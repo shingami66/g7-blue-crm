@@ -8,7 +8,7 @@ export const projectsData: Project[] = [
     client: "Saudi Aramco Events",
     startDate: "2023-10-15",
     endDate: "2023-11-30",
-    status: "in-progress",
+    status: "active",
     budget: "SAR 850,000",
     manager: "Fahad Al-Saud",
     tasks: { completed: 24, total: 45 },
