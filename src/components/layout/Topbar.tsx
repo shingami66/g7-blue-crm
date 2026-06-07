@@ -1,8 +1,11 @@
 "use client";
 
 import { Search, Bell, UserCircle } from "lucide-react";
+import { useAuth, UserButton, SignInButton } from "@clerk/nextjs";
 
 export default function Topbar() {
+  const { isSignedIn } = useAuth();
+
   return (
     <header className="sticky top-0 right-0 z-40 bg-surface border-b border-outline-variant flex justify-between items-center h-16 px-6">
       {/* Search */}
@@ -25,9 +28,17 @@ export default function Topbar() {
         <button className="p-2 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-low rounded-full">
           <Bell size={20} />
         </button>
-        <button className="p-2 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-low rounded-full">
-          <UserCircle size={20} />
-        </button>
+        {isSignedIn ? (
+          <div className="flex items-center justify-center p-1">
+            <UserButton />
+          </div>
+        ) : (
+          <SignInButton>
+            <button className="p-2 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-low rounded-full">
+              <UserCircle size={20} />
+            </button>
+          </SignInButton>
+        )}
       </div>
     </header>
   );
