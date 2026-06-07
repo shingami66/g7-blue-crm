@@ -1,8 +1,8 @@
 import { AuditFields } from "./common";
 
-export type PaymentMethod = "bank_transfer" | "cash" | "cheque" | "online" | "Bank Transfer" | "Credit Card" | "Cheque";
+export type PaymentMethod = "bank_transfer" | "cash" | "cheque" | "online";
 
-export type PaymentStatus = "pending" | "confirmed" | "failed" | "refunded" | "completed" | "processing";
+export type PaymentStatus = "pending" | "confirmed" | "failed" | "refunded";
 
 export interface Payment {
   id: string;

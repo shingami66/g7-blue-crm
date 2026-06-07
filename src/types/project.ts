@@ -1,6 +1,6 @@
 import { AuditFields } from "./common";
 
-export type ProjectStatus = "planning" | "active" | "on_hold" | "completed" | "cancelled" | "in-progress";
+export type ProjectStatus = "planning" | "active" | "on_hold" | "completed" | "cancelled";
 
 export type ProjectTaskStatus = "todo" | "in_progress" | "done" | "blocked";
 
