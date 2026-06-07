@@ -16,7 +16,8 @@ type StatusVariant =
   | "unpaid"
   | "planning"
   | "confirmed"
-  | "in-progress";
+  | "in-progress"
+  | "lead";
 
 const variantStyles: Record<StatusVariant, string> = {
   draft: "bg-gray-100 text-gray-700 border-gray-200",
@@ -35,6 +36,7 @@ const variantStyles: Record<StatusVariant, string> = {
   planning: "bg-surface-container-high text-on-surface",
   confirmed: "bg-primary-fixed text-on-primary-fixed-variant",
   "in-progress": "bg-tertiary-fixed text-on-tertiary-fixed-variant",
+  lead: "bg-blue-50 text-blue-700 border-blue-200",
 };
 
 export default function StatusBadge({
