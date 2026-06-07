@@ -36,6 +36,56 @@ export default function CustomersClient({ customers }: { customers: Customer[] }
   // -----------------------------------------------------------------------
   // Handlers
   // -----------------------------------------------------------------------
+  function handleExport() {
+    if (customers.length === 0) return;
+
+    const headers = [
+      "Company",
+      "Contact Person",
+      "Email",
+      "Phone",
+      "City",
+      "Status",
+      "Projects",
+      "Revenue"
+    ];
+
+    const escapeCsv = (val: string | number | null | undefined) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val);
+      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const rows = customers.map((c) => [
+      escapeCsv(c.company),
+      escapeCsv(c.contact),
+      escapeCsv(c.email),
+      escapeCsv(c.phone),
+      escapeCsv(c.city),
+      escapeCsv(c.status),
+      escapeCsv(c.projects),
+      escapeCsv(c.revenue),
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const date = new Date().toISOString().split("T")[0];
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", `g7-blue-customers-${date}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
   async function handleCreate(formData: FormData) {
     setActionError(null);
     startTransition(async () => {
@@ -84,7 +134,11 @@ export default function CustomersClient({ customers }: { customers: Customer[] }
         title="Customers"
         subtitle="Manage your client relationships and contact information."
       >
-        <button className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-low px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors">
+        <button
+          onClick={handleExport}
+          disabled={customers.length === 0}
+          className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-low px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Download size={18} />
           Export
         </button>
