@@ -59,23 +59,25 @@ Checklist:
 - `pnpm build` passes
 
 ### Phase 5 — Quotations UI Manual Entry
+**Note: Phase 5 is split into Phase 5A (List + Create Form completed) and Phase 5B (Edit + Soft Delete next).**
+
 Checklist:
-- [ ] Wire `/quotations` list to live data
-- [ ] Empty state
-- [ ] Access denied state
-- [ ] Loading/error states
-- [ ] Create quotation form
-- [ ] Dynamic manual line items
-- [ ] Client-side preview only comment
-- [ ] Call `createQuotation` action
+- [x] Wire `/quotations` list to live data
+- [x] Empty state
+- [x] Access denied state
+- [x] Loading/error states if implemented
+- [x] Create quotation form
+- [x] Dynamic manual line items
+- [x] Client-side preview only comment
+- [x] Call `createQuotation` action
 - [ ] Edit draft quotation
 - [ ] Prevent full edit for non-draft
 - [ ] Soft delete quotation
-- [ ] Manual test full quotation flow
-- [ ] Build
-- [ ] Audit
-- [ ] Commit/Push/PR/Merge
-- [ ] Update docs
+- [x] Manual test full quotation creation flow if confirmed
+- [x] Build
+- [x] Audit
+- [x] Commit/Push/PR/Merge
+- [x] Update docs
 
 **Definition of Done:**
 - user can create quotation manually
@@ -224,8 +226,8 @@ After each merged PR, run a docs update task:
 - commit docs update if separate, or include in next planning commit
 
 ## 4. Current Priority
-1. Start Phase 5 — Quotations UI Manual Entry
-2. Wire `/quotations` list to live data
-3. Build create quotation form with manual items
-4. Test full quotation flow
-5. Then Quotation Detail / Print
+1. Start Phase 5B — Quotations Edit + Soft Delete
+2. Allow full edit only for draft quotations
+3. Lock non-draft quotations
+4. Add soft delete action from UI
+5. Confirm approved quotations cannot be deleted

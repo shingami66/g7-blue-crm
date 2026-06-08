@@ -80,9 +80,18 @@
 - Created `types.ts`, `schemas.ts`, `mappers.ts`, `queries.ts`, `actions.ts`, `index.ts`
 - Audit passed: permissions enforced, soft delete blocked for approved quotations, numeric `Number()` mapping added, `is_deleted` filter applied, safe errors implemented.
 
+### ✅ Phase 5A — Quotations UI Manual Entry: List + Create Form
+- `/quotations` now uses live `getQuotations()` data
+- `/quotations/new` creates quotations with manual items only
+- Customer dropdown only receives active and non-deleted customers
+- VAT is read-only at 15% for now
+- Client totals are preview only and PostgreSQL RPC remains source of truth
+- Edit, soft delete, detail, and print are still not implemented
+- PR merged into main
+
 ## 4. Current Active Phase
 
-### 🚧 Phase 5 — Quotations UI Manual Entry
+### 🚧 Phase 5B — Quotations Edit + Soft Delete
 Status: Planning / Next Up
 
 ## 5. Deferred Decisions
