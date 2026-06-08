@@ -1,37 +1,86 @@
-"use client";
-
-import { useParams, useRouter, notFound } from "next/navigation";
-import { quotationsData } from "@/lib/data/quotations";
+import { notFound, redirect } from "next/navigation";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { ArrowLeft, Printer, Send, CheckCircle2, XCircle, FileEdit } from "lucide-react";
+import { ArrowLeft, Printer, FileEdit } from "lucide-react";
 import Link from "next/link";
+import { getQuotationById } from "@/lib/quotations/queries";
+import { requirePermission, ForbiddenError, UnauthorizedError } from "@/lib/auth/permissions";
 
-export default function QuotationDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const id = params.id as string;
+export default async function QuotationDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
-  const quotation = quotationsData.find((q) => q.id === id);
+  try {
+    await requirePermission("quotations:read");
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      redirect("/sign-in");
+    }
+    if (error instanceof ForbiddenError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full gap-4">
+          <div className="text-error mb-2">
+            <svg
+              className="w-12 h-12 mx-auto"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+          <h2 className="text-[24px] font-semibold text-on-surface">
+            Access Denied
+          </h2>
+          <p className="text-on-surface-variant text-[14px]">
+            You do not have permission to view quotations.
+          </p>
+          <Link
+            href="/dashboard"
+            className="mt-4 px-4 py-2 bg-primary text-on-primary rounded-lg text-[14px] font-semibold hover:bg-primary-container transition-colors"
+          >
+            Back to Dashboard
+          </Link>
+        </div>
+      );
+    }
+    throw error;
+  }
+
+  const quotation = await getQuotationById(id);
 
   if (!quotation) {
     notFound();
   }
+
+  // Helper for safe number formatting
+  const formatMoney = (val: number | null | undefined) => {
+    if (val === null || val === undefined) return "0.00";
+    return val.toLocaleString(undefined, { minimumFractionDigits: 2 });
+  };
 
   return (
     <div className="flex flex-col gap-6 pb-12">
       {/* Top Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
+          <Link
+            href="/quotations"
             className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
           >
             <ArrowLeft size={18} />
-          </button>
+          </Link>
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight">
-                {quotation.id}
+                {quotation.quotationNumber}
               </h2>
               <StatusBadge variant={quotation.status as any}>
                 {quotation.status.charAt(0).toUpperCase() +
@@ -41,22 +90,23 @@ export default function QuotationDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors">
-            <FileEdit size={18} />
-            Edit
-          </button>
+          {quotation.status === "draft" && (
+            <Link 
+              href={`/quotations/${quotation.id}/edit`}
+              className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors"
+            >
+              <FileEdit size={18} />
+              Edit
+            </Link>
+          )}
           <Link
             href={`/quotations/${quotation.id}/pdf`}
             target="_blank"
             className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-primary text-primary hover:bg-surface-container-low rounded-lg text-[14px] font-semibold transition-colors"
           >
             <Printer size={18} />
-            Generate PDF
+            Print / Save as PDF
           </Link>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[14px] font-semibold transition-colors">
-            <Send size={18} />
-            Send to Client
-          </button>
         </div>
       </div>
 
@@ -75,7 +125,7 @@ export default function QuotationDetailPage() {
                   Client
                 </div>
                 <div className="text-on-surface font-medium">
-                  {quotation.customer}
+                  {quotation.customer?.company || "Unknown Company"}
                 </div>
               </div>
               <div>
@@ -97,7 +147,7 @@ export default function QuotationDetailPage() {
                   Valid Until
                 </div>
                 <div className="text-on-surface font-medium">
-                  {quotation.validUntil}
+                  {quotation.validUntil || "-"}
                 </div>
               </div>
             </div>
@@ -147,14 +197,10 @@ export default function QuotationDetailPage() {
                         {item.qty}
                       </td>
                       <td className="px-4 py-4 text-right text-on-surface align-top">
-                        {item.unitPrice.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                        })}
+                        {formatMoney(item.unitPrice)}
                       </td>
                       <td className="px-4 py-4 text-right font-medium text-on-surface align-top">
-                        {item.total.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                        })}
+                        {formatMoney(item.total)}
                       </td>
                     </tr>
                   ))}
@@ -185,55 +231,28 @@ export default function QuotationDetailPage() {
               <div className="space-y-3">
                 <div className="flex justify-between text-[14px] text-on-surface-variant">
                   <span>Subtotal</span>
-                  <span>
-                    {(
-                      parseFloat(quotation.amount.replace(/,/g, "")) / 1.15
-                    ).toLocaleString(undefined, { minimumFractionDigits: 2 })}{" "}
-                    SAR
-                  </span>
-                </div>
-                <div className="flex justify-between text-[14px] text-on-surface-variant">
-                  <span>VAT (15%)</span>
-                  <span>
-                    {(
-                      parseFloat(quotation.amount.replace(/,/g, "")) -
-                      parseFloat(quotation.amount.replace(/,/g, "")) / 1.15
-                    ).toLocaleString(undefined, { minimumFractionDigits: 2 })}{" "}
-                    SAR
-                  </span>
+                  <span>{formatMoney(quotation.subtotal)} SAR</span>
                 </div>
                 <div className="flex justify-between text-[14px] text-on-surface-variant">
                   <span>Discount</span>
-                  <span>0.00 SAR</span>
+                  <span>{formatMoney(quotation.discount)} SAR</span>
+                </div>
+                <div className="flex justify-between text-[14px] text-on-surface-variant">
+                  <span>VAT ({quotation.vatRate}%)</span>
+                  <span>{formatMoney(quotation.vatAmount)} SAR</span>
                 </div>
                 <div className="border-t border-surface-variant pt-3 mt-3 flex justify-between">
                   <span className="font-semibold text-[18px] text-primary">
-                    Total
+                    Grand Total
                   </span>
                   <span className="font-semibold text-[18px] text-primary">
-                    {quotation.amount} SAR
+                    {formatMoney(quotation.grandTotal)} SAR
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Quick Approvals */}
-          <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
-              <h3 className="font-semibold text-primary">Update Status</h3>
-            </div>
-            <div className="p-6 flex flex-col gap-3">
-              <button className="flex items-center justify-center gap-2 w-full py-2 bg-status-completed-bg text-status-completed-text rounded-lg text-[14px] font-semibold hover:opacity-90 transition-opacity">
-                <CheckCircle2 size={18} />
-                Mark as Approved
-              </button>
-              <button className="flex items-center justify-center gap-2 w-full py-2 bg-error-container text-on-error-container rounded-lg text-[14px] font-semibold hover:opacity-90 transition-opacity">
-                <XCircle size={18} />
-                Mark as Rejected
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
