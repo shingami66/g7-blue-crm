@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCustomers } from "@/lib/customers/queries";
-import { UnauthorizedError, ForbiddenError } from "@/lib/auth/permissions";
+import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import CustomersClient from "./CustomersClient";
 
 export const dynamic = "force-dynamic";

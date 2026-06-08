@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requirePermission, UnauthorizedError, ForbiddenError } from "@/lib/auth/permissions";
+import { requirePermission } from "@/lib/auth/permissions";
+import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { createQuotationSchema, updateQuotationSchema } from "./schemas";
 import type { QuotationRpcResult } from "./types";
 

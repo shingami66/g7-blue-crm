@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getQuotations } from "@/lib/quotations/queries";
-import { UnauthorizedError, ForbiddenError, checkPermission } from "@/lib/auth/permissions";
+import { checkPermission } from "@/lib/auth/permissions";
+import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import QuotationsClient from "./QuotationsClient";
 
 export const dynamic = "force-dynamic";

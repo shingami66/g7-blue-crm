@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { requirePermission, UnauthorizedError, ForbiddenError } from "@/lib/auth/permissions";
+import { requirePermission } from "@/lib/auth/permissions";
+import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getCustomers } from "@/lib/customers/queries";
 import QuotationForm from "./QuotationForm";
 
