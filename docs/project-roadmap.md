@@ -59,7 +59,7 @@ Checklist:
 - `pnpm build` passes
 
 ### Phase 5 — Quotations UI Manual Entry
-**Note: Phase 5 is split into Phase 5A (List + Create Form completed) and Phase 5B (Edit + Soft Delete next).**
+**Note: Phase 5 is split into Phase 5A (List + Create Form completed) and Phase 5B (Edit + Soft Delete completed).**
 
 Checklist:
 - [x] Wire `/quotations` list to live data
@@ -70,9 +70,9 @@ Checklist:
 - [x] Dynamic manual line items
 - [x] Client-side preview only comment
 - [x] Call `createQuotation` action
-- [ ] Edit draft quotation
-- [ ] Prevent full edit for non-draft
-- [ ] Soft delete quotation
+- [x] Edit draft quotation
+- [x] Prevent full edit for non-draft
+- [x] Soft delete quotation
 - [x] Manual test full quotation creation flow if confirmed
 - [x] Build
 - [x] Audit
@@ -226,8 +226,8 @@ After each merged PR, run a docs update task:
 - commit docs update if separate, or include in next planning commit
 
 ## 4. Current Priority
-1. Start Phase 5B — Quotations Edit + Soft Delete
-2. Allow full edit only for draft quotations
-3. Lock non-draft quotations
-4. Add soft delete action from UI
-5. Confirm approved quotations cannot be deleted
+1. Start Phase 6 — Quotation Detail + Browser Print
+2. First inspect company/business information availability for print
+3. Build read-only quotation detail page
+4. Add print-ready layout using window.print() + print CSS
+5. Keep server-side PDF generation deferred

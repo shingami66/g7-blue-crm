@@ -89,12 +89,41 @@
 - Edit, soft delete, detail, and print are still not implemented
 - PR merged into main
 
+### ✅ Phase 5B — Quotations Edit + Soft Delete
+- Draft quotations can now be edited
+- Non-draft quotations show locked edit behavior
+- List actions respect `quotations:write`
+- Read-only users can still view quotations
+- Approved quotations cannot be deleted from UI
+- Backend `softDeleteQuotation` remains the authority
+- `checkPermission` was added as a server-only helper for conditional UI only
+
 ## 4. Current Active Phase
 
-### 🚧 Phase 5B — Quotations Edit + Soft Delete
+### 🚧 Phase 6 — Quotation Detail + Browser Print
 Status: Planning / Next Up
 
 ## 5. Deferred Decisions
+
+### Deferred: Server-side PDF Generation
+Current Phase 6 decision:
+- Use browser print with window.print() + print CSS.
+
+Reason:
+- Faster and simpler for demo/client review.
+- Avoids adding PDF dependencies and deployment complexity now.
+- User can still print or Save as PDF from the browser.
+
+Deferred enhancement:
+- Add real server-side PDF generation later for:
+  - Download PDF
+  - Email quotation PDF
+  - Store generated quotation PDF
+  - Attach PDF to invoices/customer records
+
+Possible future tools:
+- @react-pdf/renderer
+- Puppeteer
 
 ### Deferred: Service Catalog
 - Do not implement now.
