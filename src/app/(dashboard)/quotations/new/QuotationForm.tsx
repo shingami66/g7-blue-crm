@@ -4,31 +4,46 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Save, AlertCircle } from "lucide-react";
 import type { Customer } from "@/types/customer";
-import { createQuotation } from "@/lib/quotations/actions";
+import { createQuotation, updateQuotation } from "@/lib/quotations/actions";
+import type { QuotationDetail } from "@/lib/quotations/types";
 
 interface QuotationFormProps {
   customers: Customer[];
+  initialData?: QuotationDetail;
 }
 
-export default function QuotationForm({ customers }: QuotationFormProps) {
+export default function QuotationForm({ customers, initialData }: QuotationFormProps) {
   const router = useRouter();
+  const isEdit = !!initialData;
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [customerId, setCustomerId] = useState("");
-  const [event, setEvent] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [validUntil, setValidUntil] = useState("");
-  const [discount, setDiscount] = useState("0");
+  // Initialize fields with initialData if present
+  // Handle case where initialData.customerId is not in active `customers` list
+  const initialCustomerActive = customers.some(c => c.id === initialData?.customerId);
+  const [customerId, setCustomerId] = useState(initialCustomerActive ? (initialData?.customerId || "") : "");
+  
+  const [event, setEvent] = useState(initialData?.event || "");
+  const [date, setDate] = useState(initialData?.date || new Date().toISOString().split("T")[0]);
+  const [validUntil, setValidUntil] = useState(initialData?.validUntil || "");
+  const [discount, setDiscount] = useState((initialData?.discount || 0).toString());
   
   // VAT rate read-only fixed at 15 for now
   // TODO: Future company settings/admin permissions can control it
   const vatRate = 15;
 
-  const [items, setItems] = useState([
-    { description: "", details: "", category: "", qty: 1, unitPrice: 0 }
-  ]);
+  const [items, setItems] = useState(
+    initialData?.items && initialData.items.length > 0 
+      ? initialData.items.map(i => ({
+          description: i.description,
+          details: i.details || "",
+          category: i.category || "",
+          qty: Number(i.qty),
+          unitPrice: Number(i.unitPrice)
+        }))
+      : [{ description: "", details: "", category: "", qty: 1, unitPrice: 0 }]
+  );
 
   const addItem = () => {
     setItems([...items, { description: "", details: "", category: "", qty: 1, unitPrice: 0 }]);
@@ -58,7 +73,7 @@ export default function QuotationForm({ customers }: QuotationFormProps) {
     setError(null);
 
     if (!customerId) {
-      setError("Please select a customer.");
+      setError("Please select a valid, active customer.");
       return;
     }
     
@@ -80,7 +95,7 @@ export default function QuotationForm({ customers }: QuotationFormProps) {
 
     setIsSubmitting(true);
 
-    const result = await createQuotation({
+    const payload = {
       customer_id: customerId,
       event,
       date,
@@ -94,13 +109,17 @@ export default function QuotationForm({ customers }: QuotationFormProps) {
         qty: Number(i.qty),
         unit_price: Number(i.unitPrice)
       }))
-    });
+    };
+
+    const result = isEdit && initialData
+      ? await updateQuotation(initialData.id, payload)
+      : await createQuotation(payload);
 
     if (result.success) {
       router.push("/quotations");
       router.refresh();
     } else {
-      setError(result.error || "Failed to create quotation.");
+      setError(result.error || `Failed to ${isEdit ? "update" : "create"} quotation.`);
       setIsSubmitting(false);
     }
   };
@@ -116,10 +135,10 @@ export default function QuotationForm({ customers }: QuotationFormProps) {
         </button>
         <div>
           <h2 className="text-[28px] leading-[36px] font-semibold text-primary tracking-tight">
-            New Quotation
+            {isEdit ? `Edit Quotation ${initialData?.quotationNumber}` : "New Quotation"}
           </h2>
           <p className="text-on-surface-variant text-[14px]">
-            Create a new manual quotation.
+            {isEdit ? "Modify draft quotation details." : "Create a new manual quotation."}
           </p>
         </div>
       </div>
@@ -286,7 +305,7 @@ export default function QuotationForm({ customers }: QuotationFormProps) {
                         value={item.category}
                         onChange={(e) => updateItem(index, "category", e.target.value)}
                         placeholder="Category"
-                        className="w-48 bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                        className="w-48 bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:border-primary"
                       />
                     </div>
                   </div>
@@ -337,7 +356,7 @@ export default function QuotationForm({ customers }: QuotationFormProps) {
               className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg font-semibold transition-colors disabled:opacity-50"
             >
               <Save size={18} />
-              {isSubmitting ? "Creating..." : "Create Quotation"}
+              {isSubmitting ? "Saving..." : isEdit ? "Save Changes" : "Create Quotation"}
             </button>
           </div>
         </div>

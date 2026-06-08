@@ -1,20 +1,39 @@
 "use client";
 
+import { useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { Plus, Filter, FileSearch } from "lucide-react";
+import { Plus, Filter, FileSearch, Trash2, Edit, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { QuotationListItem } from "@/lib/quotations/types";
+import { softDeleteQuotation } from "@/lib/quotations/actions";
 
 interface QuotationsClientProps {
   quotations: QuotationListItem[];
+  canWrite: boolean;
 }
 
-export default function QuotationsClient({ quotations }: QuotationsClientProps) {
+export default function QuotationsClient({ quotations, canWrite }: QuotationsClientProps) {
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setError(null);
+
+    const confirmed = window.confirm("Are you sure you want to delete this quotation?");
+    if (!confirmed) return;
+
+    const result = await softDeleteQuotation(id);
+    if (!result.success) {
+      setError(result.error || "Failed to delete quotation.");
+    } else {
+      router.refresh();
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -22,13 +41,15 @@ export default function QuotationsClient({ quotations }: QuotationsClientProps) 
         title="Quotations"
         subtitle="Manage client proposals, event estimates, and approvals."
       >
-        <Link 
-          href="/quotations/new"
-          className="flex items-center gap-2 bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors"
-        >
-          <Plus size={18} />
-          New Quotation
-        </Link>
+        {canWrite && (
+          <Link 
+            href="/quotations/new"
+            className="flex items-center gap-2 bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors"
+          >
+            <Plus size={18} />
+            New Quotation
+          </Link>
+        )}
       </PageHeader>
 
       <div className="flex-1 flex flex-col min-h-0">
@@ -57,11 +78,18 @@ export default function QuotationsClient({ quotations }: QuotationsClientProps) 
           </div>
         </FilterBar>
 
+        {error && (
+          <div className="mx-4 mt-4 flex items-center gap-2 p-3 bg-error-container text-on-error-container rounded-lg text-[14px]">
+            <AlertCircle size={18} />
+            {error}
+          </div>
+        )}
+
         <div className="flex-1 overflow-auto">
           {quotations.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-on-surface-variant">
               <p>No quotations found.</p>
-              <p className="text-[14px]">Click "New Quotation" to create one.</p>
+              {canWrite && <p className="text-[14px]">Click "New Quotation" to create one.</p>}
             </div>
           ) : (
             <DataTable
@@ -112,6 +140,50 @@ export default function QuotationsClient({ quotations }: QuotationsClientProps) 
                       >
                         <FileSearch size={18} />
                       </button>
+                      
+                      {canWrite && (
+                        <>
+                          {q.status === "draft" ? (
+                            <button
+                              className="text-primary hover:text-primary-container p-1 rounded transition-colors"
+                              title="Edit Quotation"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/quotations/${q.id}/edit`);
+                              }}
+                            >
+                              <Edit size={18} />
+                            </button>
+                          ) : (
+                            <button
+                              className="text-on-surface-variant opacity-50 p-1 rounded cursor-not-allowed"
+                              title="Only draft quotations can be edited"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Edit size={18} />
+                            </button>
+                          )}
+
+                          <button
+                            className={`p-1 rounded transition-colors ${
+                              q.status === "approved"
+                                ? "text-on-surface-variant opacity-50 cursor-not-allowed"
+                                : "text-on-surface-variant hover:text-error hover:bg-error-container"
+                            }`}
+                            title={q.status === "approved" ? "Approved quotations cannot be deleted" : "Delete Quotation"}
+                            onClick={(e) => {
+                              if (q.status !== "approved") {
+                                handleDelete(e, q.id);
+                              } else {
+                                e.stopPropagation();
+                              }
+                            }}
+                            disabled={q.status === "approved"}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

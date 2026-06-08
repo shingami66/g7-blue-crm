@@ -155,3 +155,17 @@ export async function requirePermission(permission: string) {
 
   return user;
 }
+
+/**
+ * Non-throwing permission check for conditional UI rendering.
+ * Returns true if the current user has the specified permission, false otherwise.
+ */
+export async function checkPermission(permission: string): Promise<boolean> {
+  const user = await getCurrentAppUser();
+  if (!user || !user.is_active) {
+    return false;
+  }
+  
+  const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
+  return rolePermissions.includes("*") || rolePermissions.includes(permission);
+}
