@@ -74,27 +74,16 @@
 - [x] `/api/health/db` returned ok:true
 - [x] PR merged into main
 
+### ✅ Quotations Data Layer
+- PR #4 merged into main
+- Branch: `feature/quotations-data-layer`
+- Created `types.ts`, `schemas.ts`, `mappers.ts`, `queries.ts`, `actions.ts`, `index.ts`
+- Audit passed: permissions enforced, soft delete blocked for approved quotations, numeric `Number()` mapping added, `is_deleted` filter applied, safe errors implemented.
+
 ## 4. Current Active Phase
 
-### 🚧 Quotations Data Layer
-Status: In Progress
-- **Branch:** `feature/quotations-data-layer`
-- **Files created:**
-  - `src/lib/quotations/types.ts`
-  - `src/lib/quotations/schemas.ts`
-  - `src/lib/quotations/mappers.ts`
-  - `src/lib/quotations/queries.ts`
-  - `src/lib/quotations/actions.ts`
-  - `src/lib/quotations/index.ts`
-- **Build passed**
-- **Still needs audit before commit**
-- **Focus audit on:**
-  - permission errors must not become `[]` or null
-  - writes must use `requirePermission("quotations:write")`
-  - reads must use `requirePermission("quotations:read")`
-  - RPC payload shape
-  - no trusted client totals
-  - safe Supabase errors
+### 🚧 Phase 5 — Quotations UI Manual Entry
+Status: Planning / Next Up
 
 ## 5. Deferred Decisions
 

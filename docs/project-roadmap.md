@@ -38,18 +38,18 @@ After every successful merge:
 Status: In Progress
 
 Checklist:
-- [ ] Audit data layer
-- [ ] Fix permission fallback issues if any
-- [ ] Confirm no Unauthorized/Forbidden becomes [] or null
-- [ ] Confirm schemas exclude trusted totals
-- [ ] Confirm RPC payload shape
-- [ ] Confirm safe error handling
-- [ ] Build
-- [ ] Commit
-- [ ] Push
-- [ ] PR
-- [ ] Merge
-- [ ] Update project docs after merge
+- [x] Audit data layer
+- [x] Fix permission fallback issues if any
+- [x] Confirm no Unauthorized/Forbidden becomes [] or null
+- [x] Confirm schemas exclude trusted totals
+- [x] Confirm RPC payload shape
+- [x] Confirm safe error handling
+- [x] Build
+- [x] Commit
+- [x] Push
+- [x] PR
+- [x] Merge
+- [x] Update project docs after merge
 
 **Definition of Done:**
 - `getQuotations` and `getQuotationById` use `requirePermission("quotations:read")`
@@ -224,8 +224,8 @@ After each merged PR, run a docs update task:
 - commit docs update if separate, or include in next planning commit
 
 ## 4. Current Priority
-1. Audit Quotations Data Layer
-2. Commit/PR/Merge Quotations Data Layer
-3. Wire Quotations UI with manual items
-4. Then Invoices
-5. Then Payments
+1. Start Phase 5 — Quotations UI Manual Entry
+2. Wire `/quotations` list to live data
+3. Build create quotation form with manual items
+4. Test full quotation flow
+5. Then Quotation Detail / Print
