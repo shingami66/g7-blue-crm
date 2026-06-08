@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createCustomerSchema, updateCustomerSchema } from "./schemas";
-import { requirePermission, UnauthorizedError, ForbiddenError } from "@/lib/auth/permissions";
+import { requirePermission } from "@/lib/auth/permissions";
+import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 
 /** Standardised action result shape. */
 export type ActionResult = {

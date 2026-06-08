@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getQuotationById } from "@/lib/quotations/queries";
-import { requirePermission, ForbiddenError, UnauthorizedError } from "@/lib/auth/permissions";
+import { requirePermission } from "@/lib/auth/permissions";
+import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { settingsData } from "@/lib/data/settings";
 import PrintButton from "./PrintButton";
 

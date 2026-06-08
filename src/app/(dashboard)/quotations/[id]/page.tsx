@@ -3,7 +3,8 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import { ArrowLeft, Printer, FileEdit } from "lucide-react";
 import Link from "next/link";
 import { getQuotationById } from "@/lib/quotations/queries";
-import { requirePermission, ForbiddenError, UnauthorizedError } from "@/lib/auth/permissions";
+import { requirePermission } from "@/lib/auth/permissions";
+import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 
 export default async function QuotationDetailPage({
   params,

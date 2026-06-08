@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requirePermission, UnauthorizedError, ForbiddenError } from "@/lib/auth/permissions";
+import { requirePermission } from "@/lib/auth/permissions";
+import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { mapRowToQuotationListItem, mapRowToQuotationDetail } from "./mappers";
 import type { QuotationListItem, QuotationDetail } from "./types";
 
