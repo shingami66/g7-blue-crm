@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getQuotations } from "@/lib/quotations/queries";
-import { UnauthorizedError, ForbiddenError } from "@/lib/auth/permissions";
+import { UnauthorizedError, ForbiddenError, checkPermission } from "@/lib/auth/permissions";
 import QuotationsClient from "./QuotationsClient";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
 export default async function QuotationsPage() {
   try {
     const quotations = await getQuotations();
-    return <QuotationsClient quotations={quotations} />;
+    const canWrite = await checkPermission("quotations:write");
+    return <QuotationsClient quotations={quotations} canWrite={canWrite} />;
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       redirect("/sign-in");
