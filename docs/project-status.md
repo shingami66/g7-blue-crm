@@ -98,9 +98,23 @@
 - Backend `softDeleteQuotation` remains the authority
 - `checkPermission` was added as a server-only helper for conditional UI only
 
+### ✅ Phase 6 — Quotation Detail + Browser Print
+- Quotation detail page now uses live `getQuotationById` data
+- Print route now uses live quotation data
+- Browser print uses `window.print()` isolated inside a Client Component (`PrintButton`)
+- UI wording is "Print / Save as PDF", not "Generate PDF"
+- Server-side PDF generation remains deferred
+- No PDF dependencies were added
+- Company/business info currently uses static `settingsData` fallback; live `company_settings` remains deferred
+- Unauthorized redirects use `/sign-in` (Phase 6 pre-commit audit found an incorrect `/login` redirect and fixed it to match the existing app pattern)
+- Forbidden users see Access Denied inline
+- Fake quick approval/status buttons were removed
+- Totals are backend/data-layer values, not recalculated in UI
+- PR merged into main
+
 ## 4. Current Active Phase
 
-### 🚧 Phase 6 — Quotation Detail + Browser Print
+### 🚧 Phase 7 — Invoices
 Status: Planning / Next Up
 
 ## 5. Deferred Decisions

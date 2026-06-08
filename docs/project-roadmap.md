@@ -81,6 +81,89 @@ Checklist:
 
 **Definition of Done:**
 - user can create quotation manually
+# G7 BLUE CRM — Roadmap & Execution Plan
+
+## 1. Workflow Rule
+**Plan → Implement → Build → Manual Test → Audit → Commit → Push → PR → Merge**
+
+After every successful merge:
+- update `docs/project-status.md`
+- update `docs/project-roadmap.md`
+- mark completed checklist items
+- add branch/commit/PR notes
+- update "Current Active Phase"
+
+## 2. Completion Checklist
+
+### Phase 1 — Customers
+- [x] Customers CRUD
+- [x] Customers CSV Export
+
+### Phase 2 — Core Security / RBAC
+- [x] app_users
+- [x] roles
+- [x] requirePermission
+- [x] Clerk/Supabase foundation
+- [ ] production hardening for DEV_ONLY RLS
+
+### Phase 3 — Quotations RPC Foundation
+- [x] vat_rate
+- [x] QT numbering
+- [x] create RPC
+- [x] update RPC
+- [x] VAT residual adjustment
+- [x] service_role-only RPC permissions
+- [x] manual Supabase apply
+- [x] build + health check
+- [x] PR merged
+
+### Phase 4 — Quotations Data Layer
+Status: In Progress
+
+Checklist:
+- [x] Audit data layer
+- [x] Fix permission fallback issues if any
+- [x] Confirm no Unauthorized/Forbidden becomes [] or null
+- [x] Confirm schemas exclude trusted totals
+- [x] Confirm RPC payload shape
+- [x] Confirm safe error handling
+- [x] Build
+- [x] Commit
+- [x] Push
+- [x] PR
+- [x] Merge
+- [x] Update project docs after merge
+
+**Definition of Done:**
+- `getQuotations` and `getQuotationById` use `requirePermission("quotations:read")`
+- create/update/delete actions use `requirePermission("quotations:write")`
+- RPC calls pass correct payload
+- no raw Supabase errors exposed
+- `pnpm build` passes
+
+### Phase 5 — Quotations UI Manual Entry
+**Note: Phase 5 is split into Phase 5A (List + Create Form completed) and Phase 5B (Edit + Soft Delete completed).**
+
+Checklist:
+- [x] Wire `/quotations` list to live data
+- [x] Empty state
+- [x] Access denied state
+- [x] Loading/error states if implemented
+- [x] Create quotation form
+- [x] Dynamic manual line items
+- [x] Client-side preview only comment
+- [x] Call `createQuotation` action
+- [x] Edit draft quotation
+- [x] Prevent full edit for non-draft
+- [x] Soft delete quotation
+- [x] Manual test full quotation creation flow if confirmed
+- [x] Build
+- [x] Audit
+- [x] Commit/Push/PR/Merge
+- [x] Update docs
+
+**Definition of Done:**
+- user can create quotation manually
 - user can add multiple items
 - totals preview matches backend result
 - backend RPC result is displayed/stored
@@ -89,14 +172,16 @@ Checklist:
 
 ### Phase 6 — Quotation Detail / Print
 Checklist:
-- [ ] Detail page uses real data
-- [ ] Items show real values
-- [ ] Customer info shown
-- [ ] Status badge
-- [ ] Print layout
-- [ ] PDF/print-ready quotation
-- [ ] Build/test/audit/merge
-- [ ] Update docs
+- [x] Detail page uses real data
+- [x] Items show real values
+- [x] Customer info shown
+- [x] Status badge
+- [x] Print layout
+- [x] PDF/print-ready quotation
+- [x] Build/test/audit/merge
+- [x] Update docs
+
+**Note:** Phase 6 completed: quotation detail + browser print using live data.
 
 ### Phase 7 — Invoices
 Checklist:
@@ -226,8 +311,6 @@ After each merged PR, run a docs update task:
 - commit docs update if separate, or include in next planning commit
 
 ## 4. Current Priority
-1. Start Phase 6 — Quotation Detail + Browser Print
-2. First inspect company/business information availability for print
-3. Build read-only quotation detail page
-4. Add print-ready layout using window.print() + print CSS
-5. Keep server-side PDF generation deferred
+1. Confirm next roadmap phase after Phase 6 (Phase 7 — Invoices)
+2. Plan next phase only
+3. Do not implement until approved
