@@ -3,8 +3,9 @@
 ## 1. Project Overview
 - **Project Name:** G7 BLUE CRM
 - **Stack:** Next.js 16 App Router, TypeScript, Tailwind CSS, Supabase, Clerk Auth, PostgreSQL RPC
-- **Purpose:** A robust CRM tailored for G7 BLUE, managing the entire lifecycle of customer interactions, financial transactions, and project tracking.
-- **Core Financial Flow:** Customers → Quotations → Invoices → Payments → Projects / Reports
+- **Purpose:** A robust CRM tailored for G7 BLUE, managing customer relationships, event work, financial documents, payments, and operational tracking.
+- **Product Direction:** G7 BLUE CRM is an Events CRM + Billing system, not a generic billing-only CRM.
+- **Core Flow:** Customers → Quotations → Invoices → Payments → Events / Projects / Reports
 
 ## 2. Working Rules
 - **Workflow:** Plan → Implement → Build → Manual Test → Audit → Commit → Push → PR → Merge
@@ -12,6 +13,7 @@
 - **Git:** No `git add .` (only stage intentionally modified files).
 - **Database:** No migrations without strict review; PostgreSQL RPC is the absolute source of truth for financial totals.
 - **Data Access:** Supabase Admin client runs server-side only; all write Server Actions enforce `requirePermission`; no raw Supabase errors exposed to UI.
+- **Docs:** After merged phases or product-direction decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable.
 
 ## 3. Completed Milestones
 
@@ -33,6 +35,8 @@
 - [x] roles: admin, manager, sales, operations, accountant, viewer
 - [x] helpers: `requireUser`, `getCurrentAppUser`, `requireRole`, `requirePermission`
 - [x] `UnauthorizedError` / `ForbiddenError`
+- [x] `src/lib/auth/errors.ts` is canonical for `UnauthorizedError` and `ForbiddenError`
+- [x] `permissions.ts` imports and throws the shared auth errors
 - [x] `created_by` / `updated_by` fields added
 - [x] `audit_logs.user_id` converted to text
 - [x] Clerk user ID stored as text
@@ -86,7 +90,7 @@
 - Customer dropdown only receives active and non-deleted customers
 - VAT is read-only at 15% for now
 - Client totals are preview only and PostgreSQL RPC remains source of truth
-- Edit, soft delete, detail, and print are still not implemented
+- Edit, soft delete, detail, and print were deferred to later quotation phases
 - PR merged into main
 
 ### ✅ Phase 5B — Quotations Edit + Soft Delete
@@ -103,6 +107,7 @@
 - Print route now uses live quotation data
 - Browser print uses `window.print()` isolated inside a Client Component (`PrintButton`)
 - UI wording is "Print / Save as PDF", not "Generate PDF"
+- Browser print layout was improved after stabilization/product review
 - Server-side PDF generation remains deferred
 - No PDF dependencies were added
 - Company/business info currently uses static `settingsData` fallback; live `company_settings` remains deferred
@@ -112,56 +117,49 @@
 - Totals are backend/data-layer values, not recalculated in UI
 - PR merged into main
 
+### ✅ Quotation Stabilization + Product Review
+- Quotations core flow is stabilized for the current demo path: create, edit draft, view detail, and browser print.
+- Auth error imports were fixed.
+- `src/lib/auth/errors.ts` is the canonical source for `UnauthorizedError` and `ForbiddenError`.
+- `permissions.ts` imports and throws the shared auth errors instead of defining duplicate classes.
+- Quotation RPC ambiguity was fixed.
+- `create_quotation_with_items` and `update_quotation_with_items` now qualify `quotation_items` references with aliases.
+- PostgreSQL `RETURNS TABLE()` ambiguity lesson captured: output column names can shadow unqualified table references inside PL/pgSQL functions.
+- Quotation creation was verified working after manual Supabase apply.
+- Quotation browser print layout was improved.
+
 ## 4. Current Active Phase
 
-### 🚧 Phase 7 — Invoices
-Status: Planning / Next Up
+### 🚧 Business/Product Decision Review Before Invoices
+Status: Planning / Decision Review
+
+The next priority is not immediate Phase 7 invoice implementation. The next priority is confirming the event-company workflow and business decisions that affect invoice schema and financial document behavior.
+
+Decisions needed before invoice schema work:
+- Are quotations always tied to events?
+- Which event fields are required?
+- Can one quotation generate multiple invoices?
+- Are invoices official ZATCA tax invoices or internal/proforma first?
+- Are leads/inquiries tracked before becoming customers?
+- Are vendors/suppliers tracked later?
+- Is the first demo using real data or fake data?
 
 ## 5. Deferred Decisions
 
-### Deferred: Server-side PDF Generation
-Current Phase 6 decision:
-- Use browser print with window.print() + print CSS.
+Detailed deferred decisions are tracked in `docs/deferred-decisions.md` so they remain visible and can be revisited before the relevant phase starts.
 
-Reason:
-- Faster and simpler for demo/client review.
-- Avoids adding PDF dependencies and deployment complexity now.
-- User can still print or Save as PDF from the browser.
-
-Deferred enhancement:
-- Add real server-side PDF generation later for:
-  - Download PDF
-  - Email quotation PDF
-  - Store generated quotation PDF
-  - Attach PDF to invoices/customer records
-
-Possible future tools:
-- @react-pdf/renderer
-- Puppeteer
-
-### Deferred: Service Catalog
-- Do not implement now.
-- Current quotation flow will use manual line items.
-- **Reason:** Service Catalog requires new services table, CRUD, permissions, and form integration.
-- Not blocking demo.
-- **Future architecture:** `services` table → dropdown → fills description/category/unit_price → user can edit snapshot values.
-- `quotation_items` already supports future integration.
-
-### Deferred: User Management
-- Do not implement now.
-- RBAC foundation already exists.
-- Full user management should come after Quotations, Invoices, and Payments.
-- Must include Clerk sync strategy.
-- **Future recommended flow:**
-  1. Admin creates/invites user by email in `/settings/users`
-  2. `app_users` pending/invited record is created
-  3. Clerk `user.created` webhook calls `/api/webhooks/clerk`
-  4. webhook matches email
-  5. webhook updates `app_users.clerk_user_id`
-  6. then `requireUser`/`requirePermission` resolves automatically
-- Without Clerk webhook sync, every new user would need manual DB linking.
+Current decision gates before invoices:
+- Event-specific fields
+- Multi-invoice per quotation
+- ZATCA/proforma invoice direction
+- Leads/inquiries
+- Vendors/suppliers
+- Demo data security level
+- VAT defaults and document-level `vat_rate` snapshots
 
 ## 6. Last Known Good State
-- `main` contains Customers CRUD, Customers Export, Core Security, Quotations RPC Foundation
-- migration applied and verified
-- current work is data layer, not UI yet
+- `main` contains Customers CRUD, Customers Export, Core Security/RBAC, Quotations RPC Foundation, Quotations Data Layer, Quotations UI create/edit/delete controls, Quotation Detail, and Browser Print.
+- Quotations core flow is stabilized.
+- Quotation creation works after manual Supabase apply.
+- Financial totals remain server-side/database-side via PostgreSQL RPC.
+- Current work should focus on docs/agent guidance and business-domain decisions before Company Settings and invoice schema work.
