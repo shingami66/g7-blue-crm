@@ -116,24 +116,159 @@ body {
 
 @page {
   size: A4;
-  margin: 0;
+  margin: 10mm;
 }
 
 @media print {
+  html,
   body {
     background: white !important;
+    width: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  .a4-page {
-    width: 100%;
-    min-height: auto;
-    box-shadow: none;
-    margin: 0;
-    padding: 0;
-    border: none !important;
-  }
+
+  .dashboard-sidebar,
+  .dashboard-topbar,
   .no-print {
     display: none !important;
+  }
+
+  .dashboard-shell,
+  .dashboard-content,
+  .dashboard-main,
+  .quotation-print-page {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  .a4-page {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: white !important;
+  }
+
+  .quotation-print-document {
+    display: block !important;
+    font-size: 9.5pt !important;
+    line-height: 1.25 !important;
+    page-break-after: auto !important;
+  }
+
+  .quotation-print-document header,
+  .quotation-print-meta,
+  .quotation-print-summary,
+  .quotation-print-terms,
+  .quotation-print-signatures,
+  .quotation-print-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .quotation-print-document header {
+    padding-bottom: 4mm !important;
+    margin-bottom: 5mm !important;
+  }
+
+  .quotation-print-document .w-16.h-16 {
+    width: 12mm !important;
+    height: 12mm !important;
+    margin-bottom: 2mm !important;
+  }
+
+  .quotation-print-document h1 {
+    font-size: 13pt !important;
+    line-height: 1.2 !important;
+  }
+
+  .quotation-print-title {
+    margin-bottom: 4mm !important;
+  }
+
+  .quotation-print-title h2 {
+    font-size: 22pt !important;
+    line-height: 1.1 !important;
+  }
+
+  .quotation-print-meta {
+    gap: 5mm !important;
+    margin-bottom: 5mm !important;
+  }
+
+  .quotation-print-meta > div,
+  .quotation-print-summary .bg-surface-container-low {
+    padding: 3mm !important;
+  }
+
+  .quotation-print-services,
+  .quotation-print-summary,
+  .quotation-print-terms {
+    margin-bottom: 5mm !important;
+  }
+
+  .quotation-print-document thead {
+    display: table-header-group;
+  }
+
+  .quotation-print-document tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .quotation-print-document th {
+    padding: 2mm 1.5mm !important;
+    font-size: 8pt !important;
+    line-height: 1.2 !important;
+  }
+
+  .quotation-print-document td {
+    padding: 2.5mm 1.5mm !important;
+    font-size: 9pt !important;
+    line-height: 1.25 !important;
+  }
+
+  .quotation-print-summary {
+    align-items: flex-start !important;
+  }
+
+  .quotation-print-summary .py-2 {
+    padding-top: 1.5mm !important;
+    padding-bottom: 1.5mm !important;
+  }
+
+  .quotation-print-summary .py-3 {
+    padding-top: 2mm !important;
+    padding-bottom: 2mm !important;
+  }
+
+  .quotation-print-signatures {
+    margin-top: 5mm !important;
+    padding-top: 5mm !important;
+  }
+
+  .quotation-print-signatures .h-20 {
+    height: 16mm !important;
+  }
+
+  .quotation-print-footer {
+    margin-top: 5mm !important;
+    padding-top: 3mm !important;
+  }
+
+  .quotation-print-footer .gap-8 {
+    gap: 5mm !important;
   }
 }
