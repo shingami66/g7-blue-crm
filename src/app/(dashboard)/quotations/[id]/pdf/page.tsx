@@ -43,13 +43,13 @@ export default async function QuotationPdfPage({
   };
 
   return (
-    <div className="bg-surface-dim py-8 text-on-surface flex justify-center items-start min-h-screen font-sans">
+    <div className="quotation-print-page bg-surface-dim py-8 text-on-surface flex justify-center items-start min-h-screen font-sans">
       <div className="no-print fixed top-4 right-4 z-50">
         <PrintButton />
       </div>
 
       {/* A4 Document Canvas */}
-      <div className="a4-page p-[40px] flex flex-col relative bg-surface-container-lowest">
+      <div className="quotation-print-document a4-page p-[40px] flex flex-col relative bg-surface-container-lowest">
         {/* Header */}
         <header className="flex justify-between items-start border-b-2 border-primary-container pb-6 mb-8">
           <div className="flex flex-col gap-2 max-w-[50%]">
@@ -83,14 +83,14 @@ export default async function QuotationPdfPage({
         </header>
 
         {/* Document Title */}
-        <div className="mb-8">
+        <div className="quotation-print-title mb-8">
           <h2 className="text-[36px] font-bold text-primary-container tracking-tight">
             QUOTATION
           </h2>
         </div>
 
         {/* Meta Information Grid */}
-        <div className="grid grid-cols-2 gap-8 mb-10">
+        <div className="quotation-print-meta grid grid-cols-2 gap-8 mb-10">
           {/* Left: Quotation Details */}
           <div className="bg-surface p-4 rounded border border-outline-variant">
             <h3 className="text-[12px] font-semibold text-primary-container uppercase border-b border-outline-variant pb-2 mb-3">
@@ -129,7 +129,7 @@ export default async function QuotationPdfPage({
         </div>
 
         {/* Services Table */}
-        <div className="mb-10 flex-grow">
+        <div className="quotation-print-services mb-10 flex-grow">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-container-low border-y border-outline-variant">
@@ -201,7 +201,7 @@ export default async function QuotationPdfPage({
         </div>
 
         {/* Financial Summary */}
-        <div className="flex justify-between items-start mb-12">
+        <div className="quotation-print-summary flex justify-between items-start mb-12">
           {/* Amount in Words */}
           <div className="w-1/2 pr-8">
             <div className="bg-surface-container-low p-4 rounded border border-outline-variant/50">
@@ -240,7 +240,7 @@ export default async function QuotationPdfPage({
         </div>
 
         {/* Terms & Conditions */}
-        <div className="mb-12">
+        <div className="quotation-print-terms mb-12">
           <h4 className="text-[12px] font-semibold text-primary-container uppercase mb-2">
             Terms & Conditions
           </h4>
@@ -250,7 +250,7 @@ export default async function QuotationPdfPage({
         </div>
 
         {/* Signatures Section */}
-        <div className="mt-auto pt-8 border-t border-outline-variant flex justify-between px-4">
+        <div className="quotation-print-signatures mt-auto pt-8 border-t border-outline-variant flex justify-between px-4">
           <div className="w-1/4 text-center">
             <div className="h-20 flex items-end justify-center mb-2">
               <span className="font-[cursive] text-2xl text-primary-container opacity-80">
@@ -287,7 +287,7 @@ export default async function QuotationPdfPage({
         </div>
 
         {/* Footer */}
-        <footer className="mt-12 text-center text-[12px] text-on-surface-variant border-t border-outline-variant/30 pt-4">
+        <footer className="quotation-print-footer mt-12 text-center text-[12px] text-on-surface-variant border-t border-outline-variant/30 pt-4">
           <div className="flex justify-center gap-8 mb-2">
             <p>
               <span className="font-semibold text-on-surface">Bank:</span> {settingsData.bank.name}
