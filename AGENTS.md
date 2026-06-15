@@ -28,6 +28,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - `pnpm dev` is the documented local dev command and serves the app on `http://localhost:3000`.
 - `pnpm build` is the required build verification command for build-affecting changes.
 - `pnpm lint` runs the repo ESLint config.
+- `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
 - `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
 - Verify Supabase connectivity at `GET /api/health/db` while the local app is running.
 
@@ -57,6 +58,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - `app_users.clerk_user_id` is TEXT, not UUID.
 - Never cast `clerk_user_id` to UUID.
 - Fixed roles: `admin`, `manager`, `sales`, `operations`, `accountant`, `viewer`.
+- `settings:read` is currently granted to `accountant` and `viewer`; `settings:write` remains admin-only via `*`.
 - `src/lib/auth/errors.ts` is canonical for `UnauthorizedError` and `ForbiddenError`.
 - `UnauthorizedError` redirects to `/sign-in`.
 - `ForbiddenError` shows Access Denied UI.
@@ -85,6 +87,8 @@ Never skip review gates for SQL, migrations, RLS, RPC, triggers, grants/revokes,
 G7 BLUE CRM is moving toward Events CRM + Billing.
 
 Do not start invoice schema work before business-domain answers are documented, including event fields, multi-invoice flow, ZATCA/proforma direction, leads/inquiries, vendors/suppliers, and real-vs-fake demo data.
+
+For CS-A, keep `/settings` limited to the live singleton `company_settings` record keyed by `setting_key='default'`. Do not wire live Company Settings into quotation or invoice print views until CS-B snapshot design is approved.
 
 ## Local Skills
 

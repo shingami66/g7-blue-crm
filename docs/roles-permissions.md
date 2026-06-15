@@ -13,6 +13,12 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 | **accountant** | `customers:read`, `quotations:read`, `invoices:read/write`, `payments:read/write`, `settings:read`, `dashboard:read` |
 | **viewer** | Read-only access to all modules (`*:read`). |
 
+## Company Settings CS-A
+
+- `settings:read` allows viewing Company Settings.
+- `settings:write` is required for updates. Admin has this through the wildcard `*`; no non-admin role receives `settings:write` in CS-A.
+- Bank details are visible only to Admin and Accountant. Viewer can load `/settings`, but bank values are not sent to the client.
+
 ## Implementation Guidelines
 In Server Actions and API routes, permissions are enforced using helper functions from `src/lib/auth/permissions.ts`:
 - `getCurrentAppUser()`

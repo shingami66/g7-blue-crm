@@ -188,13 +188,19 @@ Checklist:
 - [ ] Confirm auth redirects and Access Denied states are correct.
 
 ### Phase CS — Company Settings Mini
-Status: Planned after Phase BD
+Status: CS-A implemented in working tree; SQL requires manual review/apply
 
 Checklist:
-- [ ] Company info used by quotation/invoice print views
-- [ ] VAT default setting
-- [ ] logo/business info for print views if needed
-- [ ] `company_settings.vat_rate` is only a default for new documents
+- [x] CS-A live singleton Company Settings only
+- [x] server-only settings query/action modules
+- [x] `settings:read` for reads and `settings:write` for updates
+- [x] bank details visible only to Admin/Accountant in the app data flow
+- [x] VAT mode defaults to `not_registered`
+- [x] `company_settings.default_vat_percent` is only a default for new documents
+- [x] logo upload deferred
+- [x] live settings are not wired into quotation/invoice print views
+- [ ] Company info used by quotation/invoice print views after CS-B snapshot design
+- [ ] CS-B document snapshot wiring
 - [ ] quotation/invoice documents keep their own `vat_rate` snapshots
 - [ ] changing company settings never retroactively changes old quotations or invoices
 - [ ] Build/test/audit/merge

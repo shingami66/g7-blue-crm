@@ -128,12 +128,23 @@
 - Quotation creation was verified working after manual Supabase apply.
 - Quotation browser print layout was improved.
 
+### 🚧 Phase CS-A — Company Settings Mini
+- Live singleton Company Settings is being implemented as CS-A only.
+- CS-A uses server-only settings queries/actions, Zod validation, `settings:read`, and `settings:write`.
+- Bank details are restricted in the app data flow to Admin and Accountant; Viewer can read settings without receiving bank values.
+- VAT mode defaults to `not_registered`; default VAT percent is `0` while not registered.
+- Logo upload is deferred.
+- Live settings are intentionally not wired into quotation/invoice print views. CS-B document snapshot wiring is required before printed documents depend on Company Settings.
+- SQL migration file is present for review/manual apply; SQL has not been run automatically.
+
 ## 4. Current Active Phase
 
-### 🚧 Business/Product Decision Review Before Invoices
-Status: Planning / Decision Review
+### 🚧 Company Settings Mini CS-A
+Status: Implementation / Verification
 
-The next priority is not immediate Phase 7 invoice implementation. The next priority is confirming the event-company workflow and business decisions that affect invoice schema and financial document behavior.
+The current implementation focus is live singleton Company Settings only. It does not change existing quotation/invoice print behavior and does not apply SQL automatically.
+
+After CS-A, the next priority remains confirming the event-company workflow and business decisions that affect invoice schema and financial document behavior.
 
 Decisions needed before invoice schema work:
 - Are quotations always tied to events?

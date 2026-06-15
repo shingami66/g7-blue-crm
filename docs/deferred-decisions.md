@@ -32,6 +32,18 @@ Deferred decisions are tracked here, not forgotten. Revisit each item before its
 - **When to return:** Before issuing official Saudi tax invoices from the system.
 - **Known requirements:** Decision required before invoice schema: are invoices official Saudi tax invoices or internal/proforma first? Planned nullable fields to consider: `invoice_uuid`, `zatca_status`, `qr_code_data`, `xml_hash`.
 
+## Company Settings Document Snapshot Wiring
+- **Status:** Deferred; required before printed quotations/invoices depend on live Company Settings.
+- **Reason deferred:** CS-A intentionally implements live singleton settings only. Existing quotation and invoice print views must not mutate when Company Settings changes.
+- **When to return:** Before wiring Company Settings into quotation/invoice print views or before invoice issuance workflows depend on seller/legal/VAT/bank settings.
+- **Known requirements:** New documents must snapshot seller legal names, CR, TIN, VAT mode, VAT number, VAT effective date if applicable, national address, terms, and any bank details displayed on the document. Existing documents must keep their own snapshots.
+
+## Company Logo Upload
+- **Status:** Deferred.
+- **Reason deferred:** Logo upload adds storage, file validation, permissions, and signed URL/security scope.
+- **When to return:** When printed documents need a real uploaded logo.
+- **Known requirements:** Storage bucket design, file size/type limits, upload RBAC, deletion/replacement rules, and document snapshot behavior.
+
 ## Server-side PDF Generation
 - **Status:** Deferred.
 - **Reason deferred:** Browser print is sufficient for the current quotation demo and avoids PDF dependencies/deployment complexity.

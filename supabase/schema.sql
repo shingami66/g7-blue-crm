@@ -29,20 +29,30 @@ CREATE TRIGGER update_number_sequences_updated_at BEFORE UPDATE ON number_sequen
 CREATE TABLE company_settings (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     setting_key text NOT NULL DEFAULT 'default' UNIQUE,
-    company_name text NOT NULL,
-    company_email text NOT NULL,
-    company_phone text NOT NULL,
-    company_address text NOT NULL,
-    legal_cr text NOT NULL,
-    legal_vat text NOT NULL,
+    legal_name_en text NOT NULL,
+    legal_name_ar text NOT NULL,
+    official_email text NOT NULL,
+    official_phone text NOT NULL,
+    national_address text NOT NULL,
+    cr_number text NOT NULL,
+    tin_number text,
+    vat_mode text NOT NULL DEFAULT 'not_registered' CHECK (vat_mode IN ('not_registered', 'vat_registered_phase_1', 'phase2_integrated')),
+    vat_effective_date date,
+    vat_number text,
     bank_name text NOT NULL,
     bank_iban text NOT NULL,
-    bank_account_name text NOT NULL,
-    finance_currency text NOT NULL DEFAULT 'SAR',
-    finance_vat_percent numeric(5,2) NOT NULL DEFAULT 15.00 CHECK (finance_vat_percent >= 0),
-    finance_terms text,
+    bank_account_holder text NOT NULL,
+    currency text NOT NULL DEFAULT 'SAR',
+    default_vat_percent numeric(5,2) NOT NULL DEFAULT 0.00 CHECK (default_vat_percent >= 0 AND default_vat_percent <= 100),
+    default_terms text,
     created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
+    updated_at timestamptz DEFAULT now(),
+    CHECK (setting_key = 'default'),
+    CHECK (
+        (vat_mode = 'not_registered' AND default_vat_percent = 0 AND vat_number IS NULL AND vat_effective_date IS NULL)
+        OR
+        (vat_mode IN ('vat_registered_phase_1', 'phase2_integrated') AND default_vat_percent > 0 AND vat_number IS NOT NULL)
+    )
 );
 CREATE TRIGGER update_company_settings_updated_at BEFORE UPDATE ON company_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
