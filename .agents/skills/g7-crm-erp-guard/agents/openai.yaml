@@ -1,0 +1,4 @@
+interface:
+  display_name: "G7 CRM ERP Guard"
+  short_description: "ERP workflow guard for G7 CRM"
+  default_prompt: "Use $g7-crm-erp-guard to review the product workflow, ERP logic, backend architecture, and design system before coding or before commit."
