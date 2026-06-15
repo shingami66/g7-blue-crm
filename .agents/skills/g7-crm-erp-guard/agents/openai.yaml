@@ -1,4 +1,7 @@
 interface:
   display_name: "G7 CRM ERP Guard"
-  short_description: "ERP workflow guard for G7 CRM"
-  default_prompt: "Use $g7-crm-erp-guard to review the product workflow, ERP logic, backend architecture, and design system before coding or before commit."
+  short_description: "Guards G7 ERP quotes, invoices, payments, VAT/RBAC, design"
+  default_prompt: "Use $g7-crm-erp-guard to discuss this G7 BLUE CRM phase before coding. Do not implement yet."
+
+policy:
+  allow_implicit_invocation: true
