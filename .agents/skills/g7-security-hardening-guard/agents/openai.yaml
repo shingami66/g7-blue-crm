@@ -1,0 +1,7 @@
+interface:
+  display_name: "G7 Security Hardening Guard"
+  short_description: "Security guard for G7 BLUE CRM auth, RBAC, Supabase RLS, SQL/RPC, Server Actions, secrets, webhooks, invoices, payments, deployment, production readiness, and AI risks."
+  default_prompt: "Use $g7-security-hardening-guard to review this G7 BLUE CRM change for security risks before commit."
+
+policy:
+  allow_implicit_invocation: true

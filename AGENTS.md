@@ -23,6 +23,14 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - RBAC via `app_users` + roles + permissions
 - Server Actions
 
+## Repo Commands
+
+- `pnpm dev` is the documented local dev command and serves the app on `http://localhost:3000`.
+- `pnpm build` is the required build verification command for build-affecting changes.
+- `pnpm lint` runs the repo ESLint config.
+- `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
+- Verify Supabase connectivity at `GET /api/health/db` while the local app is running.
+
 ## Non-Negotiable Rules
 
 - Do not touch `.env.local`.
@@ -61,6 +69,9 @@ Inspect -> proposed SQL text -> review -> migration file -> review -> manual Sup
 
 Never skip review gates for SQL, migrations, RLS, RPC, triggers, grants/revokes, or schema changes.
 
+- Keep reviewed migration SQL in `supabase/migrations/`.
+- Treat `supabase/schema.sql` as a schema reference file; do not assume it is the apply path for production changes.
+
 ## Quotation / RPC Lessons
 
 - Quotation numbers use `QT-YYYY-0001`.
@@ -78,6 +89,26 @@ Do not start invoice schema work before business-domain answers are documented, 
 ## Local Skills
 
 Local skills are advisory helpers for recurring G7 BLUE CRM work. They must follow and reinforce these project rules; they must not override `AGENTS.md` or explicit user instructions.
+
+## Guard Skill Routing
+
+For G7 BLUE CRM feature planning or implementation involving Company Settings, Services, Customers, Quotations, Invoices, Payments, VAT/ZATCA, RBAC, backend data flow, ERP logic, or core UI patterns, invoke `$g7-crm-erp-guard` before coding.
+
+For work involving auth, permissions, Clerk, Supabase RLS, SQL migrations, RPCs, Server Actions, secrets, webhooks, invoices, payments, deployment, production readiness, or AI/LLM features, invoke `$g7-security-hardening-guard`.
+
+Before commit:
+
+- Use `$clean-code-guard` on production code changes.
+- Use `$docs-guard` on documentation changes.
+- Use `$test-guard` on test changes.
+
+Do not rely on UI-only checks for security. Do not stage or commit until blocking guard findings are resolved or explicitly approved.
+
+- `.agents/skills/g7-crm-erp-guard/SKILL.md`
+  Before planning or implementing G7 BLUE CRM features involving Company Settings, Services, Customers, Quotations, Invoices, Payments, VAT/ZATCA, RBAC, financial logic, backend data flow, or core UI patterns, invoke `$g7-crm-erp-guard` in discussion mode first. Do not implement until the plan is approved.
+
+- `.agents/skills/g7-security-hardening-guard/SKILL.md`
+  Use before or after G7 BLUE CRM work involving security, Clerk auth, RBAC, Supabase RLS, SQL migrations, RPCs, Server Actions, APIs, webhooks, secrets, invoices, payments, Company Settings, deployment, production readiness, or AI/LLM features.
 
 - `.agents/skills/g7-crm-safe-engineer/SKILL.md`
   Use for plans, prompts, implementation reports, RBAC, security, financial logic, server/client boundaries, and product-flow safety.
