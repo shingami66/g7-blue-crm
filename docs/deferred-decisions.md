@@ -54,7 +54,19 @@ Deferred decisions are tracked here, not forgotten. Revisit each item before its
 - **Status:** Required before hosted demo with real/semi-real data.
 - **Reason deferred:** Development uses `DEV_ONLY` RLS policies while application-level RBAC is being stabilized.
 - **When to return:** Before any hosted demo with real/semi-real data and before production.
-- **Known requirements:** `DEV_ONLY` RLS is not acceptable for real-data deployment. Review anon access, service-role paths, admin client server-only usage, and table-level policies.
+- **Known requirements:** `DEV_ONLY` RLS is not acceptable for real-data deployment. Review anon access, service-role paths, admin client server-only usage, and table-level policies. Add explicit production RLS for `company_settings` because it contains bank, legal, and VAT data. Do not treat UI hiding as security; server-side permission checks and server-side masking are required.
+
+## Sensitive Server Action Rate Limiting
+- **Status:** Deferred; required before production or any real/semi-real hosted demo.
+- **Reason deferred:** Core ERP workflow is still being planned.
+- **When to return:** Before exposing sensitive write paths outside local/dev usage.
+- **Known requirements:** Consider rate limiting quotation creation, quotation approval, invoice creation, payment recording, and settings update. Rate limiting must complement server-side auth/RBAC and must not replace permission checks.
+
+## Viewer Bank Detail Masking Verification
+- **Status:** Deferred test case; required before real/semi-real data.
+- **Reason deferred:** CS-A server-side masking exists, but production verification needs an explicit test pass.
+- **When to return:** Before hosted demo with real/semi-real company data and before production.
+- **Known requirements:** Viewer opens `/settings`; response/data passed to the client must not include full IBAN, bank account holder, or bank account values. This must be checked server-side, not only by inspecting hidden UI fields.
 
 ## Audit Logs UI
 - **Status:** Deferred.
@@ -93,16 +105,58 @@ Deferred decisions are tracked here, not forgotten. Revisit each item before its
 - **Known requirements:** Decide whether supplier costs, purchase orders, expense tracking, and profit margin should be tracked.
 
 ## Event-specific Fields
-- **Status:** Decision required before Phase 7A.
-- **Reason deferred:** G7 is an events company. Quotations/invoices may need event context.
-- **When to return:** Before event-aware invoice schema and RPC foundation.
-- **Known requirements:** Potential fields: `event_name`, `event_date`, `event_venue`, `event_type`. Decision needed before invoice schema.
+- **Status:** Partially resolved; event type confirmation deferred.
+- **Reason deferred:** G7 is an events company. Services, quotations, and invoices need event context, but event taxonomy should be confirmed by a Saudi partner/business owner.
+- **When to return:** ERP-1 Services planning and before event-aware invoice schema work.
+- **Known requirements:** Prefer `event_start_date` and nullable `event_end_date` instead of only `event_date`, so both single-day and multi-day events are supported. `event_end_date` can be null for single-day/inquiry cases. Planned DB constraint: `CHECK (event_end_date IS NULL OR event_end_date >= event_start_date)`. Event fields should stay flexible at inquiry stage. Potential fields also include `event_name`, `event_venue`, and `event_type`.
 
 ## Multi-invoice per Quotation
 - **Status:** Decision required before Phase 7A.
 - **Reason deferred:** Events businesses often use deposit + final payment.
 - **When to return:** Before invoice schema and quotation-to-invoice workflow design.
 - **Known requirements:** Answer: can one approved quotation generate multiple invoices? Potential flow: Quotation → Deposit Invoice → Final Invoice. Multiple staged invoices may also be needed.
+
+## Invoice Voiding, Credit Notes, And Refunds
+- **Status:** Deferred.
+- **Reason deferred:** Invoice voiding/cancellation can affect accounting, auditability, payment status, refunds, and future ZATCA direction.
+- **When to return:** Before implementing invoice void/delete behavior, paid invoice cancellation, refunds, or credit notes.
+- **Known requirements:** Do not implement now. Future flow may require Void status, Credit Note, Refund, and audit trail. Do not allow casual deletion of issued or paid invoices in future design. Issued/paid financial records must be preserved for auditability.
+
+## Service Cancellation With Financial Records
+- **Status:** Partially resolved; detailed financial reversal flow deferred.
+- **Reason deferred:** Simple Service cancellation is straightforward only before invoice/payment records exist.
+- **When to return:** ERP-1 Services status design and again before ERP-3/ERP-4 financial flows.
+- **Known requirements:** Service cancellation requires `cancellation_reason`. If no invoice/payment exists, cancellation is simple. If invoice/payment exists, cancellation must not silently delete financial records. Future invoice void/refund/credit-note flow is required.
+
+## Quotation Expiry Override
+- **Status:** Deferred.
+- **Reason deferred:** The base validity rule is clear, but business approval for overrides needs role and audit design.
+- **When to return:** ERP-2 Service-linked Quotations approval flow.
+- **Known requirements:** `valid_until` or `expiry_date` must be on or after issue date. Expired quotations cannot be approved without renewal/extension or authorized override. Exact override behavior remains deferred.
+
+## Soft Delete And Financial Record Retention
+- **Status:** Deferred technical decision.
+- **Reason deferred:** Current schema uses soft-delete patterns, but future financial records need stricter retention rules.
+- **When to return:** Before ERP-1 schema work and before invoice/payment delete or void behavior.
+- **Known requirements:** Prefer `deleted_at` timestamp over only `is_deleted` for future soft deletes, or document current `is_deleted` usage as technical debt. Issued/paid financial records must not be casually deleted.
+
+## Financial Rounding And Currency Snapshots
+- **Status:** Deferred implementation detail; rule is required before ERP-3.
+- **Reason deferred:** Invoice/payment implementation has not started.
+- **When to return:** ERP-3 Invoices and ERP-4 Payments.
+- **Known requirements:** Document SAR 2-decimal rounding rules. Financial rounding must be server-side/PostgreSQL-side. Currency should be snapshotted on issued documents.
+
+## Planned ERP Indexes
+- **Status:** Deferred technical planning.
+- **Reason deferred:** ERP service-linked tables are not implemented yet.
+- **When to return:** During SQL review for ERP-1 through ERP-4 and audit logs.
+- **Known requirements:** Plan indexes on `services.customer_id`, `quotations.service_id`, `invoices.service_id`, `payments.invoice_id`, `payments.service_id` only if stored, and `audit_logs.user_id`.
+
+## Migration Rollback Procedure
+- **Status:** Deferred process hardening.
+- **Reason deferred:** Current migration workflow is manual-review first, but rollback expectations need explicit documentation before risky schema changes.
+- **When to return:** Before risky SQL, production migration, or real-data migration.
+- **Known requirements:** Migrations are forward-only by default. Risky migrations require backup/export/snapshot before apply. Rollback should be a new corrective migration, not editing old applied migrations.
 
 ## Leads / Inquiries
 - **Status:** Decision required before full Events CRM direction is locked.

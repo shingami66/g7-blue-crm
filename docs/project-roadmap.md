@@ -12,18 +12,18 @@ After every successful merge:
 - update "Current Active Phase"
 
 ## 2. Current Priority
-1. Docs + agent guidance
-2. Phase BD — Business Domain Decisions
-3. Pre-demo security check if demo uses real data
-4. Phase CS — Company Settings Mini
-5. Phase 7A — Event-aware Invoice Schema + RPC Foundation
-6. Phase 7B — Invoice Data Layer
-7. Phase 7C — Invoice UI
-8. Phase 7D — Invoice Browser Print
-9. Phase 8 — Payments
-10. Events/Projects view depending on business answers
+1. Docs + agent guidance corrections
+2. TAX-0 — cleanup premature tax/ZATCA wording before ERP implementation
+3. ERP-0 — planning/report-only workflow review
+4. ERP-1 — Services as the operational unit
+5. ERP-2 — Service-linked Quotations
+6. ERP-3 — Service-linked Invoices
+7. ERP-4 — Invoice-linked Payments
+8. CS-B — document seller/buyer/settings snapshots
+9. Pre-demo security check if demo uses real or semi-real data
+10. Customer Profile hub expansion and Activity planning
 
-Do not start invoice schema work until Phase BD decisions are documented.
+Do not start ERP implementation until TAX-0 cleanup is complete or explicitly accepted as a known risk. ERP-0 may happen before TAX-0 only as planning/report-only work.
 
 ## 3. Completion Checklist
 
@@ -149,10 +149,11 @@ Status: Required before Phase 7A
 Confirm event-company workflow before invoice schema.
 
 Questions to resolve:
-1. Are quotations always tied to events?
+1. Are quotations always tied to Services?
 2. Required event fields:
    - `event_name`
-   - `event_date`
+   - `event_start_date`
+   - nullable `event_end_date`
    - `event_venue`
    - `event_type`
 3. Can one quotation generate multiple invoices?
@@ -166,7 +167,8 @@ Questions to resolve:
 
 Acceptance criteria:
 - [ ] No invoice schema work starts before these decisions are documented.
-- [ ] Event fields decision is documented.
+- [x] Event date direction is documented: use `event_start_date` plus nullable `event_end_date`.
+- [ ] Saudi partner/business owner confirms event types.
 - [ ] Multi-invoice decision is documented.
 - [ ] ZATCA/proforma direction is documented.
 - [ ] Leads/inquiries decision is documented.
@@ -182,13 +184,17 @@ Status: Required if demo uses real or semi-real data
 Checklist:
 - [ ] Confirm whether demo data is fake, semi-real, or real.
 - [ ] If real/semi-real data is used, review DEV_ONLY RLS policies before hosted demo.
+- [ ] Add explicit production RLS plan for `company_settings` because it contains bank, legal, and VAT data.
 - [ ] Verify Supabase admin/service role usage stays server-side only.
 - [ ] Confirm no raw database/Supabase errors are exposed to UI.
 - [ ] Confirm no secrets are present in committed files.
 - [ ] Confirm auth redirects and Access Denied states are correct.
+- [ ] Verify Viewer opening `/settings` does not receive full IBAN, bank account holder, or bank account values in client data.
+- [ ] Plan rate limiting for sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
+- [ ] Confirm UI hiding is not treated as security; server-side permission checks and server-side masking are required.
 
 ### Phase CS — Company Settings Mini
-Status: CS-A implemented in working tree; SQL requires manual review/apply
+Status: CS-A committed on `main`; CS-B deferred
 
 Checklist:
 - [x] CS-A live singleton Company Settings only
@@ -203,11 +209,116 @@ Checklist:
 - [ ] CS-B document snapshot wiring
 - [ ] quotation/invoice documents keep their own `vat_rate` snapshots
 - [ ] changing company settings never retroactively changes old quotations or invoices
-- [ ] Build/test/audit/merge
-- [ ] Update docs
+- [x] Build/test/audit/merge
+- [x] Update docs
+
+### Phase TAX-0 — Tax/ZATCA Wording Cleanup
+Status: Required before ERP implementation unless explicitly accepted as a known risk
+
+Checklist:
+- [ ] Audit invoice, quotation, print, docs, and UI wording for premature tax/ZATCA/FATOORA claims.
+- [ ] Keep `phase2_integrated` wording guarded as future-only until real integration exists.
+- [ ] Confirm `not_registered` behavior remains VAT 0 and does not show Tax Invoice claims.
+- [ ] Document any remaining tax wording risk before starting ERP implementation.
+- [ ] Build/test/audit/merge if code changes are made.
+- [ ] Update docs.
+
+### Phase ERP-0 — Workflow Planning / Report Only
+Status: Planned
+
+Checklist:
+- [ ] Confirm locked workflow: Customer Profile → Service → Quotation → Invoice → Payment.
+- [ ] Confirm Service replaces Project as the operational unit.
+- [ ] Confirm no standalone quotations and no standalone invoices.
+- [ ] Customer detail should show related Services.
+- [ ] Customer detail should show related Quotations through Services.
+- [ ] Customer detail should show related Invoices through Services.
+- [ ] Customer detail should show related Payments through Invoices.
+- [ ] Customer detail should later show Activity.
+- [ ] Review schema/data migration impact without applying SQL.
+- [ ] Produce implementation plan only; do not implement in ERP-0 unless explicitly approved.
+
+### Phase ERP-1 — Services
+Status: Planned
+
+Checklist:
+- [ ] Add Service as the operational unit linked to Customer Profile.
+- [ ] Use Service status machine: Inquiry, Quoted, Approved, Deposit Paid, In Progress, Completed, Cancelled.
+- [ ] Apply status exit criteria: Inquiry = service/request captured; Quoted = quotation created/sent; Approved = customer approval recorded; Deposit Paid = deposit invoice payment recorded; In Progress = operations started; Completed = service delivered; Cancelled = cancellation reason recorded.
+- [ ] Do not add a separate Confirmed status.
+- [ ] Prefer `event_start_date` and nullable `event_end_date` instead of only `event_date`.
+- [ ] Plan DB constraint: `CHECK (event_end_date IS NULL OR event_end_date >= event_start_date)`.
+- [ ] Keep event fields flexible at inquiry stage.
+- [ ] Confirm event types with Saudi partner/business owner while avoiding immediate schema rework.
+- [ ] Plan service number format `SVC-YYYY-0001`.
+- [ ] Generate service numbers server-side, not client-side.
+- [ ] Plan `assigned_to` or `sales_owner_id`; exact implementation can be finalized during ERP-1.
+- [ ] Require `cancellation_reason` when Service is cancelled.
+- [ ] If no invoice/payment exists, allow simple cancellation.
+- [ ] If invoice/payment exists, cancellation must not silently delete financial records.
+- [ ] Integration checkpoint after ERP-1: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
+
+### Phase ERP-2 — Service-linked Quotations
+Status: Planned
+
+Checklist:
+- [ ] Quotations must belong to a Service.
+- [ ] No standalone quotation creation.
+- [ ] Customer Profile shows quotations through Services.
+- [ ] Approval requires `quotations:approve`.
+- [ ] Recommended approval roles: Admin and Manager.
+- [ ] Sales can create/send quotations but cannot approve unless explicitly granted.
+- [ ] Do not treat `quotations:write` as approval permission.
+- [ ] `valid_until` or `expiry_date` must be on or after issue date.
+- [ ] Expired quotations cannot be approved without renewal/extension or authorized override.
+- [ ] Exact override behavior remains deferred.
+- [ ] Integration checkpoint after ERP-2: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
+
+### Phase ERP-3 — Service-linked Invoices
+Status: Planned
+
+Checklist:
+- [ ] Invoices must belong to a Service.
+- [ ] No standalone invoice creation.
+- [ ] Deposit Invoice is created manually after quotation approval.
+- [ ] Deposit amount must be greater than `0`.
+- [ ] Deposit amount must be less than or equal to the approved quotation total or remaining uninvoiced balance.
+- [ ] Deposit is flexible and not fixed at 50%.
+- [ ] Plan invoice voiding/cancellation later; do not implement now.
+- [ ] Do not allow casual deletion of issued or paid invoices in future design.
+- [ ] Issued/paid financial records must be preserved for auditability.
+- [ ] Future flow may require Void status, Credit Note, Refund, and audit trail.
+- [ ] Financial rounding must be server-side/PostgreSQL-side using SAR 2-decimal rounding rules.
+- [ ] Currency should be snapshotted on issued documents.
+- [ ] Integration checkpoint after ERP-3: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
+
+### Phase ERP-4 — Invoice-linked Payments
+Status: Planned
+
+Checklist:
+- [ ] Payment must link to an Invoice.
+- [ ] Payment is connected to Service through the Invoice.
+- [ ] If `service_id` is stored on payments for query convenience, it must match the invoice's `service_id`.
+- [ ] Enforce invoice/service consistency in the data layer and preferably DB design.
+- [ ] If a customer pays before an invoice exists, require creating a Deposit Invoice first or prevent payment recording until an invoice exists.
+- [ ] Payment recording updates invoice paid amount, balance due, and payment status.
+- [ ] Deposit payment confirms the Service only through a Deposit Invoice payment.
+- [ ] Deposit payment changes Service status to `Deposit Paid`.
+- [ ] Prevent overpayment unless explicitly approved.
+- [ ] Plan future refund/credit-note behavior with invoice void/cancellation design.
+- [ ] Integration checkpoint after ERP-4: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
+
+### Integration Verification Checkpoints
+Status: Required between ERP phases
+
+Checklist:
+- [ ] After ERP-1 Services: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
+- [ ] After ERP-2 Service-linked Quotations: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
+- [ ] After ERP-3 Invoices: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
+- [ ] After ERP-4 Payments: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
 
 ### Phase 7A — Event-aware Invoice Schema + RPC Foundation
-Status: Blocked until Phase BD is complete
+Status: Superseded by ERP-3; kept as historical planning note
 
 Checklist:
 - [ ] Invoice data model review
@@ -263,7 +374,7 @@ Checklist:
 - [ ] Update docs
 
 ### Phase 8 — Payments
-Status: Planned
+Status: Superseded by ERP-4; kept as historical planning note
 
 Checklist:
 - [ ] Payment create/list/detail
@@ -274,13 +385,13 @@ Checklist:
 - [ ] Build/test/audit/merge
 - [ ] Update docs
 
-### Events / Projects View
-Status: Depends on Phase BD answers
+### Services / Operations View
+Status: Superseded by ERP-1 Services / Operations planning
 
 Checklist:
-- [ ] Decide whether event tracking is a first-class module or project view
-- [ ] Create project/event from approved quotation/invoice if needed
-- [ ] Project/event status tracking
+- [ ] Treat Service as the first-class operational module.
+- [ ] Create and manage Service from Customer Profile.
+- [ ] Service status tracking.
 - [ ] Operations view
 - [ ] Build/test/audit/merge
 - [ ] Update docs
@@ -352,11 +463,13 @@ Status: Required before hosted demo with real/semi-real data and before producti
 
 Checklist:
 - [ ] remove/replace `DEV_ONLY` RLS policies
+- [ ] add explicit production RLS plan for `company_settings`
 - [ ] review Supabase anon usage
 - [ ] verify admin client server-only
 - [ ] secret scan
 - [ ] raw error audit
-- [ ] rate limiting for sensitive endpoints
+- [ ] rate limiting for sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, settings update
+- [ ] Viewer bank-detail masking test: `/settings` client data must not include full IBAN, bank account holder, or bank account values
 - [ ] webhook signature verification
 - [ ] Build/test/audit/merge
 - [ ] Update docs

@@ -15,13 +15,14 @@ Use this reference for quotation, invoice, payment, VAT, and Company Settings se
 - Quotation must belong to a Service.
 - Invoice must belong to a Service.
 - Payment must belong to an Invoice.
-- Payment should also link to service and customer for reporting.
+- Payment is connected to Service through the Invoice.
+- If `service_id` is stored on payments for query convenience, it must match the invoice's `service_id` and be enforced in the data layer, preferably with database design.
 - Do not create standalone invoices or payments disconnected from the operational Service workflow.
 
 ## Invoice And Payment Safety
 
 - Prevent overpayment unless explicitly approved.
-- Deposit payment confirms Service only after a real payment is recorded.
+- Deposit payment confirms Service only after a real Deposit Invoice payment is recorded.
 - Do not mark a Service as Deposit Paid from a fake success path or unpaid invoice state.
 - Issued invoices cannot be freely edited or deleted.
 - Voiding issued invoices requires the approved status/void direction and `invoices:void`.

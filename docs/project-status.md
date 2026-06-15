@@ -5,7 +5,7 @@
 - **Stack:** Next.js 16 App Router, TypeScript, Tailwind CSS, Supabase, Clerk Auth, PostgreSQL RPC
 - **Purpose:** A robust CRM tailored for G7 BLUE, managing customer relationships, event work, financial documents, payments, and operational tracking.
 - **Product Direction:** G7 BLUE CRM is an Events CRM + Billing system, not a generic billing-only CRM.
-- **Core Flow:** Customers → Quotations → Invoices → Payments → Events / Projects / Reports
+- **Core Flow:** Customer Profile → Service → Quotation → Invoice → Payment
 
 ## 2. Working Rules
 - **Workflow:** Plan → Implement → Build → Manual Test → Audit → Commit → Push → PR → Merge
@@ -128,49 +128,65 @@
 - Quotation creation was verified working after manual Supabase apply.
 - Quotation browser print layout was improved.
 
-### 🚧 Phase CS-A — Company Settings Mini
-- Live singleton Company Settings is being implemented as CS-A only.
+### ✅ Phase CS-A — Company Settings Mini
+- Live singleton Company Settings was implemented as CS-A only.
 - CS-A uses server-only settings queries/actions, Zod validation, `settings:read`, and `settings:write`.
 - Bank details are restricted in the app data flow to Admin and Accountant; Viewer can read settings without receiving bank values.
 - VAT mode defaults to `not_registered`; default VAT percent is `0` while not registered.
 - Logo upload is deferred.
 - Live settings are intentionally not wired into quotation/invoice print views. CS-B document snapshot wiring is required before printed documents depend on Company Settings.
-- SQL migration file is present for review/manual apply; SQL has not been run automatically.
+- SQL migration was reviewed for manual apply; SQL must never be applied automatically by agents.
+- CS-A was committed on `main` as `8dc380f feat: implement Company Settings CS-A`.
 
 ## 4. Current Active Phase
 
-### 🚧 Company Settings Mini CS-A
-Status: Implementation / Verification
+### 🚧 Post-CS-A Planning / TAX-0 / ERP-0
+Status: Planning and documentation correction
 
-The current implementation focus is live singleton Company Settings only. It does not change existing quotation/invoice print behavior and does not apply SQL automatically.
+CS-A is committed on `main`. The next work should stay in planning/report-only mode until TAX-0 cleanup is complete or explicitly accepted as a known risk.
 
-After CS-A, the next priority remains confirming the event-company workflow and business decisions that affect invoice schema and financial document behavior.
+After CS-A, the next priority is preserving the locked workflow:
+Customer Profile → Service → Quotation → Invoice → Payment.
 
-Decisions needed before invoice schema work:
-- Are quotations always tied to events?
-- Which event fields are required?
-- Can one quotation generate multiple invoices?
-- Are invoices official ZATCA tax invoices or internal/proforma first?
-- Are leads/inquiries tracked before becoming customers?
-- Are vendors/suppliers tracked later?
-- Is the first demo using real data or fake data?
+Implementation must not proceed into ERP phases until premature tax/ZATCA wording is cleaned up in TAX-0 or explicitly accepted as a documented risk.
 
 ## 5. Deferred Decisions
 
 Detailed deferred decisions are tracked in `docs/deferred-decisions.md` so they remain visible and can be revisited before the relevant phase starts.
 
-Current decision gates before invoices:
-- Event-specific fields
-- Multi-invoice per quotation
-- ZATCA/proforma invoice direction
-- Leads/inquiries
-- Vendors/suppliers
-- Demo data security level
-- VAT defaults and document-level `vat_rate` snapshots
+Current decision gates before ERP implementation:
+- ZATCA/proforma invoice direction beyond the current "do not overclaim" rule
+- invoice void/cancellation, credit note, and refund flow
+- exact quotation expiry override behavior
+- leads/inquiries
+- vendors/suppliers
+- demo data security level
+- production RLS and sensitive Server Action rate limiting
+- audit log details
 
-## 6. Last Known Good State
+## 6. Decisions Already Resolved
+
+- **Workflow:** New ERP work follows `Customer Profile → Service → Quotation → Invoice → Payment`. Service replaces Project as the operational unit. Quotations and invoices must belong to a Service; standalone quotations and standalone invoices are not allowed.
+- **Customer Profile hub:** Customer detail must explicitly show related Services, Quotations through Services, Invoices through Services, Payments through Invoices, and later Activity.
+- **Service status exit criteria:** Inquiry = service/request captured; Quoted = at least one quotation created/sent; Approved = customer approval recorded; Deposit Paid = deposit invoice payment recorded; In Progress = operations started; Completed = service delivered; Cancelled = cancellation reason recorded. Do not add a separate Confirmed status.
+- **Payments:** Payment must link to an Invoice. Payment is connected to Service through the Invoice. If `service_id` is also stored on payments for query convenience, it must match the invoice's `service_id` and be enforced in the data layer, preferably by database design. If a customer pays before an invoice exists, the UI must require creating a Deposit Invoice first or prevent payment recording.
+- **Deposit flow:** Deposit amount must be greater than `0` and less than or equal to the approved quotation total or remaining uninvoiced balance. Deposit is flexible, not fixed at 50%. Deposit Invoice is created manually after quotation approval. Deposit payment changes Service status to `Deposit Paid`.
+- **Event dates:** Prefer `event_start_date` and nullable `event_end_date`, not only `event_date`, to support single-day and multi-day events. `event_end_date` may be null for single-day or inquiry cases. Planned DB constraint: `CHECK (event_end_date IS NULL OR event_end_date >= event_start_date)`. Event fields should stay flexible at inquiry stage; Saudi partner/business owner should confirm event types.
+- **Service numbering:** Use `SVC-YYYY-0001`. Service numbers must be generated server-side. Do not implement numbering before ERP-1.
+- **Quotation approval permission:** Approval requires `quotations:approve`. Recommended roles are Admin and Manager. Sales can create/send quotations but cannot approve unless explicitly granted. Do not treat `quotations:write` as approval permission.
+- **Quotation expiry:** `valid_until` or `expiry_date` must be on or after issue date. Expired quotations cannot be approved without renewal/extension or an authorized override. Exact override behavior remains deferred.
+- **Service cancellation:** Cancellation requires `cancellation_reason`. If no invoice/payment exists, cancellation can be simple. If invoice/payment exists, cancellation must not silently delete financial records; future void/refund/credit-note flow is required.
+- **Company Settings:** CS-A is live settings only. CS-B document snapshots remain deferred. Old documents must not mutate when Company Settings changes.
+- **VAT/ZATCA safety:** `not_registered` means VAT defaults to `0`, VAT number/effective date remain null, and no premature FATOORA Phase 2 claims are allowed.
+- **Security:** Do not treat UI hiding as security. Server-side permission checks and server-side masking are required. Production RLS is required for `company_settings` because it contains bank/legal/VAT data.
+- **Viewer bank masking test:** Viewer opens `/settings`; response/data passed to the client must not include full IBAN, bank account holder, or bank account values.
+- **Sensitive Server Action rate limiting:** Consider rate limiting quotation creation, quotation approval, invoice creation, payment recording, and settings update.
+- **Phase ordering:** TAX-0 cleanup should happen before ERP implementation. ERP-0 may be planning/report-only before TAX-0, but implementation should not proceed before premature tax/ZATCA wording is cleaned or explicitly accepted as a known risk.
+
+## 7. Last Known Good State
 - `main` contains Customers CRUD, Customers Export, Core Security/RBAC, Quotations RPC Foundation, Quotations Data Layer, Quotations UI create/edit/delete controls, Quotation Detail, and Browser Print.
 - Quotations core flow is stabilized.
 - Quotation creation works after manual Supabase apply.
+- Company Settings CS-A is committed on `main`.
 - Financial totals remain server-side/database-side via PostgreSQL RPC.
-- Current work should focus on docs/agent guidance and business-domain decisions before Company Settings and invoice schema work.
+- Current work should focus on docs/agent guidance, TAX-0 cleanup, and ERP-0/ERP-1 planning before implementation.

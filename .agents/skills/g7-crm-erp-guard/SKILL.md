@@ -16,9 +16,9 @@ Always follow `AGENTS.md` first. Do not touch `.env.local`, expose secrets, use 
 - Architecture: modular monolith with external Supabase and Clerk.
 - Business domain: event services, customers, quotations, invoices, payments, suppliers, VAT/ZATCA readiness.
 - Core workflow: Customer Profile -> Service -> Quotation -> Invoice -> Payment.
-- Service is the operational unit.
+- Service is the operational unit and replaces Project for new ERP planning.
 - Customer Profile is the hub.
-- Services replaced Projects.
+- Services replaced Projects; use Project only when referring to old/deprecated code or schema.
 
 ## Mode Selection
 
@@ -121,8 +121,18 @@ Return exactly these sections:
 
 - Services replaced Projects.
 - Use this Service status machine: Inquiry, Quoted, Approved, Deposit Paid, In Progress, Completed, Cancelled.
-- Deposit Paid means the booking/service is confirmed.
+- Status exit criteria:
+  - Inquiry: service/request captured.
+  - Quoted: at least one quotation created/sent for the service.
+  - Approved: customer approval recorded for a quotation.
+  - Deposit Paid: deposit invoice payment recorded.
+  - In Progress: operations started.
+  - Completed: service delivered.
+  - Cancelled: cancellation reason recorded.
+- Deposit Paid means the booking/service is confirmed through a real Deposit Invoice payment.
 - Do not introduce a separate `Confirmed` status unless the user explicitly approves.
+- Service should plan for `event_start_date`, nullable `event_end_date`, `cancellation_reason`, and `assigned_to` or `sales_owner_id`.
+- Service numbers should use `SVC-YYYY-0001` and be generated server-side.
 - Treat the Service detail page as the operational command center for service info, quotation, deposit invoice, final invoice, payments, notes/activity, and future suppliers/costing.
 - Do not build supplier costing inside Service unless explicitly approved.
 
@@ -197,8 +207,10 @@ Return exactly these sections:
 ## Payment Rules
 
 - Payment must be linked to an invoice.
-- Payment should also link to service and customer for reporting.
-- Recording deposit payment means Service status becomes `Deposit Paid`.
+- Payment is connected to Service through the Invoice.
+- If `service_id` is stored on payments for query convenience, it must match the invoice's `service_id` and be enforced in the data layer, preferably with database design.
+- Recording payment for a Deposit Invoice means Service status becomes `Deposit Paid`.
+- If a customer pays before an invoice exists, require creating a Deposit Invoice first or prevent recording the payment until an invoice exists.
 - Payment updates invoice paid amount, balance due, and payment status.
 - Prevent overpayment unless explicitly approved.
 - Require `payments:write`.
