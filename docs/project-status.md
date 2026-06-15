@@ -88,7 +88,7 @@
 - `/quotations` now uses live `getQuotations()` data
 - `/quotations/new` creates quotations with manual items only
 - Customer dropdown only receives active and non-deleted customers
-- VAT is read-only at 15% for now
+- Earlier quotation UI used a fixed VAT preview; TAX-0 requires this wording not be treated as current tax registration or official invoice behavior.
 - Client totals are preview only and PostgreSQL RPC remains source of truth
 - Edit, soft delete, detail, and print were deferred to later quotation phases
 - PR merged into main
@@ -110,7 +110,7 @@
 - Browser print layout was improved after stabilization/product review
 - Server-side PDF generation remains deferred
 - No PDF dependencies were added
-- Company/business info currently uses static `settingsData` fallback; live `company_settings` remains deferred
+- Company/business info currently uses static `settingsData` fallback; live `company_settings` remains deferred, and fallback output must not claim VAT registration or official tax invoice behavior
 - Unauthorized redirects use `/sign-in` (Phase 6 pre-commit audit found an incorrect `/login` redirect and fixed it to match the existing app pattern)
 - Forbidden users see Access Denied inline
 - Fake quick approval/status buttons were removed

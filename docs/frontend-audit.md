@@ -13,7 +13,7 @@ The frontend is built with Next.js 16 (App Router) and structured systematically
     - `dashboard/`: Executive dashboard overview.
     - `customers/`: Customer management interface.
     - `quotations/`: Quotations list and detail views.
-    - `invoices/`: Billing and tax invoices.
+    - `invoices/`: Billing documents. Official tax invoice behavior remains future/deferred.
     - `payments/`: Payment tracking.
     - `projects/`: Project command center.
     - `suppliers/`: Supplier network.
@@ -38,7 +38,7 @@ The frontend is built with Next.js 16 (App Router) and structured systematically
 | `/quotations/[id]` | `src/app/(dashboard)/quotations/[id]/page.tsx` | Quotation details | `quotationsData` | `StatusBadge` | Navigation back/PDF/Edit |
 | `/quotations/[id]/pdf` | `src/app/(dashboard)/quotations/[id]/pdf/page.tsx` | Print-ready A4 Quotation | `quotationsData` | None | `window.print()` trigger |
 | `/invoices` | `src/app/(dashboard)/invoices/page.tsx` | Manage invoices | `invoicesData` | `PageHeader`, `KpiCard`, `StatusBadge` | Side-panel detail view on row click |
-| `/invoices/[id]/pdf` | `src/app/(dashboard)/invoices/[id]/pdf/page.tsx` | Print-ready A4 ZATCA Invoice | `invoicesData` | None | `window.print()` trigger |
+| `/invoices/[id]/pdf` | `src/app/(dashboard)/invoices/[id]/pdf/page.tsx` | Print-ready A4 commercial invoice preview; not a ZATCA/FATOORA tax invoice | `invoicesData` | None | `window.print()` trigger |
 | `/payments` | `src/app/(dashboard)/payments/page.tsx` | Track incoming payments | `paymentsData` | `PageHeader`, `FilterBar`, `DataTable`, `StatusBadge`, `KpiCard` | Filtering dropdowns (visual only) |
 | `/projects` | `src/app/(dashboard)/projects/page.tsx` | Command center for events | `projectsData` | `PageHeader`, `StatusBadge` | Split-screen detail view with task toggles |
 | `/suppliers` | `src/app/(dashboard)/suppliers/page.tsx` | Vendor management | `suppliersData` | `PageHeader`, `FilterBar`, `StatusBadge` | Split-screen detail view on row click |
@@ -99,11 +99,11 @@ The frontend is built with Next.js 16 (App Router) and structured systematically
 ## 4. Data Layer Analysis
 The application entirely depends on mock static files simulating API responses.
 - **`customers.ts`**: Array of customer objects with company name, contact, revenue.
-- **`invoices.ts`**: Invoices referencing quotation IDs, line items, VAT, and ZATCA status.
+- **`invoices.ts`**: Demo invoices referencing quotation IDs and line items. Official VAT/ZATCA behavior is not implemented.
 - **`payments.ts`**: Financial records tracking payment method and invoice references.
 - **`projects.ts`**: Complex objects containing execution tasks, checklists, budget, and timeline.
 - **`quotations.ts`**: Line item definitions with categories, unit prices, and quantities.
-- **`settings.ts`**: Singleton object mapping company profiles, legal (CR/VAT), finance rules, and banking details.
+- **`settings.ts`**: Legacy static fallback for company profile, CR, finance rules, and banking details. Live Company Settings and future document snapshots should replace this for legal/tax document output.
 - **`suppliers.ts`**: Third-party vendor database with service types and compliance ratings.
 
 ---
@@ -132,7 +132,7 @@ The print system uses standard CSS `@media print` queries combined with HTML/CSS
 - **Pages**: `/quotations/[id]/pdf` and `/invoices/[id]/pdf`.
 - **Wrapper**: Uses `.a4-page` CSS class which sets exact dimensions (`210mm x 297mm`) and shadows for web preview.
 - **Trigger**: Implements `window.print()` via a floating 'Print PDF' button which is hidden via `.no-print` class during the actual print cycle.
-- **ZATCA Compliance**: Tax invoice template incorporates placeholder structure for ZATCA QR codes and enforces 15% VAT split logic inside the frontend rendering phase.
+- **Tax/ZATCA status**: Current print output must not claim official Tax Invoice, VAT 15%, ZATCA compliance, or FATOORA Phase 2 integration while Company Settings is `not_registered`. Official tax invoice behavior is deferred until VAT registration is confirmed, CS-B document snapshots exist, and accountant/ZATCA review is complete.
 
 ---
 

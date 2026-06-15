@@ -9,7 +9,7 @@ export const invoicesData: Invoice[] = [
     dueDate: "2023-11-23",
     amount: "177,100.00",
     status: "sent",
-    type: "Tax Invoice",
+    type: "Commercial Invoice",
     relatedQuote: "QT-2023-1104",
     quotationId: "QT-2023-1104",
     items: [
@@ -47,7 +47,7 @@ export const invoicesData: Invoice[] = [
     dueDate: "2023-11-19",
     amount: "64,400.00",
     status: "paid",
-    type: "Tax Invoice",
+    type: "Commercial Invoice",
     relatedQuote: "QT-2023-10-046",
     quotationId: "QT-2023-10-046",
     items: []
@@ -60,7 +60,7 @@ export const invoicesData: Invoice[] = [
     dueDate: "2023-10-15",
     amount: "450,000.00",
     status: "overdue",
-    type: "Tax Invoice",
+    type: "Commercial Invoice",
     relatedQuote: "QT-2023-09-012",
     quotationId: "QT-2023-09-012",
     items: []
@@ -73,7 +73,7 @@ export const invoicesData: Invoice[] = [
     dueDate: "2023-11-24",
     amount: "215,050.00",
     status: "sent",
-    type: "Tax Invoice",
+    type: "Commercial Invoice",
     relatedQuote: "QT-2023-10-049",
     quotationId: "QT-2023-10-049",
     items: []

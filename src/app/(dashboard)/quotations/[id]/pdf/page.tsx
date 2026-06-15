@@ -72,7 +72,7 @@ export default async function QuotationPdfPage({
                 <span className="font-semibold text-on-surface">CR:</span> {settingsData.legal.cr}
               </p>
               <p>
-                <span className="font-semibold text-on-surface">VAT:</span> {settingsData.legal.vat}
+                <span className="font-semibold text-on-surface">Tax/VAT Status:</span> Not registered
               </p>
             </div>
             <div className="mt-2 text-[12px]">
@@ -153,7 +153,7 @@ export default async function QuotationPdfPage({
                   </span>
                 </th>
                 <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase w-20 text-right">
-                  VAT {quotation.vatRate}%
+                  Tax/VAT
                 </th>
                 <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase w-32 text-right">
                   Total
@@ -182,7 +182,8 @@ export default async function QuotationPdfPage({
                     {formatMoney(item.unitPrice)}
                   </td>
                   <td className="py-4 px-2 align-top text-right text-[12px] text-on-surface-variant">
-                    {formatMoney(item.vat)}
+                    {/* TODO CS-B: show item.vat from the document snapshot when VAT registration is enabled. */}
+                    Not applied
                   </td>
                   <td className="py-4 px-2 align-top text-right font-medium">
                     {formatMoney(item.total)}
@@ -227,9 +228,9 @@ export default async function QuotationPdfPage({
               </span>
             </div>
             <div className="flex justify-between py-2 border-b border-outline-variant/30 text-[14px]">
-              <span className="text-on-surface-variant">Total VAT ({quotation.vatRate}%):</span>
+              <span className="text-on-surface-variant">Tax/VAT:</span>
               <span className="text-on-surface">
-                {formatMoney(quotation.vatAmount)} SAR
+                Not applied
               </span>
             </div>
             <div className="flex justify-between py-3 border-b-2 border-primary-container text-[20px] font-semibold text-primary-container mt-2">

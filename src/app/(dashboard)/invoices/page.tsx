@@ -2,12 +2,24 @@
 
 import PageHeader from "@/components/ui/PageHeader";
 import KpiCard from "@/components/ui/KpiCard";
-import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { Plus, Filter, Download, Receipt, AlertCircle, CheckCircle2, QrCode } from "lucide-react";
+import { Plus, Filter, Download, Receipt, AlertCircle, CheckCircle2 } from "lucide-react";
 import { invoicesData } from "@/lib/data/invoices";
 import { useState } from "react";
 import Link from "next/link";
+import type { InvoiceStatus } from "@/types";
+
+const invoiceStatusBadgeVariant = {
+  draft: "draft",
+  sent: "sent",
+  paid: "paid",
+  partial: "pending",
+  overdue: "overdue",
+  cancelled: "rejected",
+} as const satisfies Record<
+  InvoiceStatus,
+  "draft" | "sent" | "paid" | "pending" | "overdue" | "rejected"
+>;
 
 export default function InvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
@@ -18,7 +30,7 @@ export default function InvoicesPage() {
     <div className="flex flex-col h-full">
       <PageHeader
         title="Invoices"
-        subtitle="Manage billing, tax invoices, and payment tracking."
+        subtitle="Manage billing documents and payment tracking."
       >
         <button className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-low px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors">
           <Download size={18} />
@@ -124,7 +136,7 @@ export default function InvoicesPage() {
                       {inv.amount}
                     </td>
                     <td className="px-4 py-4">
-                      <StatusBadge variant={inv.status as any}>
+                      <StatusBadge variant={invoiceStatusBadgeVariant[inv.status]}>
                         {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
                       </StatusBadge>
                     </td>
@@ -166,8 +178,8 @@ export default function InvoicesPage() {
                   </div>
                 </div>
                 <div className="w-16 h-16 border border-outline-variant bg-white rounded flex items-center justify-center flex-col text-center">
-                  <QrCode size={24} className="text-outline mb-1" />
-                  <span className="text-[8px] font-bold text-outline uppercase">ZATCA</span>
+                  <Receipt size={24} className="text-outline mb-1" />
+                  <span className="text-[8px] font-bold text-outline uppercase">Preview</span>
                 </div>
               </div>
 
@@ -186,7 +198,7 @@ export default function InvoicesPage() {
                   </div>
                   <div>
                     <div className="text-[12px] text-on-surface-variant mb-1">Status</div>
-                    <StatusBadge variant={activeInvoice.status as any}>
+                    <StatusBadge variant={invoiceStatusBadgeVariant[activeInvoice.status]}>
                       {activeInvoice.status.charAt(0).toUpperCase() + activeInvoice.status.slice(1)}
                     </StatusBadge>
                   </div>

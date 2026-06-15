@@ -9,7 +9,7 @@ export const settingsData: Settings = {
   },
   legal: {
     cr: "1010123456",
-    vat: "300123456700003",
+    vat: "Not registered",
   },
   bank: {
     name: "Al Rajhi Bank",
@@ -18,7 +18,7 @@ export const settingsData: Settings = {
   },
   finance: {
     currency: "SAR",
-    vatPercent: 15,
+    vatPercent: 0,
     terms: "Payment is due within 30 days of invoice date. Late payments may be subject to a 2% monthly fee. Goods remain property of G7 BLUE until full payment."
   }
 };

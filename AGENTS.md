@@ -77,7 +77,7 @@ Never skip review gates for SQL, migrations, RLS, RPC, triggers, grants/revokes,
 ## Quotation / RPC Lessons
 
 - Quotation numbers use `QT-YYYY-0001`.
-- VAT is a 15% snapshot per document.
+- VAT is a document-level snapshot when VAT behavior is valid for that document; after CS-A, future VAT values must come from Company Settings and document snapshots, not hardcoded current-state text.
 - Discount applies before VAT.
 - `quotation_items.vat` stores VAT amount, not VAT rate.
 - In PL/pgSQL `RETURNS TABLE` functions, qualify column names with table aliases to avoid ambiguity with output variables.

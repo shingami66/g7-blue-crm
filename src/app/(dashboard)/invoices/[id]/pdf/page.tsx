@@ -1,10 +1,10 @@
 "use client";
 
-import { Printer, QrCode } from "lucide-react";
+import { Printer } from "lucide-react";
 import { useParams, notFound } from "next/navigation";
 import { invoicesData } from "@/lib/data/invoices";
 
-export default function TaxInvoicePdfPage() {
+export default function InvoicePdfPage() {
   const params = useParams();
   const id = params.id as string;
   const invoice = invoicesData.find((i) => i.id === id);
@@ -12,9 +12,6 @@ export default function TaxInvoicePdfPage() {
   if (!invoice) {
     notFound();
   }
-
-  const subtotal = parseFloat(invoice.amount.replace(/,/g, "")) / 1.15;
-  const vat = parseFloat(invoice.amount.replace(/,/g, "")) - subtotal;
 
   const amountInWords = "One Hundred Seventy-Seven Thousand, One Hundred Saudi Riyals Only.";
 
@@ -56,8 +53,8 @@ export default function TaxInvoicePdfPage() {
               <strong className="font-semibold text-on-surface">CR No:</strong> 1010123456
             </p>
             <p className="text-on-surface-variant">
-              <strong className="font-semibold text-on-surface">VAT No:</strong>{" "}
-              300123456700003
+              <strong className="font-semibold text-on-surface">Tax/VAT Status:</strong>{" "}
+              Not registered
             </p>
           </div>
         </header>
@@ -66,13 +63,11 @@ export default function TaxInvoicePdfPage() {
         <div className="mb-10">
           <div className="flex justify-between items-end mb-8">
             <h2 className="text-[36px] font-bold text-primary uppercase tracking-tight">
-              Tax Invoice
+              Commercial Invoice
             </h2>
-            {/* ZATCA QR Code Placeholder */}
-            <div className="border border-outline-variant p-2 rounded bg-surface w-24 h-24 flex items-center justify-center flex-col text-center">
-              <QrCode size={36} className="text-outline mb-1" />
-              <span className="text-[8px] text-outline leading-tight uppercase font-semibold">
-                ZATCA<br />Compliant
+            <div className="border border-outline-variant p-2 rounded bg-surface w-28 h-24 flex items-center justify-center flex-col text-center">
+              <span className="text-[9px] text-outline leading-tight uppercase font-semibold">
+                Commercial<br />Preview
               </span>
             </div>
           </div>
@@ -92,7 +87,7 @@ export default function TaxInvoicePdfPage() {
                 <strong className="font-semibold text-on-surface">Attn:</strong> Finance Department
               </p>
               <p className="text-[14px] text-on-surface-variant">
-                <strong className="font-semibold text-on-surface">Customer VAT:</strong> 310987654300003
+                <strong className="font-semibold text-on-surface">Customer Tax Details:</strong> Not captured
               </p>
             </div>
 
@@ -136,7 +131,7 @@ export default function TaxInvoicePdfPage() {
                 <th className="py-3 px-4 text-[12px] font-semibold text-on-surface-variant uppercase text-right w-32">
                   Unit Price<br /><span className="text-[10px] font-normal">(SAR)</span>
                 </th>
-                <th className="py-3 px-4 text-[12px] font-semibold text-on-surface-variant uppercase text-right w-24">VAT 15%</th>
+                <th className="py-3 px-4 text-[12px] font-semibold text-on-surface-variant uppercase text-right w-24">Tax/VAT</th>
                 <th className="py-3 px-4 text-[12px] font-semibold text-on-surface-variant uppercase text-right w-32">
                   Total<br /><span className="text-[10px] font-normal">(SAR)</span>
                 </th>
@@ -155,7 +150,7 @@ export default function TaxInvoicePdfPage() {
                     {item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
                   <td className="py-4 px-4 text-on-surface text-right">
-                    {item.vat.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    Not applied
                   </td>
                   <td className="py-4 px-4 text-on-surface text-right font-medium">
                     {item.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -199,15 +194,15 @@ export default function TaxInvoicePdfPage() {
           <div>
             <div className="space-y-3 pt-2">
               <div className="flex justify-between items-center text-[14px]">
-                <span className="text-on-surface-variant">Subtotal (Excl. VAT)</span>
+                <span className="text-on-surface-variant">Invoice Amount</span>
                 <span className="text-on-surface">
-                  {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })} SAR
+                  {invoice.amount} SAR
                 </span>
               </div>
               <div className="flex justify-between items-center text-[14px] border-b border-surface-variant pb-3">
-                <span className="text-on-surface-variant">Total VAT (15%)</span>
+                <span className="text-on-surface-variant">Tax/VAT</span>
                 <span className="text-on-surface">
-                  {vat.toLocaleString(undefined, { minimumFractionDigits: 2 })} SAR
+                  Not applied
                 </span>
               </div>
               <div className="flex justify-between items-center py-2 bg-surface px-3 -mx-3">
