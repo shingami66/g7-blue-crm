@@ -13,12 +13,14 @@ import {
   Settings,
   Menu,
   X,
+  BriefcaseBusiness,
 } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Customers", href: "/customers", icon: Users },
+  { label: "Services", href: "/services", icon: BriefcaseBusiness },
   { label: "Quotations", href: "/quotations", icon: FileText },
   { label: "Invoices", href: "/invoices", icon: Receipt },
   { label: "Projects", href: "/projects", icon: FolderKanban },
