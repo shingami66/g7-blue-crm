@@ -10,6 +10,7 @@ import type {
   CreateServiceInput,
   UpdateServiceInput,
 } from "./types";
+import { getServiceById } from "./queries";
 
 export type ActionResult<T = void> = {
   success: boolean;
@@ -50,7 +51,6 @@ function serviceUpdatePayload(
 ) {
   const updates: Record<string, unknown> = {};
   const allowedFields = [
-    "customer_id",
     "service_title",
     "event_name",
     "event_type",
@@ -145,9 +145,32 @@ export async function createService(
 export async function updateService(
   id: string,
   input: unknown
-): Promise<ActionResult> {
+): Promise<ActionResult<{ id: string }>> {
   try {
     const user = await requirePermission("services:write");
+
+    const forbiddenFields = [
+      "customer_id",
+      "customerId",
+      "service_number",
+      "serviceNumber",
+      "status",
+      "created_by",
+      "updated_by",
+      "deleted_at",
+      "createdAt",
+      "updatedAt",
+      "deletedAt",
+    ];
+
+    if (input && typeof input === "object") {
+      for (const field of forbiddenFields) {
+        if (field in input) {
+          return { success: false, error: "This field cannot be edited." };
+        }
+      }
+    }
+
     const parsed = updateServiceSchema.safeParse(input);
 
     if (!parsed.success) {
@@ -156,6 +179,15 @@ export async function updateService(
 
     if (parsed.data.status !== undefined) {
       return { success: false, error: "Service status changes are deferred." };
+    }
+
+    const currentService = await getServiceById(id);
+    if (!currentService) {
+      return { success: false, error: "Service not found." };
+    }
+
+    if (currentService.status !== "Inquiry" && currentService.status !== "Quoted") {
+      return { success: false, error: `Editing is not allowed when service status is ${currentService.status}.` };
     }
 
     const updates = serviceUpdatePayload(parsed.data, user.clerk_user_id);
@@ -182,7 +214,7 @@ export async function updateService(
 
     revalidatePath("/services");
     revalidatePath(`/services/${id}`);
-    return { success: true };
+    return { success: true, data: { id } };
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };

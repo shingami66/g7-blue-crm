@@ -3,7 +3,7 @@ import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Edit } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -64,22 +64,35 @@ export default async function ServiceDetailPage({
   return (
     <div className="flex flex-col gap-6 pb-12">
       {/* Top Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href="/services"
-          className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
-        >
-          <ArrowLeft size={18} />
-        </Link>
-        <div>
-          <div className="flex items-center gap-3">
-            <h2 className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight">
-              {service.serviceNumber}
-            </h2>
-            <StatusBadge variant={(STATUS_VARIANT_MAP[service.status as keyof typeof STATUS_VARIANT_MAP] ?? "pending") as React.ComponentProps<typeof StatusBadge>["variant"]}>
-              {service.status}
-            </StatusBadge>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/services"
+            className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
+          >
+            <ArrowLeft size={18} />
+          </Link>
+          <div>
+            <div className="flex items-center gap-3">
+              <h2 className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight">
+                {service.serviceNumber}
+              </h2>
+              <StatusBadge variant={(STATUS_VARIANT_MAP[service.status as keyof typeof STATUS_VARIANT_MAP] ?? "pending") as React.ComponentProps<typeof StatusBadge>["variant"]}>
+                {service.status}
+              </StatusBadge>
+            </div>
           </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {(service.status === "Inquiry" || service.status === "Quoted") && (
+            <Link
+              href={`/services/${service.id}/edit`}
+              className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors"
+            >
+              <Edit size={18} />
+              Edit
+            </Link>
+          )}
         </div>
       </div>
 
