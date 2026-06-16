@@ -5,7 +5,8 @@ import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { Filter } from "lucide-react";
+import { Filter, Plus } from "lucide-react";
+import Link from "next/link";
 import type { Service } from "@/types/service";
 
 const STATUS_VARIANT_MAP: Record<string, string> = {
@@ -36,7 +37,17 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
       <PageHeader
         title="Services"
         subtitle="Manage client services, event bookings, and operational workflow."
-      />
+      >
+        {canWrite && (
+          <Link
+            href="/services/new"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-[14px] font-semibold hover:bg-primary-container transition-colors"
+          >
+            <Plus size={18} />
+            New Service
+          </Link>
+        )}
+      </PageHeader>
 
       <div className="flex-1 flex flex-col min-h-0">
         <FilterBar>
