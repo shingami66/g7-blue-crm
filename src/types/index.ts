@@ -1,6 +1,7 @@
 export * from "./common";
 export * from "./customer";
 export * from "./quotation";
+export * from "./service";
 export * from "./invoice";
 export * from "./payment";
 export * from "./project";

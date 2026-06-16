@@ -14,6 +14,8 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     "customers:write",
     "quotations:read",
     "quotations:write",
+    "services:read",
+    "services:write",
     "invoices:read",
     "payments:read",
     "projects:read",
@@ -27,6 +29,8 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     "customers:write",
     "quotations:read",
     "quotations:write",
+    "services:read",
+    "services:write",
     "invoices:read",
     "payments:read",
     "dashboard:read",
@@ -34,6 +38,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   operations: [
     "customers:read",
     "quotations:read",
+    "services:read",
     "projects:read",
     "projects:write",
     "suppliers:read",
@@ -43,6 +48,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   accountant: [
     "customers:read",
     "quotations:read",
+    "services:read",
     "invoices:read",
     "invoices:write",
     "payments:read",
@@ -53,6 +59,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   viewer: [
     "customers:read",
     "quotations:read",
+    "services:read",
     "invoices:read",
     "payments:read",
     "projects:read",
@@ -88,7 +95,7 @@ export async function getCurrentAppUser() {
     }
 
     return data;
-  } catch (err) {
+  } catch {
     console.error("[getCurrentAppUser] Unexpected error");
     return null;
   }
