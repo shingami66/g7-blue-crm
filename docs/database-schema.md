@@ -3,7 +3,7 @@
 ## Overview
 This document outlines the Supabase PostgreSQL database schema reference for the G7 BLUE CRM backend.
 
-`supabase/schema.sql` is a schema reference snapshot of the verified live Supabase DB shape after manually applied SQL through the Core Security, Quotations RPC, and Company Settings CS-A work. It is not migration tracking, and it should not be treated as proof that `supabase_migrations.schema_migrations` exists. SQL has been applied manually through the Supabase SQL Editor, so migration tracking tables may be absent.
+`supabase/schema.sql` is a schema reference snapshot of the verified live Supabase DB shape after manually applied SQL through the Core Security, Quotations RPC, Company Settings CS-A, and ERP-1 Services DB foundation work. It is not migration tracking, and it should not be treated as proof that `supabase_migrations.schema_migrations` exists. SQL has been applied manually through the Supabase SQL Editor, so migration tracking tables may be absent.
 
 **WARNING: DO NOT apply migrations through the MCP connection.** The current setup is purely local for development. Follow the manual application steps if needed on a live instance.
 
@@ -12,11 +12,11 @@ This document outlines the Supabase PostgreSQL database schema reference for the
 ### Core Entities
 - `app_users`: Server-side app user and RBAC role table keyed by Clerk `clerk_user_id` text. RLS is enabled, but no broad `DEV_ONLY` policy is present by design; access should remain through protected server logic and the Supabase service role.
 - `company_settings`: Singleton seller/master-company settings for CS-A. It stores English and Arabic legal names, CR, TIN, VAT mode, nullable VAT number/effective date, official contact details, national address, bank details, currency, default VAT percent, and default terms. The stable `setting_key='default'` column enforces one active settings row.
-- `number_sequences`: Atomic counters for generated IDs (e.g., QT-2026-0001). Current allowed types are `quotation`, `invoice`, `payment`, and `project`; `service` is not supported until ERP-1 deliberately extends the constraint and `generate_document_number`.
+- `number_sequences`: Atomic counters for generated IDs (e.g., QT-2026-0001). Current allowed types are `quotation`, `invoice`, `payment`, `project`, and `service`. Current prefixes are `QT`, `INV`, `PAY`, `PRJ`, and `SVC`.
 - `customers`: Client database with revenue metrics and soft deletes.
+- `services`: ERP-1 operational unit linked to `customers(id)` with `service_number`, event fields, status, ownership, cancellation reason, timestamps, audit text fields, and soft-delete timestamp. The DB foundation is applied and verified, but app UI/routes/server actions are not implemented yet.
 - `suppliers`: Third-party vendor database.
 - `audit_logs`: Centralized event tracking for actions (`create`, `update`, etc.).
-- Planned `services`: Future operational unit that replaces Projects for new ERP planning. Do not add SQL until ERP-1 review.
 
 ### Financial & Workflow
 - `quotations` / `quotation_items`: Quotes with subtotal/vat/grand_total calculation foundations.
@@ -26,8 +26,9 @@ This document outlines the Supabase PostgreSQL database schema reference for the
 
 ## Relationships
 - Current legacy schema still contains direct Customer → Quotation / Invoice / Project relationships.
+- `services` now exists as the new operational unit linked to `customers(id)`, but quotations are not migrated to `service_id` yet.
 - New ERP planning must follow **Customer Profile → Service → Quotation → Invoice → Payment**.
-- Planned **Service** belongs to a **Customer**.
+- **Service** belongs to a **Customer**.
 - Planned **Quotation** belongs to a **Service** and can keep `customer_id` only for reporting/query convenience.
 - Planned **Invoice** belongs to a **Service** and can reference a **Quotation**.
 - Planned **Payment** must belong to an **Invoice**. Payment is connected to Service through the Invoice.
@@ -36,16 +37,19 @@ This document outlines the Supabase PostgreSQL database schema reference for the
 ## Planned ERP Schema Notes
 
 ### Services
-- Service replaces Project as the operational unit for new ERP work.
-- Planned service number format: `SVC-YYYY-0001`.
-- Service numbering must be generated server-side, not client-side. It is not supported in the current DB yet because `number_sequences.type` and `generate_document_number` do not allow `service`.
-- Planned event date fields: `event_start_date` and nullable `event_end_date`, not only `event_date`.
-- Planned event date constraint: `CHECK (event_end_date IS NULL OR event_end_date >= event_start_date)`.
+- ERP-1 Services DB foundation has been manually applied and verified.
+- Service replaces Project as the operational unit for new ERP work, but legacy `projects` remain for now.
+- Service number format is `SVC-YYYY-0001`.
+- Service numbering is generated server-side through `generate_document_number('service')`.
+- Event date fields are `event_start_date` and nullable `event_end_date`, not only `event_date`.
+- Event date constraint is implemented as `CHECK (event_end_date IS NULL OR (event_start_date IS NOT NULL AND event_end_date >= event_start_date))`.
 - `event_end_date` can be null for single-day events or inquiry-stage records.
 - Event fields should stay flexible at inquiry stage; Saudi partner/business owner should confirm event types.
-- Plan service ownership with `assigned_to` or `sales_owner_id`; exact implementation can be finalized in ERP-1.
+- Service ownership uses `sales_owner_id` at the DB foundation level.
 - Service cancellation requires `cancellation_reason`.
 - If no invoice/payment exists, cancellation can be simple. If invoice/payment exists, cancellation must not silently delete financial records.
+- ERP-1 did not implement app UI/routes/server actions for Services.
+- ERP-1 did not add `service_id` to quotations, invoices, or payments.
 
 ### Quotations
 - Quotations must belong to a Service. Standalone quotations are not allowed in new ERP work.
@@ -65,7 +69,8 @@ This document outlines the Supabase PostgreSQL database schema reference for the
 - Issued/paid financial records must be preserved for auditability.
 
 ### Index Planning
-- Plan indexes on `services.customer_id`, `quotations.service_id`, `invoices.service_id`, `payments.invoice_id`, `payments.service_id` only if stored, and `audit_logs.user_id`.
+- Implemented ERP-1 service indexes: `services.customer_id`, `services.status`, `services.deleted_at`, `services.event_start_date`, `services.sales_owner_id`, and `services.created_at`.
+- Future ERP phases should plan indexes on `quotations.service_id`, `invoices.service_id`, `payments.invoice_id`, `payments.service_id` only if stored, and `audit_logs.user_id`.
 
 ## Data Integrity Constraints
 - **Current Status And Method Checks**: Database `status` and `method` fields use explicit CHECK constraints where they exist. Current `payments.method` values are `bank_transfer`, `cash`, `cheque`, and `online`. Future ERP-4 payment method labels such as Card or Other require an approved schema change before use.
@@ -76,10 +81,10 @@ This document outlines the Supabase PostgreSQL database schema reference for the
 - **Bank Detail Visibility**: Bank details are sensitive. CS-A reads them server-side only for Admin and Accountant; Viewer can read settings without receiving bank values from the server.
 
 ## Numbering Strategy
-Unique Document Numbers (`quotation_number`, `invoice_number`, `payment_number`, `project_number`) are generated using the `number_sequences` table and `generate_document_number(doc_type text)`. Current supported document types are `quotation`, `invoice`, `payment`, and `project`. Planned Service numbers should use `SVC-YYYY-0001` and be generated server-side, but ERP-1 must first extend both the `number_sequences.type` CHECK constraint and `generate_document_number`.
+Unique document numbers (`quotation_number`, `invoice_number`, `payment_number`, `project_number`, `service_number`) are generated using the `number_sequences` table and `generate_document_number(doc_type text)`. Current supported document types are `quotation`, `invoice`, `payment`, `project`, and `service`. Current prefixes are `QT`, `INV`, `PAY`, `PRJ`, and `SVC`; the payment prefix remains `PAY` to preserve verified live DB behavior.
 
 ## Soft Delete Strategy
-Entities like `customers`, `quotations`, `invoices`, and `projects` implement a soft delete pattern using `is_deleted` (boolean) and `deleted_at` (timestamptz). This preserves historical references in financial data while hiding records from the active UI. Future schema should prefer `deleted_at` timestamp over only `is_deleted`, or document any `is_deleted`-only usage as technical debt.
+Entities like `customers`, `quotations`, `invoices`, and `projects` implement a soft delete pattern using `is_deleted` (boolean) and `deleted_at` (timestamptz). `services` currently uses `deleted_at` without `is_deleted`. This preserves historical references in financial data while hiding records from the active UI. Future schema should prefer `deleted_at` timestamp over only `is_deleted`, or document any `is_deleted`-only usage as technical debt.
 
 ## Row Level Security (RLS)
 All tables have Row Level Security enabled. 
@@ -90,6 +95,7 @@ All tables have Row Level Security enabled.
 Currently, the `schema.sql` creates wildcard (`true`) policies for the `authenticated` role. This allows full read/write access to any logged-in user during development.
 > **WARNING:** These `DEV_ONLY_*` policies MUST be replaced with granular tenant-based or role-based access controls before deploying to production.
 > **WARNING:** Server-side masking protects the CS-A UI path, but `DEV_ONLY_company_settings` is still not acceptable for real or semi-real data because direct Supabase Data API exposure may bypass UI masking.
+> **WARNING:** `DEV_ONLY_services` is also fake/dev-data only. Real or semi-real customer/service data remains blocked until production RLS hardening is implemented.
 Production RLS for `company_settings` must be planned explicitly because the table contains bank, legal, CR/TIN, and VAT data.
 
 ## Migration Rollback Procedure

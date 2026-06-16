@@ -1,8 +1,9 @@
 -- G7 BLUE CRM schema reference snapshot.
 --
 -- This file reflects the verified live Supabase DB shape after manually
--- applied SQL through the Core Security, Quotations RPC, and Company Settings
--- CS-A work. It is a reference snapshot, not migration tracking and not an
+-- applied SQL through the Core Security, Quotations RPC, Company Settings
+-- CS-A, and ERP-1 Services work. It is a reference snapshot, not migration
+-- tracking and not an
 -- instruction to auto-apply SQL. SQL has been applied manually through the
 -- Supabase SQL Editor, so supabase_migrations.schema_migrations may not exist.
 
@@ -35,7 +36,7 @@ CREATE TRIGGER update_app_users_updated_at BEFORE UPDATE ON app_users FOR EACH R
 -- 2. Number Sequences
 CREATE TABLE number_sequences (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    type text NOT NULL CHECK (type IN ('quotation', 'invoice', 'payment', 'project')),
+    type text NOT NULL CHECK (type IN ('quotation', 'invoice', 'payment', 'project', 'service')),
     year integer NOT NULL,
     sequence integer NOT NULL DEFAULT 0,
     prefix text NOT NULL,
@@ -120,7 +121,45 @@ CREATE TRIGGER update_customers_updated_at BEFORE UPDATE ON customers FOR EACH R
 COMMENT ON COLUMN customers.created_by IS 'Stores Clerk userId string';
 COMMENT ON COLUMN customers.updated_by IS 'Stores Clerk userId string';
 
--- 5. Suppliers
+-- 5. Services
+CREATE TABLE services (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    service_number text NOT NULL UNIQUE,
+    customer_id uuid NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
+    service_title text NOT NULL,
+    event_name text,
+    event_type text,
+    event_start_date date,
+    event_end_date date,
+    event_location text,
+    description text,
+    estimated_budget numeric(12,2),
+    status text NOT NULL DEFAULT 'Inquiry',
+    sales_owner_id text,
+    cancellation_reason text,
+    deleted_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    created_by text,
+    updated_by text,
+    CONSTRAINT chk_services_service_title_not_blank CHECK (length(trim(service_title)) > 0),
+    CONSTRAINT chk_services_service_number_format CHECK (service_number ~ '^SVC-[0-9]{4}-[0-9]{4}$'),
+    CONSTRAINT chk_services_estimated_budget_nonnegative CHECK (estimated_budget IS NULL OR estimated_budget >= 0),
+    CONSTRAINT chk_services_status CHECK (
+        status IN ('Inquiry', 'Quoted', 'Approved', 'Deposit Paid', 'In Progress', 'Completed', 'Cancelled')
+    ),
+    CONSTRAINT chk_services_event_date_range CHECK (
+        event_end_date IS NULL
+        OR (event_start_date IS NOT NULL AND event_end_date >= event_start_date)
+    ),
+    CONSTRAINT chk_services_cancelled_reason_required CHECK (
+        status <> 'Cancelled'
+        OR (cancellation_reason IS NOT NULL AND length(trim(cancellation_reason)) > 0)
+    )
+);
+CREATE TRIGGER update_services_updated_at BEFORE UPDATE ON services FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 6. Suppliers
 CREATE TABLE suppliers (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     name text NOT NULL,
@@ -141,7 +180,7 @@ CREATE TRIGGER update_suppliers_updated_at BEFORE UPDATE ON suppliers FOR EACH R
 COMMENT ON COLUMN suppliers.created_by IS 'Stores Clerk userId string';
 COMMENT ON COLUMN suppliers.updated_by IS 'Stores Clerk userId string';
 
--- 6. Quotations
+-- 7. Quotations
 CREATE TABLE quotations (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     quotation_number text UNIQUE NOT NULL,
@@ -168,7 +207,7 @@ COMMENT ON COLUMN quotations.vat_rate IS 'Snapshot of the VAT percentage applied
 COMMENT ON COLUMN quotations.created_by IS 'Stores Clerk userId string';
 COMMENT ON COLUMN quotations.updated_by IS 'Stores Clerk userId string';
 
--- 7. Quotation Items
+-- 8. Quotation Items
 CREATE TABLE quotation_items (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     quotation_id uuid REFERENCES quotations(id) ON DELETE CASCADE NOT NULL,
@@ -184,7 +223,7 @@ CREATE TABLE quotation_items (
 );
 CREATE TRIGGER update_quotation_items_updated_at BEFORE UPDATE ON quotation_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 8. Invoices
+-- 9. Invoices
 CREATE TABLE invoices (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     invoice_number text UNIQUE NOT NULL,
@@ -208,7 +247,7 @@ CREATE TRIGGER update_invoices_updated_at BEFORE UPDATE ON invoices FOR EACH ROW
 COMMENT ON COLUMN invoices.created_by IS 'Stores Clerk userId string';
 COMMENT ON COLUMN invoices.updated_by IS 'Stores Clerk userId string';
 
--- 9. Invoice Items
+-- 10. Invoice Items
 CREATE TABLE invoice_items (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     invoice_id uuid REFERENCES invoices(id) ON DELETE CASCADE NOT NULL,
@@ -223,7 +262,7 @@ CREATE TABLE invoice_items (
 );
 CREATE TRIGGER update_invoice_items_updated_at BEFORE UPDATE ON invoice_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 10. Payments
+-- 11. Payments
 CREATE TABLE payments (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     payment_number text UNIQUE NOT NULL,
@@ -245,7 +284,7 @@ CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments FOR EACH ROW
 COMMENT ON COLUMN payments.created_by IS 'Stores Clerk userId string';
 COMMENT ON COLUMN payments.updated_by IS 'Stores Clerk userId string';
 
--- 11. Projects
+-- 12. Projects
 CREATE TABLE projects (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     project_number text UNIQUE NOT NULL,
@@ -268,7 +307,7 @@ CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects FOR EACH ROW
 COMMENT ON COLUMN projects.created_by IS 'Stores Clerk userId string';
 COMMENT ON COLUMN projects.updated_by IS 'Stores Clerk userId string';
 
--- 12. Project Tasks
+-- 13. Project Tasks
 CREATE TABLE project_tasks (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id uuid REFERENCES projects(id) ON DELETE CASCADE NOT NULL,
@@ -279,7 +318,7 @@ CREATE TABLE project_tasks (
 );
 CREATE TRIGGER update_project_tasks_updated_at BEFORE UPDATE ON project_tasks FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 13. Audit Logs
+-- 14. Audit Logs
 CREATE TABLE audit_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     action text NOT NULL CHECK (action IN ('create', 'update', 'delete', 'restore', 'status_change', 'payment_recorded')),
@@ -301,8 +340,8 @@ DECLARE
     seq_record record;
     formatted_number text;
 BEGIN
-    IF doc_type NOT IN ('quotation', 'invoice', 'payment', 'project') THEN
-        RAISE EXCEPTION 'Invalid doc_type: %. Allowed values are: quotation, invoice, payment, project', doc_type;
+    IF doc_type IS NULL OR doc_type NOT IN ('quotation', 'invoice', 'payment', 'project', 'service') THEN
+        RAISE EXCEPTION 'Invalid doc_type: %. Allowed values are: quotation, invoice, payment, project, service', doc_type;
     END IF;
 
     current_year := extract(year from current_date);
@@ -317,12 +356,14 @@ BEGIN
             WHEN doc_type = 'invoice'   THEN 'INV'
             WHEN doc_type = 'payment'   THEN 'PAY'
             WHEN doc_type = 'project'   THEN 'PRJ'
+            WHEN doc_type = 'service'   THEN 'SVC'
         END,
         CASE
             WHEN doc_type = 'quotation' THEN 'QT-YYYY-0001'
             WHEN doc_type = 'invoice'   THEN 'INV-YYYY-0001'
             WHEN doc_type = 'payment'   THEN 'PAY-YYYY-0001'
             WHEN doc_type = 'project'   THEN 'PRJ-YYYY-0001'
+            WHEN doc_type = 'service'   THEN 'SVC-YYYY-0001'
         END
     )
     ON CONFLICT (type, year) DO UPDATE
@@ -745,6 +786,13 @@ CREATE INDEX idx_app_users_is_active ON app_users(is_active);
 CREATE INDEX idx_customers_status ON customers(status);
 CREATE INDEX idx_customers_created_at ON customers(created_at);
 
+CREATE INDEX idx_services_customer_id ON services(customer_id);
+CREATE INDEX idx_services_status ON services(status);
+CREATE INDEX idx_services_deleted_at ON services(deleted_at);
+CREATE INDEX idx_services_event_start_date ON services(event_start_date);
+CREATE INDEX idx_services_sales_owner_id ON services(sales_owner_id);
+CREATE INDEX idx_services_created_at ON services(created_at);
+
 CREATE INDEX idx_suppliers_created_at ON suppliers(created_at);
 
 CREATE INDEX idx_quotations_customer_id ON quotations(customer_id);
@@ -780,6 +828,7 @@ ALTER TABLE app_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE number_sequences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE company_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quotations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quotation_items ENABLE ROW LEVEL SECURITY;
@@ -800,6 +849,8 @@ ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "DEV_ONLY_number_sequences" ON number_sequences FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "DEV_ONLY_company_settings" ON company_settings FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "DEV_ONLY_customers" ON customers FOR ALL TO authenticated USING (true) WITH CHECK (true);
+-- DEV/fake-data only. This policy is not production-safe for services.
+CREATE POLICY "DEV_ONLY_services" ON services FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "DEV_ONLY_suppliers" ON suppliers FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "DEV_ONLY_quotations" ON quotations FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "DEV_ONLY_quotation_items" ON quotation_items FOR ALL TO authenticated USING (true) WITH CHECK (true);

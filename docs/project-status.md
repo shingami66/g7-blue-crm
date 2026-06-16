@@ -138,17 +138,31 @@
 - SQL migration was reviewed for manual apply; SQL must never be applied automatically by agents.
 - CS-A was committed on `main` as `8dc380f feat: implement Company Settings CS-A`.
 
+### ✅ ERP-1 — Services DB Foundation
+- ERP-1 Services migration was manually applied in Supabase SQL Editor and verified.
+- `services` now exists as the new operational unit linked to `customers(id)`.
+- Service numbering is supported through `generate_document_number('service')` with `SVC-YYYY-0001`.
+- Existing prefixes are preserved: `QT`, `INV`, `PAY`, `PRJ`, and `SVC`.
+- `schema.sql` now reflects the verified post-ERP-1 DB state.
+- Services app UI/routes/server actions are not implemented yet.
+- Quotations are not migrated to `service_id` yet.
+- Invoices and payments are not changed yet.
+- Legacy `projects` remain for now.
+- `DEV_ONLY_services` is fake/dev-data only and not production-safe.
+
 ## 4. Current Active Phase
 
-### 🚧 Post-CS-A Planning / TAX-0 / ERP-0
-Status: Planning and documentation correction
+### 🚧 Post-ERP-1 DB Foundation / ERP-2 Planning
+Status: Services DB foundation applied; app implementation still pending
 
-CS-A is committed on `main`. The next work should stay in planning/report-only mode until TAX-0 cleanup is complete or explicitly accepted as a known risk.
+CS-A and the ERP-1 Services DB foundation are complete at the database level.
 
-After CS-A, the next priority is preserving the locked workflow:
+The locked workflow remains:
 Customer Profile → Service → Quotation → Invoice → Payment.
 
-Implementation must not proceed into ERP phases until premature tax/ZATCA wording is cleaned up in TAX-0 or explicitly accepted as a documented risk.
+The Services table exists, but Services UI/routes/server actions and Service-linked quotation/invoice/payment changes are still deferred to later ERP work.
+
+Real or semi-real data is still blocked until production RLS hardening replaces DEV_ONLY policies.
 
 ## 5. Deferred Decisions
 
@@ -172,7 +186,7 @@ Current decision gates before ERP implementation:
 - **Payments:** Payment must link to an Invoice. Payment is connected to Service through the Invoice. If `service_id` is also stored on payments for query convenience, it must match the invoice's `service_id` and be enforced in the data layer, preferably by database design. If a customer pays before an invoice exists, the UI must require creating a Deposit Invoice first or prevent payment recording.
 - **Deposit flow:** Deposit amount must be greater than `0` and less than or equal to the approved quotation total or remaining uninvoiced balance. Deposit is flexible, not fixed at 50%. Deposit Invoice is created manually after quotation approval. Deposit payment changes Service status to `Deposit Paid`.
 - **Event dates:** Prefer `event_start_date` and nullable `event_end_date`, not only `event_date`, to support single-day and multi-day events. `event_end_date` may be null for single-day or inquiry cases. Planned DB constraint: `CHECK (event_end_date IS NULL OR event_end_date >= event_start_date)`. Event fields should stay flexible at inquiry stage; Saudi partner/business owner should confirm event types.
-- **Service numbering:** Use `SVC-YYYY-0001`. Service numbers must be generated server-side. Do not implement numbering before ERP-1.
+- **Service numbering:** Use `SVC-YYYY-0001`. Service numbers must be generated server-side. ERP-1 DB foundation now supports this through `generate_document_number('service')`; app usage is still pending.
 - **Quotation approval permission:** Approval requires `quotations:approve`. Recommended roles are Admin and Manager. Sales can create/send quotations but cannot approve unless explicitly granted. Do not treat `quotations:write` as approval permission.
 - **Quotation expiry:** `valid_until` or `expiry_date` must be on or after issue date. Expired quotations cannot be approved without renewal/extension or an authorized override. Exact override behavior remains deferred.
 - **Service cancellation:** Cancellation requires `cancellation_reason`. If no invoice/payment exists, cancellation can be simple. If invoice/payment exists, cancellation must not silently delete financial records; future void/refund/credit-note flow is required.
@@ -189,4 +203,4 @@ Current decision gates before ERP implementation:
 - Quotation creation works after manual Supabase apply.
 - Company Settings CS-A is committed on `main`.
 - Financial totals remain server-side/database-side via PostgreSQL RPC.
-- Current work should focus on docs/agent guidance, TAX-0 cleanup, and ERP-0/ERP-1 planning before implementation.
+- Current work should focus on Services app implementation planning, Service-linked quotations, and production RLS hardening before any real or semi-real data use.

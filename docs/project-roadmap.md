@@ -15,7 +15,7 @@ After every successful merge:
 1. Docs + agent guidance corrections
 2. TAX-0 — cleanup premature tax/ZATCA wording before ERP implementation
 3. ERP-0 — planning/report-only workflow review
-4. ERP-1 — Services as the operational unit
+4. ERP-1 — Services app layer after DB foundation
 5. ERP-2 — Service-linked Quotations
 6. ERP-3 — Service-linked Invoices
 7. ERP-4 — Invoice-linked Payments
@@ -23,7 +23,7 @@ After every successful merge:
 9. Pre-demo security check if demo uses real or semi-real data
 10. Customer Profile hub expansion and Activity planning
 
-Do not start ERP implementation until TAX-0 cleanup is complete or explicitly accepted as a known risk. ERP-0 may happen before TAX-0 only as planning/report-only work.
+TAX-0 cleanup is complete, so ERP database implementation can proceed. However, real or semi-real company/client data remains blocked until production RLS hardening replaces all DEV_ONLY policies.
 
 ## 3. Completion Checklist
 
@@ -239,24 +239,29 @@ Checklist:
 - [ ] Produce implementation plan only; do not implement in ERP-0 unless explicitly approved.
 
 ### Phase ERP-1 — Services
-Status: Planned
+Status: DB foundation applied and verified; app UI/routes/server actions pending
 
 Checklist:
-- [ ] Add Service as the operational unit linked to Customer Profile.
-- [ ] Use Service status machine: Inquiry, Quoted, Approved, Deposit Paid, In Progress, Completed, Cancelled.
-- [ ] Apply status exit criteria: Inquiry = service/request captured; Quoted = quotation created/sent; Approved = customer approval recorded; Deposit Paid = deposit invoice payment recorded; In Progress = operations started; Completed = service delivered; Cancelled = cancellation reason recorded.
-- [ ] Do not add a separate Confirmed status.
-- [ ] Prefer `event_start_date` and nullable `event_end_date` instead of only `event_date`.
-- [ ] Plan DB constraint: `CHECK (event_end_date IS NULL OR event_end_date >= event_start_date)`.
+- [x] Add `services` table as the DB foundation for the operational unit linked to Customer Profile.
+- [x] Use Service status machine in DB constraint: Inquiry, Quoted, Approved, Deposit Paid, In Progress, Completed, Cancelled.
+- [x] Do not add a separate Confirmed status.
+- [x] Use `event_start_date` and nullable `event_end_date` instead of only `event_date`.
+- [x] Add DB constraint: `CHECK (event_end_date IS NULL OR (event_start_date IS NOT NULL AND event_end_date >= event_start_date))`.
 - [ ] Keep event fields flexible at inquiry stage.
 - [ ] Confirm event types with Saudi partner/business owner while avoiding immediate schema rework.
-- [ ] Plan service number format `SVC-YYYY-0001`.
-- [ ] Generate service numbers server-side, not client-side.
-- [ ] Plan `assigned_to` or `sales_owner_id`; exact implementation can be finalized during ERP-1.
-- [ ] Require `cancellation_reason` when Service is cancelled.
+- [x] Add service number format `SVC-YYYY-0001`.
+- [x] Generate service numbers server-side through `generate_document_number('service')`.
+- [x] Preserve existing prefixes: `QT`, `INV`, `PAY`, `PRJ`; add `SVC`.
+- [x] Add `sales_owner_id` planning field at DB level.
+- [x] Require `cancellation_reason` when Service is cancelled.
 - [ ] If no invoice/payment exists, allow simple cancellation.
 - [ ] If invoice/payment exists, cancellation must not silently delete financial records.
-- [ ] Integration checkpoint after ERP-1: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
+- [x] Add `DEV_ONLY_services` for fake/dev data only.
+- [x] Verify ERP-1 Services DB state after manual Supabase SQL Editor apply.
+- [x] Update `supabase/schema.sql` after post-apply verification.
+- [ ] Implement Services UI/routes/server actions.
+- [ ] Link Services from Customer Profile.
+- [ ] Integration checkpoint after ERP-1 app layer: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
 
 ### Phase ERP-2 — Service-linked Quotations
 Status: Planned
@@ -264,6 +269,7 @@ Status: Planned
 Checklist:
 - [ ] Quotations must belong to a Service.
 - [ ] No standalone quotation creation.
+- [ ] Migrate quotation schema/app flow to use `service_id`; not done in ERP-1 DB foundation.
 - [ ] Customer Profile shows quotations through Services.
 - [ ] Approval requires `quotations:approve`.
 - [ ] Recommended approval roles: Admin and Manager.
@@ -438,7 +444,7 @@ Checklist:
 Status: Deferred as productivity enhancement, not blocking core financial demo
 
 Checklist:
-- [ ] `services` table migration
+- [ ] Catalog-style service item table migration if still needed; this is separate from the ERP-1 operational `services` table.
 - [ ] services CRUD
 - [ ] services permissions
 - [ ] `/services` page
