@@ -7,6 +7,7 @@ import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Filter, Plus } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Service } from "@/types/service";
 
 const STATUS_VARIANT_MAP: Record<string, string> = {
@@ -25,6 +26,7 @@ interface ServicesClientProps {
 }
 
 export default function ServicesClient({ services, canWrite }: ServicesClientProps) {
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState("all");
 
   const filtered = services.filter((s) => {
@@ -101,7 +103,8 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
               {filtered.map((service) => (
                 <tr
                   key={service.id}
-                  className="hover:bg-surface-container-low/50 transition-colors"
+                  className="hover:bg-surface-container-low/50 transition-colors cursor-pointer"
+                  onClick={() => router.push(`/services/${service.id}`)}
                 >
                   <td className="px-4 py-4 font-mono font-semibold text-primary">
                     {service.serviceNumber}
