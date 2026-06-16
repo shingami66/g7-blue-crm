@@ -1,17 +1,18 @@
 # Database Schema & Supabase Setup (Local Only)
 
 ## Overview
-This document outlines the Supabase PostgreSQL database schema generated from the frontend TypeScript types. The schema acts as the single source of truth for the G7 BLUE CRM backend.
+This document outlines the Supabase PostgreSQL database schema reference for the G7 BLUE CRM backend.
 
-`supabase/schema.sql` has been updated after the CS-A Company Settings migration and reflects the committed CS-A schema reference.
+`supabase/schema.sql` is a schema reference snapshot of the verified live Supabase DB shape after manually applied SQL through the Core Security, Quotations RPC, and Company Settings CS-A work. It is not migration tracking, and it should not be treated as proof that `supabase_migrations.schema_migrations` exists. SQL has been applied manually through the Supabase SQL Editor, so migration tracking tables may be absent.
 
 **WARNING: DO NOT apply migrations through the MCP connection.** The current setup is purely local for development. Follow the manual application steps if needed on a live instance.
 
 ## Tables
 
 ### Core Entities
+- `app_users`: Server-side app user and RBAC role table keyed by Clerk `clerk_user_id` text. RLS is enabled, but no broad `DEV_ONLY` policy is present by design; access should remain through protected server logic and the Supabase service role.
 - `company_settings`: Singleton seller/master-company settings for CS-A. It stores English and Arabic legal names, CR, TIN, VAT mode, nullable VAT number/effective date, official contact details, national address, bank details, currency, default VAT percent, and default terms. The stable `setting_key='default'` column enforces one active settings row.
-- `number_sequences`: Atomic counters for generated IDs (e.g., QT-2026-0001).
+- `number_sequences`: Atomic counters for generated IDs (e.g., QT-2026-0001). Current allowed types are `quotation`, `invoice`, `payment`, and `project`; `service` is not supported until ERP-1 deliberately extends the constraint and `generate_document_number`.
 - `customers`: Client database with revenue metrics and soft deletes.
 - `suppliers`: Third-party vendor database.
 - `audit_logs`: Centralized event tracking for actions (`create`, `update`, etc.).
@@ -19,8 +20,8 @@ This document outlines the Supabase PostgreSQL database schema generated from th
 
 ### Financial & Workflow
 - `quotations` / `quotation_items`: Quotes with subtotal/vat/grand_total calculation foundations.
-- `invoices` / `invoice_items`: Final billing referencing quotes.
-- `payments`: Financial tracking of invoice payments.
+- `invoices` / `invoice_items`: Current invoice tables referencing quotes. `invoices.type` exists as text without a CHECK constraint; ERP-3 should decide the approved invoice type model later.
+- `payments`: Financial tracking of invoice payments. Current `payments.method` allowed values are `bank_transfer`, `cash`, `cheque`, and `online`; ERP-4 planning may later decide whether to change this to Cash / Bank Transfer / Card / Other.
 - `projects` / `project_tasks`: Existing legacy execution tracking. New ERP planning should use Service as the operational unit.
 
 ## Relationships
@@ -37,7 +38,7 @@ This document outlines the Supabase PostgreSQL database schema generated from th
 ### Services
 - Service replaces Project as the operational unit for new ERP work.
 - Planned service number format: `SVC-YYYY-0001`.
-- Service numbering must be generated server-side, not client-side.
+- Service numbering must be generated server-side, not client-side. It is not supported in the current DB yet because `number_sequences.type` and `generate_document_number` do not allow `service`.
 - Planned event date fields: `event_start_date` and nullable `event_end_date`, not only `event_date`.
 - Planned event date constraint: `CHECK (event_end_date IS NULL OR event_end_date >= event_start_date)`.
 - `event_end_date` can be null for single-day events or inquiry-stage records.
@@ -67,20 +68,23 @@ This document outlines the Supabase PostgreSQL database schema generated from th
 - Plan indexes on `services.customer_id`, `quotations.service_id`, `invoices.service_id`, `payments.invoice_id`, `payments.service_id` only if stored, and `audit_logs.user_id`.
 
 ## Data Integrity Constraints
-- **TypeScript Union Alignment**: Database `status` and `method` fields strictly mirror the exact string literals defined in `src/types/*` (e.g., `invoices.status`, `projects.status`, `payments.method`). Display labels such as "Bank Transfer" or "Credit Card" belong in the frontend representation layer only and are not stored in the database.
+- **Current Status And Method Checks**: Database `status` and `method` fields use explicit CHECK constraints where they exist. Current `payments.method` values are `bank_transfer`, `cash`, `cheque`, and `online`. Future ERP-4 payment method labels such as Card or Other require an approved schema change before use.
+- **Invoice Type Caveat**: `invoices.type` currently has no CHECK constraint. ERP-3 should decide the approved invoice type model before invoice implementation proceeds.
 - **Financial Safety**: To prevent invalid negative financial amounts, rigid numeric `CHECK (value >= 0)` constraints protect fields like `subtotal`, `discount`, `vat_amount`, `grand_total`, `amount`, `budget`, `revenue`, `qty`, `unit_price`, `vat`, `total`, and `default_vat_percent`. Company Settings VAT values are defaults only; quotations and invoices must keep document-level snapshots.
 - **Rounding And Currency**: Future invoice/payment work must document SAR 2-decimal rounding rules. Financial rounding must be server-side/PostgreSQL-side. Currency should be snapshotted on issued documents.
 - **VAT Mode Safety**: `company_settings.vat_mode='not_registered'` requires `default_vat_percent=0`, no VAT number, and no VAT effective date. `phase2_integrated` is reserved for future FATOORA work and must not be claimed by CS-A UI.
 - **Bank Detail Visibility**: Bank details are sensitive. CS-A reads them server-side only for Admin and Accountant; Viewer can read settings without receiving bank values from the server.
 
 ## Numbering Strategy
-Unique Document Numbers (`quotation_number`, `invoice_number`, `payment_number`, `project_number`) are generated using the `number_sequences` table. It ensures atomic, sequential assignment based on year and document type (e.g., `INV-2023-001`). Planned Service numbers should use `SVC-YYYY-0001` and be generated server-side.
+Unique Document Numbers (`quotation_number`, `invoice_number`, `payment_number`, `project_number`) are generated using the `number_sequences` table and `generate_document_number(doc_type text)`. Current supported document types are `quotation`, `invoice`, `payment`, and `project`. Planned Service numbers should use `SVC-YYYY-0001` and be generated server-side, but ERP-1 must first extend both the `number_sequences.type` CHECK constraint and `generate_document_number`.
 
 ## Soft Delete Strategy
 Entities like `customers`, `quotations`, `invoices`, and `projects` implement a soft delete pattern using `is_deleted` (boolean) and `deleted_at` (timestamptz). This preserves historical references in financial data while hiding records from the active UI. Future schema should prefer `deleted_at` timestamp over only `is_deleted`, or document any `is_deleted`-only usage as technical debt.
 
 ## Row Level Security (RLS)
 All tables have Row Level Security enabled. 
+
+`app_users` has RLS enabled and intentionally has no broad `DEV_ONLY` policy. It should be accessed server-side through service role / protected server logic only.
 
 **DEV ONLY RLS:**
 Currently, the `schema.sql` creates wildcard (`true`) policies for the `authenticated` role. This allows full read/write access to any logged-in user during development.
@@ -95,9 +99,6 @@ Production RLS for `company_settings` must be planned explicitly because the tab
 - Agents must not apply SQL automatically.
 
 ## Manual Application Steps (If required)
-1. Open your Supabase Dashboard.
-2. Navigate to the SQL Editor.
-3. Open `supabase/schema.sql` from the repository.
-4. Copy the entire contents of the file.
-5. Paste it into the SQL Editor and click **Run**.
-6. Verify that tables are created in the Table Editor.
+Do not apply `supabase/schema.sql` automatically. Treat it as a reference snapshot for review, local reset planning, or schema comparison.
+
+Manual DB changes should continue to follow the project workflow: inspect live DB shape, propose SQL text, review, create a migration only when approved, review the migration, apply manually in Supabase SQL Editor, verify, then update this reference snapshot if the live schema changed.
