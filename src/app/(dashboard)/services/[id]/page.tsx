@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation";
-import { requirePermission } from "@/lib/auth/permissions";
+import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { ArrowLeft, Edit } from "lucide-react";
+import { ArrowLeft, Edit, FileText } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +61,9 @@ export default async function ServiceDetailPage({
     notFound();
   }
 
+  const canCreateQuotation = await checkPermission("quotations:write");
+  const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
+
   return (
     <div className="flex flex-col gap-6 pb-12">
       {/* Top Header */}
@@ -84,7 +87,16 @@ export default async function ServiceDetailPage({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {(service.status === "Inquiry" || service.status === "Quoted") && (
+          {canCreateQuotation && canModifyService && (
+            <Link
+              href={`/quotations/new?serviceId=${service.id}`}
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[14px] font-semibold transition-colors"
+            >
+              <FileText size={18} />
+              Create Quotation
+            </Link>
+          )}
+          {canModifyService && (
             <Link
               href={`/services/${service.id}/edit`}
               className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors"

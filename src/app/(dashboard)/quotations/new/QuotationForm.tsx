@@ -3,16 +3,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Save, AlertCircle } from "lucide-react";
-import type { Customer } from "@/types/customer";
 import { createQuotation, updateQuotation } from "@/lib/quotations/actions";
 import type { QuotationDetail } from "@/lib/quotations/types";
 
+interface QuotationFormService {
+  id: string;
+  serviceNumber: string;
+  serviceTitle: string;
+  status: string;
+  eventName: string | null;
+  customer?: { company: string; contact: string };
+}
+
 interface QuotationFormProps {
-  customers: Customer[];
+  service: QuotationFormService;
   initialData?: QuotationDetail;
 }
 
-export default function QuotationForm({ customers, initialData }: QuotationFormProps) {
+export default function QuotationForm({ service, initialData }: QuotationFormProps) {
   const router = useRouter();
   const isEdit = !!initialData;
   
@@ -20,11 +28,7 @@ export default function QuotationForm({ customers, initialData }: QuotationFormP
   const [error, setError] = useState<string | null>(null);
 
   // Initialize fields with initialData if present
-  // Handle case where initialData.customerId is not in active `customers` list
-  const initialCustomerActive = customers.some(c => c.id === initialData?.customerId);
-  const [customerId, setCustomerId] = useState(initialCustomerActive ? (initialData?.customerId || "") : "");
-  
-  const [event, setEvent] = useState(initialData?.event || "");
+  const [event, setEvent] = useState(initialData?.event || service.eventName || service.serviceTitle);
   const [date, setDate] = useState(initialData?.date || new Date().toISOString().split("T")[0]);
   const [validUntil, setValidUntil] = useState(initialData?.validUntil || "");
   const [discount, setDiscount] = useState((initialData?.discount || 0).toString());
@@ -71,11 +75,6 @@ export default function QuotationForm({ customers, initialData }: QuotationFormP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
-    if (!customerId) {
-      setError("Please select a valid, active customer.");
-      return;
-    }
     
     if (!validUntil) {
       setError("Please select a valid until date.");
@@ -95,8 +94,7 @@ export default function QuotationForm({ customers, initialData }: QuotationFormP
 
     setIsSubmitting(true);
 
-    const payload = {
-      customer_id: customerId,
+    const quotationPayload = {
       event,
       date,
       valid_until: validUntil,
@@ -112,8 +110,8 @@ export default function QuotationForm({ customers, initialData }: QuotationFormP
     };
 
     const result = isEdit && initialData
-      ? await updateQuotation(initialData.id, payload)
-      : await createQuotation(payload);
+      ? await updateQuotation(initialData.id, quotationPayload)
+      : await createQuotation({ service_id: service.id, ...quotationPayload });
 
     if (result.success) {
       router.push("/quotations");
@@ -138,7 +136,7 @@ export default function QuotationForm({ customers, initialData }: QuotationFormP
             {isEdit ? `Edit Quotation ${initialData?.quotationNumber}` : "New Quotation"}
           </h2>
           <p className="text-on-surface-variant text-[14px]">
-            {isEdit ? "Modify draft quotation details." : "Create a new manual quotation."}
+            {isEdit ? "Modify draft quotation details." : "Create a new service-scoped quotation."}
           </p>
         </div>
       </div>
@@ -155,23 +153,40 @@ export default function QuotationForm({ customers, initialData }: QuotationFormP
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden p-6 flex flex-col gap-4">
             <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">Basic Details</h3>
             
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[14px] font-semibold text-on-surface">Customer</label>
-              <select
-                value={customerId}
-                onChange={(e) => setCustomerId(e.target.value)}
-                className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
-                required
-              >
-                <option value="">Select a customer...</option>
-                {customers.map(c => (
-                  <option key={c.id} value={c.id}>{c.company} {c.contact ? `(${c.contact})` : ''}</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-1 gap-3 text-[14px]">
+              <div>
+                <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider">
+                  Service
+                </div>
+                <div className="font-mono font-semibold text-primary">{service.serviceNumber}</div>
+              </div>
+              <div>
+                <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider">
+                  Service Title
+                </div>
+                <div className="font-medium text-on-surface">{service.serviceTitle}</div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider">
+                    Status
+                  </div>
+                  <div className="font-medium text-on-surface">{service.status}</div>
+                </div>
+                <div>
+                  <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider">
+                    Customer
+                  </div>
+                  <div className="font-medium text-on-surface">
+                    {service.customer?.company || "Unknown Customer"}
+                    {service.customer?.contact ? ` (${service.customer.contact})` : ""}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[14px] font-semibold text-on-surface">Event / Project Name</label>
+              <label className="text-[14px] font-semibold text-on-surface">Quotation / Event Label</label>
               <input
                 type="text"
                 value={event}

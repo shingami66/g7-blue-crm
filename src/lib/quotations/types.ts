@@ -11,6 +11,7 @@ export type QuotationStatus = "draft" | "sent" | "approved" | "rejected" | "expi
 export interface QuotationRow {
   id: string;
   quotation_number: string;
+  service_id: string;
   customer_id: string;
   event: string;
   date: string;
@@ -27,6 +28,34 @@ export interface QuotationRow {
   deleted_at: string | null;
   created_by: string;
   updated_by: string;
+}
+
+export interface QuotationServiceSummary {
+  serviceNumber: string;
+  serviceTitle: string;
+  status: string;
+  eventName: string | null;
+}
+
+export interface QuotationCustomerSummary {
+  company: string;
+  contact: string;
+}
+
+export interface QuotationServiceRowSummary {
+  service_number: string;
+  service_title: string;
+  status: string;
+  event_name: string | null;
+}
+
+export interface QuotationRowWithRelations extends QuotationRow {
+  customers?: QuotationCustomerSummary | null;
+  services?: QuotationServiceRowSummary | null;
+}
+
+export interface QuotationDetailRow extends QuotationRowWithRelations {
+  quotation_items?: QuotationItemRow[] | null;
 }
 
 /** Raw row shape returned by Supabase for the `quotation_items` table. */
@@ -47,6 +76,8 @@ export interface QuotationItemRow {
 export interface QuotationListItem {
   id: string;
   quotationNumber: string;
+  serviceId: string;
+  service?: QuotationServiceSummary;
   customerId: string;
   customer?: { company: string; contact: string };
   event: string;

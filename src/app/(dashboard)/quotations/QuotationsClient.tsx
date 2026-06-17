@@ -16,6 +16,8 @@ interface QuotationsClientProps {
   canWrite: boolean;
 }
 
+type StatusBadgeVariant = React.ComponentProps<typeof StatusBadge>["variant"];
+
 export default function QuotationsClient({ quotations, canWrite }: QuotationsClientProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -43,11 +45,11 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
       >
         {canWrite && (
           <Link 
-            href="/quotations/new"
+            href="/services"
             className="flex items-center gap-2 bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors"
           >
             <Plus size={18} />
-            New Quotation
+            Select Service
           </Link>
         )}
       </PageHeader>
@@ -89,7 +91,7 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
           {quotations.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-on-surface-variant">
               <p>No quotations found.</p>
-              {canWrite && <p className="text-[14px]">Click "New Quotation" to create one.</p>}
+              {canWrite && <p className="text-[14px]">Select a Service to create one.</p>}
             </div>
           ) : (
             <DataTable
@@ -124,7 +126,7 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
                     {q.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-4 py-4">
-                    <StatusBadge variant={q.status as any}>
+                    <StatusBadge variant={q.status as StatusBadgeVariant}>
                       {q.status.charAt(0).toUpperCase() + q.status.slice(1)}
                     </StatusBadge>
                   </td>

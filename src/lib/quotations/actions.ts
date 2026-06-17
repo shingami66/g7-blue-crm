@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
+import { getServiceById } from "@/lib/services/queries";
 import { createQuotationSchema, updateQuotationSchema } from "./schemas";
 import type { QuotationRpcResult } from "./types";
 
@@ -13,14 +14,27 @@ export type ActionResult<T = void> = {
   data?: T;
 };
 
+function serviceCanReceiveQuotation(status: string) {
+  return status === "Inquiry" || status === "Quoted";
+}
+
 export async function createQuotation(input: unknown): Promise<ActionResult<QuotationRpcResult>> {
   try {
     const user = await requirePermission("quotations:write");
+    await requirePermission("services:read");
     const parsed = createQuotationSchema.safeParse(input);
 
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message ?? "Validation failed";
       return { success: false, error: firstError };
+    }
+
+    const service = await getServiceById(parsed.data.service_id);
+    if (!service) {
+      return { success: false, error: "Service not found or unavailable." };
+    }
+    if (!serviceCanReceiveQuotation(service.status)) {
+      return { success: false, error: "Quotations can only be created for Inquiry or Quoted services." };
     }
 
     const { items, ...quotationData } = parsed.data;
@@ -38,6 +52,7 @@ export async function createQuotation(input: unknown): Promise<ActionResult<Quot
     }
 
     revalidatePath("/quotations");
+    revalidatePath(`/services/${parsed.data.service_id}`);
     return { success: true, data: data?.[0] };
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
@@ -50,6 +65,7 @@ export async function createQuotation(input: unknown): Promise<ActionResult<Quot
 export async function updateQuotation(id: string, input: unknown): Promise<ActionResult<QuotationRpcResult>> {
   try {
     const user = await requirePermission("quotations:write");
+    await requirePermission("services:read");
     const parsed = updateQuotationSchema.safeParse(input);
 
     if (!parsed.success) {
@@ -60,7 +76,7 @@ export async function updateQuotation(id: string, input: unknown): Promise<Actio
     const { items, ...quotationData } = parsed.data;
 
     // Filter out undefined keys to match RPC fallback behavior effectively
-    const updates: Record<string, any> = {};
+    const updates: Record<string, string | number | null> = {};
     for (const [key, value] of Object.entries(quotationData)) {
       if (value !== undefined) {
         updates[key] = value;

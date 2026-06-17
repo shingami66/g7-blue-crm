@@ -3,12 +3,21 @@ import type {
   QuotationListItem,
   QuotationItem,
   QuotationDetail,
+  QuotationDetailRow,
+  QuotationRowWithRelations,
 } from "./types";
 
-export function mapRowToQuotationListItem(row: any): QuotationListItem {
+export function mapRowToQuotationListItem(row: QuotationRowWithRelations): QuotationListItem {
   return {
     id: row.id,
     quotationNumber: row.quotation_number,
+    serviceId: row.service_id,
+    service: row.services ? {
+      serviceNumber: row.services.service_number,
+      serviceTitle: row.services.service_title,
+      status: row.services.status,
+      eventName: row.services.event_name,
+    } : undefined,
     customerId: row.customer_id,
     customer: row.customers ? {
       company: row.customers.company,
@@ -38,7 +47,7 @@ export function mapRowToQuotationItem(row: QuotationItemRow): QuotationItem {
   };
 }
 
-export function mapRowToQuotationDetail(row: any): QuotationDetail {
+export function mapRowToQuotationDetail(row: QuotationDetailRow): QuotationDetail {
   const base = mapRowToQuotationListItem(row);
   return {
     ...base,

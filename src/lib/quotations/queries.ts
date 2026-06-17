@@ -5,6 +5,9 @@ import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { mapRowToQuotationListItem, mapRowToQuotationDetail } from "./mappers";
 import type { QuotationListItem, QuotationDetail } from "./types";
 
+const QUOTATION_SELECT = "*, customers(company, contact), services(service_number, service_title, status, event_name)";
+const QUOTATION_DETAIL_SELECT = `${QUOTATION_SELECT}, quotation_items(*)`;
+
 export async function getQuotations(): Promise<QuotationListItem[]> {
   await requirePermission("quotations:read");
 
@@ -12,7 +15,7 @@ export async function getQuotations(): Promise<QuotationListItem[]> {
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("quotations")
-      .select("*, customers(company, contact)")
+      .select(QUOTATION_SELECT)
       .eq("is_deleted", false)
       .order("created_at", { ascending: false });
 
@@ -36,7 +39,7 @@ export async function getQuotationById(id: string): Promise<QuotationDetail | nu
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("quotations")
-      .select("*, customers(company, contact), quotation_items(*)")
+      .select(QUOTATION_DETAIL_SELECT)
       .eq("id", id)
       .eq("is_deleted", false)
       .single();
