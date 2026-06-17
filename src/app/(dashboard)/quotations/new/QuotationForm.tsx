@@ -33,10 +33,6 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
   const [validUntil, setValidUntil] = useState(initialData?.validUntil || "");
   const [discount, setDiscount] = useState((initialData?.discount || 0).toString());
   
-  // VAT rate read-only fixed at 15 for now
-  // TODO: Future company settings/admin permissions can control it
-  const vatRate = 15;
-
   const [items, setItems] = useState(
     initialData?.items && initialData.items.length > 0 
       ? initialData.items.map(i => ({
@@ -69,8 +65,7 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
   const parsedDiscount = parseFloat(discount) || 0;
   const subtotal = items.reduce((sum, item) => sum + (Number(item.qty) * Number(item.unitPrice)), 0);
   const afterDiscount = Math.max(0, subtotal - parsedDiscount);
-  const vatAmount = afterDiscount * (vatRate / 100);
-  const grandTotal = afterDiscount + vatAmount;
+  const grandTotal = afterDiscount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +94,6 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
       date,
       valid_until: validUntil,
       discount: parsedDiscount,
-      vat_rate: vatRate,
       items: items.map(i => ({
         description: i.description,
         details: i.details || undefined,
@@ -239,13 +233,13 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[14px] font-semibold text-on-surface">VAT Rate (%)</label>
+                <label className="text-[14px] font-semibold text-on-surface">Tax/VAT</label>
                 <input
-                  type="number"
-                  value={vatRate}
+                  type="text"
+                  value="Not applied"
                   readOnly
                   className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface-variant focus:outline-none cursor-not-allowed"
-                  title="VAT rate is currently fixed. Admins will be able to change this in future settings."
+                  title="G7 BLUE is not VAT registered. Final totals are calculated on the server."
                 />
               </div>
             </div>
@@ -355,8 +349,8 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
               <span>- {parsedDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span>
             </div>
             <div className="flex justify-between w-64">
-              <span className="text-on-surface-variant">VAT ({vatRate}%):</span>
-              <span>{vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span>
+              <span className="text-on-surface-variant">Tax/VAT:</span>
+              <span>Not applied</span>
             </div>
             <div className="flex justify-between w-64 pt-2 border-t border-outline-variant font-semibold text-[16px] text-primary">
               <span>Grand Total:</span>

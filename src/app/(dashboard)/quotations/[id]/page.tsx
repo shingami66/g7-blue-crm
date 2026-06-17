@@ -5,6 +5,9 @@ import Link from "next/link";
 import { getQuotationById } from "@/lib/quotations/queries";
 import { requirePermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
+import type { ComponentProps } from "react";
+
+type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
 export default async function QuotationDetailPage({
   params,
@@ -66,6 +69,7 @@ export default async function QuotationDetailPage({
     if (val === null || val === undefined) return "0.00";
     return val.toLocaleString(undefined, { minimumFractionDigits: 2 });
   };
+  const isTaxVatNotApplied = quotation.vatRate === 0 && quotation.vatAmount === 0;
 
   return (
     <div className="flex flex-col gap-6 pb-12">
@@ -83,7 +87,7 @@ export default async function QuotationDetailPage({
               <h2 className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight">
                 {quotation.quotationNumber}
               </h2>
-              <StatusBadge variant={quotation.status as any}>
+              <StatusBadge variant={quotation.status as StatusBadgeVariant}>
                 {quotation.status.charAt(0).toUpperCase() +
                   quotation.status.slice(1)}
               </StatusBadge>
@@ -239,8 +243,8 @@ export default async function QuotationDetailPage({
                   <span>{formatMoney(quotation.discount)} SAR</span>
                 </div>
                 <div className="flex justify-between text-[14px] text-on-surface-variant">
-                  <span>VAT ({quotation.vatRate}%)</span>
-                  <span>{formatMoney(quotation.vatAmount)} SAR</span>
+                  <span>{isTaxVatNotApplied ? "Tax/VAT" : `VAT (${quotation.vatRate}%)`}</span>
+                  <span>{isTaxVatNotApplied ? "Not applied" : `${formatMoney(quotation.vatAmount)} SAR`}</span>
                 </div>
                 <div className="border-t border-surface-variant pt-3 mt-3 flex justify-between">
                   <span className="font-semibold text-[18px] text-primary">

@@ -14,7 +14,6 @@ export const createQuotationSchema = z.object({
   date: z.string().min(1, "Date is required"),
   valid_until: z.string().optional().nullable(),
   discount: z.coerce.number().nonnegative("Discount cannot be negative").default(0),
-  vat_rate: z.coerce.number().min(0, "VAT rate cannot be less than 0").max(100, "VAT rate cannot exceed 100").default(15),
   items: z.array(quotationItemInputSchema).min(1, "At least one item is required"),
 }).strict().refine(
   (data) => !data.valid_until || new Date(data.valid_until) >= new Date(data.date),
@@ -29,7 +28,6 @@ export const updateQuotationSchema = z.object({
   date: z.string().min(1, "Date cannot be empty").optional().nullable(),
   valid_until: z.string().optional().nullable(),
   discount: z.coerce.number().nonnegative("Discount cannot be negative").optional().nullable(),
-  vat_rate: z.coerce.number().min(0, "VAT rate cannot be less than 0").max(100, "VAT rate cannot exceed 100").optional().nullable(),
   items: z.array(quotationItemInputSchema).min(1, "At least one item is required"),
 }).strict().refine(
   (data) => {

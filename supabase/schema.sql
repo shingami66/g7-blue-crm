@@ -191,7 +191,7 @@ CREATE TABLE quotations (
     valid_until date NOT NULL,
     subtotal numeric(12,2) DEFAULT 0.00 CHECK (subtotal >= 0),
     discount numeric(12,2) DEFAULT 0.00 CHECK (discount >= 0),
-    vat_rate numeric(5,2) NOT NULL DEFAULT 15.00,
+    vat_rate numeric(5,2) NOT NULL DEFAULT 0.00,
     vat_amount numeric(12,2) DEFAULT 0.00 CHECK (vat_amount >= 0),
     grand_total numeric(12,2) DEFAULT 0.00 CHECK (grand_total >= 0),
     status text NOT NULL CHECK (status IN ('draft', 'sent', 'approved', 'rejected', 'expired')),
@@ -237,7 +237,7 @@ END;
 $$;
 CREATE TRIGGER update_quotations_updated_at BEFORE UPDATE ON quotations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER set_quotation_customer_from_service_trigger BEFORE INSERT OR UPDATE ON quotations FOR EACH ROW EXECUTE FUNCTION set_quotation_customer_from_service();
-COMMENT ON COLUMN quotations.vat_rate IS 'Snapshot of the VAT percentage applied at creation time. Does not change if company settings change later.';
+COMMENT ON COLUMN quotations.vat_rate IS 'Snapshot of the VAT percentage applied by quotation RPCs. Forced to 0 while company_settings.vat_mode is not_registered; does not imply ZATCA/FATOORA compliance.';
 COMMENT ON COLUMN quotations.service_id IS 'ERP-2 primary business link. Quotations belong to Services. One Service may have multiple quotations.';
 COMMENT ON COLUMN quotations.customer_id IS 'Derived from services.customer_id for reporting/query convenience. Do not trust browser-submitted customer_id.';
 COMMENT ON COLUMN quotations.event IS 'Legacy/deprecated ERP-2 compatibility field. Event context should come from the linked service going forward.';
@@ -438,7 +438,9 @@ DECLARE
     v_date date;
     v_valid_until date;
     v_discount numeric(12,2);
-    v_vat_rate numeric(5,2);
+    v_vat_mode text := 'not_registered';
+    v_settings_vat_rate numeric(5,2) := 0;
+    v_vat_rate numeric(5,2) := 0;
     v_subtotal numeric(12,2) := 0;
     v_taxable numeric(12,2);
     v_vat_amount numeric(12,2);
@@ -477,7 +479,28 @@ BEGIN
     v_date        := NULLIF(trim(p_quotation ->> 'date'), '')::date;
     v_valid_until := NULLIF(trim(p_quotation ->> 'valid_until'), '')::date;
     v_discount    := COALESCE(NULLIF(trim(p_quotation ->> 'discount'), '')::numeric(12,2), 0);
-    v_vat_rate    := COALESCE(NULLIF(trim(p_quotation ->> 'vat_rate'), '')::numeric(5,2), 15.00);
+
+    SELECT
+        CASE
+            WHEN cs.vat_mode IN ('vat_registered_phase_1', 'phase2_integrated') THEN cs.vat_mode
+            ELSE 'not_registered'
+        END,
+        COALESCE(cs.default_vat_percent, 0)::numeric(5,2)
+    INTO v_vat_mode, v_settings_vat_rate
+    FROM company_settings AS cs
+    WHERE cs.setting_key = 'default'
+    LIMIT 1;
+
+    v_vat_mode := COALESCE(v_vat_mode, 'not_registered');
+    v_settings_vat_rate := COALESCE(v_settings_vat_rate, 0);
+
+    IF v_vat_mode = 'not_registered' THEN
+        -- NOT-VAT-REGISTERED SAFEGUARD: driven by company_settings.vat_mode.
+        v_vat_rate := 0;
+    ELSE
+        -- VAT is derived from Company Settings only; client-provided vat_rate is ignored.
+        v_vat_rate := v_settings_vat_rate;
+    END IF;
 
     IF v_service_id IS NULL THEN
         RAISE EXCEPTION 'service_id is required';
@@ -510,7 +533,7 @@ BEGIN
     END IF;
 
     IF v_vat_rate < 0 OR v_vat_rate > 100 THEN
-        RAISE EXCEPTION 'vat_rate must be between 0 and 100. Got: %', v_vat_rate;
+        RAISE EXCEPTION 'Company Settings default_vat_percent must be between 0 and 100. Got: %', v_vat_rate;
     END IF;
 
     v_quotation_number := generate_document_number('quotation');
@@ -564,30 +587,36 @@ BEGIN
         RAISE EXCEPTION 'Discount (%) cannot exceed subtotal (%)', v_discount, v_subtotal;
     END IF;
 
-    v_taxable     := v_subtotal - v_discount;
-    v_vat_amount  := v_taxable * (v_vat_rate / 100);
-    v_grand_total := v_taxable + v_vat_amount;
+    v_taxable := v_subtotal - v_discount;
 
-    IF v_subtotal > 0 THEN
-        UPDATE quotation_items AS qi
-        SET vat = ROUND((qi.total - (v_discount * (qi.total / v_subtotal))) * (v_vat_rate / 100), 2)
-        WHERE qi.quotation_id = v_quotation_id;
+    IF v_vat_rate = 0 THEN
+        v_vat_amount := 0;
+        v_grand_total := v_taxable;
+    ELSE
+        v_vat_amount := ROUND(v_taxable * (v_vat_rate / 100), 2);
+        v_grand_total := v_taxable + v_vat_amount;
 
-        SELECT v_vat_amount - COALESCE(SUM(qi.vat), 0)
-        INTO v_residual
-        FROM quotation_items AS qi
-        WHERE qi.quotation_id = v_quotation_id;
-
-        IF v_residual <> 0 THEN
-            SELECT qi.id INTO v_max_item_id
-            FROM quotation_items AS qi
-            WHERE qi.quotation_id = v_quotation_id
-            ORDER BY qi.total DESC, qi.id
-            LIMIT 1;
-
+        IF v_subtotal > 0 THEN
             UPDATE quotation_items AS qi
-            SET vat = qi.vat + v_residual
-            WHERE qi.id = v_max_item_id;
+            SET vat = ROUND((qi.total - (v_discount * (qi.total / v_subtotal))) * (v_vat_rate / 100), 2)
+            WHERE qi.quotation_id = v_quotation_id;
+
+            SELECT v_vat_amount - COALESCE(SUM(qi.vat), 0)
+            INTO v_residual
+            FROM quotation_items AS qi
+            WHERE qi.quotation_id = v_quotation_id;
+
+            IF v_residual <> 0 THEN
+                SELECT qi.id INTO v_max_item_id
+                FROM quotation_items AS qi
+                WHERE qi.quotation_id = v_quotation_id
+                ORDER BY qi.total DESC, qi.id
+                LIMIT 1;
+
+                UPDATE quotation_items AS qi
+                SET vat = qi.vat + v_residual
+                WHERE qi.id = v_max_item_id;
+            END IF;
         END IF;
     END IF;
 
@@ -631,7 +660,9 @@ DECLARE
     v_date date;
     v_valid_until date;
     v_discount numeric(12,2);
-    v_vat_rate numeric(5,2);
+    v_vat_mode text := 'not_registered';
+    v_settings_vat_rate numeric(5,2) := 0;
+    v_vat_rate numeric(5,2) := 0;
     v_subtotal numeric(12,2) := 0;
     v_taxable numeric(12,2);
     v_vat_amount numeric(12,2);
@@ -682,6 +713,28 @@ BEGIN
         RAISE EXCEPTION 'Cannot edit quotation with status "%". Only draft quotations can be edited.', v_existing.status;
     END IF;
 
+    SELECT
+        CASE
+            WHEN cs.vat_mode IN ('vat_registered_phase_1', 'phase2_integrated') THEN cs.vat_mode
+            ELSE 'not_registered'
+        END,
+        COALESCE(cs.default_vat_percent, 0)::numeric(5,2)
+    INTO v_vat_mode, v_settings_vat_rate
+    FROM company_settings AS cs
+    WHERE cs.setting_key = 'default'
+    LIMIT 1;
+
+    v_vat_mode := COALESCE(v_vat_mode, 'not_registered');
+    v_settings_vat_rate := COALESCE(v_settings_vat_rate, 0);
+
+    IF v_vat_mode = 'not_registered' THEN
+        -- NOT-VAT-REGISTERED SAFEGUARD: driven by company_settings.vat_mode.
+        v_vat_rate := 0;
+    ELSE
+        -- VAT is derived from Company Settings only; client-provided vat_rate is ignored.
+        v_vat_rate := v_settings_vat_rate;
+    END IF;
+
     IF p_quotation ? 'event' THEN
         v_event := NULLIF(trim(p_quotation ->> 'event'), '');
         IF v_event IS NULL THEN
@@ -712,15 +765,6 @@ BEGIN
         v_discount := v_existing.discount;
     END IF;
 
-    IF p_quotation ? 'vat_rate' THEN
-        v_vat_rate := NULLIF(trim(p_quotation ->> 'vat_rate'), '')::numeric(5,2);
-        IF v_vat_rate IS NULL THEN
-            RAISE EXCEPTION 'vat_rate cannot be empty if provided';
-        END IF;
-    ELSE
-        v_vat_rate := v_existing.vat_rate;
-    END IF;
-
     IF v_valid_until IS NOT NULL AND v_valid_until < v_date THEN
         RAISE EXCEPTION 'valid_until (%) must be >= date (%)', v_valid_until, v_date;
     END IF;
@@ -730,7 +774,7 @@ BEGIN
     END IF;
 
     IF v_vat_rate < 0 OR v_vat_rate > 100 THEN
-        RAISE EXCEPTION 'vat_rate must be between 0 and 100. Got: %', v_vat_rate;
+        RAISE EXCEPTION 'Company Settings default_vat_percent must be between 0 and 100. Got: %', v_vat_rate;
     END IF;
 
     DELETE FROM quotation_items AS qi
@@ -773,30 +817,36 @@ BEGIN
         RAISE EXCEPTION 'Discount (%) cannot exceed subtotal (%)', v_discount, v_subtotal;
     END IF;
 
-    v_taxable     := v_subtotal - v_discount;
-    v_vat_amount  := v_taxable * (v_vat_rate / 100);
-    v_grand_total := v_taxable + v_vat_amount;
+    v_taxable := v_subtotal - v_discount;
 
-    IF v_subtotal > 0 THEN
-        UPDATE quotation_items AS qi
-        SET vat = ROUND((qi.total - (v_discount * (qi.total / v_subtotal))) * (v_vat_rate / 100), 2)
-        WHERE qi.quotation_id = p_quotation_id;
+    IF v_vat_rate = 0 THEN
+        v_vat_amount := 0;
+        v_grand_total := v_taxable;
+    ELSE
+        v_vat_amount := ROUND(v_taxable * (v_vat_rate / 100), 2);
+        v_grand_total := v_taxable + v_vat_amount;
 
-        SELECT v_vat_amount - COALESCE(SUM(qi.vat), 0)
-        INTO v_residual
-        FROM quotation_items AS qi
-        WHERE qi.quotation_id = p_quotation_id;
-
-        IF v_residual <> 0 THEN
-            SELECT qi.id INTO v_max_item_id
-            FROM quotation_items AS qi
-            WHERE qi.quotation_id = p_quotation_id
-            ORDER BY qi.total DESC, qi.id
-            LIMIT 1;
-
+        IF v_subtotal > 0 THEN
             UPDATE quotation_items AS qi
-            SET vat = qi.vat + v_residual
-            WHERE qi.id = v_max_item_id;
+            SET vat = ROUND((qi.total - (v_discount * (qi.total / v_subtotal))) * (v_vat_rate / 100), 2)
+            WHERE qi.quotation_id = p_quotation_id;
+
+            SELECT v_vat_amount - COALESCE(SUM(qi.vat), 0)
+            INTO v_residual
+            FROM quotation_items AS qi
+            WHERE qi.quotation_id = p_quotation_id;
+
+            IF v_residual <> 0 THEN
+                SELECT qi.id INTO v_max_item_id
+                FROM quotation_items AS qi
+                WHERE qi.quotation_id = p_quotation_id
+                ORDER BY qi.total DESC, qi.id
+                LIMIT 1;
+
+                UPDATE quotation_items AS qi
+                SET vat = qi.vat + v_residual
+                WHERE qi.id = v_max_item_id;
+            END IF;
         END IF;
     END IF;
 
