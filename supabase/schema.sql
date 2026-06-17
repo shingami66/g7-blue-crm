@@ -184,6 +184,7 @@ COMMENT ON COLUMN suppliers.updated_by IS 'Stores Clerk userId string';
 CREATE TABLE quotations (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     quotation_number text UNIQUE NOT NULL,
+    service_id uuid NOT NULL,
     customer_id uuid REFERENCES customers(id) ON DELETE RESTRICT NOT NULL,
     event text NOT NULL,
     date date NOT NULL,
@@ -200,10 +201,46 @@ CREATE TABLE quotations (
     deleted_at timestamptz,
     created_by text,
     updated_by text,
-    CONSTRAINT chk_quotations_vat_rate CHECK (vat_rate >= 0 AND vat_rate <= 100)
+    CONSTRAINT chk_quotations_vat_rate CHECK (vat_rate >= 0 AND vat_rate <= 100),
+    CONSTRAINT fk_quotations_service_id FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE RESTRICT
 );
+CREATE OR REPLACE FUNCTION set_quotation_customer_from_service()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_service_customer_id uuid;
+BEGIN
+    IF NEW.service_id IS NULL THEN
+        RAISE EXCEPTION 'service_id is required';
+    END IF;
+
+    IF TG_OP = 'UPDATE'
+        AND OLD.service_id IS NOT NULL
+        AND NEW.service_id IS DISTINCT FROM OLD.service_id THEN
+        RAISE EXCEPTION 'service_id cannot be changed after quotation creation';
+    END IF;
+
+    SELECT s.customer_id
+    INTO v_service_customer_id
+    FROM services AS s
+    WHERE s.id = NEW.service_id
+      AND s.deleted_at IS NULL;
+
+    IF v_service_customer_id IS NULL THEN
+        RAISE EXCEPTION 'Service not found or deleted: %', NEW.service_id;
+    END IF;
+
+    NEW.customer_id := v_service_customer_id;
+    RETURN NEW;
+END;
+$$;
 CREATE TRIGGER update_quotations_updated_at BEFORE UPDATE ON quotations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER set_quotation_customer_from_service_trigger BEFORE INSERT OR UPDATE ON quotations FOR EACH ROW EXECUTE FUNCTION set_quotation_customer_from_service();
 COMMENT ON COLUMN quotations.vat_rate IS 'Snapshot of the VAT percentage applied at creation time. Does not change if company settings change later.';
+COMMENT ON COLUMN quotations.service_id IS 'ERP-2 primary business link. Quotations belong to Services. One Service may have multiple quotations.';
+COMMENT ON COLUMN quotations.customer_id IS 'Derived from services.customer_id for reporting/query convenience. Do not trust browser-submitted customer_id.';
+COMMENT ON COLUMN quotations.event IS 'Legacy/deprecated ERP-2 compatibility field. Event context should come from the linked service going forward.';
 COMMENT ON COLUMN quotations.created_by IS 'Stores Clerk userId string';
 COMMENT ON COLUMN quotations.updated_by IS 'Stores Clerk userId string';
 
@@ -395,6 +432,7 @@ AS $$
 DECLARE
     v_quotation_id uuid;
     v_quotation_number text;
+    v_service_id uuid;
     v_customer_id uuid;
     v_event text;
     v_date date;
@@ -425,20 +463,35 @@ BEGIN
         RAISE EXCEPTION 'p_items must be a JSON array';
     END IF;
 
+    IF p_quotation ? 'customer_id' THEN
+        RAISE EXCEPTION 'customer_id is derived from service_id and must not be provided';
+    END IF;
+
     v_items_count := jsonb_array_length(p_items);
     IF v_items_count < 1 THEN
         RAISE EXCEPTION 'At least one item is required';
     END IF;
 
-    v_customer_id := NULLIF(trim(p_quotation ->> 'customer_id'), '')::uuid;
-    IF v_customer_id IS NULL THEN
-        RAISE EXCEPTION 'customer_id is required';
-    END IF;
+    v_service_id  := NULLIF(trim(p_quotation ->> 'service_id'), '')::uuid;
     v_event       := NULLIF(trim(p_quotation ->> 'event'), '');
     v_date        := NULLIF(trim(p_quotation ->> 'date'), '')::date;
     v_valid_until := NULLIF(trim(p_quotation ->> 'valid_until'), '')::date;
     v_discount    := COALESCE(NULLIF(trim(p_quotation ->> 'discount'), '')::numeric(12,2), 0);
     v_vat_rate    := COALESCE(NULLIF(trim(p_quotation ->> 'vat_rate'), '')::numeric(5,2), 15.00);
+
+    IF v_service_id IS NULL THEN
+        RAISE EXCEPTION 'service_id is required';
+    END IF;
+
+    SELECT s.customer_id
+    INTO v_customer_id
+    FROM services AS s
+    WHERE s.id = v_service_id
+      AND s.deleted_at IS NULL;
+
+    IF v_customer_id IS NULL THEN
+        RAISE EXCEPTION 'Service not found or deleted: %', v_service_id;
+    END IF;
 
     IF v_event IS NULL THEN
         RAISE EXCEPTION 'event is required';
@@ -446,10 +499,6 @@ BEGIN
 
     IF v_date IS NULL THEN
         RAISE EXCEPTION 'date is required';
-    END IF;
-
-    IF NOT EXISTS (SELECT 1 FROM customers WHERE id = v_customer_id AND is_deleted = false) THEN
-        RAISE EXCEPTION 'Customer not found or deleted: %', v_customer_id;
     END IF;
 
     IF v_valid_until IS NOT NULL AND v_valid_until < v_date THEN
@@ -468,12 +517,12 @@ BEGIN
     v_quotation_id := gen_random_uuid();
 
     INSERT INTO quotations (
-        id, quotation_number, customer_id, event, date, valid_until,
+        id, quotation_number, service_id, customer_id, event, date, valid_until,
         subtotal, discount, vat_rate, vat_amount, grand_total,
         status, created_by, updated_by
     )
     VALUES (
-        v_quotation_id, v_quotation_number, v_customer_id, v_event, v_date, v_valid_until,
+        v_quotation_id, v_quotation_number, v_service_id, v_customer_id, v_event, v_date, v_valid_until,
         0, v_discount, v_vat_rate, 0, 0,
         'draft', p_user_id, p_user_id
     );
@@ -520,33 +569,33 @@ BEGIN
     v_grand_total := v_taxable + v_vat_amount;
 
     IF v_subtotal > 0 THEN
-        UPDATE quotation_items
-        SET vat = ROUND((total - (v_discount * (total / v_subtotal))) * (v_vat_rate / 100), 2)
-        WHERE quotation_id = v_quotation_id;
+        UPDATE quotation_items AS qi
+        SET vat = ROUND((qi.total - (v_discount * (qi.total / v_subtotal))) * (v_vat_rate / 100), 2)
+        WHERE qi.quotation_id = v_quotation_id;
 
-        SELECT v_vat_amount - COALESCE(SUM(vat), 0)
+        SELECT v_vat_amount - COALESCE(SUM(qi.vat), 0)
         INTO v_residual
-        FROM quotation_items
-        WHERE quotation_id = v_quotation_id;
+        FROM quotation_items AS qi
+        WHERE qi.quotation_id = v_quotation_id;
 
         IF v_residual <> 0 THEN
-            SELECT id INTO v_max_item_id
-            FROM quotation_items
-            WHERE quotation_id = v_quotation_id
-            ORDER BY total DESC, id
+            SELECT qi.id INTO v_max_item_id
+            FROM quotation_items AS qi
+            WHERE qi.quotation_id = v_quotation_id
+            ORDER BY qi.total DESC, qi.id
             LIMIT 1;
 
-            UPDATE quotation_items
-            SET vat = vat + v_residual
-            WHERE id = v_max_item_id;
+            UPDATE quotation_items AS qi
+            SET vat = qi.vat + v_residual
+            WHERE qi.id = v_max_item_id;
         END IF;
     END IF;
 
-    UPDATE quotations
+    UPDATE quotations AS q
     SET subtotal    = v_subtotal,
         vat_amount  = v_vat_amount,
         grand_total = v_grand_total
-    WHERE id = v_quotation_id;
+    WHERE q.id = v_quotation_id;
 
     RETURN QUERY
     SELECT
@@ -578,7 +627,6 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
     v_existing record;
-    v_customer_id uuid;
     v_event text;
     v_date date;
     v_valid_until date;
@@ -608,14 +656,23 @@ BEGIN
         RAISE EXCEPTION 'p_items must be a JSON array';
     END IF;
 
+    IF p_quotation ? 'service_id' THEN
+        RAISE EXCEPTION 'service_id cannot be changed after quotation creation';
+    END IF;
+
+    IF p_quotation ? 'customer_id' THEN
+        RAISE EXCEPTION 'customer_id is derived from service_id and cannot be changed directly';
+    END IF;
+
     v_items_count := jsonb_array_length(p_items);
     IF v_items_count < 1 THEN
         RAISE EXCEPTION 'At least one item is required';
     END IF;
 
-    SELECT * INTO v_existing
-    FROM quotations
-    WHERE id = p_quotation_id AND is_deleted = false;
+    SELECT q.* INTO v_existing
+    FROM quotations AS q
+    WHERE q.id = p_quotation_id
+      AND q.is_deleted = false;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Quotation not found or deleted: %', p_quotation_id;
@@ -623,18 +680,6 @@ BEGIN
 
     IF v_existing.status <> 'draft' THEN
         RAISE EXCEPTION 'Cannot edit quotation with status "%". Only draft quotations can be edited.', v_existing.status;
-    END IF;
-
-    IF p_quotation ? 'customer_id' THEN
-        v_customer_id := NULLIF(trim(p_quotation ->> 'customer_id'), '')::uuid;
-        IF v_customer_id IS NULL THEN
-            RAISE EXCEPTION 'customer_id cannot be empty if provided';
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM customers WHERE id = v_customer_id AND is_deleted = false) THEN
-            RAISE EXCEPTION 'Customer not found or deleted: %', v_customer_id;
-        END IF;
-    ELSE
-        v_customer_id := v_existing.customer_id;
     END IF;
 
     IF p_quotation ? 'event' THEN
@@ -688,7 +733,8 @@ BEGIN
         RAISE EXCEPTION 'vat_rate must be between 0 and 100. Got: %', v_vat_rate;
     END IF;
 
-    DELETE FROM quotation_items WHERE quotation_id = p_quotation_id;
+    DELETE FROM quotation_items AS qi
+    WHERE qi.quotation_id = p_quotation_id;
 
     FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
     LOOP
@@ -732,31 +778,30 @@ BEGIN
     v_grand_total := v_taxable + v_vat_amount;
 
     IF v_subtotal > 0 THEN
-        UPDATE quotation_items
-        SET vat = ROUND((total - (v_discount * (total / v_subtotal))) * (v_vat_rate / 100), 2)
-        WHERE quotation_id = p_quotation_id;
+        UPDATE quotation_items AS qi
+        SET vat = ROUND((qi.total - (v_discount * (qi.total / v_subtotal))) * (v_vat_rate / 100), 2)
+        WHERE qi.quotation_id = p_quotation_id;
 
-        SELECT v_vat_amount - COALESCE(SUM(vat), 0)
+        SELECT v_vat_amount - COALESCE(SUM(qi.vat), 0)
         INTO v_residual
-        FROM quotation_items
-        WHERE quotation_id = p_quotation_id;
+        FROM quotation_items AS qi
+        WHERE qi.quotation_id = p_quotation_id;
 
         IF v_residual <> 0 THEN
-            SELECT id INTO v_max_item_id
-            FROM quotation_items
-            WHERE quotation_id = p_quotation_id
-            ORDER BY total DESC, id
+            SELECT qi.id INTO v_max_item_id
+            FROM quotation_items AS qi
+            WHERE qi.quotation_id = p_quotation_id
+            ORDER BY qi.total DESC, qi.id
             LIMIT 1;
 
-            UPDATE quotation_items
-            SET vat = vat + v_residual
-            WHERE id = v_max_item_id;
+            UPDATE quotation_items AS qi
+            SET vat = qi.vat + v_residual
+            WHERE qi.id = v_max_item_id;
         END IF;
     END IF;
 
-    UPDATE quotations
-    SET customer_id = v_customer_id,
-        event       = v_event,
+    UPDATE quotations AS q
+    SET event       = v_event,
         date        = v_date,
         valid_until = v_valid_until,
         discount    = v_discount,
@@ -765,7 +810,7 @@ BEGIN
         vat_amount  = v_vat_amount,
         grand_total = v_grand_total,
         updated_by  = p_user_id
-    WHERE id = p_quotation_id;
+    WHERE q.id = p_quotation_id;
 
     RETURN QUERY
     SELECT
@@ -796,6 +841,7 @@ CREATE INDEX idx_services_created_at ON services(created_at);
 CREATE INDEX idx_suppliers_created_at ON suppliers(created_at);
 
 CREATE INDEX idx_quotations_customer_id ON quotations(customer_id);
+CREATE INDEX idx_quotations_service_id ON quotations(service_id);
 CREATE INDEX idx_quotations_status ON quotations(status);
 CREATE INDEX idx_quotations_created_at ON quotations(created_at);
 

@@ -27,10 +27,17 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 
 - `pnpm dev` is the documented local dev command and serves the app on `http://localhost:3000`.
 - `pnpm build` is the required build verification command for build-affecting changes.
+- `pnpm start` runs the built app after a successful `pnpm build`.
 - `pnpm lint` runs the repo ESLint config.
 - `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
 - `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
 - Verify Supabase connectivity at `GET /api/health/db` while the local app is running.
+
+## Working Workflow
+
+- Follow `Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge`.
+- Before staging or commit work, run `git status --short`.
+- After staging, run `git diff --cached --stat` and `git diff --cached --check`.
 
 ## Non-Negotiable Rules
 
