@@ -17,7 +17,9 @@ export async function getQuotations(): Promise<QuotationListItem[]> {
       .from("quotations")
       .select(QUOTATION_SELECT)
       .eq("is_deleted", false)
-      .order("created_at", { ascending: false });
+      .order("quotation_number", { ascending: true })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true });
 
     if (error) {
       console.error("[getQuotations] Supabase error:", error.message);
