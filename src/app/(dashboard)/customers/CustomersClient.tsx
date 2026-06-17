@@ -219,10 +219,8 @@ export default function CustomersClient({ customers }: { customers: Customer[] }
                 {filtered.map((customer) => (
                   <tr
                     key={customer.id}
-                    onClick={() => setSelectedCustomer(customer.id)}
-                    className={`hover:bg-surface-container-low/50 cursor-pointer transition-colors ${
-                      selectedCustomer === customer.id ? "bg-primary-fixed/20" : ""
-                    }`}
+                    onClick={() => router.push(`/customers/${customer.id}`)}
+                    className="hover:bg-surface-container-low/50 cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-4">
                       <div className="font-semibold text-primary">
@@ -242,7 +240,7 @@ export default function CustomersClient({ customers }: { customers: Customer[] }
                       {customer.city}
                     </td>
                     <td className="px-4 py-4">
-                      <StatusBadge variant={customer.status as any}>
+                      <StatusBadge variant={customer.status}>
                         {customer.status.charAt(0).toUpperCase() +
                           customer.status.slice(1)}
                       </StatusBadge>
