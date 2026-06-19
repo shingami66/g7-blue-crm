@@ -43,6 +43,22 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - Do not force push. Open PRs only when requested.
 - For Services or Quotations UI work, manually smoke test the live ERP path `Customer Profile -> Service -> Quotation`, including `/customers/[id]`, `/services`, `/services/[id]`, and `/quotations/new?serviceId=<service-id>`.
 
+## Reporting Discipline
+
+For every task that includes numbered inspection questions, checks, or required report sections, the final report must answer every number explicitly. Silent omission is a failed report, not an incomplete one.
+
+1. **Mirror the numbering.** If the prompt has numbered items, answer each item under the same number. If an item is not applicable, say so explicitly and explain why.
+
+2. **Absence is not approval.** If something is not found, say "checked, not found" and list the files or paths checked. Do not treat a missing answer as "OK" or "not applicable."
+
+3. **Evidence before acceptance.** Claims such as "same previous behavior", "unchanged", "covered", "safe", or "validated" must include code evidence, file references, command output, or an exact explanation of what was checked. Do not rely on reassuring wording without evidence.
+
+4. **Check sibling paths before generalizing.** Create vs edit, list vs detail, web vs PDF/print, client vs server, UI vs RPC, and read vs write paths must be checked separately when relevant. A fix or finding on one path does not automatically cover its sibling path.
+
+5. **Classify risk by affected domain/files.** Use the risk level implied by the touched domain or files, not by how small the edit feels. For example, invoice, payment, VAT, quotation financial logic, RPC, RLS, migrations, auth, and permissions remain high-risk even for lint, type, or small UI changes.
+
+6. **Self-audit before finalizing.** Before submitting a report, re-read the original prompt line by line and confirm every required item has a matching explicit answer. If any item is missing, go back and answer it before reporting completion.
+
 ## Non-Negotiable Rules
 
 - Do not touch `.env.local`.
