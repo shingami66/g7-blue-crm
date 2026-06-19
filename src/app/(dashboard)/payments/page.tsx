@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import DataTable from "@/components/ui/DataTable";
@@ -7,6 +8,19 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import KpiCard from "@/components/ui/KpiCard";
 import { CreditCard, CheckCircle2, Clock, Filter, Download } from "lucide-react";
 import { paymentsData } from "@/lib/data/payments";
+
+type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
+type PaymentStatus = (typeof paymentsData)[number]["status"];
+
+const getPaymentStatusBadgeVariant = (
+  status: PaymentStatus,
+): StatusBadgeVariant => {
+  if (status === "failed" || status === "refunded") {
+    return "draft";
+  }
+
+  return status;
+};
 
 export default function PaymentsPage() {
   return (
@@ -100,7 +114,7 @@ export default function PaymentsPage() {
                 <td className="px-4 py-4 text-on-surface-variant">{p.method}</td>
                 <td className="px-4 py-4 font-semibold text-on-surface">{p.amount}</td>
                 <td className="px-4 py-4">
-                  <StatusBadge variant={p.status as any}>
+                  <StatusBadge variant={getPaymentStatusBadgeVariant(p.status)}>
                     {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
                   </StatusBadge>
                 </td>

@@ -36,13 +36,35 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 ## Working Workflow
 
 - Follow `Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge`.
+- Before staging or commit work, confirm the intended branch.
 - Before staging or commit work, run `git status --short`.
+- Stage exact files only; confirm no unrelated files, secrets, `.env.local`, or unreviewed SQL/migration files are staged.
 - After staging, run `git diff --cached --stat` and `git diff --cached --check`.
+- Do not force push. Open PRs only when requested.
+- For Services or Quotations UI work, manually smoke test the live ERP path `Customer Profile -> Service -> Quotation`, including `/customers/[id]`, `/services`, `/services/[id]`, and `/quotations/new?serviceId=<service-id>`.
+
+## Reporting Discipline
+
+For every task that includes numbered inspection questions, checks, or required report sections, the final report must answer every number explicitly. Silent omission is a failed report, not an incomplete one.
+
+1. **Mirror the numbering.** If the prompt has numbered items, answer each item under the same number. If an item is not applicable, say so explicitly and explain why.
+
+2. **Absence is not approval.** If something is not found, say "checked, not found" and list the files or paths checked. Do not treat a missing answer as "OK" or "not applicable."
+
+3. **Evidence before acceptance.** Claims such as "same previous behavior", "unchanged", "covered", "safe", or "validated" must include code evidence, file references, command output, or an exact explanation of what was checked. Do not rely on reassuring wording without evidence.
+
+4. **Check sibling paths before generalizing.** Create vs edit, list vs detail, web vs PDF/print, client vs server, UI vs RPC, and read vs write paths must be checked separately when relevant. A fix or finding on one path does not automatically cover its sibling path.
+
+5. **Classify risk by affected domain/files.** Use the risk level implied by the touched domain or files, not by how small the edit feels. For example, invoice, payment, VAT, quotation financial logic, RPC, RLS, migrations, auth, and permissions remain high-risk even for lint, type, or small UI changes.
+
+6. **Self-audit before finalizing.** Before submitting a report, re-read the original prompt line by line and confirm every required item has a matching explicit answer. If any item is missing, go back and answer it before reporting completion.
 
 ## Non-Negotiable Rules
 
 - Do not touch `.env.local`.
 - Do not expose secrets.
+- Follow explicit user scope. If a task is documentation-only, do not edit code, config, migrations, packages, environment files, or local skill files.
+- If a prompt forbids reading `.agents/skills/*`, do not read, invoke, summarize, or depend on those local skill files for that task.
 - Do not use `git add .`.
 - Do not run SQL without explicit approval.
 - Do not create migrations without separate review.
@@ -59,6 +81,31 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - Raw Supabase/database errors must not be exposed to UI.
 - Build must pass before commit when `src`, package, config, or build-affecting files change.
 - Docs must be updated after merges when behavior or roadmap changes.
+
+## Approved ERP Domain Rules
+
+- The core operational entity is Service / Booking, not Project.
+- The locked workflow is Customer Profile -> Service -> Quotation -> Invoice -> Payment.
+- No standalone quotations. Quotations are Service-scoped.
+- Quotation `customer_id`, if retained, is derived server-side from the Service.
+- One Service can have multiple Quotations. Do not add `UNIQUE(service_id)` to quotations.
+- Quotation approval requires `quotations:approve`, separate from `quotations:write`.
+- Non-draft quotations must not be fully editable through ordinary `quotations:write`.
+- Approved quotations must not be soft-deleted through ordinary `quotations:write`.
+- No Invoice may exist without Service.
+- Invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
+- Invoice numbering uses one shared `INV-YYYY-0001` sequence. Do not create separate `DEP-` or `FIN-` sequences.
+- Invoice type uses `invoice_type = deposit | final`.
+- Payment must link to Invoice.
+- Prevent overpayment unless explicitly approved.
+- Deposit is flexible, not fixed 50%.
+- `Deposit Paid` requires a valid/cleared deposit payment. A Deposit Invoice alone and a pending payment do not confirm booking.
+- Do not add a separate `Confirmed` status.
+- `Cancelled` is terminal and non-linear, not a progress step.
+- Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic.
+- Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
+- Financial records must use void/cancel/reversal workflows rather than hard deletion. Use soft delete for business records where applicable.
+- The current implemented Company Settings VAT field is `company_settings.vat_mode`.
 
 ## Auth / RBAC Facts
 
@@ -84,7 +131,10 @@ Never skip review gates for SQL, migrations, RLS, RPC, triggers, grants/revokes,
 ## Quotation / RPC Lessons
 
 - Quotation numbers use `QT-YYYY-0001`.
+- New quotations are service-scoped. Do not add or restore standalone quotation creation flows; start from a Service context and pass `serviceId`.
+- Service editing and quotation creation are currently limited to Services in `Inquiry` or `Quoted` status. Treat other status transitions as deferred unless separately approved.
 - VAT is a document-level snapshot when VAT behavior is valid for that document; after CS-A, future VAT values must come from Company Settings and document snapshots, not hardcoded current-state text.
+- While Company Settings is `not_registered`, quotation create/detail/PDF flows must keep VAT as not applied and avoid tax-invoice wording.
 - Discount applies before VAT.
 - `quotation_items.vat` stores VAT amount, not VAT rate.
 - In PL/pgSQL `RETURNS TABLE` functions, qualify column names with table aliases to avoid ambiguity with output variables.
@@ -93,7 +143,7 @@ Never skip review gates for SQL, migrations, RLS, RPC, triggers, grants/revokes,
 
 G7 BLUE CRM is moving toward Events CRM + Billing.
 
-Do not start invoice schema work before business-domain answers are documented, including event fields, multi-invoice flow, ZATCA/proforma direction, leads/inquiries, vendors/suppliers, and real-vs-fake demo data.
+Do not start invoice schema work before business-domain answers are documented. Core Service-linked quotation, invoice, payment, VAT safety, and deposit/final invoice decisions are documented; leads/inquiries, vendors/suppliers, event type taxonomy, production RLS, and real-vs-fake demo data remain decision gates.
 
 For CS-A, keep `/settings` limited to the live singleton `company_settings` record keyed by `setting_key='default'`. Do not wire live Company Settings into quotation or invoice print views until CS-B snapshot design is approved.
 

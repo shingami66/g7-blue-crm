@@ -7,7 +7,6 @@ import {
   Users,
   FileText,
   Receipt,
-  FolderKanban,
   Package,
   CreditCard,
   Settings,
@@ -23,7 +22,6 @@ const navItems = [
   { label: "Services", href: "/services", icon: BriefcaseBusiness },
   { label: "Quotations", href: "/quotations", icon: FileText },
   { label: "Invoices", href: "/invoices", icon: Receipt },
-  { label: "Projects", href: "/projects", icon: FolderKanban },
   { label: "Suppliers", href: "/suppliers", icon: Package },
   { label: "Payments", href: "/payments", icon: CreditCard },
 ];

@@ -2,11 +2,43 @@
 
 Deferred decisions are tracked here, not forgotten. Revisit each item before its dependent phase starts.
 
+## Resolved ERP Decisions To Preserve
+
+These are no longer open decisions and must remain aligned with `docs/project-roadmap.md`, `docs/project-status.md`, `docs/database-schema.md`, `docs/roles-permissions.md`, `README.md`, and `AGENTS.md`.
+
+- Core operational entity: Service / Booking, not Project.
+- Locked flow: Customer Profile -> Service -> Quotation -> Invoice -> Payment.
+- No standalone quotations. Quotations are Service-scoped.
+- Quotation `customer_id`, if retained, is derived server-side from Service.
+- One Service can have multiple Quotations. Do not add `UNIQUE(service_id)` to quotations.
+- Quotation approval requires `quotations:approve`, separate from `quotations:write`.
+- Non-draft quotations must not be fully editable through ordinary `quotations:write`.
+- Approved quotations must not be soft-deleted through ordinary `quotations:write`.
+- No Invoice without Service.
+- Invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
+- Invoice numbering uses one shared `INV-YYYY-0001` sequence; do not create separate `DEP-` or `FIN-` sequences.
+- Invoice type uses `invoice_type = deposit | final`.
+- Payment must link to Invoice, and overpayment is prevented unless explicitly approved.
+- Deposit is flexible, not fixed 50%.
+- `Deposit Paid` requires a valid/cleared deposit payment. A Deposit Invoice alone and a pending payment do not confirm booking.
+- Do not add a separate `Confirmed` status.
+- `Cancelled` is terminal and non-linear, not a progress step.
+- Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic.
+- Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
+- Financial records must use void/cancel/reversal workflows, not hard deletion. Use soft delete for business records where applicable.
+- The current implemented Company Settings VAT field is `company_settings.vat_mode`.
+
 ## Service Catalog
 - **Status:** Deferred.
-- **Reason deferred:** Manual quotation line items are enough for the current demo and avoid introducing a services table, CRUD, permissions, and form integration too early.
+- **Reason deferred:** Manual quotation line items are enough for the current demo and avoid introducing a separate catalog table, CRUD, permissions, and form integration too early. This is distinct from the ERP `services` table, which is the Service / Booking operational unit.
 - **When to return:** After invoices/payments are stable or when repeated service pricing becomes a workflow bottleneck.
-- **Known requirements:** Future `services` table, services CRUD, permissions, `/services` page, quotation form dropdown, and snapshot-editable quotation items.
+- **Known requirements:** Future catalog-style service item table, catalog CRUD, permissions, quotation form dropdown, and snapshot-editable quotation items.
+
+## Remaining Legacy Project Cleanup
+- **Status:** Deferred after PRJ-CLEANUP-1.
+- **Reason deferred:** PRJ-CLEANUP-1 only retired user-facing Projects UI and avoided schema, permission, type, and data refactors.
+- **When to return:** Dedicated follow-up after Services/Bookings are stable enough to absorb remaining legacy references.
+- **Known requirements:** Review project types/mock data, project permissions, `projects`/`project_tasks` legacy schema, customer `projects_count`, and supplier PRJ mock references.
 
 ## User Management + Clerk Sync
 - **Status:** Deferred; required before production team usage.
@@ -30,7 +62,7 @@ Deferred decisions are tracked here, not forgotten. Revisit each item before its
 - **Status:** Deferred full integration.
 - **Reason deferred:** Full Saudi e-invoicing compliance can affect schema, signing, QR/XML generation, and operational process.
 - **When to return:** Before issuing official Saudi tax invoices from the system.
-- **Known requirements:** Decision required before invoice schema: are invoices official Saudi tax invoices or internal/proforma first? Planned nullable fields to consider: `invoice_uuid`, `zatca_status`, `qr_code_data`, `xml_hash`.
+- **Known requirements:** Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior. Full integration requires separate reviewed design before issuing official Saudi tax invoices from the system. Planned nullable fields to consider only after approval: `invoice_uuid`, `zatca_status`, `qr_code_data`, `xml_hash`.
 
 ## Company Settings Document Snapshot Wiring
 - **Status:** Deferred; required before printed quotations/invoices depend on live Company Settings.
@@ -111,16 +143,16 @@ Deferred decisions are tracked here, not forgotten. Revisit each item before its
 - **Known requirements:** Prefer `event_start_date` and nullable `event_end_date` instead of only `event_date`, so both single-day and multi-day events are supported. `event_end_date` can be null for single-day/inquiry cases. Planned DB constraint: `CHECK (event_end_date IS NULL OR event_end_date >= event_start_date)`. Event fields should stay flexible at inquiry stage. Potential fields also include `event_name`, `event_venue`, and `event_type`.
 
 ## Multi-invoice per Quotation
-- **Status:** Decision required before Phase 7A.
-- **Reason deferred:** Events businesses often use deposit + final payment.
-- **When to return:** Before invoice schema and quotation-to-invoice workflow design.
-- **Known requirements:** Answer: can one approved quotation generate multiple invoices? Potential flow: Quotation → Deposit Invoice → Final Invoice. Multiple staged invoices may also be needed.
+- **Status:** Resolved for deposit/final invoices; additional staged invoice behavior remains deferred.
+- **Reason deferred:** Events businesses may later need staged invoices beyond the approved deposit/final model.
+- **When to return:** Before adding staged invoices beyond deposit/final.
+- **Known requirements:** Invoice type uses `invoice_type = deposit | final`. Invoice numbering uses one shared `INV-YYYY-0001` sequence; do not create separate `DEP-` or `FIN-` sequences. Every invoice must belong to a Service and reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
 
 ## Invoice Voiding, Credit Notes, And Refunds
 - **Status:** Deferred.
 - **Reason deferred:** Invoice voiding/cancellation can affect accounting, auditability, payment status, refunds, and future ZATCA direction.
 - **When to return:** Before implementing invoice void/delete behavior, paid invoice cancellation, refunds, or credit notes.
-- **Known requirements:** Do not implement now. Future flow may require Void status, Credit Note, Refund, and audit trail. Do not allow casual deletion of issued or paid invoices in future design. Issued/paid financial records must be preserved for auditability.
+- **Known requirements:** Do not implement now. Financial records must use void/cancel/reversal workflows, not hard deletion. Future flow may require Void status, Credit Note, Refund, and audit trail. Do not allow casual deletion of issued or paid invoices in future design. Issued/paid financial records must be preserved for auditability.
 
 ## Service Cancellation With Financial Records
 - **Status:** Partially resolved; detailed financial reversal flow deferred.
@@ -138,13 +170,13 @@ Deferred decisions are tracked here, not forgotten. Revisit each item before its
 - **Status:** Deferred technical decision.
 - **Reason deferred:** Current schema uses soft-delete patterns, but future financial records need stricter retention rules.
 - **When to return:** Before ERP-1 schema work and before invoice/payment delete or void behavior.
-- **Known requirements:** Prefer `deleted_at` timestamp over only `is_deleted` for future soft deletes, or document current `is_deleted` usage as technical debt. Issued/paid financial records must not be casually deleted.
+- **Known requirements:** Use soft delete for business records where applicable. Prefer `deleted_at` timestamp over only `is_deleted` for future soft deletes, or document current `is_deleted` usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion. Issued/paid financial records must not be casually deleted.
 
 ## Financial Rounding And Currency Snapshots
 - **Status:** Deferred implementation detail; rule is required before ERP-3.
 - **Reason deferred:** Invoice/payment implementation has not started.
 - **When to return:** ERP-3 Invoices and ERP-4 Payments.
-- **Known requirements:** Document SAR 2-decimal rounding rules. Financial rounding must be server-side/PostgreSQL-side. Currency should be snapshotted on issued documents.
+- **Known requirements:** Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic. Document SAR 2-decimal rounding rules. Financial rounding must be server-side/PostgreSQL-side. Currency should be snapshotted on issued documents.
 
 ## Planned ERP Indexes
 - **Status:** Deferred technical planning.

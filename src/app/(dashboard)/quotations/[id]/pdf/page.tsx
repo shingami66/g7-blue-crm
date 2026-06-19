@@ -41,6 +41,13 @@ export default async function QuotationPdfPage({
     if (val === null || val === undefined) return "0.00";
     return val.toLocaleString(undefined, { minimumFractionDigits: 2 });
   };
+  const formatQuantity = (val: number | null | undefined) => {
+    if (val === null || val === undefined) return "0";
+    return val.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+  };
 
   return (
     <div className="quotation-print-page bg-surface-dim py-8 text-on-surface flex justify-center items-start min-h-screen font-sans">
@@ -177,7 +184,7 @@ export default async function QuotationPdfPage({
                     </div>
                   </td>
                   <td className="py-4 px-2 align-top text-[12px]">{item.category}</td>
-                  <td className="py-4 px-2 align-top text-center">{item.qty}</td>
+                  <td className="py-4 px-2 align-top text-center">{formatQuantity(item.qty)}</td>
                   <td className="py-4 px-2 align-top text-right">
                     {formatMoney(item.unitPrice)}
                   </td>

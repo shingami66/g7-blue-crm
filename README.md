@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# G7 BLUE CRM
 
-## Getting Started
+G7 BLUE CRM is an Events CRM + Billing system built with Next.js 16 App Router, TypeScript, Tailwind CSS, Supabase/PostgreSQL, Clerk Auth, RBAC, Server Actions, and PostgreSQL RPC.
 
-First, run the development server:
+The product direction is not a generic billing-only CRM. New ERP work follows:
+
+Customer Profile -> Service / Booking -> Quotation -> Invoice -> Payment
+
+## Current State
+
+- Customers, RBAC, quotations foundation, quotation manual entry/edit/detail/print, Company Settings CS-A, and the ERP-1 Services DB foundation are documented as complete.
+- Services now exist as the new operational unit at the DB foundation level, but Services UI/routes/server actions remain pending.
+- Quotations, invoices, and payments are still being moved toward the final Service-linked ERP flow.
+- Real or semi-real data remains blocked until production RLS hardening replaces `DEV_ONLY` policies.
+
+## Approved ERP Rules
+
+- Service / Booking is the core operational entity for new ERP work, not Project.
+- No standalone quotations. Quotations are Service-scoped.
+- Quotation `customer_id`, if retained, is derived server-side from Service.
+- One Service can have multiple Quotations. Do not add `UNIQUE(service_id)` to quotations.
+- Quotation approval requires `quotations:approve`, separate from `quotations:write`.
+- Non-draft quotations must not be fully editable through ordinary `quotations:write`.
+- Approved quotations must not be soft-deleted through ordinary `quotations:write`.
+- No Invoice may exist without Service.
+- Invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
+- Invoice numbering uses one shared `INV-YYYY-0001` sequence. Do not create separate `DEP-` or `FIN-` sequences.
+- Invoice type uses `invoice_type = deposit | final`.
+- Payment must link to Invoice.
+- Prevent overpayment unless explicitly approved.
+- Deposit is flexible, not fixed 50%.
+- `Deposit Paid` requires a valid/cleared deposit payment. A Deposit Invoice alone and a pending payment do not confirm booking.
+- Do not add a separate `Confirmed` status.
+- `Cancelled` is terminal and non-linear, not a progress step.
+- Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic.
+- Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
+- Financial records must use void/cancel/reversal workflows rather than hard deletion. Use soft delete for business records where applicable.
+- The current implemented Company Settings VAT field is `company_settings.vat_mode`.
+
+## Documentation Map
+
+- `docs/project-status.md`: current project status and resolved decisions.
+- `docs/project-roadmap.md`: phase plan, active priorities, and ERP checkpoints.
+- `docs/deferred-decisions.md`: deferred and partially resolved decisions.
+- `docs/database-schema.md`: current schema reference and approved target schema direction.
+- `docs/roles-permissions.md`: RBAC roles, permission boundaries, and security rules.
+- `AGENTS.md`: repository guidance for coding agents.
+
+## Local Development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Build verification for code-affecting changes:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm build
+```
 
-## Learn More
+Documentation-only changes do not require app build, migrations, or database commands.
 
-To learn more about Next.js, take a look at the following resources:
+## Safety Rules
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Do not commit `.env.local` or expose secrets.
+- Do not run SQL or migrations without explicit review and approval.
+- Do not apply Supabase migrations automatically.
+- Do not trust client financial totals.
+- Keep Supabase admin access server-side only.
+- Use `requirePermission` for write Server Actions and respect RBAC on reads.
+- Production RLS hardening is required before any hosted demo with real or semi-real data.
