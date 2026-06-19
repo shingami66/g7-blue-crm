@@ -11,6 +11,33 @@ After every successful merge:
 - add branch/commit/PR notes
 - update "Current Active Phase"
 
+## Final Approved ERP Decisions
+
+These decisions are locked for G7 BLUE CRM planning and must stay aligned across project docs:
+
+- The core operational entity is **Service / Booking**, not Project. Legacy `projects` may remain historically, but new ERP work must follow Service.
+- The locked workflow is **Customer Profile -> Service -> Quotation -> Invoice -> Payment**.
+- Quotations are Service-scoped. No standalone quotations are allowed.
+- `customer_id` on quotations, if retained for reporting/query convenience, must be derived server-side from the Service.
+- One Service can have multiple Quotations. Do not add `UNIQUE(service_id)` to quotations.
+- Quotation approval requires `quotations:approve`, separate from `quotations:write`.
+- Non-draft quotations must not be fully editable through ordinary `quotations:write`.
+- Approved quotations must not be soft-deleted through ordinary `quotations:write`.
+- No Invoice may exist without a Service.
+- Each Invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
+- Invoice numbering uses one shared `INV-YYYY-0001` sequence. Do not create separate `DEP-` or `FIN-` sequences.
+- Invoice type uses `invoice_type = deposit | final`.
+- Payment must link to an Invoice.
+- Prevent overpayment unless explicitly approved.
+- Deposit is flexible, not fixed at 50%.
+- `Deposit Paid` requires a valid/cleared deposit payment. A Deposit Invoice alone does not confirm booking, and a pending payment does not confirm booking.
+- Do not add a separate `Confirmed` status.
+- `Cancelled` is terminal and non-linear, not a progress step.
+- Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic.
+- Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
+- Financial records must use void/cancel/reversal workflows rather than hard deletion. Use soft delete for business records where applicable.
+- The current implemented Company Settings VAT field is `company_settings.vat_mode`.
+
 ## 2. Current Priority
 1. Docs + agent guidance corrections
 2. TAX-0 — cleanup premature tax/ZATCA wording before ERP implementation
@@ -143,40 +170,40 @@ Checklist:
 **Note:** Phase 6 completed quotation detail + browser print using live data. Server-side PDF generation remains deferred.
 
 ### Phase BD — Business Domain Decisions
-Status: Required before Phase 7A
+Status: Core ERP decisions resolved; leads/vendors/demo-data details remain deferred
 
 **Purpose:**
 Confirm event-company workflow before invoice schema.
 
-Questions to resolve:
-1. Are quotations always tied to Services?
-2. Required event fields:
+Approved decisions:
+1. Quotations are always tied to Services in new ERP work.
+2. Service / Booking replaces Project as the operational entity.
+3. Required event fields remain flexible at inquiry stage, with the documented date direction:
    - `event_name`
    - `event_start_date`
    - nullable `event_end_date`
    - `event_venue`
    - `event_type`
-3. Can one quotation generate multiple invoices?
-   - deposit invoice
-   - final invoice
-   - multiple staged invoices
-4. Are invoices official ZATCA tax invoices or internal/proforma first?
-5. Are leads/inquiries tracked before becoming customers?
-6. Are vendors/suppliers tracked later?
-7. Is first demo using real data or fake data?
+4. Invoices are Service-linked and use deposit/final invoice types against an approved quotation basis.
+5. Invoices must not claim official Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior until a real reviewed integration exists.
+
+Still deferred:
+- whether leads/inquiries are tracked before becoming customers
+- whether vendors/suppliers are tracked later
+- whether first demo data is fake, semi-real, or real
 
 Acceptance criteria:
-- [ ] No invoice schema work starts before these decisions are documented.
+- [x] No invoice schema work starts before these decisions are documented.
 - [x] Event date direction is documented: use `event_start_date` plus nullable `event_end_date`.
 - [ ] Saudi partner/business owner confirms event types.
-- [ ] Multi-invoice decision is documented.
-- [ ] ZATCA/proforma direction is documented.
+- [x] Deposit/final invoice decision is documented.
+- [x] ZATCA/proforma direction is documented as no overclaiming or fake integration.
 - [ ] Leads/inquiries decision is documented.
 - [ ] Vendors/suppliers decision is documented.
 - [ ] Demo data security level is documented.
-- [ ] If `vat_rate` comes from company settings, it is only a default for new documents.
-- [ ] Every quotation/invoice stores its own `vat_rate` snapshot.
-- [ ] Changing company settings never changes old documents.
+- [x] If `vat_rate` comes from company settings, it is only a default for new documents.
+- [x] Every quotation/invoice stores its own `vat_rate` snapshot.
+- [x] Changing company settings never changes old documents.
 
 ### Pre-Demo Security Check
 Status: Required if demo uses real or semi-real data
@@ -270,14 +297,20 @@ Checklist:
 - [ ] Quotations must belong to a Service.
 - [ ] No standalone quotation creation.
 - [ ] Migrate quotation schema/app flow to use `service_id`; not done in ERP-1 DB foundation.
+- [ ] Derive quotation `customer_id` server-side from the Service; do not trust client-submitted customer linkage.
+- [ ] Allow one Service to have multiple Quotations.
+- [ ] Do not add `UNIQUE(service_id)` to quotations.
 - [ ] Customer Profile shows quotations through Services.
 - [ ] Approval requires `quotations:approve`.
 - [ ] Recommended approval roles: Admin and Manager.
 - [ ] Sales can create/send quotations but cannot approve unless explicitly granted.
 - [ ] Do not treat `quotations:write` as approval permission.
+- [ ] Non-draft quotations must not be fully editable through ordinary `quotations:write`.
+- [ ] Approved quotations must not be soft-deleted through ordinary `quotations:write`.
 - [ ] `valid_until` or `expiry_date` must be on or after issue date.
 - [ ] Expired quotations cannot be approved without renewal/extension or authorized override.
 - [ ] Exact override behavior remains deferred.
+- [ ] Client-submitted totals remain preview only; server/PostgreSQL logic calculates trusted totals.
 - [ ] Integration checkpoint after ERP-2: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
 
 ### Phase ERP-3 — Service-linked Invoices
@@ -286,6 +319,10 @@ Status: Planned
 Checklist:
 - [ ] Invoices must belong to a Service.
 - [ ] No standalone invoice creation.
+- [ ] Every invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
+- [ ] Invoice numbering uses one shared `INV-YYYY-0001` sequence.
+- [ ] Do not create separate `DEP-` or `FIN-` invoice sequences.
+- [ ] Use `invoice_type = deposit | final`.
 - [ ] Deposit Invoice is created manually after quotation approval.
 - [ ] Deposit amount must be greater than `0`.
 - [ ] Deposit amount must be less than or equal to the approved quotation total or remaining uninvoiced balance.
@@ -294,6 +331,7 @@ Checklist:
 - [ ] Do not allow casual deletion of issued or paid invoices in future design.
 - [ ] Issued/paid financial records must be preserved for auditability.
 - [ ] Future flow may require Void status, Credit Note, Refund, and audit trail.
+- [ ] Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
 - [ ] Financial rounding must be server-side/PostgreSQL-side using SAR 2-decimal rounding rules.
 - [ ] Currency should be snapshotted on issued documents.
 - [ ] Integration checkpoint after ERP-3: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
@@ -308,8 +346,10 @@ Checklist:
 - [ ] Enforce invoice/service consistency in the data layer and preferably DB design.
 - [ ] If a customer pays before an invoice exists, require creating a Deposit Invoice first or prevent payment recording until an invoice exists.
 - [ ] Payment recording updates invoice paid amount, balance due, and payment status.
-- [ ] Deposit payment confirms the Service only through a Deposit Invoice payment.
-- [ ] Deposit payment changes Service status to `Deposit Paid`.
+- [ ] `Deposit Paid` requires a valid/cleared deposit payment.
+- [ ] A Deposit Invoice alone does not confirm booking.
+- [ ] A pending payment does not confirm booking.
+- [ ] Deposit payment changes Service status to `Deposit Paid` only through a cleared Deposit Invoice payment.
 - [ ] Prevent overpayment unless explicitly approved.
 - [ ] Plan future refund/credit-note behavior with invoice void/cancellation design.
 - [ ] Integration checkpoint after ERP-4: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.

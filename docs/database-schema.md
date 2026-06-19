@@ -7,11 +7,35 @@ This document outlines the Supabase PostgreSQL database schema reference for the
 
 **WARNING: DO NOT apply migrations through the MCP connection.** The current setup is purely local for development. Follow the manual application steps if needed on a live instance.
 
+## Approved ERP Schema Direction
+
+These are approved target rules for future reviewed schema changes; they do not imply that the current DB already contains every target column.
+
+- Service / Booking is the core operational entity for new ERP work, not Project.
+- The locked relationship chain is Customer Profile -> Service -> Quotation -> Invoice -> Payment.
+- Quotations are Service-scoped. No standalone quotations are allowed.
+- Quotation `customer_id`, if retained, must be derived server-side from Service.
+- One Service can have multiple Quotations. Do not add `UNIQUE(service_id)` to quotations.
+- No Invoice may exist without Service.
+- Every Invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
+- Invoice numbering uses one shared `INV-YYYY-0001` sequence. Do not create separate `DEP-` or `FIN-` sequences.
+- Invoice type uses `invoice_type = deposit | final`.
+- Payment must link to Invoice. Payment connects to Service through the Invoice.
+- Prevent overpayment unless explicitly approved.
+- Deposit is flexible, not fixed 50%.
+- `Deposit Paid` requires a valid/cleared deposit payment. A Deposit Invoice alone and a pending payment do not confirm booking.
+- Do not add a separate `Confirmed` status.
+- `Cancelled` is terminal and non-linear, not a progress step.
+- Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic.
+- Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
+- Financial records must use void/cancel/reversal workflows rather than hard deletion. Use soft delete for business records where applicable.
+- The current implemented Company Settings VAT field is `company_settings.vat_mode`.
+
 ## Tables
 
 ### Core Entities
 - `app_users`: Server-side app user and RBAC role table keyed by Clerk `clerk_user_id` text. RLS is enabled, but no broad `DEV_ONLY` policy is present by design; access should remain through protected server logic and the Supabase service role.
-- `company_settings`: Singleton seller/master-company settings for CS-A. It stores English and Arabic legal names, CR, TIN, VAT mode, nullable VAT number/effective date, official contact details, national address, bank details, currency, default VAT percent, and default terms. The stable `setting_key='default'` column enforces one active settings row.
+- `company_settings`: Singleton seller/master-company settings for CS-A. It stores English and Arabic legal names, CR, TIN, VAT mode, nullable VAT number/effective date, official contact details, national address, bank details, currency, default VAT percent, and default terms. The stable `setting_key='default'` column enforces one active settings row. The current implemented VAT field is `company_settings.vat_mode`.
 - `number_sequences`: Atomic counters for generated IDs (e.g., QT-2026-0001). Current allowed types are `quotation`, `invoice`, `payment`, `project`, and `service`. Current prefixes are `QT`, `INV`, `PAY`, `PRJ`, and `SVC`.
 - `customers`: Client database with revenue metrics and soft deletes.
 - `services`: ERP-1 operational unit linked to `customers(id)` with `service_number`, event fields, status, ownership, cancellation reason, timestamps, audit text fields, and soft-delete timestamp. The DB foundation is applied and verified, but app UI/routes/server actions are not implemented yet.
@@ -20,7 +44,7 @@ This document outlines the Supabase PostgreSQL database schema reference for the
 
 ### Financial & Workflow
 - `quotations` / `quotation_items`: Quotes with subtotal/vat/grand_total calculation foundations.
-- `invoices` / `invoice_items`: Current invoice tables referencing quotes. `invoices.type` exists as text without a CHECK constraint; ERP-3 should decide the approved invoice type model later.
+- `invoices` / `invoice_items`: Current invoice tables referencing quotes. `invoices.type` exists as text without a CHECK constraint; ERP-3 target design must use `invoice_type = deposit | final` after reviewed schema work.
 - `payments`: Financial tracking of invoice payments. Current `payments.method` allowed values are `bank_transfer`, `cash`, `cheque`, and `online`; ERP-4 planning may later decide whether to change this to Cash / Bank Transfer / Card / Other.
 - `projects` / `project_tasks`: Existing legacy execution tracking. New ERP planning should use Service as the operational unit.
 
@@ -53,20 +77,34 @@ This document outlines the Supabase PostgreSQL database schema reference for the
 
 ### Quotations
 - Quotations must belong to a Service. Standalone quotations are not allowed in new ERP work.
+- `customer_id` in quotations must be derived server-side from the Service; do not trust client-submitted customer linkage.
+- One Service can have multiple Quotations.
+- Do not add `UNIQUE(service_id)` to quotations.
 - `valid_until` or `expiry_date` must be on or after issue date.
 - Expired quotations cannot be approved without renewal/extension or authorized override.
 - Approval requires `quotations:approve`, not only `quotations:write`.
+- Non-draft quotations must not be fully editable through ordinary `quotations:write`.
+- Approved quotations must not be soft-deleted through ordinary `quotations:write`.
 
 ### Invoices And Payments
 - Invoices must belong to a Service. Standalone invoices are not allowed in new ERP work.
+- Every invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
+- Invoice numbering uses one shared `INV-YYYY-0001` sequence.
+- Do not create separate `DEP-` or `FIN-` invoice sequences.
+- Invoice type uses `invoice_type = deposit | final`.
 - Deposit Invoice is created manually after quotation approval.
 - Deposit amount must be greater than `0`.
 - Deposit amount must be less than or equal to the approved quotation total or remaining uninvoiced balance.
 - Deposit is flexible and not fixed at 50%.
-- Deposit payment changes Service status to `Deposit Paid` only through a Deposit Invoice payment.
+- `Deposit Paid` requires a valid/cleared deposit payment.
+- A Deposit Invoice alone does not confirm booking.
+- A pending payment does not confirm booking.
+- Deposit payment changes Service status to `Deposit Paid` only through a cleared Deposit Invoice payment.
 - Payment must link to an Invoice. If a customer pays before an invoice exists, the UI must require creating a Deposit Invoice first or prevent recording the payment until an invoice exists.
+- Prevent overpayment unless explicitly approved.
 - Future invoice void/cancellation may require Void status, Credit Note, Refund, and audit trail. Do not allow casual deletion of issued or paid invoices.
 - Issued/paid financial records must be preserved for auditability.
+- Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
 
 ### Index Planning
 - Implemented ERP-1 service indexes: `services.customer_id`, `services.status`, `services.deleted_at`, `services.event_start_date`, `services.sales_owner_id`, and `services.created_at`.
@@ -74,17 +112,17 @@ This document outlines the Supabase PostgreSQL database schema reference for the
 
 ## Data Integrity Constraints
 - **Current Status And Method Checks**: Database `status` and `method` fields use explicit CHECK constraints where they exist. Current `payments.method` values are `bank_transfer`, `cash`, `cheque`, and `online`. Future ERP-4 payment method labels such as Card or Other require an approved schema change before use.
-- **Invoice Type Caveat**: `invoices.type` currently has no CHECK constraint. ERP-3 should decide the approved invoice type model before invoice implementation proceeds.
-- **Financial Safety**: To prevent invalid negative financial amounts, rigid numeric `CHECK (value >= 0)` constraints protect fields like `subtotal`, `discount`, `vat_amount`, `grand_total`, `amount`, `budget`, `revenue`, `qty`, `unit_price`, `vat`, `total`, and `default_vat_percent`. Company Settings VAT values are defaults only; quotations and invoices must keep document-level snapshots.
+- **Invoice Type Caveat**: `invoices.type` currently has no CHECK constraint. The approved ERP-3 target is `invoice_type = deposit | final` after reviewed schema work.
+- **Financial Safety**: To prevent invalid negative financial amounts, rigid numeric `CHECK (value >= 0)` constraints protect fields like `subtotal`, `discount`, `vat_amount`, `grand_total`, `amount`, `budget`, `revenue`, `qty`, `unit_price`, `vat`, `total`, and `default_vat_percent`. Company Settings VAT values are defaults only; quotations and invoices must keep document-level snapshots. Client-submitted totals must never be trusted.
 - **Rounding And Currency**: Future invoice/payment work must document SAR 2-decimal rounding rules. Financial rounding must be server-side/PostgreSQL-side. Currency should be snapshotted on issued documents.
-- **VAT Mode Safety**: `company_settings.vat_mode='not_registered'` requires `default_vat_percent=0`, no VAT number, and no VAT effective date. `phase2_integrated` is reserved for future FATOORA work and must not be claimed by CS-A UI.
+- **VAT Mode Safety**: The current implemented field is `company_settings.vat_mode`. `company_settings.vat_mode='not_registered'` requires `default_vat_percent=0`, no VAT number, and no VAT effective date. `phase2_integrated` is reserved for future FATOORA work and must not be claimed by CS-A UI.
 - **Bank Detail Visibility**: Bank details are sensitive. CS-A reads them server-side only for Admin and Accountant; Viewer can read settings without receiving bank values from the server.
 
 ## Numbering Strategy
-Unique document numbers (`quotation_number`, `invoice_number`, `payment_number`, `project_number`, `service_number`) are generated using the `number_sequences` table and `generate_document_number(doc_type text)`. Current supported document types are `quotation`, `invoice`, `payment`, `project`, and `service`. Current prefixes are `QT`, `INV`, `PAY`, `PRJ`, and `SVC`; the payment prefix remains `PAY` to preserve verified live DB behavior.
+Unique document numbers (`quotation_number`, `invoice_number`, `payment_number`, `project_number`, `service_number`) are generated using the `number_sequences` table and `generate_document_number(doc_type text)`. Current supported document types are `quotation`, `invoice`, `payment`, `project`, and `service`. Current prefixes are `QT`, `INV`, `PAY`, `PRJ`, and `SVC`; the payment prefix remains `PAY` to preserve verified live DB behavior. Invoice numbering must remain one shared `INV-YYYY-0001` sequence for both deposit and final invoices.
 
 ## Soft Delete Strategy
-Entities like `customers`, `quotations`, `invoices`, and `projects` implement a soft delete pattern using `is_deleted` (boolean) and `deleted_at` (timestamptz). `services` currently uses `deleted_at` without `is_deleted`. This preserves historical references in financial data while hiding records from the active UI. Future schema should prefer `deleted_at` timestamp over only `is_deleted`, or document any `is_deleted`-only usage as technical debt.
+Entities like `customers`, `quotations`, `invoices`, and `projects` implement a soft delete pattern using `is_deleted` (boolean) and `deleted_at` (timestamptz). `services` currently uses `deleted_at` without `is_deleted`. This preserves historical references in financial data while hiding records from the active UI. Future schema should prefer `deleted_at` timestamp over only `is_deleted`, or document any `is_deleted`-only usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion.
 
 ## Row Level Security (RLS)
 All tables have Row Level Security enabled. 

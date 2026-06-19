@@ -27,12 +27,32 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - Recommended roles: Admin and Manager.
 - Sales can create/send quotations with `quotations:write`, but cannot approve unless explicitly granted `quotations:approve`.
 - Quotation approval must not be treated as the same permission as `quotations:write`.
+- Non-draft quotations must not be fully editable through ordinary `quotations:write`.
+- Approved quotations must not be soft-deleted through ordinary `quotations:write`.
+- Quotations are Service-scoped; no standalone quotation creation is allowed.
+- Quotation `customer_id`, if present, must be derived server-side from the Service rather than accepted from the client.
+- One Service can have multiple Quotations. Do not add `UNIQUE(service_id)` to quotations.
+
+## Invoice And Payment Permissions
+
+- No Invoice may exist without a Service.
+- Every Invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
+- Invoice type uses `invoice_type = deposit | final`.
+- Invoice numbering uses one shared `INV-YYYY-0001` sequence; do not create separate `DEP-` or `FIN-` sequences.
+- Payment must link to an Invoice.
+- Prevent overpayment unless explicitly approved.
+- Deposit is flexible, not fixed at 50%.
+- `Deposit Paid` requires a valid/cleared deposit payment. A Deposit Invoice alone and a pending payment do not confirm booking.
+- Financial records must use void/cancel/reversal workflows rather than hard deletion.
 
 ## Security Notes
 
 - Do not treat UI hiding as security. Server-side permission checks are required.
 - Server-side masking is required for sensitive values such as bank details.
 - Consider rate limiting sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
+- Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic.
+- Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
+- The current implemented Company Settings VAT field is `company_settings.vat_mode`.
 
 ## Implementation Guidelines
 In Server Actions and API routes, permissions are enforced using helper functions from `src/lib/auth/permissions.ts`:
