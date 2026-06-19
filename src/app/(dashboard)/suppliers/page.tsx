@@ -1,11 +1,25 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Plus, Filter, Search, Star, Phone, Mail, FileText, CheckCircle2, User } from "lucide-react";
 import { suppliersData } from "@/lib/data/suppliers";
 import { useState } from "react";
+
+type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
+type SupplierStatus = (typeof suppliersData)[number]["status"];
+
+const getSupplierStatusBadgeVariant = (
+  status: SupplierStatus,
+): StatusBadgeVariant => {
+  if (status === "blacklisted") {
+    return "draft";
+  }
+
+  return status;
+};
 
 export default function SuppliersPage() {
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
@@ -111,7 +125,7 @@ export default function SuppliersPage() {
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <StatusBadge variant={sup.status as any}>
+                      <StatusBadge variant={getSupplierStatusBadgeVariant(sup.status)}>
                         {sup.status.charAt(0).toUpperCase() + sup.status.slice(1)}
                       </StatusBadge>
                     </td>
