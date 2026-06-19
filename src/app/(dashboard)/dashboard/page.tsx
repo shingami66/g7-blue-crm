@@ -2,13 +2,12 @@ import {
   Users,
   FileText,
   Receipt,
-  FolderKanban,
   DollarSign,
   CreditCard,
   UserPlus,
   FilePlus,
   ReceiptText,
-  FolderPlus,
+  BriefcaseBusiness,
 } from "lucide-react";
 import KpiCard from "@/components/ui/KpiCard";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -21,11 +20,11 @@ const recentQuotations = [
   { client: "NEOM Phase 1 Transport", value: "SAR 2,100,000", status: "pending" as const },
 ];
 
-const upcomingProjects = [
-  { name: "Logistics Hub Alpha", date: "Oct 15, 2023", manager: "A. Rahman" },
-  { name: "Expo 2030 Prep", date: "Nov 01, 2023", manager: "S. Ahmed" },
-  { name: "Red Sea Resupply", date: "Nov 20, 2023", manager: "F. Khalid" },
-  { name: "VIP Convoy Sec.", date: "Dec 05, 2023", manager: "M. Hassan" },
+const serviceWorkflow = [
+  { stage: "Inquiry", focus: "Capture event or booking request", owner: "Sales" },
+  { stage: "Quoted", focus: "Prepare Service-scoped quotation", owner: "Sales" },
+  { stage: "Approved", focus: "Record customer approval", owner: "Manager" },
+  { stage: "Deposit Paid", focus: "Confirm cleared deposit payment", owner: "Accountant" },
 ];
 
 export default function DashboardPage() {
@@ -67,11 +66,11 @@ export default function DashboardPage() {
             icon={Receipt}
           />
           <KpiCard
-            label="Active Projects"
-            value="56"
+            label="Service / Booking Workflow"
+            value="Services"
             trend="flat"
-            trendLabel="Steady"
-            icon={FolderKanban}
+            trendLabel="Operational center"
+            icon={BriefcaseBusiness}
           />
           <KpiCard
             label="Monthly Revenue"
@@ -107,10 +106,13 @@ export default function DashboardPage() {
               <ReceiptText size={18} />
               New Invoice
             </button>
-            <button className="w-full flex items-center justify-center gap-2 bg-surface-container-lowest border border-primary text-primary hover:bg-surface-container-low py-3 px-4 rounded-lg text-[14px] leading-[20px] transition-colors">
-              <FolderPlus size={18} />
-              New Project
-            </button>
+            <Link
+              href="/services/new"
+              className="w-full flex items-center justify-center gap-2 bg-surface-container-lowest border border-primary text-primary hover:bg-surface-container-low py-3 px-4 rounded-lg text-[14px] leading-[20px] transition-colors"
+            >
+              <BriefcaseBusiness size={18} />
+              New Service
+            </Link>
           </div>
         </div>
 
@@ -164,17 +166,17 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Upcoming Projects */}
+        {/* Service Workflow */}
         <div className="md:col-span-6 bg-surface-container-lowest rounded-xl border border-surface-variant overflow-hidden flex flex-col">
           <div className="p-4 border-b border-surface-variant flex justify-between items-center">
             <h3 className="text-[20px] leading-[28px] font-semibold text-primary">
-              Upcoming Projects
+              Service Workflow
             </h3>
             <Link
-              href="/projects"
+              href="/services"
               className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-primary hover:underline"
             >
-              View All
+              View Services
             </Link>
           </div>
           <div className="overflow-x-auto">
@@ -182,30 +184,30 @@ export default function DashboardPage() {
               <thead>
                 <tr className="bg-surface-container-low">
                   <th className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase px-4 py-2">
-                    Project Name
+                    Service Stage
                   </th>
                   <th className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase px-4 py-2">
-                    Start Date
+                    Focus
                   </th>
                   <th className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase px-4 py-2">
-                    Manager
+                    Owner
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
-                {upcomingProjects.map((p, i) => (
+                {serviceWorkflow.map((stage, i) => (
                   <tr
                     key={i}
                     className="hover:bg-surface-container-low/50 transition-colors"
                   >
                     <td className="px-4 py-2 text-on-surface font-medium">
-                      {p.name}
+                      {stage.stage}
                     </td>
                     <td className="px-4 py-2 text-on-surface-variant">
-                      {p.date}
+                      {stage.focus}
                     </td>
                     <td className="px-4 py-2 text-on-surface-variant">
-                      {p.manager}
+                      {stage.owner}
                     </td>
                   </tr>
                 ))}

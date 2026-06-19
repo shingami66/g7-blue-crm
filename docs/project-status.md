@@ -152,6 +152,12 @@
 - Legacy `projects` remain for now.
 - `DEV_ONLY_services` is fake/dev-data only and not production-safe.
 
+### ✅ PRJ-CLEANUP-1 — Retire User-Facing Projects UI
+- Projects were removed from primary user-facing navigation.
+- Dashboard Project cards/actions/sections were replaced with Service / Booking-oriented surfaces that point to the existing Services route.
+- `/projects` now redirects to `/services`.
+- Legacy project schema, permissions, types, mock data, customer `projects_count`, and supplier PRJ mock references remain deferred for later cleanup.
+
 ## 4. Current Active Phase
 
 ### 🚧 Post-ERP-1 DB Foundation / ERP-2 Planning

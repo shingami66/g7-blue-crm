@@ -34,6 +34,12 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **When to return:** After invoices/payments are stable or when repeated service pricing becomes a workflow bottleneck.
 - **Known requirements:** Future catalog-style service item table, catalog CRUD, permissions, quotation form dropdown, and snapshot-editable quotation items.
 
+## Remaining Legacy Project Cleanup
+- **Status:** Deferred after PRJ-CLEANUP-1.
+- **Reason deferred:** PRJ-CLEANUP-1 only retired user-facing Projects UI and avoided schema, permission, type, and data refactors.
+- **When to return:** Dedicated follow-up after Services/Bookings are stable enough to absorb remaining legacy references.
+- **Known requirements:** Review project types/mock data, project permissions, `projects`/`project_tasks` legacy schema, customer `projects_count`, and supplier PRJ mock references.
+
 ## User Management + Clerk Sync
 - **Status:** Deferred; required before production team usage.
 - **Reason deferred:** RBAC foundation exists, but full user management needs Clerk sync strategy and admin workflows.

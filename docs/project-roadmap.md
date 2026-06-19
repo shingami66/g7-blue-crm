@@ -52,6 +52,15 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 
 TAX-0 cleanup is complete, so ERP database implementation can proceed. However, real or semi-real company/client data remains blocked until production RLS hardening replaces all DEV_ONLY policies.
 
+### PRJ-CLEANUP-1 — Retire User-Facing Projects UI
+Status: Completed
+
+Checklist:
+- [x] Remove Projects from primary navigation.
+- [x] Replace dashboard Project surfaces with Service / Booking-oriented surfaces.
+- [x] Redirect `/projects` to `/services`.
+- [x] Leave legacy project schema, permissions, types, mock data, customer `projects_count`, and supplier PRJ mock references for later cleanup.
+
 ## 3. Completion Checklist
 
 ### Phase 0 — Stabilization
