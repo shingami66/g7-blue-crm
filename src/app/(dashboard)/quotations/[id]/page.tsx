@@ -69,6 +69,13 @@ export default async function QuotationDetailPage({
     if (val === null || val === undefined) return "0.00";
     return val.toLocaleString(undefined, { minimumFractionDigits: 2 });
   };
+  const formatQuantity = (val: number | null | undefined) => {
+    if (val === null || val === undefined) return "0";
+    return val.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+  };
   const isTaxVatNotApplied = quotation.vatRate === 0 && quotation.vatAmount === 0;
 
   return (
@@ -199,7 +206,7 @@ export default async function QuotationDetailPage({
                         </div>
                       </td>
                       <td className="px-4 py-4 text-center text-on-surface align-top">
-                        {item.qty}
+                        {formatQuantity(item.qty)}
                       </td>
                       <td className="px-4 py-4 text-right text-on-surface align-top">
                         {formatMoney(item.unitPrice)}

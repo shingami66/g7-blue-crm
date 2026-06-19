@@ -64,8 +64,8 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
   // CLIENT-SIDE PREVIEW ONLY — PostgreSQL RPC is the source of truth
   const parsedDiscount = parseFloat(discount) || 0;
   const subtotal = items.reduce((sum, item) => sum + (Number(item.qty) * Number(item.unitPrice)), 0);
-  const afterDiscount = Math.max(0, subtotal - parsedDiscount);
-  const grandTotal = afterDiscount;
+  const discountExceedsSubtotal = parsedDiscount > subtotal;
+  const grandTotal = subtotal - parsedDiscount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +84,11 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
     const hasInvalidItems = items.some(i => !i.description || i.qty <= 0 || i.unitPrice < 0);
     if (hasInvalidItems) {
       setError("All items must have a description, positive quantity, and non-negative unit price.");
+      return;
+    }
+
+    if (discountExceedsSubtotal) {
+      setError("Discount cannot exceed subtotal. Reduce the discount or adjust line items.");
       return;
     }
 
@@ -228,8 +233,15 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
                   step="0.01"
                   value={discount}
                   onChange={(e) => setDiscount(e.target.value)}
+                  aria-invalid={discountExceedsSubtotal}
+                  aria-describedby={discountExceedsSubtotal ? "discount-error" : undefined}
                   className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                 />
+                {discountExceedsSubtotal && (
+                  <p id="discount-error" className="text-[12px] text-error leading-snug">
+                    Discount cannot exceed subtotal. Server totals will reject this value.
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -348,11 +360,16 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
               <span className="text-on-surface-variant">Discount:</span>
               <span>- {parsedDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span>
             </div>
+            {discountExceedsSubtotal && (
+              <div className="w-64 text-[12px] text-error text-right">
+                Discount is greater than subtotal.
+              </div>
+            )}
             <div className="flex justify-between w-64">
               <span className="text-on-surface-variant">Tax/VAT:</span>
               <span>Not applied</span>
             </div>
-            <div className="flex justify-between w-64 pt-2 border-t border-outline-variant font-semibold text-[16px] text-primary">
+            <div className={`flex justify-between w-64 pt-2 border-t border-outline-variant font-semibold text-[16px] ${discountExceedsSubtotal ? "text-error" : "text-primary"}`}>
               <span>Grand Total:</span>
               <span>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span>
             </div>
@@ -361,7 +378,7 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
           <div className="flex justify-end mt-4">
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || discountExceedsSubtotal}
               className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg font-semibold transition-colors disabled:opacity-50"
             >
               <Save size={18} />
