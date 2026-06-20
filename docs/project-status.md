@@ -179,7 +179,7 @@
 ## 4. Current Active Phase
 
 ### 🚧 Locked Next CRM Priorities
-Status: RBAC-QUOTATIONS-APPROVE-1 is ready for PR; next task after merge is CUST-OFFICIAL-DETAILS-1
+Status: CUST-OFFICIAL-DETAILS-1B migration draft is ready for review/manual apply; next implementation after apply is customer data layer + UI/profile cards
 
 The locked workflow remains:
 Customer Profile → Service → Quotation → Invoice → Payment.
@@ -190,7 +190,10 @@ The next work order is:
    - Keeps approval separate from ordinary `quotations:write`.
    - Required before quotation approval flow and ERP-3 invoices.
 2. `CUST-OFFICIAL-DETAILS-1`
-   - Add optional/conditional customer official and billing fields before ERP-3: customer type (Individual / Company), legal name, Commercial Registration number, VAT number, National Address fields, billing email, finance contact, payment terms, and PO required flag.
+   - Migration draft ready: add optional/conditional customer official and billing fields before ERP-3.
+   - Fields include customer type (Individual / Company), legal name, Commercial Registration number, VAT number, National Address fields, billing email, finance contact, payment terms, and PO required flag.
+   - Pending review/manual apply; `supabase/schema.sql` must only be updated after manual apply and verification.
+   - Next implementation after migration review/manual apply: customer data layer + UI/profile cards.
 3. `SEC-SERVICE-INVARIANTS-1`
    - Verify active/non-deleted customer on service create.
    - Add linked-record guards before service soft delete.
@@ -257,4 +260,4 @@ Current decision gates before ERP implementation:
 - Quotation creation works after manual Supabase apply.
 - Company Settings CS-A is committed on `main`.
 - Financial totals remain server-side/database-side via PostgreSQL RPC.
-- Current work should follow the locked order: `RBAC-QUOTATIONS-APPROVE-1` ready for PR, then `CUST-OFFICIAL-DETAILS-1`, `SEC-SERVICE-INVARIANTS-1`, `SERVICE-HUB-1`, `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`.
+- Current work should follow the locked order: `CUST-OFFICIAL-DETAILS-1` migration review/manual apply, then customer data layer + UI/profile cards, `SEC-SERVICE-INVARIANTS-1`, `SERVICE-HUB-1`, `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`.

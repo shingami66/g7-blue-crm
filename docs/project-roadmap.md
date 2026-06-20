@@ -44,7 +44,10 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
    - Keep approval separate from ordinary `quotations:write`.
    - Required before quotation approval flow and ERP-3 invoices.
 2. `CUST-OFFICIAL-DETAILS-1`
-   - Add optional/conditional customer official and billing fields before ERP-3: customer type (Individual / Company), legal name, Commercial Registration number, VAT number, National Address fields, billing email, finance contact, payment terms, and PO required flag.
+   - Migration draft ready: add optional/conditional customer official and billing fields before ERP-3.
+   - Fields include customer type (Individual / Company), legal name, Commercial Registration number, VAT number, National Address fields, billing email, finance contact, payment terms, and PO required flag.
+   - Pending review/manual apply; `supabase/schema.sql` must only be updated after manual apply and verification.
+   - Next implementation after migration review/manual apply: customer data layer + UI/profile cards.
 3. `SEC-SERVICE-INVARIANTS-1`
    - Verify active/non-deleted customer on service create.
    - Add linked-record guards before service soft delete.
@@ -375,19 +378,23 @@ Checklist:
 - [x] Required before quotation approval flow and ERP-3 invoices.
 
 ### CUST-OFFICIAL-DETAILS-1
-Status: Planned before ERP-3
+Status: Migration draft ready; pending review/manual apply
 
 Checklist:
-- [ ] Add customer type: Individual / Company.
-- [ ] Add legal name.
-- [ ] Add Commercial Registration number.
-- [ ] Add VAT number.
-- [ ] Add National Address fields.
-- [ ] Add billing email.
-- [ ] Add finance contact.
-- [ ] Add payment terms.
-- [ ] Add PO required flag.
-- [ ] Keep fields optional/conditional, not mandatory for all customers.
+- [x] Draft backward-compatible migration for customer type: Individual / Company.
+- [x] Draft backward-compatible migration for legal name.
+- [x] Draft backward-compatible migration for Commercial Registration number.
+- [x] Draft backward-compatible migration for VAT number.
+- [x] Draft backward-compatible migration for National Address fields.
+- [x] Draft backward-compatible migration for billing email.
+- [x] Draft backward-compatible migration for finance contact.
+- [x] Draft backward-compatible migration for payment terms.
+- [x] Draft backward-compatible migration for PO required flag.
+- [x] Keep fields optional/conditional, not mandatory for all customers.
+- [ ] Review migration.
+- [ ] Manually apply and verify migration.
+- [ ] Update `supabase/schema.sql` only after manual apply and verification.
+- [ ] Implement customer data layer + UI/profile cards after migration review/manual apply.
 
 ### SEC-SERVICE-INVARIANTS-1
 Status: Planned before Service Hub / ERP-3
