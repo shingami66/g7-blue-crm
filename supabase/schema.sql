@@ -115,11 +115,63 @@ CREATE TABLE customers (
     is_deleted boolean DEFAULT false,
     deleted_at timestamptz,
     created_by text,
-    updated_by text
+    updated_by text,
+    customer_type text,
+    legal_name text,
+    commercial_registration_number text,
+    vat_number text,
+    national_address_building_number text,
+    national_address_street text,
+    national_address_district text,
+    national_address_city text,
+    national_address_postal_code text,
+    national_address_additional_number text,
+    national_address_country text,
+    billing_email text,
+    finance_contact_name text,
+    finance_contact_phone text,
+    payment_terms text,
+    po_required boolean DEFAULT false NOT NULL,
+    CONSTRAINT chk_customers_customer_type CHECK (
+        customer_type IS NULL
+        OR customer_type IN ('individual', 'company')
+    ),
+    CONSTRAINT chk_customers_commercial_registration_number_not_empty CHECK (
+        commercial_registration_number IS NULL
+        OR btrim(commercial_registration_number) <> ''
+    ),
+    CONSTRAINT chk_customers_vat_number_not_empty CHECK (
+        vat_number IS NULL
+        OR btrim(vat_number) <> ''
+    ),
+    CONSTRAINT chk_customers_billing_email_not_empty CHECK (
+        billing_email IS NULL
+        OR btrim(billing_email) <> ''
+    ),
+    CONSTRAINT chk_customers_finance_contact_phone_not_empty CHECK (
+        finance_contact_phone IS NULL
+        OR btrim(finance_contact_phone) <> ''
+    )
 );
 CREATE TRIGGER update_customers_updated_at BEFORE UPDATE ON customers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 COMMENT ON COLUMN customers.created_by IS 'Stores Clerk userId string';
 COMMENT ON COLUMN customers.updated_by IS 'Stores Clerk userId string';
+COMMENT ON COLUMN customers.customer_type IS 'Optional customer classification for invoice buyer context: individual or company. Nullable for existing/backward-compatible records.';
+COMMENT ON COLUMN customers.legal_name IS 'Optional legal/customer billing name for future invoice buyer snapshots.';
+COMMENT ON COLUMN customers.commercial_registration_number IS 'Optional Commercial Registration number; not unique or mandatory in this phase.';
+COMMENT ON COLUMN customers.vat_number IS 'Optional customer VAT number; storing this does not enable Tax Invoice, ZATCA, QR, XML, clearance, or reporting behavior.';
+COMMENT ON COLUMN customers.national_address_building_number IS 'Optional National Address building number.';
+COMMENT ON COLUMN customers.national_address_street IS 'Optional National Address street.';
+COMMENT ON COLUMN customers.national_address_district IS 'Optional National Address district.';
+COMMENT ON COLUMN customers.national_address_city IS 'Optional National Address city.';
+COMMENT ON COLUMN customers.national_address_postal_code IS 'Optional National Address postal code.';
+COMMENT ON COLUMN customers.national_address_additional_number IS 'Optional National Address secondary/additional number.';
+COMMENT ON COLUMN customers.national_address_country IS 'Optional National Address country.';
+COMMENT ON COLUMN customers.billing_email IS 'Optional billing email for finance communication.';
+COMMENT ON COLUMN customers.finance_contact_name IS 'Optional finance contact name.';
+COMMENT ON COLUMN customers.finance_contact_phone IS 'Optional finance contact phone.';
+COMMENT ON COLUMN customers.payment_terms IS 'Optional customer-specific payment terms.';
+COMMENT ON COLUMN customers.po_required IS 'Whether the customer requires a purchase order before invoicing; default false for backward compatibility.';
 
 -- 5. Services
 CREATE TABLE services (
