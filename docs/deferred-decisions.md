@@ -83,10 +83,10 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** Evaluate PDF tool, document storage, download flow, email attachment flow, and invoice/customer record attachment behavior.
 
 ## Production RLS Hardening
-- **Status:** Required before hosted demo with real/semi-real data.
-- **Reason deferred:** Development uses `DEV_ONLY` RLS policies while application-level RBAC is being stabilized.
+- **Status:** SEC-RLS-BASELINE-1 migration prepared; manual apply and verification still required before hosted demo with real/semi-real data.
+- **Reason deferred:** Development used `DEV_ONLY` RLS policies while application-level RBAC was being stabilized. A reviewed migration now exists to remove the broad DEV_ONLY policies, but agents must not apply SQL automatically.
 - **When to return:** Before any hosted demo with real/semi-real data and before production.
-- **Known requirements:** `DEV_ONLY` RLS is not acceptable for real-data deployment. Review anon access, service-role paths, admin client server-only usage, and table-level policies. Add explicit production RLS for `company_settings` because it contains bank, legal, and VAT data. Do not treat UI hiding as security; server-side permission checks and server-side masking are required.
+- **Known requirements:** Manually apply and verify SEC-RLS-BASELINE-1 before real/semi-real data. Review anon access, service-role paths, admin client server-only usage, and table-level policies. Add explicit production RLS follow-up for `company_settings` because it contains bank, legal, and VAT data. Do not treat UI hiding as security; server-side permission checks and server-side masking are required.
 
 ## Sensitive Server Action Rate Limiting
 - **Status:** Deferred; required before production or any real/semi-real hosted demo.

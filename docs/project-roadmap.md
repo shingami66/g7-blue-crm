@@ -50,7 +50,7 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 9. Pre-demo security check if demo uses real or semi-real data
 10. Customer Profile hub expansion and Activity planning
 
-TAX-0 cleanup is complete, so ERP database implementation can proceed. However, real or semi-real company/client data remains blocked until production RLS hardening replaces all DEV_ONLY policies.
+TAX-0 cleanup is complete, so ERP database implementation can proceed. However, real or semi-real company/client data remains blocked until the SEC-RLS-BASELINE-1 RLS migration is manually applied and verified and remaining production hardening is complete.
 
 ### PRJ-CLEANUP-1 — Retire User-Facing Projects UI
 Status: Completed
@@ -91,7 +91,9 @@ Checklist:
 - [x] roles
 - [x] requirePermission
 - [x] Clerk/Supabase foundation
-- [ ] production hardening for DEV_ONLY RLS
+- [x] SEC-RLS-BASELINE-1 migration prepared to remove DEV_ONLY RLS policies
+- [ ] Manual Supabase apply and verification for SEC-RLS-BASELINE-1
+- [ ] remaining production RLS hardening
 
 ### Phase 3 — Quotations RPC Foundation
 Status: Completed
@@ -293,6 +295,8 @@ Checklist:
 - [ ] If no invoice/payment exists, allow simple cancellation.
 - [ ] If invoice/payment exists, cancellation must not silently delete financial records.
 - [x] Add `DEV_ONLY_services` for fake/dev data only.
+- [x] SEC-RLS-BASELINE-1 migration prepared to remove `DEV_ONLY_services`.
+- [ ] Manually apply and verify SEC-RLS-BASELINE-1 before real/semi-real service data.
 - [x] Verify ERP-1 Services DB state after manual Supabase SQL Editor apply.
 - [x] Update `supabase/schema.sql` after post-apply verification.
 - [ ] Implement Services UI/routes/server actions.
@@ -517,7 +521,8 @@ Checklist:
 Status: Required before hosted demo with real/semi-real data and before production
 
 Checklist:
-- [ ] remove/replace `DEV_ONLY` RLS policies
+- [x] prepare SEC-RLS-BASELINE-1 migration to remove `DEV_ONLY` RLS policies
+- [ ] manually apply and verify SEC-RLS-BASELINE-1
 - [ ] add explicit production RLS plan for `company_settings`
 - [ ] review Supabase anon usage
 - [ ] verify admin client server-only

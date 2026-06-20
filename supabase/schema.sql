@@ -935,28 +935,6 @@ ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE project_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 
--- app_users intentionally has no broad DEV_ONLY policy. It should be accessed
--- server-side through service role / protected server logic only.
-
--- WARNING: DEV ONLY POLICIES
--- These policies allow any authenticated user full access during development
--- and fake-data demos. They are not production-safe and must be replaced
--- before real or semi-real company/client data is used.
-CREATE POLICY "DEV_ONLY_number_sequences" ON number_sequences FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "DEV_ONLY_company_settings" ON company_settings FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "DEV_ONLY_customers" ON customers FOR ALL TO authenticated USING (true) WITH CHECK (true);
--- DEV/fake-data only. This policy is not production-safe for services.
-CREATE POLICY "DEV_ONLY_services" ON services FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "DEV_ONLY_suppliers" ON suppliers FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "DEV_ONLY_quotations" ON quotations FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "DEV_ONLY_quotation_items" ON quotation_items FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "DEV_ONLY_invoices" ON invoices FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "DEV_ONLY_invoice_items" ON invoice_items FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "DEV_ONLY_payments" ON payments FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "DEV_ONLY_projects" ON projects FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "DEV_ONLY_project_tasks" ON project_tasks FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "DEV_ONLY_audit_logs" ON audit_logs FOR ALL TO authenticated USING (true) WITH CHECK (true);
-
 -- Routine privileges
 -- Functions are SECURITY INVOKER by default. Execute is restricted to postgres
 -- as owner and service_role for server-side calls.
