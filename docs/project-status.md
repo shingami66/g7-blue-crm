@@ -42,7 +42,9 @@
 - [x] `created_by` / `updated_by` fields added
 - [x] `audit_logs.user_id` converted to text
 - [x] Clerk user ID stored as text
-- [x] `DEV_ONLY` RLS policies exist for development
+- [x] `DEV_ONLY` RLS policies existed for development
+- [x] SEC-RLS-BASELINE-1 migration prepared to remove broad DEV_ONLY table policies
+- [ ] Manual Supabase apply and verification for SEC-RLS-BASELINE-1
 - [x] Final production RLS hardening is still required
 
 ### ✅ Customers CRUD
@@ -170,7 +172,7 @@ Customer Profile → Service → Quotation → Invoice → Payment.
 
 The Services table exists, but Services UI/routes/server actions and Service-linked quotation/invoice/payment changes are still deferred to later ERP work.
 
-Real or semi-real data is still blocked until production RLS hardening replaces DEV_ONLY policies.
+Real or semi-real data is still blocked until the SEC-RLS-BASELINE-1 migration is manually applied and verified, and remaining production hardening items are complete.
 
 ## 5. Deferred Decisions
 
@@ -183,7 +185,7 @@ Current decision gates before ERP implementation:
 - leads/inquiries
 - vendors/suppliers
 - demo data security level
-- production RLS and sensitive Server Action rate limiting
+- SEC-RLS-BASELINE-1 manual apply/verification, remaining production RLS hardening, and sensitive Server Action rate limiting
 - audit log details
 
 ## 6. Decisions Already Resolved
