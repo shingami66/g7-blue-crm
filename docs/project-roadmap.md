@@ -39,18 +39,45 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 - The current implemented Company Settings VAT field is `company_settings.vat_mode`.
 
 ## 2. Current Priority
-1. Docs + agent guidance corrections
-2. TAX-0 — cleanup premature tax/ZATCA wording before ERP implementation
-3. ERP-0 — planning/report-only workflow review
-4. ERP-1 — Services app layer after DB foundation
-5. ERP-2 — Service-linked Quotations
-6. ERP-3 — Service-linked Invoices
-7. ERP-4 — Invoice-linked Payments
-8. CS-B — document seller/buyer/settings snapshots
-9. Pre-demo security check if demo uses real or semi-real data
-10. Customer Profile hub expansion and Activity planning
+1. `RBAC-QUOTATIONS-APPROVE-1`
+   - Add `quotations:approve` to Manager in `src/lib/auth/permissions.ts`.
+   - Required before quotation approval flow and ERP-3 invoices.
+2. `CUST-OFFICIAL-DETAILS-1`
+   - Add optional/conditional customer official and billing fields before ERP-3: customer type (Individual / Company), legal name, Commercial Registration number, VAT number, National Address fields, billing email, finance contact, payment terms, and PO required flag.
+3. `SEC-SERVICE-INVARIANTS-1`
+   - Verify active/non-deleted customer on service create.
+   - Add linked-record guards before service soft delete.
+4. `SERVICE-HUB-1`
+   - Build a rich Service/Booking profile page to replace the old user-facing project hub concept.
+   - Include animated/status timeline, service schedule, customer context, related quotations, future invoice/payment cards, and later notes/activity/attachments.
+   - Service remains the operational source of truth.
+5. `QUOTE-APPROVAL-FLOW-1`
+   - Multiple draft quotations per Service are allowed for negotiation.
+   - More than one approved quotation per Service must be prevented.
+   - Required before ERP-3 invoice creation.
+6. `ERP-3`
+   - Deposit/final invoices must be created from Approved Quotation + Service.
+   - No invoice without Service.
+   - No invoice without Approved Quotation.
+   - Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
-TAX-0 cleanup is complete, so ERP database implementation can proceed. However, real or semi-real company/client data remains blocked until the SEC-RLS-BASELINE-1 RLS migration is manually applied and verified and remaining production hardening is complete.
+TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. However, real or semi-real company/client data remains blocked until remaining production hardening and pre-demo controls are complete: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
+
+### QUOTE-VALIDITY-RULE-1 — Enforce Quotation Validity Against Service Schedule
+Status: Completed
+
+Checklist:
+- [x] Service Schedule is read-only context in quotation create UI.
+- [x] Issue Date is read-only.
+- [x] `Quotation Valid Until` means offer expiry date, not service execution date.
+- [x] Enforce `valid_until >= issue_date`.
+- [x] If Service Start Date exists, enforce `valid_until <= service.event_start_date`.
+- [x] If Service Start Date is before Issue Date, block quotation create/update with a controlled error.
+- [x] Enforce validation in both UI and Server Actions.
+- [x] Keep Service start/end dates out of quotation payloads.
+- [x] Sort Services list by service number ascending.
+- [x] Hide native number input spinners in quotation numeric inputs.
+- [x] No schema, migration, RPC, VAT, invoice/payment, or financial total authority changes.
 
 ### PRJ-CLEANUP-1 — Retire User-Facing Projects UI
 Status: Completed
@@ -92,7 +119,11 @@ Checklist:
 - [x] requirePermission
 - [x] Clerk/Supabase foundation
 - [x] SEC-RLS-BASELINE-1 migration prepared to remove DEV_ONLY RLS policies
-- [ ] Manual Supabase apply and verification for SEC-RLS-BASELINE-1
+- [x] Manual Supabase SQL Editor apply and database verification for SEC-RLS-BASELINE-1
+- [x] DEV_ONLY policies returned zero rows in live database verification
+- [x] Broad authenticated `USING true` / `WITH CHECK true` policies returned zero rows in live database verification
+- [x] RLS enabled check passed for affected tables
+- [x] Quotation RPC grants remained `anon_execute = false`, `authenticated_execute = false`, `service_role_execute = true`
 - [ ] remaining production RLS hardening
 
 ### Phase 3 — Quotations RPC Foundation
@@ -221,7 +252,8 @@ Status: Required if demo uses real or semi-real data
 
 Checklist:
 - [ ] Confirm whether demo data is fake, semi-real, or real.
-- [ ] If real/semi-real data is used, review DEV_ONLY RLS policies before hosted demo.
+- [x] SEC-RLS-BASELINE-1 manual Supabase apply and database verification completed; DEV_ONLY broad authenticated policies were removed from the live database.
+- [ ] If real/semi-real data is used, complete remaining production hardening and pre-demo controls before hosted demo: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
 - [ ] Add explicit production RLS plan for `company_settings` because it contains bank, legal, and VAT data.
 - [ ] Verify Supabase admin/service role usage stays server-side only.
 - [ ] Confirm no raw database/Supabase errors are exposed to UI.
@@ -296,7 +328,8 @@ Checklist:
 - [ ] If invoice/payment exists, cancellation must not silently delete financial records.
 - [x] Add `DEV_ONLY_services` for fake/dev data only.
 - [x] SEC-RLS-BASELINE-1 migration prepared to remove `DEV_ONLY_services`.
-- [ ] Manually apply and verify SEC-RLS-BASELINE-1 before real/semi-real service data.
+- [x] Manually apply and verify SEC-RLS-BASELINE-1; DEV_ONLY broad authenticated policies were removed from the live database.
+- [ ] Complete remaining production hardening before real/semi-real service data.
 - [x] Verify ERP-1 Services DB state after manual Supabase SQL Editor apply.
 - [x] Update `supabase/schema.sql` after post-apply verification.
 - [ ] Implement Services UI/routes/server actions.
@@ -320,11 +353,69 @@ Checklist:
 - [ ] Do not treat `quotations:write` as approval permission.
 - [ ] Non-draft quotations must not be fully editable through ordinary `quotations:write`.
 - [ ] Approved quotations must not be soft-deleted through ordinary `quotations:write`.
-- [ ] `valid_until` or `expiry_date` must be on or after issue date.
+- [x] `valid_until` must be on or after issue date.
+- [x] If Service Start Date exists, `valid_until` must be on or before `service.event_start_date`.
+- [x] If Service Start Date is before Issue Date, quotation create/update is blocked.
+- [x] Service Schedule is read-only context in quotation UI.
+- [x] Issue Date is read-only.
+- [x] `Quotation Valid Until` means offer expiry date, not service execution date.
+- [x] Quotation validity validation is enforced in both UI and Server Actions.
 - [ ] Expired quotations cannot be approved without renewal/extension or authorized override.
 - [ ] Exact override behavior remains deferred.
 - [ ] Client-submitted totals remain preview only; server/PostgreSQL logic calculates trusted totals.
 - [ ] Integration checkpoint after ERP-2: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
+
+### RBAC-QUOTATIONS-APPROVE-1
+Status: Next
+
+Checklist:
+- [ ] Add `quotations:approve` to Manager in `src/lib/auth/permissions.ts`.
+- [ ] Keep `quotations:approve` separate from `quotations:write`.
+- [ ] Required before quotation approval flow and ERP-3 invoices.
+
+### CUST-OFFICIAL-DETAILS-1
+Status: Planned before ERP-3
+
+Checklist:
+- [ ] Add customer type: Individual / Company.
+- [ ] Add legal name.
+- [ ] Add Commercial Registration number.
+- [ ] Add VAT number.
+- [ ] Add National Address fields.
+- [ ] Add billing email.
+- [ ] Add finance contact.
+- [ ] Add payment terms.
+- [ ] Add PO required flag.
+- [ ] Keep fields optional/conditional, not mandatory for all customers.
+
+### SEC-SERVICE-INVARIANTS-1
+Status: Planned before Service Hub / ERP-3
+
+Checklist:
+- [ ] Verify active/non-deleted customer on service create.
+- [ ] Add linked-record guards before service soft delete.
+
+### SERVICE-HUB-1
+Status: Planned before or alongside ERP-3
+
+Checklist:
+- [ ] Build a rich Service/Booking profile page to replace the old user-facing project hub concept.
+- [ ] Include animated/status timeline.
+- [ ] Include service schedule.
+- [ ] Include customer context.
+- [ ] Include related quotations.
+- [ ] Include future invoice/payment cards.
+- [ ] Leave notes/activity/attachments for later if not included in the first slice.
+- [ ] Preserve Service as the operational source of truth.
+
+### QUOTE-APPROVAL-FLOW-1
+Status: Required before ERP-3 invoice creation
+
+Checklist:
+- [ ] Allow multiple draft quotations per Service for negotiation.
+- [ ] Prevent more than one approved quotation per Service.
+- [ ] Enforce `quotations:approve` separately from `quotations:write`.
+- [ ] Required before ERP-3 invoices can be created from Approved Quotation + Service.
 
 ### Phase ERP-3 — Service-linked Invoices
 Status: Planned
@@ -332,7 +423,10 @@ Status: Planned
 Checklist:
 - [ ] Invoices must belong to a Service.
 - [ ] No standalone invoice creation.
+- [ ] No invoice without Approved Quotation.
 - [ ] Every invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
+- [ ] Deposit/final invoices must be created from Approved Quotation + Service.
+- [ ] Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 - [ ] Invoice numbering uses one shared `INV-YYYY-0001` sequence.
 - [ ] Do not create separate `DEP-` or `FIN-` invoice sequences.
 - [ ] Use `invoice_type = deposit | final`.
@@ -522,7 +616,11 @@ Status: Required before hosted demo with real/semi-real data and before producti
 
 Checklist:
 - [x] prepare SEC-RLS-BASELINE-1 migration to remove `DEV_ONLY` RLS policies
-- [ ] manually apply and verify SEC-RLS-BASELINE-1
+- [x] manually apply and verify SEC-RLS-BASELINE-1
+- [x] verify DEV_ONLY policies returned zero rows
+- [x] verify broad authenticated `USING true` / `WITH CHECK true` policies returned zero rows
+- [x] verify RLS enabled check passed for affected tables
+- [x] verify quotation RPC grants remained service-role only
 - [ ] add explicit production RLS plan for `company_settings`
 - [ ] review Supabase anon usage
 - [ ] verify admin client server-only
@@ -548,10 +646,37 @@ Checklist:
 
 ## 4. Update Rule After Every Merge
 
-After each merged PR, run a docs update task:
+Documentation must be updated after:
+- every merged PR
+- every manual database/Supabase apply or verification
+- every smoke test that changes completion status
+- every Team Lead decision that changes a business rule, priority, or deferred decision
+- before starting the next major task if prior status may be stale
+
+After each docs-impacting event, run a docs update task:
 - mark completed phase checkbox
 - add commit hash and PR if available
 - move current phase
 - add any new deferred decisions
 - document any known risks
 - commit docs update if separate, or include in next planning commit
+
+Before any docs commit, agents must run a documentation staleness audit:
+- identify what changed in code
+- identify what changed outside code
+- identify what was previously pending and is now completed
+- identify stale wording that must be corrected
+- identify what remains truly pending
+- confirm next locked priority
+
+Agents must search or review wording such as:
+- pending
+- prepared
+- manual apply
+- required before
+- blocked until
+- DEV_ONLY
+- current phase
+- next priority
+
+Any match must be checked for current truth before committing docs.

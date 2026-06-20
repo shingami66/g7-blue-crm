@@ -27,6 +27,7 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
 - Financial records must use void/cancel/reversal workflows, not hard deletion. Use soft delete for business records where applicable.
 - The current implemented Company Settings VAT field is `company_settings.vat_mode`.
+- Quotation `valid_until` is offer expiry, not service execution date. It must be on or after Issue Date and, when Service Start Date exists, on or before `service.event_start_date`. If the Service already started before Issue Date, quotation create/update is blocked.
 
 ## Service Catalog
 - **Status:** Deferred.
@@ -82,11 +83,35 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **When to return:** When users need one-click generated PDFs, email attachments, stored PDFs, or consistent server-rendered documents.
 - **Known requirements:** Evaluate PDF tool, document storage, download flow, email attachment flow, and invoice/customer record attachment behavior.
 
+## Quotation Approval Workflow
+- **Status:** Deferred; required before ERP-3 invoice creation.
+- **Reason deferred:** Quotation validity is now enforced, but approval workflow, approval permission, and approved-quotation uniqueness still need a dedicated implementation phase.
+- **When to return:** `QUOTE-APPROVAL-FLOW-1`, after `RBAC-QUOTATIONS-APPROVE-1` and before ERP-3.
+- **Known requirements:** Multiple draft quotations per Service are allowed for negotiation. More than one approved quotation per Service must be prevented. Approval requires `quotations:approve`, separate from `quotations:write`. The approval flow is required before invoices can be created from Approved Quotation + Service.
+
+## Customer Official Details Before ERP-3
+- **Status:** Deferred; required before ERP-3 invoices.
+- **Reason deferred:** Current customer CRUD exists, but invoice-ready customer billing/legal identity needs dedicated schema/UI review before invoice issuance.
+- **When to return:** `CUST-OFFICIAL-DETAILS-1`, before ERP-3 invoice implementation.
+- **Known requirements:** Add optional/conditional fields for customer type (Individual / Company), legal name, Commercial Registration number, VAT number, National Address fields, billing email, finance contact, payment terms, and PO required flag. These fields must not become mandatory for all customers.
+
+## Service Hub
+- **Status:** Planned before or alongside ERP-3.
+- **Reason deferred:** Service is the operational source of truth, but the current app still needs a richer Service/Booking profile experience to replace the old user-facing project hub concept.
+- **When to return:** `SERVICE-HUB-1`, before or alongside ERP-3.
+- **Known requirements:** Build a rich Service/Booking profile page with animated/status timeline, service schedule, customer context, related quotations, future invoice/payment cards, and later notes/activity/attachments. Service remains the operational source of truth.
+
+## Full Invoice Schema And Service Linkage
+- **Status:** ERP-3 scope.
+- **Reason deferred:** Invoice schema/service linkage must wait for customer official details, quotation approval, and Service-centered hub/readiness work.
+- **When to return:** ERP-3.
+- **Known requirements:** Deposit/final invoices must be created from Approved Quotation + Service. No invoice without Service. No invoice without Approved Quotation. Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
+
 ## Production RLS Hardening
-- **Status:** SEC-RLS-BASELINE-1 migration prepared; manual apply and verification still required before hosted demo with real/semi-real data.
-- **Reason deferred:** Development used `DEV_ONLY` RLS policies while application-level RBAC was being stabilized. A reviewed migration now exists to remove the broad DEV_ONLY policies, but agents must not apply SQL automatically.
+- **Status:** SEC-RLS-BASELINE-1 manual Supabase SQL Editor apply and database verification completed; remaining production hardening is still required before hosted demo with real/semi-real data.
+- **Reason deferred:** Development used `DEV_ONLY` RLS policies while application-level RBAC was being stabilized. The reviewed SEC-RLS-BASELINE-1 migration has now been manually applied and verified in the live database; DEV_ONLY policies returned zero rows and broad authenticated `USING true` / `WITH CHECK true` policies returned zero rows.
 - **When to return:** Before any hosted demo with real/semi-real data and before production.
-- **Known requirements:** Manually apply and verify SEC-RLS-BASELINE-1 before real/semi-real data. Review anon access, service-role paths, admin client server-only usage, and table-level policies. Add explicit production RLS follow-up for `company_settings` because it contains bank, legal, and VAT data. Do not treat UI hiding as security; server-side permission checks and server-side masking are required.
+- **Known requirements:** RLS enabled checks passed for affected tables. Quotation RPC grants were verified as `anon_execute = false`, `authenticated_execute = false`, and `service_role_execute = true`. Real/semi-real data remains blocked by remaining production hardening and pre-demo controls: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production. It is no longer blocked by SEC-RLS manual apply itself. Review anon access, service-role paths, admin client server-only usage, and table-level policies. Add explicit production RLS follow-up for `company_settings` because it contains bank, legal, and VAT data. Do not treat UI hiding as security; server-side permission checks and server-side masking are required.
 
 ## Sensitive Server Action Rate Limiting
 - **Status:** Deferred; required before production or any real/semi-real hosted demo.
@@ -170,7 +195,7 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Status:** Deferred technical decision.
 - **Reason deferred:** Current schema uses soft-delete patterns, but future financial records need stricter retention rules.
 - **When to return:** Before ERP-1 schema work and before invoice/payment delete or void behavior.
-- **Known requirements:** Use soft delete for business records where applicable. Prefer `deleted_at` timestamp over only `is_deleted` for future soft deletes, or document current `is_deleted` usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion. Issued/paid financial records must not be casually deleted.
+- **Known requirements:** Use soft delete for business records where applicable. Prefer `deleted_at` timestamp over only `is_deleted` for future soft deletes, or document current `is_deleted` usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion. Issued/paid financial records must not be casually deleted. Soft-delete documentation cleanup remains a follow-up task: `DOC-SOFTDELETE-FIX`.
 
 ## Financial Rounding And Currency Snapshots
 - **Status:** Deferred implementation detail; rule is required before ERP-3.

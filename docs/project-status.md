@@ -15,7 +15,7 @@
 - **Git:** No `git add .` (only stage intentionally modified files).
 - **Database:** No migrations without strict review; PostgreSQL RPC is the absolute source of truth for financial totals.
 - **Data Access:** Supabase Admin client runs server-side only; all write Server Actions enforce `requirePermission`; no raw Supabase errors exposed to UI.
-- **Docs:** After merged phases or product-direction decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable.
+- **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 3. Completed Milestones
 
@@ -44,7 +44,10 @@
 - [x] Clerk user ID stored as text
 - [x] `DEV_ONLY` RLS policies existed for development
 - [x] SEC-RLS-BASELINE-1 migration prepared to remove broad DEV_ONLY table policies
-- [ ] Manual Supabase apply and verification for SEC-RLS-BASELINE-1
+- [x] Manual Supabase SQL Editor apply and database verification for SEC-RLS-BASELINE-1
+- [x] Live database verification returned zero DEV_ONLY policies and zero broad authenticated `USING true` / `WITH CHECK true` policies
+- [x] RLS enabled check passed for affected tables
+- [x] Quotation RPC grants verified: `anon_execute = false`, `authenticated_execute = false`, `service_role_execute = true`
 - [x] Final production RLS hardening is still required
 
 ### ✅ Customers CRUD
@@ -160,19 +163,51 @@
 - `/projects` now redirects to `/services`.
 - Legacy project schema, permissions, types, mock data, customer `projects_count`, and supplier PRJ mock references remain deferred for later cleanup.
 
+### ✅ QUOTE-VALIDITY-RULE-1 — Quotation Validity Against Service Schedule
+- PR #17 merged into `main` as `96643e6 Merge pull request #17 from shingami66/fix/quotation-validity-service-schedule`.
+- Service Schedule is read-only context in the quotation create UI.
+- Issue Date is read-only and remains the quotation document issue date.
+- Quotation Valid Until means offer expiry date, not service execution date.
+- `valid_until >= issue_date` remains enforced.
+- If Service Start Date exists, `valid_until <= service.event_start_date`.
+- If Service Start Date is before Issue Date, quotation create/update is blocked with a controlled error.
+- Validation is enforced in both UI and Server Actions.
+- Services list is sorted by service number ascending.
+- Native number input spinners are hidden in quotation numeric inputs.
+- No schema, migration, RPC, VAT, invoice/payment, or financial total authority changes were made.
+
 ## 4. Current Active Phase
 
-### 🚧 Post-ERP-1 DB Foundation / ERP-2 Planning
-Status: Services DB foundation applied; app implementation still pending
-
-CS-A and the ERP-1 Services DB foundation are complete at the database level.
+### 🚧 Locked Next CRM Priorities
+Status: QUOTE-VALIDITY-RULE-1 is merged; next CRM work is sequenced before ERP-3
 
 The locked workflow remains:
 Customer Profile → Service → Quotation → Invoice → Payment.
 
-The Services table exists, but Services UI/routes/server actions and Service-linked quotation/invoice/payment changes are still deferred to later ERP work.
+The next work order is:
+1. `RBAC-QUOTATIONS-APPROVE-1`
+   - Add `quotations:approve` to Manager in `src/lib/auth/permissions.ts`.
+   - Required before quotation approval flow and ERP-3 invoices.
+2. `CUST-OFFICIAL-DETAILS-1`
+   - Add optional/conditional customer official and billing fields before ERP-3: customer type (Individual / Company), legal name, Commercial Registration number, VAT number, National Address fields, billing email, finance contact, payment terms, and PO required flag.
+3. `SEC-SERVICE-INVARIANTS-1`
+   - Verify active/non-deleted customer on service create.
+   - Add linked-record guards before service soft delete.
+4. `SERVICE-HUB-1`
+   - Build a rich Service/Booking profile page to replace the old user-facing project hub concept.
+   - Include animated/status timeline, service schedule, customer context, related quotations, future invoice/payment cards, and later notes/activity/attachments.
+   - Service remains the operational source of truth.
+5. `QUOTE-APPROVAL-FLOW-1`
+   - Multiple draft quotations per Service are allowed for negotiation.
+   - More than one approved quotation per Service must be prevented.
+   - Required before ERP-3 invoice creation.
+6. `ERP-3`
+   - Deposit/final invoices must be created from Approved Quotation + Service.
+   - No invoice without Service.
+   - No invoice without Approved Quotation.
+   - Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
-Real or semi-real data is still blocked until the SEC-RLS-BASELINE-1 migration is manually applied and verified, and remaining production hardening items are complete.
+SEC-RLS-BASELINE-1 manual Supabase apply and database verification are complete. DEV_ONLY broad authenticated policies were removed from the live database. Real or semi-real data remains blocked by remaining production hardening and pre-demo controls: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production. It is no longer blocked by SEC-RLS manual apply itself.
 
 ## 5. Deferred Decisions
 
@@ -182,10 +217,15 @@ Current decision gates before ERP implementation:
 - ZATCA/proforma invoice direction beyond the current "do not overclaim" rule
 - invoice void/cancellation, credit note, and refund flow
 - exact quotation expiry override behavior
+- quotation approval workflow before invoices
+- customer official/billing details before ERP-3 invoices
+- Service Hub before or alongside ERP-3
+- full invoice schema/service linkage in ERP-3
+- soft-delete documentation cleanup: `DOC-SOFTDELETE-FIX`
 - leads/inquiries
 - vendors/suppliers
 - demo data security level
-- SEC-RLS-BASELINE-1 manual apply/verification, remaining production RLS hardening, and sensitive Server Action rate limiting
+- remaining production RLS hardening, `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production
 - audit log details
 
 ## 6. Decisions Already Resolved
@@ -193,7 +233,7 @@ Current decision gates before ERP implementation:
 - **Workflow:** New ERP work follows `Customer Profile → Service → Quotation → Invoice → Payment`. Service / Booking replaces Project as the operational unit. Quotations and invoices must belong to a Service; standalone quotations and standalone invoices are not allowed.
 - **Customer Profile hub:** Customer detail must explicitly show related Services, Quotations through Services, Invoices through Services, Payments through Invoices, and later Activity.
 - **Service status exit criteria:** Inquiry = service/request captured; Quoted = at least one quotation created/sent; Approved = customer approval recorded; Deposit Paid = valid/cleared deposit payment recorded; In Progress = operations started; Completed = service delivered; Cancelled = cancellation reason recorded. Do not add a separate Confirmed status. `Cancelled` is terminal and non-linear, not a progress step.
-- **Quotations:** Quotations are Service-scoped. `customer_id`, if retained, is derived server-side from Service. One Service can have multiple Quotations; do not add `UNIQUE(service_id)`. Approval requires `quotations:approve`, separate from `quotations:write`. Non-draft quotations must not be fully editable through ordinary `quotations:write`, and approved quotations must not be soft-deleted through ordinary `quotations:write`.
+- **Quotations:** Quotations are Service-scoped. `customer_id`, if retained, is derived server-side from Service. One Service can have multiple Quotations; do not add `UNIQUE(service_id)`. Approval requires `quotations:approve`, separate from `quotations:write`. Non-draft quotations must not be fully editable through ordinary `quotations:write`, and approved quotations must not be soft-deleted through ordinary `quotations:write`. `valid_until` is the offer expiry date, not a service execution date. It must be on or after Issue Date and, when Service Start Date exists, on or before `service.event_start_date`. If the Service already started before Issue Date, quotation create/update is blocked.
 - **Invoices:** No Invoice may exist without a Service. Each Invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK. Invoice numbering uses one shared `INV-YYYY-0001` sequence. Use `invoice_type = deposit | final`; do not create separate `DEP-` or `FIN-` sequences.
 - **Payments:** Payment must link to an Invoice. Payment is connected to Service through the Invoice. If `service_id` is also stored on payments for query convenience, it must match the invoice's `service_id` and be enforced in the data layer, preferably by database design. If a customer pays before an invoice exists, the UI must require creating a Deposit Invoice first or prevent payment recording. Prevent overpayment unless explicitly approved.
 - **Deposit flow:** Deposit amount must be greater than `0` and less than or equal to the approved quotation total or remaining uninvoiced balance. Deposit is flexible, not fixed at 50%. Deposit Invoice is created manually after quotation approval. A Deposit Invoice alone does not confirm booking, and a pending payment does not confirm booking. Service status changes to `Deposit Paid` only after a valid/cleared deposit payment.
@@ -216,4 +256,4 @@ Current decision gates before ERP implementation:
 - Quotation creation works after manual Supabase apply.
 - Company Settings CS-A is committed on `main`.
 - Financial totals remain server-side/database-side via PostgreSQL RPC.
-- Current work should focus on Services app implementation planning, Service-linked quotations, and production RLS hardening before any real or semi-real data use.
+- Current work should follow the locked order: `RBAC-QUOTATIONS-APPROVE-1`, `CUST-OFFICIAL-DETAILS-1`, `SEC-SERVICE-INVARIANTS-1`, `SERVICE-HUB-1`, `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`.
