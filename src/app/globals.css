@@ -88,6 +88,18 @@ body {
   color: var(--color-on-surface);
 }
 
+.no-number-spinner {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.no-number-spinner::-webkit-outer-spin-button,
+.no-number-spinner::-webkit-inner-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* === Custom scrollbar === */
 ::-webkit-scrollbar {
   width: 6px;

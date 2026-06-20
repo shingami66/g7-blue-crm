@@ -18,7 +18,7 @@ export async function getServices(): Promise<Service[]> {
       .from("services")
       .select(SERVICE_SELECT)
       .is("deleted_at", null)
-      .order("created_at", { ascending: false });
+      .order("service_number", { ascending: true });
 
     if (error) {
       console.error("[getServices] Supabase error:", error.message);
