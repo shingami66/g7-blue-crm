@@ -18,6 +18,50 @@ function serviceCanReceiveQuotation(status: string) {
   return status === "Inquiry" || status === "Quoted";
 }
 
+const VALID_AFTER_SERVICE_START_ERROR =
+  "Quotation cannot remain valid after the service begins.";
+const SERVICE_ALREADY_STARTED_ERROR =
+  "Cannot create a quotation because the service has already started.";
+
+function validateQuotationValidityWindow(
+  validUntil: string | null | undefined,
+  issueDate: string | null | undefined,
+  serviceStartDate: string | null | undefined
+) {
+  if (serviceStartDate && issueDate && serviceStartDate < issueDate) {
+    return SERVICE_ALREADY_STARTED_ERROR;
+  }
+
+  if (validUntil && issueDate && validUntil < issueDate) {
+    return "Valid until date must be on or after the quotation date";
+  }
+
+  if (validUntil && serviceStartDate && validUntil > serviceStartDate) {
+    return VALID_AFTER_SERVICE_START_ERROR;
+  }
+
+  return null;
+}
+
+async function getExistingQuotationForUpdate(
+  supabase: ReturnType<typeof createAdminClient>,
+  id: string
+) {
+  const { data, error } = await supabase
+    .from("quotations")
+    .select("id, service_id, date, valid_until, status")
+    .eq("id", id)
+    .eq("is_deleted", false)
+    .single();
+
+  if (error) {
+    console.error("[getExistingQuotationForUpdate] Supabase error:", error.message);
+    return null;
+  }
+
+  return data;
+}
+
 export async function createQuotation(input: unknown): Promise<ActionResult<QuotationRpcResult>> {
   try {
     const user = await requirePermission("quotations:write");
@@ -35,6 +79,15 @@ export async function createQuotation(input: unknown): Promise<ActionResult<Quot
     }
     if (!serviceCanReceiveQuotation(service.status)) {
       return { success: false, error: "Quotations can only be created for Inquiry or Quoted services." };
+    }
+
+    const validityError = validateQuotationValidityWindow(
+      parsed.data.valid_until,
+      parsed.data.date,
+      service.eventStartDate
+    );
+    if (validityError) {
+      return { success: false, error: validityError };
     }
 
     const { items, ...quotationData } = parsed.data;
@@ -84,6 +137,34 @@ export async function updateQuotation(id: string, input: unknown): Promise<Actio
     }
 
     const supabase = createAdminClient();
+    const existingQuotation = await getExistingQuotationForUpdate(supabase, id);
+    if (!existingQuotation) {
+      return { success: false, error: "Quotation not found or already deleted." };
+    }
+
+    if (existingQuotation.status !== "draft") {
+      return { success: false, error: "Only draft quotations can be edited." };
+    }
+
+    const service = await getServiceById(existingQuotation.service_id);
+    if (!service) {
+      return { success: false, error: "Service not found or unavailable." };
+    }
+
+    const effectiveIssueDate = parsed.data.date ?? existingQuotation.date;
+    const effectiveValidUntil =
+      parsed.data.valid_until === undefined
+        ? existingQuotation.valid_until
+        : parsed.data.valid_until;
+    const validityError = validateQuotationValidityWindow(
+      effectiveValidUntil,
+      effectiveIssueDate,
+      service.eventStartDate
+    );
+    if (validityError) {
+      return { success: false, error: validityError };
+    }
+
     const { data, error } = await supabase.rpc("update_quotation_with_items", {
       p_quotation_id: id,
       p_quotation: updates,

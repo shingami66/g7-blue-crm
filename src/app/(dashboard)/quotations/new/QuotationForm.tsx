@@ -12,6 +12,8 @@ interface QuotationFormService {
   serviceTitle: string;
   status: string;
   eventName: string | null;
+  eventStartDate?: string | null;
+  eventEndDate?: string | null;
   customer?: { company: string; contact: string };
 }
 
@@ -26,10 +28,15 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasServiceSchedule =
+    Object.prototype.hasOwnProperty.call(service, "eventStartDate") ||
+    Object.prototype.hasOwnProperty.call(service, "eventEndDate");
+  const serviceStartDate = service.eventStartDate || undefined;
+  const formatScheduleDate = (value?: string | null) => value || "Not set";
 
   // Initialize fields with initialData if present
   const [event, setEvent] = useState(initialData?.event || service.eventName || service.serviceTitle);
-  const [date, setDate] = useState(initialData?.date || new Date().toISOString().split("T")[0]);
+  const [date] = useState(initialData?.date || new Date().toISOString().split("T")[0]);
   const [validUntil, setValidUntil] = useState(initialData?.validUntil || "");
   const [discount, setDiscount] = useState((initialData?.discount || 0).toString());
   
@@ -65,11 +72,20 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
   const parsedDiscount = parseFloat(discount) || 0;
   const subtotal = items.reduce((sum, item) => sum + (Number(item.qty) * Number(item.unitPrice)), 0);
   const discountExceedsSubtotal = parsedDiscount > subtotal;
+  const serviceStartedBeforeIssueDate =
+    !!serviceStartDate && serviceStartDate < date;
+  const validUntilExceedsServiceStart =
+    !serviceStartedBeforeIssueDate && !!serviceStartDate && !!validUntil && validUntil > serviceStartDate;
   const grandTotal = subtotal - parsedDiscount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (serviceStartedBeforeIssueDate) {
+      setError("Cannot create a quotation because the service has already started.");
+      return;
+    }
     
     if (!validUntil) {
       setError("Please select a valid until date.");
@@ -78,6 +94,11 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
 
     if (new Date(validUntil) < new Date(date)) {
       setError("Valid until date must be on or after the quotation date.");
+      return;
+    }
+
+    if (validUntilExceedsServiceStart) {
+      setError("Quotation cannot remain valid after the service begins.");
       return;
     }
 
@@ -184,6 +205,32 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
               </div>
             </div>
 
+            {hasServiceSchedule && (
+              <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
+                <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-2">
+                  Service Schedule
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[14px]">
+                  <div>
+                    <div className="text-[12px] text-on-surface-variant font-semibold">
+                      Start Date
+                    </div>
+                    <div className="font-medium text-on-surface">
+                      {formatScheduleDate(service.eventStartDate)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[12px] text-on-surface-variant font-semibold">
+                      End Date
+                    </div>
+                    <div className="font-medium text-on-surface">
+                      {formatScheduleDate(service.eventEndDate)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col gap-1.5">
               <label className="text-[14px] font-semibold text-on-surface">Quotation / Event Label</label>
               <input
@@ -198,29 +245,46 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
           </div>
 
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden p-6 flex flex-col gap-4">
-            <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">Dates & Rates</h3>
+            <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">Quotation Document Dates & Rates</h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[14px] font-semibold text-on-surface">Issue Date</label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
-                  required
-                />
+                <div className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface-variant">
+                  {date}
+                </div>
+                <p className="text-[12px] text-on-surface-variant leading-snug">
+                  Issue Date is the quotation document date. Service execution dates are shown in Service Schedule.
+                </p>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[14px] font-semibold text-on-surface">Valid Until</label>
+                <label className="text-[14px] font-semibold text-on-surface">Quotation Valid Until</label>
                 <input
                   type="date"
                   value={validUntil}
                   onChange={(e) => setValidUntil(e.target.value)}
-                  className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
-                  required
+                  min={date}
+                  max={serviceStartDate}
+                  disabled={serviceStartedBeforeIssueDate}
+                  required={!serviceStartedBeforeIssueDate}
+                  aria-invalid={validUntilExceedsServiceStart}
+                  aria-describedby={validUntilExceedsServiceStart ? "valid-until-service-error" : undefined}
+                  className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary disabled:bg-surface-container-low disabled:text-on-surface-variant disabled:cursor-not-allowed"
                 />
+                <p className="text-[12px] text-on-surface-variant leading-snug">
+                  Offer expiry date — not related to service execution dates.
+                </p>
+                {serviceStartedBeforeIssueDate && (
+                  <p className="text-[12px] text-error leading-snug">
+                    Cannot create a quotation because the service has already started.
+                  </p>
+                )}
+                {validUntilExceedsServiceStart && (
+                  <p id="valid-until-service-error" className="text-[12px] text-error leading-snug">
+                    Quotation cannot remain valid after the service begins.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -235,7 +299,7 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
                   onChange={(e) => setDiscount(e.target.value)}
                   aria-invalid={discountExceedsSubtotal}
                   aria-describedby={discountExceedsSubtotal ? "discount-error" : undefined}
-                  className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                  className="no-number-spinner w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                 />
                 {discountExceedsSubtotal && (
                   <p id="discount-error" className="text-[12px] text-error leading-snug">
@@ -294,7 +358,7 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
                         step="0.01"
                         value={item.qty}
                         onChange={(e) => updateItem(index, "qty", parseFloat(e.target.value) || 0)}
-                        className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                        className="no-number-spinner w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                         required
                       />
                     </div>
@@ -306,7 +370,7 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
                         step="0.01"
                         value={item.unitPrice}
                         onChange={(e) => updateItem(index, "unitPrice", parseFloat(e.target.value) || 0)}
-                        className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                        className="no-number-spinner w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                         required
                       />
                     </div>
@@ -378,7 +442,12 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
           <div className="flex justify-end mt-4">
             <button
               type="submit"
-              disabled={isSubmitting || discountExceedsSubtotal}
+              disabled={
+                isSubmitting ||
+                discountExceedsSubtotal ||
+                validUntilExceedsServiceStart ||
+                serviceStartedBeforeIssueDate
+              }
               className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg font-semibold transition-colors disabled:opacity-50"
             >
               <Save size={18} />
