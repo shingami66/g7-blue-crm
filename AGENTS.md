@@ -36,12 +36,13 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 ## Working Workflow
 
 - Follow `Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge`.
+- After merges that change delivered behavior, phase status, or decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` as applicable.
 - Before staging or commit work, confirm the intended branch.
 - Before staging or commit work, run `git status --short`.
 - Stage exact files only; confirm no unrelated files, secrets, `.env.local`, or unreviewed SQL/migration files are staged.
 - After staging, run `git diff --cached --stat` and `git diff --cached --check`.
 - Do not force push. Open PRs only when requested.
-- For Services or Quotations UI work, manually smoke test the live ERP path `Customer Profile -> Service -> Quotation`, including `/customers/[id]`, `/services`, `/services/[id]`, and `/quotations/new?serviceId=<service-id>`.
+- For Services or Quotations UI work, manually smoke test the live ERP path `Customer Profile -> Service -> Quotation`, including `/customers/[id]`, `/services`, `/services/new`, `/services/[id]`, `/services/[id]/edit`, and `/quotations/new?serviceId=<service-id>`.
 
 ## Reporting Discipline
 
@@ -132,6 +133,8 @@ Never skip review gates for SQL, migrations, RLS, RPC, triggers, grants/revokes,
 
 - Quotation numbers use `QT-YYYY-0001`.
 - New quotations are service-scoped. Do not add or restore standalone quotation creation flows; start from a Service context and pass `serviceId`.
+- `/quotations/new` without `serviceId` is intentionally blocked; use the Service detail or related customer flow to reach quotation creation.
+- Service create/edit currently keeps status transitions deferred. Treat `customer_id`, `service_number`, and `status` as non-editable in ordinary Service edit work, and keep edit flow limited to Services in `Inquiry` or `Quoted` status.
 - Service editing and quotation creation are currently limited to Services in `Inquiry` or `Quoted` status. Treat other status transitions as deferred unless separately approved.
 - VAT is a document-level snapshot when VAT behavior is valid for that document; after CS-A, future VAT values must come from Company Settings and document snapshots, not hardcoded current-state text.
 - While Company Settings is `not_registered`, quotation create/detail/PDF flows must keep VAT as not applied and avoid tax-invoice wording.
