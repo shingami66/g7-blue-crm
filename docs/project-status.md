@@ -179,14 +179,15 @@
 ## 4. Current Active Phase
 
 ### 🚧 Locked Next CRM Priorities
-Status: QUOTE-VALIDITY-RULE-1 is merged; next CRM work is sequenced before ERP-3
+Status: RBAC-QUOTATIONS-APPROVE-1 is ready for PR; next task after merge is CUST-OFFICIAL-DETAILS-1
 
 The locked workflow remains:
 Customer Profile → Service → Quotation → Invoice → Payment.
 
 The next work order is:
 1. `RBAC-QUOTATIONS-APPROVE-1`
-   - Add `quotations:approve` to Manager in `src/lib/auth/permissions.ts`.
+   - Ready for PR: `quotations:approve` added to Manager in `src/lib/auth/permissions.ts`.
+   - Keeps approval separate from ordinary `quotations:write`.
    - Required before quotation approval flow and ERP-3 invoices.
 2. `CUST-OFFICIAL-DETAILS-1`
    - Add optional/conditional customer official and billing fields before ERP-3: customer type (Individual / Company), legal name, Commercial Registration number, VAT number, National Address fields, billing email, finance contact, payment terms, and PO required flag.
@@ -256,4 +257,4 @@ Current decision gates before ERP implementation:
 - Quotation creation works after manual Supabase apply.
 - Company Settings CS-A is committed on `main`.
 - Financial totals remain server-side/database-side via PostgreSQL RPC.
-- Current work should follow the locked order: `RBAC-QUOTATIONS-APPROVE-1`, `CUST-OFFICIAL-DETAILS-1`, `SEC-SERVICE-INVARIANTS-1`, `SERVICE-HUB-1`, `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`.
+- Current work should follow the locked order: `RBAC-QUOTATIONS-APPROVE-1` ready for PR, then `CUST-OFFICIAL-DETAILS-1`, `SEC-SERVICE-INVARIANTS-1`, `SERVICE-HUB-1`, `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`.

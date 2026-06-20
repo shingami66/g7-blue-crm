@@ -14,6 +14,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     "customers:write",
     "quotations:read",
     "quotations:write",
+    "quotations:approve",
     "services:read",
     "services:write",
     "invoices:read",

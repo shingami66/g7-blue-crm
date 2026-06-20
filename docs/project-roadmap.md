@@ -40,7 +40,8 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 
 ## 2. Current Priority
 1. `RBAC-QUOTATIONS-APPROVE-1`
-   - Add `quotations:approve` to Manager in `src/lib/auth/permissions.ts`.
+   - Ready for PR: `quotations:approve` added to Manager in `src/lib/auth/permissions.ts`.
+   - Keep approval separate from ordinary `quotations:write`.
    - Required before quotation approval flow and ERP-3 invoices.
 2. `CUST-OFFICIAL-DETAILS-1`
    - Add optional/conditional customer official and billing fields before ERP-3: customer type (Individual / Company), legal name, Commercial Registration number, VAT number, National Address fields, billing email, finance contact, payment terms, and PO required flag.
@@ -366,12 +367,12 @@ Checklist:
 - [ ] Integration checkpoint after ERP-2: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
 
 ### RBAC-QUOTATIONS-APPROVE-1
-Status: Next
+Status: Ready for PR
 
 Checklist:
-- [ ] Add `quotations:approve` to Manager in `src/lib/auth/permissions.ts`.
-- [ ] Keep `quotations:approve` separate from `quotations:write`.
-- [ ] Required before quotation approval flow and ERP-3 invoices.
+- [x] Add `quotations:approve` to Manager in `src/lib/auth/permissions.ts`.
+- [x] Keep `quotations:approve` separate from `quotations:write`.
+- [x] Required before quotation approval flow and ERP-3 invoices.
 
 ### CUST-OFFICIAL-DETAILS-1
 Status: Planned before ERP-3
