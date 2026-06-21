@@ -7,11 +7,11 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 | Role | Permissions |
 |---|---|
 | **admin** | All permissions across all modules. |
-| **manager** | `customers:read/write`, `quotations:read/write`, `quotations:approve`, `invoices:read`, `payments:read`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
-| **sales** | `customers:read/write`, `quotations:read/write`, `invoices:read`, `payments:read`, `dashboard:read` |
-| **operations** | `customers:read`, `quotations:read`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
-| **accountant** | `customers:read`, `quotations:read`, `invoices:read/write`, `payments:read/write`, `settings:read`, `dashboard:read` |
-| **viewer** | Read-only access to all modules (`*:read`). |
+| **manager** | `customers:read/write`, `quotations:read/write`, `quotations:approve`, `services:read/write`, `invoices:read`, `payments:read`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
+| **sales** | `customers:read/write`, `quotations:read/write`, `services:read/write`, `invoices:read`, `payments:read`, `dashboard:read` |
+| **operations** | `customers:read`, `quotations:read`, `services:read`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
+| **accountant** | `customers:read`, `quotations:read`, `services:read`, `invoices:read/write`, `payments:read/write`, `settings:read`, `dashboard:read` |
+| **viewer** | Read-only access to all modules, including `services:read`. |
 
 ## Company Settings CS-A
 
@@ -32,6 +32,13 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - Quotations are Service-scoped; no standalone quotation creation is allowed.
 - Quotation `customer_id`, if present, must be derived server-side from the Service rather than accepted from the client.
 - One Service can have multiple Quotations. Do not add `UNIQUE(service_id)` to quotations.
+
+## Service Permissions
+
+- `services:read` allows viewing Services and the Service Hub.
+- `services:write` is required for service create/edit/delete controls.
+- Visible Service edit controls must be hidden unless the user has `services:write`; route/action enforcement remains server-side.
+- Service status transition permissions/actions remain deferred. Do not treat `services:write` as status automation.
 
 ## Invoice And Payment Permissions
 

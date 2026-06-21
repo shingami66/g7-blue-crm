@@ -38,7 +38,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `company_settings`: Singleton seller/master-company settings for CS-A. It stores English and Arabic legal names, CR, TIN, VAT mode, nullable VAT number/effective date, official contact details, national address, bank details, currency, default VAT percent, and default terms. The stable `setting_key='default'` column enforces one active settings row. The current implemented VAT field is `company_settings.vat_mode`.
 - `number_sequences`: Atomic counters for generated IDs (e.g., QT-2026-0001). Current allowed types are `quotation`, `invoice`, `payment`, `project`, and `service`. Current prefixes are `QT`, `INV`, `PAY`, `PRJ`, and `SVC`.
 - `customers`: Client database with revenue metrics and soft deletes.
-- `services`: ERP-1 operational unit linked to `customers(id)` with `service_number`, event fields, status, ownership, cancellation reason, timestamps, audit text fields, and soft-delete timestamp. The DB foundation is applied and verified, but app UI/routes/server actions are not implemented yet.
+- `services`: ERP-1 operational unit linked to `customers(id)` with `service_number`, event fields, status, ownership, cancellation reason, timestamps, audit text fields, and soft-delete timestamp. The DB foundation and app list/create/detail/edit foundation are implemented; controlled status transitions remain deferred.
 - `suppliers`: Third-party vendor database.
 - `audit_logs`: Centralized event tracking for actions (`create`, `update`, etc.).
 
@@ -49,11 +49,11 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `projects` / `project_tasks`: Existing legacy execution tracking. New ERP planning should use Service as the operational unit.
 
 ## Relationships
-- Current legacy schema still contains direct Customer → Quotation / Invoice / Project relationships.
-- `services` now exists as the new operational unit linked to `customers(id)`, but quotations are not migrated to `service_id` yet.
+- Current legacy schema still contains direct Customer → Invoice / Project relationships and denormalized quotation customer linkage for reporting/query convenience.
+- `services` now exists as the new operational unit linked to `customers(id)`, and quotations are service-scoped through required `quotations.service_id`.
 - New ERP planning must follow **Customer Profile → Service → Quotation → Invoice → Payment**.
 - **Service** belongs to a **Customer**.
-- Planned **Quotation** belongs to a **Service** and can keep `customer_id` only for reporting/query convenience.
+- **Quotation** belongs to a **Service** and can keep `customer_id` only for reporting/query convenience.
 - Planned **Invoice** belongs to a **Service** and can reference a **Quotation**.
 - Planned **Payment** must belong to an **Invoice**. Payment is connected to Service through the Invoice.
 - If `payments.service_id` is stored for query convenience, it must match the invoice's `service_id`. Enforce this in the data layer and preferably with database design.
@@ -72,8 +72,8 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Service ownership uses `sales_owner_id` at the DB foundation level.
 - Service cancellation requires `cancellation_reason`.
 - If no invoice/payment exists, cancellation can be simple. If invoice/payment exists, cancellation must not silently delete financial records.
-- ERP-1 did not implement app UI/routes/server actions for Services.
-- ERP-1 did not add `service_id` to quotations, invoices, or payments.
+- Services app UI/routes/server actions are implemented for list/create/detail/edit, with ordinary edit limited to Inquiry/Quoted and status transitions deferred.
+- ERP-2 service-scoped quotation work added `quotations.service_id`; invoices and payments are still not service-linked.
 
 ### Quotations
 - Quotations must belong to a Service. Standalone quotations are not allowed in new ERP work.

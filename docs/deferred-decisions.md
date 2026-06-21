@@ -102,10 +102,10 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** Customers and Services lists should match the `/quotations` pagination pattern with 10 rows per page and Previous/Next controls.
 
 ## Service Hub
-- **Status:** Planned before or alongside ERP-3.
-- **Reason deferred:** Service is the operational source of truth, but the current app still needs a richer Service/Booking profile experience to replace the old user-facing project hub concept.
+- **Status:** SERVICE-HUB-1B implements the minimal read-only Service/Booking Hub detail page and is ready for review/manual smoke.
+- **Reason deferred:** Service is the operational source of truth, but richer hub behavior still needs future workflow-safe slices after the minimal profile foundation.
 - **When to return:** `SERVICE-HUB-1`, before or alongside ERP-3.
-- **Known requirements:** Build a rich Service/Booking profile page with animated/status timeline, service schedule, customer context, related quotations, future invoice/payment cards, and later notes/activity/attachments. Service remains the operational source of truth.
+- **Known requirements:** The minimal hub includes a read-only status timeline, service schedule, customer context, and related quotations. Future invoice/payment cards require real service-linked financial records from ERP-3/ERP-4. Notes/activity/attachments and controlled status transition actions remain deferred. Service remains the operational source of truth.
 
 ## Full Invoice Schema And Service Linkage
 - **Status:** ERP-3 scope.
