@@ -196,7 +196,7 @@ export async function softDeleteQuotation(id: string): Promise<ActionResult> {
     const user = await requirePermission("quotations:write");
 
     const supabase = createAdminClient();
-    
+
     // Check status before deleting
     const { data: qData, error: fetchError } = await supabase
       .from("quotations")
@@ -234,6 +234,121 @@ export async function softDeleteQuotation(id: string): Promise<ActionResult> {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
     console.error("[softDeleteQuotation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export async function approveQuotation(id: string): Promise<ActionResult> {
+  try {
+    const user = await requirePermission("quotations:approve");
+
+    const supabase = createAdminClient();
+
+    // Check status before approving
+    const { data: qData, error: fetchError } = await supabase
+      .from("quotations")
+      .select("status, service_id")
+      .eq("id", id)
+      .eq("is_deleted", false)
+      .single();
+
+    if (fetchError || !qData) {
+      return { success: false, error: "Quotation not found or already deleted." };
+    }
+
+    if (qData.status !== "draft" && qData.status !== "sent") {
+      return { success: false, error: `Cannot approve a quotation that is ${qData.status}.` };
+    }
+
+    // Explicitly check for existing approved quotation to return clean error message
+    const { count, error: countError } = await supabase
+      .from("quotations")
+      .select("id", { count: "exact", head: true })
+      .eq("service_id", qData.service_id)
+      .eq("status", "approved")
+      .eq("is_deleted", false);
+
+    if (countError) {
+      return { success: false, error: "Failed to verify existing approved quotations." };
+    }
+
+    if (count && count > 0) {
+      return { success: false, error: "An approved quotation already exists for this service." };
+    }
+
+    const { error } = await supabase
+      .from("quotations")
+      .update({
+        status: "approved",
+        updated_by: user.clerk_user_id,
+      })
+      .eq("id", id)
+      .eq("is_deleted", false);
+
+    if (error) {
+      console.error("[approveQuotation] Supabase error:", error.message);
+      if (error.message.includes("unique_approved_quotation_per_service") || error.code === "23505") {
+        return { success: false, error: "An approved quotation already exists for this service." };
+      }
+      return { success: false, error: "Failed to approve quotation. Please try again." };
+    }
+
+    revalidatePath("/quotations");
+    revalidatePath(`/quotations/${id}`);
+    revalidatePath(`/services/${qData.service_id}`);
+    return { success: true };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[approveQuotation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export async function rejectQuotation(id: string): Promise<ActionResult> {
+  try {
+    const user = await requirePermission("quotations:approve");
+
+    const supabase = createAdminClient();
+
+    // Check status before rejecting
+    const { data: qData, error: fetchError } = await supabase
+      .from("quotations")
+      .select("status, service_id")
+      .eq("id", id)
+      .eq("is_deleted", false)
+      .single();
+
+    if (fetchError || !qData) {
+      return { success: false, error: "Quotation not found or already deleted." };
+    }
+
+    if (qData.status !== "draft" && qData.status !== "sent") {
+      return { success: false, error: `Cannot reject a quotation that is ${qData.status}.` };
+    }
+
+    const { error } = await supabase
+      .from("quotations")
+      .update({
+        status: "rejected",
+        updated_by: user.clerk_user_id,
+      })
+      .eq("id", id)
+      .eq("is_deleted", false);
+
+    if (error) {
+      console.error("[rejectQuotation] Supabase error:", error.message);
+      return { success: false, error: "Failed to reject quotation. Please try again." };
+    }
+
+    revalidatePath("/quotations");
+    revalidatePath(`/quotations/${id}`);
+    revalidatePath(`/services/${qData.service_id}`);
+    return { success: true };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[rejectQuotation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { success: false, error: "An unexpected error occurred." };
   }
 }

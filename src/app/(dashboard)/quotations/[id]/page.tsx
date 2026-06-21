@@ -3,9 +3,10 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import { ArrowLeft, Printer, FileEdit } from "lucide-react";
 import Link from "next/link";
 import { getQuotationById } from "@/lib/quotations/queries";
-import { requirePermission } from "@/lib/auth/permissions";
+import { requirePermission, checkPermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import type { ComponentProps } from "react";
+import QuotationApprovalActions from "./QuotationApprovalActions";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -64,6 +65,8 @@ export default async function QuotationDetailPage({
     notFound();
   }
 
+  const canApprove = await checkPermission("quotations:approve");
+
   // Helper for safe number formatting
   const formatMoney = (val: number | null | undefined) => {
     if (val === null || val === undefined) return "0.00";
@@ -102,6 +105,9 @@ export default async function QuotationDetailPage({
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {canApprove && (quotation.status === "draft" || quotation.status === "sent") && (
+            <QuotationApprovalActions quotationId={quotation.id} status={quotation.status} />
+          )}
           {quotation.status === "draft" && (
             <Link 
               href={`/quotations/${quotation.id}/edit`}

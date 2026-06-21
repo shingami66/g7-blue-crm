@@ -66,6 +66,7 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
    - Does not add invoice/payment cards, fake financial data, status transition actions, notes/activity, or attachments.
    - Service remains the operational source of truth.
 5. `QUOTE-APPROVAL-FLOW-1`
+   - `QUOTE-APPROVAL-FLOW-1B` completed. Migration was manually applied and schema is synced. Admin smoke passed.
    - Multiple draft quotations per Service are allowed for negotiation.
    - More than one approved quotation per Service must be prevented.
    - Required before ERP-3 invoice creation.
@@ -443,13 +444,13 @@ Checklist:
 - [ ] Add future controlled status transition actions; no transition automation is part of SERVICE-HUB-1B.
 
 ### QUOTE-APPROVAL-FLOW-1
-Status: Required before ERP-3 invoice creation
+Status: QUOTE-APPROVAL-FLOW-1B completed. Migration was manually applied and schema is synced. Admin smoke passed. Required before ERP-3 invoice creation.
 
 Checklist:
-- [ ] Allow multiple draft quotations per Service for negotiation.
-- [ ] Prevent more than one approved quotation per Service.
-- [ ] Enforce `quotations:approve` separately from `quotations:write`.
-- [ ] Required before ERP-3 invoices can be created from Approved Quotation + Service.
+- [x] Allow multiple draft quotations per Service for negotiation.
+- [x] Prevent more than one approved quotation per Service.
+- [x] Enforce `quotations:approve` separately from `quotations:write`.
+- [x] Required before ERP-3 invoices can be created from Approved Quotation + Service.
 
 ### Phase ERP-3 — Service-linked Invoices
 Status: Planned
