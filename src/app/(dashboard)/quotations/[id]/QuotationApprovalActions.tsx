@@ -26,7 +26,7 @@ export default function QuotationApprovalActions({ quotationId, status }: Props)
       if (!res.success) {
         setError(res.error || "Failed to approve quotation");
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setIsApproving(false);
@@ -41,7 +41,7 @@ export default function QuotationApprovalActions({ quotationId, status }: Props)
       if (!res.success) {
         setError(res.error || "Failed to reject quotation");
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setIsRejecting(false);

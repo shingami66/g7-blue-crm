@@ -1,5 +1,3 @@
-import { AuditFields } from "./common";
-
 export type InvoiceStatus = "draft" | "sent" | "paid" | "partial" | "overdue" | "cancelled";
 
 export interface InvoiceItem {

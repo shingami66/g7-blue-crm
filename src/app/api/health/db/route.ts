@@ -6,7 +6,7 @@ export async function GET() {
     const supabase = createAdminClient();
     
     // Perform a lightweight read-only check
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("number_sequences")
       .select("id")
       .limit(1);

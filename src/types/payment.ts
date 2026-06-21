@@ -1,5 +1,3 @@
-import { AuditFields } from "./common";
-
 export type PaymentMethod = "bank_transfer" | "cash" | "cheque" | "online";
 
 export type PaymentStatus = "pending" | "confirmed" | "failed" | "refunded";
