@@ -81,6 +81,12 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **When to return:** Before issuing official Saudi tax invoices from the system.
 - **Known requirements:** Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior. Full integration requires separate reviewed design before issuing official Saudi tax invoices from the system. Planned nullable fields to consider only after approval: `invoice_uuid`, `zatca_status`, `qr_code_data`, `xml_hash`.
 
+## Official CR and VAT Registration
+- **Status:** Deferred/Pending.
+- **Reason deferred:** Waiting for official CR document and official VAT registration confirmation.
+- **When to return:** When official documents are provided.
+- **Known requirements:** VAT Number, Tax Invoice issuance, ZATCA/FATOORA, and CR confirmation remain deferred/pending. Entity Unified No (7053901414) must not be treated as CR unless officially confirmed. Tax Invoice is blocked while `vat_mode = not_registered`.
+
 ## Company Settings Document Snapshot Wiring
 - **Status:** Deferred; required before printed quotations/invoices depend on live Company Settings.
 - **Reason deferred:** CS-A intentionally implements live singleton settings only. Existing quotation and invoice print views must not mutate when Company Settings changes.

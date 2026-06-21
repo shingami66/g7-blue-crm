@@ -9,6 +9,27 @@
 - **Core Entity:** Service / Booking is the operational entity for new ERP work, not Project.
 - **Current VAT Field:** The implemented Company Settings VAT field is `company_settings.vat_mode`.
 
+## 1.1 Confirmed Company Identity & Document Rules
+- **Legal English Name:** G SEVEN BLUE Company
+- **Brand Name:** G7 BLUE
+- **VAT Status:** Not VAT registered.
+- **TIN / الرقم المميز:** 3146944674 (Do not use TIN as VAT Number)
+- **Entity Unified No:** 7053901414 (Do not treat as CR unless confirmed)
+- **VAT Number:** null / not applicable / not available
+- **Official Email:** [info@g7blue.com](mailto:info@g7blue.com)
+- **Official Mobile:** +966 55 570 0349
+- **Website:** g7blue.com
+- **City:** Riyadh, Saudi Arabia
+- **National Address:** Short Address: RBDA7036, Building No: 7036, Street: Sayida / صيدا, District: Al Duraihemiyah Dist. / حي الدريهمية, Secondary No: 2487, Postal Code: 12796, City: Riyadh / الرياض
+- **Bank Details:** Alinma Bank / مصرف الإنماء | Account No: 68207417001000 | IBAN: SA5005000068207417001000
+- **Official Logo Asset:** `public/brand/G7_BLUE_Events_Icon_White_BG.png` (Public path: `/brand/G7_BLUE_Events_Icon_White_BG.png`)
+
+### Document Generation Rules
+- **Quotation Documents:** Must show logo, legal name, brand name, TIN, and bank/payment info. Must NOT show VAT Number, Tax Invoice wording, VAT 15%, or ZATCA/FATOORA claims while `vat_mode = not_registered`.
+- **Deposit/Proforma/Receipts:** Allowed while not registered. Must NOT claim to be Tax Invoice, display VAT Number, or calculate VAT 15%. Must use VAT rate 0.
+- **Tax Invoice:** Blocked while `vat_mode = not_registered`. Remains deferred until official VAT registration and VAT Number are confirmed. ZATCA/Phase 2 deferred.
+- **Snapshot Rule:** Generated customer-facing documents must snapshot company details, financial values, VAT mode, VAT rate, document labels, logo path, and bank/payment details at issue time. Historical documents must not change if Company Settings change later.
+- **Missing/Pending:** CR number is still not confirmed from an official CR document.
 ## 2. Working Rules
 - **Workflow:** Plan → Implement → Build → Manual Test → Audit → Commit → Push → PR → Merge
 - **Security:** No `.env.local` exposure; never committed to Git.
