@@ -946,6 +946,7 @@ CREATE INDEX idx_quotations_customer_id ON quotations(customer_id);
 CREATE INDEX idx_quotations_service_id ON quotations(service_id);
 CREATE INDEX idx_quotations_status ON quotations(status);
 CREATE INDEX idx_quotations_created_at ON quotations(created_at);
+CREATE UNIQUE INDEX unique_approved_quotation_per_service ON public.quotations USING btree (service_id) WHERE ((status = 'approved'::text) AND (is_deleted = false));
 
 CREATE INDEX idx_quotation_items_quotation_id ON quotation_items(quotation_id);
 

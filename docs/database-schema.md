@@ -85,6 +85,9 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Approval requires `quotations:approve`, not only `quotations:write`.
 - Non-draft quotations must not be fully editable through ordinary `quotations:write`.
 - Approved quotations must not be soft-deleted through ordinary `quotations:write`.
+- The `unique_approved_quotation_per_service` partial unique index on `quotations(service_id)` where `status = 'approved' AND is_deleted = false` was manually applied in the database.
+- Index verification passed.
+- `supabase/schema.sql` was synced to reflect this index.
 
 ### Invoices And Payments
 - Invoices must belong to a Service. Standalone invoices are not allowed in new ERP work.
@@ -125,7 +128,7 @@ Unique document numbers (`quotation_number`, `invoice_number`, `payment_number`,
 Entities like `customers`, `quotations`, `invoices`, and `projects` implement a soft delete pattern using `is_deleted` (boolean) and `deleted_at` (timestamptz). `services` currently uses `deleted_at` without `is_deleted`. This preserves historical references in financial data while hiding records from the active UI. Future schema should prefer `deleted_at` timestamp over only `is_deleted`, or document any `is_deleted`-only usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion.
 
 ## Row Level Security (RLS)
-All tables have Row Level Security enabled. 
+All tables have Row Level Security enabled.
 
 `app_users` has RLS enabled and intentionally has no broad `DEV_ONLY` policy. It should be accessed server-side through service role / protected server logic only.
 

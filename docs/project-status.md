@@ -191,10 +191,26 @@
 - Native number input spinners are hidden in quotation numeric inputs.
 - No schema, migration, RPC, VAT, invoice/payment, or financial total authority changes were made.
 
+### ✅ QUOTE-APPROVAL-FLOW-1B — Quotation Approval Workflow
+- Quotation approval logic implemented.
+- Added `approveQuotation` and `rejectQuotation` actions.
+- Enforces one approved quotation per service via database unique constraint (`unique_approved_quotation_per_service`).
+- Admin smoke passed.
+- Manual migration was applied and verified.
+- `supabase/schema.sql` is synced.
+- Full parent `QUOTE-APPROVAL-FLOW-1` is marked complete.
+- Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available.
+- `ADMIN-USER-MANAGEMENT-1A` remains deferred/future.
+- Service status transition on approval remains deferred.
+- Sent workflow remains deferred.
+- Approval audit fields remain deferred.
+- Invoice/payment creation remains future ERP scope.
+- VAT/ZATCA remains out of scope.
+
 ## 4. Current Active Phase
 
 ### 🚧 Locked Next CRM Priorities
-Status: SEC-AUTHZ-APP-USER-GATE-1 implemented; SERVICE-HUB-1B merged; next locked priority is QUOTE-APPROVAL-FLOW-1 (smoke pending after security gate verification)
+Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.
 
 The locked workflow remains:
 Customer Profile → Service → Quotation → Invoice → Payment.
@@ -221,6 +237,19 @@ The next work order is:
    - Transition triggers remain deferred: `Quoted` to future quotation workflow, `Approved` to future approval flow, and `Deposit Paid` to future cleared payment flow.
    - Service remains the operational source of truth.
 5. `QUOTE-APPROVAL-FLOW-1`
+   - `QUOTE-APPROVAL-FLOW-1B` is implemented / code-ready / pending review.
+   - Migration file exists and was manually applied.
+   - Index verification passed.
+   - `supabase/schema.sql` is synced in this task.
+   - Manual smoke is still pending.
+   - `QUOTE-APPROVAL-FLOW-1B` is not fully complete until manual smoke passes.
+   - `QUOTE-APPROVAL-FLOW-1` parent task is not fully complete yet if smoke is still pending.
+   - Service status transition on approval remains deferred.
+   - Sent workflow remains deferred.
+   - Approval audit fields remain deferred/future-scope.
+   - Invoices/payments remain future ERP scope.
+   - VAT/ZATCA remains out of scope.
+   - Pagination remains separate follow-up.
    - Multiple draft quotations per Service are allowed for negotiation.
    - More than one approved quotation per Service must be prevented.
    - Required before ERP-3 invoice creation.
@@ -281,4 +310,4 @@ Current decision gates before ERP implementation:
 - Quotation creation works after manual Supabase apply.
 - Company Settings CS-A is committed on `main`.
 - Financial totals remain server-side/database-side via PostgreSQL RPC.
-- CUST-OFFICIAL-DETAILS-1C manual smoke passed and was merged. SEC-SERVICE-INVARIANTS-1B was merged. SERVICE-HUB-1B is implemented and ready for review/manual smoke; after review/merge, follow the locked order: `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`.
+- CUST-OFFICIAL-DETAILS-1C manual smoke passed and was merged. SEC-SERVICE-INVARIANTS-1B was merged. SERVICE-HUB-1B is implemented and ready for review/manual smoke; after review/merge, follow the locked order: `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`. `QUOTE-APPROVAL-FLOW-1B` is code-ready / pending review.

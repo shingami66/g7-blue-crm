@@ -97,10 +97,14 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** Evaluate PDF tool, document storage, download flow, email attachment flow, and invoice/customer record attachment behavior.
 
 ## Quotation Approval Workflow
-- **Status:** Deferred; required before ERP-3 invoice creation.
-- **Reason deferred:** Quotation validity is now enforced, but approval workflow, approval permission, and approved-quotation uniqueness still need a dedicated implementation phase.
-- **When to return:** `QUOTE-APPROVAL-FLOW-1`, after `RBAC-QUOTATIONS-APPROVE-1` and before ERP-3.
-- **Known requirements:** Multiple draft quotations per Service are allowed for negotiation. More than one approved quotation per Service must be prevented. Approval requires `quotations:approve`, separate from `quotations:write`. The approval flow is required before invoices can be created from Approved Quotation + Service.
+- **Status:** QUOTE-APPROVAL-FLOW-1B implemented/code-ready. Migration was manually applied and schema is synced. Pending manual smoke. Several features remain deferred.
+- **Reason deferred:** Core approval RBAC and uniqueness guards are implemented in 1B, but broader status transitions and audit trails need separate implementation.
+- **When to return:** Before ERP-3 invoice creation or when business needs audit tracking.
+- **Known requirements:**
+  - Multiple draft quotations per Service are allowed for negotiation. More than one approved quotation per Service must be prevented. Approval requires `quotations:approve`, separate from `quotations:write`.
+  - **Deferred:** Service status transition on quotation approval is deferred. Exact `Quoted` trigger remains future quotation workflow decision. `Sent` workflow/action is deferred.
+  - **Deferred Audit Fields:** `approved_at`, `approved_by`, `sent_at`, `rejected_at`, `rejected_by` remain future-scope.
+  - **Deferred ERP Scope:** Invoice/payment creation from approved quotation remains future ERP scope. VAT/ZATCA behavior remains out of scope.
 
 ## Customer Official Details Before ERP-3
 - **Status:** Implementation review; CUST-OFFICIAL-DETAILS-1B was manually applied and DB-verified, and CUST-OFFICIAL-DETAILS-1C wires optional fields into the customer data layer, create UI, profile-only edit UI, and profile card. Mozfer manual smoke passed.
