@@ -10,6 +10,7 @@ const isProtectedRoute = createRouteMatcher([
   "/projects(.*)",
   "/suppliers(.*)",
   "/payments(.*)",
+  "/services(.*)",
   "/settings(.*)",
   "/api(.*)",
 ]);

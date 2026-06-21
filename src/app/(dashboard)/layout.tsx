@@ -1,11 +1,19 @@
+import { redirect } from "next/navigation";
+import { getCurrentAppUser } from "@/lib/auth/permissions";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const appUser = await getCurrentAppUser();
+
+  if (!appUser || !appUser.is_active) {
+    redirect("/unauthorized");
+  }
+
   return (
     <div className="dashboard-shell flex min-h-screen bg-surface">
       <div className="dashboard-sidebar">
