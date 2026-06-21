@@ -200,8 +200,17 @@
 - `supabase/schema.sql` is synced.
 - Full parent `QUOTE-APPROVAL-FLOW-1` is marked complete.
 - Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available.
-- `ADMIN-USER-MANAGEMENT-1A` remains deferred/future.
 - Service status transition on approval remains deferred.
+
+### ✅ ADMIN-USER-MANAGEMENT-1A
+- Completed inspection and design phase for invite-only user management.
+- Approved Option D: Clerk Invitations API + invitation metadata + `user.created` webhook.
+- Corrected metadata wording: use Clerk invitation metadata / `publicMetadata` unless future SDK verification proves `privateMetadata` support for user invitations.
+- The invitation role is bootstrap-only; final CRM authorization remains sourced from `app_users.role`.
+- Decided against a separate `user_invitations` table for the 1B MVP.
+- Decided against changing `app_users.clerk_user_id` from NOT NULL.
+- Confirmed webhook verification is mandatory for future implementation.
+- Confirmed webhook failure rule: if invitation metadata is missing, invalid, or contains an unrecognized role, do not create an `app_users` row and do not assign a default fallback role.
 - Sent workflow remains deferred.
 - Approval audit fields remain deferred.
 - Invoice/payment creation remains future ERP scope.

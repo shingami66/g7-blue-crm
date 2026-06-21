@@ -42,12 +42,14 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** Review project types/mock data, project permissions, `projects`/`project_tasks` legacy schema, customer `projects_count`, and supplier PRJ mock references.
 
 ## User Management + Clerk Sync
-- **Status:** Deferred; required before production team usage. SEC-AUTHZ-APP-USER-GATE-1 now blocks unapproved Clerk users from dashboard access, but admin user management / invite workflow remains deferred.
-- **Reason deferred:** RBAC foundation exists and dashboard membership is now gated, but full user management needs Clerk sync strategy and admin workflows. New Clerk signups are blocked from CRM access until an admin manually creates their `app_users` row.
-- **When to return:** Before production team usage or when non-developer admins need to invite/manage users.
-- **Known requirements:** `/settings/users`, `users:manage` permission, add/invite by email, role editing, deactivation, audit role changes, Clerk `user.created` webhook, email matching, and safe duplicate/missing email handling. `app_users.clerk_user_id` is TEXT, not UUID.
-- **ADMIN-USER-MANAGEMENT-1 planning:** This phase must start with an inspection/design phase (`ADMIN-USER-MANAGEMENT-1A` - report only, no implementation) before `ADMIN-USER-MANAGEMENT-1B` (implementation). The design phase must inspect Clerk Invitations API behavior, whether `clerk_user_id` is available before invitation acceptance, whether a Clerk webhook is required, whether `app_users` can serve as the invitation store with `is_active=false`, and whether a separate `user_invitations` table is needed.
-- **Admin Navigation:** Future navigation direction will place user access management under `Admin > Users` and operational approvals under `Admin > Review Center`. Do not place these under Settings (which remains for company/system configuration).
+- **Status:** 1A Design completed. 1B Implementation planned.
+- **Decision:** Option D approved for 1B: Clerk Invitations API + invitation metadata + `user.created` webhook.
+- **Metadata correction:** Use Clerk invitation metadata / `publicMetadata` for the intended role unless future SDK verification proves `privateMetadata` is supported for user invitations.
+- **Authorization rule:** Invitation metadata is bootstrap-only. After `app_users` is created, CRM authorization must use `app_users.role` only.
+- **Reason deferred:** Implementation requires Clerk API integration, webhook endpoint, signature verification, and Admin UI.
+- **When to return:** `ADMIN-USER-MANAGEMENT-1B`.
+- **Known requirements:** `Admin > Users`, `/admin/users`, `users:invite`, `users:manage`, invite by email, role whitelist validation, `user.created` webhook, verified webhook signatures, no `user_invitations` table for 1B MVP, no nullable `app_users.clerk_user_id`, and `app_users.clerk_user_id` remains TEXT and must never be cast to UUID.
+- **Webhook failure rule:** If webhook metadata is missing, invalid, or contains an unrecognized role, the webhook must NOT create an `app_users` row. The failure must be logged. The user will be blocked by the existing dashboard gate. Do not auto-assign any default role including `viewer` as fallback.
 
 ## Review Center
 - **Status:** Deferred (`ADMIN-APPROVAL-CENTER-1`).
