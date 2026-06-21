@@ -19,6 +19,22 @@ export function mapRowToCustomer(row: CustomerRow): Customer {
     status: row.status,
     projects: row.projects_count,
     revenue: formatRevenue(row.revenue),
+    customerType: row.customer_type,
+    legalName: row.legal_name,
+    commercialRegistrationNumber: row.commercial_registration_number,
+    vatNumber: row.vat_number,
+    nationalAddressBuildingNumber: row.national_address_building_number,
+    nationalAddressStreet: row.national_address_street,
+    nationalAddressDistrict: row.national_address_district,
+    nationalAddressCity: row.national_address_city,
+    nationalAddressPostalCode: row.national_address_postal_code,
+    nationalAddressAdditionalNumber: row.national_address_additional_number,
+    nationalAddressCountry: row.national_address_country,
+    billingEmail: row.billing_email,
+    financeContactName: row.finance_contact_name,
+    financeContactPhone: row.finance_contact_phone,
+    paymentTerms: row.payment_terms,
+    poRequired: row.po_required,
   };
 }
 

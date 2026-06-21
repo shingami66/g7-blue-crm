@@ -47,7 +47,8 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
    - CUST-OFFICIAL-DETAILS-1B manually applied and DB-verified: optional/conditional customer official and billing fields are present in the database.
    - Fields include customer type (Individual / Company), legal name, Commercial Registration number, VAT number, National Address fields, billing email, finance contact, payment terms, and PO required flag.
    - `supabase/schema.sql` now matches the verified DB state for these fields.
-   - Next implementation: customer data layer + create/edit UI + profile card.
+   - CUST-OFFICIAL-DETAILS-1C wires the fields into the customer data layer, create UI, profile-only edit UI, and customer profile card; Mozfer manual smoke passed and the slice is ready for pre-commit review.
+   - Future invoice buyer snapshots remain ERP-3 scope; customer VAT number storage does not enable Tax Invoice/ZATCA behavior.
 3. `SEC-SERVICE-INVARIANTS-1`
    - Verify active/non-deleted customer on service create.
    - Add linked-record guards before service soft delete.
@@ -378,7 +379,7 @@ Checklist:
 - [x] Required before quotation approval flow and ERP-3 invoices.
 
 ### CUST-OFFICIAL-DETAILS-1
-Status: CUST-OFFICIAL-DETAILS-1B manually applied and DB-verified; data layer + UI/profile cards pending
+Status: CUST-OFFICIAL-DETAILS-1C manual smoke passed and ready for pre-commit review; next locked priority after customer review is SEC-SERVICE-INVARIANTS-1
 
 Checklist:
 - [x] Draft backward-compatible migration for customer type: Individual / Company.
@@ -394,7 +395,21 @@ Checklist:
 - [x] Review migration.
 - [x] Manually apply and verify migration.
 - [x] Update `supabase/schema.sql` after manual apply and verification.
-- [ ] Implement customer data layer + create/edit UI + profile card.
+- [x] Implement customer data layer + create UI + profile-only edit UI + profile card.
+- [x] Keep official/billing fields optional/conditional in UI and validation.
+- [x] Keep Individual customers free of company-only registration/billing fields in the mounted form UI.
+- [x] Keep customer VAT number display separate from Tax Invoice/ZATCA behavior.
+- [x] Mozfer manual smoke for CUST-OFFICIAL-DETAILS-1C passed.
+- [ ] Future ERP-3 invoice buyer snapshot usage remains deferred to invoice implementation.
+
+### LIST-PAGINATION-PARITY-1
+Status: Follow-up; do not move ahead of critical/security blockers unless approved
+
+Checklist:
+- [ ] Customers list uses the same pagination pattern as `/quotations`.
+- [ ] Services list uses the same pagination pattern as `/quotations`.
+- [ ] Use 10 rows per page.
+- [ ] Include Previous/Next controls.
 
 ### SEC-SERVICE-INVARIANTS-1
 Status: Planned before Service Hub / ERP-3

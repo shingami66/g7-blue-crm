@@ -90,10 +90,16 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** Multiple draft quotations per Service are allowed for negotiation. More than one approved quotation per Service must be prevented. Approval requires `quotations:approve`, separate from `quotations:write`. The approval flow is required before invoices can be created from Approved Quotation + Service.
 
 ## Customer Official Details Before ERP-3
-- **Status:** Deferred; required before ERP-3 invoices.
-- **Reason deferred:** Current customer CRUD exists, but invoice-ready customer billing/legal identity needs dedicated schema/UI review before invoice issuance.
+- **Status:** Implementation review; CUST-OFFICIAL-DETAILS-1B was manually applied and DB-verified, and CUST-OFFICIAL-DETAILS-1C wires optional fields into the customer data layer, create UI, profile-only edit UI, and profile card. Mozfer manual smoke passed.
+- **Reason deferred:** Future invoice buyer snapshot usage remains ERP-3 scope and must not be treated as implemented by customer profile fields alone.
 - **When to return:** `CUST-OFFICIAL-DETAILS-1`, before ERP-3 invoice implementation.
-- **Known requirements:** Add optional/conditional fields for customer type (Individual / Company), legal name, Commercial Registration number, VAT number, National Address fields, billing email, finance contact, payment terms, and PO required flag. These fields must not become mandatory for all customers.
+- **Known requirements:** Customer official/billing fields remain optional/conditional and must not become mandatory for all customers. Individual customers must not carry mounted company-only registration/billing fields in the UI, and customer VAT number storage/display remains buyer identity data only. Customer VAT number storage/display does not enable Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior. Future ERP-3 invoices must snapshot buyer fields at issue time after separate reviewed implementation.
+
+## List Pagination Parity
+- **Status:** Follow-up.
+- **Reason deferred:** Discovered during CUST-OFFICIAL-DETAILS-1C manual smoke; not part of the customer official/billing field scope.
+- **When to return:** `LIST-PAGINATION-PARITY-1`, after critical/security blockers unless approved earlier.
+- **Known requirements:** Customers and Services lists should match the `/quotations` pagination pattern with 10 rows per page and Previous/Next controls.
 
 ## Service Hub
 - **Status:** Planned before or alongside ERP-3.

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCustomers } from "@/lib/customers/queries";
+import { checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import CustomersClient from "./CustomersClient";
 
@@ -7,9 +8,11 @@ export const dynamic = "force-dynamic";
 
 export default async function CustomersPage() {
   let customers: Awaited<ReturnType<typeof getCustomers>>;
+  let canWrite = false;
 
   try {
     customers = await getCustomers();
+    canWrite = await checkPermission("customers:write");
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       redirect("/sign-in");
@@ -40,5 +43,5 @@ export default async function CustomersPage() {
     );
   }
 
-  return <CustomersClient customers={customers} />;
+  return <CustomersClient customers={customers} canWrite={canWrite} />;
 }
