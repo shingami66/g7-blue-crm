@@ -1,5 +1,3 @@
-import { AuditFields } from "./common";
-
 export type QuotationStatus = "draft" | "sent" | "approved" | "rejected" | "expired";
 
 export interface QuotationItem {

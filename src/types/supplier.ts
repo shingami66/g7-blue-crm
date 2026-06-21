@@ -1,5 +1,3 @@
-import { AuditFields } from "./common";
-
 export type SupplierStatus = "active" | "inactive" | "blacklisted";
 
 export interface Supplier {
