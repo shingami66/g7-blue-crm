@@ -600,15 +600,15 @@ Status: 1A Design approved. 1B Implementation planned.
 
 Checklist:
 - [x] 1A Admin User Management Design Report
-- [ ] 1B Build `Admin > Users` / `/admin/users`
-- [ ] 1B Implement Admin-only invite action using Clerk Invitations API
-- [ ] 1B Store intended role as invitation metadata / `publicMetadata` unless SDK verification proves otherwise
-- [ ] 1B Implement `user.created` webhook with verified signature
-- [ ] 1B Create `app_users` row after accepted invite using `clerk_user_id`
-- [ ] 1B Validate invitation role against the CRM role whitelist
-- [ ] 1B Reject invalid/missing webhook role metadata without creating `app_users`
-- [ ] 1B Ensure final authorization uses only `app_users.role`
-- [ ] 1B Enforce `users:invite` and `users:manage`
+- [x] 1B Build `Admin > Users` / `/admin/users`
+- [x] 1B Implement Admin-only invite action using Clerk Invitations API
+- [x] 1B Store intended role as invitation metadata / `publicMetadata` unless SDK verification proves otherwise
+- [x] 1B Implement `user.created` webhook with verified signature
+- [x] 1B Create `app_users` row after accepted invite using `clerk_user_id`
+- [x] 1B Validate invitation role against the CRM role whitelist
+- [x] 1B Reject invalid/missing webhook role metadata without creating `app_users`
+- [x] 1B Ensure final authorization uses only `app_users.role`
+- [x] 1B Enforce `users:invite` and `users:manage`
 
 ### Service Catalog
 Status: Deferred as productivity enhancement, not blocking core financial demo

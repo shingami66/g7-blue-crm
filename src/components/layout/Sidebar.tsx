@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   BriefcaseBusiness,
+  ShieldAlert,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -30,7 +31,7 @@ const bottomItems = [
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -74,8 +75,29 @@ export default function Sidebar() {
         })}
       </div>
 
+      {/* Admin Nav */}
+      {isAdmin && (
+        <div className="mt-4 mb-2 flex flex-col gap-1">
+          <div className="px-4 py-2">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-white/50">Admin</span>
+          </div>
+          <Link
+            href="/admin/users"
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${
+              isActive("/admin/users")
+                ? "border-l-2 border-tertiary-fixed text-white bg-on-primary-fixed-variant/10"
+                : "text-white/70 hover:text-white hover:bg-on-primary-fixed-variant/5"
+            }`}
+          >
+            <ShieldAlert size={20} className={isActive("/admin/users") ? "opacity-100" : "opacity-70"} />
+            <span>Users</span>
+          </Link>
+        </div>
+      )}
+
       {/* Bottom Nav */}
-      <div className="mt-auto">
+      <div className={isAdmin ? "mt-2" : "mt-auto"}>
         {bottomItems.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
