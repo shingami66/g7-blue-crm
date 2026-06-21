@@ -50,8 +50,9 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
    - CUST-OFFICIAL-DETAILS-1C wires the fields into the customer data layer, create UI, profile-only edit UI, and customer profile card; Mozfer manual smoke passed and the slice is ready for pre-commit review.
    - Future invoice buyer snapshots remain ERP-3 scope; customer VAT number storage does not enable Tax Invoice/ZATCA behavior.
 3. `SEC-SERVICE-INVARIANTS-1`
-   - Verify active/non-deleted customer on service create.
-   - Add linked-record guards before service soft delete.
+   - Ready for review: Service creation now validates active/non-deleted customer server-side.
+   - Ready for review: Service soft delete now blocks non-deleted linked quotations.
+   - Future invoice/payment service deletion guards remain ERP-3/ERP-4 scope once service-linked invoices/payments exist.
 4. `SERVICE-HUB-1`
    - Build a rich Service/Booking profile page to replace the old user-facing project hub concept.
    - Include animated/status timeline, service schedule, customer context, related quotations, future invoice/payment cards, and later notes/activity/attachments.
@@ -412,11 +413,12 @@ Checklist:
 - [ ] Include Previous/Next controls.
 
 ### SEC-SERVICE-INVARIANTS-1
-Status: Planned before Service Hub / ERP-3
+Status: SEC-SERVICE-INVARIANTS-1B implemented and ready for review; next locked priority is SERVICE-HUB-1
 
 Checklist:
-- [ ] Verify active/non-deleted customer on service create.
-- [ ] Add linked-record guards before service soft delete.
+- [x] Verify active/non-deleted customer on service create.
+- [x] Add linked-record guards before service soft delete.
+- [ ] Extend service deletion guards for invoices/payments after ERP-3/ERP-4 add service-linked financial records.
 
 ### SERVICE-HUB-1
 Status: Planned before or alongside ERP-3
