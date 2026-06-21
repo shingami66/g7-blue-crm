@@ -42,14 +42,15 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** Review project types/mock data, project permissions, `projects`/`project_tasks` legacy schema, customer `projects_count`, and supplier PRJ mock references.
 
 ## User Management + Clerk Sync
-- **Status:** 1A Design completed. 1B Implementation planned.
-- **Decision:** Option D approved for 1B: Clerk Invitations API + invitation metadata + `user.created` webhook.
-- **Metadata correction:** Use Clerk invitation metadata / `publicMetadata` for the intended role unless future SDK verification proves `privateMetadata` is supported for user invitations.
-- **Authorization rule:** Invitation metadata is bootstrap-only. After `app_users` is created, CRM authorization must use `app_users.role` only.
-- **Reason deferred:** Implementation requires Clerk API integration, webhook endpoint, signature verification, and Admin UI.
-- **When to return:** `ADMIN-USER-MANAGEMENT-1B`.
-- **Known requirements:** `Admin > Users`, `/admin/users`, `users:invite`, `users:manage`, invite by email, role whitelist validation, `user.created` webhook, verified webhook signatures, no `user_invitations` table for 1B MVP, no nullable `app_users.clerk_user_id`, and `app_users.clerk_user_id` remains TEXT and must never be cast to UUID.
-- **Webhook failure rule:** If webhook metadata is missing, invalid, or contains an unrecognized role, the webhook must NOT create an `app_users` row. The failure must be logged. The user will be blocked by the existing dashboard gate. Do not auto-assign any default role including `viewer` as fallback.
+- **Status:** Code implementation complete (ADMIN-USER-MANAGEMENT-1B); real Clerk invitation/webhook smoke testing remains pending.
+- **Decision:** Implemented Option D: Clerk Invitations API + invitation metadata + `user.created` webhook.
+- **Metadata usage:** Used Clerk invitation metadata (`publicMetadata`) for the intended role.
+- **Authorization rule:** Invitation metadata is bootstrap-only. CRM authorization strictly uses `app_users.role`.
+- **Smoke limitation:** Real Clerk invitation/webhook smoke testing is still pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and Mozfer explicitly approves creating a real test invitation/user.
+- **No live user creation:** No real Clerk users/invitations were created during implementation.
+- **Lockout reduction:** Self-deactivation and self-role-change are blocked.
+- **Webhook failure rule:** Enforced missing/invalid metadata check in `user.created` webhook. Invalid events are acknowledged but no `app_users` row is created and no fallback role is assigned.
+- **1C UX/security hardening:** Add last-active-admin protection and replace the native revoke-invitation `confirm()` dialog with an inline CRM-styled confirmation pattern.
 
 ## Review Center
 - **Status:** Deferred (`ADMIN-APPROVAL-CENTER-1`).
@@ -63,9 +64,9 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
   - Invoices — future `invoices:write`
 
 ## Clerk Webhook Svix Signature Verification
-- **Status:** Deferred; required before enabling Clerk webhooks in production.
-- **Reason deferred:** Webhook sync is not yet implemented.
-- **When to return:** Before implementing `/api/webhooks/clerk` or any Clerk event receiver.
+- **Status:** Implemented in ADMIN-USER-MANAGEMENT-1B code; real Clerk webhook smoke testing remains pending.
+- **Remaining limitation:** Live verification still requires `CLERK_WEBHOOK_SIGNING_SECRET` to be configured and Mozfer approval before creating a real test invitation/user.
+- **When to return:** Before production enablement, run the approved real Clerk invitation/webhook smoke test.
 - **Known requirements:** Verify Svix signatures, reject invalid webhook requests, handle replay/idempotency, and avoid exposing webhook secrets.
 
 ## Idle Session Timeout / Inactivity Auto Logout

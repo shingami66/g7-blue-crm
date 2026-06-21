@@ -8,7 +8,11 @@ import { UnauthorizedError, ForbiddenError } from "./errors";
 // PERMISSION MAP
 // ---------------------------------------------------------------------------
 export const ROLE_PERMISSIONS: Record<string, string[]> = {
-  admin: ["*"], // Special case: wildcard means all permissions
+  admin: [
+    "*",
+    "users:invite",
+    "users:manage",
+  ], // Special case: wildcard means all permissions
   manager: [
     "customers:read",
     "customers:write",

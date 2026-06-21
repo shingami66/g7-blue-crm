@@ -61,7 +61,7 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - The `app_users` lookup matches on `clerk_user_id` (TEXT). Email is not used as a lookup key for authorization.
 - New Clerk signups remain blocked from CRM access unless they have an active `app_users` row. `ADMIN-USER-MANAGEMENT-1A` selected an invite-first design for future implementation: Clerk invitation acceptance will be synced into `app_users` by a verified `user.created` webhook in `ADMIN-USER-MANAGEMENT-1B`.
 
-## Future Admin User Management Permissions
+## Admin User Management Permissions
 
 - `users:invite` — Admin only
 - `users:manage` — Admin only
@@ -69,6 +69,12 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 Invitation metadata is bootstrap-only for creating the initial `app_users` row after Clerk invitation acceptance. It must not be used as an authorization source after user creation. Final CRM authorization remains based on `app_users.role`.
 
 If webhook metadata is missing, invalid, or contains an unrecognized role, the webhook must not create an `app_users` row and must not assign a fallback role such as `viewer`.
+- ADMIN-USER-MANAGEMENT-1B code implementation is complete; real Clerk invitation/webhook smoke testing remains pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and Mozfer explicitly approves creating a real test invitation/user.
+- Real Clerk webhook testing requires `CLERK_WEBHOOK_SIGNING_SECRET`; the webhook must fail safe if the signing secret is missing.
+- Admins may invite another user with any allowed CRM role, including `admin`, only by explicitly selecting that role. The system must not default invitations to `admin`.
+- No real Clerk users/invitations were created during implementation.
+- Self-deactivation and self-role-change are blocked to reduce admin lockout risk.
+- Last-active-admin protection and a proper revoke confirmation modal remain 1C UX/security hardening.
 - Do not treat UI hiding as security. Server-side permission checks are required.
 - Server-side masking is required for sensitive values such as bank details.
 - Consider rate limiting sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.

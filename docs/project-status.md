@@ -216,6 +216,24 @@
 - Invoice/payment creation remains future ERP scope.
 - VAT/ZATCA remains out of scope.
 
+### ✅ ADMIN-USER-MANAGEMENT-1B
+- Implemented `/admin/users` UI built and connected to Server Actions.
+- ADMIN-USER-MANAGEMENT-1B code implementation is complete; real Clerk invitation/webhook smoke testing remains pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and Mozfer explicitly approves creating a real test invitation/user.
+- Server Actions implemented for inviting users, managing roles, revoking invitations, and toggling active status.
+- Clerk SDK Invitations API integration with `publicMetadata` role embedding.
+- Clerk `user.created` webhook implemented with signature verification and strict validation.
+- Webhook enforces strict validation rules: ignores missing or invalid roles to prevent fallback access.
+- Final authorization relies strictly on `app_users.role`. Authentication relies on Clerk.
+- Invite Server Action enforces `users:invite`; role update, active/inactive toggle, invitation revoke, and pending invitation reads enforce `users:manage`.
+- Self-deactivation and self-role-change are blocked to reduce admin lockout risk.
+- Admin user list database errors show a safe error state instead of "No users found".
+- Successful user-management actions refresh server data in the UI.
+- `CLERK_WEBHOOK_SIGNING_SECRET` is required for real Clerk webhook testing; missing secret fails safe before processing.
+- Admin can invite another user with any allowed CRM role, including `admin`, only by explicitly selecting that role. The invite form defaults to `viewer`, never `admin`.
+- No real Clerk users/invitations were created during implementation.
+- Last-active-admin protection and a proper revoke confirmation modal remain 1C UX/security hardening.
+- No schema changes, migrations, SQL, or package changes were made for ADMIN-USER-MANAGEMENT-1B.
+
 ## 4. Current Active Phase
 
 ### 🚧 Locked Next CRM Priorities

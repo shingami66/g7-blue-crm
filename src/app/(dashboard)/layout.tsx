@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCurrentAppUser } from "@/lib/auth/permissions";
+import { getCurrentAppUser, checkPermission } from "@/lib/auth/permissions";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 
@@ -14,10 +14,12 @@ export default async function DashboardLayout({
     redirect("/unauthorized");
   }
 
+  const isAdmin = await checkPermission("users:manage");
+
   return (
     <div className="dashboard-shell flex min-h-screen bg-surface">
       <div className="dashboard-sidebar">
-        <Sidebar />
+        <Sidebar isAdmin={isAdmin} />
       </div>
       <div className="dashboard-content flex-1 md:ml-[260px] flex flex-col min-h-screen">
         <div className="dashboard-topbar">

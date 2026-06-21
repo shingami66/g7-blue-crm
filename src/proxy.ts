@@ -12,11 +12,14 @@ const isProtectedRoute = createRouteMatcher([
   "/payments(.*)",
   "/services(.*)",
   "/settings(.*)",
+  "/admin(.*)",
   "/api(.*)",
 ]);
 
+const isWebhookRoute = createRouteMatcher(["/api/webhooks/clerk(.*)"]);
+
 export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req) && !isHealthRoute(req)) {
+  if (isProtectedRoute(req) && !isHealthRoute(req) && !isWebhookRoute(req)) {
     await auth.protect();
   }
 });
