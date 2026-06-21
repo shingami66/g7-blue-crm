@@ -1,14 +1,21 @@
 import { notFound, redirect } from "next/navigation";
+import type { ComponentProps, ReactNode } from "react";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
+import { getQuotationsByServiceId } from "@/lib/quotations/queries";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { ArrowLeft, Edit, FileText } from "lucide-react";
+import { ArrowLeft, CalendarDays, Edit, FileText, MapPin, UserRound } from "lucide-react";
 import Link from "next/link";
+import ServiceStatusTimeline from "./ServiceStatusTimeline";
+import RelatedQuotationsCard from "./RelatedQuotationsCard";
+import type { Service } from "@/types/service";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_VARIANT_MAP = {
+type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
+
+const STATUS_VARIANT_MAP: Record<Service["status"], StatusBadgeVariant> = {
   "Inquiry": "inquiry",
   "Quoted": "quoted",
   "Approved": "approved",
@@ -62,31 +69,55 @@ export default async function ServiceDetailPage({
   }
 
   const canCreateQuotation = await checkPermission("quotations:write");
+  const canEditService = await checkPermission("services:write");
+  const canReadQuotations = await checkPermission("quotations:read");
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
+  const relatedQuotations = canReadQuotations
+    ? await getQuotationsByServiceId(service.id)
+    : null;
 
   return (
     <div className="flex flex-col gap-6 pb-12">
-      {/* Top Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/services"
-            className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
-          >
-            <ArrowLeft size={18} />
-          </Link>
-          <div>
-            <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex items-start gap-4">
+          <BackToServicesLink />
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight">
                 {service.serviceNumber}
               </h2>
-              <StatusBadge variant={(STATUS_VARIANT_MAP[service.status as keyof typeof STATUS_VARIANT_MAP] ?? "pending") as React.ComponentProps<typeof StatusBadge>["variant"]}>
+              <StatusBadge variant={STATUS_VARIANT_MAP[service.status]}>
                 {service.status}
               </StatusBadge>
             </div>
+            <div>
+              <h1 className="text-[24px] leading-[32px] font-semibold text-on-surface">
+                {service.serviceTitle}
+              </h1>
+              <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-[14px] leading-[20px] text-on-surface-variant">
+                <Link
+                  href={`/customers/${service.customerId}`}
+                  className="inline-flex items-center gap-2 text-primary hover:underline"
+                >
+                  <UserRound size={16} />
+                  {formatCustomerName(service)}
+                </Link>
+                <span className="inline-flex items-center gap-2">
+                  <CalendarDays size={16} />
+                  {formatServiceSchedule(service)}
+                </span>
+                {service.eventLocation && (
+                  <span className="inline-flex items-center gap-2">
+                    <MapPin size={16} />
+                    {service.eventLocation}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+
+        <div className="flex flex-wrap items-center gap-3">
           {canCreateQuotation && canModifyService && (
             <Link
               href={`/quotations/new?serviceId=${service.id}`}
@@ -96,7 +127,7 @@ export default async function ServiceDetailPage({
               Create Quotation
             </Link>
           )}
-          {canModifyService && (
+          {canEditService && canModifyService && (
             <Link
               href={`/services/${service.id}/edit`}
               className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors"
@@ -108,119 +139,140 @@ export default async function ServiceDetailPage({
         </div>
       </div>
 
-      <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
-          <h3 className="font-semibold text-primary">Service Details</h3>
-        </div>
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div>
-            <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Service Title
-            </div>
-            <div className="text-on-surface font-medium">
-              {service.serviceTitle}
-            </div>
-          </div>
-          <div>
-            <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Customer
-            </div>
-            <div className="text-on-surface font-medium">
-              {service.customer?.company || "—"} {service.customer?.contact ? `(${service.customer.contact})` : ""}
-            </div>
-          </div>
-          <div>
-            <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Estimated Budget
-            </div>
-            <div className="text-on-surface font-medium">
-              {service.estimatedBudget != null
-                ? `${Number(service.estimatedBudget).toLocaleString("en-SA")} SAR`
-                : "—"}
-            </div>
-          </div>
+      <ServiceStatusTimeline
+        status={service.status}
+        cancellationReason={service.cancellationReason}
+      />
 
-          <div>
-            <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Event Name
-            </div>
-            <div className="text-on-surface font-medium">
-              {service.eventName || "—"}
-            </div>
-          </div>
-          <div>
-            <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Event Type
-            </div>
-            <div className="text-on-surface font-medium">
-              {service.eventType || "—"}
-            </div>
-          </div>
-          <div>
-            <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Event Location
-            </div>
-            <div className="text-on-surface font-medium">
-              {service.eventLocation || "—"}
-            </div>
-          </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
+          <SectionHeader title="Service Schedule" />
+          <dl className="p-6 grid grid-cols-1 gap-5">
+            <DetailItem label="Event Name">{formatNullable(service.eventName)}</DetailItem>
+            <DetailItem label="Event Type">{formatNullable(service.eventType)}</DetailItem>
+            <DetailItem label="Start Date">{formatNullable(service.eventStartDate)}</DetailItem>
+            <DetailItem label="End Date">{formatNullable(service.eventEndDate)}</DetailItem>
+            <DetailItem label="Location">{formatNullable(service.eventLocation)}</DetailItem>
+          </dl>
+        </section>
 
-          <div>
-            <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Start Date
-            </div>
-            <div className="text-on-surface font-medium">
-              {service.eventStartDate || "—"}
-            </div>
-          </div>
-          <div>
-            <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              End Date
-            </div>
-            <div className="text-on-surface font-medium">
-              {service.eventEndDate || "—"}
-            </div>
-          </div>
-          <div>
-            <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Created At
-            </div>
-            <div className="text-on-surface font-medium">
-              {new Date(service.createdAt).toLocaleString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </div>
-          </div>
+        <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
+          <SectionHeader title="Customer Summary" />
+          <dl className="p-6 grid grid-cols-1 gap-5">
+            <DetailItem label="Customer">
+              <Link
+                href={`/customers/${service.customerId}`}
+                className="text-primary hover:underline"
+              >
+                {formatCustomerName(service)}
+              </Link>
+            </DetailItem>
+            <DetailItem label="Primary Contact">
+              {formatNullable(service.customer?.contact)}
+            </DetailItem>
+            <DetailItem label="Customer ID">
+              <span className="font-mono text-[13px]">{service.customerId}</span>
+            </DetailItem>
+          </dl>
+        </section>
 
-          <div className="md:col-span-2 lg:col-span-3">
-            <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Description
-            </div>
-            <div className="text-on-surface whitespace-pre-wrap font-medium">
-              {service.description || "—"}
-            </div>
-          </div>
-
-          <div>
-            <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Updated At
-            </div>
-            <div className="text-on-surface font-medium">
-              {new Date(service.updatedAt).toLocaleString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </div>
-          </div>
-        </div>
+        <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
+          <SectionHeader title="Operational Details" />
+          <dl className="p-6 grid grid-cols-1 gap-5">
+            <DetailItem label="Estimated Budget">{formatBudget(service)}</DetailItem>
+            <DetailItem label="Created At">{formatDateTime(service.createdAt)}</DetailItem>
+            <DetailItem label="Updated At">{formatDateTime(service.updatedAt)}</DetailItem>
+            <DetailItem label="Status">{service.status}</DetailItem>
+          </dl>
+        </section>
       </div>
+
+      <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
+          <h3 className="font-semibold text-primary">Description / Notes</h3>
+        </div>
+        <div className="p-6 text-[14px] leading-[22px] text-on-surface whitespace-pre-wrap">
+          {service.description || "—"}
+        </div>
+      </section>
+
+      <RelatedQuotationsCard quotations={relatedQuotations} />
     </div>
   );
+}
+
+function BackToServicesLink() {
+  return (
+    <Link
+      href="/services"
+      className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
+      aria-label="Back to services"
+    >
+      <ArrowLeft size={18} />
+    </Link>
+  );
+}
+
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright">
+      <h3 className="font-semibold text-primary">{title}</h3>
+    </div>
+  );
+}
+
+function DetailItem({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <dt className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
+        {label}
+      </dt>
+      <dd className="text-on-surface font-medium">{children}</dd>
+    </div>
+  );
+}
+
+function formatCustomerName(service: Service) {
+  const company = service.customer?.company;
+  const contact = service.customer?.contact;
+
+  if (company && contact) return `${company} (${contact})`;
+  return company || contact || "Customer profile";
+}
+
+function formatServiceSchedule(service: Service) {
+  if (service.eventStartDate && service.eventEndDate) {
+    return `${service.eventStartDate} - ${service.eventEndDate}`;
+  }
+
+  return service.eventStartDate || service.eventEndDate || "Schedule not set";
+}
+
+function formatNullable(value: string | null | undefined) {
+  return value || "—";
+}
+
+function formatBudget(service: Service) {
+  if (service.estimatedBudget == null) return "—";
+
+  return `${service.estimatedBudget.toLocaleString("en-SA", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} SAR`;
+}
+
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }

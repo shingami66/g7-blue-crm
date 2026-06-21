@@ -54,8 +54,9 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
    - Ready for review: Service soft delete now blocks non-deleted linked quotations.
    - Future invoice/payment service deletion guards remain ERP-3/ERP-4 scope once service-linked invoices/payments exist.
 4. `SERVICE-HUB-1`
-   - Build a rich Service/Booking profile page to replace the old user-facing project hub concept.
-   - Include animated/status timeline, service schedule, customer context, related quotations, future invoice/payment cards, and later notes/activity/attachments.
+   - SERVICE-HUB-1B implements the minimal Service/Booking Hub detail page to replace the old user-facing project hub concept.
+   - Includes a read-only status timeline, service schedule, customer context, and related quotations.
+   - Does not add invoice/payment cards, fake financial data, status transition actions, notes/activity, or attachments.
    - Service remains the operational source of truth.
 5. `QUOTE-APPROVAL-FLOW-1`
    - Multiple draft quotations per Service are allowed for negotiation.
@@ -315,7 +316,7 @@ Checklist:
 - [ ] Produce implementation plan only; do not implement in ERP-0 unless explicitly approved.
 
 ### Phase ERP-1 — Services
-Status: DB foundation applied and verified; app UI/routes/server actions pending
+Status: DB foundation and app list/create/detail/edit foundation implemented; controlled status transitions remain deferred
 
 Checklist:
 - [x] Add `services` table as the DB foundation for the operational unit linked to Customer Profile.
@@ -338,8 +339,8 @@ Checklist:
 - [ ] Complete remaining production hardening before real/semi-real service data.
 - [x] Verify ERP-1 Services DB state after manual Supabase SQL Editor apply.
 - [x] Update `supabase/schema.sql` after post-apply verification.
-- [ ] Implement Services UI/routes/server actions.
-- [ ] Link Services from Customer Profile.
+- [x] Implement Services UI/routes/server actions for list/create/detail/edit.
+- [x] Link Services from Customer Profile.
 - [ ] Integration checkpoint after ERP-1 app layer: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
 
 ### Phase ERP-2 — Service-linked Quotations
@@ -413,7 +414,7 @@ Checklist:
 - [ ] Include Previous/Next controls.
 
 ### SEC-SERVICE-INVARIANTS-1
-Status: SEC-SERVICE-INVARIANTS-1B implemented and ready for review; next locked priority is SERVICE-HUB-1
+Status: SEC-SERVICE-INVARIANTS-1B merged; next locked priority is SERVICE-HUB-1
 
 Checklist:
 - [x] Verify active/non-deleted customer on service create.
@@ -421,17 +422,18 @@ Checklist:
 - [ ] Extend service deletion guards for invoices/payments after ERP-3/ERP-4 add service-linked financial records.
 
 ### SERVICE-HUB-1
-Status: Planned before or alongside ERP-3
+Status: SERVICE-HUB-1B implemented and ready for review/manual smoke
 
 Checklist:
-- [ ] Build a rich Service/Booking profile page to replace the old user-facing project hub concept.
-- [ ] Include animated/status timeline.
-- [ ] Include service schedule.
-- [ ] Include customer context.
-- [ ] Include related quotations.
-- [ ] Include future invoice/payment cards.
+- [x] Build a minimal Service/Booking Hub detail page to replace the old user-facing project hub concept.
+- [x] Include read-only status timeline.
+- [x] Include service schedule.
+- [x] Include customer context.
+- [x] Include related quotations.
+- [ ] Include future invoice/payment cards after ERP-3/ERP-4 provide real service-linked financial records.
 - [ ] Leave notes/activity/attachments for later if not included in the first slice.
 - [ ] Preserve Service as the operational source of truth.
+- [ ] Add future controlled status transition actions; no transition automation is part of SERVICE-HUB-1B.
 
 ### QUOTE-APPROVAL-FLOW-1
 Status: Required before ERP-3 invoice creation

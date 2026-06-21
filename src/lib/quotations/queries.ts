@@ -34,6 +34,38 @@ export async function getQuotations(): Promise<QuotationListItem[]> {
   }
 }
 
+export async function getQuotationsByServiceId(
+  serviceId: string
+): Promise<QuotationListItem[]> {
+  await requirePermission("quotations:read");
+
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("quotations")
+      .select(QUOTATION_SELECT)
+      .eq("service_id", serviceId)
+      .eq("is_deleted", false)
+      .order("quotation_number", { ascending: false })
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false });
+
+    if (error) {
+      console.error("[getQuotationsByServiceId] Supabase error:", error.message);
+      return [];
+    }
+
+    return (data || []).map(mapRowToQuotationListItem);
+  } catch (err) {
+    if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
+    console.error(
+      "[getQuotationsByServiceId] Unexpected error:",
+      err instanceof Error ? err.message : "Unknown"
+    );
+    return [];
+  }
+}
+
 export async function getQuotationById(id: string): Promise<QuotationDetail | null> {
   await requirePermission("quotations:read");
 

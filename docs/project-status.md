@@ -151,8 +151,8 @@
 - Service numbering is supported through `generate_document_number('service')` with `SVC-YYYY-0001`.
 - Existing prefixes are preserved: `QT`, `INV`, `PAY`, `PRJ`, and `SVC`.
 - `schema.sql` now reflects the verified post-ERP-1 DB state.
-- Services app UI/routes/server actions are not implemented yet.
-- Quotations are not migrated to `service_id` yet.
+- Services app UI/routes/server actions now support live service list/create/detail/edit, with status transitions still deferred.
+- Quotations are now service-scoped through `quotations.service_id`; invoices and payments are not changed yet.
 - Invoices and payments are not changed yet.
 - Legacy `projects` remain for now.
 - `DEV_ONLY_services` is fake/dev-data only and not production-safe.
@@ -179,7 +179,7 @@
 ## 4. Current Active Phase
 
 ### 🚧 Locked Next CRM Priorities
-Status: SEC-SERVICE-INVARIANTS-1B implemented and ready for review; next locked priority after this guard slice is SERVICE-HUB-1
+Status: SERVICE-HUB-1B implemented and ready for review/manual smoke; next locked priority after this hub slice is QUOTE-APPROVAL-FLOW-1
 
 The locked workflow remains:
 Customer Profile → Service → Quotation → Invoice → Payment.
@@ -200,8 +200,10 @@ The next work order is:
    - Ready for review: Service soft delete now blocks non-deleted linked quotations.
    - Future invoice/payment service deletion guards remain ERP-3/ERP-4 scope once service-linked invoices/payments exist.
 4. `SERVICE-HUB-1`
-   - Build a rich Service/Booking profile page to replace the old user-facing project hub concept.
-   - Include animated/status timeline, service schedule, customer context, related quotations, future invoice/payment cards, and later notes/activity/attachments.
+   - SERVICE-HUB-1B implements the minimal Service/Booking Hub detail page to replace the old user-facing project hub concept.
+   - Includes a read-only status timeline, service schedule, customer context, and related quotations.
+   - Does not add invoice/payment cards, fake financial data, status transition actions, notes/activity, or attachments.
+   - Transition triggers remain deferred: `Quoted` to future quotation workflow, `Approved` to future approval flow, and `Deposit Paid` to future cleared payment flow.
    - Service remains the operational source of truth.
 5. `QUOTE-APPROVAL-FLOW-1`
    - Multiple draft quotations per Service are allowed for negotiation.
@@ -264,4 +266,4 @@ Current decision gates before ERP implementation:
 - Quotation creation works after manual Supabase apply.
 - Company Settings CS-A is committed on `main`.
 - Financial totals remain server-side/database-side via PostgreSQL RPC.
-- CUST-OFFICIAL-DETAILS-1C manual smoke passed and was merged. SEC-SERVICE-INVARIANTS-1B is implemented and ready for review; after review/merge, follow the locked order: `SERVICE-HUB-1`, `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`.
+- CUST-OFFICIAL-DETAILS-1C manual smoke passed and was merged. SEC-SERVICE-INVARIANTS-1B was merged. SERVICE-HUB-1B is implemented and ready for review/manual smoke; after review/merge, follow the locked order: `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`.
