@@ -46,6 +46,19 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Reason deferred:** RBAC foundation exists and dashboard membership is now gated, but full user management needs Clerk sync strategy and admin workflows. New Clerk signups are blocked from CRM access until an admin manually creates their `app_users` row.
 - **When to return:** Before production team usage or when non-developer admins need to invite/manage users.
 - **Known requirements:** `/settings/users`, `users:manage` permission, add/invite by email, role editing, deactivation, audit role changes, Clerk `user.created` webhook, email matching, and safe duplicate/missing email handling. `app_users.clerk_user_id` is TEXT, not UUID.
+- **ADMIN-USER-MANAGEMENT-1 planning:** This phase must start with an inspection/design phase (`ADMIN-USER-MANAGEMENT-1A` - report only, no implementation) before `ADMIN-USER-MANAGEMENT-1B` (implementation). The design phase must inspect Clerk Invitations API behavior, whether `clerk_user_id` is available before invitation acceptance, whether a Clerk webhook is required, whether `app_users` can serve as the invitation store with `is_active=false`, and whether a separate `user_invitations` table is needed.
+- **Admin Navigation:** Future navigation direction will place user access management under `Admin > Users` and operational approvals under `Admin > Review Center`. Do not place these under Settings (which remains for company/system configuration).
+
+## Review Center
+- **Status:** Deferred (`ADMIN-APPROVAL-CENTER-1`).
+- **Reason deferred:** Core operational flows need to be stabilized first before centralizing pending decisions.
+- **When to return:** After quotation approval, service status workflows, and invoicing flows are implemented.
+- **Known requirements:** A unified review hub for pending decisions under `Admin > Review Center`. It is not admin-only as a whole; each tab must enforce its own permission:
+  - Access/Users — Admin only
+  - Quotations — `quotations:approve`
+  - Services — future service status/cancellation permission
+  - Payments — future `payments:write`
+  - Invoices — future `invoices:write`
 
 ## Clerk Webhook Svix Signature Verification
 - **Status:** Deferred; required before enabling Clerk webhooks in production.
