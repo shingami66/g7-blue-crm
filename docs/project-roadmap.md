@@ -76,6 +76,15 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
    - No invoice without Approved Quotation.
    - Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
+### DOC-COMPANY-DOCUMENT-RULES-1A — Documentation + Official Logo Asset
+Status: Completed
+
+Checklist:
+- [x] Record official company identity, logo path, TIN, VAT status (Not Registered).
+- [x] Document generation rules for Quotations, Deposits, and Proforma.
+- [x] Document required snapshot rules for generated documents.
+- [x] Required before document branding or invoice implementation.
+
 TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. However, real or semi-real company/client data remains blocked until remaining production hardening and pre-demo controls are complete: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
 
 ### QUOTE-VALIDITY-RULE-1 — Enforce Quotation Validity Against Service Schedule
