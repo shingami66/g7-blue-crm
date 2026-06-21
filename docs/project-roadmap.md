@@ -595,32 +595,20 @@ Checklist:
 - [ ] Build/test/audit/merge
 - [ ] Update docs
 
-### User Management + Clerk Sync
-Status: Deferred; required before production team usage
+### ADMIN-USER-MANAGEMENT-1
+Status: 1A Design approved. 1B Implementation planned.
 
 Checklist:
-- [ ] `/settings/users`
-- [ ] `users:manage` permission
-- [ ] list `app_users`
-- [ ] add/invite user by email
-- [ ] edit role
-- [ ] deactivate user
-- [ ] Clerk webhook endpoint `/api/webhooks/clerk`
-- [ ] verify Clerk webhook Svix signatures
-- [ ] handle `user.created`
-- [ ] match Clerk email to `app_users.email`
-- [ ] update `app_users.clerk_user_id`
-- [ ] handle duplicate/missing email safely
-- [ ] audit role changes
-- [ ] Build/test/audit/merge
-- [ ] Update docs
-
-**Definition of Done:**
-- admin can invite/add users
-- new Clerk signup links automatically to `app_users`
-- no manual DB linking required
-- inactive users cannot access system
-- `app_users.clerk_user_id` remains text and is never cast to UUID
+- [x] 1A Admin User Management Design Report
+- [ ] 1B Build `Admin > Users` / `/admin/users`
+- [ ] 1B Implement Admin-only invite action using Clerk Invitations API
+- [ ] 1B Store intended role as invitation metadata / `publicMetadata` unless SDK verification proves otherwise
+- [ ] 1B Implement `user.created` webhook with verified signature
+- [ ] 1B Create `app_users` row after accepted invite using `clerk_user_id`
+- [ ] 1B Validate invitation role against the CRM role whitelist
+- [ ] 1B Reject invalid/missing webhook role metadata without creating `app_users`
+- [ ] 1B Ensure final authorization uses only `app_users.role`
+- [ ] 1B Enforce `users:invite` and `users:manage`
 
 ### Service Catalog
 Status: Deferred as productivity enhancement, not blocking core financial demo

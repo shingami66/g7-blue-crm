@@ -59,11 +59,16 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - Authentication is not authorization. A signed-in Clerk user must not access internal CRM pages unless they have an active `app_users` row. The current security gate blocks any Clerk-authenticated user without an active `app_users` row.
 - The `(dashboard)` layout enforces an `app_users` membership gate server-side. Users without an active `app_users` row are redirected to `/unauthorized` and never see dashboard content, sidebar, or internal navigation.
 - The `app_users` lookup matches on `clerk_user_id` (TEXT). Email is not used as a lookup key for authorization.
-- New Clerk signups are blocked from CRM access until an admin manually creates their `app_users` row. Admin user management / invite workflow remains deferred.
+- New Clerk signups remain blocked from CRM access unless they have an active `app_users` row. `ADMIN-USER-MANAGEMENT-1A` selected an invite-first design for future implementation: Clerk invitation acceptance will be synced into `app_users` by a verified `user.created` webhook in `ADMIN-USER-MANAGEMENT-1B`.
 
-## Future Permissions
-- `users:invite` — Admin only (required for ADMIN-USER-MANAGEMENT-1)
-- `users:manage` — Admin only (required for ADMIN-USER-MANAGEMENT-1)
+## Future Admin User Management Permissions
+
+- `users:invite` — Admin only
+- `users:manage` — Admin only
+
+Invitation metadata is bootstrap-only for creating the initial `app_users` row after Clerk invitation acceptance. It must not be used as an authorization source after user creation. Final CRM authorization remains based on `app_users.role`.
+
+If webhook metadata is missing, invalid, or contains an unrecognized role, the webhook must not create an `app_users` row and must not assign a fallback role such as `viewer`.
 - Do not treat UI hiding as security. Server-side permission checks are required.
 - Server-side masking is required for sensitive values such as bank details.
 - Consider rate limiting sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
