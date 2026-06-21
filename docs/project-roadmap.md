@@ -39,6 +39,13 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 - The current implemented Company Settings VAT field is `company_settings.vat_mode`.
 
 ## 2. Current Priority
+0. `SEC-AUTHZ-APP-USER-GATE-1`
+   - Security blocker: Clerk-authenticated users without an `app_users` row could access dashboard and internal CRM.
+   - Fix: dashboard layout now requires active `app_users` membership; blocked users redirect to `/unauthorized`.
+   - `/services(.*)` added to Clerk protected routes.
+   - No schema changes, no SQL, no users inserted or promoted.
+   - `SEC-AUTHZ-APP-USER-GATE-1` implementation passed manual verification. Unapproved Clerk users are blocked from dashboard/internal CRM. Existing active admin access verified.
+   - `QUOTE-APPROVAL-FLOW-1B` remains in stash, pending restoration and smoke after this security fix is committed/merged.
 1. `RBAC-QUOTATIONS-APPROVE-1`
    - Ready for PR: `quotations:approve` added to Manager in `src/lib/auth/permissions.ts`.
    - Keep approval separate from ordinary `quotations:write`.

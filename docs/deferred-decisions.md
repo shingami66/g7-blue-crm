@@ -42,8 +42,8 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** Review project types/mock data, project permissions, `projects`/`project_tasks` legacy schema, customer `projects_count`, and supplier PRJ mock references.
 
 ## User Management + Clerk Sync
-- **Status:** Deferred; required before production team usage.
-- **Reason deferred:** RBAC foundation exists, but full user management needs Clerk sync strategy and admin workflows.
+- **Status:** Deferred; required before production team usage. SEC-AUTHZ-APP-USER-GATE-1 now blocks unapproved Clerk users from dashboard access, but admin user management / invite workflow remains deferred.
+- **Reason deferred:** RBAC foundation exists and dashboard membership is now gated, but full user management needs Clerk sync strategy and admin workflows. New Clerk signups are blocked from CRM access until an admin manually creates their `app_users` row.
 - **When to return:** Before production team usage or when non-developer admins need to invite/manage users.
 - **Known requirements:** `/settings/users`, `users:manage` permission, add/invite by email, role editing, deactivation, audit role changes, Clerk `user.created` webhook, email matching, and safe duplicate/missing email handling. `app_users.clerk_user_id` is TEXT, not UUID.
 

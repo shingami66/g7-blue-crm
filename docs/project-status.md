@@ -50,6 +50,21 @@
 - [x] Quotation RPC grants verified: `anon_execute = false`, `authenticated_execute = false`, `service_role_execute = true`
 - [x] Final production RLS hardening is still required
 
+### ✅ SEC-AUTHZ-APP-USER-GATE-1
+- [x] Security blocker discovered: a Clerk-authenticated user with no `app_users` row could access `/dashboard` and all internal CRM navigation.
+- [x] Root cause: `(dashboard)/layout.tsx` had no `app_users` membership check; Clerk authentication alone was sufficient to enter the internal CRM.
+- [x] Fix: dashboard layout now requires an active `app_users` row (matched on `clerk_user_id` as TEXT); users without membership are redirected to `/unauthorized`.
+- [x] `/unauthorized` page created with navy/gold design, no sidebar, no internal navigation, no internal data.
+- [x] `/services(.*)` added to Clerk protected routes in `src/proxy.ts` (was missing).
+- [x] Existing permission system (`requirePermission`, `requireUser`) continues to protect Server Actions.
+- [x] Role source remains `app_users.role`. User linkage remains `app_users.clerk_user_id`.
+- [x] No users were inserted, updated, or auto-promoted.
+- [x] No schema changes, no migrations, no SQL was run.
+- [x] Admin user management / invite workflow remains deferred.
+- [x] This fix does not solve production RLS hardening; that remains separate/deferred.
+- [x] Implementation passed manual verification by Mozfer (active admin access works, unapproved Clerk users are blocked and see `/unauthorized`, direct route access is blocked).
+- [x] `QUOTE-APPROVAL-FLOW-1B` remains in stash, pending restoration and smoke after this security fix is committed/merged.
+
 ### ✅ Customers CRUD
 - [x] list/read customers from Supabase
 - [x] add customer
@@ -179,7 +194,7 @@
 ## 4. Current Active Phase
 
 ### 🚧 Locked Next CRM Priorities
-Status: SERVICE-HUB-1B implemented and ready for review/manual smoke; next locked priority after this hub slice is QUOTE-APPROVAL-FLOW-1
+Status: SEC-AUTHZ-APP-USER-GATE-1 implemented; SERVICE-HUB-1B merged; next locked priority is QUOTE-APPROVAL-FLOW-1 (smoke pending after security gate verification)
 
 The locked workflow remains:
 Customer Profile → Service → Quotation → Invoice → Payment.
