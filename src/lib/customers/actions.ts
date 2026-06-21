@@ -12,6 +12,85 @@ export type ActionResult = {
   error?: string;
 };
 
+const COMPANY_ONLY_CUSTOMER_FIELDS = [
+  "legal_name",
+  "commercial_registration_number",
+  "vat_number",
+  "national_address_building_number",
+  "national_address_street",
+  "national_address_district",
+  "national_address_city",
+  "national_address_postal_code",
+  "national_address_additional_number",
+  "national_address_country",
+  "billing_email",
+  "finance_contact_name",
+  "finance_contact_phone",
+  "payment_terms",
+] as const;
+
+function readOfficialBillingFields(
+  formData: FormData,
+  options: { preserveMissingCompanyFields?: boolean } = {}
+) {
+  const customerType = formData.get("customer_type");
+  const preserveMissingCompanyFields = Boolean(options.preserveMissingCompanyFields);
+  const companyFieldsSubmitted = hasCompanyOnlyFieldInput(formData);
+
+  if (customerType === "individual") {
+    return {
+      customer_type: customerType,
+      ...emptyCompanyOnlyFields(),
+      po_required: false,
+    };
+  }
+
+  return {
+    customer_type: customerType,
+    ...readCompanyOnlyTextFields(formData, preserveMissingCompanyFields),
+    po_required: readPoRequired(formData, preserveMissingCompanyFields, companyFieldsSubmitted),
+  };
+}
+
+function hasCompanyOnlyFieldInput(formData: FormData) {
+  return (
+    formData.has("po_required") ||
+    COMPANY_ONLY_CUSTOMER_FIELDS.some((fieldName) => formData.has(fieldName))
+  );
+}
+
+function readCompanyOnlyTextFields(
+  formData: FormData,
+  preserveMissingCompanyFields: boolean
+) {
+  return Object.fromEntries(
+    COMPANY_ONLY_CUSTOMER_FIELDS.map((fieldName) => [
+      fieldName,
+      preserveMissingCompanyFields && !formData.has(fieldName)
+        ? undefined
+        : formData.get(fieldName),
+    ])
+  );
+}
+
+function emptyCompanyOnlyFields() {
+  return Object.fromEntries(
+    COMPANY_ONLY_CUSTOMER_FIELDS.map((fieldName) => [fieldName, null])
+  );
+}
+
+function readPoRequired(
+  formData: FormData,
+  preserveMissingCompanyFields: boolean,
+  companyFieldsSubmitted: boolean
+) {
+  if (preserveMissingCompanyFields && !companyFieldsSubmitted) {
+    return undefined;
+  }
+
+  return formData.get("po_required") === "on";
+}
+
 // ---------------------------------------------------------------------------
 // CREATE
 // ---------------------------------------------------------------------------
@@ -28,6 +107,7 @@ export async function createCustomer(formData: FormData): Promise<ActionResult> 
       status: formData.get("status") || "lead",
       projects_count: 0,
       revenue: 0,
+      ...readOfficialBillingFields(formData),
     };
 
     const parsed = createCustomerSchema.safeParse(raw);
@@ -73,6 +153,7 @@ export async function updateCustomer(id: string, formData: FormData): Promise<Ac
       email: formData.get("email") || undefined,
       city: formData.get("city") || undefined,
       status: formData.get("status") || undefined,
+      ...readOfficialBillingFields(formData, { preserveMissingCompanyFields: true }),
     };
 
     const parsed = updateCustomerSchema.safeParse(raw);

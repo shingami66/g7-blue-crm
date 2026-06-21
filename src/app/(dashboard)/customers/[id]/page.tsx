@@ -4,12 +4,13 @@ import type { ComponentProps, ReactNode } from "react";
 import { ArrowLeft, Mail, MapPin, Phone } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import DataTable from "@/components/ui/DataTable";
-import { requirePermission } from "@/lib/auth/permissions";
+import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getCustomerById } from "@/lib/customers/queries";
 import { getServicesByCustomerId } from "@/lib/services/queries";
 import type { Customer } from "@/types/customer";
 import type { Service } from "@/types/service";
+import CustomerProfileActions from "./CustomerProfileActions";
 
 export const dynamic = "force-dynamic";
 
@@ -30,10 +31,12 @@ export default async function CustomerProfilePage({
 }) {
   const { id } = await params;
   let customer: Customer | null = null;
+  let canWrite = false;
 
   try {
     await requirePermission("customers:read");
     customer = await getCustomerById(id);
+    canWrite = await checkPermission("customers:write");
   } catch (error) {
     return renderLoadError(
       error,
@@ -84,6 +87,7 @@ export default async function CustomerProfilePage({
             </p>
           </div>
         </div>
+        <CustomerProfileActions customer={customer} canWrite={canWrite} />
       </div>
 
       <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
@@ -140,6 +144,8 @@ export default async function CustomerProfilePage({
           </DetailItem>
         </dl>
       </section>
+
+      <OfficialBillingDetails customer={customer} />
 
       <section>
         <div className="flex flex-col gap-1 mb-3 sm:flex-row sm:items-end sm:justify-between">
@@ -233,6 +239,66 @@ function DetailItem({
   );
 }
 
+function OfficialBillingDetails({ customer }: { customer: Customer }) {
+  return (
+    <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
+      <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright">
+        <h3 className="font-semibold text-primary">Official & Billing Details</h3>
+      </div>
+      {customer.customerType === "individual" ? (
+        <div className="p-6 space-y-3">
+          <dl>
+            <DetailItem label="Customer Type">Individual</DetailItem>
+          </dl>
+          <p className="text-[14px] leading-[20px] text-on-surface-variant">
+            Individual customer — company registration fields are not required.
+          </p>
+        </div>
+      ) : (
+        <dl className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <DetailItem label="Customer Type">
+            {formatCustomerType(customer.customerType)}
+          </DetailItem>
+          <DetailItem label="Legal Name">
+            {formatNullable(customer.legalName)}
+          </DetailItem>
+          <DetailItem label="CR Number">
+            {formatNullable(customer.commercialRegistrationNumber)}
+          </DetailItem>
+          <DetailItem label="VAT Number">
+            {formatNullable(customer.vatNumber)}
+          </DetailItem>
+          <DetailItem label="Billing Email">
+            {customer.billingEmail ? (
+              <a
+                href={`mailto:${customer.billingEmail}`}
+                className="inline-flex items-center gap-2 text-primary hover:underline"
+              >
+                <Mail size={16} />
+                {customer.billingEmail}
+              </a>
+            ) : (
+              "—"
+            )}
+          </DetailItem>
+          <DetailItem label="Finance Contact">
+            {formatFinanceContact(customer)}
+          </DetailItem>
+          <DetailItem label="Payment Terms">
+            {formatNullable(customer.paymentTerms)}
+          </DetailItem>
+          <DetailItem label="PO Required">
+            {customer.poRequired ? "Yes" : "No"}
+          </DetailItem>
+          <DetailItem label="National Address">
+            {formatNationalAddress(customer)}
+          </DetailItem>
+        </dl>
+      )}
+    </section>
+  );
+}
+
 function ErrorState({ title, message }: { title: string; message: string }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
@@ -266,6 +332,32 @@ function formatNullable(value: string | number | null | undefined) {
 
 function formatCustomerStatus(status: Customer["status"]) {
   return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+function formatCustomerType(customerType: Customer["customerType"]) {
+  if (!customerType) return "—";
+
+  return customerType.charAt(0).toUpperCase() + customerType.slice(1);
+}
+
+function formatFinanceContact(customer: Customer) {
+  const parts = [customer.financeContactName, customer.financeContactPhone].filter(Boolean);
+
+  return parts.length > 0 ? parts.join(" / ") : "—";
+}
+
+function formatNationalAddress(customer: Customer) {
+  const parts = [
+    customer.nationalAddressBuildingNumber,
+    customer.nationalAddressStreet,
+    customer.nationalAddressDistrict,
+    customer.nationalAddressCity,
+    customer.nationalAddressPostalCode,
+    customer.nationalAddressAdditionalNumber,
+    customer.nationalAddressCountry,
+  ].filter(Boolean);
+
+  return parts.length > 0 ? parts.join(", ") : "—";
 }
 
 function formatEventDate(service: Service) {

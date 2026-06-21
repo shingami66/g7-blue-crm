@@ -179,7 +179,7 @@
 ## 4. Current Active Phase
 
 ### 🚧 Locked Next CRM Priorities
-Status: CUST-OFFICIAL-DETAILS-1B migration manually applied and DB-verified; next implementation is customer data layer + create/edit UI + profile card
+Status: CUST-OFFICIAL-DETAILS-1C manual smoke passed and ready for pre-commit review; next locked priority after customer review is SEC-SERVICE-INVARIANTS-1
 
 The locked workflow remains:
 Customer Profile → Service → Quotation → Invoice → Payment.
@@ -193,7 +193,8 @@ The next work order is:
    - CUST-OFFICIAL-DETAILS-1B manually applied and DB-verified: optional/conditional customer official and billing fields are present in the database.
    - Fields include customer type (Individual / Company), legal name, Commercial Registration number, VAT number, National Address fields, billing email, finance contact, payment terms, and PO required flag.
    - `supabase/schema.sql` now matches the verified DB state for these fields.
-   - Next implementation: customer data layer + create/edit UI + profile card.
+   - CUST-OFFICIAL-DETAILS-1C wires the fields into the customer data layer, create UI, profile-only edit UI, and customer profile card; all fields remain optional/conditional and Mozfer manual smoke passed.
+   - Future invoice buyer snapshots remain ERP-3 scope; customer VAT number storage does not enable Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
 3. `SEC-SERVICE-INVARIANTS-1`
    - Verify active/non-deleted customer on service create.
    - Add linked-record guards before service soft delete.
@@ -212,6 +213,8 @@ The next work order is:
    - Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
 SEC-RLS-BASELINE-1 manual Supabase apply and database verification are complete. DEV_ONLY broad authenticated policies were removed from the live database. Real or semi-real data remains blocked by remaining production hardening and pre-demo controls: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production. It is no longer blocked by SEC-RLS manual apply itself.
+
+Follow-up tracked from CUST-OFFICIAL-DETAILS-1C manual smoke: `LIST-PAGINATION-PARITY-1`. Customers and Services lists should match the `/quotations` pagination pattern with 10 rows per page and Previous/Next controls. Do not move this ahead of critical/security blockers unless approved.
 
 ## 5. Deferred Decisions
 
@@ -260,4 +263,4 @@ Current decision gates before ERP implementation:
 - Quotation creation works after manual Supabase apply.
 - Company Settings CS-A is committed on `main`.
 - Financial totals remain server-side/database-side via PostgreSQL RPC.
-- Current work should follow the locked order: `CUST-OFFICIAL-DETAILS-1` customer data layer + create/edit UI + profile card, then `SEC-SERVICE-INVARIANTS-1`, `SERVICE-HUB-1`, `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`.
+- CUST-OFFICIAL-DETAILS-1C manual smoke passed. After CUST-OFFICIAL-DETAILS-1C commit/PR/merge, follow the locked order: `SEC-SERVICE-INVARIANTS-1`, `SERVICE-HUB-1`, `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`.
