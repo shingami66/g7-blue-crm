@@ -54,10 +54,16 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 
 ## Security Notes
 
-- Authentication is not authorization. A signed-in Clerk user must not access internal CRM pages unless they have an active `app_users` row.
+- **Access model decision:** G7 BLUE CRM will use an invite-only access model for production. New users must be invited/created by an authorized admin through `Admin > Users`, assigned a role, and activated before CRM access is permitted. Self-signup is not the official production access workflow.
+- **Production hardening checklist:** Before production deployment, Clerk Dashboard must be configured to invitation-only signup mode to prevent unauthorized account creation at the Clerk level.
+- Authentication is not authorization. A signed-in Clerk user must not access internal CRM pages unless they have an active `app_users` row. The current security gate blocks any Clerk-authenticated user without an active `app_users` row.
 - The `(dashboard)` layout enforces an `app_users` membership gate server-side. Users without an active `app_users` row are redirected to `/unauthorized` and never see dashboard content, sidebar, or internal navigation.
 - The `app_users` lookup matches on `clerk_user_id` (TEXT). Email is not used as a lookup key for authorization.
 - New Clerk signups are blocked from CRM access until an admin manually creates their `app_users` row. Admin user management / invite workflow remains deferred.
+
+## Future Permissions
+- `users:invite` — Admin only (required for ADMIN-USER-MANAGEMENT-1)
+- `users:manage` — Admin only (required for ADMIN-USER-MANAGEMENT-1)
 - Do not treat UI hiding as security. Server-side permission checks are required.
 - Server-side masking is required for sensitive values such as bank details.
 - Consider rate limiting sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
