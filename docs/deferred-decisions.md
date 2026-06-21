@@ -201,7 +201,7 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Status:** Deferred technical decision.
 - **Reason deferred:** Current schema uses soft-delete patterns, but future financial records need stricter retention rules.
 - **When to return:** Before ERP-1 schema work and before invoice/payment delete or void behavior.
-- **Known requirements:** Use soft delete for business records where applicable. Prefer `deleted_at` timestamp over only `is_deleted` for future soft deletes, or document current `is_deleted` usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion. Issued/paid financial records must not be casually deleted. Soft-delete documentation cleanup remains a follow-up task: `DOC-SOFTDELETE-FIX`.
+- **Known requirements:** Use soft delete for business records where applicable. SEC-SERVICE-INVARIANTS-1B blocks Service soft delete when non-deleted linked quotations exist. Future invoice/payment service deletion guards remain ERP-3/ERP-4 scope once service-linked financial records exist. Prefer `deleted_at` timestamp over only `is_deleted` for future soft deletes, or document current `is_deleted` usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion. Issued/paid financial records must not be casually deleted. Soft-delete documentation cleanup remains a follow-up task: `DOC-SOFTDELETE-FIX`.
 
 ## Financial Rounding And Currency Snapshots
 - **Status:** Deferred implementation detail; rule is required before ERP-3.

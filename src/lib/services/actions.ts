@@ -92,6 +92,68 @@ async function generateServiceNumber(
   return { success: true, data: serviceNumber };
 }
 
+async function validateActiveCustomerForService(
+  supabase: ReturnType<typeof createAdminClient>,
+  customerId: string
+): Promise<ActionResult> {
+  const { data: customerRow, error } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("id", customerId)
+    .eq("status", "active")
+    .eq("is_deleted", false)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[validateActiveCustomerForService] Supabase error:", error.message);
+    return { success: false, error: "Failed to validate selected customer. Please try again." };
+  }
+
+  if (!customerRow) {
+    return { success: false, error: "Selected customer is unavailable. Please choose an active customer." };
+  }
+
+  return { success: true };
+}
+
+async function validateServiceCanBeDeleted(
+  supabase: ReturnType<typeof createAdminClient>,
+  serviceId: string
+): Promise<ActionResult> {
+  const { data: serviceRow, error: serviceError } = await supabase
+    .from("services")
+    .select("id")
+    .eq("id", serviceId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (serviceError) {
+    console.error("[validateServiceCanBeDeleted] Service lookup error:", serviceError.message);
+    return { success: false, error: "Failed to delete service. Please try again." };
+  }
+
+  if (!serviceRow) {
+    return { success: false, error: "Service not found." };
+  }
+
+  const { count: linkedQuotationCount, error: quotationError } = await supabase
+    .from("quotations")
+    .select("id", { count: "exact", head: true })
+    .eq("service_id", serviceId)
+    .eq("is_deleted", false);
+
+  if (quotationError) {
+    console.error("[validateServiceCanBeDeleted] Quotation lookup error:", quotationError.message);
+    return { success: false, error: "Failed to delete service. Please try again." };
+  }
+
+  if ((linkedQuotationCount ?? 0) > 0) {
+    return { success: false, error: "This service cannot be deleted because it has linked quotations." };
+  }
+
+  return { success: true };
+}
+
 export async function createService(
   input: unknown
 ): Promise<ActionResult<CreatedServiceResult>> {
@@ -104,6 +166,14 @@ export async function createService(
     }
 
     const supabase = createAdminClient();
+    const customerValidationResult = await validateActiveCustomerForService(
+      supabase,
+      parsed.data.customer_id
+    );
+    if (!customerValidationResult.success) {
+      return { success: false, error: customerValidationResult.error };
+    }
+
     const serviceNumberResult = await generateServiceNumber(supabase);
     if (!serviceNumberResult.success || !serviceNumberResult.data) {
       return { success: false, error: serviceNumberResult.error };
@@ -227,6 +297,12 @@ export async function softDeleteService(id: string): Promise<ActionResult> {
   try {
     const user = await requirePermission("services:write");
     const supabase = createAdminClient();
+    const deleteValidationResult = await validateServiceCanBeDeleted(supabase, id);
+    if (!deleteValidationResult.success) {
+      return { success: false, error: deleteValidationResult.error };
+    }
+
+    // ERP-3 service-linked invoices/payments must extend this guard before service deletion is exposed.
     const { error } = await supabase
       .from("services")
       .update({

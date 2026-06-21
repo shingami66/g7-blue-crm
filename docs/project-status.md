@@ -179,7 +179,7 @@
 ## 4. Current Active Phase
 
 ### 🚧 Locked Next CRM Priorities
-Status: CUST-OFFICIAL-DETAILS-1C manual smoke passed and ready for pre-commit review; next locked priority after customer review is SEC-SERVICE-INVARIANTS-1
+Status: SEC-SERVICE-INVARIANTS-1B implemented and ready for review; next locked priority after this guard slice is SERVICE-HUB-1
 
 The locked workflow remains:
 Customer Profile → Service → Quotation → Invoice → Payment.
@@ -196,8 +196,9 @@ The next work order is:
    - CUST-OFFICIAL-DETAILS-1C wires the fields into the customer data layer, create UI, profile-only edit UI, and customer profile card; all fields remain optional/conditional and Mozfer manual smoke passed.
    - Future invoice buyer snapshots remain ERP-3 scope; customer VAT number storage does not enable Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
 3. `SEC-SERVICE-INVARIANTS-1`
-   - Verify active/non-deleted customer on service create.
-   - Add linked-record guards before service soft delete.
+   - Ready for review: Service creation now validates active/non-deleted customer server-side.
+   - Ready for review: Service soft delete now blocks non-deleted linked quotations.
+   - Future invoice/payment service deletion guards remain ERP-3/ERP-4 scope once service-linked invoices/payments exist.
 4. `SERVICE-HUB-1`
    - Build a rich Service/Booking profile page to replace the old user-facing project hub concept.
    - Include animated/status timeline, service schedule, customer context, related quotations, future invoice/payment cards, and later notes/activity/attachments.
@@ -263,4 +264,4 @@ Current decision gates before ERP implementation:
 - Quotation creation works after manual Supabase apply.
 - Company Settings CS-A is committed on `main`.
 - Financial totals remain server-side/database-side via PostgreSQL RPC.
-- CUST-OFFICIAL-DETAILS-1C manual smoke passed. After CUST-OFFICIAL-DETAILS-1C commit/PR/merge, follow the locked order: `SEC-SERVICE-INVARIANTS-1`, `SERVICE-HUB-1`, `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`.
+- CUST-OFFICIAL-DETAILS-1C manual smoke passed and was merged. SEC-SERVICE-INVARIANTS-1B is implemented and ready for review; after review/merge, follow the locked order: `SERVICE-HUB-1`, `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`.
