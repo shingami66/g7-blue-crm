@@ -50,6 +50,7 @@ export function AdminUsersClient({
 
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
+  const [pendingRevokeInvitation, setPendingRevokeInvitation] = useState<PendingInvitation | null>(null);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,19 +101,35 @@ export function AdminUsersClient({
     setActionLoadingId(null);
   };
 
-  const handleRevoke = async (invitationId: string) => {
-    if (!confirm("Are you sure you want to revoke this invitation?")) return;
-
-    setActionLoadingId(invitationId);
+  const openRevokeModal = (invitation: PendingInvitation) => {
     setActionError("");
-    const result = await revokeInvitation(invitationId);
+    setPendingRevokeInvitation(invitation);
+  };
+
+  const closeRevokeModal = () => {
+    if (pendingRevokeInvitation && actionLoadingId === pendingRevokeInvitation.id) return;
+    setPendingRevokeInvitation(null);
+  };
+
+  const confirmRevokeInvitation = async () => {
+    if (!pendingRevokeInvitation) return;
+
+    setActionLoadingId(pendingRevokeInvitation.id);
+    setActionError("");
+    const result = await revokeInvitation(pendingRevokeInvitation.id);
     if (result.success) {
+      setPendingRevokeInvitation(null);
+      setActionError("");
       router.refresh();
     } else {
       setActionError(result.error || "Failed to revoke invitation.");
     }
     setActionLoadingId(null);
   };
+
+  const isRevokingPendingInvitation = Boolean(
+    pendingRevokeInvitation && actionLoadingId === pendingRevokeInvitation.id
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -313,7 +330,7 @@ export function AdminUsersClient({
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => handleRevoke(inv.id)}
+                          onClick={() => openRevokeModal(inv)}
                           disabled={actionLoadingId === inv.id}
                           className="text-error hover:bg-error/10 text-sm font-medium px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
                         >
@@ -335,6 +352,61 @@ export function AdminUsersClient({
           </div>
         )}
       </div>
+
+      {pendingRevokeInvitation && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-surface/80 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="revoke-invitation-title"
+        >
+          <div className="w-full max-w-md rounded-xl border border-outline-variant bg-surface-container p-6 shadow-xl">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-error-container p-2 text-error">
+                <Trash2 size={20} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 id="revoke-invitation-title" className="text-lg font-semibold text-on-surface">
+                  Revoke invitation
+                </h2>
+                <p className="mt-2 text-sm text-on-surface-variant">
+                  This will revoke the pending invitation for{" "}
+                  <span className="font-medium text-on-surface">
+                    {pendingRevokeInvitation.emailAddress}
+                  </span>
+                  .
+                </p>
+              </div>
+            </div>
+
+            {actionError && (
+              <div className="mt-4 rounded-lg border border-error/20 bg-error-container/40 p-3 text-sm text-on-error-container">
+                {actionError}
+              </div>
+            )}
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeRevokeModal}
+                disabled={isRevokingPendingInvitation}
+                className="rounded-lg border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface hover:bg-surface-container-high disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmRevokeInvitation}
+                disabled={isRevokingPendingInvitation}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isRevokingPendingInvitation && <Loader2 size={16} className="animate-spin" />}
+                <span>Revoke invitation</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

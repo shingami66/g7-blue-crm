@@ -596,7 +596,7 @@ Checklist:
 - [ ] Update docs
 
 ### ADMIN-USER-MANAGEMENT-1
-Status: 1A Design approved. 1B Implementation planned.
+Status: 1C-B implemented; real Clerk invitation/webhook smoke testing remains pending.
 
 Checklist:
 - [x] 1A Admin User Management Design Report
@@ -609,6 +609,12 @@ Checklist:
 - [x] 1B Reject invalid/missing webhook role metadata without creating `app_users`
 - [x] 1B Ensure final authorization uses only `app_users.role`
 - [x] 1B Enforce `users:invite` and `users:manage`
+- [x] 1C-B Implement server-side last-active-admin protection
+- [x] 1C-B Block deactivating the final active admin
+- [x] 1C-B Block changing the final active admin to a non-admin role
+- [x] 1C-B Replace native revoke invitation `confirm()` with a CRM-styled modal
+- [x] 1C-B Keep real Clerk invitation/webhook smoke testing pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and Mozfer approves a real test invitation/user
+- [x] 1C-B Avoid SQL, migrations, package, environment, schema, and real Clerk user/invitation changes
 
 ### Service Catalog
 Status: Deferred as productivity enhancement, not blocking core financial demo

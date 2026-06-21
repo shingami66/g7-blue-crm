@@ -231,8 +231,18 @@
 - `CLERK_WEBHOOK_SIGNING_SECRET` is required for real Clerk webhook testing; missing secret fails safe before processing.
 - Admin can invite another user with any allowed CRM role, including `admin`, only by explicitly selecting that role. The invite form defaults to `viewer`, never `admin`.
 - No real Clerk users/invitations were created during implementation.
-- Last-active-admin protection and a proper revoke confirmation modal remain 1C UX/security hardening.
+- Last-active-admin protection and a proper revoke confirmation modal were deferred to ADMIN-USER-MANAGEMENT-1C-B.
 - No schema changes, migrations, SQL, or package changes were made for ADMIN-USER-MANAGEMENT-1B.
+
+### ✅ ADMIN-USER-MANAGEMENT-1C-B
+- Implemented last-active-admin protection server-side in Admin User Management Server Actions.
+- Deactivating the final active admin is blocked with a safe UI-facing error.
+- Changing the final active admin to a non-admin role is blocked with a safe UI-facing error.
+- Existing self-deactivation and self-role-change protections remain in place.
+- Replaced the native revoke invitation `confirm()` with a CRM-styled confirmation modal using existing G7 BLUE design tokens.
+- Real Clerk invitation/webhook smoke testing remains pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and Mozfer explicitly approves creating a real test invitation/user.
+- No real Clerk users/invitations were created during implementation.
+- No SQL, migrations, package, environment, or schema changes were made for ADMIN-USER-MANAGEMENT-1C-B.
 
 ## 4. Current Active Phase
 
