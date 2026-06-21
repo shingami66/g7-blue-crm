@@ -73,8 +73,9 @@ If webhook metadata is missing, invalid, or contains an unrecognized role, the w
 - Real Clerk webhook testing requires `CLERK_WEBHOOK_SIGNING_SECRET`; the webhook must fail safe if the signing secret is missing.
 - Admins may invite another user with any allowed CRM role, including `admin`, only by explicitly selecting that role. The system must not default invitations to `admin`.
 - No real Clerk users/invitations were created during implementation.
-- Self-deactivation and self-role-change are blocked to reduce admin lockout risk.
-- Last-active-admin protection and a proper revoke confirmation modal remain 1C UX/security hardening.
+- Self-deactivation, self-role-change, final-active-admin deactivation, and final-active-admin demotion are blocked server-side to reduce admin lockout risk.
+- Pending invitation revocation uses a CRM-styled confirmation modal instead of native browser `confirm()`.
+- Real Clerk invitation/webhook smoke testing remains pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and Mozfer explicitly approves creating a real test invitation/user.
 - Do not treat UI hiding as security. Server-side permission checks are required.
 - Server-side masking is required for sensitive values such as bank details.
 - Consider rate limiting sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.

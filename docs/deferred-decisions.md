@@ -42,15 +42,15 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** Review project types/mock data, project permissions, `projects`/`project_tasks` legacy schema, customer `projects_count`, and supplier PRJ mock references.
 
 ## User Management + Clerk Sync
-- **Status:** Code implementation complete (ADMIN-USER-MANAGEMENT-1B); real Clerk invitation/webhook smoke testing remains pending.
+- **Status:** Code implementation complete through ADMIN-USER-MANAGEMENT-1C-B; real Clerk invitation/webhook smoke testing remains pending.
 - **Decision:** Implemented Option D: Clerk Invitations API + invitation metadata + `user.created` webhook.
 - **Metadata usage:** Used Clerk invitation metadata (`publicMetadata`) for the intended role.
 - **Authorization rule:** Invitation metadata is bootstrap-only. CRM authorization strictly uses `app_users.role`.
 - **Smoke limitation:** Real Clerk invitation/webhook smoke testing is still pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and Mozfer explicitly approves creating a real test invitation/user.
 - **No live user creation:** No real Clerk users/invitations were created during implementation.
-- **Lockout reduction:** Self-deactivation and self-role-change are blocked.
+- **Lockout reduction:** Self-deactivation, self-role-change, final-active-admin deactivation, and final-active-admin demotion are blocked server-side.
 - **Webhook failure rule:** Enforced missing/invalid metadata check in `user.created` webhook. Invalid events are acknowledged but no `app_users` row is created and no fallback role is assigned.
-- **1C UX/security hardening:** Add last-active-admin protection and replace the native revoke-invitation `confirm()` dialog with an inline CRM-styled confirmation pattern.
+- **1C UX/security hardening:** Implemented last-active-admin protection and replaced the native revoke-invitation `confirm()` dialog with an inline CRM-styled confirmation modal.
 
 ## Review Center
 - **Status:** Deferred (`ADMIN-APPROVAL-CENTER-1`).

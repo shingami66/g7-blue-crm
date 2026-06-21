@@ -19,6 +19,24 @@ export type ActionResult<T = void> = {
 };
 
 const NO_ROW_ERROR_CODE = "PGRST116";
+const LAST_ACTIVE_ADMIN_ERROR = "At least one active admin must remain.";
+
+async function hasOtherActiveAdmin(excludedUserId: string): Promise<ActionResult<boolean>> {
+  const supabase = createAdminClient();
+  const { count, error } = await supabase
+    .from("app_users")
+    .select("id", { count: "exact", head: true })
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .neq("id", excludedUserId);
+
+  if (error) {
+    console.error("[hasOtherActiveAdmin] Supabase error:", error.message);
+    return { success: false, error: "Failed to verify admin access safety. Please try again." };
+  }
+
+  return { success: true, data: (count ?? 0) > 0 };
+}
 
 /**
  * Invites a new user via Clerk Invitations API.
@@ -93,6 +111,33 @@ export async function updateUserRole(input: unknown): Promise<ActionResult> {
     }
 
     const supabase = createAdminClient();
+    const { data: targetUser, error: fetchError } = await supabase
+      .from("app_users")
+      .select("id, role, is_active")
+      .eq("id", userId)
+      .single();
+
+    if (fetchError?.code === NO_ROW_ERROR_CODE) {
+      return { success: false, error: "User not found." };
+    }
+
+    if (fetchError) {
+      console.error("[updateUserRole] Supabase error:", fetchError.message);
+      return { success: false, error: "Failed to load user. Please try again." };
+    }
+
+    if (!targetUser) {
+      return { success: false, error: "User not found." };
+    }
+
+    if (targetUser.role === "admin" && targetUser.is_active && role !== "admin") {
+      const activeAdminCheck = await hasOtherActiveAdmin(userId);
+      if (!activeAdminCheck.success) return { success: false, error: activeAdminCheck.error };
+      if (!activeAdminCheck.data) {
+        return { success: false, error: LAST_ACTIVE_ADMIN_ERROR };
+      }
+    }
+
     const { error } = await supabase
       .from("app_users")
       .update({ role, updated_at: new Date().toISOString() })
@@ -139,7 +184,7 @@ export async function toggleUserActive(input: unknown): Promise<ActionResult> {
     // Fetch target user's current state
     const { data: targetUser, error: fetchError } = await supabase
       .from("app_users")
-      .select("id, is_active")
+      .select("id, role, is_active")
       .eq("id", userId)
       .single();
 
@@ -157,6 +202,14 @@ export async function toggleUserActive(input: unknown): Promise<ActionResult> {
     }
 
     const newActiveStatus = !targetUser.is_active;
+
+    if (targetUser.role === "admin" && targetUser.is_active && !newActiveStatus) {
+      const activeAdminCheck = await hasOtherActiveAdmin(userId);
+      if (!activeAdminCheck.success) return { success: false, error: activeAdminCheck.error };
+      if (!activeAdminCheck.data) {
+        return { success: false, error: LAST_ACTIVE_ADMIN_ERROR };
+      }
+    }
 
     const { error } = await supabase
       .from("app_users")
