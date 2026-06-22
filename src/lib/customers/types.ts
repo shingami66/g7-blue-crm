@@ -10,6 +10,7 @@ export type { Customer, CustomerStatus, CustomerType } from "@/types/customer";
 /** Raw row shape returned by Supabase for the `customers` table. */
 export interface CustomerRow {
   id: string;
+  customer_number: string;
   company: string;
   contact: string;
   phone: string;

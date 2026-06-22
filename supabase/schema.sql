@@ -36,7 +36,7 @@ CREATE TRIGGER update_app_users_updated_at BEFORE UPDATE ON app_users FOR EACH R
 -- 2. Number Sequences
 CREATE TABLE number_sequences (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    type text NOT NULL CHECK (type IN ('quotation', 'invoice', 'payment', 'project', 'service')),
+    type text NOT NULL CHECK (type IN ('quotation', 'invoice', 'payment', 'project', 'service', 'customer')),
     year integer NOT NULL,
     sequence integer NOT NULL DEFAULT 0,
     prefix text NOT NULL,
@@ -102,6 +102,7 @@ COMMENT ON COLUMN company_settings.default_vat_percent IS 'Default VAT percent f
 -- 4. Customers
 CREATE TABLE customers (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_number text NOT NULL UNIQUE,
     company text NOT NULL,
     contact text NOT NULL,
     phone text NOT NULL,
@@ -435,8 +436,8 @@ DECLARE
     seq_record record;
     formatted_number text;
 BEGIN
-    IF doc_type IS NULL OR doc_type NOT IN ('quotation', 'invoice', 'payment', 'project', 'service') THEN
-        RAISE EXCEPTION 'Invalid doc_type: %. Allowed values are: quotation, invoice, payment, project, service', doc_type;
+    IF doc_type IS NULL OR doc_type NOT IN ('quotation', 'invoice', 'payment', 'project', 'service', 'customer') THEN
+        RAISE EXCEPTION 'Invalid doc_type: %. Allowed values are: quotation, invoice, payment, project, service, customer', doc_type;
     END IF;
 
     current_year := extract(year from current_date);
@@ -452,6 +453,7 @@ BEGIN
             WHEN doc_type = 'payment'   THEN 'PAY'
             WHEN doc_type = 'project'   THEN 'PRJ'
             WHEN doc_type = 'service'   THEN 'SVC'
+            WHEN doc_type = 'customer'  THEN 'CUST'
         END,
         CASE
             WHEN doc_type = 'quotation' THEN 'QT-YYYY-0001'
@@ -459,6 +461,7 @@ BEGIN
             WHEN doc_type = 'payment'   THEN 'PAY-YYYY-0001'
             WHEN doc_type = 'project'   THEN 'PRJ-YYYY-0001'
             WHEN doc_type = 'service'   THEN 'SVC-YYYY-0001'
+            WHEN doc_type = 'customer'  THEN 'CUST-YYYY-0001'
         END
     )
     ON CONFLICT (type, year) DO UPDATE

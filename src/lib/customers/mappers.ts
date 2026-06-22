@@ -11,6 +11,7 @@ import type { CustomerRow } from "./types";
 export function mapRowToCustomer(row: CustomerRow): Customer {
   return {
     id: row.id,
+    customerNumber: row.customer_number,
     company: row.company,
     contact: row.contact,
     phone: row.phone,

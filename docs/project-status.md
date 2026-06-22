@@ -87,6 +87,12 @@
 - [x] Implementation passed manual verification by Mozfer (active admin access works, unapproved Clerk users are blocked and see `/unauthorized`, direct route access is blocked).
 - [x] `QUOTE-APPROVAL-FLOW-1B` remains in stash, pending restoration and smoke after this security fix is committed/merged.
 
+### ✅ CUSTOMER-NUMBER-1
+- [x] DB migration applied manually, adding `customer_number` sequence.
+- [x] App layer generates customer number server-side via `generate_document_number` RPC.
+- [x] UI updated to show customer number instead of UUID prefix.
+- [x] Schema synchronized in `schema.sql`.
+
 ### ✅ Customers CRUD
 - [x] list/read customers from Supabase
 - [x] add customer

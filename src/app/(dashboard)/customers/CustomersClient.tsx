@@ -37,6 +37,7 @@ export default function CustomersClient({
     if (customers.length === 0) return;
 
     const headers = [
+      "Customer Number",
       "Company",
       "Contact Person",
       "Email",
@@ -48,6 +49,7 @@ export default function CustomersClient({
     ];
 
     const rows = customers.map((customer) => [
+      escapeCsv(customer.customerNumber),
       escapeCsv(customer.company),
       escapeCsv(customer.contact),
       escapeCsv(customer.email),
@@ -192,7 +194,7 @@ export default function CustomersClient({
                         {customer.company}
                       </div>
                       <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
-                        {customer.id.slice(0, 8)}
+                        {customer.customerNumber}
                       </div>
                     </td>
                     <td className="px-4 py-4">

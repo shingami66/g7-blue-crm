@@ -3,6 +3,7 @@ export type CustomerType = "individual" | "company";
 
 export interface Customer {
   id: string;
+  customerNumber: string;
   company: string;
   contact: string;
   phone: string;

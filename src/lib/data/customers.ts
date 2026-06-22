@@ -3,6 +3,7 @@ import { Customer } from "@/types";
 export const customersData: Customer[] = [
   {
     id: "CUST-001",
+    customerNumber: "CUST-001",
     company: "Saudi Aramco Events",
     contact: "Mohammed Al-Qahtani",
     phone: "+966 50 123 4567",
@@ -14,6 +15,7 @@ export const customersData: Customer[] = [
   },
   {
     id: "CUST-002",
+    customerNumber: "CUST-002",
     company: "Riyadh Season Setup",
     contact: "Fahad Al-Saud",
     phone: "+966 55 987 6543",
@@ -25,6 +27,7 @@ export const customersData: Customer[] = [
   },
   {
     id: "CUST-003",
+    customerNumber: "CUST-003",
     company: "NEOM Logistics",
     contact: "Sarah Al-Rashid",
     phone: "+966 54 321 0987",
@@ -36,6 +39,7 @@ export const customersData: Customer[] = [
   },
   {
     id: "CUST-004",
+    customerNumber: "CUST-004",
     company: "Jeddah Corniche Circuit",
     contact: "Omar Abdullah",
     phone: "+966 56 789 0123",
@@ -47,6 +51,7 @@ export const customersData: Customer[] = [
   },
   {
     id: "CUST-005",
+    customerNumber: "CUST-005",
     company: "Red Sea Film Festival",
     contact: "Layan Al-Faisal",
     phone: "+966 53 456 7890",

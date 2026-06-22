@@ -117,8 +117,20 @@ export async function createCustomer(formData: FormData): Promise<ActionResult> 
     }
 
     const supabase = createAdminClient();
+
+    const { data: customerNumber, error: numberError } = await supabase.rpc(
+      "generate_document_number",
+      { doc_type: "customer" }
+    );
+
+    if (numberError || !customerNumber) {
+      console.error("[createCustomer] Failed to generate customer number:", numberError?.message);
+      return { success: false, error: "Failed to generate customer number. Please try again." };
+    }
+
     const payload = {
       ...parsed.data,
+      customer_number: customerNumber,
       created_by: user.clerk_user_id,
       updated_by: user.clerk_user_id,
     };

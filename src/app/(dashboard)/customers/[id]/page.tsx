@@ -83,7 +83,7 @@ export default async function CustomerProfilePage({
               </StatusBadge>
             </div>
             <p className="mt-1 text-[14px] leading-[20px] text-on-surface-variant">
-              Customer ID: {formatNullable(customer.id)}
+              Customer No: {formatNullable(customer.customerNumber)}
             </p>
           </div>
         </div>
@@ -95,6 +95,9 @@ export default async function CustomerProfilePage({
           <h3 className="font-semibold text-primary">Customer Profile</h3>
         </div>
         <dl className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <DetailItem label="Customer No">
+            {formatNullable(customer.customerNumber)}
+          </DetailItem>
           <DetailItem label="Company">
             {formatNullable(customer.company)}
           </DetailItem>
