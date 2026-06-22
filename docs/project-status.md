@@ -263,7 +263,14 @@
 - Replaced the native revoke invitation `confirm()` with a CRM-styled confirmation modal using existing G7 BLUE design tokens.
 - Real Clerk invitation/webhook smoke testing remains pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and Mozfer explicitly approves creating a real test invitation/user.
 - No real Clerk users/invitations were created during implementation.
-- No SQL, migrations, package, environment, or schema changes were made for ADMIN-USER-MANAGEMENT-1C-B.
+- [x] No SQL, migrations, package, environment, or schema changes were made for ADMIN-USER-MANAGEMENT-1C-B.
+
+### ✅ DOCUMENT-BRANDING-PRINT-1B
+- Applied official G7 BLUE identity and logo to Quotation and Invoice PDF/print views.
+- Removed fake VAT, Tax Invoice, and CR values.
+- Used Entity Unified No `7053901414` and TIN `3146944674`.
+- Retained `not_registered` VAT status.
+- Implemented purely in the UI, avoiding premature ERP-3 database snapshots or schema changes.
 
 ## 4. Current Active Phase
 
@@ -368,4 +375,4 @@ Current decision gates before ERP implementation:
 - Quotation creation works after manual Supabase apply.
 - Company Settings CS-A is committed on `main`.
 - Financial totals remain server-side/database-side via PostgreSQL RPC.
-- CUST-OFFICIAL-DETAILS-1C manual smoke passed and was merged. SEC-SERVICE-INVARIANTS-1B was merged. SERVICE-HUB-1B is implemented and ready for review/manual smoke; after review/merge, follow the locked order: `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`. `QUOTE-APPROVAL-FLOW-1B` is code-ready / pending review.
+- CUST-OFFICIAL-DETAILS-1C manual smoke passed and was merged. SEC-SERVICE-INVARIANTS-1B was merged. SERVICE-HUB-1B is implemented and ready for review/manual smoke; after review/merge, follow the locked order: `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`. `QUOTE-APPROVAL-FLOW-1B` is code-ready / pending review. DOCUMENT-BRANDING-PRINT-1B is complete.

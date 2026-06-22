@@ -3,6 +3,7 @@
 import { Printer } from "lucide-react";
 import { useParams, notFound } from "next/navigation";
 import { invoicesData } from "@/lib/data/invoices";
+import { settingsData } from "@/lib/data/settings";
 
 export default function InvoicePdfPage() {
   const params = useParams();
@@ -33,29 +34,40 @@ export default function InvoicePdfPage() {
         {/* Header */}
         <header className="flex justify-between items-start border-b border-surface-variant pb-8 mb-8">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl font-bold">
-              G7
-            </div>
+            <img
+              src="/brand/G7_BLUE_Events_Icon_White_BG.png"
+              alt="G7 BLUE Logo"
+              className="w-16 h-16 object-contain"
+            />
             <div>
               <h1 className="text-[24px] leading-[32px] font-semibold text-primary tracking-tight">
-                G7 BLUE
+                {settingsData.company.name}
               </h1>
-              <p className="text-[14px] text-on-surface-variant">Enterprise CRM Solutions</p>
+              {settingsData.company.brandName && (
+                <p className="text-[14px] font-medium text-primary tracking-wide mt-1">
+                  {settingsData.company.brandName}
+                </p>
+              )}
             </div>
           </div>
           <div className="text-right text-[12px]">
-            <p className="font-semibold text-on-surface mb-1 text-[14px]">
-              G7 BLUE LOGISTICS LLC
+            <p className="font-semibold text-on-surface mb-1 text-[14px] uppercase">
+              Headquarters
             </p>
-            <p className="text-on-surface-variant">King Fahd Road, Olaya District</p>
-            <p className="text-on-surface-variant">Riyadh 12211, Saudi Arabia</p>
+            <p className="whitespace-pre-line text-on-surface-variant">{settingsData.company.address}</p>
             <p className="text-on-surface-variant mt-2">
-              <strong className="font-semibold text-on-surface">CR No:</strong> 1010123456
+              <strong className="font-semibold text-on-surface">Entity Unified No:</strong> {settingsData.legal.entityUnifiedNumber}
             </p>
             <p className="text-on-surface-variant">
-              <strong className="font-semibold text-on-surface">Tax/VAT Status:</strong>{" "}
-              Not registered
+              <strong className="font-semibold text-on-surface">TIN / الرقم المميز:</strong> {settingsData.legal.tin}
             </p>
+            <p className="text-on-surface-variant">
+              <strong className="font-semibold text-on-surface">Tax/VAT Status:</strong> Not registered
+            </p>
+            <div className="mt-2 text-on-surface-variant">
+              <p>{settingsData.company.email}</p>
+              <p>{settingsData.company.phone}</p>
+            </div>
           </div>
         </header>
 
@@ -107,11 +119,10 @@ export default function InvoicePdfPage() {
                 <span className="text-on-surface text-right">{invoice.relatedQuote}</span>
                 <span className="text-on-surface-variant mt-2">Status:</span>
                 <div className="text-right mt-2">
-                  <span className={`inline-block px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider ${
-                    invoice.status === 'paid' ? 'bg-status-completed-bg text-status-completed-text' :
-                    invoice.status === 'overdue' ? 'bg-error-container text-on-error-container' :
-                    'bg-surface-variant text-on-surface'
-                  }`}>
+                  <span className={`inline-block px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider ${invoice.status === 'paid' ? 'bg-status-completed-bg text-status-completed-text' :
+                      invoice.status === 'overdue' ? 'bg-error-container text-on-error-container' :
+                        'bg-surface-variant text-on-surface'
+                    }`}>
                     {invoice.status}
                   </span>
                 </div>
@@ -179,13 +190,13 @@ export default function InvoicePdfPage() {
               <p className="text-[12px] font-semibold text-primary mb-2">Bank Transfer Details</p>
               <div className="grid grid-cols-[100px_1fr] gap-y-1 text-[12px]">
                 <span className="text-on-surface-variant">Bank Name:</span>
-                <span className="font-semibold text-on-surface">Saudi National Bank (SNB)</span>
+                <span className="font-semibold text-on-surface">{settingsData.bank.name}</span>
                 <span className="text-on-surface-variant">Account Name:</span>
-                <span className="font-semibold text-on-surface">G7 BLUE LOGISTICS LLC</span>
+                <span className="font-semibold text-on-surface">{settingsData.bank.accountName}</span>
+                <span className="text-on-surface-variant">Account No:</span>
+                <span className="font-semibold text-on-surface">{settingsData.bank.accountNo}</span>
                 <span className="text-on-surface-variant">IBAN:</span>
-                <span className="font-semibold text-on-surface tracking-wider">SA12 1000 0000 1234 5678 90</span>
-                <span className="text-on-surface-variant">SWIFT:</span>
-                <span className="font-semibold text-on-surface">NCBKSAXXXX</span>
+                <span className="font-semibold text-on-surface tracking-wider">{settingsData.bank.iban}</span>
               </div>
             </div>
           </div>
@@ -255,7 +266,7 @@ export default function InvoicePdfPage() {
 
         {/* Footer */}
         <footer className="mt-12 pt-4 border-t border-surface-variant flex justify-between items-center text-[12px] text-on-surface-variant">
-          <p>For any inquiries regarding this invoice, please contact billing@g7blue.com or call +966 11 234 5678.</p>
+          <p>For any inquiries regarding this invoice, please contact {settingsData.company.email} or call {settingsData.company.phone}.</p>
           <p className="font-semibold">Page 1 of 1</p>
         </footer>
       </div>
