@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { getQuotationById } from "@/lib/quotations/queries";
 import { requirePermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
-import { settingsData } from "@/lib/data/settings";
 import PrintButton from "./PrintButton";
 
 export default async function QuotationPdfPage({
@@ -32,6 +31,18 @@ export default async function QuotationPdfPage({
 
   if (!quotation) {
     notFound();
+  }
+
+  // Extract snapshots
+  const seller = quotation.snapshotSeller;
+  const buyer = quotation.snapshotBuyer;
+
+  if (!seller || !buyer) {
+    return (
+      <div className="p-8 text-error font-semibold">
+        Error: Document snapshot data is missing.
+      </div>
+    );
   }
 
   // Extremely basic number to words logic for the placeholder
@@ -67,11 +78,11 @@ export default async function QuotationPdfPage({
             />
             <div>
               <h1 className="text-[20px] leading-[28px] font-semibold text-primary-container">
-                {settingsData.company.name}
+                {seller.legalNameEn}
               </h1>
-              {settingsData.company.brandName && (
+              {seller.brandName && (
                 <p className="text-[14px] font-medium text-primary tracking-wide">
-                  {settingsData.company.brandName}
+                  {seller.brandName}
                 </p>
               )}
             </div>
@@ -80,21 +91,25 @@ export default async function QuotationPdfPage({
             <p className="text-[12px] font-semibold text-on-surface uppercase mb-1">
               Headquarters
             </p>
-            <p className="whitespace-pre-line">{settingsData.company.address}</p>
+            <p className="whitespace-pre-line">{seller.address.display}</p>
             <div className="mt-2 text-[12px]">
-              <p>
-                <span className="font-semibold text-on-surface">Entity Unified No:</span> {settingsData.legal.entityUnifiedNumber}
-              </p>
-              <p>
-                <span className="font-semibold text-on-surface">TIN / الرقم المميز:</span> {settingsData.legal.tin}
-              </p>
+              {seller.entityUnifiedNumber && (
+                <p>
+                  <span className="font-semibold text-on-surface">Entity Unified No:</span> {seller.entityUnifiedNumber}
+                </p>
+              )}
+              {seller.tin && (
+                <p>
+                  <span className="font-semibold text-on-surface">TIN / الرقم المميز:</span> {seller.tin}
+                </p>
+              )}
               <p>
                 <span className="font-semibold text-on-surface">Tax/VAT Status:</span> Not registered
               </p>
             </div>
             <div className="mt-2 text-[12px]">
-              <p>{settingsData.company.email}</p>
-              <p>{settingsData.company.phone}</p>
+              {seller.officialEmail && <p>{seller.officialEmail}</p>}
+              {seller.officialPhone && <p>{seller.officialPhone}</p>}
             </div>
           </div>
         </header>
@@ -132,11 +147,11 @@ export default async function QuotationPdfPage({
             </h3>
             <div className="grid grid-cols-[100px_1fr] gap-y-2 text-[14px]">
               <div className="text-on-surface-variant">Client:</div>
-              <div className="font-semibold text-on-surface">{quotation.customer?.company || "Unknown Company"}</div>
-              {quotation.customer?.contact && (
+              <div className="font-semibold text-on-surface">{buyer.name || buyer.legalName || "Unknown Company"}</div>
+              {buyer.contactName && (
                 <>
                   <div className="text-on-surface-variant mt-2">Contact:</div>
-                  <div className="text-on-surface mt-2">{quotation.customer.contact}</div>
+                  <div className="text-on-surface mt-2">{buyer.contactName}</div>
                 </>
               )}
               <div className="text-on-surface-variant mt-2">Event Name:</div>
@@ -263,7 +278,7 @@ export default async function QuotationPdfPage({
             Terms & Conditions
           </h4>
           <p className="text-[12px] text-on-surface-variant whitespace-pre-wrap">
-            {settingsData.finance.terms}
+            {seller.terms}
           </p>
         </div>
 
@@ -299,7 +314,7 @@ export default async function QuotationPdfPage({
             </div>
             <div className="border-t border-outline-variant pt-2">
               <p className="text-[12px] font-semibold text-on-surface">Official Stamp</p>
-              <p className="text-[12px] text-on-surface-variant">{settingsData.company.name}</p>
+              <p className="text-[12px] text-on-surface-variant">{seller.legalNameEn}</p>
             </div>
           </div>
         </div>
@@ -308,13 +323,13 @@ export default async function QuotationPdfPage({
         <footer className="quotation-print-footer mt-12 text-center text-[12px] text-on-surface-variant border-t border-outline-variant/30 pt-4">
           <div className="flex justify-center gap-8 mb-2">
             <p>
-              <span className="font-semibold text-on-surface">Bank:</span> {settingsData.bank.name}
+              <span className="font-semibold text-on-surface">Bank:</span> {seller.bank.bankName}
             </p>
             <p>
-              <span className="font-semibold text-on-surface">Account Name:</span> {settingsData.bank.accountName}
+              <span className="font-semibold text-on-surface">Account Name:</span> {seller.bank.accountName}
             </p>
             <p>
-              <span className="font-semibold text-on-surface">IBAN:</span> {settingsData.bank.iban}
+              <span className="font-semibold text-on-surface">IBAN:</span> {seller.bank.iban}
             </p>
           </div>
           <p>This is a system generated document. Page 1 of 1.</p>

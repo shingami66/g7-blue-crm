@@ -28,6 +28,8 @@ export interface QuotationRow {
   deleted_at: string | null;
   created_by: string;
   updated_by: string;
+  snapshot_seller: QuotationSnapshotSeller | null;
+  snapshot_buyer: QuotationSnapshotBuyer | null;
 }
 
 export interface QuotationServiceSummary {
@@ -87,6 +89,8 @@ export interface QuotationListItem {
   status: QuotationStatus;
   createdAt: string;
   updatedAt: string;
+  snapshotSeller?: QuotationSnapshotSeller | null;
+  snapshotBuyer?: QuotationSnapshotBuyer | null;
 }
 
 export interface QuotationItem {
@@ -122,3 +126,74 @@ export type CreateQuotationItemInput = z.infer<typeof quotationItemInputSchema>;
 export type UpdateQuotationItemInput = z.infer<typeof quotationItemInputSchema>;
 export type CreateQuotationInput = z.infer<typeof createQuotationSchema>;
 export type UpdateQuotationInput = z.infer<typeof updateQuotationSchema>;
+
+export interface QuotationSnapshotSeller {
+  snapshotVersion: number;
+  snapshotSource: string;
+  snapshotCapturedAt: string;
+  snapshotNote: string | null;
+  legalNameEn: string;
+  legalNameAr: string | null;
+  brandName: string | null;
+  tin: string | null;
+  entityUnifiedNumber: string | null;
+  crNumber: string | null;
+  vatMode: "not_registered" | "vat_registered_phase_1" | "phase2_integrated";
+  vatNumber: string | null;
+  vatEffectiveDate: string | null;
+  vatRate: number;
+  officialEmail: string | null;
+  officialPhone: string | null;
+  website: string | null;
+  address: {
+    shortAddress: string | null;
+    buildingNo: string | null;
+    street: string | null;
+    district: string | null;
+    secondaryNo: string | null;
+    postalCode: string | null;
+    city: string | null;
+    country: string | null;
+    display: string | null;
+  };
+  bank: {
+    bankName: string | null;
+    accountName: string | null;
+    accountNo: string | null;
+    iban: string | null;
+  };
+  logoPath: string | null;
+  currency: string | null;
+  terms: string | null;
+}
+
+export interface QuotationSnapshotBuyer {
+  snapshotVersion: number;
+  snapshotSource: string;
+  snapshotCapturedAt: string;
+  snapshotNote: string | null;
+  customerId: string;
+  customerType: string | null;
+  name: string;
+  legalName: string | null;
+  contactName: string | null;
+  email: string | null;
+  phone: string | null;
+  crNumber: string | null;
+  vatNumber: string | null;
+  billingEmail: string | null;
+  financeContact: string | null;
+  paymentTerms: string | null;
+  poRequired: boolean | null;
+  address: {
+    shortAddress: string | null;
+    buildingNo: string | null;
+    street: string | null;
+    district: string | null;
+    secondaryNo: string | null;
+    postalCode: string | null;
+    city: string | null;
+    country: string | null;
+    display: string | null;
+  };
+}
