@@ -758,13 +758,22 @@ Checklist:
 - [ ] Preserve search/filter behavior across pages.
 
 ### QUOTATION-PDF-CLEANUP-1
-Status: Monitoring / conditional
+Status: Verified (data cleanup) / Print headers pending
 
 Checklist:
-- [ ] Verify Email displays as plain `info@g7blue.com`.
-- [ ] Verify Terms display professional terms.
-- [ ] Verify CR does not display fake placeholder.
-- [ ] Verify no Tax Invoice / ZATCA / FATOORA / VAT 15% is displayed while not VAT registered.
+- [x] Verify Email displays as plain `info@g7blue.com`.
+- [x] Verify Terms display professional terms.
+- [x] Verify CR does not display fake placeholder.
+- [x] Verify no Tax Invoice / ZATCA / FATOORA / VAT 15% is displayed while not VAT registered.
+
+#### QUOTATION-PDF-PRINT-SETTINGS-1
+Status: Pending (Before external/client-facing PDF sharing)
+
+Checklist:
+- [ ] Fix print/export polish: provide a cleaner PDF/export experience where generated documents do not show browser URL/date/title/page footer artifacts.
+- [ ] This is not a VAT/data correctness issue. PDF data cleanup is verified.
+- [ ] User workaround: disable `Headers and footers` in the browser print dialog.
+- [ ] This must be fixed before external/client-facing PDF usage, even if ERP-3 can continue.
 
 ### ADMIN-USERS-SMOKE-1
 Status: Pending later controlled smoke

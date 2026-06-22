@@ -351,6 +351,8 @@ SEC-RLS-BASELINE-1 manual Supabase apply and database verification are complete.
 
 Follow-up tracked from CUST-OFFICIAL-DETAILS-1C manual smoke: `LIST-PAGINATION-PARITY-1`. Customers and Services lists should match the `/quotations` pagination pattern with 10 rows per page and Previous/Next controls. Do not move this ahead of critical/security blockers unless approved.
 
+Follow-up tracked from QUOTATION-PDF-CLEANUP-1 manual smoke: `QUOTATION-PDF-PRINT-SETTINGS-1`. Browser headers and footers currently appear when printing/exporting PDF. Print/export polish is needed to hide browser URL/date/title/page footer artifacts before external/client-facing PDF sharing. User workaround: disable `Headers and footers` in browser print dialog.
+
 ## 5. Deferred Decisions
 
 Detailed deferred decisions are tracked in `docs/deferred-decisions.md` so they remain visible and can be revisited before the relevant phase starts.

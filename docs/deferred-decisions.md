@@ -271,13 +271,21 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
   - Preserve search/filter behavior across pages.
 
 ### QUOTATION-PDF-CLEANUP-1
-- **Status:** Monitoring / conditional after COMPANY-SETTINGS-CLEANUP-1B
-- **Reason:** Database cleanup corrected official email, CR placeholder, and default terms in company_settings and existing quotation snapshots. PDF visual smoke should confirm the rendered PDF no longer shows markdown email or placeholder terms.
+- **Status:** Verified (data cleanup) / Print headers pending
+- **Reason:** Database cleanup corrected official email, CR placeholder, and default terms in company_settings and existing quotation snapshots. PDF visual smoke confirmed the rendered PDF no longer shows markdown email or placeholder terms.
 - **Required future behavior if still needed:**
-  - PDF displays plain `info@g7blue.com`.
-  - PDF displays professional terms.
-  - PDF does not display fake CR placeholder.
-  - PDF still must not show Tax Invoice / VAT Number / ZATCA / VAT 15% while `vat_mode = not_registered`.
+  - PDF displays plain `info@g7blue.com`. (Verified)
+  - PDF displays professional terms. (Verified)
+  - PDF does not display fake CR placeholder. (Verified)
+  - PDF still must not show Tax Invoice / VAT Number / ZATCA / VAT 15% while `vat_mode = not_registered`. (Verified)
+
+#### QUOTATION-PDF-PRINT-SETTINGS-1
+- **Status:** Pending (Before external/client-facing PDF sharing)
+- **Reason:** Browser headers and footers (URL, date, page number) currently appear when printing/exporting PDF. This is print/export polish only. It is not a VAT/data correctness issue, because PDF data cleanup is verified.
+- **Required future behavior:**
+  - Provide a cleaner PDF/export experience where generated documents do not show browser URL/date/title/page footer artifacts.
+  - Until fixed, user workaround: disable `Headers and footers` in the browser print dialog.
+  - This must be fixed before external/client-facing PDF usage, even if ERP-3 can continue.
 
 ### ADMIN-USERS-SMOKE-1
 - **Status:** Deferred until official test users / controlled smoke approval
