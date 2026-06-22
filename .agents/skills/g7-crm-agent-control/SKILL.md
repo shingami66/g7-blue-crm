@@ -60,6 +60,29 @@ Do not modify these files unless the task explicitly uses `GUARD_EDIT_ONLY` mode
 18. If required guard files are missing or unreadable, return HOLD.
 19. If required lint/build/tests fail, return HOLD.
 20. If a claim cannot be proven with raw output, do not claim it.
+21. Do not run commands outside the task’s requested command list unless they are safe, read-only, and necessary. If a command may start services, kill processes, change files, change ports, connect externally, or affect runtime state, it requires explicit task approval.
+22. For untracked files, `git diff` may be empty. Evidence must include `git status --short --untracked-files=all` and full raw file content using `Get-Content -Raw` or equivalent. Do not claim an untracked file is correct without raw content evidence.
+23. Empty command output must be represented explicitly as `<empty>` in the final report.
+
+## SQL and Migration Review Discipline
+
+* For migrations, SQL, RPCs, constraints, grants, RLS, triggers, or backfills, the agent must not return `approve as-is` unless it has raw evidence for all relevant items.
+* Required SQL review evidence must include, when applicable:
+  * current table/schema definition
+  * current constraint names and definitions
+  * current RPC/function body
+  * current grants/permissions
+  * current RLS/policies if affected
+  * backfill logic and deterministic ordering
+  * partial-run/rerun safety
+  * confirmation existing behavior is preserved
+* If any of that evidence is missing, return HOLD or `needs fix`.
+* For CHECK constraints, do not rely only on text patterns like `LIKE '%type IN%'` because PostgreSQL may render checks as `ANY (ARRAY[...])`.
+* Constraint drops must be scoped to the target table and target constraint purpose.
+* Dynamic SQL must use safe quoting such as `quote_ident` where applicable.
+* Backfills must not overwrite existing non-null production values unless explicitly approved.
+* SQL_DRAFT_ONLY must never connect to Supabase or apply SQL.
+* SUPABASE_APPLY_ONLY must apply only exact approved SQL.
 
 ## Destructive Commands
 
@@ -98,6 +121,9 @@ Forbidden:
 * Push.
 * SQL/database writes.
 * Supabase connection.
+* Starting dev servers unless explicitly authorized.
+* Killing ports/processes unless explicitly authorized.
+* Running commands that modify runtime state.
 
 Required evidence:
 
