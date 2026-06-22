@@ -62,8 +62,11 @@ export default async function QuotationPdfPage({
 
   return (
     <div className="quotation-print-page bg-surface-dim py-8 text-on-surface flex justify-center items-start min-h-screen font-sans">
-      <div className="no-print fixed top-4 right-4 z-50">
+      <div className="no-print fixed top-4 right-4 z-50 flex flex-col items-end gap-2">
         <PrintButton />
+        <div className="bg-surface-container-high text-on-surface-variant text-[12px] p-3 rounded shadow-sm max-w-xs border border-outline-variant/30 text-right">
+          For best PDF output: use A4 paper, enable Background graphics, and disable browser Headers and footers if they appear in the print preview.
+        </div>
       </div>
 
       {/* A4 Document Canvas */}

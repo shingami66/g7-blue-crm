@@ -366,7 +366,7 @@ SEC-RLS-BASELINE-1 manual Supabase apply and database verification are complete.
 
 Follow-up tracked from CUST-OFFICIAL-DETAILS-1C manual smoke: `LIST-PAGINATION-PARITY-1`. Customers and Services lists pagination implemented. Quotations pagination modernized to a functional state. A shared `PaginationFooter` component was created and is now used by Customers, Services, and Quotations. Pagination controls are now correctly hidden across all lists when item count is 10 or less. Manual browser smoke passed for shared pagination across Quotations, Customers, and Services. Do not move this ahead of critical/security blockers unless approved.
 
-Follow-up tracked from QUOTATION-PDF-CLEANUP-1 manual smoke: `QUOTATION-PDF-PRINT-SETTINGS-1`. Browser headers and footers currently appear when printing/exporting PDF. Print/export polish is needed to hide browser URL/date/title/page footer artifacts before external/client-facing PDF sharing. User workaround: disable `Headers and footers` in browser print dialog.
+Follow-up tracked from QUOTATION-PDF-CLEANUP-1 manual smoke: `QUOTATION-PDF-PRINT-SETTINGS-1`. Quotation PDF print CSS cleanup was implemented. `@page` margin was adjusted and document padding restored for print layout. Browser-generated headers/footers may still depend on the browser print dialog. Manual browser smoke is required before considering it fully verified.
 
 ## 5. Deferred Decisions
 
