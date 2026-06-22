@@ -26,7 +26,7 @@ export async function getCustomers(): Promise<Customer[]> {
       .from("customers")
       .select("*")
       .eq("is_deleted", false)
-      .order("created_at", { ascending: false });
+      .order("customer_number", { ascending: true });
 
     if (error) {
       console.error("[getCustomers] Supabase error:", error.message);
