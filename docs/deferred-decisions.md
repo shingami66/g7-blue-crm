@@ -258,3 +258,34 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Reason deferred:** Core product flow is still being stabilized.
 - **When to return:** Before hosted production use, and earlier if real/semi-real demo data is used.
 - **Known requirements:** Supabase backup expectations, app error logging, uptime monitoring, build/deployment alerts, database monitoring, and incident response ownership.
+
+## PRE-ERP-3-UX-DATA-BACKLOG-SYNC-1
+
+### LIST-PAGINATION-PARITY-1
+- **Status:** Deferred until after ERP-3 unless quick/safe to bundle separately
+- **Reason:** Customers page currently showed 12 of 12 at once; Services currently has fewer records but should support pagination before growth. This is UX parity work, not a blocker for Company Settings cleanup.
+- **Required future behavior:**
+  - Customers list: 10 rows per page.
+  - Services list: 10 rows per page.
+  - Previous / Next controls when record count exceeds 10.
+  - Preserve search/filter behavior across pages.
+
+### QUOTATION-PDF-CLEANUP-1
+- **Status:** Monitoring / conditional after COMPANY-SETTINGS-CLEANUP-1B
+- **Reason:** Database cleanup corrected official email, CR placeholder, and default terms in company_settings and existing quotation snapshots. PDF visual smoke should confirm the rendered PDF no longer shows markdown email or placeholder terms.
+- **Required future behavior if still needed:**
+  - PDF displays plain `info@g7blue.com`.
+  - PDF displays professional terms.
+  - PDF does not display fake CR placeholder.
+  - PDF still must not show Tax Invoice / VAT Number / ZATCA / VAT 15% while `vat_mode = not_registered`.
+
+### ADMIN-USERS-SMOKE-1
+- **Status:** Deferred until official test users / controlled smoke approval
+- **Reason:** Admin user management logic appears conceptually correct, and Access Pending after self-registration is correct. Full real invite/webhook/revoke/role smoke requires controlled test accounts and explicit approval.
+- **Required future smoke:**
+  - Invite user with real test email only after Mozfer approval.
+  - Verify pending invitation.
+  - Verify revoke modal.
+  - Verify role change protections.
+  - Verify self-role/self-deactivate protections.
+  - Verify final active Admin cannot be deactivated/demoted.

@@ -279,12 +279,20 @@
 - Quotation snapshot UI wiring, DB migrations, backfill, RPC updates, and schema sync completed.
 - `company_settings` and `customers` are decoupled from printed Quotations.
 
-### ⏳ COMPANY-SETTINGS-CLEANUP-1B (Repo implementation ready / pending manual Supabase apply and DB verification)
-- Made `cr_number` optional in DB and Zod schemas to prevent `sar` placeholders.
-- Sanitized `official_email` in Zod schemas to strip markdown/mailto strings.
-- Prepared manual SQL correction script to clean live `company_settings` and frozen `quotations.snapshot_seller` demo data.
-- Manual Supabase migration apply and live DB cleanup remain pending.
-- `SETTINGS-EDIT-MODE-1` edit toggle remains separate/deferred.
+### ✅ COMPANY-SETTINGS-CLEANUP-1B (Applied and verified in Supabase)
+- Repo implementation committed and pushed in `0b826a9`.
+- Supabase migration/manual DB cleanup applied manually.
+- `company_settings.cr_number` is nullable in DB.
+- `company_settings.official_email` is plain `info@g7blue.com`.
+- `company_settings.cr_number` is `NULL`.
+- `company_settings.default_terms` uses professional terms.
+- Existing quotation seller snapshots were corrected.
+- Verification result:
+  - total quotations: 9
+  - bad snapshot email: 0
+  - bad snapshot CR: 0
+  - bad snapshot terms: 0
+- No Tax Invoice / VAT 15% / VAT Number / ZATCA behavior is enabled while `vat_mode = not_registered`.
 
 ## 4. Current Active Phase
 
