@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect, useRef } from "react";
 import {
   Building2,
   Gavel,
@@ -98,13 +98,37 @@ export default function SettingsForm({
     updateCompanySettings,
     initialCompanySettingsActionState
   );
+  const [isEditing, setIsEditing] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
   const [vatMode, setVatMode] = useState(settings.vatMode);
   const [defaultVatPercent, setDefaultVatPercent] = useState(
     settings.vatMode === "not_registered" ? "0" : settings.defaultVatPercent.toString()
   );
 
+  const prevPending = useRef(pending);
+
+  useEffect(() => {
+    if (prevPending.current && !pending) {
+      if (state.success) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setIsEditing(false);
+        setResetKey((prev) => prev + 1);
+      }
+    }
+    prevPending.current = pending;
+  }, [pending, state.success]);
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setVatMode(settings.vatMode);
+    setDefaultVatPercent(
+      settings.vatMode === "not_registered" ? "0" : settings.defaultVatPercent.toString()
+    );
+    setResetKey((prev) => prev + 1);
+  };
+
   const isNotRegistered = vatMode === "not_registered";
-  const controlsDisabled = !canEdit || pending;
+  const controlsDisabled = !canEdit || pending || !isEditing;
   const bank = settings.bank;
 
   const handleVatModeChange = (nextVatMode: typeof vatMode) => {
@@ -119,15 +143,36 @@ export default function SettingsForm({
         subtitle="Manage seller profile, VAT defaults, and company banking details for future documents."
       >
         {canEdit ? (
-          <button
-            type="submit"
-            form="company-settings-form"
-            disabled={pending}
-            className="flex items-center gap-2 bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <Save size={18} />
-            {pending ? "Saving..." : "Save Changes"}
-          </button>
+          isEditing ? (
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={pending}
+                className="text-[14px] font-semibold text-on-surface hover:text-on-surface-variant transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="company-settings-form"
+                disabled={pending}
+                className="flex items-center gap-2 bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Save size={18} />
+                {pending ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-2 bg-surface-container-high hover:bg-surface-container-highest text-on-surface px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors"
+            >
+              <Settings2 size={18} />
+              Edit Settings
+            </button>
+          )
         ) : (
           <div className="flex items-center gap-2 text-[13px] text-on-surface-variant bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2">
             <Lock size={16} />
@@ -136,7 +181,7 @@ export default function SettingsForm({
         )}
       </PageHeader>
 
-      <form id="company-settings-form" action={canEdit ? formAction : undefined}>
+      <form key={resetKey} id="company-settings-form" action={canEdit ? formAction : undefined}>
         <input type="hidden" name="currency" value="SAR" />
 
         {state.error && (

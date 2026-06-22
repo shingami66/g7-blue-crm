@@ -294,6 +294,15 @@
   - bad snapshot terms: 0
 - No Tax Invoice / VAT 15% / VAT Number / ZATCA behavior is enabled while `vat_mode = not_registered`.
 
+### ✅ SETTINGS-EDIT-MODE-1
+- Implemented and repo-ready.
+- Company Settings is read-only by default.
+- Edit requires explicit `Edit Settings` action.
+- Save/Cancel appear only in edit mode.
+- Edit button does not render for users without write permission.
+- Existing validation, permissions, and bank masking are expected to remain respected.
+- Manual browser smoke remains pending.
+
 ## 4. Current Active Phase
 
 ### 🚧 Locked Next CRM Priorities

@@ -342,11 +342,15 @@ Checklist:
 - [x] Update docs
 
 ### SETTINGS-EDIT-MODE-1
-Status: Planned
+Status: Implemented / Repo-ready (Manual browser smoke still required)
 
 Checklist:
-- [ ] Protect Company Settings UI behind an Edit Settings toggle.
-- [ ] Prevent accidental modifications by making fields read-only by default.
+- [x] Protect Company Settings UI behind an Edit Settings toggle.
+- [x] Prevent accidental modifications by making fields read-only by default.
+- [x] Show `Save Changes` and `Cancel` only in edit mode.
+- [x] Cancel discards unsaved changes.
+- [x] The Edit button does not render for users without write permission.
+- [x] Existing validation, permissions, and bank masking remain expected.
 
 ### Phase TAX-0 — Tax/ZATCA Wording Cleanup
 Status: Required before ERP implementation unless explicitly accepted as a known risk
