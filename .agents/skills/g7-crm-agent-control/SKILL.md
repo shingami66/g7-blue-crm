@@ -63,6 +63,30 @@ Do not modify these files unless the task explicitly uses `GUARD_EDIT_ONLY` mode
 21. Do not run commands outside the task’s requested command list unless they are safe, read-only, and necessary. If a command may start services, kill processes, change files, change ports, connect externally, or affect runtime state, it requires explicit task approval.
 22. For untracked files, `git diff` may be empty. Evidence must include `git status --short --untracked-files=all` and full raw file content using `Get-Content -Raw` or equivalent. Do not claim an untracked file is correct without raw content evidence.
 23. Empty command output must be represented explicitly as `<empty>` in the final report.
+24. Never read, print, cat, Get-Content, Select-String, grep, search, or display `.env`, `.env.local`, `.env.*`, secret files, credential files, tokens, API keys, connection strings, or private logs unless the task explicitly authorizes the exact file and exact reason.
+25. Never search IDE/system transcripts, logs, shell history, browser profiles, or user home directories for secrets or connection strings.
+26. Never run `supabase db push`, `supabase link`, `supabase db pull`, `supabase db reset`, `supabase start`, `supabase stop`, `supabase migration repair`, `supabase secrets`, or `supabase db query --linked` unless the exact command is explicitly authorized.
+27. Never start Docker Desktop, Supabase local services, dev servers, background services, or port/process management commands unless explicitly authorized.
+28. If database access is unavailable, return HOLD. Do not escalate by trying linked/remote/local fallback commands unless explicitly authorized.
+29. If a command might expose secrets in output, return HOLD before running it.
+
+## Secret and Environment File Discipline
+
+* `.env*` files are protected.
+* The agent may verify existence with `Test-Path` only if needed.
+* The agent must not read or print secret file contents.
+* The agent must not include secrets in final reports.
+* If secret contents are accidentally exposed, return HOLD and state that secret rotation may be required without repeating the secret.
+
+## Supabase Command Discipline
+
+* `SQL_DRAFT_ONLY` may read migration files and draft SQL only.
+* `SUPABASE_APPLY_ONLY` may run only exact approved Supabase/SQL commands.
+* `supabase db push` is forbidden unless the task explicitly approves that exact command.
+* `--linked` / remote project commands are forbidden unless the task explicitly approves linked Supabase access.
+* local Supabase/Docker start/stop commands are forbidden unless explicitly approved.
+* failed local DB connection means HOLD, not fallback attempts.
+* verification queries must be exact and approved.
 
 ## SQL and Migration Review Discipline
 
@@ -268,6 +292,11 @@ Forbidden:
 * `supabase/schema.sql` edits unless explicitly authorized.
 * Commit.
 * Push.
+* Reading `.env*` or secret files.
+* Running `supabase db push` unless exact command approved.
+* Using `--linked` unless exact command approved.
+* Starting/stopping local Supabase or Docker services unless exact command approved.
+* Searching user/system logs for credentials.
 
 Required evidence:
 
@@ -333,3 +362,7 @@ Return `TASK RESULT: HOLD` if:
 * Evidence is incomplete.
 * Environment/secrets files are modified without explicit authorization.
 * Package dependencies are changed without explicit package-level approval.
+* Any attempted secret file read without explicit authorization.
+* Any unapproved Supabase fallback command.
+* Any command that could expose credentials.
+* Any unapproved attempt to start services or kill ports/processes.
