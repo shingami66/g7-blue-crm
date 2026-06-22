@@ -2,19 +2,22 @@ import { Settings } from "@/types";
 
 export const settingsData: Settings = {
   company: {
-    name: "G7 BLUE Logistics & Events",
-    email: "contact@g7blue.com.sa",
-    phone: "+966 11 234 5678",
-    address: "King Abdullah Financial District (KAFD)\nRiyadh, Saudi Arabia",
+    name: "G SEVEN BLUE Company",
+    brandName: "G7 BLUE",
+    email: "info@g7blue.com",
+    phone: "+966 55 570 0349",
+    address: "RBDA7036, Building 7036, Sayida / صيدا, Al Duraihemiyah Dist. / حي الدريهمية, Riyadh 12796",
   },
   legal: {
-    cr: "1010123456",
     vat: "Not registered",
+    tin: "3146944674",
+    entityUnifiedNumber: "7053901414",
   },
   bank: {
-    name: "Al Rajhi Bank",
-    iban: "SA 12 8000 0000 6080 1234 5678",
-    accountName: "G7 BLUE FOR LOGISTICS",
+    name: "Alinma Bank / مصرف الإنماء",
+    accountNo: "68207417001000",
+    iban: "SA5005000068207417001000",
+    accountName: "G SEVEN BLUE Company",
   },
   finance: {
     currency: "SAR",

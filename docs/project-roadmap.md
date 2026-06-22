@@ -85,6 +85,16 @@ Checklist:
 - [x] Document required snapshot rules for generated documents.
 - [x] Required before document branding or invoice implementation.
 
+### DOCUMENT-BRANDING-PRINT-1B — Apply G7 BLUE Branding to Print/PDF Views
+Status: Completed
+
+Checklist:
+- [x] Apply official G7 BLUE identity and logo to Quotation PDF/print views.
+- [x] Apply official G7 BLUE identity and logo to Invoice PDF/print views.
+- [x] Remove fake VAT, Tax Invoice, and CR values.
+- [x] Use Entity Unified No 7053901414 and TIN 3146944674.
+- [x] Retain not_registered VAT status.
+
 TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. However, real or semi-real company/client data remains blocked until remaining production hardening and pre-demo controls are complete: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
 
 ### QUOTE-VALIDITY-RULE-1 — Enforce Quotation Validity Against Service Schedule

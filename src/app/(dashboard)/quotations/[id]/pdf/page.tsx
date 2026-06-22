@@ -60,13 +60,20 @@ export default async function QuotationPdfPage({
         {/* Header */}
         <header className="flex justify-between items-start border-b-2 border-primary-container pb-6 mb-8">
           <div className="flex flex-col gap-2 max-w-[50%]">
-            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2">
-              {settingsData.company.name.substring(0, 2).toUpperCase() || "G7"}
-            </div>
+            <img
+              src="/brand/G7_BLUE_Events_Icon_White_BG.png"
+              alt="G7 BLUE Logo"
+              className="w-16 h-16 object-contain mb-2"
+            />
             <div>
               <h1 className="text-[20px] leading-[28px] font-semibold text-primary-container">
                 {settingsData.company.name}
               </h1>
+              {settingsData.company.brandName && (
+                <p className="text-[14px] font-medium text-primary tracking-wide">
+                  {settingsData.company.brandName}
+                </p>
+              )}
             </div>
           </div>
           <div className="text-right flex flex-col gap-1 text-[14px] text-on-surface-variant">
@@ -76,7 +83,10 @@ export default async function QuotationPdfPage({
             <p className="whitespace-pre-line">{settingsData.company.address}</p>
             <div className="mt-2 text-[12px]">
               <p>
-                <span className="font-semibold text-on-surface">CR:</span> {settingsData.legal.cr}
+                <span className="font-semibold text-on-surface">Entity Unified No:</span> {settingsData.legal.entityUnifiedNumber}
+              </p>
+              <p>
+                <span className="font-semibold text-on-surface">TIN / الرقم المميز:</span> {settingsData.legal.tin}
               </p>
               <p>
                 <span className="font-semibold text-on-surface">Tax/VAT Status:</span> Not registered

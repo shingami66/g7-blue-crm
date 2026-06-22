@@ -35,19 +35,23 @@ export interface CompanySettingsPageData {
 
 export interface CompanySettings {
   name: string;
+  brandName?: string;
   email: string;
   phone: string;
   address: string;
 }
 
 export interface LegalSettings {
-  cr: string;
+  cr?: string;
   vat: string;
+  tin?: string;
+  entityUnifiedNumber?: string;
 }
 
 export interface BankDetails {
   name: string;
   iban: string;
+  accountNo?: string;
   accountName: string;
 }
 
