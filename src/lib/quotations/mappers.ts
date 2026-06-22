@@ -30,6 +30,8 @@ export function mapRowToQuotationListItem(row: QuotationRowWithRelations): Quota
     status: row.status,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    snapshotSeller: row.snapshot_seller,
+    snapshotBuyer: row.snapshot_buyer,
   };
 }
 
