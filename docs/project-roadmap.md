@@ -103,6 +103,19 @@ Checklist:
 - [x] company_settings and customers are decoupled from printed Quotations.
 - [x] Verify that ERP-3 (Invoices) is ready to start when authorized.
 
+### COMPANY-SETTINGS-CLEANUP-1B — Company Settings Data Cleanup
+Status: Repo implementation ready / pending manual Supabase apply and DB verification
+
+Checklist:
+- [x] Make `cr_number` optional in DB and Zod schemas to prevent `sar` placeholders.
+- [x] Sanitize `official_email` in Zod schemas to strip markdown/mailto.
+- [x] Propose SQL to correct existing bad `company_settings` data and frozen `quotations.snapshot_seller` demo data.
+- [ ] Manual Supabase migration apply is pending.
+- [ ] Manual SQL correction for `company_settings` and `quotations.snapshot_seller` is pending.
+- [ ] Live database is not yet verified for this cleanup.
+- [x] Do not apply SQL automatically.
+- [x] `SETTINGS-EDIT-MODE-1` remains separate/deferred.
+
 TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. However, real or semi-real company/client data remains blocked until remaining production hardening and pre-demo controls are complete: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
 
 ### QUOTE-VALIDITY-RULE-1 — Enforce Quotation Validity Against Service Schedule
@@ -323,6 +336,13 @@ Checklist:
 - [ ] changing company settings never retroactively changes old quotations or invoices
 - [x] Build/test/audit/merge
 - [x] Update docs
+
+### SETTINGS-EDIT-MODE-1
+Status: Planned
+
+Checklist:
+- [ ] Protect Company Settings UI behind an Edit Settings toggle.
+- [ ] Prevent accidental modifications by making fields read-only by default.
 
 ### Phase TAX-0 — Tax/ZATCA Wording Cleanup
 Status: Required before ERP implementation unless explicitly accepted as a known risk

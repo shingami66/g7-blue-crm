@@ -29,7 +29,8 @@
 - **Deposit/Proforma/Receipts:** Allowed while not registered. Must NOT claim to be Tax Invoice, display VAT Number, or calculate VAT 15%. Must use VAT rate 0.
 - **Tax Invoice:** Blocked while `vat_mode = not_registered`. Remains deferred until official VAT registration and VAT Number are confirmed. ZATCA/Phase 2 deferred.
 - **Snapshot Rule:** Generated customer-facing documents must snapshot company details, financial values, VAT mode, VAT rate, document labels, logo path, and bank/payment details at issue time. Historical documents must not change if Company Settings change later.
-- **Missing/Pending:** CR number is still not confirmed from an official CR document.
+- **CR Status:** CR number is optional/unconfirmed.
+- **Official Email:** Must be stored as a plain email string without markdown.
 ## 2. Working Rules
 - **Workflow:** Plan → Implement → Build → Manual Test → Audit → Commit → Push → PR → Merge
 - **Security:** No `.env.local` exposure; never committed to Git.
@@ -278,10 +279,18 @@
 - Quotation snapshot UI wiring, DB migrations, backfill, RPC updates, and schema sync completed.
 - `company_settings` and `customers` are decoupled from printed Quotations.
 
+### ⏳ COMPANY-SETTINGS-CLEANUP-1B (Repo implementation ready / pending manual Supabase apply and DB verification)
+- Made `cr_number` optional in DB and Zod schemas to prevent `sar` placeholders.
+- Sanitized `official_email` in Zod schemas to strip markdown/mailto strings.
+- Prepared manual SQL correction script to clean live `company_settings` and frozen `quotations.snapshot_seller` demo data.
+- Manual Supabase migration apply and live DB cleanup remain pending.
+- `SETTINGS-EDIT-MODE-1` edit toggle remains separate/deferred.
+
 ## 4. Current Active Phase
 
 ### 🚧 Locked Next CRM Priorities
 Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.
+
 
 The locked workflow remains:
 Customer Profile → Service → Quotation → Invoice → Payment.

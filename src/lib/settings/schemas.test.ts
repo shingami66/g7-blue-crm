@@ -62,3 +62,60 @@ test("rejects phase2_integrated in CS-A form validation", () => {
 
   assert.equal(result.success, false);
 });
+
+test("accepts blank cr_number and normalizes to null", () => {
+  const result = updateCompanySettingsSchema.safeParse({
+    ...baseInput,
+    cr_number: "   ",
+  });
+
+  assert.equal(result.success, true);
+  if (result.success) {
+    assert.equal(result.data.cr_number, null);
+  }
+});
+
+test("accepts null cr_number", () => {
+  const result = updateCompanySettingsSchema.safeParse({
+    ...baseInput,
+    cr_number: null,
+  });
+
+  assert.equal(result.success, true);
+  if (result.success) {
+    assert.equal(result.data.cr_number, null);
+  }
+});
+
+test("sanitizes markdown mailto official_email", () => {
+  const result = updateCompanySettingsSchema.safeParse({
+    ...baseInput,
+    official_email: "[info@g7blue.com](mailto:info@g7blue.com)",
+  });
+
+  assert.equal(result.success, true);
+  if (result.success) {
+    assert.equal(result.data.official_email, "info@g7blue.com");
+  }
+});
+
+test("sanitizes plain mailto: official_email", () => {
+  const result = updateCompanySettingsSchema.safeParse({
+    ...baseInput,
+    official_email: "mailto:info@g7blue.com",
+  });
+
+  assert.equal(result.success, true);
+  if (result.success) {
+    assert.equal(result.data.official_email, "info@g7blue.com");
+  }
+});
+
+test("fails validation for invalid official_email even after sanitization", () => {
+  const result = updateCompanySettingsSchema.safeParse({
+    ...baseInput,
+    official_email: "[invalid](mailto:invalid)",
+  });
+
+  assert.equal(result.success, false);
+});

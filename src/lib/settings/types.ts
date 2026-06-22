@@ -5,7 +5,7 @@ export interface CompanySettingsRow {
   setting_key: "default";
   legal_name_en: string;
   legal_name_ar: string;
-  cr_number: string;
+  cr_number: string | null;
   tin_number: string | null;
   vat_mode: VatMode;
   vat_effective_date: string | null;

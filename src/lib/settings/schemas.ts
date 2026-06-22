@@ -19,16 +19,28 @@ const optionalText = (max = 500) =>
     z.string().max(max, "Value is too long").nullable()
   );
 
+const sanitizeEmail = (val: unknown) => {
+  if (typeof val !== "string") return val;
+  let str = val.trim();
+  const markdownMatch = str.match(/\[.*?\]\(mailto:(.*?)\)/);
+  if (markdownMatch) {
+    str = markdownMatch[1];
+  } else if (str.startsWith("mailto:")) {
+    str = str.replace("mailto:", "");
+  }
+  return str.trim();
+};
+
 export const updateCompanySettingsSchema = z
   .object({
     legal_name_en: requiredText("English legal company name"),
     legal_name_ar: requiredText("Arabic legal company name"),
-    cr_number: requiredText("CR number", 50),
+    cr_number: optionalText(50),
     tin_number: optionalText(50),
     vat_mode: vatModeSchema,
     vat_effective_date: optionalText(20),
     vat_number: optionalText(50),
-    official_email: z.email("Invalid official email").trim().max(255),
+    official_email: z.preprocess(sanitizeEmail, z.email("Invalid official email").trim().max(255)),
     official_phone: requiredText("Official phone", 50),
     national_address: requiredText("National address", 1000),
     bank_name: requiredText("Bank name", 120),

@@ -56,7 +56,7 @@ CREATE TABLE company_settings (
     official_email text NOT NULL,
     official_phone text NOT NULL,
     national_address text NOT NULL,
-    cr_number text NOT NULL,
+    cr_number text,
     tin_number text,
     vat_mode text NOT NULL DEFAULT 'not_registered',
     vat_effective_date date,
