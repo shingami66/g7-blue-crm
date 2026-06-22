@@ -253,6 +253,10 @@ CREATE TABLE quotations (
     deleted_at timestamptz,
     created_by text,
     updated_by text,
+    snapshot_seller jsonb NOT NULL,
+    snapshot_buyer jsonb NOT NULL,
+    CONSTRAINT chk_quotations_snapshot_buyer_type CHECK (jsonb_typeof(snapshot_buyer) = 'object'),
+    CONSTRAINT chk_quotations_snapshot_seller_type CHECK (jsonb_typeof(snapshot_seller) = 'object'),
     CONSTRAINT chk_quotations_vat_rate CHECK (vat_rate >= 0 AND vat_rate <= 100),
     CONSTRAINT fk_quotations_service_id FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE RESTRICT
 );
@@ -295,6 +299,8 @@ COMMENT ON COLUMN quotations.customer_id IS 'Derived from services.customer_id f
 COMMENT ON COLUMN quotations.event IS 'Legacy/deprecated ERP-2 compatibility field. Event context should come from the linked service going forward.';
 COMMENT ON COLUMN quotations.created_by IS 'Stores Clerk userId string';
 COMMENT ON COLUMN quotations.updated_by IS 'Stores Clerk userId string';
+COMMENT ON COLUMN quotations.snapshot_seller IS 'JSONB snapshot of Company Settings at issue time. Contains document config, bank details, and legal data.';
+COMMENT ON COLUMN quotations.snapshot_buyer IS 'JSONB snapshot of Customer official details at issue time. Separates quotation identity from live customer record.';
 
 -- 8. Quotation Items
 CREATE TABLE quotation_items (
@@ -486,6 +492,7 @@ DECLARE
     v_quotation_number text;
     v_service_id uuid;
     v_customer_id uuid;
+    v_service_event_start_date date;
     v_event text;
     v_date date;
     v_valid_until date;
@@ -504,6 +511,8 @@ DECLARE
     v_items_count integer;
     v_residual numeric(12,2);
     v_max_item_id uuid;
+    v_snapshot_seller jsonb;
+    v_snapshot_buyer jsonb;
 BEGIN
     IF p_user_id IS NULL OR trim(p_user_id) = '' THEN
         RAISE EXCEPTION 'p_user_id is required';
@@ -532,40 +541,8 @@ BEGIN
     v_valid_until := NULLIF(trim(p_quotation ->> 'valid_until'), '')::date;
     v_discount    := COALESCE(NULLIF(trim(p_quotation ->> 'discount'), '')::numeric(12,2), 0);
 
-    SELECT
-        CASE
-            WHEN cs.vat_mode IN ('vat_registered_phase_1', 'phase2_integrated') THEN cs.vat_mode
-            ELSE 'not_registered'
-        END,
-        COALESCE(cs.default_vat_percent, 0)::numeric(5,2)
-    INTO v_vat_mode, v_settings_vat_rate
-    FROM company_settings AS cs
-    WHERE cs.setting_key = 'default'
-    LIMIT 1;
-
-    v_vat_mode := COALESCE(v_vat_mode, 'not_registered');
-    v_settings_vat_rate := COALESCE(v_settings_vat_rate, 0);
-
-    IF v_vat_mode = 'not_registered' THEN
-        -- NOT-VAT-REGISTERED SAFEGUARD: driven by company_settings.vat_mode.
-        v_vat_rate := 0;
-    ELSE
-        -- VAT is derived from Company Settings only; client-provided vat_rate is ignored.
-        v_vat_rate := v_settings_vat_rate;
-    END IF;
-
     IF v_service_id IS NULL THEN
         RAISE EXCEPTION 'service_id is required';
-    END IF;
-
-    SELECT s.customer_id
-    INTO v_customer_id
-    FROM services AS s
-    WHERE s.id = v_service_id
-      AND s.deleted_at IS NULL;
-
-    IF v_customer_id IS NULL THEN
-        RAISE EXCEPTION 'Service not found or deleted: %', v_service_id;
     END IF;
 
     IF v_event IS NULL THEN
@@ -578,6 +555,127 @@ BEGIN
 
     IF v_valid_until IS NOT NULL AND v_valid_until < v_date THEN
         RAISE EXCEPTION 'valid_until (%) must be >= date (%)', v_valid_until, v_date;
+    END IF;
+
+    SELECT s.customer_id, s.event_start_date
+    INTO v_customer_id, v_service_event_start_date
+    FROM services AS s
+    WHERE s.id = v_service_id
+      AND s.deleted_at IS NULL;
+
+    IF v_customer_id IS NULL THEN
+        RAISE EXCEPTION 'Service not found or deleted: %', v_service_id;
+    END IF;
+
+    IF v_service_event_start_date IS NOT NULL THEN
+        IF v_service_event_start_date < v_date THEN
+            RAISE EXCEPTION 'Service Start Date (%) cannot be before Issue Date (%)', v_service_event_start_date, v_date;
+        END IF;
+
+        IF v_valid_until IS NOT NULL AND v_valid_until > v_service_event_start_date THEN
+            RAISE EXCEPTION 'valid_until (%) must be <= Service Start Date (%)', v_valid_until, v_service_event_start_date;
+        END IF;
+    END IF;
+
+    SELECT
+        CASE
+            WHEN cs.vat_mode IN ('vat_registered_phase_1', 'phase2_integrated') THEN cs.vat_mode
+            ELSE 'not_registered'
+        END,
+        COALESCE(cs.default_vat_percent, 0)::numeric(5,2),
+        jsonb_build_object(
+            'snapshotVersion', 1,
+            'snapshotSource', 'live_creation',
+            'snapshotCapturedAt', now(),
+            'snapshotNote', null,
+            'legalNameEn', cs.legal_name_en,
+            'legalNameAr', cs.legal_name_ar,
+            'brandName', 'G7 BLUE',
+            'tin', cs.tin_number,
+            'entityUnifiedNumber', '7053901414',
+            'crNumber', null,
+            'vatMode', cs.vat_mode,
+            'vatNumber', CASE WHEN cs.vat_mode = 'not_registered' THEN null ELSE cs.vat_number END,
+            'vatEffectiveDate', CASE WHEN cs.vat_mode = 'not_registered' THEN null ELSE cs.vat_effective_date END,
+            'vatRate', cs.default_vat_percent,
+            'officialEmail', cs.official_email,
+            'officialPhone', cs.official_phone,
+            'website', null,
+            'address', jsonb_build_object(
+                'shortAddress', null,
+                'buildingNo', null,
+                'street', null,
+                'district', null,
+                'secondaryNo', null,
+                'postalCode', null,
+                'city', null,
+                'country', null,
+                'display', cs.national_address
+            ),
+            'bank', jsonb_build_object(
+                'bankName', cs.bank_name,
+                'accountName', cs.bank_account_holder,
+                'accountNo', '68207417001000',
+                'iban', cs.bank_iban
+            ),
+            'logoPath', '/brand/G7_BLUE_Events_Icon_White_BG.png',
+            'currency', cs.currency,
+            'terms', cs.default_terms
+        )
+    INTO v_vat_mode, v_settings_vat_rate, v_snapshot_seller
+    FROM company_settings AS cs
+    WHERE cs.setting_key = 'default'
+    LIMIT 1;
+
+    IF v_snapshot_seller IS NULL THEN
+        RAISE EXCEPTION 'Company settings missing, cannot capture seller snapshot.';
+    END IF;
+
+    v_vat_mode := COALESCE(v_vat_mode, 'not_registered');
+    v_settings_vat_rate := COALESCE(v_settings_vat_rate, 0);
+
+    IF v_vat_mode = 'not_registered' THEN
+        v_vat_rate := 0;
+    ELSE
+        v_vat_rate := v_settings_vat_rate;
+    END IF;
+
+    SELECT jsonb_build_object(
+        'snapshotVersion', 1,
+        'snapshotSource', 'live_creation',
+        'snapshotCapturedAt', now(),
+        'snapshotNote', null,
+        'customerId', c.id,
+        'customerType', c.customer_type,
+        'name', c.company,
+        'legalName', c.legal_name,
+        'contactName', c.contact,
+        'email', c.email,
+        'phone', c.phone,
+        'crNumber', c.commercial_registration_number,
+        'vatNumber', c.vat_number,
+        'billingEmail', c.billing_email,
+        'financeContact', c.finance_contact_name,
+        'paymentTerms', c.payment_terms,
+        'poRequired', c.po_required,
+        'address', jsonb_build_object(
+            'shortAddress', null,
+            'buildingNo', c.national_address_building_number,
+            'street', c.national_address_street,
+            'district', c.national_address_district,
+            'secondaryNo', c.national_address_additional_number,
+            'postalCode', c.national_address_postal_code,
+            'city', c.national_address_city,
+            'country', c.national_address_country,
+            'display', c.city
+        )
+    )
+    INTO v_snapshot_buyer
+    FROM customers AS c
+    WHERE c.id = v_customer_id;
+
+    IF v_snapshot_buyer IS NULL THEN
+        RAISE EXCEPTION 'Customer not found, cannot capture buyer snapshot.';
     END IF;
 
     IF v_discount < 0 THEN
@@ -594,12 +692,12 @@ BEGIN
     INSERT INTO quotations (
         id, quotation_number, service_id, customer_id, event, date, valid_until,
         subtotal, discount, vat_rate, vat_amount, grand_total,
-        status, created_by, updated_by
+        status, created_by, updated_by, snapshot_seller, snapshot_buyer
     )
     VALUES (
         v_quotation_id, v_quotation_number, v_service_id, v_customer_id, v_event, v_date, v_valid_until,
         0, v_discount, v_vat_rate, 0, 0,
-        'draft', p_user_id, p_user_id
+        'draft', p_user_id, p_user_id, v_snapshot_seller, v_snapshot_buyer
     );
 
     FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
@@ -708,6 +806,7 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
     v_existing record;
+    v_service_event_start_date date;
     v_event text;
     v_date date;
     v_valid_until date;
@@ -726,6 +825,8 @@ DECLARE
     v_items_count integer;
     v_residual numeric(12,2);
     v_max_item_id uuid;
+    v_snapshot_seller jsonb;
+    v_snapshot_buyer jsonb;
 BEGIN
     IF p_user_id IS NULL OR trim(p_user_id) = '' THEN
         RAISE EXCEPTION 'p_user_id is required';
@@ -765,28 +866,6 @@ BEGIN
         RAISE EXCEPTION 'Cannot edit quotation with status "%". Only draft quotations can be edited.', v_existing.status;
     END IF;
 
-    SELECT
-        CASE
-            WHEN cs.vat_mode IN ('vat_registered_phase_1', 'phase2_integrated') THEN cs.vat_mode
-            ELSE 'not_registered'
-        END,
-        COALESCE(cs.default_vat_percent, 0)::numeric(5,2)
-    INTO v_vat_mode, v_settings_vat_rate
-    FROM company_settings AS cs
-    WHERE cs.setting_key = 'default'
-    LIMIT 1;
-
-    v_vat_mode := COALESCE(v_vat_mode, 'not_registered');
-    v_settings_vat_rate := COALESCE(v_settings_vat_rate, 0);
-
-    IF v_vat_mode = 'not_registered' THEN
-        -- NOT-VAT-REGISTERED SAFEGUARD: driven by company_settings.vat_mode.
-        v_vat_rate := 0;
-    ELSE
-        -- VAT is derived from Company Settings only; client-provided vat_rate is ignored.
-        v_vat_rate := v_settings_vat_rate;
-    END IF;
-
     IF p_quotation ? 'event' THEN
         v_event := NULLIF(trim(p_quotation ->> 'event'), '');
         IF v_event IS NULL THEN
@@ -811,26 +890,137 @@ BEGIN
         v_valid_until := v_existing.valid_until;
     END IF;
 
-    IF p_quotation ? 'discount' THEN
-        v_discount := COALESCE(NULLIF(trim(p_quotation ->> 'discount'), '')::numeric(12,2), 0);
-    ELSE
-        v_discount := v_existing.discount;
-    END IF;
-
     IF v_valid_until IS NOT NULL AND v_valid_until < v_date THEN
         RAISE EXCEPTION 'valid_until (%) must be >= date (%)', v_valid_until, v_date;
     END IF;
 
-    IF v_discount < 0 THEN
-        RAISE EXCEPTION 'Discount cannot be negative: %', v_discount;
+    SELECT s.event_start_date
+    INTO v_service_event_start_date
+    FROM services AS s
+    WHERE s.id = v_existing.service_id
+      AND s.deleted_at IS NULL;
+
+    IF v_service_event_start_date IS NOT NULL THEN
+        IF v_service_event_start_date < v_date THEN
+            RAISE EXCEPTION 'Service Start Date (%) cannot be before Issue Date (%)', v_service_event_start_date, v_date;
+        END IF;
+
+        IF v_valid_until IS NOT NULL AND v_valid_until > v_service_event_start_date THEN
+            RAISE EXCEPTION 'valid_until (%) must be <= Service Start Date (%)', v_valid_until, v_service_event_start_date;
+        END IF;
     END IF;
 
-    IF v_vat_rate < 0 OR v_vat_rate > 100 THEN
-        RAISE EXCEPTION 'Company Settings default_vat_percent must be between 0 and 100. Got: %', v_vat_rate;
+    SELECT
+        CASE
+            WHEN cs.vat_mode IN ('vat_registered_phase_1', 'phase2_integrated') THEN cs.vat_mode
+            ELSE 'not_registered'
+        END,
+        COALESCE(cs.default_vat_percent, 0)::numeric(5,2),
+        jsonb_build_object(
+            'snapshotVersion', 1,
+            'snapshotSource', 'live_creation',
+            'snapshotCapturedAt', now(),
+            'snapshotNote', null,
+            'legalNameEn', cs.legal_name_en,
+            'legalNameAr', cs.legal_name_ar,
+            'brandName', 'G7 BLUE',
+            'tin', cs.tin_number,
+            'entityUnifiedNumber', '7053901414',
+            'crNumber', null,
+            'vatMode', cs.vat_mode,
+            'vatNumber', CASE WHEN cs.vat_mode = 'not_registered' THEN null ELSE cs.vat_number END,
+            'vatEffectiveDate', CASE WHEN cs.vat_mode = 'not_registered' THEN null ELSE cs.vat_effective_date END,
+            'vatRate', cs.default_vat_percent,
+            'officialEmail', cs.official_email,
+            'officialPhone', cs.official_phone,
+            'website', null,
+            'address', jsonb_build_object(
+                'shortAddress', null,
+                'buildingNo', null,
+                'street', null,
+                'district', null,
+                'secondaryNo', null,
+                'postalCode', null,
+                'city', null,
+                'country', null,
+                'display', cs.national_address
+            ),
+            'bank', jsonb_build_object(
+                'bankName', cs.bank_name,
+                'accountName', cs.bank_account_holder,
+                'accountNo', '68207417001000',
+                'iban', cs.bank_iban
+            ),
+            'logoPath', '/brand/G7_BLUE_Events_Icon_White_BG.png',
+            'currency', cs.currency,
+            'terms', cs.default_terms
+        )
+    INTO v_vat_mode, v_settings_vat_rate, v_snapshot_seller
+    FROM company_settings AS cs
+    WHERE cs.setting_key = 'default'
+    LIMIT 1;
+
+    IF v_snapshot_seller IS NULL THEN
+        RAISE EXCEPTION 'Company settings missing, cannot capture seller snapshot.';
     END IF;
 
-    DELETE FROM quotation_items AS qi
-    WHERE qi.quotation_id = p_quotation_id;
+    v_vat_mode := COALESCE(v_vat_mode, 'not_registered');
+    v_settings_vat_rate := COALESCE(v_settings_vat_rate, 0);
+
+    IF v_vat_mode = 'not_registered' THEN
+        v_vat_rate := 0;
+    ELSE
+        v_vat_rate := v_settings_vat_rate;
+    END IF;
+
+    SELECT jsonb_build_object(
+        'snapshotVersion', 1,
+        'snapshotSource', 'live_creation',
+        'snapshotCapturedAt', now(),
+        'snapshotNote', null,
+        'customerId', c.id,
+        'customerType', c.customer_type,
+        'name', c.company,
+        'legalName', c.legal_name,
+        'contactName', c.contact,
+        'email', c.email,
+        'phone', c.phone,
+        'crNumber', c.commercial_registration_number,
+        'vatNumber', c.vat_number,
+        'billingEmail', c.billing_email,
+        'financeContact', c.finance_contact_name,
+        'paymentTerms', c.payment_terms,
+        'poRequired', c.po_required,
+        'address', jsonb_build_object(
+            'shortAddress', null,
+            'buildingNo', c.national_address_building_number,
+            'street', c.national_address_street,
+            'district', c.national_address_district,
+            'secondaryNo', c.national_address_additional_number,
+            'postalCode', c.national_address_postal_code,
+            'city', c.national_address_city,
+            'country', c.national_address_country,
+            'display', c.city
+        )
+    )
+    INTO v_snapshot_buyer
+    FROM customers AS c
+    WHERE c.id = v_existing.customer_id;
+
+    IF v_snapshot_buyer IS NULL THEN
+        RAISE EXCEPTION 'Customer not found, cannot capture buyer snapshot.';
+    END IF;
+
+    IF p_quotation ? 'discount' THEN
+        v_discount := COALESCE(NULLIF(trim(p_quotation ->> 'discount'), '')::numeric(12,2), 0);
+        IF v_discount < 0 THEN
+            RAISE EXCEPTION 'Discount cannot be negative: %', v_discount;
+        END IF;
+    ELSE
+        v_discount := v_existing.discount;
+    END IF;
+
+    DELETE FROM quotation_items WHERE quotation_id = p_quotation_id;
 
     FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
     LOOP
@@ -903,25 +1093,28 @@ BEGIN
     END IF;
 
     UPDATE quotations AS q
-    SET event       = v_event,
-        date        = v_date,
-        valid_until = v_valid_until,
+    SET subtotal    = v_subtotal,
         discount    = v_discount,
         vat_rate    = v_vat_rate,
-        subtotal    = v_subtotal,
         vat_amount  = v_vat_amount,
         grand_total = v_grand_total,
-        updated_by  = p_user_id
+        event       = v_event,
+        date        = v_date,
+        valid_until = v_valid_until,
+        updated_by  = p_user_id,
+        updated_at  = now(),
+        snapshot_seller = v_snapshot_seller,
+        snapshot_buyer = v_snapshot_buyer
     WHERE q.id = p_quotation_id;
 
     RETURN QUERY
     SELECT
-        p_quotation_id              AS quotation_id,
+        p_quotation_id     AS quotation_id,
         v_existing.quotation_number AS quotation_number,
-        v_subtotal                  AS subtotal,
-        v_discount                  AS discount,
-        v_vat_amount                AS vat_amount,
-        v_grand_total               AS grand_total;
+        v_subtotal         AS subtotal,
+        v_discount         AS discount,
+        v_vat_amount       AS vat_amount,
+        v_grand_total      AS grand_total;
 END;
 $$;
 

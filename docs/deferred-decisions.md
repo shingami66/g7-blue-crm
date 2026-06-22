@@ -88,10 +88,10 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** VAT Number, Tax Invoice issuance, ZATCA/FATOORA, and CR confirmation remain deferred/pending. Entity Unified No (7053901414) must not be treated as CR unless officially confirmed. Tax Invoice is blocked while `vat_mode = not_registered`.
 
 ## Company Settings Document Snapshot Wiring
-- **Status:** Deferred; required before printed quotations/invoices depend on live Company Settings.
-- **Reason deferred:** CS-A intentionally implements live singleton settings only. Existing quotation and invoice print views must not mutate when Company Settings changes.
-- **When to return:** Before wiring Company Settings into quotation/invoice print views or before invoice issuance workflows depend on seller/legal/VAT/bank settings.
-- **Known requirements:** New documents must snapshot seller legal names, CR, TIN, VAT mode, VAT number, VAT effective date if applicable, national address, terms, and any bank details displayed on the document. Existing documents must keep their own snapshots.
+- **Status:** Partially resolved; Quotations are wired, but Invoices still need wiring during ERP-3.
+- **Reason deferred:** CS-A intentionally implements live singleton settings only. Existing quotation and invoice print views must not mutate when Company Settings changes. Quotation snapshot wiring is completed (`DOCUMENT-SNAPSHOT-WIRING-1B`).
+- **When to return:** Before wiring Company Settings into invoice print views or before invoice issuance workflows depend on seller/legal/VAT/bank settings.
+- **Known requirements:** New documents must snapshot seller legal names, CR, TIN, VAT mode, VAT number, VAT effective date if applicable, national address, terms, and any bank details displayed on the document. Existing documents must keep their own snapshots. Quotations have this implemented; Invoices remain.
 
 ## Company Logo Upload
 - **Status:** Deferred.

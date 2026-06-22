@@ -95,6 +95,14 @@ Checklist:
 - [x] Use Entity Unified No 7053901414 and TIN 3146944674.
 - [x] Retain not_registered VAT status.
 
+### DOCUMENT-SNAPSHOT-WIRING-1B — Document Snapshot Wiring
+Status: Completed
+
+Checklist:
+- [x] Quotation snapshot UI wiring, DB migrations, backfill, RPC updates, and schema sync.
+- [x] company_settings and customers are decoupled from printed Quotations.
+- [x] Verify that ERP-3 (Invoices) is ready to start when authorized.
+
 TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. However, real or semi-real company/client data remains blocked until remaining production hardening and pre-demo controls are complete: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
 
 ### QUOTE-VALIDITY-RULE-1 — Enforce Quotation Validity Against Service Schedule

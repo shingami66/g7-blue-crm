@@ -272,6 +272,12 @@
 - Retained `not_registered` VAT status.
 - Implemented purely in the UI, avoiding premature ERP-3 database snapshots or schema changes.
 
+### ✅ DOCUMENT-SNAPSHOT-WIRING-1B
+- [x] DOCUMENT-SNAPSHOT-WIRING-1A completed.
+- [x] DOCUMENT-SNAPSHOT-WIRING-1B completed.
+- Quotation snapshot UI wiring, DB migrations, backfill, RPC updates, and schema sync completed.
+- `company_settings` and `customers` are decoupled from printed Quotations.
+
 ## 4. Current Active Phase
 
 ### 🚧 Locked Next CRM Priorities
