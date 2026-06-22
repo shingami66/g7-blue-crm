@@ -364,7 +364,7 @@ The next work order is:
 
 SEC-RLS-BASELINE-1 manual Supabase apply and database verification are complete. DEV_ONLY broad authenticated policies were removed from the live database. Real or semi-real data remains blocked by remaining production hardening and pre-demo controls: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production. It is no longer blocked by SEC-RLS manual apply itself.
 
-Follow-up tracked from CUST-OFFICIAL-DETAILS-1C manual smoke: `LIST-PAGINATION-PARITY-1`. Customers list pagination implemented (manual browser smoke passed for Customers ordering and 10-row pagination). Services list should match the `/quotations` pagination pattern with 10 rows per page and Previous/Next controls. Do not move this ahead of critical/security blockers unless approved.
+Follow-up tracked from CUST-OFFICIAL-DETAILS-1C manual smoke: `LIST-PAGINATION-PARITY-1`. Customers and Services lists pagination implemented (manual browser smoke passed for Customers ordering and 10-row pagination). Do not move this ahead of critical/security blockers unless approved.
 
 Follow-up tracked from QUOTATION-PDF-CLEANUP-1 manual smoke: `QUOTATION-PDF-PRINT-SETTINGS-1`. Browser headers and footers currently appear when printing/exporting PDF. Print/export polish is needed to hide browser URL/date/title/page footer artifacts before external/client-facing PDF sharing. User workaround: disable `Headers and footers` in browser print dialog.
 

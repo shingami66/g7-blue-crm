@@ -28,11 +28,18 @@ interface ServicesClientProps {
 export default function ServicesClient({ services, canWrite }: ServicesClientProps) {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const filtered = services.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
     return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filtered.length);
+  const paginatedServices = filtered.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div className="flex flex-col h-full">
@@ -56,7 +63,10 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
           <div className="relative">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
               className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
             >
               <option value="all">All Statuses</option>
@@ -74,7 +84,9 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
             />
           </div>
           <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
-            Showing {filtered.length} of {services.length} services
+            {filtered.length === 0
+              ? "Showing 0 of 0 services"
+              : `Showing ${startIndex + 1}-${endIndex} of ${filtered.length} services`}
           </div>
         </FilterBar>
 
@@ -100,7 +112,7 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
                 "Budget",
               ]}
             >
-              {filtered.map((service) => (
+              {paginatedServices.map((service) => (
                 <tr
                   key={service.id}
                   className="hover:bg-surface-container-low/50 transition-colors cursor-pointer"
@@ -138,6 +150,40 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
             </DataTable>
           )}
         </div>
+
+        {filtered.length > itemsPerPage && (
+          <div className="bg-surface-container-lowest border-t border-surface-variant p-4 flex justify-between items-center rounded-b-xl border border-x-0 border-b-0">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="px-3 py-1 bg-surface border border-outline-variant rounded text-[14px] text-on-surface hover:bg-surface-container-low disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            <div className="flex gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-8 h-8 flex items-center justify-center rounded text-[14px] font-semibold transition-colors ${
+                    currentPage === page
+                      ? "bg-primary text-white"
+                      : "bg-surface text-on-surface hover:bg-surface-container-low border border-transparent hover:border-outline-variant"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="px-3 py-1 bg-surface border border-outline-variant rounded text-[14px] text-on-surface hover:bg-surface-container-low disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
