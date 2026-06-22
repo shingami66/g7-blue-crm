@@ -5,6 +5,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
+import PaginationFooter from "@/components/ui/PaginationFooter";
 import { Plus, Filter, FileSearch, Trash2, Edit, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,6 +22,13 @@ type StatusBadgeVariant = React.ComponentProps<typeof StatusBadge>["variant"];
 export default function QuotationsClient({ quotations, canWrite }: QuotationsClientProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const totalPages = Math.max(1, Math.ceil(quotations.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, quotations.length);
+  const paginatedQuotations = quotations.slice(startIndex, startIndex + itemsPerPage);
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -76,7 +84,9 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
             />
           </div>
           <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
-            Showing {quotations.length} quotations
+            {quotations.length === 0
+              ? "Showing 0 of 0 quotations"
+              : `Showing ${startIndex + 1}-${endIndex} of ${quotations.length} quotations`}
           </div>
         </FilterBar>
 
@@ -104,7 +114,7 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
                 "Actions",
               ]}
             >
-              {quotations.map((q) => (
+              {paginatedQuotations.map((q) => (
                 <tr
                   key={q.id}
                   className="hover:bg-surface-container-low/50 transition-colors cursor-pointer"
@@ -195,20 +205,13 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
         </div>
 
         {/* Pagination Footer */}
-        {quotations.length > 0 && (
-          <div className="bg-surface-container-lowest border-t border-surface-variant p-4 flex justify-between items-center rounded-b-xl border border-t-0">
-            <button className="px-3 py-1 bg-surface border border-outline-variant rounded text-[14px] text-on-surface hover:bg-surface-container-low">
-              Previous
-            </button>
-            <div className="flex gap-1">
-              <button className="w-8 h-8 flex items-center justify-center rounded bg-primary text-white text-[14px] font-semibold">
-                1
-              </button>
-            </div>
-            <button className="px-3 py-1 bg-surface border border-outline-variant rounded text-[14px] text-on-surface hover:bg-surface-container-low">
-              Next
-            </button>
-          </div>
+        {quotations.length > itemsPerPage && (
+          <PaginationFooter
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            className="border-t-0"
+          />
         )}
       </div>
     </div>

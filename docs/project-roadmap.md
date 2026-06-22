@@ -758,8 +758,10 @@ Status: Complete
 Checklist:
 - [x] Customers list: 10 rows per page.
 - [x] Services list: 10 rows per page.
+- [x] Quotations list: 10 rows per page.
 - [x] Previous / Next controls when count exceeds 10.
 - [x] Preserve search/filter behavior across pages.
+- [x] Shared `PaginationFooter` component used.
 
 ### QUOTATION-PDF-CLEANUP-1
 Status: Verified (data cleanup) / Print headers pending
