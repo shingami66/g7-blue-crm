@@ -511,7 +511,7 @@ Checklist:
 Status: In Progress
 
 ### ERP-3A Invoice Schema Foundation
-Status: Repo-prepared / Manual apply pending
+Status: Manual Supabase apply completed / Verified
 
 Checklist:
 - [x] Add `service_id` to invoices.
@@ -519,7 +519,7 @@ Checklist:
 - [x] Rename `type` to `invoice_type` and add deposit/final CHECK constraint.
 - [x] Add snapshot columns for seller, buyer, and quotation details.
 - [x] Prepare composite FK linking invoice to quotation and service.
-- [ ] Manual Supabase apply.
+- [x] Manual Supabase apply.
 
 ### ERP-3B Invoice Generation (Upcoming)
 Checklist:
