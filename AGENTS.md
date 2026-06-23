@@ -182,3 +182,21 @@ Do not rely on UI-only checks for security. Do not stage or commit until blockin
 
 - `.agents/skills/g7-crm-precommit-gate/SKILL.md`
   Use before staging, committing, pushing, opening PRs, or merging.
+
+<!-- SPECKIT START -->
+When using Spec Kit in this repository, the following rules constrain all Spec Kit specs, plans, tasks, analyses, and implementations:
+
+1. `AGENTS.md` remains the authoritative repository control file. Spec Kit output must not override it.
+2. Existing G7 BLUE CRM custom skills remain mandatory whenever their domain applies, especially:
+   - `.agents/skills/g7-crm-erp-guard/SKILL.md`
+   - `.agents/skills/g7-crm-agent-control/SKILL.md`
+3. Spec Kit does not authorize staging, committing, pushing, opening PRs, applying SQL, running Supabase commands, reading `.env*`, reading secrets, starting dev servers, or killing ports/processes.
+4. Spec Kit implementation work must still begin in `MODE: IMPLEMENT_NO_STAGE` and may only move to `CONTROLLED_COMMIT` or `CONTROLLED_PUSH` after explicit user approval.
+5. All Spec Kit specs and plans must preserve the G7 BLUE CRM locked flow: Customer Profile → Service / Booking → Quotation → Invoice → Payment.
+6. While `company_settings.vat_mode = not_registered`, Spec Kit work must not create or display Tax Invoice wording, VAT 15%, VAT Number, ZATCA, FATOORA, QR, XML, clearance, or official Saudi e-invoicing behavior.
+7. Financial totals must not be trusted from client input. Invoice and payment logic must use trusted server/database logic and approved quotation snapshots.
+8. Generated customer-facing documents must preserve snapshot behavior so historical documents do not mutate when settings, customers, VAT mode, or bank details change later.
+9. If a Spec Kit task conflicts with these rules, return `TASK RESULT: HOLD` and explain the conflict before making changes.
+
+For additional Spec Kit context, read the current plan, but apply the rules above first.
+<!-- SPECKIT END -->
