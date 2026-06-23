@@ -16,6 +16,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   manager: [
     "customers:read",
     "customers:write",
+    "customers:export",
     "quotations:read",
     "quotations:write",
     "quotations:approve",
@@ -52,6 +53,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   ],
   accountant: [
     "customers:read",
+    "customers:export",
     "quotations:read",
     "services:read",
     "invoices:read",

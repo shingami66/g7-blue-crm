@@ -11,13 +11,18 @@ import { Plus, Filter, Download, X } from "lucide-react";
 import { createCustomer } from "@/lib/customers/actions";
 import type { Customer } from "@/types/customer";
 import { CustomerCoreFields, CustomerOfficialBillingFields } from "./CustomerFormFields";
+import { generateExcelReport } from "@/lib/reports/exportExcel";
 
 export default function CustomersClient({
   customers,
   canWrite,
+  canExport,
+  generatedBy,
 }: {
   customers: Customer[];
   canWrite: boolean;
+  canExport?: boolean;
+  generatedBy?: string;
 }) {
   const router = useRouter();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -41,48 +46,41 @@ export default function CustomersClient({
   const endIndex = Math.min(startIndex + itemsPerPage, filteredCustomers.length);
   const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
 
-  function exportCustomers() {
-    if (filteredCustomers.length === 0) return;
+  async function exportCustomers() {
+    if (!canExport || filteredCustomers.length === 0) return;
 
-    const headers = [
-      "Customer Number",
-      "Company",
-      "Contact Person",
-      "Email",
-      "Phone",
-      "City",
-      "Status",
-      "Projects",
-      "Revenue",
-    ];
+    const date = new Date();
+    const dateStr = date.toISOString().split("T")[0];
 
-    const rows = filteredCustomers.map((customer) => [
-      escapeCsv(customer.customerNumber),
-      escapeCsv(customer.company),
-      escapeCsv(customer.contact),
-      escapeCsv(customer.email),
-      escapeCsv(customer.phone),
-      escapeCsv(customer.city),
-      escapeCsv(customer.status),
-      escapeCsv(customer.projects),
-      escapeCsv(customer.revenue),
-    ]);
+    const activeFilters = [];
+    if (statusFilter !== "all") activeFilters.push(`Status: ${statusFilter}`);
+    if (cityFilter !== "all") activeFilters.push(`City: ${cityFilter}`);
 
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    const date = new Date().toISOString().split("T")[0];
-
-    link.setAttribute("href", url);
-    link.setAttribute("download", `g7-blue-customers-${date}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    await generateExcelReport<Customer>({
+      metadata: {
+        companyName: "G SEVEN BLUE Company",
+        brandName: "G7 BLUE CRM",
+        reportTitle: "Customers Report",
+        generatedAt: date,
+        generatedBy: generatedBy || "System Generated",
+        filters: activeFilters,
+        totalRecords: filteredCustomers.length,
+        fileName: `g7-blue-customers-${dateStr}.xlsx`,
+      },
+      columns: [
+        { header: "Customer Number", key: "customerNumber", width: 20, format: "text" },
+        { header: "Company", key: "company", width: 30, format: "text" },
+        { header: "Contact Person", key: "contact", width: 25, format: "text" },
+        { header: "Email", key: "email", width: 30, format: "text" },
+        { header: "Phone", key: "phone", width: 20, format: "text" },
+        { header: "City", key: "city", width: 20, format: "text" },
+        { header: "Status", key: "status", width: 15, format: "text" },
+        { header: "Services Count", key: "servicesCount", width: 15, format: "number" },
+        { header: "Quotations Count", key: "quotationsCount", width: 15, format: "number" },
+        { header: "Total Quoted Amount (SAR)", key: "totalQuotedAmount", width: 25, format: "currency" },
+      ],
+      rows: filteredCustomers,
+    });
   }
 
   async function createCustomerFromForm(formData: FormData) {
@@ -105,15 +103,17 @@ export default function CustomersClient({
         title="Customers"
         subtitle="Manage your client relationships and contact information."
       >
-        <button
-          type="button"
-          onClick={exportCustomers}
-          disabled={customers.length === 0}
-          className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-low px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Download size={18} />
-          Export
-        </button>
+        {canExport && (
+          <button
+            type="button"
+            onClick={exportCustomers}
+            disabled={customers.length === 0}
+            className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-low px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download size={18} />
+            Export
+          </button>
+        )}
         {canWrite && (
           <button
             type="button"
@@ -195,7 +195,7 @@ export default function CustomersClient({
                   "Contact Person",
                   "Location",
                   "Status",
-                  "Projects",
+                  "Services",
                   "Revenue",
                 ]}
               >
@@ -229,10 +229,10 @@ export default function CustomersClient({
                       </StatusBadge>
                     </td>
                     <td className="px-4 py-4 text-on-surface">
-                      {customer.projects}
+                      {customer.servicesCount}
                     </td>
                     <td className="px-4 py-4 font-semibold text-on-surface">
-                      {customer.revenue}
+                      SAR {customer.totalQuotedAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                     </td>
                   </tr>
                 ))}
@@ -299,19 +299,4 @@ export default function CustomersClient({
       )}
     </div>
   );
-}
-
-function escapeCsv(csvValue: string | number | null | undefined) {
-  if (csvValue === null || csvValue === undefined) return '""';
-
-  const serializedValue = String(csvValue);
-  if (
-    serializedValue.includes(",") ||
-    serializedValue.includes('"') ||
-    serializedValue.includes("\n")
-  ) {
-    return `"${serializedValue.replace(/"/g, '""')}"`;
-  }
-
-  return serializedValue;
 }

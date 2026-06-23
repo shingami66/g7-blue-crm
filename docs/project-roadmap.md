@@ -789,6 +789,131 @@ Checklist:
 - [ ] Controlled smoke for role changes.
 - [ ] Controlled smoke for self-protection and final active Admin protection.
 
+### EXPORT-REPORTS-XLSX-1
+Status: Complete
+
+Checklist:
+- [x] Customers raw CSV export replaced with branded XLSX report.
+- [x] Shared export helper introduced.
+- [x] Permissions were intentionally not changed in this task.
+- [x] Viewer export permission review remains a separate future decision/task (Resolved in CUSTOMERS-SECURE-SUMMARY-XLSX-1B).
+
+### CUSTOMERS-SECURE-SUMMARY-XLSX-1B
+Status: Complete
+
+Checklist:
+- [x] Fix export RBAC by adding `customers:export` permission.
+- [x] Allow export only for admin, manager, accountant.
+- [x] Block Viewer from exporting.
+- [x] Replace stale customer report metrics with real metrics from `public.customer_report_metrics`.
+- [x] Update column formatting (text for phone/email, currency for total amount).
+
+### CUSTOMER-REPORT-METRICS-VIEW-1
+Status: Manually applied and verified
+
+Checklist:
+- [x] Create SQL migration for `customer_report_metrics` view.
+- [x] Use `security_invoker = true`.
+- [x] Aggregate `services_count`, `quotations_count`, and `total_quoted_amount` on server side.
+- [x] Mozfer to manually apply SQL in Supabase.
+- [x] Verify view returns expected aggregation metrics.
+
+Manual verification evidence:
+* `public.customer_report_metrics` was manually applied in Supabase by Mozfer.
+* The view was verified successfully and is the source of real customer summary metrics.
+* Verified rows:
+  - CUST-2026-0007: services_count=2, quotations_count=3, approved_quotations_count=1, draft_quotations_count=2, total_quoted_amount=408558.00
+  - CUST-2026-0006: services_count=2, quotations_count=2, approved_quotations_count=1, draft_quotations_count=0, total_quoted_amount=13223.00
+  - CUST-2026-0008: services_count=1, quotations_count=4, approved_quotations_count=0, draft_quotations_count=4, total_quoted_amount=66953.00
+
+### CUSTOMERS-EXPORT-POLISH-AND-DOCS-1
+Status: Complete
+
+Checklist:
+- [x] Make Customers Export a lightweight customer-level summary.
+- [x] Remove quotation pipeline breakdown columns from Customers Export only.
+- [x] Keep the database view and data model fields unchanged for future reports.
+- [x] Document the reporting strategy and deferred reporting modules.
+
+### CUSTOMERS-EXCEL-HEADER-POLISH-1
+Status: Complete
+
+Checklist:
+- [x] Customers XLSX now uses a professional merged blue report header.
+- [x] Phone/text cells are explicitly text-safe to prevent scientific notation.
+- [x] The export remains a lightweight current filtered view report.
+- [x] No change was made to reporting strategy, permissions, view, queries, or data model.
+
+Final Customers XLSX export columns are exactly:
+- Customer Number
+- Company
+- Contact Person
+- Email
+- Phone
+- City
+- Status
+- Services Count
+- Quotations Count
+- Total Quoted Amount (SAR)
+
+Notes:
+* `Approved Quotations` and `Draft Quotations` were intentionally removed from the Customers export only.
+* `Approved/Draft` metrics remain available in `customer_report_metrics`, types, mappers, and queries for future reports.
+* Customers export remains a lightweight current filtered view report.
+* Customers export is not a full pipeline report and not a full customer activity report.
+
+### Reporting Strategy
+Status: Documented
+
+Each main module should eventually have its own dedicated report:
+1. Customers Report
+2. Services Report
+3. Quotations Report
+4. Invoices Report
+5. Payments Report
+
+Additionally, each customer should eventually have a fixed full customer-specific report from `/customers/[id]`.
+
+Customers Report:
+- Current implemented report.
+- Source: Customers page.
+- Scope: current filtered customer list.
+- Format: lightweight XLSX.
+- Purpose: customer-level summary.
+
+Services Report:
+- Future dedicated report.
+- Scope: service/booking details.
+
+Quotations Report:
+- Future dedicated report.
+- Scope: quotation details, quotation amounts, quotation status breakdown.
+- Approved/Draft/Rejected/Expired analysis belongs here.
+
+Invoices Report:
+- Future dedicated report.
+- Scope: invoice/billing details and totals.
+
+Payments Report:
+- Future dedicated report.
+- Scope: collection/payment tracking.
+
+Customer Full Report:
+- Future dedicated report from `/customers/[id]`.
+- One customer only.
+- Should combine the customer profile and all related business activity.
+- Suggested XLSX workbook sheets:
+  - Profile
+  - Services
+  - Quotations
+  - Invoices
+  - Payments
+
+Future UI Direction:
+- List page export means: Export current filtered view.
+- Future selection export can add selected customers and column configuration.
+- Customer-specific reports should live inside the Customer Detail page.
+
 ## 4. Update Rule After Every Merge
 
 Documentation must be updated after:

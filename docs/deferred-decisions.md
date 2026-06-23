@@ -297,3 +297,21 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
   - Verify role change protections.
   - Verify self-role/self-deactivate protections.
   - Verify final active Admin cannot be deactivated/demoted.
+
+## Export Enhancements and UI Audit
+- **Status:** Deferred.
+- **Reason deferred:** Core export and permissions are stable, but data normalization and detailed reporting are separate scopes.
+- **When to return:** Before building the Reports module or refining UX.
+- **Known requirements:**
+  - `CITY-NORMALIZATION-1`: Normalizing city inputs and old data values (e.g. DAMAM vs damam, Ryead, GFG). Treat as data quality/input normalization, not part of Customers export.
+  - `QUOTATIONS-RBAC-AND-FILTER-AUDIT-1`: Audit quotation status/date filters, and Viewer visibility for Select Service, edit, and delete actions. Classify whether issues are UI-only or RBAC/security-related before implementation.
+  - `LOGOUT-UX-1`: Fix Clerk sign-out redirect/cache/back behavior. Must verify Admin logout -> Viewer login and Viewer logout -> Admin login behavior. Protected pages must not remain accessible through browser back/cache after logout.
+  - `SERVICES-REPORT-1`: Future dedicated report for services. (Each main module should eventually have its own dedicated report. Do not overload Customers Report with every module's details.)
+  - `QUOTATIONS-REPORT-1`: Future dedicated report for quotations and statuses.
+  - `INVOICES-REPORT-1`: Future dedicated report for invoices.
+  - `PAYMENTS-REPORT-1`: Future dedicated report for payments.
+  - `CUSTOMER-DETAIL-REPORT-AUDIT-1`: Future full report for one customer from `/customers/[id]`. Must start as readonly audit/design before implementation. Suggested workbook/PDF sections: Profile, Services, Quotations, Invoices, Payments.
+  - `EXPORT-UI-ENHANCEMENTS-1`: Future export UI improvements (Export dropdown, Export current filtered view, Export selected customers, Configure export columns, Customer-specific export button inside Customer Detail page).
+  - `CUSTOMERS-UI-LABEL-POLISH-1`: Review Customers table label currently using Revenue while value represents Total Quoted Amount. Prefer `Total Quoted` or `Quoted Amount` to avoid confusing quotation totals with actual revenue.
+  - `DEMO-DATA-CLEANUP-1`: Review smoke/demo customers before production readiness. Decide whether to delete, archive, or isolate test data.
+  - `CLERK-WEBHOOK-SYNC-1`: Verify Clerk invite acceptance and `app_users` auto-sync. Manual viewer provisioning was used during smoke; webhook sync remains future verification.

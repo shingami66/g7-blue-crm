@@ -8,7 +8,15 @@ import type { CustomerRow } from "./types";
  * - `projects_count` (number)  →  `projects` (number)
  * - `revenue` (numeric)        →  `revenue` (formatted string, e.g. "SAR 1,200.00")
  */
-export function mapRowToCustomer(row: CustomerRow): Customer {
+export interface CustomerMetricsRow {
+  services_count: number;
+  quotations_count: number;
+  approved_quotations_count: number;
+  draft_quotations_count: number;
+  total_quoted_amount: number;
+}
+
+export function mapRowToCustomer(row: CustomerRow, metrics?: CustomerMetricsRow): Customer {
   return {
     id: row.id,
     customerNumber: row.customer_number,
@@ -18,8 +26,11 @@ export function mapRowToCustomer(row: CustomerRow): Customer {
     email: row.email,
     city: row.city,
     status: row.status,
-    projects: row.projects_count,
-    revenue: formatRevenue(row.revenue),
+    servicesCount: metrics?.services_count ?? 0,
+    quotationsCount: metrics?.quotations_count ?? 0,
+    approvedQuotationsCount: metrics?.approved_quotations_count ?? 0,
+    draftQuotationsCount: metrics?.draft_quotations_count ?? 0,
+    totalQuotedAmount: metrics?.total_quoted_amount ?? 0,
     customerType: row.customer_type,
     legalName: row.legal_name,
     commercialRegistrationNumber: row.commercial_registration_number,
@@ -37,16 +48,4 @@ export function mapRowToCustomer(row: CustomerRow): Customer {
     paymentTerms: row.payment_terms,
     poRequired: row.po_required,
   };
-}
-
-/** Formats a numeric revenue value to a display string (e.g. SAR 1,200.00). */
-function formatRevenue(amount: number): string {
-  if (amount === 0) return "SAR 0";
-  if (amount >= 1_000_000) {
-    return `SAR ${(amount / 1_000_000).toFixed(1)}M`;
-  }
-  if (amount >= 1_000) {
-    return `SAR ${(amount / 1_000).toFixed(0)}K`;
-  }
-  return `SAR ${amount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }

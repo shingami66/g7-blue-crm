@@ -49,6 +49,9 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `payments`: Financial tracking of invoice payments. Current `payments.method` allowed values are `bank_transfer`, `cash`, `cheque`, and `online`; ERP-4 planning may later decide whether to change this to Cash / Bank Transfer / Card / Other.
 - `projects` / `project_tasks`: Existing legacy execution tracking. New ERP planning should use Service as the operational unit.
 
+### Views
+- `customer_report_metrics`: Read-only view with `security_invoker = true`. Provides server-side aggregated metrics (`services_count`, `quotations_count`, `approved_quotations_count`, `draft_quotations_count`, `total_quoted_amount`) per customer for reporting and export.
+
 ## Relationships
 - Current legacy schema still contains direct Customer → Invoice / Project relationships and denormalized quotation customer linkage for reporting/query convenience.
 - `services` now exists as the new operational unit linked to `customers(id)`, and quotations are service-scoped through required `quotations.service_id`.

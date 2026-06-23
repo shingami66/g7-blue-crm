@@ -8,7 +8,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/permissions";
-import { mapRowToCustomer } from "./mappers";
+import { mapRowToCustomer, type CustomerMetricsRow } from "./mappers";
 import type { Customer } from "@/types/customer";
 import type { CustomerRow } from "./types";
 
@@ -33,7 +33,22 @@ export async function getCustomers(): Promise<Customer[]> {
       return [];
     }
 
-    return (data as CustomerRow[]).map(mapRowToCustomer);
+    const { data: metricsData, error: metricsError } = await supabase
+      .from("customer_report_metrics")
+      .select("*");
+
+    if (metricsError) {
+      console.error("[getCustomers] Error fetching metrics:", metricsError.message);
+    }
+
+    const metricsMap = new Map<string, CustomerMetricsRow>();
+    if (metricsData) {
+      metricsData.forEach((m: CustomerMetricsRow & { customer_id: string }) => {
+        metricsMap.set(m.customer_id, m as CustomerMetricsRow);
+      });
+    }
+
+    return (data as CustomerRow[]).map(row => mapRowToCustomer(row, metricsMap.get(row.id)));
   } catch (err) {
     console.error("[getCustomers] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return [];
@@ -62,7 +77,17 @@ export async function getCustomerById(id: string): Promise<Customer | null> {
       return null;
     }
 
-    return mapRowToCustomer(data as CustomerRow);
+    const { data: metricsData, error: metricsError } = await supabase
+      .from("customer_report_metrics")
+      .select("*")
+      .eq("customer_id", id)
+      .single();
+
+    if (metricsError && metricsError.code !== "PGRST116") {
+      console.error("[getCustomerById] Error fetching metrics:", metricsError.message);
+    }
+
+    return mapRowToCustomer(data as CustomerRow, metricsData as CustomerMetricsRow | undefined);
   } catch (err) {
     console.error("[getCustomerById] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return null;

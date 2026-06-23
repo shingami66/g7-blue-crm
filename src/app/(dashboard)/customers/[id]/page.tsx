@@ -139,11 +139,13 @@ export default async function CustomerProfilePage({
           <DetailItem label="Status">
             {formatCustomerStatus(customer.status)}
           </DetailItem>
-          <DetailItem label="Projects">
-            {formatNullable(customer.projects)}
+          <DetailItem label="Services Count">
+            {formatNullable(customer.servicesCount)}
           </DetailItem>
-          <DetailItem label="Revenue">
-            {formatNullable(customer.revenue)}
+          <DetailItem label="Total Quoted Amount">
+            {customer.totalQuotedAmount !== undefined && customer.totalQuotedAmount !== null
+              ? `SAR ${customer.totalQuotedAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+              : "—"}
           </DetailItem>
         </dl>
       </section>

@@ -7,11 +7,11 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 | Role | Permissions |
 |---|---|
 | **admin** | All permissions across all modules. |
-| **manager** | `customers:read/write`, `quotations:read/write`, `quotations:approve`, `services:read/write`, `invoices:read`, `payments:read`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
+| **manager** | `customers:read/write/export`, `quotations:read/write`, `quotations:approve`, `services:read/write`, `invoices:read`, `payments:read`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
 | **sales** | `customers:read/write`, `quotations:read/write`, `services:read/write`, `invoices:read`, `payments:read`, `dashboard:read` |
 | **operations** | `customers:read`, `quotations:read`, `services:read`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
-| **accountant** | `customers:read`, `quotations:read`, `services:read`, `invoices:read/write`, `payments:read/write`, `settings:read`, `dashboard:read` |
-| **viewer** | Read-only access to all modules, including `services:read`. |
+| **accountant** | `customers:read/export`, `quotations:read`, `services:read`, `invoices:read/write`, `payments:read/write`, `settings:read`, `dashboard:read` |
+| **viewer** | Read-only access to all modules, including `services:read`. Cannot export bulk data. |
 
 ## Company Settings CS-A
 

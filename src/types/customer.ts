@@ -10,8 +10,11 @@ export interface Customer {
   email: string;
   city: string;
   status: CustomerStatus;
-  projects: number;
-  revenue: string;
+  servicesCount: number;
+  quotationsCount: number;
+  approvedQuotationsCount: number;
+  draftQuotationsCount: number;
+  totalQuotedAmount: number;
   customerType?: CustomerType | null;
   legalName?: string | null;
   commercialRegistrationNumber?: string | null;

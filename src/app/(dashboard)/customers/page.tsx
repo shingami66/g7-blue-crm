@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { currentUser } from "@clerk/nextjs/server";
 import { getCustomers } from "@/lib/customers/queries";
 import { checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
@@ -9,10 +10,25 @@ export const dynamic = "force-dynamic";
 export default async function CustomersPage() {
   let customers: Awaited<ReturnType<typeof getCustomers>>;
   let canWrite = false;
+  let canExport = false;
+  let generatedBy = "System Generated";
 
   try {
     customers = await getCustomers();
     canWrite = await checkPermission("customers:write");
+    canExport = await checkPermission("customers:export");
+    const clerkUser = await currentUser();
+    if (clerkUser) {
+      const email = clerkUser.emailAddresses[0]?.emailAddress;
+      const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ");
+      if (name && email) {
+        generatedBy = `${name} (${email})`;
+      } else if (email) {
+        generatedBy = email;
+      } else if (name) {
+        generatedBy = name;
+      }
+    }
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       redirect("/sign-in");
@@ -43,5 +59,5 @@ export default async function CustomersPage() {
     );
   }
 
-  return <CustomersClient customers={customers} canWrite={canWrite} />;
+  return <CustomersClient customers={customers} canWrite={canWrite} canExport={canExport} generatedBy={generatedBy} />;
 }
