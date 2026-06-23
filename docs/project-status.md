@@ -368,6 +368,8 @@ Follow-up tracked from CUST-OFFICIAL-DETAILS-1C manual smoke: `LIST-PAGINATION-P
 
 Follow-up tracked from QUOTATION-PDF-CLEANUP-1 manual smoke: `QUOTATION-PDF-PRINT-SETTINGS-1`. Quotation PDF print CSS cleanup was implemented. `@page` margin was adjusted and document padding restored for print layout. Browser-generated headers/footers may still depend on the browser print dialog. Manual browser smoke is required before considering it fully verified.
 
+ADMIN-USERS-SMOKE-1 partial manual browser smoke passed: Admin Users page loads, current Admin is visible, role dropdown verified, invite/revoke pending invitation flow verified, and pending invitations returned to 0. Full invitation acceptance and Clerk webhook app_users sync remain pending/not tested.
+
 ## 5. Deferred Decisions
 
 Detailed deferred decisions are tracked in `docs/deferred-decisions.md` so they remain visible and can be revisited before the relevant phase starts.
