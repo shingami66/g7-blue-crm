@@ -94,6 +94,18 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `supabase/schema.sql` was synced to reflect this index.
 
 ### Invoices And Payments
+**Status: ERP-3A Invoice Schema Foundation — Repo-prepared / Manual apply pending**
+- ERP-3A invoice schema foundation is prepared in repo. Manual Supabase apply is still pending.
+- No invoice creation UI/server action, creation RPC, or payment recording was implemented.
+- No SQL was applied by the agent.
+- Tax Invoice / VAT 15% / ZATCA/FATOORA remain blocked while `vat_mode = not_registered`.
+- Invoice generation still requires later ERP-3B Server Action/RPC logic from Approved Quotation + Service.
+- `approved_quotation_id` is the locked invoice linkage name.
+- `invoice_type` is the locked invoice type column name.
+- `snapshot_*` columns are staged nullable jsonb and NOT NULL enforcement is deferred to ERP-3B.
+- Composite FK enforcement is partial while `service_id` remains nullable.
+- Payment confirmation and service status transition remain deferred.
+
 - Invoices must belong to a Service. Standalone invoices are not allowed in new ERP work.
 - Every invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
 - Invoice numbering uses one shared `INV-YYYY-0001` sequence.

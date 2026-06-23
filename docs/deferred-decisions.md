@@ -315,3 +315,9 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
   - `CUSTOMERS-UI-LABEL-POLISH-1`: Review Customers table label currently using Revenue while value represents Total Quoted Amount. Prefer `Total Quoted` or `Quoted Amount` to avoid confusing quotation totals with actual revenue.
   - `DEMO-DATA-CLEANUP-1`: Review smoke/demo customers before production readiness. Decide whether to delete, archive, or isolate test data.
   - `CLERK-WEBHOOK-SYNC-1`: Verify Clerk invite acceptance and `app_users` auto-sync. Manual viewer provisioning was used during smoke; webhook sync remains future verification.
+
+## ERP-3A TypeScript Type Mismatch
+- **Status:** Deferred until ERP-3B
+- **Reason:** src/types/invoice.ts was not updated in ERP-3A because it is outside the approved file list.
+- **When to return:** During ERP-3B Invoice Generation
+- **Known requirements:** Type mismatch between schema fields (approved_quotation_id, invoice_type) and TypeScript type fields (quotation_id, type) is deferred to ERP-3B. Furthermore, snapshot_* columns are staged nullable jsonb and NOT NULL enforcement is deferred to ERP-3B. Composite FK enforcement is partial while service_id remains nullable. Payment confirmation and service status transition remain deferred.

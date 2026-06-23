@@ -507,9 +507,21 @@ Checklist:
 - [x] Enforce `quotations:approve` separately from `quotations:write`.
 - [x] Required before ERP-3 invoices can be created from Approved Quotation + Service.
 
-### Phase ERP-3 — Service-linked Invoices
-Status: Planned
+### Phase ERP-3 - Service-linked Invoices
+Status: In Progress
 
+### ERP-3A Invoice Schema Foundation
+Status: Repo-prepared / Manual apply pending
+
+Checklist:
+- [x] Add `service_id` to invoices.
+- [x] Rename `quotation_id` to `approved_quotation_id`.
+- [x] Rename `type` to `invoice_type` and add deposit/final CHECK constraint.
+- [x] Add snapshot columns for seller, buyer, and quotation details.
+- [x] Prepare composite FK linking invoice to quotation and service.
+- [ ] Manual Supabase apply.
+
+### ERP-3B Invoice Generation (Upcoming)
 Checklist:
 - [ ] Invoices must belong to a Service.
 - [ ] No standalone invoice creation.

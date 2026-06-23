@@ -259,7 +259,8 @@ CREATE TABLE quotations (
     CONSTRAINT chk_quotations_snapshot_buyer_type CHECK (jsonb_typeof(snapshot_buyer) = 'object'),
     CONSTRAINT chk_quotations_snapshot_seller_type CHECK (jsonb_typeof(snapshot_seller) = 'object'),
     CONSTRAINT chk_quotations_vat_rate CHECK (vat_rate >= 0 AND vat_rate <= 100),
-    CONSTRAINT fk_quotations_service_id FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE RESTRICT
+    CONSTRAINT fk_quotations_service_id FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE RESTRICT,
+    CONSTRAINT quotations_id_service_id_key UNIQUE (id, service_id)
 );
 CREATE OR REPLACE FUNCTION set_quotation_customer_from_service()
 RETURNS trigger
@@ -324,20 +325,36 @@ CREATE TABLE invoices (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     invoice_number text UNIQUE NOT NULL,
     customer_id uuid REFERENCES customers(id) ON DELETE RESTRICT NOT NULL,
-    quotation_id uuid REFERENCES quotations(id) ON DELETE RESTRICT,
+    approved_quotation_id uuid REFERENCES quotations(id) ON DELETE RESTRICT,
+    service_id uuid REFERENCES services(id) ON DELETE RESTRICT,
     date date NOT NULL,
     due_date date NOT NULL,
     subtotal numeric(12,2) DEFAULT 0.00 CHECK (subtotal >= 0),
     vat_amount numeric(12,2) DEFAULT 0.00 CHECK (vat_amount >= 0),
     grand_total numeric(12,2) DEFAULT 0.00 CHECK (grand_total >= 0),
+    amount_paid numeric(12,2) DEFAULT 0.00 CHECK (amount_paid >= 0),
+    balance_due numeric(12,2) DEFAULT 0.00 CHECK (balance_due >= 0),
     status text NOT NULL CHECK (status IN ('draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled')),
-    type text NOT NULL,
+    invoice_type text NOT NULL,
+    document_label text, -- staged NOT NULL after ERP-3B invoice creation logic
+    vat_mode text, -- staged NOT NULL after ERP-3B invoice creation logic
+    vat_rate numeric(5,2) DEFAULT 0.00 CHECK (vat_rate >= 0),
+    snapshot_seller jsonb, -- staged NOT NULL after ERP-3B
+    snapshot_buyer jsonb, -- staged NOT NULL after ERP-3B
+    snapshot_quotation jsonb, -- staged NOT NULL after ERP-3B
+    snapshot_bank_details jsonb, -- staged NOT NULL after ERP-3B
+    snapshot_document_rules jsonb, -- staged NOT NULL after ERP-3B
+    issued_at timestamptz,
+    voided_at timestamptz,
+    void_reason text,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now(),
     is_deleted boolean DEFAULT false,
     deleted_at timestamptz,
     created_by text,
-    updated_by text
+    updated_by text,
+    CONSTRAINT invoices_invoice_type_check CHECK (invoice_type IN ('deposit', 'final')),
+    CONSTRAINT invoices_approved_quotation_id_service_id_fkey FOREIGN KEY (approved_quotation_id, service_id) REFERENCES quotations(id, service_id) ON DELETE RESTRICT
 );
 CREATE TRIGGER update_invoices_updated_at BEFORE UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 COMMENT ON COLUMN invoices.created_by IS 'Stores Clerk userId string';
@@ -1147,7 +1164,7 @@ CREATE UNIQUE INDEX unique_approved_quotation_per_service ON public.quotations U
 CREATE INDEX idx_quotation_items_quotation_id ON quotation_items(quotation_id);
 
 CREATE INDEX idx_invoices_customer_id ON invoices(customer_id);
-CREATE INDEX idx_invoices_quotation_id ON invoices(quotation_id);
+CREATE INDEX idx_invoices_approved_quotation_id ON invoices(approved_quotation_id);
 CREATE INDEX idx_invoices_status ON invoices(status);
 CREATE INDEX idx_invoices_created_at ON invoices(created_at);
 
