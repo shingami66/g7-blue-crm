@@ -8,6 +8,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
 import { IssueInvoiceAction } from "./IssueInvoiceAction";
+import { RecordPaymentModal } from "./RecordPaymentModal";
 
 const invoiceStatusBadgeVariant = {
   draft: "draft",
@@ -38,8 +39,14 @@ interface InvoicesListClientProps {
 
 export default function InvoicesListClient({ initialInvoices }: InvoicesListClientProps) {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const activeInvoice = initialInvoices.find((i) => i.id === selectedInvoiceId);
+
+  const canRecordPayment = activeInvoice
+    ? (activeInvoice.status === "sent" || activeInvoice.status === "partial") &&
+      (activeInvoice.balance_due ?? 0) > 0
+    : false;
 
   return (
     <div className="flex flex-col h-full">
@@ -273,17 +280,35 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
               >
                 View PDF
               </button>
-              <button
-                disabled
-                title="Payment workflow pending"
-                className="w-full flex justify-center items-center gap-2 bg-surface-container-low border border-outline-variant text-on-surface-variant py-2 rounded-lg text-[14px] font-semibold cursor-not-allowed"
-              >
-                Record Payment
-              </button>
+              {canRecordPayment ? (
+                <button
+                  onClick={() => setShowPaymentModal(true)}
+                  className="w-full flex justify-center items-center gap-2 bg-primary border border-primary text-on-primary py-2 rounded-lg text-[14px] font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  Record Payment
+                </button>
+              ) : (
+                <button
+                  disabled
+                  title={activeInvoice.status === "draft" ? "Draft invoices cannot be paid." : "Invoice is fully paid or unavailable."}
+                  className="w-full flex justify-center items-center gap-2 bg-surface-container-low border border-outline-variant text-on-surface-variant py-2 rounded-lg text-[14px] font-semibold cursor-not-allowed"
+                >
+                  Record Payment
+                </button>
+              )}
             </div>
           </div>
         )}
       </div>
+
+      {showPaymentModal && activeInvoice && (
+        <RecordPaymentModal
+          invoiceId={activeInvoice.id}
+          invoiceNumber={activeInvoice.invoice_number || activeInvoice.id}
+          balanceDue={activeInvoice.balance_due ?? 0}
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
     </div>
   );
 }
