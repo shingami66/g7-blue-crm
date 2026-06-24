@@ -1,5 +1,6 @@
 import type { ServiceBillingState } from "@/lib/invoices/types";
 import { CreateDepositInvoiceAction } from "./CreateDepositInvoiceAction";
+import { CreateFinalInvoiceAction } from "./CreateFinalInvoiceAction";
 
 export default function BillingPanel({ billingState }: { billingState: ServiceBillingState }) {
   const formatCurrency = (value: number) => {
@@ -139,14 +140,26 @@ export default function BillingPanel({ billingState }: { billingState: ServiceBi
           </div>
         )}
 
-        <div className="mt-4 pt-4 border-t border-outline-variant">
-          <CreateDepositInvoiceAction
-            serviceId={billingState.serviceId}
-            quotationId={billingState.approvedQuotation?.id ?? null}
-            quotationTotal={billingState.approvedQuotation?.grandTotal ?? 0}
-            canCreate={billingState.canCreateDepositInvoice}
-            disabledReasons={billingState.disabledReasons}
-          />
+        <div className="mt-4 pt-4 border-t border-outline-variant flex flex-col gap-6 md:flex-row md:items-start">
+          <div className="flex-1">
+            <CreateDepositInvoiceAction
+              serviceId={billingState.serviceId}
+              quotationId={billingState.approvedQuotation?.id ?? null}
+              quotationTotal={billingState.approvedQuotation?.grandTotal ?? 0}
+              canCreate={billingState.canCreateDepositInvoice}
+              disabledReasons={billingState.disabledReasons}
+            />
+          </div>
+          <div className="hidden md:block w-px bg-outline-variant self-stretch"></div>
+          <div className="md:hidden h-px w-full bg-outline-variant"></div>
+          <div className="flex-1">
+            <CreateFinalInvoiceAction
+              serviceId={billingState.serviceId}
+              quotationId={billingState.approvedQuotation?.id ?? null}
+              remainingAmount={billingState.remainingUninvoicedAmount}
+              canCreate={billingState.canCreateFinalInvoice}
+            />
+          </div>
         </div>
       </div>
     </section>
