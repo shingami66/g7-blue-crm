@@ -33,8 +33,8 @@ export interface Invoice {
   currency: string;
   document_label: string;
   vat_mode: VatMode;
-  snapshot_seller: QuotationSnapshotSeller | null;
-  snapshot_buyer: QuotationSnapshotBuyer | null;
+  snapshot_seller: QuotationSnapshotSeller | JsonValue | null;
+  snapshot_buyer: QuotationSnapshotBuyer | JsonValue | null;
   snapshot_quotation: JsonValue | null;
   snapshot_bank_details: JsonValue | null;
   snapshot_document_rules: JsonValue | null;

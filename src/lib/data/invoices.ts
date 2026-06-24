@@ -1,6 +1,27 @@
-import { Invoice } from "@/types";
+import type { InvoiceStatus } from "@/types";
 
-export const invoicesData: Invoice[] = [
+export interface MockInvoice {
+  id: string;
+  customerId: string;
+  customer: string;
+  date: string;
+  dueDate: string;
+  amount: string;
+  status: InvoiceStatus;
+  type: string;
+  relatedQuote: string;
+  quotationId: string;
+  items: {
+    description: string;
+    details: string;
+    qty: number;
+    unitPrice: number;
+    vat: number;
+    total: number;
+  }[];
+}
+
+export const invoicesData: MockInvoice[] = [
   {
     id: "INV-2023-0892",
     customerId: "CUST-000", // using placeholder customer id since none existed

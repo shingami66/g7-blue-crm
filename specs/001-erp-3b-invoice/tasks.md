@@ -78,21 +78,29 @@ The following items remain explicitly deferred and must not be implemented by an
 - [ ] T015 [US1] Create `src/lib/invoices/actions.ts` — implement `createInvoiceAction` Server Action with the following trusted server logic:
   - Enforce RBAC via `requirePermission('invoices:write')` — blocks Viewer and unpermitted Sales roles
   - Parse and validate input with Zod schema from T011
-  - Fetch the Quotation by `quotationId` and verify: status is `approved`, belongs to the given `serviceId`, no other approved quotation exists for the Service
+  - Fetch the Quotation by `quotationId` and verify: status is `approved`, belongs to the given `serviceId`
   - Fetch the Service by `serviceId` and verify it exists and is not deleted
-  - Handle `service_id` nullable DB state safely — require `serviceId` in server logic even though DB column is nullable (Composite FK enforcement remains partial while service_id is nullable)
-  - For `deposit` type: validate `requestedAmount` is provided, is not negative, does not exceed quotation `grand_total`
+  - Handle `service_id` nullable DB state safely
+  - Verify the linked Service exists, is not deleted, and is not cancelled before creating the deposit invoice.
+  - Deposit guard must be based on service_id, not quotation_id only.
+  - Enforce one active deposit invoice per service in the current MVP.
+  - Active invoice definition: status NOT IN ('voided','cancelled') AND voided_at IS NULL, plus is_deleted = false only if that column exists.
+  - For `deposit` type: validate `requestedAmount` is provided, is > 0, and does not exceed the approved quotation `grand_total`.
+  - Deposit is an advance/prepayment invoice, not a discount.
   - Derive `amount_paid` and `balance_due` server-side from approved quotation data — never trust client totals
   - Generate invoice number via `generate_document_number('invoice')` RPC for shared `INV-YYYY-0001` sequence
-  - Set `document_label` to `Commercial Invoice` (or `Proforma` / `Receipt`) while `vat_mode = not_registered` — never use Tax Invoice wording
+  - Set `document_label` to `Commercial Invoice` (or `Proforma` / `Receipt`) while `vat_mode = not_registered`
   - Set `vat_mode` from Company Settings current value, `vat_rate` to `0` while not_registered
   - Assemble and populate snapshot fields at issue time:
-    - `snapshot_seller`: from Company Settings (legal names, TIN, address, contact, logo path)
-    - `snapshot_buyer`: from Customer (name, contact, official details)
-    - `snapshot_quotation`: from approved Quotation (number, items, totals, dates)
-    - `snapshot_bank_details`: from Company Settings (bank name, IBAN, account)
-    - `snapshot_document_rules`: from Company Settings (terms, currency, VAT mode)
+    - `snapshot_seller`: from Company Settings
+    - `snapshot_buyer`: from Customer
+    - `snapshot_quotation`: from approved Quotation
+    - `snapshot_bank_details`: from Company Settings
+    - `snapshot_document_rules`: from Company Settings
+  - Snapshot fields must be inserted at issue time and must not be deferred.
   - Set `issued_at` to current timestamp
+  - Insert `customer_id`, `date`, and `due_date`.
+  - New deposit invoice status must be `draft` unless a real send action exists.
   - Insert invoice row via Supabase admin client
   - Return `CreateInvoiceResult` with `invoiceId` and `invoiceNumber`
   - Do not hard delete any invoice records — respect void/cancel/reversal lifecycle
@@ -107,6 +115,22 @@ The following items remain explicitly deferred and must not be implemented by an
 
 ---
 
+## Phase 2.5: Final Invoice Settlement Design Review (Blocking Before US2)
+
+**Purpose**: Decide the settlement model before any final invoice implementation.
+
+- [ ] T017A [US2] Run Final Invoice Settlement Design Review before implementing T018:
+  - Confirm whether simple `SUM(active prior deposit/progress invoices)` is sufficient for this stage.
+  - Decide whether `invoice_prepayment_applications` must be introduced before Final Invoice implementation.
+  - Confirm Final Invoice amount represents remaining uninvoiced balance.
+  - Confirm Final Invoice subtracts active prior invoices, not payments.
+  - Confirm payments affect collected/uncollected balance, not invoiced/uninvoiced balance.
+  - Confirm no ZATCA/FATOORA/QR/XML behavior is implemented while `vat_mode = not_registered`.
+
+**Checkpoint**: Final Invoice settlement design accepted. T018 may begin only after this checkpoint.
+
+---
+
 ## Phase 3: User Story 2 - Create Final Invoice (Priority: P1)
 
 **Goal**: An admin, manager, or accountant can create a final invoice based on an approved quotation for a specific service, with totals derived strictly from approved quotation authoritative data.
@@ -116,12 +140,18 @@ The following items remain explicitly deferred and must not be implemented by an
 ### Implementation for User Story 2
 
 - [ ] T018 [US2] Extend `createInvoiceAction` in `src/lib/invoices/actions.ts` for `final` invoice type:
-  - For `final` type: derive totals strictly from approved quotation `grand_total` / authoritative snapshot — ignore any client-submitted `requestedAmount`
   - Server-calculated totals from the approved quotation override client input (FR-009)
-  - Derive `amount_paid` and `balance_due` from approved quotation totals (future deposit deduction logic is deferred to payment workflow)
-  - Re-use the same snapshot assembly, document labeling, VAT mode, RBAC enforcement, and sequence generation from T015
-  - Same Commercial Invoice / Proforma / Receipt label while `vat_mode = not_registered`
-  - No ZATCA/FATOORA/QR/XML clearance behavior triggered or displayed (FR-010)
+  - For `final` type: derive the invoice amount as remaining uninvoiced balance:
+    `final_invoice_amount = approved_quotation_total - SUM(active prior deposit/progress invoices)`.
+  - Active prior invoices use:
+    `status NOT IN ('voided','cancelled') AND voided_at IS NULL`, plus `is_deleted = false` only if that column exists.
+  - Subtract active prior invoices, not payments.
+  - Payments remain separate from invoice calculation and affect collected/uncollected balance only.
+  - Do not invoice the full quotation total again when active prior invoices already exist.
+  - If settlement design requires `invoice_prepayment_applications`, return HOLD and do not implement T018 until that design/table is accepted.
+  - Re-use snapshot assembly, document labeling, VAT mode, RBAC enforcement, and sequence generation from T015.
+  - Same Commercial Invoice / Proforma / Receipt label while `vat_mode = not_registered`.
+  - No ZATCA/FATOORA/QR/XML clearance behavior triggered or displayed.
 
 - [ ] T019 [US2] Wire final invoice creation UI trigger — add "Create Final Invoice" action from quotation/service detail page; visible only to `invoices:write` permitted users; no deposit amount input needed for final type; submit to `createInvoiceAction` with `invoiceType: 'final'`
 

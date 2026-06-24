@@ -16,6 +16,7 @@ const invoiceStatusBadgeVariant = {
   partial: "pending",
   overdue: "overdue",
   cancelled: "rejected",
+  voided: "rejected",
 } as const satisfies Record<
   InvoiceStatus,
   "draft" | "sent" | "paid" | "pending" | "overdue" | "rejected"

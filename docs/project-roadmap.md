@@ -23,20 +23,26 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 - Quotation approval requires `quotations:approve`, separate from `quotations:write`.
 - Non-draft quotations must not be fully editable through ordinary `quotations:write`.
 - Approved quotations must not be soft-deleted through ordinary `quotations:write`.
-- No Invoice may exist without a Service.
-- Each Invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
-- Invoice numbering uses one shared `INV-YYYY-0001` sequence. Do not create separate `DEP-` or `FIN-` sequences.
-- Invoice type uses `invoice_type = deposit | final`.
-- Payment must link to an Invoice.
-- Prevent overpayment unless explicitly approved.
-- Deposit is flexible, not fixed at 50%.
-- `Deposit Paid` requires a valid/cleared deposit payment. A Deposit Invoice alone does not confirm booking, and a pending payment does not confirm booking.
-- Do not add a separate `Confirmed` status.
-- `Cancelled` is terminal and non-linear, not a progress step.
-- Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic.
-- Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
+- Invoices are siblings under Service / Booking and Approved Quotation.
+- No `parent_invoice_id`, `deposit_invoice_id`, `related_invoice_id`, or invoice-to-invoice FK in MVP.
+- Deposit Invoice is an advance/prepayment invoice, not a discount.
+- Deposit amount must be > 0 and <= approved quotation total, allowing 100% advance.
+- One active deposit invoice per service in the current MVP.
+- Deposit creation guard must be based on `service_id`, not `quotation_id` only.
+- Newly created deposit invoices use status = `draft` unless a real send action exists.
+- Service must not be cancelled before creating a deposit invoice.
+- Final Invoice must represent remaining uninvoiced balance, not the full quotation total again.
+- Final invoice calculation: `final_invoice_amount = approved_quotation_total - SUM(active prior deposit/progress invoices)`.
+- Payments are separate from invoices.
+- Multiple payments against one invoice do not create multiple invoices.
+- Payments affect collected/uncollected balance, not invoiced/uninvoiced balance.
+- Active invoice definition: `status NOT IN ('voided','cancelled') AND voided_at IS NULL` plus `is_deleted = false` only if the column exists.
+- TypeScript currently includes status 'voided', but the current DB CHECK may not allow 'voided'. This is a tracked schema/lifecycle gap, not permission to write status='voided'.
+- Every invoice created must persist full historical snapshot fields at issue time, even if DB columns are nullable. Snapshot population must not be deferred.
+- `document_label` must be derived from `vat_mode` at issue time.
+- While `vat_mode = not_registered`, documents must remain Commercial Invoice / Proforma / Receipt only.
+- No Tax Invoice, VAT 15%, VAT number, ZATCA XML, QR, or FATOORA behavior while `vat_mode = not_registered`.
 - Financial records must use void/cancel/reversal workflows rather than hard deletion. Use soft delete for business records where applicable.
-- The current implemented Company Settings VAT field is `company_settings.vat_mode`.
 
 ## 2. Current Priority
 0. `SEC-AUTHZ-APP-USER-GATE-1`
@@ -75,6 +81,16 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
    - No invoice without Service.
    - No invoice without Approved Quotation.
    - Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
+
+### ERP-3B Docs & Implementation Next Steps
+1. Review and commit ERP-3B docs/tasks alignment.
+2. Commit/push T015C deposit invoice persistence after final docs/code review.
+3. Before implementing Final Invoice, run Final Invoice Settlement Design Review.
+4. Decide whether simple SUM(active prior invoices) is sufficient or `invoice_prepayment_applications` must be introduced first.
+5. Implement Final Invoice only after settlement design is accepted.
+6. Payment workflow comes after invoice creation is stable.
+7. Credit/debit notes come after invoices, payments, refunds, and lifecycle rules are stable.
+8. ZATCA/FATOORA comes after VAT registration / FATOORA phase.
 
 ### DOC-COMPANY-DOCUMENT-RULES-1A — Documentation + Official Logo Asset
 Status: Completed

@@ -372,6 +372,13 @@ ADMIN-USERS-SMOKE-1 partial manual browser smoke passed: Admin Users page loads,
 
 ## 4. Work in Progress / Recent Accomplishments
 
+ERP-3B T015C Deposit Invoice Persistence — Final Technical Review Passed:
+- ERP-3B T015C deposit invoice persistence diff has passed final technical review.
+- Lint passes with only the two known <img> warnings.
+- Build passes.
+- T015C remains uncommitted until docs/tasks alignment is reviewed.
+- Current architecture decisions for deposit/final invoices are finalized and must be treated as source-of-truth.
+
 ERP-3A Invoice Schema Foundation — Manual Supabase apply completed / Verified:
 Created SQL migration `20260623200000_erp3a_invoice_schema.sql` to prepare the database schema for invoices and payments. The migration implements the safe schema updates required for the invoice workflow, adding `service_id` to invoices, renaming `quotation_id` to `approved_quotation_id`, renaming `type` to `invoice_type`, and preparing snapshot columns (`snapshot_seller`, `snapshot_buyer`, `snapshot_quotation`, etc.) as nullable JSONB. Note that composite FK enforcement is partial while `service_id` remains nullable, and NOT NULL enforcement for snapshots is deferred to ERP-3B. No UI, Server Action, or RPC for invoice creation was implemented. Tax Invoice, ZATCA, and VAT 15% remain blocked while `vat_mode = not_registered`. Manual Supabase apply was completed and post-apply verification passed.
 

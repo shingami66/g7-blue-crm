@@ -14,15 +14,26 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - Quotation approval requires `quotations:approve`, separate from `quotations:write`.
 - Non-draft quotations must not be fully editable through ordinary `quotations:write`.
 - Approved quotations must not be soft-deleted through ordinary `quotations:write`.
-- No Invoice without Service.
-- Invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
-- Invoice numbering uses one shared `INV-YYYY-0001` sequence; do not create separate `DEP-` or `FIN-` sequences.
-- Invoice type uses `invoice_type = deposit | final`.
-- Payment must link to Invoice, and overpayment is prevented unless explicitly approved.
-- Deposit is flexible, not fixed 50%.
-- `Deposit Paid` requires a valid/cleared deposit payment. A Deposit Invoice alone and a pending payment do not confirm booking.
-- Do not add a separate `Confirmed` status.
-- `Cancelled` is terminal and non-linear, not a progress step.
+- Invoices are siblings under Service / Booking and Approved Quotation.
+- No `parent_invoice_id`, `deposit_invoice_id`, `related_invoice_id`, or invoice-to-invoice FK in MVP.
+- Deposit Invoice is an advance/prepayment invoice, not a discount.
+- Deposit amount must be > 0 and <= approved quotation total, allowing 100% advance.
+- One active deposit invoice per service in the current MVP.
+- Deposit creation guard must be based on `service_id`, not `quotation_id` only.
+- Newly created deposit invoices use status = `draft` unless a real send action exists.
+- Service must not be cancelled before creating a deposit invoice.
+- Final Invoice must represent remaining uninvoiced balance, not the full quotation total again.
+- Final invoice calculation: `final_invoice_amount = approved_quotation_total - SUM(active prior deposit/progress invoices)`.
+- Payments are separate from invoices.
+- Multiple payments against one invoice do not create multiple invoices.
+- Payments affect collected/uncollected balance, not invoiced/uninvoiced balance.
+- Active invoice definition: `status NOT IN ('voided','cancelled') AND voided_at IS NULL` plus `is_deleted = false` only if the column exists.
+- TypeScript currently includes status 'voided', but the current DB CHECK may not allow 'voided'. This is a tracked schema/lifecycle gap, not permission to write status='voided'.
+- Every invoice created must persist full historical snapshot fields at issue time, even if DB columns are nullable. Snapshot population must not be deferred.
+- `document_label` must be derived from `vat_mode` at issue time.
+- While `vat_mode = not_registered`, documents must remain Commercial Invoice / Proforma / Receipt only.
+- No Tax Invoice, VAT 15%, VAT number, ZATCA XML, QR, or FATOORA behavior while `vat_mode = not_registered`.
+- Financial records must use void/cancel/reversal workflows rather than hard deletion. Use soft delete for business records where applicable.
 - Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic.
 - Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
 - Financial records must use void/cancel/reversal workflows, not hard deletion. Use soft delete for business records where applicable.
@@ -78,8 +89,8 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 ## ZATCA / FATOORA Full Integration
 - **Status:** Deferred full integration.
 - **Reason deferred:** Full Saudi e-invoicing compliance can affect schema, signing, QR/XML generation, and operational process.
-- **When to return:** Before issuing official Saudi tax invoices from the system.
-- **Known requirements:** Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior. Full integration requires separate reviewed design before issuing official Saudi tax invoices from the system. Planned nullable fields to consider only after approval: `invoice_uuid`, `zatca_status`, `qr_code_data`, `xml_hash`.
+- **When to return:** Before issuing official Saudi tax invoices from the system (VAT registration / FATOORA phase).
+- **Known requirements:** Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior. ZATCA/FATOORA XML, QR, invoice type codes 386/388, official PrepaidAmount XML, and XML references to advance invoices are deferred until VAT registration / FATOORA phase. Full integration requires separate reviewed design before issuing official Saudi tax invoices from the system. Planned nullable fields to consider only after approval: `invoice_uuid`, `zatca_status`, `qr_code_data`, `xml_hash`.
 
 ## Official CR and VAT Registration
 - **Status:** Deferred/Pending.
@@ -203,13 +214,13 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Status:** Resolved for deposit/final invoices; additional staged invoice behavior remains deferred.
 - **Reason deferred:** Events businesses may later need staged invoices beyond the approved deposit/final model.
 - **When to return:** Before adding staged invoices beyond deposit/final.
-- **Known requirements:** Invoice type uses `invoice_type = deposit | final`. Invoice numbering uses one shared `INV-YYYY-0001` sequence; do not create separate `DEP-` or `FIN-` sequences. Every invoice must belong to a Service and reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
+- **Known requirements:** Progress / milestone invoice type is deferred. `invoice_prepayment_applications` is deferred until final settlement design or until multi-deposit/ZATCA-grade settlement requires it. Before implementing Final Invoice, run a settlement design review to decide whether simple SUM(active prior invoices) is enough or whether `invoice_prepayment_applications` must be introduced before Final implementation. Every invoice must belong to a Service and reference an approved quotation basis.
 
 ## Invoice Voiding, Credit Notes, And Refunds
 - **Status:** Deferred.
 - **Reason deferred:** Invoice voiding/cancellation can affect accounting, auditability, payment status, refunds, and future ZATCA direction.
 - **When to return:** Before implementing invoice void/delete behavior, paid invoice cancellation, refunds, or credit notes.
-- **Known requirements:** Do not implement now. Financial records must use void/cancel/reversal workflows, not hard deletion. Future flow may require Void status, Credit Note, Refund, and audit trail. Do not allow casual deletion of issued or paid invoices in future design. Issued/paid financial records must be preserved for auditability.
+- **Known requirements:** Credit/debit notes are deferred until invoices, payments, refunds, and lifecycle rules are stable. Financial records must use void/cancel/reversal workflows, not hard deletion. Future flow may require Void status, Credit Note, Refund, and audit trail. Do not allow casual deletion of issued or paid invoices in future design. Issued/paid financial records must be preserved for auditability.
 
 ## Service Cancellation With Financial Records
 - **Status:** Partially resolved; detailed financial reversal flow deferred.
@@ -317,7 +328,7 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
   - `CLERK-WEBHOOK-SYNC-1`: Verify Clerk invite acceptance and `app_users` auto-sync. Manual viewer provisioning was used during smoke; webhook sync remains future verification.
 
 ## ERP-3A TypeScript Type Mismatch
-- **Status:** Deferred until ERP-3B
+- **Status:** Deferred until ERP-3B / Tracked as gap
 - **Reason:** src/types/invoice.ts was not updated in ERP-3A because it is outside the approved file list.
-- **When to return:** During ERP-3B Invoice Generation
-- **Known requirements:** Type mismatch between schema fields (approved_quotation_id, invoice_type) and TypeScript type fields (quotation_id, type) is deferred to ERP-3B. Furthermore, snapshot_* columns are staged nullable jsonb and NOT NULL enforcement is deferred to ERP-3B. Composite FK enforcement is partial while service_id remains nullable. Payment confirmation and service status transition remain deferred.
+- **When to return:** During ERP-3B Invoice Generation / Future Void Migration
+- **Known requirements:** TypeScript currently includes status 'voided', but the current DB CHECK may not allow 'voided'. This must remain a tracked deferred schema gap until void/credit-note lifecycle migration. Type mismatch between schema fields (approved_quotation_id, invoice_type) and TypeScript type fields (quotation_id, type) is deferred to ERP-3B. Furthermore, snapshot_* columns are staged nullable jsonb and NOT NULL enforcement is deferred to ERP-3B. Composite FK enforcement is partial while service_id remains nullable. Payment workflow and confirmation remain deferred. Service status transition on invoice creation remains deferred.
