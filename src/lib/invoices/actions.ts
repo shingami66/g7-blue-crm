@@ -7,7 +7,7 @@ import { createInvoiceSchema } from "./schemas";
 import { buildInvoiceSnapshotData } from "./snapshots";
 import { mapRowToQuotationDetail } from "@/lib/quotations/mappers";
 import type { QuotationDetailRow } from "@/lib/quotations/types";
-import type { CreateInvoiceResult } from "./types";
+import type { CreateInvoiceResult, IssueInvoiceResult } from "./types";
 
 const QUOTATION_DETAIL_SELECT = "*, quotation_items(*), customers(company, contact), services(service_number, service_title, status, event_name)";
 
@@ -260,6 +260,63 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
     console.error("[createInvoiceAction] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export async function issueInvoiceAction(invoiceId: string): Promise<IssueInvoiceResult> {
+  try {
+    await requirePermission("invoices:write");
+
+    if (!invoiceId || typeof invoiceId !== "string") {
+      return { success: false, error: "invalid_invoice_id" };
+    }
+
+    const supabase = createAdminClient();
+
+    const { data: invoice, error: fetchError } = await supabase
+      .from("invoices")
+      .select("id, status, is_deleted")
+      .eq("id", invoiceId)
+      .maybeSingle();
+
+    if (fetchError || !invoice) {
+      return { success: false, error: "invoice_not_found" };
+    }
+
+    if (invoice.is_deleted) {
+      return { success: false, error: "invoice_not_found" };
+    }
+
+    if (invoice.status !== "draft") {
+      return { success: false, error: "invoice_not_draft" };
+    }
+
+    const { data: updatedInvoice, error: updateError } = await supabase
+      .from("invoices")
+      .update({
+        status: "sent",
+        issued_at: new Date().toISOString(),
+      })
+      .eq("id", invoiceId)
+      .eq("status", "draft")
+      .select("id")
+      .maybeSingle();
+
+    if (updateError) {
+      console.error("[issueInvoiceAction] Invoice update failed:", updateError);
+      return { success: false, error: "invoice_update_failed" };
+    }
+
+    if (!updatedInvoice) {
+      return { success: false, error: "invoice_not_draft" };
+    }
+
+    return { success: true };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[issueInvoiceAction] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { success: false, error: "An unexpected error occurred." };
   }
 }

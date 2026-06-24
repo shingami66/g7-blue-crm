@@ -7,6 +7,7 @@ import { Plus, Filter, Download, Receipt, AlertCircle, CheckCircle2 } from "luci
 import { useState } from "react";
 import Link from "next/link";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
+import { IssueInvoiceAction } from "./IssueInvoiceAction";
 
 const invoiceStatusBadgeVariant = {
   draft: "draft",
@@ -20,6 +21,16 @@ const invoiceStatusBadgeVariant = {
   InvoiceStatus,
   "draft" | "sent" | "paid" | "pending" | "overdue" | "rejected"
 >;
+
+const statusLabel: Record<InvoiceStatus, string> = {
+  draft: "Draft",
+  sent: "Issued",
+  paid: "Paid",
+  partial: "Partial",
+  overdue: "Overdue",
+  cancelled: "Cancelled",
+  voided: "Voided",
+};
 
 interface InvoicesListClientProps {
   initialInvoices: Invoice[];
@@ -157,7 +168,7 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                     </td>
                     <td className="px-4 py-4">
                       <StatusBadge variant={invoiceStatusBadgeVariant[inv.status]}>
-                        {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
+                        {statusLabel[inv.status]}
                       </StatusBadge>
                     </td>
                   </tr>
@@ -234,7 +245,7 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                   <div>
                     <div className="text-[12px] text-on-surface-variant mb-1">Status</div>
                     <StatusBadge variant={invoiceStatusBadgeVariant[activeInvoice.status]}>
-                      {activeInvoice.status.charAt(0).toUpperCase() + activeInvoice.status.slice(1)}
+                      {statusLabel[activeInvoice.status]}
                     </StatusBadge>
                   </div>
                   <div>
@@ -252,6 +263,9 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
             </div>
 
             <div className="mt-auto p-6 border-t border-surface-variant bg-surface flex flex-col gap-3 rounded-b-xl">
+              {activeInvoice.status === "draft" && (
+                <IssueInvoiceAction invoiceId={activeInvoice.id} />
+              )}
               <button
                 disabled
                 title="PDF preview pending"

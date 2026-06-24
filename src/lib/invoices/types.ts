@@ -14,6 +14,11 @@ export interface CreateInvoiceResult {
   error?: string;
 }
 
+export interface IssueInvoiceResult {
+  success: boolean;
+  error?: string;
+}
+
 export interface InvoiceSnapshotData {
   snapshot_seller: JsonValue | null;
   snapshot_buyer: JsonValue | null;

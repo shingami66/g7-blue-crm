@@ -10,6 +10,11 @@ export default function BillingPanel({ billingState }: { billingState: ServiceBi
     }).format(value);
   };
 
+  const formatStatus = (status: string) => {
+    if (status === 'sent') return 'Issued';
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
   const {
     approvedQuotation,
     depositInvoice,
@@ -35,7 +40,7 @@ export default function BillingPanel({ billingState }: { billingState: ServiceBi
             <div className="bg-surface p-4 rounded-lg border border-outline-variant">
               <div className="font-mono text-primary font-medium mb-1">{approvedQuotation.quotationNumber}</div>
               <div className="text-on-surface font-semibold text-lg">{formatCurrency(approvedQuotation.grandTotal)}</div>
-              <div className="text-[12px] text-on-surface-variant mt-1 capitalize">{approvedQuotation.status}</div>
+              <div className="text-[12px] text-on-surface-variant mt-1">{formatStatus(approvedQuotation.status)}</div>
             </div>
           ) : (
             <div className="bg-surface p-4 rounded-lg border border-outline-variant border-dashed text-on-surface-variant text-[14px]">
@@ -51,7 +56,7 @@ export default function BillingPanel({ billingState }: { billingState: ServiceBi
             <div className="bg-surface p-4 rounded-lg border border-outline-variant">
               <div className="font-mono text-primary font-medium mb-1">{depositInvoice.invoiceNumber}</div>
               <div className="text-on-surface font-semibold text-lg">{formatCurrency(depositInvoice.amount)}</div>
-              <div className="text-[12px] text-on-surface-variant mt-1 capitalize">{depositInvoice.status}</div>
+              <div className="text-[12px] text-on-surface-variant mt-1">{formatStatus(depositInvoice.status)}</div>
             </div>
           ) : (
             <div className="bg-surface p-4 rounded-lg border border-outline-variant border-dashed text-on-surface-variant text-[14px]">
@@ -67,7 +72,7 @@ export default function BillingPanel({ billingState }: { billingState: ServiceBi
             <div className="bg-surface p-4 rounded-lg border border-outline-variant">
               <div className="font-mono text-primary font-medium mb-1">{finalInvoice.invoiceNumber}</div>
               <div className="text-on-surface font-semibold text-lg">{formatCurrency(finalInvoice.amount)}</div>
-              <div className="text-[12px] text-on-surface-variant mt-1 capitalize">{finalInvoice.status}</div>
+              <div className="text-[12px] text-on-surface-variant mt-1">{formatStatus(finalInvoice.status)}</div>
             </div>
           ) : (
             <div className="bg-surface p-4 rounded-lg border border-outline-variant border-dashed text-on-surface-variant text-[14px]">
