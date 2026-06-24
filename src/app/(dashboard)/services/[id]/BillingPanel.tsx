@@ -93,32 +93,48 @@ export default function BillingPanel({ billingState }: { billingState: ServiceBi
         </div>
       </div>
 
-      {/* Action Readiness */}
+      {/* Billing Status */}
       <div className="px-6 py-5 bg-surface border-t border-surface-variant flex flex-col gap-4">
-        <h4 className="text-[13px] font-semibold text-on-surface uppercase tracking-wide">Action Readiness</h4>
+        <h4 className="text-[13px] font-semibold text-on-surface uppercase tracking-wide">Billing Status</h4>
         
         <div className="flex flex-wrap gap-4">
           <div className="flex items-center gap-2">
             <span className="text-[14px] text-on-surface-variant">Deposit Invoice:</span>
-            <span className={`px-2 py-1 rounded text-[12px] font-medium ${canCreateDepositInvoice ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'}`}>
-              {canCreateDepositInvoice ? "Available" : "Not available"}
+            <span className={`px-2 py-1 rounded text-[12px] font-medium ${depositInvoice ? 'bg-green-100 text-green-800' : (canCreateDepositInvoice ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600')}`}>
+              {depositInvoice ? "Created" : (canCreateDepositInvoice ? "Available" : "Not available")}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[14px] text-on-surface-variant">Final Invoice:</span>
-            <span className={`px-2 py-1 rounded text-[12px] font-medium ${canCreateFinalInvoice ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'}`}>
-              {canCreateFinalInvoice ? "Available" : "Not available"}
+            <span className={`px-2 py-1 rounded text-[12px] font-medium ${finalInvoice ? 'bg-green-100 text-green-800' : (canCreateFinalInvoice ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600')}`}>
+              {finalInvoice ? "Created" : (canCreateFinalInvoice ? "Available" : "Not available")}
             </span>
           </div>
         </div>
 
+        {canCreateFinalInvoice && !finalInvoice && (
+          <div className="mt-2 text-[14px] font-medium text-primary">
+            Next available action: Create Final Invoice
+          </div>
+        )}
+
         {disabledReasons.length > 0 && (
           <div className="mt-2">
-            <p className="text-[13px] text-on-surface-variant mb-2">Blockers:</p>
-            <ul className="list-disc list-inside text-[13px] text-red-600 space-y-1">
-              {disabledReasons.map((reason) => (
-                <li key={reason} className="font-mono">{reason}</li>
-              ))}
+            <p className="text-[13px] font-semibold text-on-surface-variant mb-2">Notes:</p>
+            <ul className="list-disc list-inside text-[13px] text-on-surface-variant space-y-1">
+              {disabledReasons.map((reason) => {
+                const labels: Record<string, string> = {
+                  no_approved_quotation: "No approved quotation is available for this service.",
+                  deposit_invoice_already_exists: "Deposit invoice already created for this service.",
+                  final_invoice_already_exists: "Final invoice already created for this service.",
+                  prior_invoices_exceed_quotation_total: "Prior invoices exceed the approved quotation total.",
+                  quotation_not_approved: "The selected quotation is not approved yet.",
+                  quotation_service_mismatch: "The quotation does not match this service.",
+                };
+                return (
+                  <li key={reason}>{labels[reason] ?? "Action is currently unavailable."}</li>
+                );
+              })}
             </ul>
           </div>
         )}

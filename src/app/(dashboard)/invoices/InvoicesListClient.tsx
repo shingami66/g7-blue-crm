@@ -40,7 +40,11 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
           <Download size={18} />
           Export
         </button>
-        <button className="flex items-center gap-2 bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors">
+        <button
+          className="flex items-center gap-2 bg-primary/50 text-on-primary/80 px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold cursor-not-allowed"
+          title="Create invoices from a Service billing panel."
+          disabled
+        >
           <Plus size={18} />
           Create Invoice
         </button>
@@ -102,6 +106,12 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                     Invoice
                   </th>
                   <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
+                    Type
+                  </th>
+                  <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
+                    Document
+                  </th>
+                  <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
                     Client
                   </th>
                   <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
@@ -130,6 +140,12 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                     <td className="px-4 py-4 font-mono font-semibold text-primary">
                       {inv.invoice_number || inv.id}
                     </td>
+                    <td className="px-4 py-4 text-on-surface capitalize">
+                      {inv.invoice_type || "—"}
+                    </td>
+                    <td className="px-4 py-4 text-on-surface">
+                      {inv.document_label || "—"}
+                    </td>
                     <td className="px-4 py-4 font-medium text-on-surface">
                       {inv.customer}
                     </td>
@@ -148,7 +164,7 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                 ))}
                 {initialInvoices.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-on-surface-variant">
+                    <td colSpan={8} className="px-4 py-8 text-center text-on-surface-variant">
                       No invoices found.
                     </td>
                   </tr>
@@ -208,15 +224,23 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                     <div className="text-[14px] font-medium text-on-surface">{activeInvoice.dueDate}</div>
                   </div>
                   <div>
+                    <div className="text-[12px] text-on-surface-variant mb-1">Type</div>
+                    <div className="text-[14px] font-medium text-on-surface capitalize">{activeInvoice.invoice_type || "—"}</div>
+                  </div>
+                  <div>
+                    <div className="text-[12px] text-on-surface-variant mb-1">Document Label</div>
+                    <div className="text-[14px] font-medium text-on-surface">{activeInvoice.document_label || "—"}</div>
+                  </div>
+                  <div>
                     <div className="text-[12px] text-on-surface-variant mb-1">Status</div>
                     <StatusBadge variant={invoiceStatusBadgeVariant[activeInvoice.status]}>
                       {activeInvoice.status.charAt(0).toUpperCase() + activeInvoice.status.slice(1)}
                     </StatusBadge>
                   </div>
                   <div>
-                    <div className="text-[12px] text-on-surface-variant mb-1">Related Quote</div>
+                    <div className="text-[12px] text-on-surface-variant mb-1">Quotation ID</div>
                     {activeInvoice.relatedQuote ? (
-                      <Link href={`/quotations/${activeInvoice.relatedQuote}`} className="text-[14px] font-medium text-primary hover:underline">
+                      <Link href={`/quotations/${activeInvoice.relatedQuote}`} className="text-[14px] font-medium text-primary hover:underline truncate block" title={activeInvoice.relatedQuote}>
                         {activeInvoice.relatedQuote}
                       </Link>
                     ) : (
@@ -228,14 +252,18 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
             </div>
 
             <div className="mt-auto p-6 border-t border-surface-variant bg-surface flex flex-col gap-3 rounded-b-xl">
-              <Link
-                href={`/invoices/${activeInvoice.id}/pdf`}
-                target="_blank"
-                className="w-full flex justify-center items-center gap-2 bg-surface-container-lowest border border-primary text-primary hover:bg-surface-container-low py-2 rounded-lg text-[14px] font-semibold transition-colors"
+              <button
+                disabled
+                title="PDF preview pending"
+                className="w-full flex justify-center items-center gap-2 bg-surface-container-lowest border border-outline-variant text-on-surface-variant py-2 rounded-lg text-[14px] font-semibold cursor-not-allowed"
               >
                 View PDF
-              </Link>
-              <button className="w-full flex justify-center items-center gap-2 bg-primary hover:bg-primary-container text-on-primary py-2 rounded-lg text-[14px] font-semibold transition-colors">
+              </button>
+              <button
+                disabled
+                title="Payment workflow pending"
+                className="w-full flex justify-center items-center gap-2 bg-surface-container-low border border-outline-variant text-on-surface-variant py-2 rounded-lg text-[14px] font-semibold cursor-not-allowed"
+              >
                 Record Payment
               </button>
             </div>
