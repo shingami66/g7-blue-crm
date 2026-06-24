@@ -1,4 +1,4 @@
-﻿# G7 BLUE CRM - Roadmap & Execution Plan
+# G7 BLUE CRM - Roadmap & Execution Plan
 
 ## 1. Workflow Rule
 **Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge**
@@ -83,14 +83,13 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
    - Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
 ### ERP-3B Docs & Implementation Next Steps
-1. Final Invoice UI Action
-2. Issue Workflow: draft → sent / UI Issued
-3. Live PDF from snapshots
-4. Payment MVP
-5. Environment / UAT / smoke test docs
-6. Global Invoice Wizard ERP-3F
-7. Void / Cancel / Credit Note lifecycle
-8. ZATCA/FATOORA after VAT registration
+1. Issue Workflow: draft → sent / UI Issued
+2. Live PDF from snapshots
+3. Payment MVP
+4. Environment / UAT / smoke test docs
+5. Global Invoice Wizard ERP-3F
+6. Void / Cancel / Credit Note lifecycle
+7. ZATCA/FATOORA after VAT registration
 
 *Previous Decisions Retained:*
 - Final Invoice Settlement Design accepted with SIMPLE_SUM_FOR_T018 (subtracts active prior invoices, not payments).

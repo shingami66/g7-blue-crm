@@ -1,4 +1,4 @@
-﻿# G7 BLUE CRM - Project Status
+# G7 BLUE CRM - Project Status
 
 ## 1. Project Overview
 - **Project Name:** G7 BLUE CRM
@@ -378,6 +378,8 @@ ADMIN-USERS-SMOKE-1 partial manual browser smoke passed: Admin Users page loads,
    42df67e feat(invoices): clean up billing UX states
 2. Draft invoice issued_at fix completed and pushed:
    88507ab fix(invoices): keep draft issued_at empty
+3. Final Invoice UI Action completed and pushed:
+   ae64366 feat(invoices): add final invoice service action
 
 **Current invoice module status:**
 Invoice Foundation is working.
@@ -389,6 +391,9 @@ Operational Invoice Module is not complete yet.
 - Billing Panel shows billing state.
 - Invoice list is live and UX-cleaned.
 - Draft invoice creation now keeps issued_at = null.
+- Final Invoice UI Action is completed and pushed. Final invoice creation is available from the Service Billing Panel.
+- Final invoice amount remains server-derived. The UI does not accept a final invoice amount input.
+- The action calls createInvoiceAction with invoiceType = "final". Final invoices are still created as Draft.
 - Guard rules verified in createInvoiceAction:
   - invoices:write enforced
   - approved quotation required
@@ -402,7 +407,6 @@ Operational Invoice Module is not complete yet.
   - payments ignored in invoice amount calculation
 
 **Currently pending:**
-- Final Invoice UI action is pending/display-only.
 - Issue Workflow is pending.
 - Live PDF from snapshots is pending.
 - Payment MVP is pending.

@@ -1,4 +1,4 @@
-﻿# Tasks: ERP-3B Invoice Creation
+# Tasks: ERP-3B Invoice Creation
 
 **Input**: Design documents from `/specs/001-erp-3b-invoice/`
 
@@ -38,7 +38,7 @@ The following items remain explicitly deferred and must not be implemented by an
 - T017D Billing UX Cleanup completed and pushed: 42df67e
 - Draft invoice issued_at fix completed and pushed: 88507ab
 - Snapshot DB verification passed for INV-2026-0004
-- Final Invoice UI action remains pending/display-only
+- Final Invoice UI action completed.
 - Issue Workflow remains pending
 - Live PDF from snapshots remains pending
 - Payment MVP remains pending
