@@ -23,16 +23,14 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
 
     const { quotationId, serviceId, invoiceType, requestedAmount } = parsed.data;
 
-    if (invoiceType !== "deposit") {
-      return { success: false, error: "final_invoice_not_implemented_in_this_slice" };
-    }
+    if (invoiceType === "deposit") {
+      if (requestedAmount === undefined || requestedAmount === null) {
+        return { success: false, error: "deposit_amount_required" };
+      }
 
-    if (requestedAmount === undefined || requestedAmount === null) {
-      return { success: false, error: "deposit_amount_required" };
-    }
-
-    if (typeof requestedAmount !== "number" || !Number.isFinite(requestedAmount) || requestedAmount <= 0) {
-      return { success: false, error: "invalid_deposit_amount" };
+      if (typeof requestedAmount !== "number" || !Number.isFinite(requestedAmount) || requestedAmount <= 0) {
+        return { success: false, error: "invalid_deposit_amount" };
+      }
     }
 
     const supabase = createAdminClient();
@@ -95,12 +93,9 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
       return { success: false, error: "invoice_snapshot_unavailable" };
     }
 
-    // 6. Validate deposit amount against trusted quotation total
+    // 6. Trusted quotation total
     if (typeof quotationDetail.grandTotal !== "number") {
       return { success: false, error: "quotation_total_unavailable" };
-    }
-    if (requestedAmount > quotationDetail.grandTotal) {
-      return { success: false, error: "deposit_amount_exceeds_quotation_total" };
     }
 
     // 7. Reject VAT registered modes for this slice
@@ -108,27 +103,102 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
       return { success: false, error: "vat_registered_invoice_not_implemented_in_this_slice" };
     }
 
-    // 8. Check for existing active deposit invoice
-    // NOTE: "voided" is in the TypeScript InvoiceStatus union but not yet in the DB CHECK.
-    // DB will reject status = "voided" until the void/credit-note migration is applied.
-    // The duplicate guard filters it anyway for future-proofing.
-    const { data: existingDeposit, error: existingDepositError } = await supabase
-      .from("invoices")
-      .select("id")
-      .eq("approved_quotation_id", quotationId)
-      .eq("service_id", serviceId)
-      .eq("invoice_type", "deposit")
-      .not("status", "in", '("voided","cancelled")')
-      .is("voided_at", null)
-      .eq("is_deleted", false)
-      .maybeSingle();
+    let finalInvoiceAmount = 0;
 
-    if (existingDepositError && existingDepositError.code !== "PGRST116") {
-      console.error("[createInvoiceAction] Error checking existing deposit:", existingDepositError);
-      return { success: false, error: "deposit_invoice_already_exists" };
-    }
-    if (existingDeposit) {
-      return { success: false, error: "deposit_invoice_already_exists" };
+    if (invoiceType === "deposit") {
+      if (requestedAmount! > quotationDetail.grandTotal) {
+        return { success: false, error: "deposit_amount_exceeds_quotation_total" };
+      }
+      finalInvoiceAmount = requestedAmount!;
+
+      // 8. Check for existing active deposit invoice
+      // NOTE: "voided" is in the TypeScript InvoiceStatus union but not yet in the DB CHECK.
+      // DB will reject status = "voided" until the void/credit-note migration is applied.
+      // The duplicate guard filters it anyway for future-proofing.
+      const { data: existingDeposit, error: existingDepositError } = await supabase
+        .from("invoices")
+        .select("id")
+        .eq("approved_quotation_id", quotationId)
+        .eq("service_id", serviceId)
+        .eq("invoice_type", "deposit")
+        .not("status", "in", '("voided","cancelled")')
+        .is("voided_at", null)
+        .eq("is_deleted", false)
+        .maybeSingle();
+
+      if (existingDepositError && existingDepositError.code !== "PGRST116") {
+        console.error("[createInvoiceAction] Error checking existing deposit:", existingDepositError);
+        return { success: false, error: "deposit_invoice_already_exists" };
+      }
+      if (existingDeposit) {
+        return { success: false, error: "deposit_invoice_already_exists" };
+      }
+    } else {
+      // 8. Final invoice logic
+
+      // Prevent duplicate active final invoice
+      const { data: existingFinal, error: existingFinalError } = await supabase
+        .from("invoices")
+        .select("id")
+        .eq("service_id", serviceId)
+        .eq("invoice_type", "final")
+        .not("status", "in", '("voided","cancelled")')
+        .is("voided_at", null)
+        .eq("is_deleted", false)
+        .maybeSingle();
+
+      if (existingFinalError && existingFinalError.code !== "PGRST116") {
+        console.error("[createInvoiceAction] Error checking existing final:", existingFinalError);
+        return { success: false, error: "final_invoice_already_exists" };
+      }
+      if (existingFinal) {
+        return { success: false, error: "final_invoice_already_exists" };
+      }
+
+      // Find active prior deposit invoices
+      const { data: priorDeposits, error: priorDepositsError } = await supabase
+        .from("invoices")
+        .select("id, invoice_number, invoice_type, grand_total, status")
+        .eq("service_id", serviceId)
+        .eq("invoice_type", "deposit")
+        .not("status", "in", '("voided","cancelled")')
+        .is("voided_at", null)
+        .eq("is_deleted", false);
+
+      if (priorDepositsError) {
+        console.error("[createInvoiceAction] Error querying prior deposits:", priorDepositsError);
+        return { success: false, error: "prior_invoice_lookup_failed" };
+      }
+
+      const activePriorInvoiceTotal = priorDeposits
+        ? priorDeposits.reduce((sum, inv) => sum + Number(inv.grand_total || 0), 0)
+        : 0;
+
+      finalInvoiceAmount = quotationDetail.grandTotal - activePriorInvoiceTotal;
+
+      if (finalInvoiceAmount < 0) {
+        return { success: false, error: "prior_invoices_exceed_quotation_total" };
+      }
+
+      // Persist final settlement basis in snapshots
+      snapshotData.snapshot_quotation = {
+        ...(snapshotData.snapshot_quotation && typeof snapshotData.snapshot_quotation === "object" ? (snapshotData.snapshot_quotation as Record<string, unknown>) : {}),
+        final_invoice_settlement: {
+          method: "SIMPLE_SUM_FOR_T018",
+          approved_quotation_total: quotationDetail.grandTotal,
+          active_prior_invoice_total: activePriorInvoiceTotal,
+          final_invoice_amount: finalInvoiceAmount,
+          prior_invoices: priorDeposits?.map(d => ({
+            id: d.id,
+            invoice_number: d.invoice_number,
+            invoice_type: d.invoice_type,
+            amount: Number(d.grand_total || 0),
+            status: d.status
+          })) || [],
+          payments_excluded: true,
+          invoice_prepayment_applications_used: false
+        }
+      } as unknown as string;
     }
 
     // 9. Generate invoice number
@@ -146,7 +216,7 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
 
     const today = new Date().toISOString().slice(0, 10);
 
-    // 10. Insert deposit invoice
+    // 10. Insert invoice
     const { data: insertedInvoice, error: insertError } = await supabase
       .from("invoices")
       .insert({
@@ -156,14 +226,14 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
         service_id: serviceId,
         date: today,
         due_date: today,
-        invoice_type: "deposit",
+        invoice_type: invoiceType,
         status: "draft",
-        subtotal: requestedAmount,
+        subtotal: finalInvoiceAmount,
         vat_rate: 0,
         vat_amount: 0,
-        grand_total: requestedAmount,
+        grand_total: finalInvoiceAmount,
         amount_paid: 0,
-        balance_due: requestedAmount,
+        balance_due: finalInvoiceAmount,
         currency: settings.currency || "SAR",
         document_label: snapshotData.document_label,
         vat_mode: snapshotData.vat_mode,
