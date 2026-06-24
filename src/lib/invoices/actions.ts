@@ -241,7 +241,7 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
         snapshot_quotation: snapshotData.snapshot_quotation,
         snapshot_bank_details: snapshotData.snapshot_bank_details,
         snapshot_document_rules: snapshotData.snapshot_document_rules,
-        issued_at: new Date().toISOString(),
+        issued_at: null,
       })
       .select("id, invoice_number")
       .single();
