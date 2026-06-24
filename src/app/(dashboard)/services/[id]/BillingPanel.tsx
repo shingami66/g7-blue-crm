@@ -1,4 +1,5 @@
 import type { ServiceBillingState } from "@/lib/invoices/types";
+import { CreateDepositInvoiceAction } from "./CreateDepositInvoiceAction";
 
 export default function BillingPanel({ billingState }: { billingState: ServiceBillingState }) {
   const formatCurrency = (value: number) => {
@@ -121,6 +122,16 @@ export default function BillingPanel({ billingState }: { billingState: ServiceBi
             </ul>
           </div>
         )}
+
+        <div className="mt-4 pt-4 border-t border-outline-variant">
+          <CreateDepositInvoiceAction
+            serviceId={billingState.serviceId}
+            quotationId={billingState.approvedQuotation?.id ?? null}
+            quotationTotal={billingState.approvedQuotation?.grandTotal ?? 0}
+            canCreate={billingState.canCreateDepositInvoice}
+            disabledReasons={billingState.disabledReasons}
+          />
+        </div>
       </div>
     </section>
   );
