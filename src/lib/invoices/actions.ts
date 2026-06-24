@@ -203,7 +203,7 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
 
     // 9. Generate invoice number
     const { data: invoiceNumber, error: invoiceNumberError } = await supabase
-      .rpc("generate_document_number", { p_entity: "invoice" });
+      .rpc("generate_document_number", { doc_type: "invoice" });
 
     if (invoiceNumberError || !invoiceNumber) {
       console.error("[createInvoiceAction] Invoice number error:", invoiceNumberError);
