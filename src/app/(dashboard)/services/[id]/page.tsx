@@ -4,11 +4,13 @@ import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
 import { getQuotationsByServiceId } from "@/lib/quotations/queries";
+import { getServiceBillingState } from "@/lib/invoices";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { ArrowLeft, CalendarDays, Edit, FileText, MapPin, UserRound } from "lucide-react";
 import Link from "next/link";
 import ServiceStatusTimeline from "./ServiceStatusTimeline";
 import RelatedQuotationsCard from "./RelatedQuotationsCard";
+import BillingPanel from "./BillingPanel";
 import type { Service } from "@/types/service";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +77,7 @@ export default async function ServiceDetailPage({
   const relatedQuotations = canReadQuotations
     ? await getQuotationsByServiceId(service.id)
     : null;
+  const billingState = await getServiceBillingState(service.id);
 
   return (
     <div className="flex flex-col gap-6 pb-12">
@@ -197,6 +200,7 @@ export default async function ServiceDetailPage({
       </section>
 
       <RelatedQuotationsCard quotations={relatedQuotations} />
+      <BillingPanel billingState={billingState} />
     </div>
   );
 }
