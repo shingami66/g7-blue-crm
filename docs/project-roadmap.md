@@ -1,7 +1,7 @@
-# G7 BLUE CRM — Roadmap & Execution Plan
+﻿# G7 BLUE CRM - Roadmap & Execution Plan
 
 ## 1. Workflow Rule
-**Plan → Implement → Build → Manual Test → Audit → Commit → Push → PR → Merge**
+**Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge**
 
 After every successful merge:
 - update `docs/project-status.md`
@@ -83,17 +83,20 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
    - Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
 ### ERP-3B Docs & Implementation Next Steps
-1. ERP-3B Final Invoice Settlement Design Review accepted with SIMPLE_SUM_FOR_T018.
-2. Next implementation phase may begin for T018 Final Invoice server logic.
-3. T018 must use remaining uninvoiced balance:
-   approved_quotation_total - SUM(active prior invoices).
-4. T018 must subtract active prior invoices, not payments.
-5. invoice_prepayment_applications remains deferred until multi-deposit/ZATCA-grade settlement or future design requires it.
-6. Payment workflow remains after invoice creation is stable.
-7. Credit/debit notes remain after invoices, payments, refunds, and lifecycle rules are stable.
-8. ZATCA/FATOORA remains after VAT registration / FATOORA phase.
+1. Final Invoice UI Action
+2. Issue Workflow: draft → sent / UI Issued
+3. Live PDF from snapshots
+4. Payment MVP
+5. Environment / UAT / smoke test docs
+6. Global Invoice Wizard ERP-3F
+7. Void / Cancel / Credit Note lifecycle
+8. ZATCA/FATOORA after VAT registration
 
-### DOC-COMPANY-DOCUMENT-RULES-1A — Documentation + Official Logo Asset
+*Previous Decisions Retained:*
+- Final Invoice Settlement Design accepted with SIMPLE_SUM_FOR_T018 (subtracts active prior invoices, not payments).
+- invoice_prepayment_applications remains deferred.
+
+### DOC-COMPANY-DOCUMENT-RULES-1A - Documentation + Official Logo Asset
 Status: Completed
 
 Checklist:
@@ -102,7 +105,7 @@ Checklist:
 - [x] Document required snapshot rules for generated documents.
 - [x] Required before document branding or invoice implementation.
 
-### DOCUMENT-BRANDING-PRINT-1B — Apply G7 BLUE Branding to Print/PDF Views
+### DOCUMENT-BRANDING-PRINT-1B - Apply G7 BLUE Branding to Print/PDF Views
 Status: Completed
 
 Checklist:
@@ -112,7 +115,7 @@ Checklist:
 - [x] Use Entity Unified No 7053901414 and TIN 3146944674.
 - [x] Retain not_registered VAT status.
 
-### DOCUMENT-SNAPSHOT-WIRING-1B — Document Snapshot Wiring
+### DOCUMENT-SNAPSHOT-WIRING-1B - Document Snapshot Wiring
 Status: Completed
 
 Checklist:
@@ -120,7 +123,7 @@ Checklist:
 - [x] company_settings and customers are decoupled from printed Quotations.
 - [x] Verify that ERP-3 (Invoices) is ready to start when authorized.
 
-### COMPANY-SETTINGS-CLEANUP-1B — Company Settings Data Cleanup
+### COMPANY-SETTINGS-CLEANUP-1B - Company Settings Data Cleanup
 Status: Applied and verified in Supabase
 
 Checklist:
@@ -139,7 +142,7 @@ Checklist:
 
 TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. However, real or semi-real company/client data remains blocked until remaining production hardening and pre-demo controls are complete: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
 
-### QUOTE-VALIDITY-RULE-1 — Enforce Quotation Validity Against Service Schedule
+### QUOTE-VALIDITY-RULE-1 - Enforce Quotation Validity Against Service Schedule
 Status: Completed
 
 Checklist:
@@ -155,7 +158,7 @@ Checklist:
 - [x] Hide native number input spinners in quotation numeric inputs.
 - [x] No schema, migration, RPC, VAT, invoice/payment, or financial total authority changes.
 
-### PRJ-CLEANUP-1 — Retire User-Facing Projects UI
+### PRJ-CLEANUP-1 - Retire User-Facing Projects UI
 Status: Completed
 
 Checklist:
@@ -166,7 +169,7 @@ Checklist:
 
 ## 3. Completion Checklist
 
-### Phase 0 — Stabilization
+### Phase 0 - Stabilization
 Status: Completed
 
 Checklist:
@@ -179,14 +182,14 @@ Checklist:
 - [x] quotation creation verified after manual Supabase apply
 - [x] quotation browser print layout improved
 
-### Phase 1 — Customers
+### Phase 1 - Customers
 Status: Completed
 
 Checklist:
 - [x] Customers CRUD
 - [x] Customers CSV Export
 
-### Phase 2 — Core Security / RBAC
+### Phase 2 - Core Security / RBAC
 Status: Foundation completed; production hardening deferred
 
 Checklist:
@@ -202,7 +205,7 @@ Checklist:
 - [x] Quotation RPC grants remained `anon_execute = false`, `authenticated_execute = false`, `service_role_execute = true`
 - [ ] remaining production RLS hardening
 
-### Phase 3 — Quotations RPC Foundation
+### Phase 3 - Quotations RPC Foundation
 Status: Completed
 
 Checklist:
@@ -216,7 +219,7 @@ Checklist:
 - [x] build + health check
 - [x] PR merged
 
-### Phase 4 — Quotations Data Layer
+### Phase 4 - Quotations Data Layer
 Status: Completed
 
 Checklist:
@@ -240,7 +243,7 @@ Checklist:
 - no raw Supabase errors exposed
 - `pnpm build` passes
 
-### Phase 5 — Quotations UI Manual Entry
+### Phase 5 - Quotations UI Manual Entry
 Status: Completed
 
 **Note:** Phase 5 was split into Phase 5A (List + Create Form completed) and Phase 5B (Edit + Soft Delete completed).
@@ -271,7 +274,7 @@ Checklist:
 - non-draft edit lock respected
 - no Service Catalog required
 
-### Phase 6 — Quotation Detail / Print
+### Phase 6 - Quotation Detail / Print
 Status: Completed
 
 Checklist:
@@ -287,7 +290,7 @@ Checklist:
 
 **Note:** Phase 6 completed quotation detail + browser print using live data. Server-side PDF generation remains deferred.
 
-### Phase BD — Business Domain Decisions
+### Phase BD - Business Domain Decisions
 Status: Core ERP decisions resolved; leads/vendors/demo-data details remain deferred
 
 **Purpose:**
@@ -339,7 +342,7 @@ Checklist:
 - [ ] Plan rate limiting for sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
 - [ ] Confirm UI hiding is not treated as security; server-side permission checks and server-side masking are required.
 
-### Phase CS — Company Settings Mini
+### Phase CS - Company Settings Mini
 Status: CS-A committed on `main`; CS-B deferred
 
 Checklist:
@@ -369,7 +372,7 @@ Checklist:
 - [x] The Edit button does not render for users without write permission.
 - [x] Existing validation, permissions, and bank masking remain expected.
 
-### Phase TAX-0 — Tax/ZATCA Wording Cleanup
+### Phase TAX-0 - Tax/ZATCA Wording Cleanup
 Status: Required before ERP implementation unless explicitly accepted as a known risk
 
 Checklist:
@@ -380,11 +383,11 @@ Checklist:
 - [ ] Build/test/audit/merge if code changes are made.
 - [ ] Update docs.
 
-### Phase ERP-0 — Workflow Planning / Report Only
+### Phase ERP-0 - Workflow Planning / Report Only
 Status: Planned
 
 Checklist:
-- [ ] Confirm locked workflow: Customer Profile → Service → Quotation → Invoice → Payment.
+- [ ] Confirm locked workflow: Customer Profile -> Service -> Quotation -> Invoice -> Payment.
 - [ ] Confirm Service replaces Project as the operational unit.
 - [ ] Confirm no standalone quotations and no standalone invoices.
 - [ ] Customer detail should show related Services.
@@ -395,7 +398,7 @@ Checklist:
 - [ ] Review schema/data migration impact without applying SQL.
 - [ ] Produce implementation plan only; do not implement in ERP-0 unless explicitly approved.
 
-### Phase ERP-1 — Services
+### Phase ERP-1 - Services
 Status: DB foundation and app list/create/detail/edit foundation implemented; controlled status transitions remain deferred
 
 Checklist:
@@ -423,7 +426,7 @@ Checklist:
 - [x] Link Services from Customer Profile.
 - [ ] Integration checkpoint after ERP-1 app layer: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
 
-### Phase ERP-2 — Service-linked Quotations
+### Phase ERP-2 - Service-linked Quotations
 Status: Planned
 
 Checklist:
@@ -562,7 +565,7 @@ Checklist:
 - [ ] Currency should be snapshotted on issued documents.
 - [ ] Integration checkpoint after ERP-3: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
 
-### Phase ERP-4 — Invoice-linked Payments
+### Phase ERP-4 - Invoice-linked Payments
 Status: Planned
 
 Checklist:
@@ -589,7 +592,7 @@ Checklist:
 - [ ] After ERP-3 Invoices: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
 - [ ] After ERP-4 Payments: build, targeted lint/test where applicable, manual browser smoke test, and DB state check if SQL changed.
 
-### Phase 7A — Event-aware Invoice Schema + RPC Foundation
+### Phase 7A - Event-aware Invoice Schema + RPC Foundation
 Status: Superseded by ERP-3; kept as historical planning note
 
 Checklist:
@@ -605,7 +608,7 @@ Checklist:
 - [ ] Build/test/audit/merge
 - [ ] Update docs
 
-### Phase 7B — Invoice Data Layer
+### Phase 7B - Invoice Data Layer
 Status: Planned
 
 Checklist:
@@ -620,7 +623,7 @@ Checklist:
 - [ ] Build/test/audit/merge
 - [ ] Update docs
 
-### Phase 7C — Invoice UI
+### Phase 7C - Invoice UI
 Status: Planned
 
 Checklist:
@@ -633,7 +636,7 @@ Checklist:
 - [ ] Build/test/audit/merge
 - [ ] Update docs
 
-### Phase 7D — Invoice Browser Print
+### Phase 7D - Invoice Browser Print
 Status: Planned
 
 Checklist:
@@ -645,7 +648,7 @@ Checklist:
 - [ ] Build/test/audit/merge
 - [ ] Update docs
 
-### Phase 8 — Payments
+### Phase 8 - Payments
 Status: Superseded by ERP-4; kept as historical planning note
 
 Checklist:

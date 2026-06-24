@@ -332,3 +332,14 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Reason:** src/types/invoice.ts was not updated in ERP-3A because it is outside the approved file list.
 - **When to return:** During ERP-3B Invoice Generation / Future Void Migration
 - **Known requirements:** TypeScript currently includes status 'voided', but the current DB CHECK may not allow 'voided'. This must remain a tracked deferred schema gap until void/credit-note lifecycle migration. Type mismatch between schema fields (approved_quotation_id, invoice_type) and TypeScript type fields (quotation_id, type) is deferred to ERP-3B. Furthermore, snapshot_* columns are staged nullable jsonb and NOT NULL enforcement is deferred to ERP-3B. Composite FK enforcement is partial while service_id remains nullable. Payment workflow and confirmation remain deferred. Service status transition on invoice creation remains deferred.
+
+## Global Invoice Wizard & Recent Invoicing Decisions
+- **Status:** Deferred/Pending.
+- **Reason deferred:** Invoice creation is currently from Service Billing Panel only to ensure safe data context.
+- **When to return:** Future ERP-3F phase and production hardening.
+- **Known requirements:**
+  - Global Invoice Wizard is deferred as ERP-3F, not cancelled. It will live on the Invoices page later. It must select Service / Booking first, load the approved quotation, load Billing State, and allow Deposit or Final invoice creation only when safe. No free-form invoice creation without Service + Approved Quotation + Billing State.
+  - Sales and Viewer currently need invoice read-scope review before production. Global invoice access should not be production-approved for Sales without an ownership/scoping model. This is deferred as production RBAC hardening, not part of the immediate invoice foundation patch.
+  - Void/Credit Note lifecycle deferred.
+  - ZATCA/FATOORA deferred until VAT registration.
+  - Smoke data cleanup required before production handover.

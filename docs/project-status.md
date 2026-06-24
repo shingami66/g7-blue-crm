@@ -1,11 +1,11 @@
-# G7 BLUE CRM — Project Status
+﻿# G7 BLUE CRM - Project Status
 
 ## 1. Project Overview
 - **Project Name:** G7 BLUE CRM
 - **Stack:** Next.js 16 App Router, TypeScript, Tailwind CSS, Supabase, Clerk Auth, PostgreSQL RPC
 - **Purpose:** A robust CRM tailored for G7 BLUE, managing customer relationships, event work, financial documents, payments, and operational tracking.
 - **Product Direction:** G7 BLUE CRM is an Events CRM + Billing system, not a generic billing-only CRM.
-- **Core Flow:** Customer Profile → Service → Quotation → Invoice → Payment
+- **Core Flow:** Customer Profile -> Service -> Quotation -> Invoice -> Payment
 - **Core Entity:** Service / Booking is the operational entity for new ERP work, not Project.
 - **Current VAT Field:** The implemented Company Settings VAT field is `company_settings.vat_mode`.
 
@@ -13,15 +13,15 @@
 - **Legal English Name:** G SEVEN BLUE Company
 - **Brand Name:** G7 BLUE
 - **VAT Status:** Not VAT registered.
-- **TIN / الرقم المميز:** 3146944674 (Do not use TIN as VAT Number)
+- **TIN / Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ù…Ù…ÙŠØ²:** 3146944674 (Do not use TIN as VAT Number)
 - **Entity Unified No:** 7053901414 (Do not treat as CR unless confirmed)
 - **VAT Number:** null / not applicable / not available
 - **Official Email:** [info@g7blue.com](mailto:info@g7blue.com)
 - **Official Mobile:** +966 55 570 0349
 - **Website:** g7blue.com
 - **City:** Riyadh, Saudi Arabia
-- **National Address:** Short Address: RBDA7036, Building No: 7036, Street: Sayida / صيدا, District: Al Duraihemiyah Dist. / حي الدريهمية, Secondary No: 2487, Postal Code: 12796, City: Riyadh / الرياض
-- **Bank Details:** Alinma Bank / مصرف الإنماء | Account No: 68207417001000 | IBAN: SA5005000068207417001000
+- **National Address:** Short Address: RBDA7036, Building No: 7036, Street: Sayida / ØµÙŠØ¯Ø§, District: Al Duraihemiyah Dist. / Ø­ÙŠ Ø§Ù„Ø¯Ø±ÙŠÙ‡Ù…ÙŠØ©, Secondary No: 2487, Postal Code: 12796, City: Riyadh / Ø§Ù„Ø±ÙŠØ§Ø¶
+- **Bank Details:** Alinma Bank / Ù…ØµØ±Ù Ø§Ù„Ø¥Ù†Ù…Ø§Ø¡ | Account No: 68207417001000 | IBAN: SA5005000068207417001000
 - **Official Logo Asset:** `public/brand/G7_BLUE_Events_Icon_White_BG.png` (Public path: `/brand/G7_BLUE_Events_Icon_White_BG.png`)
 
 ### Document Generation Rules
@@ -32,7 +32,7 @@
 - **CR Status:** CR number is optional/unconfirmed.
 - **Official Email:** Must be stored as a plain email string without markdown.
 ## 2. Working Rules
-- **Workflow:** Plan → Implement → Build → Manual Test → Audit → Commit → Push → PR → Merge
+- **Workflow:** Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge
 - **Security:** No `.env.local` exposure; never committed to Git.
 - **Git:** No `git add .` (only stage intentionally modified files).
 - **Database:** No migrations without strict review; PostgreSQL RPC is the absolute source of truth for financial totals.
@@ -41,12 +41,12 @@
 
 ## 3. Completed Milestones
 
-### ✅ Foundation UI / Routes
+### âœ… Foundation UI / Routes
 - [x] dashboard routes exist
 - [x] UI started with mock data
 - [x] modules being converted gradually to live Supabase data
 
-### ✅ Supabase + Clerk Foundation
+### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
 - [x] Supabase client/admin setup exists
 - [x] `/api/health/db` works
@@ -54,7 +54,7 @@
 - [x] protected routes redirect correctly
 - [x] `.env.local` ignored and not committed
 
-### ✅ Core Security / RBAC
+### âœ… Core Security / RBAC
 - [x] `app_users` table
 - [x] roles: admin, manager, sales, operations, accountant, viewer
 - [x] helpers: `requireUser`, `getCurrentAppUser`, `requireRole`, `requirePermission`
@@ -72,7 +72,7 @@
 - [x] Quotation RPC grants verified: `anon_execute = false`, `authenticated_execute = false`, `service_role_execute = true`
 - [x] Final production RLS hardening is still required
 
-### ✅ SEC-AUTHZ-APP-USER-GATE-1
+### âœ… SEC-AUTHZ-APP-USER-GATE-1
 - [x] Security blocker discovered: a Clerk-authenticated user with no `app_users` row could access `/dashboard` and all internal CRM navigation.
 - [x] Root cause: `(dashboard)/layout.tsx` had no `app_users` membership check; Clerk authentication alone was sufficient to enter the internal CRM.
 - [x] Fix: dashboard layout now requires an active `app_users` row (matched on `clerk_user_id` as TEXT); users without membership are redirected to `/unauthorized`.
@@ -87,13 +87,13 @@
 - [x] Implementation passed manual verification by Mozfer (active admin access works, unapproved Clerk users are blocked and see `/unauthorized`, direct route access is blocked).
 - [x] `QUOTE-APPROVAL-FLOW-1B` remains in stash, pending restoration and smoke after this security fix is committed/merged.
 
-### ✅ CUSTOMER-NUMBER-1
+### âœ… CUSTOMER-NUMBER-1
 - [x] DB migration applied manually, adding `customer_number` sequence.
 - [x] App layer generates customer number server-side via `generate_document_number` RPC.
 - [x] UI updated to show customer number instead of UUID prefix.
 - [x] Schema synchronized in `schema.sql`.
 
-### ✅ Customers CRUD
+### âœ… Customers CRUD
 - [x] list/read customers from Supabase
 - [x] add customer
 - [x] edit customer
@@ -103,14 +103,14 @@
 - [x] no `[]` returned for Unauthorized/Forbidden
 - [x] merged into main
 
-### ✅ Customers CSV Export
+### âœ… Customers CSV Export
 - [x] export visible customers to CSV
 - [x] filename format: `g7-blue-customers-YYYY-MM-DD.csv`
 - [x] correct CSV escaping
 - [x] disabled when list is empty
 - [x] merged into main
 
-### ✅ Quotations RPC Foundation
+### âœ… Quotations RPC Foundation
 - [x] `vat_rate` added to quotations
 - [x] quotation number standardized to QT-YYYY-0001
 - [x] `create_quotation_with_items` RPC
@@ -128,13 +128,13 @@
 - [x] `/api/health/db` returned ok:true
 - [x] PR merged into main
 
-### ✅ Quotations Data Layer
+### âœ… Quotations Data Layer
 - PR #4 merged into main
 - Branch: `feature/quotations-data-layer`
 - Created `types.ts`, `schemas.ts`, `mappers.ts`, `queries.ts`, `actions.ts`, `index.ts`
 - Audit passed: permissions enforced, soft delete blocked for approved quotations, numeric `Number()` mapping added, `is_deleted` filter applied, safe errors implemented.
 
-### ✅ Phase 5A — Quotations UI Manual Entry: List + Create Form
+### âœ… Phase 5A - Quotations UI Manual Entry: List + Create Form
 - `/quotations` now uses live `getQuotations()` data
 - `/quotations/new` creates quotations with manual items only
 - Customer dropdown only receives active and non-deleted customers
@@ -143,7 +143,7 @@
 - Edit, soft delete, detail, and print were deferred to later quotation phases
 - PR merged into main
 
-### ✅ Phase 5B — Quotations Edit + Soft Delete
+### âœ… Phase 5B - Quotations Edit + Soft Delete
 - Draft quotations can now be edited
 - Non-draft quotations show locked edit behavior
 - List actions respect `quotations:write`
@@ -152,7 +152,7 @@
 - Backend `softDeleteQuotation` remains the authority
 - `checkPermission` was added as a server-only helper for conditional UI only
 
-### ✅ Phase 6 — Quotation Detail + Browser Print
+### âœ… Phase 6 - Quotation Detail + Browser Print
 - Quotation detail page now uses live `getQuotationById` data
 - Print route now uses live quotation data
 - Browser print uses `window.print()` isolated inside a Client Component (`PrintButton`)
@@ -167,7 +167,7 @@
 - Totals are backend/data-layer values, not recalculated in UI
 - PR merged into main
 
-### ✅ Quotation Stabilization + Product Review
+### âœ… Quotation Stabilization + Product Review
 - Quotations core flow is stabilized for the current demo path: create, edit draft, view detail, and browser print.
 - Auth error imports were fixed.
 - `src/lib/auth/errors.ts` is the canonical source for `UnauthorizedError` and `ForbiddenError`.
@@ -178,7 +178,7 @@
 - Quotation creation was verified working after manual Supabase apply.
 - Quotation browser print layout was improved.
 
-### ✅ Phase CS-A — Company Settings Mini
+### âœ… Phase CS-A - Company Settings Mini
 - Live singleton Company Settings was implemented as CS-A only.
 - CS-A uses server-only settings queries/actions, Zod validation, `settings:read`, and `settings:write`.
 - Bank details are restricted in the app data flow to Admin and Accountant; Viewer can read settings without receiving bank values.
@@ -188,7 +188,7 @@
 - SQL migration was reviewed for manual apply; SQL must never be applied automatically by agents.
 - CS-A was committed on `main` as `8dc380f feat: implement Company Settings CS-A`.
 
-### ✅ ERP-1 — Services DB Foundation
+### âœ… ERP-1 - Services DB Foundation
 - ERP-1 Services migration was manually applied in Supabase SQL Editor and verified.
 - `services` now exists as the new operational unit linked to `customers(id)`.
 - Service numbering is supported through `generate_document_number('service')` with `SVC-YYYY-0001`.
@@ -200,13 +200,13 @@
 - Legacy `projects` remain for now.
 - `DEV_ONLY_services` is fake/dev-data only and not production-safe.
 
-### ✅ PRJ-CLEANUP-1 — Retire User-Facing Projects UI
+### âœ… PRJ-CLEANUP-1 - Retire User-Facing Projects UI
 - Projects were removed from primary user-facing navigation.
 - Dashboard Project cards/actions/sections were replaced with Service / Booking-oriented surfaces that point to the existing Services route.
 - `/projects` now redirects to `/services`.
 - Legacy project schema, permissions, types, mock data, customer `projects_count`, and supplier PRJ mock references remain deferred for later cleanup.
 
-### ✅ QUOTE-VALIDITY-RULE-1 — Quotation Validity Against Service Schedule
+### âœ… QUOTE-VALIDITY-RULE-1 - Quotation Validity Against Service Schedule
 - PR #17 merged into `main` as `96643e6 Merge pull request #17 from shingami66/fix/quotation-validity-service-schedule`.
 - Service Schedule is read-only context in the quotation create UI.
 - Issue Date is read-only and remains the quotation document issue date.
@@ -219,7 +219,7 @@
 - Native number input spinners are hidden in quotation numeric inputs.
 - No schema, migration, RPC, VAT, invoice/payment, or financial total authority changes were made.
 
-### ✅ QUOTE-APPROVAL-FLOW-1B — Quotation Approval Workflow
+### âœ… QUOTE-APPROVAL-FLOW-1B - Quotation Approval Workflow
 - Quotation approval logic implemented.
 - Added `approveQuotation` and `rejectQuotation` actions.
 - Enforces one approved quotation per service via database unique constraint (`unique_approved_quotation_per_service`).
@@ -230,7 +230,7 @@
 - Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available.
 - Service status transition on approval remains deferred.
 
-### ✅ ADMIN-USER-MANAGEMENT-1A
+### âœ… ADMIN-USER-MANAGEMENT-1A
 - Completed inspection and design phase for invite-only user management.
 - Approved Option D: Clerk Invitations API + invitation metadata + `user.created` webhook.
 - Corrected metadata wording: use Clerk invitation metadata / `publicMetadata` unless future SDK verification proves `privateMetadata` support for user invitations.
@@ -244,7 +244,7 @@
 - Invoice/payment creation remains future ERP scope.
 - VAT/ZATCA remains out of scope.
 
-### ✅ ADMIN-USER-MANAGEMENT-1B
+### âœ… ADMIN-USER-MANAGEMENT-1B
 - Implemented `/admin/users` UI built and connected to Server Actions.
 - ADMIN-USER-MANAGEMENT-1B code implementation is complete; real Clerk invitation/webhook smoke testing remains pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and Mozfer explicitly approves creating a real test invitation/user.
 - Server Actions implemented for inviting users, managing roles, revoking invitations, and toggling active status.
@@ -262,7 +262,7 @@
 - Last-active-admin protection and a proper revoke confirmation modal were deferred to ADMIN-USER-MANAGEMENT-1C-B.
 - No schema changes, migrations, SQL, or package changes were made for ADMIN-USER-MANAGEMENT-1B.
 
-### ✅ ADMIN-USER-MANAGEMENT-1C-B
+### âœ… ADMIN-USER-MANAGEMENT-1C-B
 - Implemented last-active-admin protection server-side in Admin User Management Server Actions.
 - Deactivating the final active admin is blocked with a safe UI-facing error.
 - Changing the final active admin to a non-admin role is blocked with a safe UI-facing error.
@@ -272,20 +272,20 @@
 - No real Clerk users/invitations were created during implementation.
 - [x] No SQL, migrations, package, environment, or schema changes were made for ADMIN-USER-MANAGEMENT-1C-B.
 
-### ✅ DOCUMENT-BRANDING-PRINT-1B
+### âœ… DOCUMENT-BRANDING-PRINT-1B
 - Applied official G7 BLUE identity and logo to Quotation and Invoice PDF/print views.
 - Removed fake VAT, Tax Invoice, and CR values.
 - Used Entity Unified No `7053901414` and TIN `3146944674`.
 - Retained `not_registered` VAT status.
 - Implemented purely in the UI, avoiding premature ERP-3 database snapshots or schema changes.
 
-### ✅ DOCUMENT-SNAPSHOT-WIRING-1B
+### âœ… DOCUMENT-SNAPSHOT-WIRING-1B
 - [x] DOCUMENT-SNAPSHOT-WIRING-1A completed.
 - [x] DOCUMENT-SNAPSHOT-WIRING-1B completed.
 - Quotation snapshot UI wiring, DB migrations, backfill, RPC updates, and schema sync completed.
 - `company_settings` and `customers` are decoupled from printed Quotations.
 
-### ✅ COMPANY-SETTINGS-CLEANUP-1B (Applied and verified in Supabase)
+### âœ… COMPANY-SETTINGS-CLEANUP-1B (Applied and verified in Supabase)
 - Repo implementation committed and pushed in `0b826a9`.
 - Supabase migration/manual DB cleanup applied manually.
 - `company_settings.cr_number` is nullable in DB.
@@ -300,7 +300,7 @@
   - bad snapshot terms: 0
 - No Tax Invoice / VAT 15% / VAT Number / ZATCA behavior is enabled while `vat_mode = not_registered`.
 
-### ✅ SETTINGS-EDIT-MODE-1
+### âœ… SETTINGS-EDIT-MODE-1
 - Implemented and repo-ready.
 - Company Settings is read-only by default.
 - Edit requires explicit `Edit Settings` action.
@@ -311,12 +311,12 @@
 
 ## 4. Current Active Phase
 
-### 🚧 Locked Next CRM Priorities
+### ðŸš§ Locked Next CRM Priorities
 Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.
 
 
 The locked workflow remains:
-Customer Profile → Service → Quotation → Invoice → Payment.
+Customer Profile -> Service -> Quotation -> Invoice -> Payment.
 
 The next work order is:
 1. `RBAC-QUOTATIONS-APPROVE-1`
@@ -371,8 +371,76 @@ Follow-up tracked from QUOTATION-PDF-CLEANUP-1 manual smoke: `QUOTATION-PDF-PRIN
 ADMIN-USERS-SMOKE-1 partial manual browser smoke passed: Admin Users page loads, current Admin is visible, role dropdown verified, invite/revoke pending invitation flow verified, and pending invitations returned to 0. Full invitation acceptance and Clerk webhook app_users sync remain pending/not tested.
 
 ## 4. Work in Progress / Recent Accomplishments
+### Invoice Readiness Documentation Sync (ERP-3B)
 
-ERP-3B Final Invoice Settlement Design Review — Completed:
+**Completed and Pushed:**
+1. T017D Billing UX Cleanup completed and pushed:
+   42df67e feat(invoices): clean up billing UX states
+2. Draft invoice issued_at fix completed and pushed:
+   88507ab fix(invoices): keep draft issued_at empty
+
+**Current invoice module status:**
+Invoice Foundation is working.
+Operational Invoice Module is not complete yet.
+
+**Currently implemented:**
+- Deposit invoice backend creation works.
+- Final invoice server logic exists.
+- Billing Panel shows billing state.
+- Invoice list is live and UX-cleaned.
+- Draft invoice creation now keeps issued_at = null.
+- Guard rules verified in createInvoiceAction:
+  - invoices:write enforced
+  - approved quotation required
+  - quotation/service mismatch rejected
+  - deposit amount > 0
+  - deposit amount <= quotation total
+  - duplicate active deposit blocked
+  - duplicate active final blocked
+  - final amount calculated server-side
+  - final amount subtracts active prior deposit invoice totals
+  - payments ignored in invoice amount calculation
+
+**Currently pending:**
+- Final Invoice UI action is pending/display-only.
+- Issue Workflow is pending.
+- Live PDF from snapshots is pending.
+- Payment MVP is pending.
+- Void/Cancel/Credit Note lifecycle is pending.
+- Environment / staging / production documentation is pending.
+- UAT / smoke test checklist is pending.
+
+**Snapshot DB verification:**
+Snapshot DB verification passed for INV-2026-0004:
+invoice_number = INV-2026-0004
+invoice_type = deposit
+status = draft
+document_label = Commercial Invoice
+vat_mode = not_registered
+vat_rate = 0.00
+snapshot_seller = present, object
+snapshot_buyer = present, object
+snapshot_quotation = present, object
+snapshot_bank_details = present, object
+snapshot_document_rules = present, object
+
+Important note:
+INV-2026-0004 is smoke-test/dev data used for snapshot verification.
+It must be cleaned up or isolated before production handover.
+
+**Invoice Module Operational Definition of Done:**
+- Deposit Invoice UI works
+- Final Invoice UI works
+- Invoice can be issued from Draft
+- Issued invoice can be printed/exported as PDF from live snapshot
+- Payment can be recorded manually
+- Balance due updates correctly
+- Invoice list distinguishes Deposit vs Final
+- Raw internal codes are hidden from UI
+- RBAC/RLS verified for production access pattern
+- Snapshot fields verified in DB
+
+ERP-3B Final Invoice Settlement Design Review - Completed:
 - ERP-3B Final Invoice Settlement Design Review completed.
 - Recommendation accepted: SIMPLE_SUM_FOR_T018.
 - Final Invoice will calculate remaining uninvoiced balance using approved quotation total minus SUM(active prior invoices).
@@ -381,14 +449,14 @@ ERP-3B Final Invoice Settlement Design Review — Completed:
 - invoice_prepayment_applications remains deferred.
 - T018 implementation is now unblocked from a design perspective, but no implementation has started in this task.
 
-ERP-3B T015C Deposit Invoice Persistence — Final Technical Review Passed:
+ERP-3B T015C Deposit Invoice Persistence - Final Technical Review Passed:
 - ERP-3B T015C deposit invoice persistence diff has passed final technical review.
 - Lint passes with only the two known <img> warnings.
 - Build passes.
 - T015C remains uncommitted until docs/tasks alignment is reviewed.
 - Current architecture decisions for deposit/final invoices are finalized and must be treated as source-of-truth.
 
-ERP-3A Invoice Schema Foundation — Manual Supabase apply completed / Verified:
+ERP-3A Invoice Schema Foundation - Manual Supabase apply completed / Verified:
 Created SQL migration `20260623200000_erp3a_invoice_schema.sql` to prepare the database schema for invoices and payments. The migration implements the safe schema updates required for the invoice workflow, adding `service_id` to invoices, renaming `quotation_id` to `approved_quotation_id`, renaming `type` to `invoice_type`, and preparing snapshot columns (`snapshot_seller`, `snapshot_buyer`, `snapshot_quotation`, etc.) as nullable JSONB. Note that composite FK enforcement is partial while `service_id` remains nullable, and NOT NULL enforcement for snapshots is deferred to ERP-3B. No UI, Server Action, or RPC for invoice creation was implemented. Tax Invoice, ZATCA, and VAT 15% remain blocked while `vat_mode = not_registered`. Manual Supabase apply was completed and post-apply verification passed.
 
 CUSTOMER-REPORT-METRICS-VIEW-1 implemented: Created SQL migration `20260623100000_customer_report_metrics_view.sql` to provide a read-only `customer_report_metrics` view. This view safely aggregates `services_count`, `quotations_count`, `approved_quotations_count`, `draft_quotations_count`, and `total_quoted_amount` using secure server-side aggregations.
@@ -499,7 +567,7 @@ Current decision gates before ERP implementation:
 
 ## 6. Decisions Already Resolved
 
-- **Workflow:** New ERP work follows `Customer Profile → Service → Quotation → Invoice → Payment`. Service / Booking replaces Project as the operational unit. Quotations and invoices must belong to a Service; standalone quotations and standalone invoices are not allowed.
+- **Workflow:** New ERP work follows `Customer Profile -> Service -> Quotation -> Invoice -> Payment`. Service / Booking replaces Project as the operational unit. Quotations and invoices must belong to a Service; standalone quotations and standalone invoices are not allowed.
 - **Customer Profile hub:** Customer detail must explicitly show related Services, Quotations through Services, Invoices through Services, Payments through Invoices, and later Activity.
 - **Service status exit criteria:** Inquiry = service/request captured; Quoted = at least one quotation created/sent; Approved = customer approval recorded; Deposit Paid = valid/cleared deposit payment recorded; In Progress = operations started; Completed = service delivered; Cancelled = cancellation reason recorded. Do not add a separate Confirmed status. `Cancelled` is terminal and non-linear, not a progress step.
 - **Quotations:** Quotations are Service-scoped. `customer_id`, if retained, is derived server-side from Service. One Service can have multiple Quotations; do not add `UNIQUE(service_id)`. Approval requires `quotations:approve`, separate from `quotations:write`. Non-draft quotations must not be fully editable through ordinary `quotations:write`, and approved quotations must not be soft-deleted through ordinary `quotations:write`. `valid_until` is the offer expiry date, not a service execution date. It must be on or after Issue Date and, when Service Start Date exists, on or before `service.event_start_date`. If the Service already started before Issue Date, quotation create/update is blocked.
