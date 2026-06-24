@@ -83,14 +83,15 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
    - Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
 ### ERP-3B Docs & Implementation Next Steps
-1. Review and commit ERP-3B docs/tasks alignment.
-2. Commit/push T015C deposit invoice persistence after final docs/code review.
-3. Before implementing Final Invoice, run Final Invoice Settlement Design Review.
-4. Decide whether simple SUM(active prior invoices) is sufficient or `invoice_prepayment_applications` must be introduced first.
-5. Implement Final Invoice only after settlement design is accepted.
-6. Payment workflow comes after invoice creation is stable.
-7. Credit/debit notes come after invoices, payments, refunds, and lifecycle rules are stable.
-8. ZATCA/FATOORA comes after VAT registration / FATOORA phase.
+1. ERP-3B Final Invoice Settlement Design Review accepted with SIMPLE_SUM_FOR_T018.
+2. Next implementation phase may begin for T018 Final Invoice server logic.
+3. T018 must use remaining uninvoiced balance:
+   approved_quotation_total - SUM(active prior invoices).
+4. T018 must subtract active prior invoices, not payments.
+5. invoice_prepayment_applications remains deferred until multi-deposit/ZATCA-grade settlement or future design requires it.
+6. Payment workflow remains after invoice creation is stable.
+7. Credit/debit notes remain after invoices, payments, refunds, and lifecycle rules are stable.
+8. ZATCA/FATOORA remains after VAT registration / FATOORA phase.
 
 ### DOC-COMPANY-DOCUMENT-RULES-1A — Documentation + Official Logo Asset
 Status: Completed

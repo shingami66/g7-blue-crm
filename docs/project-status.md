@@ -372,6 +372,15 @@ ADMIN-USERS-SMOKE-1 partial manual browser smoke passed: Admin Users page loads,
 
 ## 4. Work in Progress / Recent Accomplishments
 
+ERP-3B Final Invoice Settlement Design Review — Completed:
+- ERP-3B Final Invoice Settlement Design Review completed.
+- Recommendation accepted: SIMPLE_SUM_FOR_T018.
+- Final Invoice will calculate remaining uninvoiced balance using approved quotation total minus SUM(active prior invoices).
+- Current MVP effectively subtracts the active deposit invoice amount because progress/milestone invoices are deferred and only one active deposit invoice is allowed per service.
+- Payments remain separate and do not affect the invoiced/uninvoiced calculation.
+- invoice_prepayment_applications remains deferred.
+- T018 implementation is now unblocked from a design perspective, but no implementation has started in this task.
+
 ERP-3B T015C Deposit Invoice Persistence — Final Technical Review Passed:
 - ERP-3B T015C deposit invoice persistence diff has passed final technical review.
 - Lint passes with only the two known <img> warnings.
