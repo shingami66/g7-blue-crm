@@ -52,3 +52,30 @@ export interface InvoiceRow {
   is_deleted: boolean;
   deleted_at: string | null;
 }
+
+export type BillingInvoiceSummary = {
+  id: string;
+  invoiceNumber: string;
+  invoiceType: "deposit" | "final";
+  status: string;
+  amount: number;
+};
+
+export type BillingApprovedQuotationSummary = {
+  id: string;
+  quotationNumber: string;
+  status: "approved";
+  grandTotal: number;
+};
+
+export type ServiceBillingState = {
+  serviceId: string;
+  approvedQuotation: BillingApprovedQuotationSummary | null;
+  depositInvoice: BillingInvoiceSummary | null;
+  finalInvoice: BillingInvoiceSummary | null;
+  activePriorInvoiceTotal: number;
+  remainingUninvoicedAmount: number;
+  canCreateDepositInvoice: boolean;
+  canCreateFinalInvoice: boolean;
+  disabledReasons: string[];
+};
