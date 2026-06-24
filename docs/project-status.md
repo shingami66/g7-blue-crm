@@ -407,12 +407,25 @@ Operational Invoice Module is not complete yet.
   - payments ignored in invoice amount calculation
 
 **Currently pending:**
-- Issue Workflow is pending.
 - Live PDF from snapshots is pending.
 - Payment MVP is pending.
 - Void/Cancel/Credit Note lifecycle is pending.
 - Environment / staging / production documentation is pending.
 - UAT / smoke test checklist is pending.
+
+**Recently Completed:**
+- Issue Workflow is completed and pushed.
+- Draft invoices can now be issued.
+- Issuing sets DB status to "sent".
+- UI displays "sent" as "Issued".
+- issuing sets issued_at.
+- issueInvoiceAction requires invoices:write.
+- Issue update is race-safe using status=draft condition.
+- Issue Workflow does not change invoice amounts.
+- Issue Workflow does not change snapshots.
+- Issue Workflow does not create payment.
+- Issue Workflow does not create PDF.
+- Issue Workflow does not implement ZATCA/FATOORA/QR/XML.
 
 **Snapshot DB verification:**
 Snapshot DB verification passed for INV-2026-0004:
