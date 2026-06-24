@@ -234,7 +234,6 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
         grand_total: finalInvoiceAmount,
         amount_paid: 0,
         balance_due: finalInvoiceAmount,
-        currency: settings.currency || "SAR",
         document_label: snapshotData.document_label,
         vat_mode: snapshotData.vat_mode,
         snapshot_seller: snapshotData.snapshot_seller,
