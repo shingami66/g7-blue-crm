@@ -407,7 +407,6 @@ Operational Invoice Module is not complete yet.
   - payments ignored in invoice amount calculation
 
 **Currently pending:**
-- Live PDF from snapshots is pending.
 - Payment MVP is pending.
 - Void/Cancel/Credit Note lifecycle is pending.
 - Environment / staging / production documentation is pending.
@@ -426,6 +425,21 @@ Operational Invoice Module is not complete yet.
 - Issue Workflow does not create payment.
 - Issue Workflow does not create PDF.
 - Issue Workflow does not implement ZATCA/FATOORA/QR/XML.
+- Live Invoice PDF from snapshots is completed and pushed.
+- Invoice PDF is now DB-backed.
+- Invoice PDF uses getInvoiceById.
+- Invoice PDF enforces invoices:read permission.
+- Invoice PDF uses snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, and snapshot_document_rules as authoritative historical data.
+- Invoice PDF no longer uses invoicesData/settingsData/useParams.
+- Draft invoices show preview/watermark behavior.
+- status "sent" displays as "Issued".
+- vat_mode = not_registered displays Commercial Invoice / VAT not applied.
+- No invoice mutation happens from PDF.
+- No Payment was implemented.
+- No Issue Workflow changes were included.
+- No Global Invoice Wizard was implemented.
+- No Void/Cancel/Credit Note was implemented.
+- No ZATCA/FATOORA/QR/XML was implemented.
 
 **Snapshot DB verification:**
 Snapshot DB verification passed for INV-2026-0004:

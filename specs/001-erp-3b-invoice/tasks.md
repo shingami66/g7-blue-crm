@@ -40,7 +40,7 @@ The following items remain explicitly deferred and must not be implemented by an
 - Snapshot DB verification passed for INV-2026-0004
 - Final Invoice UI action completed.
 - Issue Workflow completed.
-- Live PDF from snapshots remains pending
+- Live Invoice PDF from snapshots completed.
 - Payment MVP remains pending
 - Global Invoice Wizard is deferred as ERP-3F
 

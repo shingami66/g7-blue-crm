@@ -83,12 +83,11 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
    - Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
 ### ERP-3B Docs & Implementation Next Steps
-1. Live PDF from snapshots
-2. Payment MVP
-3. Environment / UAT / smoke test docs
-4. Global Invoice Wizard ERP-3F
-5. Void / Cancel / Credit Note lifecycle
-6. ZATCA/FATOORA after VAT registration
+1. Payment MVP
+2. Environment / UAT / smoke test docs
+3. Global Invoice Wizard ERP-3F
+4. Void / Cancel / Credit Note lifecycle
+5. ZATCA/FATOORA after VAT registration
 
 *Previous Decisions Retained:*
 - Final Invoice Settlement Design accepted with SIMPLE_SUM_FOR_T018 (subtracts active prior invoices, not payments).
