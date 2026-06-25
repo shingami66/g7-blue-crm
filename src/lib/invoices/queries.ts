@@ -63,7 +63,7 @@ export async function getInvoices(): Promise<Invoice[]> {
     .from("invoices")
     .select("*")
     .eq("is_deleted", false)
-    .order("created_at", { ascending: false });
+    .order("invoice_number", { ascending: true });
 
   if (error) {
     console.error("[getInvoices] Supabase error:", error.message);
