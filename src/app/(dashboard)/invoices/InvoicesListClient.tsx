@@ -219,7 +219,7 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                     Amount Due
                   </div>
                   <div className="text-[24px] font-bold text-primary">
-                    {activeInvoice.amount} SAR
+                    {activeInvoice.balance_due ?? 0} SAR
                   </div>
                 </div>
                 <div className="w-16 h-16 border border-outline-variant bg-white rounded flex items-center justify-center flex-col text-center">
