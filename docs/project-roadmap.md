@@ -763,6 +763,7 @@ Checklist:
 Status: Pending
 
 BILLING-FLEXIBILITY-1
+Status: Complete (Manual Smoke Passed)
 - Deposit is optional, not mandatory.
 - Direct Final Invoice without Deposit must be supported.
 - Prevent duplicate active final invoices.
@@ -771,6 +772,23 @@ PAYMENT-EVIDENCE-1
 - Bank transfer payments should require reference/transaction ID.
 - Receipt/proof attachments should be supported.
 - Future workflow should support pending → confirmed.
+
+INVOICE-LIST-SORT-1
+- Current UI displays newest/highest invoice number first. Desired order is invoice_number ascending.
+- Current desired visible order for existing data: `INV-2026-0004`, `INV-2026-0005`, `INV-2026-0006`, `INV-2026-0007`, `INV-2026-0008`.
+- This is a follow-up task. Do not implement sorting in this docs correction.
+
+INVOICE-NUMBER-GAP-AUDIT-1
+- `INV-2026-0001`, `INV-2026-0002`, and `INV-2026-0003` are absent from the `invoices` table. Stored invoices currently start at `INV-2026-0004`.
+- Latest stored invoice from smoke is `INV-2026-0008`. `number_sequences` for `invoice` / `2026` is `8`.
+- Treat this as a development/smoke numbering gap. Do not reset invoice numbering. Do not create fake filler invoices. Do not manually renumber existing invoices.
+- Future production financial lifecycle should use void/cancel/reversal rather than hard deletion.
+
+SERVICE-STATUS-WORKFLOW-1
+- Manual smoke showed `SVC-2026-0008` remained `Inquiry`.
+- It remained `Inquiry` after quotation approval, direct final invoice creation, invoice issuing, and full payment recording.
+- Future workflow must define status transitions for quotation approval, deposit invoice path, direct final invoice without deposit path, payment completion, in progress, and completed.
+- Do not implement this in the current docs task.
 
 INVOICE-PDF-BREAKDOWN-1
 - Deposit/final PDFs should show approved quotation total, deposit paid, current invoice amount, amount paid, and balance due.

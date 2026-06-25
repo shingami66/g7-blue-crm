@@ -47,6 +47,18 @@ The following items remain explicitly deferred and must not be implemented by an
 - Final invoice smoke: INV-2026-0005.
 - Partial-payment path remains a separate future smoke test.
 - Global Invoice Wizard is deferred as ERP-3F
+- `BILLING-FLEXIBILITY-1` manual smoke passed.
+- Direct Final Invoice without Deposit is supported.
+- Service: `SVC-2026-0008`.
+- Quotation: `QT-2026-0012`.
+- Invoice: `INV-2026-0008`.
+- Final amount: `SAR 20,000.00`.
+- No Deposit Invoice existed.
+- Duplicate active Final Invoice was blocked.
+- Service status remained `Inquiry`.
+- Correct formula remains active prior invoice grand_total, not `amount_paid`.
+- Invoice numbering gap: `INV-2026-0001` to `INV-2026-0003` absent. sequence is `8`. do not reset numbering.
+- `INVOICE-LIST-SORT-1` remains follow-up.
 
 ## Phase 0: Safety and Source Review
 

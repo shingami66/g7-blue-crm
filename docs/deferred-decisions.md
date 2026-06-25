@@ -328,6 +328,201 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
   - `CLERK-WEBHOOK-SYNC-1`: Verify Clerk invite acceptance and `app_users` auto-sync. Manual viewer provisioning was used during smoke; webhook sync remains future verification.
 
 ## ERP-3A TypeScript Type Mismatch
+- **Status:** Follow-up.
+- **Reason deferred:** Discovered during CUST-OFFICIAL-DETAILS-1C manual smoke; not part of the customer official/billing field scope.
+- **When to return:** `LIST-PAGINATION-PARITY-1`, after critical/security blockers unless approved earlier.
+- **Known requirements:** Customers and Services lists should match the `/quotations` pagination pattern with 10 rows per page and Previous/Next controls.
+
+## Service Hub
+- **Status:** SERVICE-HUB-1B implements the minimal read-only Service/Booking Hub detail page and is ready for review/manual smoke.
+- **Reason deferred:** Service is the operational source of truth, but richer hub behavior still needs future workflow-safe slices after the minimal profile foundation.
+- **When to return:** `SERVICE-HUB-1`, before or alongside ERP-3.
+- **Known requirements:** The minimal hub includes a read-only status timeline, service schedule, customer context, and related quotations. Future invoice/payment cards require real service-linked financial records from ERP-3/ERP-4. Notes/activity/attachments and controlled status transition actions remain deferred. Service remains the operational source of truth.
+
+## Full Invoice Schema And Service Linkage
+- **Status:** ERP-3 scope.
+- **Reason deferred:** Invoice schema/service linkage must wait for customer official details, quotation approval, and Service-centered hub/readiness work.
+- **When to return:** ERP-3.
+- **Known requirements:** Deposit/final invoices must be created from Approved Quotation + Service. No invoice without Service. No invoice without Approved Quotation. Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
+
+## Production RLS Hardening
+- **Status:** SEC-RLS-BASELINE-1 manual Supabase SQL Editor apply and database verification completed; remaining production hardening is still required before hosted demo with real/semi-real data.
+- **Reason deferred:** Development used `DEV_ONLY` RLS policies while application-level RBAC was being stabilized. The reviewed SEC-RLS-BASELINE-1 migration has now been manually applied and verified in the live database; DEV_ONLY policies returned zero rows and broad authenticated `USING true` / `WITH CHECK true` policies returned zero rows.
+- **When to return:** Before any hosted demo with real/semi-real data and before production.
+- **Known requirements:** RLS enabled checks passed for affected tables. Quotation RPC grants were verified as `anon_execute = false`, `authenticated_execute = false`, and `service_role_execute = true`. Real/semi-real data remains blocked by remaining production hardening and pre-demo controls: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production. It is no longer blocked by SEC-RLS manual apply itself. Review anon access, service-role paths, admin client server-only usage, and table-level policies. Add explicit production RLS follow-up for `company_settings` because it contains bank, legal, and VAT data. Do not treat UI hiding as security; server-side permission checks and server-side masking are required.
+
+## Sensitive Server Action Rate Limiting
+- **Status:** Deferred; required before production or any real/semi-real hosted demo.
+- **Reason deferred:** Core ERP workflow is still being planned.
+- **When to return:** Before exposing sensitive write paths outside local/dev usage.
+- **Known requirements:** Consider rate limiting quotation creation, quotation approval, invoice creation, payment recording, and settings update. Rate limiting must complement server-side auth/RBAC and must not replace permission checks.
+
+## Viewer Bank Detail Masking Verification
+- **Status:** Deferred test case; required before real/semi-real data.
+- **Reason deferred:** CS-A server-side masking exists, but production verification needs an explicit test pass.
+- **When to return:** Before hosted demo with real/semi-real company data and before production.
+- **Known requirements:** Viewer opens `/settings`; response/data passed to the client must not include full IBAN, bank account holder, or bank account values. This must be checked server-side, not only by inspecting hidden UI fields.
+
+## Audit Logs UI
+- **Status:** Deferred.
+- **Reason deferred:** Audit storage foundations are more important than admin UI while core flows are still being built.
+- **When to return:** Before production admin handoff or when business users need traceability in the UI.
+- **Known requirements:** Identify important actions, log creates/updates/deletes/status changes, protect audit visibility with admin permission, and avoid exposing sensitive payloads.
+
+## Advanced Dashboard / Reports
+- **Status:** Deferred.
+- **Reason deferred:** Dashboard metrics depend on stable invoices, payments, events/projects, and business definitions.
+- **When to return:** After invoices/payments are implemented and reporting definitions are confirmed.
+- **Known requirements:** Revenue summary, quotation/invoice/payment counts, outstanding balances, recent activity, event/project status, filters, and export needs.
+
+## Customer Activity Timeline
+- **Status:** Deferred.
+- **Reason deferred:** Timeline events depend on finalized customer, quotation, invoice, payment, communication, and project/event workflows.
+- **When to return:** After invoices/payments and core customer interactions are stable.
+- **Known requirements:** Define tracked event types, permissions, ordering, filtering, and whether emails/WhatsApp/notes/attachments appear in the same timeline.
+
+## Attachments
+- **Status:** Deferred.
+- **Reason deferred:** Storage, permissions, file type limits, and security scanning need dedicated design.
+- **When to return:** When quotations, invoices, customer records, or event/project records need uploaded documents.
+- **Known requirements:** Storage provider/bucket design, file size/type limits, RBAC checks, signed URLs, audit logs, and deletion/retention rules.
+
+## Email / WhatsApp / Notifications
+- **Status:** Deferred.
+- **Reason deferred:** Communication workflows depend on finalized document states, customer activity model, and notification preferences.
+- **When to return:** After invoices/payments are stable or when client communication becomes a demo requirement.
+- **Known requirements:** Provider choice, templates, opt-in/consent, delivery status, audit trail, attachments, and customer timeline integration.
+
+## Vendors / Suppliers
+- **Status:** Deferred; business decision required.
+- **Reason deferred:** Supplier costs and profit tracking may change event/project schema and reporting.
+- **When to return:** During Phase BD or before event/project profitability features.
+- **Known requirements:** Decide whether supplier costs, purchase orders, expense tracking, and profit margin should be tracked.
+
+## Event-specific Fields
+- **Status:** Partially resolved; event type confirmation deferred.
+- **Reason deferred:** G7 is an events company. Services, quotations, and invoices need event context, but event taxonomy should be confirmed by a Saudi partner/business owner.
+- **When to return:** ERP-1 Services planning and before event-aware invoice schema work.
+- **Known requirements:** Prefer `event_start_date` and nullable `event_end_date` instead of only `event_date`, so both single-day and multi-day events are supported. `event_end_date` can be null for single-day/inquiry cases. Planned DB constraint: `CHECK (event_end_date IS NULL OR event_end_date >= event_start_date)`. Event fields should stay flexible at inquiry stage. Potential fields also include `event_name`, `event_venue`, and `event_type`.
+
+## Multi-invoice per Quotation
+- **Status:** Resolved for deposit/final invoices; additional staged invoice behavior remains deferred.
+- **Reason deferred:** Events businesses may later need staged invoices beyond the approved deposit/final model.
+- **When to return:** Before adding staged invoices beyond deposit/final.
+- **Known requirements:** Progress / milestone invoice type is deferred. `invoice_prepayment_applications` is deferred until final settlement design or until multi-deposit/ZATCA-grade settlement requires it. Before implementing Final Invoice, run a settlement design review to decide whether simple SUM(active prior invoices) is enough or whether `invoice_prepayment_applications` must be introduced before Final implementation. Every invoice must belong to a Service and reference an approved quotation basis.
+
+## Invoice Voiding, Credit Notes, And Refunds
+- **Status:** Deferred.
+- **Reason deferred:** Invoice voiding/cancellation can affect accounting, auditability, payment status, refunds, and future ZATCA direction.
+- **When to return:** Before implementing invoice void/delete behavior, paid invoice cancellation, refunds, or credit notes.
+- **Known requirements:** Credit/debit notes are deferred until invoices, payments, refunds, and lifecycle rules are stable. Financial records must use void/cancel/reversal workflows, not hard deletion. Future flow may require Void status, Credit Note, Refund, and audit trail. Do not allow casual deletion of issued or paid invoices in future design. Issued/paid financial records must be preserved for auditability.
+
+## Service Cancellation With Financial Records
+- **Status:** Partially resolved; detailed financial reversal flow deferred.
+- **Reason deferred:** Simple Service cancellation is straightforward only before invoice/payment records exist.
+- **When to return:** ERP-1 Services status design and again before ERP-3/ERP-4 financial flows.
+- **Known requirements:** Service cancellation requires `cancellation_reason`. If no invoice/payment exists, cancellation is simple. If invoice/payment exists, cancellation must not silently delete financial records. Future invoice void/refund/credit-note flow is required.
+
+## Quotation Expiry Override
+- **Status:** Deferred.
+- **Reason deferred:** The base validity rule is clear, but business approval for overrides needs role and audit design.
+- **When to return:** ERP-2 Service-linked Quotations approval flow.
+- **Known requirements:** `valid_until` or `expiry_date` must be on or after issue date. Expired quotations cannot be approved without renewal/extension or authorized override. Exact override behavior remains deferred.
+
+## Soft Delete And Financial Record Retention
+- **Status:** Deferred technical decision.
+- **Reason deferred:** Current schema uses soft-delete patterns, but future financial records need stricter retention rules.
+- **When to return:** Before ERP-1 schema work and before invoice/payment delete or void behavior.
+- **Known requirements:** Use soft delete for business records where applicable. SEC-SERVICE-INVARIANTS-1B blocks Service soft delete when non-deleted linked quotations exist. Future invoice/payment service deletion guards remain ERP-3/ERP-4 scope once service-linked financial records exist. Prefer `deleted_at` timestamp over only `is_deleted` for future soft deletes, or document current `is_deleted` usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion. Issued/paid financial records must not be casually deleted. Soft-delete documentation cleanup remains a follow-up task: `DOC-SOFTDELETE-FIX`.
+
+## Financial Rounding And Currency Snapshots
+- **Status:** Deferred implementation detail; rule is required before ERP-3.
+- **Reason deferred:** Invoice/payment implementation has not started.
+- **When to return:** ERP-3 Invoices and ERP-4 Payments.
+- **Known requirements:** Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic. Document SAR 2-decimal rounding rules. Financial rounding must be server-side/PostgreSQL-side. Currency should be snapshotted on issued documents.
+
+## Planned ERP Indexes
+- **Status:** Deferred technical planning.
+- **Reason deferred:** ERP service-linked tables are not implemented yet.
+- **When to return:** During SQL review for ERP-1 through ERP-4 and audit logs.
+- **Known requirements:** Plan indexes on `services.customer_id`, `quotations.service_id`, `invoices.service_id`, `payments.invoice_id`, `payments.service_id` only if stored, and `audit_logs.user_id`.
+
+## Migration Rollback Procedure
+- **Status:** Deferred process hardening.
+- **Reason deferred:** Current migration workflow is manual-review first, but rollback expectations need explicit documentation before risky schema changes.
+- **When to return:** Before risky SQL, production migration, or real-data migration.
+- **Known requirements:** Migrations are forward-only by default. Risky migrations require backup/export/snapshot before apply. Rollback should be a new corrective migration, not editing old applied migrations.
+
+## Leads / Inquiries
+- **Status:** Decision required before full Events CRM direction is locked.
+- **Reason deferred:** It is unclear whether G7 needs to track inquiries before they become customers.
+- **When to return:** During Phase BD or before customer workflow expansion.
+- **Known requirements:** Decide whether to add leads/inquiries, conversion to customers, source tracking, follow-up status, and activity timeline integration.
+
+## Backup / Monitoring / Error Logging
+- **Status:** Deferred; required before production.
+- **Reason deferred:** Core product flow is still being stabilized.
+- **When to return:** Before hosted production use, and earlier if real/semi-real demo data is used.
+- **Known requirements:** Supabase backup expectations, app error logging, uptime monitoring, build/deployment alerts, database monitoring, and incident response ownership.
+
+## PRE-ERP-3-UX-DATA-BACKLOG-SYNC-1
+
+### LIST-PAGINATION-PARITY-1
+- **Status:** Deferred until after ERP-3 unless quick/safe to bundle separately
+- **Reason:** Customers page currently showed 12 of 12 at once; Services currently has fewer records but should support pagination before growth. This is UX parity work, not a blocker for Company Settings cleanup.
+- **Required future behavior:**
+  - Customers list: 10 rows per page.
+  - Services list: 10 rows per page.
+  - Previous / Next controls when record count exceeds 10.
+  - Preserve search/filter behavior across pages.
+
+### QUOTATION-PDF-CLEANUP-1
+- **Status:** Verified (data cleanup) / Print headers pending
+- **Reason:** Database cleanup corrected official email, CR placeholder, and default terms in company_settings and existing quotation snapshots. PDF visual smoke confirmed the rendered PDF no longer shows markdown email or placeholder terms.
+- **Required future behavior if still needed:**
+  - PDF displays plain `info@g7blue.com`. (Verified)
+  - PDF displays professional terms. (Verified)
+  - PDF does not display fake CR placeholder. (Verified)
+  - PDF still must not show Tax Invoice / VAT Number / ZATCA / VAT 15% while `vat_mode = not_registered`. (Verified)
+
+#### QUOTATION-PDF-PRINT-SETTINGS-1
+- **Status:** Pending (Before external/client-facing PDF sharing)
+- **Reason:** Browser headers and footers (URL, date, page number) currently appear when printing/exporting PDF. This is print/export polish only. It is not a VAT/data correctness issue, because PDF data cleanup is verified.
+- **Required future behavior:**
+  - Provide a cleaner PDF/export experience where generated documents do not show browser URL/date/title/page footer artifacts.
+  - Until fixed, user workaround: disable `Headers and footers` in the browser print dialog.
+  - This must be fixed before external/client-facing PDF usage, even if ERP-3 can continue.
+
+### ADMIN-USERS-SMOKE-1
+- **Status:** Deferred until official test users / controlled smoke approval
+- **Reason:** Admin user management logic appears conceptually correct, and Access Pending after self-registration is correct. Full real invite/webhook/revoke/role smoke requires controlled test accounts and explicit approval.
+- **Required future smoke:**
+  - Invite user with real test email only after Mozfer approval.
+  - Verify pending invitation.
+  - Verify revoke modal.
+  - Verify role change protections.
+  - Verify self-role/self-deactivate protections.
+  - Verify final active Admin cannot be deactivated/demoted.
+
+## Export Enhancements and UI Audit
+- **Status:** Deferred.
+- **Reason deferred:** Core export and permissions are stable, but data normalization and detailed reporting are separate scopes.
+- **When to return:** Before building the Reports module or refining UX.
+- **Known requirements:**
+  - `CITY-NORMALIZATION-1`: Normalizing city inputs and old data values (e.g. DAMAM vs damam, Ryead, GFG). Treat as data quality/input normalization, not part of Customers export.
+  - `QUOTATIONS-RBAC-AND-FILTER-AUDIT-1`: Audit quotation status/date filters, and Viewer visibility for Select Service, edit, and delete actions. Classify whether issues are UI-only or RBAC/security-related before implementation.
+  - `LOGOUT-UX-1`: Fix Clerk sign-out redirect/cache/back behavior. Must verify Admin logout -> Viewer login and Viewer logout -> Admin login behavior. Protected pages must not remain accessible through browser back/cache after logout.
+  - `SERVICES-REPORT-1`: Future dedicated report for services. (Each main module should eventually have its own dedicated report. Do not overload Customers Report with every module's details.)
+  - `QUOTATIONS-REPORT-1`: Future dedicated report for quotations and statuses.
+  - `INVOICES-REPORT-1`: Future dedicated report for invoices.
+  - `PAYMENTS-REPORT-1`: Future dedicated report for payments.
+  - `CUSTOMER-DETAIL-REPORT-AUDIT-1`: Future full report for one customer from `/customers/[id]`. Must start as readonly audit/design before implementation. Suggested workbook/PDF sections: Profile, Services, Quotations, Invoices, Payments.
+  - `EXPORT-UI-ENHANCEMENTS-1`: Future export UI improvements (Export dropdown, Export current filtered view, Export selected customers, Configure export columns, Customer-specific export button inside Customer Detail page).
+  - `CUSTOMERS-UI-LABEL-POLISH-1`: Review Customers table label currently using Revenue while value represents Total Quoted Amount. Prefer `Total Quoted` or `Quoted Amount` to avoid confusing quotation totals with actual revenue.
+  - `DEMO-DATA-CLEANUP-1`: Review smoke/demo customers before production readiness. Decide whether to delete, archive, or isolate test data.
+  - `CLERK-WEBHOOK-SYNC-1`: Verify Clerk invite acceptance and `app_users` auto-sync. Manual viewer provisioning was used during smoke; webhook sync remains future verification.
+
+## ERP-3A TypeScript Type Mismatch
 - **Status:** Deferred until ERP-3B / Tracked as gap
 - **Reason:** src/types/invoice.ts was not updated in ERP-3A because it is outside the approved file list.
 - **When to return:** During ERP-3B Invoice Generation / Future Void Migration
@@ -345,12 +540,38 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
   - Smoke data cleanup required before production handover.
 
 ### BILLING-FLEXIBILITY-1
-Status: Deferred.
+Status: Complete (Manual Smoke Passed)
 Decision: Deposit is optional, not mandatory. Direct Final Invoice without Deposit must be supported for full upfront payment cases.
+Manual smoke evidence:
+- Service: `SVC-2026-0008`
+- Quotation: `QT-2026-0012`
+- Invoice: `INV-2026-0008`
+- No Deposit Invoice existed before final invoice creation.
+- Final Invoice amount was `SAR 20,000.00`.
+- Invoice was issued and paid.
+- Duplicate active Final Invoice was blocked.
+Correct accounting formula:
+- `Final Invoice = Approved Quotation Total - SUM(active prior deposit/progress invoice grand_total)`
+- Payments affect collected/uncollected balance, not invoiced/uninvoiced balance.
+- Do not use: `Approved Quotation Total - SUM(amount_paid)`
+- Reason: Using paid amount can cause over-invoicing when a Deposit Invoice is unpaid or partially paid.
+- MVP policy: If an active Deposit Invoice is unpaid or partially paid, creating a Final Invoice is allowed only as long as total active invoice grand_total does not exceed the approved quotation total. This can leave two open balances for the customer and is accepted as a known MVP workflow gap until Void/Cancel lifecycle and Service status workflow are designed.
 
 ### PAYMENT-EVIDENCE-1
 Status: Deferred.
 Decision: Manual confirmed payment is acceptable for MVP only. Future workflow must support payment reference, receipt/proof attachment, recorded_by, recorded_at, confirmed_by, confirmed_at, and pending → confirmed approval.
+
+### INVOICE-LIST-SORT-1
+Status: Deferred.
+Decision: Current UI displays newest/highest invoice number first. Desired order is invoice_number ascending. Current desired visible order for existing data: `INV-2026-0004`, `INV-2026-0005`, `INV-2026-0006`, `INV-2026-0007`, `INV-2026-0008`. This is a follow-up task. Do not implement sorting in this docs correction.
+
+### INVOICE-NUMBER-GAP-AUDIT-1
+Status: Deferred.
+Decision: `INV-2026-0001`, `INV-2026-0002`, and `INV-2026-0003` are absent from the `invoices` table. Stored invoices currently start at `INV-2026-0004`. Latest stored invoice from smoke is `INV-2026-0008`. `number_sequences` for `invoice` / `2026` is `8`. Treat this as a development/smoke numbering gap. Do not reset invoice numbering. Do not create fake filler invoices. Do not manually renumber existing invoices. Future production financial lifecycle should use void/cancel/reversal rather than hard deletion.
+
+### SERVICE-STATUS-WORKFLOW-1
+Status: Deferred.
+Decision: Manual smoke showed `SVC-2026-0008` remained `Inquiry`. It remained `Inquiry` after quotation approval, direct final invoice creation, invoice issuing, and full payment recording. Future workflow must define status transitions for quotation approval, deposit invoice path, direct final invoice without deposit path, payment completion, in progress, and completed. Do not implement this in the current docs task.
 
 ### INVOICE-PDF-BREAKDOWN-1
 Status: Deferred.

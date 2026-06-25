@@ -457,6 +457,17 @@ Operational Invoice Module is not complete yet.
 - Deposit and final invoice PDFs opened successfully after the PDF terms normalization fix.
 - Latest pushed commit: 8be7d43
 
+**Billing Flexibility Smoke:**
+- `BILLING-FLEXIBILITY-1` manual smoke passed for Direct Final Invoice without Deposit.
+- No invoice code patch is required for the no-deposit direct final path.
+- `SVC-2026-0008` remained `Inquiry` after quotation approval, direct final invoice creation, invoice issuing, and full payment recording.
+- `INV-2026-0008` was created as a final invoice directly from `QT-2026-0012` for `SAR 20,000.00`.
+- No Deposit Invoice existed before final invoice creation.
+- The invoice was issued and paid.
+- Duplicate active Final Invoice was blocked.
+- Service status automation remains a deferred workflow gap. Future workflow must define status transitions.
+- Invoice numbering development gap confirmed: `INV-2026-0001` to `INV-2026-0003` are absent. Stored invoices start at `INV-2026-0004` up to `INV-2026-0008`. `number_sequences` is `8`. Do not reset invoice numbering. Do not create fake filler invoices. Do not manually renumber existing invoices.
+
 **Snapshot DB verification:**
 Snapshot DB verification passed for INV-2026-0004:
 invoice_number = INV-2026-0004
@@ -490,9 +501,10 @@ It must be cleaned up or isolated before production handover.
 ERP-3B Final Invoice Settlement Design Review - Completed:
 - ERP-3B Final Invoice Settlement Design Review completed.
 - Recommendation accepted: SIMPLE_SUM_FOR_T018.
-- Final Invoice will calculate remaining uninvoiced balance using approved quotation total minus SUM(active prior invoices).
-- Current MVP effectively subtracts the active deposit invoice amount because progress/milestone invoices are deferred and only one active deposit invoice is allowed per service.
-- Payments remain separate and do not affect the invoiced/uninvoiced calculation.
+- Locked Accounting Formula: `Final Invoice = Approved Quotation Total - SUM(active prior deposit/progress invoice grand_total)`.
+- Payments affect collected/uncollected balance, not invoiced/uninvoiced balance.
+- Do not use: `Approved Quotation Total - SUM(amount_paid)`. Reason: Using paid amount can cause over-invoicing when a Deposit Invoice is unpaid or partially paid.
+- MVP Policy: If an active Deposit Invoice is unpaid or partially paid, creating a Final Invoice is allowed only as long as total active invoice grand_total does not exceed the approved quotation total. This can leave two open balances for the customer and is accepted as a known MVP workflow gap until Void/Cancel lifecycle and Service status workflow are designed.
 - invoice_prepayment_applications remains deferred.
 - T018 implementation is now unblocked from a design perspective, but no implementation has started in this task.
 
