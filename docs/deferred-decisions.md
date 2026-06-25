@@ -562,8 +562,8 @@ Status: Deferred.
 Decision: Manual confirmed payment is acceptable for MVP only. Future workflow must support payment reference, receipt/proof attachment, recorded_by, recorded_at, confirmed_by, confirmed_at, and pending → confirmed approval.
 
 ### INVOICE-LIST-SORT-1
-Status: Deferred.
-Decision: Current UI displays newest/highest invoice number first. Desired order is invoice_number ascending. Current desired visible order for existing data: `INV-2026-0004`, `INV-2026-0005`, `INV-2026-0006`, `INV-2026-0007`, `INV-2026-0008`. This is a follow-up task. Do not implement sorting in this docs correction.
+Status: Completed.
+Decision: Implemented in commit `9c297a6`. Desired order is now implemented. Current data displays ascending from `INV-2026-0004` to `INV-2026-0008`. This did not reset invoice numbering, create fake invoices, or manually renumber existing invoices.
 
 ### INVOICE-NUMBER-GAP-AUDIT-1
 Status: Deferred.

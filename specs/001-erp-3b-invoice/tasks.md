@@ -58,7 +58,17 @@ The following items remain explicitly deferred and must not be implemented by an
 - Service status remained `Inquiry`.
 - Correct formula remains active prior invoice grand_total, not `amount_paid`.
 - Invoice numbering gap: `INV-2026-0001` to `INV-2026-0003` absent. sequence is `8`. do not reset numbering.
-- `INVOICE-LIST-SORT-1` remains follow-up.
+- `INVOICE-LIST-SORT-1` completed and pushed.
+- Commit: `9c297a6 fix(invoices): sort invoice list by invoice number`.
+- Invoices page now sorts by `invoice_number` ascending.
+- Manual smoke passed.
+- Desired visible order confirmed:
+  - `INV-2026-0004`
+  - `INV-2026-0005`
+  - `INV-2026-0006`
+  - `INV-2026-0007`
+  - `INV-2026-0008`
+- No invoice numbering reset, fake filler invoices, or manual renumbering was done.
 
 ## Phase 0: Safety and Source Review
 

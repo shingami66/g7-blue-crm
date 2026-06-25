@@ -774,9 +774,11 @@ PAYMENT-EVIDENCE-1
 - Future workflow should support pending → confirmed.
 
 INVOICE-LIST-SORT-1
-- Current UI displays newest/highest invoice number first. Desired order is invoice_number ascending.
-- Current desired visible order for existing data: `INV-2026-0004`, `INV-2026-0005`, `INV-2026-0006`, `INV-2026-0007`, `INV-2026-0008`.
-- This is a follow-up task. Do not implement sorting in this docs correction.
+- Status: Completed.
+- Implemented in commit `9c297a6`.
+- Invoices page sorts by `invoice_number` ascending.
+- Manual smoke passed.
+- No invoice numbering reset, fake filler invoices, or manual renumbering was done.
 
 INVOICE-NUMBER-GAP-AUDIT-1
 - `INV-2026-0001`, `INV-2026-0002`, and `INV-2026-0003` are absent from the `invoices` table. Stored invoices currently start at `INV-2026-0004`.

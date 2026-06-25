@@ -468,6 +468,19 @@ Operational Invoice Module is not complete yet.
 - Service status automation remains a deferred workflow gap. Future workflow must define status transitions.
 - Invoice numbering development gap confirmed: `INV-2026-0001` to `INV-2026-0003` are absent. Stored invoices start at `INV-2026-0004` up to `INV-2026-0008`. `number_sequences` is `8`. Do not reset invoice numbering. Do not create fake filler invoices. Do not manually renumber existing invoices.
 
+**Invoice List Sort:**
+- `INVOICE-LIST-SORT-1` completed.
+- Implemented in commit `9c297a6 fix(invoices): sort invoice list by invoice number`.
+- Invoices page now sorts by `invoice_number` ascending.
+- Manual smoke passed.
+- Current verified visible order:
+  - `INV-2026-0004`
+  - `INV-2026-0005`
+  - `INV-2026-0006`
+  - `INV-2026-0007`
+  - `INV-2026-0008`
+- No invoice numbering reset, fake filler invoices, or manual renumbering was done.
+
 **Snapshot DB verification:**
 Snapshot DB verification passed for INV-2026-0004:
 invoice_number = INV-2026-0004
