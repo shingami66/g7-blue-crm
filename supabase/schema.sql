@@ -1281,10 +1281,10 @@ DECLARE
     v_new_status text;
 BEGIN
     -- 1. Fetch and lock the invoice
-    SELECT id, customer_id, amount_paid, balance_due, status, is_deleted
+    SELECT i.id, i.customer_id, i.amount_paid, i.balance_due, i.status, i.is_deleted
     INTO v_invoice_record
-    FROM invoices
-    WHERE id = p_invoice_id
+    FROM invoices i
+    WHERE i.id = p_invoice_id
     FOR UPDATE;
 
     IF NOT FOUND THEN
