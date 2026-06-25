@@ -274,9 +274,9 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                 <IssueInvoiceAction invoiceId={activeInvoice.id} />
               )}
               <button
-                disabled
-                title="PDF preview pending"
-                className="w-full flex justify-center items-center gap-2 bg-surface-container-lowest border border-outline-variant text-on-surface-variant py-2 rounded-lg text-[14px] font-semibold cursor-not-allowed"
+                type="button"
+                onClick={() => window.open(`/invoices/${activeInvoice.id}/pdf`, "_blank", "noopener,noreferrer")}
+                className="w-full flex justify-center items-center gap-2 bg-surface-container-lowest border border-outline-variant text-on-surface py-2 rounded-lg text-[14px] font-semibold hover:bg-surface-container-low transition-colors"
               >
                 View PDF
               </button>
