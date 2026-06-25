@@ -5,6 +5,23 @@ import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import PrintButton from "./PrintButton";
 import type { QuotationSnapshotSeller, QuotationSnapshotBuyer, QuotationItem } from "@/lib/quotations/types";
 
+function normalizeStringList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(/\r?\n/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
 export default async function InvoicePdfPage({
   params,
 }: {
@@ -41,10 +58,11 @@ export default async function InvoicePdfPage({
   const bankDetails = invoice.snapshot_bank_details as { bankName?: string; accountName?: string; accountNo?: string; iban?: string } | null;
   const documentRules = invoice.snapshot_document_rules as {
     notes?: string;
-    terms?: string[];
+    terms?: unknown;
     validityDays?: number;
   } | null;
 
+  const documentRuleTerms = normalizeStringList(documentRules?.terms);
   if (!seller || !buyer) {
     return (
       <div className="p-8 text-error font-semibold">
@@ -340,11 +358,11 @@ export default async function InvoicePdfPage({
             <p className="text-[14px] text-on-surface font-medium mt-1 whitespace-pre-wrap">
               {documentRules?.notes || "Not available"}
             </p>
-            {documentRules?.terms && documentRules.terms.length > 0 && (
+            {documentRuleTerms.length > 0 && (
               <div className="mt-3">
                 <p className="text-[10px] font-semibold text-on-surface-variant uppercase mb-1">Terms</p>
                 <ul className="list-disc pl-4 text-[12px] text-on-surface space-y-1">
-                  {documentRules.terms.map((term, i) => (
+                  {documentRuleTerms.map((term, i) => (
                     <li key={i}>{term}</li>
                   ))}
                 </ul>
