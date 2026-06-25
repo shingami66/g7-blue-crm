@@ -41,7 +41,11 @@ The following items remain explicitly deferred and must not be implemented by an
 - Final Invoice UI action completed.
 - Issue Workflow completed.
 - Live Invoice PDF from snapshots completed.
-- Payment MVP remains pending
+- Payment MVP completed.
+- Full-payment path tested for deposit and final invoices.
+- Deposit invoice smoke: INV-2026-0004 / PAY-2026-0001.
+- Final invoice smoke: INV-2026-0005.
+- Partial-payment path remains a separate future smoke test.
 - Global Invoice Wizard is deferred as ERP-3F
 
 ## Phase 0: Safety and Source Review

@@ -407,7 +407,6 @@ Operational Invoice Module is not complete yet.
   - payments ignored in invoice amount calculation
 
 **Currently pending:**
-- Payment MVP is pending.
 - Void/Cancel/Credit Note lifecycle is pending.
 - Environment / staging / production documentation is pending.
 - UAT / smoke test checklist is pending.
@@ -440,6 +439,23 @@ Operational Invoice Module is not complete yet.
 - No Global Invoice Wizard was implemented.
 - No Void/Cancel/Credit Note was implemented.
 - No ZATCA/FATOORA/QR/XML was implemented.
+
+**Payment MVP Completed:**
+- Payment MVP completed.
+- Atomic RPC payment recording implemented.
+- Migrations applied and verified manually.
+- Deposit invoice full-payment smoke passed.
+- Final invoice full-payment smoke passed.
+- Payment rows and audit logs verified.
+- Amount Due UI fixed.
+- Invoice PDF View enabled.
+- Invoice PDF terms runtime fixed.
+- RPC: public.record_invoice_payment(uuid,numeric,date,text,text,text)
+- Deposit Invoice: INV-2026-0004
+- Deposit Payment: PAY-2026-0001
+- Final Invoice: INV-2026-0005
+- Deposit and final invoice PDFs opened successfully after the PDF terms normalization fix.
+- Latest pushed commit: 8be7d43
 
 **Snapshot DB verification:**
 Snapshot DB verification passed for INV-2026-0004:

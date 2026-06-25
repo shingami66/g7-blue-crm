@@ -343,3 +343,31 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
   - Void/Credit Note lifecycle deferred.
   - ZATCA/FATOORA deferred until VAT registration.
   - Smoke data cleanup required before production handover.
+
+### BILLING-FLEXIBILITY-1
+Status: Deferred.
+Decision: Deposit is optional, not mandatory. Direct Final Invoice without Deposit must be supported for full upfront payment cases.
+
+### PAYMENT-EVIDENCE-1
+Status: Deferred.
+Decision: Manual confirmed payment is acceptable for MVP only. Future workflow must support payment reference, receipt/proof attachment, recorded_by, recorded_at, confirmed_by, confirmed_at, and pending → confirmed approval.
+
+### INVOICE-PDF-BREAKDOWN-1
+Status: Deferred.
+Decision: Deposit and final invoice PDFs must show full accounting breakdown.
+
+### INVOICE-PDF-LAYOUT-1
+Status: Deferred.
+Decision: Optimize A4 pagination and remove misleading static page count.
+
+### QUOTATION-VALIDITY-1
+Status: Deferred.
+Decision: Quotation Valid Until is not service end date. Default should come from company settings.
+
+### SERVICE-BUDGET-GUARD-1
+Status: Deferred.
+Decision: Service estimated budget is advisory. Show warning if quotation total exceeds budget but allow save.
+
+### GLOBAL-INVOICE-WIZARD-1
+Status: Deferred.
+Decision: Invoices page remains for list/issue/pay/PDF/status. Global invoice creation is deferred.

@@ -759,6 +759,34 @@ Checklist:
 
 ## Backlog / UX & Admin Follow-up
 
+### Future Billing & Accounting Enhancements
+Status: Pending
+
+BILLING-FLEXIBILITY-1
+- Deposit is optional, not mandatory.
+- Direct Final Invoice without Deposit must be supported.
+- Prevent duplicate active final invoices.
+
+PAYMENT-EVIDENCE-1
+- Bank transfer payments should require reference/transaction ID.
+- Receipt/proof attachments should be supported.
+- Future workflow should support pending → confirmed.
+
+INVOICE-PDF-BREAKDOWN-1
+- Deposit/final PDFs should show approved quotation total, deposit paid, current invoice amount, amount paid, and balance due.
+
+INVOICE-PDF-LAYOUT-1
+- A4 pagination and static page count polish.
+
+QUOTATION-VALIDITY-1
+- Default Valid Until from company settings, usually issue date + 7 days.
+
+SERVICE-BUDGET-GUARD-1
+- Show warning when quotation total exceeds service estimated budget.
+
+GLOBAL-INVOICE-WIZARD-1
+- Global invoice creation from Invoices page remains deferred.
+
 ### SETTINGS-EDIT-MODE-1
 Status: Pending before ERP-3
 
