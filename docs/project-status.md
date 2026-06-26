@@ -457,6 +457,17 @@ Operational Invoice Module is not complete yet.
 - Deposit and final invoice PDFs opened successfully after the PDF terms normalization fix.
 - Latest pushed commit: 8be7d43
 
+**Live Payments List:**
+- `PAYMENTS-LIST-LIVE-1` completed and pushed.
+- Implemented in commit `f4471a2 feat(payments): show live payment records`.
+- `/payments` now uses live read-only payment records through `getPaymentsList` instead of rendering mock `paymentsData` rows as real records.
+- The live query enforces `payments:read`.
+- Live-only KPI values are shown; mock payment rows were removed from the live page.
+- Manual UI smoke passed: payment count changed from `4` to `5` after recording a new payment; confirmed collected changed from `SAR 27,499.95` to `SAR 32,503.04`; `PAY-2026-0005` appeared, linked to `INV-2026-0007`, amount `SAR 5,003.09`, method `Bank Transfer`, status `Confirmed`; invoice list showed `INV-2026-0007` changed from `Issued` to `Paid`.
+- Payment recording path, `recordPaymentAction`, `record_invoice_payment` RPC usage, invoice balance/status formulas, SQL, schema, migrations, packages, and tax behavior were unchanged.
+- No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
+- Pending follow-up: `/invoices` KPI cards still appear static/mock (`SAR 2.4M`, `SAR 450K`, `SAR 1.2M`); `/dashboard` summary/sample rows still appear static/mock, including examples like Saudi Aramco and NEOM; mock-data audit remains pending.
+
 **Billing Flexibility Smoke:**
 - `BILLING-FLEXIBILITY-1` manual smoke passed for Direct Final Invoice without Deposit.
 - No invoice code patch is required for the no-deposit direct final path.

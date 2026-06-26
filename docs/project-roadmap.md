@@ -773,6 +773,25 @@ PAYMENT-EVIDENCE-1
 - Receipt/proof attachments should be supported.
 - Future workflow should support pending → confirmed.
 
+PAYMENTS-LIST-LIVE-1
+- Status: Completed.
+- Implemented in commit `f4471a2 feat(payments): show live payment records`.
+- `/payments` now uses live read-only payment records through `getPaymentsList` and no longer renders mock `paymentsData` rows as real records.
+- Manual smoke passed with `PAY-2026-0005` linked to `INV-2026-0007`; payment count changed from `4` to `5`; confirmed collected changed from `SAR 27,499.95` to `SAR 32,503.04`.
+- Payment recording, invoice balances/status formulas, SQL, schema, migrations, packages, and tax/ZATCA behavior were unchanged.
+
+MOCK-DATA-AUDIT-1
+- Status: Pending.
+- Audit remaining mock/static app surfaces before replacing individual KPI/dashboard summaries.
+
+INVOICE-KPI-LIVE-1
+- Status: Pending.
+- `/invoices` KPI cards still appear static/mock: `TOTAL OUTSTANDING: SAR 2.4M`, `OVERDUE (30+ DAYS): SAR 450K`, `RECEIVED THIS MONTH: SAR 1.2M`. Do not treat these KPI cards as live yet.
+
+DASHBOARD-LIVE-SUMMARY-1
+- Status: Pending.
+- `/dashboard` still appears static/mock, including `Total Customers: 1,248`, `Active Quotations: 342`, `Pending Invoices: 89`, `Monthly Revenue: SAR 2.4M`, `Pending Payments: SAR 450K`, and sample rows such as Saudi Aramco / NEOM. Do not treat dashboard as live yet.
+
 INVOICE-LIST-SORT-1
 - Status: Completed.
 - Implemented in commit `9c297a6`.

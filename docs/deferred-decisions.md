@@ -561,6 +561,22 @@ Correct accounting formula:
 Status: Deferred.
 Decision: Manual confirmed payment is acceptable for MVP only. Future workflow must support payment reference, receipt/proof attachment, recorded_by, recorded_at, confirmed_by, confirmed_at, and pending → confirmed approval.
 
+### PAYMENTS-LIST-LIVE-1
+Status: Complete.
+Decision: Implemented in commit `f4471a2 feat(payments): show live payment records`. `/payments` now uses live read-only payment records through `getPaymentsList` and no longer renders mock `paymentsData` rows as real data. The query enforces `payments:read`. Manual smoke passed: payment count changed from `4` to `5`, confirmed collected changed from `SAR 27,499.95` to `SAR 32,503.04`, `PAY-2026-0005` linked to `INV-2026-0007`, amount `SAR 5,003.09`, method `Bank Transfer`, status `Confirmed`, and invoice list showed `INV-2026-0007` changed from `Issued` to `Paid`. Payment recording, invoice balances/status formulas, SQL, schema, migrations, packages, and tax/ZATCA behavior were unchanged.
+
+### MOCK-DATA-AUDIT-1
+Status: Pending.
+Decision: Audit remaining mock/static app surfaces before further live-data polish. Known follow-ups include `/invoices` KPI cards that still appear static/mock (`SAR 2.4M`, `SAR 450K`, `SAR 1.2M`) and `/dashboard` summary/sample rows that still appear static/mock, including Saudi Aramco and NEOM examples.
+
+### INVOICE-KPI-LIVE-1
+Status: Pending.
+Decision: `/invoices` table/list is live, but KPI cards still appear static/mock. Replace them with live values only after `MOCK-DATA-AUDIT-1`; do not treat them as live now.
+
+### DASHBOARD-LIVE-SUMMARY-1
+Status: Pending.
+Decision: `/dashboard` summary cards and sample rows still appear static/mock. Replace them with live summaries only after audit; do not treat the dashboard as live now.
+
 ### INVOICE-LIST-SORT-1
 Status: Completed.
 Decision: Implemented in commit `9c297a6`. Desired order is now implemented. Current data displays ascending from `INV-2026-0004` to `INV-2026-0008`. This did not reset invoice numbering, create fake invoices, or manually renumber existing invoices.

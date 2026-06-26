@@ -83,6 +83,13 @@ The following items remain explicitly deferred and must not be implemented by an
 - `Commercial Invoice` title and Tax/VAT `Not applied` behavior were preserved.
 - No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
 - No invoice creation, payment recording, quotation approval, service status, or number-generation logic changed.
+- `PAYMENTS-LIST-LIVE-1` completed and pushed.
+- Commit: `f4471a2 feat(payments): show live payment records`.
+- `/payments` now uses live read-only payment records through `getPaymentsList` and no longer renders mock `paymentsData` rows as live records.
+- Manual UI smoke passed: payment count changed from `4` to `5`; confirmed collected changed from `SAR 27,499.95` to `SAR 32,503.04`; `PAY-2026-0005` appeared and linked to `INV-2026-0007`; amount `SAR 5,003.09`; method `Bank Transfer`; status `Confirmed`; invoice list showed `INV-2026-0007` changed from `Issued` to `Paid`.
+- Payment recording, invoice balances, invoice status formulas, and tax behavior were unchanged.
+- No SQL, migration, schema, package, or docs-external files changed in the implementation.
+- Pending static/mock cleanup: `/invoices` KPI cards and `/dashboard` summary/sample rows remain pending under `MOCK-DATA-AUDIT-1`, `INVOICE-KPI-LIVE-1`, and `DASHBOARD-LIVE-SUMMARY-1`.
 
 ## Phase 0: Safety and Source Review
 
