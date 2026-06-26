@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
-import { createServiceSchema, updateServiceSchema } from "./schemas";
+import { createServiceSchema, updateServiceSchema, updateServiceStatusSchema } from "./schemas";
 import type {
   CreatedServiceResult,
   CreateServiceInput,
@@ -328,6 +328,55 @@ export async function softDeleteService(id: string): Promise<ActionResult> {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
     console.error("[softDeleteService] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export async function updateServiceStatusAction(
+  id: string,
+  input: unknown
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const user = await requirePermission("services:write");
+
+    const parsed = updateServiceStatusSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return { success: false, error: firstValidationError(parsed) };
+    }
+
+    const currentService = await getServiceById(id);
+    if (!currentService) {
+      return { success: false, error: "Service not found." };
+    }
+
+    const supabase = createAdminClient();
+    const { error } = await supabase
+      .from("services")
+      .update({
+        status: parsed.data.status,
+        updated_by: user.clerk_user_id,
+      })
+      .eq("id", id)
+      .is("deleted_at", null)
+      .select("id")
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        return { success: false, error: "Service not found." };
+      }
+      console.error("[updateServiceStatusAction] Supabase error:", error.message);
+      return { success: false, error: "Failed to update service status. Please try again." };
+    }
+
+    revalidatePath("/services");
+    revalidatePath(`/services/${id}`);
+    return { success: true, data: { id } };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[updateServiceStatusAction] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { success: false, error: "An unexpected error occurred." };
   }
 }

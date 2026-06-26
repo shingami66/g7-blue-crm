@@ -11,6 +11,7 @@ import Link from "next/link";
 import ServiceStatusTimeline from "./ServiceStatusTimeline";
 import RelatedQuotationsCard from "./RelatedQuotationsCard";
 import BillingPanel from "./BillingPanel";
+import ServiceStatusControl from "./ServiceStatusControl";
 import type { Service } from "@/types/service";
 
 export const dynamic = "force-dynamic";
@@ -146,6 +147,13 @@ export default async function ServiceDetailPage({
         status={service.status}
         cancellationReason={service.cancellationReason}
       />
+
+      {canEditService && (
+        <ServiceStatusControl
+          serviceId={service.id}
+          currentStatus={service.status}
+        />
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
