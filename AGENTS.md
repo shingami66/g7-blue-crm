@@ -32,11 +32,13 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
 - `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
 - Verify Supabase connectivity at `GET /api/health/db` while the local app is running.
+- Documentation-only changes do not require app build, migrations, or database commands.
 
 ## Working Workflow
 
 - Follow `Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge`.
 - After merges that change delivered behavior, phase status, or decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` as applicable.
+- Before committing docs, run a documentation staleness audit: identify what changed in code, what changed outside code, what moved from pending to complete, any stale wording that must be corrected, what remains truly pending, and the next locked priority.
 - Before staging or commit work, confirm the intended branch.
 - Before staging or commit work, run `git status --short`.
 - Stage exact files only; confirm no unrelated files, secrets, `.env.local`, or unreviewed SQL/migration files are staged.
