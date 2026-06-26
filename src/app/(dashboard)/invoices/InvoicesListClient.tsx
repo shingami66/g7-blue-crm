@@ -3,8 +3,8 @@
 import PageHeader from "@/components/ui/PageHeader";
 import KpiCard from "@/components/ui/KpiCard";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { Plus, Filter, Download, Receipt, AlertCircle, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { Plus, Filter, Download, Receipt, FileText, CheckCircle2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
 import { IssueInvoiceAction } from "./IssueInvoiceAction";
@@ -37,11 +37,55 @@ interface InvoicesListClientProps {
   initialInvoices: Invoice[];
 }
 
+const inactiveInvoiceStatuses = new Set<InvoiceStatus>(["cancelled", "voided"]);
+
+const toSafeNumber = (value: number | string | null | undefined) => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value.replace(/,/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
+};
+
+const formatSar = (value: number) =>
+  `SAR ${value.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
 export default function InvoicesListClient({ initialInvoices }: InvoicesListClientProps) {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const activeInvoice = initialInvoices.find((i) => i.id === selectedInvoiceId);
+  const invoiceStats = useMemo(() => {
+    const activeInvoices = initialInvoices.filter(
+      (invoice) => !inactiveInvoiceStatuses.has(invoice.status)
+    );
+
+    return activeInvoices.reduce(
+      (stats, invoice) => {
+        const balanceDue = Math.max(toSafeNumber(invoice.balance_due), 0);
+        const amountPaid = Math.max(toSafeNumber(invoice.amount_paid), 0);
+
+        return {
+          totalOutstanding: stats.totalOutstanding + balanceDue,
+          openInvoices: stats.openInvoices + (balanceDue > 0 ? 1 : 0),
+          totalCollected: stats.totalCollected + amountPaid,
+        };
+      },
+      {
+        totalOutstanding: 0,
+        openInvoices: 0,
+        totalCollected: 0,
+      }
+    );
+  }, [initialInvoices]);
 
   const canRecordPayment = activeInvoice
     ? (activeInvoice.status === "sent" || activeInvoice.status === "partial") &&
@@ -72,21 +116,23 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
         <KpiCard
           label="Total Outstanding"
-          value="SAR 2.4M"
+          value={formatSar(invoiceStats.totalOutstanding)}
+          trend="flat"
+          trendLabel={`${invoiceStats.openInvoices} open invoices`}
           icon={Receipt}
         />
         <KpiCard
-          label="Overdue (30+ Days)"
-          value="SAR 450K"
-          trend="warning"
-          trendLabel="12 Invoices"
-          icon={AlertCircle}
+          label="Open Invoices"
+          value={invoiceStats.openInvoices.toString()}
+          trend="flat"
+          trendLabel="Based on live balances"
+          icon={FileText}
         />
         <KpiCard
-          label="Received This Month"
-          value="SAR 1.2M"
-          trend="up"
-          trendLabel="+18% vs Last Month"
+          label="Total Collected"
+          value={formatSar(invoiceStats.totalCollected)}
+          trend="flat"
+          trendLabel="Collected on recorded invoices"
           icon={CheckCircle2}
         />
       </div>
