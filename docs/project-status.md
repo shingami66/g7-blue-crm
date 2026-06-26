@@ -460,13 +460,25 @@ Operational Invoice Module is not complete yet.
 **Billing Flexibility Smoke:**
 - `BILLING-FLEXIBILITY-1` manual smoke passed for Direct Final Invoice without Deposit.
 - No invoice code patch is required for the no-deposit direct final path.
-- `SVC-2026-0008` remained `Inquiry` after quotation approval, direct final invoice creation, invoice issuing, and full payment recording.
+- Historical pre-Stage-1 evidence: `SVC-2026-0008` remained `Inquiry` after quotation approval, direct final invoice creation, invoice issuing, and full payment recording.
 - `INV-2026-0008` was created as a final invoice directly from `QT-2026-0012` for `SAR 20,000.00`.
 - No Deposit Invoice existed before final invoice creation.
 - The invoice was issued and paid.
 - Duplicate active Final Invoice was blocked.
-- Service status automation remains a deferred workflow gap. Future workflow must define status transitions.
+- Service status automation remains a deferred workflow gap. Future workflow must define guarded transitions.
 - Invoice numbering development gap confirmed: `INV-2026-0001` to `INV-2026-0003` are absent. Stored invoices start at `INV-2026-0004` up to `INV-2026-0008`. `number_sequences` is `8`. Do not reset invoice numbering. Do not create fake filler invoices. Do not manually renumber existing invoices.
+
+**Manual Status Control:**
+- `SERVICE-STATUS-WORKFLOW-1` Stage 1 completed.
+- Implemented in commit `0b0cc78 feat(services): add manual service status control`.
+- Service status can now be manually changed from the Service detail page.
+- Status is saved in `services.status`.
+- Manual smoke passed on `SVC-2026-0008`.
+- `SVC-2026-0008` reached `Completed` and appeared correctly in Service detail and Services list.
+- Status persisted after UI refresh / navigation.
+- Current behavior is manual-only.
+- The system does not yet validate quotation, invoice, payment, or delivery state before changing Service status.
+- Guarded transitions are deferred as `SERVICE-STATUS-GUARDED-TRANSITIONS-1`.
 
 **Invoice List Sort:**
 - `INVOICE-LIST-SORT-1` completed.

@@ -787,10 +787,22 @@ INVOICE-NUMBER-GAP-AUDIT-1
 - Future production financial lifecycle should use void/cancel/reversal rather than hard deletion.
 
 SERVICE-STATUS-WORKFLOW-1
-- Manual smoke showed `SVC-2026-0008` remained `Inquiry`.
-- It remained `Inquiry` after quotation approval, direct final invoice creation, invoice issuing, and full payment recording.
-- Future workflow must define status transitions for quotation approval, deposit invoice path, direct final invoice without deposit path, payment completion, in progress, and completed.
-- Do not implement this in the current docs task.
+- Status: Stage 1 completed.
+- Implemented in commit `0b0cc78`.
+- Manual Service status control is available from Service detail.
+- Status changes update `services.status`.
+- Manual smoke passed on `SVC-2026-0008`; it reached `Completed` and displayed correctly in Service detail and Services list.
+- Current behavior is manual-only.
+- No automation was added.
+- No DB migration was added.
+- The system does not yet validate quotation, invoice, payment, or delivery state before changing Service status.
+- Guarded transitions remain deferred under `SERVICE-STATUS-GUARDED-TRANSITIONS-1`.
+
+SERVICE-STATUS-GUARDED-TRANSITIONS-1
+- Status: Deferred / Post-MVP Review.
+- Future stage should evaluate guarded status transitions or warnings based on quotation, invoice, payment, and delivery state.
+- Future rules may warn or require confirmation before marking `Completed` while active invoices still have balance due, warn before marking `Deposit Paid` if no deposit/progress payment exists, possibly guard `Approved` based on approved quotation state, and require cancellation reason when moving to `Cancelled`.
+- Do not blindly block operational manual status changes. Use warnings, confirmations, or role-based manual override before hard blocking.
 
 INVOICE-PDF-BREAKDOWN-1
 - Deposit/final PDFs should show approved quotation total, deposit paid, current invoice amount, amount paid, and balance due.

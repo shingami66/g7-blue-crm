@@ -55,7 +55,14 @@ The following items remain explicitly deferred and must not be implemented by an
 - Final amount: `SAR 20,000.00`.
 - No Deposit Invoice existed.
 - Duplicate active Final Invoice was blocked.
-- Service status remained `Inquiry`.
+- Historical pre-Stage-1 evidence: Service status remained `Inquiry`.
+- `SERVICE-STATUS-WORKFLOW-1` Stage 1 completed and pushed.
+- Commit: `0b0cc78 feat(services): add manual service status control`.
+- Manual status control exists on Service detail.
+- Manual smoke passed on `SVC-2026-0008`.
+- Status reached `Completed`.
+- Current status behavior is manual-only and not validated against quotation, invoice, payment, or delivery state.
+- `SERVICE-STATUS-GUARDED-TRANSITIONS-1` remains deferred for post-MVP review.
 - Correct formula remains active prior invoice grand_total, not `amount_paid`.
 - Invoice numbering gap: `INV-2026-0001` to `INV-2026-0003` absent. sequence is `8`. do not reset numbering.
 - `INVOICE-LIST-SORT-1` completed and pushed.

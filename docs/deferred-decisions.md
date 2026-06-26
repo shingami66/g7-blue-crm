@@ -570,8 +570,12 @@ Status: Deferred.
 Decision: `INV-2026-0001`, `INV-2026-0002`, and `INV-2026-0003` are absent from the `invoices` table. Stored invoices currently start at `INV-2026-0004`. Latest stored invoice from smoke is `INV-2026-0008`. `number_sequences` for `invoice` / `2026` is `8`. Treat this as a development/smoke numbering gap. Do not reset invoice numbering. Do not create fake filler invoices. Do not manually renumber existing invoices. Future production financial lifecycle should use void/cancel/reversal rather than hard deletion.
 
 ### SERVICE-STATUS-WORKFLOW-1
-Status: Deferred.
-Decision: Manual smoke showed `SVC-2026-0008` remained `Inquiry`. It remained `Inquiry` after quotation approval, direct final invoice creation, invoice issuing, and full payment recording. Future workflow must define status transitions for quotation approval, deposit invoice path, direct final invoice without deposit path, payment completion, in progress, and completed. Do not implement this in the current docs task.
+Status: Stage 1 Completed.
+Decision: Stage 1 manual Service status control is complete. Implemented in commit `0b0cc78 feat(services): add manual service status control`. Service status is now manually controlled from the Service detail page and saved in `services.status`. Manual smoke passed on `SVC-2026-0008`; the Service reached `Completed`, appeared correctly in Service detail and Services list, and persisted after UI refresh / navigation. This preserves the earlier history that no automation was implemented: the current MVP behavior is manual-only and does not validate quotation, invoice, payment, or actual delivery state before a manual status change.
+
+### SERVICE-STATUS-GUARDED-TRANSITIONS-1
+Status: Deferred / Post-MVP Review.
+Decision: Future guarded transitions or warnings must be designed after MVP. They may consider quotation approval, invoice status, payment status, outstanding balance, cancellation reason, and actual service delivery, while preserving manual operational override where appropriate. Future rules may warn or require confirmation before marking `Completed` while active invoices still have balance due, warn before marking `Deposit Paid` if no deposit/progress payment exists, possibly guard `Approved` based on approved quotation state, and require cancellation reason when moving to `Cancelled`. Do not blindly block operational manual status changes; prefer warnings, confirmations, or role-based manual override before hard blocking.
 
 ### INVOICE-PDF-BREAKDOWN-1
 Status: Deferred.
