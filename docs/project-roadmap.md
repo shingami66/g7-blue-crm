@@ -805,10 +805,17 @@ SERVICE-STATUS-GUARDED-TRANSITIONS-1
 - Do not blindly block operational manual status changes. Use warnings, confirmations, or role-based manual override before hard blocking.
 
 INVOICE-PDF-BREAKDOWN-1
-- Deposit/final PDFs should show approved quotation total, deposit paid, current invoice amount, amount paid, and balance due.
+- Status: Completed.
+- Implemented in commit `b38a75f fix(invoices): add compact invoice pdf breakdown`.
+- Compact display-only invoice PDF breakdown uses persisted invoice fields and existing snapshot values only.
+- Deposit/final PDFs now show Approved Quotation Total when available, Previous Invoices / Deposits when available, Total Amount, Amount Paid, and Balance Due in the existing totals section.
+- Manual visual smoke passed on `INV-2026-0004` and `INV-2026-0005`; both tested PDFs fit one A4 page after final duplicate footer cleanup.
+- `Commercial Invoice` title and Tax/VAT `Not applied` behavior were preserved.
+- No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
 
 INVOICE-PDF-LAYOUT-1
-- A4 pagination and static page count polish.
+- Status: Deferred / As Needed.
+- A future page numbering or print-scaling strategy is only needed for genuinely multi-page PDFs. The compact invoice PDF MVP removed misleading hardcoded page-count text from the tested one-page PDFs.
 
 QUOTATION-VALIDITY-1
 - Default Valid Until from company settings, usually issue date + 7 days.

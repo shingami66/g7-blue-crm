@@ -76,6 +76,13 @@ The following items remain explicitly deferred and must not be implemented by an
   - `INV-2026-0007`
   - `INV-2026-0008`
 - No invoice numbering reset, fake filler invoices, or manual renumbering was done.
+- `INVOICE-PDF-BREAKDOWN-1` completed and pushed.
+- Commit: `b38a75f fix(invoices): add compact invoice pdf breakdown`.
+- Invoice PDF now shows display-only breakdown rows from persisted invoice fields and snapshots: Approved Quotation Total when available, Previous Invoices / Deposits when available, Total Amount, Amount Paid, and Balance Due.
+- Manual visual smoke passed on `INV-2026-0004` and `INV-2026-0005`; both tested PDFs fit one A4 page after final duplicate footer cleanup.
+- `Commercial Invoice` title and Tax/VAT `Not applied` behavior were preserved.
+- No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
+- No invoice creation, payment recording, quotation approval, service status, or number-generation logic changed.
 
 ## Phase 0: Safety and Source Review
 

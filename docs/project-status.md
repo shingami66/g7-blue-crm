@@ -493,6 +493,17 @@ Operational Invoice Module is not complete yet.
   - `INV-2026-0008`
 - No invoice numbering reset, fake filler invoices, or manual renumbering was done.
 
+**Compact Invoice PDF Breakdown:**
+- `INVOICE-PDF-BREAKDOWN-1` completed and pushed.
+- Implemented in commit `b38a75f fix(invoices): add compact invoice pdf breakdown`.
+- Invoice PDF now displays compact display-only breakdown rows in the existing totals section using persisted invoice fields and existing snapshot data only.
+- Rows include Approved Quotation Total when available, Previous Invoices / Deposits when available, Total Amount, Amount Paid, and Balance Due.
+- Manual visual smoke passed on `INV-2026-0004` and `INV-2026-0005`; both tested PDFs fit one A4 page after final duplicate footer cleanup.
+- `Commercial Invoice` title and Tax/VAT `Not applied` behavior were preserved.
+- No financial logic, tax behavior, SQL, migrations, schema, packages, invoice/payment/quotation/service-status/number-generation logic, or write paths changed.
+- No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
+- Future page numbering for genuinely multi-page PDFs remains separate/deferred.
+
 **Snapshot DB verification:**
 Snapshot DB verification passed for INV-2026-0004:
 invoice_number = INV-2026-0004

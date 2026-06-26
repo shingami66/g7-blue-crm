@@ -578,12 +578,12 @@ Status: Deferred / Post-MVP Review.
 Decision: Future guarded transitions or warnings must be designed after MVP. They may consider quotation approval, invoice status, payment status, outstanding balance, cancellation reason, and actual service delivery, while preserving manual operational override where appropriate. Future rules may warn or require confirmation before marking `Completed` while active invoices still have balance due, warn before marking `Deposit Paid` if no deposit/progress payment exists, possibly guard `Approved` based on approved quotation state, and require cancellation reason when moving to `Cancelled`. Do not blindly block operational manual status changes; prefer warnings, confirmations, or role-based manual override before hard blocking.
 
 ### INVOICE-PDF-BREAKDOWN-1
-Status: Deferred.
-Decision: Deposit and final invoice PDFs must show full accounting breakdown.
+Status: Complete.
+Decision: Implemented in commit `b38a75f fix(invoices): add compact invoice pdf breakdown`. Deposit and final invoice PDFs now show compact display-only breakdown rows using persisted invoice fields and existing snapshot data only: Approved Quotation Total when available, Previous Invoices / Deposits when available, Total Amount, Amount Paid, and Balance Due. Manual visual smoke passed for `INV-2026-0004` and `INV-2026-0005`; both tested PDFs fit one A4 page after final duplicate footer cleanup. This did not change invoice creation, payment recording, quotation approval, service status, number generation, SQL, schema, migrations, packages, or financial formulas. It did not add Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior.
 
 ### INVOICE-PDF-LAYOUT-1
-Status: Deferred.
-Decision: Optimize A4 pagination and remove misleading static page count.
+Status: Deferred / As Needed.
+Decision: The compact invoice PDF smoke removed misleading hardcoded page-count text and eliminated the tested one-page split. If future invoices with many line items genuinely span multiple pages, add a proper page numbering strategy or remove any misleading page-count text. This is separate from `INVOICE-PDF-BREAKDOWN-1`.
 
 ### QUOTATION-VALIDITY-1
 Status: Deferred.
