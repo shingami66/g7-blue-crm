@@ -466,7 +466,7 @@ Operational Invoice Module is not complete yet.
 - Manual UI smoke passed: payment count changed from `4` to `5` after recording a new payment; confirmed collected changed from `SAR 27,499.95` to `SAR 32,503.04`; `PAY-2026-0005` appeared, linked to `INV-2026-0007`, amount `SAR 5,003.09`, method `Bank Transfer`, status `Confirmed`; invoice list showed `INV-2026-0007` changed from `Issued` to `Paid`.
 - Payment recording path, `recordPaymentAction`, `record_invoice_payment` RPC usage, invoice balance/status formulas, SQL, schema, migrations, packages, and tax behavior were unchanged.
 - No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
-- Pending follow-up: `/suppliers` still uses static supplier data through `suppliersData`; supplier mock-data cleanup remains pending as a separate surface.
+- Supplier live read-only cleanup was completed later under `SUPPLIERS-LIVE-READ-FOUNDATION-1`; supplier write/finance modules remain separate deferred work.
 
 **Live Invoice KPI Cards:**
 - `INVOICE-KPI-LIVE-1` completed and pushed.
@@ -477,7 +477,7 @@ Operational Invoice Module is not complete yet.
 - Invoice table/list behavior remained live and unchanged.
 - No invoice creation, payment recording, invoice balance/status formulas, SQL, schema, migrations, packages, dashboard, suppliers, payments page, or tax behavior changed.
 - No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
-- Pending follow-up: `/suppliers` remains static via `suppliersData`.
+- Supplier live read-only cleanup was completed later under `SUPPLIERS-LIVE-READ-FOUNDATION-1`; supplier write/finance modules remain separate deferred work.
 
 **Live Dashboard Summary:**
 - `DASHBOARD-LIVE-SUMMARY-1` completed and pushed.
@@ -490,7 +490,7 @@ Operational Invoice Module is not complete yet.
 - No customer, quotation, invoice, payment, or service write paths changed.
 - No invoice balance formulas, payment recording, SQL, schema, migrations, packages, or tax behavior changed.
 - No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
-- Pending follow-up: `/suppliers` still uses static supplier data through `suppliersData`.
+- Supplier live read-only cleanup was completed later under `SUPPLIERS-LIVE-READ-FOUNDATION-1`; supplier write/finance modules remain separate deferred work.
 
 **Supplier Module Design:**
 - `SUPPLIERS-SCHEMA-DESIGN-1` completed and pushed.
@@ -505,7 +505,11 @@ Operational Invoice Module is not complete yet.
 - Key direction is now documented: suppliers support `company` and `individual`; lifecycle statuses are `active`, `on_hold`, `blacklisted`, and `inactive`; `is_preferred` is separate; bank details are role-masked; cost/margin visibility is Admin/Manager-only by default; supplier invoices/payments are separate from customer invoices/payments; supplier bookings/internal POs and supplier invoices require snapshots.
 - Supplier DB foundation completed after the design package. Migration `supabase/migrations/20260627153000_supplier_directory_foundation.sql` was committed and pushed in `ee50e60 feat(suppliers): add directory foundation migration`, manually applied in Supabase, and verified. `supabase/schema.sql` was synced and pushed in `ed61fb7 chore(suppliers): sync schema after directory foundation`.
 - Verification evidence: required supplier foundation columns exist; `on_hold` is supported by `chk_suppliers_status`; `chk_suppliers_vat_registration_status` exists; RLS remains enabled on `public.suppliers`; DEV_ONLY supplier policies returned no rows; broad anon/authenticated supplier policies returned no rows; future supplier financial/scope tables returned no rows.
-- Supplier implementation remains future work. `/suppliers` still uses static supplier data through `suppliersData`. Live supplier UI, supplier data layer/actions, supplier CRUD, supplier rate cards, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
+- `SUPPLIERS-LIVE-READ-FOUNDATION-1` completed and pushed in commit `1fbf77e feat(suppliers): add live read-only directory`.
+- `/suppliers` now reads live supplier records from the database through a server-side supplier query layer, UI-safe mapper/types, and a read-only client list/detail UI.
+- The permission gate uses `suppliers:read`. This read-only slice does not use `suppliers:write`, does not add create/edit/delete/restore behavior, and does not expose bank or IBAN fields in the UI selection, mapper, types, or rendering.
+- Verification evidence: lint passed with only existing `<img>` warnings, `pnpm exec tsc --noEmit` passed, no SQL/schema/migration changes were made, and no supplier finance/future modules were introduced.
+- Supplier implementation remains partial. Supplier create/edit/delete/restore CRUD, supplier write actions/server actions, supplier rate cards, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
 
 **Billing Flexibility Smoke:**
 - `BILLING-FLEXIBILITY-1` manual smoke passed for Direct Final Invoice without Deposit.
