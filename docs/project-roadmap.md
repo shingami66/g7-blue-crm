@@ -782,15 +782,23 @@ PAYMENTS-LIST-LIVE-1
 
 MOCK-DATA-AUDIT-1
 - Status: Pending.
-- Audit remaining mock/static app surfaces before replacing individual KPI/dashboard summaries.
+- Audit remaining mock/static app surfaces before replacing individual dashboard/supplier summaries and lists.
 
 INVOICE-KPI-LIVE-1
-- Status: Pending.
-- `/invoices` KPI cards still appear static/mock: `TOTAL OUTSTANDING: SAR 2.4M`, `OVERDUE (30+ DAYS): SAR 450K`, `RECEIVED THIS MONTH: SAR 1.2M`. Do not treat these KPI cards as live yet.
+- Status: Completed.
+- Implemented in commit `d89b520 fix(invoices): derive KPI cards from live invoices`.
+- `/invoices` KPI cards now derive from live invoice list data.
+- Static/mock invoice KPI values were removed: `TOTAL OUTSTANDING: SAR 2.4M`, `OVERDUE (30+ DAYS): SAR 450K`, `RECEIVED THIS MONTH: SAR 1.2M`, `12 Invoices`, and `+18% vs Last Month`.
+- Manual smoke passed with `Total Outstanding: SAR 0.00`, `Open Invoices: 0`, and `Total Collected: SAR 32,503.04`.
+- Invoice table/list behavior, invoice creation, payment recording, invoice balance/status formulas, SQL, schema, migrations, packages, dashboard, suppliers, payments page, and tax/ZATCA behavior were unchanged.
 
 DASHBOARD-LIVE-SUMMARY-1
 - Status: Pending.
 - `/dashboard` still appears static/mock, including `Total Customers: 1,248`, `Active Quotations: 342`, `Pending Invoices: 89`, `Monthly Revenue: SAR 2.4M`, `Pending Payments: SAR 450K`, and sample rows such as Saudi Aramco / NEOM. Do not treat dashboard as live yet.
+
+SUPPLIERS-LIST-LIVE-1
+- Status: Pending.
+- `/suppliers` still uses static supplier data from `src/lib/data/suppliers.ts` through `suppliersData` imported by `src/app/(dashboard)/suppliers/page.tsx`. Do not treat suppliers as live yet.
 
 INVOICE-LIST-SORT-1
 - Status: Completed.

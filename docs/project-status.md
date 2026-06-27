@@ -466,7 +466,18 @@ Operational Invoice Module is not complete yet.
 - Manual UI smoke passed: payment count changed from `4` to `5` after recording a new payment; confirmed collected changed from `SAR 27,499.95` to `SAR 32,503.04`; `PAY-2026-0005` appeared, linked to `INV-2026-0007`, amount `SAR 5,003.09`, method `Bank Transfer`, status `Confirmed`; invoice list showed `INV-2026-0007` changed from `Issued` to `Paid`.
 - Payment recording path, `recordPaymentAction`, `record_invoice_payment` RPC usage, invoice balance/status formulas, SQL, schema, migrations, packages, and tax behavior were unchanged.
 - No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
-- Pending follow-up: `/invoices` KPI cards still appear static/mock (`SAR 2.4M`, `SAR 450K`, `SAR 1.2M`); `/dashboard` summary/sample rows still appear static/mock, including examples like Saudi Aramco and NEOM; mock-data audit remains pending.
+- Pending follow-up: `/dashboard` summary/sample rows still appear static/mock, including examples like Saudi Aramco and NEOM; `/suppliers` still uses static supplier data through `suppliersData`; mock-data cleanup remains pending for those separate surfaces.
+
+**Live Invoice KPI Cards:**
+- `INVOICE-KPI-LIVE-1` completed and pushed.
+- Implemented in commit `d89b520 fix(invoices): derive KPI cards from live invoices`.
+- `/invoices` KPI cards now use live invoice list data instead of hardcoded/static mock values.
+- Static/mock invoice KPI values were removed: `SAR 2.4M`, `SAR 450K`, `SAR 1.2M`, `12 Invoices`, `Received This Month`, and `+18% vs Last Month`.
+- Manual smoke passed: `Total Outstanding` showed `SAR 0.00`, `Open Invoices` showed `0`, and `Total Collected` showed `SAR 32,503.04`.
+- Invoice table/list behavior remained live and unchanged.
+- No invoice creation, payment recording, invoice balance/status formulas, SQL, schema, migrations, packages, dashboard, suppliers, payments page, or tax behavior changed.
+- No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
+- Pending follow-up: `/dashboard` remains static/mock; `/suppliers` remains static via `suppliersData`.
 
 **Billing Flexibility Smoke:**
 - `BILLING-FLEXIBILITY-1` manual smoke passed for Direct Final Invoice without Deposit.
