@@ -95,7 +95,14 @@ The following items remain explicitly deferred and must not be implemented by an
 - Manual smoke passed: `Total Outstanding` showed `SAR 0.00`; `Open Invoices` showed `0`; `Total Collected` showed `SAR 32,503.04`.
 - Invoice table/list behavior, invoice creation, payment recording, invoice balances/status formulas, and tax behavior were unchanged.
 - No SQL, migration, schema, package, or docs-external files changed in the implementation.
-- Pending static/mock cleanup: `/dashboard` summary/sample rows remain pending under `DASHBOARD-LIVE-SUMMARY-1`; `/suppliers` static data remains pending under `SUPPLIERS-LIST-LIVE-1`.
+- `DASHBOARD-LIVE-SUMMARY-1` completed and pushed.
+- Commit: `d25cb17 fix(dashboard): show live summary data`.
+- `/dashboard` now uses live/read-only data where permissions allow and no longer shows old static/mock KPI/sample rows such as `1,248`, `342`, `89`, `SAR 2.4M`, `SAR 450K`, `Saudi Aramco`, `NEOM`, `Riyadh Season`, `Jeddah Corniche`, or fake SAR sample quotation amounts.
+- Manual smoke passed: `Total Customers` showed `14`; `Total Quotations` showed `12`; `Open Invoices` showed `0`; `Services` showed `8`; `Total Collected` showed `SAR 32,503.04`; `Pending Balance` showed `SAR 0.00`.
+- Recent Quotations now renders live quotation rows or a safe empty/unavailable state.
+- Customer, quotation, invoice, payment, and service write paths, invoice balance formulas, payment recording, and tax behavior were unchanged.
+- No SQL, migration, schema, package, or docs-external files changed in the implementation.
+- Pending static/mock cleanup: `/suppliers` static data remains pending under `SUPPLIERS-LIST-LIVE-1`.
 
 ## Phase 0: Safety and Source Review
 

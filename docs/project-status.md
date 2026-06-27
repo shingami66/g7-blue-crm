@@ -466,7 +466,7 @@ Operational Invoice Module is not complete yet.
 - Manual UI smoke passed: payment count changed from `4` to `5` after recording a new payment; confirmed collected changed from `SAR 27,499.95` to `SAR 32,503.04`; `PAY-2026-0005` appeared, linked to `INV-2026-0007`, amount `SAR 5,003.09`, method `Bank Transfer`, status `Confirmed`; invoice list showed `INV-2026-0007` changed from `Issued` to `Paid`.
 - Payment recording path, `recordPaymentAction`, `record_invoice_payment` RPC usage, invoice balance/status formulas, SQL, schema, migrations, packages, and tax behavior were unchanged.
 - No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
-- Pending follow-up: `/dashboard` summary/sample rows still appear static/mock, including examples like Saudi Aramco and NEOM; `/suppliers` still uses static supplier data through `suppliersData`; mock-data cleanup remains pending for those separate surfaces.
+- Pending follow-up: `/suppliers` still uses static supplier data through `suppliersData`; supplier mock-data cleanup remains pending as a separate surface.
 
 **Live Invoice KPI Cards:**
 - `INVOICE-KPI-LIVE-1` completed and pushed.
@@ -477,7 +477,20 @@ Operational Invoice Module is not complete yet.
 - Invoice table/list behavior remained live and unchanged.
 - No invoice creation, payment recording, invoice balance/status formulas, SQL, schema, migrations, packages, dashboard, suppliers, payments page, or tax behavior changed.
 - No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
-- Pending follow-up: `/dashboard` remains static/mock; `/suppliers` remains static via `suppliersData`.
+- Pending follow-up: `/suppliers` remains static via `suppliersData`.
+
+**Live Dashboard Summary:**
+- `DASHBOARD-LIVE-SUMMARY-1` completed and pushed.
+- Implemented in commit `d25cb17 fix(dashboard): show live summary data`.
+- `/dashboard` now uses live/read-only data where permissions allow.
+- Old static/mock dashboard KPI and sample values were removed: `1,248`, `342`, `89`, `SAR 2.4M`, `SAR 450K`, `Saudi Aramco`, `NEOM`, `Riyadh Season`, `Jeddah Corniche`, and fake SAR sample quotation amounts.
+- Manual smoke passed: `Total Customers` showed `14`, `Total Quotations` showed `12`, `Open Invoices` showed `0`, `Services` showed `8`, `Total Collected` showed `SAR 32,503.04`, and `Pending Balance` showed `SAR 0.00`.
+- Recent Quotations now renders live quotation rows or a safe empty/unavailable state.
+- `Service Workflow` remains a static workflow definition section and is not fake business KPI/sample data.
+- No customer, quotation, invoice, payment, or service write paths changed.
+- No invoice balance formulas, payment recording, SQL, schema, migrations, packages, or tax behavior changed.
+- No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
+- Pending follow-up: `/suppliers` still uses static supplier data through `suppliersData`.
 
 **Billing Flexibility Smoke:**
 - `BILLING-FLEXIBILITY-1` manual smoke passed for Direct Final Invoice without Deposit.

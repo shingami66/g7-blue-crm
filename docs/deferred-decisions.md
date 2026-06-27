@@ -567,15 +567,15 @@ Decision: Implemented in commit `f4471a2 feat(payments): show live payment recor
 
 ### MOCK-DATA-AUDIT-1
 Status: Pending.
-Decision: Audit remaining mock/static app surfaces before further live-data polish. `INVOICE-KPI-LIVE-1` removed the stale `/invoices` KPI mock values. Known remaining follow-ups include `/dashboard` summary/sample rows that still appear static/mock, including Saudi Aramco and NEOM examples, and `/suppliers`, which still uses static supplier data through `suppliersData`.
+Decision: Audit remaining mock/static app surfaces before further live-data polish. `INVOICE-KPI-LIVE-1` removed the stale `/invoices` KPI mock values. `DASHBOARD-LIVE-SUMMARY-1` removed the stale `/dashboard` KPI/sample values. Known remaining follow-up: `/suppliers` still uses static supplier data through `suppliersData`.
 
 ### INVOICE-KPI-LIVE-1
 Status: Complete.
 Decision: Implemented in commit `d89b520 fix(invoices): derive KPI cards from live invoices`. `/invoices` KPI cards now derive from live invoice list data. Static/mock invoice KPI values were removed: `SAR 2.4M`, `SAR 450K`, `SAR 1.2M`, `12 Invoices`, `Received This Month`, and `+18% vs Last Month`. Manual smoke passed with `Total Outstanding: SAR 0.00`, `Open Invoices: 0`, and `Total Collected: SAR 32,503.04`. Invoice table/list behavior, invoice creation, payment recording, invoice balance/status formulas, SQL, schema, migrations, packages, dashboard, suppliers, payments page, and tax/ZATCA behavior were unchanged.
 
 ### DASHBOARD-LIVE-SUMMARY-1
-Status: Pending.
-Decision: `/dashboard` summary cards and sample rows still appear static/mock. Replace them with live summaries only after audit; do not treat the dashboard as live now.
+Status: Complete.
+Decision: Implemented in commit `d25cb17 fix(dashboard): show live summary data`. `/dashboard` now uses live/read-only data where permissions allow and no longer renders old static/mock values such as `1,248`, `342`, `89`, `SAR 2.4M`, `SAR 450K`, Saudi Aramco, NEOM, Riyadh Season, Jeddah Corniche, or fake SAR sample quotation amounts. Manual smoke passed with `Total Customers: 14`, `Total Quotations: 12`, `Open Invoices: 0`, `Services: 8`, `Total Collected: SAR 32,503.04`, and `Pending Balance: SAR 0.00`. Recent Quotations now renders live rows or a safe empty/unavailable state. Customer, quotation, invoice, payment, and service write paths, invoice balance formulas, payment recording, SQL, schema, migrations, packages, and tax/ZATCA behavior were unchanged.
 
 ### SUPPLIERS-LIST-LIVE-1
 Status: Pending.

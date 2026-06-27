@@ -782,7 +782,7 @@ PAYMENTS-LIST-LIVE-1
 
 MOCK-DATA-AUDIT-1
 - Status: Pending.
-- Audit remaining mock/static app surfaces before replacing individual dashboard/supplier summaries and lists.
+- Audit remaining mock/static app surfaces before replacing individual summaries and lists. `/dashboard` summary/sample rows were completed under `DASHBOARD-LIVE-SUMMARY-1`; `/suppliers` remains pending under `SUPPLIERS-LIST-LIVE-1`.
 
 INVOICE-KPI-LIVE-1
 - Status: Completed.
@@ -793,8 +793,13 @@ INVOICE-KPI-LIVE-1
 - Invoice table/list behavior, invoice creation, payment recording, invoice balance/status formulas, SQL, schema, migrations, packages, dashboard, suppliers, payments page, and tax/ZATCA behavior were unchanged.
 
 DASHBOARD-LIVE-SUMMARY-1
-- Status: Pending.
-- `/dashboard` still appears static/mock, including `Total Customers: 1,248`, `Active Quotations: 342`, `Pending Invoices: 89`, `Monthly Revenue: SAR 2.4M`, `Pending Payments: SAR 450K`, and sample rows such as Saudi Aramco / NEOM. Do not treat dashboard as live yet.
+- Status: Completed.
+- Implemented in commit `d25cb17 fix(dashboard): show live summary data`.
+- `/dashboard` now uses live/read-only data where permissions allow.
+- Static/mock dashboard values were removed: `Total Customers: 1,248`, `Active Quotations: 342`, `Pending Invoices: 89`, `Monthly Revenue: SAR 2.4M`, `Pending Payments: SAR 450K`, and sample rows such as Saudi Aramco / NEOM, Riyadh Season, Jeddah Corniche, and fake SAR sample quotation amounts.
+- Manual smoke passed with `Total Customers: 14`, `Total Quotations: 12`, `Open Invoices: 0`, `Services: 8`, `Total Collected: SAR 32,503.04`, and `Pending Balance: SAR 0.00`.
+- Recent Quotations now renders live quotation rows or a safe empty/unavailable state.
+- Customer, quotation, invoice, payment, and service write paths, invoice balance formulas, payment recording, SQL, schema, migrations, packages, and tax/ZATCA behavior were unchanged.
 
 SUPPLIERS-LIST-LIVE-1
 - Status: Pending.
