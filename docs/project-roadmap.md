@@ -805,9 +805,16 @@ SUPPLIERS-SCHEMA-DESIGN-1
 - Status: Completed and pushed.
 - Implemented in commit `e85adec spec(suppliers): add supplier module design artifacts`.
 - Schema/design/spec phase is complete only as Spec Kit design artifacts under `specs/002-suppliers-schema-design/`: `spec.md`, `plan.md`, `research.md`, `data-model.md`, and `tasks.md`.
-- This did not implement supplier tables, migrations, RLS, permissions, live supplier UI, supplier CRUD, supplier invoices/payments, supplier bookings/internal POs, or Service P&L reporting.
-- Future supplier work should start from controlled implementation planning and explicit approval. Do not treat supplier implementation as immediate or already started.
+- This did not implement live supplier UI, supplier CRUD, supplier invoices/payments, supplier bookings/internal POs, or Service P&L reporting.
 - Preserve current workflow rules: no SQL/migration/Supabase actions without review and approval; no supplier cost/margin exposure in customer-facing documents; no Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior while `company_settings.vat_mode = not_registered`.
+
+SUPPLIERS-DB-FOUNDATION-1
+- Status: DB foundation completed and pushed; supplier implementation remains deferred.
+- Migration `supabase/migrations/20260627153000_supplier_directory_foundation.sql` was committed and pushed in `ee50e60 feat(suppliers): add directory foundation migration`.
+- Manual Supabase apply was completed and verified: required supplier foundation columns exist, `on_hold` is supported by the supplier status lifecycle, supplier VAT registration status constraint exists, RLS remains enabled on `public.suppliers`, no DEV_ONLY supplier policies were found, no broad anon/authenticated supplier policies were found, and no future supplier financial/scope tables were created.
+- `supabase/schema.sql` was synced and pushed in `ed61fb7 chore(suppliers): sync schema after directory foundation`.
+- This completes only the supplier directory DB foundation. Live supplier UI, supplier server/data-layer actions, supplier CRUD, supplier rate cards, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
+- Next supplier work should be a separate controlled task, likely supplier server/data-layer or supplier live list readiness after docs sync review. Do not treat full supplier management as complete or already started.
 
 SUPPLIERS-LIST-LIVE-1
 - Status: Pending.

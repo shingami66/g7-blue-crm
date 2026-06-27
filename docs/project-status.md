@@ -503,7 +503,9 @@ Operational Invoice Module is not complete yet.
   - `specs/002-suppliers-schema-design/data-model.md`
   - `specs/002-suppliers-schema-design/tasks.md`
 - Key direction is now documented: suppliers support `company` and `individual`; lifecycle statuses are `active`, `on_hold`, `blacklisted`, and `inactive`; `is_preferred` is separate; bank details are role-masked; cost/margin visibility is Admin/Manager-only by default; supplier invoices/payments are separate from customer invoices/payments; supplier bookings/internal POs and supplier invoices require snapshots.
-- Supplier implementation remains future work. `/suppliers` still uses static supplier data through `suppliersData`, and no supplier SQL/schema has been applied.
+- Supplier DB foundation completed after the design package. Migration `supabase/migrations/20260627153000_supplier_directory_foundation.sql` was committed and pushed in `ee50e60 feat(suppliers): add directory foundation migration`, manually applied in Supabase, and verified. `supabase/schema.sql` was synced and pushed in `ed61fb7 chore(suppliers): sync schema after directory foundation`.
+- Verification evidence: required supplier foundation columns exist; `on_hold` is supported by `chk_suppliers_status`; `chk_suppliers_vat_registration_status` exists; RLS remains enabled on `public.suppliers`; DEV_ONLY supplier policies returned no rows; broad anon/authenticated supplier policies returned no rows; future supplier financial/scope tables returned no rows.
+- Supplier implementation remains future work. `/suppliers` still uses static supplier data through `suppliersData`. Live supplier UI, supplier data layer/actions, supplier CRUD, supplier rate cards, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
 
 **Billing Flexibility Smoke:**
 - `BILLING-FLEXIBILITY-1` manual smoke passed for Direct Final Invoice without Deposit.
