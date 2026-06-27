@@ -215,23 +215,101 @@ CREATE TRIGGER update_services_updated_at BEFORE UPDATE ON services FOR EACH ROW
 -- 6. Suppliers
 CREATE TABLE suppliers (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    supplier_number text,
+    supplier_type text,
+    category text,
+    legal_name text,
+    display_name text,
+    contact_name text,
+    whatsapp_phone text,
+    email text,
+    city text,
+    country text,
+    coverage_area text,
     name text NOT NULL,
     service text NOT NULL,
     contact text NOT NULL,
     phone text NOT NULL,
     rating numeric(3,1) DEFAULT 0.0,
-    status text NOT NULL CHECK (status IN ('active', 'inactive', 'blacklisted')),
+    status text NOT NULL,
     recent_project text,
+    cr_number text,
+    vat_registration_status text,
+    vat_number text,
+    payment_terms text,
+    iban text,
+    bank_name text,
+    bank_account_name text,
+    is_preferred boolean NOT NULL DEFAULT false,
+    blacklisted_reason text,
+    blacklisted_at timestamptz,
+    blacklisted_by text,
+    notes text,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now(),
     is_deleted boolean DEFAULT false,
     deleted_at timestamptz,
     created_by text,
-    updated_by text
+    updated_by text,
+    deleted_by text,
+    CONSTRAINT chk_suppliers_status CHECK (status IN ('active', 'on_hold', 'blacklisted', 'inactive')),
+    CONSTRAINT chk_suppliers_supplier_type CHECK (
+        supplier_type IS NULL
+        OR supplier_type IN ('company', 'individual')
+    ),
+    CONSTRAINT chk_suppliers_category CHECK (
+        category IS NULL
+        OR category IN (
+            'transport',
+            'cars',
+            'cleaning',
+            'staff',
+            'security',
+            'sound',
+            'lighting',
+            'screens_led',
+            'decoration',
+            'photo_video',
+            'catering',
+            'logistics',
+            'furniture_tents_stage',
+            'printing',
+            'permits_support',
+            'other'
+        )
+    ),
+    CONSTRAINT chk_suppliers_vat_registration_status CHECK (
+        vat_registration_status IS NULL
+        OR vat_registration_status IN ('not_registered', 'registered', 'unknown')
+    )
 );
 CREATE TRIGGER update_suppliers_updated_at BEFORE UPDATE ON suppliers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+COMMENT ON COLUMN suppliers.supplier_number IS 'Optional supplier code/number for future supplier directory identity. Nullable for existing rows.';
+COMMENT ON COLUMN suppliers.supplier_type IS 'Optional supplier type: company or individual. Nullable for existing/backward-compatible rows.';
+COMMENT ON COLUMN suppliers.category IS 'Optional controlled supplier service category for directory filtering.';
+COMMENT ON COLUMN suppliers.legal_name IS 'Optional legal/commercial supplier name for compliance and future snapshots.';
+COMMENT ON COLUMN suppliers.display_name IS 'Optional display name; existing name column remains compatible.';
+COMMENT ON COLUMN suppliers.contact_name IS 'Optional primary supplier contact name; existing contact column remains compatible.';
+COMMENT ON COLUMN suppliers.whatsapp_phone IS 'Optional WhatsApp phone if separate from phone.';
+COMMENT ON COLUMN suppliers.email IS 'Optional supplier email.';
+COMMENT ON COLUMN suppliers.city IS 'Optional supplier city.';
+COMMENT ON COLUMN suppliers.country IS 'Optional supplier country.';
+COMMENT ON COLUMN suppliers.coverage_area IS 'Optional supplier delivery/coverage area.';
+COMMENT ON COLUMN suppliers.cr_number IS 'Optional Commercial Registration number; not unique or mandatory in this phase.';
+COMMENT ON COLUMN suppliers.vat_registration_status IS 'Optional supplier-side VAT registration fact; does not enable G7 BLUE customer tax invoice behavior.';
+COMMENT ON COLUMN suppliers.vat_number IS 'Optional supplier VAT number; does not enable G7 BLUE customer VAT/ZATCA behavior.';
+COMMENT ON COLUMN suppliers.payment_terms IS 'Optional supplier payment terms.';
+COMMENT ON COLUMN suppliers.iban IS 'Optional supplier IBAN; future application logic must mask by role and require before confirmed outbound supplier payment.';
+COMMENT ON COLUMN suppliers.bank_name IS 'Optional supplier bank name; future application logic must mask bank details by role.';
+COMMENT ON COLUMN suppliers.bank_account_name IS 'Optional supplier bank account holder name; future application logic must mask bank details by role.';
+COMMENT ON COLUMN suppliers.is_preferred IS 'Preferred supplier flag, intentionally separate from lifecycle status.';
+COMMENT ON COLUMN suppliers.blacklisted_reason IS 'Internal reason for blacklist status; future application logic must restrict visibility by role.';
+COMMENT ON COLUMN suppliers.blacklisted_at IS 'Timestamp when supplier was blacklisted.';
+COMMENT ON COLUMN suppliers.blacklisted_by IS 'Clerk userId string for the user who blacklisted the supplier.';
+COMMENT ON COLUMN suppliers.notes IS 'Optional internal supplier notes.';
 COMMENT ON COLUMN suppliers.created_by IS 'Stores Clerk userId string';
 COMMENT ON COLUMN suppliers.updated_by IS 'Stores Clerk userId string';
+COMMENT ON COLUMN suppliers.deleted_by IS 'Clerk userId string for the user who soft-deleted the supplier, when applicable.';
 
 -- 7. Quotations
 CREATE TABLE quotations (
@@ -1154,6 +1232,11 @@ CREATE INDEX idx_services_sales_owner_id ON services(sales_owner_id);
 CREATE INDEX idx_services_created_at ON services(created_at);
 
 CREATE INDEX idx_suppliers_created_at ON suppliers(created_at);
+CREATE INDEX idx_suppliers_status ON suppliers(status);
+CREATE INDEX idx_suppliers_category ON suppliers(category);
+CREATE INDEX idx_suppliers_supplier_type ON suppliers(supplier_type);
+CREATE INDEX idx_suppliers_is_preferred ON suppliers(is_preferred);
+CREATE INDEX idx_suppliers_deleted_at ON suppliers(deleted_at);
 
 CREATE INDEX idx_quotations_customer_id ON quotations(customer_id);
 CREATE INDEX idx_quotations_service_id ON quotations(service_id);
