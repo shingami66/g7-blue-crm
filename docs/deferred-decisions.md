@@ -199,10 +199,12 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** Provider choice, templates, opt-in/consent, delivery status, audit trail, attachments, and customer timeline integration.
 
 ## Vendors / Suppliers
-- **Status:** Deferred; business decision required.
-- **Reason deferred:** Supplier costs and profit tracking may change event/project schema and reporting.
-- **When to return:** During Phase BD or before event/project profitability features.
-- **Known requirements:** Decide whether supplier costs, purchase orders, expense tracking, and profit margin should be tracked.
+- **Status:** Design direction resolved; implementation deferred.
+- **Decision:** `SUPPLIERS-SCHEMA-DESIGN-1` was completed and pushed in commit `e85adec spec(suppliers): add supplier module design artifacts`. The design package lives under `specs/002-suppliers-schema-design/` and includes `spec.md`, `plan.md`, `research.md`, `data-model.md`, and `tasks.md`.
+- **Resolved direction:** Suppliers are core to G7 BLUE service delivery. Supplier records may be `company` or `individual`; lifecycle statuses are `active`, `on_hold`, `blacklisted`, and `inactive`; `is_preferred` is a separate flag; bank details are role-masked; supplier cost/margin is internal and Admin/Manager-only by default; supplier invoices and supplier payments are separate from customer invoices and payments; supplier bookings/internal POs and supplier invoices must preserve snapshots.
+- **Still deferred:** Implementation, SQL migrations, supplier DB tables, RLS policies, live supplier UI, supplier CRUD, supplier rate cards, service supplier allocations/costing, supplier bookings/internal POs, supplier invoices/payments, Supplier PO PDF, WhatsApp/email, supplier portal, invoice attachments, supplier payment approval workflow, rate-card-driven quotation automation, and automatic margin reports.
+- **Security and financial cautions:** Do not expose supplier cost, supplier rate cards, supplier actual cost, margin, variance, or Gross Profit in customer-facing quotations, invoices, PDFs, receipts, or broad read-only views. Do not add Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior while G7 BLUE remains `not_registered`.
+- **When to return:** Start future supplier work only through a controlled implementation planning prompt based on the approved Spec Kit artifacts.
 
 ## Event-specific Fields
 - **Status:** Partially resolved; event type confirmation deferred.
@@ -394,10 +396,12 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** Provider choice, templates, opt-in/consent, delivery status, audit trail, attachments, and customer timeline integration.
 
 ## Vendors / Suppliers
-- **Status:** Deferred; business decision required.
-- **Reason deferred:** Supplier costs and profit tracking may change event/project schema and reporting.
-- **When to return:** During Phase BD or before event/project profitability features.
-- **Known requirements:** Decide whether supplier costs, purchase orders, expense tracking, and profit margin should be tracked.
+- **Status:** Design direction resolved; implementation deferred.
+- **Decision:** `SUPPLIERS-SCHEMA-DESIGN-1` was completed and pushed in commit `e85adec spec(suppliers): add supplier module design artifacts`. The design package lives under `specs/002-suppliers-schema-design/` and includes `spec.md`, `plan.md`, `research.md`, `data-model.md`, and `tasks.md`.
+- **Resolved direction:** Suppliers are core to G7 BLUE service delivery. Supplier records may be `company` or `individual`; lifecycle statuses are `active`, `on_hold`, `blacklisted`, and `inactive`; `is_preferred` is a separate flag; bank details are role-masked; supplier cost/margin is internal and Admin/Manager-only by default; supplier invoices and supplier payments are separate from customer invoices and payments; supplier bookings/internal POs and supplier invoices must preserve snapshots.
+- **Still deferred:** Implementation, SQL migrations, supplier DB tables, RLS policies, live supplier UI, supplier CRUD, supplier rate cards, service supplier allocations/costing, supplier bookings/internal POs, supplier invoices/payments, Supplier PO PDF, WhatsApp/email, supplier portal, invoice attachments, supplier payment approval workflow, rate-card-driven quotation automation, and automatic margin reports.
+- **Security and financial cautions:** Do not expose supplier cost, supplier rate cards, supplier actual cost, margin, variance, or Gross Profit in customer-facing quotations, invoices, PDFs, receipts, or broad read-only views. Do not add Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior while G7 BLUE remains `not_registered`.
+- **When to return:** Start future supplier work only through a controlled implementation planning prompt based on the approved Spec Kit artifacts.
 
 ## Event-specific Fields
 - **Status:** Partially resolved; event type confirmation deferred.

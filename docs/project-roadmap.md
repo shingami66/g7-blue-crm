@@ -288,7 +288,7 @@ Checklist:
 **Note:** Phase 6 completed quotation detail + browser print using live data. Server-side PDF generation remains deferred.
 
 ### Phase BD - Business Domain Decisions
-Status: Core ERP decisions resolved; leads/vendors/demo-data details remain deferred
+Status: Core ERP decisions resolved; leads/demo-data details remain deferred; supplier design direction documented
 
 **Purpose:**
 Confirm event-company workflow before invoice schema.
@@ -307,7 +307,7 @@ Approved decisions:
 
 Still deferred:
 - whether leads/inquiries are tracked before becoming customers
-- whether vendors/suppliers are tracked later
+- supplier implementation after the completed supplier design package
 - whether first demo data is fake, semi-real, or real
 
 Acceptance criteria:
@@ -317,7 +317,7 @@ Acceptance criteria:
 - [x] Deposit/final invoice decision is documented.
 - [x] ZATCA/proforma direction is documented as no overclaiming or fake integration.
 - [ ] Leads/inquiries decision is documented.
-- [ ] Vendors/suppliers decision is documented.
+- [x] Vendors/suppliers design direction is documented in `SUPPLIERS-SCHEMA-DESIGN-1`; implementation remains future controlled work.
 - [ ] Demo data security level is documented.
 - [x] If `vat_rate` comes from company settings, it is only a default for new documents.
 - [x] Every quotation/invoice stores its own `vat_rate` snapshot.
@@ -800,6 +800,14 @@ DASHBOARD-LIVE-SUMMARY-1
 - Manual smoke passed with `Total Customers: 14`, `Total Quotations: 12`, `Open Invoices: 0`, `Services: 8`, `Total Collected: SAR 32,503.04`, and `Pending Balance: SAR 0.00`.
 - Recent Quotations now renders live quotation rows or a safe empty/unavailable state.
 - Customer, quotation, invoice, payment, and service write paths, invoice balance formulas, payment recording, SQL, schema, migrations, packages, and tax/ZATCA behavior were unchanged.
+
+SUPPLIERS-SCHEMA-DESIGN-1
+- Status: Completed and pushed.
+- Implemented in commit `e85adec spec(suppliers): add supplier module design artifacts`.
+- Schema/design/spec phase is complete only as Spec Kit design artifacts under `specs/002-suppliers-schema-design/`: `spec.md`, `plan.md`, `research.md`, `data-model.md`, and `tasks.md`.
+- This did not implement supplier tables, migrations, RLS, permissions, live supplier UI, supplier CRUD, supplier invoices/payments, supplier bookings/internal POs, or Service P&L reporting.
+- Future supplier work should start from controlled implementation planning and explicit approval. Do not treat supplier implementation as immediate or already started.
+- Preserve current workflow rules: no SQL/migration/Supabase actions without review and approval; no supplier cost/margin exposure in customer-facing documents; no Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior while `company_settings.vat_mode = not_registered`.
 
 SUPPLIERS-LIST-LIVE-1
 - Status: Pending.

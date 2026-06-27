@@ -492,6 +492,19 @@ Operational Invoice Module is not complete yet.
 - No Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior was added.
 - Pending follow-up: `/suppliers` still uses static supplier data through `suppliersData`.
 
+**Supplier Module Design:**
+- `SUPPLIERS-SCHEMA-DESIGN-1` completed and pushed.
+- Implemented in commit `e85adec spec(suppliers): add supplier module design artifacts`.
+- This was design-only Spec Kit work. No supplier implementation, SQL, migrations, Supabase actions, schema apply, app code, live supplier UI, supplier DB tables, or supplier CRUD were added.
+- Design artifacts were recorded under:
+  - `specs/002-suppliers-schema-design/spec.md`
+  - `specs/002-suppliers-schema-design/plan.md`
+  - `specs/002-suppliers-schema-design/research.md`
+  - `specs/002-suppliers-schema-design/data-model.md`
+  - `specs/002-suppliers-schema-design/tasks.md`
+- Key direction is now documented: suppliers support `company` and `individual`; lifecycle statuses are `active`, `on_hold`, `blacklisted`, and `inactive`; `is_preferred` is separate; bank details are role-masked; cost/margin visibility is Admin/Manager-only by default; supplier invoices/payments are separate from customer invoices/payments; supplier bookings/internal POs and supplier invoices require snapshots.
+- Supplier implementation remains future work. `/suppliers` still uses static supplier data through `suppliersData`, and no supplier SQL/schema has been applied.
+
 **Billing Flexibility Smoke:**
 - `BILLING-FLEXIBILITY-1` manual smoke passed for Direct Final Invoice without Deposit.
 - No invoice code patch is required for the no-deposit direct final path.
@@ -690,7 +703,7 @@ Current decision gates before ERP implementation:
 - full invoice schema/service linkage in ERP-3
 - soft-delete documentation cleanup: `DOC-SOFTDELETE-FIX`
 - leads/inquiries
-- vendors/suppliers
+- supplier implementation after completed `SUPPLIERS-SCHEMA-DESIGN-1` design package
 - demo data security level
 - remaining production RLS hardening, `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production
 - audit log details
