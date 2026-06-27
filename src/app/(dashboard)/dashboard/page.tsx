@@ -12,13 +12,20 @@ import {
 import KpiCard from "@/components/ui/KpiCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { checkPermission, requirePermission } from "@/lib/auth/permissions";
+import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
+import { getCustomers } from "@/lib/customers/queries";
+import { getQuotations } from "@/lib/quotations/queries";
+import { getInvoices } from "@/lib/invoices/queries";
+import { getServices } from "@/lib/services/queries";
+import type { QuotationListItem } from "@/lib/quotations/types";
 
-const recentQuotations = [
-  { client: "Saudi Aramco Events", value: "SAR 125,000", status: "pending" as const },
-  { client: "Riyadh Season Setup", value: "SAR 850,000", status: "approved" as const },
-  { client: "Jeddah Corniche Logistics", value: "SAR 45,000", status: "rejected" as const },
-  { client: "NEOM Phase 1 Transport", value: "SAR 2,100,000", status: "pending" as const },
-];
+export const dynamic = "force-dynamic";
+
+type LoadState<T> =
+  | { status: "ready"; data: T }
+  | { status: "unavailable" };
 
 const serviceWorkflow = [
   { stage: "Inquiry", focus: "Capture event or booking request", owner: "Sales" },
@@ -27,7 +34,105 @@ const serviceWorkflow = [
   { stage: "Deposit Paid", focus: "Confirm cleared deposit payment", owner: "Accountant" },
 ];
 
-export default function DashboardPage() {
+const formatCount = (value: number) => new Intl.NumberFormat("en-SA").format(value);
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("en-SA", {
+    style: "currency",
+    currency: "SAR",
+    minimumFractionDigits: 2,
+  }).format(value);
+
+const formatStatus = (value: string) =>
+  value.charAt(0).toUpperCase() + value.slice(1);
+
+async function loadIfAllowed<T>(
+  permission: string,
+  load: () => Promise<T>,
+): Promise<LoadState<T>> {
+  const allowed = await checkPermission(permission);
+
+  if (!allowed) {
+    return { status: "unavailable" };
+  }
+
+  try {
+    return { status: "ready", data: await load() };
+  } catch (err) {
+    console.error(
+      `[DashboardPage] Failed to load ${permission}`,
+      err instanceof Error ? err.message : "Unknown",
+    );
+    return { status: "unavailable" };
+  }
+}
+
+function getRecentQuotations(quotations: QuotationListItem[]) {
+  return [...quotations]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 4);
+}
+
+function SafeErrorState() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+      <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
+        <h2 className="text-xl font-semibold text-slate-900 mb-2">Something went wrong</h2>
+        <p className="text-sm text-slate-500">
+          We couldn&apos;t load the dashboard at this time. Please try again later.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default async function DashboardPage() {
+  try {
+    await requirePermission("dashboard:read");
+  } catch (err) {
+    if (err instanceof UnauthorizedError) {
+      redirect("/sign-in");
+    }
+
+    if (err instanceof ForbiddenError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+          <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
+            <p className="text-sm text-slate-500">
+              You don&apos;t have permission to view the dashboard.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return <SafeErrorState />;
+  }
+
+  const [customersState, quotationsState, invoicesState, servicesState] =
+    await Promise.all([
+      loadIfAllowed("customers:read", getCustomers),
+      loadIfAllowed("quotations:read", getQuotations),
+      loadIfAllowed("invoices:read", getInvoices),
+      loadIfAllowed("services:read", getServices),
+    ]);
+
+  const invoices = invoicesState.status === "ready" ? invoicesState.data : [];
+  const openInvoiceCount = invoices.filter(
+    (invoice) => Number(invoice.balance_due) > 0,
+  ).length;
+  const totalCollected = invoices.reduce(
+    (sum, invoice) => sum + Number(invoice.amount_paid || 0),
+    0,
+  );
+  const pendingBalance = invoices.reduce(
+    (sum, invoice) => sum + Math.max(Number(invoice.balance_due || 0), 0),
+    0,
+  );
+  const recentQuotations =
+    quotationsState.status === "ready" ? getRecentQuotations(quotationsState.data) : [];
+
   return (
     <>
       {/* Page Header */}
@@ -46,44 +151,92 @@ export default function DashboardPage() {
         <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <KpiCard
             label="Total Customers"
-            value="1,248"
-            trend="up"
-            trendLabel="+12% this month"
+            value={
+              customersState.status === "ready"
+                ? formatCount(customersState.data.length)
+                : "Unavailable"
+            }
+            trend="flat"
+            trendLabel={
+              customersState.status === "ready"
+                ? "Based on live records"
+                : "Unavailable for this role"
+            }
             icon={Users}
           />
           <KpiCard
-            label="Active Quotations"
-            value="342"
-            trend="up"
-            trendLabel="+5% this week"
+            label="Total Quotations"
+            value={
+              quotationsState.status === "ready"
+                ? formatCount(quotationsState.data.length)
+                : "Unavailable"
+            }
+            trend="flat"
+            trendLabel={
+              quotationsState.status === "ready"
+                ? "Based on live records"
+                : "Unavailable for this role"
+            }
             icon={FileText}
           />
           <KpiCard
-            label="Pending Invoices"
-            value="89"
-            trend="down"
-            trendLabel="-2% this week"
+            label="Open Invoices"
+            value={
+              invoicesState.status === "ready"
+                ? formatCount(openInvoiceCount)
+                : "Unavailable"
+            }
+            trend="flat"
+            trendLabel={
+              invoicesState.status === "ready"
+                ? "From current invoices"
+                : "Unavailable for this role"
+            }
             icon={Receipt}
           />
           <KpiCard
-            label="Service / Booking Workflow"
-            value="Services"
+            label="Services"
+            value={
+              servicesState.status === "ready"
+                ? formatCount(servicesState.data.length)
+                : "Unavailable"
+            }
             trend="flat"
-            trendLabel="Operational center"
+            trendLabel={
+              servicesState.status === "ready"
+                ? "Based on live records"
+                : "Unavailable for this role"
+            }
             icon={BriefcaseBusiness}
           />
           <KpiCard
-            label="Monthly Revenue"
-            value="SAR 2.4M"
-            trend="up"
-            trendLabel="+18% vs last month"
+            label="Total Collected"
+            value={
+              invoicesState.status === "ready"
+                ? formatCurrency(totalCollected)
+                : "Unavailable"
+            }
+            trend="flat"
+            trendLabel={
+              invoicesState.status === "ready"
+                ? "Collected on recorded invoices"
+                : "Unavailable for this role"
+            }
             icon={DollarSign}
           />
           <KpiCard
-            label="Pending Payments"
-            value="SAR 450K"
-            trend="warning"
-            trendLabel="Requires attention"
+            label="Pending Balance"
+            value={
+              invoicesState.status === "ready"
+                ? formatCurrency(pendingBalance)
+                : "Unavailable"
+            }
+            trend="flat"
+            trendLabel={
+              invoicesState.status === "ready"
+                ? "From current invoices"
+                : "Unavailable for this role"
+            }
             icon={CreditCard}
           />
         </div>
@@ -145,22 +298,36 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
-                {recentQuotations.map((q, i) => (
+                {recentQuotations.map((q) => (
                   <tr
-                    key={i}
+                    key={q.id}
                     className="hover:bg-surface-container-low/50 transition-colors"
                   >
-                    <td className="px-4 py-2 text-on-surface">{q.client}</td>
+                    <td className="px-4 py-2 text-on-surface">
+                      {q.customer?.company ?? q.event ?? q.quotationNumber}
+                    </td>
                     <td className="px-4 py-2 text-on-surface-variant">
-                      {q.value}
+                      {formatCurrency(q.grandTotal)}
                     </td>
                     <td className="px-4 py-2">
                       <StatusBadge variant={q.status}>
-                        {q.status.charAt(0).toUpperCase() + q.status.slice(1)}
+                        {formatStatus(q.status)}
                       </StatusBadge>
                     </td>
                   </tr>
                 ))}
+                {recentQuotations.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      className="px-4 py-8 text-center text-on-surface-variant"
+                    >
+                      {quotationsState.status === "ready"
+                        ? "No recent activity yet"
+                        : "Recent quotations unavailable for this role."}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
