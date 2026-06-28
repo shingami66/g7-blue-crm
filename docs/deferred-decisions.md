@@ -589,6 +589,14 @@ Decision: Implemented in commit `d25cb17 fix(dashboard): show live summary data`
 Status: Complete.
 Decision: Implemented in commit `1fbf77e feat(suppliers): add live read-only directory`. `/suppliers` now reads live supplier records from the database through a server-side supplier query layer, UI-safe mapper/types, and read-only client list/detail UI. The permission gate uses `suppliers:read`. Lint passed with only existing `<img>` warnings, `pnpm exec tsc --noEmit` passed, no bank/IBAN fields were selected, mapped, typed for UI, or rendered, and no `suppliers:write`, create/edit/delete/restore behavior, SQL/schema/migration change, or supplier finance/future module was introduced.
 
+### SUPPLIERS-CREATE-FORM-1
+Status: Complete.
+Decision: Implemented in commit `05affcd feat(suppliers): add create form`. This completed the create-only supplier flow, including the create page/form, validation, server action, and return path to the live supplier list. This does not complete Supplier Edit/Delete/Restore, full Supplier CRUD, bank/IBAN editing, supplier finance/workflow modules, SQL/schema/migration work, or payment approval workflow.
+
+### SUPPLIERS-CREATE-UX-FIX-1
+Status: Complete.
+Decision: Implemented in commit `9ed7a59 fix(suppliers): refine create ui`. This completed Team Lead create-flow UI/UX fixes only. Supplier Edit/Delete/Restore remain deferred until explicit RBAC, soft-delete, restore, audit, and permission policy are implemented. Supplier bank/IBAN collection/editing remains deferred. Supplier rate cards, allocations, bookings/internal POs, supplier invoices/payments, Supplier PO PDF/WhatsApp/email, supplier portal, costing/margin/P&L, and supplier payment approval workflows remain deferred.
+
 ### SUPPLIERS-LIST-LIVE-1
 Status: Superseded/completed by `SUPPLIERS-LIVE-READ-FOUNDATION-1`.
 Decision: `/suppliers` no longer depends on `suppliersData` for the live page. Supplier create/edit/delete/restore CRUD, supplier write actions/server actions, supplier rate cards, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
@@ -604,6 +612,17 @@ Decision: `INV-2026-0001`, `INV-2026-0002`, and `INV-2026-0003` are absent from 
 ### SERVICE-STATUS-WORKFLOW-1
 Status: Stage 1 Completed.
 Decision: Stage 1 manual Service status control is complete. Implemented in commit `0b0cc78 feat(services): add manual service status control`. Service status is now manually controlled from the Service detail page and saved in `services.status`. Manual smoke passed on `SVC-2026-0008`; the Service reached `Completed`, appeared correctly in Service detail and Services list, and persisted after UI refresh / navigation. This preserves the earlier history that no automation was implemented: the current MVP behavior is manual-only and does not validate quotation, invoice, payment, or actual delivery state before a manual status change.
+
+### SERVICE-STATUS-STATE-MACHINE-SPEC-1
+Status: Spec Complete / Implementation Pending.
+Decision: Completed and pushed in commit `760c569 spec(services): define status state machine`. This is Spec Kit design only under `specs/003-service-status-state-machine/`; it does not implement guarded transitions, `services:update_status`, UI next-state filtering, status audit/history persistence, or automation.
+Still deferred: quotation approval auto-updates, payment-to-Deposit-Paid automation, status audit/history table, cancellation overrides with financial records, reopen/reversal flow, and any hard enforcement or role-based override behavior.
+
+### TEAM-LEAD-CODEX-UX-ERP-BACKLOG-1
+Status: Captured / Deferred for targeted implementation.
+Decision: Team Lead UX/UI review and Codex UX-ERP analysis are official backlog inputs. The review score is `6.4/10`; the product is guided internal demo-ready, not operational-ready, and not client-production-ready. The strongest advantage remains the Service-centric workflow for Saudi events operations. The backlog capture does not mean the UX backlog is complete.
+Still deferred: Service guarded transition implementation, `services:update_status`, Service Detail related quotation CTA, approved quotation to Deposit Invoice CTA, disabled standalone Create Invoice removal, human reference display, currency/date format standardization, search/filter parity, invoice due-date visibility, Service payments panel, customer type defaults, breadcrumbs, user-friendly error copy, RBAC role model lock, event type taxonomy, Global Search, customer hub tabs, and remaining module polish.
+Supplier deferrals remain unchanged: Supplier Edit/Delete/Restore, supplier bank/IBAN collection/editing, rate cards, allocations, bookings/internal POs, supplier invoices/payments, Supplier PO PDF/WhatsApp/email, supplier portal, costing/margin/P&L, and payment approval workflows are future work. Full ZATCA/FATOORA Phase 2 remains deferred until official VAT registration and a separate approved design. Global Search may remain later until Sprint 1 workflow blockers are implemented.
 
 ### SERVICE-STATUS-GUARDED-TRANSITIONS-1
 Status: Deferred / Post-MVP Review.

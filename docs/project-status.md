@@ -511,6 +511,25 @@ Operational Invoice Module is not complete yet.
 - Verification evidence: lint passed with only existing `<img>` warnings, `pnpm exec tsc --noEmit` passed, no SQL/schema/migration changes were made, and no supplier finance/future modules were introduced.
 - Supplier implementation remains partial. Supplier create/edit/delete/restore CRUD, supplier write actions/server actions, supplier rate cards, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
 
+**Supplier Create and Service Status Spec Sync:**
+- `SUPPLIERS-CREATE-FORM-1` completed and pushed in commit `05affcd feat(suppliers): add create form`.
+- Scope was create-only supplier entry: create page/form, server action, schema validation, and list navigation. This does not complete Supplier Edit/Delete/Restore or broader Supplier CRUD.
+- `SUPPLIERS-CREATE-UX-FIX-1` completed and pushed in commit `9ed7a59 fix(suppliers): refine create ui`.
+- Scope was Team Lead create-flow UI/UX fixes only. Supplier Edit remains deferred until RBAC and soft-delete/restore policy are explicitly implemented.
+- `SERVICE-STATUS-STATE-MACHINE-SPEC-1` completed and pushed in commit `760c569 spec(services): define status state machine`.
+- Scope was Spec Kit design artifacts under `specs/003-service-status-state-machine/`. No source implementation, guarded transition enforcement, `services:update_status`, UI next-state filtering, or automation was implemented.
+- Next recommended area: Sprint 1 workflow blockers, starting with `SERVICE-STATUS-GUARDED-TRANSITIONS-1` or workflow CTA tasks (`SERVICE-DETAIL-RELATED-QUOTE-CTA-1`, `QUOTE-TO-DEPOSIT-CTA-1`, `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`, `HUMAN-REFERENCE-DISPLAY-1`).
+
+**Team Lead / Codex UX-ERP Review Backlog:**
+- Team Lead UX/UI review is captured as an official backlog input, not as completed work. Overall score: `6.4/10`.
+- Current readiness: suitable for guided internal demo; not operational-ready; not client-production-ready.
+- Strongest product advantage: Service-centric workflow for Saudi events operations.
+- Biggest confirmed gaps: workflow blockers, visible UUIDs, inconsistent currency/date formats, missing search/filter parity, missing breadcrumbs, RBAC clarity, and module-specific UX gaps.
+- Codex UX-ERP analysis completed and used to separate stale findings from still-open items. Directionally accurate Team Lead findings remain useful; stale items were not treated as current defects.
+- Already fixed or present: supplier live/read/create/UX fixes, quotation Approve/Reject, paid or zero-balance invoice payment disablement, Admin self-role/self-deactivation protection, and last-active-admin protection.
+- Still open or partly open: guarded Service status state-machine implementation, Related Quotations create CTA in Service Detail, approved quotation to Deposit Invoice CTA, removal of disabled standalone Create Invoice from Invoices page, human reference display instead of visible UUIDs, standardized currency/date formatting, and search/filter parity.
+- Next implementation focus remains Sprint 1 workflow blockers. Broad redesign is not planned; the path is targeted ERP workflow hardening.
+
 **Billing Flexibility Smoke:**
 - `BILLING-FLEXIBILITY-1` manual smoke passed for Direct Final Invoice without Deposit.
 - No invoice code patch is required for the no-deposit direct final path.

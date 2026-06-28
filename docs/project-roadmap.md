@@ -822,8 +822,20 @@ SUPPLIERS-LIVE-READ-FOUNDATION-1
 - Permission gate uses `suppliers:read`; this slice does not use `suppliers:write`.
 - Verification passed: lint passed with only existing PDF `<img>` warnings; `pnpm exec tsc --noEmit` passed; no bank/IBAN fields were selected, mapped, typed for UI, or rendered.
 - No create/edit/delete/restore behavior, SQL/schema/migration changes, or supplier finance/future modules were introduced.
-- Still deferred: supplier create/edit/delete/restore CRUD, supplier write actions/server actions, supplier rate cards, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow.
-- Next supplier work must be a separate controlled task, likely supplier create/edit design or supplier write-action readiness after review. Do not treat full supplier management as complete.
+- Still deferred after this read-only slice: supplier create/edit/delete/restore CRUD, supplier write actions/server actions, supplier rate cards, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow.
+
+SUPPLIERS-CREATE-FORM-1
+- Status: Completed and pushed.
+- Implemented in commit `05affcd feat(suppliers): add create form`.
+- Create-only supplier flow is complete: create form/page, validation, server action, and list navigation.
+- This is not full Supplier CRUD. Supplier Edit/Delete/Restore remain deferred.
+
+SUPPLIERS-CREATE-UX-FIX-1
+- Status: Completed and pushed.
+- Implemented in commit `9ed7a59 fix(suppliers): refine create ui`.
+- Team Lead create-flow UI/UX fixes are complete.
+- Supplier Edit remains deferred until RBAC and soft-delete/restore policy are explicitly implemented.
+- Supplier finance/workflow modules remain deferred: rate cards, allocations, bookings/internal POs, supplier invoices/payments, Supplier PO PDF/WhatsApp/email, supplier portal, costing/margin/P&L, and payment approval workflow.
 
 SUPPLIERS-LIST-LIVE-1
 - Status: Superseded/completed by `SUPPLIERS-LIVE-READ-FOUNDATION-1`.
@@ -853,6 +865,45 @@ SERVICE-STATUS-WORKFLOW-1
 - No DB migration was added.
 - The system does not yet validate quotation, invoice, payment, or delivery state before changing Service status.
 - Guarded transitions remain deferred under `SERVICE-STATUS-GUARDED-TRANSITIONS-1`.
+
+SERVICE-STATUS-STATE-MACHINE-SPEC-1
+- Status: Completed and pushed as Spec Kit design only.
+- Implemented in commit `760c569 spec(services): define status state machine`.
+- Design artifacts live under `specs/003-service-status-state-machine/`.
+- This does not implement guarded transitions, `services:update_status`, UI next-state filtering, status history/audit persistence, or status automation.
+- Upcoming Sprint 1 workflow blocker tasks: `SERVICE-STATUS-GUARDED-TRANSITIONS-1`, `SERVICE-DETAIL-RELATED-QUOTE-CTA-1`, `QUOTE-TO-DEPOSIT-CTA-1`, `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`, and `HUMAN-REFERENCE-DISPLAY-1`.
+
+TEAM-LEAD-CODEX-UX-ERP-BACKLOG-1
+- Status: Captured / Not completed.
+- Team Lead UX/UI score: `6.4/10`.
+- Readiness: guided internal demo-ready, not operational-ready, not client-production-ready.
+- Codex analysis: Team Lead report is directionally accurate but partly stale. Supplier create/live/UX fixes, quotation Approve/Reject, paid or zero-balance invoice payment disablement, Admin self-role/self-deactivation protections, and last-active-admin protection are already present.
+- Planning rule: broad redesign is not planned. Use targeted ERP workflow hardening slices.
+
+Critical / Sprint 1 backlog:
+- `SERVICE-STATUS-GUARDED-TRANSITIONS-1`: implement guarded Service status transitions or warning/override flow from the completed state-machine spec; `services:update_status` is still pending.
+- `SERVICE-DETAIL-RELATED-QUOTE-CTA-1`: add Create Quotation CTA where Service Detail has no related quotation.
+- `QUOTE-TO-DEPOSIT-CTA-1`: add Create Deposit Invoice CTA from an approved quotation where workflow state allows it.
+- `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`: remove disabled standalone Create Invoice affordance from the Invoices page.
+- `HUMAN-REFERENCE-DISPLAY-1`: replace visible UUIDs/internal identifiers with human reference numbers where users make decisions.
+
+High priority backlog:
+- `FORMAT-STANDARDIZATION-1`: standardize currency display and related numeric formatting.
+- `DATE-FORMAT-STANDARDIZATION-1`: standardize date display across lists, detail pages, and documents.
+- `LIST-SEARCH-FILTER-PARITY-1`: align search/filter behavior across major list pages.
+- `INVOICE-DUE-DATE-LIST-1`: expose invoice due-date visibility where list decisions require it.
+- `SERVICE-PAYMENTS-PANEL-1`: add Service-level payment visibility without changing financial source of truth.
+- `CUSTOMER-TYPE-DEFAULT-1`: define and apply safer customer type defaults.
+- `BREADCRUMB-NAV-1`: add consistent breadcrumb navigation for deep module pages.
+- `USER-FRIENDLY-ERROR-COPY-1`: replace technical error wording with user-safe operational copy.
+- `RBAC-ROLE-MODEL-LOCK-1`: lock and document the practical role model before more write workflows expand.
+- `EVENT-TYPE-TAXONOMY-1`: confirm event taxonomy before depending on event type reporting or automation.
+
+Polish / later backlog:
+- `USER-MANAGEMENT-CONFIRMATION-POLISH-1`
+- `QUOTE-APPROVAL-UX-POLISH-1`
+- `GLOBAL-SEARCH-1`
+- `CUSTOMER-HUB-TABS-1`
 
 SERVICE-STATUS-GUARDED-TRANSITIONS-1
 - Status: Deferred / Post-MVP Review.
