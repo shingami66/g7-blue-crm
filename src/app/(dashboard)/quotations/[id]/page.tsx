@@ -7,6 +7,8 @@ import { requirePermission, checkPermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import type { ComponentProps } from "react";
 import QuotationApprovalActions from "./QuotationApprovalActions";
+import { getInvoicesByQuotationId } from "@/lib/invoices/queries";
+import { CreateDepositInvoiceAction } from "@/app/(dashboard)/services/[id]/CreateDepositInvoiceAction";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -66,6 +68,12 @@ export default async function QuotationDetailPage({
   }
 
   const canApprove = await checkPermission("quotations:approve");
+  const canCreateInvoice = await checkPermission("invoices:write");
+
+  const relatedInvoices = await getInvoicesByQuotationId(quotation.id);
+  const activeDepositInvoice = relatedInvoices.find(
+    (inv) => inv.invoice_type === "deposit" && inv.status !== "cancelled" && inv.status !== "voided"
+  );
 
   // Helper for safe number formatting
   const formatMoney = (val: number | null | undefined) => {
@@ -271,6 +279,34 @@ export default async function QuotationDetailPage({
             </div>
           </div>
 
+          {/* Billing / Invoicing Actions */}
+          {quotation.status === "approved" && (
+            <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
+                <h3 className="font-semibold text-primary">Deposit Invoice</h3>
+              </div>
+              <div className="p-6">
+                {activeDepositInvoice ? (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[14px] text-on-surface-variant">
+                      Deposit invoice already created: <span className="font-medium text-on-surface">{activeDepositInvoice.invoice_number}</span>
+                    </span>
+                    <span className="text-[13px] text-on-surface-variant italic">
+                      Open it from the Invoices list.
+                    </span>
+                  </div>
+                ) : (
+                  <CreateDepositInvoiceAction
+                    serviceId={quotation.serviceId}
+                    quotationId={quotation.id}
+                    quotationTotal={quotation.grandTotal}
+                    canCreate={canCreateInvoice}
+                    disabledReasons={!canCreateInvoice ? ["Forbidden"] : []}
+                  />
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
