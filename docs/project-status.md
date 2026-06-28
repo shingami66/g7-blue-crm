@@ -520,6 +520,20 @@ Operational Invoice Module is not complete yet.
 - Scope was Spec Kit design artifacts under `specs/003-service-status-state-machine/`. No source implementation, guarded transition enforcement, `services:update_status`, UI next-state filtering, or automation was implemented.
 - Next recommended area: Sprint 1 workflow blockers, starting with `SERVICE-STATUS-GUARDED-TRANSITIONS-1` or workflow CTA tasks (`SERVICE-DETAIL-RELATED-QUOTE-CTA-1`, `QUOTE-TO-DEPOSIT-CTA-1`, `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`, `HUMAN-REFERENCE-DISPLAY-1`).
 
+**Guarded Service Status Transitions:**
+- `SERVICE-STATUS-GUARDED-TRANSITIONS-1` implemented and manual smoke passed.
+- Latest implementation commit: `1a4748f feat(services): guard status transitions`.
+- Service status workflow now uses guarded manual transitions.
+- Free status jumping is removed.
+- `services:update_status` permission is implemented in code.
+- Automation remains deferred.
+- **Manual smoke follow-up notes (Non-blocking observations tracked for future backlog):**
+  - Visible Customer UUID remains in Service Detail Customer Summary (Track under `HUMAN-REFERENCE-DISPLAY-1`).
+  - Currency/date formatting remains inconsistent in some service/billing areas (Track under `FORMAT-STANDARDIZATION-1` and `DATE-FORMAT-STANDARDIZATION-1`).
+  - Location/data typo such as `ryade` appears from existing data (Track under future `DATA-QUALITY-INPUT-NORMALIZATION-1`).
+  - Billing labels such as `Prior Invoiced` / `Remaining` still need wording polish according to Team Lead backlog (Track under `BILLING-LABEL-COPY-POLISH-1`).
+  - Browser/DevTools showed minor non-blocking warnings: form field missing `id` or `name`, and CSP warning about `eval`. These did not block the status transition workflow during smoke (Track under `UI-QUALITY-WARNINGS-CLEANUP-1`).
+
 **Team Lead / Codex UX-ERP Review Backlog:**
 - Team Lead UX/UI review is captured as an official backlog input, not as completed work. Overall score: `6.4/10`.
 - Current readiness: suitable for guided internal demo; not operational-ready; not client-production-ready.
@@ -527,7 +541,7 @@ Operational Invoice Module is not complete yet.
 - Biggest confirmed gaps: workflow blockers, visible UUIDs, inconsistent currency/date formats, missing search/filter parity, missing breadcrumbs, RBAC clarity, and module-specific UX gaps.
 - Codex UX-ERP analysis completed and used to separate stale findings from still-open items. Directionally accurate Team Lead findings remain useful; stale items were not treated as current defects.
 - Already fixed or present: supplier live/read/create/UX fixes, quotation Approve/Reject, paid or zero-balance invoice payment disablement, Admin self-role/self-deactivation protection, and last-active-admin protection.
-- Still open or partly open: guarded Service status state-machine implementation, Related Quotations create CTA in Service Detail, approved quotation to Deposit Invoice CTA, removal of disabled standalone Create Invoice from Invoices page, human reference display instead of visible UUIDs, standardized currency/date formatting, and search/filter parity.
+- Still open or partly open: Related Quotations create CTA in Service Detail, approved quotation to Deposit Invoice CTA, removal of disabled standalone Create Invoice from Invoices page, human reference display instead of visible UUIDs, standardized currency/date formatting, and search/filter parity.
 - Next implementation focus remains Sprint 1 workflow blockers. Broad redesign is not planned; the path is targeted ERP workflow hardening.
 
 **Billing Flexibility Smoke:**
@@ -551,7 +565,7 @@ Operational Invoice Module is not complete yet.
 - Status persisted after UI refresh / navigation.
 - Current behavior is manual-only.
 - The system does not yet validate quotation, invoice, payment, or delivery state before changing Service status.
-- Guarded transitions are deferred as `SERVICE-STATUS-GUARDED-TRANSITIONS-1`.
+- Guarded transitions are implemented under `SERVICE-STATUS-GUARDED-TRANSITIONS-1`.
 
 **Invoice List Sort:**
 - `INVOICE-LIST-SORT-1` completed.

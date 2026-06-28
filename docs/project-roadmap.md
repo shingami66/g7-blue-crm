@@ -864,14 +864,14 @@ SERVICE-STATUS-WORKFLOW-1
 - No automation was added.
 - No DB migration was added.
 - The system does not yet validate quotation, invoice, payment, or delivery state before changing Service status.
-- Guarded transitions remain deferred under `SERVICE-STATUS-GUARDED-TRANSITIONS-1`.
+- Guarded transitions are implemented under `SERVICE-STATUS-GUARDED-TRANSITIONS-1`.
 
 SERVICE-STATUS-STATE-MACHINE-SPEC-1
 - Status: Completed and pushed as Spec Kit design only.
 - Implemented in commit `760c569 spec(services): define status state machine`.
 - Design artifacts live under `specs/003-service-status-state-machine/`.
 - This does not implement guarded transitions, `services:update_status`, UI next-state filtering, status history/audit persistence, or status automation.
-- Upcoming Sprint 1 workflow blocker tasks: `SERVICE-STATUS-GUARDED-TRANSITIONS-1`, `SERVICE-DETAIL-RELATED-QUOTE-CTA-1`, `QUOTE-TO-DEPOSIT-CTA-1`, `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`, and `HUMAN-REFERENCE-DISPLAY-1`.
+- Upcoming Sprint 1 workflow blocker tasks: `SERVICE-DETAIL-RELATED-QUOTE-CTA-1`, `QUOTE-TO-DEPOSIT-CTA-1`, `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`, and `HUMAN-REFERENCE-DISPLAY-1`.
 
 TEAM-LEAD-CODEX-UX-ERP-BACKLOG-1
 - Status: Captured / Not completed.
@@ -881,15 +881,18 @@ TEAM-LEAD-CODEX-UX-ERP-BACKLOG-1
 - Planning rule: broad redesign is not planned. Use targeted ERP workflow hardening slices.
 
 Critical / Sprint 1 backlog:
-- `SERVICE-STATUS-GUARDED-TRANSITIONS-1`: implement guarded Service status transitions or warning/override flow from the completed state-machine spec; `services:update_status` is still pending.
-- `SERVICE-DETAIL-RELATED-QUOTE-CTA-1`: add Create Quotation CTA where Service Detail has no related quotation.
-- `QUOTE-TO-DEPOSIT-CTA-1`: add Create Deposit Invoice CTA from an approved quotation where workflow state allows it.
-- `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`: remove disabled standalone Create Invoice affordance from the Invoices page.
-- `HUMAN-REFERENCE-DISPLAY-1`: replace visible UUIDs/internal identifiers with human reference numbers where users make decisions.
+- [x] `SERVICE-STATUS-GUARDED-TRANSITIONS-1`: implemented guarded Service status transitions; free status jumping removed; `services:update_status` permission enforced.
+- [ ] `SERVICE-DETAIL-RELATED-QUOTE-CTA-1`: add Create Quotation CTA where Service Detail has no related quotation.
+- [ ] `QUOTE-TO-DEPOSIT-CTA-1`: add Create Deposit Invoice CTA from an approved quotation where workflow state allows it.
+- [ ] `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`: remove disabled standalone Create Invoice affordance from the Invoices page.
+- [ ] `HUMAN-REFERENCE-DISPLAY-1`: replace visible UUIDs/internal identifiers with human reference numbers where users make decisions (e.g., visible Customer UUID in Service Detail Customer Summary).
 
 High priority backlog:
-- `FORMAT-STANDARDIZATION-1`: standardize currency display and related numeric formatting.
-- `DATE-FORMAT-STANDARDIZATION-1`: standardize date display across lists, detail pages, and documents.
+- `FORMAT-STANDARDIZATION-1`: standardize currency display and related numeric formatting (inconsistent formatting noted in service/billing areas).
+- `DATE-FORMAT-STANDARDIZATION-1`: standardize date display across lists, detail pages, and documents (inconsistent formatting noted in service/billing areas).
+- `DATA-QUALITY-INPUT-NORMALIZATION-1`: normalize city inputs and old data values (e.g., location typo `ryade` in existing data).
+- `BILLING-LABEL-COPY-POLISH-1`: polish billing labels (such as `Prior Invoiced` and `Remaining`) according to Team Lead backlog feedback.
+- `UI-QUALITY-WARNINGS-CLEANUP-1`: clean up minor UI issues and DevTools console warnings (e.g., missing form field `id`/`name`, CSP `eval` warnings).
 - `LIST-SEARCH-FILTER-PARITY-1`: align search/filter behavior across major list pages.
 - `INVOICE-DUE-DATE-LIST-1`: expose invoice due-date visibility where list decisions require it.
 - `SERVICE-PAYMENTS-PANEL-1`: add Service-level payment visibility without changing financial source of truth.
