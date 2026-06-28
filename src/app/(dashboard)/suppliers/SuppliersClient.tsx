@@ -1,12 +1,13 @@
 "use client";
 
 import type { ComponentProps } from "react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import DataTable from "@/components/ui/DataTable";
-import { Filter, Search, Star, Phone, Mail, FileText, CheckCircle2, User, MapPin } from "lucide-react";
+import { Filter, Search, Star, Phone, Mail, FileText, CheckCircle2, User, MapPin, Plus } from "lucide-react";
 import type { Supplier, SupplierStatus } from "@/types/supplier";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
@@ -64,9 +65,11 @@ function supplierMatchesSearch(supplier: Supplier, searchTerm: string) {
 export default function SuppliersClient({
   suppliers,
   loadError,
+  canCreateSuppliers = false,
 }: {
   suppliers: Supplier[];
   loadError?: "suppliers_load_failed";
+  canCreateSuppliers?: boolean;
 }) {
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -99,6 +102,18 @@ export default function SuppliersClient({
         title="Supplier Network"
         subtitle="Review live supplier directory records from the database."
       />
+
+      {canCreateSuppliers && (
+        <div className="mb-4 flex justify-end">
+          <Link
+            href="/suppliers/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold text-on-primary transition-colors hover:bg-primary-container"
+          >
+            <Plus size={16} />
+            New Supplier
+          </Link>
+        </div>
+      )}
 
       {loadError && (
         <div className="mb-4 rounded-lg border border-error-container bg-error-container/40 px-4 py-3 text-[14px] font-medium text-on-error-container">
