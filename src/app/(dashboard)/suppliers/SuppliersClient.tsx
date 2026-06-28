@@ -34,6 +34,17 @@ function formatStatus(value: SupplierStatus) {
   return formatOption(value);
 }
 
+function formatVatRegistration(value: Supplier["vatRegistrationStatus"]) {
+  if (value === "not_registered") return "Not Registered";
+  if (value === "registered") return "VAT Registered";
+  if (value === "unknown") return "Unknown";
+  return "-";
+}
+
+function hasRating(supplier: Supplier) {
+  return supplier.rating > 0;
+}
+
 function getSupplierInitial(supplier: Supplier) {
   return supplier.name.trim().charAt(0).toUpperCase() || "S";
 }
@@ -206,7 +217,14 @@ export default function SuppliersClient({
                             <Star size={14} className="text-tertiary-fixed-dim fill-current" />
                           )}
                         </div>
-                        <div className="text-[12px] text-on-surface-variant mt-0.5">
+                        <div
+                          className={`mt-0.5 max-w-[160px] truncate ${
+                            supplier.supplierNumber
+                              ? "text-[12px] text-on-surface-variant"
+                              : "font-mono text-xs text-on-surface-variant opacity-40"
+                          }`}
+                          title={supplier.supplierNumber ?? supplier.id}
+                        >
                           {supplier.supplierNumber ?? supplier.id}
                         </div>
                       </div>
@@ -224,10 +242,16 @@ export default function SuppliersClient({
                     {[supplier.city, supplier.country].filter(Boolean).join(", ") || "-"}
                   </td>
                   <td className="px-4 py-4">
-                    <div className="flex items-center gap-1">
-                      <Star size={16} className="text-tertiary-fixed-dim fill-current" />
-                      <span className="font-semibold text-on-surface">{supplier.rating.toFixed(1)}</span>
-                    </div>
+                    {hasRating(supplier) ? (
+                      <div className="flex items-center gap-1">
+                        <Star size={16} className="text-tertiary-fixed-dim fill-current" />
+                        <span className="font-semibold text-on-surface">
+                          {supplier.rating.toFixed(1)}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-on-surface-variant">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-4">
                     <StatusBadge variant={STATUS_VARIANT_MAP[supplier.status]}>
@@ -261,7 +285,14 @@ export default function SuppliersClient({
                     {activeSupplier.name}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[12px] font-mono text-on-surface-variant">
+                    <span
+                      className={
+                        activeSupplier.supplierNumber
+                          ? "text-[12px] font-mono text-on-surface-variant"
+                          : "max-w-[180px] truncate font-mono text-xs text-on-surface-variant opacity-40"
+                      }
+                      title={activeSupplier.supplierNumber ?? activeSupplier.id}
+                    >
                       {activeSupplier.supplierNumber ?? activeSupplier.id}
                     </span>
                     <span className="bg-surface-variant text-on-surface px-2 py-0.5 rounded text-[10px] font-bold uppercase">
@@ -315,7 +346,7 @@ export default function SuppliersClient({
                   <div className="flex justify-between items-center gap-4">
                     <span className="text-on-surface-variant">VAT Registration</span>
                     <span className="text-on-surface font-medium">
-                      {formatOption(activeSupplier.vatRegistrationStatus)}
+                      {formatVatRegistration(activeSupplier.vatRegistrationStatus)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center gap-4">
@@ -356,8 +387,8 @@ export default function SuppliersClient({
                   <div>
                     <div className="text-[14px] font-medium text-on-surface">
                       {activeSupplier.recentProject
-                        ? `Contract ${activeSupplier.recentProject}`
-                        : "No recent project recorded"}
+                        ? `Service ${activeSupplier.recentProject}`
+                        : "No recent service recorded"}
                     </div>
                     <div className="text-[12px] text-on-surface-variant">
                       Live supplier directory record

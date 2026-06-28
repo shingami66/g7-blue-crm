@@ -10,7 +10,10 @@ import {
 } from "@/lib/suppliers/schemas";
 
 const SUPPLIER_TYPES = ["company", "individual"] as const;
-const VAT_REGISTRATION_STATUSES = ["not_registered", "registered", "unknown"] as const;
+const VAT_REGISTRATION_OPTIONS = [
+  { value: "not_registered", label: "Not Registered" },
+  { value: "registered", label: "VAT Registered" },
+] as const;
 
 function formatOption(value: string) {
   return value
@@ -41,10 +44,13 @@ export default function SupplierCreateForm() {
   const [country, setCountry] = useState("");
   const [coverageArea, setCoverageArea] = useState("");
   const [crNumber, setCrNumber] = useState("");
-  const [vatRegistrationStatus, setVatRegistrationStatus] = useState("");
+  const [vatRegistrationStatus, setVatRegistrationStatus] = useState<
+    (typeof VAT_REGISTRATION_OPTIONS)[number]["value"]
+  >("not_registered");
   const [vatNumber, setVatNumber] = useState("");
   const [status, setStatus] = useState<(typeof SAFE_SUPPLIER_CREATE_STATUSES)[number]>("active");
   const [isPreferred, setIsPreferred] = useState(false);
+  const [notes, setNotes] = useState("");
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -75,10 +81,11 @@ export default function SupplierCreateForm() {
       country: emptyToUndefined(country),
       coverageArea: emptyToUndefined(coverageArea),
       crNumber: emptyToUndefined(crNumber),
-      vatRegistrationStatus: emptyToUndefined(vatRegistrationStatus),
+      vatRegistrationStatus,
       vatNumber: emptyToUndefined(vatNumber),
       status,
       isPreferred,
+      notes: emptyToUndefined(notes),
     });
 
     if (result.success) {
@@ -155,7 +162,7 @@ export default function SupplierCreateForm() {
                   onChange={(event) => setSupplierType(event.target.value)}
                   className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                 >
-                  <option value="">Not specified</option>
+                  <option value="">Select type</option>
                   {SUPPLIER_TYPES.map((type) => (
                     <option key={type} value={type}>
                       {formatOption(type)}
@@ -171,7 +178,7 @@ export default function SupplierCreateForm() {
                   onChange={(event) => setCategory(event.target.value)}
                   className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                 >
-                  <option value="">Not specified</option>
+                  <option value="">Select category</option>
                   {SUPPLIER_CATEGORIES.map((supplierCategory) => (
                     <option key={supplierCategory} value={supplierCategory}>
                       {formatOption(supplierCategory)}
@@ -179,6 +186,26 @@ export default function SupplierCreateForm() {
                   ))}
                 </select>
               </div>
+            </div>
+
+            <label className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] font-semibold text-on-surface">
+              <input
+                type="checkbox"
+                checked={isPreferred}
+                onChange={(event) => setIsPreferred(event.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              Preferred Supplier
+            </label>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[14px] font-semibold text-on-surface">Coverage Area</label>
+              <input
+                type="text"
+                value={coverageArea}
+                onChange={(event) => setCoverageArea(event.target.value)}
+                className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -198,22 +225,12 @@ export default function SupplierCreateForm() {
                   ))}
                 </select>
               </div>
-
-              <label className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] font-semibold text-on-surface">
-                <input
-                  type="checkbox"
-                  checked={isPreferred}
-                  onChange={(event) => setIsPreferred(event.target.checked)}
-                  className="h-4 w-4 accent-primary"
-                />
-                Preferred supplier
-              </label>
             </div>
           </div>
 
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden p-6 flex flex-col gap-4">
             <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">
-              Contact And Compliance
+              Contact & Legal
             </h3>
 
             <div className="flex flex-col gap-1.5">
@@ -281,16 +298,6 @@ export default function SupplierCreateForm() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[14px] font-semibold text-on-surface">Coverage Area</label>
-              <input
-                type="text"
-                value={coverageArea}
-                onChange={(event) => setCoverageArea(event.target.value)}
-                className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
-              />
-            </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[14px] font-semibold text-on-surface">CR Number</label>
@@ -308,13 +315,16 @@ export default function SupplierCreateForm() {
                 </label>
                 <select
                   value={vatRegistrationStatus}
-                  onChange={(event) => setVatRegistrationStatus(event.target.value)}
+                  onChange={(event) =>
+                    setVatRegistrationStatus(
+                      event.target.value as (typeof VAT_REGISTRATION_OPTIONS)[number]["value"],
+                    )
+                  }
                   className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                 >
-                  <option value="">Not specified</option>
-                  {VAT_REGISTRATION_STATUSES.map((vatStatus) => (
-                    <option key={vatStatus} value={vatStatus}>
-                      {formatOption(vatStatus)}
+                  {VAT_REGISTRATION_OPTIONS.map((vatStatus) => (
+                    <option key={vatStatus.value} value={vatStatus.value}>
+                      {vatStatus.label}
                     </option>
                   ))}
                 </select>
@@ -328,6 +338,17 @@ export default function SupplierCreateForm() {
                 value={vatNumber}
                 onChange={(event) => setVatNumber(event.target.value)}
                 className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[14px] font-semibold text-on-surface">Internal Notes</label>
+              <textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                rows={4}
+                className="w-full resize-y bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                placeholder="Optional internal context for the supplier directory"
               />
             </div>
           </div>

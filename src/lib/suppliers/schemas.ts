@@ -53,7 +53,7 @@ const optionalSupplierCategory = z.preprocess((value) => {
 const optionalVatRegistrationStatus = z.preprocess((value) => {
   if (value === null || value === undefined || value === "") return null;
   return value;
-}, z.enum(["not_registered", "registered", "unknown"]).nullable());
+}, z.enum(["not_registered", "registered"]).nullable());
 
 export const createSupplierSchema = z
   .object({
@@ -73,6 +73,7 @@ export const createSupplierSchema = z
     vatNumber: optionalTrimmedText,
     status: z.enum(SAFE_SUPPLIER_CREATE_STATUSES).default("active"),
     isPreferred: z.boolean().default(false),
+    notes: optionalTrimmedText,
   })
   .strict()
   .superRefine((input, context) => {

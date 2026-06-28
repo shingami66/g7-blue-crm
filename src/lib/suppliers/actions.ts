@@ -42,6 +42,7 @@ function supplierInsertPayload(input: CreateSupplierInput, clerkUserId: string) 
     vat_registration_status: input.vatRegistrationStatus,
     vat_number: input.vatRegistrationStatus === "registered" ? input.vatNumber : null,
     is_preferred: input.isPreferred,
+    notes: input.notes,
     created_by: clerkUserId,
     updated_by: clerkUserId,
   };
