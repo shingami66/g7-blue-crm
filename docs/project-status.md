@@ -570,7 +570,14 @@ Operational Invoice Module is not complete yet.
 - `SUPPLIERS-CREATE-FORM-1` completed and pushed in commit `05affcd feat(suppliers): add create form`.
 - Scope was create-only supplier entry: create page/form, server action, schema validation, and list navigation. This does not complete Supplier Edit/Delete/Restore or broader Supplier CRUD.
 - `SUPPLIERS-CREATE-UX-FIX-1` completed and pushed in commit `9ed7a59 fix(suppliers): refine create ui`.
-- Scope was Team Lead create-flow UI/UX fixes only. Supplier Edit remains deferred until RBAC and soft-delete/restore policy are explicitly implemented.
+- Scope was Team Lead create-flow UI/UX fixes only.
+- `SUPPLIERS-EDIT-FORM-1` completed and pushed in commit `9f87566 feat(suppliers): add edit form`.
+- Scope allows updating basic, safe, non-sensitive supplier profile fields only.
+- Enforces `suppliers:write` on both the edit page and server action.
+- Prefills existing safe data. Soft-deleted records are protected.
+- Sensitive banking and blacklist audit fields are strictly excluded.
+- Lint and TypeScript compile successfully with zero errors.
+- Other supplier modules (finance, rate cards, delete/restore, blacklist workflows) remain deferred.
 - `SERVICE-STATUS-STATE-MACHINE-SPEC-1` completed and pushed in commit `760c569 spec(services): define status state machine`.
 - Scope was Spec Kit design artifacts under `specs/003-service-status-state-machine/`. No source implementation, guarded transition enforcement, `services:update_status`, UI next-state filtering, or automation was implemented.
 - Next recommended area: Sprint 1 workflow blockers, starting with `SERVICE-STATUS-GUARDED-TRANSITIONS-1` or workflow CTA tasks (`SERVICE-DETAIL-RELATED-QUOTE-CTA-1`, `QUOTE-TO-DEPOSIT-CTA-1`, `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`, `HUMAN-REFERENCE-DISPLAY-1`).

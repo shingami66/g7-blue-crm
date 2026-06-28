@@ -834,14 +834,24 @@ SUPPLIERS-CREATE-FORM-1
 - Status: Completed and pushed.
 - Implemented in commit `05affcd feat(suppliers): add create form`.
 - Create-only supplier flow is complete: create form/page, validation, server action, and list navigation.
-- This is not full Supplier CRUD. Supplier Edit/Delete/Restore remain deferred.
+- This is not full Supplier CRUD. Supplier Delete/Restore remain deferred.
 
 SUPPLIERS-CREATE-UX-FIX-1
 - Status: Completed and pushed.
 - Implemented in commit `9ed7a59 fix(suppliers): refine create ui`.
 - Team Lead create-flow UI/UX fixes are complete.
-- Supplier Edit remains deferred until RBAC and soft-delete/restore policy are explicitly implemented.
+- Basic profile Supplier Edit is complete. Supplier Delete/Restore remain deferred.
 - Supplier finance/workflow modules remain deferred: rate cards, allocations, bookings/internal POs, supplier invoices/payments, Supplier PO PDF/WhatsApp/email, supplier portal, costing/margin/P&L, and payment approval workflow.
+
+SUPPLIERS-EDIT-FORM-1
+- Status: Completed and pushed.
+- Implemented in commit `9f87566 feat(suppliers): add edit form`.
+- Scope allows updating basic, safe, non-sensitive supplier profile fields only.
+- Enforces `suppliers:write` on edit page and update server action.
+- Prefills existing safe data. Soft-deleted records are protected.
+- Sensitive banking and blacklist audit fields remain excluded.
+- Lint and TypeScript compile successfully with zero errors.
+- Other supplier modules (finance, rate cards, delete/restore, blacklist workflows) remain deferred.
 
 SUPPLIERS-LIST-LIVE-1
 - Status: Superseded/completed by `SUPPLIERS-LIVE-READ-FOUNDATION-1`.
