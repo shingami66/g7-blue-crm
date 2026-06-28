@@ -301,14 +301,24 @@ export default function SuppliersClient({
                   </div>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setSelectedSupplierId(null)}
-                className="text-on-surface-variant hover:text-primary"
-                aria-label="Close supplier details"
-              >
-                &times;
-              </button>
+              <div className="flex items-center gap-4">
+                {canCreateSuppliers && (
+                  <Link
+                    href={`/suppliers/${activeSupplier.id}/edit`}
+                    className="text-[12px] font-medium text-primary hover:underline px-2 py-1 rounded hover:bg-surface-variant"
+                  >
+                    Edit
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedSupplierId(null)}
+                  className="text-on-surface-variant hover:text-primary"
+                  aria-label="Close supplier details"
+                >
+                  &times;
+                </button>
+              </div>
             </div>
 
             <div className="space-y-6">

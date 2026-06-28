@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createSupplierSchema } from "./schemas";
-import type { CreateSupplierInput } from "./schemas";
+import { createSupplierSchema, updateSupplierSchema } from "./schemas";
+import type { CreateSupplierInput, UpdateSupplierInput } from "./schemas";
 
 export type CreateSupplierResult = {
   success: boolean;
@@ -75,6 +75,72 @@ export async function createSupplier(input: unknown): Promise<CreateSupplierResu
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
     console.error("[createSupplier] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export type UpdateSupplierResult = {
+  success: boolean;
+  error?: string;
+};
+
+function supplierUpdatePayload(input: UpdateSupplierInput, clerkUserId: string) {
+  const displayName = input.displayName;
+  const contactName = input.contactName ?? displayName;
+  const category = input.category ?? null;
+
+  return {
+    supplier_type: input.supplierType,
+    category,
+    legal_name: input.legalName,
+    display_name: displayName,
+    contact_name: contactName,
+    whatsapp_phone: input.whatsappPhone,
+    email: input.email,
+    city: input.city,
+    country: input.country,
+    coverage_area: input.coverageArea,
+    name: displayName,
+    service: category ?? "other",
+    contact: contactName,
+    phone: input.phone,
+    status: input.status,
+    cr_number: input.crNumber,
+    vat_registration_status: input.vatRegistrationStatus,
+    vat_number: input.vatRegistrationStatus === "registered" ? input.vatNumber : null,
+    is_preferred: input.isPreferred,
+    notes: input.notes,
+    updated_by: clerkUserId,
+  };
+}
+
+export async function updateSupplier(input: unknown): Promise<UpdateSupplierResult> {
+  try {
+    const user = await requirePermission("suppliers:write");
+    const parsed = updateSupplierSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return { success: false, error: firstValidationError(parsed) };
+    }
+
+    const supabase = createAdminClient();
+    const { error } = await supabase
+      .from("suppliers")
+      .update(supplierUpdatePayload(parsed.data, user.clerk_user_id))
+      .eq("id", parsed.data.id)
+      .eq("is_deleted", false);
+
+    if (error) {
+      console.error("[updateSupplier] Supabase error:", error.message);
+      return { success: false, error: "Failed to update supplier. Please try again." };
+    }
+
+    revalidatePath("/suppliers");
+    return { success: true };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[updateSupplier] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { success: false, error: "An unexpected error occurred." };
   }
 }

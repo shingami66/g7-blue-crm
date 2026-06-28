@@ -19,10 +19,13 @@ export interface Supplier {
   country: string | null;
   coverageArea: string | null;
   vatRegistrationStatus: SupplierVatRegistrationStatus | null;
+  vatNumber: string | null;
+  crNumber: string | null;
   isPreferred: boolean;
   rating: number;
   status: SupplierStatus;
   recentProject: string | null;
+  notes: string | null;
   createdAt: string;
   updatedAt: string;
 }

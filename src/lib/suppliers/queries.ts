@@ -28,7 +28,10 @@ const SUPPLIER_LIST_SELECT = `
   status,
   recent_project,
   vat_registration_status,
+  vat_number,
+  cr_number,
   is_preferred,
+  notes,
   created_at,
   updated_at
 `;
@@ -79,5 +82,37 @@ export async function getSuppliersList(): Promise<SuppliersListResult> {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error("[getSuppliersList] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { suppliers: [], error: "suppliers_load_failed" };
+  }
+}
+
+export async function getSupplierById(id: string): Promise<{ supplier: Supplier | null; error?: string }> {
+  await requirePermission("suppliers:read");
+
+  try {
+    const supabase = createAdminClient();
+
+    const { data, error } = await supabase
+      .from("suppliers")
+      .select(SUPPLIER_LIST_SELECT)
+      .eq("id", id)
+      .eq("is_deleted", false)
+      .is("deleted_at", null)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        return { supplier: null };
+      }
+      console.error("[getSupplierById] Supabase error:", error.message);
+      return { supplier: null, error: "supplier_load_failed" };
+    }
+
+    return {
+      supplier: mapRowToSupplier((data as unknown) as SupplierRow),
+    };
+  } catch (err) {
+    if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
+    console.error("[getSupplierById] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { supplier: null, error: "supplier_load_failed" };
   }
 }

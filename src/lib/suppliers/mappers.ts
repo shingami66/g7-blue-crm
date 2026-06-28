@@ -24,10 +24,13 @@ export function mapRowToSupplier(row: SupplierRow): Supplier {
     country: row.country,
     coverageArea: row.coverage_area,
     vatRegistrationStatus: row.vat_registration_status,
+    vatNumber: row.vat_number,
+    crNumber: row.cr_number,
     isPreferred: row.is_preferred ?? false,
     rating: normalizeRating(row.rating),
     status: row.status,
     recentProject: row.recent_project,
+    notes: row.notes,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

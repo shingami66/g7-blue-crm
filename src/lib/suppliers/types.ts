@@ -33,9 +33,12 @@ export interface SupplierRow {
   status: SupplierStatus;
   recent_project: string | null;
   vat_registration_status: SupplierVatRegistrationStatus | null;
+  vat_number: string | null;
+  cr_number: string | null;
   is_preferred: boolean | null;
   created_at: string;
   updated_at: string;
+  notes: string | null;
 }
 
 export interface SuppliersListResult {

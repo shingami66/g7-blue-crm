@@ -87,3 +87,9 @@ export const createSupplierSchema = z
   });
 
 export type CreateSupplierInput = z.infer<typeof createSupplierSchema>;
+
+export const updateSupplierSchema = createSupplierSchema.extend({
+  id: z.string().uuid("Invalid supplier ID"),
+});
+
+export type UpdateSupplierInput = z.infer<typeof updateSupplierSchema>;
