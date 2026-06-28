@@ -10,6 +10,20 @@ export const SERVICE_STATUSES = [
 
 export type ServiceStatus = (typeof SERVICE_STATUSES)[number];
 
+export interface ServiceStatusTransitionAction {
+  status: ServiceStatus;
+  label: string;
+  description: string;
+  blockedReason: string | null;
+  requiresCancellationReason: boolean;
+}
+
+export interface ServiceStatusTransitionState {
+  currentStatus: ServiceStatus;
+  isTerminal: boolean;
+  actions: ServiceStatusTransitionAction[];
+}
+
 export interface ServiceCustomerSummary {
   company: string;
   contact: string;

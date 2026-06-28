@@ -5,12 +5,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { createServiceSchema, updateServiceSchema, updateServiceStatusSchema } from "./schemas";
+import { validateServiceStatusTransition } from "./status-transitions";
 import type {
   CreatedServiceResult,
   CreateServiceInput,
   UpdateServiceInput,
 } from "./types";
 import { getServiceById } from "./queries";
+import type { ServiceStatus } from "@/types/service";
 
 export type ActionResult<T = void> = {
   success: boolean;
@@ -337,7 +339,7 @@ export async function updateServiceStatusAction(
   input: unknown
 ): Promise<ActionResult<{ id: string }>> {
   try {
-    const user = await requirePermission("services:write");
+    const user = await requirePermission("services:update_status");
 
     const parsed = updateServiceStatusSchema.safeParse(input);
 
@@ -345,19 +347,49 @@ export async function updateServiceStatusAction(
       return { success: false, error: firstValidationError(parsed) };
     }
 
-    const currentService = await getServiceById(id);
+    const supabase = createAdminClient();
+    const { data: currentService, error: serviceError } = await supabase
+      .from("services")
+      .select("id, status")
+      .eq("id", id)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (serviceError) {
+      console.error("[updateServiceStatusAction] Service lookup error:", serviceError.message);
+      return { success: false, error: "Failed to update service status. Please try again." };
+    }
+
     if (!currentService) {
       return { success: false, error: "Service not found." };
     }
 
-    const supabase = createAdminClient();
+    const validationResult = await validateServiceStatusTransition(
+      supabase,
+      id,
+      currentService.status as ServiceStatus,
+      parsed.data.status,
+      parsed.data.cancellation_reason
+    );
+
+    if (!validationResult.success) {
+      return { success: false, error: validationResult.error };
+    }
+
+    const updates: Record<string, unknown> = {
+      status: parsed.data.status,
+      updated_by: user.clerk_user_id,
+    };
+
+    if (parsed.data.status === "Cancelled") {
+      updates.cancellation_reason = parsed.data.cancellation_reason;
+    }
+
     const { error } = await supabase
       .from("services")
-      .update({
-        status: parsed.data.status,
-        updated_by: user.clerk_user_id,
-      })
+      .update(updates)
       .eq("id", id)
+      .eq("status", currentService.status)
       .is("deleted_at", null)
       .select("id")
       .single();

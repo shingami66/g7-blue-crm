@@ -116,4 +116,5 @@ export const updateServiceSchema = serviceBaseSchema
 
 export const updateServiceStatusSchema = z.object({
   status: serviceStatusSchema,
+  cancellation_reason: nullableTrimmedString.optional(),
 });

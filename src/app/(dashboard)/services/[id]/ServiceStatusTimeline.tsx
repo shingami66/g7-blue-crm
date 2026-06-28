@@ -29,7 +29,7 @@ export default function ServiceStatusTimeline({
       <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright">
         <h3 className="font-semibold text-primary">Service Status Timeline</h3>
         <p className="mt-1 text-[13px] leading-[18px] text-on-surface-variant">
-          Display-only workflow view. Status transitions remain controlled by future workflow actions.
+          Display-only workflow view. Status changes are controlled by guarded workflow actions.
         </p>
       </div>
 

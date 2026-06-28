@@ -3,8 +3,10 @@ import type { ComponentProps, ReactNode } from "react";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getQuotationsByServiceId } from "@/lib/quotations/queries";
 import { getServiceBillingState } from "@/lib/invoices";
+import { getServiceStatusTransitionState } from "@/lib/services/status-transitions";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { ArrowLeft, CalendarDays, Edit, FileText, MapPin, UserRound } from "lucide-react";
 import Link from "next/link";
@@ -73,12 +75,20 @@ export default async function ServiceDetailPage({
 
   const canCreateQuotation = await checkPermission("quotations:write");
   const canEditService = await checkPermission("services:write");
+  const canUpdateServiceStatus = await checkPermission("services:update_status");
   const canReadQuotations = await checkPermission("quotations:read");
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
   const relatedQuotations = canReadQuotations
     ? await getQuotationsByServiceId(service.id)
     : null;
   const billingState = await getServiceBillingState(service.id);
+  const statusTransitionState = canUpdateServiceStatus
+    ? await getServiceStatusTransitionState(
+        createAdminClient(),
+        service.id,
+        service.status
+      )
+    : null;
 
   return (
     <div className="flex flex-col gap-6 pb-12">
@@ -148,10 +158,11 @@ export default async function ServiceDetailPage({
         cancellationReason={service.cancellationReason}
       />
 
-      {canEditService && (
+      {canUpdateServiceStatus && statusTransitionState && (
         <ServiceStatusControl
           serviceId={service.id}
           currentStatus={service.status}
+          transitionState={statusTransitionState}
         />
       )}
 
