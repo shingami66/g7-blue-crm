@@ -309,6 +309,18 @@
 - Existing validation, permissions, and bank masking are expected to remain respected.
 - Manual browser smoke remains pending.
 
+### âœ… SERVICE-DETAIL-RELATED-QUOTE-CTA-1
+- Status: Completed, reviewed, manual smoke passed, and pushed.
+- Implementation commits:
+  - `80e3765 feat(services): add related quotation create cta`
+  - `0930954 fix(services): align quotation cta eligibility`
+- Added `Create Quotation` CTA inside the Service Detail `Related Quotations` card.
+- CTA links to `/quotations/new?serviceId=<service-id>` for eligible services, passing context correctly.
+- Eligibility fix ensures already-started Inquiry/Quoted services show a disabled CTA with the reason:
+  `Cannot create a quotation because the service has already started.`
+- Clean Code Guard Review Mode passed successfully.
+- Lint and TypeScript compile successfully.
+
 ## 4. Current Active Phase
 
 ### ðŸš§ Locked Next CRM Priorities
@@ -540,8 +552,8 @@ Operational Invoice Module is not complete yet.
 - Strongest product advantage: Service-centric workflow for Saudi events operations.
 - Biggest confirmed gaps: workflow blockers, visible UUIDs, inconsistent currency/date formats, missing search/filter parity, missing breadcrumbs, RBAC clarity, and module-specific UX gaps.
 - Codex UX-ERP analysis completed and used to separate stale findings from still-open items. Directionally accurate Team Lead findings remain useful; stale items were not treated as current defects.
-- Already fixed or present: supplier live/read/create/UX fixes, quotation Approve/Reject, paid or zero-balance invoice payment disablement, Admin self-role/self-deactivation protection, and last-active-admin protection.
-- Still open or partly open: Related Quotations create CTA in Service Detail, approved quotation to Deposit Invoice CTA, removal of disabled standalone Create Invoice from Invoices page, human reference display instead of visible UUIDs, standardized currency/date formatting, and search/filter parity.
+- Already fixed or present: supplier live/read/create/UX fixes, quotation Approve/Reject, paid or zero-balance invoice payment disablement, Admin self-role/self-deactivation protection, last-active-admin protection, and Related Quotations create CTA in Service Detail.
+- Still open or partly open: approved quotation to Deposit Invoice CTA, removal of disabled standalone Create Invoice from Invoices page, human reference display instead of visible UUIDs, standardized currency/date formatting, and search/filter parity.
 - Next implementation focus remains Sprint 1 workflow blockers. Broad redesign is not planned; the path is targeted ERP workflow hardening.
 
 **Billing Flexibility Smoke:**
