@@ -341,6 +341,17 @@
 - Option B approved as separate P1 backlog item: `INVOICE-LIST-DEEP-LINK-SELECTION-1`.
 - Option C (creating an `/invoices/[id]` detail route) was rejected pending a full invoice UX/product design session.
 
+### ✅ INVOICE-LIST-REMOVE-STANDALONE-CREATE-1
+- Status: Completed, reviewed, manual smoke passed, and pushed.
+- Implementation commit:
+  - `ada01f0 fix(invoices): remove standalone create entry point`
+- Summary:
+  - Generic disabled `Create Invoice` button removed from `/invoices`.
+  - Safe workflow guidance added: `Invoices are created from approved quotations or service billing actions.`
+  - Invoice list and side panel preserved without layout regression.
+  - Server-side invoice creation remains context-guarded by `quotationId` and `serviceId`.
+- Lint and TypeScript compile successfully with zero errors.
+
 ## 4. Current Active Phase
 
 ### ðŸš§ Locked Next CRM Priorities

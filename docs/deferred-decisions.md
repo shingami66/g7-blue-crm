@@ -655,3 +655,9 @@ Decision: Invoices page remains for list/issue/pay/PDF/status. Global invoice cr
 - Decision: Do not create `/invoices/[id]` detail page until a full invoice UX/product design session is completed.
 - Reason: A full invoice detail route requires decisions around issue invoice action, record payment, PDF render, payment history, void/credit note states, RBAC, and deposit vs final invoice differences.
 - Related backlog: `INVOICE-LIST-DEEP-LINK-SELECTION-1` is the approved safer P1 navigation improvement to open the invoice in the existing invoices list panel instead of a dedicated detail page.
+
+### INVOICE-LIST-REMOVE-STANDALONE-CREATE-1
+- Status: Completed.
+- Decision: Standalone invoice creation from `/invoices` is intentionally disabled/removed.
+- Reason: Invoices must be created from a valid workflow context (such as an approved quotation or service billing action) to preserve financial traceability and avoid orphaned records.
+- Related behavior: Approved invoice creation remains workflow-based through approved quotation or service billing actions.
