@@ -762,6 +762,12 @@ Checklist:
 ### Future Billing & Accounting Enhancements
 Status: Pending
 
+INVOICE-LIST-DEEP-LINK-SELECTION-1
+- Priority: P1
+- Status: Pending
+- Description: Support `/invoices?invoiceId=<id>` so invoice links from related workflow pages can open the existing invoices list with the correct invoice selected in the existing side panel.
+- Note: This is separate from `QUOTE-TO-DEPOSIT-CTA-1` and was NOT implemented in commit `103e0fa`.
+
 BILLING-FLEXIBILITY-1
 Status: Complete (Manual Smoke Passed)
 - Deposit is optional, not mandatory.
@@ -883,7 +889,7 @@ TEAM-LEAD-CODEX-UX-ERP-BACKLOG-1
 Critical / Sprint 1 backlog:
 - [x] `SERVICE-STATUS-GUARDED-TRANSITIONS-1`: implemented guarded Service status transitions; free status jumping removed; `services:update_status` permission enforced.
 - [x] `SERVICE-DETAIL-RELATED-QUOTE-CTA-1`: add Create Quotation CTA where Service Detail has no related quotation. (Commits: `80e3765`, `0930954`. Manual smoke and Clean Code Guard passed. CTA appears inside Service Detail Related Quotations. Eligibility fix restricts already-started services.)
-- [ ] `QUOTE-TO-DEPOSIT-CTA-1`: add Create Deposit Invoice CTA from an approved quotation where workflow state allows it.
+- [x] `QUOTE-TO-DEPOSIT-CTA-1`: add Create Deposit Invoice CTA from an approved quotation where workflow state allows it. (Commit: `103e0fa`. Reuses existing `CreateDepositInvoiceAction`. Option A implemented: displays invoice number as text with guidance and avoids 404 links. Option B deep-linking moved to backlog as separate `INVOICE-LIST-DEEP-LINK-SELECTION-1` task. Option C detail page rejected.)
 - [ ] `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`: remove disabled standalone Create Invoice affordance from the Invoices page.
 - [ ] `HUMAN-REFERENCE-DISPLAY-1`: replace visible UUIDs/internal identifiers with human reference numbers where users make decisions (e.g., visible Customer UUID in Service Detail Customer Summary).
 

@@ -321,6 +321,26 @@
 - Clean Code Guard Review Mode passed successfully.
 - Lint and TypeScript compile successfully.
 
+### ✅ QUOTE-TO-DEPOSIT-CTA-1
+- Status: Completed, reviewed, manual smoke passed, and pushed.
+- Implementation commit:
+  - `103e0fa feat(quotations): add deposit invoice cta`
+- Approved Quotation Detail now shows a `Deposit Invoice` card/CTA.
+- Reuses existing `CreateDepositInvoiceAction`.
+- Uses existing invoice creation backend flow via `createInvoiceAction`.
+- Preserves server-side authority for RBAC, quotation approval validation, service linkage validation, duplicate active deposit invoice prevention, and existing invoice/VAT behavior.
+- Manual smoke confirmed:
+  - Approved quotation displayed Deposit Invoice CTA.
+  - Deposit invoice was created successfully.
+  - Duplicate creation was prevented after creation.
+  - Created invoice appeared in `/invoices`.
+- Team Lead approved Option A for existing deposit invoice display:
+  - Do not link to unsupported `/invoices/<id>` (removed the broken link that caused 404).
+  - Show invoice number as text.
+  - Show guidance: `Open it from the Invoices list.`
+- Option B approved as separate P1 backlog item: `INVOICE-LIST-DEEP-LINK-SELECTION-1`.
+- Option C (creating an `/invoices/[id]` detail route) was rejected pending a full invoice UX/product design session.
+
 ## 4. Current Active Phase
 
 ### ðŸš§ Locked Next CRM Priorities

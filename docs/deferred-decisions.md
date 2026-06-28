@@ -649,3 +649,9 @@ Decision: Service estimated budget is advisory. Show warning if quotation total 
 ### GLOBAL-INVOICE-WIZARD-1
 Status: Deferred.
 Decision: Invoices page remains for list/issue/pay/PDF/status. Global invoice creation is deferred.
+
+### INVOICE-DETAIL-PAGE-1
+- Status: Deferred / Hard No for now.
+- Decision: Do not create `/invoices/[id]` detail page until a full invoice UX/product design session is completed.
+- Reason: A full invoice detail route requires decisions around issue invoice action, record payment, PDF render, payment history, void/credit note states, RBAC, and deposit vs final invoice differences.
+- Related backlog: `INVOICE-LIST-DEEP-LINK-SELECTION-1` is the approved safer P1 navigation improvement to open the invoice in the existing invoices list panel instead of a dedicated detail page.
