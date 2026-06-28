@@ -7,7 +7,7 @@ import { mapRowToService } from "./mappers";
 import type { Service } from "@/types/service";
 import type { ServiceRowWithCustomer } from "./types";
 
-const SERVICE_SELECT = "*, customers(company, contact)";
+const SERVICE_SELECT = "*, customers(company, contact, customer_number)";
 
 export async function getServices(): Promise<Service[]> {
   await requirePermission("services:read");

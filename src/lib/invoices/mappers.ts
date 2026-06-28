@@ -14,6 +14,16 @@ export function mapRowToInvoice(row: InvoiceRow): Invoice {
     if (buyer.customerId && typeof buyer.customerId === 'string') customerId = buyer.customerId;
   }
 
+  let relatedQuoteNumber: string | undefined = undefined;
+  if (row.snapshot_quotation && typeof row.snapshot_quotation === 'object') {
+    const quote = row.snapshot_quotation as Record<string, unknown>;
+    if (quote.quotationNumber && typeof quote.quotationNumber === 'string') {
+      relatedQuoteNumber = quote.quotationNumber;
+    } else if (quote.quotation_number && typeof quote.quotation_number === 'string') {
+      relatedQuoteNumber = quote.quotation_number;
+    }
+  }
+
   const amountFormatted = new Intl.NumberFormat('en-SA', {
     style: 'decimal',
     minimumFractionDigits: 2,
@@ -56,6 +66,7 @@ export function mapRowToInvoice(row: InvoiceRow): Invoice {
     customer: customerName,
     customerId: customerId,
     relatedQuote: row.approved_quotation_id,
+    relatedQuoteNumber: relatedQuoteNumber,
     amount: amountFormatted,
     date: dateFormatted,
     dueDate: dateFormatted,

@@ -10,6 +10,7 @@ export function mapRowToService(row: ServiceRowWithCustomer): Service {
       ? {
           company: row.customers.company,
           contact: row.customers.contact,
+          customerNumber: row.customers.customer_number,
         }
       : undefined,
     serviceTitle: row.service_title,

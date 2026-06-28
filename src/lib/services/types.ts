@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { ServiceCustomerSummary, ServiceStatus } from "@/types/service";
+import type { ServiceStatus } from "@/types/service";
 import type { createServiceSchema, updateServiceSchema } from "./schemas";
 
 export { SERVICE_STATUSES } from "@/types/service";
@@ -28,7 +28,11 @@ export interface ServiceRow {
 }
 
 export interface ServiceRowWithCustomer extends ServiceRow {
-  customers?: ServiceCustomerSummary | null;
+  customers?: {
+    company: string;
+    contact: string;
+    customer_number?: string;
+  } | null;
 }
 
 export interface CreatedServiceResult {

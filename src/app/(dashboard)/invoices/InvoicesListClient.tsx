@@ -297,10 +297,10 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                     </StatusBadge>
                   </div>
                   <div>
-                    <div className="text-[12px] text-on-surface-variant mb-1">Quotation ID</div>
+                    <div className="text-[12px] text-on-surface-variant mb-1">Quotation Ref</div>
                     {activeInvoice.relatedQuote ? (
-                      <Link href={`/quotations/${activeInvoice.relatedQuote}`} className="text-[14px] font-medium text-primary hover:underline truncate block" title={activeInvoice.relatedQuote}>
-                        {activeInvoice.relatedQuote}
+                      <Link href={`/quotations/${activeInvoice.relatedQuote}`} className="text-[14px] font-medium text-primary hover:underline truncate block" title={activeInvoice.relatedQuoteNumber || activeInvoice.relatedQuote}>
+                        {activeInvoice.relatedQuoteNumber || "Quotation reference unavailable"}
                       </Link>
                     ) : (
                       <span className="text-[14px] font-medium text-on-surface-variant">-</span>

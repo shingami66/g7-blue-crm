@@ -209,8 +209,8 @@ export default async function ServiceDetailPage({
             <DetailItem label="Primary Contact">
               {formatNullable(service.customer?.contact)}
             </DetailItem>
-            <DetailItem label="Customer ID">
-              <span className="font-mono text-[13px]">{service.customerId}</span>
+            <DetailItem label="Customer Ref">
+              <span className="font-mono text-[13px]">{service.customer?.customerNumber || "Customer reference unavailable"}</span>
             </DetailItem>
           </dl>
         </section>

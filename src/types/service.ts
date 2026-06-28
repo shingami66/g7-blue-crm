@@ -27,6 +27,7 @@ export interface ServiceStatusTransitionState {
 export interface ServiceCustomerSummary {
   company: string;
   contact: string;
+  customerNumber?: string;
 }
 
 export interface Service {

@@ -48,6 +48,7 @@ export interface Invoice {
   customerId?: string;
   customer?: string;
   relatedQuote?: string;
+  relatedQuoteNumber?: string;
   date?: string;
   dueDate?: string;
   amount?: string;
