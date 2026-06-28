@@ -78,6 +78,13 @@ export default async function ServiceDetailPage({
   const canUpdateServiceStatus = await checkPermission("services:update_status");
   const canReadQuotations = await checkPermission("quotations:read");
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
+
+  const today = new Date().toISOString().split("T")[0];
+  const serviceStarted = !!service.eventStartDate && service.eventStartDate < today;
+  const quotationDisabledReason = serviceStarted
+    ? "Cannot create a quotation because the service has already started."
+    : undefined;
+
   const relatedQuotations = canReadQuotations
     ? await getQuotationsByServiceId(service.id)
     : null;
@@ -133,13 +140,23 @@ export default async function ServiceDetailPage({
 
         <div className="flex flex-wrap items-center gap-3">
           {canCreateQuotation && canModifyService && (
-            <Link
-              href={`/quotations/new?serviceId=${service.id}`}
-              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[14px] font-semibold transition-colors"
-            >
-              <FileText size={18} />
-              Create Quotation
-            </Link>
+            quotationDisabledReason ? (
+              <span
+                className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant text-on-surface-variant rounded-lg text-[14px] font-semibold cursor-not-allowed opacity-60"
+                title={quotationDisabledReason}
+              >
+                <FileText size={18} />
+                Create Quotation
+              </span>
+            ) : (
+              <Link
+                href={`/quotations/new?serviceId=${service.id}`}
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[14px] font-semibold transition-colors"
+              >
+                <FileText size={18} />
+                Create Quotation
+              </Link>
+            )
           )}
           {canEditService && canModifyService && (
             <Link
@@ -222,6 +239,7 @@ export default async function ServiceDetailPage({
         quotations={relatedQuotations}
         serviceId={service.id}
         canCreateQuotation={canCreateQuotation && canModifyService}
+        disabledReason={quotationDisabledReason}
       />
       <BillingPanel billingState={billingState} />
     </div>

@@ -18,12 +18,14 @@ interface RelatedQuotationsCardProps {
   quotations: QuotationListItem[] | null;
   serviceId: string;
   canCreateQuotation: boolean;
+  disabledReason?: string;
 }
 
 export default function RelatedQuotationsCard({
   quotations,
   serviceId,
   canCreateQuotation,
+  disabledReason,
 }: RelatedQuotationsCardProps) {
   return (
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
@@ -41,13 +43,23 @@ export default function RelatedQuotationsCard({
             </div>
           )}
           {canCreateQuotation && (
-            <Link
-              href={`/quotations/new?serviceId=${serviceId}`}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[13px] font-semibold transition-colors"
-            >
-              <FileText size={16} />
-              Create Quotation
-            </Link>
+            disabledReason ? (
+              <span
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-outline-variant text-on-surface-variant rounded-lg text-[13px] font-semibold cursor-not-allowed opacity-60"
+                title={disabledReason}
+              >
+                <FileText size={16} />
+                Create Quotation
+              </span>
+            ) : (
+              <Link
+                href={`/quotations/new?serviceId=${serviceId}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[13px] font-semibold transition-colors"
+              >
+                <FileText size={16} />
+                Create Quotation
+              </Link>
+            )
           )}
         </div>
       </div>
