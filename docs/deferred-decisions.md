@@ -621,14 +621,18 @@ Still deferred: quotation approval auto-updates, payment-to-Deposit-Paid automat
 ### TEAM-LEAD-CODEX-UX-ERP-BACKLOG-1
 Status: Captured / Deferred for targeted implementation.
 Decision: Team Lead UX/UI review and Codex UX-ERP analysis are official backlog inputs. The review score is `6.4/10`; the product is guided internal demo-ready, not operational-ready, and not client-production-ready. The strongest advantage remains the Service-centric workflow for Saudi events operations. The backlog capture does not mean the UX backlog is complete.
-Still deferred: Service Detail related quotation CTA, approved quotation to Deposit Invoice CTA, disabled standalone Create Invoice removal, human reference display, currency/date format standardization, search/filter parity, invoice due-date visibility, Service payments panel, customer type defaults, breadcrumbs, user-friendly error copy, RBAC role model lock, event type taxonomy, Global Search, customer hub tabs, and remaining module polish.
+Still deferred: Service Detail related quotation CTA, approved quotation to Deposit Invoice CTA, disabled standalone Create Invoice removal, currency/date format standardization, search/filter parity, invoice due-date visibility, Service payments panel, customer type defaults, breadcrumbs, user-friendly error copy, RBAC role model lock, event type taxonomy, Global Search, customer hub tabs, and remaining module polish.
 Supplier deferrals remain unchanged: Supplier Edit/Delete/Restore, supplier bank/IBAN collection/editing, rate cards, allocations, bookings/internal POs, supplier invoices/payments, Supplier PO PDF/WhatsApp/email, supplier portal, costing/margin/P&L, and payment approval workflows are future work. Full ZATCA/FATOORA Phase 2 remains deferred until official VAT registration and a separate approved design. Global Search may remain later until Sprint 1 workflow blockers are implemented.
 
 ### SERVICE-STATUS-GUARDED-TRANSITIONS-1
 Status: Implemented / Partial Automation Deferred.
 Decision: Guarded manual transitions have been implemented based on the state machine spec in commit `1a4748f feat(services): guard status transitions`. Free status jumping is removed, and transitions are now restricted based on logical next steps and evidence (approved quotation, deposit invoice). `services:update_status` permission is enforced.
 Still deferred: quotation approval auto-updates, payment-to-Deposit-Paid automation, status audit/history table, cancellation override with financial records, reopen/reversal flow. Do not treat `services:write` as status automation. (Supplier features remain deferred).
-Follow-up backlog items identified during manual smoke: visible Customer UUID (`HUMAN-REFERENCE-DISPLAY-1`), currency/date formatting inconsistencies (`FORMAT-STANDARDIZATION-1`/`DATE-FORMAT-STANDARDIZATION-1`), data typos (`DATA-QUALITY-INPUT-NORMALIZATION-1`), billing label copy (`BILLING-LABEL-COPY-POLISH-1`), and DevTools warnings (`UI-QUALITY-WARNINGS-CLEANUP-1`).
+Follow-up backlog items identified during manual smoke: currency/date formatting inconsistencies (`FORMAT-STANDARDIZATION-1`/`DATE-FORMAT-STANDARDIZATION-1`), data typos (`DATA-QUALITY-INPUT-NORMALIZATION-1`), billing label copy (`BILLING-LABEL-COPY-POLISH-1`), and DevTools warnings (`UI-QUALITY-WARNINGS-CLEANUP-1`).
+
+### HUMAN-REFERENCE-DISPLAY-1
+Status: Complete.
+Decision: Implemented in commit `f68afe0`. User-facing screens should prefer human-readable references over raw UUIDs. UUIDs remain internal for routes/actions/database relationships. No schema change was made for this task.
 
 ### INVOICE-PDF-BREAKDOWN-1
 Status: Complete.

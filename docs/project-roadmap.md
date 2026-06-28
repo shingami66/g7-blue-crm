@@ -877,7 +877,7 @@ SERVICE-STATUS-STATE-MACHINE-SPEC-1
 - Implemented in commit `760c569 spec(services): define status state machine`.
 - Design artifacts live under `specs/003-service-status-state-machine/`.
 - This does not implement guarded transitions, `services:update_status`, UI next-state filtering, status history/audit persistence, or status automation.
-- Upcoming Sprint 1 workflow blocker tasks: `SERVICE-DETAIL-RELATED-QUOTE-CTA-1`, `QUOTE-TO-DEPOSIT-CTA-1`, `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`, and `HUMAN-REFERENCE-DISPLAY-1`.
+- All Sprint 1 workflow blocker tasks are now complete: `SERVICE-DETAIL-RELATED-QUOTE-CTA-1`, `QUOTE-TO-DEPOSIT-CTA-1`, `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`, and `HUMAN-REFERENCE-DISPLAY-1`.
 
 TEAM-LEAD-CODEX-UX-ERP-BACKLOG-1
 - Status: Captured / Not completed.
@@ -891,7 +891,7 @@ Critical / Sprint 1 backlog:
 - [x] `SERVICE-DETAIL-RELATED-QUOTE-CTA-1`: add Create Quotation CTA where Service Detail has no related quotation. (Commits: `80e3765`, `0930954`. Manual smoke and Clean Code Guard passed. CTA appears inside Service Detail Related Quotations. Eligibility fix restricts already-started services.)
 - [x] `QUOTE-TO-DEPOSIT-CTA-1`: add Create Deposit Invoice CTA from an approved quotation where workflow state allows it. (Commit: `103e0fa`. Reuses existing `CreateDepositInvoiceAction`. Option A implemented: displays invoice number as text with guidance and avoids 404 links. Option B deep-linking moved to backlog as separate `INVOICE-LIST-DEEP-LINK-SELECTION-1` task. Option C detail page rejected.)
 - [x] `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`: remove disabled standalone Create Invoice affordance from the Invoices page. (Commit: `ada01f0`. Generic disabled Create Invoice button removed from Invoices list and replaced with safe workflow copy. Server-side context-guarded validation remains intact.)
-- [ ] `HUMAN-REFERENCE-DISPLAY-1`: replace visible UUIDs/internal identifiers with human reference numbers where users make decisions (e.g., visible Customer UUID in Service Detail Customer Summary).
+- [x] `HUMAN-REFERENCE-DISPLAY-1`: replace visible UUIDs/internal identifiers with human reference numbers where users make decisions (e.g., visible Customer UUID in Service Detail Customer Summary). (Commit: `f68afe0`. Replaced raw UUIDs with `customerNumber` and `relatedQuoteNumber` in Service Detail and Invoice side panel with safe fallbacks. Internal routes and actions were preserved.)
 
 High priority backlog:
 - `FORMAT-STANDARDIZATION-1`: standardize currency display and related numeric formatting (inconsistent formatting noted in service/billing areas).

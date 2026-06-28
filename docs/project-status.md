@@ -352,6 +352,18 @@
   - Server-side invoice creation remains context-guarded by `quotationId` and `serviceId`.
 - Lint and TypeScript compile successfully with zero errors.
 
+### ✅ HUMAN-REFERENCE-DISPLAY-1
+- Status: Completed, reviewed, manual smoke passed, and pushed.
+- Implementation commit:
+  - `f68afe0 fix(ui): display human-readable references`
+- Summary:
+  - Service Detail changed visible `Customer ID` raw UUID to `Customer Ref`.
+  - Service Detail displays `customerNumber` with safe fallback.
+  - Invoice side panel changed visible `Quotation ID` raw UUID to `Quotation Ref`.
+  - Invoice side panel displays `relatedQuoteNumber` with safe fallback.
+  - Internal UUIDs/routes/actions were preserved.
+  - No schema/action/workflow/RBAC changes.
+- Lint and TypeScript compile successfully with zero errors.
 ## 4. Current Active Phase
 
 ### ðŸš§ Locked Next CRM Priorities
