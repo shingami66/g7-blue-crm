@@ -3,7 +3,7 @@
 import PageHeader from "@/components/ui/PageHeader";
 import KpiCard from "@/components/ui/KpiCard";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { Plus, Filter, Download, Receipt, FileText, CheckCircle2 } from "lucide-react";
+import { Filter, Download, Receipt, FileText, CheckCircle2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
@@ -102,14 +102,9 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
           <Download size={18} />
           Export
         </button>
-        <button
-          className="flex items-center gap-2 bg-primary/50 text-on-primary/80 px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold cursor-not-allowed"
-          title="Create invoices from a Service billing panel."
-          disabled
-        >
-          <Plus size={18} />
-          Create Invoice
-        </button>
+        <div className="flex items-center text-[13px] text-on-surface-variant max-w-[240px] text-right leading-tight hidden sm:block">
+          Invoices are created from approved quotations or service billing actions.
+        </div>
       </PageHeader>
 
       {/* KPIs */}
