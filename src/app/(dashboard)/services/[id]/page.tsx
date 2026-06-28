@@ -218,7 +218,11 @@ export default async function ServiceDetailPage({
         </div>
       </section>
 
-      <RelatedQuotationsCard quotations={relatedQuotations} />
+      <RelatedQuotationsCard
+        quotations={relatedQuotations}
+        serviceId={service.id}
+        canCreateQuotation={canCreateQuotation && canModifyService}
+      />
       <BillingPanel billingState={billingState} />
     </div>
   );

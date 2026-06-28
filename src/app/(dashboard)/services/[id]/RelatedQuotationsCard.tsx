@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 import Link from "next/link";
+import { FileText } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import type { QuotationListItem, QuotationStatus } from "@/lib/quotations/types";
 
@@ -15,10 +16,14 @@ const QUOTATION_STATUS_VARIANTS: Record<QuotationStatus, StatusBadgeVariant> = {
 
 interface RelatedQuotationsCardProps {
   quotations: QuotationListItem[] | null;
+  serviceId: string;
+  canCreateQuotation: boolean;
 }
 
 export default function RelatedQuotationsCard({
   quotations,
+  serviceId,
+  canCreateQuotation,
 }: RelatedQuotationsCardProps) {
   return (
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
@@ -29,11 +34,22 @@ export default function RelatedQuotationsCard({
             Service-scoped quotation records.
           </p>
         </div>
-        {quotations && (
-          <div className="text-[13px] leading-[18px] text-on-surface-variant">
-            {quotations.length} {quotations.length === 1 ? "quotation" : "quotations"}
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          {quotations && (
+            <div className="text-[13px] leading-[18px] text-on-surface-variant">
+              {quotations.length} {quotations.length === 1 ? "quotation" : "quotations"}
+            </div>
+          )}
+          {canCreateQuotation && (
+            <Link
+              href={`/quotations/new?serviceId=${serviceId}`}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[13px] font-semibold transition-colors"
+            >
+              <FileText size={16} />
+              Create Quotation
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="p-6">
