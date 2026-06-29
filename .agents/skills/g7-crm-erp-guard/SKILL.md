@@ -220,9 +220,10 @@ Return exactly these sections:
 ## Supplier/Future ERP Rules
 
 - Suppliers are basic master data now.
-- Supplier PO, supplier payments, service expenses, event costing, and profit margin are deferred.
+- Supplier Booking / Internal Supplier PO is a planned future module after SUPPLIER-ALLOCATIONS-1 (Not implemented, Not started, Not complete).
+- Supplier payments, service expenses, event costing, and profit margin are deferred.
 - Keep current design extensible for purchase orders, supplier payments, service expenses, event costing, and service profit reports.
-- Do not build supplier PO/costing now unless explicitly approved.
+- Do not build supplier PO/costing now unless explicitly approved in its planned sequence.
 - Do not design schema/UI in a way that blocks these future modules.
 
 ## Backend Architecture Rules

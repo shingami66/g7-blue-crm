@@ -879,6 +879,43 @@ SUPPLIERS-RATE-CARDS-READ-1
 - Details: Visible only to Admin/Manager users with `supplier_costing:read`. Unauthorized roles (Accountant, Sales, Operations, Viewer) do not see the Rate Cards section. Enforces server-side `requirePermission("supplier_costing:read")` before using `createAdminClient()`. Reads `supplier_rate_cards` filtered by `supplier_id` and `is_deleted = false`. Displays non-deleted rate cards sorted active first and newest `valid_from` first. Internal notes are displayed only inside the authorized internal Supplier side panel.
 - Validation: `pnpm run lint` passed with only the two known existing PDF `<img>` warnings, `pnpm exec tsc --noEmit` passed, and `pnpm run build` passed.
 
+FUTURE SUPPLIER SEQUENCE
+- SUPPLIERS-RATE-CARDS-READ-1 is complete.
+- Everything after it in this supplier sequence is not implemented:
+  1. SUPPLIER-ALLOCATIONS-DESIGN-1
+  2. SUPPLIER-ALLOCATIONS-1
+  3. SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1
+  4. SUPPLIER-BOOKINGS-INTERNAL-PO-1
+  5. SUPPLIER-INVOICES-1
+  6. SUPPLIER-PAYMENTS-1
+  7. SUPPLIER-COSTING-MARGIN-REPORTS-1
+- Supplier Booking / Internal Supplier PO must not be implemented before SUPPLIER-ALLOCATIONS-1.
+
+SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1 (Planned future item)
+- Status: Not implemented, Not started, Not complete.
+- Scope: Pending dedicated design for Supplier Booking / Internal Supplier PO.
+- Required design decisions/requirements:
+  - `approved_quotation_id` for traceability to the approved customer quotation.
+  - `supplier_allocation_id` to link supplier allocation planning to supplier commitment.
+  - formal RBAC permission strings before implementation.
+  - status transition permissions before implementation.
+  - header-level and line-level VAT handling before schema implementation.
+  - booking_number format, likely `SBK-YYYY-XXXX`.
+  - whether `supplier_allocation_id` can be nullable for Draft or whether direct booking without allocation is blocked.
+  - whether MVP uses 8 statuses or a simplified 6-status lifecycle.
+  - concurrent booking protection / uniqueness rules.
+- Required future permission strings: `supplier_bookings:read`, `supplier_bookings:read_cost`, `supplier_bookings:write`, `supplier_bookings:approve`, `supplier_bookings:send`, `supplier_bookings:cancel`, `supplier_bookings:complete`.
+- Security intent:
+  - Cost visibility must remain separate from operational visibility.
+  - Admin and Manager likely full access.
+  - Operations may later receive operational read without cost access.
+  - Sales and Viewer must not see supplier costs.
+  - Accountant access to cost/finance requires explicit future approval.
+
+SUPPLIER-BOOKINGS-INTERNAL-PO-1 (Planned future item)
+- Status: Not implemented, Not started, Not complete.
+- Scope: Planned after allocations and pending dedicated design.
+
 
 SUPPLIERS-LIST-LIVE-1
 - Status: Superseded/completed by `SUPPLIERS-LIVE-READ-FOUNDATION-1`.
