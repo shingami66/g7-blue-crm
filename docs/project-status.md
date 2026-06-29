@@ -611,6 +611,21 @@ Operational Invoice Module is not complete yet.
 - Scope was Spec Kit design artifacts under `specs/003-service-status-state-machine/`. No source implementation, guarded transition enforcement, `services:update_status`, UI next-state filtering, or automation was implemented.
 - Next recommended area: Sprint 1 workflow blockers, starting with `SERVICE-STATUS-GUARDED-TRANSITIONS-1` or workflow CTA tasks (`SERVICE-DETAIL-RELATED-QUOTE-CTA-1`, `QUOTE-TO-DEPOSIT-CTA-1`, `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`, `HUMAN-REFERENCE-DISPLAY-1`).
 
+- `SUPPLIER-ALLOCATIONS-FOUNDATION-1A` completed, validated, committed, and pushed.
+  - Latest commits:
+    - `bc3db52 feat(suppliers): add allocation foundation`
+    - `46881ee chore(supabase): sync supplier allocation schema`
+  - Scope: Database and permissions foundation for Supplier Allocations.
+    - Migration `supabase/migrations/20260629100000_service_supplier_allocations_foundation.sql` manually applied and verified.
+    - Synced `supabase/schema.sql` with table `public.service_supplier_allocations`, including correct columns, data types, defaults, generated column (`estimated_total_cost`), immutability trigger (`check_service_supplier_allocations_immutable_service_id_trg`), update trigger (`update_service_supplier_allocations_updated_at`), 8 new indexes, and RLS enabled.
+    - Permissions added in `src/lib/auth/permissions.ts` for Admin and Manager: `supplier_allocations:read`, `supplier_allocations:read_cost`, `supplier_allocations:write`, `supplier_allocations:cancel`.
+    - No `supplier_allocations:approve` exists. Operations, Sales, Viewer, and Accountant have no access.
+  - Boundaries & Security:
+    - This is a database/permissions foundation only. Runtime CRUD, Server Actions, UI panels, Service Detail integration, and allocations history are NOT implemented.
+    - RLS is enabled with 0 policies and 0 broad client grants; access remains server-side only for future tasks.
+    - Business logic validation rules (e.g. rate card ID matches supplier ID, approved quotation ID matches service ID, blacklisted supplier blocks, parent service cancellation blocks) are deferred to future server-side validation/runtime hardening.
+    - Supplier Booking / Internal Supplier PO, supplier invoices/payments, and costing reports remain deferred.
+
 **Guarded Service Status Transitions:**
 - `SERVICE-STATUS-GUARDED-TRANSITIONS-1` implemented and manual smoke passed.
 - Latest implementation commit: `1a4748f feat(services): guard status transitions`.

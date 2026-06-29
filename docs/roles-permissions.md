@@ -7,7 +7,7 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 | Role | Permissions |
 |---|---|
 | **admin** | All permissions across all modules. |
-| **manager** | `customers:read/write/export`, `quotations:read/write`, `quotations:approve`, `services:read/write`, `invoices:read`, `payments:read`, `projects:read/write`, `suppliers:read/write`, `supplier_allocations:read`, `supplier_allocations:read_cost`, `supplier_allocations:write`, `dashboard:read` |
+| **manager** | `customers:read/write/export`, `quotations:read/write`, `quotations:approve`, `services:read/write`, `invoices:read`, `payments:read`, `projects:read/write`, `suppliers:read/write`, `supplier_allocations:read`, `supplier_allocations:read_cost`, `supplier_allocations:write`, `supplier_allocations:cancel`, `dashboard:read` |
 | **sales** | `customers:read/write`, `quotations:read/write`, `services:read/write`, `invoices:read`, `payments:read`, `dashboard:read` |
 | **operations** | `customers:read`, `quotations:read`, `services:read`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
 | **accountant** | `customers:read/export`, `quotations:read`, `services:read`, `invoices:read/write`, `payments:read/write`, `settings:read`, `dashboard:read` |
@@ -54,10 +54,14 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 
 ## Supplier Allocations Permissions
 
-- `supplier_allocations:read` and `supplier_allocations:read_cost` are separate permissions. MVP separation ensures cost visibility remains restricted.
-- MVP requires Admin and Manager to have full access.
-- Operations, Sales, and Viewer have no access in the MVP.
+- Permissions added for Admin/Manager only:
+  - `supplier_allocations:read`
+  - `supplier_allocations:read_cost`
+  - `supplier_allocations:write`
+  - `supplier_allocations:cancel`
 - No `supplier_allocations:approve` permission exists for allocations in the MVP.
+- Operations, Sales, Viewer, and Accountant still have no Supplier Allocations access.
+- MVP separation between `supplier_allocations:read` and `supplier_allocations:read_cost` ensures cost visibility remains restricted.
 
 ### Status Transitions
 - `Create -> draft`: `supplier_allocations:write`

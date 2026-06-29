@@ -881,35 +881,31 @@ SUPPLIERS-RATE-CARDS-READ-1
 
 FUTURE SUPPLIER SEQUENCE
 - SUPPLIERS-RATE-CARDS-READ-1 is complete.
+- SUPPLIER-ALLOCATIONS-FOUNDATION-1A is complete.
 - Everything after it in this supplier sequence is not implemented:
-  1. SUPPLIER-ALLOCATIONS-DESIGN-1 (Completed, Design Approved)
-  2. SUPPLIER-ALLOCATIONS-1
-  3. SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1
-  4. SUPPLIER-BOOKINGS-INTERNAL-PO-1
-  5. SUPPLIER-INVOICES-1
-  6. SUPPLIER-PAYMENTS-1
-  7. SUPPLIER-COSTING-MARGIN-REPORTS-1
+  1. SUPPLIER-ALLOCATIONS-1 (Runtime CRUD / Actions / UI)
+  2. SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1
+  3. SUPPLIER-BOOKINGS-INTERNAL-PO-1
+  4. SUPPLIER-INVOICES-1
+  5. SUPPLIER-PAYMENTS-1
+  6. SUPPLIER-COSTING-MARGIN-REPORTS-1
 
 SUPPLIER-ALLOCATIONS-DESIGN-1 (Completed, Design Approved)
-- Status: Ready for review. Docs/spec sync only. Supplier Allocations implementation remains deferred/pending.
-- Scope: Design for the future Supplier Allocations module, the planning layer between Service/Event and Supplier Booking / Internal PO.
-- Workflow (Parallel to Quotation):
-  - Service Created
-  - → Quotation preparation starts
-  - → Supplier Allocations may be created/updated in parallel for cost estimation
-  - → Quotation Approved
-  - → Allocations may continue to be refined/selected
-  - → Future Supplier Booking / Internal PO
-- 9 Required Revision Items Approved:
-  1. Table: `service_supplier_allocations`. No table exists yet. No migration exists yet. Not in schema.sql.
-  2. UI: Service detail only (no standalone hub yet).
-  3. Pre-quotation approval: Allowed.
-  4. `approved_quotation_id`: Nullable, for reporting.
-  5. `supplier_rate_card_id`: Optional.
-  6. Manual cost: Allowed (`cost_source` = `rate_card` | `manual_estimate`).
-  7. Statuses: `draft` | `planned` | `selected` | `cancelled`.
-  8. MVP Permissions: No `supplier_allocations:approve` permission (Not included in MVP). Operations/Sales/Viewer: No access. Admin/Manager: Full access. (Separating `supplier_allocations:read` and `supplier_allocations:read_cost` permissions. Server-only access, no broad grants. Same cautious security pattern as supplier rate cards).
-  9. Blacklist: Block new allocations for blacklisted/inactive suppliers.
+- Status: Completed. Spec sync only.
+
+SUPPLIER-ALLOCATIONS-FOUNDATION-1A (Completed, Closed)
+- Status: Completed, closed, committed, and pushed.
+- Commits:
+  - `bc3db52 feat(suppliers): add allocation foundation`
+  - `46881ee chore(supabase): sync supplier allocation schema`
+- Scope: Database and permissions foundation for Supplier Allocations.
+  - Table `public.service_supplier_allocations` created (migration `20260629100000_service_supplier_allocations_foundation.sql` applied).
+  - Columns, generated column `estimated_total_cost`, triggers (`check_service_supplier_allocations_immutable_service_id_trg`, `update_service_supplier_allocations_updated_at`), indexes, and RLS (no policies, server-only access) are synced in `supabase/schema.sql`.
+  - Permissions added in `src/lib/auth/permissions.ts` for Admin and Manager: `supplier_allocations:read`, `supplier_allocations:read_cost`, `supplier_allocations:write`, `supplier_allocations:cancel`.
+  - Operations, Sales, Viewer, and Accountant have no access. No `supplier_allocations:approve` exists.
+- Boundaries:
+  - Database/permissions foundation only. Runtime CRUD, Server Actions, UI panels, Service Detail integration, allocations history are NOT implemented.
+  - Business logic validation rules (e.g. rate card ID matches supplier ID, approved quotation ID matches service ID, blacklisted supplier blocks, parent service cancellation blocks) are deferred to future server-side validation/runtime hardening.
 - Supplier Booking / Internal Supplier PO must not be implemented before SUPPLIER-ALLOCATIONS-1.
 
 SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1 (Planned future item)

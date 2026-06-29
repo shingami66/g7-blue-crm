@@ -41,7 +41,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `customers`: Client database with revenue metrics, soft deletes, and a system-generated unique `customer_number`.
 - `services`: ERP-1 operational unit linked to `customers(id)` with `service_number`, event fields, status, ownership, cancellation reason, timestamps, audit text fields, and soft-delete timestamp. The DB foundation and app list/create/detail/edit foundation are implemented; controlled status transitions remain deferred.
 - `suppliers`: Third-party vendor database.
-- `service_supplier_allocations`: Supplier Allocations planning layer between Service/Event and Supplier Booking / Internal PO. (Design approved, not implemented yet).
+- `service_supplier_allocations`: Supplier Allocations planning layer. Database and permissions foundation implemented under SUPPLIER-ALLOCATIONS-FOUNDATION-1A; runtime CRUD/actions/UI are deferred.
 - `audit_logs`: Centralized event tracking for actions (`create`, `update`, etc.).
 
 ### Financial & Workflow
@@ -132,7 +132,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
 
 ### Supplier Allocations
-- **Table:** `service_supplier_allocations` will be created (not implemented yet, no migration exists, not in schema.sql).
+- **Table:** `service_supplier_allocations` exists (database/permissions foundation implemented under `SUPPLIER-ALLOCATIONS-FOUNDATION-1A` via migration `20260629100000_service_supplier_allocations_foundation.sql` and synced in `schema.sql`). Runtime implementation remains deferred.
 - **Costing:** Manual cost is allowed (`cost_source` = `rate_card` | `manual_estimate`).
 - **Statuses:** `draft` | `planned` | `selected` | `cancelled`.
 - **Planned Fields:**
