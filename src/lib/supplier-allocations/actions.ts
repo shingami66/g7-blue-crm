@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission, checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
-import { supplierAllocationCreateSchema } from "./schemas";
+import { supplierAllocationCreateSchema, supplierAllocationCancelSchema } from "./schemas";
 import { mapSupplierAllocationRow } from "./mappers";
 import type { SupplierAllocation } from "./types";
 
@@ -121,6 +121,75 @@ export async function createSupplierAllocation(
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
     console.error("[createSupplierAllocation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export async function cancelSupplierAllocation(
+  id: string,
+  input: unknown
+): Promise<ActionResult<SupplierAllocation>> {
+  try {
+    const user = await requirePermission("supplier_allocations:cancel");
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
+      return { success: false, error: "Supplier allocation id is required." };
+    }
+
+    const parsed = supplierAllocationCancelSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: firstValidationError(parsed) };
+    }
+
+    const supabase = createAdminClient();
+
+    const { data: existingAllocation, error: fetchError } = await supabase
+      .from("service_supplier_allocations")
+      .select("*")
+      .eq("id", id)
+      .eq("is_deleted", false)
+      .single();
+
+    if (fetchError || !existingAllocation) {
+      return { success: false, error: "Supplier allocation not found." };
+    }
+
+    if (existingAllocation.status === "cancelled") {
+      return { success: false, error: "Supplier allocation is already cancelled." };
+    }
+
+    // Business cancellation preserves the row for audit/history and must not set is_deleted.
+    const updatePayload = {
+      status: "cancelled",
+      cancelled_reason: parsed.data.cancelledReason,
+      cancelled_at: new Date().toISOString(),
+      cancelled_by: user.clerk_user_id,
+      updated_by: user.clerk_user_id,
+    };
+
+    const { data: updatedRow, error: updateError } = await supabase
+      .from("service_supplier_allocations")
+      .update(updatePayload)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("[cancelSupplierAllocation] Supabase error:", updateError.message);
+      return { success: false, error: "Failed to cancel supplier allocation. Please try again." };
+    }
+
+    const canReadCost = await checkPermission("supplier_allocations:read_cost");
+    const mappedData = mapSupplierAllocationRow(updatedRow, { canReadCost });
+
+    revalidatePath("/services");
+    revalidatePath(`/services/${existingAllocation.service_id}`);
+
+    return { success: true, data: mappedData };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[cancelSupplierAllocation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { success: false, error: "An unexpected error occurred." };
   }
 }
