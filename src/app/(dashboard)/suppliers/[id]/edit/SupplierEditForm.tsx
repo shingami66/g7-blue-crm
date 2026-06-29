@@ -47,18 +47,18 @@ export default function SupplierEditForm({ supplier }: { supplier: Supplier }) {
   // Using crNumber from existing supplier if it was part of the schema, but type/schema does not map it in getSupplierById (it's not selected).
   // Wait, is cr_number in SUPPLIER_LIST_SELECT? I need to check. If not, it shouldn't be edited here or we need to add it.
   // I will check this separately, but I will put it as empty string for now.
-  const [crNumber, setCrNumber] = useState("");
+  const [crNumber, setCrNumber] = useState(supplier.crNumber ?? "");
   const [vatRegistrationStatus, setVatRegistrationStatus] = useState<
     (typeof VAT_REGISTRATION_OPTIONS)[number]["value"]
   >(supplier.vatRegistrationStatus === "registered" ? "registered" : "not_registered");
-  const [vatNumber, setVatNumber] = useState("");
+  const [vatNumber, setVatNumber] = useState(supplier.vatNumber ?? "");
   const [status, setStatus] = useState<(typeof SAFE_SUPPLIER_CREATE_STATUSES)[number]>(
     (SAFE_SUPPLIER_CREATE_STATUSES as readonly string[]).includes(supplier.status)
       ? (supplier.status as (typeof SAFE_SUPPLIER_CREATE_STATUSES)[number])
       : "active"
   );
   const [isPreferred, setIsPreferred] = useState(supplier.isPreferred ?? false);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(supplier.notes ?? "");
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
