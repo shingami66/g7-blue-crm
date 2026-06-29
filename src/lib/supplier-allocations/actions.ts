@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission, checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
-import { supplierAllocationCreateSchema, supplierAllocationCancelSchema } from "./schemas";
+import { supplierAllocationCreateSchema, supplierAllocationCancelSchema, supplierAllocationUpdateSchema } from "./schemas";
 import { mapSupplierAllocationRow } from "./mappers";
 import type { SupplierAllocation } from "./types";
 
@@ -190,6 +190,150 @@ export async function cancelSupplierAllocation(
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
     console.error("[cancelSupplierAllocation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export async function updateSupplierAllocation(
+  id: string,
+  input: unknown
+): Promise<ActionResult<SupplierAllocation>> {
+  try {
+    const user = await requirePermission("supplier_allocations:write");
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
+      return { success: false, error: "Supplier allocation id is required." };
+    }
+
+    const trimmedId = id.trim();
+
+    const parsed = supplierAllocationUpdateSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: firstValidationError(parsed) };
+    }
+
+    if (parsed.data.costSource === "rate_card") {
+      return { success: false, error: "Rate-card allocations cannot be manually updated yet." };
+    }
+
+    const supabase = createAdminClient();
+
+    const { data: existingAllocation, error: fetchError } = await supabase
+      .from("service_supplier_allocations")
+      .select("*")
+      .eq("id", trimmedId)
+      .eq("is_deleted", false)
+      .single();
+
+    if (fetchError || !existingAllocation) {
+      return { success: false, error: "Supplier allocation not found." };
+    }
+
+    if (existingAllocation.status === "cancelled") {
+      return { success: false, error: "Cannot update a cancelled supplier allocation." };
+    }
+
+    if (existingAllocation.cost_source === "rate_card") {
+      return { success: false, error: "Rate-card allocations cannot be manually updated yet." };
+    }
+
+    const nextStatus = parsed.data.status ?? existingAllocation.status;
+
+    const allowedStatusTransitions: Record<string, string[]> = {
+      draft: ["draft", "planned"],
+      planned: ["planned", "selected"],
+      selected: ["selected"],
+      cancelled: [],
+    };
+
+    if (!allowedStatusTransitions[existingAllocation.status]?.includes(nextStatus)) {
+      return {
+        success: false,
+        error: "Invalid supplier allocation status transition.",
+      };
+    }
+
+    // Cross-table check 1: Service check
+    const { data: service, error: serviceError } = await supabase
+      .from("services")
+      .select("status")
+      .eq("id", existingAllocation.service_id)
+      .is("deleted_at", null)
+      .single();
+
+    if (serviceError || !service || service.status === "Cancelled" || service.status === "Completed") {
+      return { success: false, error: "Service is unavailable for supplier allocation update." };
+    }
+
+    // Cross-table check 2: Supplier check (immutable, but check active status)
+    const { data: supplier, error: supplierError } = await supabase
+      .from("suppliers")
+      .select("status")
+      .eq("id", existingAllocation.supplier_id)
+      .eq("is_deleted", false)
+      .single();
+
+    if (supplierError || !supplier || supplier.status !== "active") {
+      return { success: false, error: "Supplier is unavailable for allocation update." };
+    }
+
+    // Cross-table check 3: Approved quotation check
+    if (parsed.data.approvedQuotationId) {
+      const { data: quotation, error: quotationError } = await supabase
+        .from("quotations")
+        .select("status, service_id")
+        .eq("id", parsed.data.approvedQuotationId)
+        .eq("is_deleted", false)
+        .single();
+
+      if (
+        quotationError ||
+        !quotation ||
+        quotation.status !== "approved" ||
+        quotation.service_id !== existingAllocation.service_id
+      ) {
+        return { success: false, error: "Approved quotation is invalid for this service." };
+      }
+    }
+
+    const updatePayload = {
+      status: nextStatus,
+      category: parsed.data.category,
+      item_name: parsed.data.itemName,
+      unit: parsed.data.unit,
+      quantity: parsed.data.quantity,
+      currency: "SAR",
+      estimated_unit_cost: parsed.data.estimatedUnitCost,
+      cost_source: "manual_estimate",
+      scope_of_work: parsed.data.scopeOfWork ?? null,
+      internal_notes: parsed.data.internalNotes ?? null,
+      approved_quotation_id: parsed.data.approvedQuotationId ?? existingAllocation.approved_quotation_id,
+      updated_by: user.clerk_user_id,
+    };
+
+    const { data: updatedRow, error: updateError } = await supabase
+      .from("service_supplier_allocations")
+      .update(updatePayload)
+      .eq("id", trimmedId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("[updateSupplierAllocation] Supabase error:", updateError.message);
+      return { success: false, error: "Failed to update supplier allocation. Please try again." };
+    }
+
+    const canReadCost = await checkPermission("supplier_allocations:read_cost");
+    const mappedData = mapSupplierAllocationRow(updatedRow, { canReadCost });
+
+    revalidatePath("/services");
+    revalidatePath(`/services/${existingAllocation.service_id}`);
+
+    return { success: true, data: mappedData };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[updateSupplierAllocation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { success: false, error: "An unexpected error occurred." };
   }
 }

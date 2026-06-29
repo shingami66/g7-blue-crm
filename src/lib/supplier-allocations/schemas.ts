@@ -55,9 +55,6 @@ export const supplierAllocationCreateSchema = baseAllocationSchema
   });
 
 export const supplierAllocationUpdateSchema = baseAllocationSchema
-  .extend({
-    supplierId: z.string().min(1, "Supplier ID is required"),
-  })
   .superRefine((data, ctx) => {
     if (data.status === "cancelled") {
       ctx.addIssue({
