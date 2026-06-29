@@ -861,6 +861,12 @@ SUPPLIERS-EDIT-OPTIONAL-FIELDS-FIX-1
 - Fixed by hydrating `crNumber`, `vatNumber`, and `notes` states from the supplier prop. Manual smoke tests passed successfully after implementation.
 - No other fields or modules were modified. Sensitive banking/blacklist fields remain excluded.
 
+SUPPLIERS-STATUS-BLACKLIST-1
+- Status: Completed and pushed.
+- Implemented in commit `92617ef feat(suppliers): add blacklist workflow`.
+- Scope: Implemented dedicated supplier blacklist/unblacklist workflow with reason modal, recording `blacklisted_reason`, `blacklisted_by`, and `blacklisted_at` in the database.
+- Details: Blacklist details are shown inside the supplier side panel, unblacklisting restores the status to `inactive`, and normal Supplier Edit form updates are validated to prevent bypassing the workflow. Layout flexbox fixes in side panel and Zod refinement fixes included. Manual smoke and validation passed.
+
 SUPPLIERS-LIST-LIVE-1
 - Status: Superseded/completed by `SUPPLIERS-LIVE-READ-FOUNDATION-1`.
 - `/suppliers` no longer depends on `suppliersData` for the live page. The remaining mock data file is not the route data source. Supplier CRUD/write and finance/workflow modules remain deferred.
