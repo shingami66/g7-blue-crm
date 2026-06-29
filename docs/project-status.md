@@ -639,6 +639,30 @@ Operational Invoice Module is not complete yet.
   - Boundaries:
     - Runtime CRUD, Server Actions, DB queries, UI panel, Service Detail integration, allocations history, and SQL/migration changes are NOT implemented.
 
+- `SUPPLIER-ALLOCATIONS-READ-1A` completed, validated, committed, and pushed.
+  - Latest commits:
+    - `1d874cc feat(suppliers): add allocation read queries`
+  - Scope: Server-only read query module for Supplier Allocations.
+    - Implemented server-only read queries in `src/lib/supplier-allocations/queries.ts` and exported in `src/lib/supplier-allocations/index.ts`.
+    - Added query functions:
+      - `getSupplierAllocationsByServiceId(serviceId)`
+      - `getSupplierAllocationsBySupplierId(supplierId)`
+      - `getSupplierAllocationById(id)`
+  - Permissions & Cost Redaction:
+    - Every read query requires `supplier_allocations:read` via `requirePermission("supplier_allocations:read")` (re-throwing auth/permission errors).
+    - Cost exposure is computed server-side using `checkPermission("supplier_allocations:read_cost")` to check permission and pass `canReadCost` into mappers.
+    - Mappers redact `estimatedUnitCost`, `estimatedTotalCost`, and `rateCardSnapshot` server-side when `canReadCost` is false.
+    - Raw DB rows are never returned to callers; only mapped `SupplierAllocation` domain objects are returned.
+    - Customer-facing routes/PDFs must not import allocation read queries for cost-bearing data.
+  - DB Filtering & Query Behavior:
+    - Queries target the `public.service_supplier_allocations` table using `createAdminClient()` behind application-level permission gates.
+    - All reads filter out deleted allocations with `eq("is_deleted", false)`.
+    - List queries are ordered by `created_at` descending.
+    - Cancelled allocations are intentionally returned as historical planning records (no status filtering).
+    - DB errors are logged via `console.error` and handled gracefully by returning `[]` (lists) or `null` (single record).
+  - Boundaries:
+    - Write actions, Server Actions, UI panels, Service Detail integration, allocations history UI, and SQL/migration changes are NOT implemented.
+
 
 **Guarded Service Status Transitions:**
 - `SERVICE-STATUS-GUARDED-TRANSITIONS-1` implemented and manual smoke passed.

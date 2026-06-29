@@ -132,7 +132,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
 
 ### Supplier Allocations
-- **Table:** `service_supplier_allocations` exists (database/permissions foundation implemented under `SUPPLIER-ALLOCATIONS-FOUNDATION-1A` via migration `20260629100000_service_supplier_allocations_foundation.sql` and synced in `schema.sql`; domain types, Zod schemas, and mappers implemented under `SUPPLIER-ALLOCATIONS-SCHEMAS-1A`). Runtime queries, server actions, and UI remain deferred.
+- **Table:** `service_supplier_allocations` exists (database/permissions foundation implemented under `SUPPLIER-ALLOCATIONS-FOUNDATION-1A` via migration `20260629100000_service_supplier_allocations_foundation.sql` and synced in `schema.sql`; domain types, Zod schemas, and mappers implemented under `SUPPLIER-ALLOCATIONS-SCHEMAS-1A`; server-only read queries implemented under `SUPPLIER-ALLOCATIONS-READ-1A`). Server actions, write mutations, and UI remain deferred.
 - **Costing:** Manual cost is allowed (`cost_source` = `rate_card` | `manual_estimate`).
 - **Statuses:** `draft` | `planned` | `selected` | `cancelled`.
 - **Planned Fields:**
