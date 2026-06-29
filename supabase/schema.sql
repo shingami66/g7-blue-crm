@@ -340,6 +340,61 @@ CREATE TABLE supplier_rate_cards (
 );
 COMMENT ON TABLE supplier_rate_cards IS 'Internal supplier cost defaults. They must never be exposed in customer-facing quotations, invoices, PDFs, or receipts. They do not automate quotation pricing in MVP.';
 
+-- 6.2. Supplier Allocations
+CREATE TABLE service_supplier_allocations (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    service_id uuid NOT NULL REFERENCES services(id) ON DELETE RESTRICT,
+    supplier_id uuid NOT NULL REFERENCES suppliers(id) ON DELETE RESTRICT,
+    supplier_rate_card_id uuid REFERENCES supplier_rate_cards(id) ON DELETE RESTRICT,
+    approved_quotation_id uuid REFERENCES quotations(id) ON DELETE RESTRICT,
+    status text NOT NULL DEFAULT 'draft'::text,
+    category text NOT NULL,
+    item_name text NOT NULL,
+    unit text NOT NULL,
+    quantity numeric(10,3) NOT NULL,
+    currency character(3) NOT NULL DEFAULT 'SAR'::bpchar,
+    estimated_unit_cost numeric(14,2) NOT NULL,
+    estimated_total_cost numeric(14,2) GENERATED ALWAYS AS ((quantity * estimated_unit_cost)) STORED,
+    cost_source text NOT NULL,
+    rate_card_snapshot jsonb,
+    scope_of_work text,
+    internal_notes text,
+    created_by uuid,
+    updated_by uuid,
+    cancelled_at timestamp with time zone,
+    cancelled_by uuid,
+    cancelled_reason text,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    updated_at timestamp with time zone NOT NULL DEFAULT now(),
+    is_deleted boolean NOT NULL DEFAULT false,
+    CONSTRAINT chk_quantity_positive CHECK (quantity > 0),
+    CONSTRAINT chk_estimated_unit_cost_positive CHECK (estimated_unit_cost >= 0),
+    CONSTRAINT chk_currency_sar CHECK (currency = 'SAR'::bpchar),
+    CONSTRAINT chk_status_valid CHECK (status = ANY (ARRAY['draft'::text, 'planned'::text, 'selected'::text, 'cancelled'::text])),
+    CONSTRAINT chk_cost_source_valid CHECK (cost_source = ANY (ARRAY['rate_card'::text, 'manual_estimate'::text])),
+    CONSTRAINT chk_cost_source_requirements CHECK (((cost_source = 'manual_estimate'::text) OR ((cost_source = 'rate_card'::text) AND (supplier_rate_card_id IS NOT NULL) AND (rate_card_snapshot IS NOT NULL)))),
+    CONSTRAINT chk_cancelled_reason_required CHECK (((status <> 'cancelled'::text) OR ((cancelled_reason IS NOT NULL) AND (btrim(cancelled_reason) <> ''::text)))),
+    CONSTRAINT chk_category_nonblank CHECK (btrim(category) <> ''::text),
+    CONSTRAINT chk_item_name_nonblank CHECK (btrim(item_name) <> ''::text),
+    CONSTRAINT chk_unit_nonblank CHECK (btrim(unit) <> ''::text)
+);
+COMMENT ON TABLE service_supplier_allocations IS 'Internal supplier planning allocations. They are not Supplier Booking/Internal PO, not supplier invoice/payment, and not customer-facing.';
+
+CREATE OR REPLACE FUNCTION check_service_supplier_allocations_immutable_service_id()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF OLD.service_id IS DISTINCT FROM NEW.service_id THEN
+        RAISE EXCEPTION 'service_id is immutable';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER update_service_supplier_allocations_updated_at BEFORE UPDATE ON service_supplier_allocations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER check_service_supplier_allocations_immutable_service_id_trg BEFORE UPDATE ON service_supplier_allocations FOR EACH ROW EXECUTE FUNCTION check_service_supplier_allocations_immutable_service_id();
+
 -- 7. Quotations
 CREATE TABLE quotations (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1275,6 +1330,15 @@ CREATE INDEX idx_supplier_rate_cards_valid_to ON supplier_rate_cards(valid_to);
 CREATE INDEX idx_supplier_rate_cards_supplier_status_deleted ON supplier_rate_cards(supplier_id, status, is_deleted);
 CREATE INDEX idx_supplier_rate_cards_lookup ON supplier_rate_cards(supplier_id, item_name, unit, valid_from, valid_to);
 
+CREATE INDEX idx_service_supplier_allocations_service_id ON service_supplier_allocations(service_id);
+CREATE INDEX idx_service_supplier_allocations_supplier_id ON service_supplier_allocations(supplier_id);
+CREATE INDEX idx_service_supplier_allocations_supplier_rate_card_id ON service_supplier_allocations(supplier_rate_card_id);
+CREATE INDEX idx_service_supplier_allocations_approved_quotation_id ON service_supplier_allocations(approved_quotation_id);
+CREATE INDEX idx_service_supplier_allocations_status ON service_supplier_allocations(status);
+CREATE INDEX idx_service_supplier_allocations_is_deleted ON service_supplier_allocations(is_deleted);
+CREATE INDEX idx_service_supplier_allocations_service_status ON service_supplier_allocations(service_id, status);
+CREATE INDEX idx_service_supplier_allocations_supplier_deleted ON service_supplier_allocations(supplier_id, is_deleted);
+
 CREATE INDEX idx_quotations_customer_id ON quotations(customer_id);
 CREATE INDEX idx_quotations_service_id ON quotations(service_id);
 CREATE INDEX idx_quotations_status ON quotations(status);
@@ -1313,6 +1377,7 @@ ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE supplier_rate_cards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE service_supplier_allocations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quotations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quotation_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
