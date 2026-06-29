@@ -33,7 +33,10 @@ const SUPPLIER_LIST_SELECT = `
   is_preferred,
   notes,
   created_at,
-  updated_at
+  updated_at,
+  blacklisted_reason,
+  blacklisted_by,
+  blacklisted_at
 `;
 
 const STATUS_SORT_ORDER: Record<SupplierStatus, number> = {

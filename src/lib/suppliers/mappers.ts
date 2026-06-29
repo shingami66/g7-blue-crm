@@ -33,5 +33,8 @@ export function mapRowToSupplier(row: SupplierRow): Supplier {
     notes: row.notes,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    blacklistedReason: row.blacklisted_reason,
+    blacklistedBy: row.blacklisted_by,
+    blacklistedAt: row.blacklisted_at,
   };
 }

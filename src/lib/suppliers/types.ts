@@ -39,6 +39,9 @@ export interface SupplierRow {
   created_at: string;
   updated_at: string;
   notes: string | null;
+  blacklisted_reason: string | null;
+  blacklisted_by: string | null;
+  blacklisted_at: string | null;
 }
 
 export interface SuppliersListResult {

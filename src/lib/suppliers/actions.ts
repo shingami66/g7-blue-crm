@@ -124,11 +124,31 @@ export async function updateSupplier(input: unknown): Promise<UpdateSupplierResu
     }
 
     const supabase = createAdminClient();
+
+    // Prevent bypass: Check existing status
+    const { data: existingSupplier, error: fetchError } = await supabase
+      .from("suppliers")
+      .select("status")
+      .eq("id", parsed.data.id)
+      .single();
+
+    if (fetchError || !existingSupplier) {
+      return { success: false, error: "Supplier not found." };
+    }
+
+    if (existingSupplier.status === "blacklisted" && parsed.data.status !== "blacklisted") {
+      return { success: false, error: "Cannot unblacklist via normal edit. Use the dedicated workflow." };
+    }
+    if (existingSupplier.status !== "blacklisted" && parsed.data.status === "blacklisted") {
+      return { success: false, error: "Cannot blacklist via normal edit. Use the dedicated workflow." };
+    }
+
     const { error } = await supabase
       .from("suppliers")
       .update(supplierUpdatePayload(parsed.data, user.clerk_user_id))
       .eq("id", parsed.data.id)
       .eq("is_deleted", false);
+
 
     if (error) {
       console.error("[updateSupplier] Supabase error:", error.message);
@@ -141,6 +161,92 @@ export async function updateSupplier(input: unknown): Promise<UpdateSupplierResu
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
     console.error("[updateSupplier] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export type BlacklistSupplierResult = {
+  success: boolean;
+  error?: string;
+};
+
+export async function blacklistSupplier(input: unknown): Promise<BlacklistSupplierResult> {
+  try {
+    const user = await requirePermission("suppliers:write");
+    const { blacklistSupplierSchema } = await import("./schemas");
+    const parsed = blacklistSupplierSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return { success: false, error: firstValidationError(parsed) };
+    }
+
+    const supabase = createAdminClient();
+    const { error } = await supabase
+      .from("suppliers")
+      .update({
+        status: "blacklisted",
+        blacklisted_reason: parsed.data.reason,
+        blacklisted_by: user.clerk_user_id,
+        blacklisted_at: new Date().toISOString(),
+        updated_by: user.clerk_user_id,
+      })
+      .eq("id", parsed.data.id)
+      .eq("is_deleted", false);
+
+    if (error) {
+      console.error("[blacklistSupplier] Supabase error:", error.message);
+      return { success: false, error: "Failed to blacklist supplier. Please try again." };
+    }
+
+    revalidatePath("/suppliers");
+    return { success: true };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[blacklistSupplier] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export type UnblacklistSupplierResult = {
+  success: boolean;
+  error?: string;
+};
+
+export async function unblacklistSupplier(input: unknown): Promise<UnblacklistSupplierResult> {
+  try {
+    const user = await requirePermission("suppliers:write");
+    const { unblacklistSupplierSchema } = await import("./schemas");
+    const parsed = unblacklistSupplierSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return { success: false, error: firstValidationError(parsed) };
+    }
+
+    const supabase = createAdminClient();
+    const { error } = await supabase
+      .from("suppliers")
+      .update({
+        status: "inactive",
+        blacklisted_reason: null,
+        blacklisted_by: null,
+        blacklisted_at: null,
+        updated_by: user.clerk_user_id,
+      })
+      .eq("id", parsed.data.id)
+      .eq("is_deleted", false);
+
+    if (error) {
+      console.error("[unblacklistSupplier] Supabase error:", error.message);
+      return { success: false, error: "Failed to unblacklist supplier. Please try again." };
+    }
+
+    revalidatePath("/suppliers");
+    return { success: true };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[unblacklistSupplier] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { success: false, error: "An unexpected error occurred." };
   }
 }

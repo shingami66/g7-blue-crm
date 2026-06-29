@@ -8,7 +8,7 @@ import {
   SAFE_SUPPLIER_CREATE_STATUSES,
   SUPPLIER_CATEGORIES,
 } from "@/lib/suppliers/schemas";
-import type { Supplier } from "@/types/supplier";
+import type { Supplier, SupplierStatus } from "@/types/supplier";
 
 const SUPPLIER_TYPES = ["company", "individual"] as const;
 const VAT_REGISTRATION_OPTIONS = [
@@ -52,11 +52,7 @@ export default function SupplierEditForm({ supplier }: { supplier: Supplier }) {
     (typeof VAT_REGISTRATION_OPTIONS)[number]["value"]
   >(supplier.vatRegistrationStatus === "registered" ? "registered" : "not_registered");
   const [vatNumber, setVatNumber] = useState(supplier.vatNumber ?? "");
-  const [status, setStatus] = useState<(typeof SAFE_SUPPLIER_CREATE_STATUSES)[number]>(
-    (SAFE_SUPPLIER_CREATE_STATUSES as readonly string[]).includes(supplier.status)
-      ? (supplier.status as (typeof SAFE_SUPPLIER_CREATE_STATUSES)[number])
-      : "active"
-  );
+  const [status, setStatus] = useState<SupplierStatus>(supplier.status);
   const [isPreferred, setIsPreferred] = useState(supplier.isPreferred ?? false);
   const [notes, setNotes] = useState(supplier.notes ?? "");
 

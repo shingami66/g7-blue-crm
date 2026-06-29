@@ -7,8 +7,9 @@ import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import DataTable from "@/components/ui/DataTable";
-import { Filter, Search, Star, Phone, Mail, FileText, CheckCircle2, User, MapPin, Plus } from "lucide-react";
+import { Filter, Search, Star, Phone, Mail, FileText, CheckCircle2, User, MapPin, Plus, ShieldAlert } from "lucide-react";
 import type { Supplier, SupplierStatus } from "@/types/supplier";
+import SupplierBlacklistActions from "./SupplierBlacklistActions";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -275,13 +276,13 @@ export default function SuppliersClient({
 
         {selectedSupplierId && activeSupplier && (
           <div className="w-1/3 bg-surface-container-lowest border border-surface-variant rounded-xl p-6 flex-col hidden lg:flex sticky top-0 h-fit max-h-[calc(100vh-8rem)] overflow-y-auto">
-            <div className="flex justify-between items-start mb-6 border-b border-surface-variant pb-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-lg bg-primary-fixed flex items-center justify-center text-primary font-bold text-[24px]">
+            <div className="flex justify-between items-start mb-6 border-b border-surface-variant pb-6 gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-16 h-16 rounded-lg bg-primary-fixed flex items-center justify-center text-primary font-bold text-[24px] shrink-0">
                   {getSupplierInitial(activeSupplier)}
                 </div>
-                <div>
-                  <h3 className="text-[20px] leading-[28px] font-semibold text-primary">
+                <div className="min-w-0">
+                  <h3 className="text-[20px] leading-[28px] font-semibold text-primary truncate" title={activeSupplier.name}>
                     {activeSupplier.name}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
@@ -301,15 +302,19 @@ export default function SuppliersClient({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center justify-end gap-2 shrink-0">
                 {canCreateSuppliers && (
-                  <Link
-                    href={`/suppliers/${activeSupplier.id}/edit`}
-                    className="text-[12px] font-medium text-primary hover:underline px-2 py-1 rounded hover:bg-surface-variant"
-                  >
-                    Edit
-                  </Link>
+                  <>
+                    <SupplierBlacklistActions supplier={activeSupplier} />
+                    <Link
+                      href={`/suppliers/${activeSupplier.id}/edit`}
+                      className="text-[12px] font-medium text-primary hover:underline px-2 py-1 rounded hover:bg-surface-variant"
+                    >
+                      Edit
+                    </Link>
+                  </>
                 )}
+
                 <button
                   type="button"
                   onClick={() => setSelectedSupplierId(null)}
@@ -341,6 +346,26 @@ export default function SuppliersClient({
                   </div>
                 </div>
               </div>
+
+              {activeSupplier.status === "blacklisted" && activeSupplier.blacklistedReason && (
+                <div>
+                  <h4 className="text-[12px] font-semibold text-error uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <ShieldAlert size={14} />
+                    Blacklist Details
+                  </h4>
+                  <div className="bg-error-container/20 border border-error/30 rounded-lg p-4 space-y-2 text-[14px]">
+                    <div className="text-on-surface-variant">
+                      <span className="font-semibold text-error">Reason: </span>
+                      {activeSupplier.blacklistedReason}
+                    </div>
+                    {activeSupplier.blacklistedAt && (
+                      <div className="text-[12px] text-on-surface-variant mt-2 pt-2 border-t border-error/20">
+                        Blacklisted on {new Date(activeSupplier.blacklistedAt).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <h4 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider mb-3">

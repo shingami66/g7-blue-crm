@@ -55,7 +55,7 @@ const optionalVatRegistrationStatus = z.preprocess((value) => {
   return value;
 }, z.enum(["not_registered", "registered"]).nullable());
 
-export const createSupplierSchema = z
+export const baseSupplierSchema = z
   .object({
     displayName: requiredTrimmedText("Supplier name is required"),
     legalName: optionalTrimmedText,
@@ -75,21 +75,43 @@ export const createSupplierSchema = z
     isPreferred: z.boolean().default(false),
     notes: optionalTrimmedText,
   })
-  .strict()
-  .superRefine((input, context) => {
-    if (input.vatRegistrationStatus !== "registered" && input.vatNumber) {
-      context.addIssue({
-        code: "custom",
-        message: "VAT number can only be set when VAT status is registered",
-        path: ["vatNumber"],
-      });
-    }
-  });
+  .strict();
+
+function validateVatNumber(
+  input: { vatRegistrationStatus?: string | null; vatNumber?: string | null },
+  context: z.RefinementCtx
+) {
+  if (input.vatRegistrationStatus !== "registered" && input.vatNumber) {
+    context.addIssue({
+      code: "custom",
+      message: "VAT number can only be set when VAT status is registered",
+      path: ["vatNumber"],
+    });
+  }
+}
+
+export const createSupplierSchema = baseSupplierSchema.superRefine(validateVatNumber);
 
 export type CreateSupplierInput = z.infer<typeof createSupplierSchema>;
 
-export const updateSupplierSchema = createSupplierSchema.extend({
+export const updateSupplierSchema = baseSupplierSchema
+  .extend({
+    id: z.string().uuid("Invalid supplier ID"),
+    status: z.enum(["active", "on_hold", "blacklisted", "inactive"]).default("active"),
+  })
+  .superRefine(validateVatNumber);
+
+export type UpdateSupplierInput = z.infer<typeof updateSupplierSchema>;
+
+export const blacklistSupplierSchema = z.object({
+  id: z.string().uuid("Invalid supplier ID"),
+  reason: requiredTrimmedText("Reason is required to blacklist a supplier"),
+});
+
+export type BlacklistSupplierInput = z.infer<typeof blacklistSupplierSchema>;
+
+export const unblacklistSupplierSchema = z.object({
   id: z.string().uuid("Invalid supplier ID"),
 });
 
-export type UpdateSupplierInput = z.infer<typeof updateSupplierSchema>;
+export type UnblacklistSupplierInput = z.infer<typeof unblacklistSupplierSchema>;

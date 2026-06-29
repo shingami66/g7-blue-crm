@@ -28,4 +28,7 @@ export interface Supplier {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+  blacklistedReason: string | null;
+  blacklistedBy: string | null;
+  blacklistedAt: string | null;
 }
