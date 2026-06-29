@@ -578,6 +578,10 @@ Operational Invoice Module is not complete yet.
 - Sensitive banking and blacklist audit fields are strictly excluded.
 - Lint and TypeScript compile successfully with zero errors.
 - Other supplier modules (finance, rate cards, delete/restore, blacklist workflows) remain deferred.
+- `SUPPLIERS-EDIT-OPTIONAL-FIELDS-FIX-1` completed and pushed in commit `7df51f4 fix(suppliers): preserve optional edit fields`.
+- Scope fixes optional supplier edit field persistence: CR Number, VAT Number, and Internal Notes.
+- Manual smoke testing found that these fields were previously initialized to empty strings `""` instead of their database values from the `supplier` prop, resetting them to `null` on save.
+- Fixed by hydrating `crNumber`, `vatNumber`, and `notes` states from the supplier prop. Manual smoke tests passed successfully after implementation.
 - `SERVICE-STATUS-STATE-MACHINE-SPEC-1` completed and pushed in commit `760c569 spec(services): define status state machine`.
 - Scope was Spec Kit design artifacts under `specs/003-service-status-state-machine/`. No source implementation, guarded transition enforcement, `services:update_status`, UI next-state filtering, or automation was implemented.
 - Next recommended area: Sprint 1 workflow blockers, starting with `SERVICE-STATUS-GUARDED-TRANSITIONS-1` or workflow CTA tasks (`SERVICE-DETAIL-RELATED-QUOTE-CTA-1`, `QUOTE-TO-DEPOSIT-CTA-1`, `INVOICE-LIST-REMOVE-STANDALONE-CREATE-1`, `HUMAN-REFERENCE-DISPLAY-1`).

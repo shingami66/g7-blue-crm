@@ -853,6 +853,14 @@ SUPPLIERS-EDIT-FORM-1
 - Lint and TypeScript compile successfully with zero errors.
 - Other supplier modules (finance, rate cards, delete/restore, blacklist workflows) remain deferred.
 
+SUPPLIERS-EDIT-OPTIONAL-FIELDS-FIX-1
+- Status: Completed and pushed.
+- Implemented in commit `7df51f4 fix(suppliers): preserve optional edit fields`.
+- Scope fixes optional supplier edit field persistence: CR Number, VAT Number, and Internal Notes.
+- Manual smoke testing found that these fields were previously initialized to empty strings `""` instead of their database values from the `supplier` prop, resetting them to `null` on save.
+- Fixed by hydrating `crNumber`, `vatNumber`, and `notes` states from the supplier prop. Manual smoke tests passed successfully after implementation.
+- No other fields or modules were modified. Sensitive banking/blacklist fields remain excluded.
+
 SUPPLIERS-LIST-LIVE-1
 - Status: Superseded/completed by `SUPPLIERS-LIVE-READ-FOUNDATION-1`.
 - `/suppliers` no longer depends on `suppliersData` for the live page. The remaining mock data file is not the route data source. Supplier CRUD/write and finance/workflow modules remain deferred.
