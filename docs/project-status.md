@@ -757,8 +757,6 @@ Operational Invoice Module is not complete yet.
     - Runtime manual create action is implemented.
     - Supplier Allocations full write layer is not complete.
     - CRUD is not complete.
-    - Update action remains deferred.
-    - Cancel action remains deferred.
     - Delete/restore actions remain deferred.
     - Rate-card allocation creation remains deferred.
     - Server-side rate-card snapshot generation remains deferred.
@@ -768,6 +766,71 @@ Operational Invoice Module is not complete yet.
     - Supplier invoices/payments remain deferred.
     - Supplier costing/margin reports remain deferred.
     - Rate-card-driven quotation automation remains deferred.
+    - Customer-facing supplier cost exposure remains forbidden/deferred.
+
+- `SUPPLIER-ALLOCATIONS-UPDATE-MANUAL-1A` completed, validated, committed, and pushed.
+  - Latest commits:
+    - `486bdb9 feat(suppliers): add manual allocation update action`
+  - Action Facts:
+    - `updateSupplierAllocation(id, input)` is implemented in `src/lib/supplier-allocations/actions.ts`.
+    - Existing export path remains `src/lib/supplier-allocations/index.ts`.
+    - Uses `"use server"`.
+    - Returns project ActionResult pattern with SupplierAllocation.
+    - Requires `supplier_allocations:write`.
+    - Does not use `supplier_allocations:cancel`.
+    - Uses `user.clerk_user_id` for `updated_by`.
+    - Enforces `canReadCost` redaction using `checkPermission("supplier_allocations:read_cost")`.
+    - Validates `id` as a non-empty string.
+    - Uses `supplierAllocationUpdateSchema.safeParse`.
+    - Schema no longer requires `supplierId` because `supplier_id` is immutable.
+    - Does not allow client control of `id`, `serviceId`, `supplierId`, `estimatedTotalCost`, `supplierRateCardId`, `rateCardSnapshot`, audit fields, cancellation fields, and deletion fields.
+  - Existing Allocation checks:
+    - Loads row by `id` and `is_deleted = false`.
+    - Missing allocation returns a client-safe not found error.
+    - Already cancelled allocations cannot be updated.
+    - Existing rate-card allocations cannot be manually updated in this slice.
+  - Cross-Table Validation:
+    - Loads parent Service by `existingAllocation.service_id`. Blocks if missing, deleted, `Cancelled`, or `Completed`.
+    - Loads Supplier by `existingAllocation.supplier_id`. Blocks if missing, deleted, or status is not `active` (rejects `inactive`, `on_hold`, `blacklisted`).
+    - Supplier cannot be changed by the action.
+  - Manual-Only / Rate-Card Boundary:
+    - Only updates `manual_estimate` allocations.
+    - Rejects `costSource === "rate_card"`.
+    - Leaves `supplier_rate_card_id` and `rate_card_snapshot` untouched.
+    - Rate-card creation/snapshot generation remain deferred.
+  - Status Transitions:
+    - Transition guard strictly enforces:
+      - `draft -> draft/planned`
+      - `planned -> planned/selected`
+      - `selected -> selected`
+    - Blocked:
+      - `any -> cancelled` (cancel action only)
+      - `cancelled -> any`
+      - `planned -> draft`
+      - `selected -> planned/draft`
+    - Omitted status preserves existing status safely.
+  - Payload Safety:
+    - Cherry-picks mutable database fields: `status` (via `nextStatus`), `category`, `itemName`, `unit`, `quantity`, `currency` (SAR only), `estimatedUnitCost`, `costSource` (`manual_estimate`), `scopeOfWork`, `internalNotes`, `approvedQuotationId` (only after validation), and `updated_by`.
+    - Excludes `id`, `service_id`, `supplier_id`, `estimated_total_cost`, `supplier_rate_card_id`, `rate_card_snapshot`, audit/cancel/delete fields.
+  - Approved Quotation:
+    - If `approvedQuotationId` is provided, validates that quotation exists, is not deleted, has status `approved`, and matches the allocation's `service_id`.
+    - If omitted, existing `approved_quotation_id` is preserved. Nullable clearing is not supported.
+  - Return/Error/Revalidation:
+    - Result mapped through `mapSupplierAllocationRow` respecting `canReadCost` redaction.
+    - DB details are not returned to client. Internal errors logged server-side only.
+    - Revalidates `/services` and `/services/[id]`.
+  - Boundaries:
+    - Manual update action is implemented.
+    - Supplier Allocations CRUD is not complete.
+    - Full write layer is not complete.
+    - UI is not complete.
+    - Delete/restore remains deferred.
+    - Rate-card allocation creation remains deferred.
+    - Server-side rate-card snapshot generation remains deferred.
+    - Supplier Booking / Internal PO remains deferred.
+    - Supplier invoices/payments remain deferred.
+    - Supplier costing/margin reports remain deferred.
+    - Quotation automation remains deferred.
     - Customer-facing supplier cost exposure remains forbidden/deferred.
 
 
