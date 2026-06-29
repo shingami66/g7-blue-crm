@@ -885,6 +885,7 @@ FUTURE SUPPLIER SEQUENCE
 - SUPPLIER-ALLOCATIONS-SCHEMAS-1A is complete.
 - SUPPLIER-ALLOCATIONS-READ-1A is complete.
 - SUPPLIER-ALLOCATIONS-CREATE-MANUAL-1A is complete.
+- SUPPLIER-ALLOCATIONS-CANCEL-1A is complete.
 - Everything after it in this supplier sequence is not implemented:
   1. SUPPLIER-ALLOCATIONS-1 (Remaining Runtime CRUD / Actions / UI)
   2. SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1
@@ -949,6 +950,57 @@ SUPPLIER-ALLOCATIONS-READ-1A (Completed, Closed)
   - DB errors are logged via `console.error` and handled gracefully by returning `[]` (lists) or `null` (single record).
 - Boundaries:
   - Write actions, Server Actions, UI panels, Service Detail integration, allocations history UI, and SQL/migration changes are NOT implemented.
+
+SUPPLIER-ALLOCATIONS-CANCEL-1A (Completed, Closed)
+- Status: Completed, closed, committed, and pushed.
+- Commits:
+  - `b383f85 feat(suppliers): add allocation cancel action`
+- Author: `shingami66 <157619702+shingami66@users.noreply.github.com>`
+- Action Facts:
+  - `cancelSupplierAllocation(id, input)` is implemented in `src/lib/supplier-allocations/actions.ts`.
+  - Existing export path remains `src/lib/supplier-allocations/index.ts`.
+  - Uses `"use server"`.
+  - Returns project ActionResult pattern with SupplierAllocation.
+  - Requires `supplier_allocations:cancel`.
+  - Does not use `supplier_allocations:write` as substitute.
+  - Uses `user.clerk_user_id` for `cancelled_by` and `updated_by`.
+  - Validates `id` as a non-empty string from function argument.
+  - Uses `supplierAllocationCancelSchema.safeParse`.
+  - Requires `cancelledReason`.
+  - Does not accept client-provided `status`, `cancelled_at`, `cancelled_by`, or `is_deleted`.
+  - Loads existing allocation from `service_supplier_allocations` with `id` and `is_deleted = false`.
+  - Missing allocation returns a client-safe not found error.
+  - Already cancelled allocation returns a client-safe already-cancelled error.
+  - Parent Service status does not block cancellation.
+- Update Payload Safety:
+  - Cancel is business cancellation only.
+  - Cancel preserves row for history/audit.
+  - Cancel does not hard delete.
+  - Cancel does not set `is_deleted`.
+  - Update payload is strictly cherry-picked.
+  - Updated fields are only: `status`, `cancelled_reason`, `cancelled_at`, `cancelled_by`, `updated_by`.
+  - Does not update `service_id`, `supplier_id`, `approved_quotation_id`, cost fields, rate-card fields, `created_by`, `created_at`, deleted fields, or item/scope fields.
+- Security/Return Behavior:
+  - Updated row is mapped through `mapSupplierAllocationRow`.
+  - `canReadCost` is computed via `supplier_allocations:read_cost`.
+  - Returned data respects cost redaction.
+  - Raw DB rows are not returned.
+  - Supabase/internal errors are logged server-side and returned as generic client-safe messages.
+  - Successful cancel revalidates `/services` and `/services/[id]`.
+- Boundaries:
+  - Runtime cancel action is implemented.
+  - Supplier Allocations full write layer is not complete.
+  - CRUD is not complete.
+  - Update action remains deferred.
+  - Delete/restore actions remain deferred.
+  - Rate-card allocation creation and server-side snapshot generation remain deferred.
+  - Service detail UI panel remains deferred.
+  - Supplier allocation history UI remains deferred.
+  - Supplier Booking / Internal Supplier PO remains deferred.
+  - Supplier invoices/payments remain deferred.
+  - Supplier costing/margin reports remain deferred.
+  - Rate-card-driven quotation automation remains deferred.
+  - Customer-facing supplier cost exposure remains forbidden/deferred.
 
 SUPPLIER-ALLOCATIONS-CREATE-MANUAL-1A (Completed, Closed)
 - Status: Completed, closed, committed, and pushed.
