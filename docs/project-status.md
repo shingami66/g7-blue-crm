@@ -663,6 +663,63 @@ Operational Invoice Module is not complete yet.
   - Boundaries:
     - Write actions, Server Actions, UI panels, Service Detail integration, allocations history UI, and SQL/migration changes are NOT implemented.
 
+- `SUPPLIER-ALLOCATIONS-CREATE-MANUAL-1A` completed, validated, committed, and pushed.
+  - Latest commits:
+    - `3b2364d feat(suppliers): add manual allocation create action`
+  - Action Facts:
+    - `createSupplierAllocation(input)` is implemented in `src/lib/supplier-allocations/actions.ts`.
+    - `actions.ts` uses `"use server"`.
+    - The action returns the project ActionResult pattern.
+    - The action requires `supplier_allocations:write`.
+    - The action uses `user.clerk_user_id` for both `created_by` and `updated_by`.
+    - The action uses `supplierAllocationCreateSchema.safeParse`.
+    - The action rejects `costSource = rate_card` as not yet supported.
+    - The action forces `status = draft` server-side.
+    - The action does not allow selected/cancelled creation.
+    - The action does not trust client-provided identity fields.
+    - The action does not accept or insert `estimated_total_cost`.
+    - The action does not insert `supplier_rate_card_id` or `rate_card_snapshot` in this slice.
+  - Cross-Table Validation Facts:
+    - Parent Service must exist.
+    - Parent Service must not be deleted.
+    - Parent Service status must not be Cancelled.
+    - Parent Service status must not be Completed.
+    - Supplier must exist.
+    - Supplier must not be deleted.
+    - Supplier status must be active.
+    - Optional `approvedQuotationId` must reference an existing quotation.
+    - Optional `approvedQuotationId` must reference a not-deleted quotation.
+    - Optional `approvedQuotationId` must belong to the same service.
+    - Optional `approvedQuotationId` must have status approved.
+    - Valid `approvedQuotationId` is inserted as `approved_quotation_id`.
+  - Insert Payload & Return Safety Facts:
+    - Insert payload is strictly cherry-picked.
+    - Generated fields are excluded from client-controlled input.
+    - Audit/default fields are excluded from client-controlled input.
+    - Created row is mapped through `mapSupplierAllocationRow`.
+    - `canReadCost` is computed via `supplier_allocations:read_cost`.
+    - Returned data respects cost redaction.
+    - Raw DB rows are not returned.
+    - Supabase/internal errors are logged server-side.
+    - Client receives generic safe errors, not internal DB details.
+    - Successful create revalidates `/services` and `/services/[id]`.
+  - Boundaries:
+    - Runtime manual create action is implemented.
+    - Supplier Allocations full write layer is not complete.
+    - CRUD is not complete.
+    - Update action remains deferred.
+    - Cancel action remains deferred.
+    - Delete/restore actions remain deferred.
+    - Rate-card allocation creation remains deferred.
+    - Server-side rate-card snapshot generation remains deferred.
+    - Service detail UI panel remains deferred.
+    - Supplier allocation history UI remains deferred.
+    - Supplier Booking / Internal Supplier PO remains deferred.
+    - Supplier invoices/payments remain deferred.
+    - Supplier costing/margin reports remain deferred.
+    - Rate-card-driven quotation automation remains deferred.
+    - Customer-facing supplier cost exposure remains forbidden/deferred.
+
 
 **Guarded Service Status Transitions:**
 - `SERVICE-STATUS-GUARDED-TRANSITIONS-1` implemented and manual smoke passed.
