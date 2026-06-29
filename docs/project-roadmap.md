@@ -828,7 +828,7 @@ SUPPLIERS-LIVE-READ-FOUNDATION-1
 - Permission gate uses `suppliers:read`; this slice does not use `suppliers:write`.
 - Verification passed: lint passed with only existing PDF `<img>` warnings; `pnpm exec tsc --noEmit` passed; no bank/IBAN fields were selected, mapped, typed for UI, or rendered.
 - No create/edit/delete/restore behavior, SQL/schema/migration changes, or supplier finance/future modules were introduced.
-- Still deferred after this read-only slice: supplier create/edit/delete/restore CRUD, supplier write actions/server actions, supplier rate cards, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow.
+- Still deferred after this read-only slice: supplier create/edit/delete/restore CRUD, supplier write actions/server actions, supplier rate cards runtime workflows, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow.
 
 SUPPLIERS-CREATE-FORM-1
 - Status: Completed and pushed.
@@ -841,7 +841,7 @@ SUPPLIERS-CREATE-UX-FIX-1
 - Implemented in commit `9ed7a59 fix(suppliers): refine create ui`.
 - Team Lead create-flow UI/UX fixes are complete.
 - Basic profile Supplier Edit is complete. Supplier Delete/Restore remain deferred.
-- Supplier finance/workflow modules remain deferred: rate cards, allocations, bookings/internal POs, supplier invoices/payments, Supplier PO PDF/WhatsApp/email, supplier portal, costing/margin/P&L, and payment approval workflow.
+- Supplier finance/workflow modules remain deferred: rate cards runtime workflows, allocations, bookings/internal POs, supplier invoices/payments, Supplier PO PDF/WhatsApp/email, supplier portal, costing/margin/P&L, and payment approval workflow.
 
 SUPPLIERS-EDIT-FORM-1
 - Status: Completed and pushed.
@@ -851,7 +851,7 @@ SUPPLIERS-EDIT-FORM-1
 - Prefills existing safe data. Soft-deleted records are protected.
 - Sensitive banking and blacklist audit fields remain excluded.
 - Lint and TypeScript compile successfully with zero errors.
-- Other supplier modules (finance, rate cards, delete/restore, blacklist workflows) remain deferred.
+- Other supplier modules (finance, rate cards runtime workflows, delete/restore, blacklist workflows) remain deferred.
 
 SUPPLIERS-EDIT-OPTIONAL-FIELDS-FIX-1
 - Status: Completed and pushed.
@@ -866,6 +866,11 @@ SUPPLIERS-STATUS-BLACKLIST-1
 - Implemented in commit `92617ef feat(suppliers): add blacklist workflow`.
 - Scope: Implemented dedicated supplier blacklist/unblacklist workflow with reason modal, recording `blacklisted_reason`, `blacklisted_by`, and `blacklisted_at` in the database.
 - Details: Blacklist details are shown inside the supplier side panel, unblacklisting restores the status to `inactive`, and normal Supplier Edit form updates are validated to prevent bypassing the workflow. Layout flexbox fixes in side panel and Zod refinement fixes included. Manual smoke and validation passed.
+
+SUPPLIERS-RATE-CARDS-FOUNDATION-1A
+- Implemented in commits `6a2804d feat(suppliers): add rate cards foundation` and `87c714c chore(suppliers): sync schema after rate cards foundation`.
+- Scope: Supplier rate cards database table, RLS enablement without broad policies, and app-level `supplier_costing:read` / `supplier_costing:write` permissions assigned to Admin and Manager. Accountant, Sales, Operations, and Viewer do not have supplier costing permissions in this MVP slice.
+- Details: Foundation table and permissions completed. Migration manually applied and schema synced. The full supplier rate cards feature is not yet complete. Supplier rate cards contain internal cost data and must never appear in customer-facing quotations, invoices, PDFs, receipts, broad supplier list views, or unauthorized role views. Runtime workflows remain deferred.
 
 SUPPLIERS-LIST-LIVE-1
 - Status: Superseded/completed by `SUPPLIERS-LIVE-READ-FOUNDATION-1`.

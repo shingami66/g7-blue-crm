@@ -564,7 +564,15 @@ Operational Invoice Module is not complete yet.
 - `/suppliers` now reads live supplier records from the database through a server-side supplier query layer, UI-safe mapper/types, and a read-only client list/detail UI.
 - The permission gate uses `suppliers:read`. This read-only slice does not use `suppliers:write`, does not add create/edit/delete/restore behavior, and does not expose bank or IBAN fields in the UI selection, mapper, types, or rendering.
 - Verification evidence: lint passed with only existing `<img>` warnings, `pnpm exec tsc --noEmit` passed, no SQL/schema/migration changes were made, and no supplier finance/future modules were introduced.
-- Supplier implementation remains partial. Supplier create/edit/delete/restore CRUD, supplier write actions/server actions, supplier rate cards, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
+- `SUPPLIERS-RATE-CARDS-FOUNDATION-1A` completed and pushed in commits `6a2804d` and `87c714c`.
+  - The foundation table `supplier_rate_cards` was created with data integrity constraints (`base_cost > 0`, `currency = 'SAR'`).
+  - Permissions `supplier_costing:read` and `supplier_costing:write` were added and assigned to Admin and Manager roles. Accountant, Sales, Operations, and Viewer do not have `supplier_costing:read` or `supplier_costing:write` permissions in this MVP slice.
+  - The migration was manually applied and verified in Supabase, and `supabase/schema.sql` was synced.
+  - Security was hardened: RLS is enabled with 0 policies, and direct anon/authenticated grants are revoked.
+  - Important rule enforced: Supplier rate cards contain internal cost data and must never appear in customer-facing quotations, invoices, PDFs, receipts, broad supplier list views, or unauthorized role views.
+  - The full supplier rate cards feature is not yet complete. Only the foundation table and permissions are completed.
+  - Supplier rate cards runtime workflows (supplier allocations, quotation automation, cost margin reports) remain deferred.
+- Supplier implementation remains partial. Supplier create/edit/delete/restore CRUD, supplier write actions/server actions, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
 
 **Supplier Create and Service Status Spec Sync:**
 - `SUPPLIERS-CREATE-FORM-1` completed and pushed in commit `05affcd feat(suppliers): add create form`.
