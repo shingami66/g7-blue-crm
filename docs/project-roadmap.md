@@ -872,6 +872,14 @@ SUPPLIERS-RATE-CARDS-FOUNDATION-1A
 - Scope: Supplier rate cards database table, RLS enablement without broad policies, and app-level `supplier_costing:read` / `supplier_costing:write` permissions assigned to Admin and Manager. Accountant, Sales, Operations, and Viewer do not have supplier costing permissions in this MVP slice.
 - Details: Foundation table and permissions completed. Migration manually applied and schema synced. The full supplier rate cards feature is not yet complete. Supplier rate cards contain internal cost data and must never appear in customer-facing quotations, invoices, PDFs, receipts, broad supplier list views, or unauthorized role views. Runtime workflows remain deferred.
 
+SUPPLIERS-RATE-CARDS-READ-1
+- Status: Completed.
+- Implemented in commit `da5bc86 feat(suppliers): add read-only rate cards view`.
+- Scope: Internal read-only Supplier Rate Cards view added to the existing Supplier side panel.
+- Details: Visible only to Admin/Manager users with `supplier_costing:read`. Unauthorized roles (Accountant, Sales, Operations, Viewer) do not see the Rate Cards section. Enforces server-side `requirePermission("supplier_costing:read")` before using `createAdminClient()`. Reads `supplier_rate_cards` filtered by `supplier_id` and `is_deleted = false`. Displays non-deleted rate cards sorted active first and newest `valid_from` first. Internal notes are displayed only inside the authorized internal Supplier side panel.
+- Validation: `pnpm run lint` passed with only the two known existing PDF `<img>` warnings, `pnpm exec tsc --noEmit` passed, and `pnpm run build` passed.
+
+
 SUPPLIERS-LIST-LIVE-1
 - Status: Superseded/completed by `SUPPLIERS-LIVE-READ-FOUNDATION-1`.
 - `/suppliers` no longer depends on `suppliersData` for the live page. The remaining mock data file is not the route data source. Supplier CRUD/write and finance/workflow modules remain deferred.

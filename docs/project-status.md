@@ -572,7 +572,17 @@ Operational Invoice Module is not complete yet.
   - Important rule enforced: Supplier rate cards contain internal cost data and must never appear in customer-facing quotations, invoices, PDFs, receipts, broad supplier list views, or unauthorized role views.
   - The full supplier rate cards feature is not yet complete. Only the foundation table and permissions are completed.
   - Supplier rate cards runtime workflows (supplier allocations, quotation automation, cost margin reports) remain deferred.
-- Supplier implementation remains partial. Supplier create/edit/delete/restore CRUD, supplier write actions/server actions, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
+- `SUPPLIERS-RATE-CARDS-READ-1` completed, validated, committed, and pushed in commit `da5bc86 feat(suppliers): add read-only rate cards view`.
+  - Internal read-only Supplier Rate Cards view added to the existing Supplier side panel.
+  - Visible only to Admin/Manager users with `supplier_costing:read`.
+  - Unauthorized roles (Accountant, Sales, Operations, Viewer) do not see the Rate Cards section.
+  - Server-side `requirePermission("supplier_costing:read")` is enforced.
+  - Uses server-side access only.
+  - Reads `supplier_rate_cards` filtered by `supplier_id` and `is_deleted = false`.
+  - Displays non-deleted rate cards sorted active first and newest `valid_from` first.
+  - Internal notes are displayed only inside the authorized internal Supplier side panel.
+  - Validation: `pnpm run lint` passed with only the two known existing PDF `<img>` warnings, `pnpm exec tsc --noEmit` passed, and `pnpm run build` passed.
+- Supplier implementation remains partial. Supplier create/edit/delete/restore CRUD, supplier write actions/server actions, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred. Supplier rate cards runtime read-only visibility is completed, while write (create/edit/delete) workflows remain deferred.
 
 **Supplier Create and Service Status Spec Sync:**
 - `SUPPLIERS-CREATE-FORM-1` completed and pushed in commit `05affcd feat(suppliers): add create form`.
