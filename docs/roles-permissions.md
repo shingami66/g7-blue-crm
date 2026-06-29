@@ -7,7 +7,7 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 | Role | Permissions |
 |---|---|
 | **admin** | All permissions across all modules. |
-| **manager** | `customers:read/write/export`, `quotations:read/write`, `quotations:approve`, `services:read/write`, `invoices:read`, `payments:read`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
+| **manager** | `customers:read/write/export`, `quotations:read/write`, `quotations:approve`, `services:read/write`, `invoices:read`, `payments:read`, `projects:read/write`, `suppliers:read/write`, `supplier_allocations:read`, `supplier_allocations:read_cost`, `supplier_allocations:write`, `dashboard:read` |
 | **sales** | `customers:read/write`, `quotations:read/write`, `services:read/write`, `invoices:read`, `payments:read`, `dashboard:read` |
 | **operations** | `customers:read`, `quotations:read`, `services:read`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
 | **accountant** | `customers:read/export`, `quotations:read`, `services:read`, `invoices:read/write`, `payments:read/write`, `settings:read`, `dashboard:read` |
@@ -51,6 +51,21 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - Deposit is flexible, not fixed at 50%.
 - `Deposit Paid` requires a valid/cleared deposit payment. A Deposit Invoice alone and a pending payment do not confirm booking.
 - Financial records must use void/cancel/reversal workflows rather than hard deletion.
+
+## Supplier Allocations Permissions
+
+- `supplier_allocations:read` and `supplier_allocations:read_cost` are separate permissions. MVP separation ensures cost visibility remains restricted.
+- MVP requires Admin and Manager to have full access.
+- Operations, Sales, and Viewer have no access in the MVP.
+- No `supplier_allocations:approve` permission exists for allocations in the MVP.
+
+### Status Transitions
+- `Create -> draft`: `supplier_allocations:write`
+- `draft -> planned`: `supplier_allocations:write`
+- `planned -> selected`: `supplier_allocations:write`
+- `Any -> cancelled`: `supplier_allocations:cancel`
+
+Avoid confirmed status at allocation level because confirmation/commitment belongs to future Supplier Booking / Internal PO.
 
 ## Security Notes
 

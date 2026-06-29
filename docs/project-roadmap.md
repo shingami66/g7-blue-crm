@@ -882,13 +882,34 @@ SUPPLIERS-RATE-CARDS-READ-1
 FUTURE SUPPLIER SEQUENCE
 - SUPPLIERS-RATE-CARDS-READ-1 is complete.
 - Everything after it in this supplier sequence is not implemented:
-  1. SUPPLIER-ALLOCATIONS-DESIGN-1
+  1. SUPPLIER-ALLOCATIONS-DESIGN-1 (Completed, Design Approved)
   2. SUPPLIER-ALLOCATIONS-1
   3. SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1
   4. SUPPLIER-BOOKINGS-INTERNAL-PO-1
   5. SUPPLIER-INVOICES-1
   6. SUPPLIER-PAYMENTS-1
   7. SUPPLIER-COSTING-MARGIN-REPORTS-1
+
+SUPPLIER-ALLOCATIONS-DESIGN-1 (Completed, Design Approved)
+- Status: Ready for review. Docs/spec sync only. Supplier Allocations implementation remains deferred/pending.
+- Scope: Design for the future Supplier Allocations module, the planning layer between Service/Event and Supplier Booking / Internal PO.
+- Workflow (Parallel to Quotation):
+  - Service Created
+  - → Quotation preparation starts
+  - → Supplier Allocations may be created/updated in parallel for cost estimation
+  - → Quotation Approved
+  - → Allocations may continue to be refined/selected
+  - → Future Supplier Booking / Internal PO
+- 9 Required Revision Items Approved:
+  1. Table: `service_supplier_allocations`. No table exists yet. No migration exists yet. Not in schema.sql.
+  2. UI: Service detail only (no standalone hub yet).
+  3. Pre-quotation approval: Allowed.
+  4. `approved_quotation_id`: Nullable, for reporting.
+  5. `supplier_rate_card_id`: Optional.
+  6. Manual cost: Allowed (`cost_source` = `rate_card` | `manual_estimate`).
+  7. Statuses: `draft` | `planned` | `selected` | `cancelled`.
+  8. MVP Permissions: No `supplier_allocations:approve` permission (Not included in MVP). Operations/Sales/Viewer: No access. Admin/Manager: Full access. (Separating `supplier_allocations:read` and `supplier_allocations:read_cost` permissions. Server-only access, no broad grants. Same cautious security pattern as supplier rate cards).
+  9. Blacklist: Block new allocations for blacklisted/inactive suppliers.
 - Supplier Booking / Internal Supplier PO must not be implemented before SUPPLIER-ALLOCATIONS-1.
 
 SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1 (Planned future item)

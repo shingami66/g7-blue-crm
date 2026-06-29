@@ -41,6 +41,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `customers`: Client database with revenue metrics, soft deletes, and a system-generated unique `customer_number`.
 - `services`: ERP-1 operational unit linked to `customers(id)` with `service_number`, event fields, status, ownership, cancellation reason, timestamps, audit text fields, and soft-delete timestamp. The DB foundation and app list/create/detail/edit foundation are implemented; controlled status transitions remain deferred.
 - `suppliers`: Third-party vendor database.
+- `service_supplier_allocations`: Supplier Allocations planning layer between Service/Event and Supplier Booking / Internal PO. (Design approved, not implemented yet).
 - `audit_logs`: Centralized event tracking for actions (`create`, `update`, etc.).
 
 ### Financial & Workflow
@@ -129,6 +130,28 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Future invoice void/cancellation may require Void status, Credit Note, Refund, and audit trail. Do not allow casual deletion of issued or paid invoices.
 - Issued/paid financial records must be preserved for auditability.
 - Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
+
+### Supplier Allocations
+- **Table:** `service_supplier_allocations` will be created (not implemented yet, no migration exists, not in schema.sql).
+- **Costing:** Manual cost is allowed (`cost_source` = `rate_card` | `manual_estimate`).
+- **Statuses:** `draft` | `planned` | `selected` | `cancelled`.
+- **Planned Fields:**
+  - `quantity NUMERIC(10,3) NOT NULL` (decimal because events may need 0.5 day, 1.5 day, 2.5 hours, or 2.5 meters).
+  - `estimated_unit_cost NUMERIC(14,2) NOT NULL`
+  - `estimated_total_cost NUMERIC(14,2) GENERATED ALWAYS AS (quantity * estimated_unit_cost) STORED` (DB-generated, not client-submitted).
+  - `currency CHAR(3) NOT NULL DEFAULT 'SAR'` (SAR-only for MVP unless Team Lead later approves multi-currency).
+- **Integrity Rules:**
+  - `service_id` is required and immutable after creation.
+  - `quantity > 0` and `estimated_unit_cost >= 0`.
+  - Server-side validation remains mandatory for quantity and estimated_unit_cost before insert/update.
+  - `supplier_rate_card_id` is optional.
+  - If `cost_source = rate_card`, `supplier_rate_card_id` and `rate_card_snapshot` are required.
+  - If `cost_source = manual_estimate`, `supplier_rate_card_id` may be null.
+  - If `supplier_rate_card_id` is selected, it must belong to the same `supplier_id`. MVP enforcement for `supplier_rate_card_id`/`supplier_id` matching is server-side validation (preferred future DB option: composite FK or trigger, not an MVP blocker).
+  - `approved_quotation_id` is nullable and present on allocation.
+  - If `approved_quotation_id` is set, it must belong to the same `service_id` and reference only an approved quotation. MVP enforcement for `approved_quotation_id` integrity is server-side validation (preferred future DB integrity rule should be considered in DB foundation).
+  - Block new allocations for blacklisted or inactive suppliers.
+  - Cancelled parent Service: If the parent Service is cancelled, block new allocations and keep existing allocations read-only historical records.
 
 ### Index Planning
 - Implemented ERP-1 service indexes: `services.customer_id`, `services.status`, `services.deleted_at`, `services.event_start_date`, `services.sales_owner_id`, and `services.created_at`.
