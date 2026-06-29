@@ -14,6 +14,10 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     "users:manage",
     "supplier_costing:read",
     "supplier_costing:write",
+    "supplier_allocations:read",
+    "supplier_allocations:read_cost",
+    "supplier_allocations:write",
+    "supplier_allocations:cancel",
   ], // Special case: wildcard means all permissions
   manager: [
     "customers:read",
@@ -33,6 +37,10 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     "suppliers:write",
     "supplier_costing:read",
     "supplier_costing:write",
+    "supplier_allocations:read",
+    "supplier_allocations:read_cost",
+    "supplier_allocations:write",
+    "supplier_allocations:cancel",
     "dashboard:read",
   ],
   sales: [
