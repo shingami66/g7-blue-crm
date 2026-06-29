@@ -62,6 +62,8 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - No `supplier_allocations:approve` permission exists for allocations in the MVP.
 - Operations, Sales, Viewer, and Accountant still have no Supplier Allocations access.
 - MVP separation between `supplier_allocations:read` and `supplier_allocations:read_cost` ensures cost visibility remains restricted.
+- Domain module `src/lib/supplier-allocations/` implements types, Zod schemas, and mappers under `SUPPLIER-ALLOCATIONS-SCHEMAS-1A`. Mappers enforce the `canReadCost` option to redact sensitive cost fields (`estimatedUnitCost`, `estimatedTotalCost`, `rateCardSnapshot`) when `supplier_allocations:read_cost` is not present, and Zod schemas validate create/update inputs (e.g. blocking `estimatedTotalCost` and `serviceId` updates) while keeping the database and permissions foundation secure. No database queries, server actions, or UI are implemented.
+
 
 ### Status Transitions
 - `Create -> draft`: `supplier_allocations:write`

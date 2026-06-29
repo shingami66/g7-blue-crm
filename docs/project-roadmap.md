@@ -882,6 +882,7 @@ SUPPLIERS-RATE-CARDS-READ-1
 FUTURE SUPPLIER SEQUENCE
 - SUPPLIERS-RATE-CARDS-READ-1 is complete.
 - SUPPLIER-ALLOCATIONS-FOUNDATION-1A is complete.
+- SUPPLIER-ALLOCATIONS-SCHEMAS-1A is complete.
 - Everything after it in this supplier sequence is not implemented:
   1. SUPPLIER-ALLOCATIONS-1 (Runtime CRUD / Actions / UI)
   2. SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1
@@ -907,6 +908,21 @@ SUPPLIER-ALLOCATIONS-FOUNDATION-1A (Completed, Closed)
   - Database/permissions foundation only. Runtime CRUD, Server Actions, UI panels, Service Detail integration, allocations history are NOT implemented.
   - Business logic validation rules (e.g. rate card ID matches supplier ID, approved quotation ID matches service ID, blacklisted supplier blocks, parent service cancellation blocks) are deferred to future server-side validation/runtime hardening.
 - Supplier Booking / Internal Supplier PO must not be implemented before SUPPLIER-ALLOCATIONS-1.
+
+SUPPLIER-ALLOCATIONS-SCHEMAS-1A (Completed, Closed)
+- Status: Completed, closed, committed, and pushed.
+- Commits:
+  - `e5a20ee feat(suppliers): add allocation schemas`
+- Scope: Domain types, Zod schemas, and mappers for Supplier Allocations.
+  - Implemented under `src/lib/supplier-allocations/`.
+  - Defined `SupplierAllocationStatus` (`draft`, `planned`, `selected`, `cancelled`) and `SupplierAllocationCostSource` (`rate_card`, `manual_estimate`).
+  - Implemented DB row type (`SupplierAllocationRow`) and domain type (`SupplierAllocation`), with `estimatedUnitCost`, `estimatedTotalCost`, and `rateCardSnapshot` marked as nullable to support cost redaction.
+  - Implemented Zod schemas for validation: `supplierAllocationCreateSchema` (requires `serviceId` and `supplierId`; conditionally requires rate card snapshot/ID for `rate_card` cost source), `supplierAllocationUpdateSchema` (disallows `serviceId` updates and status `cancelled`), `supplierAllocationCancelSchema` (requires `cancelledReason`), and status/cost source schemas.
+  - Implemented mappers with `canReadCost` option to redact cost-related fields when permission check fails.
+  - Added security boundary comments ensuring cost data remains internal-only and mappers are kept separate from UI/Auth/Supabase imports.
+- Boundaries:
+  - Runtime CRUD, Server Actions, DB queries, UI panel, Service Detail integration, allocations history, and SQL/migration changes are NOT implemented.
+
 
 SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1 (Planned future item)
 - Status: Not implemented, Not started, Not complete.
