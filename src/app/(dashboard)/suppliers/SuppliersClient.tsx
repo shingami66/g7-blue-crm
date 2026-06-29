@@ -10,6 +10,7 @@ import DataTable from "@/components/ui/DataTable";
 import { Filter, Search, Star, Phone, Mail, FileText, CheckCircle2, User, MapPin, Plus, ShieldAlert } from "lucide-react";
 import type { Supplier, SupplierStatus } from "@/types/supplier";
 import SupplierBlacklistActions from "./SupplierBlacklistActions";
+import SupplierRateCardsList from "./SupplierRateCardsList";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -78,10 +79,12 @@ export default function SuppliersClient({
   suppliers,
   loadError,
   canCreateSuppliers = false,
+  canViewCosting = false,
 }: {
   suppliers: Supplier[];
   loadError?: "suppliers_load_failed";
   canCreateSuppliers?: boolean;
+  canViewCosting?: boolean;
 }) {
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -431,6 +434,15 @@ export default function SuppliersClient({
                   </div>
                 </div>
               </div>
+
+              {canViewCosting && (
+                <div>
+                  <h4 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider mb-3">
+                    Internal Rate Cards
+                  </h4>
+                  <SupplierRateCardsList supplierId={activeSupplier.id} />
+                </div>
+              )}
             </div>
           </div>
         )}

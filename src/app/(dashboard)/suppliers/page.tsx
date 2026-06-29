@@ -35,10 +35,12 @@ function SafeErrorState() {
 export default async function SuppliersPage() {
   let result: Awaited<ReturnType<typeof getSuppliersList>>;
   let canCreateSuppliers = false;
+  let canViewCosting = false;
 
   try {
     result = await getSuppliersList();
     canCreateSuppliers = await checkPermission("suppliers:write");
+    canViewCosting = await checkPermission("supplier_costing:read");
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       redirect("/sign-in");
@@ -56,6 +58,7 @@ export default async function SuppliersPage() {
       suppliers={result.suppliers}
       loadError={result.error}
       canCreateSuppliers={canCreateSuppliers}
+      canViewCosting={canViewCosting}
     />
   );
 }
