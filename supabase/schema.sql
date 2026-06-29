@@ -311,6 +311,35 @@ COMMENT ON COLUMN suppliers.created_by IS 'Stores Clerk userId string';
 COMMENT ON COLUMN suppliers.updated_by IS 'Stores Clerk userId string';
 COMMENT ON COLUMN suppliers.deleted_by IS 'Clerk userId string for the user who soft-deleted the supplier, when applicable.';
 
+-- 6.1. Supplier Rate Cards
+CREATE TABLE supplier_rate_cards (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    supplier_id uuid NOT NULL REFERENCES suppliers(id) ON DELETE RESTRICT,
+    category text,
+    item_name text NOT NULL,
+    unit text NOT NULL,
+    currency text NOT NULL DEFAULT 'SAR',
+    base_cost numeric NOT NULL,
+    valid_from date NOT NULL,
+    valid_to date,
+    status text NOT NULL DEFAULT 'active',
+    notes text,
+    is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    created_by text,
+    updated_by text,
+    deleted_at timestamptz,
+    deleted_by text,
+    CONSTRAINT chk_supplier_rate_cards_valid_dates CHECK (valid_to IS NULL OR valid_to >= valid_from),
+    CONSTRAINT supplier_rate_cards_base_cost_check CHECK (base_cost > 0),
+    CONSTRAINT supplier_rate_cards_currency_check CHECK (currency = 'SAR'),
+    CONSTRAINT supplier_rate_cards_item_name_check CHECK (trim(item_name) <> ''),
+    CONSTRAINT supplier_rate_cards_status_check CHECK (status IN ('active', 'inactive')),
+    CONSTRAINT supplier_rate_cards_unit_check CHECK (trim(unit) <> '')
+);
+COMMENT ON TABLE supplier_rate_cards IS 'Internal supplier cost defaults. They must never be exposed in customer-facing quotations, invoices, PDFs, or receipts. They do not automate quotation pricing in MVP.';
+
 -- 7. Quotations
 CREATE TABLE quotations (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1238,6 +1267,14 @@ CREATE INDEX idx_suppliers_supplier_type ON suppliers(supplier_type);
 CREATE INDEX idx_suppliers_is_preferred ON suppliers(is_preferred);
 CREATE INDEX idx_suppliers_deleted_at ON suppliers(deleted_at);
 
+CREATE INDEX idx_supplier_rate_cards_supplier_id ON supplier_rate_cards(supplier_id);
+CREATE INDEX idx_supplier_rate_cards_status ON supplier_rate_cards(status);
+CREATE INDEX idx_supplier_rate_cards_is_deleted ON supplier_rate_cards(is_deleted);
+CREATE INDEX idx_supplier_rate_cards_valid_from ON supplier_rate_cards(valid_from);
+CREATE INDEX idx_supplier_rate_cards_valid_to ON supplier_rate_cards(valid_to);
+CREATE INDEX idx_supplier_rate_cards_supplier_status_deleted ON supplier_rate_cards(supplier_id, status, is_deleted);
+CREATE INDEX idx_supplier_rate_cards_lookup ON supplier_rate_cards(supplier_id, item_name, unit, valid_from, valid_to);
+
 CREATE INDEX idx_quotations_customer_id ON quotations(customer_id);
 CREATE INDEX idx_quotations_service_id ON quotations(service_id);
 CREATE INDEX idx_quotations_status ON quotations(status);
@@ -1275,6 +1312,7 @@ ALTER TABLE company_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE supplier_rate_cards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quotations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quotation_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
