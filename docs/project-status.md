@@ -1024,6 +1024,46 @@ Operational Invoice Module is not complete yet.
     - Quotation automation.
     - Customer-facing/PDF/public supplier cost exposure.
 
+- `SUPPLIER-ALLOCATIONS-RATE-CARD-CREATE-1` completed, validated, committed, and pushed.
+  - Commit pushed:
+    `9dd6839 feat(suppliers): add rate-card allocation create flow`
+  - Commit author:
+    `shingami66 <157619702+shingami66@users.noreply.github.com>`
+  - Implemented in:
+    - `src/lib/supplier-allocations/schemas.ts`
+    - `src/lib/suppliers/rate-card-actions.ts`
+    - `src/lib/supplier-allocations/actions.ts`
+    - `src/app/(dashboard)/services/[id]/allocations/new/page.tsx`
+    - `src/app/(dashboard)/services/[id]/allocations/new/SupplierAllocationCreateForm.tsx`
+    - `src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx`
+  - Completed Scope:
+    - Added support for `costSource = rate_card` in `createSupplierAllocation` Server Action.
+    - Client does not submit `rateCardSnapshot`. The server loads `supplier_rate_cards` server-side, validates it (existence, active status, not deleted, SAR currency, base cost, supplier ownership, expiration check), and builds the snapshot server-side.
+    - Historical Service costing must not change when supplier rate card changes later.
+    - Allocation row and rate_card_snapshot preserve pricing context at creation time.
+    - Updated `supplierAllocationCreateSchema` to omit `rateCardSnapshot` client requirement, while still requiring `supplierRateCardId` when `costSource === 'rate_card'`.
+    - Manual estimate validation remains unchanged.
+    - Snapshot schema remains available for server-built snapshots.
+    - Form UI checks `supplier_costing:read` permission. Only displays `From Rate Card` mode toggle when allowed.
+    - Manual Estimate remains default.
+    - Added dynamic loading of active rate cards upon supplier selection.
+    - Form displays cost details (cost, category, item name, unit) as read-only, allowing user input only for quantity, scope of work, and internal notes.
+    - Enabled soft-deletion and restoration for rate-card allocations, while preserving their read-only state in manual edit flow.
+    - Rate-card allocations can be cancelled.
+    - Soft delete/restore preserves supplier_rate_card_id and rate_card_snapshot.
+    - Existing Edit UI remains manual_estimate only.
+  - Boundaries Preserved (Still deferred):
+    - Rate-card edit flow.
+    - Rate-card management CRUD/write workflows.
+    - Rate-card overlap enforcement.
+    - Supplier Booking / Internal PO.
+    - Supplier invoices/payments.
+    - Actual expense posting.
+    - Costing/margin reports.
+    - Quotation automation from supplier cost.
+    - Customer-facing/PDF/public supplier cost exposure.
+
+
 
 
 **Guarded Service Status Transitions:**
