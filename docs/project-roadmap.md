@@ -811,7 +811,7 @@ SUPPLIERS-SCHEMA-DESIGN-1
 - Status: Completed and pushed.
 - Implemented in commit `e85adec spec(suppliers): add supplier module design artifacts`.
 - Schema/design/spec phase is complete only as Spec Kit design artifacts under `specs/002-suppliers-schema-design/`: `spec.md`, `plan.md`, `research.md`, `data-model.md`, and `tasks.md`.
-- This did not implement live supplier UI, supplier CRUD, supplier invoices/payments, supplier bookings/internal POs, or Service P&L reporting.
+- This did not implement live supplier UI, supplier CRUD, supplier invoices/payments, Supplier Bookings, or Service P&L reporting.
 - Preserve current workflow rules: no SQL/migration/Supabase actions without review and approval; no supplier cost/margin exposure in customer-facing documents; no Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior while `company_settings.vat_mode = not_registered`.
 
 SUPPLIERS-DB-FOUNDATION-1
@@ -819,7 +819,7 @@ SUPPLIERS-DB-FOUNDATION-1
 - Migration `supabase/migrations/20260627153000_supplier_directory_foundation.sql` was committed and pushed in `ee50e60 feat(suppliers): add directory foundation migration`.
 - Manual Supabase apply was completed and verified: required supplier foundation columns exist, `on_hold` is supported by the supplier status lifecycle, supplier VAT registration status constraint exists, RLS remains enabled on `public.suppliers`, no DEV_ONLY supplier policies were found, no broad anon/authenticated supplier policies were found, and no future supplier financial/scope tables were created.
 - `supabase/schema.sql` was synced and pushed in `ed61fb7 chore(suppliers): sync schema after directory foundation`.
-- This completed only the supplier directory DB foundation. Supplier write CRUD, supplier rate cards, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
+- This completed only the supplier directory DB foundation. Supplier write CRUD, supplier rate cards, service supplier allocations, Supplier Bookings, supplier invoices, supplier payments, Supplier Booking PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
 
 SUPPLIERS-LIVE-READ-FOUNDATION-1
 - Status: Completed and pushed.
@@ -828,7 +828,7 @@ SUPPLIERS-LIVE-READ-FOUNDATION-1
 - Permission gate uses `suppliers:read`; this slice does not use `suppliers:write`.
 - Verification passed: lint passed with only existing PDF `<img>` warnings; `pnpm exec tsc --noEmit` passed; no bank/IBAN fields were selected, mapped, typed for UI, or rendered.
 - No create/edit/delete/restore behavior, SQL/schema/migration changes, or supplier finance/future modules were introduced.
-- Still deferred after this read-only slice: supplier create/edit/delete/restore CRUD, supplier write actions/server actions, supplier rate cards runtime workflows, service supplier allocations, supplier bookings/internal POs, supplier invoices, supplier payments, Supplier PO PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow.
+- Still deferred after this read-only slice: supplier create/edit/delete/restore CRUD, supplier write actions/server actions, supplier rate cards runtime workflows, service supplier allocations, Supplier Bookings, supplier invoices, supplier payments, Supplier Booking PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow.
 
 SUPPLIERS-CREATE-FORM-1
 - Status: Completed and pushed.
@@ -841,7 +841,7 @@ SUPPLIERS-CREATE-UX-FIX-1
 - Implemented in commit `9ed7a59 fix(suppliers): refine create ui`.
 - Team Lead create-flow UI/UX fixes are complete.
 - Basic profile Supplier Edit is complete. Supplier Delete/Restore remain deferred.
-- Supplier finance/workflow modules remain deferred: rate cards runtime workflows, allocations, bookings/internal POs, supplier invoices/payments, Supplier PO PDF/WhatsApp/email, supplier portal, costing/margin/P&L, and payment approval workflow.
+- Supplier finance/workflow modules remain deferred: rate cards runtime workflows, allocations, Supplier Bookings, supplier invoices/payments, Supplier Booking PDF/WhatsApp/email, supplier portal, costing/margin/P&L, and payment approval workflow.
 
 SUPPLIERS-EDIT-FORM-1
 - Status: Completed and pushed.
@@ -895,8 +895,8 @@ FUTURE SUPPLIER SEQUENCE
 - SUPPLIER-ALLOCATIONS-RATE-CARD-CREATE-1 is complete (Rate-card allocation creation).
 - Everything after it in this supplier sequence is not implemented:
   1. SUPPLIER-ALLOCATIONS-RATE-CARD-AUTOMATION-1 (Rate-card allocation automation / overlap enforcement / etc)
-  2. SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1
-  3. SUPPLIER-BOOKINGS-INTERNAL-PO-1
+  2. SUPPLIER-BOOKINGS-DESIGN-1
+  3. SUPPLIER-BOOKINGS-1
   4. SUPPLIER-INVOICES-1
   5. SUPPLIER-PAYMENTS-1
   6. SUPPLIER-COSTING-MARGIN-REPORTS-1
@@ -917,7 +917,7 @@ SUPPLIER-ALLOCATIONS-FOUNDATION-1A (Completed, Closed)
 - Boundaries:
   - Database/permissions foundation only. Runtime CRUD, Server Actions, UI panels, Service Detail integration, allocations history are NOT implemented.
   - Business logic validation rules (e.g. rate card ID matches supplier ID, approved quotation ID matches service ID, blacklisted supplier blocks, parent service cancellation blocks) are deferred to future server-side validation/runtime hardening.
-- Supplier Booking / Internal Supplier PO must not be implemented before SUPPLIER-ALLOCATIONS-1.
+- Supplier Booking must not be implemented before SUPPLIER-ALLOCATIONS-1.
 
 SUPPLIER-ALLOCATIONS-SCHEMAS-1A (Completed, Closed)
 - Status: Completed, closed, committed, and pushed.
@@ -1003,7 +1003,7 @@ SUPPLIER-ALLOCATIONS-CANCEL-1A (Completed, Closed)
   - Rate-card allocation creation and server-side snapshot generation remain deferred.
   - Service detail UI panel remains deferred.
   - Supplier allocation history UI remains deferred.
-  - Supplier Booking / Internal Supplier PO remains deferred.
+  - Supplier Booking remains deferred.
   - Supplier invoices/payments remain deferred.
   - Supplier costing/margin reports remain deferred.
   - Rate-card-driven quotation automation remains deferred.
@@ -1061,7 +1061,7 @@ SUPPLIER-ALLOCATIONS-CREATE-MANUAL-1A (Completed, Closed)
   - Server-side rate-card snapshot generation remains deferred.
   - Service detail UI panel remains deferred.
   - Supplier allocation history UI remains deferred.
-  - Supplier Booking / Internal Supplier PO remains deferred.
+  - Supplier Booking remains deferred.
   - Supplier invoices/payments remain deferred.
   - Supplier costing/margin reports remain deferred.
   - Rate-card-driven quotation automation remains deferred.
@@ -1123,7 +1123,7 @@ SUPPLIER-ALLOCATIONS-UPDATE-MANUAL-1A (Completed, Closed)
 - Boundaries:
   - Only manual update action is implemented.
   - CRUD is not complete. Write layer is not complete. UI is not complete.
-  - Delete/restore, rate-card allocation creation, snapshot generation, bookings/internal POs, invoices/payments, costing reports, quotation automation, and customer-facing supplier cost exposure remain deferred.
+  - Delete/restore, rate-card allocation creation, snapshot generation, bookings/Supplier Booking, invoices/payments, costing reports, quotation automation, and customer-facing supplier cost exposure remain deferred.
 
 SUPPLIER-ALLOCATIONS-SERVICE-UI-PANEL-1A (Completed, Closed)
 - Status: Completed, closed, committed, and pushed.
@@ -1157,7 +1157,7 @@ SUPPLIER-ALLOCATIONS-SERVICE-UI-PANEL-1A (Completed, Closed)
   - No supplier costs are exposed to customer-facing pages, PDFs, or public routes.
 - Status / Empty State UX:
   - Panel displays allocation statuses: draft, planned, selected, cancelled.
-  - Local status labeling is used without marking Supplier Booking/Internal PO as implemented.
+  - Local status labeling is used without marking Supplier Booking as implemented.
   - Empty state: "No supplier allocations recorded for this service yet."
   - Cancelled/Completed Services still show historical allocations read-only.
 - Boundaries:
@@ -1169,7 +1169,7 @@ SUPPLIER-ALLOCATIONS-SERVICE-UI-PANEL-1A (Completed, Closed)
   - Delete/restore remains deferred.
   - Rate-card allocation UI remains deferred.
   - Rate-card snapshot UI remains deferred.
-  - Supplier Booking / Internal PO remains deferred.
+  - Supplier Booking remains deferred.
   - Supplier invoices/payments remain deferred.
   - Supplier costing/margin reports remain deferred.
   - Quotation automation remains deferred.
@@ -1203,7 +1203,7 @@ SUPPLIER-ALLOCATIONS-SERVICE-UI-CREATE-1B (Completed, Closed)
   - Delete/Restore Allocation UI.
   - Rate-card allocation UI and snapshots.
   - Approved quotation allocation UI.
-  - Supplier Booking / Internal PO.
+  - Supplier Booking.
   - Supplier invoices/payments.
   - Supplier costing/margin reports.
   - Quotation automation.
@@ -1237,7 +1237,7 @@ SUPPLIER-ALLOCATIONS-SERVICE-UI-EDIT-1C (Completed, Closed)
   - Rate-card allocation UI and snapshots.
   - Approved quotation allocation UI.
   - Supplier change/replacement after creation.
-  - Supplier Booking / Internal PO.
+  - Supplier Booking.
   - Supplier invoices/payments.
   - Costing/margin reports.
   - Quotation automation.
@@ -1267,7 +1267,7 @@ SUPPLIER-ALLOCATIONS-SERVICE-UI-CANCEL-1D (Completed, Closed)
   - Delete/Restore Allocation UI.
   - Rate-card allocation UI and snapshots.
   - Approved quotation allocation UI.
-  - Supplier Booking / Internal PO.
+  - Supplier Booking.
   - Supplier invoices/payments.
   - Costing/margin reports.
   - Quotation automation.
@@ -1306,7 +1306,7 @@ SUPPLIER-ALLOCATIONS-DELETE-RESTORE-1 (Completed, Closed)
   - Rate-card allocation UI and snapshots.
   - Approved quotation allocation UI.
   - Supplier change/replacement after creation.
-  - Supplier Booking / Internal PO.
+  - Supplier Booking.
   - Supplier invoices/payments.
   - Costing/margin reports.
   - Quotation automation.
@@ -1344,37 +1344,32 @@ SUPPLIER-ALLOCATIONS-RATE-CARD-CREATE-1 (Completed, Closed)
   - Rate-card edit flow.
   - Rate-card management CRUD/write workflows.
   - Rate-card overlap enforcement.
-  - Supplier Booking / Internal PO.
+  - Supplier Booking.
   - Supplier invoices/payments.
   - Actual expense posting.
   - Costing/margin reports.
   - Quotation automation from supplier cost.
   - Customer-facing/PDF/public supplier cost exposure.
 
-SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1 (Planned future item)
-- Status: Not implemented, Not started, Not complete.
-- Scope: Pending dedicated design for Supplier Booking / Internal Supplier PO.
-- Required design decisions/requirements:
-  - `approved_quotation_id` for traceability to the approved customer quotation.
-  - `supplier_allocation_id` to link supplier allocation planning to supplier commitment.
-  - formal RBAC permission strings before implementation.
-  - status transition permissions before implementation.
-  - header-level and line-level VAT handling before schema implementation.
-  - booking_number format, likely `SBK-YYYY-XXXX`.
-  - whether `supplier_allocation_id` can be nullable for Draft or whether direct booking without allocation is blocked.
-  - whether MVP uses 8 statuses or a simplified 6-status lifecycle.
-  - concurrent booking protection / uniqueness rules.
-- Required future permission strings: `supplier_bookings:read`, `supplier_bookings:read_cost`, `supplier_bookings:write`, `supplier_bookings:approve`, `supplier_bookings:send`, `supplier_bookings:cancel`, `supplier_bookings:complete`.
-- Security intent:
-  - Cost visibility must remain separate from operational visibility.
-  - Admin and Manager likely full access.
-  - Operations may later receive operational read without cost access.
-  - Sales and Viewer must not see supplier costs.
-  - Accountant access to cost/finance requires explicit future approval.
+SUPPLIER-BOOKINGS-FOUNDATION-1 (Completed, Closed)
+- Status: Completed, verified, committed, and pushed.
+- Commits:
+  - `5866d42 db(suppliers): add supplier bookings foundation migration`
+  - `04d1e7c db(suppliers): sync supplier bookings schema`
+- Scope: Database foundation completed.
+  - The `supplier_bookings` table exists in the database.
+  - RLS is enabled; direct table access for `anon` and `authenticated` roles is revoked.
+  - Foreign keys (`source_allocation_id`, `service_id`, `supplier_id`) are strictly immutable.
+  - Insert triggers (`trg_supplier_bookings_insert_sync_allocation`) enforce business rules, ensuring consistency between `service_supplier_allocations` and the new booking.
+  - Booking numbers are generated server-side using `generate_document_number('supplier_booking')` (e.g. `SBK-YYYY-0001`).
+  - Indexes exist, including `idx_supplier_bookings_one_active_per_allocation` to enforce at most one active booking per allocation.
+- **Deferred**: Supplier Bookings Domain, UI, permissions, actions, pages, and runtime behavior are explicitly deferred to future tasks.
+- Terminology constraint: Uses `Supplier Booking` / `supplier_bookings` / `SBK`. Do not use Internal PO / Purchase Order.
 
-SUPPLIER-BOOKINGS-INTERNAL-PO-1 (Planned future item)
+SUPPLIER-BOOKINGS-RUNTIME-1 (Planned future item)
 - Status: Not implemented, Not started, Not complete.
-- Scope: Planned after allocations and pending dedicated design.
+- Scope: Domain, UI, permissions, actions, pages, and runtime behavior.
+
 
 
 SUPPLIERS-LIST-LIVE-1

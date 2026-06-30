@@ -220,10 +220,10 @@ Return exactly these sections:
 ## Supplier/Future ERP Rules
 
 - Suppliers are basic master data now.
-- Supplier Booking / Internal Supplier PO is a planned future module after SUPPLIER-ALLOCATIONS-1 (Not implemented, Not started, Not complete).
+- Supplier Bookings DB Foundation is complete. Domain, UI, permissions, actions, pages, and runtime behavior are explicitly deferred to future tasks (Not implemented, Not started, Not complete). Terminology constraint: Uses Supplier Booking / SBK. Do not use Internal PO / Purchase Order.
 - Supplier payments, service expenses, event costing, and profit margin are deferred.
-- Keep current design extensible for purchase orders, supplier payments, service expenses, event costing, and service profit reports.
-- Do not build supplier PO/costing now unless explicitly approved in its planned sequence.
+- Keep current design extensible for supplier bookings, supplier payments, service expenses, event costing, and service profit reports.
+- Do not build supplier bookings/costing now unless explicitly approved in its planned sequence.
 - Do not design schema/UI in a way that blocks these future modules.
 
 ## Backend Architecture Rules
@@ -325,7 +325,7 @@ The following remain deferred:
 - supplier costing/margin reports
 - rate-card automation
 - rate-card snapshot workflow
-- `Supplier Booking / Internal PO`
+- `Supplier Bookings` (Domain, UI, permissions, actions, and runtime behavior)
 - supplier invoices/payments
 - customer-facing supplier cost exposure
 - customer PDF supplier cost exposure
@@ -342,7 +342,7 @@ Cancellation must happen only through cancel action.
 
 ## selected Terminology
 `selected` means preferred supplier allocation for internal planning only.
-`selected` does not mean `Supplier Booking / Internal PO`.
+`selected` does not mean `Supplier Booking`.
 `selected` does not mean supplier commitment.
 `selected` does not mean financial commitment.
 
@@ -363,7 +363,7 @@ UI fixed value alone is not enough.
 ## Service Status Timing
 Supplier allocations may be created during active Service planning for internal cost estimation.
 Create/update is blocked only for Services in: `Cancelled`, `Completed`.
-Supplier allocations do not create supplier commitment, issue Supplier PO, confirm supplier booking, or create financial commitment.
+Supplier allocations do not create supplier commitment, issue Supplier Bookings, confirm supplier booking, or create financial commitment.
 
 ## Team Lead Escalation Policy
 Escalate back to Team Lead / Project Owner only for:
@@ -374,7 +374,7 @@ Escalate back to Team Lead / Project Owner only for:
 - DB/RLS/migration changes
 - new dependencies
 - rate-card automation
-- `Supplier Booking / Internal PO`
+- `Supplier Bookings` (Domain, UI, permissions, actions, and runtime behavior)
 - supplier invoice/payment workflows
 - costing/margin report workflows
 - security/build validation failures
