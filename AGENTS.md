@@ -29,6 +29,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - `pnpm build` is the required build verification command for build-affecting changes.
 - `pnpm start` runs the built app after a successful `pnpm build`.
 - `pnpm lint` runs the repo ESLint config.
+- `pnpm exec tsc --noEmit` is the documented typecheck verification command for runtime implementation slices.
 - `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
 - `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
 - Verify Supabase connectivity at `GET /api/health/db` while the local app is running.
@@ -45,6 +46,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - After staging, run `git diff --cached --stat` and `git diff --cached --check`.
 - Do not force push. Open PRs only when requested.
 - For Services or Quotations UI work, manually smoke test the live ERP path `Customer Profile -> Service -> Quotation`, including `/customers/[id]`, `/services`, `/services/new`, `/services/[id]`, `/services/[id]/edit`, and `/quotations/new?serviceId=<service-id>`.
+- For Service billing or supplier allocation UI work, manually smoke test `/services/[id]`, deposit/final invoice actions in the Billing panel, `/services/[id]/allocations/new`, `/services/[id]/allocations/[allocationId]/edit`, `/cancel`, `/delete`, `/restore`, and `?showDeleted=true` when delete/restore behavior changes.
 
 ## Reporting Discipline
 
@@ -143,6 +145,14 @@ Never skip review gates for SQL, migrations, RLS, RPC, triggers, grants/revokes,
 - Discount applies before VAT.
 - `quotation_items.vat` stores VAT amount, not VAT rate.
 - In PL/pgSQL `RETURNS TABLE` functions, qualify column names with table aliases to avoid ambiguity with output variables.
+
+## Supplier Allocation Lessons
+
+- Supplier allocations are Service-scoped internal records. Keep allocation cost data out of customer-facing quotations, invoices, PDFs, and public/client routes.
+- Supplier allocation cost visibility and write/cancel actions are Admin/Manager-only via `supplier_allocations:read`, `supplier_allocations:read_cost`, `supplier_allocations:write`, and `supplier_allocations:cancel`.
+- New, updated, restored, or cancelled allocations must stay blocked when the parent Service is `Completed` or `Cancelled`.
+- Manual allocation edit is currently limited to non-deleted, non-cancelled `manual_estimate` rows; rate-card allocations can be created but are not manually editable in this slice.
+- Cancel preserves allocation history as `status = cancelled`; delete/restore uses the hidden-record path and `?showDeleted=true` on the Service detail view.
 
 ## Product Direction
 
