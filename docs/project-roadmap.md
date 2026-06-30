@@ -887,8 +887,13 @@ FUTURE SUPPLIER SEQUENCE
 - SUPPLIER-ALLOCATIONS-CREATE-MANUAL-1A is complete.
 - SUPPLIER-ALLOCATIONS-CANCEL-1A is complete.
 - SUPPLIER-ALLOCATIONS-UPDATE-MANUAL-1A is complete.
+- SUPPLIER-ALLOCATIONS-SERVICE-UI-PANEL-1A is complete.
+- SUPPLIER-ALLOCATIONS-SERVICE-UI-CREATE-1B is complete.
+- SUPPLIER-ALLOCATIONS-SERVICE-UI-EDIT-1C is complete.
+- SUPPLIER-ALLOCATIONS-SERVICE-UI-CANCEL-1D is complete.
+- SUPPLIER-ALLOCATIONS-DELETE-RESTORE-1 is complete (Manual Supplier Allocation lifecycle is now closed).
 - Everything after it in this supplier sequence is not implemented:
-  1. SUPPLIER-ALLOCATIONS-1 (Remaining Runtime CRUD / Actions / UI)
+  1. SUPPLIER-ALLOCATIONS-RATE-CARD-AUTOMATION-1 (Rate-card allocation creation / automation)
   2. SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1
   3. SUPPLIER-BOOKINGS-INTERNAL-PO-1
   4. SUPPLIER-INVOICES-1
@@ -1261,6 +1266,45 @@ SUPPLIER-ALLOCATIONS-SERVICE-UI-CANCEL-1D (Completed, Closed)
   - Delete/Restore Allocation UI.
   - Rate-card allocation UI and snapshots.
   - Approved quotation allocation UI.
+  - Supplier Booking / Internal PO.
+  - Supplier invoices/payments.
+  - Costing/margin reports.
+  - Quotation automation.
+  - Customer-facing/PDF/public supplier cost exposure.
+
+SUPPLIER-ALLOCATIONS-DELETE-RESTORE-1 (Completed, Closed)
+- Status: Completed, closed, committed, and pushed.
+- Commits:
+  - `2307a42 feat(suppliers): add allocation delete restore flow`
+- Author: `shingami66 <157619702+shingami66@users.noreply.github.com>`
+- Implemented in:
+  - `src/lib/supplier-allocations/actions.ts`
+  - `src/lib/supplier-allocations/queries.ts`
+  - `src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx`
+  - `src/app/(dashboard)/services/[id]/page.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/delete/page.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/delete/SupplierAllocationDeleteForm.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/restore/page.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/restore/SupplierAllocationRestoreForm.tsx`
+- Completed Scope:
+  - Added Delete and Restore backend actions `deleteSupplierAllocation` and `restoreSupplierAllocation`.
+  - Both actions require `supplier_allocations:write` and do NOT require `supplier_allocations:read_cost`.
+  - Soft delete/restore implemented purely via `is_deleted` toggling and updating `updated_by`/`updated_at` (no hard delete, no SQL migrations, no `deleted_at`/`restored_at` columns added).
+  - Restore action preserves the original allocation status.
+  - Both actions reject Completed/Cancelled services, missing/deleted services, and rate-card allocations.
+  - Updated read queries `getSupplierAllocationsByServiceId` and `getSupplierAllocationById` to support `includeDeleted` option (defaulting to active-only).
+  - Service Detail page reads `searchParams` to support `?showDeleted=true` query.
+  - `SupplierAllocationsPanel` displays "Active" / "Show Deleted" toggle tabs.
+  - Deleted rows render with muted visual styling (opacity/grayscale) and clear "Deleted" badge.
+  - Active rows display "Delete" CTA when allowed (manual_estimate, open service, write access).
+  - Deleted rows hide Edit/Cancel/Delete and show "Restore" CTA when allowed (manual_estimate, open service, write access).
+  - Added dedicated internal delete and restore confirmation routes/forms with safe read-only summary fields (supplierName, category, itemName, quantity, unit, status) without exposing estimated costs or currency variables.
+  - Delete form redirects back to `/services/[id]`, restore form redirects back to `/services/[id]?showDeleted=true`.
+  - No modal/dialog/sheet/react-hook-form used.
+- Boundaries Preserved (Still deferred):
+  - Rate-card allocation UI and snapshots.
+  - Approved quotation allocation UI.
+  - Supplier change/replacement after creation.
   - Supplier Booking / Internal PO.
   - Supplier invoices/payments.
   - Costing/margin reports.

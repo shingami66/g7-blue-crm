@@ -985,6 +985,45 @@ Operational Invoice Module is not complete yet.
     - Quotation automation.
     - Customer-facing/PDF/public supplier cost exposure.
 
+- `SUPPLIER-ALLOCATIONS-DELETE-RESTORE-1` completed, validated, committed, and pushed.
+  - Commit pushed:
+    `2307a42 feat(suppliers): add allocation delete restore flow`
+  - Commit author:
+    `shingami66 <157619702+shingami66@users.noreply.github.com>`
+  - Implemented in:
+    - `src/lib/supplier-allocations/actions.ts`
+    - `src/lib/supplier-allocations/queries.ts`
+    - `src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx`
+    - `src/app/(dashboard)/services/[id]/page.tsx`
+    - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/delete/page.tsx`
+    - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/delete/SupplierAllocationDeleteForm.tsx`
+    - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/restore/page.tsx`
+    - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/restore/SupplierAllocationRestoreForm.tsx`
+  - Completed Scope:
+    - Added Delete and Restore backend actions `deleteSupplierAllocation` and `restoreSupplierAllocation`.
+    - Both actions require `supplier_allocations:write` and do NOT require `supplier_allocations:read_cost`.
+    - Soft delete/restore implemented purely via `is_deleted` toggling and updating `updated_by`/`updated_at` (no hard delete, no SQL migrations, no `deleted_at`/`restored_at` columns added).
+    - Restore action preserves the original allocation status.
+    - Both actions reject Completed/Cancelled services, missing/deleted services, and rate-card allocations.
+    - Updated read queries `getSupplierAllocationsByServiceId` and `getSupplierAllocationById` to support `includeDeleted` option (defaulting to active-only).
+    - Service Detail page reads `searchParams` to support `?showDeleted=true` query.
+    - `SupplierAllocationsPanel` displays "Active" / "Show Deleted" toggle tabs.
+    - Deleted rows render with muted visual styling (opacity/grayscale) and clear "Deleted" badge.
+    - Active rows display "Delete" CTA when allowed (manual_estimate, open service, write access).
+    - Deleted rows hide Edit/Cancel/Delete and show "Restore" CTA when allowed (manual_estimate, open service, write access).
+    - Added dedicated internal delete and restore confirmation routes/forms with safe read-only summary fields (supplierName, category, itemName, quantity, unit, status) without exposing estimated costs or currency variables.
+    - Delete form redirects back to `/services/[id]`, restore form redirects back to `/services/[id]?showDeleted=true`.
+    - No modal/dialog/sheet/react-hook-form used.
+  - Boundaries Preserved (Still deferred):
+    - Rate-card allocation UI and snapshots.
+    - Approved quotation allocation UI.
+    - Supplier change/replacement after creation.
+    - Supplier Booking / Internal PO.
+    - Supplier invoices/payments.
+    - Costing/margin reports.
+    - Quotation automation.
+    - Customer-facing/PDF/public supplier cost exposure.
+
 
 
 **Guarded Service Status Transitions:**
@@ -1246,9 +1285,9 @@ Current decision gates before ERP implementation:
 
 ## Supplier Allocations UI Implementation Guidelines
 Supplier Allocations backend foundation and read-only internal Service detail panel are implemented.
-Manual create, manual update, and cancel server actions are implemented.
-Manual create and manual edit UI are implemented.
-Cancel, delete/restore, rate-card workflows, `Supplier Booking / Internal PO`, supplier invoices/payments, costing/margin reports, and customer-facing supplier costs remain deferred.
+Manual create, manual update, cancel, delete, and restore server actions are implemented.
+Manual Supplier Allocation lifecycle is now closed for Create/Edit/Cancel/Delete/Restore.
+Rate-card workflows, `Supplier Booking / Internal PO`, supplier invoices/payments, costing/margin reports, and customer-facing supplier costs remain deferred.
 Internal supplier allocation cost estimation is approved for Admin/Manager planning only.
 
 ### Supplier Allocation Status State Machine
