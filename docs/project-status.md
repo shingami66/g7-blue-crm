@@ -682,7 +682,7 @@ Operational Invoice Module is not complete yet.
     - Loads existing allocation from `service_supplier_allocations` with `id` and `is_deleted = false`.
     - Missing allocation returns a client-safe not found error.
     - Already cancelled allocation returns a client-safe already-cancelled error.
-    - Parent Service status does not block cancellation.
+    - Parent Service status now blocks cancellation if the parent Service is Completed or Cancelled (Hardening slice 1).
   - Update Payload Safety:
     - Cancel is business cancellation only.
     - Cancel preserves row for history/audit.
@@ -910,6 +910,37 @@ Operational Invoice Module is not complete yet.
   - Boundaries Preserved (Still deferred):
     - Edit Allocation UI.
     - Cancel Allocation UI.
+    - Delete/Restore Allocation UI.
+    - Rate-card allocation UI and snapshots.
+    - Approved quotation allocation UI.
+    - Supplier Booking / Internal PO.
+    - Supplier invoices/payments.
+    - Costing/margin reports.
+    - Quotation automation.
+    - Customer-facing/PDF/public supplier cost exposure.
+
+- `SUPPLIER-ALLOCATIONS-SERVICE-UI-CANCEL-1D` completed, validated, committed, and pushed.
+  - Commit pushed:
+    `7dc5063 feat(suppliers): add manual allocation cancel ui`
+  - Backend Hardening pushed:
+    `a24999c fix(suppliers): block allocation cancel for closed services`
+  - Commit author:
+    `shingami66 <157619702+shingami66@users.noreply.github.com>`
+  - Implemented in:
+    - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/cancel/page.tsx`
+    - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/cancel/SupplierAllocationCancelForm.tsx`
+    - `src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx`
+    - `src/app/(dashboard)/services/[id]/page.tsx`
+  - Completed Scope:
+    - Added Cancel-only internal Supplier Allocation UI.
+    - Added dedicated route: `/services/[id]/allocations/[allocationId]/cancel`.
+    - Added controlled cancellation form requiring a cancellation reason.
+    - Cancel route requires `supplier_allocations:read`, `supplier_allocations:cancel`, and `supplier_allocations:read_cost`.
+    - Cancel CTA is gated by `canCancel` permission, allocation status (must not be cancelled), and Service status.
+    - Completed/Cancelled services block cancellation (both UI and server-side).
+    - Status transitions directly to `cancelled` and is irreversible through the UI.
+    - No customer-facing/PDF/public supplier cost exposure.
+  - Boundaries Preserved (Still deferred):
     - Delete/Restore Allocation UI.
     - Rate-card allocation UI and snapshots.
     - Approved quotation allocation UI.
