@@ -12,6 +12,7 @@ type SupplierAllocationsPanelProps = {
   canCancel?: boolean;
   serviceId?: string;
   serviceStatus?: string;
+  showDeleted?: boolean;
 };
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
@@ -37,6 +38,7 @@ export default function SupplierAllocationsPanel({
   canCancel,
   serviceId,
   serviceStatus,
+  showDeleted = false,
 }: SupplierAllocationsPanelProps) {
   const hasAllocations = allocations.length > 0;
 
@@ -50,7 +52,33 @@ export default function SupplierAllocationsPanel({
   return (
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden mt-6">
       <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center gap-4">
-        <h3 className="font-semibold text-primary">Supplier Allocations</h3>
+        <div className="flex items-center gap-4">
+          <h3 className="font-semibold text-primary">Supplier Allocations</h3>
+          {serviceId && (
+            <div className="flex items-center gap-2 text-[13px]">
+              <Link
+                href={`/services/${serviceId}`}
+                className={`px-3 py-1 rounded-full transition-colors ${
+                  !showDeleted
+                    ? "bg-primary-container text-on-primary-container font-semibold"
+                    : "text-on-surface-variant hover:bg-surface-variant"
+                }`}
+              >
+                Active
+              </Link>
+              <Link
+                href={`/services/${serviceId}?showDeleted=true`}
+                className={`px-3 py-1 rounded-full transition-colors ${
+                  showDeleted
+                    ? "bg-primary-container text-on-primary-container font-semibold"
+                    : "text-on-surface-variant hover:bg-surface-variant"
+                }`}
+              >
+                Show Deleted
+              </Link>
+            </div>
+          )}
+        </div>
         {canCreate && serviceId && (
           <Link
             href={`/services/${serviceId}/allocations/new`}
@@ -69,14 +97,15 @@ export default function SupplierAllocationsPanel({
       ) : (
         <DataTable columns={columns}>
           {allocations.map((a) => (
-            <tr key={a.id}>
+            <tr key={a.id} className={a.isDeleted ? "opacity-60 bg-surface-container-lowest grayscale-[0.5]" : ""}>
               <td className="px-4 py-3 align-top">
-                <StatusBadge variant={STATUS_VARIANT_MAP[a.status] || "draft"}>
-                  {STATUS_LABEL_MAP[a.status] || a.status}
+                <StatusBadge variant={a.isDeleted ? "cancelled" : STATUS_VARIANT_MAP[a.status] || "draft"}>
+                  {a.isDeleted ? "Deleted" : STATUS_LABEL_MAP[a.status] || a.status}
                 </StatusBadge>
               </td>
               <td className="px-4 py-3 align-top font-medium text-on-surface">
                 {a.supplierName || a.supplierId}
+                {a.isDeleted && <span className="block text-[11px] text-error mt-1 font-semibold">Deleted Record</span>}
               </td>
               <td className="px-4 py-3 align-top text-on-surface-variant">
                 {a.category}
@@ -112,7 +141,7 @@ export default function SupplierAllocationsPanel({
               )}
               <td className="px-4 py-3 align-top text-right">
                 <div className="flex items-center justify-end gap-3">
-                  {canWrite && canReadCost && a.status !== "cancelled" && a.costSource === "manual_estimate" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
+                  {!a.isDeleted && canWrite && canReadCost && a.status !== "cancelled" && a.costSource === "manual_estimate" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
                     <Link
                       href={`/services/${serviceId}/allocations/${a.id}/edit`}
                       className="text-[13px] font-semibold text-primary hover:underline"
@@ -120,12 +149,28 @@ export default function SupplierAllocationsPanel({
                       Edit
                     </Link>
                   )}
-                  {canCancel && a.status !== "cancelled" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
+                  {!a.isDeleted && canCancel && a.status !== "cancelled" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
                     <Link
                       href={`/services/${serviceId}/allocations/${a.id}/cancel`}
                       className="text-[13px] font-semibold text-error hover:underline"
                     >
                       Cancel
+                    </Link>
+                  )}
+                  {!a.isDeleted && canWrite && a.costSource === "manual_estimate" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
+                    <Link
+                      href={`/services/${serviceId}/allocations/${a.id}/delete`}
+                      className="text-[13px] font-semibold text-error hover:underline"
+                    >
+                      Delete
+                    </Link>
+                  )}
+                  {a.isDeleted && canWrite && a.costSource === "manual_estimate" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
+                    <Link
+                      href={`/services/${serviceId}/allocations/${a.id}/restore`}
+                      className="text-[13px] font-semibold text-primary hover:underline"
+                    >
+                      Restore
                     </Link>
                   )}
                 </div>

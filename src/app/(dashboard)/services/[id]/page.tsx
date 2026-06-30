@@ -34,10 +34,14 @@ const STATUS_VARIANT_MAP: Record<Service["status"], StatusBadgeVariant> = {
 
 export default async function ServiceDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
+  const showDeleted = resolvedSearchParams?.showDeleted === "true";
 
   try {
     await requirePermission("services:read");
@@ -104,7 +108,7 @@ export default async function ServiceDetailPage({
     : null;
 
   const supplierAllocations = canReadSupplierAllocations
-    ? await getSupplierAllocationsByServiceId(service.id)
+    ? await getSupplierAllocationsByServiceId(service.id, { includeDeleted: showDeleted })
     : null;
 
   return (
@@ -259,6 +263,7 @@ export default async function ServiceDetailPage({
           canCancel={canCancelAllocations}
           serviceId={service.id}
           serviceStatus={service.status}
+          showDeleted={showDeleted}
         />
       )}
       <BillingPanel billingState={billingState} />

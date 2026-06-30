@@ -351,3 +351,151 @@ export async function updateSupplierAllocation(
     return { success: false, error: "An unexpected error occurred." };
   }
 }
+
+export async function deleteSupplierAllocation(id: string): Promise<ActionResult<SupplierAllocation>> {
+  try {
+    const user = await requirePermission("supplier_allocations:write");
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
+      return { success: false, error: "Supplier allocation id is required." };
+    }
+
+    const trimmedId = id.trim();
+    const supabase = createAdminClient();
+
+    const { data: existingAllocation, error: fetchError } = await supabase
+      .from("service_supplier_allocations")
+      .select("*")
+      .eq("id", trimmedId)
+      .single();
+
+    if (fetchError || !existingAllocation) {
+      return { success: false, error: "Supplier allocation not found." };
+    }
+
+    if (existingAllocation.is_deleted) {
+      return { success: false, error: "Supplier allocation is already deleted." };
+    }
+
+    if (existingAllocation.cost_source === "rate_card") {
+      return { success: false, error: "Rate-card allocations cannot be manually deleted yet." };
+    }
+
+    // Cross-table check 1: Service check
+    const { data: service, error: serviceError } = await supabase
+      .from("services")
+      .select("status")
+      .eq("id", existingAllocation.service_id)
+      .is("deleted_at", null)
+      .single();
+
+    if (serviceError || !service || service.status === "Cancelled" || service.status === "Completed") {
+      return { success: false, error: "Service is unavailable for supplier allocation deletion." };
+    }
+
+    const updatePayload = {
+      is_deleted: true,
+      updated_by: user.clerk_user_id,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: updatedRow, error: updateError } = await supabase
+      .from("service_supplier_allocations")
+      .update(updatePayload)
+      .eq("id", trimmedId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("[deleteSupplierAllocation] Supabase error:", updateError.message);
+      return { success: false, error: "Failed to delete supplier allocation. Please try again." };
+    }
+
+    const canReadCost = await checkPermission("supplier_allocations:read_cost");
+    const mappedData = mapSupplierAllocationRow(updatedRow, { canReadCost });
+
+    revalidatePath("/services");
+    revalidatePath(`/services/${existingAllocation.service_id}`);
+
+    return { success: true, data: mappedData };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[deleteSupplierAllocation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export async function restoreSupplierAllocation(id: string): Promise<ActionResult<SupplierAllocation>> {
+  try {
+    const user = await requirePermission("supplier_allocations:write");
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
+      return { success: false, error: "Supplier allocation id is required." };
+    }
+
+    const trimmedId = id.trim();
+    const supabase = createAdminClient();
+
+    const { data: existingAllocation, error: fetchError } = await supabase
+      .from("service_supplier_allocations")
+      .select("*")
+      .eq("id", trimmedId)
+      .single();
+
+    if (fetchError || !existingAllocation) {
+      return { success: false, error: "Supplier allocation not found." };
+    }
+
+    if (!existingAllocation.is_deleted) {
+      return { success: false, error: "Supplier allocation is not deleted." };
+    }
+
+    if (existingAllocation.cost_source === "rate_card") {
+      return { success: false, error: "Rate-card allocations cannot be manually restored yet." };
+    }
+
+    // Cross-table check 1: Service check
+    const { data: service, error: serviceError } = await supabase
+      .from("services")
+      .select("status")
+      .eq("id", existingAllocation.service_id)
+      .is("deleted_at", null)
+      .single();
+
+    if (serviceError || !service || service.status === "Cancelled" || service.status === "Completed") {
+      return { success: false, error: "Service is unavailable for supplier allocation restoration." };
+    }
+
+    const updatePayload = {
+      is_deleted: false,
+      updated_by: user.clerk_user_id,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: updatedRow, error: updateError } = await supabase
+      .from("service_supplier_allocations")
+      .update(updatePayload)
+      .eq("id", trimmedId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("[restoreSupplierAllocation] Supabase error:", updateError.message);
+      return { success: false, error: "Failed to restore supplier allocation. Please try again." };
+    }
+
+    const canReadCost = await checkPermission("supplier_allocations:read_cost");
+    const mappedData = mapSupplierAllocationRow(updatedRow, { canReadCost });
+
+    revalidatePath("/services");
+    revalidatePath(`/services/${existingAllocation.service_id}`);
+
+    return { success: true, data: mappedData };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[restoreSupplierAllocation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}

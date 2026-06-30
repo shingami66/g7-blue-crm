@@ -13,18 +13,25 @@ import type { SupplierAllocation, SupplierAllocationRow } from "./types";
  * Customer-facing routes/PDFs must not import allocation read queries for cost-bearing data.
  */
 
-export async function getSupplierAllocationsByServiceId(serviceId: string): Promise<SupplierAllocation[]> {
+export async function getSupplierAllocationsByServiceId(
+  serviceId: string,
+  options?: { includeDeleted?: boolean }
+): Promise<SupplierAllocation[]> {
   await requirePermission("supplier_allocations:read");
   const canReadCost = await checkPermission("supplier_allocations:read_cost");
 
   try {
     const supabase = createAdminClient();
-    const { data: rows, error } = await supabase
+    let query = supabase
       .from("service_supplier_allocations")
       .select("*, supplier:suppliers(name, display_name, legal_name, contact)")
-      .eq("service_id", serviceId)
-      .eq("is_deleted", false)
-      .order("created_at", { ascending: false });
+      .eq("service_id", serviceId);
+
+    if (!options?.includeDeleted) {
+      query = query.eq("is_deleted", false);
+    }
+
+    const { data: rows, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
       console.error("[getSupplierAllocationsByServiceId] Supabase error:", error.message);
@@ -42,18 +49,25 @@ export async function getSupplierAllocationsByServiceId(serviceId: string): Prom
   }
 }
 
-export async function getSupplierAllocationsBySupplierId(supplierId: string): Promise<SupplierAllocation[]> {
+export async function getSupplierAllocationsBySupplierId(
+  supplierId: string,
+  options?: { includeDeleted?: boolean }
+): Promise<SupplierAllocation[]> {
   await requirePermission("supplier_allocations:read");
   const canReadCost = await checkPermission("supplier_allocations:read_cost");
 
   try {
     const supabase = createAdminClient();
-    const { data: rows, error } = await supabase
+    let query = supabase
       .from("service_supplier_allocations")
       .select("*, supplier:suppliers(name, display_name, legal_name, contact)")
-      .eq("supplier_id", supplierId)
-      .eq("is_deleted", false)
-      .order("created_at", { ascending: false });
+      .eq("supplier_id", supplierId);
+
+    if (!options?.includeDeleted) {
+      query = query.eq("is_deleted", false);
+    }
+
+    const { data: rows, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
       console.error("[getSupplierAllocationsBySupplierId] Supabase error:", error.message);
@@ -71,18 +85,25 @@ export async function getSupplierAllocationsBySupplierId(supplierId: string): Pr
   }
 }
 
-export async function getSupplierAllocationById(id: string): Promise<SupplierAllocation | null> {
+export async function getSupplierAllocationById(
+  id: string,
+  options?: { includeDeleted?: boolean }
+): Promise<SupplierAllocation | null> {
   await requirePermission("supplier_allocations:read");
   const canReadCost = await checkPermission("supplier_allocations:read_cost");
 
   try {
     const supabase = createAdminClient();
-    const { data: row, error } = await supabase
+    let query = supabase
       .from("service_supplier_allocations")
       .select("*, supplier:suppliers(name, display_name, legal_name, contact)")
-      .eq("id", id)
-      .eq("is_deleted", false)
-      .maybeSingle();
+      .eq("id", id);
+
+    if (!options?.includeDeleted) {
+      query = query.eq("is_deleted", false);
+    }
+
+    const { data: row, error } = await query.maybeSingle();
 
     if (error) {
       console.error("[getSupplierAllocationById] Supabase error:", error.message);
