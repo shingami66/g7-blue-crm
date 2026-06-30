@@ -116,6 +116,8 @@ export default async function NewSupplierAllocationPage({
     );
   }
 
+  const canUseRateCards = await checkPermission("supplier_costing:read");
+
   return (
     <div className="max-w-3xl mx-auto pb-12">
       <div className="mb-6">
@@ -138,6 +140,7 @@ export default async function NewSupplierAllocationPage({
       <SupplierAllocationCreateForm 
         serviceId={service.id} 
         suppliers={suppliers} 
+        canUseRateCards={canUseRateCards}
       />
     </div>
   );

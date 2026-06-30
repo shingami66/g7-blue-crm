@@ -44,13 +44,7 @@ export const supplierAllocationCreateSchema = baseAllocationSchema
           path: ["supplierRateCardId"],
         });
       }
-      if (!data.rateCardSnapshot) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Rate card snapshot is required when cost source is rate card",
-          path: ["rateCardSnapshot"],
-        });
-      }
+      // Note: rateCardSnapshot is not required from client for create, server builds it
     }
   });
 

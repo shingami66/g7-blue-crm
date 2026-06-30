@@ -157,7 +157,7 @@ export default function SupplierAllocationsPanel({
                       Cancel
                     </Link>
                   )}
-                  {!a.isDeleted && canWrite && a.costSource === "manual_estimate" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
+                  {!a.isDeleted && canWrite && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
                     <Link
                       href={`/services/${serviceId}/allocations/${a.id}/delete`}
                       className="text-[13px] font-semibold text-error hover:underline"
@@ -165,7 +165,7 @@ export default function SupplierAllocationsPanel({
                       Delete
                     </Link>
                   )}
-                  {a.isDeleted && canWrite && a.costSource === "manual_estimate" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
+                  {a.isDeleted && canWrite && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
                     <Link
                       href={`/services/${serviceId}/allocations/${a.id}/restore`}
                       className="text-[13px] font-semibold text-primary hover:underline"

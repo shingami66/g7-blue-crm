@@ -66,3 +66,47 @@ export async function getSupplierRateCards(supplierId: string): Promise<Supplier
     return { rateCards: [], error: "rate_cards_load_failed" };
   }
 }
+
+export async function getActiveSupplierRateCardsForAllocation(supplierId: string): Promise<SupplierRateCardsListResult> {
+  await requirePermission("supplier_costing:read");
+
+  try {
+    const supabase = createAdminClient();
+
+    const { data, error } = await supabase
+      .from("supplier_rate_cards")
+      .select(RATE_CARD_SELECT)
+      .eq("supplier_id", supplierId)
+      .eq("is_deleted", false)
+      .eq("status", "active");
+
+    if (error) {
+      console.error("[getActiveSupplierRateCardsForAllocation] Supabase error:", error.message);
+      return { rateCards: [], error: "rate_cards_load_failed" };
+    }
+
+    const rows = (data ?? []) as unknown as SupplierRateCardRow[];
+    
+    // Filter out expired cards: valid_to must be null OR >= today
+    const today = new Date().toISOString().split("T")[0];
+    const unexpiredRows = rows.filter((row) => !row.valid_to || row.valid_to >= today);
+
+    const sorted = unexpiredRows.map(mapRowToSupplierRateCard).sort((a, b) => {
+      // valid_from desc
+      const dateA = new Date(a.validFrom).getTime();
+      const dateB = new Date(b.validFrom).getTime();
+      if (dateA !== dateB) return dateB - dateA;
+      
+      // created_at desc
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    return { rateCards: sorted };
+  } catch (err) {
+    if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
+      throw err;
+    }
+    console.error("[getActiveSupplierRateCardsForAllocation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { rateCards: [], error: "rate_cards_load_failed" };
+  }
+}
