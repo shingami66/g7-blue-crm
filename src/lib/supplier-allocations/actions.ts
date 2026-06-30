@@ -159,6 +159,18 @@ export async function cancelSupplierAllocation(
       return { success: false, error: "Supplier allocation is already cancelled." };
     }
 
+    // Cross-table check 1: Service check
+    const { data: service, error: serviceError } = await supabase
+      .from("services")
+      .select("status")
+      .eq("id", existingAllocation.service_id)
+      .is("deleted_at", null)
+      .single();
+
+    if (serviceError || !service || service.status === "Cancelled" || service.status === "Completed") {
+      return { success: false, error: "Service is unavailable for supplier allocation cancel." };
+    }
+
     // Business cancellation preserves the row for audit/history and must not set is_deleted.
     const updatePayload = {
       status: "cancelled",
