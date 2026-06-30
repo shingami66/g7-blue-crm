@@ -1141,3 +1141,33 @@ Current decision gates before ERP implementation:
 - Company Settings CS-A is committed on `main`.
 - Financial totals remain server-side/database-side via PostgreSQL RPC.
 - CUST-OFFICIAL-DETAILS-1C manual smoke passed and was merged. SEC-SERVICE-INVARIANTS-1B was merged. SERVICE-HUB-1B is implemented and ready for review/manual smoke; after review/merge, follow the locked order: `QUOTE-APPROVAL-FLOW-1`, then `ERP-3`. `QUOTE-APPROVAL-FLOW-1B` is code-ready / pending review. DOCUMENT-BRANDING-PRINT-1B is complete.
+
+## Supplier Allocations UI Implementation Guidelines
+Supplier Allocations backend foundation and read-only internal Service detail panel are implemented.
+Manual create, manual update, and cancel server actions are implemented.
+Create/Edit/Cancel mutation UI remains pending. `Create UI` remains blocked until `Permission/Schema/RLS Hardening Review` is complete.
+Delete/restore, rate-card workflows, `Supplier Booking / Internal PO`, supplier invoices/payments, costing/margin reports, and customer-facing supplier costs remain deferred.
+Internal supplier allocation cost estimation is approved for Admin/Manager planning only.
+
+### Supplier Allocation Status State Machine
+Approved statuses: `draft`, `planned`, `selected`, `cancelled`
+Forward movement: `draft` -> `planned`, `planned` -> `selected`
+Allowed same-state persistence: `draft` -> `draft`, `planned` -> `planned`, `selected` -> `selected`
+Blocked through update: `planned` -> `draft`, `selected` -> `planned`, `selected` -> `draft`, any -> `cancelled`, `cancelled` -> any
+Cancellation must happen only through cancel action.
+
+### selected Terminology
+`selected` means preferred supplier allocation for internal planning only.
+`selected` does not mean `Supplier Booking / Internal PO`.
+`selected` does not mean supplier commitment.
+`selected` does not mean financial commitment.
+
+### SAR-Only Currency
+Supplier allocation currency is `SAR`-only for MVP.
+Zod schemas and server actions must reject non-`SAR` currency.
+UI fixed value alone is not enough.
+
+### Service Status Timing
+Supplier allocations may be created during active Service planning for internal cost estimation.
+Create/update is blocked only for Services in: `Cancelled`, `Completed`.
+Supplier allocations do not create supplier commitment, issue Supplier PO, confirm supplier booking, or create financial commitment.

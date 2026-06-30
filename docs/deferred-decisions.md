@@ -664,3 +664,31 @@ Decision: Invoices page remains for list/issue/pay/PDF/status. Global invoice cr
 - Decision: Standalone invoice creation from `/invoices` is intentionally disabled/removed.
 - Reason: Invoices must be created from a valid workflow context (such as an approved quotation or service billing action) to preserve financial traceability and avoid orphaned records.
 - Related behavior: Approved invoice creation remains workflow-based through approved quotation or service billing actions.
+
+## Deferred Broader Supplier Costing
+The following remain deferred:
+- supplier costing/margin reports
+- rate-card automation
+- rate-card snapshot workflow
+- `Supplier Booking / Internal PO`
+- supplier invoices/payments
+- customer-facing supplier cost exposure
+- customer PDF supplier cost exposure
+- public/customer portal supplier cost exposure
+- quotation automation from supplier cost
+Do not mark these complete.
+
+## Team Lead Escalation Policy
+Escalate back to Team Lead / Project Owner only for:
+- new business workflow decisions
+- RBAC expansion to new roles
+- supplier cost exposure changes
+- customer-facing/PDF/public route supplier cost changes
+- DB/RLS/migration changes
+- new dependencies
+- rate-card automation
+- `Supplier Booking / Internal PO`
+- supplier invoice/payment workflows
+- costing/margin report workflows
+- security/build validation failures
+No Team Lead escalation is required for implementation that exactly follows locked decisions, docs sync matching approved decisions, create-only UI within approved boundaries, validation/commit/push after PASS, small refactors that do not change business logic, security, RBAC, database, or public/customer-facing behavior.

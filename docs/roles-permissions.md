@@ -112,3 +112,32 @@ In Server Actions and API routes, permissions are enforced using helper function
 - `requirePermission(permission)`
 
 **Note:** The application uses these helpers directly to perform authorization checks. Direct calls to `auth()` should be avoided in favor of `requireUser` or `requirePermission` which automatically check the `app_users` table and return the user record.
+
+## MVP RBAC Role Mapping (Supplier Allocations)
+Supplier Allocations access is Admin/Manager-only in MVP.
+Admin: `supplier_allocations:read`, `supplier_allocations:read_cost`, `supplier_allocations:write`, `supplier_allocations:cancel`
+Manager: `supplier_allocations:read`, `supplier_allocations:read_cost`, `supplier_allocations:write`, `supplier_allocations:cancel`
+No Supplier Allocations access in MVP: Accountant, Sales, Operations, Viewer.
+Future access for Accountant, Sales, or Operations requires explicit Project Owner approval.
+
+## write/read_cost Invariant
+Any role with `supplier_allocations:write` must also have `supplier_allocations:read_cost` in MVP.
+
+## Cost-Bearing Update Enforcement
+For MVP, any `updateSupplierAllocation` operation should require `supplier_allocations:read_cost`.
+This is approved as an MVP simplification because Supplier Allocation write access is Admin/Manager-only, and both roles have `read_cost`.
+This should be revisited if future non-cost contributor roles are introduced.
+
+## Supplier Options Permission Rule
+Future `getActiveSupplierOptions` must require both `supplier_allocations:write` and `suppliers:read`.
+It must return minimal safe fields only: supplier id, safe display name.
+It must not return: IBAN, bank details, account details, internal notes, rate-card data, supplier financial secrets.
+
+## Server-Action Defense-in-Depth
+Server actions should enforce `supplier_allocations:read_cost` when accepting cost-bearing create/update input.
+UI hiding alone is not sufficient.
+
+## Sales / Pricing Clarification
+Early-stage supplier cost estimates inform Admin/Manager pricing decisions directly.
+Sales does not have direct access to supplier allocation cost data in MVP.
+Sales relies on Admin/Manager-provided or Admin/Manager-approved quotation pricing rather than viewing supplier estimates independently.

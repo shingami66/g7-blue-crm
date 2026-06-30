@@ -307,3 +307,75 @@ For invoices, recommend:
 - Prefer safe, reviewable phases.
 - Ask for approval before coding.
 - Always protect existing business decisions.
+
+## Mandatory Runtime Build Gate
+All runtime implementation slices must pass `pnpm run lint`, `pnpm exec tsc --noEmit`, and `pnpm build` before commit readiness. Docs-only slices do not require build unless runtime files changed.
+
+## Internal Supplier Allocation Cost Estimation Scope
+Internal supplier allocation cost estimation inside Service is approved for Admin/Manager internal planning only.
+This includes:
+- `estimated_unit_cost`
+- `estimated_total_cost`
+- `cost_source`
+- supplier allocation cost visibility with RBAC redaction
+This approval covers the technical scope of storing and displaying internal allocation cost estimates with RBAC redaction. It does not retroactively approve any governance process gap. It does not mean full supplier costing is complete.
+
+## Deferred Broader Supplier Costing
+The following remain deferred:
+- supplier costing/margin reports
+- rate-card automation
+- rate-card snapshot workflow
+- `Supplier Booking / Internal PO`
+- supplier invoices/payments
+- customer-facing supplier cost exposure
+- customer PDF supplier cost exposure
+- public/customer portal supplier cost exposure
+- quotation automation from supplier cost
+Do not mark these complete.
+
+## Supplier Allocation Status State Machine
+Approved statuses: `draft`, `planned`, `selected`, `cancelled`
+Forward movement: `draft` -> `planned`, `planned` -> `selected`
+Allowed same-state persistence: `draft` -> `draft`, `planned` -> `planned`, `selected` -> `selected`
+Blocked through update: `planned` -> `draft`, `selected` -> `planned`, `selected` -> `draft`, any -> `cancelled`, `cancelled` -> any
+Cancellation must happen only through cancel action.
+
+## selected Terminology
+`selected` means preferred supplier allocation for internal planning only.
+`selected` does not mean `Supplier Booking / Internal PO`.
+`selected` does not mean supplier commitment.
+`selected` does not mean financial commitment.
+
+## Sales / Pricing Clarification
+Early-stage supplier cost estimates inform Admin/Manager pricing decisions directly.
+Sales does not have direct access to supplier allocation cost data in MVP.
+Sales relies on Admin/Manager-provided or Admin/Manager-approved quotation pricing rather than viewing supplier estimates independently.
+
+## Server-Action Defense-in-Depth
+Server actions should enforce `supplier_allocations:read_cost` when accepting cost-bearing create/update input.
+UI hiding alone is not sufficient.
+
+## SAR-Only Currency
+Supplier allocation currency is `SAR`-only for MVP.
+Zod schemas and server actions must reject non-`SAR` currency.
+UI fixed value alone is not enough.
+
+## Service Status Timing
+Supplier allocations may be created during active Service planning for internal cost estimation.
+Create/update is blocked only for Services in: `Cancelled`, `Completed`.
+Supplier allocations do not create supplier commitment, issue Supplier PO, confirm supplier booking, or create financial commitment.
+
+## Team Lead Escalation Policy
+Escalate back to Team Lead / Project Owner only for:
+- new business workflow decisions
+- RBAC expansion to new roles
+- supplier cost exposure changes
+- customer-facing/PDF/public route supplier cost changes
+- DB/RLS/migration changes
+- new dependencies
+- rate-card automation
+- `Supplier Booking / Internal PO`
+- supplier invoice/payment workflows
+- costing/margin report workflows
+- security/build validation failures
+No Team Lead escalation is required for implementation that exactly follows locked decisions, docs sync matching approved decisions, create-only UI within approved boundaries, validation/commit/push after PASS, small refactors that do not change business logic, security, RBAC, database, or public/customer-facing behavior.

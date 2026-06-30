@@ -1516,3 +1516,14 @@ Agents must search or review wording such as:
 - next priority
 
 Any match must be checked for current truth before committing docs.
+
+## Mandatory Runtime Build Gate
+All runtime implementation slices must pass `pnpm run lint`, `pnpm exec tsc --noEmit`, and `pnpm build` before commit readiness. Docs-only slices do not require build unless runtime files changed.
+
+## RLS Verification Requirement
+The hardening review must verify RLS policies on `service_supplier_allocations`.
+Must verify:
+- no broad anon SELECT/INSERT/UPDATE/DELETE access
+- no broad authenticated SELECT access bypassing application-level RBAC
+- no direct table access exposing cost fields without mapper redaction
+- RLS behavior aligns with server-action/application RBAC
