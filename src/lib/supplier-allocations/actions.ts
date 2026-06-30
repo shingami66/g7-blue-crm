@@ -23,6 +23,7 @@ export async function createSupplierAllocation(
 ): Promise<ActionResult<SupplierAllocation>> {
   try {
     const user = await requirePermission("supplier_allocations:write");
+    await requirePermission("supplier_allocations:read_cost");
     const parsed = supplierAllocationCreateSchema.safeParse(input);
 
     if (!parsed.success) {
@@ -200,6 +201,7 @@ export async function updateSupplierAllocation(
 ): Promise<ActionResult<SupplierAllocation>> {
   try {
     const user = await requirePermission("supplier_allocations:write");
+    await requirePermission("supplier_allocations:read_cost");
 
     if (!id || typeof id !== "string" || id.trim() === "") {
       return { success: false, error: "Supplier allocation id is required." };
