@@ -1204,6 +1204,41 @@ SUPPLIER-ALLOCATIONS-SERVICE-UI-CREATE-1B (Completed, Closed)
   - Quotation automation.
   - Customer-facing/PDF/public supplier cost exposure.
 
+SUPPLIER-ALLOCATIONS-SERVICE-UI-EDIT-1C (Completed, Closed)
+- Status: Completed, closed, committed, and pushed.
+- Commits:
+  - `1348dc9 feat(suppliers): add manual allocation edit ui`
+- Author: `shingami66 <157619702+shingami66@users.noreply.github.com>`
+- Implemented in:
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/edit/page.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/edit/SupplierAllocationEditForm.tsx`
+  - `src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx`
+- Completed Scope:
+  - Added Edit-only internal Supplier Allocation UI.
+  - Added dedicated route: `/services/[id]/allocations/[allocationId]/edit`.
+  - Added controlled edit form for manual allocations.
+  - Supplier is displayed read-only and `supplierId` is not editable.
+  - Edit route requires `supplier_allocations:read`, `supplier_allocations:write`, and `supplier_allocations:read_cost`.
+  - Edit CTA is gated by `canWrite`, `canReadCost`, allocation status, `costSource`, and Service status.
+  - Completed/Cancelled services block editing.
+  - Cancelled allocations block editing.
+  - Rate-card allocations block editing.
+  - Editable fields are limited to safe manual fields: `category`, `itemName`, `unit`, `quantity`, `estimatedUnitCost`, `scopeOfWork`, `internalNotes`, `status`.
+  - Status transition UI is forward-only (`draft -> draft/planned`, `planned -> planned/selected`, `selected -> selected`), and `cancelled` is not selectable through edit.
+  - Payload stays manual-only with currency `SAR` and `costSource` `manual_estimate`.
+  - No customer-facing/PDF/public supplier cost exposure.
+- Boundaries Preserved (Still deferred):
+  - Cancel Allocation UI.
+  - Delete/Restore Allocation UI.
+  - Rate-card allocation UI and snapshots.
+  - Approved quotation allocation UI.
+  - Supplier change/replacement after creation.
+  - Supplier Booking / Internal PO.
+  - Supplier invoices/payments.
+  - Costing/margin reports.
+  - Quotation automation.
+  - Customer-facing/PDF/public supplier cost exposure.
+
 SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1 (Planned future item)
 - Status: Not implemented, Not started, Not complete.
 - Scope: Pending dedicated design for Supplier Booking / Internal Supplier PO.

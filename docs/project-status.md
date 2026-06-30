@@ -919,6 +919,41 @@ Operational Invoice Module is not complete yet.
     - Quotation automation.
     - Customer-facing/PDF/public supplier cost exposure.
 
+- `SUPPLIER-ALLOCATIONS-SERVICE-UI-EDIT-1C` completed, validated, committed, and pushed.
+  - Commit pushed:
+    `1348dc9 feat(suppliers): add manual allocation edit ui`
+  - Commit author:
+    `shingami66 <157619702+shingami66@users.noreply.github.com>`
+  - Implemented in:
+    - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/edit/page.tsx`
+    - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/edit/SupplierAllocationEditForm.tsx`
+    - `src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx`
+  - Completed Scope:
+    - Added Edit-only internal Supplier Allocation UI.
+    - Added dedicated route: `/services/[id]/allocations/[allocationId]/edit`.
+    - Added controlled edit form for manual allocations.
+    - Supplier is displayed read-only and `supplierId` is not editable.
+    - Edit route requires `supplier_allocations:read`, `supplier_allocations:write`, and `supplier_allocations:read_cost`.
+    - Edit CTA is gated by `canWrite`, `canReadCost`, allocation status, `costSource`, and Service status.
+    - Completed/Cancelled services block editing.
+    - Cancelled allocations block editing.
+    - Rate-card allocations block editing.
+    - Editable fields are limited to safe manual fields: `category`, `itemName`, `unit`, `quantity`, `estimatedUnitCost`, `scopeOfWork`, `internalNotes`, `status`.
+    - Status transition UI is forward-only (`draft -> draft/planned`, `planned -> planned/selected`, `selected -> selected`), and `cancelled` is not selectable through edit.
+    - Payload stays manual-only with currency `SAR` and `costSource` `manual_estimate`.
+    - No customer-facing/PDF/public supplier cost exposure.
+  - Boundaries Preserved (Still deferred):
+    - Cancel Allocation UI.
+    - Delete/Restore Allocation UI.
+    - Rate-card allocation UI and snapshots.
+    - Approved quotation allocation UI.
+    - Supplier change/replacement after creation.
+    - Supplier Booking / Internal PO.
+    - Supplier invoices/payments.
+    - Costing/margin reports.
+    - Quotation automation.
+    - Customer-facing/PDF/public supplier cost exposure.
+
 
 
 **Guarded Service Status Transitions:**
@@ -1181,8 +1216,8 @@ Current decision gates before ERP implementation:
 ## Supplier Allocations UI Implementation Guidelines
 Supplier Allocations backend foundation and read-only internal Service detail panel are implemented.
 Manual create, manual update, and cancel server actions are implemented.
-Create/Edit/Cancel mutation UI remains pending. `Create UI` remains blocked until `Permission/Schema/RLS Hardening Review` is complete.
-Delete/restore, rate-card workflows, `Supplier Booking / Internal PO`, supplier invoices/payments, costing/margin reports, and customer-facing supplier costs remain deferred.
+Manual create and manual edit UI are implemented.
+Cancel, delete/restore, rate-card workflows, `Supplier Booking / Internal PO`, supplier invoices/payments, costing/margin reports, and customer-facing supplier costs remain deferred.
 Internal supplier allocation cost estimation is approved for Admin/Manager planning only.
 
 ### Supplier Allocation Status State Machine
