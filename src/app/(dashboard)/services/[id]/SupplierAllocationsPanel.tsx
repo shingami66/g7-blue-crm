@@ -40,7 +40,8 @@ export default function SupplierAllocationsPanel({
 
   const baseColumns = ["Status", "Supplier", "Category", "Item", "Unit", "Qty", "Cost Source"];
   const costColumns = canReadCost ? ["Unit Cost", "Total Cost"] : [];
-  const columns = [...baseColumns, ...costColumns];
+  const actionColumns = [""]; // Empty header for actions
+  const columns = [...baseColumns, ...costColumns, ...actionColumns];
 
   const canCreate = canWrite && canReadCost && serviceStatus !== "Completed" && serviceStatus !== "Cancelled";
 
@@ -107,6 +108,16 @@ export default function SupplierAllocationsPanel({
                   </td>
                 </>
               )}
+              <td className="px-4 py-3 align-top text-right">
+                {canWrite && canReadCost && a.status !== "cancelled" && a.costSource === "manual_estimate" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
+                  <Link
+                    href={`/services/${serviceId}/allocations/${a.id}/edit`}
+                    className="text-[13px] font-semibold text-primary hover:underline"
+                  >
+                    Edit
+                  </Link>
+                )}
+              </td>
             </tr>
           ))}
         </DataTable>
