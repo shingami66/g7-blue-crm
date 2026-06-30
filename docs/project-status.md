@@ -884,6 +884,42 @@ Operational Invoice Module is not complete yet.
     - Customer-facing supplier cost exposure remains forbidden/deferred.
 
 
+- `SUPPLIER-ALLOCATIONS-SERVICE-UI-CREATE-1B` completed, validated, committed, and pushed.
+  - Commit pushed:
+    `49793f7 feat(suppliers): add manual allocation create ui`
+  - Commit author:
+    `shingami66 <157619702+shingami66@users.noreply.github.com>`
+  - Implemented in:
+    - `src/app/(dashboard)/services/[id]/allocations/new/page.tsx`
+    - `src/app/(dashboard)/services/[id]/allocations/new/SupplierAllocationCreateForm.tsx`
+    - `src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx`
+    - `src/app/(dashboard)/services/[id]/page.tsx`
+    - `src/lib/suppliers/queries.ts`
+    - `src/lib/suppliers/types.ts`
+  - Completed Scope:
+    - Added Create-only internal Supplier Allocation UI.
+    - Added dedicated route: `/services/[id]/allocations/new`.
+    - Added manual allocation create form.
+    - Added safe active supplier options query.
+    - Supplier options require both `supplier_allocations:write` and `suppliers:read`.
+    - Create route requires `supplier_allocations:read`, `supplier_allocations:write`, `supplier_allocations:read_cost`, and supplier option access.
+    - CTA is gated by `canWrite`, `canReadCost`, and service status.
+    - Completed/Cancelled services block creation.
+    - Payload is manual-only with currency `SAR` and `costSource` `manual_estimate`.
+    - No customer-facing/PDF/public supplier cost exposure.
+  - Boundaries Preserved (Still deferred):
+    - Edit Allocation UI.
+    - Cancel Allocation UI.
+    - Delete/Restore Allocation UI.
+    - Rate-card allocation UI and snapshots.
+    - Approved quotation allocation UI.
+    - Supplier Booking / Internal PO.
+    - Supplier invoices/payments.
+    - Costing/margin reports.
+    - Quotation automation.
+    - Customer-facing/PDF/public supplier cost exposure.
+
+
 
 **Guarded Service Status Transitions:**
 - `SERVICE-STATUS-GUARDED-TRANSITIONS-1` implemented and manual smoke passed.
