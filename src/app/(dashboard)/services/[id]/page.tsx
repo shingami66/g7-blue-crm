@@ -14,6 +14,8 @@ import ServiceStatusTimeline from "./ServiceStatusTimeline";
 import RelatedQuotationsCard from "./RelatedQuotationsCard";
 import BillingPanel from "./BillingPanel";
 import ServiceStatusControl from "./ServiceStatusControl";
+import SupplierAllocationsPanel from "./SupplierAllocationsPanel";
+import { getSupplierAllocationsByServiceId } from "@/lib/supplier-allocations/queries";
 import type { Service } from "@/types/service";
 
 export const dynamic = "force-dynamic";
@@ -77,6 +79,8 @@ export default async function ServiceDetailPage({
   const canEditService = await checkPermission("services:write");
   const canUpdateServiceStatus = await checkPermission("services:update_status");
   const canReadQuotations = await checkPermission("quotations:read");
+  const canReadSupplierAllocations = await checkPermission("supplier_allocations:read");
+  const canReadCost = await checkPermission("supplier_allocations:read_cost");
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
   const today = new Date().toISOString().split("T")[0];
@@ -95,6 +99,10 @@ export default async function ServiceDetailPage({
         service.id,
         service.status
       )
+    : null;
+
+  const supplierAllocations = canReadSupplierAllocations
+    ? await getSupplierAllocationsByServiceId(service.id)
     : null;
 
   return (
@@ -241,6 +249,12 @@ export default async function ServiceDetailPage({
         canCreateQuotation={canCreateQuotation && canModifyService}
         disabledReason={quotationDisabledReason}
       />
+      {canReadSupplierAllocations && supplierAllocations && (
+        <SupplierAllocationsPanel
+          allocations={supplierAllocations}
+          canReadCost={canReadCost}
+        />
+      )}
       <BillingPanel billingState={billingState} />
     </div>
   );

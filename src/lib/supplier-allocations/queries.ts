@@ -21,7 +21,7 @@ export async function getSupplierAllocationsByServiceId(serviceId: string): Prom
     const supabase = createAdminClient();
     const { data: rows, error } = await supabase
       .from("service_supplier_allocations")
-      .select("*")
+      .select("*, supplier:suppliers(name, display_name, legal_name, contact)")
       .eq("service_id", serviceId)
       .eq("is_deleted", false)
       .order("created_at", { ascending: false });
@@ -50,7 +50,7 @@ export async function getSupplierAllocationsBySupplierId(supplierId: string): Pr
     const supabase = createAdminClient();
     const { data: rows, error } = await supabase
       .from("service_supplier_allocations")
-      .select("*")
+      .select("*, supplier:suppliers(name, display_name, legal_name, contact)")
       .eq("supplier_id", supplierId)
       .eq("is_deleted", false)
       .order("created_at", { ascending: false });
@@ -79,7 +79,7 @@ export async function getSupplierAllocationById(id: string): Promise<SupplierAll
     const supabase = createAdminClient();
     const { data: row, error } = await supabase
       .from("service_supplier_allocations")
-      .select("*")
+      .select("*, supplier:suppliers(name, display_name, legal_name, contact)")
       .eq("id", id)
       .eq("is_deleted", false)
       .maybeSingle();

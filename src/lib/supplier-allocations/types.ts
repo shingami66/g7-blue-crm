@@ -45,6 +45,12 @@ export interface SupplierAllocationRow {
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
+  supplier?: {
+    name: string;
+    display_name: string | null;
+    legal_name: string | null;
+    contact: string | null;
+  } | null;
 }
 
 export interface SupplierAllocation {
@@ -74,6 +80,7 @@ export interface SupplierAllocation {
   createdAt: string;
   updatedAt: string;
   isDeleted: boolean;
+  supplierName?: string | null;
 }
 
 export type SupplierAllocationCreateInput = z.infer<typeof supplierAllocationCreateSchema>;

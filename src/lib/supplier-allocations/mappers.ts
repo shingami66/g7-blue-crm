@@ -17,6 +17,16 @@ export function mapSupplierAllocationRow(
 ): SupplierAllocation {
   const { canReadCost } = options;
 
+  let computedSupplierName: string | null = null;
+  if (row.supplier) {
+    computedSupplierName =
+      row.supplier.display_name ||
+      row.supplier.name ||
+      row.supplier.legal_name ||
+      row.supplier.contact ||
+      row.supplier_id;
+  }
+
   return {
     id: row.id,
     serviceId: row.service_id,
@@ -45,6 +55,7 @@ export function mapSupplierAllocationRow(
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     isDeleted: row.is_deleted,
+    supplierName: computedSupplierName,
   };
 }
 
