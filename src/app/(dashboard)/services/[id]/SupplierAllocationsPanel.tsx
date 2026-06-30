@@ -9,6 +9,7 @@ type SupplierAllocationsPanelProps = {
   allocations: SupplierAllocation[];
   canReadCost: boolean;
   canWrite?: boolean;
+  canCancel?: boolean;
   serviceId?: string;
   serviceStatus?: string;
 };
@@ -33,6 +34,7 @@ export default function SupplierAllocationsPanel({
   allocations,
   canReadCost,
   canWrite,
+  canCancel,
   serviceId,
   serviceStatus,
 }: SupplierAllocationsPanelProps) {
@@ -109,14 +111,24 @@ export default function SupplierAllocationsPanel({
                 </>
               )}
               <td className="px-4 py-3 align-top text-right">
-                {canWrite && canReadCost && a.status !== "cancelled" && a.costSource === "manual_estimate" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
-                  <Link
-                    href={`/services/${serviceId}/allocations/${a.id}/edit`}
-                    className="text-[13px] font-semibold text-primary hover:underline"
-                  >
-                    Edit
-                  </Link>
-                )}
+                <div className="flex items-center justify-end gap-3">
+                  {canWrite && canReadCost && a.status !== "cancelled" && a.costSource === "manual_estimate" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
+                    <Link
+                      href={`/services/${serviceId}/allocations/${a.id}/edit`}
+                      className="text-[13px] font-semibold text-primary hover:underline"
+                    >
+                      Edit
+                    </Link>
+                  )}
+                  {canCancel && a.status !== "cancelled" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
+                    <Link
+                      href={`/services/${serviceId}/allocations/${a.id}/cancel`}
+                      className="text-[13px] font-semibold text-error hover:underline"
+                    >
+                      Cancel
+                    </Link>
+                  )}
+                </div>
               </td>
             </tr>
           ))}

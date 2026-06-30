@@ -82,6 +82,7 @@ export default async function ServiceDetailPage({
   const canReadSupplierAllocations = await checkPermission("supplier_allocations:read");
   const canReadCost = await checkPermission("supplier_allocations:read_cost");
   const canWriteAllocations = await checkPermission("supplier_allocations:write");
+  const canCancelAllocations = await checkPermission("supplier_allocations:cancel");
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
   const today = new Date().toISOString().split("T")[0];
@@ -255,6 +256,7 @@ export default async function ServiceDetailPage({
           allocations={supplierAllocations}
           canReadCost={canReadCost}
           canWrite={canWriteAllocations}
+          canCancel={canCancelAllocations}
           serviceId={service.id}
           serviceStatus={service.status}
         />
