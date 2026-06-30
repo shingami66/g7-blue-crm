@@ -81,6 +81,7 @@ export default async function ServiceDetailPage({
   const canReadQuotations = await checkPermission("quotations:read");
   const canReadSupplierAllocations = await checkPermission("supplier_allocations:read");
   const canReadCost = await checkPermission("supplier_allocations:read_cost");
+  const canWriteAllocations = await checkPermission("supplier_allocations:write");
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
   const today = new Date().toISOString().split("T")[0];
@@ -253,6 +254,9 @@ export default async function ServiceDetailPage({
         <SupplierAllocationsPanel
           allocations={supplierAllocations}
           canReadCost={canReadCost}
+          canWrite={canWriteAllocations}
+          serviceId={service.id}
+          serviceStatus={service.status}
         />
       )}
       <BillingPanel billingState={billingState} />

@@ -5,7 +5,7 @@ import { requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mapRowToSupplier } from "./mappers";
 import type { Supplier, SupplierStatus } from "@/types/supplier";
-import type { SupplierRow, SuppliersListResult } from "./types";
+import type { SupplierRow, SuppliersListResult, SupplierOption } from "./types";
 
 const SUPPLIER_LIST_SELECT = `
   id,
@@ -117,5 +117,38 @@ export async function getSupplierById(id: string): Promise<{ supplier: Supplier 
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error("[getSupplierById] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { supplier: null, error: "supplier_load_failed" };
+  }
+}
+
+export async function getActiveSupplierOptions(): Promise<{ suppliers: SupplierOption[]; error?: string }> {
+  await requirePermission("supplier_allocations:write");
+  await requirePermission("suppliers:read");
+
+  try {
+    const supabase = createAdminClient();
+
+    const { data, error } = await supabase
+      .from("suppliers")
+      .select("id, name, display_name, legal_name, contact")
+      .eq("status", "active")
+      .eq("is_deleted", false)
+      .is("deleted_at", null)
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("[getActiveSupplierOptions] Supabase error:", error.message);
+      return { suppliers: [], error: "suppliers_load_failed" };
+    }
+
+    const suppliers = (data ?? []).map((row) => ({
+      id: row.id,
+      name: row.display_name || row.name || row.legal_name || row.contact || row.id,
+    }));
+
+    return { suppliers };
+  } catch (err) {
+    if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
+    console.error("[getActiveSupplierOptions] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { suppliers: [], error: "suppliers_load_failed" };
   }
 }

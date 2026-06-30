@@ -48,3 +48,8 @@ export interface SuppliersListResult {
   suppliers: Supplier[];
   error?: "suppliers_load_failed";
 }
+
+export interface SupplierOption {
+  id: string;
+  name: string;
+}

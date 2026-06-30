@@ -2,10 +2,15 @@ import type { ComponentProps } from "react";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 
 type SupplierAllocationsPanelProps = {
   allocations: SupplierAllocation[];
   canReadCost: boolean;
+  canWrite?: boolean;
+  serviceId?: string;
+  serviceStatus?: string;
 };
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
@@ -27,6 +32,9 @@ const STATUS_LABEL_MAP: Record<SupplierAllocation["status"], string> = {
 export default function SupplierAllocationsPanel({
   allocations,
   canReadCost,
+  canWrite,
+  serviceId,
+  serviceStatus,
 }: SupplierAllocationsPanelProps) {
   const hasAllocations = allocations.length > 0;
 
@@ -34,10 +42,21 @@ export default function SupplierAllocationsPanel({
   const costColumns = canReadCost ? ["Unit Cost", "Total Cost"] : [];
   const columns = [...baseColumns, ...costColumns];
 
+  const canCreate = canWrite && canReadCost && serviceStatus !== "Completed" && serviceStatus !== "Cancelled";
+
   return (
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden mt-6">
-      <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
+      <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center gap-4">
         <h3 className="font-semibold text-primary">Supplier Allocations</h3>
+        {canCreate && serviceId && (
+          <Link
+            href={`/services/${serviceId}/allocations/new`}
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[13px] font-semibold transition-colors"
+          >
+            <Plus size={16} />
+            New Allocation
+          </Link>
+        )}
       </div>
       
       {!hasAllocations ? (
