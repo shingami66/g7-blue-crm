@@ -1119,6 +1119,57 @@ SUPPLIER-ALLOCATIONS-UPDATE-MANUAL-1A (Completed, Closed)
   - CRUD is not complete. Write layer is not complete. UI is not complete.
   - Delete/restore, rate-card allocation creation, snapshot generation, bookings/internal POs, invoices/payments, costing reports, quotation automation, and customer-facing supplier cost exposure remain deferred.
 
+SUPPLIER-ALLOCATIONS-SERVICE-UI-PANEL-1A (Completed, Closed)
+- Status: Completed, closed, committed, and pushed.
+- Commits:
+  - `2370e74 feat(suppliers): add read-only service allocations panel`
+- Author: `shingami66 <157619702+shingami66@users.noreply.github.com>`
+- Implemented in:
+  - `src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx`
+  - `src/app/(dashboard)/services/[id]/page.tsx`
+  - `src/lib/supplier-allocations/queries.ts`
+  - `src/lib/supplier-allocations/types.ts`
+  - `src/lib/supplier-allocations/mappers.ts`
+- UI Panel Behavior:
+  - Adds a read-only Supplier Allocations panel to the internal dashboard Service detail page.
+  - Mounts the panel between RelatedQuotationsCard and BillingPanel.
+  - Uses getSupplierAllocationsByServiceId(serviceId) for the Service allocation list.
+  - Does not fetch or render allocations unless `supplier_allocations:read` is granted.
+  - Does not call createSupplierAllocation, updateSupplierAllocation, or cancelSupplierAllocation.
+  - Does not add create/edit/cancel forms, drawers, dialogs, or mutation controls.
+- Supplier Display Behavior:
+  - Allocation reads now include a safe supplier display join.
+  - Mapper exposes `supplierName` safely.
+  - Supplier name fallback is safe and does not expose banking/IBAN.
+  - Query join avoids N+1 UI lookup.
+- Cost Redaction Behavior:
+  - Backend mapper remains the cost redaction source of truth.
+  - Service page computes/checks `supplier_allocations:read_cost` and passes `canReadCost` to the panel.
+  - Unit cost and total cost columns are omitted when `canReadCost` is false.
+  - UI does not calculate totals client-side.
+  - UI does not display `rateCardSnapshot` in this slice.
+  - No supplier costs are exposed to customer-facing pages, PDFs, or public routes.
+- Status / Empty State UX:
+  - Panel displays allocation statuses: draft, planned, selected, cancelled.
+  - Local status labeling is used without marking Supplier Booking/Internal PO as implemented.
+  - Empty state: "No supplier allocations recorded for this service yet."
+  - Cancelled/Completed Services still show historical allocations read-only.
+- Boundaries:
+  - This is read-only panel 1A only.
+  - Supplier Allocations UI is not complete.
+  - Supplier Allocations CRUD is not complete.
+  - Full write layer is not complete.
+  - Create/edit/cancel mutation UI remains deferred to 1B or later.
+  - Delete/restore remains deferred.
+  - Rate-card allocation UI remains deferred.
+  - Rate-card snapshot UI remains deferred.
+  - Supplier Booking / Internal PO remains deferred.
+  - Supplier invoices/payments remain deferred.
+  - Supplier costing/margin reports remain deferred.
+  - Quotation automation remains deferred.
+  - Customer-facing supplier cost exposure remains forbidden/deferred.
+
+
 
 SUPPLIER-BOOKINGS-INTERNAL-PO-DESIGN-1 (Planned future item)
 - Status: Not implemented, Not started, Not complete.
