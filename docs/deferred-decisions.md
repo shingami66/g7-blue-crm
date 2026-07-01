@@ -219,7 +219,7 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
     - A Supplier can appear in many Services, and can appear multiple times in the same Service when there are separate cost lines.
     - **Future Purpose:** Supplier Allocations will later support Service expenses, Service costing, Profit/margin calculation, Supplier Bookings, Supplier invoices/payments, and Costing reports.
     - **Strict Boundary:** Supplier Allocations remain internal costing/planning data. Supplier costs must not be exposed to customer-facing documents, PDFs, public routes, or the customer portal.
-- **Supplier Booking:** DB foundation, schemas, and permissions complete (`SUPPLIER-BOOKINGS-FOUNDATION-1`, `SUPPLIER-BOOKINGS-SCHEMAS-1A`, `SUPPLIER-BOOKINGS-PERMISSIONS-1A`). Queries, UI, actions, and runtime behavior are explicitly deferred. Terminology constraint: Always use Supplier Booking / SBK. Do not use Internal PO / Purchase Order.
+- **Supplier Booking:** DB foundation, schemas, permissions, and queries complete (`SUPPLIER-BOOKINGS-FOUNDATION-1`, `SUPPLIER-BOOKINGS-SCHEMAS-1A`, `SUPPLIER-BOOKINGS-PERMISSIONS-1A`, `SUPPLIER-BOOKINGS-QUERIES-1A`). UI, actions, and runtime behavior are explicitly deferred. Terminology constraint: Always use Supplier Booking / SBK. Do not use Internal PO / Purchase Order.
 - **Security and financial cautions:** Supplier rate cards contain internal supplier cost data and must never appear in customer-facing quotations, invoices, PDFs, receipts, broad supplier list views, or unauthorized role views. Accountant, Sales, Operations, and Viewer do not have `supplier_costing:read` or `supplier_costing:write` permissions in this MVP slice. Do not add Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior while G7 BLUE remains `not_registered`.
 - **When to return:** Start future supplier work only through a controlled implementation planning prompt based on the approved Spec Kit artifacts.
 
@@ -678,7 +678,7 @@ The following remain deferred:
 - supplier costing/margin reports
 - rate-card automation
 - rate-card snapshot workflow
-- `Supplier Bookings` (Queries, UI, actions, and runtime behavior)
+- `Supplier Bookings` (UI, actions, and runtime behavior)
 - supplier invoices/payments
 - customer-facing supplier cost exposure
 - customer PDF supplier cost exposure
@@ -694,7 +694,7 @@ Escalate back to Team Lead / Project Owner only for:
 - DB/RLS/migration changes
 - new dependencies
 - rate-card automation
-- `Supplier Bookings` (Queries, UI, actions, and runtime behavior)
+- `Supplier Bookings` (UI, actions, and runtime behavior)
 - supplier invoice/payment workflows
 - costing/margin report workflows
 - security/build validation failures

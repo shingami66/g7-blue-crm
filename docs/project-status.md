@@ -416,7 +416,20 @@
 - Manager now has: `supplier_bookings:read`, `supplier_bookings:read_cost`, `supplier_bookings:write`, `supplier_bookings:cancel`.
 - Operations, Accountant, Sales, and Viewer have no Supplier Booking permissions in MVP.
 - Admin access remains through wildcard `*`.
-- Next safe slice is `SUPPLIER-BOOKINGS-QUERIES-1A`.
+
+### ✅ SUPPLIER-BOOKINGS-QUERIES-1A
+- Status: Completed, verified, committed, and pushed.
+- Implementation commit:
+  - `578241a feat(suppliers): add supplier booking read queries`
+- Summary:
+  - Added server-only read queries: `getSupplierBookingsByServiceId`, `getSupplierBookingsBySupplierId`, and `getSupplierBookingById`.
+  - All queries require `supplier_bookings:read` permission.
+  - Cost and internal details (including snapshots and internal notes) are gated by `supplier_bookings:read_cost`.
+  - All queries enforce `is_deleted = false`.
+  - The `includeDeleted` option was intentionally not implemented in this slice.
+  - Cancelled Supplier Bookings remain included as historical internal records.
+  - No Supplier Booking actions or UI were started.
+  - Next safe slice is `SUPPLIER-BOOKINGS-ACTIONS-1A-DESIGN-REVIEW`.
 
 ## 4. Current Active Phase
 
@@ -427,7 +440,8 @@ Cursor audit gate:
 - SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED.
 - SUPPLIER-BOOKINGS-SCHEMAS-1A: CLOSED.
 - SUPPLIER-BOOKINGS-PERMISSIONS-1A: CLOSED.
-- Next safe slice is `SUPPLIER-BOOKINGS-QUERIES-1A`.
+- SUPPLIER-BOOKINGS-QUERIES-1A: CLOSED.
+- Next safe slice is `SUPPLIER-BOOKINGS-ACTIONS-1A-DESIGN-REVIEW`.
 
 ### 🚧 Locked Next CRM Priorities
 Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.

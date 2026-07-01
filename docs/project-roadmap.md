@@ -927,11 +927,12 @@ FUTURE SUPPLIER SEQUENCE
   1. SUPPLIER-ALLOCATIONS-RATE-CARD-AUTOMATION-1 (Rate-card allocation automation / overlap enforcement / etc)
   2. SUPPLIER-BOOKINGS-SCHEMAS-1A: CLOSED
   3. SUPPLIER-BOOKINGS-PERMISSIONS-1A: CLOSED
-  4. SUPPLIER-BOOKINGS-QUERIES-1A: NEXT
-  5. SUPPLIER-BOOKINGS-ACTIONS-UI-1 (Design/review required before implementation)
-  6. SUPPLIER-INVOICES-1
-  7. SUPPLIER-PAYMENTS-1
-  8. SUPPLIER-COSTING-MARGIN-REPORTS-1
+  4. SUPPLIER-BOOKINGS-QUERIES-1A: CLOSED
+  5. SUPPLIER-BOOKINGS-ACTIONS-1A-DESIGN-REVIEW: NEXT
+  6. SUPPLIER-BOOKINGS-ACTIONS-UI-1 (Design/review required before implementation)
+  7. SUPPLIER-INVOICES-1
+  8. SUPPLIER-PAYMENTS-1
+  9. SUPPLIER-COSTING-MARGIN-REPORTS-1
 
 SUPPLIER-ALLOCATIONS-DESIGN-1 (Completed, Design Approved)
 - Status: Completed. Spec sync only.
@@ -1410,9 +1411,14 @@ SUPPLIER-BOOKINGS-PERMISSIONS-1A (Completed, Closed)
 - Manager now has: `supplier_bookings:read`, `supplier_bookings:read_cost`, `supplier_bookings:write`, `supplier_bookings:cancel`.
 - Operations, Accountant, Sales, and Viewer have no access.
 
-SUPPLIER-BOOKINGS-QUERIES-1A (NEXT)
-- Next safe implementation slice.
-- Must precede actions/UI implementation.
+SUPPLIER-BOOKINGS-QUERIES-1A (Completed, Closed)
+- Status: Completed, verified, committed, and pushed.
+- Commits: `578241a feat(suppliers): add supplier booking read queries`
+- Scope: Server-only read queries implemented (`getSupplierBookingsByServiceId`, `getSupplierBookingsBySupplierId`, `getSupplierBookingById`). All queries gate on `supplier_bookings:read` and redact costs/internal details based on `supplier_bookings:read_cost`. Enforce `is_deleted = false`.
+
+SUPPLIER-BOOKINGS-ACTIONS-1A-DESIGN-REVIEW (NEXT)
+- Next safe design review slice.
+- Must precede actions implementation.
 
 SUPPLIER-BOOKINGS-RUNTIME-1 (Planned future item)
 - Status: Not implemented, Not started, Not complete.
