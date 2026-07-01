@@ -47,6 +47,8 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - Do not force push. Open PRs only when requested.
 - For Services or Quotations UI work, manually smoke test the live ERP path `Customer Profile -> Service -> Quotation`, including `/customers/[id]`, `/services`, `/services/new`, `/services/[id]`, `/services/[id]/edit`, and `/quotations/new?serviceId=<service-id>`.
 - For Service billing or supplier allocation UI work, manually smoke test `/services/[id]`, deposit/final invoice actions in the Billing panel, `/services/[id]/allocations/new`, `/services/[id]/allocations/[allocationId]/edit`, `/cancel`, `/delete`, `/restore`, and `?showDeleted=true` when delete/restore behavior changes.
+- For Service status workflow changes, manually smoke test the guarded manual status actions on `/services/[id]`. Current status changes are manual from the Service detail page; automation remains deferred.
+- For Payments module UI/read changes, manually smoke test `/payments` against live records and confirm the page still reflects `payments:read`-guarded data rather than mock rows.
 
 ## Reporting Discipline
 
@@ -118,6 +120,8 @@ For every task that includes numbered inspection questions, checks, or required 
 - Never cast `clerk_user_id` to UUID.
 - Fixed roles: `admin`, `manager`, `sales`, `operations`, `accountant`, `viewer`.
 - `settings:read` is currently granted to `accountant` and `viewer`; `settings:write` remains admin-only via `*`.
+- `services:update_status` is implemented in code for guarded manual Service status actions.
+- `payments:read` gates the live read-only `/payments` page.
 - `src/lib/auth/errors.ts` is canonical for `UnauthorizedError` and `ForbiddenError`.
 - `UnauthorizedError` redirects to `/sign-in`.
 - `ForbiddenError` shows Access Denied UI.
