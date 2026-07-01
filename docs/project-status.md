@@ -389,14 +389,24 @@
 - Verified ZERO_POLICY_DEPENDENCIES, ZERO_INDEX_DEPENDENCIES, ZERO_TRIGGER_DEPENDENCIES, ZERO_ZOD_UUID_VALIDATORS.
 - Remote Supabase database updated successfully.
 
+### ✅ SUPPLIER-ALLOCATION-BOOKING-GUARD-1
+- Status: Completed, verified, committed, and pushed.
+- Implementation commit:
+  - `4400700 fix(suppliers): block allocation changes with active bookings`
+- `cancelSupplierAllocation`, `deleteSupplierAllocation`, and `restoreSupplierAllocation` now block mutation when an active `supplier_booking` exists.
+- Active booking definition: `supplier_bookings.is_deleted = false AND supplier_bookings.status <> 'cancelled'`.
+- The helper performs an existence-only check and selects only `id`.
+- No supplier costs/details are exposed.
+- Lint and build passed with only pre-existing unrelated Next.js image warnings.
+
 ## 4. Current Active Phase
 
 ### 🚧 Cursor Audit Priority Gates & Blockers
 Cursor audit gate:
-- Current verdict: HOLD_BEFORE_SUPPLIER_BOOKINGS_DOMAIN until P0 gates close.
+- Current verdict: PROCEED_TO_SUPPLIER_BOOKINGS_DOMAIN.
 - SUPPLIER-AUDIT-COLUMNS-TEXT-FIX-1: CLOSED.
-- SUPPLIER-ALLOCATION-BOOKING-GUARD-1: NEXT / BLOCKER.
-- Supplier Bookings Domain/actions/UI/RBAC must not start until the active-booking guard is implemented and verified.
+- SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED.
+- Supplier Bookings Domain may now move to design/planning, but must still follow controlled task workflow.
 
 ### 🚧 Locked Next CRM Priorities
 Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.

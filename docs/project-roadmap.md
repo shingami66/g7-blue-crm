@@ -47,15 +47,17 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 ## 2. Current Priority
 
 ### 🚧 Cursor Audit Priority Gates & Blockers
-P0 before Supplier Bookings Domain:
+Cursor audit gates:
 1. SUPPLIER-AUDIT-COLUMNS-TEXT-FIX-1: CLOSED
-2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: NEXT / BLOCKER
+2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 After P0 gates:
-- Supplier Bookings Domain
+- Supplier Bookings Domain design/planning
 - Supplier Bookings server actions
 - Supplier Bookings UI
 - Supplier Bookings RBAC
+
+Note: This does not mean immediate implementation without design/review. Domain work must follow controlled task workflow.
 
 P1 soon / before production:
 - INVOICE-READ-BOUNDARY-HARDEN-1
