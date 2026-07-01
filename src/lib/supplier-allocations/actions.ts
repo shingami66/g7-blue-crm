@@ -18,6 +18,32 @@ function firstValidationError(parsed: { error: { issues: { message: string }[] }
   return parsed.error.issues[0]?.message ?? "Validation failed";
 }
 
+async function checkActiveSupplierBooking(
+  supabase: ReturnType<typeof createAdminClient>,
+  allocationId: string
+): Promise<{ active: boolean; error?: string }> {
+  try {
+    const { data, error } = await supabase
+      .from("supplier_bookings")
+      .select("id")
+      .eq("source_allocation_id", allocationId)
+      .eq("is_deleted", false)
+      .neq("status", "cancelled")
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[checkActiveSupplierBooking] Supabase error:", error.message);
+      return { active: false, error: "Failed to verify booking status. Please try again." };
+    }
+
+    return { active: !!data };
+  } catch (err) {
+    console.error("[checkActiveSupplierBooking] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { active: false, error: "An unexpected error occurred while verifying booking status." };
+  }
+}
+
 export async function createSupplierAllocation(
   input: unknown
 ): Promise<ActionResult<SupplierAllocation>> {
@@ -221,6 +247,14 @@ export async function cancelSupplierAllocation(
 
     if (existingAllocation.status === "cancelled") {
       return { success: false, error: "Supplier allocation is already cancelled." };
+    }
+
+    const bookingCheck = await checkActiveSupplierBooking(supabase, id);
+    if (bookingCheck.error) {
+      return { success: false, error: bookingCheck.error };
+    }
+    if (bookingCheck.active) {
+      return { success: false, error: "This allocation cannot be modified because it is linked to an active supplier booking." };
     }
 
     // Cross-table check 1: Service check
@@ -441,7 +475,13 @@ export async function deleteSupplierAllocation(id: string): Promise<ActionResult
       return { success: false, error: "Supplier allocation is already deleted." };
     }
 
-
+    const bookingCheck = await checkActiveSupplierBooking(supabase, trimmedId);
+    if (bookingCheck.error) {
+      return { success: false, error: bookingCheck.error };
+    }
+    if (bookingCheck.active) {
+      return { success: false, error: "This allocation cannot be modified because it is linked to an active supplier booking." };
+    }
 
     // Cross-table check 1: Service check
     const { data: service, error: serviceError } = await supabase
@@ -513,7 +553,13 @@ export async function restoreSupplierAllocation(id: string): Promise<ActionResul
       return { success: false, error: "Supplier allocation is not deleted." };
     }
 
-
+    const bookingCheck = await checkActiveSupplierBooking(supabase, trimmedId);
+    if (bookingCheck.error) {
+      return { success: false, error: bookingCheck.error };
+    }
+    if (bookingCheck.active) {
+      return { success: false, error: "This allocation cannot be modified because it is linked to an active supplier booking." };
+    }
 
     // Cross-table check 1: Service check
     const { data: service, error: serviceError } = await supabase
