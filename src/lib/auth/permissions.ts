@@ -41,6 +41,10 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     "supplier_allocations:read_cost",
     "supplier_allocations:write",
     "supplier_allocations:cancel",
+    "supplier_bookings:read",
+    "supplier_bookings:read_cost",
+    "supplier_bookings:write",
+    "supplier_bookings:cancel",
     "dashboard:read",
   ],
   sales: [
