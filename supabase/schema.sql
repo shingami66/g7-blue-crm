@@ -1587,10 +1587,10 @@ CREATE TABLE IF NOT EXISTS "public"."service_supplier_allocations" (
     "rate_card_snapshot" "jsonb",
     "scope_of_work" "text",
     "internal_notes" "text",
-    "created_by" "uuid",
-    "updated_by" "uuid",
+    "created_by" "text",
+    "updated_by" "text",
     "cancelled_at" timestamp with time zone,
-    "cancelled_by" "uuid",
+    "cancelled_by" "text",
     "cancelled_reason" "text",
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
@@ -1611,6 +1611,18 @@ CREATE TABLE IF NOT EXISTS "public"."service_supplier_allocations" (
 ALTER TABLE "public"."service_supplier_allocations" OWNER TO "postgres";
 
 
+COMMENT ON COLUMN "public"."service_supplier_allocations"."created_by" IS 'Clerk userId string of the user who created this supplier allocation.';
+
+
+
+COMMENT ON COLUMN "public"."service_supplier_allocations"."updated_by" IS 'Clerk userId string of the user who last updated this supplier allocation.';
+
+
+
+COMMENT ON COLUMN "public"."service_supplier_allocations"."cancelled_by" IS 'Clerk userId string of the user who cancelled this supplier allocation.';
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."supplier_bookings" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "service_id" "uuid" NOT NULL,
@@ -1629,10 +1641,10 @@ CREATE TABLE IF NOT EXISTS "public"."supplier_bookings" (
     "internal_notes" "text",
     "allocation_snapshot" "jsonb" NOT NULL,
     "cancelled_at" timestamp with time zone,
-    "cancelled_by" "uuid",
+    "cancelled_by" "text",
     "cancelled_reason" "text",
-    "created_by" "uuid",
-    "updated_by" "uuid",
+    "created_by" "text",
+    "updated_by" "text",
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "is_deleted" boolean DEFAULT false NOT NULL,
@@ -1653,6 +1665,18 @@ ALTER TABLE "public"."supplier_bookings" OWNER TO "postgres";
 
 
 COMMENT ON TABLE "public"."supplier_bookings" IS 'Supplier Booking estimated costs are planning/commitment estimates only. They do not create accounting entries. They must not be treated as actual costs or used in profit/margin calculations until Supplier Invoice exists.';
+
+
+
+COMMENT ON COLUMN "public"."supplier_bookings"."cancelled_by" IS 'Clerk userId string of the user who cancelled this supplier booking.';
+
+
+
+COMMENT ON COLUMN "public"."supplier_bookings"."created_by" IS 'Clerk userId string of the user who created this supplier booking.';
+
+
+
+COMMENT ON COLUMN "public"."supplier_bookings"."updated_by" IS 'Clerk userId string of the user who last updated this supplier booking.';
 
 
 
