@@ -1628,7 +1628,7 @@ CREATE TABLE IF NOT EXISTS "public"."supplier_bookings" (
     "service_id" "uuid" NOT NULL,
     "supplier_id" "uuid" NOT NULL,
     "source_allocation_id" "uuid" NOT NULL,
-    "booking_number" "text" NOT NULL,
+    "booking_number" "text" DEFAULT "public"."generate_document_number"('supplier_booking'::"text") NOT NULL,
     "status" "text" DEFAULT 'draft'::"text" NOT NULL,
     "category" "text" NOT NULL,
     "item_name" "text" NOT NULL,
