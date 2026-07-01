@@ -699,3 +699,15 @@ Escalate back to Team Lead / Project Owner only for:
 - costing/margin report workflows
 - security/build validation failures
 No Team Lead escalation is required for implementation that exactly follows locked decisions, docs sync matching approved decisions, create-only UI within approved boundaries, validation/commit/push after PASS, small refactors that do not change business logic, security, RBAC, database, or public/customer-facing behavior.
+
+## Production Hardening / Deferred Audit Blockers
+The following items are explicitly documented as deferred or production hardening, and are NOT P0 blockers for Supplier Bookings Domain/actions/UI/RBAC:
+- invoices.service_id NOT NULL enforcement
+- production RLS/grant hardening
+- invoice voided status / credit note alignment
+- invoice snapshot freeze point
+- customer PO invoice gate policy
+- zero final invoice policy
+- public DB health route hardening
+- money/document lifecycle audit log coverage
+- supplier blacklist active-work impact check

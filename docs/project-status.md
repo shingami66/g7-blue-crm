@@ -379,9 +379,26 @@
 - Terminology constraint: Uses `Supplier Booking` / `supplier_bookings` / `SBK`. (Internal PO / Purchase Order terminology is rejected).
 - **Deferred**: Supplier Bookings Domain, UI, permissions, actions, pages, and runtime behavior are explicitly deferred to future tasks.
 
+### ✅ SUPPLIER-AUDIT-COLUMNS-TEXT-FIX-1
+- Status: Completed, verified, committed, and pushed.
+- Implementation commits:
+  - `39fb5fd db(suppliers): align audit columns with clerk ids`
+  - `4cbd9cf db(suppliers): sync audit column schema`
+- Solved Cursor Audit blocker `SUPPLIER-AUDIT-COLUMNS-TEXT-1`.
+- Aligned `service_supplier_allocations` and `supplier_bookings` `created_by`, `updated_by`, `cancelled_by` to `text` instead of `uuid`, matching `app_users.clerk_user_id`.
+- Verified ZERO_POLICY_DEPENDENCIES, ZERO_INDEX_DEPENDENCIES, ZERO_TRIGGER_DEPENDENCIES, ZERO_ZOD_UUID_VALIDATORS.
+- Remote Supabase database updated successfully.
+
 ## 4. Current Active Phase
 
-### ðŸš§ Locked Next CRM Priorities
+### 🚧 Cursor Audit Priority Gates & Blockers
+Cursor audit gate:
+- Current verdict: HOLD_BEFORE_SUPPLIER_BOOKINGS_DOMAIN until P0 gates close.
+- SUPPLIER-AUDIT-COLUMNS-TEXT-FIX-1: CLOSED.
+- SUPPLIER-ALLOCATION-BOOKING-GUARD-1: NEXT / BLOCKER.
+- Supplier Bookings Domain/actions/UI/RBAC must not start until the active-booking guard is implemented and verified.
+
+### 🚧 Locked Next CRM Priorities
 Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.
 
 

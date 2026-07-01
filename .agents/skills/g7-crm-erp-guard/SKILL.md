@@ -379,3 +379,13 @@ Escalate back to Team Lead / Project Owner only for:
 - costing/margin report workflows
 - security/build validation failures
 No Team Lead escalation is required for implementation that exactly follows locked decisions, docs sync matching approved decisions, create-only UI within approved boundaries, validation/commit/push after PASS, small refactors that do not change business logic, security, RBAC, database, or public/customer-facing behavior.
+
+## Cursor Audit Priority Gates & Blockers
+Supplier Bookings Domain Gate:
+Do not start Supplier Bookings Domain/actions/UI/RBAC while allocation cancel/delete/restore can mutate a source allocation that has an active supplier_booking.
+
+Active supplier_booking =
+supplier_bookings.is_deleted = false
+AND supplier_bookings.status <> 'cancelled'.
+
+Supplier audit user columns store Clerk userId strings as text. Do not cast Clerk user IDs to UUID.

@@ -45,6 +45,34 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 - Financial records must use void/cancel/reversal workflows rather than hard deletion. Use soft delete for business records where applicable.
 
 ## 2. Current Priority
+
+### 🚧 Cursor Audit Priority Gates & Blockers
+P0 before Supplier Bookings Domain:
+1. SUPPLIER-AUDIT-COLUMNS-TEXT-FIX-1: CLOSED
+2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: NEXT / BLOCKER
+
+After P0 gates:
+- Supplier Bookings Domain
+- Supplier Bookings server actions
+- Supplier Bookings UI
+- Supplier Bookings RBAC
+
+P1 soon / before production:
+- INVOICE-READ-BOUNDARY-HARDEN-1
+- SERVICE-STATUS-DIRECT-FINAL-PATH-1
+- CUSTOMER-PO-INVOICE-GATE-1
+- INVOICE-ZERO-FINAL-GUARD-1
+- PUBLIC-HEALTH-ROUTE-HARDEN-1
+- MONEY-AUDIT-LOG-COVERAGE-1
+
+P2 before production / deferred:
+- INVOICE-SERVICE-ID-NOT-NULL-1
+- SEC-RLS-PRODUCTION-POLICIES-1
+- INVOICE-VOID-STATUS-MIGRATION-1
+- INVOICE-SNAPSHOT-FREEZE-POINT-1
+- SUPPLIER-BLACKLIST-IMPACT-CHECK-1
+
+### 🚧 Locked Next CRM Priorities
 0. `SEC-AUTHZ-APP-USER-GATE-1`
    - Security blocker: Clerk-authenticated users without an `app_users` row could access dashboard and internal CRM.
    - Fix: dashboard layout now requires active `app_users` membership; blocked users redirect to `/unauthorized`.

@@ -212,3 +212,10 @@ When using Spec Kit in this repository, the following rules constrain all Spec K
 
 For additional Spec Kit context, read the current plan, but apply the rules above first.
 <!-- SPECKIT END -->
+
+## Cursor Audit Priority Gates & Blockers
+Before starting Supplier Bookings Domain/actions/UI/RBAC, verify P0 Cursor audit gates:
+1. Supplier audit columns are text and schema is synced. CLOSED.
+2. Allocation cancel/delete/restore active-booking guard is implemented and verified. REQUIRED NEXT.
+
+Do not start Supplier Bookings Domain/actions/UI/RBAC before SUPPLIER-ALLOCATION-BOOKING-GUARD-1 is closed.
