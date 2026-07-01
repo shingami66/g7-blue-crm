@@ -925,11 +925,13 @@ FUTURE SUPPLIER SEQUENCE
 - SUPPLIER-ALLOCATIONS-RATE-CARD-CREATE-1 is complete (Rate-card allocation creation).
 - Everything after it in this supplier sequence is not implemented:
   1. SUPPLIER-ALLOCATIONS-RATE-CARD-AUTOMATION-1 (Rate-card allocation automation / overlap enforcement / etc)
-  2. SUPPLIER-BOOKINGS-DESIGN-1
-  3. SUPPLIER-BOOKINGS-1
-  4. SUPPLIER-INVOICES-1
-  5. SUPPLIER-PAYMENTS-1
-  6. SUPPLIER-COSTING-MARGIN-REPORTS-1
+  2. SUPPLIER-BOOKINGS-SCHEMAS-1A: CLOSED
+  3. SUPPLIER-BOOKINGS-PERMISSIONS-1A: CLOSED
+  4. SUPPLIER-BOOKINGS-QUERIES-1A: NEXT
+  5. SUPPLIER-BOOKINGS-ACTIONS-UI-1 (Design/review required before implementation)
+  6. SUPPLIER-INVOICES-1
+  7. SUPPLIER-PAYMENTS-1
+  8. SUPPLIER-COSTING-MARGIN-REPORTS-1
 
 SUPPLIER-ALLOCATIONS-DESIGN-1 (Completed, Design Approved)
 - Status: Completed. Spec sync only.
@@ -1396,9 +1398,26 @@ SUPPLIER-BOOKINGS-FOUNDATION-1 (Completed, Closed)
 - **Deferred**: Supplier Bookings Domain, UI, permissions, actions, pages, and runtime behavior are explicitly deferred to future tasks.
 - Terminology constraint: Uses `Supplier Booking` / `supplier_bookings` / `SBK`. Do not use Internal PO / Purchase Order.
 
+SUPPLIER-BOOKINGS-SCHEMAS-1A (Completed, Closed)
+- Status: Completed, verified, committed, and pushed.
+- Commits: `4147591 feat(suppliers): add supplier bookings domain schemas`
+- Domain foundation includes only `types`, `schemas`, `mappers`, `index` exports.
+- Cost redaction is active by default.
+
+SUPPLIER-BOOKINGS-PERMISSIONS-1A (Completed, Closed)
+- Status: Completed, verified, committed, and pushed.
+- Commits: `27f4bf5 feat(suppliers): add supplier booking permissions`
+- Manager now has: `supplier_bookings:read`, `supplier_bookings:read_cost`, `supplier_bookings:write`, `supplier_bookings:cancel`.
+- Operations, Accountant, Sales, and Viewer have no access.
+
+SUPPLIER-BOOKINGS-QUERIES-1A (NEXT)
+- Next safe implementation slice.
+- Must precede actions/UI implementation.
+
 SUPPLIER-BOOKINGS-RUNTIME-1 (Planned future item)
 - Status: Not implemented, Not started, Not complete.
-- Scope: Domain, UI, permissions, actions, pages, and runtime behavior.
+- Scope: UI, actions, pages, and runtime behavior.
+- Design/review is strictly required before implementation. Actions/UI must not start before queries are complete.
 
 
 

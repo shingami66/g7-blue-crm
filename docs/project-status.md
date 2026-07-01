@@ -399,6 +399,25 @@
 - No supplier costs/details are exposed.
 - Lint and build passed with only pre-existing unrelated Next.js image warnings.
 
+### ✅ SUPPLIER-BOOKINGS-SCHEMAS-1A
+- Status: Completed, verified, committed, and pushed.
+- Implementation commit:
+  - `4147591 feat(suppliers): add supplier bookings domain schemas`
+- Domain foundation currently includes only: `types`, `schemas`, `mappers`, `index` exports.
+- There are still no Supplier Booking queries/actions/UI.
+- Supplier Booking statuses remain limited to: `draft`, `cancelled`.
+- Mapper redacts cost/internal details by default (`canReadCost=false`, `canReadInternalDetails=false`).
+- `createSupplierBookingSchema` accepts only `sourceAllocationId` and does not trust client cost/business fields.
+
+### ✅ SUPPLIER-BOOKINGS-PERMISSIONS-1A
+- Status: Completed, verified, committed, and pushed.
+- Implementation commit:
+  - `27f4bf5 feat(suppliers): add supplier booking permissions`
+- Manager now has: `supplier_bookings:read`, `supplier_bookings:read_cost`, `supplier_bookings:write`, `supplier_bookings:cancel`.
+- Operations, Accountant, Sales, and Viewer have no Supplier Booking permissions in MVP.
+- Admin access remains through wildcard `*`.
+- Next safe slice is `SUPPLIER-BOOKINGS-QUERIES-1A`.
+
 ## 4. Current Active Phase
 
 ### 🚧 Cursor Audit Priority Gates & Blockers
@@ -406,7 +425,9 @@ Cursor audit gate:
 - Current verdict: PROCEED_TO_SUPPLIER_BOOKINGS_DOMAIN.
 - SUPPLIER-AUDIT-COLUMNS-TEXT-FIX-1: CLOSED.
 - SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED.
-- Supplier Bookings Domain may now move to design/planning, but must still follow controlled task workflow.
+- SUPPLIER-BOOKINGS-SCHEMAS-1A: CLOSED.
+- SUPPLIER-BOOKINGS-PERMISSIONS-1A: CLOSED.
+- Next safe slice is `SUPPLIER-BOOKINGS-QUERIES-1A`.
 
 ### 🚧 Locked Next CRM Priorities
 Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.
