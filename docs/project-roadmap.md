@@ -923,16 +923,18 @@ FUTURE SUPPLIER SEQUENCE
 - SUPPLIER-ALLOCATIONS-SERVICE-UI-CANCEL-1D is complete.
 - SUPPLIER-ALLOCATIONS-DELETE-RESTORE-1 is complete (Manual Supplier Allocation lifecycle is now closed).
 - SUPPLIER-ALLOCATIONS-RATE-CARD-CREATE-1 is complete (Rate-card allocation creation).
-- Everything after it in this supplier sequence is not implemented:
+- Supplier Booking foundation slices below show completed progress, the next design/review slice, and future deferred work. Items marked CLOSED are implemented and pushed; items marked NEXT or FUTURE are not implemented yet.
   1. SUPPLIER-ALLOCATIONS-RATE-CARD-AUTOMATION-1 (Rate-card allocation automation / overlap enforcement / etc)
   2. SUPPLIER-BOOKINGS-SCHEMAS-1A: CLOSED
   3. SUPPLIER-BOOKINGS-PERMISSIONS-1A: CLOSED
   4. SUPPLIER-BOOKINGS-QUERIES-1A: CLOSED
-  5. SUPPLIER-BOOKINGS-ACTIONS-1A-DESIGN-REVIEW: NEXT
-  6. SUPPLIER-BOOKINGS-ACTIONS-UI-1 (Design/review required before implementation)
-  7. SUPPLIER-INVOICES-1
-  8. SUPPLIER-PAYMENTS-1
-  9. SUPPLIER-COSTING-MARGIN-REPORTS-1
+  5. SUPPLIER-BOOKINGS-NUMBERING-DB-1: CLOSED
+  6. SUPPLIER-BOOKINGS-ACTIONS-1A: CLOSED
+  7. SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW: NEXT
+  8. SUPPLIER-BOOKINGS-UI-1A-IMPLEMENTATION (Future after UI design/review)
+  9. SUPPLIER-INVOICES-1
+  10. SUPPLIER-PAYMENTS-1
+  11. SUPPLIER-COSTING-MARGIN-REPORTS-1
 
 SUPPLIER-ALLOCATIONS-DESIGN-1 (Completed, Design Approved)
 - Status: Completed. Spec sync only.
@@ -1394,10 +1396,11 @@ SUPPLIER-BOOKINGS-FOUNDATION-1 (Completed, Closed)
   - RLS is enabled; direct table access for `anon` and `authenticated` roles is revoked.
   - Foreign keys (`source_allocation_id`, `service_id`, `supplier_id`) are strictly immutable.
   - Insert triggers (`trg_supplier_bookings_insert_sync_allocation`) enforce business rules, ensuring consistency between `service_supplier_allocations` and the new booking.
-  - Booking numbers are generated server-side using `generate_document_number('supplier_booking')` (e.g. `SBK-YYYY-0001`).
+  - Booking numbers are generated DB-side using `generate_document_number('supplier_booking'::text)` (e.g. `SBK-YYYY-0001`).
   - Indexes exist, including `idx_supplier_bookings_one_active_per_allocation` to enforce at most one active booking per allocation.
-- **Deferred**: Supplier Bookings Domain, UI, permissions, actions, pages, and runtime behavior are explicitly deferred to future tasks.
-- Terminology constraint: Uses `Supplier Booking` / `supplier_bookings` / `SBK`. Do not use Internal PO / Purchase Order.
+- `SUPPLIER-BOOKINGS-NUMBERING-DB-1` closed in commit `d9b2a6d db(suppliers): add supplier booking number default`; manual DB verification confirmed the `public.supplier_bookings.booking_number` column default.
+- **Deferred**: Supplier Booking UI, pages, customer-facing documents/messages/portal, supplier invoices/payments, actual supplier costs, profit/margin reporting, and broader runtime workflows remain future tasks.
+- Terminology constraint: Uses `Supplier Booking` / `supplier_bookings` / `SBK`.
 
 SUPPLIER-BOOKINGS-SCHEMAS-1A (Completed, Closed)
 - Status: Completed, verified, committed, and pushed.
@@ -1416,14 +1419,30 @@ SUPPLIER-BOOKINGS-QUERIES-1A (Completed, Closed)
 - Commits: `578241a feat(suppliers): add supplier booking read queries`
 - Scope: Server-only read queries implemented (`getSupplierBookingsByServiceId`, `getSupplierBookingsBySupplierId`, `getSupplierBookingById`). All queries gate on `supplier_bookings:read` and redact costs/internal details based on `supplier_bookings:read_cost`. Enforce `is_deleted = false`.
 
-SUPPLIER-BOOKINGS-ACTIONS-1A-DESIGN-REVIEW (NEXT)
+SUPPLIER-BOOKINGS-NUMBERING-DB-1 (Completed, Closed)
+- Status: Completed, verified, committed, and pushed.
+- Commits: `d9b2a6d db(suppliers): add supplier booking number default`
+- Scope: `supplier_bookings.booking_number` now defaults DB-side to `generate_document_number('supplier_booking'::text)`.
+- Manual DB verification confirmed the `public.supplier_bookings.booking_number` column default.
+- Create actions must omit `booking_number` and must not call `generate_document_number` manually.
+
+SUPPLIER-BOOKINGS-ACTIONS-1A (Completed, Closed)
+- Status: Completed, reviewed, committed, and pushed.
+- Commits: `8bd98bf feat(suppliers): add supplier booking actions`
+- Scope: Internal-only `createSupplierBookingFromAllocation` and `cancelSupplierBooking` actions.
+- Create accepts only `sourceAllocationId`, derives business/cost fields server-side from the selected allocation, omits `booking_number`, and returns a controlled error for duplicate active Supplier Bookings.
+- Cancel only sets cancellation, status, and audit fields.
+- Supplier Booking UI has not started.
+
+SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW (NEXT)
 - Next safe design review slice.
-- Must precede actions implementation.
+- Must precede UI implementation.
+- Controlled workflow remains: design/review before implementation, implementation before docs sync, commit and push as separate tasks.
 
 SUPPLIER-BOOKINGS-RUNTIME-1 (Planned future item)
 - Status: Not implemented, Not started, Not complete.
-- Scope: UI, actions, pages, and runtime behavior.
-- Design/review is strictly required before implementation. Actions/UI must not start before queries are complete.
+- Scope: UI, pages, and broader runtime behavior.
+- Design/review is strictly required before UI implementation.
 
 
 
