@@ -300,6 +300,27 @@ export async function cancelSupplierBooking(
       return { success: false, error: "Supplier Booking is already cancelled." };
     }
 
+    const { data: service, error: serviceError } = await supabase
+      .from("services")
+      .select("id, status")
+      .eq("id", existingBooking.service_id)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (serviceError) {
+      console.error("[cancelSupplierBooking] Supabase service status error:", serviceError.message);
+      return { success: false, error: "Failed to verify service status. Please try again." };
+    }
+
+    if (!service) {
+      return { success: false, error: "Service is unavailable for Supplier Booking cancellation." };
+    }
+
+    const { status } = service as ServiceStatusRow;
+    if (status === "Completed" || status === "Cancelled") {
+      return { success: false, error: "Service is unavailable for Supplier Booking cancellation." };
+    }
+
     const { data: updatedRow, error: updateError } = await supabase
       .from("supplier_bookings")
       .update({
