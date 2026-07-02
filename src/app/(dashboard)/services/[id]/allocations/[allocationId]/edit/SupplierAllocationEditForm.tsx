@@ -30,6 +30,7 @@ export default function SupplierAllocationEditForm({
   } else if (allocation.status === "selected") {
     statusOptions.push({ value: "selected", label: "Selected" });
   }
+  const isStatusReadOnly = statusOptions.length <= 1;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -167,16 +168,19 @@ export default function SupplierAllocationEditForm({
           </label>
           <select
             id="status"
-            name="status"
+            name={isStatusReadOnly ? undefined : "status"}
             defaultValue={allocation.status}
             required
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-            disabled={isLoading || statusOptions.length <= 1}
+            disabled={isLoading || isStatusReadOnly}
           >
             {statusOptions.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
+          {isStatusReadOnly && (
+            <input type="hidden" name="status" value={allocation.status} />
+          )}
         </div>
 
         <div className="md:col-span-2 space-y-2">
