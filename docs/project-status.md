@@ -378,7 +378,7 @@
 - `SUPPLIER-BOOKINGS-NUMBERING-DB-1` is closed in commit `d9b2a6d db(suppliers): add supplier booking number default`; manual DB verification confirmed the `public.supplier_bookings.booking_number` column default.
 - Indexes exist, including `idx_supplier_bookings_one_active_per_allocation` to enforce at most one active booking per allocation.
 - Terminology constraint: Uses `Supplier Booking` / `supplier_bookings` / `SBK`.
-- **Deferred**: Supplier Booking UI, pages, customer-facing documents/messages/portal, supplier invoices/payments, actual supplier costs, profit/margin reporting, and broader runtime workflows remain future tasks.
+- **Deferred**: Standalone/broader Supplier Booking routes/UI, customer-facing documents/messages/portal, supplier invoices/payments, actual supplier costs, profit/margin reporting, and broader runtime workflows remain future tasks. Narrow internal Service Detail Supplier Booking UI is closed in `SUPPLIER-BOOKINGS-UI-1A`.
 
 ### ✅ SUPPLIER-AUDIT-COLUMNS-TEXT-FIX-1
 - Status: Completed, verified, committed, and pushed.
@@ -405,7 +405,7 @@
 - Implementation commit:
   - `4147591 feat(suppliers): add supplier bookings domain schemas`
 - Domain foundation currently includes only: `types`, `schemas`, `mappers`, `index` exports.
-- Supplier Booking queries and narrow actions are now complete; Supplier Booking UI has not started.
+- Supplier Booking queries, narrow actions, and narrow internal Service Detail UI are now complete; standalone/broader UI remains deferred.
 - Supplier Booking statuses remain limited to: `draft`, `cancelled`.
 - Mapper redacts cost/internal details by default (`canReadCost=false`, `canReadInternalDetails=false`).
 - `createSupplierBookingSchema` accepts only `sourceAllocationId` and does not trust client cost/business fields.
@@ -429,7 +429,7 @@
   - All queries enforce `is_deleted = false`.
   - The `includeDeleted` option was intentionally not implemented in this slice.
   - Cancelled Supplier Bookings remain included as historical internal records.
-  - Supplier Booking actions are now complete; Supplier Booking UI has not started.
+  - Supplier Booking actions and narrow internal Service Detail UI are now complete; standalone/broader UI remains deferred.
 
 ### ✅ SUPPLIER-BOOKINGS-NUMBERING-DB-1
 - Status: Completed, verified, committed, and pushed.
@@ -450,8 +450,20 @@
 - Duplicate active Supplier Booking returns a controlled error.
 - Cancel only sets cancellation, status, and audit fields.
 - Cost and internal details remain protected by `supplier_bookings:read_cost` mapper redaction.
-- Supplier Booking UI has not started.
-- Next safe slice is `SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW` only.
+- Supplier Booking UI 1A is now complete as a narrow internal Service Detail panel; standalone/broader UI remains deferred.
+
+### ✅ SUPPLIER-BOOKINGS-UI-1A
+- Status: Completed, reviewed, committed, and pushed.
+- Implementation commit:
+  - `79473e9 feat(suppliers): add supplier booking service UI`
+- Added narrow internal Service Detail MVP UI only, near Supplier Allocations and before Billing.
+- Read/create/cancel UI is permission-gated: read `supplier_bookings:read`, create `supplier_bookings:write`, cancel `supplier_bookings:cancel`.
+- Create sends only `sourceAllocationId`.
+- Cancel requires a reason and sends only `cancelledReason`.
+- Cost/internal fields display only from permission-safe mapped Supplier Booking data.
+- Supplier Booking statuses remain limited to `draft` and `cancelled`.
+- No standalone route, PDF, customer-facing surface, supplier portal, supplier invoice/payment, actual cost, profit/margin reporting, edit/delete/restore, or status expansion was added.
+- Next safe slice is `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY`.
 
 ## 4. Current Active Phase
 
@@ -465,7 +477,9 @@ Cursor audit gate:
 - SUPPLIER-BOOKINGS-QUERIES-1A: CLOSED.
 - SUPPLIER-BOOKINGS-NUMBERING-DB-1: CLOSED.
 - SUPPLIER-BOOKINGS-ACTIONS-1A: CLOSED.
-- Next safe slice is `SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW`.
+- SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW: CLOSED.
+- SUPPLIER-BOOKINGS-UI-1A: CLOSED.
+- Next safe slice is `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY`.
 
 ### 🚧 Locked Next CRM Priorities
 Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.

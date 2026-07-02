@@ -923,18 +923,20 @@ FUTURE SUPPLIER SEQUENCE
 - SUPPLIER-ALLOCATIONS-SERVICE-UI-CANCEL-1D is complete.
 - SUPPLIER-ALLOCATIONS-DELETE-RESTORE-1 is complete (Manual Supplier Allocation lifecycle is now closed).
 - SUPPLIER-ALLOCATIONS-RATE-CARD-CREATE-1 is complete (Rate-card allocation creation).
-- Supplier Booking foundation slices below show completed progress, the next design/review slice, and future deferred work. Items marked CLOSED are implemented and pushed; items marked NEXT or FUTURE are not implemented yet.
+- Supplier Booking foundation slices below show completed progress, the next smoke verification slice, and future deferred work. Items marked CLOSED are implemented and pushed; items marked NEXT or FUTURE are not implemented yet.
   1. SUPPLIER-ALLOCATIONS-RATE-CARD-AUTOMATION-1 (Rate-card allocation automation / overlap enforcement / etc)
   2. SUPPLIER-BOOKINGS-SCHEMAS-1A: CLOSED
   3. SUPPLIER-BOOKINGS-PERMISSIONS-1A: CLOSED
   4. SUPPLIER-BOOKINGS-QUERIES-1A: CLOSED
   5. SUPPLIER-BOOKINGS-NUMBERING-DB-1: CLOSED
   6. SUPPLIER-BOOKINGS-ACTIONS-1A: CLOSED
-  7. SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW: NEXT
-  8. SUPPLIER-BOOKINGS-UI-1A-IMPLEMENTATION (Future after UI design/review)
-  9. SUPPLIER-INVOICES-1
-  10. SUPPLIER-PAYMENTS-1
-  11. SUPPLIER-COSTING-MARGIN-REPORTS-1
+  7. SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW: CLOSED
+  8. SUPPLIER-BOOKINGS-UI-1A: CLOSED
+  9. SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY: NEXT
+  10. SUPPLIER-BOOKINGS-BROADER-ROUTES-PDFS-MESSAGES-PORTAL-1: FUTURE (standalone Supplier Booking routes, Supplier Booking PDFs, WhatsApp/email, supplier portal, edit/delete/restore, and status expansion)
+  11. SUPPLIER-INVOICES-1: FUTURE
+  12. SUPPLIER-PAYMENTS-1: FUTURE
+  13. SUPPLIER-COSTING-MARGIN-REPORTS-1: FUTURE (actual supplier costs and profit/margin reporting)
 
 SUPPLIER-ALLOCATIONS-DESIGN-1 (Completed, Design Approved)
 - Status: Completed. Spec sync only.
@@ -1399,7 +1401,7 @@ SUPPLIER-BOOKINGS-FOUNDATION-1 (Completed, Closed)
   - Booking numbers are generated DB-side using `generate_document_number('supplier_booking'::text)` (e.g. `SBK-YYYY-0001`).
   - Indexes exist, including `idx_supplier_bookings_one_active_per_allocation` to enforce at most one active booking per allocation.
 - `SUPPLIER-BOOKINGS-NUMBERING-DB-1` closed in commit `d9b2a6d db(suppliers): add supplier booking number default`; manual DB verification confirmed the `public.supplier_bookings.booking_number` column default.
-- **Deferred**: Supplier Booking UI, pages, customer-facing documents/messages/portal, supplier invoices/payments, actual supplier costs, profit/margin reporting, and broader runtime workflows remain future tasks.
+- **Deferred**: Standalone/broader Supplier Booking routes/UI, customer-facing documents/messages/portal, supplier invoices/payments, actual supplier costs, profit/margin reporting, and broader runtime workflows remain future tasks. Narrow internal Service Detail Supplier Booking UI is closed in `SUPPLIER-BOOKINGS-UI-1A`.
 - Terminology constraint: Uses `Supplier Booking` / `supplier_bookings` / `SBK`.
 
 SUPPLIER-BOOKINGS-SCHEMAS-1A (Completed, Closed)
@@ -1432,17 +1434,32 @@ SUPPLIER-BOOKINGS-ACTIONS-1A (Completed, Closed)
 - Scope: Internal-only `createSupplierBookingFromAllocation` and `cancelSupplierBooking` actions.
 - Create accepts only `sourceAllocationId`, derives business/cost fields server-side from the selected allocation, omits `booking_number`, and returns a controlled error for duplicate active Supplier Bookings.
 - Cancel only sets cancellation, status, and audit fields.
-- Supplier Booking UI has not started.
+- Narrow internal Service Detail UI is now complete in `SUPPLIER-BOOKINGS-UI-1A`; standalone/broader UI remains deferred.
 
-SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW (NEXT)
-- Next safe design review slice.
-- Must precede UI implementation.
-- Controlled workflow remains: design/review before implementation, implementation before docs sync, commit and push as separate tasks.
+SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW (Completed, Closed)
+- Status: Completed/reviewed before implementation.
+- Controlled workflow preserved: design/review before implementation, implementation before docs sync, commit and push as separate tasks.
+
+SUPPLIER-BOOKINGS-UI-1A (Completed, Closed)
+- Status: Completed, reviewed, committed, and pushed.
+- Commits: `79473e9 feat(suppliers): add supplier booking service UI`
+- Scope: Narrow internal Service Detail MVP UI only, rendered near Supplier Allocations.
+- Read/create/cancel UI is permission-gated: read `supplier_bookings:read`, create `supplier_bookings:write`, cancel `supplier_bookings:cancel`.
+- Create sends only `sourceAllocationId`.
+- Cancel requires a reason and sends only `cancelledReason`.
+- Cost/internal fields display only from permission-safe mapped Supplier Booking data.
+- Supplier Booking statuses remain limited to `draft` and `cancelled`.
+- No standalone route, PDF, customer-facing surface, supplier portal, supplier invoice/payment, actual cost, profit/margin reporting, edit/delete/restore, or status expansion was added.
+
+SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY (NEXT)
+- Next safe verification slice.
+- Scope: Manual/internal smoke verification of the closed Service Detail Supplier Booking UI only.
+- Must not add standalone routes, pages, PDFs, customer-facing surfaces, supplier portal, supplier invoice/payment, actual cost, profit/margin reporting, edit/delete/restore, or status expansion.
 
 SUPPLIER-BOOKINGS-RUNTIME-1 (Planned future item)
 - Status: Not implemented, Not started, Not complete.
-- Scope: UI, pages, and broader runtime behavior.
-- Design/review is strictly required before UI implementation.
+- Scope: Standalone routes/pages, PDFs, WhatsApp/email, supplier portal, supplier invoices/payments, actual supplier costs, profit/margin reporting, edit/delete/restore, status expansion, and broader runtime behavior.
+- Design/review is strictly required before future UI/runtime expansion.
 
 
 
