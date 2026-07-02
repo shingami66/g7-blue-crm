@@ -16,7 +16,9 @@ import BillingPanel from "./BillingPanel";
 import ServiceStatusControl from "./ServiceStatusControl";
 import SupplierAllocationsPanel from "./SupplierAllocationsPanel";
 import { getSupplierAllocationsByServiceId } from "@/lib/supplier-allocations/queries";
+import { getSupplierBookingsByServiceId } from "@/lib/supplier-bookings/queries";
 import type { Service } from "@/types/service";
+import SupplierBookingsPanel from "./SupplierBookingsPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +89,9 @@ export default async function ServiceDetailPage({
   const canReadCost = await checkPermission("supplier_allocations:read_cost");
   const canWriteAllocations = await checkPermission("supplier_allocations:write");
   const canCancelAllocations = await checkPermission("supplier_allocations:cancel");
+  const canReadSupplierBookings = await checkPermission("supplier_bookings:read");
+  const canWriteSupplierBookings = await checkPermission("supplier_bookings:write");
+  const canCancelSupplierBookings = await checkPermission("supplier_bookings:cancel");
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
   const today = new Date().toISOString().split("T")[0];
@@ -109,6 +114,9 @@ export default async function ServiceDetailPage({
 
   const supplierAllocations = canReadSupplierAllocations
     ? await getSupplierAllocationsByServiceId(service.id, { includeDeleted: showDeleted })
+    : null;
+  const supplierBookings = canReadSupplierBookings
+    ? await getSupplierBookingsByServiceId(service.id)
     : null;
 
   return (
@@ -264,6 +272,15 @@ export default async function ServiceDetailPage({
           serviceId={service.id}
           serviceStatus={service.status}
           showDeleted={showDeleted}
+        />
+      )}
+      {canReadSupplierBookings && supplierBookings && (
+        <SupplierBookingsPanel
+          bookings={supplierBookings}
+          allocations={supplierAllocations ?? []}
+          canCreate={canWriteSupplierBookings}
+          canCancel={canCancelSupplierBookings}
+          serviceStatus={service.status}
         />
       )}
       <BillingPanel billingState={billingState} />
