@@ -349,6 +349,14 @@ export async function updateSupplierAllocation(
       return { success: false, error: "Rate-card allocations cannot be manually updated yet." };
     }
 
+    const bookingCheck = await checkActiveSupplierBooking(supabase, trimmedId);
+    if (bookingCheck.error) {
+      return { success: false, error: bookingCheck.error };
+    }
+    if (bookingCheck.active) {
+      return { success: false, error: "This allocation cannot be modified because it is linked to an active supplier booking." };
+    }
+
     const nextStatus = parsed.data.status ?? existingAllocation.status;
 
     const allowedStatusTransitions: Record<string, string[]> = {
