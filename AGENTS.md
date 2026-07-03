@@ -50,6 +50,14 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - For Service status workflow changes, manually smoke test the guarded manual status actions on `/services/[id]`. Current status changes are manual from the Service detail page; automation remains deferred.
 - For Payments module UI/read changes, manually smoke test `/payments` against live records and confirm the page still reflects `payments:read`-guarded data rather than mock rows.
 
+## Graphify-First Navigation
+
+- Before broad file reads, check `docs/graphify-usage-guide.md` and current `graphify-out/` outputs or `graphify query` to identify candidate files.
+- Treat Graphify as navigation only, never as source of truth.
+- Verify conclusions by reading actual source, docs, migrations/schema, diffs, tests, build output, smoke evidence, or database verification as appropriate.
+- If `graphify-out/` is stale or missing, use targeted `rg` or request a separate approved Graphify refresh task.
+- Do not rely on ignored `graphify-out/` artifacts as proof.
+
 ## Reporting Discipline
 
 For every task that includes numbered inspection questions, checks, or required report sections, the final report must answer every number explicitly. Silent omission is a failed report, not an incomplete one.
