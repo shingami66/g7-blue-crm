@@ -1,18 +1,21 @@
 "use server";
 
-import { requirePermission, getCurrentAppUser } from "@/lib/auth/permissions";
+import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 import { recordPaymentSchema } from "./schemas";
 import type { RecordPaymentResult } from "./types";
 
+const RATE_LIMIT_ERROR = "Too many attempts. Please wait a moment and try again.";
+const RECORD_PAYMENT_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
+
 export async function recordPaymentAction(input: unknown): Promise<RecordPaymentResult> {
   try {
-    await requirePermission("payments:write");
-    const user = await getCurrentAppUser();
+    const user = await requirePermission("payments:write");
 
-    if (!user) {
-      throw new UnauthorizedError("User not found");
+    if (!consumeRateLimit("recordPaymentAction", user.clerk_user_id, RECORD_PAYMENT_RATE_LIMIT)) {
+      return { success: false, error: RATE_LIMIT_ERROR };
     }
 
     const parsed = recordPaymentSchema.safeParse(input);

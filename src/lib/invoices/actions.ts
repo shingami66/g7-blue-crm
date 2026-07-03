@@ -3,6 +3,7 @@
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 import { createInvoiceSchema } from "./schemas";
 import { buildInvoiceSnapshotData } from "./snapshots";
 import { mapRowToQuotationDetail } from "@/lib/quotations/mappers";
@@ -10,10 +11,17 @@ import type { QuotationDetailRow } from "@/lib/quotations/types";
 import type { CreateInvoiceResult, IssueInvoiceResult } from "./types";
 
 const QUOTATION_DETAIL_SELECT = "*, quotation_items(*), customers(company, contact), services(service_number, service_title, status, event_name)";
+const RATE_LIMIT_ERROR = "Too many attempts. Please wait a moment and try again.";
+const CREATE_INVOICE_RATE_LIMIT = { limit: 5, windowMs: 60_000 };
+const ISSUE_INVOICE_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
 
 export async function createInvoiceAction(input: unknown): Promise<CreateInvoiceResult> {
   try {
-    await requirePermission("invoices:write");
+    const user = await requirePermission("invoices:write");
+
+    if (!consumeRateLimit("createInvoiceAction", user.clerk_user_id, CREATE_INVOICE_RATE_LIMIT)) {
+      return { success: false, error: RATE_LIMIT_ERROR };
+    }
 
     const parsed = createInvoiceSchema.safeParse(input);
 
@@ -266,7 +274,11 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
 
 export async function issueInvoiceAction(invoiceId: string): Promise<IssueInvoiceResult> {
   try {
-    await requirePermission("invoices:write");
+    const user = await requirePermission("invoices:write");
+
+    if (!consumeRateLimit("issueInvoiceAction", user.clerk_user_id, ISSUE_INVOICE_RATE_LIMIT)) {
+      return { success: false, error: RATE_LIMIT_ERROR };
+    }
 
     if (!invoiceId || typeof invoiceId !== "string") {
       return { success: false, error: "invalid_invoice_id" };

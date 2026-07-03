@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 import {
   normalizeCompanySettingsInput,
   updateCompanySettingsSchema,
@@ -14,6 +15,9 @@ export type CompanySettingsActionState = {
   message?: string;
   error?: string;
 };
+
+const RATE_LIMIT_ERROR = "Too many attempts. Please wait a moment and try again.";
+const UPDATE_SETTINGS_RATE_LIMIT = { limit: 5, windowMs: 60_000 };
 
 function readFormData(formData: FormData) {
   return {
@@ -42,6 +46,11 @@ export async function updateCompanySettings(
 ): Promise<CompanySettingsActionState> {
   try {
     const user = await requirePermission("settings:write");
+
+    if (!consumeRateLimit("updateCompanySettings", user.clerk_user_id, UPDATE_SETTINGS_RATE_LIMIT)) {
+      return { success: false, error: RATE_LIMIT_ERROR };
+    }
+
     const parsed = updateCompanySettingsSchema.safeParse(readFormData(formData));
 
     if (!parsed.success) {

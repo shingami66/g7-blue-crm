@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 import { getServiceById } from "@/lib/services/queries";
 import { createQuotationSchema, updateQuotationSchema } from "./schemas";
 import type { QuotationRpcResult } from "./types";
@@ -13,6 +14,10 @@ export type ActionResult<T = void> = {
   error?: string;
   data?: T;
 };
+
+const RATE_LIMIT_ERROR = "Too many attempts. Please wait a moment and try again.";
+const CREATE_QUOTATION_RATE_LIMIT = { limit: 5, windowMs: 60_000 };
+const APPROVAL_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
 
 function serviceCanReceiveQuotation(status: string) {
   return status === "Inquiry" || status === "Quoted";
@@ -66,6 +71,11 @@ export async function createQuotation(input: unknown): Promise<ActionResult<Quot
   try {
     const user = await requirePermission("quotations:write");
     await requirePermission("services:read");
+
+    if (!consumeRateLimit("createQuotation", user.clerk_user_id, CREATE_QUOTATION_RATE_LIMIT)) {
+      return { success: false, error: RATE_LIMIT_ERROR };
+    }
+
     const parsed = createQuotationSchema.safeParse(input);
 
     if (!parsed.success) {
@@ -242,6 +252,10 @@ export async function approveQuotation(id: string): Promise<ActionResult> {
   try {
     const user = await requirePermission("quotations:approve");
 
+    if (!consumeRateLimit("approveQuotation", user.clerk_user_id, APPROVAL_RATE_LIMIT)) {
+      return { success: false, error: RATE_LIMIT_ERROR };
+    }
+
     const supabase = createAdminClient();
 
     // Check status before approving
@@ -308,6 +322,10 @@ export async function approveQuotation(id: string): Promise<ActionResult> {
 export async function rejectQuotation(id: string): Promise<ActionResult> {
   try {
     const user = await requirePermission("quotations:approve");
+
+    if (!consumeRateLimit("rejectQuotation", user.clerk_user_id, APPROVAL_RATE_LIMIT)) {
+      return { success: false, error: RATE_LIMIT_ERROR };
+    }
 
     const supabase = createAdminClient();
 
