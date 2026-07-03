@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Bell, UserCircle, LogOut } from "lucide-react";
+import { Search, Bell, UserCircle, LogOut, ChevronDown } from "lucide-react";
 import { useAuth, SignInButton, SignOutButton } from "@clerk/nextjs";
 
 export default function Topbar() {
@@ -29,17 +29,30 @@ export default function Topbar() {
           <Bell size={20} />
         </button>
         {isSignedIn ? (
-          <SignOutButton redirectUrl="/sign-in">
-            <button
-              type="button"
-              aria-label="Sign out"
-              title="Sign out"
-              className="inline-flex items-center gap-2 px-3 py-2 text-[12px] leading-[16px] font-semibold text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-low rounded-lg"
+          <details className="group relative">
+            <summary
+              aria-label="Open account menu"
+              title="Account"
+              className="flex cursor-pointer list-none items-center gap-1 rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary [&::-webkit-details-marker]:hidden"
             >
-              <LogOut size={18} />
-              <span className="hidden sm:inline">Sign Out</span>
-            </button>
-          </SignOutButton>
+              <UserCircle size={20} />
+              <ChevronDown
+                size={14}
+                className="transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-lg border border-outline-variant bg-surface-container-lowest py-1 shadow-lg">
+              <SignOutButton redirectUrl="/sign-in">
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-semibold leading-[16px] text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary"
+                >
+                  <LogOut size={16} />
+                  <span>Sign Out</span>
+                </button>
+              </SignOutButton>
+            </div>
+          </details>
         ) : (
           <SignInButton>
             <button className="p-2 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-low rounded-full">
