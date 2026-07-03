@@ -46,7 +46,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - After staging, run `git diff --cached --stat` and `git diff --cached --check`.
 - Do not force push. Open PRs only when requested.
 - For Services or Quotations UI work, manually smoke test the live ERP path `Customer Profile -> Service -> Quotation`, including `/customers/[id]`, `/services`, `/services/new`, `/services/[id]`, `/services/[id]/edit`, and `/quotations/new?serviceId=<service-id>`.
-- For Service billing or supplier allocation UI work, manually smoke test `/services/[id]`, deposit/final invoice actions in the Billing panel, `/services/[id]/allocations/new`, `/services/[id]/allocations/[allocationId]/edit`, `/cancel`, `/delete`, `/restore`, and `?showDeleted=true` when delete/restore behavior changes.
+- For Service billing, supplier allocation, or Supplier Booking UI work, manually smoke test `/services/[id]`, deposit/final invoice actions in the Billing panel, `/services/[id]/allocations/new`, `/services/[id]/allocations/[allocationId]/edit`, allocation `/cancel`, `/delete`, `/restore`, `?showDeleted=true` when delete/restore behavior changes, and the Service Detail Supplier Bookings panel create/cancel flow from selected allocations.
 - For Service status workflow changes, manually smoke test the guarded manual status actions on `/services/[id]`. Current status changes are manual from the Service detail page; automation remains deferred.
 - For Payments module UI/read changes, manually smoke test `/payments` against live records and confirm the page still reflects `payments:read`-guarded data rather than mock rows.
 
@@ -165,6 +165,16 @@ Never skip review gates for SQL, migrations, RLS, RPC, triggers, grants/revokes,
 - New, updated, restored, or cancelled allocations must stay blocked when the parent Service is `Completed` or `Cancelled`.
 - Manual allocation edit is currently limited to non-deleted, non-cancelled `manual_estimate` rows; rate-card allocations can be created but are not manually editable in this slice.
 - Cancel preserves allocation history as `status = cancelled`; delete/restore uses the hidden-record path and `?showDeleted=true` on the Service detail view.
+- Allocations linked to an active Supplier Booking must not be updated, cancelled, deleted, or restored until that booking is cancelled.
+
+## Supplier Booking Lessons
+
+- Supplier Bookings are internal-only Service Detail records created from selected supplier allocations. Do not add standalone routes, PDFs, portals, or customer-facing surfaces for this slice.
+- Supplier Booking access is Manager/Admin-only via `supplier_bookings:read`, `supplier_bookings:read_cost`, `supplier_bookings:write`, and `supplier_bookings:cancel`; operations, sales, accountant, and viewer currently have no access.
+- Create accepts only `sourceAllocationId`, derives business and cost fields server-side from the selected allocation, and must not manually set `booking_number`.
+- Supplier Booking costs and internal details must remain permission-redacted unless `supplier_bookings:read_cost` is granted.
+- Active Supplier Bookings are limited to one per source allocation; current statuses remain `draft` and `cancelled`, and cancellation requires a reason.
+- New or cancelled Supplier Bookings must stay blocked when the parent Service is `Completed` or `Cancelled`.
 
 ## Product Direction
 
