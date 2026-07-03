@@ -1,5 +1,7 @@
 "use client";
 
+import Button from "@/components/ui/Button";
+
 interface PaginationFooterProps {
   currentPage: number;
   totalPages: number;
@@ -19,39 +21,39 @@ export default function PaginationFooter({
     <div
       className={`bg-surface-container-lowest border-t border-surface-variant p-4 flex justify-between items-center rounded-b-xl border border-x-0 border-b-0 ${className}`}
     >
-      <button
+      <Button
         disabled={currentPage === 1}
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-        className="px-3 py-1 bg-surface border border-outline-variant rounded text-[14px] text-on-surface hover:bg-surface-container-low disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         aria-label="Previous page"
+        size="sm"
+        variant="outline"
       >
         Previous
-      </button>
+      </Button>
       <div className="flex gap-1">
         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-          <button
+          <Button
             key={page}
             onClick={() => onPageChange(page)}
-            className={`w-8 h-8 flex items-center justify-center rounded text-[14px] font-semibold transition-colors ${
-              currentPage === page
-                ? "bg-primary text-white"
-                : "bg-surface text-on-surface hover:bg-surface-container-low border border-transparent hover:border-outline-variant"
-            }`}
             aria-label={`Page ${page}`}
             aria-current={currentPage === page ? "page" : undefined}
+            className="h-8 w-8 rounded"
+            size="icon"
+            variant={currentPage === page ? "primary" : "ghost"}
           >
             {page}
-          </button>
+          </Button>
         ))}
       </div>
-      <button
+      <Button
         disabled={currentPage === totalPages}
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-        className="px-3 py-1 bg-surface border border-outline-variant rounded text-[14px] text-on-surface hover:bg-surface-container-low disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         aria-label="Next page"
+        size="sm"
+        variant="outline"
       >
         Next
-      </button>
+      </Button>
     </div>
   );
 }

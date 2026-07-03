@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Search, Bell, UserCircle, LogOut, ChevronDown } from "lucide-react";
 import { useAuth, SignInButton, useClerk } from "@clerk/nextjs";
+import Button from "@/components/ui/Button";
 
 export default function Topbar() {
   const { isSignedIn } = useAuth();
@@ -42,9 +43,14 @@ export default function Topbar() {
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        <button className="p-2 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-low rounded-full">
+        <Button
+          aria-label="Notifications"
+          className="rounded-full"
+          size="icon"
+          variant="ghost"
+        >
           <Bell size={20} />
-        </button>
+        </Button>
         {isSignedIn ? (
           <details className="group relative">
             <summary
@@ -59,23 +65,29 @@ export default function Topbar() {
               />
             </summary>
             <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-lg border border-outline-variant bg-surface-container-lowest py-1 shadow-lg">
-              <button
-                type="button"
+              <Button
                 aria-label="Sign out"
-                disabled={isSigningOut}
+                className="w-full justify-start rounded-none px-3 py-2 text-left text-[12px] leading-[16px]"
+                loading={isSigningOut}
                 onClick={handleSignOut}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-semibold leading-[16px] text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                size="sm"
+                variant="ghost"
               >
                 <LogOut size={16} />
                 <span>{isSigningOut ? "Signing out..." : "Sign Out"}</span>
-              </button>
+              </Button>
             </div>
           </details>
         ) : (
           <SignInButton>
-            <button className="p-2 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-low rounded-full">
+            <Button
+              aria-label="Sign in"
+              className="rounded-full"
+              size="icon"
+              variant="ghost"
+            >
               <UserCircle size={20} />
-            </button>
+            </Button>
           </SignInButton>
         )}
       </div>

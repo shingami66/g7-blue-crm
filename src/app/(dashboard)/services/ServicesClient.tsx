@@ -6,6 +6,7 @@ import FilterBar from "@/components/ui/FilterBar";
 import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
+import Button from "@/components/ui/Button";
 import { Filter, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -49,13 +50,12 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
         subtitle="Manage client services, event bookings, and operational workflow."
       >
         {canWrite && (
-          <Link
-            href="/services/new"
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-[14px] font-semibold hover:bg-primary-container transition-colors"
-          >
-            <Plus size={18} />
-            New Service
-          </Link>
+          <Button asChild>
+            <Link href="/services/new">
+              <Plus size={18} />
+              New Service
+            </Link>
+          </Button>
         )}
       </PageHeader>
 

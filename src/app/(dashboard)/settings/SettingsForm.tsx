@@ -14,6 +14,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import type { CompanySettingsPageData } from "@/types/settings";
 import { updateCompanySettings } from "@/lib/settings/actions";
 import type { CompanySettingsActionState } from "@/lib/settings/actions";
+import Button from "@/components/ui/Button";
 
 const fieldClass =
   "w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-[14px] focus:border-primary focus:ring-1 focus:ring-primary outline-none disabled:bg-surface disabled:text-on-surface-variant disabled:cursor-not-allowed";
@@ -145,33 +146,30 @@ export default function SettingsForm({
         {canEdit ? (
           isEditing ? (
             <div className="flex items-center gap-3">
-              <button
-                type="button"
+              <Button
                 onClick={handleCancel}
                 disabled={pending}
-                className="text-[14px] font-semibold text-on-surface hover:text-on-surface-variant transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                variant="ghost"
               >
                 Cancel
-              </button>
-              <button
-                type="submit"
+              </Button>
+              <Button
                 form="company-settings-form"
-                disabled={pending}
-                className="flex items-center gap-2 bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                loading={pending}
+                type="submit"
               >
                 <Save size={18} />
                 {pending ? "Saving..." : "Save Changes"}
-              </button>
+              </Button>
             </div>
           ) : (
-            <button
-              type="button"
+            <Button
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 bg-surface-container-high hover:bg-surface-container-highest text-on-surface px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors"
+              variant="secondary"
             >
               <Settings2 size={18} />
               Edit Settings
-            </button>
+            </Button>
           )
         ) : (
           <div className="flex items-center gap-2 text-[13px] text-on-surface-variant bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2">
