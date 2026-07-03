@@ -151,16 +151,16 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** Deposit/final invoices must be created from Approved Quotation + Service. No invoice without Service. No invoice without Approved Quotation. Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
 ## Production RLS Hardening
-- **Status:** SEC-RLS-BASELINE-1 manual Supabase SQL Editor apply and database verification completed; remaining production hardening is still required before hosted demo with real/semi-real data.
-- **Reason deferred:** Development used `DEV_ONLY` RLS policies while application-level RBAC was being stabilized. The reviewed SEC-RLS-BASELINE-1 migration has now been manually applied and verified in the live database; DEV_ONLY policies returned zero rows and broad authenticated `USING true` / `WITH CHECK true` policies returned zero rows.
-- **When to return:** Before any hosted demo with real/semi-real data and before production.
-- **Known requirements:** RLS enabled checks passed for affected tables. Quotation RPC grants were verified as `anon_execute = false`, `authenticated_execute = false`, and `service_role_execute = true`. Real/semi-real data remains blocked by remaining production hardening and pre-demo controls: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production. It is no longer blocked by SEC-RLS manual apply itself. Review anon access, service-role paths, admin client server-only usage, and table-level policies. Add explicit production RLS follow-up for `company_settings` because it contains bank, legal, and VAT data. Do not treat UI hiding as security; server-side permission checks and server-side masking are required.
+- **Status:** SEC-RLS-BASELINE-1 manual Supabase SQL Editor apply and database verification completed; STAB-P0-04 repo hardening is complete, but the `company_settings` production RLS migration still needs to be applied to the remote Supabase database before real/semi-real production use.
+- **Reason deferred:** Development used `DEV_ONLY` RLS policies while application-level RBAC was being stabilized. The reviewed SEC-RLS-BASELINE-1 migration was manually applied and verified in the live database; STAB-P0-04 added repo-level env validation, sensitive Server Action rate limiting, and a production `company_settings` RLS migration.
+- **When to return:** Before any hosted demo with real/semi-real data and before production remote-db apply.
+- **Known requirements:** RLS enabled checks passed for affected tables. Quotation RPC grants were verified as `anon_execute = false`, `authenticated_execute = false`, and `service_role_execute = true`. Remaining production hardening is now mostly operational follow-up: remote apply of the `company_settings` RLS migration, demo-data/security decision, Viewer bank masking verification, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production. Do not treat UI hiding as security; server-side permission checks and server-side masking are required.
 
 ## Sensitive Server Action Rate Limiting
-- **Status:** Deferred; required before production or any real/semi-real hosted demo.
-- **Reason deferred:** Core ERP workflow is still being planned.
-- **When to return:** Before exposing sensitive write paths outside local/dev usage.
-- **Known requirements:** Consider rate limiting quotation creation, quotation approval, invoice creation, payment recording, and settings update. Rate limiting must complement server-side auth/RBAC and must not replace permission checks.
+- **Status:** Implemented in repo as MVP single-instance in-memory rate limiting; still requires a distributed follow-up before high-scale production if multi-instance concurrency matters.
+- **Reason deferred:** The current guard is intentionally lightweight and process-local.
+- **When to return:** Before multi-instance production traffic or if stronger central enforcement is needed.
+- **Known requirements:** Rate limiting now covers quotation creation, quotation approval/rejection, invoice creation/issue, payment recording, and settings update. It complements server-side auth/RBAC and does not replace permission checks.
 
 ## Viewer Bank Detail Masking Verification
 - **Status:** Deferred test case; required before real/semi-real data.

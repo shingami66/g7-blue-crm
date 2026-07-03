@@ -359,14 +359,14 @@ Status: Required if demo uses real or semi-real data
 Checklist:
 - [ ] Confirm whether demo data is fake, semi-real, or real.
 - [x] SEC-RLS-BASELINE-1 manual Supabase apply and database verification completed; DEV_ONLY broad authenticated policies were removed from the live database.
-- [ ] If real/semi-real data is used, complete remaining production hardening and pre-demo controls before hosted demo: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
-- [ ] Add explicit production RLS plan for `company_settings` because it contains bank, legal, and VAT data.
+- [ ] If real/semi-real data is used, complete remaining production hardening and pre-demo controls before hosted demo: apply the `company_settings` production RLS migration to the remote Supabase database, finalize the demo-data/security decision, verify Viewer bank masking, confirm raw error/security checks where applicable, and complete backup/monitoring/deployment readiness before production.
+- [x] Add explicit production RLS plan for `company_settings` because it contains bank, legal, and VAT data.
 - [ ] Verify Supabase admin/service role usage stays server-side only.
 - [ ] Confirm no raw database/Supabase errors are exposed to UI.
 - [ ] Confirm no secrets are present in committed files.
 - [ ] Confirm auth redirects and Access Denied states are correct.
 - [ ] Verify Viewer opening `/settings` does not receive full IBAN, bank account holder, or bank account values in client data.
-- [ ] Plan rate limiting for sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
+- [x] Plan rate limiting for sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
 - [ ] Confirm UI hiding is not treated as security; server-side permission checks and server-side masking are required.
 
 ### Phase CS - Company Settings Mini

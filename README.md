@@ -11,7 +11,7 @@ Customer Profile -> Service / Booking -> Quotation -> Invoice -> Payment
 - Customers, RBAC, quotations foundation, quotation manual entry/edit/detail/print, Company Settings CS-A, and the ERP-1 Services DB foundation are documented as complete.
 - Services now exist as the new operational unit at the DB foundation level, but Services UI/routes/server actions remain pending.
 - Quotations, invoices, and payments are still being moved toward the final Service-linked ERP flow.
-- Real or semi-real data remains blocked until production RLS hardening replaces `DEV_ONLY` policies.
+- Real or semi-real data remains blocked until the `company_settings` production RLS migration is applied to the remote Supabase database and the remaining production-hardening follow-up is finished.
 
 ## Approved ERP Rules
 
@@ -70,4 +70,4 @@ Documentation-only changes do not require app build, migrations, or database com
 - Do not trust client financial totals.
 - Keep Supabase admin access server-side only.
 - Use `requirePermission` for write Server Actions and respect RBAC on reads.
-- Production RLS hardening is required before any hosted demo with real or semi-real data.
+- Production RLS hardening is partially in-repo; remote Supabase apply and remaining production follow-up are still required before any hosted demo with real or semi-real data.
