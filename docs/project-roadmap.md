@@ -167,7 +167,7 @@ Checklist:
 - [x] Do not apply SQL automatically.
 - [x] `SETTINGS-EDIT-MODE-1` remains separate/deferred.
 
-TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. However, real or semi-real company/client data remains blocked until remaining production hardening and pre-demo controls are complete: `company_settings` production RLS follow-up, demo-data/security decision, Viewer bank masking verification, sensitive Server Action rate limiting, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
+TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. STAB-P0-04 remote DB apply is now complete and verified for both the supplier booking number default and the `company_settings` production RLS migration. Real or semi-real company/client data remains blocked only by the remaining operational hardening items: demo-data/security decision, Viewer bank masking verification, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
 
 ### QUOTE-VALIDITY-RULE-1 - Enforce Quotation Validity Against Service Schedule
 Status: Completed

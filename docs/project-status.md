@@ -375,7 +375,7 @@
 - Insert triggers (`trg_supplier_bookings_insert_sync_allocation`) enforce business rules, ensuring consistency between `service_supplier_allocations` and the new booking.
 - `number_sequences_type_check` includes `supplier_booking`.
 - Booking numbers are generated DB-side using `generate_document_number('supplier_booking'::text)` (e.g. `SBK-YYYY-0001`).
-- `SUPPLIER-BOOKINGS-NUMBERING-DB-1` is closed in commit `d9b2a6d db(suppliers): add supplier booking number default`; manual DB verification confirmed the `public.supplier_bookings.booking_number` column default.
+- `SUPPLIER-BOOKINGS-NUMBERING-DB-1` is closed in commit `d9b2a6d db(suppliers): add supplier booking number default`; remote DB verification confirmed the `public.supplier_bookings.booking_number` column default.
 - Indexes exist, including `idx_supplier_bookings_one_active_per_allocation` to enforce at most one active booking per allocation.
 - Terminology constraint: Uses `Supplier Booking` / `supplier_bookings` / `SBK`.
 - **Deferred**: Standalone/broader Supplier Booking routes/UI, customer-facing documents/messages/portal, supplier invoices/payments, actual supplier costs, profit/margin reporting, and broader runtime workflows remain future tasks. Narrow internal Service Detail Supplier Booking UI is closed in `SUPPLIER-BOOKINGS-UI-1A`.
@@ -436,7 +436,7 @@
 - Implementation commit:
   - `d9b2a6d db(suppliers): add supplier booking number default`
 - `supplier_bookings.booking_number` generation is DB-side via `generate_document_number('supplier_booking'::text)`.
-- Manual DB verification confirmed the `public.supplier_bookings.booking_number` column default.
+- Remote DB verification confirmed the `public.supplier_bookings.booking_number` column default.
 - Supplier Booking create code omits `booking_number` and does not call `generate_document_number` manually.
 
 ### ✅ SUPPLIER-BOOKINGS-ACTIONS-1A
@@ -1425,7 +1425,7 @@ Current decision gates before ERP implementation:
 - **Company Settings:** CS-A is live settings only. CS-B document snapshots remain deferred. Old documents must not mutate when Company Settings changes.
 - **VAT/ZATCA safety:** The current implemented Company Settings VAT field is `company_settings.vat_mode`. `not_registered` means VAT defaults to `0`, VAT number/effective date remain null, and no premature Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, reporting, or Phase 2 claims are allowed.
 - **Financial trust and retention:** Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic. Financial records must use void/cancel/reversal workflows rather than hard deletion. Use soft delete for business records where applicable.
-- **Security:** Do not treat UI hiding as security. Server-side permission checks and server-side masking are required. Production RLS for `company_settings` is now added in-repo, but the migration still needs to be applied to the remote database because it contains bank/legal/VAT data.
+- **Security:** Do not treat UI hiding as security. Server-side permission checks and server-side masking are required. Production RLS for `company_settings` is now applied and verified on the remote database because it contains bank/legal/VAT data.
 - **Viewer bank masking test:** Viewer opens `/settings`; response/data passed to the client must not include full IBAN, bank account holder, or bank account values.
 - **Sensitive Server Action rate limiting:** Consider rate limiting quotation creation, quotation approval, invoice creation, payment recording, and settings update.
 - **Phase ordering:** TAX-0 cleanup should happen before ERP implementation. ERP-0 may be planning/report-only before TAX-0, but implementation should not proceed before premature tax/ZATCA wording is cleaned or explicitly accepted as a known risk.
