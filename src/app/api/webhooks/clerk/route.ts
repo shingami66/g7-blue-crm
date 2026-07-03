@@ -2,14 +2,15 @@ import { NextRequest } from "next/server";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CRM_ROLES } from "@/lib/admin/users/schemas";
+import { getServerEnv } from "@/lib/env";
 import type { WebhookEvent, UserWebhookEvent } from "@clerk/nextjs/server";
 
 const NO_ROW_ERROR_CODE = "PGRST116";
 
 export async function POST(req: NextRequest) {
-  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
+  const { CLERK_WEBHOOK_SIGNING_SECRET: webhookSecret } = getServerEnv();
 
-  if (!WEBHOOK_SECRET) {
+  if (!webhookSecret) {
     console.error("[Clerk Webhook] Missing CLERK_WEBHOOK_SIGNING_SECRET in environment variables.");
     return new Response("Server configuration error", { status: 500 });
   }
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
   let evt: WebhookEvent;
   try {
     evt = await verifyWebhook(req, {
-      signingSecret: WEBHOOK_SECRET,
+      signingSecret: webhookSecret,
     });
   } catch (err) {
     console.error("[Clerk Webhook] Error verifying webhook:", err);

@@ -1,27 +1,74 @@
 import { z } from "zod";
 
-const envSchema = z.object({
+const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+  NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1),
+  NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1),
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: z.string().min(1),
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: z.string().min(1),
 });
 
-const parsed = envSchema.safeParse({
+const serverEnvSchema = z.object({
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  CLERK_SECRET_KEY: z.string().min(1),
+  CLERK_WEBHOOK_SIGNING_SECRET: z.string().min(1),
+});
+
+type PublicEnv = z.infer<typeof publicEnvSchema>;
+type ServerEnv = z.infer<typeof serverEnvSchema>;
+
+function failInvalidEnv(scope: "public" | "server", error: z.ZodError) {
+  const invalidKeys = error.issues
+    .map((issue) => issue.path.join("."))
+    .filter(Boolean)
+    .join(", ");
+
+  console.error(`Invalid ${scope} environment variables: ${invalidKeys}`);
+  throw new Error(`Invalid ${scope} environment variables`);
+}
+
+function parseEnv<T>(
+  scope: "public" | "server",
+  schema: z.ZodType<T>,
+  values: Record<string, unknown>
+): T {
+  const result = schema.safeParse(values);
+
+  if (!result.success) {
+    failInvalidEnv(scope, result.error);
+  }
+
+  return result.data as T;
+}
+
+export const publicEnv: PublicEnv = parseEnv("public", publicEnvSchema, {
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
+  NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL,
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL,
 });
 
-if (!parsed.success) {
-  console.error("Invalid environment variables");
-  throw new Error("Invalid environment variables");
+let cachedServerEnv: ServerEnv | null = null;
+
+export function getServerEnv(): ServerEnv {
+  if (typeof window !== "undefined") {
+    throw new Error("Server environment variables must not be accessed in the browser.");
+  }
+
+  if (cachedServerEnv) {
+    return cachedServerEnv;
+  }
+
+  cachedServerEnv = parseEnv("server", serverEnvSchema, {
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    CLERK_WEBHOOK_SIGNING_SECRET: process.env.CLERK_WEBHOOK_SIGNING_SECRET,
+  });
+
+  return cachedServerEnv;
 }
-
-const env = parsed.data;
-
-if (typeof window === "undefined" && !env.SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("SUPABASE_SERVICE_ROLE_KEY is required on the server");
-  throw new Error("SUPABASE_SERVICE_ROLE_KEY is required on the server");
-}
-
-export { env };
