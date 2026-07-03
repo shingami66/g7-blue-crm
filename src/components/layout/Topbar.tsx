@@ -1,10 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { Search, Bell, UserCircle, LogOut, ChevronDown } from "lucide-react";
-import { useAuth, SignInButton, SignOutButton } from "@clerk/nextjs";
+import { useAuth, SignInButton, useClerk } from "@clerk/nextjs";
 
 export default function Topbar() {
   const { isSignedIn } = useAuth();
+  const { signOut } = useClerk();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  async function handleSignOut() {
+    if (isSigningOut) {
+      return;
+    }
+
+    setIsSigningOut(true);
+
+    try {
+      await signOut({ redirectUrl: "/sign-in" });
+    } finally {
+      setIsSigningOut(false);
+    }
+  }
 
   return (
     <header className="sticky top-0 right-0 z-40 bg-surface border-b border-outline-variant flex justify-between items-center h-16 px-6">
@@ -42,15 +59,16 @@ export default function Topbar() {
               />
             </summary>
             <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-lg border border-outline-variant bg-surface-container-lowest py-1 shadow-lg">
-              <SignOutButton redirectUrl="/sign-in">
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-semibold leading-[16px] text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary"
-                >
-                  <LogOut size={16} />
-                  <span>Sign Out</span>
-                </button>
-              </SignOutButton>
+              <button
+                type="button"
+                aria-label="Sign out"
+                disabled={isSigningOut}
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-semibold leading-[16px] text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <LogOut size={16} />
+                <span>{isSigningOut ? "Signing out..." : "Sign Out"}</span>
+              </button>
             </div>
           </details>
         ) : (
