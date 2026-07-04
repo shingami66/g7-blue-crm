@@ -46,6 +46,12 @@
 - [x] UI started with mock data
 - [x] modules being converted gradually to live Supabase data
 
+### âœ… Global Pending UX
+- [x] Approved global centered pending bolt UX is implemented and pushed in `aad0ca5 feat(ui): add global centered pending bolt`.
+- [x] Shared `Button` loading state now drives the global centered bolt pattern in the authenticated dashboard.
+- [x] Dashboard route loading uses the same bolt indicator.
+- [x] No backdrop, visible loading text, or spinner is used.
+
 ### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
 - [x] Supabase client/admin setup exists
@@ -86,6 +92,12 @@
 - [x] This fix does not solve production RLS hardening; that remains separate/deferred.
 - [x] Implementation passed manual verification by Mozfer (active admin access works, unapproved Clerk users are blocked and see `/unauthorized`, direct route access is blocked).
 - [x] `QUOTE-APPROVAL-FLOW-1B` remains in stash, pending restoration and smoke after this security fix is committed/merged.
+
+### âœ… STAB-P0-04 / Global Pending UX
+- [x] Repo-level env validation for the dashboard server paths was centralized.
+- [x] Sensitive authenticated Server Actions now use MVP single-instance in-memory rate limiting.
+- [x] The production `company_settings` RLS migration is committed in-repo and the remote Supabase apply has been verified.
+- [x] The centered bolt loader is the approved polished MVP loading mark for dashboard pending states.
 
 ### âœ… CUSTOMER-NUMBER-1
 - [x] DB migration applied manually, adding `customer_number` sequence.

@@ -167,7 +167,7 @@ Checklist:
 - [x] Do not apply SQL automatically.
 - [x] `SETTINGS-EDIT-MODE-1` remains separate/deferred.
 
-TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. STAB-P0-04 remote DB apply is now complete and verified for both the supplier booking number default and the `company_settings` production RLS migration. Real or semi-real company/client data remains blocked only by the remaining operational hardening items: demo-data/security decision, Viewer bank masking verification, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
+TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. STAB-P0-04 remote DB apply is complete and verified for both the supplier booking number default and the `company_settings` production RLS migration. Real or semi-real company/client data remains blocked only by the remaining operational hardening items: demo-data/security decision, Viewer bank masking verification, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
 
 ### QUOTE-VALIDITY-RULE-1 - Enforce Quotation Validity Against Service Schedule
 Status: Completed
@@ -359,13 +359,18 @@ Status: Required if demo uses real or semi-real data
 Checklist:
 - [ ] Confirm whether demo data is fake, semi-real, or real.
 - [x] SEC-RLS-BASELINE-1 manual Supabase apply and database verification completed; DEV_ONLY broad authenticated policies were removed from the live database.
-- [ ] If real/semi-real data is used, complete remaining production hardening and pre-demo controls before hosted demo: apply the `company_settings` production RLS migration to the remote Supabase database, finalize the demo-data/security decision, verify Viewer bank masking, confirm raw error/security checks where applicable, and complete backup/monitoring/deployment readiness before production.
+- [ ] If real/semi-real data is used, complete remaining production hardening and pre-demo controls before hosted demo: finalize the demo-data/security decision, verify Viewer bank masking, confirm raw error/security checks where applicable, and complete backup/monitoring/deployment readiness before production. The `company_settings` production RLS migration is already applied and verified.
 - [x] Add explicit production RLS plan for `company_settings` because it contains bank, legal, and VAT data.
 - [ ] Verify Supabase admin/service role usage stays server-side only.
 - [ ] Confirm no raw database/Supabase errors are exposed to UI.
 - [ ] Confirm no secrets are present in committed files.
 - [ ] Confirm auth redirects and Access Denied states are correct.
 - [ ] Verify Viewer opening `/settings` does not receive full IBAN, bank account holder, or bank account values in client data.
+- [x] Global centered pending bolt UX is implemented and pushed.
+- [x] Shared dashboard `Button` loading now triggers the global centered bolt pattern.
+- [x] Supplier Allocation and Supplier Booking action flows use the global pending UX.
+- [x] Dashboard loading route exists and uses the same bolt indicator.
+- [x] No backdrop, visible loading text, or spinner is used.
 - [x] Plan rate limiting for sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
 - [ ] Confirm UI hiding is not treated as security; server-side permission checks and server-side masking are required.
 

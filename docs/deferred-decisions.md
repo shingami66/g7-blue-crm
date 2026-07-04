@@ -151,16 +151,22 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** Deposit/final invoices must be created from Approved Quotation + Service. No invoice without Service. No invoice without Approved Quotation. Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
 ## Production RLS Hardening
-- **Status:** SEC-RLS-BASELINE-1 manual Supabase SQL Editor apply and database verification completed; STAB-P0-04 remote DB apply is complete and verified for both pending migrations.
-- **Reason deferred:** Development used `DEV_ONLY` RLS policies while application-level RBAC was being stabilized. The reviewed SEC-RLS-BASELINE-1 migration was manually applied and verified in the live database; STAB-P0-04 added repo-level env validation, sensitive Server Action rate limiting, and the production `company_settings` RLS migration, then applied both migrations to the remote Supabase project.
+- **Status:** SEC-RLS-BASELINE-1 manual Supabase SQL Editor apply and database verification completed; STAB-P0-04 remote DB apply is complete and verified for both committed migrations.
+- **Reason deferred:** Development used `DEV_ONLY` RLS policies while application-level RBAC was being stabilized. The reviewed SEC-RLS-BASELINE-1 migration was manually applied and verified in the live database; STAB-P0-04 added repo-level env validation, sensitive Server Action rate limiting, and the production `company_settings` RLS migration, then applied the committed migrations to the remote Supabase project.
 - **When to return:** Before any hosted demo with real/semi-real data and before production operational hardening.
 - **Known requirements:** RLS enabled checks passed for affected tables. Quotation RPC grants were verified as `anon_execute = false`, `authenticated_execute = false`, and `service_role_execute = true`. Remaining production hardening is now mostly operational follow-up: demo-data/security decision, Viewer bank masking verification, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production. Do not treat UI hiding as security; server-side permission checks and server-side masking are required.
 
 ## Sensitive Server Action Rate Limiting
-- **Status:** Implemented in repo as MVP single-instance in-memory rate limiting; still requires a distributed follow-up before high-scale production if multi-instance concurrency matters.
-- **Reason deferred:** The current guard is intentionally lightweight and process-local.
+- **Status:** Implemented in repo as MVP single-instance in-memory rate limiting.
+- **Reason deferred:** The current guard is intentionally lightweight and process-local; a distributed follow-up is only needed if multi-instance concurrency or stronger central enforcement becomes important.
 - **When to return:** Before multi-instance production traffic or if stronger central enforcement is needed.
 - **Known requirements:** Rate limiting now covers quotation creation, quotation approval/rejection, invoice creation/issue, payment recording, and settings update. It complements server-side auth/RBAC and does not replace permission checks.
+
+## Global Pending Bolt UX
+- **Status:** Implemented and pushed.
+- **Reason deferred:** The current centered bolt is the approved polished MVP loading mark; any future visual refinement is optional rather than required.
+- **When to return:** Only if a future design pass is requested.
+- **Known requirements:** The global centered bolt is driven by shared dashboard `Button` loading state, appears in dashboard loading, and deliberately uses no backdrop, visible loading text, or spinner.
 
 ## Viewer Bank Detail Masking Verification
 - **Status:** Deferred test case; required before real/semi-real data.
