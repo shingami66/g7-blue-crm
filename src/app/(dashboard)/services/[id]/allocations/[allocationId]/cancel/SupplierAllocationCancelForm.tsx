@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { cancelSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import StatusBadge from "@/components/ui/StatusBadge";
+import Button from "@/components/ui/Button";
 import type { ComponentProps } from "react";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
@@ -138,25 +139,21 @@ export default function SupplierAllocationCancelForm({
       )}
 
       <div className="px-6 py-4 bg-surface-bright border-t border-outline-variant flex items-center justify-end gap-3">
-        <button
+        <Button
           type="button"
           onClick={() => router.push(`/services/${serviceId}`)}
-          disabled={isLoading}
-          className="px-4 py-2 font-semibold text-on-surface hover:bg-surface-container-low rounded-lg transition-colors disabled:opacity-50"
+          variant="ghost"
         >
           Go Back
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          disabled={isLoading}
-          className="px-6 py-2 bg-error text-on-error font-semibold rounded-lg hover:bg-[#8C1D18] transition-colors disabled:opacity-50 flex items-center justify-center min-w-[120px]"
+          className="min-w-[120px]"
+          loading={isLoading}
+          variant="danger"
         >
-          {isLoading ? (
-            <span className="w-5 h-5 border-2 border-on-error border-t-transparent rounded-full animate-spin"></span>
-          ) : (
-            "Cancel Allocation"
-          )}
-        </button>
+          {isLoading ? "Canceling..." : "Cancel Allocation"}
+        </Button>
       </div>
     </form>
   );

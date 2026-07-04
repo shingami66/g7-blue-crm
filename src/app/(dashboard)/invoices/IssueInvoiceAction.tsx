@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { issueInvoiceAction } from "@/lib/invoices/actions";
+import Button from "@/components/ui/Button";
 
 type IssueInvoiceActionProps = {
   invoiceId: string;
@@ -58,13 +59,14 @@ export function IssueInvoiceAction({ invoiceId }: IssueInvoiceActionProps) {
       )}
 
       {!successMsg && (
-        <button
+        <Button
           onClick={handleSubmit}
-          disabled={isPending}
-          className="w-full flex justify-center items-center gap-2 bg-primary hover:bg-primary-container text-on-primary py-2 rounded-lg text-[14px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full"
+          loading={isPending}
+          variant="primary"
         >
           {isPending ? "Issuing..." : "Issue Invoice"}
-        </button>
+        </Button>
       )}
     </div>
   );

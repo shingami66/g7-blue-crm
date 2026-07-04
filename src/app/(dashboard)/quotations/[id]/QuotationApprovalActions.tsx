@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { approveQuotation, rejectQuotation } from "@/lib/quotations/actions";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
+import Button from "@/components/ui/Button";
 
 interface Props {
   quotationId: string;
@@ -51,22 +52,22 @@ export default function QuotationApprovalActions({ quotationId, status }: Props)
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-3">
-        <button
+        <Button
           onClick={handleApprove}
-          disabled={isApproving || isRejecting}
-          className="flex items-center gap-2 px-4 py-2 bg-[#2E7D32] text-white rounded-lg text-[14px] font-semibold hover:bg-[#1B5E20] disabled:opacity-50 transition-colors"
+          loading={isApproving}
+          variant="primary"
         >
-          {isApproving ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
+          {!isApproving && <CheckCircle size={18} />}
           Approve
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleReject}
-          disabled={isApproving || isRejecting}
-          className="flex items-center gap-2 px-4 py-2 bg-error text-on-error rounded-lg text-[14px] font-semibold hover:opacity-90 disabled:opacity-50 transition-colors"
+          loading={isRejecting}
+          variant="danger"
         >
-          {isRejecting ? <Loader2 size={18} className="animate-spin" /> : <XCircle size={18} />}
+          {!isRejecting && <XCircle size={18} />}
           Reject
-        </button>
+        </Button>
       </div>
       {error && <p className="text-error text-[13px] font-medium">{error}</p>}
     </div>

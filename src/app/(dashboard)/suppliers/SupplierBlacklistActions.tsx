@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, X, ShieldAlert, ShieldCheck } from "lucide-react";
 import { blacklistSupplier, unblacklistSupplier } from "@/lib/suppliers/actions";
 import type { Supplier } from "@/types/supplier";
+import Button from "@/components/ui/Button";
 
 export default function SupplierBlacklistActions({
   supplier,
@@ -53,29 +54,31 @@ export default function SupplierBlacklistActions({
   return (
     <>
       {!isBlacklisted ? (
-        <button
+        <Button
           type="button"
           onClick={() => {
             setActionError(null);
             setShowBlacklistModal(true);
           }}
-          className="text-[12px] font-medium text-error hover:underline px-2 py-1 rounded hover:bg-error-container/30 transition-colors flex items-center gap-1"
+          size="sm"
+          variant="ghost"
         >
           <ShieldAlert size={14} />
           Blacklist
-        </button>
+        </Button>
       ) : (
-        <button
+        <Button
           type="button"
           onClick={() => {
             setActionError(null);
             setShowUnblacklistModal(true);
           }}
-          className="text-[12px] font-medium text-primary hover:underline px-2 py-1 rounded hover:bg-primary-container/30 transition-colors flex items-center gap-1"
+          size="sm"
+          variant="ghost"
         >
           <ShieldCheck size={14} />
           Remove Blacklist
-        </button>
+        </Button>
       )}
 
       {showBlacklistModal && (
@@ -123,20 +126,20 @@ export default function SupplierBlacklistActions({
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
-                <button
+                <Button
                   type="button"
                   onClick={() => setShowBlacklistModal(false)}
-                  className="px-4 py-2 text-on-surface-variant hover:text-on-surface text-[14px] font-medium transition-colors"
+                  variant="ghost"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  disabled={isPending}
-                  className="px-4 py-2 bg-error hover:bg-error/90 text-on-error rounded-lg text-[14px] font-semibold transition-colors disabled:opacity-50"
+                  loading={isPending}
+                  variant="danger"
                 >
                   {isPending ? "Blacklisting..." : "Confirm Blacklist"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -174,20 +177,20 @@ export default function SupplierBlacklistActions({
 
             <form action={handleUnblacklist} className="space-y-4">
               <div className="flex justify-end gap-3 pt-4">
-                <button
+                <Button
                   type="button"
                   onClick={() => setShowUnblacklistModal(false)}
-                  className="px-4 py-2 text-on-surface-variant hover:text-on-surface text-[14px] font-medium transition-colors"
+                  variant="ghost"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  disabled={isPending}
-                  className="px-4 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[14px] font-semibold transition-colors disabled:opacity-50"
+                  loading={isPending}
+                  variant="primary"
                 >
                   {isPending ? "Processing..." : "Remove Blacklist"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
