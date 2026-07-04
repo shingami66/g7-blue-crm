@@ -33,6 +33,8 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
 - `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
 - Verify Supabase connectivity at `GET /api/health/db` while the local app is running.
+- The local Supabase health-check workflow assumes `.env.local` already provides `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`; never read, print, or edit those secrets during ordinary tasks.
+- `graphify query "<question>"` is the approved manual Graphify command for scoped codebase discovery; do not run Graphify install, hook, or Codex integration commands without explicit approval.
 - Documentation-only changes do not require app build, migrations, or database commands.
 
 ## Working Workflow
@@ -144,6 +146,7 @@ Never skip review gates for SQL, migrations, RLS, RPC, triggers, grants/revokes,
 
 - Keep reviewed migration SQL in `supabase/migrations/`.
 - Treat `supabase/schema.sql` as a schema reference file; do not assume it is the apply path for production changes.
+- Until an approved CLI workflow is introduced, manual SQL apply and admin-user seeding remain Supabase SQL Editor tasks after review and explicit approval.
 
 ## Quotation / RPC Lessons
 
