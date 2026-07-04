@@ -36,8 +36,9 @@ export function CreateSupplierBookingButton({ allocationId }: { allocationId: st
         onClick={createSupplierBooking}
         size="sm"
         loading={isPending}
+        loadingLabel="Creating supplier booking"
       >
-        {isPending ? "Creating..." : "Create Supplier Booking"}
+        Create Supplier Booking
       </Button>
       {error && <p className="max-w-xs text-[12px] font-medium text-error">{error}</p>}
     </div>
@@ -134,9 +135,10 @@ export default function SupplierBookingActions({ bookingId }: { bookingId: strin
             onClick={submitCancellation}
             disabled={cancelledReason.trim().length === 0}
             loading={isPending}
+            loadingLabel="Cancelling supplier booking"
             variant="danger"
           >
-            {isPending ? "Cancelling..." : "Cancel Supplier Booking"}
+            Cancel Supplier Booking
           </Button>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import {
   Children,
   cloneElement,
+  useEffect,
   isValidElement,
   type MouseEvent,
   type ButtonHTMLAttributes,
@@ -10,6 +11,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import { useGlobalPending } from "@/components/ui/GlobalPendingProvider";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 type ButtonSize = "sm" | "md" | "lg" | "icon";
@@ -19,6 +21,7 @@ type ButtonProps = {
   children: ReactNode;
   className?: string;
   loading?: boolean;
+  loadingLabel?: string;
   size?: ButtonSize;
   variant?: ButtonVariant;
 } & ButtonHTMLAttributes<HTMLButtonElement>;
@@ -48,36 +51,21 @@ function cx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
-function Spinner({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cx(
-        "inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent",
-        className
-      )}
-    />
-  );
-}
-
 export default function Button({
   asChild = false,
   children,
   className,
   disabled,
   loading = false,
+  loadingLabel,
   size = "md",
   type = "button",
   variant = "primary",
   ...props
 }: ButtonProps) {
+  const { hidePending, showPending } = useGlobalPending();
   const isDisabled = disabled || loading;
-  const buttonContent = (
-    <>
-      {loading ? <Spinner /> : null}
-      {children}
-    </>
-  );
+  const buttonContent = children;
 
   const classes = cx(
     baseClassName,
@@ -85,6 +73,18 @@ export default function Button({
     sizeClassNames[size],
     className
   );
+
+  useEffect(() => {
+    if (!loading) {
+      return;
+    }
+
+    const pendingId = showPending(loadingLabel);
+
+    return () => {
+      hidePending(pendingId);
+    };
+  }, [hidePending, loading, loadingLabel, showPending]);
 
   if (asChild) {
     const child = Children.only(children);
@@ -95,12 +95,6 @@ export default function Button({
 
     const childElement = child as ReactElement<HTMLAttributes<HTMLElement>>;
     const childProps = childElement.props;
-    const childContent = (
-      <>
-        {loading ? <Spinner /> : null}
-        {childProps.children}
-      </>
-    );
 
     const handleChildClick = (event: MouseEvent<HTMLElement>) => {
       if (isDisabled) {
@@ -121,7 +115,7 @@ export default function Button({
       className: cx(classes, childProps.className),
       onClick: handleChildClick,
       tabIndex: isDisabled ? -1 : childProps.tabIndex,
-    }, childContent);
+    }, childProps.children);
   }
 
   return (

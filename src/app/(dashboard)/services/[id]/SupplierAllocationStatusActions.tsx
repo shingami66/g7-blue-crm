@@ -17,12 +17,12 @@ const STATUS_ACTIONS: Record<
 > = {
   draft: {
     label: "Mark Planned",
-    loadingLabel: "Saving...",
+    loadingLabel: "Marking supplier allocation as planned",
     nextStatus: "planned",
   },
   planned: {
     label: "Select Supplier",
-    loadingLabel: "Selecting...",
+    loadingLabel: "Selecting supplier allocation",
     nextStatus: "selected",
   },
 };
@@ -74,9 +74,10 @@ export default function SupplierAllocationStatusActions({
         size="sm"
         variant={status === "draft" ? "outline" : "primary"}
         loading={isPending}
+        loadingLabel={action.loadingLabel}
         onClick={handleTransition}
       >
-        {isPending ? action.loadingLabel : action.label}
+        {action.label}
       </Button>
       {error ? (
         <p className="max-w-[220px] text-right text-[12px] font-medium text-error">
