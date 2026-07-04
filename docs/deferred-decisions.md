@@ -169,10 +169,10 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** The global centered bolt is driven by shared dashboard `Button` loading state, appears in dashboard loading, and deliberately uses no backdrop, visible loading text, or spinner.
 
 ## Viewer Bank Detail Masking Verification
-- **Status:** Deferred test case; required before real/semi-real data.
-- **Reason deferred:** CS-A server-side masking exists, but production verification needs an explicit test pass.
-- **When to return:** Before hosted demo with real/semi-real company data and before production.
-- **Known requirements:** Viewer opens `/settings`; response/data passed to the client must not include full IBAN, bank account holder, or bank account values. This must be checked server-side, not only by inspecting hidden UI fields.
+- **Status:** Passed.
+- **Reason:** Read-only code/data-flow review and Viewer browser smoke both confirmed server-side masking.
+- **When to return:** Only if the `/settings` data flow changes in a way that could re-expose bank details.
+- **Known requirements:** Viewer opens `/settings`; response/data passed to the client does not include full IBAN, bank account holder, or bank account values. This was verified server-side, not only through hidden UI fields.
 
 ## Audit Logs UI
 - **Status:** Deferred.

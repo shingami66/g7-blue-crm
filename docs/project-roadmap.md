@@ -167,7 +167,7 @@ Checklist:
 - [x] Do not apply SQL automatically.
 - [x] `SETTINGS-EDIT-MODE-1` remains separate/deferred.
 
-TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. STAB-P0-04 remote DB apply is complete and verified for both the supplier booking number default and the `company_settings` production RLS migration. Real or semi-real company/client data remains blocked only by the remaining operational hardening items: demo-data/security decision, Viewer bank masking verification, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production.
+TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. STAB-P0-04 remote DB apply is complete and verified for both the supplier booking number default and the `company_settings` production RLS migration. Real or semi-real company/client data remains blocked only by the remaining operational hardening items: demo-data/security decision, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production. Viewer bank masking verification is complete and passed.
 
 ### QUOTE-VALIDITY-RULE-1 - Enforce Quotation Validity Against Service Schedule
 Status: Completed
@@ -365,7 +365,7 @@ Checklist:
 - [ ] Confirm no raw database/Supabase errors are exposed to UI.
 - [ ] Confirm no secrets are present in committed files.
 - [ ] Confirm auth redirects and Access Denied states are correct.
-- [ ] Verify Viewer opening `/settings` does not receive full IBAN, bank account holder, or bank account values in client data.
+- [x] Verify Viewer opening `/settings` does not receive full IBAN, bank account holder, or bank account values in client data.
 - [x] Global centered pending bolt UX is implemented and pushed.
 - [x] Shared dashboard `Button` loading now triggers the global centered bolt pattern.
 - [x] Supplier Allocation and Supplier Booking action flows use the global pending UX.

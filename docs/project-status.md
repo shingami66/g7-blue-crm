@@ -98,6 +98,7 @@
 - [x] Sensitive authenticated Server Actions now use MVP single-instance in-memory rate limiting.
 - [x] The production `company_settings` RLS migration is committed in-repo and the remote Supabase apply has been verified.
 - [x] The centered bolt loader is the approved polished MVP loading mark for dashboard pending states.
+- [x] Viewer bank-detail masking verification passed: server-side data shaping removes bank details before client props, and Viewer browser smoke on `/settings` showed only the restriction message.
 
 ### âœ… CUSTOMER-NUMBER-1
 - [x] DB migration applied manually, adding `customer_number` sequence.
