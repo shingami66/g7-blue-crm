@@ -34,6 +34,8 @@ export default function SupplierBookingsPanel({
   canCancel,
   serviceStatus,
 }: SupplierBookingsPanelProps) {
+  const isServiceBookingLocked =
+    serviceStatus === "Completed" || serviceStatus === "Cancelled";
   const selectedAllocations = allocations.filter(
     (allocation) => !allocation.isDeleted && allocation.status === "selected"
   );
@@ -69,7 +71,12 @@ export default function SupplierBookingsPanel({
 
       {bookings.length === 0 ? (
         <div className="p-8 text-center text-on-surface-variant text-[14px]">
-          No Supplier Bookings recorded for this service yet.
+          <p>No Supplier Bookings recorded for this service yet.</p>
+          {selectedAllocations.length === 0 ? (
+            <p className="mt-2 text-[13px]">
+              Select a planned supplier allocation to create a Supplier Booking.
+            </p>
+          ) : null}
         </div>
       ) : (
         <DataTable columns={bookingColumns}>
@@ -106,10 +113,10 @@ export default function SupplierBookingsPanel({
               <td className="px-4 py-3 align-top text-on-surface-variant">
                 {formatDateTime(booking.createdAt)}
               </td>
-              <td className="px-4 py-3 align-top text-on-surface-variant">
+              <td className="px-4 py-3 align-top text-on-surface-variant min-w-[280px]">
                 <BookingInternalDetails booking={booking} />
               </td>
-              <td className="px-4 py-3 align-top text-right">
+              <td className="px-4 py-3 align-top text-right min-w-[140px]">
                 {canCancel && booking.status === "draft" && (
                   <SupplierBookingActions bookingId={booking.id} />
                 )}
@@ -142,19 +149,28 @@ export default function SupplierBookingsPanel({
                     </div>
                   </div>
                   {activeBooking ? (
-                    <div className="flex flex-wrap items-center gap-2 text-[13px] text-on-surface-variant">
-                      <span className="font-mono font-semibold text-primary">
-                        {activeBooking.bookingNumber}
+                    <div className="flex flex-col items-start gap-2 text-[13px] text-on-surface-variant md:items-end">
+                      <span className="text-[12px] font-semibold uppercase tracking-wide text-on-surface-variant">
+                        Linked SBK
                       </span>
-                      <StatusBadge variant={STATUS_VARIANT_MAP[activeBooking.status]}>
-                        {STATUS_LABEL_MAP[activeBooking.status]}
-                      </StatusBadge>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono font-semibold text-primary">
+                          {activeBooking.bookingNumber}
+                        </span>
+                        <StatusBadge variant={STATUS_VARIANT_MAP[activeBooking.status]}>
+                          {STATUS_LABEL_MAP[activeBooking.status]}
+                        </StatusBadge>
+                      </div>
                     </div>
                   ) : canCreateForService ? (
                     <CreateSupplierBookingButton allocationId={allocation.id} />
+                  ) : isServiceBookingLocked ? (
+                    <span className="text-[13px] font-medium text-on-surface-variant">
+                      Supplier Booking locked for completed or cancelled services.
+                    </span>
                   ) : (
                     <span className="text-[13px] font-medium text-on-surface-variant">
-                      Supplier Booking unavailable for this service state.
+                      You do not have permission to create Supplier Bookings.
                     </span>
                   )}
                 </div>
@@ -169,7 +185,7 @@ export default function SupplierBookingsPanel({
 
 function BookingInternalDetails({ booking }: { booking: SupplierBooking }) {
   return (
-    <div className="max-w-sm space-y-1">
+    <div className="max-w-md space-y-1">
       {booking.scopeOfWork && (
         <p>
           <span className="font-semibold text-on-surface">Scope:</span> {booking.scopeOfWork}

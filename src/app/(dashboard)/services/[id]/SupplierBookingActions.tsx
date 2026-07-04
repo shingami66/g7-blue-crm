@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Button from "@/components/ui/Button";
 import {
   cancelSupplierBooking,
   createSupplierBookingFromAllocation,
@@ -31,14 +32,13 @@ export function CreateSupplierBookingButton({ allocationId }: { allocationId: st
 
   return (
     <div className="flex flex-col items-start gap-2 md:items-end">
-      <button
-        type="button"
+      <Button
         onClick={createSupplierBooking}
-        disabled={isPending}
-        className="min-h-[36px] rounded-lg bg-primary px-4 py-2 text-[13px] font-semibold text-on-primary transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50"
+        size="sm"
+        loading={isPending}
       >
         {isPending ? "Creating..." : "Create Supplier Booking"}
-      </button>
+      </Button>
       {error && <p className="max-w-xs text-[12px] font-medium text-error">{error}</p>}
     </div>
   );
@@ -77,52 +77,68 @@ export default function SupplierBookingActions({ bookingId }: { bookingId: strin
 
   if (!isCancelling) {
     return (
-      <button
-        type="button"
+      <Button
         onClick={() => setIsCancelling(true)}
-        className="text-[13px] font-semibold text-error hover:underline"
+        size="sm"
+        variant="ghost"
       >
         Cancel
-      </button>
+      </Button>
     );
   }
 
   return (
-    <div className="min-w-[260px] space-y-2 text-left">
-      <label htmlFor={`cancel-supplier-booking-${bookingId}`} className="text-[12px] font-semibold text-on-surface">
-        Cancellation Reason
-      </label>
-      <textarea
-        id={`cancel-supplier-booking-${bookingId}`}
-        value={cancelledReason}
-        onChange={(event) => setCancelledReason(event.target.value)}
-        disabled={isPending}
-        rows={3}
-        className="w-full resize-none rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
-        placeholder="Explain why this Supplier Booking is being cancelled."
-      />
-      {error && <p className="text-[12px] font-medium text-error">{error}</p>}
-      <div className="flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => {
-            setIsCancelling(false);
-            setCancelledReason("");
-            setError(null);
-          }}
-          disabled={isPending}
-          className="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-on-surface-variant hover:bg-surface-container-low disabled:opacity-50"
-        >
-          Back
-        </button>
-        <button
-          type="button"
-          onClick={submitCancellation}
-          disabled={isPending || cancelledReason.trim().length === 0}
-          className="rounded-lg bg-error px-3 py-1.5 text-[12px] font-semibold text-on-error hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isPending ? "Cancelling..." : "Cancel Supplier Booking"}
-        </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
+      <div className="w-full max-w-lg rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl">
+        <div className="border-b border-outline-variant px-6 py-4">
+          <h4 className="text-base font-semibold text-on-surface">
+            Cancel Supplier Booking
+          </h4>
+          <p className="mt-1 text-[13px] text-on-surface-variant">
+            Add a reason before cancelling this internal Supplier Booking.
+          </p>
+        </div>
+        <div className="space-y-3 px-6 py-5 text-left">
+          <label
+            htmlFor={`cancel-supplier-booking-${bookingId}`}
+            className="block text-[12px] font-semibold text-on-surface"
+          >
+            Cancellation Reason
+          </label>
+          <textarea
+            id={`cancel-supplier-booking-${bookingId}`}
+            value={cancelledReason}
+            onChange={(event) => setCancelledReason(event.target.value)}
+            disabled={isPending}
+            rows={4}
+            className="w-full resize-none rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+            placeholder="Explain why this Supplier Booking is being cancelled."
+          />
+          {error && <p className="text-[12px] font-medium text-error">{error}</p>}
+        </div>
+        <div className="flex justify-end gap-3 border-t border-outline-variant px-6 py-4">
+          <Button
+            type="button"
+            onClick={() => {
+              setIsCancelling(false);
+              setCancelledReason("");
+              setError(null);
+            }}
+            disabled={isPending}
+            variant="ghost"
+          >
+            Back
+          </Button>
+          <Button
+            type="button"
+            onClick={submitCancellation}
+            disabled={cancelledReason.trim().length === 0}
+            loading={isPending}
+            variant="danger"
+          >
+            {isPending ? "Cancelling..." : "Cancel Supplier Booking"}
+          </Button>
+        </div>
       </div>
     </div>
   );

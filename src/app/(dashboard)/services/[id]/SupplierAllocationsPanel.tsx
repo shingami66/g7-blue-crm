@@ -4,6 +4,7 @@ import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import SupplierAllocationStatusActions from "./SupplierAllocationStatusActions";
 
 type SupplierAllocationsPanelProps = {
   allocations: SupplierAllocation[];
@@ -41,13 +42,15 @@ export default function SupplierAllocationsPanel({
   showDeleted = false,
 }: SupplierAllocationsPanelProps) {
   const hasAllocations = allocations.length > 0;
+  const isServiceEditable =
+    serviceStatus !== "Completed" && serviceStatus !== "Cancelled";
 
   const baseColumns = ["Status", "Supplier", "Category", "Item", "Unit", "Qty", "Cost Source"];
   const costColumns = canReadCost ? ["Unit Cost", "Total Cost"] : [];
   const actionColumns = [""]; // Empty header for actions
   const columns = [...baseColumns, ...costColumns, ...actionColumns];
 
-  const canCreate = canWrite && canReadCost && serviceStatus !== "Completed" && serviceStatus !== "Cancelled";
+  const canCreate = canWrite && canReadCost && isServiceEditable;
 
   return (
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden mt-6">
@@ -140,38 +143,51 @@ export default function SupplierAllocationsPanel({
                 </>
               )}
               <td className="px-4 py-3 align-top text-right">
-                <div className="flex items-center justify-end gap-3">
-                  {!a.isDeleted && canWrite && canReadCost && a.status !== "cancelled" && a.costSource === "manual_estimate" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
-                    <Link
-                      href={`/services/${serviceId}/allocations/${a.id}/edit`}
-                      className="text-[13px] font-semibold text-primary hover:underline"
-                    >
-                      Edit
-                    </Link>
-                  )}
-                  {!a.isDeleted && canCancel && a.status !== "cancelled" && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
-                    <Link
-                      href={`/services/${serviceId}/allocations/${a.id}/cancel`}
-                      className="text-[13px] font-semibold text-error hover:underline"
-                    >
-                      Cancel
-                    </Link>
-                  )}
-                  {!a.isDeleted && canWrite && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
-                    <Link
-                      href={`/services/${serviceId}/allocations/${a.id}/delete`}
-                      className="text-[13px] font-semibold text-error hover:underline"
-                    >
-                      Delete
-                    </Link>
-                  )}
-                  {a.isDeleted && canWrite && serviceStatus !== "Completed" && serviceStatus !== "Cancelled" && (
-                    <Link
-                      href={`/services/${serviceId}/allocations/${a.id}/restore`}
-                      className="text-[13px] font-semibold text-primary hover:underline"
-                    >
-                      Restore
-                    </Link>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex flex-wrap items-center justify-end gap-3">
+                    {!a.isDeleted && canWrite && a.status !== "cancelled" && isServiceEditable && (
+                      <SupplierAllocationStatusActions
+                        allocationId={a.id}
+                        status={a.status}
+                      />
+                    )}
+                    {!a.isDeleted && canWrite && canReadCost && a.status !== "cancelled" && a.costSource === "manual_estimate" && isServiceEditable && (
+                      <Link
+                        href={`/services/${serviceId}/allocations/${a.id}/edit`}
+                        className="text-[13px] font-semibold text-primary hover:underline"
+                      >
+                        Edit
+                      </Link>
+                    )}
+                    {!a.isDeleted && canCancel && a.status !== "cancelled" && isServiceEditable && (
+                      <Link
+                        href={`/services/${serviceId}/allocations/${a.id}/cancel`}
+                        className="text-[13px] font-semibold text-error hover:underline"
+                      >
+                        Cancel
+                      </Link>
+                    )}
+                    {!a.isDeleted && canWrite && isServiceEditable && (
+                      <Link
+                        href={`/services/${serviceId}/allocations/${a.id}/delete`}
+                        className="text-[13px] font-semibold text-error hover:underline"
+                      >
+                        Delete
+                      </Link>
+                    )}
+                    {a.isDeleted && canWrite && isServiceEditable && (
+                      <Link
+                        href={`/services/${serviceId}/allocations/${a.id}/restore`}
+                        className="text-[13px] font-semibold text-primary hover:underline"
+                      >
+                        Restore
+                      </Link>
+                    )}
+                  </div>
+                  {!a.isDeleted && a.status === "selected" && (
+                    <span className="max-w-[220px] text-right text-[11px] font-medium text-on-surface-variant">
+                      Supplier Booking create or linked SBK appears in the panel below.
+                    </span>
                   )}
                 </div>
               </td>
