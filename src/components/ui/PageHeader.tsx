@@ -10,8 +10,11 @@ export default function PageHeader({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-      <div>
+    <div
+      className="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"
+      style={{ textAlign: "start" }}
+    >
+      <div style={{ textAlign: "start" }}>
         <h2 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-primary">
           {title}
         </h2>

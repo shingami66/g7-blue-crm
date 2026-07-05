@@ -16,14 +16,28 @@ export default async function DashboardLayout({
   }
 
   const isAdmin = await checkPermission("users:manage");
+  // Temporary dev-only RTL shell override for Shell-1A manual verification.
+  // Remove after real app_users.locale runtime wiring is approved.
+  const shellDirection =
+    process.env.NODE_ENV !== "production" && process.env.G7_DEV_RTL === "1"
+      ? "rtl"
+      : "ltr";
 
   return (
     <GlobalPendingProvider>
-      <div className="dashboard-shell flex min-h-screen bg-surface">
+      <div
+        className="dashboard-shell flex min-h-screen bg-surface"
+        data-dev-rtl={shellDirection === "rtl" ? "true" : undefined}
+        dir={shellDirection}
+      >
         <div className="dashboard-sidebar">
-          <Sidebar isAdmin={isAdmin} />
+          <Sidebar isAdmin={isAdmin} shellDirection={shellDirection} />
         </div>
-        <div className="dashboard-content flex-1 md:ml-[260px] flex flex-col min-h-screen">
+        <div
+          className={`dashboard-content flex-1 flex flex-col min-h-screen ${
+            shellDirection === "rtl" ? "md:mr-[260px]" : "md:ml-[260px]"
+          }`}
+        >
           <div className="dashboard-topbar">
             <Topbar />
           </div>

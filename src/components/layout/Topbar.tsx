@@ -25,18 +25,21 @@ export default function Topbar() {
   }
 
   return (
-    <header className="sticky top-0 right-0 z-40 bg-surface border-b border-outline-variant flex justify-between items-center h-16 px-6">
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-outline-variant bg-surface px-6">
       {/* Search */}
       <div className="flex items-center gap-4 flex-1">
         <div className="relative w-full max-w-sm hidden md:block">
           <Search
             size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-outline"
+            className="absolute top-1/2 -translate-y-1/2 text-outline"
+            style={{ insetInlineStart: "0.75rem" }}
           />
           <input
+            dir="auto"
             type="text"
             placeholder="Search..."
-            className="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+            className="w-full rounded-lg border border-outline-variant bg-surface-container-low py-2 text-[14px] leading-[20px] text-on-surface transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            style={{ paddingInlineStart: "2.5rem", paddingInlineEnd: "1rem" }}
           />
         </div>
       </div>
@@ -61,16 +64,20 @@ export default function Topbar() {
               <UserCircle size={20} />
               <ChevronDown
                 size={14}
-                className="transition-transform group-open:rotate-180"
-              />
+              className="transition-transform group-open:rotate-180"
+            />
             </summary>
-            <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-lg border border-outline-variant bg-surface-container-lowest py-1 shadow-lg">
+            <div
+              className="absolute top-full z-50 mt-2 w-44 rounded-lg border border-outline-variant bg-surface-container-lowest py-1 shadow-lg"
+              style={{ insetInlineEnd: 0 }}
+            >
               <Button
                 aria-label="Sign out"
-                className="w-full justify-start rounded-none px-3 py-2 text-left text-[12px] leading-[16px]"
+                className="w-full justify-start rounded-none px-3 py-2 text-[12px] leading-[16px]"
                 loading={isSigningOut}
                 onClick={handleSignOut}
                 size="sm"
+                style={{ textAlign: "start" }}
                 variant="ghost"
               >
                 <LogOut size={16} />

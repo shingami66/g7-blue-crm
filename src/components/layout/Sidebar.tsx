@@ -31,9 +31,16 @@ const bottomItems = [
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
-export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
+export default function Sidebar({
+  isAdmin = false,
+  shellDirection = "ltr",
+}: {
+  isAdmin?: boolean;
+  shellDirection?: "ltr" | "rtl";
+}) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isRtl = shellDirection === "rtl";
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -64,7 +71,7 @@ export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${
                 active
-                  ? "border-l-2 border-tertiary-fixed text-white bg-on-primary-fixed-variant/10"
+                  ? `${isRtl ? "border-r-2" : "border-l-2"} border-tertiary-fixed text-white bg-on-primary-fixed-variant/10`
                   : "text-white/70 hover:text-white hover:bg-on-primary-fixed-variant/5"
               }`}
             >
@@ -86,7 +93,7 @@ export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
             onClick={() => setMobileOpen(false)}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${
               isActive("/admin/users")
-                ? "border-l-2 border-tertiary-fixed text-white bg-on-primary-fixed-variant/10"
+                ? `${isRtl ? "border-r-2" : "border-l-2"} border-tertiary-fixed text-white bg-on-primary-fixed-variant/10`
                 : "text-white/70 hover:text-white hover:bg-on-primary-fixed-variant/5"
             }`}
           >
@@ -108,7 +115,7 @@ export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${
                 active
-                  ? "border-l-2 border-tertiary-fixed text-white bg-on-primary-fixed-variant/10"
+                  ? `${isRtl ? "border-r-2" : "border-l-2"} border-tertiary-fixed text-white bg-on-primary-fixed-variant/10`
                   : "text-white/70 hover:text-white hover:bg-on-primary-fixed-variant/5"
               }`}
             >
@@ -125,7 +132,9 @@ export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
     <>
       {/* Mobile hamburger button */}
       <button
-        className="md:hidden fixed top-4 left-4 z-[60] p-2 bg-primary text-white rounded-lg"
+        className={`fixed top-4 z-[60] rounded-lg bg-primary p-2 text-white md:hidden ${
+          isRtl ? "right-4" : "left-4"
+        }`}
         onClick={() => setMobileOpen(!mobileOpen)}
       >
         {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -141,9 +150,12 @@ export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
 
       {/* Sidebar */}
       <nav
-        className={`fixed left-0 top-0 h-full w-[260px] bg-primary flex flex-col py-6 px-4 z-50 transition-transform duration-300 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 z-50 flex h-full w-[260px] flex-col bg-primary px-4 py-6 transition-transform duration-300 ${
+          isRtl ? "right-0" : "left-0"
+        } ${
+          mobileOpen ? "translate-x-0" : isRtl ? "translate-x-full" : "-translate-x-full"
         } md:translate-x-0`}
+        dir={shellDirection}
       >
         {navContent}
       </nav>
