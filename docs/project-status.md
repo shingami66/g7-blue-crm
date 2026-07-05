@@ -54,7 +54,7 @@
 - [x] `GLOBAL-LOADING-CRUD-FORMS-1` completed and pushed in `bf3a4ba feat(ui): add global pending bolt to CRUD forms`.
 - [x] Covered CRUD submit actions: customer profile save, service create/edit, and supplier create/edit.
 - [x] Manual smoke passed for the five covered CRUD actions, and validation passed with `pnpm exec next typegen`, `pnpm exec tsc --noEmit`, and `git diff --check`.
-- [ ] Navigation pending coverage remains future follow-up work and is not included in this completed CRUD slice.
+- [ ] Navigation pending coverage remains future follow-up work for non-quotation areas and is not included in this completed CRUD slice.
 
 ### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
@@ -429,13 +429,16 @@
   - service detail create final invoice
 - Manual smoke passed for invoice create submit flows, and validation passed with `pnpm exec next typegen`, `pnpm exec tsc --noEmit`, and `git diff --check`.
 - `RecordPaymentModal` remains intentionally local-pending and untouched.
+- `GLOBAL-PENDING-QUOTATION-NAVIGATION-1` is completed and pushed in `29cdfb4 feat(ui): add global pending bolt to quotation navigation`.
+- Safe quotation navigation now uses delayed global pending helpers for list row click, View Details, draft Edit, detail Back/Edit, and new/edit top Back.
+- Manual smoke passed for the covered quotation navigation paths, and modifier-key / middle-click behavior remained correct.
 - Follow-up scope remains open for payment recording, supplier allocation/booking workflow, service status, admin/RBAC row actions, and the remaining invoice/payment workflow slices.
 
 ### Immediate Next Priorities
 - `P0`: finish the docs commit and push for `GLOBAL-PENDING-INVOICE-CREATE-ACTIONS-1`.
 - `P1`: `PAYMENTS-LIST-SORT-PAGINATION-1` to sort payments ascending and paginate 10 per page.
 - `P2`: `QUOTATIONS-FILTERS-FIX-1` to fix quotation status/date filters without changing list actions or pagination.
-- `P3`: `GLOBAL-PENDING-QUOTATION-NAVIGATION-1` as an optional navigation pending bolt slice, kept separate from quotation filters.
+- `P3`: `GLOBAL-PENDING-QUOTATION-NAVIGATION-1` completed and pushed in `29cdfb4 feat(ui): add global pending bolt to quotation navigation`.
 - `P4`: remaining high-risk pending/action audits for supplier allocation/booking, admin/users/RBAC, and other financial edge actions, with `RecordPaymentModal` staying local by design unless separately approved.
 
 ### ✅ HUMAN-REFERENCE-DISPLAY-1

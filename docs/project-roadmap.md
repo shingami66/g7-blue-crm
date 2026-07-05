@@ -389,7 +389,7 @@ Immediate next priorities:
 1. `P0` - finish the docs commit and push for `GLOBAL-PENDING-INVOICE-CREATE-ACTIONS-1`.
 1. `P1` - `PAYMENTS-LIST-SORT-PAGINATION-1`: sort payments ascending from older/smaller sequence to newer/larger sequence, and paginate 10 records per page to match Quotations/Invoices.
 1. `P2` - `QUOTATIONS-FILTERS-FIX-1`: fix quotation status and date filters while preserving existing quotation list actions and pagination.
-1. `P3` - `GLOBAL-PENDING-QUOTATION-NAVIGATION-1`: optional quotation list/detail/back/edit navigation pending bolt slice, kept separate from quotation filters.
+1. `P3` - `GLOBAL-PENDING-QUOTATION-NAVIGATION-1`: completed and pushed in `29cdfb4 feat(ui): add global pending bolt to quotation navigation`.
 1. `P4` - remaining high-risk pending/action audits for supplier allocation/booking actions, admin/users/RBAC actions, and other financial edge actions.
 
 - [x] `PAYMENTS-LIST-SORT-PAGINATION-1` completed and pushed in `844f2ec feat(payments): add ascending pagination to payments list`.
@@ -397,7 +397,7 @@ Immediate next priorities:
 - [x] Manual smoke passed for payment ordering, pagination, KPI counts, and unchanged payment-recording behavior.
 - [x] `QUOTATIONS-FILTERS-FIX-1` completed and pushed in `3c19a28 fix(quotations): wire list filters`.
 - [x] Quotations status and month filters now use controlled client-side state and pagination runs against filtered results.
-- [ ] `GLOBAL-PENDING-QUOTATION-NAVIGATION-1` remains optional/follow-up.
+- [x] `GLOBAL-PENDING-QUOTATION-NAVIGATION-1` completed and pushed in `29cdfb4 feat(ui): add global pending bolt to quotation navigation`.
 - [ ] Remaining high-risk pending/action audits remain open for supplier allocation/booking actions, admin/users/RBAC actions, and other financial edge actions.
 - [x] Plan rate limiting for sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
 - [ ] Confirm UI hiding is not treated as security; server-side permission checks and server-side masking are required.
