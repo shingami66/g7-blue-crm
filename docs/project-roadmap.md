@@ -1828,3 +1828,17 @@ Must verify:
 - no broad authenticated SELECT access bypassing application-level RBAC
 - no direct table access exposing cost fields without mapper redaction
 - RLS behavior aligns with server-action/application RBAC
+
+## I18N / RTL Next Priority Order
+1. `I18N-P0-DECISIONS-LOCK-1`
+   - Lock the document language model, number/date/currency/document-number formatting, and split status glossary before implementation.
+2. `I18N-RTL-FOUNDATION-1`
+   - Blocked until the audit and P0 decisions are complete.
+3. `INVOICE-LIST-ACTIONS-POLISH-1`
+   - View/Print icons, list action polish, pagination/page-size/go-to-page review.
+4. `DOCUMENT-FORM-LAYOUT-POLISH-1`
+   - Invoice/quotation form sections, line items, and totals panel polish.
+5. `ARABIC-COPY-REVIEW-1`
+   - Review Arabic terminology and avoid literal translation.
+6. `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1`
+   - Medium-risk pending UX migration for supplier allocation create/edit/delete forms.

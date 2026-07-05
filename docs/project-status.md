@@ -56,6 +56,12 @@
 - [x] Manual smoke passed for the five covered CRUD actions, and validation passed with `pnpm exec next typegen`, `pnpm exec tsc --noEmit`, and `git diff --check`.
 - [ ] Navigation pending coverage remains future follow-up work for non-quotation areas and is not included in this completed CRUD slice.
 
+### âœ… I18N-RTL-FOUNDATION-AUDIT-1
+- [x] Readonly i18n / RTL foundation audit completed with no runtime code changes.
+- [x] Audit artifact captured in `specs/004-i18n-rtl-foundation/audit.md`.
+- [x] Latest audited HEAD was `691555b`.
+- [x] The audit confirmed the app shell is still LTR-first, the status glossary and formatting model still need P0 decisions, and the next step remains decision locking before implementation.
+
 ### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
 - [x] Supabase client/admin setup exists

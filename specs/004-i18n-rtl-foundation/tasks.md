@@ -11,9 +11,10 @@
 ### I18N-RTL-FOUNDATION-AUDIT-1
 
 - Type: readonly audit
-- Status: READY
+- Status: DONE
 - No code
 - Output:
+  - audit.md
   - hardcoded text inventory
   - hardcoded left/right inventory
   - Service / Quotation / Invoice / `invoice_type` status label inventory
@@ -26,7 +27,7 @@
 ### I18N-P0-DECISIONS-LOCK-1
 
 - Type: product / team decision
-- Status: READY AFTER AUDIT OUTPUT
+- Status: READY
 - Output:
   - document language model decision
   - numeral / date / currency formatting decision

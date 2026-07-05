@@ -781,3 +781,13 @@ The following items are explicitly documented as deferred or production hardenin
 - public DB health route hardening
 - money/document lifecycle audit log coverage
 - supplier blacklist active-work impact check
+
+## I18N / RTL Decisions Still Open
+- The I18N / RTL audit is complete, but implementation remains blocked until P0 decisions are locked.
+- P0 decisions still open: document language model; numeral, currency, date, and document-number formatting; split status glossary approval.
+- P1 decisions still open: booking terminology, role rollout, reuse of existing Company Settings Arabic/English company name fields, and Hijri calendar deferral.
+- Locale source of truth remains `app_users.locale`, with a cookie mirror only to prevent wrong-direction flash.
+- Do not use `/ar` or `/en` URL segmentation for this internal authenticated CRM.
+- Use CSS logical utilities for RTL work, mirror directional icons only, and bidi-isolate numbers, SAR amounts, dates, and document numbers.
+- Document/PDF language must reuse the existing snapshot approach and preserve historical meaning after locale/settings changes.
+- Do not add fake Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, XML, clearance, or cleared-status claims through localization work.
