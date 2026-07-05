@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Save, AlertCircle } from "lucide-react";
 import { createQuotation, updateQuotation } from "@/lib/quotations/actions";
 import type { QuotationDetail } from "@/lib/quotations/types";
+import Button from "@/components/ui/Button";
 
 interface QuotationFormService {
   id: string;
@@ -440,19 +441,18 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
           </div>
 
           <div className="flex justify-end mt-4">
-            <button
+            <Button
               type="submit"
+              loading={isSubmitting}
               disabled={
-                isSubmitting ||
                 discountExceedsSubtotal ||
                 validUntilExceedsServiceStart ||
                 serviceStartedBeforeIssueDate
               }
-              className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg font-semibold transition-colors disabled:opacity-50"
             >
               <Save size={18} />
-              {isSubmitting ? "Saving..." : isEdit ? "Save Changes" : "Create Quotation"}
-            </button>
+              {isEdit ? "Save Changes" : "Create Quotation"}
+            </Button>
           </div>
         </div>
       </form>
