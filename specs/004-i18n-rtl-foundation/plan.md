@@ -22,11 +22,31 @@
 
 ### P2
 
-- Shell/navigation RTL and shared UI translation
-- This remains the next separate task (`I18N-RTL-SHELL-1`).
-- It must not be collapsed back into Foundation-1.
+- `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1`
+- Readonly inventory of shared Modal/Dialog/Toast/Dropdown paths and ownership.
 
 ### P3
+
+- `I18N-RTL-SHELL-1A`
+- Navigation shell only:
+  - `src/components/layout/Sidebar.tsx`
+  - `src/components/layout/Topbar.tsx`
+  - `src/components/ui/PageHeader.tsx`
+  - `src/app/(dashboard)/layout.tsx`
+- Must not touch `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx`.
+- Must use a temporary dev-only RTL verification method until real `app_users.locale` wiring is approved.
+
+### P4
+
+- `I18N-RTL-SHELL-1B`
+- Shared data components only:
+  - `src/components/ui/DataTable.tsx`
+  - `src/components/ui/PaginationFooter.tsx`
+  - `src/components/ui/FilterBar.tsx`
+- Must not touch `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx`.
+- Page-number order stays ascending; only prev/next chevrons mirror direction.
+
+### P5
 
 - Module-by-module translation
   - Customers
@@ -38,19 +58,19 @@
   - Settings
   - Users / RBAC
 
-### P4
+### P6
 
 - Document / PDF language strategy and implementation
 
-### P5
+### P7
 
 - Arabic copy review and glossary approval
 
-### P6
+### P8
 
 - SMACC-inspired invoice / quotation UX polish after i18n foundation, not before
 
-### P7
+### P9
 
 - `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1` remains a later medium-risk supplier UX slice
 
@@ -58,6 +78,14 @@
 
 - Foundation-1 runtime implementation is complete only for the narrow helper/scaffolding scope above.
 - This roadmap does not approve broader shell/module/document implementation by default.
+- Shell-1A and Shell-1B must not perform broad bidi conversion, sweeping formatter changes, PDF/document bidi work, or module-level value-rendering refactors.
+- Future implementation prompts must collect Tailwind compatibility evidence before refactor:
+  - `package.json` Tailwind version
+  - RTL-specific plugin presence/absence
+  - Tailwind config context
+  - global CSS context
+  - existing logical utility usage and `dir=` / `[dir=` usage
+- HOLD if logical utility support is uncertain; do not invent unsupported classes.
 - Arabic / English support must be real direction-aware behavior, not literal translation only.
 - Historical document meaning must not silently change.
 - Supplier/internal cost must never leak to customer outputs.

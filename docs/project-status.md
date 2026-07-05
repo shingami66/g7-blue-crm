@@ -73,7 +73,7 @@
 - [x] Root app HTML now uses foundation helpers for safe `lang` / `dir` scaffolding in `src/app/layout.tsx`, still defaulting to `en` / `ltr` until reviewed preference wiring is approved.
 - [x] English-only typed dictionary skeletons were added for common, navigation, statuses, document types, and RBAC-sensitive namespaces; final Arabic wording remains unapproved.
 - [x] SQL draft planning for `app_users.locale` and `company_settings.default_locale` is recorded in `specs/004-i18n-rtl-foundation/sql-draft.md` and remains not applied / not a migration.
-- [x] Shared UI logical-direction refactor remains deferred to `I18N-RTL-SHELL-1`.
+- [x] Shared UI logical-direction refactor remains deferred to the later `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1`, `I18N-RTL-SHELL-1A`, and `I18N-RTL-SHELL-1B` planning sequence.
 - [x] Document/PDF language implementation, `document_locale` schema/runtime wiring, and Customer `preferred_language` remain deferred.
 - [x] No fake VAT, ZATCA, FATOORA, QR, XML, clearance, or cleared-status behavior was introduced.
 
@@ -479,15 +479,17 @@
 - Arabic copy should use business-friendly Saudi/event terms, not awkward literal translation.
 - Numbers, currency, dates, VAT labels, and document names must remain clear, and historical documents must not change meaning when language/settings change.
 - `I18N-RTL-FOUNDATION-AUDIT-1`, `I18N-P0-DECISIONS-LOCK-1`, and `I18N-RTL-FOUNDATION-1` are now closed.
-- `I18N-RTL-SHELL-1` remains the next separate task for shared UI logical-direction refactor across the deferred dashboard shell components.
+- `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` is now the required readonly prerequisite before shell RTL implementation.
+- `I18N-RTL-SHELL-1A` and `I18N-RTL-SHELL-1B` replace the previous single Shell-1 idea.
+- `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx` remains explicitly forbidden for Shell-1A and Shell-1B because `Cancelled` is a non-linear terminal state.
 - Document/PDF language implementation, `document_locale`, and Customer `preferred_language` remain deferred to later reviewed tasks.
 - P1 decisions to confirm next: whether Booking remains a secondary Service label, Arabic rollout order by role, reuse of existing Company Settings Arabic/English company name fields, and whether Hijri calendar support stays deferred.
 
 ### Immediate Next Priorities
-- `P1`: `I18N-RTL-SHELL-1` for the shared UI logical-direction refactor across the deferred shell/navigation components.
-- `P2`: `INVOICE-LIST-ACTIONS-POLISH-1` for view/print icon polish, list action review, and pagination/page-size/go-to-page review.
-- `P3`: `DOCUMENT-FORM-LAYOUT-POLISH-1` for invoice/quotation form sections, line items, and totals panel polish.
-- `P4`: `ARABIC-COPY-REVIEW-1` to review Arabic terminology and avoid literal translation.
+- `P1`: `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` for readonly shared overlay path/ownership inventory.
+- `P2`: `I18N-RTL-SHELL-1A` for the shell/navigation logical-direction refactor across the approved shell files only.
+- `P3`: `I18N-RTL-SHELL-1B` for the shared list/data-component logical-direction refactor.
+- `P4`: `INVOICE-LIST-ACTIONS-POLISH-1` for view/print icon polish, list action review, and pagination/page-size/go-to-page review.
 - `P5`: `DOCUMENT-LANGUAGE-SNAPSHOT-1` for the later reviewed `document_locale` / snapshot-safe document language task.
 - `P6`: `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1` for the medium-risk pending UX migration on supplier allocation create/edit/delete forms.
 

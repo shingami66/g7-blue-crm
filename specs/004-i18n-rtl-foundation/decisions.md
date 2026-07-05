@@ -68,6 +68,7 @@ Hijri support is explicitly deferred unless later approved.
 - cookie mirror should exist only to prevent wrong-direction flash
 - no `/ar` or `/en` URL segmentation should be used for the internal authenticated CRM
 - `company_settings.default_locale` should seed first login only and must not override explicit user preference
+- use a temporary manual/dev-only RTL verification method until real `app_users.locale` wiring is approved and implemented
 
 ## Explicit Non-Decisions
 
@@ -124,6 +125,111 @@ This package does not approve:
 - Final Arabic wording is not approved by this task.
 - Existing invoice cancelled/voided split is translated as-is under this decision.
 - Business-logic correctness of the cancelled/voided distinction is out of scope for this i18n decision and remains flagged separately.
+
+### Decision 4: Shell-1 Planning Boundary
+
+- Split the previous single shell implementation idea into two sequential tasks:
+  - `I18N-RTL-SHELL-1A` for navigation shell only
+  - `I18N-RTL-SHELL-1B` for shared data components only
+- `I18N-RTL-SHELL-1A` scope:
+  - `src/components/layout/Sidebar.tsx`
+  - `src/components/layout/Topbar.tsx`
+  - `src/components/ui/PageHeader.tsx`
+  - `src/app/(dashboard)/layout.tsx`
+- `I18N-RTL-SHELL-1B` scope:
+  - `src/components/ui/DataTable.tsx`
+  - `src/components/ui/PaginationFooter.tsx`
+  - `src/components/ui/FilterBar.tsx`
+- `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx` is explicitly forbidden for Shell-1A and Shell-1B.
+- Reason:
+  - `Cancelled` is a non-linear terminal state
+  - timeline/status-machine visual logic requires a separate reviewed task
+
+### Decision 5: Shared Overlays Prerequisite
+
+- Add `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` before Shell-1A or Shell-1B implementation.
+- This task is readonly only.
+- It must inventory shared Modal/Dialog/Toast/Dropdown components, record exact file paths, and classify each path as shared primitive, module-local component, or third-party wrapper.
+
+### Decision 6: Temporary RTL Verification Method
+
+- Use a temporary manual/dev-only RTL verification method until real `app_users.locale` runtime wiring is approved and implemented.
+- The temporary verification method:
+  - must not write the database
+  - must not use migrations
+  - must not use cookie/runtime persistence as a source of truth
+  - must not be exposed to real users
+  - must be clearly temporary
+  - must be marked for removal after real `app_users.locale` wiring
+  - must not affect document language
+  - must not imply document locale support
+
+### Decision 7: Tailwind Compatibility Evidence
+
+- Future implementation prompts must collect:
+  - `package.json` Tailwind version
+  - presence/absence of RTL-specific Tailwind plugins such as `tailwindcss-rtl`
+  - Tailwind config context
+  - global CSS context
+  - existing logical utility usage, if any:
+    - `ms-`
+    - `me-`
+    - `ps-`
+    - `pe-`
+    - `text-start`
+    - `text-end`
+    - `border-s-`
+    - `border-e-`
+  - existing `dir=` or `[dir=` usage
+- HOLD if logical utility support is uncertain.
+- Do not invent unsupported classes.
+- Check for lighter `[dir=\"rtl\"]` fallback patterns before proposing Tailwind upgrade work.
+
+### Decision 8: Bidi Scope Boundary
+
+- Shell-1A and Shell-1B must not perform broad bidi conversion.
+- Allowed:
+  - preserve compatibility with Foundation-1 bidi/formatting helpers
+  - avoid introducing new hardcoded left/right assumptions
+  - use direction-aware layout patterns in approved shared components
+- Forbidden:
+  - broad conversion of number/date/SAR/document-number call sites
+  - sweeping formatter changes
+  - PDF/document bidi work
+  - financial/document rendering changes
+  - module-level value-rendering changes
+- If unsafe bidi call sites are discovered:
+  - report them as findings
+  - do not fix them inline
+  - recommend a separate follow-up task
+
+### Decision 9: Pagination And PageHeader Direction Rules
+
+- Shell-1B pagination rule:
+  - prev/next chevrons mirror direction
+  - page-number sequence stays ascending numeric order
+  - do not reverse `1 2 3 ... 10`
+- Shell-1A PageHeader rule:
+  - explicitly define primary CTA logical position
+  - explicitly define back-button logical position
+  - explicitly define breadcrumb direction behavior
+  - English/LTR visual behavior must remain unchanged
+  - Arabic/RTL behavior must be manually smoke-tested through the temporary dev-only RTL method
+
+### Decision 10: Future Codex Report Evidence
+
+- Future implementation reports must include:
+  - changed files
+  - forbidden files touched: `NONE`
+  - actual `ServiceStatusTimeline` path touched: `NONE`
+  - Modal/Dialog/Toast/Dropdown touched: `[list or NONE]`
+  - PDF/document/schema/migration touched: `NONE`
+  - Tailwind compatibility evidence
+  - RTL verification method used
+  - confirmation that the verification method is dev-only and non-persistent
+  - confirmation that the temporary verification method is marked for removal after real locale wiring
+  - validation outputs
+  - sub-pass covered: `Shell-1A` or `Shell-1B`
 
 ### Still Deferred / Not Approved
 

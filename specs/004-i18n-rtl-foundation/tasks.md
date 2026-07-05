@@ -46,10 +46,52 @@
   - Shared UI shell refactor, module translation, document/PDF language work, `document_locale`, and Customer `preferred_language` remain deferred.
   - No migration file, Supabase apply, or live DB change was created.
 
-### I18N-RTL-SHELL-1
+### I18N-RTL-SHARED-OVERLAYS-INVENTORY-1
+
+- Type: readonly audit
+- Status: READY NEXT
+- Scope:
+  - inventory shared Modal/Dialog/Toast/Dropdown components only
+  - record exact file paths
+  - classify each path as shared primitive, module-local component, or third-party wrapper
+  - no code changes
+- Outcome:
+  - either include approved shared components in a later reviewed RTL task
+  - or defer them to a named follow-up task
+
+### I18N-RTL-SHELL-1A
 
 - Type: implementation
-- Status: READY NEXT
+- Status: BLOCKED until `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` is complete
+- Scope:
+  - `src/components/layout/Sidebar.tsx`
+  - `src/components/layout/Topbar.tsx`
+  - `src/components/ui/PageHeader.tsx`
+  - `src/app/(dashboard)/layout.tsx`
+- Purpose:
+  - safer shell/navigation logical-direction refactor
+  - smaller blast radius
+  - independently validated and committed before shared data components
+- Explicitly forbidden:
+  - `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx`
+  - shared data components reserved for `I18N-RTL-SHELL-1B`
+  - Modal/Dialog/Toast/Dropdown runtime edits before the readonly inventory is reviewed
+
+### I18N-RTL-SHELL-1B
+
+- Type: implementation
+- Status: BLOCKED until `I18N-RTL-SHELL-1A` is complete
+- Scope:
+  - `src/components/ui/DataTable.tsx`
+  - `src/components/ui/PaginationFooter.tsx`
+  - `src/components/ui/FilterBar.tsx`
+- Purpose:
+  - separate pass because these components affect many modules at once
+  - Customers, Services, Quotations, Invoices, Payments, and Suppliers may all be impacted through shared list UI
+- Explicitly forbidden:
+  - `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx`
+  - shell/navigation files already scoped to `I18N-RTL-SHELL-1A`
+  - Modal/Dialog/Toast/Dropdown runtime edits before the readonly inventory is reviewed
 
 ### I18N-RTL-MODULES-1+
 
@@ -72,6 +114,8 @@
 - Start with the audit.
 - Lock product decisions before any runtime foundation work.
 - Keep Foundation-1 narrower than the shell/navigation RTL refactor.
+- Split shell/navigation RTL from shared data-component RTL so each pass has a smaller blast radius.
+- Require the shared overlays inventory before either shell implementation pass.
 - Keep document/PDF language work behind the document language model decision.
 - Keep `document_locale` and Customer `preferred_language` out of Foundation-1.
 - Keep supplier pending UX as a later separate slice.

@@ -9,7 +9,7 @@
 - formatter helper exists and explicitly forces `numberingSystem: 'latn'`
 - SQL draft exists for `app_users.locale` and `company_settings.default_locale`
 - no migration file or live DB change is created in Foundation-1
-- shared UI shell RTL refactor remains deferred to `I18N-RTL-SHELL-1`
+- shared UI shell RTL refactor remains deferred to `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1`, `I18N-RTL-SHELL-1A`, and `I18N-RTL-SHELL-1B`
 - document/PDF language implementation, `document_locale`, and Customer `preferred_language` remain deferred
 
 ## Mode Smoke
@@ -28,6 +28,25 @@
 - toasts checked
 - dropdowns checked
 - pagination checked
+- `PageHeader` explicitly defines primary CTA logical position, back-button logical position, and breadcrumb behavior
+- `PaginationFooter` mirrors prev/next chevrons only; page numbers remain ascending `1 2 3 ...`
+- `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx` remains untouched in Shell-1A and Shell-1B
+
+## Verification Method
+
+- Shell-1A and Shell-1B use a temporary manual/dev-only RTL verification method until real `app_users.locale` runtime wiring is approved
+- the temporary verification method is non-persistent
+- the temporary verification method does not write the database
+- the temporary verification method does not use migrations
+- the temporary verification method does not become source of truth
+- the temporary verification method does not imply document locale support
+- the temporary verification method is marked for removal after real locale wiring
+
+## Shared Overlays Inventory
+
+- `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` records exact Modal/Dialog/Toast/Dropdown paths before shell implementation
+- each overlay path is classified as shared primitive, module-local component, or third-party wrapper
+- overlay findings are either approved into a later RTL task or deferred to a named follow-up task
 
 ## Icon Rules
 
@@ -42,6 +61,8 @@
 - SAR amounts in Arabic remain visually safe
 - document numbers in Arabic remain visually safe
 - bidi isolation is applied where needed
+- Shell-1A and Shell-1B preserve compatibility with Foundation-1 bidi/formatting helpers
+- unsafe bidi call sites discovered during shell work are reported, not converted inline
 
 ## RBAC And Sensitive Labels
 
@@ -58,12 +79,27 @@
 
 - Cancelled Service status remains non-linear terminal state
 - Service / Quotation / Invoice / `invoice_type` glossaries remain explicitly reviewed
+- `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx` remains a separate reviewed task because `Cancelled` must not be treated as a mirrored progress step
 - document-language integrity smoke: `document_locale` persists at creation and never changes retroactively
 - numeral-consistency smoke: financial/document values render Western digits in English and Arabic modes
 - formatter safety smoke: `Intl.NumberFormat` / date formatter call sites are checked for `numberingSystem: 'latn'` or equivalent
 - type/status separation smoke: no UI control mixes `invoice_type` and invoice status in one dropdown/filter/badge
 - status display consistency smoke: StatusBadge and Timeline use canonical shared glossary terms with optional short/long variants
 - existing invoice cancelled/voided translation does not imply business-logic approval
+
+## Future Report Evidence
+
+- future implementation reports list changed files
+- future implementation reports state forbidden files touched: `NONE`
+- future implementation reports state actual `ServiceStatusTimeline` path touched: `NONE`
+- future implementation reports list Modal/Dialog/Toast/Dropdown touched or `NONE`
+- future implementation reports state PDF/document/schema/migration touched: `NONE`
+- future implementation reports include Tailwind compatibility evidence
+- future implementation reports include the RTL verification method used
+- future implementation reports confirm the verification method is dev-only and non-persistent
+- future implementation reports confirm the temporary verification method is marked for removal after real locale wiring
+- future implementation reports include validation outputs
+- future implementation reports state whether the covered sub-pass was `Shell-1A` or `Shell-1B`
 
 ## Compliance And Claim Safety
 

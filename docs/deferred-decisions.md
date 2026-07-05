@@ -61,7 +61,9 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 ## RTL / i18n Gates
 - `I18N-RTL-FOUNDATION-AUDIT-1`, `I18N-P0-DECISIONS-LOCK-1`, and `I18N-RTL-FOUNDATION-1` are closed.
 - Foundation-1 is limited to locale helpers, root `lang` / `dir` scaffolding, dictionary skeletons, bidi/formatting helpers, and SQL-draft-only schema planning.
-- `I18N-RTL-SHELL-1` remains the next separate task for the shared UI logical-direction refactor.
+- `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` is the new readonly prerequisite before shell RTL implementation.
+- `I18N-RTL-SHELL-1A` and `I18N-RTL-SHELL-1B` replace the previous single Shell-1 implementation idea.
+- `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx` is explicitly forbidden for Shell-1A and Shell-1B because `Cancelled` must not be treated as a mirrored progress step.
 - Document/PDF language implementation and `document_locale` runtime/schema work remain deferred to a later reviewed task.
 - P1 decisions to confirm next: whether Booking remains a secondary Service label, Arabic rollout order by role, reuse of existing Company Settings Arabic/English company name fields, and whether Hijri calendar support stays deferred.
 
@@ -796,6 +798,8 @@ The following items are explicitly documented as deferred or production hardenin
 - Use CSS logical utilities for RTL work, mirror directional icons only, and bidi-isolate numbers, SAR amounts, dates, and document numbers.
 - Document/PDF language must reuse the existing snapshot approach and preserve historical meaning after locale/settings changes.
 - Do not add fake Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, XML, clearance, or cleared-status claims through localization work.
+- Use a temporary manual/dev-only RTL verification method until real `app_users.locale` runtime wiring is approved and implemented.
+- Future Shell-1A and Shell-1B prompts must collect Tailwind compatibility evidence before refactor and HOLD if logical utility support is uncertain.
 
 ## I18N / RTL Still Deferred
 - Final Arabic terminology.

@@ -387,12 +387,12 @@ Checklist:
 
 Immediate next priorities:
 - [x] `SUPPLIER-ACTIONS-PENDING-AUDIT-1` completed as a readonly audit; no code changes were made.
-1. `P1` - `I18N-RTL-SHELL-1`: shared UI logical-direction refactor for the deferred dashboard shell/navigation components after Foundation-1.
-1. `P2` - `INVOICE-LIST-ACTIONS-POLISH-1`: view/print icon polish, list action review, and pagination/page-size/go-to-page review.
-1. `P3` - `DOCUMENT-FORM-LAYOUT-POLISH-1`: invoice/quotation form sections, line items, and totals panel polish.
-1. `P4` - `ARABIC-COPY-REVIEW-1`: review Arabic terminology and avoid literal translation.
-1. `P5` - `DOCUMENT-LANGUAGE-SNAPSHOT-1`: later reviewed document-language / `document_locale` task; PDF/runtime changes remain deferred here.
-1. `P6` - `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1`: medium-risk pending UX migration for supplier allocation create/edit/delete forms.
+1. `P1` - `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1`: readonly inventory of shared Modal/Dialog/Toast/Dropdown paths and ownership before shell RTL implementation.
+1. `P2` - `I18N-RTL-SHELL-1A`: shell/navigation logical-direction refactor for `Sidebar`, `Topbar`, `PageHeader`, and `src/app/(dashboard)/layout.tsx`.
+1. `P3` - `I18N-RTL-SHELL-1B`: shared data-component logical-direction refactor for `DataTable`, `PaginationFooter`, and `FilterBar`.
+1. `P4` - `INVOICE-LIST-ACTIONS-POLISH-1`: view/print icon polish, list action review, and pagination/page-size/go-to-page review.
+1. `P5` - `DOCUMENT-FORM-LAYOUT-POLISH-1`: invoice/quotation form sections, line items, and totals panel polish.
+1. `P6` - `ARABIC-COPY-REVIEW-1`: review Arabic terminology and avoid literal translation.
 
 - [x] `PAYMENTS-LIST-SORT-PAGINATION-1` completed and pushed in `844f2ec feat(payments): add ascending pagination to payments list`.
 - [x] Payments list ordering now starts from the smallest/older payment sequence and the page shows 10 records per page with shared pagination controls.
@@ -1830,16 +1830,18 @@ Must verify:
 - RLS behavior aligns with server-action/application RBAC
 
 ## I18N / RTL Next Priority Order
-1. `I18N-RTL-SHELL-1`
+1. `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1`
+   - Readonly inventory of shared Modal/Dialog/Toast/Dropdown file paths, ownership, and wrapper type before shell implementation.
+2. `I18N-RTL-SHELL-1A`
    - Foundation-1 is complete for locale helpers, root `lang` / `dir` scaffolding, dictionary skeletons, bidi helpers, formatting helpers, and SQL draft planning only.
-   - Shared UI logical-direction refactor remains a separate task and can touch the deferred shell/navigation files only in its own approved prompt.
-2. `ARABIC-COPY-REVIEW-1`
+   - Shell-1A is limited to `Sidebar`, `Topbar`, `PageHeader`, and `src/app/(dashboard)/layout.tsx`.
+   - `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx` remains explicitly forbidden because `Cancelled` must not be treated as a mirrored progress step.
+3. `I18N-RTL-SHELL-1B`
+   - Shared data components move in a separate pass because `DataTable`, `PaginationFooter`, and `FilterBar` can affect multiple modules at once.
+   - Pagination keeps ascending page numbers while only prev/next chevrons mirror direction.
+4. `ARABIC-COPY-REVIEW-1`
    - Final Arabic terminology remains unapproved.
-3. `DOCUMENT-LANGUAGE-SNAPSHOT-1`
+5. `DOCUMENT-LANGUAGE-SNAPSHOT-1`
    - `document_locale` schema/runtime work remains deferred and must stay separate from Foundation-1.
-4. `INVOICE-LIST-ACTIONS-POLISH-1`
+6. `INVOICE-LIST-ACTIONS-POLISH-1`
    - View/Print icons, list action polish, pagination/page-size/go-to-page review.
-5. `DOCUMENT-FORM-LAYOUT-POLISH-1`
-   - Invoice/quotation form sections, line items, and totals panel polish.
-6. `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1`
-   - Medium-risk pending UX migration for supplier allocation create/edit/delete forms.
