@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import type { Service } from "@/types/service";
 import { updateService } from "@/lib/services/actions";
+import Button from "@/components/ui/Button";
 
 interface EditServiceFormProps {
   service: Service;
@@ -232,14 +233,13 @@ export default function EditServiceForm({ service }: EditServiceFormProps) {
           >
             Cancel
           </button>
-          <button
+          <Button
             type="submit"
-            disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg font-semibold transition-colors disabled:opacity-50"
+            loading={isSubmitting}
           >
             <Save size={18} />
-            {isSubmitting ? "Saving..." : "Save Changes"}
-          </button>
+            Save Changes
+          </Button>
         </div>
       </form>
     </div>

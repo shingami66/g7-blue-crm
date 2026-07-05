@@ -8,6 +8,7 @@ import {
   SAFE_SUPPLIER_CREATE_STATUSES,
   SUPPLIER_CATEGORIES,
 } from "@/lib/suppliers/schemas";
+import Button from "@/components/ui/Button";
 
 const SUPPLIER_TYPES = ["company", "individual"] as const;
 const VAT_REGISTRATION_OPTIONS = [
@@ -363,14 +364,13 @@ export default function SupplierCreateForm() {
           >
             Cancel
           </button>
-          <button
+          <Button
             type="submit"
-            disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg font-semibold transition-colors disabled:opacity-50"
+            loading={isSubmitting}
           >
             <Save size={18} />
-            {isSubmitting ? "Creating..." : "Create Supplier"}
-          </button>
+            Create Supplier
+          </Button>
         </div>
       </form>
     </div>

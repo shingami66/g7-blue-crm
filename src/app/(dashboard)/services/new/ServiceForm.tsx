@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import type { Customer } from "@/types/customer";
 import { createService } from "@/lib/services/actions";
+import Button from "@/components/ui/Button";
 
 interface ServiceFormProps {
   customers: Customer[];
@@ -249,14 +250,13 @@ export default function ServiceForm({ customers }: ServiceFormProps) {
           >
             Cancel
           </button>
-          <button
+          <Button
             type="submit"
-            disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg font-semibold transition-colors disabled:opacity-50"
+            loading={isSubmitting}
           >
             <Save size={18} />
-            {isSubmitting ? "Creating..." : "Create Service"}
-          </button>
+            Create Service
+          </Button>
         </div>
       </form>
     </div>

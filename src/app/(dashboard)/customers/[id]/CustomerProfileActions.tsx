@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Pencil, X } from "lucide-react";
 import { updateCustomer } from "@/lib/customers/actions";
 import type { Customer } from "@/types/customer";
+import Button from "@/components/ui/Button";
 import {
   CustomerCoreFields,
   CustomerOfficialBillingFields,
@@ -89,13 +90,12 @@ export default function CustomerProfileActions({
                 >
                   Cancel
                 </button>
-                <button
+                <Button
                   type="submit"
-                  disabled={isPending}
-                  className="px-4 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[14px] font-semibold transition-colors disabled:opacity-50"
+                  loading={isPending}
                 >
-                  {isPending ? "Saving..." : "Save Changes"}
-                </button>
+                  Save Changes
+                </Button>
               </div>
             </form>
           </div>
