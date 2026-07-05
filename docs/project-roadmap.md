@@ -391,6 +391,14 @@ Immediate next priorities:
    - Result: no shared overlay primitive layer was found; current overlays are hand-rolled module-local modal blocks; Shell-1A is not blocked by shared overlays.
    - Follow-up: `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1` is a deferred module-local modal RTL/accessibility review and is not a prerequisite blocker before Shell-1A.
 1. `P2` - `I18N-RTL-SHELL-1A`: shell/navigation logical-direction refactor for `Sidebar`, `Topbar`, `PageHeader`, and `src/app/(dashboard)/layout.tsx`.
+   - Implementation commit `3f627b1` is pushed.
+   - Manual smoke passed with `G7_DEV_RTL=1` across dashboard/root route, customers, services, invoices, quotations, suppliers, payments, admin/users, and settings.
+   - Sidebar moved right in dev RTL and the content offset remained usable.
+   - Topbar/search remained usable.
+   - G7 logo and object icons were not mirrored.
+   - No DB/cookie/runtime persistence was introduced.
+   - Shell-1B findings observed: DataTable and pagination inherit RTL and need a dedicated Shell-1B pass for page number order and prev/next behavior.
+   - Shell-1B findings are not blockers for Shell-1A and must remain out of this docs sync.
 1. `P3` - `I18N-RTL-SHELL-1B`: shared data-component logical-direction refactor for `DataTable`, `PaginationFooter`, and `FilterBar`.
 1. `P4` - `INVOICE-LIST-ACTIONS-POLISH-1`: view/print icon polish, list action review, and pagination/page-size/go-to-page review.
 1. `P5` - `DOCUMENT-FORM-LAYOUT-POLISH-1`: invoice/quotation form sections, line items, and totals panel polish.

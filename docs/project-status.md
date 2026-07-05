@@ -86,6 +86,18 @@
 - [x] Shell-1A is not blocked by shared overlay primitives.
 - [x] Module-local overlays remain important but were deferred to `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1`, which is not a prerequisite blocker before Shell-1A.
 
+### âœ… I18N-RTL-SHELL-1A
+- [x] Implementation commit `3f627b1` is pushed.
+- [x] Manual smoke passed with `G7_DEV_RTL=1`.
+- [x] Verified pages: dashboard/root route, customers, services, invoices, quotations, suppliers, payments, admin/users, settings.
+- [x] Sidebar moved right in dev RTL.
+- [x] Content offset stayed usable.
+- [x] Topbar/search remained usable.
+- [x] G7 logo and object icons were not mirrored.
+- [x] No DB/cookie/runtime persistence was introduced.
+- [x] Shell-1B findings observed: DataTable and pagination-related inherited RTL behavior need dedicated Shell-1B handling, including page number order and prev/next behavior.
+- [x] Shell-1B findings are not blockers for Shell-1A and must not be fixed in this docs sync.
+
 ### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
 - [x] Supabase client/admin setup exists

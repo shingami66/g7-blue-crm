@@ -802,11 +802,15 @@ The following items are explicitly documented as deferred or production hardenin
 - Future Shell-1A and Shell-1B prompts must collect Tailwind compatibility evidence before refactor and HOLD if logical utility support is uncertain.
 - `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` completed as readonly evidence; no shared overlay primitive layer was found.
 - Module-local overlays remain important but are deferred to `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1` for RTL/accessibility review only, and that follow-up is not a prerequisite blocker before Shell-1A.
+- `I18N-RTL-SHELL-1A` implementation commit `3f627b1` is pushed and smoke-verified with `G7_DEV_RTL=1`.
+- Shell-1B findings were observed during smoke: `DataTable` and pagination behavior inherit RTL direction and need dedicated Shell-1B handling for page number order and prev/next behavior.
+- Shell-1B findings are not blockers for Shell-1A and must not be fixed in this docs sync.
 
 ## I18N / RTL Still Deferred
 - Final Arabic terminology.
 - Shared UI logical-direction refactor across the deferred shell/navigation components.
 - Module-local modal RTL/accessibility review for close icon position, action ordering, form alignment, focus handling, and portal/focus-trap behavior. This review must stay separate from Shell-1A and Shell-1B.
+- Shell-1B data-component RTL handling for `DataTable`, `PaginationFooter`, and `FilterBar` after a separate controlled prompt.
 - Module-by-module translation rollout.
 - Bilingual side-by-side documents.
 - Document/PDF language implementation.
