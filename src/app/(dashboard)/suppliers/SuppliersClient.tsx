@@ -1,12 +1,12 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import DataTable from "@/components/ui/DataTable";
+import PendingLink from "@/components/ui/PendingLink";
 import { Filter, Search, Star, Phone, Mail, FileText, CheckCircle2, User, MapPin, Plus, ShieldAlert } from "lucide-react";
 import type { Supplier, SupplierStatus } from "@/types/supplier";
 import SupplierBlacklistActions from "./SupplierBlacklistActions";
@@ -120,13 +120,13 @@ export default function SuppliersClient({
 
       {canCreateSuppliers && (
         <div className="mb-4 flex justify-end">
-          <Link
+          <PendingLink
             href="/suppliers/new"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold text-on-primary transition-colors hover:bg-primary-container"
           >
             <Plus size={16} />
             New Supplier
-          </Link>
+          </PendingLink>
         </div>
       )}
 
@@ -309,12 +309,12 @@ export default function SuppliersClient({
                 {canCreateSuppliers && (
                   <>
                     <SupplierBlacklistActions supplier={activeSupplier} />
-                    <Link
+                    <PendingLink
                       href={`/suppliers/${activeSupplier.id}/edit`}
                       className="text-[12px] font-medium text-primary hover:underline px-2 py-1 rounded hover:bg-surface-variant"
                     >
                       Edit
-                    </Link>
+                    </PendingLink>
                   </>
                 )}
 

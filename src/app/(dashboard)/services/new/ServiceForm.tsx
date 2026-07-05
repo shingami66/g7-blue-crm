@@ -6,6 +6,7 @@ import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import type { Customer } from "@/types/customer";
 import { createService } from "@/lib/services/actions";
 import Button from "@/components/ui/Button";
+import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 
 interface ServiceFormProps {
   customers: Customer[];
@@ -13,6 +14,7 @@ interface ServiceFormProps {
 
 export default function ServiceForm({ customers }: ServiceFormProps) {
   const router = useRouter();
+  const { back, push } = useGlobalNavigationPending();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,7 +102,7 @@ export default function ServiceForm({ customers }: ServiceFormProps) {
       <div className="flex items-center gap-4 py-4">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => back()}
           className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
         >
           <ArrowLeft size={18} />
@@ -244,7 +246,7 @@ export default function ServiceForm({ customers }: ServiceFormProps) {
         <div className="flex justify-end gap-3 mt-4">
           <button
             type="button"
-            onClick={() => router.push("/services")}
+            onClick={() => push("/services")}
             className="px-6 py-2 bg-surface border border-outline-variant hover:bg-surface-container-low text-on-surface rounded-lg font-semibold transition-colors disabled:opacity-50"
             disabled={isSubmitting}
           >

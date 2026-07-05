@@ -8,6 +8,7 @@ import { getQuotationsByServiceId } from "@/lib/quotations/queries";
 import { getServiceBillingState } from "@/lib/invoices";
 import { getServiceStatusTransitionState } from "@/lib/services/status-transitions";
 import StatusBadge from "@/components/ui/StatusBadge";
+import PendingLink from "@/components/ui/PendingLink";
 import { ArrowLeft, CalendarDays, Edit, FileText, MapPin, UserRound } from "lucide-react";
 import Link from "next/link";
 import ServiceStatusTimeline from "./ServiceStatusTimeline";
@@ -138,13 +139,13 @@ export default async function ServiceDetailPage({
                 {service.serviceTitle}
               </h1>
               <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-[14px] leading-[20px] text-on-surface-variant">
-                <Link
+                <PendingLink
                   href={`/customers/${service.customerId}`}
                   className="inline-flex items-center gap-2 text-primary hover:underline"
                 >
                   <UserRound size={16} />
                   {formatCustomerName(service)}
-                </Link>
+                </PendingLink>
                 <span className="inline-flex items-center gap-2">
                   <CalendarDays size={16} />
                   {formatServiceSchedule(service)}
@@ -181,13 +182,13 @@ export default async function ServiceDetailPage({
             )
           )}
           {canEditService && canModifyService && (
-            <Link
+            <PendingLink
               href={`/services/${service.id}/edit`}
               className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors"
             >
               <Edit size={18} />
               Edit
-            </Link>
+            </PendingLink>
           )}
         </div>
       </div>
@@ -221,12 +222,12 @@ export default async function ServiceDetailPage({
           <SectionHeader title="Customer Summary" />
           <dl className="p-6 grid grid-cols-1 gap-5">
             <DetailItem label="Customer">
-              <Link
+              <PendingLink
                 href={`/customers/${service.customerId}`}
                 className="text-primary hover:underline"
               >
                 {formatCustomerName(service)}
-              </Link>
+              </PendingLink>
             </DetailItem>
             <DetailItem label="Primary Contact">
               {formatNullable(service.customer?.contact)}
@@ -290,13 +291,13 @@ export default async function ServiceDetailPage({
 
 function BackToServicesLink() {
   return (
-    <Link
+    <PendingLink
       href="/services"
       className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
       aria-label="Back to services"
     >
       <ArrowLeft size={18} />
-    </Link>
+    </PendingLink>
   );
 }
 

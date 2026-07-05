@@ -7,9 +7,9 @@ import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import Button from "@/components/ui/Button";
+import PendingLink from "@/components/ui/PendingLink";
+import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import { Filter, Plus } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import type { Service } from "@/types/service";
 
 const STATUS_VARIANT_MAP: Record<string, string> = {
@@ -28,7 +28,7 @@ interface ServicesClientProps {
 }
 
 export default function ServicesClient({ services, canWrite }: ServicesClientProps) {
-  const router = useRouter();
+  const { push } = useGlobalNavigationPending();
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -51,10 +51,10 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
       >
         {canWrite && (
           <Button asChild>
-            <Link href="/services/new">
+            <PendingLink href="/services/new">
               <Plus size={18} />
               New Service
-            </Link>
+            </PendingLink>
           </Button>
         )}
       </PageHeader>
@@ -117,7 +117,7 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
                 <tr
                   key={service.id}
                   className="hover:bg-surface-container-low/50 transition-colors cursor-pointer"
-                  onClick={() => router.push(`/services/${service.id}`)}
+                  onClick={() => push(`/services/${service.id}`)}
                 >
                   <td className="px-4 py-4 font-mono font-semibold text-primary">
                     {service.serviceNumber}

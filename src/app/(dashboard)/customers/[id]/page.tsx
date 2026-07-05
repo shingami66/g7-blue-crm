@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { ArrowLeft, Mail, MapPin, Phone } from "lucide-react";
+import PendingLink from "@/components/ui/PendingLink";
 import StatusBadge from "@/components/ui/StatusBadge";
 import DataTable from "@/components/ui/DataTable";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
@@ -66,13 +66,13 @@ export default async function CustomerProfilePage({
     <div className="flex flex-col gap-6 pb-12">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
-          <Link
+          <PendingLink
             href="/customers"
             className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
             aria-label="Back to customers"
           >
             <ArrowLeft size={18} />
-          </Link>
+          </PendingLink>
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-[28px] leading-[36px] font-semibold text-primary">
@@ -187,20 +187,20 @@ export default async function CustomerProfilePage({
                 className="hover:bg-surface-container-low/50 transition-colors"
               >
                 <td className="px-4 py-4 font-mono font-semibold">
-                  <Link
+                  <PendingLink
                     href={`/services/${service.id}`}
                     className="text-primary hover:underline"
                   >
                     {formatNullable(service.serviceNumber)}
-                  </Link>
+                  </PendingLink>
                 </td>
                 <td className="px-4 py-4">
-                  <Link
+                  <PendingLink
                     href={`/services/${service.id}`}
                     className="font-semibold text-on-surface hover:text-primary hover:underline"
                   >
                     {formatNullable(service.serviceTitle)}
-                  </Link>
+                  </PendingLink>
                   <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
                     {formatNullable(service.eventName)}
                   </div>

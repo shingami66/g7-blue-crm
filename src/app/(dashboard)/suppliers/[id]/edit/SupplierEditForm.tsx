@@ -10,6 +10,7 @@ import {
 } from "@/lib/suppliers/schemas";
 import type { Supplier, SupplierStatus } from "@/types/supplier";
 import Button from "@/components/ui/Button";
+import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 
 const SUPPLIER_TYPES = ["company", "individual"] as const;
 const VAT_REGISTRATION_OPTIONS = [
@@ -31,6 +32,7 @@ function emptyToUndefined(value: string) {
 
 export default function SupplierEditForm({ supplier }: { supplier: Supplier }) {
   const router = useRouter();
+  const { push } = useGlobalNavigationPending();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -109,7 +111,7 @@ export default function SupplierEditForm({ supplier }: { supplier: Supplier }) {
       <div className="flex items-center gap-4 py-4">
         <button
           type="button"
-          onClick={() => router.push("/suppliers")}
+          onClick={() => push("/suppliers")}
           className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
           aria-label="Back to suppliers"
         >
@@ -364,7 +366,7 @@ export default function SupplierEditForm({ supplier }: { supplier: Supplier }) {
         <div className="flex justify-end gap-3 mt-4">
           <button
             type="button"
-            onClick={() => router.push("/suppliers")}
+            onClick={() => push("/suppliers")}
             className="px-6 py-2 bg-surface border border-outline-variant hover:bg-surface-container-low text-on-surface rounded-lg font-semibold transition-colors disabled:opacity-50"
             disabled={isSubmitting}
           >

@@ -8,6 +8,7 @@ import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import Button from "@/components/ui/Button";
+import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import { Plus, Filter, Download, X } from "lucide-react";
 import { createCustomer } from "@/lib/customers/actions";
 import type { Customer } from "@/types/customer";
@@ -26,6 +27,7 @@ export default function CustomersClient({
   generatedBy?: string;
 }) {
   const router = useRouter();
+  const { push } = useGlobalNavigationPending();
   const [showAddModal, setShowAddModal] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -200,7 +202,7 @@ export default function CustomersClient({
                 {paginatedCustomers.map((customer) => (
                   <tr
                     key={customer.id}
-                    onClick={() => router.push(`/customers/${customer.id}`)}
+                    onClick={() => push(`/customers/${customer.id}`)}
                     className="hover:bg-surface-container-low/50 cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-4">
