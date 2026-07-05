@@ -52,6 +52,9 @@
 
 ## Module Rollout Gate
 
+- `I18N-RTL-MODULE-TEXT-INVENTORY-1` is complete as a readonly inventory
+- overall result is `PASS`
+- no files were changed by the inventory task
 - Shell-1A and Shell-1B are completed and pushed before module rollout begins
 - `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1` is completed as readonly review with overall result `DEFER`
 - overlay hardening is deferred to `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`

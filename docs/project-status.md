@@ -124,6 +124,23 @@
 - [x] Supplier/internal cost labels remain RBAC-sensitive.
 - [x] Service remains the locked operational core; Booking terminology still needs careful copy review.
 
+### I18N-RTL-MODULE-TEXT-INVENTORY-1
+- [x] Readonly module text inventory completed.
+- [x] Overall result: PASS.
+- [x] No files were changed by the inventory task.
+- [x] Covered Customers, Services, Quotations non-PDF, Invoices non-PDF, Payments, Suppliers, Settings, Admin/Users, and shared list UI terms.
+- [x] Main conclusion: next risk is terminology/glossary consistency, not missing surface discovery.
+- [x] Recommended next task: `ARABIC-COPY-REVIEW-1`.
+- [x] Arabic copy review is required before any runtime module translation.
+- [x] Do not start broad \"translate everything\" implementation.
+- [x] Recommended first runtime module after Arabic copy review remains Customers, then Services, then Quotations non-PDF.
+- [x] Services has the densest workflow/supplier-cost vocabulary and must stay carefully reviewed.
+- [x] Quotations/Invoices/PDF/document language remain separate; PDF/document language remains deferred.
+- [x] `document_locale` and Customer `preferred_language` remain deferred.
+- [x] VAT/ZATCA/FATOORA/QR/XML/clearance claims remain forbidden.
+- [x] Supplier/internal cost labels remain RBAC-sensitive.
+- [x] Service is the locked operational core; Booking is secondary terminology and still needs care.
+
 ### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
 - [x] Supabase client/admin setup exists

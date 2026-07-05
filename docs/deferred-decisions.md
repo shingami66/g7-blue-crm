@@ -808,6 +808,7 @@ The following items are explicitly documented as deferred or production hardenin
 - `I18N-RTL-SHELL-1B` implementation commit `7f4c19f` is pushed and smoke-verified in RTL dev mode and LTR normal mode.
 - `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1` completed as readonly review with overall result `DEFER`.
 - Future overlay hardening remains a separate task: `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`.
+- `I18N-RTL-MODULE-TEXT-INVENTORY-1` completed as readonly inventory with overall result `PASS` and no file changes.
 - The next runtime phase must not begin as a broad "translate everything" pass.
 - Arabic copy is not finally approved yet.
 - The next recommended task is `I18N-RTL-MODULE-TEXT-INVENTORY-1` as a readonly module text inventory before runtime translation.

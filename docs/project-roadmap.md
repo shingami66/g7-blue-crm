@@ -411,11 +411,12 @@ Immediate next priorities:
    - DataTable, PaginationFooter, and FilterBar are now direction-aware.
    - Page numbers remain ascending while prev/next presentation mirrors direction.
 1. `P5` - `I18N-RTL-MODULE-TEXT-INVENTORY-1`: readonly module text inventory before runtime rollout.
-   - Recommended next task.
-   - Must finish before `ARABIC-COPY-REVIEW-1` and before any runtime module translation pass.
-   - Must record rollout order as Customers, Services, Quotations non-PDF surfaces, Invoices non-PDF surfaces, Payments, Suppliers, then Settings/Admin later.
+    - Recommended next task.
+   - Readonly inventory completed with overall result PASS and no file changes.
+    - Must finish before `ARABIC-COPY-REVIEW-1` and before any runtime module translation pass.
+    - Must record rollout order as Customers, Services, Quotations non-PDF surfaces, Invoices non-PDF surfaces, Payments, Suppliers, then Settings/Admin later.
 1. `P6` - `ARABIC-COPY-REVIEW-1`: glossary/copy review before runtime module translation.
-   - Arabic copy is not finally approved yet.
+    - Arabic copy is not finally approved yet.
 1. `P7` - Module rollout remains split into small controlled tasks, not a broad "translate everything" pass.
    - Recommended first runtime module candidate after planning/copy review: Customers.
    - Service remains the locked operational core; Booking terminology still needs care.
