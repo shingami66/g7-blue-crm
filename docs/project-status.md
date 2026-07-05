@@ -457,6 +457,10 @@
 - Arabic mode should switch to RTL with the sidebar on the right and mirrored breadcrumbs/table/action flow.
 - Arabic copy should use business-friendly Saudi/event terms, not awkward literal translation.
 - Numbers, currency, dates, VAT labels, and document names must remain clear, and historical documents must not change meaning when language/settings change.
+- `I18N-RTL-FOUNDATION-AUDIT-1` is approved to start as a readonly audit.
+- `I18N-RTL-FOUNDATION-1` remains gated until the P0 decisions below are locked.
+- P0 decisions before implementation: document-language model, numeral/currency/date/document-number formatting, and split status glossaries for service, quotation, invoice, and invoice_type values.
+- P1 decisions to confirm next: whether Booking remains a secondary Service label, Arabic rollout order by role, reuse of existing Company Settings Arabic/English company name fields, and whether Hijri calendar support stays deferred.
 
 ### Immediate Next Priorities
 - `P1`: `I18N-RTL-FOUNDATION-AUDIT-1` for a readonly audit of current layout/text structure, language-switch readiness, `dir` handling, dictionary strategy, and document impact.

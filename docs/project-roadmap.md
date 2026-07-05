@@ -388,7 +388,7 @@ Checklist:
 Immediate next priorities:
 - [x] `SUPPLIER-ACTIONS-PENDING-AUDIT-1` completed as a readonly audit; no code changes were made.
 1. `P1` - `I18N-RTL-FOUNDATION-AUDIT-1`: readonly audit of current layout/text structure, language-switch readiness, `dir` handling, dictionary strategy, and document impact.
-1. `P2` - `I18N-RTL-FOUNDATION-1`: implement the RTL/language foundation only after the audit.
+1. `P2` - `I18N-RTL-FOUNDATION-1`: blocked until the P0 RTL decisions are locked after the audit.
 1. `P3` - `INVOICE-LIST-ACTIONS-POLISH-1`: view/print icon polish, list action review, and pagination/page-size/go-to-page review.
 1. `P4` - `DOCUMENT-FORM-LAYOUT-POLISH-1`: invoice/quotation form sections, line items, and totals panel polish.
 1. `P5` - `ARABIC-COPY-REVIEW-1`: review Arabic terminology and avoid literal translation.

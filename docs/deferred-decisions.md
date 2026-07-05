@@ -50,6 +50,19 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - Arabic copy should use business-friendly Saudi/event terms, not awkward literal translation.
 - Numbers, currency, dates, VAT labels, and document names must stay clear, and historical documents must not change meaning when language/settings change.
 - No fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior should be implied by localization work.
+- Locale source of truth should be `app_users.locale`, with a cookie mirror only to prevent wrong-direction flash.
+- Do not use `/ar` or `/en` URL segmentation for this internal authenticated CRM.
+- `company_settings.default_locale` may seed the first login only and must not override user preference.
+- Use existing Company Settings Arabic/English company name fields where relevant.
+- Prefer CSS logical utilities over hardcoded left/right, mirror only directional icons, and bidi-isolate numbers, SAR amounts, dates, and document numbers.
+- Document/PDF language should reuse the existing snapshot approach, and historical documents must not silently change meaning after locale/settings changes.
+- Keep company/VAT behavior explicit: do not claim fake Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, XML, clearance, or cleared-status behavior, and treat the company as not VAT registered unless settings prove otherwise.
+
+## RTL / i18n Gates
+- `I18N-RTL-FOUNDATION-AUDIT-1` is safe to start as a readonly audit.
+- `I18N-RTL-FOUNDATION-1` is blocked until the P0 decisions are locked.
+- P0 decisions to lock before implementation: document-language model, numeral/currency/date/document-number formatting, and split status glossaries for service, quotation, invoice, and invoice_type values.
+- P1 decisions to confirm next: whether Booking remains a secondary Service label, Arabic rollout order by role, reuse of existing Company Settings Arabic/English company name fields, and whether Hijri calendar support stays deferred.
 
 ## Supplier Allocation / Booking Pending UX
 - `SUPPLIER-ACTIONS-PENDING-AUDIT-1` is completed as a readonly audit with no code changes.
