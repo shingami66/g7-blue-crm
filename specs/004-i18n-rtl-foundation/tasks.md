@@ -2,9 +2,9 @@
 
 ## Task Scope Rules
 
-- Keep this package specification-only.
-- Do not implement runtime code from these tasks unless a later approved prompt explicitly allows it.
-- Separate audit, decision lock, implementation, docs sync, commit, and push into separate controlled prompts.
+- Keep audit, decision lock, foundation implementation, shell refactor, module rollout, document-language work, docs sync, commit, and push in separate controlled prompts.
+- Runtime code is approved only for the closed Foundation-1 scope recorded below; broader shell/module/document work remains separate.
+- Separate SQL drafts from migration files and live DB changes.
 
 ## Task Cards
 
@@ -39,15 +39,17 @@
 ### I18N-RTL-FOUNDATION-1
 
 - Type: implementation
-- Status: BLOCKED until the Foundation-1 prompt passes senior review
+- Status: DONE
 - Note:
-  - Foundation-1 prompt must include `app_users.locale` and `company_settings.default_locale` as explicit, separately staged SQL-draft-only schema items following standard migration governance.
-  - Runtime implementation remains not started.
+  - Senior-reviewed Foundation-1 prompt was executed as a narrow additive slice only.
+  - Scope delivered: locale helpers, root `lang` / `dir` scaffolding, English-only dictionary skeletons, bidi/formatting helpers, docs sync, and SQL-draft-only planning for `app_users.locale` and `company_settings.default_locale`.
+  - Shared UI shell refactor, module translation, document/PDF language work, `document_locale`, and Customer `preferred_language` remain deferred.
+  - No migration file, Supabase apply, or live DB change was created.
 
 ### I18N-RTL-SHELL-1
 
 - Type: implementation
-- Status: BLOCKED until foundation completes
+- Status: READY NEXT
 
 ### I18N-RTL-MODULES-1+
 
@@ -57,7 +59,7 @@
 ### DOCUMENT-LANGUAGE-SNAPSHOT-1
 
 - Type: document architecture
-- Status: BLOCKED until document language model is decided
+- Status: BLOCKED until separately reviewed after Foundation-1
 
 ### ARABIC-COPY-REVIEW-1
 
@@ -69,5 +71,7 @@
 
 - Start with the audit.
 - Lock product decisions before any runtime foundation work.
+- Keep Foundation-1 narrower than the shell/navigation RTL refactor.
 - Keep document/PDF language work behind the document language model decision.
+- Keep `document_locale` and Customer `preferred_language` out of Foundation-1.
 - Keep supplier pending UX as a later separate slice.

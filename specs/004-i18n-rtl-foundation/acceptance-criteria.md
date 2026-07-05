@@ -1,5 +1,17 @@
 # Arabic / English i18n + RTL Acceptance Criteria
 
+## Foundation-1 Completion Gate
+
+- locale helpers exist for `en` / `ar`, including a safe parser and default `en` fallback
+- root `html` `lang` / `dir` scaffolding exists and safely defaults to `en` / `ltr`
+- English-only typed dictionary skeletons exist for common, navigation, statuses, document types, and RBAC-sensitive namespaces
+- bidi isolation helper exists for mixed-direction values
+- formatter helper exists and explicitly forces `numberingSystem: 'latn'`
+- SQL draft exists for `app_users.locale` and `company_settings.default_locale`
+- no migration file or live DB change is created in Foundation-1
+- shared UI shell RTL refactor remains deferred to `I18N-RTL-SHELL-1`
+- document/PDF language implementation, `document_locale`, and Customer `preferred_language` remain deferred
+
 ## Mode Smoke
 
 - English mode smoke

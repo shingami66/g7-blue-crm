@@ -59,9 +59,10 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - Keep company/VAT behavior explicit: do not claim fake Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, XML, clearance, or cleared-status behavior, and treat the company as not VAT registered unless settings prove otherwise.
 
 ## RTL / i18n Gates
-- `I18N-RTL-FOUNDATION-AUDIT-1` is safe to start as a readonly audit.
-- `I18N-RTL-FOUNDATION-1` is blocked until the P0 decisions are locked.
-- P0 decisions to lock before implementation: document-language model, numeral/currency/date/document-number formatting, and split status glossaries for service, quotation, invoice, and invoice_type values.
+- `I18N-RTL-FOUNDATION-AUDIT-1`, `I18N-P0-DECISIONS-LOCK-1`, and `I18N-RTL-FOUNDATION-1` are closed.
+- Foundation-1 is limited to locale helpers, root `lang` / `dir` scaffolding, dictionary skeletons, bidi/formatting helpers, and SQL-draft-only schema planning.
+- `I18N-RTL-SHELL-1` remains the next separate task for the shared UI logical-direction refactor.
+- Document/PDF language implementation and `document_locale` runtime/schema work remain deferred to a later reviewed task.
 - P1 decisions to confirm next: whether Booking remains a secondary Service label, Arabic rollout order by role, reuse of existing Company Settings Arabic/English company name fields, and whether Hijri calendar support stays deferred.
 
 ## Supplier Allocation / Booking Pending UX
@@ -798,8 +799,12 @@ The following items are explicitly documented as deferred or production hardenin
 
 ## I18N / RTL Still Deferred
 - Final Arabic terminology.
-- Runtime implementation.
+- Shared UI logical-direction refactor across the deferred shell/navigation components.
+- Module-by-module translation rollout.
 - Bilingual side-by-side documents.
+- Document/PDF language implementation.
+- `document_locale` schema/runtime wiring.
+- Customer `preferred_language`.
 - Hijri calendar.
 - Booking terminology final copy.
 - Arabic rollout order by role.

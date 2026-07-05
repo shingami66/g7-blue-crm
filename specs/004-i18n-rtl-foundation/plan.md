@@ -13,14 +13,18 @@
 ### P1
 
 - `I18N-RTL-FOUNDATION-1`
-- Blocked until:
-  - audit is complete
-  - P0 decisions are locked
-  - Team Lead review gate is satisfied
+- Complete:
+  - locale type + parser + default locale foundation
+  - direction helpers and root `html` `lang` / `dir` scaffolding
+  - English-only dictionary skeletons
+  - bidi isolation and `numberingSystem: 'latn'` formatting helpers
+  - SQL-draft-only planning for `app_users.locale` and `company_settings.default_locale`
 
 ### P2
 
 - Shell/navigation RTL and shared UI translation
+- This remains the next separate task (`I18N-RTL-SHELL-1`).
+- It must not be collapsed back into Foundation-1.
 
 ### P3
 
@@ -52,7 +56,8 @@
 
 ## Program Constraints
 
-- This roadmap does not approve runtime implementation.
+- Foundation-1 runtime implementation is complete only for the narrow helper/scaffolding scope above.
+- This roadmap does not approve broader shell/module/document implementation by default.
 - Arabic / English support must be real direction-aware behavior, not literal translation only.
 - Historical document meaning must not silently change.
 - Supplier/internal cost must never leak to customer outputs.

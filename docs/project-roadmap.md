@@ -387,11 +387,11 @@ Checklist:
 
 Immediate next priorities:
 - [x] `SUPPLIER-ACTIONS-PENDING-AUDIT-1` completed as a readonly audit; no code changes were made.
-1. `P1` - `I18N-RTL-FOUNDATION-AUDIT-1`: readonly audit of current layout/text structure, language-switch readiness, `dir` handling, dictionary strategy, and document impact.
-1. `P2` - `I18N-RTL-FOUNDATION-1`: blocked until the P0 RTL decisions are locked after the audit.
-1. `P3` - `INVOICE-LIST-ACTIONS-POLISH-1`: view/print icon polish, list action review, and pagination/page-size/go-to-page review.
-1. `P4` - `DOCUMENT-FORM-LAYOUT-POLISH-1`: invoice/quotation form sections, line items, and totals panel polish.
-1. `P5` - `ARABIC-COPY-REVIEW-1`: review Arabic terminology and avoid literal translation.
+1. `P1` - `I18N-RTL-SHELL-1`: shared UI logical-direction refactor for the deferred dashboard shell/navigation components after Foundation-1.
+1. `P2` - `INVOICE-LIST-ACTIONS-POLISH-1`: view/print icon polish, list action review, and pagination/page-size/go-to-page review.
+1. `P3` - `DOCUMENT-FORM-LAYOUT-POLISH-1`: invoice/quotation form sections, line items, and totals panel polish.
+1. `P4` - `ARABIC-COPY-REVIEW-1`: review Arabic terminology and avoid literal translation.
+1. `P5` - `DOCUMENT-LANGUAGE-SNAPSHOT-1`: later reviewed document-language / `document_locale` task; PDF/runtime changes remain deferred here.
 1. `P6` - `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1`: medium-risk pending UX migration for supplier allocation create/edit/delete forms.
 
 - [x] `PAYMENTS-LIST-SORT-PAGINATION-1` completed and pushed in `844f2ec feat(payments): add ascending pagination to payments list`.
@@ -1830,16 +1830,16 @@ Must verify:
 - RLS behavior aligns with server-action/application RBAC
 
 ## I18N / RTL Next Priority Order
-1. Draft `I18N-RTL-FOUNDATION-1` prompt for senior review.
-   - Foundation-1 remains blocked until the implementation prompt passes senior review.
-   - The prompt is expected to include locale foundation work plus schema planning for `app_users.locale` and `company_settings.default_locale`, but only through SQL-draft-only and migration review gates.
-2. `I18N-RTL-FOUNDATION-1`
-   - Blocked until the prompt review passes.
-3. `INVOICE-LIST-ACTIONS-POLISH-1`
+1. `I18N-RTL-SHELL-1`
+   - Foundation-1 is complete for locale helpers, root `lang` / `dir` scaffolding, dictionary skeletons, bidi helpers, formatting helpers, and SQL draft planning only.
+   - Shared UI logical-direction refactor remains a separate task and can touch the deferred shell/navigation files only in its own approved prompt.
+2. `ARABIC-COPY-REVIEW-1`
+   - Final Arabic terminology remains unapproved.
+3. `DOCUMENT-LANGUAGE-SNAPSHOT-1`
+   - `document_locale` schema/runtime work remains deferred and must stay separate from Foundation-1.
+4. `INVOICE-LIST-ACTIONS-POLISH-1`
    - View/Print icons, list action polish, pagination/page-size/go-to-page review.
-4. `DOCUMENT-FORM-LAYOUT-POLISH-1`
+5. `DOCUMENT-FORM-LAYOUT-POLISH-1`
    - Invoice/quotation form sections, line items, and totals panel polish.
-5. `ARABIC-COPY-REVIEW-1`
-   - Review Arabic terminology and avoid literal translation.
 6. `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1`
    - Medium-risk pending UX migration for supplier allocation create/edit/delete forms.

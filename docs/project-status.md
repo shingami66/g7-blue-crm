@@ -68,6 +68,15 @@
 - [x] Locked decisions now cover single-language documents with explicit `document_locale`, permanent Western digits for documents/PDFs with explicit `numberingSystem: 'latn'`, and a split status glossary with `invoice_type` kept separate from invoice lifecycle status.
 - [x] Next step is Foundation-1 prompt drafting plus senior review, not runtime implementation.
 
+### âœ… I18N-RTL-FOUNDATION-1
+- [x] Minimal runtime foundation is implemented for locale types, safe parsing, direction helpers, bidi isolation, and `numberingSystem: 'latn'` formatting helpers under `src/lib/i18n/`.
+- [x] Root app HTML now uses foundation helpers for safe `lang` / `dir` scaffolding in `src/app/layout.tsx`, still defaulting to `en` / `ltr` until reviewed preference wiring is approved.
+- [x] English-only typed dictionary skeletons were added for common, navigation, statuses, document types, and RBAC-sensitive namespaces; final Arabic wording remains unapproved.
+- [x] SQL draft planning for `app_users.locale` and `company_settings.default_locale` is recorded in `specs/004-i18n-rtl-foundation/sql-draft.md` and remains not applied / not a migration.
+- [x] Shared UI logical-direction refactor remains deferred to `I18N-RTL-SHELL-1`.
+- [x] Document/PDF language implementation, `document_locale` schema/runtime wiring, and Customer `preferred_language` remain deferred.
+- [x] No fake VAT, ZATCA, FATOORA, QR, XML, clearance, or cleared-status behavior was introduced.
+
 ### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
 - [x] Supabase client/admin setup exists
@@ -469,17 +478,17 @@
 - Arabic mode should switch to RTL with the sidebar on the right and mirrored breadcrumbs/table/action flow.
 - Arabic copy should use business-friendly Saudi/event terms, not awkward literal translation.
 - Numbers, currency, dates, VAT labels, and document names must remain clear, and historical documents must not change meaning when language/settings change.
-- `I18N-RTL-FOUNDATION-AUDIT-1` is approved to start as a readonly audit.
-- `I18N-RTL-FOUNDATION-1` remains gated until the P0 decisions below are locked.
-- P0 decisions before implementation: document-language model, numeral/currency/date/document-number formatting, and split status glossaries for service, quotation, invoice, and invoice_type values.
+- `I18N-RTL-FOUNDATION-AUDIT-1`, `I18N-P0-DECISIONS-LOCK-1`, and `I18N-RTL-FOUNDATION-1` are now closed.
+- `I18N-RTL-SHELL-1` remains the next separate task for shared UI logical-direction refactor across the deferred dashboard shell components.
+- Document/PDF language implementation, `document_locale`, and Customer `preferred_language` remain deferred to later reviewed tasks.
 - P1 decisions to confirm next: whether Booking remains a secondary Service label, Arabic rollout order by role, reuse of existing Company Settings Arabic/English company name fields, and whether Hijri calendar support stays deferred.
 
 ### Immediate Next Priorities
-- `P1`: `I18N-RTL-FOUNDATION-AUDIT-1` for a readonly audit of current layout/text structure, language-switch readiness, `dir` handling, dictionary strategy, and document impact.
-- `P2`: `I18N-RTL-FOUNDATION-1` to implement the foundation only after the audit.
-- `P3`: `INVOICE-LIST-ACTIONS-POLISH-1` for view/print icon polish, list action review, and pagination/page-size/go-to-page review.
-- `P4`: `DOCUMENT-FORM-LAYOUT-POLISH-1` for invoice/quotation form sections, line items, and totals panel polish.
-- `P5`: `ARABIC-COPY-REVIEW-1` to review Arabic terminology and avoid literal translation.
+- `P1`: `I18N-RTL-SHELL-1` for the shared UI logical-direction refactor across the deferred shell/navigation components.
+- `P2`: `INVOICE-LIST-ACTIONS-POLISH-1` for view/print icon polish, list action review, and pagination/page-size/go-to-page review.
+- `P3`: `DOCUMENT-FORM-LAYOUT-POLISH-1` for invoice/quotation form sections, line items, and totals panel polish.
+- `P4`: `ARABIC-COPY-REVIEW-1` to review Arabic terminology and avoid literal translation.
+- `P5`: `DOCUMENT-LANGUAGE-SNAPSHOT-1` for the later reviewed `document_locale` / snapshot-safe document language task.
 - `P6`: `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1` for the medium-risk pending UX migration on supplier allocation create/edit/delete forms.
 
 ### ✅ HUMAN-REFERENCE-DISPLAY-1
