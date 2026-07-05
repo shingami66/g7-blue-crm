@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import DataTable from "@/components/ui/DataTable";
@@ -23,12 +23,30 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [monthFilter, setMonthFilter] = useState("");
   const itemsPerPage = 10;
 
-  const totalPages = Math.max(1, Math.ceil(quotations.length / itemsPerPage));
+  const filteredQuotations = quotations.filter((quotation) => {
+    const matchesStatus =
+      statusFilter === "all" ? true : quotation.status === statusFilter;
+    const matchesMonth =
+      monthFilter === "" ? true : String(quotation.date).startsWith(monthFilter);
+
+    return matchesStatus && matchesMonth;
+  });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, monthFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredQuotations.length / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, quotations.length);
-  const paginatedQuotations = quotations.slice(startIndex, startIndex + itemsPerPage);
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredQuotations.length);
+  const paginatedQuotations = filteredQuotations.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -65,12 +83,16 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
       <div className="flex-1 flex flex-col min-h-0">
         <FilterBar>
           <div className="relative">
-            <select className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary">
-              <option>All Statuses</option>
-              <option>Draft</option>
-              <option>Sent</option>
-              <option>Approved</option>
-              <option>Rejected</option>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
+            >
+              <option value="all">All Statuses</option>
+              <option value="draft">Draft</option>
+              <option value="sent">Sent</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
             </select>
             <Filter
               size={14}
@@ -80,13 +102,15 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
           <div className="relative">
             <input
               type="month"
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
               className="appearance-none bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
             />
           </div>
           <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
-            {quotations.length === 0
+            {filteredQuotations.length === 0
               ? "Showing 0 of 0 quotations"
-              : `Showing ${startIndex + 1}-${endIndex} of ${quotations.length} quotations`}
+              : `Showing ${startIndex + 1}-${endIndex} of ${filteredQuotations.length} quotations`}
           </div>
         </FilterBar>
 
@@ -98,10 +122,9 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
         )}
 
         <div className="flex-1 overflow-auto">
-          {quotations.length === 0 ? (
+          {filteredQuotations.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-on-surface-variant">
-              <p>No quotations found.</p>
-              {canWrite && <p className="text-[14px]">Select a Service to create one.</p>}
+              <p>No quotations match the selected filters.</p>
             </div>
           ) : (
             <DataTable
@@ -205,7 +228,7 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
         </div>
 
         {/* Pagination Footer */}
-        {quotations.length > itemsPerPage && (
+        {filteredQuotations.length > itemsPerPage && (
           <PaginationFooter
             currentPage={currentPage}
             totalPages={totalPages}
