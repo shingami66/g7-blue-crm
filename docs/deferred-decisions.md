@@ -174,6 +174,12 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **When to return:** Only if the `/settings` data flow changes in a way that could re-expose bank details.
 - **Known requirements:** Viewer opens `/settings`; response/data passed to the client does not include full IBAN, bank account holder, or bank account values. This was verified server-side, not only through hidden UI fields.
 
+## Raw Error / Security Exposure Verification
+- **Status:** Passed.
+- **Reason:** Manual browser smoke on `/services/[id]`, `/invoices` payment modal, and `/settings` showed only safe validation messages and no raw Supabase/Postgres/RPC/internal errors.
+- **When to return:** Only if server error handling, action result mapping, or client-side fallback handling changes.
+- **Known requirements:** Raw database, RPC, stack trace, env, secret, and service-role details must stay server-side and out of client-facing responses.
+
 ## Audit Logs UI
 - **Status:** Deferred.
 - **Reason deferred:** Audit storage foundations are more important than admin UI while core flows are still being built.

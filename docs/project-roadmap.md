@@ -362,7 +362,7 @@ Checklist:
 - [ ] If real/semi-real data is used, complete remaining production hardening and pre-demo controls before hosted demo: finalize the demo-data/security decision, verify Viewer bank masking, confirm raw error/security checks where applicable, and complete backup/monitoring/deployment readiness before production. The `company_settings` production RLS migration is already applied and verified.
 - [x] Add explicit production RLS plan for `company_settings` because it contains bank, legal, and VAT data.
 - [ ] Verify Supabase admin/service role usage stays server-side only.
-- [ ] Confirm no raw database/Supabase errors are exposed to UI.
+- [x] Confirm no raw database/Supabase errors are exposed to UI. Manual browser smoke on `/services/[id]`, `/invoices` payment modal, and `/settings` showed only safe validation messages and no raw Supabase/Postgres/RPC/internal errors.
 - [ ] Confirm no secrets are present in committed files.
 - [ ] Confirm auth redirects and Access Denied states are correct.
 - [x] Verify Viewer opening `/settings` does not receive full IBAN, bank account holder, or bank account values in client data.
