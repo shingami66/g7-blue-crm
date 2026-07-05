@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import DataTable from "@/components/ui/DataTable";
@@ -29,6 +29,16 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
   const [monthFilter, setMonthFilter] = useState("");
   const itemsPerPage = 10;
 
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleMonthFilterChange = (value: string) => {
+    setMonthFilter(value);
+    setCurrentPage(1);
+  };
+
   const filteredQuotations = quotations.filter((quotation) => {
     const matchesStatus =
       statusFilter === "all" ? true : quotation.status === statusFilter;
@@ -37,10 +47,6 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
 
     return matchesStatus && matchesMonth;
   });
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter, monthFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredQuotations.length / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -87,7 +93,7 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
           <div className="relative">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => handleStatusFilterChange(e.target.value)}
               className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
             >
               <option value="all">All Statuses</option>
@@ -105,7 +111,7 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
             <input
               type="month"
               value={monthFilter}
-              onChange={(e) => setMonthFilter(e.target.value)}
+              onChange={(e) => handleMonthFilterChange(e.target.value)}
               className="appearance-none bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
             />
           </div>
