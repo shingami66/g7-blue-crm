@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 interface PaginationFooterProps {
@@ -15,22 +17,36 @@ export default function PaginationFooter({
   onPageChange,
   className = "",
 }: PaginationFooterProps) {
+  const footerRef = useRef<HTMLDivElement>(null);
+  const [isRtl, setIsRtl] = useState(false);
+
+  useEffect(() => {
+    const direction = footerRef.current?.closest("[dir]")?.getAttribute("dir");
+    setIsRtl(direction === "rtl");
+  }, []);
+
   if (totalPages <= 1) return null;
+
+  const PreviousIcon = isRtl ? ChevronRight : ChevronLeft;
+  const NextIcon = isRtl ? ChevronLeft : ChevronRight;
 
   return (
     <div
-      className={`bg-surface-container-lowest border-t border-surface-variant p-4 flex justify-between items-center rounded-b-xl border border-x-0 border-b-0 ${className}`}
+      ref={footerRef}
+      className={`bg-surface-container-lowest border-t border-surface-variant p-4 flex flex-wrap items-center justify-between gap-3 rounded-b-xl border border-x-0 border-b-0 sm:flex-nowrap ${className}`}
     >
       <Button
+        className={isRtl ? "order-3" : "order-1"}
         disabled={currentPage === 1}
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         aria-label="Previous page"
         size="sm"
         variant="outline"
       >
+        <PreviousIcon size={16} />
         Previous
       </Button>
-      <div className="flex gap-1">
+      <div className="order-2 flex gap-1" dir="ltr">
         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
           <Button
             key={page}
@@ -46,6 +62,7 @@ export default function PaginationFooter({
         ))}
       </div>
       <Button
+        className={isRtl ? "order-1" : "order-3"}
         disabled={currentPage === totalPages}
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
         aria-label="Next page"
@@ -53,6 +70,7 @@ export default function PaginationFooter({
         variant="outline"
       >
         Next
+        <NextIcon size={16} />
       </Button>
     </div>
   );
