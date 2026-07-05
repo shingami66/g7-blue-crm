@@ -782,12 +782,25 @@ The following items are explicitly documented as deferred or production hardenin
 - money/document lifecycle audit log coverage
 - supplier blacklist active-work impact check
 
-## I18N / RTL Decisions Still Open
-- The I18N / RTL audit is complete, but implementation remains blocked until P0 decisions are locked.
-- P0 decisions still open: document language model; numeral, currency, date, and document-number formatting; split status glossary approval.
-- P1 decisions still open: booking terminology, role rollout, reuse of existing Company Settings Arabic/English company name fields, and Hijri calendar deferral.
+## I18N / RTL Locked P0 Decisions
+- The I18N / RTL audit is complete, and the P0 decision lock is now approved with changes and recorded.
+- Single-language per document is locked for MVP, with explicit `document_locale` captured at document creation time.
+- `document_locale` must never be inherited from the creator's UI session locale.
+- Western digits are permanently locked for all documents/PDFs, and locale-aware number/date formatters must explicitly force `numberingSystem: 'latn'` or equivalent.
+- `invoice_type` values `deposit` / `final` remain document-type labels, not invoice lifecycle statuses.
+- Status glossaries remain split across service, quotation, invoice, payment, supplier, supplier allocation, and supplier booking domains.
+- Service `Cancelled` remains a non-linear terminal state, never a mirrored progress step.
 - Locale source of truth remains `app_users.locale`, with a cookie mirror only to prevent wrong-direction flash.
 - Do not use `/ar` or `/en` URL segmentation for this internal authenticated CRM.
 - Use CSS logical utilities for RTL work, mirror directional icons only, and bidi-isolate numbers, SAR amounts, dates, and document numbers.
 - Document/PDF language must reuse the existing snapshot approach and preserve historical meaning after locale/settings changes.
 - Do not add fake Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, XML, clearance, or cleared-status claims through localization work.
+
+## I18N / RTL Still Deferred
+- Final Arabic terminology.
+- Runtime implementation.
+- Bilingual side-by-side documents.
+- Hijri calendar.
+- Booking terminology final copy.
+- Arabic rollout order by role.
+- Invoice cancelled/voided business-logic correctness.

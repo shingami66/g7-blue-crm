@@ -1830,10 +1830,11 @@ Must verify:
 - RLS behavior aligns with server-action/application RBAC
 
 ## I18N / RTL Next Priority Order
-1. `I18N-P0-DECISIONS-LOCK-1`
-   - Lock the document language model, number/date/currency/document-number formatting, and split status glossary before implementation.
+1. Draft `I18N-RTL-FOUNDATION-1` prompt for senior review.
+   - Foundation-1 remains blocked until the implementation prompt passes senior review.
+   - The prompt is expected to include locale foundation work plus schema planning for `app_users.locale` and `company_settings.default_locale`, but only through SQL-draft-only and migration review gates.
 2. `I18N-RTL-FOUNDATION-1`
-   - Blocked until the audit and P0 decisions are complete.
+   - Blocked until the prompt review passes.
 3. `INVOICE-LIST-ACTIONS-POLISH-1`
    - View/Print icons, list action polish, pagination/page-size/go-to-page review.
 4. `DOCUMENT-FORM-LAYOUT-POLISH-1`

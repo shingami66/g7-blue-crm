@@ -62,6 +62,12 @@
 - [x] Latest audited HEAD was `691555b`.
 - [x] The audit confirmed the app shell is still LTR-first, the status glossary and formatting model still need P0 decisions, and the next step remains decision locking before implementation.
 
+### âœ… I18N-P0-DECISIONS-LOCK-1
+- [x] Docs/spec-only P0 decision lock completed with no runtime code changes.
+- [x] Team Lead verdict recorded as APPROVED WITH CHANGES, and the approved changes were incorporated into the decision lock.
+- [x] Locked decisions now cover single-language documents with explicit `document_locale`, permanent Western digits for documents/PDFs with explicit `numberingSystem: 'latn'`, and a split status glossary with `invoice_type` kept separate from invoice lifecycle status.
+- [x] Next step is Foundation-1 prompt drafting plus senior review, not runtime implementation.
+
 ### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
 - [x] Supabase client/admin setup exists

@@ -77,3 +77,61 @@ This package does not approve:
 - document language output
 - runtime implementation
 - fake VAT, ZATCA, FATOORA, QR, XML, clearance, or cleared claims
+
+## P0 Decisions - LOCKED
+
+- Team Lead verdict: APPROVED WITH CHANGES.
+- Changes are incorporated in this decision lock.
+- This locks product and architecture decisions only.
+- It does not approve runtime implementation or final Arabic terminology.
+
+### Decision 1: Document Language Model
+
+- Single-language per document for MVP.
+- Bilingual side-by-side Arabic + English is deferred, not rejected.
+- `document_locale` is captured explicitly at document creation time, via create-form choice or Customer `preferred_language`.
+- `document_locale` is NEVER inherited from the creator's UI session locale.
+- Document language must be snapshot-safe.
+- Reuse the existing snapshot mechanism, including seller `legalNameEn` / `legalNameAr` where available.
+- Historical documents remain immutable once issued and must not silently change meaning after locale/settings changes.
+
+### Decision 2: Numeral / Date / Currency / Document-Number Formatting
+
+- Western digits `0-9` are permanent for all documents/PDFs, not MVP-only.
+- Arabic-Indic digits must not be used in documents/PDFs.
+- Arabic-Indic digits may be reconsidered later only as a UI cosmetic preference, never for documents/PDFs.
+- All locale-aware number/date formatters must explicitly force `numberingSystem: 'latn'` or equivalent.
+- Do not rely on `ar-SA` formatter defaults.
+- Bidi isolation is required for SAR amounts, balances, totals, dates, document numbers, quotation numbers, invoice numbers, payment numbers, service numbers, phone numbers, CR/VAT numbers, IBAN, bank details, percentages, and VAT/tax values wherever they render inside RTL text.
+
+### Decision 3: Split Status Glossary
+
+- Keep separate glossaries for:
+  - Service statuses
+  - Quotation statuses
+  - Invoice statuses
+  - Payment statuses
+  - Supplier statuses
+  - Supplier allocation statuses
+  - Supplier booking statuses
+- Do not merge all statuses into one generic dictionary.
+- `invoice_type` values `deposit` / `final` are document-type labels, filed separately from the invoice status glossary.
+- `invoice_type` is not a lifecycle status.
+- Service `Cancelled` remains a non-linear terminal state, never a mirrored progress step.
+- StatusBadge and Timeline components must share one canonical term per status, with optional short/long display variants.
+- Do not independently translate StatusBadge and Timeline into separate meanings.
+- This decision approves glossary structure only.
+- Final Arabic wording is not approved by this task.
+- Existing invoice cancelled/voided split is translated as-is under this decision.
+- Business-logic correctness of the cancelled/voided distinction is out of scope for this i18n decision and remains flagged separately.
+
+### Still Deferred / Not Approved
+
+- Final Arabic terminology.
+- Runtime implementation.
+- Bilingual side-by-side documents.
+- Hijri calendar.
+- Full document/PDF redesign.
+- SMACC-inspired invoice/quotation UX polish.
+- Fake VAT, ZATCA, FATOORA, QR, XML, clearance, or cleared claims.
+- Tax Invoice / VAT 15% unless company settings prove VAT registration.

@@ -46,6 +46,12 @@
 
 - Cancelled Service status remains non-linear terminal state
 - Service / Quotation / Invoice / `invoice_type` glossaries remain explicitly reviewed
+- document-language integrity smoke: `document_locale` persists at creation and never changes retroactively
+- numeral-consistency smoke: financial/document values render Western digits in English and Arabic modes
+- formatter safety smoke: `Intl.NumberFormat` / date formatter call sites are checked for `numberingSystem: 'latn'` or equivalent
+- type/status separation smoke: no UI control mixes `invoice_type` and invoice status in one dropdown/filter/badge
+- status display consistency smoke: StatusBadge and Timeline use canonical shared glossary terms with optional short/long variants
+- existing invoice cancelled/voided translation does not imply business-logic approval
 
 ## Compliance And Claim Safety
 

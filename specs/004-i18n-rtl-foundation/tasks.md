@@ -27,7 +27,7 @@
 ### I18N-P0-DECISIONS-LOCK-1
 
 - Type: product / team decision
-- Status: READY
+- Status: DONE
 - Output:
   - document language model decision
   - numeral / date / currency formatting decision
@@ -39,7 +39,10 @@
 ### I18N-RTL-FOUNDATION-1
 
 - Type: implementation
-- Status: BLOCKED until audit + P0 decisions + review gate
+- Status: BLOCKED until the Foundation-1 prompt passes senior review
+- Note:
+  - Foundation-1 prompt must include `app_users.locale` and `company_settings.default_locale` as explicit, separately staged SQL-draft-only schema items following standard migration governance.
+  - Runtime implementation remains not started.
 
 ### I18N-RTL-SHELL-1
 
