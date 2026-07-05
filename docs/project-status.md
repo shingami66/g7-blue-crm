@@ -374,6 +374,21 @@
   - Server-side invoice creation remains context-guarded by `quotationId` and `serviceId`.
 - Lint and TypeScript compile successfully with zero errors.
 
+### ✅ GLOBAL-PENDING-NAVIGATION-LOW-RISK-1A
+- Status: Completed, reviewed, manual smoke passed, and pushed.
+- Implementation commit:
+  - `6759de2 feat(ui): add global pending bolt to low-risk navigation`
+- Summary:
+  - Added `PendingLink` and `useGlobalNavigationPending` for delayed global centered pending bolt coverage on low-risk dashboard navigation.
+  - Covered safe navigation paths: New Service, New Supplier, service/customer row detail navigation, service detail Back/Edit/customer links, customer detail Back/related service links, and service/supplier create-edit back/cancel.
+  - Preserved normal link behavior for modifier clicks and middle-clicks.
+- Validation:
+  - `pnpm exec next typegen`
+  - `pnpm exec tsc --noEmit`
+  - `git diff --check`
+- Manual smoke passed for the covered low-risk navigation paths.
+- Follow-up scope remains open for quotations, invoices/payments, financial actions, service status, supplier allocation/booking workflow, and admin/RBAC row actions.
+
 ### ✅ HUMAN-REFERENCE-DISPLAY-1
 - Status: Completed, reviewed, manual smoke passed, and pushed.
 - Implementation commit:

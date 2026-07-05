@@ -391,6 +391,12 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **When to return:** Before exposing sensitive write paths outside local/dev usage.
 - **Known requirements:** Consider rate limiting quotation creation, quotation approval, invoice creation, payment recording, and settings update. Rate limiting must complement server-side auth/RBAC and must not replace permission checks.
 
+## GLOBAL-PENDING-NAVIGATION-LOW-RISK-1B
+- **Status:** Completed in code and documented.
+- **Reason closed:** Low-risk dashboard navigation now uses delayed centered pending bolt coverage for the approved Phase 1 slice.
+- **When to return:** For broader navigation coverage beyond the approved safe slice.
+- **Known requirements:** Keep the remaining follow-up scope separate for quotations, invoices/payments, financial actions, service status, supplier allocation/booking workflow, and admin/RBAC row actions. Avoid treating this as full global navigation coverage.
+
 ## Viewer Bank Detail Masking Verification
 - **Status:** Deferred test case; required before real/semi-real data.
 - **Reason deferred:** CS-A server-side masking exists, but production verification needs an explicit test pass.
