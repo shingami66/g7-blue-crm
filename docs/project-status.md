@@ -97,6 +97,7 @@
 - [x] Repo-level env validation for the dashboard server paths was centralized.
 - [x] Sensitive authenticated Server Actions now use MVP single-instance in-memory rate limiting.
 - [x] The production `company_settings` RLS migration is committed in-repo and the remote Supabase apply has been verified.
+- [x] Committed/tracked secrets exposure review passed: no real secrets were found in tracked repo files, docs, env examples, or client-facing code paths; public env usage remains limited to safe publishable values and auth route URLs.
 - [x] The centered bolt loader is the approved polished MVP loading mark for dashboard pending states.
 - [x] Viewer bank-detail masking verification passed: server-side data shaping removes bank details before client props, and Viewer browser smoke on `/settings` showed only the restriction message.
 - [x] Raw error/security exposure verification passed: manual browser smoke on `/services/[id]`, `/invoices` payment modal, and `/settings` showed only safe validation messages and no raw Supabase/Postgres/RPC/internal errors.

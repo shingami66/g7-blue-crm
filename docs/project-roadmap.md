@@ -363,7 +363,7 @@ Checklist:
 - [x] Add explicit production RLS plan for `company_settings` because it contains bank, legal, and VAT data.
 - [ ] Verify Supabase admin/service role usage stays server-side only.
 - [x] Confirm no raw database/Supabase errors are exposed to UI. Manual browser smoke on `/services/[id]`, `/invoices` payment modal, and `/settings` showed only safe validation messages and no raw Supabase/Postgres/RPC/internal errors.
-- [ ] Confirm no secrets are present in committed files.
+- [x] Confirm no secrets are present in committed files. Read-only audit found no real secrets in tracked repo files, docs, env examples, or client-facing code paths; `NEXT_PUBLIC_*` usage remains limited to safe publishable values and auth route URLs.
 - [ ] Confirm auth redirects and Access Denied states are correct.
 - [x] Verify Viewer opening `/settings` does not receive full IBAN, bank account holder, or bank account values in client data.
 - [x] Global centered pending bolt UX is implemented and pushed.
