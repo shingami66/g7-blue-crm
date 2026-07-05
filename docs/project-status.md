@@ -434,12 +434,37 @@
 - Manual smoke passed for the covered quotation navigation paths, and modifier-key / middle-click behavior remained correct.
 - Follow-up scope remains open for payment recording, supplier allocation/booking workflow, service status, admin/RBAC row actions, and the remaining invoice/payment workflow slices.
 
+### ✅ SUPPLIER-ACTIONS-PENDING-AUDIT-1
+- Status: Readonly audit completed, no code changes.
+- Already global/no change:
+  - supplier allocation status transitions
+  - supplier booking create
+  - supplier booking cancel modal keeps local context
+  - allocation cancel and restore already use shared `Button` / global bolt behavior
+- Local pending gaps found:
+  - `SupplierAllocationCreateForm` raw local spinner
+  - `SupplierAllocationEditForm` raw local spinner
+  - `SupplierAllocationDeleteForm` raw local spinner
+- Recommended next supplier slice: `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1`, limited to create/edit/delete allocation submit buttons using shared `Button loading={...}` only.
+- Open risk areas remain: supplier status machine, booking workflow, RBAC/cost visibility, audit trail behavior, and any customer-output leakage of supplier/internal costing details.
+
+### UX / Localization Direction
+- SMACC / warehouse ERP screenshots are useful UX inspiration only, not a direct clone.
+- Good reference ideas: list/manage tabs, result count beside List, search/filter area, page size and go-to-page controls, View eye icon, Print/PDF icon, and a clear document header/metadata/line-items/totals split.
+- Avoid copying inventory-only concepts unless G7 actually needs them: warehouse code, salesman code, item code, loyalty card, promotion controls, and fake cleared-status claims.
+- Arabic/English support should be real layout-direction switching rather than literal text replacement.
+- English mode should stay LTR with the sidebar on the left and table/action flows left-to-right.
+- Arabic mode should switch to RTL with the sidebar on the right and mirrored breadcrumbs/table/action flow.
+- Arabic copy should use business-friendly Saudi/event terms, not awkward literal translation.
+- Numbers, currency, dates, VAT labels, and document names must remain clear, and historical documents must not change meaning when language/settings change.
+
 ### Immediate Next Priorities
-- `P0`: finish the docs commit and push for `GLOBAL-PENDING-INVOICE-CREATE-ACTIONS-1`.
-- `P1`: `PAYMENTS-LIST-SORT-PAGINATION-1` to sort payments ascending and paginate 10 per page.
-- `P2`: `QUOTATIONS-FILTERS-FIX-1` to fix quotation status/date filters without changing list actions or pagination.
-- `P3`: `GLOBAL-PENDING-QUOTATION-NAVIGATION-1` completed and pushed in `29cdfb4 feat(ui): add global pending bolt to quotation navigation`.
-- `P4`: remaining high-risk pending/action audits for supplier allocation/booking, admin/users/RBAC, and other financial edge actions, with `RecordPaymentModal` staying local by design unless separately approved.
+- `P1`: `I18N-RTL-FOUNDATION-AUDIT-1` for a readonly audit of current layout/text structure, language-switch readiness, `dir` handling, dictionary strategy, and document impact.
+- `P2`: `I18N-RTL-FOUNDATION-1` to implement the foundation only after the audit.
+- `P3`: `INVOICE-LIST-ACTIONS-POLISH-1` for view/print icon polish, list action review, and pagination/page-size/go-to-page review.
+- `P4`: `DOCUMENT-FORM-LAYOUT-POLISH-1` for invoice/quotation form sections, line items, and totals panel polish.
+- `P5`: `ARABIC-COPY-REVIEW-1` to review Arabic terminology and avoid literal translation.
+- `P6`: `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1` for the medium-risk pending UX migration on supplier allocation create/edit/delete forms.
 
 ### ✅ HUMAN-REFERENCE-DISPLAY-1
 - Status: Completed, reviewed, manual smoke passed, and pushed.

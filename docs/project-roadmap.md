@@ -383,14 +383,16 @@ Checklist:
 - [x] `GLOBAL-PENDING-INVOICE-CREATE-ACTIONS-1` completed and pushed in `468cd00 feat(ui): add global pending bolt to invoice create actions`.
 - [x] Service detail deposit and final invoice create buttons now use shared `Button loading={isPending}` and show the global centered pending bolt during invoice creation.
 - [x] Manual smoke passed for invoice create submit flows, with inline success/error messages and disabled guards preserved.
-- [ ] Navigation pending coverage, payment recording, service status, supplier allocation workflows, and admin users/RBAC row actions remain separate future follow-up work.
+- [ ] Payment recording, service status, supplier allocation workflows, and admin users/RBAC row actions remain separate future follow-up work.
 
 Immediate next priorities:
-1. `P0` - finish the docs commit and push for `GLOBAL-PENDING-INVOICE-CREATE-ACTIONS-1`.
-1. `P1` - `PAYMENTS-LIST-SORT-PAGINATION-1`: sort payments ascending from older/smaller sequence to newer/larger sequence, and paginate 10 records per page to match Quotations/Invoices.
-1. `P2` - `QUOTATIONS-FILTERS-FIX-1`: fix quotation status and date filters while preserving existing quotation list actions and pagination.
-1. `P3` - `GLOBAL-PENDING-QUOTATION-NAVIGATION-1`: completed and pushed in `29cdfb4 feat(ui): add global pending bolt to quotation navigation`.
-1. `P4` - remaining high-risk pending/action audits for supplier allocation/booking actions, admin/users/RBAC actions, and other financial edge actions.
+- [x] `SUPPLIER-ACTIONS-PENDING-AUDIT-1` completed as a readonly audit; no code changes were made.
+1. `P1` - `I18N-RTL-FOUNDATION-AUDIT-1`: readonly audit of current layout/text structure, language-switch readiness, `dir` handling, dictionary strategy, and document impact.
+1. `P2` - `I18N-RTL-FOUNDATION-1`: implement the RTL/language foundation only after the audit.
+1. `P3` - `INVOICE-LIST-ACTIONS-POLISH-1`: view/print icon polish, list action review, and pagination/page-size/go-to-page review.
+1. `P4` - `DOCUMENT-FORM-LAYOUT-POLISH-1`: invoice/quotation form sections, line items, and totals panel polish.
+1. `P5` - `ARABIC-COPY-REVIEW-1`: review Arabic terminology and avoid literal translation.
+1. `P6` - `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1`: medium-risk pending UX migration for supplier allocation create/edit/delete forms.
 
 - [x] `PAYMENTS-LIST-SORT-PAGINATION-1` completed and pushed in `844f2ec feat(payments): add ascending pagination to payments list`.
 - [x] Payments list ordering now starts from the smallest/older payment sequence and the page shows 10 records per page with shared pagination controls.

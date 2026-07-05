@@ -40,6 +40,22 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - The current implemented Company Settings VAT field is `company_settings.vat_mode`.
 - Quotation `valid_until` is offer expiry, not service execution date. It must be on or after Issue Date and, when Service Start Date exists, on or before `service.event_start_date`. If the Service already started before Issue Date, quotation create/update is blocked.
 
+## UX Inspiration / Localization Foundation
+- SMACC / warehouse ERP screenshots are inspiration only, not a direct clone.
+- Useful reference patterns include list/manage tabs, a result count beside List, search/filter areas, page-size and go-to-page controls, View eye icons, Print/PDF icons, and a clear document header/metadata/line-items/totals split.
+- Avoid copying inventory-only concepts unless G7 actually needs them: warehouse code, salesman code, item code, loyalty card, promotion controls, and fake cleared-status claims.
+- Arabic/English support must be real layout-direction switching rather than literal text replacement.
+- English mode should remain LTR with the sidebar on the left and table/action flow left-to-right.
+- Arabic mode should switch to RTL with the sidebar on the right and mirrored breadcrumbs/table/action flow.
+- Arabic copy should use business-friendly Saudi/event terms, not awkward literal translation.
+- Numbers, currency, dates, VAT labels, and document names must stay clear, and historical documents must not change meaning when language/settings change.
+- No fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior should be implied by localization work.
+
+## Supplier Allocation / Booking Pending UX
+- `SUPPLIER-ACTIONS-PENDING-AUDIT-1` is completed as a readonly audit with no code changes.
+- Local pending gaps remain in supplier allocation create/edit/delete submit buttons, while allocation status transitions and supplier booking create/cancel paths already use the approved global bolt or intentionally local modal context.
+- High-risk supplier status-machine changes, booking workflow changes, RBAC/cost-visibility changes, audit-trail changes, and any customer-output leakage of supplier/internal costing details stay deferred until explicitly reviewed.
+
 ## Service Catalog
 - **Status:** Deferred.
 - **Reason deferred:** Manual quotation line items are enough for the current demo and avoid introducing a separate catalog table, CRUD, permissions, and form integration too early. This is distinct from the ERP `services` table, which is the Service / Booking operational unit.
