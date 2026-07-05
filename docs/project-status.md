@@ -117,6 +117,14 @@
 - Payments page now paginates 10 records per page using the shared `PaginationFooter`, while KPI cards still use the full payment dataset.
 - Manual smoke passed for page ordering, pagination controls, KPI counts, and the unchanged `RecordPaymentModal`.
 
+### ✅ QUOTATIONS-FILTERS-FIX-1
+- Status: Completed, reviewed, manual smoke passed, and pushed.
+- Implementation commit:
+  - `3c19a28 fix(quotations): wire list filters`
+- Quotations status and month filters are now controlled client-side state wired to the existing controls.
+- Pagination now uses the filtered quotations list, and changing filters resets the current page to 1.
+- Manual smoke passed for status filtering, month filtering, filtered pagination, clearing filters, and unchanged row actions.
+
 ### âœ… CUSTOMER-NUMBER-1
 - [x] DB migration applied manually, adding `customer_number` sequence.
 - [x] App layer generates customer number server-side via `generate_document_number` RPC.

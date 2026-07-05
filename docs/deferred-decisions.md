@@ -181,7 +181,7 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **P0:** finish the docs commit and push for `GLOBAL-PENDING-INVOICE-CREATE-ACTIONS-1`.
 - **P1:** `PAYMENTS-LIST-SORT-PAGINATION-1` for ascending payment ordering and 10-per-page pagination.
 - **P2:** `QUOTATIONS-FILTERS-FIX-1` for quotation status/date filter fixes while preserving list actions and pagination.
-- **P3:** `GLOBAL-PENDING-QUOTATION-NAVIGATION-1` as an optional quotation navigation pending bolt slice, kept separate from quotation filters.
+- **P3:** `GLOBAL-PENDING-QUOTATION-NAVIGATION-1` remains optional and separate from quotation filters.
 - **P4:** remaining high-risk pending/action audits for supplier allocation/booking, admin/users/RBAC, and other financial edge actions.
 - **RecordPaymentModal:** stays local-pending by design unless a separate financial review explicitly approves changing it.
 
