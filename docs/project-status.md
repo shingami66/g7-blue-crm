@@ -77,6 +77,15 @@
 - [x] Document/PDF language implementation, `document_locale` schema/runtime wiring, and Customer `preferred_language` remain deferred.
 - [x] No fake VAT, ZATCA, FATOORA, QR, XML, clearance, or cleared-status behavior was introduced.
 
+### âœ… I18N-RTL-SHARED-OVERLAYS-INVENTORY-1
+- [x] Readonly inventory completed and recorded in the planning docs.
+- [x] No shared overlay primitive layer was found under `src/components/ui` or `src/components/layout`.
+- [x] No shared `Dialog`, `Popover`, `AlertDialog`, `Sheet`, `Drawer`, `Tooltip`, `Toast`, or similar primitive was found.
+- [x] No third-party overlay wrapper or overlay-specific UI dependency was found.
+- [x] Current overlays are hand-rolled module-local modal blocks.
+- [x] Shell-1A is not blocked by shared overlay primitives.
+- [x] Module-local overlays remain important but were deferred to `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1`, which is not a prerequisite blocker before Shell-1A.
+
 ### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
 - [x] Supabase client/admin setup exists

@@ -49,15 +49,29 @@
 ### I18N-RTL-SHARED-OVERLAYS-INVENTORY-1
 
 - Type: readonly audit
+- Status: DONE
+- Output:
+  - readonly overlay inventory completed
+  - no shared overlay primitive layer found under `src/components/ui` or `src/components/layout`
+  - no shared `Dialog`, `Popover`, `AlertDialog`, `Sheet`, `Drawer`, `Tooltip`, `Toast`, or similar primitive found
+  - no third-party overlay wrapper or overlay-specific UI dependency found
+  - current overlays are hand-rolled module-local modal blocks
+ - Shell-1A is not blocked by shared overlay primitives
+ - module-local overlays remain important but are deferred to `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1`
+
+### I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1
+
+- Type: follow-up review
 - Status: READY NEXT
 - Scope:
-  - inventory shared Modal/Dialog/Toast/Dropdown components only
-  - record exact file paths
-  - classify each path as shared primitive, module-local component, or third-party wrapper
-  - no code changes
-- Outcome:
-  - either include approved shared components in a later reviewed RTL task
-  - or defer them to a named follow-up task
+  - module-local modal RTL review
+  - close icon position
+  - action button ordering
+  - form alignment
+  - focus handling
+  - portal / focus-trap / accessibility behavior
+ - no Shell-1A or Shell-1B implementation mixed in
+ - not a prerequisite blocker before Shell-1A
 
 ### I18N-RTL-SHELL-1A
 

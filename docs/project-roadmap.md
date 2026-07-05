@@ -388,6 +388,8 @@ Checklist:
 Immediate next priorities:
 - [x] `SUPPLIER-ACTIONS-PENDING-AUDIT-1` completed as a readonly audit; no code changes were made.
 1. `P1` - `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1`: readonly inventory of shared Modal/Dialog/Toast/Dropdown paths and ownership before shell RTL implementation.
+   - Result: no shared overlay primitive layer was found; current overlays are hand-rolled module-local modal blocks; Shell-1A is not blocked by shared overlays.
+   - Follow-up: `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1` is a deferred module-local modal RTL/accessibility review and is not a prerequisite blocker before Shell-1A.
 1. `P2` - `I18N-RTL-SHELL-1A`: shell/navigation logical-direction refactor for `Sidebar`, `Topbar`, `PageHeader`, and `src/app/(dashboard)/layout.tsx`.
 1. `P3` - `I18N-RTL-SHELL-1B`: shared data-component logical-direction refactor for `DataTable`, `PaginationFooter`, and `FilterBar`.
 1. `P4` - `INVOICE-LIST-ACTIONS-POLISH-1`: view/print icon polish, list action review, and pagination/page-size/go-to-page review.

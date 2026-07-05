@@ -12,6 +12,14 @@
 - shared UI shell RTL refactor remains deferred to `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1`, `I18N-RTL-SHELL-1A`, and `I18N-RTL-SHELL-1B`
 - document/PDF language implementation, `document_locale`, and Customer `preferred_language` remain deferred
 
+## Shared Overlays Inventory
+
+- `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` is complete as a readonly inventory
+- no shared overlay primitives were found under `src/components/ui` or `src/components/layout`
+- module-local overlays remain important but are deferred to `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1`
+- `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1` is not a prerequisite blocker before Shell-1A
+- future Shell-1A and Shell-1B remain focused on their approved files only
+
 ## Mode Smoke
 
 - English mode smoke

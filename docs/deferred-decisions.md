@@ -800,10 +800,13 @@ The following items are explicitly documented as deferred or production hardenin
 - Do not add fake Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, XML, clearance, or cleared-status claims through localization work.
 - Use a temporary manual/dev-only RTL verification method until real `app_users.locale` runtime wiring is approved and implemented.
 - Future Shell-1A and Shell-1B prompts must collect Tailwind compatibility evidence before refactor and HOLD if logical utility support is uncertain.
+- `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` completed as readonly evidence; no shared overlay primitive layer was found.
+- Module-local overlays remain important but are deferred to `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1` for RTL/accessibility review only, and that follow-up is not a prerequisite blocker before Shell-1A.
 
 ## I18N / RTL Still Deferred
 - Final Arabic terminology.
 - Shared UI logical-direction refactor across the deferred shell/navigation components.
+- Module-local modal RTL/accessibility review for close icon position, action ordering, form alignment, focus handling, and portal/focus-trap behavior. This review must stay separate from Shell-1A and Shell-1B.
 - Module-by-module translation rollout.
 - Bilingual side-by-side documents.
 - Document/PDF language implementation.
