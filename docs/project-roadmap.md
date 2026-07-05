@@ -399,7 +399,13 @@ Immediate next priorities:
    - No DB/cookie/runtime persistence was introduced.
    - Shell-1B findings observed: DataTable and pagination inherit RTL and need a dedicated Shell-1B pass for page number order and prev/next behavior.
    - Shell-1B findings are not blockers for Shell-1A and must remain out of this docs sync.
-1. `P3` - `I18N-RTL-SHELL-1B`: shared data-component logical-direction refactor for `DataTable`, `PaginationFooter`, and `FilterBar`.
+1. `P3` - `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1`: readonly review completed and deferred.
+   - Overall result: DEFER.
+   - Reviewed six module-local overlays: `RecordPaymentModal`, `SupplierBlacklistActions`, `AdminUsersClient`, `CustomersClient`, `CustomerProfileActions`, and `SupplierBookingActions`.
+   - Main risk: accessibility hardening only, especially dialog semantics, `aria-modal` consistency, focus trap, escape-key handling, and focus return.
+   - No supplier-cost leakage or customer-facing internal cost exposure found.
+   - Future implementation task: `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`.
+1. `P4` - `I18N-RTL-SHELL-1B`: shared data-component logical-direction refactor for `DataTable`, `PaginationFooter`, and `FilterBar`.
 1. `P4` - `INVOICE-LIST-ACTIONS-POLISH-1`: view/print icon polish, list action review, and pagination/page-size/go-to-page review.
 1. `P5` - `DOCUMENT-FORM-LAYOUT-POLISH-1`: invoice/quotation form sections, line items, and totals panel polish.
 1. `P6` - `ARABIC-COPY-REVIEW-1`: review Arabic terminology and avoid literal translation.

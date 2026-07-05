@@ -98,6 +98,17 @@
 - [x] Shell-1B findings observed: DataTable and pagination-related inherited RTL behavior need dedicated Shell-1B handling, including page number order and prev/next behavior.
 - [x] Shell-1B findings are not blockers for Shell-1A and must not be fixed in this docs sync.
 
+### âœ… I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1
+- [x] Readonly review completed.
+- [x] Overall result: DEFER.
+- [x] Reviewed six module-local overlays: `src/app/(dashboard)/invoices/RecordPaymentModal.tsx`, `src/app/(dashboard)/suppliers/SupplierBlacklistActions.tsx`, `src/app/(dashboard)/admin/users/AdminUsersClient.tsx`, `src/app/(dashboard)/customers/CustomersClient.tsx`, `src/app/(dashboard)/customers/[id]/CustomerProfileActions.tsx`, `src/app/(dashboard)/services/[id]/SupplierBookingActions.tsx`.
+- [x] RTL risk was low across reviewed overlays.
+- [x] Main risk is accessibility hardening: dialog semantics, `aria-modal` consistency, focus trap, escape-key handling, and focus return.
+- [x] Security/business review found no supplier-cost leakage or customer-facing internal cost exposure.
+- [x] Admin/supplier destructive actions remain sensitive but copy/confirmation looked explicit enough for deferral.
+- [x] This review does not block Shell-1A or Shell-1B.
+- [x] Future implementation task recorded as `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`.
+
 ### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
 - [x] Supabase client/admin setup exists
