@@ -35,6 +35,9 @@
   - `src/app/(dashboard)/layout.tsx`
 - Must not touch `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx`.
 - Must use a temporary dev-only RTL verification method until real `app_users.locale` wiring is approved.
+- Status:
+  - completed and pushed in commit `3f627b1`
+  - smoke passed with `G7_DEV_RTL=1`
 
 ### P4
 
@@ -45,32 +48,58 @@
   - `src/components/ui/FilterBar.tsx`
 - Must not touch `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx`.
 - Page-number order stays ascending; only prev/next chevrons mirror direction.
+- Status:
+  - completed and pushed in commit `7f4c19f`
+  - smoke passed in RTL dev mode and LTR normal mode
 
 ### P5
 
-- Module-by-module translation
-  - Customers
-  - Services
-  - Quotations
-  - Invoices
-  - Payments
-  - Suppliers
-  - Settings
-  - Users / RBAC
+- `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1`
+- Readonly review completed with overall result `DEFER`.
+- Future hardening task remains separate:
+  - `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`
+- Accessibility hardening is not a blocker for Shell-1A or Shell-1B.
 
 ### P6
 
-- Document / PDF language strategy and implementation
+- `I18N-RTL-MODULE-TEXT-INVENTORY-1`
+- Recommended next step:
+  - readonly inventory of visible module text before runtime rollout
+  - split text by module, screen, and sensitivity
+  - record glossary/open-copy decisions needed for safe rollout
 
 ### P7
 
-- Arabic copy review and glossary approval
+- `ARABIC-COPY-REVIEW-1`
+- Required before module runtime translation.
+- Arabic copy is not finally approved yet.
 
 ### P8
 
-- SMACC-inspired invoice / quotation UX polish after i18n foundation, not before
+- Module-by-module rollout
+  - Customers
+  - Services
+  - Quotations list/detail non-PDF surfaces
+  - Invoices list non-PDF surfaces
+  - Payments
+  - Suppliers
+  - Settings / Admin later
 
 ### P9
+
+- Document / PDF language strategy and implementation
+- `document_locale` remains deferred.
+- Customer `preferred_language` remains deferred.
+
+### P10
+
+- Arabic copy glossary approval follow-through and later polish
+
+### P11
+
+- SMACC-inspired invoice / quotation UX polish after i18n foundation, not before
+
+### P12
 
 - `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1` remains a later medium-risk supplier UX slice
 
@@ -79,6 +108,10 @@
 - Foundation-1 runtime implementation is complete only for the narrow helper/scaffolding scope above.
 - This roadmap does not approve broader shell/module/document implementation by default.
 - Shell-1A and Shell-1B must not perform broad bidi conversion, sweeping formatter changes, PDF/document bidi work, or module-level value-rendering refactors.
+- The next runtime phase must not start as a broad "translate everything" pass.
+- Module rollout must stay split into small controlled tasks.
+- Recommended first runtime module after planning/copy review is Customers.
+- Service remains the locked operational core entity; Booking terminology needs explicit care during copy review and rollout.
 - Future implementation prompts must collect Tailwind compatibility evidence before refactor:
   - `package.json` Tailwind version
   - RTL-specific plugin presence/absence

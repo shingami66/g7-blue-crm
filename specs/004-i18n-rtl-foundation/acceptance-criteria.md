@@ -50,6 +50,23 @@
 - the temporary verification method does not imply document locale support
 - the temporary verification method is marked for removal after real locale wiring
 
+## Module Rollout Gate
+
+- Shell-1A and Shell-1B are completed and pushed before module rollout begins
+- `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1` is completed as readonly review with overall result `DEFER`
+- overlay hardening is deferred to `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`
+- the next runtime phase must not begin as a broad "translate everything" pass
+- Arabic copy remains unapproved until `ARABIC-COPY-REVIEW-1` is completed
+- `I18N-RTL-MODULE-TEXT-INVENTORY-1` completes before any module runtime translation
+- module rollout is split into small tasks, not one broad implementation
+- recommended rollout order starts with Customers, then Services, then Quotations non-PDF surfaces, then Invoices non-PDF surfaces, then Payments, then Suppliers, with Settings/Admin later
+- document/PDF language remains deferred
+- `document_locale` remains deferred
+- Customer `preferred_language` remains deferred
+- VAT, ZATCA, FATOORA, QR, XML, clearance, and cleared-status claims remain forbidden during module rollout
+- supplier/internal cost labels remain RBAC-sensitive during all translation work
+- Service remains the locked operational core; Booking terminology requires explicit copy review before broad rollout
+
 ## Shared Overlays Inventory
 
 - `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` records exact Modal/Dialog/Toast/Dropdown paths before shell implementation

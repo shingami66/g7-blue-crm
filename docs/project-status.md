@@ -109,6 +109,21 @@
 - [x] This review does not block Shell-1A or Shell-1B.
 - [x] Future implementation task recorded as `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`.
 
+### I18N-RTL-MODULE-ROLLOUT-PLANNING-1
+- [x] Planning/docs review completed.
+- [x] Shell-1A commit `3f627b1` and Shell-1B commit `7f4c19f` are complete and pushed.
+- [x] Overlay review remains deferred to `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`.
+- [x] The next runtime phase must not begin as a broad "translate everything" implementation.
+- [x] Arabic copy is still not finally approved.
+- [x] Module rollout must stay split into small controlled tasks.
+- [x] Recommended next task: `I18N-RTL-MODULE-TEXT-INVENTORY-1`.
+- [x] Arabic copy review is required before module runtime translation work begins.
+- [x] Recommended rollout order after inventory/copy review: Customers, Services, Quotations list/detail non-PDF surfaces, Invoices list non-PDF surfaces, Payments, Suppliers, then Settings/Admin later.
+- [x] Document/PDF language, `document_locale`, and Customer `preferred_language` remain deferred.
+- [x] VAT/ZATCA/FATOORA/QR/XML/clearance claims remain forbidden.
+- [x] Supplier/internal cost labels remain RBAC-sensitive.
+- [x] Service remains the locked operational core; Booking terminology still needs careful copy review.
+
 ### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
 - [x] Supabase client/admin setup exists

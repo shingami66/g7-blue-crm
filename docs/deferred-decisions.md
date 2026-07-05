@@ -805,13 +805,21 @@ The following items are explicitly documented as deferred or production hardenin
 - `I18N-RTL-SHELL-1A` implementation commit `3f627b1` is pushed and smoke-verified with `G7_DEV_RTL=1`.
 - Shell-1B findings were observed during smoke: `DataTable` and pagination behavior inherit RTL direction and need dedicated Shell-1B handling for page number order and prev/next behavior.
 - Shell-1B findings are not blockers for Shell-1A and must not be fixed in this docs sync.
+- `I18N-RTL-SHELL-1B` implementation commit `7f4c19f` is pushed and smoke-verified in RTL dev mode and LTR normal mode.
+- `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1` completed as readonly review with overall result `DEFER`.
+- Future overlay hardening remains a separate task: `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`.
+- The next runtime phase must not begin as a broad "translate everything" pass.
+- Arabic copy is not finally approved yet.
+- The next recommended task is `I18N-RTL-MODULE-TEXT-INVENTORY-1` as a readonly module text inventory before runtime translation.
+- Recommended rollout order remains Customers, Services, Quotations list/detail non-PDF surfaces, Invoices list non-PDF surfaces, Payments, Suppliers, then Settings/Admin later.
+- Service remains the locked operational core; Booking terminology still needs explicit copy review.
+- Supplier/internal cost labels remain RBAC-sensitive during future translation work.
 
 ## I18N / RTL Still Deferred
 - Final Arabic terminology.
-- Shared UI logical-direction refactor across the deferred shell/navigation components.
-- Module-local modal RTL/accessibility review for close icon position, action ordering, form alignment, focus handling, and portal/focus-trap behavior. This review must stay separate from Shell-1A and Shell-1B.
-- Shell-1B data-component RTL handling for `DataTable`, `PaginationFooter`, and `FilterBar` after a separate controlled prompt.
-- Module-by-module translation rollout.
+- Module-local overlay accessibility hardening implementation as `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`.
+- Readonly module text inventory planning as `I18N-RTL-MODULE-TEXT-INVENTORY-1`.
+- Module-by-module translation rollout after `I18N-RTL-MODULE-TEXT-INVENTORY-1` and `ARABIC-COPY-REVIEW-1`.
 - Bilingual side-by-side documents.
 - Document/PDF language implementation.
 - `document_locale` schema/runtime wiring.

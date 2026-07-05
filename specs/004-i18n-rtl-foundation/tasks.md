@@ -62,7 +62,7 @@
 ### I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1
 
 - Type: follow-up review
-- Status: READY NEXT
+- Status: DONE
 - Scope:
   - module-local modal RTL review
   - close icon position
@@ -70,13 +70,17 @@
   - form alignment
   - focus handling
   - portal / focus-trap / accessibility behavior
- - no Shell-1A or Shell-1B implementation mixed in
- - not a prerequisite blocker before Shell-1A
+- Outcome:
+  - overall result: `DEFER`
+  - follow-up implementation task: `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`
+  - no supplier-cost leakage or customer-facing internal cost exposure found
+  - no Shell-1A or Shell-1B implementation mixed in
+  - not a prerequisite blocker before Shell-1A or Shell-1B
 
 ### I18N-RTL-SHELL-1A
 
 - Type: implementation
-- Status: BLOCKED until `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` is complete
+- Status: DONE
 - Scope:
   - `src/components/layout/Sidebar.tsx`
   - `src/components/layout/Topbar.tsx`
@@ -90,11 +94,15 @@
   - `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx`
   - shared data components reserved for `I18N-RTL-SHELL-1B`
   - Modal/Dialog/Toast/Dropdown runtime edits before the readonly inventory is reviewed
+- Delivery note:
+  - pushed in commit `3f627b1`
+  - manual smoke passed with `G7_DEV_RTL=1`
+  - no DB, cookie, or persistent runtime locale wiring introduced
 
 ### I18N-RTL-SHELL-1B
 
 - Type: implementation
-- Status: BLOCKED until `I18N-RTL-SHELL-1A` is complete
+- Status: DONE
 - Scope:
   - `src/components/ui/DataTable.tsx`
   - `src/components/ui/PaginationFooter.tsx`
@@ -106,11 +114,40 @@
   - `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx`
   - shell/navigation files already scoped to `I18N-RTL-SHELL-1A`
   - Modal/Dialog/Toast/Dropdown runtime edits before the readonly inventory is reviewed
+- Delivery note:
+  - pushed in commit `7f4c19f`
+  - manual smoke passed in RTL dev mode and LTR normal mode
+  - page numbers remain ascending while prev/next presentation mirrors direction
+
+### I18N-RTL-MODULE-TEXT-INVENTORY-1
+
+- Type: readonly audit
+- Status: READY NEXT
+- Purpose:
+  - inventory visible module text before runtime rollout
+  - split translation scope by module and screen
+  - isolate RBAC-sensitive labels, operational terminology, and mixed-direction value surfaces
+- Required before:
+  - `ARABIC-COPY-REVIEW-1`
+  - any module runtime translation pass
+- Must record:
+  - Customers as first rollout candidate
+  - Services as second rollout candidate
+  - Quotations list/detail non-PDF surfaces as third rollout candidate
+  - Invoices list non-PDF surfaces as fourth rollout candidate
+  - Payments as fifth rollout candidate
+  - Suppliers as sixth rollout candidate
+  - Settings/Admin as later rollout candidates
+  - document/PDF language remains deferred
+  - `document_locale` remains deferred
+  - Customer `preferred_language` remains deferred
+  - supplier/internal cost labels remain RBAC-sensitive
+  - Service is the locked operational core; Booking terminology still needs care
 
 ### I18N-RTL-MODULES-1+
 
 - Type: phased module implementation
-- Status: BLOCKED until shell is stable
+- Status: BLOCKED until `I18N-RTL-MODULE-TEXT-INVENTORY-1` and `ARABIC-COPY-REVIEW-1` are complete
 
 ### DOCUMENT-LANGUAGE-SNAPSHOT-1
 
@@ -120,7 +157,7 @@
 ### ARABIC-COPY-REVIEW-1
 
 - Type: product copy review
-- Status: CAN START AFTER GLOSSARY INVENTORY
+- Status: BLOCKED until `I18N-RTL-MODULE-TEXT-INVENTORY-1` is complete
 - No runtime code
 
 ## Delivery Sequence Notes
@@ -130,6 +167,9 @@
 - Keep Foundation-1 narrower than the shell/navigation RTL refactor.
 - Split shell/navigation RTL from shared data-component RTL so each pass has a smaller blast radius.
 - Require the shared overlays inventory before either shell implementation pass.
+- Treat overlay hardening as a separate follow-up after the readonly review; do not mix it into shell or module rollout.
+- Do not start the next runtime phase as broad "translate everything".
+- Split module rollout into small controlled tasks after a readonly module text inventory and Arabic copy review.
 - Keep document/PDF language work behind the document language model decision.
 - Keep `document_locale` and Customer `preferred_language` out of Foundation-1.
 - Keep supplier pending UX as a later separate slice.
