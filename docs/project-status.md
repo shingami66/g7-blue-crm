@@ -141,6 +141,49 @@
 - [x] Supplier/internal cost labels remain RBAC-sensitive.
 - [x] Service is the locked operational core; Booking is secondary terminology and still needs care.
 
+### ARABIC-COPY-REVIEW-1
+- [x] Readonly Arabic copy/glossary review completed.
+- [x] Overall result: PASS.
+- [x] Customer / Client -> العميل.
+- [x] Customer Profile -> ملف العميل.
+- [x] Service -> الخدمة.
+- [x] Booking -> الحجز only in narrow booking-specific context.
+- [x] Event Booking -> حجز الفعالية only when event context needs clarification.
+- [x] Quotation / Quote -> عرض السعر.
+- [x] Invoice -> الفاتورة.
+- [x] Deposit Invoice -> فاتورة دفعة مقدمة.
+- [x] Final Invoice -> الفاتورة النهائية.
+- [x] Payment -> السداد.
+- [x] Payment Tracking -> متابعة السداد.
+- [x] Record Payment -> تسجيل السداد.
+- [x] Supplier -> المورد.
+- [x] Supplier Allocation -> تخصيص مورد.
+- [x] Supplier Booking -> حجز مورد.
+- [x] Rate Card -> بطاقة أسعار.
+- [x] Preferred Supplier -> مورد مفضل.
+- [x] Blacklist -> قائمة الحظر.
+- [x] Blacklisted -> محظور.
+- [x] Unblacklist -> إزالة من قائمة الحظر.
+- [x] Revenue risk label -> قيمة العروض, not الإيراد unless true recognized revenue exists.
+- [x] Access Denied -> تم رفض الوصول.
+- [x] Read only -> للعرض فقط.
+- [x] Something went wrong -> حدث خطأ ما.
+- [x] Issue Date -> تاريخ الإصدار.
+- [x] Valid Until -> صالح حتى.
+- [x] Due Date -> تاريخ الاستحقاق.
+- [x] Amount Due -> المبلغ المستحق.
+- [x] Balance Due -> الرصيد المستحق.
+- [x] Outstanding -> المستحق غير المحصل.
+- [x] Collected -> المحصل.
+- [x] VAT -> ضريبة القيمة المضافة, optionally VAT in parentheses on first mention.
+- [x] TIN -> الرقم الضريبي المميز, optionally TIN in parentheses.
+- [x] CR -> رقم السجل التجاري.
+- [x] IBAN -> رقم الآيبان, optionally IBAN in parentheses.
+- [x] SAR -> ر.س or SAR depending component constraints.
+- [x] Service is the locked operational core and Booking remains secondary terminology.
+- [x] Supplier/internal cost labels remain RBAC-sensitive and must not appear in customer-facing copy.
+- [x] Arabic-Indic digits remain forbidden in document/PDF contexts; Western digits remain required.
+
 ### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
 - [x] Supabase client/admin setup exists

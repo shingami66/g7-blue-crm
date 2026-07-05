@@ -161,8 +161,15 @@
 ### ARABIC-COPY-REVIEW-1
 
 - Type: product copy review
-- Status: BLOCKED until `I18N-RTL-MODULE-TEXT-INVENTORY-1` is complete
-- No runtime code
+- Status: DONE
+- Outcome:
+  - completed as readonly Arabic copy/glossary review
+  - overall result: `PASS`
+  - no runtime code was implemented
+- Notes:
+  - customer-facing terminology, RBAC-sensitive wording, and mixed-direction copy rules were reviewed
+  - `I18N-RTL-MODULE-TEXT-INVENTORY-1` remains the readonly source for module readiness
+  - the next runtime module recommendation remains Customers, but only after docs are committed/pushed
 
 ## Delivery Sequence Notes
 

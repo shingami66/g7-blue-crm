@@ -416,7 +416,9 @@ Immediate next priorities:
     - Must finish before `ARABIC-COPY-REVIEW-1` and before any runtime module translation pass.
     - Must record rollout order as Customers, Services, Quotations non-PDF surfaces, Invoices non-PDF surfaces, Payments, Suppliers, then Settings/Admin later.
 1. `P6` - `ARABIC-COPY-REVIEW-1`: glossary/copy review before runtime module translation.
-    - Arabic copy is not finally approved yet.
+   - Readonly Arabic copy/glossary review completed with overall result PASS.
+   - Canonical glossary decisions were recorded for customer, service, quotation, invoice, payment, supplier, admin, RBAC-sensitive, and mixed-direction rules.
+   - Arabic copy is now ready for docs-sync approval; runtime rollout still waits for the docs commits/push sequence.
 1. `P7` - Module rollout remains split into small controlled tasks, not a broad "translate everything" pass.
    - Recommended first runtime module candidate after planning/copy review: Customers.
    - Service remains the locked operational core; Booking terminology still needs care.

@@ -809,6 +809,7 @@ The following items are explicitly documented as deferred or production hardenin
 - `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1` completed as readonly review with overall result `DEFER`.
 - Future overlay hardening remains a separate task: `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`.
 - `I18N-RTL-MODULE-TEXT-INVENTORY-1` completed as readonly inventory with overall result `PASS` and no file changes.
+- `ARABIC-COPY-REVIEW-1` completed as readonly Arabic copy/glossary review with overall result `PASS`.
 - The next runtime phase must not begin as a broad "translate everything" pass.
 - Arabic copy is not finally approved yet.
 - The next recommended task is `I18N-RTL-MODULE-TEXT-INVENTORY-1` as a readonly module text inventory before runtime translation.
@@ -820,6 +821,7 @@ The following items are explicitly documented as deferred or production hardenin
 - Final Arabic terminology.
 - Module-local overlay accessibility hardening implementation as `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`.
 - Readonly module text inventory planning as `I18N-RTL-MODULE-TEXT-INVENTORY-1`.
+- Module-by-module translation rollout after `I18N-RTL-MODULE-TEXT-INVENTORY-1` and `ARABIC-COPY-REVIEW-1`.
 - Module-by-module translation rollout after `I18N-RTL-MODULE-TEXT-INVENTORY-1` and `ARABIC-COPY-REVIEW-1`.
 - Bilingual side-by-side documents.
 - Document/PDF language implementation.
