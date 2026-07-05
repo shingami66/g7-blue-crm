@@ -391,6 +391,11 @@ Immediate next priorities:
 1. `P2` - `QUOTATIONS-FILTERS-FIX-1`: fix quotation status and date filters while preserving existing quotation list actions and pagination.
 1. `P3` - `GLOBAL-PENDING-QUOTATION-NAVIGATION-1`: optional quotation list/detail/back/edit navigation pending bolt slice, kept separate from quotation filters.
 1. `P4` - remaining high-risk pending/action audits for supplier allocation/booking actions, admin/users/RBAC actions, and other financial edge actions.
+
+- [x] `PAYMENTS-LIST-SORT-PAGINATION-1` completed and pushed in `844f2ec feat(payments): add ascending pagination to payments list`.
+- [x] Payments list ordering now starts from the smallest/older payment sequence and the page shows 10 records per page with shared pagination controls.
+- [x] Manual smoke passed for payment ordering, pagination, KPI counts, and unchanged payment-recording behavior.
+- [ ] `QUOTATIONS-FILTERS-FIX-1` remains the next P2 priority.
 - [x] Plan rate limiting for sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
 - [ ] Confirm UI hiding is not treated as security; server-side permission checks and server-side masking are required.
 

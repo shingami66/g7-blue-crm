@@ -185,6 +185,12 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **P4:** remaining high-risk pending/action audits for supplier allocation/booking, admin/users/RBAC, and other financial edge actions.
 - **RecordPaymentModal:** stays local-pending by design unless a separate financial review explicitly approves changing it.
 
+## PAYMENTS-LIST-SORT-PAGINATION-1
+- **Status:** Completed in code and documented.
+- **Reason closed:** Payments list now sorts by canonical payment sequence ascending and paginates 10 rows per page while keeping KPIs based on the full dataset.
+- **When to return:** Only if payment list UX needs another change beyond the completed sort/pagination slice.
+- **Known requirements:** Keep `RecordPaymentModal` local-pending and keep payment recording/accounting logic unchanged.
+
 ## Viewer Bank Detail Masking Verification
 - **Status:** Passed.
 - **Reason:** Read-only code/data-flow review and Viewer browser smoke both confirmed server-side masking.

@@ -109,6 +109,14 @@
 - [x] Viewer bank-detail masking verification passed: server-side data shaping removes bank details before client props, and Viewer browser smoke on `/settings` showed only the restriction message.
 - [x] Raw error/security exposure verification passed: manual browser smoke on `/services/[id]`, `/invoices` payment modal, and `/settings` showed only safe validation messages and no raw Supabase/Postgres/RPC/internal errors.
 
+### ✅ PAYMENTS-LIST-SORT-PAGINATION-1
+- Status: Completed, reviewed, manual smoke passed, and pushed.
+- Implementation commit:
+  - `844f2ec feat(payments): add ascending pagination to payments list`
+- Payments list now orders by `payment_number` ascending, then `date` and `created_at` ascending.
+- Payments page now paginates 10 records per page using the shared `PaginationFooter`, while KPI cards still use the full payment dataset.
+- Manual smoke passed for page ordering, pagination controls, KPI counts, and the unchanged `RecordPaymentModal`.
+
 ### âœ… CUSTOMER-NUMBER-1
 - [x] DB migration applied manually, adding `customer_number` sequence.
 - [x] App layer generates customer number server-side via `generate_document_number` RPC.
