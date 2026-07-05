@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { ArrowLeft, Printer, FileEdit } from "lucide-react";
 import Link from "next/link";
+import PendingLink from "@/components/ui/PendingLink";
 import { getQuotationById } from "@/lib/quotations/queries";
 import { requirePermission, checkPermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
@@ -94,12 +95,12 @@ export default async function QuotationDetailPage({
       {/* Top Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link
+          <PendingLink
             href="/quotations"
             className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
           >
             <ArrowLeft size={18} />
-          </Link>
+          </PendingLink>
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight">
@@ -117,13 +118,13 @@ export default async function QuotationDetailPage({
             <QuotationApprovalActions quotationId={quotation.id} status={quotation.status} />
           )}
           {quotation.status === "draft" && (
-            <Link 
+            <PendingLink
               href={`/quotations/${quotation.id}/edit`}
               className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors"
             >
               <FileEdit size={18} />
               Edit
-            </Link>
+            </PendingLink>
           )}
           <Link
             href={`/quotations/${quotation.id}/pdf`}

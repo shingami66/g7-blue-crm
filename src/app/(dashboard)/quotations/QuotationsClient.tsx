@@ -9,6 +9,7 @@ import PaginationFooter from "@/components/ui/PaginationFooter";
 import { Plus, Filter, FileSearch, Trash2, Edit, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import type { QuotationListItem } from "@/lib/quotations/types";
 import { softDeleteQuotation } from "@/lib/quotations/actions";
 
@@ -21,6 +22,7 @@ type StatusBadgeVariant = React.ComponentProps<typeof StatusBadge>["variant"];
 
 export default function QuotationsClient({ quotations, canWrite }: QuotationsClientProps) {
   const router = useRouter();
+  const { push } = useGlobalNavigationPending();
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -141,7 +143,7 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
                 <tr
                   key={q.id}
                   className="hover:bg-surface-container-low/50 transition-colors cursor-pointer"
-                  onClick={() => router.push(`/quotations/${q.id}`)}
+                  onClick={() => push(`/quotations/${q.id}`)}
                 >
                   <td className="px-4 py-4 font-mono font-semibold text-primary">
                     {q.quotationNumber}
@@ -170,7 +172,7 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
                         title="View Details"
                         onClick={(e) => {
                           e.stopPropagation();
-                          router.push(`/quotations/${q.id}`);
+                          push(`/quotations/${q.id}`);
                         }}
                       >
                         <FileSearch size={18} />
@@ -184,7 +186,7 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
                               title="Edit Quotation"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                router.push(`/quotations/${q.id}/edit`);
+                                push(`/quotations/${q.id}/edit`);
                               }}
                             >
                               <Edit size={18} />

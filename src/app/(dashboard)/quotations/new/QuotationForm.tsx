@@ -6,6 +6,7 @@ import { ArrowLeft, Plus, Trash2, Save, AlertCircle } from "lucide-react";
 import { createQuotation, updateQuotation } from "@/lib/quotations/actions";
 import type { QuotationDetail } from "@/lib/quotations/types";
 import Button from "@/components/ui/Button";
+import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 
 interface QuotationFormService {
   id: string;
@@ -25,6 +26,7 @@ interface QuotationFormProps {
 
 export default function QuotationForm({ service, initialData }: QuotationFormProps) {
   const router = useRouter();
+  const { back } = useGlobalNavigationPending();
   const isEdit = !!initialData;
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -147,7 +149,8 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-4 py-4">
         <button
-          onClick={() => router.back()}
+          type="button"
+          onClick={() => back()}
           className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
         >
           <ArrowLeft size={18} />
