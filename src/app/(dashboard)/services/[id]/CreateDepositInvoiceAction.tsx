@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Button from "@/components/ui/Button";
 import { createInvoiceAction } from "@/lib/invoices/actions";
 
 type CreateDepositInvoiceActionProps = {
@@ -113,13 +114,14 @@ export function CreateDepositInvoiceAction({
             placeholder="0.00"
             required
           />
-          <button
+          <Button
             type="submit"
             disabled={isPending}
             className="px-4 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[14px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            loading={isPending}
           >
-            {isPending ? "Creating..." : "Create Deposit"}
-          </button>
+            Create Deposit
+          </Button>
         </div>
       </div>
       {error && (
