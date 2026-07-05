@@ -368,9 +368,13 @@ Checklist:
 - [x] Verify Viewer opening `/settings` does not receive full IBAN, bank account holder, or bank account values in client data.
 - [x] Global centered pending bolt UX is implemented and pushed.
 - [x] Shared dashboard `Button` loading now triggers the global centered bolt pattern.
+- [x] `GLOBAL-LOADING-CRUD-FORMS-1` completed and pushed in `bf3a4ba feat(ui): add global pending bolt to CRUD forms`.
+- [x] Safe CRUD submit/save actions now use shared `Button loading={...}` for customer profile save, service create/edit, and supplier create/edit.
+- [x] Manual smoke passed for the five covered CRUD actions, and validation passed before commit.
 - [x] Supplier Allocation and Supplier Booking action flows use the global pending UX.
 - [x] Dashboard loading route exists and uses the same bolt indicator.
 - [x] No backdrop, visible loading text, or spinner is used.
+- [ ] Navigation pending coverage, financial actions, quotation create/update, service status, supplier allocation workflows, and admin users/RBAC row actions remain separate future follow-up work.
 - [x] Plan rate limiting for sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
 - [ ] Confirm UI hiding is not treated as security; server-side permission checks and server-side masking are required.
 

@@ -51,6 +51,10 @@
 - [x] Shared `Button` loading state now drives the global centered bolt pattern in the authenticated dashboard.
 - [x] Dashboard route loading uses the same bolt indicator.
 - [x] No backdrop, visible loading text, or spinner is used.
+- [x] `GLOBAL-LOADING-CRUD-FORMS-1` completed and pushed in `bf3a4ba feat(ui): add global pending bolt to CRUD forms`.
+- [x] Covered CRUD submit actions: customer profile save, service create/edit, and supplier create/edit.
+- [x] Manual smoke passed for the five covered CRUD actions, and validation passed with `pnpm exec next typegen`, `pnpm exec tsc --noEmit`, and `git diff --check`.
+- [ ] Navigation pending coverage remains future follow-up work and is not included in this completed CRUD slice.
 
 ### âœ… Supabase + Clerk Foundation
 - [x] Supabase schema exists
@@ -99,6 +103,9 @@
 - [x] The production `company_settings` RLS migration is committed in-repo and the remote Supabase apply has been verified.
 - [x] Committed/tracked secrets exposure review passed: no real secrets were found in tracked repo files, docs, env examples, or client-facing code paths; public env usage remains limited to safe publishable values and auth route URLs.
 - [x] The centered bolt loader is the approved polished MVP loading mark for dashboard pending states.
+- [x] `GLOBAL-LOADING-CRUD-FORMS-1` completed and pushed in `bf3a4ba feat(ui): add global pending bolt to CRUD forms`.
+- [x] Safe CRUD submit/save actions now use shared `Button loading={...}` for customer profile save, service create/edit, and supplier create/edit.
+- [x] Manual smoke passed for the five covered CRUD actions, and validation passed before commit.
 - [x] Viewer bank-detail masking verification passed: server-side data shaping removes bank details before client props, and Viewer browser smoke on `/settings` showed only the restriction message.
 - [x] Raw error/security exposure verification passed: manual browser smoke on `/services/[id]`, `/invoices` payment modal, and `/settings` showed only safe validation messages and no raw Supabase/Postgres/RPC/internal errors.
 

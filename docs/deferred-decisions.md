@@ -167,6 +167,8 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Reason deferred:** The current centered bolt is the approved polished MVP loading mark; any future visual refinement is optional rather than required.
 - **When to return:** Only if a future design pass is requested.
 - **Known requirements:** The global centered bolt is driven by shared dashboard `Button` loading state, appears in dashboard loading, and deliberately uses no backdrop, visible loading text, or spinner.
+- **Completed slice:** `GLOBAL-LOADING-CRUD-FORMS-1` is complete and pushed in `bf3a4ba feat(ui): add global pending bolt to CRUD forms`. It covered customer profile save, service create/edit, and supplier create/edit submit actions only.
+- **Follow-up scope:** Navigation pending, quotation create/update, financial actions, service status, supplier allocation workflows, and admin users/RBAC row actions remain separate future work and are not closed by this CRUD slice.
 
 ## Viewer Bank Detail Masking Verification
 - **Status:** Passed.
