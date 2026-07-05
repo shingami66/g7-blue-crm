@@ -42,8 +42,9 @@ export async function getPaymentsList(): Promise<PaymentsListResult> {
       .from("payments")
       .select(PAYMENT_LIST_SELECT)
       .eq("is_deleted", false)
-      .order("date", { ascending: false })
-      .order("created_at", { ascending: false });
+      .order("payment_number", { ascending: true })
+      .order("date", { ascending: true })
+      .order("created_at", { ascending: true });
 
     if (error) {
       console.error("[getPaymentsList] Supabase error:", error.message);
