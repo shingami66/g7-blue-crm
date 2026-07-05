@@ -150,6 +150,12 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **When to return:** ERP-3.
 - **Known requirements:** Deposit/final invoices must be created from Approved Quotation + Service. No invoice without Service. No invoice without Approved Quotation. Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
+## GLOBAL-PENDING-QUOTATION-FORMS-1B
+- **Status:** Completed in code and documented.
+- **Reason closed:** Quotation create/update submit now uses the shared global pending bolt pattern for the approved form slice.
+- **When to return:** For broader quotation workflow changes beyond submit/save pending UI.
+- **Known requirements:** Keep the remaining payment, invoice, service status, supplier allocation/booking, and admin/RBAC action flows separate and workflow-reviewed before any broader pending-UX migration.
+
 ## Production RLS Hardening
 - **Status:** SEC-RLS-BASELINE-1 manual Supabase SQL Editor apply and database verification completed; STAB-P0-04 remote DB apply is complete and verified for both committed migrations.
 - **Reason deferred:** Development used `DEV_ONLY` RLS policies while application-level RBAC was being stabilized. The reviewed SEC-RLS-BASELINE-1 migration was manually applied and verified in the live database; STAB-P0-04 added repo-level env validation, sensitive Server Action rate limiting, and the production `company_settings` RLS migration, then applied the committed migrations to the remote Supabase project.

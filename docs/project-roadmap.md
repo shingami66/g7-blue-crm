@@ -377,6 +377,9 @@ Checklist:
 - [x] `GLOBAL-PENDING-NAVIGATION-LOW-RISK-1A` completed and pushed in `6759de2 feat(ui): add global pending bolt to low-risk navigation`.
 - [x] Low-risk dashboard navigation now uses delayed global pending bolt coverage for New Service, New Supplier, service/customer row detail navigation, service detail Back/Edit/customer links, customer detail Back/related service links, and service/supplier create-edit back/cancel.
 - [x] Manual smoke passed for the covered low-risk navigation paths, and modifier-key / middle-click behavior was preserved.
+- [x] `GLOBAL-PENDING-QUOTATION-FORMS-1` completed and pushed in `645eef0 feat(ui): add global pending bolt to quotation forms`.
+- [x] Quotation create/update submit now uses shared `Button loading={isSubmitting}` and shows the global centered pending bolt during save/create.
+- [x] Manual smoke passed for quotation create submit and quotation edit/update submit, with normal validation behavior preserved.
 - [ ] Navigation pending coverage, financial actions, quotation create/update, service status, supplier allocation workflows, and admin users/RBAC row actions remain separate future follow-up work.
 - [x] Plan rate limiting for sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
 - [ ] Confirm UI hiding is not treated as security; server-side permission checks and server-side masking are required.

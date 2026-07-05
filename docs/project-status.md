@@ -389,6 +389,21 @@
 - Manual smoke passed for the covered low-risk navigation paths.
 - Follow-up scope remains open for quotations, invoices/payments, financial actions, service status, supplier allocation/booking workflow, and admin/RBAC row actions.
 
+### ✅ GLOBAL-PENDING-QUOTATION-FORMS-1
+- Status: Completed, reviewed, manual smoke passed, and pushed.
+- Implementation commit:
+  - `645eef0 feat(ui): add global pending bolt to quotation forms`
+- Summary:
+  - Updated quotation create/update submit to shared `Button loading={isSubmitting}` so the global centered pending bolt appears during quotation save/create.
+  - Changed only `src/app/(dashboard)/quotations/new/QuotationForm.tsx`.
+  - Preserved quotation validation, totals, payload shape, redirects, and permission behavior.
+- Validation:
+  - `pnpm exec next typegen`
+  - `pnpm exec tsc --noEmit`
+  - `git diff --check`
+- Manual smoke passed for quotation create submit and quotation edit/update submit.
+- Follow-up scope remains open for financial/payment/invoice actions, service status, supplier allocation/booking workflow, and admin/RBAC row actions.
+
 ### ✅ HUMAN-REFERENCE-DISPLAY-1
 - Status: Completed, reviewed, manual smoke passed, and pushed.
 - Implementation commit:
