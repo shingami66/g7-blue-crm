@@ -174,7 +174,16 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **When to return:** Only if a future design pass is requested.
 - **Known requirements:** The global centered bolt is driven by shared dashboard `Button` loading state, appears in dashboard loading, and deliberately uses no backdrop, visible loading text, or spinner.
 - **Completed slice:** `GLOBAL-LOADING-CRUD-FORMS-1` is complete and pushed in `bf3a4ba feat(ui): add global pending bolt to CRUD forms`. It covered customer profile save, service create/edit, and supplier create/edit submit actions only.
+- **Completed slice:** `GLOBAL-PENDING-INVOICE-CREATE-ACTIONS-1` is complete and pushed in `468cd00 feat(ui): add global pending bolt to invoice create actions`. It covered service detail deposit and final invoice create actions only.
 - **Follow-up scope:** Navigation pending, quotation create/update, financial actions, service status, supplier allocation workflows, and admin users/RBAC row actions remain separate future work and are not closed by this CRUD slice.
+
+## Immediate Next Priority Order
+- **P0:** finish the docs commit and push for `GLOBAL-PENDING-INVOICE-CREATE-ACTIONS-1`.
+- **P1:** `PAYMENTS-LIST-SORT-PAGINATION-1` for ascending payment ordering and 10-per-page pagination.
+- **P2:** `QUOTATIONS-FILTERS-FIX-1` for quotation status/date filter fixes while preserving list actions and pagination.
+- **P3:** `GLOBAL-PENDING-QUOTATION-NAVIGATION-1` as an optional quotation navigation pending bolt slice, kept separate from quotation filters.
+- **P4:** remaining high-risk pending/action audits for supplier allocation/booking, admin/users/RBAC, and other financial edge actions.
+- **RecordPaymentModal:** stays local-pending by design unless a separate financial review explicitly approves changing it.
 
 ## Viewer Bank Detail Masking Verification
 - **Status:** Passed.

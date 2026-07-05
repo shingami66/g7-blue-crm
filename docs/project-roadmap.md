@@ -380,7 +380,17 @@ Checklist:
 - [x] `GLOBAL-PENDING-QUOTATION-FORMS-1` completed and pushed in `645eef0 feat(ui): add global pending bolt to quotation forms`.
 - [x] Quotation create/update submit now uses shared `Button loading={isSubmitting}` and shows the global centered pending bolt during save/create.
 - [x] Manual smoke passed for quotation create submit and quotation edit/update submit, with normal validation behavior preserved.
-- [ ] Navigation pending coverage, financial actions, quotation create/update, service status, supplier allocation workflows, and admin users/RBAC row actions remain separate future follow-up work.
+- [x] `GLOBAL-PENDING-INVOICE-CREATE-ACTIONS-1` completed and pushed in `468cd00 feat(ui): add global pending bolt to invoice create actions`.
+- [x] Service detail deposit and final invoice create buttons now use shared `Button loading={isPending}` and show the global centered pending bolt during invoice creation.
+- [x] Manual smoke passed for invoice create submit flows, with inline success/error messages and disabled guards preserved.
+- [ ] Navigation pending coverage, payment recording, service status, supplier allocation workflows, and admin users/RBAC row actions remain separate future follow-up work.
+
+Immediate next priorities:
+1. `P0` - finish the docs commit and push for `GLOBAL-PENDING-INVOICE-CREATE-ACTIONS-1`.
+1. `P1` - `PAYMENTS-LIST-SORT-PAGINATION-1`: sort payments ascending from older/smaller sequence to newer/larger sequence, and paginate 10 records per page to match Quotations/Invoices.
+1. `P2` - `QUOTATIONS-FILTERS-FIX-1`: fix quotation status and date filters while preserving existing quotation list actions and pagination.
+1. `P3` - `GLOBAL-PENDING-QUOTATION-NAVIGATION-1`: optional quotation list/detail/back/edit navigation pending bolt slice, kept separate from quotation filters.
+1. `P4` - remaining high-risk pending/action audits for supplier allocation/booking actions, admin/users/RBAC actions, and other financial edge actions.
 - [x] Plan rate limiting for sensitive Server Actions: quotation creation, quotation approval, invoice creation, payment recording, and settings update.
 - [ ] Confirm UI hiding is not treated as security; server-side permission checks and server-side masking are required.
 

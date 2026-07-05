@@ -404,6 +404,24 @@
 - Manual smoke passed for quotation create submit and quotation edit/update submit.
 - Follow-up scope remains open for financial/payment/invoice actions, service status, supplier allocation/booking workflow, and admin/RBAC row actions.
 
+### ✅ GLOBAL-PENDING-INVOICE-CREATE-ACTIONS-1
+- Status: Completed, reviewed, manual smoke passed, and pushed.
+- Implementation commit:
+  - `468cd00 feat(ui): add global pending bolt to invoice create actions`
+- Covered invoice create actions:
+  - service detail create deposit invoice
+  - service detail create final invoice
+- Manual smoke passed for invoice create submit flows, and validation passed with `pnpm exec next typegen`, `pnpm exec tsc --noEmit`, and `git diff --check`.
+- `RecordPaymentModal` remains intentionally local-pending and untouched.
+- Follow-up scope remains open for payment recording, supplier allocation/booking workflow, service status, admin/RBAC row actions, and the remaining invoice/payment workflow slices.
+
+### Immediate Next Priorities
+- `P0`: finish the docs commit and push for `GLOBAL-PENDING-INVOICE-CREATE-ACTIONS-1`.
+- `P1`: `PAYMENTS-LIST-SORT-PAGINATION-1` to sort payments ascending and paginate 10 per page.
+- `P2`: `QUOTATIONS-FILTERS-FIX-1` to fix quotation status/date filters without changing list actions or pagination.
+- `P3`: `GLOBAL-PENDING-QUOTATION-NAVIGATION-1` as an optional navigation pending bolt slice, kept separate from quotation filters.
+- `P4`: remaining high-risk pending/action audits for supplier allocation/booking, admin/users/RBAC, and other financial edge actions, with `RecordPaymentModal` staying local by design unless separately approved.
+
 ### ✅ HUMAN-REFERENCE-DISPLAY-1
 - Status: Completed, reviewed, manual smoke passed, and pushed.
 - Implementation commit:
