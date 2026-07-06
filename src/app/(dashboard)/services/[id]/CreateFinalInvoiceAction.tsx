@@ -3,13 +3,38 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getLocale } from "@/lib/i18n/locales";
 import { createInvoiceAction } from "@/lib/invoices/actions";
+
+type FinalActionDictionary = {
+  unavailable: string;
+  amountSummary: string;
+  create: string;
+  success: string;
+  errors: {
+    invalidInvoiceInput: string;
+    finalInvoiceAlreadyExists: string;
+    quotationNotFound: string;
+    quotationNotApproved: string;
+    quotationServiceMismatch: string;
+    companySettingsUnavailable: string;
+    invoiceSnapshotUnavailable: string;
+    invoiceCreationFailed: string;
+    unauthorized: string;
+    forbidden: string;
+    fallbackWithCode: string;
+    fallback: string;
+  };
+};
 
 type CreateFinalInvoiceActionProps = {
   serviceId: string;
   quotationId: string | null;
   remainingAmount: number;
   canCreate: boolean;
+  dictionary?: FinalActionDictionary;
 };
 
 export function CreateFinalInvoiceAction({
@@ -17,6 +42,7 @@ export function CreateFinalInvoiceAction({
   quotationId,
   remainingAmount,
   canCreate,
+  dictionary = getServicesDictionary(getLocale()).billing.finalAction,
 }: CreateFinalInvoiceActionProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -40,22 +66,26 @@ export function CreateFinalInvoiceAction({
       });
 
       if (result.success) {
-        setSuccessMsg(`Final invoice created successfully (Invoice #${result.invoiceNumber}).`);
+        setSuccessMsg(
+          dictionary.success.replace("{invoiceNumber}", isolateBidiText(result.invoiceNumber ?? "")),
+        );
         router.refresh();
       } else {
         const errMap: Record<string, string> = {
-          "invalid_invoice_input": "Invalid input provided.",
-          "final_invoice_already_exists": "An active final invoice already exists.",
-          "quotation_not_found": "Quotation not found.",
-          "quotation_not_approved": "Quotation is not approved.",
-          "quotation_service_mismatch": "Quotation does not match the current service.",
-          "company_settings_unavailable": "Company settings are unavailable.",
-          "invoice_snapshot_unavailable": "Unable to generate invoice snapshots.",
-          "invoice_creation_failed": "Failed to insert the invoice.",
-          "Unauthorized": "You are not authorized to perform this action.",
-          "Forbidden": "You do not have permission to create invoices.",
+          "invalid_invoice_input": dictionary.errors.invalidInvoiceInput,
+          "final_invoice_already_exists": dictionary.errors.finalInvoiceAlreadyExists,
+          "quotation_not_found": dictionary.errors.quotationNotFound,
+          "quotation_not_approved": dictionary.errors.quotationNotApproved,
+          "quotation_service_mismatch": dictionary.errors.quotationServiceMismatch,
+          "company_settings_unavailable": dictionary.errors.companySettingsUnavailable,
+          "invoice_snapshot_unavailable": dictionary.errors.invoiceSnapshotUnavailable,
+          "invoice_creation_failed": dictionary.errors.invoiceCreationFailed,
+          "Unauthorized": dictionary.errors.unauthorized,
+          "Forbidden": dictionary.errors.forbidden,
         };
-        const errMsg = result.error ? (errMap[result.error] || `Unable to create final invoice. Error code: ${result.error}`) : "Unable to create final invoice. Please try again.";
+        const errMsg = result.error
+          ? (errMap[result.error] || dictionary.errors.fallbackWithCode.replace("{code}", result.error))
+          : dictionary.errors.fallback;
         setError(errMsg);
       }
     });
@@ -65,7 +95,7 @@ export function CreateFinalInvoiceAction({
     return (
       <div className="flex flex-col gap-3">
         <div className="text-[14px] text-on-surface-variant italic">
-          Final invoice is not available.
+          {dictionary.unavailable}
         </div>
       </div>
     );
@@ -75,7 +105,7 @@ export function CreateFinalInvoiceAction({
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 max-w-sm">
       <div className="flex flex-col gap-2">
         <div className="text-[13px] text-on-surface-variant">
-          Final invoice amount will be calculated automatically from the approved quotation minus active deposit invoices.
+          {dictionary.amountSummary}
         </div>
         <div className="flex gap-2">
           <Button
@@ -84,7 +114,7 @@ export function CreateFinalInvoiceAction({
             className="px-4 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[14px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             loading={isPending}
           >
-            Create Final Invoice
+            {dictionary.create}
           </Button>
         </div>
       </div>

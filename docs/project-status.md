@@ -172,6 +172,22 @@
 - [x] AGENTS.md untouched.
 - [x] Minor follow-up: `EditServiceForm` subtitle may need future RTL polish because service number and localized subtitle should not force the whole sentence LTR; not a blocker after smoke.
 
+### I18N-RTL-SERVICES-RUNTIME-1B
+- [x] Services billing/invoice action UI only.
+- [x] Senior review initially HOLD due disabled reason mapping mismatch.
+- [x] FIX-1 completed and aligned BillingPanel disabled reason mappings with real ServiceBillingState reason codes.
+- [x] Focused re-review result: PASS.
+- [x] Mozfer manual/browser smoke result: PASS.
+- [x] Billing panel LTR passed.
+- [x] Deposit/final invoice action UI passed or rendered unavailable states correctly.
+- [x] Disabled reason messages passed.
+- [x] RTL dev shell billing panel passed with minor non-blocking English-locale punctuation note.
+- [x] No invoice routes touched.
+- [x] No PDF/document routes touched.
+- [x] No supplier allocation/booking files touched.
+- [x] No schema/migrations/middleware/cookies/RBAC/financial logic changed.
+- [x] AGENTS.md untouched.
+
 ### I18N-RTL-MODULE-TEXT-INVENTORY-1
 - [x] Readonly module text inventory completed.
 - [x] Overall result: PASS.

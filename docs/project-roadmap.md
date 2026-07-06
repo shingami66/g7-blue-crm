@@ -435,6 +435,16 @@ Immediate next priorities:
    - Services runtime pages now use `getLocale()` + Services dictionary.
    - Service status family is dictionary-backed, `status-transitions` copy moved to dictionary-backed copy without changing behavior, and mixed-direction protections were added for service numbers, quotation numbers, SAR values, dates/date ranges, and customer references.
    - No billing/invoice action files, supplier allocation/booking files, allocation subflows, PDF/document routes, schema/migrations, middleware/cookies, RBAC, or shared UI refactor were touched.
+1. `P6C` - `I18N-RTL-SERVICES-RUNTIME-1B`: Services billing/invoice action UI completed after copy review.
+   - Senior review initially HOLD due disabled reason mapping mismatch.
+   - FIX-1 aligned BillingPanel disabled reason mappings with real ServiceBillingState reason codes.
+   - Focused re-review result: PASS.
+   - Mozfer manual/browser smoke result: PASS.
+   - Billing panel LTR passed.
+   - Deposit/final invoice action UI passed or rendered unavailable states correctly.
+   - Disabled reason messages passed.
+   - RTL dev shell billing panel passed with minor non-blocking English-locale punctuation note.
+   - No invoice routes, PDF/document routes, supplier allocation/booking files, schema/migrations, middleware/cookies, RBAC, or financial logic were touched.
 1. `P7` - Module rollout remains split into small controlled tasks, not a broad "translate everything" pass.
    - Recommended first runtime module candidate after planning/copy review: Customers.
    - Service remains the locked operational core; Booking terminology still needs care.

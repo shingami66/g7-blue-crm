@@ -110,6 +110,22 @@
 - no RBAC/shared UI refactor touched
 - no supplier/internal-cost leakage
 - minor follow-up: `EditServiceForm` subtitle may need future RTL polish because service number and localized subtitle should not force the whole sentence LTR; not a blocker after smoke
+- `I18N-RTL-SERVICES-RUNTIME-1B` is complete as a Services billing/invoice action UI slice
+- senior review initially held due disabled reason mapping mismatch
+- FIX-1 aligned BillingPanel disabled reason mappings with real ServiceBillingState reason codes
+- focused re-review result is `PASS`
+- manual smoke result is `PASS` based on Mozfer visual/browser smoke
+- Billing panel LTR passed
+- Deposit/final invoice action UI passed or rendered unavailable states correctly
+- disabled reason messages passed
+- RTL dev shell billing panel passed with minor non-blocking English-locale punctuation note
+- no invoice routes touched
+- no PDF/document routes touched
+- no supplier allocation/booking files touched
+- no schema/migrations touched
+- no middleware/cookies touched
+- no RBAC or financial logic changed
+- AGENTS.md untouched
 
 ## Shared Overlays Inventory
 

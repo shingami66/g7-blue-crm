@@ -3,7 +3,39 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getLocale } from "@/lib/i18n/locales";
 import { createInvoiceAction } from "@/lib/invoices/actions";
+
+type DepositActionDictionary = {
+  unavailable: string;
+  amountLabel: string;
+  amountPlaceholder: string;
+  create: string;
+  validation: {
+    validAmount: string;
+    amountGreaterThanZero: string;
+    amountCannotExceedQuotationTotal: string;
+  };
+  success: string;
+  errors: {
+    invalidInvoiceInput: string;
+    depositAmountRequired: string;
+    depositAmountExceedsQuotationTotal: string;
+    depositInvoiceAlreadyExists: string;
+    quotationNotFound: string;
+    quotationNotApproved: string;
+    quotationServiceMismatch: string;
+    companySettingsUnavailable: string;
+    invoiceSnapshotUnavailable: string;
+    invoiceCreationFailed: string;
+    unauthorized: string;
+    forbidden: string;
+    fallbackWithCode: string;
+    fallback: string;
+  };
+};
 
 type CreateDepositInvoiceActionProps = {
   serviceId: string;
@@ -11,6 +43,7 @@ type CreateDepositInvoiceActionProps = {
   quotationTotal: number;
   canCreate: boolean;
   disabledReasons: string[];
+  dictionary?: DepositActionDictionary;
 };
 
 export function CreateDepositInvoiceAction({
@@ -18,6 +51,7 @@ export function CreateDepositInvoiceAction({
   quotationId,
   quotationTotal,
   canCreate,
+  dictionary = getServicesDictionary(getLocale()).billing.depositAction,
 }: CreateDepositInvoiceActionProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -37,17 +71,17 @@ export function CreateDepositInvoiceAction({
     const parsedAmount = parseFloat(amountStr);
 
     if (isNaN(parsedAmount) || !isFinite(parsedAmount)) {
-      setError("Please enter a valid numeric amount.");
+      setError(dictionary.validation.validAmount);
       return;
     }
 
     if (parsedAmount <= 0) {
-      setError("Deposit amount must be greater than 0.");
+      setError(dictionary.validation.amountGreaterThanZero);
       return;
     }
 
     if (parsedAmount > quotationTotal) {
-      setError("Deposit amount cannot exceed quotation total.");
+      setError(dictionary.validation.amountCannotExceedQuotationTotal);
       return;
     }
 
@@ -60,25 +94,29 @@ export function CreateDepositInvoiceAction({
       });
 
       if (result.success) {
-        setSuccessMsg(`Deposit invoice created successfully (Invoice #${result.invoiceNumber}).`);
+        setSuccessMsg(
+          dictionary.success.replace("{invoiceNumber}", isolateBidiText(result.invoiceNumber ?? "")),
+        );
         setAmountStr("");
         router.refresh();
       } else {
         const errMap: Record<string, string> = {
-          "invalid_invoice_input": "Invalid input provided.",
-          "deposit_amount_required": "Deposit amount is required.",
-          "deposit_amount_exceeds_quotation_total": "Deposit amount exceeds quotation total.",
-          "deposit_invoice_already_exists": "An active deposit invoice already exists.",
-          "quotation_not_found": "Quotation not found.",
-          "quotation_not_approved": "Quotation is not approved.",
-          "quotation_service_mismatch": "Quotation does not match the current service.",
-          "company_settings_unavailable": "Company settings are unavailable.",
-          "invoice_snapshot_unavailable": "Unable to generate invoice snapshots.",
-          "invoice_creation_failed": "Failed to insert the invoice.",
-          "Unauthorized": "You are not authorized to perform this action.",
-          "Forbidden": "You do not have permission to create invoices.",
+          "invalid_invoice_input": dictionary.errors.invalidInvoiceInput,
+          "deposit_amount_required": dictionary.errors.depositAmountRequired,
+          "deposit_amount_exceeds_quotation_total": dictionary.errors.depositAmountExceedsQuotationTotal,
+          "deposit_invoice_already_exists": dictionary.errors.depositInvoiceAlreadyExists,
+          "quotation_not_found": dictionary.errors.quotationNotFound,
+          "quotation_not_approved": dictionary.errors.quotationNotApproved,
+          "quotation_service_mismatch": dictionary.errors.quotationServiceMismatch,
+          "company_settings_unavailable": dictionary.errors.companySettingsUnavailable,
+          "invoice_snapshot_unavailable": dictionary.errors.invoiceSnapshotUnavailable,
+          "invoice_creation_failed": dictionary.errors.invoiceCreationFailed,
+          "Unauthorized": dictionary.errors.unauthorized,
+          "Forbidden": dictionary.errors.forbidden,
         };
-        const errMsg = result.error ? (errMap[result.error] || `Unable to create deposit invoice. Error code: ${result.error}`) : "Unable to create deposit invoice. Please try again.";
+        const errMsg = result.error
+          ? (errMap[result.error] || dictionary.errors.fallbackWithCode.replace("{code}", result.error))
+          : dictionary.errors.fallback;
         setError(errMsg);
       }
     });
@@ -88,7 +126,7 @@ export function CreateDepositInvoiceAction({
     return (
       <div className="flex flex-col gap-3">
         <div className="text-[14px] text-on-surface-variant italic">
-          Deposit invoice is not available.
+          {dictionary.unavailable}
         </div>
       </div>
     );
@@ -98,7 +136,7 @@ export function CreateDepositInvoiceAction({
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 max-w-sm">
       <div className="flex flex-col gap-1">
         <label htmlFor="depositAmount" className="text-[13px] font-semibold text-on-surface uppercase tracking-wide">
-          Deposit Amount (SAR)
+          {dictionary.amountLabel}
         </label>
         <div className="flex gap-2">
           <input
@@ -111,7 +149,7 @@ export function CreateDepositInvoiceAction({
             onChange={(e) => setAmountStr(e.target.value)}
             disabled={isPending}
             className="flex-1 px-3 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface text-[14px] focus:outline-none focus:ring-2 focus:ring-primary/50"
-            placeholder="0.00"
+            placeholder={dictionary.amountPlaceholder}
             required
           />
           <Button
@@ -120,7 +158,7 @@ export function CreateDepositInvoiceAction({
             className="px-4 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[14px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             loading={isPending}
           >
-            Create Deposit
+            {dictionary.create}
           </Button>
         </div>
       </div>

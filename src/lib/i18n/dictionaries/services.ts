@@ -153,6 +153,100 @@ export interface ServicesDictionary {
     blockedTitle: string;
     blockedMessage: string;
   };
+  billing: {
+    title: string;
+    cards: {
+      approvedQuotation: string;
+      depositInvoice: string;
+      finalInvoice: string;
+      billingCalculation: string;
+      noApprovedQuotationYet: string;
+      noActiveDepositInvoice: string;
+      noActiveFinalInvoice: string;
+      priorInvoiced: string;
+      remaining: string;
+    };
+    status: {
+      title: string;
+      depositInvoice: string;
+      finalInvoice: string;
+      created: string;
+      available: string;
+      notAvailable: string;
+      nextAvailableAction: string;
+      notes: string;
+    };
+    invoiceStatuses: {
+      sent: string;
+      draft: string;
+      paid: string;
+      partial: string;
+      overdue: string;
+      cancelled: string;
+      voided: string;
+    };
+    disabledReasons: {
+      approvedQuotationRequired: string;
+      billingStateUnavailable: string;
+      duplicateActiveDepositInvoices: string;
+      duplicateActiveFinalInvoices: string;
+      missingServiceId: string;
+      depositInvoiceAlreadyExists: string;
+      finalInvoiceAlreadyExists: string;
+      priorInvoicesExceedQuotationTotal: string;
+      quotationNotApproved: string;
+      quotationServiceMismatch: string;
+      unavailable: string;
+    };
+    depositAction: {
+      unavailable: string;
+      amountLabel: string;
+      amountPlaceholder: string;
+      create: string;
+      validation: {
+        validAmount: string;
+        amountGreaterThanZero: string;
+        amountCannotExceedQuotationTotal: string;
+      };
+      success: string;
+      errors: {
+        invalidInvoiceInput: string;
+        depositAmountRequired: string;
+        depositAmountExceedsQuotationTotal: string;
+        depositInvoiceAlreadyExists: string;
+        quotationNotFound: string;
+        quotationNotApproved: string;
+        quotationServiceMismatch: string;
+        companySettingsUnavailable: string;
+        invoiceSnapshotUnavailable: string;
+        invoiceCreationFailed: string;
+        unauthorized: string;
+        forbidden: string;
+        fallbackWithCode: string;
+        fallback: string;
+      };
+    };
+    finalAction: {
+      unavailable: string;
+      amountSummary: string;
+      create: string;
+      success: string;
+      errors: {
+        invalidInvoiceInput: string;
+        finalInvoiceAlreadyExists: string;
+        quotationNotFound: string;
+        quotationNotApproved: string;
+        quotationServiceMismatch: string;
+        companySettingsUnavailable: string;
+        invoiceSnapshotUnavailable: string;
+        invoiceCreationFailed: string;
+        unauthorized: string;
+        forbidden: string;
+        fallbackWithCode: string;
+        fallback: string;
+      };
+    };
+  };
   transitionCopy: {
     actions: Record<ServiceStatus, { label: string; description: string }>;
     blockedReasons: {
@@ -329,6 +423,100 @@ const servicesDictionaryEn: ServicesDictionary = {
   editPage: {
     blockedTitle: "Edit Blocked",
     blockedMessage: "Editing is not allowed when service status is {status}.",
+  },
+  billing: {
+    title: "Billing / Invoicing",
+    cards: {
+      approvedQuotation: "Approved Quotation",
+      depositInvoice: "Deposit Invoice",
+      finalInvoice: "Final Invoice",
+      billingCalculation: "Billing Calculation",
+      noApprovedQuotationYet: "No approved quotation yet",
+      noActiveDepositInvoice: "No active deposit invoice",
+      noActiveFinalInvoice: "No active final invoice",
+      priorInvoiced: "Prior Invoiced",
+      remaining: "Remaining",
+    },
+    status: {
+      title: "Billing Status",
+      depositInvoice: "Deposit Invoice",
+      finalInvoice: "Final Invoice",
+      created: "Created",
+      available: "Available",
+      notAvailable: "Not available",
+      nextAvailableAction: "Next available action: Create Final Invoice",
+      notes: "Notes:",
+    },
+    invoiceStatuses: {
+      sent: "Issued",
+      draft: "Draft",
+      paid: "Paid",
+      partial: "Partial",
+      overdue: "Overdue",
+      cancelled: "Cancelled",
+      voided: "Voided",
+    },
+    disabledReasons: {
+      approvedQuotationRequired: "No approved quotation is available for this service.",
+      billingStateUnavailable: "Billing information is currently unavailable.",
+      duplicateActiveDepositInvoices: "Multiple active deposit invoices were found for this service.",
+      duplicateActiveFinalInvoices: "Multiple active final invoices were found for this service.",
+      missingServiceId: "Billing information is unavailable because the service ID is missing.",
+      depositInvoiceAlreadyExists: "Deposit invoice already created for this service.",
+      finalInvoiceAlreadyExists: "Final invoice already created for this service.",
+      priorInvoicesExceedQuotationTotal: "Prior invoices exceed the approved quotation total.",
+      quotationNotApproved: "The selected quotation is not approved yet.",
+      quotationServiceMismatch: "The quotation does not match this service.",
+      unavailable: "Action is currently unavailable.",
+    },
+    depositAction: {
+      unavailable: "Deposit invoice is not available.",
+      amountLabel: "Deposit Amount (SAR)",
+      amountPlaceholder: "0.00",
+      create: "Create Deposit",
+      validation: {
+        validAmount: "Please enter a valid numeric amount.",
+        amountGreaterThanZero: "Deposit amount must be greater than 0.",
+        amountCannotExceedQuotationTotal: "Deposit amount cannot exceed quotation total.",
+      },
+      success: "Deposit invoice created successfully. Invoice: {invoiceNumber}.",
+      errors: {
+        invalidInvoiceInput: "Invalid input provided.",
+        depositAmountRequired: "Deposit amount is required.",
+        depositAmountExceedsQuotationTotal: "Deposit amount exceeds quotation total.",
+        depositInvoiceAlreadyExists: "An active deposit invoice already exists.",
+        quotationNotFound: "Quotation not found.",
+        quotationNotApproved: "Quotation is not approved.",
+        quotationServiceMismatch: "Quotation does not match the current service.",
+        companySettingsUnavailable: "Company settings are unavailable.",
+        invoiceSnapshotUnavailable: "Unable to generate invoice snapshots.",
+        invoiceCreationFailed: "Failed to insert the invoice.",
+        unauthorized: "You are not authorized to perform this action.",
+        forbidden: "You do not have permission to create invoices.",
+        fallbackWithCode: "Unable to create deposit invoice. Error code: {code}",
+        fallback: "Unable to create deposit invoice. Please try again.",
+      },
+    },
+    finalAction: {
+      unavailable: "Final invoice is not available.",
+      amountSummary: "Final invoice amount will be calculated automatically from the approved quotation minus active deposit invoices.",
+      create: "Create Final Invoice",
+      success: "Final invoice created successfully. Invoice: {invoiceNumber}.",
+      errors: {
+        invalidInvoiceInput: "Invalid input provided.",
+        finalInvoiceAlreadyExists: "An active final invoice already exists.",
+        quotationNotFound: "Quotation not found.",
+        quotationNotApproved: "Quotation is not approved.",
+        quotationServiceMismatch: "Quotation does not match the current service.",
+        companySettingsUnavailable: "Company settings are unavailable.",
+        invoiceSnapshotUnavailable: "Unable to generate invoice snapshots.",
+        invoiceCreationFailed: "Failed to insert the invoice.",
+        unauthorized: "You are not authorized to perform this action.",
+        forbidden: "You do not have permission to create invoices.",
+        fallbackWithCode: "Unable to create final invoice. Error code: {code}",
+        fallback: "Unable to create final invoice. Please try again.",
+      },
+    },
   },
   transitionCopy: {
     actions: {
@@ -549,6 +737,100 @@ const servicesDictionaryAr: ServicesDictionary = {
   editPage: {
     blockedTitle: "التعديل محظور",
     blockedMessage: "التعديل غير مسموح عندما تكون حالة الخدمة {status}.",
+  },
+  billing: {
+    title: "الفوترة / الفواتير",
+    cards: {
+      approvedQuotation: "عرض السعر المعتمد",
+      depositInvoice: "فاتورة دفعة مقدمة",
+      finalInvoice: "الفاتورة النهائية",
+      billingCalculation: "احتساب الفوترة",
+      noApprovedQuotationYet: "لا يوجد عرض سعر معتمد حتى الآن",
+      noActiveDepositInvoice: "لا توجد فاتورة دفعة مقدمة نشطة",
+      noActiveFinalInvoice: "لا توجد فاتورة نهائية نشطة",
+      priorInvoiced: "المفوتر سابقًا",
+      remaining: "المتبقي",
+    },
+    status: {
+      title: "حالة الفوترة",
+      depositInvoice: "فاتورة دفعة مقدمة",
+      finalInvoice: "الفاتورة النهائية",
+      created: "تم الإنشاء",
+      available: "متاحة",
+      notAvailable: "غير متاحة",
+      nextAvailableAction: "الإجراء المتاح التالي: إنشاء الفاتورة النهائية",
+      notes: "ملاحظات:",
+    },
+    invoiceStatuses: {
+      sent: "صادرة",
+      draft: "مسودة",
+      paid: "مدفوعة",
+      partial: "مدفوعة جزئيًا",
+      overdue: "متأخرة",
+      cancelled: "ملغاة",
+      voided: "ملغاة نهائيًا",
+    },
+    disabledReasons: {
+      approvedQuotationRequired: "لا يوجد عرض سعر معتمد متاح لهذه الخدمة.",
+      billingStateUnavailable: "معلومات الفوترة غير متاحة حاليًا.",
+      duplicateActiveDepositInvoices: "تم العثور على أكثر من فاتورة دفعة مقدمة نشطة لهذه الخدمة.",
+      duplicateActiveFinalInvoices: "تم العثور على أكثر من فاتورة نهائية نشطة لهذه الخدمة.",
+      missingServiceId: "معلومات الفوترة غير متاحة لأن معرف الخدمة غير موجود.",
+      depositInvoiceAlreadyExists: "تم بالفعل إنشاء فاتورة دفعة مقدمة لهذه الخدمة.",
+      finalInvoiceAlreadyExists: "تم بالفعل إنشاء الفاتورة النهائية لهذه الخدمة.",
+      priorInvoicesExceedQuotationTotal: "إجمالي الفواتير السابقة يتجاوز إجمالي عرض السعر المعتمد.",
+      quotationNotApproved: "عرض السعر المحدد غير معتمد حتى الآن.",
+      quotationServiceMismatch: "عرض السعر لا يطابق هذه الخدمة.",
+      unavailable: "الإجراء غير متاح حاليًا.",
+    },
+    depositAction: {
+      unavailable: "فاتورة الدفعة المقدمة غير متاحة.",
+      amountLabel: "قيمة الدفعة المقدمة (SAR)",
+      amountPlaceholder: "0.00",
+      create: "إنشاء دفعة مقدمة",
+      validation: {
+        validAmount: "يرجى إدخال مبلغ رقمي صحيح.",
+        amountGreaterThanZero: "يجب أن تكون قيمة الدفعة المقدمة أكبر من 0.",
+        amountCannotExceedQuotationTotal: "لا يمكن أن تتجاوز قيمة الدفعة المقدمة إجمالي عرض السعر.",
+      },
+      success: "تم إنشاء فاتورة الدفعة المقدمة بنجاح. الفاتورة: {invoiceNumber}.",
+      errors: {
+        invalidInvoiceInput: "تم إدخال بيانات غير صحيحة.",
+        depositAmountRequired: "قيمة الدفعة المقدمة مطلوبة.",
+        depositAmountExceedsQuotationTotal: "قيمة الدفعة المقدمة تتجاوز إجمالي عرض السعر.",
+        depositInvoiceAlreadyExists: "توجد بالفعل فاتورة دفعة مقدمة نشطة.",
+        quotationNotFound: "تعذر العثور على عرض السعر.",
+        quotationNotApproved: "عرض السعر غير معتمد.",
+        quotationServiceMismatch: "عرض السعر لا يطابق الخدمة الحالية.",
+        companySettingsUnavailable: "إعدادات الشركة غير متاحة.",
+        invoiceSnapshotUnavailable: "تعذر إنشاء لقطات الفاتورة.",
+        invoiceCreationFailed: "تعذر إنشاء الفاتورة.",
+        unauthorized: "يجب تسجيل الدخول لتنفيذ هذا الإجراء.",
+        forbidden: "ليس لديك صلاحية لإنشاء الفواتير.",
+        fallbackWithCode: "تعذر إنشاء فاتورة الدفعة المقدمة. رمز الخطأ: {code}",
+        fallback: "تعذر إنشاء فاتورة الدفعة المقدمة. يرجى المحاولة مرة أخرى.",
+      },
+    },
+    finalAction: {
+      unavailable: "الفاتورة النهائية غير متاحة.",
+      amountSummary: "سيتم احتساب قيمة الفاتورة النهائية تلقائيًا من عرض السعر المعتمد بعد خصم فواتير الدفعة المقدمة النشطة.",
+      create: "إنشاء الفاتورة النهائية",
+      success: "تم إنشاء الفاتورة النهائية بنجاح. الفاتورة: {invoiceNumber}.",
+      errors: {
+        invalidInvoiceInput: "تم إدخال بيانات غير صحيحة.",
+        finalInvoiceAlreadyExists: "توجد بالفعل فاتورة نهائية نشطة.",
+        quotationNotFound: "تعذر العثور على عرض السعر.",
+        quotationNotApproved: "عرض السعر غير معتمد.",
+        quotationServiceMismatch: "عرض السعر لا يطابق الخدمة الحالية.",
+        companySettingsUnavailable: "إعدادات الشركة غير متاحة.",
+        invoiceSnapshotUnavailable: "تعذر إنشاء لقطات الفاتورة.",
+        invoiceCreationFailed: "تعذر إنشاء الفاتورة.",
+        unauthorized: "يجب تسجيل الدخول لتنفيذ هذا الإجراء.",
+        forbidden: "ليس لديك صلاحية لإنشاء الفواتير.",
+        fallbackWithCode: "تعذر إنشاء الفاتورة النهائية. رمز الخطأ: {code}",
+        fallback: "تعذر إنشاء الفاتورة النهائية. يرجى المحاولة مرة أخرى.",
+      },
+    },
   },
   transitionCopy: {
     actions: {
