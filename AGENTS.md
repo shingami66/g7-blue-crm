@@ -30,6 +30,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - `pnpm start` runs the built app after a successful `pnpm build`.
 - `pnpm lint` runs the repo ESLint config.
 - `pnpm exec tsc --noEmit` is the documented typecheck verification command for runtime implementation slices.
+- Runtime implementation slices must pass `pnpm lint`, `pnpm exec tsc --noEmit`, and `pnpm build` before commit readiness.
 - `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
 - `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
 - Verify Supabase connectivity at `GET /api/health/db` while the local app is running.
@@ -241,6 +242,6 @@ For additional Spec Kit context, read the current plan, but apply the rules abov
 ## Cursor Audit Priority Gates & Blockers
 Before starting Supplier Bookings Domain/actions/UI/RBAC, verify P0 Cursor audit gates:
 1. Supplier audit columns are text and schema is synced. CLOSED.
-2. Allocation cancel/delete/restore active-booking guard is implemented and verified. REQUIRED NEXT.
+2. Allocation cancel/delete/restore active-booking guard is implemented and verified. CLOSED.
 
-Do not start Supplier Bookings Domain/actions/UI/RBAC before SUPPLIER-ALLOCATION-BOOKING-GUARD-1 is closed.
+After P0 gates, the next safe slice is `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY` for manual/internal smoke verification of the closed Service Detail Supplier Booking UI only.
