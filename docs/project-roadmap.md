@@ -445,6 +445,15 @@ Immediate next priorities:
    - Disabled reason messages passed.
    - RTL dev shell billing panel passed with minor non-blocking English-locale punctuation note.
    - No invoice routes, PDF/document routes, supplier allocation/booking files, schema/migrations, middleware/cookies, RBAC, or financial logic were touched.
+1. `P6D` - `I18N-RTL-SERVICES-RUNTIME-1C`: Services supplier allocation/booking display panels completed after copy review.
+   - Focused senior review result: PASS.
+   - Mozfer manual/browser smoke result: PASS.
+   - Supplier Allocations panel passed.
+   - Supplier Bookings panel passed.
+   - Cost/internal labels remained internal and permission-gated.
+   - SBK numbers, supplier names, SAR values, dates, quantities, units, and notes remained readable.
+   - RTL dev shell passed with minor non-blocking English-locale punctuation note.
+   - No supplier action files, allocation subflows, RBAC/permission/cost visibility logic, invoice/payment/quotation/PDF/document routes, schema/migrations, middleware/cookies, or shared UI refactor were touched.
 1. `P7` - Module rollout remains split into small controlled tasks, not a broad "translate everything" pass.
    - Recommended first runtime module candidate after planning/copy review: Customers.
    - Service remains the locked operational core; Booking terminology still needs care.

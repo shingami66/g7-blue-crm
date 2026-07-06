@@ -188,6 +188,22 @@
 - [x] No schema/migrations/middleware/cookies/RBAC/financial logic changed.
 - [x] AGENTS.md untouched.
 
+### I18N-RTL-SERVICES-RUNTIME-1C
+- [x] Services supplier allocation/booking display panels only.
+- [x] Focused senior review result: PASS.
+- [x] Mozfer manual/browser smoke result: PASS.
+- [x] Supplier Allocations panel passed.
+- [x] Supplier Bookings panel passed.
+- [x] Cost/internal labels remained internal and permission-gated.
+- [x] SBK numbers, supplier names, SAR values, dates, quantities, units, and notes remained readable.
+- [x] RTL dev shell passed with minor non-blocking English-locale punctuation note.
+- [x] No supplier action files touched.
+- [x] No allocation subflows touched.
+- [x] No RBAC/permission/cost visibility logic changed.
+- [x] No invoice/payment/quotation/PDF/document routes touched.
+- [x] No schema/migrations/middleware/cookies/shared UI touched.
+- [x] AGENTS.md untouched.
+
 ### I18N-RTL-MODULE-TEXT-INVENTORY-1
 - [x] Readonly module text inventory completed.
 - [x] Overall result: PASS.

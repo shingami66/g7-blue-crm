@@ -126,6 +126,22 @@
 - no middleware/cookies touched
 - no RBAC or financial logic changed
 - AGENTS.md untouched
+- `I18N-RTL-SERVICES-RUNTIME-1C` is complete as a Services supplier allocation/booking display panel slice
+- focused senior review result is `PASS`
+- manual smoke result is `PASS` based on Mozfer visual/browser smoke
+- Supplier Allocations panel passed
+- Supplier Bookings panel passed
+- cost/internal labels remained internal and permission-gated
+- SBK numbers, supplier names, SAR values, dates, quantities, units, and notes remained readable
+- RTL dev shell billing panel passed with minor non-blocking English-locale punctuation note
+- no supplier action files touched
+- no allocation subflows touched
+- no RBAC/permission/cost visibility logic changed
+- no invoice/payment/quotation/PDF/document routes touched
+- no schema/migrations touched
+- no middleware/cookies touched
+- no shared UI refactor touched
+- AGENTS.md untouched
 
 ## Shared Overlays Inventory
 

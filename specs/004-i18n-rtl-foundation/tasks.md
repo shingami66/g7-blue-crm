@@ -247,6 +247,27 @@
   - no RBAC or financial logic changed
   - AGENTS.md untouched
 
+### I18N-RTL-SERVICES-RUNTIME-1C
+- Type: module runtime implementation
+- Status: DONE
+- Outcome:
+  - Services supplier allocation/booking display panels only
+  - focused senior review result: `PASS`
+  - manual smoke result: `PASS` based on Mozfer visual/browser smoke
+  - Supplier Allocations panel passed
+  - Supplier Bookings panel passed
+  - cost/internal labels remained internal and permission-gated
+  - SBK numbers, supplier names, SAR values, dates, quantities, units, and notes remained readable
+  - RTL dev shell passed with minor non-blocking English-locale punctuation note
+  - no supplier action files touched
+  - no allocation subflows touched
+  - no RBAC/permission/cost visibility logic changed
+  - no invoice/payment/quotation/PDF/document routes touched
+  - no schema/migrations touched
+  - no middleware/cookies touched
+  - no shared UI refactor touched
+  - AGENTS.md untouched
+
 ## Delivery Sequence Notes
 
 - Start with the audit.

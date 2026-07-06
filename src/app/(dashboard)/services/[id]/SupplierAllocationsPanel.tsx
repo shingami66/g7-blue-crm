@@ -2,6 +2,9 @@ import type { ComponentProps } from "react";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getLocale } from "@/lib/i18n/locales";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import SupplierAllocationStatusActions from "./SupplierAllocationStatusActions";
@@ -25,13 +28,6 @@ const STATUS_VARIANT_MAP: Record<SupplierAllocation["status"], StatusBadgeVarian
   cancelled: "cancelled",
 };
 
-const STATUS_LABEL_MAP: Record<SupplierAllocation["status"], string> = {
-  draft: "Draft",
-  planned: "Planned",
-  selected: "Selected",
-  cancelled: "Cancelled",
-};
-
 export default function SupplierAllocationsPanel({
   allocations,
   canReadCost,
@@ -41,13 +37,26 @@ export default function SupplierAllocationsPanel({
   serviceStatus,
   showDeleted = false,
 }: SupplierAllocationsPanelProps) {
+  const locale = getLocale();
+  const dictionary = getServicesDictionary(locale);
+  const panelDictionary = dictionary.supplierAllocations;
   const hasAllocations = allocations.length > 0;
   const isServiceEditable =
     serviceStatus !== "Completed" && serviceStatus !== "Cancelled";
 
-  const baseColumns = ["Status", "Supplier", "Category", "Item", "Unit", "Qty", "Cost Source"];
-  const costColumns = canReadCost ? ["Unit Cost", "Total Cost"] : [];
-  const actionColumns = [""]; // Empty header for actions
+  const baseColumns = [
+    panelDictionary.columns.status,
+    panelDictionary.columns.supplier,
+    panelDictionary.columns.category,
+    panelDictionary.columns.item,
+    panelDictionary.columns.unit,
+    panelDictionary.columns.qty,
+    panelDictionary.columns.costSource,
+  ];
+  const costColumns = canReadCost
+    ? [panelDictionary.columns.unitCost, panelDictionary.columns.totalCost]
+    : [];
+  const actionColumns = [panelDictionary.columns.actions];
   const columns = [...baseColumns, ...costColumns, ...actionColumns];
 
   const canCreate = canWrite && canReadCost && isServiceEditable;
@@ -56,7 +65,7 @@ export default function SupplierAllocationsPanel({
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden mt-6">
       <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center gap-4">
         <div className="flex items-center gap-4">
-          <h3 className="font-semibold text-primary">Supplier Allocations</h3>
+          <h3 className="font-semibold text-primary">{panelDictionary.title}</h3>
           {serviceId && (
             <div className="flex items-center gap-2 text-[13px]">
               <Link
@@ -67,7 +76,7 @@ export default function SupplierAllocationsPanel({
                     : "text-on-surface-variant hover:bg-surface-variant"
                 }`}
               >
-                Active
+                {panelDictionary.tabs.active}
               </Link>
               <Link
                 href={`/services/${serviceId}?showDeleted=true`}
@@ -77,7 +86,7 @@ export default function SupplierAllocationsPanel({
                     : "text-on-surface-variant hover:bg-surface-variant"
                 }`}
               >
-                Show Deleted
+                {panelDictionary.tabs.showDeleted}
               </Link>
             </div>
           )}
@@ -88,14 +97,14 @@ export default function SupplierAllocationsPanel({
             className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[13px] font-semibold transition-colors"
           >
             <Plus size={16} />
-            New Allocation
+            {panelDictionary.actions.newAllocation}
           </Link>
         )}
       </div>
       
       {!hasAllocations ? (
         <div className="p-8 text-center text-on-surface-variant text-[14px]">
-          No supplier allocations recorded for this service yet.
+          {panelDictionary.empty}
         </div>
       ) : (
         <DataTable columns={columns}>
@@ -103,41 +112,43 @@ export default function SupplierAllocationsPanel({
             <tr key={a.id} className={a.isDeleted ? "opacity-60 bg-surface-container-lowest grayscale-[0.5]" : ""}>
               <td className="px-4 py-3 align-top">
                 <StatusBadge variant={a.isDeleted ? "cancelled" : STATUS_VARIANT_MAP[a.status] || "draft"}>
-                  {a.isDeleted ? "Deleted" : STATUS_LABEL_MAP[a.status] || a.status}
+                  {a.isDeleted ? panelDictionary.statusLabels.deleted : panelDictionary.statusLabels[a.status] || a.status}
                 </StatusBadge>
               </td>
               <td className="px-4 py-3 align-top font-medium text-on-surface">
-                {a.supplierName || a.supplierId}
-                {a.isDeleted && <span className="block text-[11px] text-error mt-1 font-semibold">Deleted Record</span>}
+                <span dir="auto">{isolateBidiText(a.supplierName || a.supplierId)}</span>
+                {a.isDeleted && <span className="block text-[11px] text-error mt-1 font-semibold">{panelDictionary.deletedRecord}</span>}
               </td>
               <td className="px-4 py-3 align-top text-on-surface-variant">
-                {a.category}
+                <span dir="auto">{isolateBidiText(a.category)}</span>
               </td>
               <td className="px-4 py-3 align-top text-on-surface">
-                {a.itemName}
+                <span dir="auto">{isolateBidiText(a.itemName)}</span>
               </td>
               <td className="px-4 py-3 align-top text-on-surface-variant">
-                {a.unit}
+                <span dir="ltr">{isolateBidiText(a.unit)}</span>
               </td>
-              <td className="px-4 py-3 align-top text-on-surface">
-                {a.quantity}
+              <td dir="ltr" className="px-4 py-3 align-top text-on-surface">
+                {isolateBidiText(String(a.quantity))}
               </td>
               <td className="px-4 py-3 align-top text-on-surface-variant">
-                {a.costSource === "manual_estimate" ? "Manual" : "Rate Card"}
+                {a.costSource === "manual_estimate"
+                  ? panelDictionary.costSourceLabels.manual
+                  : panelDictionary.costSourceLabels.rateCard}
                 {a.approvedQuotationId && (
-                  <span className="block text-[11px] text-primary mt-1">Quoted</span>
+                  <span className="block text-[11px] text-primary mt-1">{panelDictionary.costSourceLabels.quoted}</span>
                 )}
               </td>
               {canReadCost && (
                 <>
-                  <td className="px-4 py-3 align-top text-on-surface text-right">
+                  <td dir="ltr" className="px-4 py-3 align-top text-on-surface text-right">
                     {a.estimatedUnitCost !== null 
-                      ? `${a.estimatedUnitCost.toLocaleString("en-SA", { minimumFractionDigits: 2 })} ${a.currency}` 
+                      ? isolateBidiText(`${a.estimatedUnitCost.toLocaleString("en-SA", { minimumFractionDigits: 2 })} ${a.currency}`)
                       : "—"}
                   </td>
-                  <td className="px-4 py-3 align-top text-on-surface text-right font-semibold">
+                  <td dir="ltr" className="px-4 py-3 align-top text-on-surface text-right font-semibold">
                     {a.estimatedTotalCost !== null 
-                      ? `${a.estimatedTotalCost.toLocaleString("en-SA", { minimumFractionDigits: 2 })} ${a.currency}` 
+                      ? isolateBidiText(`${a.estimatedTotalCost.toLocaleString("en-SA", { minimumFractionDigits: 2 })} ${a.currency}`)
                       : "—"}
                   </td>
                 </>
@@ -156,7 +167,7 @@ export default function SupplierAllocationsPanel({
                         href={`/services/${serviceId}/allocations/${a.id}/edit`}
                         className="text-[13px] font-semibold text-primary hover:underline"
                       >
-                        Edit
+                        {panelDictionary.actions.edit}
                       </Link>
                     )}
                     {!a.isDeleted && canCancel && a.status !== "cancelled" && isServiceEditable && (
@@ -164,7 +175,7 @@ export default function SupplierAllocationsPanel({
                         href={`/services/${serviceId}/allocations/${a.id}/cancel`}
                         className="text-[13px] font-semibold text-error hover:underline"
                       >
-                        Cancel
+                        {panelDictionary.actions.cancel}
                       </Link>
                     )}
                     {!a.isDeleted && canWrite && isServiceEditable && (
@@ -172,7 +183,7 @@ export default function SupplierAllocationsPanel({
                         href={`/services/${serviceId}/allocations/${a.id}/delete`}
                         className="text-[13px] font-semibold text-error hover:underline"
                       >
-                        Delete
+                        {panelDictionary.actions.delete}
                       </Link>
                     )}
                     {a.isDeleted && canWrite && isServiceEditable && (
@@ -180,13 +191,13 @@ export default function SupplierAllocationsPanel({
                         href={`/services/${serviceId}/allocations/${a.id}/restore`}
                         className="text-[13px] font-semibold text-primary hover:underline"
                       >
-                        Restore
+                        {panelDictionary.actions.restore}
                       </Link>
                     )}
                   </div>
                   {!a.isDeleted && a.status === "selected" && (
                     <span className="max-w-[220px] text-right text-[11px] font-medium text-on-surface-variant">
-                      Supplier Booking create or linked SBK appears in the panel below.
+                      {panelDictionary.selectedHint}
                     </span>
                   )}
                 </div>

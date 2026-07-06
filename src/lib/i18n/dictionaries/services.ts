@@ -153,6 +153,82 @@ export interface ServicesDictionary {
     blockedTitle: string;
     blockedMessage: string;
   };
+  supplierAllocations: {
+    title: string;
+    tabs: {
+      active: string;
+      showDeleted: string;
+    };
+    actions: {
+      newAllocation: string;
+      edit: string;
+      cancel: string;
+      delete: string;
+      restore: string;
+    };
+    empty: string;
+    columns: {
+      status: string;
+      supplier: string;
+      category: string;
+      item: string;
+      unit: string;
+      qty: string;
+      costSource: string;
+      unitCost: string;
+      totalCost: string;
+      actions: string;
+    };
+    statusLabels: {
+      draft: string;
+      planned: string;
+      selected: string;
+      cancelled: string;
+      deleted: string;
+    };
+    costSourceLabels: {
+      manual: string;
+      rateCard: string;
+      quoted: string;
+    };
+    deletedRecord: string;
+    selectedHint: string;
+  };
+  supplierBookings: {
+    title: string;
+    subtitle: string;
+    empty: {
+      noBookings: string;
+      selectAllocation: string;
+    };
+    columns: {
+      bookingNumber: string;
+      status: string;
+      supplier: string;
+      item: string;
+      qty: string;
+      unitCost: string;
+      totalCost: string;
+      created: string;
+      internalDetails: string;
+      actions: string;
+    };
+    statusLabels: {
+      draft: string;
+      cancelled: string;
+    };
+    selectedAllocations: string;
+    linkedBooking: string;
+    locked: string;
+    noPermission: string;
+    details: {
+      scope: string;
+      notes: string;
+      cancelled: string;
+      noReason: string;
+      empty: string;
+    };
+  };
   billing: {
     title: string;
     cards: {
@@ -423,6 +499,82 @@ const servicesDictionaryEn: ServicesDictionary = {
   editPage: {
     blockedTitle: "Edit Blocked",
     blockedMessage: "Editing is not allowed when service status is {status}.",
+  },
+  supplierAllocations: {
+    title: "Supplier Allocations",
+    tabs: {
+      active: "Active",
+      showDeleted: "Show Deleted",
+    },
+    actions: {
+      newAllocation: "New Allocation",
+      edit: "Edit",
+      cancel: "Cancel",
+      delete: "Delete",
+      restore: "Restore",
+    },
+    empty: "No supplier allocations recorded for this service yet.",
+    columns: {
+      status: "Status",
+      supplier: "Supplier",
+      category: "Category",
+      item: "Item",
+      unit: "Unit",
+      qty: "Qty",
+      costSource: "Cost Source",
+      unitCost: "Unit Cost",
+      totalCost: "Total Cost",
+      actions: "",
+    },
+    statusLabels: {
+      draft: "Draft",
+      planned: "Planned",
+      selected: "Selected",
+      cancelled: "Cancelled",
+      deleted: "Deleted",
+    },
+    costSourceLabels: {
+      manual: "Manual",
+      rateCard: "Rate Card",
+      quoted: "Quoted",
+    },
+    deletedRecord: "Deleted Record",
+    selectedHint: "Supplier Booking create or linked SBK appears in the panel below.",
+  },
+  supplierBookings: {
+    title: "Supplier Bookings",
+    subtitle: "Internal SBK records created from selected supplier allocations.",
+    empty: {
+      noBookings: "No Supplier Bookings recorded for this service yet.",
+      selectAllocation: "Select a planned supplier allocation to create a Supplier Booking.",
+    },
+    columns: {
+      bookingNumber: "SBK Number",
+      status: "Status",
+      supplier: "Supplier",
+      item: "Item",
+      qty: "Qty",
+      unitCost: "Unit Cost",
+      totalCost: "Total Cost",
+      created: "Created",
+      internalDetails: "Internal Details",
+      actions: "",
+    },
+    statusLabels: {
+      draft: "Draft",
+      cancelled: "Cancelled",
+    },
+    selectedAllocations: "Selected Allocations",
+    linkedBooking: "Linked SBK",
+    locked: "Supplier Booking locked for completed or cancelled services.",
+    noPermission: "You do not have permission to create Supplier Bookings.",
+    details: {
+      scope: "Scope:",
+      notes: "Notes:",
+      cancelled: "Cancelled:",
+      noReason: "No reason recorded",
+      empty: "—",
+    },
   },
   billing: {
     title: "Billing / Invoicing",
@@ -737,6 +889,82 @@ const servicesDictionaryAr: ServicesDictionary = {
   editPage: {
     blockedTitle: "التعديل محظور",
     blockedMessage: "التعديل غير مسموح عندما تكون حالة الخدمة {status}.",
+  },
+  supplierAllocations: {
+    title: "تخصيصات الموردين",
+    tabs: {
+      active: "النشطة",
+      showDeleted: "عرض المحذوف",
+    },
+    actions: {
+      newAllocation: "تخصيص جديد",
+      edit: "تعديل",
+      cancel: "إلغاء",
+      delete: "حذف",
+      restore: "استعادة",
+    },
+    empty: "لا توجد تخصيصات موردين مسجلة لهذه الخدمة حتى الآن.",
+    columns: {
+      status: "الحالة",
+      supplier: "المورد",
+      category: "الفئة",
+      item: "العنصر",
+      unit: "الوحدة",
+      qty: "الكمية",
+      costSource: "مصدر التكلفة",
+      unitCost: "تكلفة الوحدة",
+      totalCost: "إجمالي التكلفة",
+      actions: "",
+    },
+    statusLabels: {
+      draft: "مسودة",
+      planned: "مخطط",
+      selected: "محدد",
+      cancelled: "ملغى",
+      deleted: "محذوف",
+    },
+    costSourceLabels: {
+      manual: "يدوي",
+      rateCard: "بطاقة أسعار",
+      quoted: "مسعر",
+    },
+    deletedRecord: "سجل محذوف",
+    selectedHint: "يظهر إنشاء حجز المورد أو رقم SBK المرتبط في اللوحة أدناه.",
+  },
+  supplierBookings: {
+    title: "حجوزات الموردين",
+    subtitle: "سجلات SBK داخلية تم إنشاؤها من تخصيصات الموردين المحددة.",
+    empty: {
+      noBookings: "لا توجد حجوزات موردين مسجلة لهذه الخدمة حتى الآن.",
+      selectAllocation: "حدد تخصيص مورد مخططًا لإنشاء حجز مورد.",
+    },
+    columns: {
+      bookingNumber: "رقم SBK",
+      status: "الحالة",
+      supplier: "المورد",
+      item: "العنصر",
+      qty: "الكمية",
+      unitCost: "تكلفة الوحدة",
+      totalCost: "إجمالي التكلفة",
+      created: "تاريخ الإنشاء",
+      internalDetails: "تفاصيل داخلية",
+      actions: "",
+    },
+    statusLabels: {
+      draft: "مسودة",
+      cancelled: "ملغى",
+    },
+    selectedAllocations: "التخصيصات المحددة",
+    linkedBooking: "SBK مرتبط",
+    locked: "حجز المورد مقفل للخدمات المكتملة أو الملغاة.",
+    noPermission: "ليست لديك صلاحية لإنشاء حجوزات موردين.",
+    details: {
+      scope: "النطاق:",
+      notes: "ملاحظات:",
+      cancelled: "تم الإلغاء:",
+      noReason: "لم يتم تسجيل سبب",
+      empty: "—",
+    },
   },
   billing: {
     title: "الفوترة / الفواتير",
