@@ -191,6 +191,31 @@ export interface ServicesDictionary {
       rateCard: string;
       quoted: string;
     };
+    statusActions: {
+      draft: {
+        label: string;
+        loadingLabel: string;
+      };
+      planned: {
+        label: string;
+        loadingLabel: string;
+      };
+      selected: string;
+      updateFailed: string;
+      errors: {
+        allocationIdRequired: string;
+        notFound: string;
+        cancelled: string;
+        invalidTransition: string;
+        linkedActiveBooking: string;
+        serviceUnavailable: string;
+        supplierUnavailable: string;
+        updateFailedRetry: string;
+        unauthorized: string;
+        forbidden: string;
+        unexpected: string;
+      };
+    };
     deletedRecord: string;
     selectedHint: string;
   };
@@ -216,6 +241,48 @@ export interface ServicesDictionary {
     statusLabels: {
       draft: string;
       cancelled: string;
+    };
+    createAction: {
+      label: string;
+      loadingLabel: string;
+      failed: string;
+      errors: {
+        invalidInput: string;
+        sourceLoadFailed: string;
+        sourceNotFound: string;
+        sourceDeleted: string;
+        sourceMustBeSelected: string;
+        serviceStatusVerifyFailed: string;
+        serviceUnavailable: string;
+        activeBookingExists: string;
+        createFailedRetry: string;
+        unauthorized: string;
+        forbidden: string;
+        unexpected: string;
+      };
+    };
+    cancelAction: {
+      trigger: string;
+      title: string;
+      subtitle: string;
+      reasonLabel: string;
+      reasonPlaceholder: string;
+      validationReasonRequired: string;
+      back: string;
+      loadingLabel: string;
+      confirm: string;
+      failed: string;
+      errors: {
+        bookingLoadFailed: string;
+        bookingNotFound: string;
+        alreadyCancelled: string;
+        serviceStatusVerifyFailed: string;
+        serviceUnavailable: string;
+        cancelFailedRetry: string;
+        unauthorized: string;
+        forbidden: string;
+        unexpected: string;
+      };
     };
     selectedAllocations: string;
     linkedBooking: string;
@@ -538,6 +605,32 @@ const servicesDictionaryEn: ServicesDictionary = {
       rateCard: "Rate Card",
       quoted: "Quoted",
     },
+    statusActions: {
+      draft: {
+        label: "Mark Planned",
+        loadingLabel: "Marking supplier allocation as planned",
+      },
+      planned: {
+        label: "Select Supplier",
+        loadingLabel: "Selecting supplier allocation",
+      },
+      selected: "Selected allocation",
+      updateFailed: "Failed to update supplier allocation status.",
+      errors: {
+        allocationIdRequired: "Supplier Allocation ID is required.",
+        notFound: "Supplier Allocation not found.",
+        cancelled: "Cancelled Supplier Allocations cannot change status.",
+        invalidTransition: "This Supplier Allocation status change is not allowed.",
+        linkedActiveBooking:
+          "This Supplier Allocation is linked to an active Supplier Booking and cannot be changed.",
+        serviceUnavailable: "Service data is unavailable for this Supplier Allocation update.",
+        supplierUnavailable: "Supplier data is unavailable for this Supplier Allocation update.",
+        updateFailedRetry: "Failed to update Supplier Allocation. Please try again.",
+        unauthorized: "You must be signed in to update Supplier Allocations.",
+        forbidden: "You do not have permission to update Supplier Allocations.",
+        unexpected: "An unexpected error occurred while updating the Supplier Allocation.",
+      },
+    },
     deletedRecord: "Deleted Record",
     selectedHint: "Supplier Booking create or linked SBK appears in the panel below.",
   },
@@ -563,6 +656,51 @@ const servicesDictionaryEn: ServicesDictionary = {
     statusLabels: {
       draft: "Draft",
       cancelled: "Cancelled",
+    },
+    createAction: {
+      label: "Create Supplier Booking",
+      loadingLabel: "Creating Supplier Booking",
+      failed: "Failed to create Supplier Booking.",
+      errors: {
+        invalidInput:
+          "Supplier Booking input is invalid. Only the selected Supplier Allocation can be used.",
+        sourceLoadFailed: "Failed to load the selected Supplier Allocation. Please try again.",
+        sourceNotFound: "Selected Supplier Allocation not found.",
+        sourceDeleted: "Selected Supplier Allocation is deleted.",
+        sourceMustBeSelected:
+          "The Supplier Allocation must be in Selected status before creating a Supplier Booking.",
+        serviceStatusVerifyFailed: "Failed to verify service status. Please try again.",
+        serviceUnavailable: "Service data is unavailable for Supplier Booking creation.",
+        activeBookingExists:
+          "This Supplier Allocation already has an active Supplier Booking.",
+        createFailedRetry: "Failed to create Supplier Booking. Please try again.",
+        unauthorized: "You must be signed in to create Supplier Bookings.",
+        forbidden: "You do not have permission to create Supplier Bookings.",
+        unexpected: "An unexpected error occurred while creating the Supplier Booking.",
+      },
+    },
+    cancelAction: {
+      trigger: "Cancel",
+      title: "Cancel Supplier Booking",
+      subtitle: "Add a reason before cancelling this internal Supplier Booking.",
+      reasonLabel: "Cancellation Reason",
+      reasonPlaceholder: "Explain why this Supplier Booking is being cancelled.",
+      validationReasonRequired: "Cancellation reason is required.",
+      back: "Back",
+      loadingLabel: "Cancelling Supplier Booking",
+      confirm: "Cancel Supplier Booking",
+      failed: "Failed to cancel Supplier Booking.",
+      errors: {
+        bookingLoadFailed: "Failed to load Supplier Booking. Please try again.",
+        bookingNotFound: "Supplier Booking not found.",
+        alreadyCancelled: "Supplier Booking is already cancelled.",
+        serviceStatusVerifyFailed: "Failed to verify service status. Please try again.",
+        serviceUnavailable: "Service data is unavailable for Supplier Booking cancellation.",
+        cancelFailedRetry: "Failed to cancel Supplier Booking. Please try again.",
+        unauthorized: "You must be signed in to cancel Supplier Bookings.",
+        forbidden: "You do not have permission to cancel Supplier Bookings.",
+        unexpected: "An unexpected error occurred while cancelling the Supplier Booking.",
+      },
     },
     selectedAllocations: "Selected Allocations",
     linkedBooking: "Linked SBK",
@@ -928,6 +1066,32 @@ const servicesDictionaryAr: ServicesDictionary = {
       rateCard: "بطاقة أسعار",
       quoted: "مسعر",
     },
+    statusActions: {
+      draft: {
+        label: "تحديد كمخطط",
+        loadingLabel: "جارٍ تحديد تخصيص المورد كمخطط",
+      },
+      planned: {
+        label: "تحديد المورد",
+        loadingLabel: "جارٍ تحديد المورد للتخصيص",
+      },
+      selected: "تم تحديد التخصيص",
+      updateFailed: "تعذر تحديث حالة تخصيص المورد.",
+      errors: {
+        allocationIdRequired: "معرّف تخصيص المورد مطلوب.",
+        notFound: "تعذر العثور على تخصيص المورد.",
+        cancelled: "لا يمكن تغيير حالة تخصيص المورد الملغى.",
+        invalidTransition: "تغيير حالة تخصيص المورد هذا غير مسموح.",
+        linkedActiveBooking:
+          "تخصيص المورد هذا مرتبط بحجز مورد نشط ولا يمكن تعديله.",
+        serviceUnavailable: "بيانات الخدمة غير متاحة لتحديث تخصيص المورد هذا.",
+        supplierUnavailable: "بيانات المورد غير متاحة لتحديث تخصيص المورد هذا.",
+        updateFailedRetry: "تعذر تحديث تخصيص المورد. يرجى المحاولة مرة أخرى.",
+        unauthorized: "يجب تسجيل الدخول لتحديث تخصيصات الموردين.",
+        forbidden: "ليست لديك صلاحية لتحديث تخصيصات الموردين.",
+        unexpected: "حدث خطأ غير متوقع أثناء تحديث تخصيص المورد.",
+      },
+    },
     deletedRecord: "سجل محذوف",
     selectedHint: "يظهر إنشاء حجز المورد أو رقم SBK المرتبط في اللوحة أدناه.",
   },
@@ -953,6 +1117,50 @@ const servicesDictionaryAr: ServicesDictionary = {
     statusLabels: {
       draft: "مسودة",
       cancelled: "ملغى",
+    },
+    createAction: {
+      label: "إنشاء حجز مورد",
+      loadingLabel: "جارٍ إنشاء حجز المورد",
+      failed: "تعذر إنشاء حجز المورد.",
+      errors: {
+        invalidInput:
+          "بيانات حجز المورد غير صحيحة. يمكن استخدام تخصيص المورد المحدد فقط.",
+        sourceLoadFailed: "تعذر تحميل تخصيص المورد المحدد. يرجى المحاولة مرة أخرى.",
+        sourceNotFound: "تعذر العثور على تخصيص المورد المحدد.",
+        sourceDeleted: "تم حذف تخصيص المورد المحدد.",
+        sourceMustBeSelected:
+          "يجب أن تكون حالة تخصيص المورد محدد قبل إنشاء حجز المورد.",
+        serviceStatusVerifyFailed: "تعذر التحقق من حالة الخدمة. يرجى المحاولة مرة أخرى.",
+        serviceUnavailable: "بيانات الخدمة غير متاحة لإنشاء حجز المورد.",
+        activeBookingExists: "يوجد بالفعل حجز مورد نشط لهذا التخصيص.",
+        createFailedRetry: "تعذر إنشاء حجز المورد. يرجى المحاولة مرة أخرى.",
+        unauthorized: "يجب تسجيل الدخول لإنشاء حجوزات الموردين.",
+        forbidden: "ليست لديك صلاحية لإنشاء حجوزات الموردين.",
+        unexpected: "حدث خطأ غير متوقع أثناء إنشاء حجز المورد.",
+      },
+    },
+    cancelAction: {
+      trigger: "إلغاء",
+      title: "إلغاء حجز المورد",
+      subtitle: "أضف سببًا قبل إلغاء حجز المورد الداخلي هذا.",
+      reasonLabel: "سبب الإلغاء",
+      reasonPlaceholder: "اشرح سبب إلغاء حجز المورد هذا.",
+      validationReasonRequired: "سبب الإلغاء مطلوب.",
+      back: "رجوع",
+      loadingLabel: "جارٍ إلغاء حجز المورد",
+      confirm: "إلغاء حجز المورد",
+      failed: "تعذر إلغاء حجز المورد.",
+      errors: {
+        bookingLoadFailed: "تعذر تحميل حجز المورد. يرجى المحاولة مرة أخرى.",
+        bookingNotFound: "تعذر العثور على حجز المورد.",
+        alreadyCancelled: "حجز المورد ملغى بالفعل.",
+        serviceStatusVerifyFailed: "تعذر التحقق من حالة الخدمة. يرجى المحاولة مرة أخرى.",
+        serviceUnavailable: "بيانات الخدمة غير متاحة لإلغاء حجز المورد.",
+        cancelFailedRetry: "تعذر إلغاء حجز المورد. يرجى المحاولة مرة أخرى.",
+        unauthorized: "يجب تسجيل الدخول لإلغاء حجوزات الموردين.",
+        forbidden: "ليست لديك صلاحية لإلغاء حجوزات الموردين.",
+        unexpected: "حدث خطأ غير متوقع أثناء إلغاء حجز المورد.",
+      },
     },
     selectedAllocations: "التخصيصات المحددة",
     linkedBooking: "SBK مرتبط",

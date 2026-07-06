@@ -204,6 +204,21 @@
 - [x] No schema/migrations/middleware/cookies/shared UI touched.
 - [x] AGENTS.md untouched.
 
+### I18N-RTL-SERVICES-RUNTIME-1D
+- [x] Services supplier action buttons/modals only.
+- [x] Focused senior review result: PASS.
+- [x] Mozfer manual/browser smoke result: PASS.
+- [x] Supplier allocation action copy passed.
+- [x] Supplier booking action copy passed.
+- [x] Destructive/cancel wording remained explicit.
+- [x] Server action message mapping stayed safe, with fallback to original message for unmapped future errors.
+- [x] RTL shell smoke passed visually for the service detail supplier action area.
+- [x] No allocation subflow pages touched.
+- [x] No lib supplier allocation/booking action logic touched.
+- [x] No RBAC/permission/DB/action behavior drift.
+- [x] No cost leakage observed.
+- [x] Deferred navigation issue observed: New Allocation navigation to `allocations/new` and browser back navigation from the allocation subflow do not show the global pending bolt; this is outside Services 1D scope and belongs to `allocations/**` navigation or global pending-bolt route coverage.
+
 ### I18N-RTL-MODULE-TEXT-INVENTORY-1
 - [x] Readonly module text inventory completed.
 - [x] Overall result: PASS.

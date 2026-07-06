@@ -142,6 +142,19 @@
 - no middleware/cookies touched
 - no shared UI refactor touched
 - AGENTS.md untouched
+- `I18N-RTL-SERVICES-RUNTIME-1D` is complete as a Services supplier action buttons/modals slice
+- focused senior review result is `PASS`
+- manual smoke result is `PASS` based on Mozfer visual/browser smoke
+- supplier allocation action copy passed
+- supplier booking action copy passed
+- destructive/cancel wording remained explicit
+- server action message mapping stayed safe with fallback to original message for unmapped future errors
+- RTL shell smoke passed visually for the service detail supplier action area
+- no allocation subflow pages touched
+- no lib supplier allocation/booking action logic touched
+- no RBAC/permission/DB/action behavior drift
+- no cost leakage observed
+- deferred navigation issue: `allocations/new` and browser back navigation do not show the global pending bolt; handle in a later `allocations/**` or navigation task
 
 ## Shared Overlays Inventory
 

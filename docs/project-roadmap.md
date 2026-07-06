@@ -454,6 +454,16 @@ Immediate next priorities:
    - SBK numbers, supplier names, SAR values, dates, quantities, units, and notes remained readable.
    - RTL dev shell passed with minor non-blocking English-locale punctuation note.
    - No supplier action files, allocation subflows, RBAC/permission/cost visibility logic, invoice/payment/quotation/PDF/document routes, schema/migrations, middleware/cookies, or shared UI refactor were touched.
+1. `P6E` - `I18N-RTL-SERVICES-RUNTIME-1D`: Services supplier action buttons/modals completed after copy review.
+   - Focused senior review result: `PASS`.
+   - Mozfer manual/browser smoke result: `PASS`.
+   - Supplier allocation action copy passed.
+   - Supplier booking action copy passed.
+   - Destructive/cancel wording remained explicit.
+   - Server action message mapping stayed safe, with fallback to original message for unmapped future errors.
+   - RTL shell smoke passed visually for the service detail supplier action area.
+   - No allocation subflow pages, lib supplier allocation/booking action logic, RBAC/permission/DB/action behavior, or cost leakage were touched.
+   - Deferred navigation issue: `allocations/new` and browser back navigation do not show the global pending bolt; handle in a later `allocations/**` or navigation task.
 1. `P7` - Module rollout remains split into small controlled tasks, not a broad "translate everything" pass.
    - Recommended first runtime module candidate after planning/copy review: Customers.
    - Service remains the locked operational core; Booking terminology still needs care.

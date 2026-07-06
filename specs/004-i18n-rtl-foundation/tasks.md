@@ -262,11 +262,34 @@
   - no supplier action files touched
   - no allocation subflows touched
   - no RBAC/permission/cost visibility logic changed
-  - no invoice/payment/quotation/PDF/document routes touched
-  - no schema/migrations touched
-  - no middleware/cookies touched
-  - no shared UI refactor touched
-  - AGENTS.md untouched
+- no invoice/payment/quotation/PDF/document routes touched
+- no schema/migrations touched
+- no middleware/cookies touched
+- no shared UI refactor touched
+- AGENTS.md untouched
+
+### I18N-RTL-SERVICES-RUNTIME-1D
+
+- Type: module runtime implementation
+- Status: DONE
+- Scope:
+  - `src/app/(dashboard)/services/[id]/SupplierAllocationStatusActions.tsx`
+  - `src/app/(dashboard)/services/[id]/SupplierBookingActions.tsx`
+  - `src/lib/i18n/dictionaries/services.ts`
+- Outcome:
+  - supplier action buttons/modals only
+  - focused senior review result: `PASS`
+  - Mozfer manual/browser smoke result: `PASS`
+  - supplier allocation action copy passed
+  - supplier booking action copy passed
+  - destructive/cancel wording remained explicit
+  - server action message mapping stayed safe with fallback to original message for unmapped future errors
+  - RTL shell smoke passed visually for the service detail supplier action area
+  - no allocation subflow pages touched
+  - no lib supplier allocation/booking action logic touched
+  - no RBAC/permission/DB/action behavior drift
+  - no cost leakage observed
+  - deferred navigation issue: `allocations/new` and browser back navigation do not show the global pending bolt; handle in a later `allocations/**` or navigation task
 
 ## Delivery Sequence Notes
 

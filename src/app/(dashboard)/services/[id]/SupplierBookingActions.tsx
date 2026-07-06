@@ -3,15 +3,80 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getLocale } from "@/lib/i18n/locales";
 import {
   cancelSupplierBooking,
   createSupplierBookingFromAllocation,
 } from "@/lib/supplier-bookings/actions";
 
+function getCreateSupplierBookingErrorMessage(
+  error: string | null | undefined,
+  dictionary: ReturnType<typeof getServicesDictionary>["supplierBookings"]["createAction"]
+) {
+  if (!error) {
+    return dictionary.failed;
+  }
+
+  const mappedErrors: Record<string, string> = {
+    "Supplier Booking create input can only include sourceAllocationId.":
+      dictionary.errors.invalidInput,
+    "Failed to load source allocation. Please try again.":
+      dictionary.errors.sourceLoadFailed,
+    "Source allocation not found.": dictionary.errors.sourceNotFound,
+    "Source allocation is deleted.": dictionary.errors.sourceDeleted,
+    "Source allocation must be selected before booking.":
+      dictionary.errors.sourceMustBeSelected,
+    "Failed to verify service status. Please try again.":
+      dictionary.errors.serviceStatusVerifyFailed,
+    "Service is unavailable for Supplier Booking.":
+      dictionary.errors.serviceUnavailable,
+    "Source allocation already has an active Supplier Booking.":
+      dictionary.errors.activeBookingExists,
+    "Failed to create Supplier Booking. Please try again.":
+      dictionary.errors.createFailedRetry,
+    Unauthorized: dictionary.errors.unauthorized,
+    Forbidden: dictionary.errors.forbidden,
+    "An unexpected error occurred.": dictionary.errors.unexpected,
+  };
+
+  return mappedErrors[error] || error;
+}
+
+function getCancelSupplierBookingErrorMessage(
+  error: string | null | undefined,
+  dictionary: ReturnType<typeof getServicesDictionary>["supplierBookings"]["cancelAction"]
+) {
+  if (!error) {
+    return dictionary.failed;
+  }
+
+  const mappedErrors: Record<string, string> = {
+    "Failed to load Supplier Booking. Please try again.":
+      dictionary.errors.bookingLoadFailed,
+    "Supplier Booking not found.": dictionary.errors.bookingNotFound,
+    "Supplier Booking is already cancelled.":
+      dictionary.errors.alreadyCancelled,
+    "Failed to verify service status. Please try again.":
+      dictionary.errors.serviceStatusVerifyFailed,
+    "Service is unavailable for Supplier Booking cancellation.":
+      dictionary.errors.serviceUnavailable,
+    "Failed to cancel Supplier Booking. Please try again.":
+      dictionary.errors.cancelFailedRetry,
+    Unauthorized: dictionary.errors.unauthorized,
+    Forbidden: dictionary.errors.forbidden,
+    "An unexpected error occurred.": dictionary.errors.unexpected,
+  };
+
+  return mappedErrors[error] || error;
+}
+
 export function CreateSupplierBookingButton({ allocationId }: { allocationId: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const dictionary =
+    getServicesDictionary(getLocale()).supplierBookings.createAction;
 
   function createSupplierBooking() {
     setError(null);
@@ -26,7 +91,7 @@ export function CreateSupplierBookingButton({ allocationId }: { allocationId: st
         return;
       }
 
-      setError(result.error || "Failed to create Supplier Booking.");
+      setError(getCreateSupplierBookingErrorMessage(result.error, dictionary));
     });
   }
 
@@ -36,9 +101,9 @@ export function CreateSupplierBookingButton({ allocationId }: { allocationId: st
         onClick={createSupplierBooking}
         size="sm"
         loading={isPending}
-        loadingLabel="Creating supplier booking"
+        loadingLabel={dictionary.loadingLabel}
       >
-        Create Supplier Booking
+        {dictionary.label}
       </Button>
       {error && <p className="max-w-xs text-[12px] font-medium text-error">{error}</p>}
     </div>
@@ -51,11 +116,13 @@ export default function SupplierBookingActions({ bookingId }: { bookingId: strin
   const [cancelledReason, setCancelledReason] = useState("");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const dictionary =
+    getServicesDictionary(getLocale()).supplierBookings.cancelAction;
 
   function submitCancellation() {
     const trimmedReason = cancelledReason.trim();
     if (!trimmedReason) {
-      setError("Cancellation reason is required.");
+      setError(dictionary.validationReasonRequired);
       return;
     }
 
@@ -72,7 +139,7 @@ export default function SupplierBookingActions({ bookingId }: { bookingId: strin
         return;
       }
 
-      setError(result.error || "Failed to cancel Supplier Booking.");
+      setError(getCancelSupplierBookingErrorMessage(result.error, dictionary));
     });
   }
 
@@ -83,7 +150,7 @@ export default function SupplierBookingActions({ bookingId }: { bookingId: strin
         size="sm"
         variant="ghost"
       >
-        Cancel
+        {dictionary.trigger}
       </Button>
     );
   }
@@ -93,10 +160,10 @@ export default function SupplierBookingActions({ bookingId }: { bookingId: strin
       <div className="w-full max-w-lg rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl">
         <div className="border-b border-outline-variant px-6 py-4">
           <h4 className="text-base font-semibold text-on-surface">
-            Cancel Supplier Booking
+            {dictionary.title}
           </h4>
           <p className="mt-1 text-[13px] text-on-surface-variant">
-            Add a reason before cancelling this internal Supplier Booking.
+            {dictionary.subtitle}
           </p>
         </div>
         <div className="space-y-3 px-6 py-5 text-left">
@@ -104,7 +171,7 @@ export default function SupplierBookingActions({ bookingId }: { bookingId: strin
             htmlFor={`cancel-supplier-booking-${bookingId}`}
             className="block text-[12px] font-semibold text-on-surface"
           >
-            Cancellation Reason
+            {dictionary.reasonLabel}
           </label>
           <textarea
             id={`cancel-supplier-booking-${bookingId}`}
@@ -113,7 +180,7 @@ export default function SupplierBookingActions({ bookingId }: { bookingId: strin
             disabled={isPending}
             rows={4}
             className="w-full resize-none rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
-            placeholder="Explain why this Supplier Booking is being cancelled."
+            placeholder={dictionary.reasonPlaceholder}
           />
           {error && <p className="text-[12px] font-medium text-error">{error}</p>}
         </div>
@@ -128,17 +195,17 @@ export default function SupplierBookingActions({ bookingId }: { bookingId: strin
             disabled={isPending}
             variant="ghost"
           >
-            Back
+            {dictionary.back}
           </Button>
           <Button
             type="button"
             onClick={submitCancellation}
             disabled={cancelledReason.trim().length === 0}
             loading={isPending}
-            loadingLabel="Cancelling supplier booking"
+            loadingLabel={dictionary.loadingLabel}
             variant="danger"
           >
-            Cancel Supplier Booking
+            {dictionary.confirm}
           </Button>
         </div>
       </div>
