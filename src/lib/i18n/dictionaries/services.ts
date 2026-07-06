@@ -218,6 +218,181 @@ export interface ServicesDictionary {
     };
     deletedRecord: string;
     selectedHint: string;
+    subflow: {
+      common: {
+        allocationSummary: string;
+        supplier: string;
+        category: string;
+        itemName: string;
+        quantity: string;
+        unit: string;
+        status: string;
+      };
+      createPage: {
+        accessDeniedTitle: string;
+        accessDeniedMessage: string;
+        supplierPermissionMessage: string;
+        failedToLoadServiceTitle: string;
+        failedToLoadServiceMessage: string;
+        serviceUnavailableTitle: string;
+        serviceUnavailableMessage: string;
+        failedToLoadSuppliersTitle: string;
+        failedToLoadSuppliersMessage: string;
+        returnToService: string;
+        backToService: string;
+        title: string;
+        subtitle: string;
+      };
+      createForm: {
+        modes: {
+          manualEstimate: string;
+          fromRateCard: string;
+        };
+        supplier: string;
+        selectSupplier: string;
+        rateCardItem: string;
+        loadingRateCards: string;
+        selectSupplierFirst: string;
+        noActiveRateCards: string;
+        selectRateCard: string;
+        category: string;
+        itemName: string;
+        unit: string;
+        quantity: string;
+        rateCardUnitCost: string;
+        estimatedUnitCost: string;
+        scopeOfWork: string;
+        internalNotes: string;
+        cancel: string;
+        create: string;
+        failed: string;
+        placeholders: {
+          category: string;
+          itemName: string;
+          unit: string;
+          quantity: string;
+          estimatedUnitCost: string;
+          scopeOfWork: string;
+          internalNotes: string;
+        };
+        errors: {
+          serviceUnavailable: string;
+          supplierUnavailable: string;
+          approvedQuotationInvalid: string;
+          rateCardIdRequired: string;
+          rateCardNotFound: string;
+          rateCardInactive: string;
+          rateCardSupplierMismatch: string;
+          invalidRateCardCostOrCurrency: string;
+          rateCardExpired: string;
+          createFailedRetry: string;
+          unauthorized: string;
+          forbidden: string;
+          unexpected: string;
+        };
+      };
+      editForm: {
+        supplier: string;
+        category: string;
+        itemName: string;
+        unit: string;
+        quantity: string;
+        estimatedUnitCost: string;
+        status: string;
+        scopeOfWork: string;
+        internalNotes: string;
+        cancel: string;
+        update: string;
+        failed: string;
+        placeholders: {
+          category: string;
+          itemName: string;
+          unit: string;
+          quantity: string;
+          estimatedUnitCost: string;
+          scopeOfWork: string;
+          internalNotes: string;
+        };
+        errors: {
+          allocationIdRequired: string;
+          notFound: string;
+          cancelled: string;
+          rateCardReadOnly: string;
+          linkedActiveBooking: string;
+          invalidTransition: string;
+          serviceUnavailable: string;
+          supplierUnavailable: string;
+          approvedQuotationInvalid: string;
+          updateFailedRetry: string;
+          unauthorized: string;
+          forbidden: string;
+          unexpected: string;
+          bookingStatusVerifyFailed: string;
+          bookingStatusUnexpected: string;
+        };
+      };
+      cancelForm: {
+        reasonLabel: string;
+        reasonPlaceholder: string;
+        warning: string;
+        back: string;
+        loadingLabel: string;
+        confirm: string;
+        failed: string;
+        errors: {
+          allocationIdRequired: string;
+          notFound: string;
+          alreadyCancelled: string;
+          linkedActiveBooking: string;
+          serviceUnavailable: string;
+          cancelFailedRetry: string;
+          unauthorized: string;
+          forbidden: string;
+          unexpected: string;
+          bookingStatusVerifyFailed: string;
+          bookingStatusUnexpected: string;
+        };
+      };
+      deleteForm: {
+        warning: string;
+        back: string;
+        confirm: string;
+        failed: string;
+        errors: {
+          allocationIdRequired: string;
+          notFound: string;
+          alreadyDeleted: string;
+          linkedActiveBooking: string;
+          serviceUnavailable: string;
+          deleteFailedRetry: string;
+          unauthorized: string;
+          forbidden: string;
+          unexpected: string;
+          bookingStatusVerifyFailed: string;
+          bookingStatusUnexpected: string;
+        };
+      };
+      restoreForm: {
+        warning: string;
+        back: string;
+        loadingLabel: string;
+        confirm: string;
+        failed: string;
+        errors: {
+          allocationIdRequired: string;
+          notFound: string;
+          notDeleted: string;
+          linkedActiveBooking: string;
+          serviceUnavailable: string;
+          restoreFailedRetry: string;
+          unauthorized: string;
+          forbidden: string;
+          unexpected: string;
+          bookingStatusVerifyFailed: string;
+          bookingStatusUnexpected: string;
+        };
+      };
+    };
   };
   supplierBookings: {
     title: string;
@@ -633,6 +808,233 @@ const servicesDictionaryEn: ServicesDictionary = {
     },
     deletedRecord: "Deleted Record",
     selectedHint: "Supplier Booking create or linked SBK appears in the panel below.",
+    subflow: {
+      common: {
+        allocationSummary: "Allocation Summary",
+        supplier: "Supplier",
+        category: "Category",
+        itemName: "Item Name",
+        quantity: "Quantity",
+        unit: "Unit",
+        status: "Status",
+      },
+      createPage: {
+        accessDeniedTitle: "Access Denied",
+        accessDeniedMessage:
+          "You do not have permission to create manual supplier allocations.",
+        supplierPermissionMessage:
+          "You do not have permission to view suppliers, which is required to create an allocation.",
+        failedToLoadServiceTitle: "Failed to load service",
+        failedToLoadServiceMessage:
+          "We couldn't load the service details needed to create an allocation. Please try again later.",
+        serviceUnavailableTitle: "Service Unavailable",
+        serviceUnavailableMessage:
+          "Cannot create a supplier allocation because the service is {status}.",
+        failedToLoadSuppliersTitle: "Failed to load suppliers",
+        failedToLoadSuppliersMessage:
+          "We couldn't load the supplier options. Please try again later.",
+        returnToService: "Return to Service",
+        backToService: "Back to Service",
+        title: "Create Allocation",
+        subtitle: "Create a manual supplier allocation for",
+      },
+      createForm: {
+        modes: {
+          manualEstimate: "Manual Estimate",
+          fromRateCard: "From Rate Card",
+        },
+        supplier: "Supplier",
+        selectSupplier: "Select a supplier...",
+        rateCardItem: "Rate Card Item",
+        loadingRateCards: "Loading rate cards...",
+        selectSupplierFirst: "Select a supplier first",
+        noActiveRateCards: "No active rate cards found",
+        selectRateCard: "Select a rate card...",
+        category: "Category",
+        itemName: "Item Name",
+        unit: "Unit",
+        quantity: "Quantity",
+        rateCardUnitCost: "Rate Card Unit Cost (SAR)",
+        estimatedUnitCost: "Estimated Unit Cost (SAR)",
+        scopeOfWork: "Scope of Work",
+        internalNotes: "Internal Notes",
+        cancel: "Cancel",
+        create: "Create Allocation",
+        failed: "Failed to create supplier allocation.",
+        placeholders: {
+          category: "e.g. Venue, Catering, AV",
+          itemName: "e.g. Main Hall Rental",
+          unit: "e.g. Days, Pax, Pieces",
+          quantity: "1",
+          estimatedUnitCost: "0.00",
+          scopeOfWork:
+            "Detailed description of what the supplier will provide...",
+          internalNotes: "Internal notes for operations team...",
+        },
+        errors: {
+          serviceUnavailable: "Service is unavailable for supplier allocation.",
+          supplierUnavailable: "Supplier is unavailable for allocation.",
+          approvedQuotationInvalid:
+            "Approved quotation is invalid for this service.",
+          rateCardIdRequired: "Rate card ID is required.",
+          rateCardNotFound: "Rate card not found.",
+          rateCardInactive: "Rate card is not active or deleted.",
+          rateCardSupplierMismatch:
+            "Rate card does not belong to the selected supplier.",
+          invalidRateCardCostOrCurrency: "Invalid rate card cost or currency.",
+          rateCardExpired: "Rate card is expired.",
+          createFailedRetry:
+            "Failed to create supplier allocation. Please try again.",
+          unauthorized:
+            "You must be signed in to create supplier allocations.",
+          forbidden:
+            "You do not have permission to create supplier allocations.",
+          unexpected:
+            "An unexpected error occurred while creating the supplier allocation.",
+        },
+      },
+      editForm: {
+        supplier: "Supplier",
+        category: "Category",
+        itemName: "Item Name",
+        unit: "Unit",
+        quantity: "Quantity",
+        estimatedUnitCost: "Estimated Unit Cost (SAR)",
+        status: "Status",
+        scopeOfWork: "Scope of Work",
+        internalNotes: "Internal Notes",
+        cancel: "Cancel",
+        update: "Update Allocation",
+        failed: "Failed to update supplier allocation.",
+        placeholders: {
+          category: "e.g. Venue, Catering, AV",
+          itemName: "e.g. Main Hall Rental",
+          unit: "e.g. Days, Pax, Pieces",
+          quantity: "1",
+          estimatedUnitCost: "0.00",
+          scopeOfWork:
+            "Detailed description of what the supplier will provide...",
+          internalNotes: "Internal notes for operations team...",
+        },
+        errors: {
+          allocationIdRequired: "Supplier allocation ID is required.",
+          notFound: "Supplier allocation not found.",
+          cancelled: "Cannot update a cancelled supplier allocation.",
+          rateCardReadOnly:
+            "Rate-card allocations cannot be manually updated yet.",
+          linkedActiveBooking:
+            "This allocation cannot be modified because it is linked to an active supplier booking.",
+          invalidTransition:
+            "Invalid supplier allocation status transition.",
+          serviceUnavailable:
+            "Service is unavailable for supplier allocation update.",
+          supplierUnavailable: "Supplier is unavailable for allocation update.",
+          approvedQuotationInvalid:
+            "Approved quotation is invalid for this service.",
+          updateFailedRetry:
+            "Failed to update supplier allocation. Please try again.",
+          unauthorized:
+            "You must be signed in to update supplier allocations.",
+          forbidden:
+            "You do not have permission to update supplier allocations.",
+          unexpected:
+            "An unexpected error occurred while updating the supplier allocation.",
+          bookingStatusVerifyFailed:
+            "Failed to verify booking status. Please try again.",
+          bookingStatusUnexpected:
+            "An unexpected error occurred while verifying booking status.",
+        },
+      },
+      cancelForm: {
+        reasonLabel: "Cancellation Reason",
+        reasonPlaceholder:
+          "Please provide a reason for cancelling this allocation...",
+        warning:
+          "This action cannot be undone. The allocation will be preserved for history but its status will change to cancelled.",
+        back: "Go Back",
+        loadingLabel: "Cancelling...",
+        confirm: "Cancel Allocation",
+        failed: "Failed to cancel supplier allocation.",
+        errors: {
+          allocationIdRequired: "Supplier allocation ID is required.",
+          notFound: "Supplier allocation not found.",
+          alreadyCancelled: "Supplier allocation is already cancelled.",
+          linkedActiveBooking:
+            "This allocation cannot be modified because it is linked to an active supplier booking.",
+          serviceUnavailable:
+            "Service is unavailable for supplier allocation cancel.",
+          cancelFailedRetry:
+            "Failed to cancel supplier allocation. Please try again.",
+          unauthorized:
+            "You must be signed in to cancel supplier allocations.",
+          forbidden:
+            "You do not have permission to cancel supplier allocations.",
+          unexpected:
+            "An unexpected error occurred while cancelling the supplier allocation.",
+          bookingStatusVerifyFailed:
+            "Failed to verify booking status. Please try again.",
+          bookingStatusUnexpected:
+            "An unexpected error occurred while verifying booking status.",
+        },
+      },
+      deleteForm: {
+        warning:
+          'Are you sure you want to delete this allocation? It will be removed from the default view. You can view or restore it later by toggling "Show Deleted".',
+        back: "Go Back",
+        confirm: "Delete Allocation",
+        failed: "Failed to delete supplier allocation.",
+        errors: {
+          allocationIdRequired: "Supplier allocation ID is required.",
+          notFound: "Supplier allocation not found.",
+          alreadyDeleted: "Supplier allocation is already deleted.",
+          linkedActiveBooking:
+            "This allocation cannot be modified because it is linked to an active supplier booking.",
+          serviceUnavailable:
+            "Service is unavailable for supplier allocation deletion.",
+          deleteFailedRetry:
+            "Failed to delete supplier allocation. Please try again.",
+          unauthorized:
+            "You must be signed in to delete supplier allocations.",
+          forbidden:
+            "You do not have permission to delete supplier allocations.",
+          unexpected:
+            "An unexpected error occurred while deleting the supplier allocation.",
+          bookingStatusVerifyFailed:
+            "Failed to verify booking status. Please try again.",
+          bookingStatusUnexpected:
+            "An unexpected error occurred while verifying booking status.",
+        },
+      },
+      restoreForm: {
+        warning:
+          "Are you sure you want to restore this allocation? It will become active again in the default view.",
+        back: "Go Back",
+        loadingLabel: "Restoring...",
+        confirm: "Restore Allocation",
+        failed: "Failed to restore supplier allocation.",
+        errors: {
+          allocationIdRequired: "Supplier allocation ID is required.",
+          notFound: "Supplier allocation not found.",
+          notDeleted: "Supplier allocation is not deleted.",
+          linkedActiveBooking:
+            "This allocation cannot be modified because it is linked to an active supplier booking.",
+          serviceUnavailable:
+            "Service is unavailable for supplier allocation restoration.",
+          restoreFailedRetry:
+            "Failed to restore supplier allocation. Please try again.",
+          unauthorized:
+            "You must be signed in to restore supplier allocations.",
+          forbidden:
+            "You do not have permission to restore supplier allocations.",
+          unexpected:
+            "An unexpected error occurred while restoring the supplier allocation.",
+          bookingStatusVerifyFailed:
+            "Failed to verify booking status. Please try again.",
+          bookingStatusUnexpected:
+            "An unexpected error occurred while verifying booking status.",
+        },
+      },
+    },
   },
   supplierBookings: {
     title: "Supplier Bookings",
@@ -1094,6 +1496,229 @@ const servicesDictionaryAr: ServicesDictionary = {
     },
     deletedRecord: "سجل محذوف",
     selectedHint: "يظهر إنشاء حجز المورد أو رقم SBK المرتبط في اللوحة أدناه.",
+    subflow: {
+      common: {
+        allocationSummary: "ملخص التخصيص",
+        supplier: "المورد",
+        category: "الفئة",
+        itemName: "اسم العنصر",
+        quantity: "الكمية",
+        unit: "الوحدة",
+        status: "الحالة",
+      },
+      createPage: {
+        accessDeniedTitle: "تم رفض الوصول",
+        accessDeniedMessage:
+          "ليست لديك صلاحية لإنشاء تخصيصات موردين يدوية.",
+        supplierPermissionMessage:
+          "ليست لديك صلاحية لعرض الموردين، وهذا مطلوب لإنشاء التخصيص.",
+        failedToLoadServiceTitle: "تعذر تحميل الخدمة",
+        failedToLoadServiceMessage:
+          "تعذر تحميل تفاصيل الخدمة المطلوبة لإنشاء التخصيص. يرجى المحاولة مرة أخرى لاحقًا.",
+        serviceUnavailableTitle: "الخدمة غير متاحة",
+        serviceUnavailableMessage:
+          "لا يمكن إنشاء تخصيص مورد لأن حالة الخدمة هي {status}.",
+        failedToLoadSuppliersTitle: "تعذر تحميل الموردين",
+        failedToLoadSuppliersMessage:
+          "تعذر تحميل خيارات الموردين. يرجى المحاولة مرة أخرى لاحقًا.",
+        returnToService: "العودة إلى الخدمة",
+        backToService: "رجوع إلى الخدمة",
+        title: "إنشاء تخصيص",
+        subtitle: "إنشاء تخصيص مورد يدوي للخدمة",
+      },
+      createForm: {
+        modes: {
+          manualEstimate: "تقدير يدوي",
+          fromRateCard: "من بطاقة الأسعار",
+        },
+        supplier: "المورد",
+        selectSupplier: "اختر موردًا...",
+        rateCardItem: "عنصر بطاقة الأسعار",
+        loadingRateCards: "جارٍ تحميل بطاقات الأسعار...",
+        selectSupplierFirst: "اختر موردًا أولًا",
+        noActiveRateCards: "لم يتم العثور على بطاقات أسعار نشطة",
+        selectRateCard: "اختر بطاقة أسعار...",
+        category: "الفئة",
+        itemName: "اسم العنصر",
+        unit: "الوحدة",
+        quantity: "الكمية",
+        rateCardUnitCost: "تكلفة وحدة بطاقة الأسعار (SAR)",
+        estimatedUnitCost: "تكلفة الوحدة التقديرية (SAR)",
+        scopeOfWork: "نطاق العمل",
+        internalNotes: "ملاحظات داخلية",
+        cancel: "إلغاء",
+        create: "إنشاء تخصيص",
+        failed: "تعذر إنشاء تخصيص المورد.",
+        placeholders: {
+          category: "مثال: قاعة، تموين، صوتيات",
+          itemName: "مثال: إيجار القاعة الرئيسية",
+          unit: "مثال: أيام، أفراد، قطع",
+          quantity: "1",
+          estimatedUnitCost: "0.00",
+          scopeOfWork: "وصف تفصيلي لما سيقدمه المورد...",
+          internalNotes: "ملاحظات داخلية لفريق العمليات...",
+        },
+        errors: {
+          serviceUnavailable: "الخدمة غير متاحة لتخصيص المورد.",
+          supplierUnavailable: "المورد غير متاح لهذا التخصيص.",
+          approvedQuotationInvalid: "عرض السعر المعتمد غير صالح لهذه الخدمة.",
+          rateCardIdRequired: "معرّف بطاقة الأسعار مطلوب.",
+          rateCardNotFound: "تعذر العثور على بطاقة الأسعار.",
+          rateCardInactive: "بطاقة الأسعار غير نشطة أو محذوفة.",
+          rateCardSupplierMismatch:
+            "بطاقة الأسعار لا تتبع المورد المحدد.",
+          invalidRateCardCostOrCurrency:
+            "تكلفة بطاقة الأسعار أو عملتها غير صالحة.",
+          rateCardExpired: "انتهت صلاحية بطاقة الأسعار.",
+          createFailedRetry:
+            "تعذر إنشاء تخصيص المورد. يرجى المحاولة مرة أخرى.",
+          unauthorized:
+            "يجب تسجيل الدخول لإنشاء تخصيصات الموردين.",
+          forbidden:
+            "ليست لديك صلاحية لإنشاء تخصيصات الموردين.",
+          unexpected:
+            "حدث خطأ غير متوقع أثناء إنشاء تخصيص المورد.",
+        },
+      },
+      editForm: {
+        supplier: "المورد",
+        category: "الفئة",
+        itemName: "اسم العنصر",
+        unit: "الوحدة",
+        quantity: "الكمية",
+        estimatedUnitCost: "تكلفة الوحدة التقديرية (SAR)",
+        status: "الحالة",
+        scopeOfWork: "نطاق العمل",
+        internalNotes: "ملاحظات داخلية",
+        cancel: "إلغاء",
+        update: "تحديث التخصيص",
+        failed: "تعذر تحديث تخصيص المورد.",
+        placeholders: {
+          category: "مثال: قاعة، تموين، صوتيات",
+          itemName: "مثال: إيجار القاعة الرئيسية",
+          unit: "مثال: أيام، أفراد، قطع",
+          quantity: "1",
+          estimatedUnitCost: "0.00",
+          scopeOfWork: "وصف تفصيلي لما سيقدمه المورد...",
+          internalNotes: "ملاحظات داخلية لفريق العمليات...",
+        },
+        errors: {
+          allocationIdRequired: "معرّف تخصيص المورد مطلوب.",
+          notFound: "تعذر العثور على تخصيص المورد.",
+          cancelled: "لا يمكن تحديث تخصيص مورد ملغى.",
+          rateCardReadOnly:
+            "لا يمكن تحديث تخصيصات بطاقة الأسعار يدويًا حتى الآن.",
+          linkedActiveBooking:
+            "لا يمكن تعديل هذا التخصيص لأنه مرتبط بحجز مورد نشط.",
+          invalidTransition: "تغيير حالة تخصيص المورد غير مسموح.",
+          serviceUnavailable:
+            "الخدمة غير متاحة لتحديث تخصيص المورد.",
+          supplierUnavailable:
+            "المورد غير متاح لتحديث هذا التخصيص.",
+          approvedQuotationInvalid: "عرض السعر المعتمد غير صالح لهذه الخدمة.",
+          updateFailedRetry:
+            "تعذر تحديث تخصيص المورد. يرجى المحاولة مرة أخرى.",
+          unauthorized:
+            "يجب تسجيل الدخول لتحديث تخصيصات الموردين.",
+          forbidden:
+            "ليست لديك صلاحية لتحديث تخصيصات الموردين.",
+          unexpected:
+            "حدث خطأ غير متوقع أثناء تحديث تخصيص المورد.",
+          bookingStatusVerifyFailed:
+            "تعذر التحقق من حالة الحجز. يرجى المحاولة مرة أخرى.",
+          bookingStatusUnexpected:
+            "حدث خطأ غير متوقع أثناء التحقق من حالة الحجز.",
+        },
+      },
+      cancelForm: {
+        reasonLabel: "سبب الإلغاء",
+        reasonPlaceholder: "يرجى توضيح سبب إلغاء هذا التخصيص...",
+        warning:
+          "لا يمكن التراجع عن هذا الإجراء. سيتم الاحتفاظ بالتخصيص لأغراض السجل، لكن حالته ستتغير إلى ملغى.",
+        back: "رجوع",
+        loadingLabel: "جارٍ الإلغاء...",
+        confirm: "إلغاء التخصيص",
+        failed: "تعذر إلغاء تخصيص المورد.",
+        errors: {
+          allocationIdRequired: "معرّف تخصيص المورد مطلوب.",
+          notFound: "تعذر العثور على تخصيص المورد.",
+          alreadyCancelled: "تم إلغاء تخصيص المورد بالفعل.",
+          linkedActiveBooking:
+            "لا يمكن تعديل هذا التخصيص لأنه مرتبط بحجز مورد نشط.",
+          serviceUnavailable:
+            "الخدمة غير متاحة لإلغاء تخصيص المورد.",
+          cancelFailedRetry:
+            "تعذر إلغاء تخصيص المورد. يرجى المحاولة مرة أخرى.",
+          unauthorized:
+            "يجب تسجيل الدخول لإلغاء تخصيصات الموردين.",
+          forbidden:
+            "ليست لديك صلاحية لإلغاء تخصيصات الموردين.",
+          unexpected:
+            "حدث خطأ غير متوقع أثناء إلغاء تخصيص المورد.",
+          bookingStatusVerifyFailed:
+            "تعذر التحقق من حالة الحجز. يرجى المحاولة مرة أخرى.",
+          bookingStatusUnexpected:
+            "حدث خطأ غير متوقع أثناء التحقق من حالة الحجز.",
+        },
+      },
+      deleteForm: {
+        warning:
+          "هل أنت متأكد من حذف هذا التخصيص؟ ستتم إزالته من العرض الافتراضي، ويمكنك عرضه أو استعادته لاحقًا عبر تفعيل \"عرض المحذوف\".",
+        back: "رجوع",
+        confirm: "حذف التخصيص",
+        failed: "تعذر حذف تخصيص المورد.",
+        errors: {
+          allocationIdRequired: "معرّف تخصيص المورد مطلوب.",
+          notFound: "تعذر العثور على تخصيص المورد.",
+          alreadyDeleted: "تم حذف تخصيص المورد بالفعل.",
+          linkedActiveBooking:
+            "لا يمكن تعديل هذا التخصيص لأنه مرتبط بحجز مورد نشط.",
+          serviceUnavailable:
+            "الخدمة غير متاحة لحذف تخصيص المورد.",
+          deleteFailedRetry:
+            "تعذر حذف تخصيص المورد. يرجى المحاولة مرة أخرى.",
+          unauthorized:
+            "يجب تسجيل الدخول لحذف تخصيصات الموردين.",
+          forbidden:
+            "ليست لديك صلاحية لحذف تخصيصات الموردين.",
+          unexpected:
+            "حدث خطأ غير متوقع أثناء حذف تخصيص المورد.",
+          bookingStatusVerifyFailed:
+            "تعذر التحقق من حالة الحجز. يرجى المحاولة مرة أخرى.",
+          bookingStatusUnexpected:
+            "حدث خطأ غير متوقع أثناء التحقق من حالة الحجز.",
+        },
+      },
+      restoreForm: {
+        warning:
+          "هل أنت متأكد من استعادة هذا التخصيص؟ سيصبح نشطًا مرة أخرى في العرض الافتراضي.",
+        back: "رجوع",
+        loadingLabel: "جارٍ الاستعادة...",
+        confirm: "استعادة التخصيص",
+        failed: "تعذر استعادة تخصيص المورد.",
+        errors: {
+          allocationIdRequired: "معرّف تخصيص المورد مطلوب.",
+          notFound: "تعذر العثور على تخصيص المورد.",
+          notDeleted: "تخصيص المورد غير محذوف.",
+          linkedActiveBooking:
+            "لا يمكن تعديل هذا التخصيص لأنه مرتبط بحجز مورد نشط.",
+          serviceUnavailable:
+            "الخدمة غير متاحة لاستعادة تخصيص المورد.",
+          restoreFailedRetry:
+            "تعذر استعادة تخصيص المورد. يرجى المحاولة مرة أخرى.",
+          unauthorized:
+            "يجب تسجيل الدخول لاستعادة تخصيصات الموردين.",
+          forbidden:
+            "ليست لديك صلاحية لاستعادة تخصيصات الموردين.",
+          unexpected:
+            "حدث خطأ غير متوقع أثناء استعادة تخصيص المورد.",
+          bookingStatusVerifyFailed:
+            "تعذر التحقق من حالة الحجز. يرجى المحاولة مرة أخرى.",
+          bookingStatusUnexpected:
+            "حدث خطأ غير متوقع أثناء التحقق من حالة الحجز.",
+        },
+      },
+    },
   },
   supplierBookings: {
     title: "حجوزات الموردين",

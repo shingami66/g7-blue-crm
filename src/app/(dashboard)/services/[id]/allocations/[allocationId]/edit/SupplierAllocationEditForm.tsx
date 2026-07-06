@@ -3,8 +3,53 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getLocale } from "@/lib/i18n/locales";
 import { updateSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
+
+function getUpdateSupplierAllocationErrorMessage(
+  error: string | null | undefined,
+  dictionary: ReturnType<
+    typeof getServicesDictionary
+  >["supplierAllocations"]["subflow"]["editForm"]
+) {
+  if (!error) {
+    return dictionary.failed;
+  }
+
+  const mappedErrors: Record<string, string> = {
+    "Supplier allocation id is required.":
+      dictionary.errors.allocationIdRequired,
+    "Supplier allocation not found.": dictionary.errors.notFound,
+    "Cannot update a cancelled supplier allocation.":
+      dictionary.errors.cancelled,
+    "Rate-card allocations cannot be manually updated yet.":
+      dictionary.errors.rateCardReadOnly,
+    "This allocation cannot be modified because it is linked to an active supplier booking.":
+      dictionary.errors.linkedActiveBooking,
+    "Invalid supplier allocation status transition.":
+      dictionary.errors.invalidTransition,
+    "Service is unavailable for supplier allocation update.":
+      dictionary.errors.serviceUnavailable,
+    "Supplier is unavailable for allocation update.":
+      dictionary.errors.supplierUnavailable,
+    "Approved quotation is invalid for this service.":
+      dictionary.errors.approvedQuotationInvalid,
+    "Failed to update supplier allocation. Please try again.":
+      dictionary.errors.updateFailedRetry,
+    "Failed to verify booking status. Please try again.":
+      dictionary.errors.bookingStatusVerifyFailed,
+    "An unexpected error occurred while verifying booking status.":
+      dictionary.errors.bookingStatusUnexpected,
+    Unauthorized: dictionary.errors.unauthorized,
+    Forbidden: dictionary.errors.forbidden,
+    "An unexpected error occurred.": dictionary.errors.unexpected,
+  };
+
+  return mappedErrors[error] || error;
+}
 
 export default function SupplierAllocationEditForm({
   serviceId,
@@ -15,6 +60,9 @@ export default function SupplierAllocationEditForm({
 }) {
   const router = useRouter();
   const { push } = useGlobalNavigationPending();
+  const servicesDictionary = getServicesDictionary(getLocale());
+  const dictionary = servicesDictionary.supplierAllocations.subflow.editForm;
+  const statusLabels = servicesDictionary.supplierAllocations.statusLabels;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -24,13 +72,13 @@ export default function SupplierAllocationEditForm({
   // - current selected options: selected
   const statusOptions = [];
   if (allocation.status === "draft") {
-    statusOptions.push({ value: "draft", label: "Draft" });
-    statusOptions.push({ value: "planned", label: "Planned" });
+    statusOptions.push({ value: "draft", label: statusLabels.draft });
+    statusOptions.push({ value: "planned", label: statusLabels.planned });
   } else if (allocation.status === "planned") {
-    statusOptions.push({ value: "planned", label: "Planned" });
-    statusOptions.push({ value: "selected", label: "Selected" });
+    statusOptions.push({ value: "planned", label: statusLabels.planned });
+    statusOptions.push({ value: "selected", label: statusLabels.selected });
   } else if (allocation.status === "selected") {
-    statusOptions.push({ value: "selected", label: "Selected" });
+    statusOptions.push({ value: "selected", label: statusLabels.selected });
   }
   const isStatusReadOnly = statusOptions.length <= 1;
 
@@ -63,7 +111,7 @@ export default function SupplierAllocationEditForm({
       push(`/services/${serviceId}`);
       router.refresh();
     } else {
-      setError(result.error || "Failed to update supplier allocation");
+      setError(getUpdateSupplierAllocationErrorMessage(result.error, dictionary));
       setIsLoading(false);
     }
   }
@@ -73,16 +121,19 @@ export default function SupplierAllocationEditForm({
       <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2 space-y-2">
           <label className="block text-sm font-semibold text-on-surface">
-            Supplier
+            {dictionary.supplier}
           </label>
-          <div className="w-full px-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-on-surface-variant font-medium">
-            {allocation.supplierName || allocation.supplierId}
+          <div
+            className="w-full px-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-on-surface-variant font-medium"
+            dir="auto"
+          >
+            {isolateBidiText(allocation.supplierName || allocation.supplierId)}
           </div>
         </div>
 
         <div className="space-y-2">
           <label htmlFor="category" className="block text-sm font-semibold text-on-surface">
-            Category <span className="text-error">*</span>
+            {dictionary.category} <span className="text-error">*</span>
           </label>
           <input
             type="text"
@@ -91,14 +142,15 @@ export default function SupplierAllocationEditForm({
             defaultValue={allocation.category}
             required
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-            placeholder="e.g. Venue, Catering, AV"
+            placeholder={dictionary.placeholders.category}
             disabled={isLoading}
+            dir="auto"
           />
         </div>
 
         <div className="space-y-2">
           <label htmlFor="itemName" className="block text-sm font-semibold text-on-surface">
-            Item Name <span className="text-error">*</span>
+            {dictionary.itemName} <span className="text-error">*</span>
           </label>
           <input
             type="text"
@@ -107,14 +159,15 @@ export default function SupplierAllocationEditForm({
             defaultValue={allocation.itemName}
             required
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-            placeholder="e.g. Main Hall Rental"
+            placeholder={dictionary.placeholders.itemName}
             disabled={isLoading}
+            dir="auto"
           />
         </div>
 
         <div className="space-y-2">
           <label htmlFor="unit" className="block text-sm font-semibold text-on-surface">
-            Unit <span className="text-error">*</span>
+            {dictionary.unit} <span className="text-error">*</span>
           </label>
           <input
             type="text"
@@ -123,14 +176,15 @@ export default function SupplierAllocationEditForm({
             defaultValue={allocation.unit}
             required
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-            placeholder="e.g. Days, Pax, Pieces"
+            placeholder={dictionary.placeholders.unit}
             disabled={isLoading}
+            dir="auto"
           />
         </div>
 
         <div className="space-y-2">
           <label htmlFor="quantity" className="block text-sm font-semibold text-on-surface">
-            Quantity <span className="text-error">*</span>
+            {dictionary.quantity} <span className="text-error">*</span>
           </label>
           <input
             type="number"
@@ -141,14 +195,15 @@ export default function SupplierAllocationEditForm({
             step="0.01"
             required
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-            placeholder="1"
+            placeholder={dictionary.placeholders.quantity}
             disabled={isLoading}
+            dir="ltr"
           />
         </div>
 
         <div className="space-y-2">
           <label htmlFor="estimatedUnitCost" className="block text-sm font-semibold text-on-surface">
-            Estimated Unit Cost (SAR) <span className="text-error">*</span>
+            {dictionary.estimatedUnitCost} <span className="text-error">*</span>
           </label>
           <input
             type="number"
@@ -159,14 +214,15 @@ export default function SupplierAllocationEditForm({
             step="0.01"
             required
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-            placeholder="0.00"
+            placeholder={dictionary.placeholders.estimatedUnitCost}
             disabled={isLoading}
+            dir="ltr"
           />
         </div>
         
         <div className="space-y-2">
           <label htmlFor="status" className="block text-sm font-semibold text-on-surface">
-            Status <span className="text-error">*</span>
+            {dictionary.status} <span className="text-error">*</span>
           </label>
           <select
             id="status"
@@ -187,7 +243,7 @@ export default function SupplierAllocationEditForm({
 
         <div className="md:col-span-2 space-y-2">
           <label htmlFor="scopeOfWork" className="block text-sm font-semibold text-on-surface">
-            Scope of Work
+            {dictionary.scopeOfWork}
           </label>
           <textarea
             id="scopeOfWork"
@@ -195,14 +251,15 @@ export default function SupplierAllocationEditForm({
             defaultValue={allocation.scopeOfWork || ""}
             rows={3}
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
-            placeholder="Detailed description of what the supplier will provide..."
+            placeholder={dictionary.placeholders.scopeOfWork}
             disabled={isLoading}
+            dir="auto"
           />
         </div>
 
         <div className="md:col-span-2 space-y-2">
           <label htmlFor="internalNotes" className="block text-sm font-semibold text-on-surface">
-            Internal Notes
+            {dictionary.internalNotes}
           </label>
           <textarea
             id="internalNotes"
@@ -210,8 +267,9 @@ export default function SupplierAllocationEditForm({
             defaultValue={allocation.internalNotes || ""}
             rows={2}
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
-            placeholder="Internal notes for operations team..."
+            placeholder={dictionary.placeholders.internalNotes}
             disabled={isLoading}
+            dir="auto"
           />
         </div>
       </div>
@@ -229,7 +287,7 @@ export default function SupplierAllocationEditForm({
           disabled={isLoading}
           className="px-4 py-2 font-semibold text-on-surface hover:bg-surface-container-low rounded-lg transition-colors disabled:opacity-50"
         >
-          Cancel
+          {dictionary.cancel}
         </button>
         <button
           type="submit"
@@ -239,7 +297,7 @@ export default function SupplierAllocationEditForm({
           {isLoading ? (
             <span className="w-5 h-5 border-2 border-on-primary border-t-transparent rounded-full animate-spin"></span>
           ) : (
-            "Update Allocation"
+            dictionary.update
           )}
         </button>
       </div>

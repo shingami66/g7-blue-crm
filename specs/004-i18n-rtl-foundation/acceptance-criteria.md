@@ -170,6 +170,25 @@
 - no cost/financial drift
 - previously deferred New Allocation/back navigation pending-bolt issue resolved
 
+- `I18N-RTL-SERVICES-RUNTIME-1E` is complete as a Services allocation subflow runtime i18n slice
+- senior review result is `PASS`
+- manual smoke result is `PASS` based on Mozfer visual/browser smoke
+- New/Create Allocation page and form were localized
+- Edit Allocation form was localized
+- Cancel Allocation form was localized
+- Delete Allocation form was localized
+- Restore Allocation form was localized
+- restore flow verified through Supplier Allocations -> Show Deleted -> Restore
+- destructive cancel/delete wording remained explicit
+- restore wording remained clear and non-destructive
+- supplier names, service number/title, quantities, units, SAR values, IDs, and dates remained readable
+- pending-bolt route navigation from the prior task remained preserved
+- `Show Deleted` remains a local panel/filter toggle and does not show the global pending bolt by design
+- no navigation helper files changed
+- no lib supplier allocation action logic changed
+- no RBAC/permission/DB/server action behavior changed
+- no customer-facing PDF/document surfaces changed
+
 ## Shared Overlays Inventory
 
 - `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` records exact Modal/Dialog/Toast/Dropdown paths before shell implementation

@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cancelSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getLocale } from "@/lib/i18n/locales";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
@@ -18,12 +21,39 @@ const STATUS_VARIANT_MAP: Record<SupplierAllocation["status"], StatusBadgeVarian
   cancelled: "cancelled",
 };
 
-const STATUS_LABEL_MAP: Record<SupplierAllocation["status"], string> = {
-  draft: "Draft",
-  planned: "Planned",
-  selected: "Selected",
-  cancelled: "Cancelled",
-};
+function getCancelSupplierAllocationErrorMessage(
+  error: string | null | undefined,
+  dictionary: ReturnType<
+    typeof getServicesDictionary
+  >["supplierAllocations"]["subflow"]["cancelForm"]
+) {
+  if (!error) {
+    return dictionary.failed;
+  }
+
+  const mappedErrors: Record<string, string> = {
+    "Supplier allocation id is required.":
+      dictionary.errors.allocationIdRequired,
+    "Supplier allocation not found.": dictionary.errors.notFound,
+    "Supplier allocation is already cancelled.":
+      dictionary.errors.alreadyCancelled,
+    "This allocation cannot be modified because it is linked to an active supplier booking.":
+      dictionary.errors.linkedActiveBooking,
+    "Service is unavailable for supplier allocation cancel.":
+      dictionary.errors.serviceUnavailable,
+    "Failed to cancel supplier allocation. Please try again.":
+      dictionary.errors.cancelFailedRetry,
+    "Failed to verify booking status. Please try again.":
+      dictionary.errors.bookingStatusVerifyFailed,
+    "An unexpected error occurred while verifying booking status.":
+      dictionary.errors.bookingStatusUnexpected,
+    Unauthorized: dictionary.errors.unauthorized,
+    Forbidden: dictionary.errors.forbidden,
+    "An unexpected error occurred.": dictionary.errors.unexpected,
+  };
+
+  return mappedErrors[error] || error;
+}
 
 export default function SupplierAllocationCancelForm({
   serviceId,
@@ -34,6 +64,10 @@ export default function SupplierAllocationCancelForm({
 }) {
   const router = useRouter();
   const { push } = useGlobalNavigationPending();
+  const servicesDictionary = getServicesDictionary(getLocale());
+  const dictionary = servicesDictionary.supplierAllocations.subflow.cancelForm;
+  const common = servicesDictionary.supplierAllocations.subflow.common;
+  const statusLabels = servicesDictionary.supplierAllocations.statusLabels;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +87,7 @@ export default function SupplierAllocationCancelForm({
       push(`/services/${serviceId}`);
       router.refresh();
     } else {
-      setError(result.error || "Failed to cancel supplier allocation");
+      setError(getCancelSupplierAllocationErrorMessage(result.error, dictionary));
       setIsLoading(false);
     }
   }
@@ -61,55 +95,57 @@ export default function SupplierAllocationCancelForm({
   return (
     <form onSubmit={handleSubmit} className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
       <div className="p-6">
-        <h3 className="text-lg font-semibold text-on-surface mb-4">Allocation Summary</h3>
+        <h3 className="text-lg font-semibold text-on-surface mb-4">
+          {common.allocationSummary}
+        </h3>
         <dl className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
           <div>
             <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Supplier
+              {common.supplier}
             </dt>
-            <dd className="text-sm font-medium text-on-surface">
-              {allocation.supplierName || allocation.supplierId}
+            <dd className="text-sm font-medium text-on-surface" dir="auto">
+              {isolateBidiText(allocation.supplierName || allocation.supplierId)}
             </dd>
           </div>
           <div>
             <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Category
+              {common.category}
             </dt>
-            <dd className="text-sm font-medium text-on-surface">
-              {allocation.category}
+            <dd className="text-sm font-medium text-on-surface" dir="auto">
+              {isolateBidiText(allocation.category)}
             </dd>
           </div>
           <div>
             <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Item Name
+              {common.itemName}
             </dt>
-            <dd className="text-sm font-medium text-on-surface">
-              {allocation.itemName}
+            <dd className="text-sm font-medium text-on-surface" dir="auto">
+              {isolateBidiText(allocation.itemName)}
             </dd>
           </div>
           <div>
             <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Quantity
+              {common.quantity}
             </dt>
-            <dd className="text-sm font-medium text-on-surface">
-              {allocation.quantity}
+            <dd className="text-sm font-medium text-on-surface" dir="ltr">
+              {isolateBidiText(String(allocation.quantity))}
             </dd>
           </div>
           <div>
             <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Unit
+              {common.unit}
             </dt>
-            <dd className="text-sm font-medium text-on-surface">
-              {allocation.unit}
+            <dd className="text-sm font-medium text-on-surface" dir="ltr">
+              {isolateBidiText(allocation.unit)}
             </dd>
           </div>
           <div>
             <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-              Status
+              {common.status}
             </dt>
             <dd>
               <StatusBadge variant={STATUS_VARIANT_MAP[allocation.status] || "draft"}>
-                {STATUS_LABEL_MAP[allocation.status] || allocation.status}
+                {statusLabels[allocation.status] || allocation.status}
               </StatusBadge>
             </dd>
           </div>
@@ -117,7 +153,7 @@ export default function SupplierAllocationCancelForm({
 
         <div className="space-y-2 border-t border-outline-variant pt-6 mt-2">
           <label htmlFor="cancelledReason" className="block text-sm font-semibold text-on-surface">
-            Cancellation Reason <span className="text-error">*</span>
+            {dictionary.reasonLabel} <span className="text-error">*</span>
           </label>
           <textarea
             id="cancelledReason"
@@ -125,11 +161,12 @@ export default function SupplierAllocationCancelForm({
             required
             rows={3}
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-error focus:border-transparent transition-all resize-none"
-            placeholder="Please provide a reason for cancelling this allocation..."
+            placeholder={dictionary.reasonPlaceholder}
             disabled={isLoading}
+            dir="auto"
           />
           <p className="text-xs text-on-surface-variant">
-            This action cannot be undone. The allocation will be preserved for history but its status will change to cancelled.
+            {dictionary.warning}
           </p>
         </div>
       </div>
@@ -146,7 +183,7 @@ export default function SupplierAllocationCancelForm({
           onClick={() => push(`/services/${serviceId}`)}
           variant="ghost"
         >
-          Go Back
+          {dictionary.back}
         </Button>
         <Button
           type="submit"
@@ -154,7 +191,7 @@ export default function SupplierAllocationCancelForm({
           loading={isLoading}
           variant="danger"
         >
-          {isLoading ? "Canceling..." : "Cancel Allocation"}
+          {isLoading ? dictionary.loadingLabel : dictionary.confirm}
         </Button>
       </div>
     </form>

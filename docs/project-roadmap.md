@@ -465,15 +465,33 @@ Immediate next priorities:
    - No allocation subflow pages, lib supplier allocation/booking action logic, RBAC/permission/DB/action behavior, or cost leakage were touched.
    - Deferred navigation issue: `allocations/new` and browser back navigation do not show the global pending bolt; handle in a later `allocations/**` or navigation task.
 1. `P6F` - `SERVICES-ALLOCATIONS-NAV-PENDING-BOLT-1`: allocation subflow navigation pending-bolt wiring completed after review.
-   - Focused navigation review result: `PASS`.
-   - Mozfer manual/browser smoke result: `PASS`.
-   - New Allocation link now shows the global centered pending bolt.
+    - Focused navigation review result: `PASS`.
+    - Mozfer manual/browser smoke result: `PASS`.
+    - New Allocation link now shows the global centered pending bolt.
    - Back to Service links now show the pending bolt.
    - App-controlled cancel/back navigation now uses pending navigation.
    - Post-success navigation after create/edit/cancel/delete/restore now triggers the centered bolt.
-   - Native browser back remains untouched by design.
-   - No action logic drift, permission/RBAC drift, DB/server action drift, i18n/copy drift, or cost/financial drift.
-   - Previously deferred New Allocation/back navigation pending-bolt issue is resolved.
+    - Native browser back remains untouched by design.
+    - No action logic drift, permission/RBAC drift, DB/server action drift, i18n/copy drift, or cost/financial drift.
+    - Previously deferred New Allocation/back navigation pending-bolt issue is resolved.
+1. `P6G` - `I18N-RTL-SERVICES-RUNTIME-1E`: Services allocation subflow runtime i18n completed after review.
+    - Focused senior review result: `PASS`.
+    - Mozfer manual/browser smoke result: `PASS`.
+    - New/Create Allocation page and form were localized.
+    - Edit Allocation form was localized.
+    - Cancel Allocation form was localized.
+    - Delete Allocation form was localized.
+    - Restore Allocation form was localized.
+    - Restore flow was verified through Supplier Allocations -> Show Deleted -> Restore.
+    - Destructive cancel/delete wording remained explicit.
+    - Restore wording remained clear and non-destructive.
+    - Supplier names, service number/title, quantities, units, SAR values, IDs, and dates remained readable.
+    - Pending-bolt route navigation from the prior task remained preserved.
+    - `Show Deleted` remains a local panel/filter toggle and does not show the global pending bolt by design.
+    - No navigation helper files changed.
+    - No lib supplier allocation action logic changed.
+    - No RBAC/permission/DB/server action behavior changed.
+    - No customer-facing PDF/document surfaces changed.
 1. `P7` - Module rollout remains split into small controlled tasks, not a broad "translate everything" pass.
    - Recommended first runtime module candidate after planning/copy review: Customers.
    - Service remains the locked operational core; Booking terminology still needs care.

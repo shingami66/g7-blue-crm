@@ -3,12 +3,50 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getLocale } from "@/lib/i18n/locales";
 import { createSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import { getActiveSupplierRateCardsForAllocation } from "@/lib/suppliers/rate-card-actions";
 import type { SupplierOption } from "@/lib/suppliers/types";
 import type { SupplierRateCard } from "@/lib/suppliers/rate-card-types";
 
 type CostSource = "manual_estimate" | "rate_card";
+
+function getCreateSupplierAllocationErrorMessage(
+  error: string | null | undefined,
+  dictionary: ReturnType<
+    typeof getServicesDictionary
+  >["supplierAllocations"]["subflow"]["createForm"]
+) {
+  if (!error) {
+    return dictionary.failed;
+  }
+
+  const mappedErrors: Record<string, string> = {
+    "Service is unavailable for supplier allocation.":
+      dictionary.errors.serviceUnavailable,
+    "Supplier is unavailable for allocation.":
+      dictionary.errors.supplierUnavailable,
+    "Approved quotation is invalid for this service.":
+      dictionary.errors.approvedQuotationInvalid,
+    "Rate card ID is required.": dictionary.errors.rateCardIdRequired,
+    "Rate card not found.": dictionary.errors.rateCardNotFound,
+    "Rate card is not active or deleted.": dictionary.errors.rateCardInactive,
+    "Rate card does not belong to the selected supplier.":
+      dictionary.errors.rateCardSupplierMismatch,
+    "Invalid rate card cost or currency.":
+      dictionary.errors.invalidRateCardCostOrCurrency,
+    "Rate card is expired.": dictionary.errors.rateCardExpired,
+    "Failed to create supplier allocation. Please try again.":
+      dictionary.errors.createFailedRetry,
+    Unauthorized: dictionary.errors.unauthorized,
+    Forbidden: dictionary.errors.forbidden,
+    "An unexpected error occurred.": dictionary.errors.unexpected,
+  };
+
+  return mappedErrors[error] || error;
+}
 
 export default function SupplierAllocationCreateForm({
   serviceId,
@@ -21,6 +59,8 @@ export default function SupplierAllocationCreateForm({
 }) {
   const router = useRouter();
   const { push } = useGlobalNavigationPending();
+  const dictionary =
+    getServicesDictionary(getLocale()).supplierAllocations.subflow.createForm;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -155,7 +195,7 @@ export default function SupplierAllocationCreateForm({
       push(`/services/${serviceId}`);
       router.refresh();
     } else {
-      setError(result.error || "Failed to create supplier allocation");
+      setError(getCreateSupplierAllocationErrorMessage(result.error, dictionary));
       setIsLoading(false);
     }
   }
@@ -165,26 +205,26 @@ export default function SupplierAllocationCreateForm({
       {canUseRateCards && (
         <div className="px-6 py-4 border-b border-outline-variant bg-surface-bright flex gap-4">
           <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
-            <input 
-              type="radio" 
-              name="mode" 
-              value="manual_estimate" 
-              checked={mode === "manual_estimate"} 
-              onChange={() => handleModeChange("manual_estimate")} 
+            <input
+              type="radio"
+              name="mode"
+              value="manual_estimate"
+              checked={mode === "manual_estimate"}
+              onChange={() => handleModeChange("manual_estimate")}
               className="w-4 h-4 text-primary focus:ring-primary"
             />
-            Manual Estimate
+            {dictionary.modes.manualEstimate}
           </label>
           <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
-            <input 
-              type="radio" 
-              name="mode" 
-              value="rate_card" 
-              checked={mode === "rate_card"} 
-              onChange={() => handleModeChange("rate_card")} 
+            <input
+              type="radio"
+              name="mode"
+              value="rate_card"
+              checked={mode === "rate_card"}
+              onChange={() => handleModeChange("rate_card")}
               className="w-4 h-4 text-primary focus:ring-primary"
             />
-            From Rate Card
+            {dictionary.modes.fromRateCard}
           </label>
         </div>
       )}
@@ -192,7 +232,7 @@ export default function SupplierAllocationCreateForm({
       <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2 space-y-2">
           <label htmlFor="supplierId" className="block text-sm font-semibold text-on-surface">
-            Supplier <span className="text-error">*</span>
+            {dictionary.supplier} <span className="text-error">*</span>
           </label>
           <select
             id="supplierId"
@@ -202,11 +242,12 @@ export default function SupplierAllocationCreateForm({
             onChange={handleSupplierChange}
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             disabled={isLoading}
+            dir="auto"
           >
-            <option value="">Select a supplier...</option>
+            <option value="">{dictionary.selectSupplier}</option>
             {suppliers.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name}
+                {isolateBidiText(s.name)}
               </option>
             ))}
           </select>
@@ -215,7 +256,7 @@ export default function SupplierAllocationCreateForm({
         {mode === "rate_card" && (
           <div className="md:col-span-2 space-y-2">
             <label htmlFor="supplierRateCardId" className="block text-sm font-semibold text-on-surface">
-              Rate Card Item <span className="text-error">*</span>
+              {dictionary.rateCardItem} <span className="text-error">*</span>
             </label>
             <select
               id="supplierRateCardId"
@@ -225,19 +266,22 @@ export default function SupplierAllocationCreateForm({
               onChange={handleRateCardChange}
               className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               disabled={isLoading || !selectedSupplierId || isLoadingRateCards}
+              dir="auto"
             >
               <option value="">
                 {isLoadingRateCards 
-                  ? "Loading rate cards..." 
+                  ? dictionary.loadingRateCards
                   : !selectedSupplierId 
-                    ? "Select a supplier first" 
+                    ? dictionary.selectSupplierFirst
                     : rateCards.length === 0 
-                      ? "No active rate cards found" 
-                      : "Select a rate card..."}
+                      ? dictionary.noActiveRateCards
+                      : dictionary.selectRateCard}
               </option>
               {rateCards.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.itemName} ({r.category}) - {r.baseCost} SAR / {r.unit}
+                  {isolateBidiText(
+                    `${r.itemName} (${r.category}) - ${r.baseCost} SAR / ${r.unit}`
+                  )}
                 </option>
               ))}
             </select>
@@ -246,7 +290,7 @@ export default function SupplierAllocationCreateForm({
 
         <div className="space-y-2">
           <label htmlFor="category" className="block text-sm font-semibold text-on-surface">
-            Category <span className="text-error">*</span>
+            {dictionary.category} <span className="text-error">*</span>
           </label>
           <input
             type="text"
@@ -257,14 +301,15 @@ export default function SupplierAllocationCreateForm({
             onChange={(event) => setManualCategory(event.target.value)}
             readOnly={mode === "rate_card"}
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all read-only:bg-surface-container-low read-only:text-on-surface-variant"
-            placeholder="e.g. Venue, Catering, AV"
+            placeholder={dictionary.placeholders.category}
             disabled={isLoading}
+            dir="auto"
           />
         </div>
 
         <div className="space-y-2">
           <label htmlFor="itemName" className="block text-sm font-semibold text-on-surface">
-            Item Name <span className="text-error">*</span>
+            {dictionary.itemName} <span className="text-error">*</span>
           </label>
           <input
             type="text"
@@ -275,14 +320,15 @@ export default function SupplierAllocationCreateForm({
             onChange={(event) => setManualItemName(event.target.value)}
             readOnly={mode === "rate_card"}
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all read-only:bg-surface-container-low read-only:text-on-surface-variant"
-            placeholder="e.g. Main Hall Rental"
+            placeholder={dictionary.placeholders.itemName}
             disabled={isLoading}
+            dir="auto"
           />
         </div>
 
         <div className="space-y-2">
           <label htmlFor="unit" className="block text-sm font-semibold text-on-surface">
-            Unit <span className="text-error">*</span>
+            {dictionary.unit} <span className="text-error">*</span>
           </label>
           <input
             type="text"
@@ -293,14 +339,15 @@ export default function SupplierAllocationCreateForm({
             onChange={(event) => setManualUnit(event.target.value)}
             readOnly={mode === "rate_card"}
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all read-only:bg-surface-container-low read-only:text-on-surface-variant"
-            placeholder="e.g. Days, Pax, Pieces"
+            placeholder={dictionary.placeholders.unit}
             disabled={isLoading}
+            dir="auto"
           />
         </div>
 
         <div className="space-y-2">
           <label htmlFor="quantity" className="block text-sm font-semibold text-on-surface">
-            Quantity <span className="text-error">*</span>
+            {dictionary.quantity} <span className="text-error">*</span>
           </label>
           <input
             type="number"
@@ -312,14 +359,18 @@ export default function SupplierAllocationCreateForm({
             onChange={(event) => setQuantity(event.target.value)}
             required
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-            placeholder="1"
+            placeholder={dictionary.placeholders.quantity}
             disabled={isLoading}
+            dir="ltr"
           />
         </div>
 
         <div className="space-y-2">
           <label htmlFor="estimatedUnitCost" className="block text-sm font-semibold text-on-surface">
-            {mode === "rate_card" ? "Rate Card Unit Cost (SAR)" : "Estimated Unit Cost (SAR)"} <span className="text-error">*</span>
+            {mode === "rate_card"
+              ? dictionary.rateCardUnitCost
+              : dictionary.estimatedUnitCost}{" "}
+            <span className="text-error">*</span>
           </label>
           <input
             type="number"
@@ -332,14 +383,15 @@ export default function SupplierAllocationCreateForm({
             onChange={(event) => setManualEstimatedUnitCost(event.target.value)}
             readOnly={mode === "rate_card"}
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all read-only:bg-surface-container-low read-only:text-on-surface-variant"
-            placeholder="0.00"
+            placeholder={dictionary.placeholders.estimatedUnitCost}
             disabled={isLoading}
+            dir="ltr"
           />
         </div>
 
         <div className="md:col-span-2 space-y-2">
           <label htmlFor="scopeOfWork" className="block text-sm font-semibold text-on-surface">
-            Scope of Work
+            {dictionary.scopeOfWork}
           </label>
           <textarea
             id="scopeOfWork"
@@ -348,14 +400,15 @@ export default function SupplierAllocationCreateForm({
             value={scopeOfWork}
             onChange={(event) => setScopeOfWork(event.target.value)}
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
-            placeholder="Detailed description of what the supplier will provide..."
+            placeholder={dictionary.placeholders.scopeOfWork}
             disabled={isLoading}
+            dir="auto"
           />
         </div>
 
         <div className="md:col-span-2 space-y-2">
           <label htmlFor="internalNotes" className="block text-sm font-semibold text-on-surface">
-            Internal Notes
+            {dictionary.internalNotes}
           </label>
           <textarea
             id="internalNotes"
@@ -364,8 +417,9 @@ export default function SupplierAllocationCreateForm({
             value={internalNotes}
             onChange={(event) => setInternalNotes(event.target.value)}
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
-            placeholder="Internal notes for operations team..."
+            placeholder={dictionary.placeholders.internalNotes}
             disabled={isLoading}
+            dir="auto"
           />
         </div>
       </div>
@@ -383,7 +437,7 @@ export default function SupplierAllocationCreateForm({
           disabled={isLoading}
           className="px-4 py-2 font-semibold text-on-surface hover:bg-surface-container-low rounded-lg transition-colors disabled:opacity-50"
         >
-          Cancel
+          {dictionary.cancel}
         </button>
         <button
           type="submit"
@@ -393,7 +447,7 @@ export default function SupplierAllocationCreateForm({
           {isLoading ? (
             <span className="w-5 h-5 border-2 border-on-primary border-t-transparent rounded-full animate-spin"></span>
           ) : (
-            "Create Allocation"
+            dictionary.create
           )}
         </button>
       </div>

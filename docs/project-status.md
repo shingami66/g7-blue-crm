@@ -219,6 +219,26 @@
 - [x] No cost leakage observed.
 - [x] Deferred navigation issue observed: New Allocation navigation to `allocations/new` and browser back navigation from the allocation subflow do not show the global pending bolt; this is outside Services 1D scope and belongs to `allocations/**` navigation or global pending-bolt route coverage.
 
+### I18N-RTL-SERVICES-RUNTIME-1E
+- [x] Services allocation subflow runtime i18n only.
+- [x] Focused senior review result: PASS.
+- [x] Mozfer manual/browser smoke result: PASS.
+- [x] New/Create Allocation page and form were localized.
+- [x] Edit Allocation form was localized.
+- [x] Cancel Allocation form was localized.
+- [x] Delete Allocation form was localized.
+- [x] Restore Allocation form was localized.
+- [x] Restore flow was verified through Supplier Allocations -> Show Deleted -> Restore.
+- [x] Destructive cancel/delete wording remained explicit.
+- [x] Restore wording remained clear and non-destructive.
+- [x] Supplier names, service number/title, quantities, units, SAR values, IDs, and dates remained readable.
+- [x] Pending-bolt route navigation from the prior task remained preserved.
+- [x] Show Deleted remains a local panel/filter toggle and does not show the global pending bolt by design.
+- [x] No navigation helper files changed.
+- [x] No lib supplier allocation action logic changed.
+- [x] No RBAC/permission/DB/server action behavior changed.
+- [x] No customer-facing PDF/document surfaces changed.
+
 ### SERVICES-ALLOCATIONS-NAV-PENDING-BOLT-1
 - [x] Allocation subflow navigation pending-bolt wiring only.
 - [x] Focused navigation review result: PASS.

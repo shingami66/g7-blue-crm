@@ -287,9 +287,36 @@
   - RTL shell smoke passed visually for the service detail supplier action area
   - no allocation subflow pages touched
   - no lib supplier allocation/booking action logic touched
-  - no RBAC/permission/DB/action behavior drift
-  - no cost leakage observed
-  - deferred navigation issue: `allocations/new` and browser back navigation do not show the global pending bolt; handle in a later `allocations/**` or navigation task
+- no RBAC/permission/DB/action behavior drift
+- no cost leakage observed
+- deferred navigation issue: `allocations/new` and browser back navigation do not show the global pending bolt; handle in a later `allocations/**` or navigation task
+
+### I18N-RTL-SERVICES-RUNTIME-1E
+
+- Type: module runtime implementation
+- Status: DONE
+- Scope:
+  - `src/app/(dashboard)/services/[id]/allocations/new/page.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/new/SupplierAllocationCreateForm.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/cancel/SupplierAllocationCancelForm.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/delete/SupplierAllocationDeleteForm.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/edit/SupplierAllocationEditForm.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/restore/SupplierAllocationRestoreForm.tsx`
+  - `src/lib/i18n/dictionaries/services.ts`
+- Outcome:
+  - Services allocation subflow runtime i18n only
+  - focused senior review result: `PASS`
+  - manual smoke result: `PASS` based on Mozfer visual/browser smoke
+  - New/Create Allocation, Edit, Cancel, Delete, and Restore flows were localized
+  - destructive cancel/delete wording remained explicit
+  - restore wording remained clear and non-destructive
+  - supplier names, service number/title, quantities, units, SAR values, IDs, and dates remained readable
+  - pending-bolt route navigation from the prior task remained preserved
+  - `Show Deleted` remains a local panel/filter toggle and does not show the global pending bolt by design
+  - no navigation helper files changed
+  - no lib supplier allocation action logic changed
+  - no RBAC/permission/DB/server action behavior changed
+  - no customer-facing PDF/document surfaces changed
 
 ### SERVICES-ALLOCATIONS-NAV-PENDING-BOLT-1
 

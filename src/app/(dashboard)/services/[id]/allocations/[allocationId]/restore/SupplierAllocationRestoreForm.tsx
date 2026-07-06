@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { restoreSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getLocale } from "@/lib/i18n/locales";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
@@ -18,12 +21,38 @@ const STATUS_VARIANT_MAP: Record<SupplierAllocation["status"], StatusBadgeVarian
   cancelled: "cancelled",
 };
 
-const STATUS_LABEL_MAP: Record<SupplierAllocation["status"], string> = {
-  draft: "Draft",
-  planned: "Planned",
-  selected: "Selected",
-  cancelled: "Cancelled",
-};
+function getRestoreSupplierAllocationErrorMessage(
+  error: string | null | undefined,
+  dictionary: ReturnType<
+    typeof getServicesDictionary
+  >["supplierAllocations"]["subflow"]["restoreForm"]
+) {
+  if (!error) {
+    return dictionary.failed;
+  }
+
+  const mappedErrors: Record<string, string> = {
+    "Supplier allocation id is required.":
+      dictionary.errors.allocationIdRequired,
+    "Supplier allocation not found.": dictionary.errors.notFound,
+    "Supplier allocation is not deleted.": dictionary.errors.notDeleted,
+    "This allocation cannot be modified because it is linked to an active supplier booking.":
+      dictionary.errors.linkedActiveBooking,
+    "Service is unavailable for supplier allocation restoration.":
+      dictionary.errors.serviceUnavailable,
+    "Failed to restore supplier allocation. Please try again.":
+      dictionary.errors.restoreFailedRetry,
+    "Failed to verify booking status. Please try again.":
+      dictionary.errors.bookingStatusVerifyFailed,
+    "An unexpected error occurred while verifying booking status.":
+      dictionary.errors.bookingStatusUnexpected,
+    Unauthorized: dictionary.errors.unauthorized,
+    Forbidden: dictionary.errors.forbidden,
+    "An unexpected error occurred.": dictionary.errors.unexpected,
+  };
+
+  return mappedErrors[error] || error;
+}
 
 export default function SupplierAllocationRestoreForm({
   serviceId,
@@ -34,6 +63,10 @@ export default function SupplierAllocationRestoreForm({
 }) {
   const router = useRouter();
   const { push } = useGlobalNavigationPending();
+  const servicesDictionary = getServicesDictionary(getLocale());
+  const dictionary = servicesDictionary.supplierAllocations.subflow.restoreForm;
+  const common = servicesDictionary.supplierAllocations.subflow.common;
+  const statusLabels = servicesDictionary.supplierAllocations.statusLabels;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +81,7 @@ export default function SupplierAllocationRestoreForm({
       push(`/services/${serviceId}?showDeleted=true`);
       router.refresh();
     } else {
-      setError(result.error || "Failed to restore supplier allocation");
+      setError(getRestoreSupplierAllocationErrorMessage(result.error, dictionary));
       setIsLoading(false);
     }
   }
@@ -56,33 +89,35 @@ export default function SupplierAllocationRestoreForm({
   return (
     <form onSubmit={handleSubmit} className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
       <div className="p-6">
-        <h3 className="text-lg font-semibold text-on-surface mb-4">Allocation Summary</h3>
+        <h3 className="text-lg font-semibold text-on-surface mb-4">
+          {common.allocationSummary}
+        </h3>
         <dl className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
           <div>
-            <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">Supplier</dt>
-            <dd className="text-sm font-medium text-on-surface">{allocation.supplierName || allocation.supplierId}</dd>
+            <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">{common.supplier}</dt>
+            <dd className="text-sm font-medium text-on-surface" dir="auto">{isolateBidiText(allocation.supplierName || allocation.supplierId)}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">Category</dt>
-            <dd className="text-sm font-medium text-on-surface">{allocation.category}</dd>
+            <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">{common.category}</dt>
+            <dd className="text-sm font-medium text-on-surface" dir="auto">{isolateBidiText(allocation.category)}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">Item Name</dt>
-            <dd className="text-sm font-medium text-on-surface">{allocation.itemName}</dd>
+            <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">{common.itemName}</dt>
+            <dd className="text-sm font-medium text-on-surface" dir="auto">{isolateBidiText(allocation.itemName)}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">Quantity</dt>
-            <dd className="text-sm font-medium text-on-surface">{allocation.quantity}</dd>
+            <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">{common.quantity}</dt>
+            <dd className="text-sm font-medium text-on-surface" dir="ltr">{isolateBidiText(String(allocation.quantity))}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">Unit</dt>
-            <dd className="text-sm font-medium text-on-surface">{allocation.unit}</dd>
+            <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">{common.unit}</dt>
+            <dd className="text-sm font-medium text-on-surface" dir="ltr">{isolateBidiText(allocation.unit)}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">Status</dt>
+            <dt className="text-xs uppercase text-on-surface-variant font-semibold tracking-wider mb-1">{common.status}</dt>
             <dd>
               <StatusBadge variant={STATUS_VARIANT_MAP[allocation.status] || "draft"}>
-                {STATUS_LABEL_MAP[allocation.status] || allocation.status}
+                {statusLabels[allocation.status] || allocation.status}
               </StatusBadge>
             </dd>
           </div>
@@ -90,7 +125,7 @@ export default function SupplierAllocationRestoreForm({
 
         <div className="border-t border-outline-variant pt-6 mt-2">
           <p className="text-sm text-on-surface-variant">
-            Are you sure you want to restore this allocation? It will become active again in the default view.
+            {dictionary.warning}
           </p>
         </div>
       </div>
@@ -107,7 +142,7 @@ export default function SupplierAllocationRestoreForm({
           onClick={() => push(`/services/${serviceId}?showDeleted=true`)}
           variant="ghost"
         >
-          Go Back
+          {dictionary.back}
         </Button>
         <Button
           type="submit"
@@ -115,7 +150,7 @@ export default function SupplierAllocationRestoreForm({
           loading={isLoading}
           variant="primary"
         >
-          {isLoading ? "Restoring..." : "Restore Allocation"}
+          {isLoading ? dictionary.loadingLabel : dictionary.confirm}
         </Button>
       </div>
     </form>
