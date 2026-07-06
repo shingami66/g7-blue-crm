@@ -58,6 +58,24 @@
 - `ARABIC-COPY-REVIEW-1` is complete as a readonly Arabic copy/glossary review
 - overall result is `PASS`
 - the next runtime module recommendation remains Customers, but only after docs are committed/pushed
+- `I18N-RTL-CUSTOMERS-RUNTIME-1` is complete as a Customers runtime module slice
+- senior review result is `PASS`
+- manual smoke result is `PASS` based on Mozfer visual/browser smoke
+- Customers list LTR, Add Customer modal LTR, Customer profile LTR, Edit Profile modal LTR, and Dev RTL shell visual smoke all passed
+- no runtime Arabic locale selector was introduced
+- Arabic runtime labels remain not directly reachable because `getLocale()` still resolves to `en`
+- Customers dictionary was added as module-local runtime i18n dictionary
+- Customers runtime pages now use `getLocale()` + Customers dictionary
+- Revenue label was corrected to `Quoted Value` in English and `قيمة العروض` in Arabic
+- Customer statuses are dictionary-backed: Lead, Active, Inactive
+- mixed-direction protections were added for customer numbers, phone, email, CR/VAT, dates, service numbers, and SAR values
+- no PDF/document routes touched
+- no schema/migrations touched
+- no middleware/cookies touched
+- no `document_locale`
+- no Customer `preferred_language`
+- no shared UI refactor
+- no supplier/internal-cost leakage
 - Shell-1A and Shell-1B are completed and pushed before module rollout begins
 - `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1` is completed as readonly review with overall result `DEFER`
 - overlay hardening is deferred to `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`

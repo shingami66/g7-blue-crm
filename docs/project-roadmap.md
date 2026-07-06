@@ -419,6 +419,14 @@ Immediate next priorities:
    - Readonly Arabic copy/glossary review completed with overall result PASS.
    - Canonical glossary decisions were recorded for customer, service, quotation, invoice, payment, supplier, admin, RBAC-sensitive, and mixed-direction rules.
    - Arabic copy is now ready for docs-sync approval; runtime rollout still waits for the docs commits/push sequence.
+1. `P6A` - `I18N-RTL-CUSTOMERS-RUNTIME-1`: Customers runtime slice completed after copy review.
+   - Senior review result: PASS.
+   - Manual smoke result: PASS based on Mozfer visual/browser smoke.
+   - Customers list LTR, Add Customer modal LTR, Customer profile LTR, Edit Profile modal LTR, and Dev RTL shell visual smoke all passed.
+   - No runtime Arabic locale selector was introduced; `getLocale()` still resolves to `en`, so Arabic runtime labels remain indirectly reachable only.
+   - Customers runtime pages now use `getLocale()` + Customers dictionary.
+   - Revenue label was corrected to `Quoted Value` / `قيمة العروض`, customer statuses are dictionary-backed, and mixed-direction protections were added for customer numbers, phone, email, CR/VAT, dates, service numbers, and SAR values.
+   - No PDF/document routes, schema/migrations, middleware/cookies, or shared UI refactor were touched.
 1. `P7` - Module rollout remains split into small controlled tasks, not a broad "translate everything" pass.
    - Recommended first runtime module candidate after planning/copy review: Customers.
    - Service remains the locked operational core; Booking terminology still needs care.

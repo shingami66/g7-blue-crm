@@ -124,6 +124,30 @@
 - [x] Supplier/internal cost labels remain RBAC-sensitive.
 - [x] Service remains the locked operational core; Booking terminology still needs careful copy review.
 
+### I18N-RTL-CUSTOMERS-RUNTIME-1
+- [x] Implementation completed for the Customers runtime slice.
+- [x] Senior review result: PASS.
+- [x] Manual smoke result: PASS based on Mozfer visual/browser smoke.
+- [x] Customers list LTR passed.
+- [x] Add Customer modal LTR passed.
+- [x] Customer profile LTR passed.
+- [x] Edit Profile modal LTR passed.
+- [x] Dev RTL shell visual smoke passed with minor non-blocking notes.
+- [x] No runtime Arabic locale selector was introduced.
+- [x] Arabic runtime labels remain not directly reachable because `getLocale()` still resolves to `en`.
+- [x] Customers dictionary was added as a module-local runtime i18n dictionary.
+- [x] Customers runtime pages now use `getLocale()` + Customers dictionary.
+- [x] Revenue label was corrected to `Quoted Value` in English and `قيمة العروض` in Arabic.
+- [x] Customer statuses are dictionary-backed: Lead, Active, Inactive.
+- [x] Mixed-direction protections were added for customer numbers, phone, email, CR/VAT, dates, service numbers, and SAR values.
+- [x] No PDF/document routes touched.
+- [x] No schema/migrations touched.
+- [x] No middleware/cookies touched.
+- [x] No document_locale.
+- [x] No Customer preferred_language.
+- [x] No shared UI refactor.
+- [x] No supplier/internal-cost leakage.
+
 ### I18N-RTL-MODULE-TEXT-INVENTORY-1
 - [x] Readonly module text inventory completed.
 - [x] Overall result: PASS.

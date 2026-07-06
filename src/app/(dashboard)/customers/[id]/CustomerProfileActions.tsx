@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, X } from "lucide-react";
 import { updateCustomer } from "@/lib/customers/actions";
+import type { CustomersDictionary } from "@/lib/i18n/dictionaries/customers";
 import type { Customer } from "@/types/customer";
 import Button from "@/components/ui/Button";
 import {
@@ -14,9 +15,11 @@ import {
 export default function CustomerProfileActions({
   customer,
   canWrite,
+  dictionary,
 }: {
   customer: Customer;
   canWrite: boolean;
+  dictionary: CustomersDictionary;
 }) {
   const router = useRouter();
   const [showEditModal, setShowEditModal] = useState(false);
@@ -36,7 +39,7 @@ export default function CustomerProfileActions({
         setShowEditModal(false);
         router.refresh();
       } else {
-        setActionError(result.error ?? "Unknown error");
+        setActionError(result.error ?? dictionary.states.unknownError);
       }
     });
   }
@@ -52,7 +55,7 @@ export default function CustomerProfileActions({
         className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-[14px] leading-[20px] font-semibold text-on-primary transition-colors hover:bg-primary-container"
       >
         <Pencil size={18} />
-        Edit Profile
+        {dictionary.actions.editProfile}
       </button>
 
       {showEditModal && (
@@ -60,13 +63,13 @@ export default function CustomerProfileActions({
           <div className="bg-surface-container-lowest border border-surface-variant rounded-2xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4 shadow-xl">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-[20px] leading-[28px] font-semibold text-primary">
-                Edit Customer Profile
+                {dictionary.actions.editProfile}
               </h3>
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
                 className="text-on-surface-variant hover:text-primary"
-                aria-label="Close edit customer profile"
+                aria-label={dictionary.actions.closeEditCustomerProfile}
               >
                 <X size={18} />
               </button>
@@ -79,8 +82,8 @@ export default function CustomerProfileActions({
             )}
 
             <form action={saveCustomerProfile} className="space-y-4">
-              <CustomerCoreFields customer={customer} />
-              <CustomerOfficialBillingFields customer={customer} />
+              <CustomerCoreFields customer={customer} dictionary={dictionary} />
+              <CustomerOfficialBillingFields customer={customer} dictionary={dictionary} />
 
               <div className="flex justify-end gap-3 pt-2">
                 <button
@@ -88,13 +91,13 @@ export default function CustomerProfileActions({
                   onClick={() => setShowEditModal(false)}
                   className="px-4 py-2 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-low rounded-lg text-[14px] font-semibold transition-colors"
                 >
-                  Cancel
+                  {dictionary.actions.cancel}
                 </button>
                 <Button
                   type="submit"
                   loading={isPending}
                 >
-                  Save Changes
+                  {dictionary.actions.saveChanges}
                 </Button>
               </div>
             </form>

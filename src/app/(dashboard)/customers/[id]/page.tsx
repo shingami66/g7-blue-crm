@@ -8,6 +8,11 @@ import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getCustomerById } from "@/lib/customers/queries";
 import { getServicesByCustomerId } from "@/lib/services/queries";
+import { getLocale } from "@/lib/i18n/locales";
+import {
+  getCustomersDictionary,
+  type CustomersDictionary,
+} from "@/lib/i18n/dictionaries/customers";
 import type { Customer } from "@/types/customer";
 import type { Service } from "@/types/service";
 import CustomerProfileActions from "./CustomerProfileActions";
@@ -15,13 +20,13 @@ import CustomerProfileActions from "./CustomerProfileActions";
 export const dynamic = "force-dynamic";
 
 const SERVICE_STATUS_VARIANT_MAP = {
-  "Inquiry": "inquiry",
-  "Quoted": "quoted",
-  "Approved": "approved",
+  Inquiry: "inquiry",
+  Quoted: "quoted",
+  Approved: "approved",
   "Deposit Paid": "deposit-paid",
   "In Progress": "in-progress",
-  "Completed": "completed",
-  "Cancelled": "cancelled",
+  Completed: "completed",
+  Cancelled: "cancelled",
 } as const satisfies Record<Service["status"], ComponentProps<typeof StatusBadge>["variant"]>;
 
 export default async function CustomerProfilePage({
@@ -29,6 +34,8 @@ export default async function CustomerProfilePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const locale = getLocale();
+  const dictionary = getCustomersDictionary(locale);
   const { id } = await params;
   let customer: Customer | null = null;
   let canWrite = false;
@@ -40,8 +47,9 @@ export default async function CustomerProfilePage({
   } catch (error) {
     return renderLoadError(
       error,
-      "You do not have permission to view customers.",
-      "We couldn't load the customer at this time. Please try again later."
+      dictionary.states.customerForbidden,
+      dictionary.states.customerLoadError,
+      dictionary
     );
   }
 
@@ -57,8 +65,9 @@ export default async function CustomerProfilePage({
   } catch (error) {
     return renderLoadError(
       error,
-      "You do not have permission to view services for this customer.",
-      "We couldn't load the related services at this time. Please try again later."
+      dictionary.states.customerServicesForbidden,
+      dictionary.states.relatedServicesLoadError,
+      dictionary
     );
   }
 
@@ -69,7 +78,7 @@ export default async function CustomerProfilePage({
           <PendingLink
             href="/customers"
             className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
-            aria-label="Back to customers"
+            aria-label={dictionary.profile.backToCustomers}
           >
             <ArrowLeft size={18} />
           </PendingLink>
@@ -79,41 +88,42 @@ export default async function CustomerProfilePage({
                 {formatNullable(customer.company)}
               </h2>
               <StatusBadge variant={customer.status}>
-                {formatCustomerStatus(customer.status)}
+                {dictionary.customerStatuses[customer.status]}
               </StatusBadge>
             </div>
             <p className="mt-1 text-[14px] leading-[20px] text-on-surface-variant">
-              Customer No: {formatNullable(customer.customerNumber)}
+              {dictionary.profile.customerNumber}: <span dir="ltr">{formatNullable(customer.customerNumber)}</span>
             </p>
           </div>
         </div>
-        <CustomerProfileActions customer={customer} canWrite={canWrite} />
+        <CustomerProfileActions customer={customer} canWrite={canWrite} dictionary={dictionary} />
       </div>
 
       <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright">
-          <h3 className="font-semibold text-primary">Customer Profile</h3>
+          <h3 className="font-semibold text-primary">{dictionary.profile.customerProfile}</h3>
         </div>
         <dl className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <DetailItem label="Customer No">
-            {formatNullable(customer.customerNumber)}
+          <DetailItem label={dictionary.profile.customerNumber}>
+            <span dir="ltr">{formatNullable(customer.customerNumber)}</span>
           </DetailItem>
-          <DetailItem label="Company">
+          <DetailItem label={dictionary.list.table.company}>
             {formatNullable(customer.company)}
           </DetailItem>
-          <DetailItem label="Primary Contact">
+          <DetailItem label={dictionary.profile.primaryContact}>
             {formatNullable(customer.contact)}
           </DetailItem>
-          <DetailItem label="City">
+          <DetailItem label={dictionary.list.report.columns.city}>
             <span className="inline-flex items-center gap-2">
               <MapPin size={16} className="text-on-surface-variant" />
               {formatNullable(customer.city)}
             </span>
           </DetailItem>
-          <DetailItem label="Email">
+          <DetailItem label={dictionary.list.report.columns.email}>
             {customer.email ? (
               <a
                 href={`mailto:${customer.email}`}
+                dir="ltr"
                 className="inline-flex items-center gap-2 text-primary hover:underline"
               >
                 <Mail size={16} />
@@ -123,10 +133,11 @@ export default async function CustomerProfilePage({
               "—"
             )}
           </DetailItem>
-          <DetailItem label="Phone">
+          <DetailItem label={dictionary.list.report.columns.phone}>
             {customer.phone ? (
               <a
                 href={`tel:${customer.phone}`}
+                dir="ltr"
                 className="inline-flex items-center gap-2 text-primary hover:underline"
               >
                 <Phone size={16} />
@@ -136,49 +147,51 @@ export default async function CustomerProfilePage({
               "—"
             )}
           </DetailItem>
-          <DetailItem label="Status">
-            {formatCustomerStatus(customer.status)}
+          <DetailItem label={dictionary.list.table.status}>
+            {dictionary.customerStatuses[customer.status]}
           </DetailItem>
-          <DetailItem label="Services Count">
+          <DetailItem label={dictionary.profile.servicesCount}>
             {formatNullable(customer.servicesCount)}
           </DetailItem>
-          <DetailItem label="Total Quoted Amount">
-            {customer.totalQuotedAmount !== undefined && customer.totalQuotedAmount !== null
-              ? `SAR ${customer.totalQuotedAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
-              : "—"}
+          <DetailItem label={dictionary.profile.totalQuotedAmount}>
+            <span dir="ltr">
+              {customer.totalQuotedAmount !== undefined && customer.totalQuotedAmount !== null
+                ? `SAR ${customer.totalQuotedAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+                : "—"}
+            </span>
           </DetailItem>
         </dl>
       </section>
 
-      <OfficialBillingDetails customer={customer} />
+      <OfficialBillingDetails customer={customer} dictionary={dictionary} />
 
       <section>
         <div className="flex flex-col gap-1 mb-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h3 className="font-semibold text-primary">Related Services</h3>
+            <h3 className="font-semibold text-primary">{dictionary.profile.relatedServices}</h3>
             <p className="text-[14px] leading-[20px] text-on-surface-variant">
-              Services linked to this customer.
+              {dictionary.profile.relatedServicesSubtitle}
             </p>
           </div>
           <div className="text-[14px] leading-[20px] text-on-surface-variant">
-            {services.length} {services.length === 1 ? "service" : "services"}
+            {dictionary.profile.totalServices}: <span dir="ltr">{services.length}</span>
           </div>
         </div>
 
         {services.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 bg-surface-container-lowest border border-surface-variant rounded-xl">
             <p className="text-on-surface-variant text-[14px] leading-[20px]">
-              No services are linked to this customer yet.
+              {dictionary.states.noRelatedServices}
             </p>
           </div>
         ) : (
           <DataTable
             columns={[
-              "Service Number",
-              "Service Title / Event Name",
-              "Event Date",
-              "Status",
-              "Budget",
+              dictionary.profile.serviceTable.serviceNumber,
+              dictionary.profile.serviceTable.serviceTitle,
+              dictionary.profile.serviceTable.eventDate,
+              dictionary.profile.serviceTable.status,
+              dictionary.profile.serviceTable.budget,
             ]}
           >
             {services.map((service) => (
@@ -186,7 +199,7 @@ export default async function CustomerProfilePage({
                 key={service.id}
                 className="hover:bg-surface-container-low/50 transition-colors"
               >
-                <td className="px-4 py-4 font-mono font-semibold">
+                <td dir="ltr" className="px-4 py-4 font-mono font-semibold">
                   <PendingLink
                     href={`/services/${service.id}`}
                     className="text-primary hover:underline"
@@ -205,7 +218,7 @@ export default async function CustomerProfilePage({
                     {formatNullable(service.eventName)}
                   </div>
                 </td>
-                <td className="px-4 py-4 text-on-surface-variant">
+                <td dir="ltr" className="px-4 py-4 text-on-surface-variant">
                   {formatEventDate(service)}
                 </td>
                 <td className="px-4 py-4">
@@ -213,7 +226,7 @@ export default async function CustomerProfilePage({
                     {service.status}
                   </StatusBadge>
                 </td>
-                <td className="px-4 py-4 font-semibold text-on-surface">
+                <td dir="ltr" className="px-4 py-4 font-semibold text-on-surface">
                   {service.estimatedBudget != null
                     ? `${Number(service.estimatedBudget).toLocaleString("en-SA")} SAR`
                     : "—"}
@@ -244,39 +257,48 @@ function DetailItem({
   );
 }
 
-function OfficialBillingDetails({ customer }: { customer: Customer }) {
+function OfficialBillingDetails({
+  customer,
+  dictionary,
+}: {
+  customer: Customer;
+  dictionary: CustomersDictionary;
+}) {
   return (
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
       <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright">
-        <h3 className="font-semibold text-primary">Official & Billing Details</h3>
+        <h3 className="font-semibold text-primary">{dictionary.profile.officialBillingDetails}</h3>
       </div>
       {customer.customerType === "individual" ? (
         <div className="p-6 space-y-3">
           <dl>
-            <DetailItem label="Customer Type">Individual</DetailItem>
+            <DetailItem label={dictionary.form.officialBilling.customerType}>
+              {dictionary.customerTypes.individual}
+            </DetailItem>
           </dl>
           <p className="text-[14px] leading-[20px] text-on-surface-variant">
-            Individual customer — company registration fields are not required.
+            {dictionary.form.officialBilling.individualHint}
           </p>
         </div>
       ) : (
         <dl className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <DetailItem label="Customer Type">
-            {formatCustomerType(customer.customerType)}
+          <DetailItem label={dictionary.form.officialBilling.customerType}>
+            {formatCustomerType(customer.customerType, dictionary)}
           </DetailItem>
-          <DetailItem label="Legal Name">
+          <DetailItem label={dictionary.form.officialBilling.legalName}>
             {formatNullable(customer.legalName)}
           </DetailItem>
-          <DetailItem label="CR Number">
-            {formatNullable(customer.commercialRegistrationNumber)}
+          <DetailItem label={dictionary.form.officialBilling.crNumber}>
+            <span dir="ltr">{formatNullable(customer.commercialRegistrationNumber)}</span>
           </DetailItem>
-          <DetailItem label="VAT Number">
-            {formatNullable(customer.vatNumber)}
+          <DetailItem label={dictionary.form.officialBilling.vatNumber}>
+            <span dir="ltr">{formatNullable(customer.vatNumber)}</span>
           </DetailItem>
-          <DetailItem label="Billing Email">
+          <DetailItem label={dictionary.form.officialBilling.billingEmail}>
             {customer.billingEmail ? (
               <a
                 href={`mailto:${customer.billingEmail}`}
+                dir="ltr"
                 className="inline-flex items-center gap-2 text-primary hover:underline"
               >
                 <Mail size={16} />
@@ -286,16 +308,16 @@ function OfficialBillingDetails({ customer }: { customer: Customer }) {
               "—"
             )}
           </DetailItem>
-          <DetailItem label="Finance Contact">
+          <DetailItem label={dictionary.form.officialBilling.financeContactName}>
             {formatFinanceContact(customer)}
           </DetailItem>
-          <DetailItem label="Payment Terms">
+          <DetailItem label={dictionary.form.officialBilling.paymentTerms}>
             {formatNullable(customer.paymentTerms)}
           </DetailItem>
-          <DetailItem label="PO Required">
-            {customer.poRequired ? "Yes" : "No"}
+          <DetailItem label={dictionary.form.officialBilling.poRequired}>
+            {customer.poRequired ? dictionary.booleans.yes : dictionary.booleans.no}
           </DetailItem>
-          <DetailItem label="National Address">
+          <DetailItem label={dictionary.form.officialBilling.nationalAddress}>
             {formatNationalAddress(customer)}
           </DetailItem>
         </dl>
@@ -315,16 +337,21 @@ function ErrorState({ title, message }: { title: string; message: string }) {
   );
 }
 
-function renderLoadError(error: unknown, forbiddenMessage: string, genericMessage: string) {
+function renderLoadError(
+  error: unknown,
+  forbiddenMessage: string,
+  genericMessage: string,
+  dictionary: CustomersDictionary
+) {
   if (error instanceof UnauthorizedError) {
     redirect("/sign-in");
   }
 
   if (error instanceof ForbiddenError) {
-    return <ErrorState title="Access Denied" message={forbiddenMessage} />;
+    return <ErrorState title={dictionary.states.accessDenied} message={forbiddenMessage} />;
   }
 
-  return <ErrorState title="Something went wrong" message={genericMessage} />;
+  return <ErrorState title={dictionary.states.genericError} message={genericMessage} />;
 }
 
 function formatNullable(value: string | number | null | undefined) {
@@ -335,20 +362,19 @@ function formatNullable(value: string | number | null | undefined) {
   return value;
 }
 
-function formatCustomerStatus(status: Customer["status"]) {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-function formatCustomerType(customerType: Customer["customerType"]) {
+function formatCustomerType(
+  customerType: Customer["customerType"],
+  dictionary: CustomersDictionary
+) {
   if (!customerType) return "—";
 
-  return customerType.charAt(0).toUpperCase() + customerType.slice(1);
+  return dictionary.customerTypes[customerType];
 }
 
 function formatFinanceContact(customer: Customer) {
   const parts = [customer.financeContactName, customer.financeContactPhone].filter(Boolean);
 
-  return parts.length > 0 ? parts.join(" / ") : "—";
+  return parts.length > 0 ? <span dir="ltr">{parts.join(" / ")}</span> : "—";
 }
 
 function formatNationalAddress(customer: Customer) {

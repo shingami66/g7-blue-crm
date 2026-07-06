@@ -1,61 +1,72 @@
 "use client";
 
 import { useState } from "react";
+import type { CustomersDictionary } from "@/lib/i18n/dictionaries/customers";
 import type { Customer } from "@/types/customer";
 
 type CustomerTypeChoice = NonNullable<Customer["customerType"]> | "";
 
-export function CustomerCoreFields({ customer }: { customer: Customer | null }) {
+export function CustomerCoreFields({
+  customer,
+  dictionary,
+}: {
+  customer: Customer | null;
+  dictionary: CustomersDictionary;
+}) {
+  const labels = dictionary.form.core;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <TextInput
-        label="Company *"
+        label={labels.company}
         name="company"
         defaultValue={customer?.company}
-        placeholder="Company name"
+        placeholder={labels.companyPlaceholder}
         required
       />
       <TextInput
-        label="Contact Person *"
+        label={labels.contactPerson}
         name="contact"
         defaultValue={customer?.contact}
-        placeholder="Contact name"
+        placeholder={labels.contactPersonPlaceholder}
         required
       />
       <TextInput
-        label="Phone *"
+        label={labels.phone}
         name="phone"
         defaultValue={customer?.phone}
-        placeholder="+966 5X XXX XXXX"
+        placeholder={labels.phonePlaceholder}
+        dir="ltr"
         required
       />
       <TextInput
-        label="Email *"
+        label={labels.email}
         name="email"
         type="email"
         defaultValue={customer?.email}
-        placeholder="email@company.com"
+        placeholder={labels.emailPlaceholder}
+        dir="ltr"
         required
       />
       <TextInput
-        label="City *"
+        label={labels.city}
         name="city"
         defaultValue={customer?.city}
-        placeholder="Riyadh"
+        placeholder={labels.cityPlaceholder}
         required
       />
       <div>
         <label className="block text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] mb-1">
-          Status
+          {labels.status}
         </label>
         <select
           name="status"
           defaultValue={customer?.status ?? "lead"}
           className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
         >
-          <option value="lead">Lead</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="lead">{dictionary.customerStatuses.lead}</option>
+          <option value="active">{dictionary.customerStatuses.active}</option>
+          <option value="inactive">{dictionary.customerStatuses.inactive}</option>
         </select>
       </div>
     </div>
@@ -64,9 +75,12 @@ export function CustomerCoreFields({ customer }: { customer: Customer | null }) 
 
 export function CustomerOfficialBillingFields({
   customer,
+  dictionary,
 }: {
   customer: Customer | null;
+  dictionary: CustomersDictionary;
 }) {
+  const labels = dictionary.form.officialBilling;
   const [customerType, setCustomerType] = useState<CustomerTypeChoice>(
     customer?.customerType ?? ""
   );
@@ -75,12 +89,12 @@ export function CustomerOfficialBillingFields({
   return (
     <fieldset className="border-t border-outline-variant pt-4">
       <legend className="text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">
-        Official & Billing Details
+        {labels.title}
       </legend>
       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] mb-1">
-            Customer Type
+            {labels.customerType}
           </label>
           <select
             name="customer_type"
@@ -90,66 +104,69 @@ export function CustomerOfficialBillingFields({
             }
             className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
           >
-            <option value="">Not specified</option>
-            <option value="individual">Individual</option>
-            <option value="company">Company</option>
+            <option value="">{labels.notSpecified}</option>
+            <option value="individual">{labels.individual}</option>
+            <option value="company">{labels.company}</option>
           </select>
         </div>
         {customerType === "individual" && (
           <div className="sm:col-span-2 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] leading-[20px] text-on-surface-variant">
-            Individual customer — company registration and billing fields are
-            not required.
+            {labels.individualHint}
           </div>
         )}
         {showCompanyFields && (
           <>
             <TextInput
-              label="Legal Name"
+              label={labels.legalName}
               name="legal_name"
               defaultValue={customer?.legalName}
-              placeholder="Legal billing name"
+              placeholder={labels.legalNamePlaceholder}
             />
             <TextInput
-              label="CR Number"
+              label={labels.crNumber}
               name="commercial_registration_number"
               defaultValue={customer?.commercialRegistrationNumber}
-              placeholder="Commercial Registration"
+              placeholder={labels.crNumberPlaceholder}
+              dir="ltr"
             />
             <TextInput
-              label="VAT Number"
+              label={labels.vatNumber}
               name="vat_number"
               defaultValue={customer?.vatNumber}
-              placeholder="VAT number"
+              placeholder={labels.vatNumberPlaceholder}
+              dir="ltr"
             />
             <TextInput
-              label="Billing Email"
+              label={labels.billingEmail}
               name="billing_email"
               type="email"
               defaultValue={customer?.billingEmail}
-              placeholder="billing@company.com"
+              placeholder={labels.billingEmailPlaceholder}
+              dir="ltr"
             />
             <TextInput
-              label="Finance Contact Name"
+              label={labels.financeContactName}
               name="finance_contact_name"
               defaultValue={customer?.financeContactName}
-              placeholder="Finance contact"
+              placeholder={labels.financeContactNamePlaceholder}
             />
             <TextInput
-              label="Finance Contact Phone"
+              label={labels.financeContactPhone}
               name="finance_contact_phone"
               defaultValue={customer?.financeContactPhone}
-              placeholder="+966 5X XXX XXXX"
+              placeholder={labels.financeContactPhonePlaceholder}
+              dir="ltr"
             />
             <div>
               <label className="block text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] mb-1">
-                Payment Terms
+                {labels.paymentTerms}
               </label>
               <textarea
                 name="payment_terms"
                 defaultValue={customer?.paymentTerms ?? ""}
                 rows={3}
                 className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary resize-y"
-                placeholder="Optional payment terms"
+                placeholder={labels.paymentTermsPlaceholder}
               />
             </div>
             <label className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] leading-[20px] text-on-surface">
@@ -159,7 +176,7 @@ export function CustomerOfficialBillingFields({
                 defaultChecked={customer?.poRequired ?? false}
                 className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
               />
-              PO Required
+              {labels.poRequired}
             </label>
           </>
         )}
@@ -168,50 +185,53 @@ export function CustomerOfficialBillingFields({
       {showCompanyFields && (
         <div className="mt-4">
           <div className="text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] mb-2">
-            National Address
+            {labels.nationalAddress}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <TextInput
-              label="Building Number"
+              label={labels.buildingNumber}
               name="national_address_building_number"
               defaultValue={customer?.nationalAddressBuildingNumber}
-              placeholder="Building number"
+              placeholder={labels.buildingNumberPlaceholder}
+              dir="ltr"
             />
             <TextInput
-              label="Street"
+              label={labels.street}
               name="national_address_street"
               defaultValue={customer?.nationalAddressStreet}
-              placeholder="Street"
+              placeholder={labels.streetPlaceholder}
             />
             <TextInput
-              label="District"
+              label={labels.district}
               name="national_address_district"
               defaultValue={customer?.nationalAddressDistrict}
-              placeholder="District"
+              placeholder={labels.districtPlaceholder}
             />
             <TextInput
-              label="City"
+              label={labels.addressCity}
               name="national_address_city"
               defaultValue={customer?.nationalAddressCity}
-              placeholder="City"
+              placeholder={labels.addressCityPlaceholder}
             />
             <TextInput
-              label="Postal Code"
+              label={labels.postalCode}
               name="national_address_postal_code"
               defaultValue={customer?.nationalAddressPostalCode}
-              placeholder="Postal code"
+              placeholder={labels.postalCodePlaceholder}
+              dir="ltr"
             />
             <TextInput
-              label="Additional Number"
+              label={labels.additionalNumber}
               name="national_address_additional_number"
               defaultValue={customer?.nationalAddressAdditionalNumber}
-              placeholder="Additional number"
+              placeholder={labels.additionalNumberPlaceholder}
+              dir="ltr"
             />
             <TextInput
-              label="Country"
+              label={labels.country}
               name="national_address_country"
               defaultValue={customer?.nationalAddressCountry}
-              placeholder="Saudi Arabia"
+              placeholder={labels.countryPlaceholder}
             />
           </div>
         </div>
@@ -227,6 +247,7 @@ function TextInput({
   placeholder,
   type = "text",
   required = false,
+  dir,
 }: {
   label: string;
   name: string;
@@ -234,6 +255,7 @@ function TextInput({
   placeholder?: string;
   type?: "email" | "text";
   required?: boolean;
+  dir?: "auto" | "ltr" | "rtl";
 }) {
   return (
     <div>
@@ -247,6 +269,7 @@ function TextInput({
         defaultValue={defaultValue ?? ""}
         className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
         placeholder={placeholder}
+        dir={dir}
       />
     </div>
   );

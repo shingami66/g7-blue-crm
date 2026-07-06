@@ -171,6 +171,33 @@
   - `I18N-RTL-MODULE-TEXT-INVENTORY-1` remains the readonly source for module readiness
   - the next runtime module recommendation remains Customers, but only after docs are committed/pushed
 
+### I18N-RTL-CUSTOMERS-RUNTIME-1
+- Type: module runtime implementation
+- Status: DONE
+- Outcome:
+  - Customers runtime implementation completed as the first runtime module slice after copy review
+  - senior review result: `PASS`
+  - manual smoke result: `PASS` based on Mozfer visual/browser smoke
+  - Customers list LTR passed
+  - Add Customer modal LTR passed
+  - Customer profile LTR passed
+  - Edit Profile modal LTR passed
+  - Dev RTL shell visual smoke passed with minor non-blocking notes
+  - no runtime Arabic locale selector was introduced
+  - Arabic runtime labels remain not directly reachable because `getLocale()` still resolves to `en`
+  - Customers dictionary was added as module-local runtime i18n dictionary
+  - Customers runtime pages now use `getLocale()` + Customers dictionary
+  - Revenue label was corrected: English `Quoted Value`, Arabic `قيمة العروض`
+  - Customer statuses are dictionary-backed: Lead, Active, Inactive
+  - mixed-direction protections were added for customer numbers, phone, email, CR/VAT, dates, service numbers, and SAR values
+  - no PDF/document routes touched
+  - no schema/migrations touched
+  - no middleware/cookies touched
+  - no `document_locale`
+  - no Customer `preferred_language`
+  - no shared UI refactor
+  - no supplier/internal-cost leakage
+
 ## Delivery Sequence Notes
 
 - Start with the audit.

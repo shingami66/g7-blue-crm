@@ -3,11 +3,15 @@ import { currentUser } from "@clerk/nextjs/server";
 import { getCustomers } from "@/lib/customers/queries";
 import { checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
+import { getLocale } from "@/lib/i18n/locales";
+import { getCustomersDictionary } from "@/lib/i18n/dictionaries/customers";
 import CustomersClient from "./CustomersClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function CustomersPage() {
+  const locale = getLocale();
+  const dictionary = getCustomersDictionary(locale);
   let customers: Awaited<ReturnType<typeof getCustomers>>;
   let canWrite = false;
   let canExport = false;
@@ -38,10 +42,8 @@ export default async function CustomersPage() {
       return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
           <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
-            <p className="text-sm text-slate-500">
-              You don&apos;t have permission to view the customers module.
-            </p>
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.accessDenied}</h2>
+            <p className="text-sm text-slate-500">{dictionary.states.customersForbidden}</p>
           </div>
         </div>
       );
@@ -50,14 +52,20 @@ export default async function CustomersPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Something went wrong</h2>
-          <p className="text-sm text-slate-500">
-            We couldn&apos;t load the customers at this time. Please try again later.
-          </p>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.genericError}</h2>
+          <p className="text-sm text-slate-500">{dictionary.states.customersLoadError}</p>
         </div>
       </div>
     );
   }
 
-  return <CustomersClient customers={customers} canWrite={canWrite} canExport={canExport} generatedBy={generatedBy} />;
+  return (
+    <CustomersClient
+      customers={customers}
+      canWrite={canWrite}
+      canExport={canExport}
+      generatedBy={generatedBy}
+      dictionary={dictionary}
+    />
+  );
 }
