@@ -2,6 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
+import { getLocale } from "@/lib/i18n/locales";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import EditServiceForm from "./EditServiceForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -13,6 +15,8 @@ export default async function EditServicePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const locale = getLocale();
+  const dictionary = getServicesDictionary(locale);
   const { id } = await params;
 
   let service;
@@ -28,10 +32,8 @@ export default async function EditServicePage({
       return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
           <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
-            <p className="text-sm text-slate-500">
-              You do not have permission to edit services.
-            </p>
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.accessDenied}</h2>
+            <p className="text-sm text-slate-500">{dictionary.states.editForbidden}</p>
           </div>
         </div>
       );
@@ -39,10 +41,8 @@ export default async function EditServicePage({
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Something went wrong</h2>
-          <p className="text-sm text-slate-500">
-            We couldn&apos;t load the necessary data at this time. Please try again later.
-          </p>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.genericError}</h2>
+          <p className="text-sm text-slate-500">{dictionary.states.serviceDataLoadError}</p>
         </div>
       </div>
     );
@@ -64,16 +64,16 @@ export default async function EditServicePage({
           </Link>
           <div>
             <h2 className="text-[28px] leading-[36px] font-semibold text-primary tracking-tight">
-              Edit Blocked
+              {dictionary.editPage.blockedTitle}
             </h2>
-            <p className="text-on-surface-variant text-[14px]">
+            <p dir="ltr" className="text-on-surface-variant text-[14px]">
               {service.serviceNumber}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 p-4 bg-error-container text-on-error-container rounded-lg text-[14px] max-w-3xl">
-          Editing is not allowed when service status is {service.status}.
+          {dictionary.editPage.blockedMessage.replace("{status}", dictionary.serviceStatuses[service.status])}
         </div>
       </div>
     );
@@ -81,7 +81,7 @@ export default async function EditServicePage({
 
   return (
     <div className="flex flex-col h-full max-w-5xl mx-auto w-full pb-12">
-      <EditServiceForm service={service} />
+      <EditServiceForm service={service} dictionary={dictionary} />
     </div>
   );
 }

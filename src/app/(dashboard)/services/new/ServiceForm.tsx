@@ -5,14 +5,17 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import type { Customer } from "@/types/customer";
 import { createService } from "@/lib/services/actions";
+import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { isolateBidiText } from "@/lib/i18n/bidi";
 import Button from "@/components/ui/Button";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 
 interface ServiceFormProps {
   customers: Customer[];
+  dictionary: ServicesDictionary;
 }
 
-export default function ServiceForm({ customers }: ServiceFormProps) {
+export default function ServiceForm({ customers, dictionary }: ServiceFormProps) {
   const router = useRouter();
   const { back, push } = useGlobalNavigationPending();
 
@@ -34,23 +37,23 @@ export default function ServiceForm({ customers }: ServiceFormProps) {
     setError(null);
 
     if (!customerId) {
-      setError("Please select a valid, active customer.");
+      setError(dictionary.form.validation.validActiveCustomer);
       return;
     }
 
     if (!serviceTitle.trim()) {
-      setError("Service title is required.");
+      setError(dictionary.form.validation.serviceTitleRequired);
       return;
     }
 
     if (eventEndDate && !eventStartDate) {
-      setError("Event start date is required when end date is set.");
+      setError(dictionary.form.validation.startDateRequiredWhenEndDateSet);
       return;
     }
 
     if (eventStartDate && eventEndDate) {
       if (new Date(eventEndDate) < new Date(eventStartDate)) {
-        setError("Event end date must not be before start date.");
+        setError(dictionary.form.validation.endDateBeforeStartDate);
         return;
       }
     }
@@ -58,11 +61,11 @@ export default function ServiceForm({ customers }: ServiceFormProps) {
     const parsedBudget = estimatedBudget.trim() === "" ? undefined : Number(estimatedBudget);
     if (parsedBudget !== undefined) {
       if (!Number.isFinite(parsedBudget)) {
-        setError("Estimated budget must be a valid number.");
+        setError(dictionary.form.validation.estimatedBudgetInvalid);
         return;
       }
       if (parsedBudget < 0) {
-        setError("Estimated budget must not be negative.");
+        setError(dictionary.form.validation.estimatedBudgetNegative);
         return;
       }
     }
@@ -88,11 +91,11 @@ export default function ServiceForm({ customers }: ServiceFormProps) {
         router.push("/services");
         router.refresh();
       } else {
-        setError(result.error || "Failed to create service.");
+        setError(result.error || dictionary.form.validation.failedToCreate);
         setIsSubmitting(false);
       }
     } catch {
-      setError("An unexpected error occurred. Please try again.");
+      setError(dictionary.form.validation.unexpectedError);
       setIsSubmitting(false);
     }
   };
@@ -109,10 +112,10 @@ export default function ServiceForm({ customers }: ServiceFormProps) {
         </button>
         <div>
           <h2 className="text-[28px] leading-[36px] font-semibold text-primary tracking-tight">
-            New Service
+            {dictionary.form.newTitle}
           </h2>
           <p className="text-on-surface-variant text-[14px]">
-            Create a new service or event booking.
+            {dictionary.form.newSubtitle}
           </p>
         </div>
       </div>
@@ -127,115 +130,123 @@ export default function ServiceForm({ customers }: ServiceFormProps) {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden p-6 flex flex-col gap-4">
-            <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">Basic Details</h3>
+            <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">{dictionary.form.basicDetails}</h3>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[14px] font-semibold text-on-surface">Customer</label>
+              <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.labels.customer}</label>
               <select
                 value={customerId}
                 onChange={(e) => setCustomerId(e.target.value)}
                 className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                 required
               >
-                <option value="">Select a customer...</option>
+                <option value="">{dictionary.form.placeholders.customer}</option>
                 {customers.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.company} {c.contact ? `(${c.contact})` : ""}
+                    {isolateBidiText(`${c.company}${c.contact ? ` (${c.contact})` : ""}`)}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[14px] font-semibold text-on-surface">Service Title</label>
+              <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.labels.serviceTitle}</label>
               <input
                 type="text"
                 value={serviceTitle}
                 onChange={(e) => setServiceTitle(e.target.value)}
-                placeholder="e.g. Wedding Photography, Corporate Setup"
+                placeholder={dictionary.form.placeholders.serviceTitle}
+                dir="auto"
                 className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                 required
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[14px] font-semibold text-on-surface">Description</label>
+              <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.labels.description}</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Service details..."
+                placeholder={dictionary.form.placeholders.description}
+                dir="auto"
                 rows={3}
                 className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary resize-y"
               />
             </div>
 
             <div className="flex flex-col gap-1.5 mt-2 border-t border-surface-variant pt-4">
-              <label className="text-[14px] font-semibold text-on-surface">Estimated Budget (SAR)</label>
+              <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.labels.estimatedBudget}</label>
               <input
                 type="number"
                 min="0"
                 step="0.01"
                 value={estimatedBudget}
                 onChange={(e) => setEstimatedBudget(e.target.value)}
-                placeholder="0.00"
+                placeholder={dictionary.form.placeholders.estimatedBudget}
+                dir="ltr"
                 className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
               />
             </div>
           </div>
 
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden p-6 flex flex-col gap-4">
-            <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">Event Information (Optional)</h3>
+            <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">{dictionary.form.eventInformationOptional}</h3>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[14px] font-semibold text-on-surface">Event Name</label>
+              <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.labels.eventName}</label>
               <input
                 type="text"
                 value={eventName}
                 onChange={(e) => setEventName(e.target.value)}
-                placeholder="e.g. Annual Tech Conference 2026"
+                placeholder={dictionary.form.placeholders.eventName}
+                dir="auto"
                 className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[14px] font-semibold text-on-surface">Event Type</label>
+              <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.labels.eventType}</label>
               <input
                 type="text"
                 value={eventType}
                 onChange={(e) => setEventType(e.target.value)}
-                placeholder="e.g. Wedding, Exhibition, Corporate"
+                placeholder={dictionary.form.placeholders.eventType}
+                dir="auto"
                 className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[14px] font-semibold text-on-surface">Event Location</label>
+              <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.labels.eventLocation}</label>
               <input
                 type="text"
                 value={eventLocation}
                 onChange={(e) => setEventLocation(e.target.value)}
-                placeholder="Venue name or address"
+                placeholder={dictionary.form.placeholders.eventLocation}
+                dir="auto"
                 className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[14px] font-semibold text-on-surface">Start Date</label>
+                <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.labels.startDate}</label>
                 <input
                   type="date"
                   value={eventStartDate}
                   onChange={(e) => setEventStartDate(e.target.value)}
+                  dir="ltr"
                   className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[14px] font-semibold text-on-surface">End Date</label>
+                <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.labels.endDate}</label>
                 <input
                   type="date"
                   value={eventEndDate}
                   onChange={(e) => setEventEndDate(e.target.value)}
+                  dir="ltr"
                   className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                 />
               </div>
@@ -250,14 +261,14 @@ export default function ServiceForm({ customers }: ServiceFormProps) {
             className="px-6 py-2 bg-surface border border-outline-variant hover:bg-surface-container-low text-on-surface rounded-lg font-semibold transition-colors disabled:opacity-50"
             disabled={isSubmitting}
           >
-            Cancel
+            {dictionary.form.buttons.cancel}
           </button>
           <Button
             type="submit"
             loading={isSubmitting}
           >
             <Save size={18} />
-            Create Service
+            {dictionary.form.buttons.create}
           </Button>
         </div>
       </form>

@@ -2,6 +2,8 @@ import type { ComponentProps } from "react";
 import Link from "next/link";
 import { FileText } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
+import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { isolateBidiText } from "@/lib/i18n/bidi";
 import type { QuotationListItem, QuotationStatus } from "@/lib/quotations/types";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
@@ -18,6 +20,7 @@ interface RelatedQuotationsCardProps {
   quotations: QuotationListItem[] | null;
   serviceId: string;
   canCreateQuotation: boolean;
+  dictionary: ServicesDictionary;
   disabledReason?: string;
 }
 
@@ -25,21 +28,25 @@ export default function RelatedQuotationsCard({
   quotations,
   serviceId,
   canCreateQuotation,
+  dictionary,
   disabledReason,
 }: RelatedQuotationsCardProps) {
   return (
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
       <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex items-center justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-primary">Related Quotations</h3>
+          <h3 className="font-semibold text-primary">{dictionary.relatedQuotations.title}</h3>
           <p className="mt-1 text-[13px] leading-[18px] text-on-surface-variant">
-            Service-scoped quotation records.
+            {dictionary.relatedQuotations.subtitle}
           </p>
         </div>
         <div className="flex items-center gap-4">
           {quotations && (
             <div className="text-[13px] leading-[18px] text-on-surface-variant">
-              {quotations.length} {quotations.length === 1 ? "quotation" : "quotations"}
+              {quotations.length}{" "}
+              {quotations.length === 1
+                ? dictionary.relatedQuotations.countSingular
+                : dictionary.relatedQuotations.countPlural}
             </div>
           )}
           {canCreateQuotation && (
@@ -49,7 +56,7 @@ export default function RelatedQuotationsCard({
                 title={disabledReason}
               >
                 <FileText size={16} />
-                Create Quotation
+                {dictionary.relatedQuotations.createQuotation}
               </span>
             ) : (
               <Link
@@ -57,7 +64,7 @@ export default function RelatedQuotationsCard({
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[13px] font-semibold transition-colors"
               >
                 <FileText size={16} />
-                Create Quotation
+                {dictionary.relatedQuotations.createQuotation}
               </Link>
             )
           )}
@@ -66,44 +73,44 @@ export default function RelatedQuotationsCard({
 
       <div className="p-6">
         {quotations === null ? (
-          <EmptyMessage message="You do not have permission to view related quotations." />
+          <EmptyMessage message={dictionary.states.noPermissionToViewQuotations} />
         ) : quotations.length === 0 ? (
-          <EmptyMessage message="No quotations are linked to this service yet." />
+          <EmptyMessage message={dictionary.states.noRelatedQuotations} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-surface-variant text-[12px] uppercase text-on-surface-variant">
-                  <th className="py-3 pr-4 font-semibold">Quotation</th>
-                  <th className="py-3 pr-4 font-semibold">Status</th>
-                  <th className="py-3 pr-4 font-semibold">Issue Date</th>
-                  <th className="py-3 pr-4 font-semibold">Valid Until</th>
-                  <th className="py-3 text-right font-semibold">Grand Total</th>
+                  <th className="py-3 pr-4 font-semibold">{dictionary.relatedQuotations.table.quotation}</th>
+                  <th className="py-3 pr-4 font-semibold">{dictionary.relatedQuotations.table.status}</th>
+                  <th className="py-3 pr-4 font-semibold">{dictionary.relatedQuotations.table.issueDate}</th>
+                  <th className="py-3 pr-4 font-semibold">{dictionary.relatedQuotations.table.validUntil}</th>
+                  <th className="py-3 text-right font-semibold">{dictionary.relatedQuotations.table.grandTotal}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant text-[14px]">
                 {quotations.map((quotation) => (
                   <tr key={quotation.id}>
-                    <td className="py-4 pr-4 font-mono font-semibold">
+                    <td dir="ltr" className="py-4 pr-4 font-mono font-semibold">
                       <Link
                         href={`/quotations/${quotation.id}`}
                         className="text-primary hover:underline"
                       >
-                        {quotation.quotationNumber}
+                        {isolateBidiText(quotation.quotationNumber)}
                       </Link>
                     </td>
                     <td className="py-4 pr-4">
                       <StatusBadge variant={QUOTATION_STATUS_VARIANTS[quotation.status]}>
-                        {formatStatus(quotation.status)}
+                        {dictionary.quotationStatuses[quotation.status]}
                       </StatusBadge>
                     </td>
-                    <td className="py-4 pr-4 text-on-surface-variant">
-                      {quotation.date}
+                    <td dir="ltr" className="py-4 pr-4 text-on-surface-variant">
+                      {isolateBidiText(quotation.date)}
                     </td>
-                    <td className="py-4 pr-4 text-on-surface-variant">
-                      {quotation.validUntil ?? "—"}
+                    <td dir="ltr" className="py-4 pr-4 text-on-surface-variant">
+                      {quotation.validUntil ? isolateBidiText(quotation.validUntil) : "—"}
                     </td>
-                    <td className="py-4 text-right font-semibold text-on-surface">
+                    <td dir="ltr" className="py-4 text-right font-semibold text-on-surface">
                       {formatSar(quotation.grandTotal)}
                     </td>
                   </tr>
@@ -125,13 +132,9 @@ function EmptyMessage({ message }: { message: string }) {
   );
 }
 
-function formatStatus(status: QuotationStatus) {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
-
 function formatSar(amount: number) {
-  return `${amount.toLocaleString("en-SA", {
+  return isolateBidiText(`${amount.toLocaleString("en-SA", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })} SAR`;
+  })} SAR`);
 }

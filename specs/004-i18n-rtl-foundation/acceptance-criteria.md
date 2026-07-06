@@ -90,6 +90,26 @@
 - VAT, ZATCA, FATOORA, QR, XML, clearance, and cleared-status claims remain forbidden during module rollout
 - supplier/internal cost labels remain RBAC-sensitive during all translation work
 - Service remains the locked operational core; Booking terminology requires explicit copy review before broad rollout
+- `I18N-RTL-SERVICES-RUNTIME-1A` is complete as a Services runtime module slice
+- senior review result is `PASS`
+- manual smoke result is `PASS` based on Mozfer visual/browser smoke
+- Services list, New Service form, Service detail, Edit Service form, and RTL dev shell all passed
+- no runtime Arabic locale selector was introduced
+- Arabic runtime labels remain not directly reachable because `getLocale()` still resolves to `en`
+- Services dictionary was added as module-local runtime i18n dictionary
+- Services runtime pages now use `getLocale()` + Services dictionary
+- Service status family is dictionary-backed: Inquiry, Quoted, Approved, Deposit Paid, In Progress, Completed, Cancelled
+- `status-transitions` copy moved to dictionary-backed copy without changing transition behavior
+- mixed-direction protections were added for service numbers, quotation numbers, SAR values, dates/date ranges, and customer references
+- no billing/invoice action files touched
+- no supplier allocation/booking files touched
+- no allocation subflows touched
+- no PDF/document routes touched
+- no schema/migrations touched
+- no middleware/cookies touched
+- no RBAC/shared UI refactor touched
+- no supplier/internal-cost leakage
+- minor follow-up: `EditServiceForm` subtitle may need future RTL polish because service number and localized subtitle should not force the whole sentence LTR; not a blocker after smoke
 
 ## Shared Overlays Inventory
 

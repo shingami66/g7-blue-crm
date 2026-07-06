@@ -10,6 +10,8 @@ import Button from "@/components/ui/Button";
 import PendingLink from "@/components/ui/PendingLink";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import { Filter, Plus } from "lucide-react";
+import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { isolateBidiText } from "@/lib/i18n/bidi";
 import type { Service } from "@/types/service";
 
 const STATUS_VARIANT_MAP: Record<string, string> = {
@@ -25,9 +27,10 @@ const STATUS_VARIANT_MAP: Record<string, string> = {
 interface ServicesClientProps {
   services: Service[];
   canWrite: boolean;
+  dictionary: ServicesDictionary;
 }
 
-export default function ServicesClient({ services, canWrite }: ServicesClientProps) {
+export default function ServicesClient({ services, canWrite, dictionary }: ServicesClientProps) {
   const { push } = useGlobalNavigationPending();
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -43,17 +46,28 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
   const endIndex = Math.min(startIndex + itemsPerPage, filtered.length);
   const paginatedServices = filtered.slice(startIndex, startIndex + itemsPerPage);
 
+  function formatServicesSummary() {
+    if (filtered.length === 0) {
+      return dictionary.list.showingZero;
+    }
+
+    return dictionary.list.showingRange
+      .replace("{start}", String(startIndex + 1))
+      .replace("{end}", String(endIndex))
+      .replace("{total}", String(filtered.length));
+  }
+
   return (
     <div className="flex flex-col h-full">
       <PageHeader
-        title="Services"
-        subtitle="Manage client services, event bookings, and operational workflow."
+        title={dictionary.list.title}
+        subtitle={dictionary.list.subtitle}
       >
         {canWrite && (
           <Button asChild>
             <PendingLink href="/services/new">
               <Plus size={18} />
-              New Service
+              {dictionary.list.newService}
             </PendingLink>
           </Button>
         )}
@@ -70,14 +84,14 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
               }}
               className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
             >
-              <option value="all">All Statuses</option>
-              <option value="Inquiry">Inquiry</option>
-              <option value="Quoted">Quoted</option>
-              <option value="Approved">Approved</option>
-              <option value="Deposit Paid">Deposit Paid</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
+              <option value="all">{dictionary.list.allStatuses}</option>
+              <option value="Inquiry">{dictionary.serviceStatuses.Inquiry}</option>
+              <option value="Quoted">{dictionary.serviceStatuses.Quoted}</option>
+              <option value="Approved">{dictionary.serviceStatuses.Approved}</option>
+              <option value="Deposit Paid">{dictionary.serviceStatuses["Deposit Paid"]}</option>
+              <option value="In Progress">{dictionary.serviceStatuses["In Progress"]}</option>
+              <option value="Completed">{dictionary.serviceStatuses.Completed}</option>
+              <option value="Cancelled">{dictionary.serviceStatuses.Cancelled}</option>
             </select>
             <Filter
               size={14}
@@ -85,9 +99,7 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
             />
           </div>
           <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
-            {filtered.length === 0
-              ? "Showing 0 of 0 services"
-              : `Showing ${startIndex + 1}-${endIndex} of ${filtered.length} services`}
+            {formatServicesSummary()}
           </div>
         </FilterBar>
 
@@ -97,20 +109,20 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
               <p className="text-on-surface-variant text-[14px] leading-[20px]">
                 {services.length === 0
                   ? canWrite
-                    ? "No services yet. Create your first service to get started."
-                    : "No services found."
-                  : "No services match the selected filters."}
+                    ? dictionary.states.noServices
+                    : dictionary.states.noServicesFound
+                  : dictionary.states.noFilteredServices}
               </p>
             </div>
           ) : (
             <DataTable
               columns={[
-                "Service Number",
-                "Service Title / Event Name",
-                "Customer",
-                "Event Date",
-                "Status",
-                "Budget",
+                dictionary.list.table.serviceNumber,
+                dictionary.list.table.serviceTitle,
+                dictionary.list.table.customer,
+                dictionary.list.table.eventDate,
+                dictionary.list.table.status,
+                dictionary.list.table.budget,
               ]}
             >
               {paginatedServices.map((service) => (
@@ -119,31 +131,31 @@ export default function ServicesClient({ services, canWrite }: ServicesClientPro
                   className="hover:bg-surface-container-low/50 transition-colors cursor-pointer"
                   onClick={() => push(`/services/${service.id}`)}
                 >
-                  <td className="px-4 py-4 font-mono font-semibold text-primary">
-                    {service.serviceNumber}
+                  <td dir="ltr" className="px-4 py-4 font-mono font-semibold text-primary">
+                    {isolateBidiText(service.serviceNumber)}
                   </td>
                   <td className="px-4 py-4">
-                    <div className="font-semibold text-on-surface">
-                      {service.serviceTitle}
+                    <div dir="auto" className="font-semibold text-on-surface">
+                      {isolateBidiText(service.serviceTitle)}
                     </div>
-                    <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
-                      {service.eventName || "—"}
+                    <div dir="auto" className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
+                      {service.eventName ? isolateBidiText(service.eventName) : "—"}
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-on-surface-variant">
-                    {service.customer?.company || "—"}
+                  <td dir="auto" className="px-4 py-4 text-on-surface-variant">
+                    {service.customer?.company ? isolateBidiText(service.customer.company) : "—"}
                   </td>
-                  <td className="px-4 py-4 text-on-surface-variant">
-                    {service.eventStartDate || "—"}
+                  <td dir="ltr" className="px-4 py-4 text-on-surface-variant">
+                    {service.eventStartDate ? isolateBidiText(service.eventStartDate) : "—"}
                   </td>
                   <td className="px-4 py-4">
                     <StatusBadge variant={(STATUS_VARIANT_MAP[service.status] ?? "pending") as React.ComponentProps<typeof StatusBadge>["variant"]}>
-                      {service.status}
+                      {dictionary.serviceStatuses[service.status]}
                     </StatusBadge>
                   </td>
-                  <td className="px-4 py-4 font-semibold text-on-surface">
+                  <td dir="ltr" className="px-4 py-4 font-semibold text-on-surface">
                     {service.estimatedBudget != null
-                      ? `${Number(service.estimatedBudget).toLocaleString("en-SA")} SAR`
+                      ? isolateBidiText(`${Number(service.estimatedBudget).toLocaleString("en-SA")} SAR`)
                       : "—"}
                   </td>
                 </tr>

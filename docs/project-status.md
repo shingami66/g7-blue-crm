@@ -148,6 +148,30 @@
 - [x] No shared UI refactor.
 - [x] No supplier/internal-cost leakage.
 
+### I18N-RTL-SERVICES-RUNTIME-1A
+- [x] Implementation completed for the Services runtime slice.
+- [x] Senior review result: PASS.
+- [x] Mozfer manual smoke result: PASS.
+- [x] Services list passed.
+- [x] New Service form passed.
+- [x] Service detail passed.
+- [x] Edit Service form passed.
+- [x] RTL dev shell passed.
+- [x] No runtime Arabic locale selector was introduced.
+- [x] Arabic labels remain not directly reachable because `getLocale()` still resolves to `en`.
+- [x] Added module-local Services dictionary.
+- [x] Services runtime pages use `getLocale()` + Services dictionary.
+- [x] Service status family is dictionary-backed: Inquiry, Quoted, Approved, Deposit Paid, In Progress, Completed, Cancelled.
+- [x] `status-transitions` copy moved to dictionary-backed copy without changing transition behavior.
+- [x] Mixed-direction protections were added for service numbers, quotation numbers, SAR values, dates/date ranges, and customer references.
+- [x] No billing/invoice action files touched.
+- [x] No supplier allocation/booking files touched.
+- [x] No allocation subflows touched.
+- [x] No PDF/document routes touched.
+- [x] No schema/migrations/middleware/cookies/RBAC/shared UI touched.
+- [x] AGENTS.md untouched.
+- [x] Minor follow-up: `EditServiceForm` subtitle may need future RTL polish because service number and localized subtitle should not force the whole sentence LTR; not a blocker after smoke.
+
 ### I18N-RTL-MODULE-TEXT-INVENTORY-1
 - [x] Readonly module text inventory completed.
 - [x] Overall result: PASS.

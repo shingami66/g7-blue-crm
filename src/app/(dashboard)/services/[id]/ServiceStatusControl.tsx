@@ -8,17 +8,20 @@ import type {
   ServiceStatusTransitionState,
 } from "@/types/service";
 import { updateServiceStatusAction } from "@/lib/services/actions";
+import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 
 interface ServiceStatusControlProps {
   serviceId: string;
   currentStatus: ServiceStatus;
   transitionState: ServiceStatusTransitionState;
+  dictionary: ServicesDictionary;
 }
 
 export default function ServiceStatusControl({
   serviceId,
   currentStatus,
   transitionState,
+  dictionary,
 }: ServiceStatusControlProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +47,7 @@ export default function ServiceStatusControl({
         router.refresh();
         setTimeout(() => setSuccess(false), 3000);
       } else {
-        setError(result.error || "Failed to update status");
+        setError(result.error || dictionary.serviceStatusControl.failedToUpdate);
       }
     });
   };
@@ -68,16 +71,16 @@ export default function ServiceStatusControl({
     <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden mt-6 mb-6">
       <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
         <div>
-          <h3 className="font-semibold text-primary">Status Actions</h3>
+          <h3 className="font-semibold text-primary">{dictionary.serviceStatusControl.title}</h3>
           <p className="text-[13px] text-on-surface-variant mt-1">
-            Current status: {currentStatus}
+            {dictionary.serviceStatusControl.currentStatus}: {dictionary.serviceStatuses[currentStatus]}
           </p>
         </div>
       </div>
       <div className="p-6 space-y-5">
         {transitionState.isTerminal ? (
           <p className="text-[14px] text-on-surface-variant">
-            This Service is in a terminal status. No further status actions are available.
+            {dictionary.serviceStatusControl.terminalMessage}
           </p>
         ) : (
           <>
@@ -89,12 +92,12 @@ export default function ServiceStatusControl({
                   disabled={isPending}
                   className="min-h-[40px] px-5 bg-primary text-on-primary font-semibold text-[14px] rounded-lg hover:bg-primary-container disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isPending ? "Saving..." : action.label}
+                  {isPending ? dictionary.serviceStatusControl.saving : action.label}
                 </button>
               ))}
               {forwardActions.length === 0 && !cancellationAction && (
                 <p className="text-[14px] text-on-surface-variant">
-                  No status action is currently available.
+                  {dictionary.serviceStatusControl.noActions}
                 </p>
               )}
             </div>
@@ -108,7 +111,7 @@ export default function ServiceStatusControl({
             {cancellationAction && (
               <div className="border-t border-surface-variant pt-5 space-y-3">
                 <label htmlFor="cancellation-reason" className="text-[13px] font-semibold text-on-surface">
-                  Cancellation Reason
+                  {dictionary.serviceStatusControl.cancellationReason}
                 </label>
                 <textarea
                   id="cancellation-reason"
@@ -117,14 +120,14 @@ export default function ServiceStatusControl({
                   disabled={isPending}
                   rows={3}
                   className="w-full max-w-2xl px-3 py-2 bg-surface border border-outline-variant rounded-lg text-[14px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                  placeholder="Explain why this Service is being cancelled."
+                  placeholder={dictionary.serviceStatusControl.cancellationPlaceholder}
                 />
                 <button
                   onClick={() => handleTransition(cancellationAction)}
                   disabled={isPending || cancellationReasonMissing}
                   className="min-h-[40px] px-5 bg-error text-on-error font-semibold text-[14px] rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isPending ? "Saving..." : cancellationAction.label}
+                  {isPending ? dictionary.serviceStatusControl.saving : cancellationAction.label}
                 </button>
               </div>
             )}
@@ -132,7 +135,7 @@ export default function ServiceStatusControl({
             {blockedActions.length > 0 && (
               <div className="rounded-lg border border-outline-variant bg-surface p-4">
                 <h4 className="text-[13px] font-semibold text-on-surface mb-2">
-                  Blocked Actions
+                  {dictionary.serviceStatusControl.blockedActions}
                 </h4>
                 <ul className="space-y-2">
                   {blockedActions.map((action) => (
@@ -154,7 +157,7 @@ export default function ServiceStatusControl({
 
         {success && (
           <div className="text-[13px] text-emerald-600 font-medium">
-            Status updated successfully!
+            {dictionary.serviceStatusControl.updatedSuccessfully}
           </div>
         )}
       </div>

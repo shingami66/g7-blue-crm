@@ -427,6 +427,14 @@ Immediate next priorities:
    - Customers runtime pages now use `getLocale()` + Customers dictionary.
    - Revenue label was corrected to `Quoted Value` / `قيمة العروض`, customer statuses are dictionary-backed, and mixed-direction protections were added for customer numbers, phone, email, CR/VAT, dates, service numbers, and SAR values.
    - No PDF/document routes, schema/migrations, middleware/cookies, or shared UI refactor were touched.
+1. `P6B` - `I18N-RTL-SERVICES-RUNTIME-1A`: Services runtime slice completed after copy review.
+   - Senior review result: PASS.
+   - Mozfer manual smoke result: PASS.
+   - Services list, New Service form, Service detail, Edit Service form, and RTL dev shell all passed.
+   - No runtime Arabic locale selector was introduced; `getLocale()` still resolves to `en`, so Arabic runtime labels remain indirectly reachable only.
+   - Services runtime pages now use `getLocale()` + Services dictionary.
+   - Service status family is dictionary-backed, `status-transitions` copy moved to dictionary-backed copy without changing behavior, and mixed-direction protections were added for service numbers, quotation numbers, SAR values, dates/date ranges, and customer references.
+   - No billing/invoice action files, supplier allocation/booking files, allocation subflows, PDF/document routes, schema/migrations, middleware/cookies, RBAC, or shared UI refactor were touched.
 1. `P7` - Module rollout remains split into small controlled tasks, not a broad "translate everything" pass.
    - Recommended first runtime module candidate after planning/copy review: Customers.
    - Service remains the locked operational core; Booking terminology still needs care.

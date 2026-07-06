@@ -1,6 +1,8 @@
 import "server-only";
 
 import type { createAdminClient } from "@/lib/supabase/admin";
+import { getLocale } from "@/lib/i18n/locales";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import type {
   ServiceStatus,
   ServiceStatusTransitionAction,
@@ -37,37 +39,6 @@ type TransitionValidationResult =
 
 const TERMINAL_STATUSES = new Set<ServiceStatus>(["Completed", "Cancelled"]);
 
-const ACTION_COPY: Record<ServiceStatus, { label: string; description: string }> = {
-  Inquiry: {
-    label: "Move to Inquiry",
-    description: "Return to inquiry.",
-  },
-  Quoted: {
-    label: "Move to Quoted",
-    description: "A Service-scoped quotation exists.",
-  },
-  Approved: {
-    label: "Move to Approved",
-    description: "An approved quotation exists for this Service.",
-  },
-  "Deposit Paid": {
-    label: "Move to Deposit Paid",
-    description: "A Deposit Invoice has confirmed payment evidence.",
-  },
-  "In Progress": {
-    label: "Start Work",
-    description: "Operations confirms work has started.",
-  },
-  Completed: {
-    label: "Mark Completed",
-    description: "Delivery is complete and active invoices are paid.",
-  },
-  Cancelled: {
-    label: "Cancel Service",
-    description: "Cancel this Service with a reason.",
-  },
-};
-
 export const SERVICE_STATUS_ALLOWED_TRANSITIONS: Record<ServiceStatus, readonly ServiceStatus[]> = {
   Inquiry: ["Quoted", "Cancelled"],
   Quoted: ["Approved", "Cancelled"],
@@ -82,6 +53,10 @@ export function isTerminalServiceStatus(status: ServiceStatus) {
   return TERMINAL_STATUSES.has(status);
 }
 
+function getTransitionDictionary() {
+  return getServicesDictionary(getLocale()).transitionCopy;
+}
+
 async function loadTransitionEvidence(
   supabase: SupabaseAdminClient,
   serviceId: string
@@ -94,7 +69,7 @@ async function loadTransitionEvidence(
 
   if (quotationsError) {
     console.error("[loadTransitionEvidence] Quotation lookup error:", quotationsError.message);
-    return { success: false, error: "Unable to verify Service quotation evidence. Please try again." };
+    return { success: false, error: getTransitionDictionary().blockedReasons.unableToVerifyQuotationEvidence };
   }
 
   const approvedQuotations = (quotations ?? []).filter(
@@ -109,7 +84,7 @@ async function loadTransitionEvidence(
 
   if (allInvoicesError) {
     console.error("[loadTransitionEvidence] Invoice lookup error:", allInvoicesError.message);
-    return { success: false, error: "Unable to verify Service invoice evidence. Please try again." };
+    return { success: false, error: getTransitionDictionary().blockedReasons.unableToVerifyInvoiceEvidence };
   }
 
   const activeInvoices = ((allInvoices ?? []) as InvoiceEvidence[]).filter(
@@ -133,7 +108,7 @@ async function loadTransitionEvidence(
 
     if (paymentsError) {
       console.error("[loadTransitionEvidence] Deposit payment lookup error:", paymentsError.message);
-      return { success: false, error: "Unable to verify Service payment evidence. Please try again." };
+      return { success: false, error: getTransitionDictionary().blockedReasons.unableToVerifyPaymentEvidence };
     }
 
     hasConfirmedDepositPayment = (payments ?? []).length > 0;
@@ -164,38 +139,40 @@ function getPreconditionBlockReason(
   nextStatus: ServiceStatus,
   evidence: TransitionEvidence
 ): string | null {
+  const copy = getTransitionDictionary().blockedReasons;
+
   switch (nextStatus) {
     case "Quoted":
       return evidence.quotationCount > 0
         ? null
-        : "Create a Service quotation before moving this Service to Quoted.";
+        : copy.noServiceQuotation;
     case "Approved":
       if (evidence.approvedQuotationCount === 0) {
-        return "Approve a Service quotation before moving this Service to Approved.";
+        return copy.approveQuotationFirst;
       }
       if (evidence.approvedQuotationCount > 1) {
-        return "Multiple approved quotations were found. Resolve the quotation state before changing Service status.";
+        return copy.multipleApprovedQuotations;
       }
       return null;
     case "Deposit Paid":
       return hasDepositPaymentEvidence(evidence)
         ? null
-        : "Create a Deposit Invoice and record a confirmed payment before moving this Service to Deposit Paid.";
+        : copy.depositPaymentRequired;
     case "In Progress":
       return hasDepositPaymentEvidence(evidence)
         ? null
-        : "Confirmed Deposit Invoice payment evidence is required before starting work.";
+        : copy.depositPaymentBeforeWork;
     case "Completed": {
       const unpaidInvoice = evidence.activeInvoices.find(
         (invoice) => Number(invoice.balance_due ?? 0) > 0
       );
 
       if (unpaidInvoice) {
-        return "This Service still has unpaid active invoices. Complete payment before marking it Completed.";
+        return copy.unpaidInvoices;
       }
 
       if (evidence.approvedQuotationCount !== 1 || evidence.approvedQuotationTotal === null) {
-        return "An approved quotation is required before marking this Service Completed.";
+        return copy.approvedQuotationRequiredForCompleted;
       }
 
       const activeInvoiceTotal = evidence.activeInvoices.reduce(
@@ -204,7 +181,7 @@ function getPreconditionBlockReason(
       );
 
       if (evidence.approvedQuotationTotal - activeInvoiceTotal > 0.01) {
-        return "Create the remaining invoice before marking this Service Completed.";
+        return copy.remainingInvoiceRequired;
       }
 
       return null;
@@ -212,9 +189,9 @@ function getPreconditionBlockReason(
     case "Cancelled":
       return evidence.nonDeletedInvoiceCount === 0
         ? null
-        : "This Service has financial records. Cancellation needs a finance cancellation workflow first.";
+        : copy.financeCancellationRequired;
     default:
-      return "This status transition is not available.";
+      return copy.unavailable;
   }
 }
 
@@ -222,10 +199,12 @@ function makeAction(
   status: ServiceStatus,
   blockedReason: string | null
 ): ServiceStatusTransitionAction {
+  const copy = getTransitionDictionary().actions[status];
+
   return {
     status,
-    label: ACTION_COPY[status].label,
-    description: ACTION_COPY[status].description,
+    label: copy.label,
+    description: copy.description,
     blockedReason,
     requiresCancellationReason: status === "Cancelled",
   };
@@ -275,20 +254,34 @@ export async function validateServiceStatusTransition(
   requestedStatus: ServiceStatus,
   cancellationReason?: string | null
 ): Promise<TransitionValidationResult> {
+  const dictionary = getServicesDictionary(getLocale());
+
   if (currentStatus === requestedStatus) {
-    return { success: false, error: `Service is already ${currentStatus}.` };
+    return {
+      success: false,
+      error: getTransitionDictionary().blockedReasons.alreadyStatus.replace(
+        "{status}",
+        dictionary.serviceStatuses[currentStatus],
+      ),
+    };
   }
 
   if (isTerminalServiceStatus(currentStatus)) {
-    return { success: false, error: `${currentStatus} Services cannot be changed.` };
+    return {
+      success: false,
+      error: getTransitionDictionary().blockedReasons.terminalStatusCannotChange.replace(
+        "{status}",
+        dictionary.serviceStatuses[currentStatus],
+      ),
+    };
   }
 
   if (!SERVICE_STATUS_ALLOWED_TRANSITIONS[currentStatus]?.includes(requestedStatus)) {
-    return { success: false, error: "This Service status transition is not allowed." };
+    return { success: false, error: getTransitionDictionary().blockedReasons.transitionNotAllowed };
   }
 
   if (requestedStatus === "Cancelled" && !cancellationReason?.trim()) {
-    return { success: false, error: "Cancellation requires a reason." };
+    return { success: false, error: getTransitionDictionary().blockedReasons.cancellationReasonRequired };
   }
 
   const evidenceResult = await loadTransitionEvidence(supabase, serviceId);

@@ -1,4 +1,5 @@
 import type { Service } from "@/types/service";
+import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { Check } from "lucide-react";
 
 const LINEAR_STATUSES = [
@@ -13,11 +14,13 @@ const LINEAR_STATUSES = [
 interface ServiceStatusTimelineProps {
   status: Service["status"];
   cancellationReason: string | null;
+  dictionary: ServicesDictionary;
 }
 
 export default function ServiceStatusTimeline({
   status,
   cancellationReason,
+  dictionary,
 }: ServiceStatusTimelineProps) {
   const currentStatusIndex = LINEAR_STATUSES.indexOf(
     status as (typeof LINEAR_STATUSES)[number]
@@ -27,9 +30,9 @@ export default function ServiceStatusTimeline({
   return (
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
       <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright">
-        <h3 className="font-semibold text-primary">Service Status Timeline</h3>
+        <h3 className="font-semibold text-primary">{dictionary.serviceStatusTimeline.title}</h3>
         <p className="mt-1 text-[13px] leading-[18px] text-on-surface-variant">
-          Display-only workflow view. Status changes are controlled by guarded workflow actions.
+          {dictionary.serviceStatusTimeline.subtitle}
         </p>
       </div>
 
@@ -89,10 +92,10 @@ export default function ServiceStatusTimeline({
                       isCurrent ? "text-primary" : "text-on-surface"
                     }`}
                   >
-                    {timelineStatus}
+                    {dictionary.serviceStatuses[timelineStatus]}
                   </p>
                   <p className="mt-0.5 text-[12px] leading-[16px] text-on-surface-variant">
-                    {getStatusLabel(isCurrent, isPast, isFuture)}
+                    {getStatusLabel(dictionary, isCurrent, isPast, isFuture)}
                   </p>
                 </div>
               </li>
@@ -103,7 +106,7 @@ export default function ServiceStatusTimeline({
         {serviceCancelled && (
           <div className="mt-2 md:mt-6 border border-error-container bg-error-container/40 text-on-error-container rounded-lg px-4 py-3">
             <div className="text-[13px] leading-[18px] font-semibold">
-              Cancelled is terminal and non-linear.
+              {dictionary.serviceStatusTimeline.cancelledTerminal}
             </div>
             {cancellationReason && (
               <p className="mt-1 text-[13px] leading-[18px]">
@@ -118,12 +121,13 @@ export default function ServiceStatusTimeline({
 }
 
 function getStatusLabel(
+  dictionary: ServicesDictionary,
   isCurrent: boolean,
   isPast: boolean,
   isFuture: boolean
 ) {
-  if (isCurrent) return "Current status";
-  if (isPast) return "Reached";
-  if (isFuture) return "Pending workflow";
-  return "Pending";
+  if (isCurrent) return dictionary.serviceStatusTimeline.currentStatus;
+  if (isPast) return dictionary.serviceStatusTimeline.reached;
+  if (isFuture) return dictionary.serviceStatusTimeline.pendingWorkflow;
+  return dictionary.serviceStatusTimeline.pending;
 }

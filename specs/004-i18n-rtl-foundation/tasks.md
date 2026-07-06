@@ -198,6 +198,34 @@
   - no shared UI refactor
   - no supplier/internal-cost leakage
 
+### I18N-RTL-SERVICES-RUNTIME-1A
+- Type: module runtime implementation
+- Status: DONE
+- Outcome:
+  - Services runtime implementation completed as the next runtime module slice after copy review
+  - senior review result: `PASS`
+  - manual smoke result: `PASS` based on Mozfer visual/browser smoke
+  - Services list passed
+  - New Service form passed
+  - Service detail passed
+  - Edit Service form passed
+  - RTL dev shell passed with minor non-blocking notes
+  - no runtime Arabic locale selector was introduced
+  - Arabic runtime labels remain not directly reachable because `getLocale()` still resolves to `en`
+  - Services dictionary was added as module-local runtime i18n dictionary
+  - Services runtime pages now use `getLocale()` + Services dictionary
+  - Service status family is dictionary-backed: Inquiry, Quoted, Approved, Deposit Paid, In Progress, Completed, Cancelled
+  - `status-transitions` copy moved to dictionary-backed copy without changing transition behavior
+  - mixed-direction protections were added for service numbers, quotation numbers, SAR values, dates/date ranges, and customer references
+  - no billing/invoice action files touched
+  - no supplier allocation/booking files touched
+  - no allocation subflows touched
+  - no PDF/document routes touched
+  - no schema/migrations touched
+  - no middleware/cookies touched
+  - no RBAC/shared UI refactor touched
+  - no supplier/internal-cost leakage
+
 ## Delivery Sequence Notes
 
 - Start with the audit.
