@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import { updateSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 
@@ -13,6 +14,7 @@ export default function SupplierAllocationEditForm({
   allocation: SupplierAllocation;
 }) {
   const router = useRouter();
+  const { push } = useGlobalNavigationPending();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -58,7 +60,7 @@ export default function SupplierAllocationEditForm({
     const result = await updateSupplierAllocation(allocation.id, input);
 
     if (result.success) {
-      router.push(`/services/${serviceId}`);
+      push(`/services/${serviceId}`);
       router.refresh();
     } else {
       setError(result.error || "Failed to update supplier allocation");
@@ -223,7 +225,7 @@ export default function SupplierAllocationEditForm({
       <div className="px-6 py-4 bg-surface-bright border-t border-outline-variant flex items-center justify-end gap-3">
         <button
           type="button"
-          onClick={() => router.push(`/services/${serviceId}`)}
+          onClick={() => push(`/services/${serviceId}`)}
           disabled={isLoading}
           className="px-4 py-2 font-semibold text-on-surface hover:bg-surface-container-low rounded-lg transition-colors disabled:opacity-50"
         >

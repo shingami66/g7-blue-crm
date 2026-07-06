@@ -2,6 +2,7 @@ import type { ComponentProps } from "react";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
+import PendingLink from "@/components/ui/PendingLink";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { getLocale } from "@/lib/i18n/locales";
@@ -92,13 +93,13 @@ export default function SupplierAllocationsPanel({
           )}
         </div>
         {canCreate && serviceId && (
-          <Link
+          <PendingLink
             href={`/services/${serviceId}/allocations/new`}
             className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[13px] font-semibold transition-colors"
           >
             <Plus size={16} />
             {panelDictionary.actions.newAllocation}
-          </Link>
+          </PendingLink>
         )}
       </div>
       
@@ -163,36 +164,36 @@ export default function SupplierAllocationsPanel({
                       />
                     )}
                     {!a.isDeleted && canWrite && canReadCost && a.status !== "cancelled" && a.costSource === "manual_estimate" && isServiceEditable && (
-                      <Link
+                      <PendingLink
                         href={`/services/${serviceId}/allocations/${a.id}/edit`}
                         className="text-[13px] font-semibold text-primary hover:underline"
                       >
                         {panelDictionary.actions.edit}
-                      </Link>
+                      </PendingLink>
                     )}
                     {!a.isDeleted && canCancel && a.status !== "cancelled" && isServiceEditable && (
-                      <Link
+                      <PendingLink
                         href={`/services/${serviceId}/allocations/${a.id}/cancel`}
                         className="text-[13px] font-semibold text-error hover:underline"
                       >
                         {panelDictionary.actions.cancel}
-                      </Link>
+                      </PendingLink>
                     )}
                     {!a.isDeleted && canWrite && isServiceEditable && (
-                      <Link
+                      <PendingLink
                         href={`/services/${serviceId}/allocations/${a.id}/delete`}
                         className="text-[13px] font-semibold text-error hover:underline"
                       >
                         {panelDictionary.actions.delete}
-                      </Link>
+                      </PendingLink>
                     )}
                     {a.isDeleted && canWrite && isServiceEditable && (
-                      <Link
+                      <PendingLink
                         href={`/services/${serviceId}/allocations/${a.id}/restore`}
                         className="text-[13px] font-semibold text-primary hover:underline"
                       >
                         {panelDictionary.actions.restore}
-                      </Link>
+                      </PendingLink>
                     )}
                   </div>
                   {!a.isDeleted && a.status === "selected" && (

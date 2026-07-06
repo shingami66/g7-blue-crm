@@ -219,6 +219,22 @@
 - [x] No cost leakage observed.
 - [x] Deferred navigation issue observed: New Allocation navigation to `allocations/new` and browser back navigation from the allocation subflow do not show the global pending bolt; this is outside Services 1D scope and belongs to `allocations/**` navigation or global pending-bolt route coverage.
 
+### SERVICES-ALLOCATIONS-NAV-PENDING-BOLT-1
+- [x] Allocation subflow navigation pending-bolt wiring only.
+- [x] Focused navigation review result: PASS.
+- [x] Mozfer manual/browser smoke result: PASS.
+- [x] New Allocation link now shows the global centered pending bolt.
+- [x] Back to Service links now show the pending bolt.
+- [x] App-controlled cancel/back navigation now uses pending navigation.
+- [x] Post-success navigation after create/edit/cancel/delete/restore now triggers the centered bolt.
+- [x] Native browser back remains untouched by design.
+- [x] No action logic drift.
+- [x] No permission/RBAC drift.
+- [x] No DB/server action drift.
+- [x] No i18n/copy drift.
+- [x] No cost/financial drift.
+- [x] This task resolves the previously deferred New Allocation/back navigation pending-bolt issue.
+
 ### I18N-RTL-MODULE-TEXT-INVENTORY-1
 - [x] Readonly module text inventory completed.
 - [x] Overall result: PASS.

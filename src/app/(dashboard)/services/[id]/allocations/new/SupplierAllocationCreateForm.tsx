@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import { createSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import { getActiveSupplierRateCardsForAllocation } from "@/lib/suppliers/rate-card-actions";
 import type { SupplierOption } from "@/lib/suppliers/types";
@@ -19,6 +20,7 @@ export default function SupplierAllocationCreateForm({
   canUseRateCards?: boolean;
 }) {
   const router = useRouter();
+  const { push } = useGlobalNavigationPending();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -150,7 +152,7 @@ export default function SupplierAllocationCreateForm({
     const result = await createSupplierAllocation(input);
 
     if (result.success) {
-      router.push(`/services/${serviceId}`);
+      push(`/services/${serviceId}`);
       router.refresh();
     } else {
       setError(result.error || "Failed to create supplier allocation");
@@ -377,7 +379,7 @@ export default function SupplierAllocationCreateForm({
       <div className="px-6 py-4 bg-surface-bright border-t border-outline-variant flex items-center justify-end gap-3">
         <button
           type="button"
-          onClick={() => router.push(`/services/${serviceId}`)}
+          onClick={() => push(`/services/${serviceId}`)}
           disabled={isLoading}
           className="px-4 py-2 font-semibold text-on-surface hover:bg-surface-container-low rounded-lg transition-colors disabled:opacity-50"
         >

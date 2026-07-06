@@ -155,6 +155,20 @@
 - no RBAC/permission/DB/action behavior drift
 - no cost leakage observed
 - deferred navigation issue: `allocations/new` and browser back navigation do not show the global pending bolt; handle in a later `allocations/**` or navigation task
+- `SERVICES-ALLOCATIONS-NAV-PENDING-BOLT-1` is complete as an allocation subflow navigation wiring slice
+- focused navigation review result is `PASS`
+- manual smoke result is `PASS` based on Mozfer visual/browser smoke
+- New Allocation link now shows the global centered pending bolt
+- Back to Service links now show the pending bolt
+- app-controlled cancel/back navigation now uses pending navigation
+- post-success navigation after create/edit/cancel/delete/restore now triggers the centered bolt
+- native browser back remains untouched by design
+- no action logic drift
+- no permission/RBAC drift
+- no DB/server action drift
+- no i18n/copy drift
+- no cost/financial drift
+- previously deferred New Allocation/back navigation pending-bolt issue resolved
 
 ## Shared Overlays Inventory
 

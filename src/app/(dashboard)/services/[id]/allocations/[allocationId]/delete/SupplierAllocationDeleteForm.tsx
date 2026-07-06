@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import { deleteSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -31,6 +32,7 @@ export default function SupplierAllocationDeleteForm({
   allocation: SupplierAllocation;
 }) {
   const router = useRouter();
+  const { push } = useGlobalNavigationPending();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +44,7 @@ export default function SupplierAllocationDeleteForm({
     const result = await deleteSupplierAllocation(allocation.id);
 
     if (result.success) {
-      router.push(`/services/${serviceId}`);
+      push(`/services/${serviceId}`);
       router.refresh();
     } else {
       setError(result.error || "Failed to delete supplier allocation");
@@ -101,7 +103,7 @@ export default function SupplierAllocationDeleteForm({
       <div className="px-6 py-4 bg-surface-bright border-t border-outline-variant flex items-center justify-end gap-3">
         <button
           type="button"
-          onClick={() => router.push(`/services/${serviceId}`)}
+          onClick={() => push(`/services/${serviceId}`)}
           disabled={isLoading}
           className="px-4 py-2 font-semibold text-on-surface hover:bg-surface-container-low rounded-lg transition-colors disabled:opacity-50"
         >

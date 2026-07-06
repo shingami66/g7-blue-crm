@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
+import PendingLink from "@/components/ui/PendingLink";
 import { getActiveSupplierOptions } from "@/lib/suppliers/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import SupplierAllocationCreateForm from "./SupplierAllocationCreateForm";
@@ -40,13 +41,13 @@ export default async function NewSupplierAllocationPage({
             <p className="text-sm text-slate-500">
               You do not have permission to create manual supplier allocations.
             </p>
-            <Link
+            <PendingLink
               href={`/services/${id}`}
               className="mt-6 inline-flex items-center gap-2 text-primary hover:underline font-medium"
             >
               <ArrowLeft size={16} />
               Return to Service
-            </Link>
+            </PendingLink>
           </div>
         </div>
       );
@@ -64,13 +65,13 @@ export default async function NewSupplierAllocationPage({
           <p className="text-sm text-slate-500">
             You do not have permission to view suppliers, which is required to create an allocation.
           </p>
-          <Link
+          <PendingLink
             href={`/services/${id}`}
             className="mt-6 inline-flex items-center gap-2 text-primary hover:underline font-medium"
           >
             <ArrowLeft size={16} />
             Return to Service
-          </Link>
+          </PendingLink>
         </div>
       </div>
     );
@@ -92,13 +93,13 @@ export default async function NewSupplierAllocationPage({
           <p className="text-sm text-slate-500">
             We couldn&apos;t load the service details needed to create an allocation. Please try again later.
           </p>
-          <Link
+          <PendingLink
             href={`/services/${id}`}
             className="mt-6 inline-flex items-center gap-2 text-primary hover:underline font-medium"
           >
             <ArrowLeft size={16} />
             Return to Service
-          </Link>
+          </PendingLink>
         </div>
       </div>
     );
@@ -118,13 +119,13 @@ export default async function NewSupplierAllocationPage({
           <p className="text-sm text-slate-500">
             Cannot create a supplier allocation because the service is {serviceRecord.status.toLowerCase()}.
           </p>
-          <Link
+          <PendingLink
             href={`/services/${id}`}
             className="mt-6 inline-flex items-center gap-2 text-primary hover:underline font-medium"
           >
             <ArrowLeft size={16} />
             Return to Service
-          </Link>
+          </PendingLink>
         </div>
       </div>
     );
@@ -157,13 +158,13 @@ export default async function NewSupplierAllocationPage({
   return (
     <div className="max-w-3xl mx-auto pb-12">
       <div className="mb-6">
-        <Link
+        <PendingLink
           href={`/services/${serviceRecord.id}`}
           className="inline-flex items-center gap-2 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors"
         >
           <ArrowLeft size={16} />
           Back to Service
-        </Link>
+        </PendingLink>
       </div>
       
       <div className="mb-8">

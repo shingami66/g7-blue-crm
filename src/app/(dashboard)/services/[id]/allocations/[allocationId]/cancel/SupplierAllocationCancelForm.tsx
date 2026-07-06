@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cancelSupplierAllocation } from "@/lib/supplier-allocations/actions";
+import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
@@ -32,6 +33,7 @@ export default function SupplierAllocationCancelForm({
   allocation: SupplierAllocation;
 }) {
   const router = useRouter();
+  const { push } = useGlobalNavigationPending();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +50,7 @@ export default function SupplierAllocationCancelForm({
     });
 
     if (result.success) {
-      router.push(`/services/${serviceId}`);
+      push(`/services/${serviceId}`);
       router.refresh();
     } else {
       setError(result.error || "Failed to cancel supplier allocation");
@@ -141,7 +143,7 @@ export default function SupplierAllocationCancelForm({
       <div className="px-6 py-4 bg-surface-bright border-t border-outline-variant flex items-center justify-end gap-3">
         <Button
           type="button"
-          onClick={() => router.push(`/services/${serviceId}`)}
+          onClick={() => push(`/services/${serviceId}`)}
           variant="ghost"
         >
           Go Back

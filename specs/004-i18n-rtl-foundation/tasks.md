@@ -291,6 +291,36 @@
   - no cost leakage observed
   - deferred navigation issue: `allocations/new` and browser back navigation do not show the global pending bolt; handle in a later `allocations/**` or navigation task
 
+### SERVICES-ALLOCATIONS-NAV-PENDING-BOLT-1
+
+- Type: implementation
+- Status: DONE
+- Scope:
+  - allocation subflow navigation pending-bolt wiring only
+  - `src/components/ui/useGlobalNavigationPending.ts`
+  - `src/components/ui/PendingLink.tsx`
+  - `src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/new/page.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/new/SupplierAllocationCreateForm.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/cancel/SupplierAllocationCancelForm.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/delete/SupplierAllocationDeleteForm.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/edit/SupplierAllocationEditForm.tsx`
+  - `src/app/(dashboard)/services/[id]/allocations/[allocationId]/restore/SupplierAllocationRestoreForm.tsx`
+- Outcome:
+  - New Allocation link now shows the global centered pending bolt
+  - Back to Service links now show the pending bolt
+  - app-controlled cancel/back navigation now uses pending navigation
+  - post-success navigation after create/edit/cancel/delete/restore now triggers the centered bolt
+  - native browser back remains untouched by design
+  - focused navigation review result: `PASS`
+  - Mozfer manual/browser smoke result: `PASS`
+  - no action logic drift
+  - no permission/RBAC drift
+  - no DB/server action drift
+  - no i18n/copy drift
+  - no cost/financial drift
+  - previously deferred New Allocation/back navigation pending-bolt issue resolved
+
 ## Delivery Sequence Notes
 
 - Start with the audit.

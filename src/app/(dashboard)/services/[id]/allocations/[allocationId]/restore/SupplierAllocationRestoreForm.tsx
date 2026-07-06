@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { restoreSupplierAllocation } from "@/lib/supplier-allocations/actions";
+import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
@@ -32,6 +33,7 @@ export default function SupplierAllocationRestoreForm({
   allocation: SupplierAllocation;
 }) {
   const router = useRouter();
+  const { push } = useGlobalNavigationPending();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,7 +45,7 @@ export default function SupplierAllocationRestoreForm({
     const result = await restoreSupplierAllocation(allocation.id);
 
     if (result.success) {
-      router.push(`/services/${serviceId}?showDeleted=true`);
+      push(`/services/${serviceId}?showDeleted=true`);
       router.refresh();
     } else {
       setError(result.error || "Failed to restore supplier allocation");
@@ -102,7 +104,7 @@ export default function SupplierAllocationRestoreForm({
       <div className="px-6 py-4 bg-surface-bright border-t border-outline-variant flex items-center justify-end gap-3">
         <Button
           type="button"
-          onClick={() => router.push(`/services/${serviceId}?showDeleted=true`)}
+          onClick={() => push(`/services/${serviceId}?showDeleted=true`)}
           variant="ghost"
         >
           Go Back
