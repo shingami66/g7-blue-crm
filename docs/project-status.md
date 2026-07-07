@@ -1865,6 +1865,26 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - No quotation action/query logic changed.
 - No RBAC/permission/service-gating/create-flow behavior changed.
 - No totals/SAR calculation behavior changed.
+## Invoices 1A Docs Sync
+- `I18N-RTL-INVOICES-RUNTIME-1A` completed.
+- Scope: invoices list route/runtime page only.
+- Introduced module-local invoices dictionary.
+- Localized route permission/error states, list header/stats/table/filter/status labels, and side panel/detail drawer labels/buttons.
+- IssueInvoiceAction untouched.
+- RecordPaymentModal untouched.
+- PDF/document/ZATCA routes untouched.
+- Invoice actions/queries untouched.
+- No RBAC/permission drift.
+- No stats/calculation drift.
+- No side-panel behavior drift.
+- No route/link behavior drift.
+- Focused senior review initially returned HOLD for a glossary mismatch in `partial`.
+- FIX-1 corrected `partial` from `مدفوعة جزئيًا` to `مدفوعة جزئياً`.
+- Re-review outcome: PASS.
+- Mozfer manual/browser smoke result: PASS.
+- Invoices list, stats, table, side panel, and RTL shell passed visually.
+- Invoice numbers, customer names, quotation refs, SAR values, dates, and statuses remained readable/LTR-safe.
+- Non-blocking UX follow-up: list feels crowded because it shows more than 10 rows at once; future pagination task suggested as `INVOICES-LIST-PAGINATION-10-1`.
 ## Quotations 1B Docs Sync
 - `I18N-RTL-QUOTATIONS-RUNTIME-1B` completed.
 - Scope: quotation detail runtime page only.

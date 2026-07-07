@@ -7,6 +7,7 @@ import { Filter, Download, Receipt, FileText, CheckCircle2 } from "lucide-react"
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
+import type { InvoicesDictionary } from "@/lib/i18n/dictionaries/invoices";
 import { IssueInvoiceAction } from "./IssueInvoiceAction";
 import { RecordPaymentModal } from "./RecordPaymentModal";
 
@@ -23,18 +24,9 @@ const invoiceStatusBadgeVariant = {
   "draft" | "sent" | "paid" | "pending" | "overdue" | "rejected"
 >;
 
-const statusLabel: Record<InvoiceStatus, string> = {
-  draft: "Draft",
-  sent: "Issued",
-  paid: "Paid",
-  partial: "Partial",
-  overdue: "Overdue",
-  cancelled: "Cancelled",
-  voided: "Voided",
-};
-
 interface InvoicesListClientProps {
   initialInvoices: Invoice[];
+  dictionary: InvoicesDictionary;
 }
 
 const inactiveInvoiceStatuses = new Set<InvoiceStatus>(["cancelled", "voided"]);
@@ -53,12 +45,20 @@ const toSafeNumber = (value: number | string | null | undefined) => {
 };
 
 const formatSar = (value: number) =>
-  `SAR ${value.toLocaleString("en-US", {
+  `\u2066SAR ${value.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })}`;
+  })}\u2069`;
 
-export default function InvoicesListClient({ initialInvoices }: InvoicesListClientProps) {
+const formatCopy = (template: string, values: Record<string, string | number>) =>
+  template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
+
+const toLtrText = (value: string | number) => `\u2066${String(value)}\u2069`;
+
+export default function InvoicesListClient({
+  initialInvoices,
+  dictionary,
+}: InvoicesListClientProps) {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
@@ -95,39 +95,41 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
   return (
     <div className="flex flex-col h-full">
       <PageHeader
-        title="Invoices"
-        subtitle="Manage billing documents and payment tracking."
+        title={dictionary.list.title}
+        subtitle={dictionary.list.subtitle}
       >
         <button className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-low px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors">
           <Download size={18} />
-          Export
+          {dictionary.list.export}
         </button>
         <div className="flex items-center text-[13px] text-on-surface-variant max-w-[240px] text-right leading-tight hidden sm:block">
-          Invoices are created from approved quotations or service billing actions.
+          {dictionary.list.creationHint}
         </div>
       </PageHeader>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
         <KpiCard
-          label="Total Outstanding"
+          label={dictionary.list.stats.totalOutstanding}
           value={formatSar(invoiceStats.totalOutstanding)}
           trend="flat"
-          trendLabel={`${invoiceStats.openInvoices} open invoices`}
+          trendLabel={formatCopy(dictionary.list.stats.openInvoicesCount, {
+            count: toLtrText(invoiceStats.openInvoices),
+          })}
           icon={Receipt}
         />
         <KpiCard
-          label="Open Invoices"
-          value={invoiceStats.openInvoices.toString()}
+          label={dictionary.list.stats.openInvoices}
+          value={toLtrText(invoiceStats.openInvoices)}
           trend="flat"
-          trendLabel="Based on live balances"
+          trendLabel={dictionary.list.stats.basedOnLiveBalances}
           icon={FileText}
         />
         <KpiCard
-          label="Total Collected"
+          label={dictionary.list.stats.totalCollected}
           value={formatSar(invoiceStats.totalCollected)}
           trend="flat"
-          trendLabel="Collected on recorded invoices"
+          trendLabel={dictionary.list.stats.collectedOnRecordedInvoices}
           icon={CheckCircle2}
         />
       </div>
@@ -142,10 +144,10 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
           <div className="p-4 border-b border-surface-variant flex flex-wrap gap-3 items-center bg-surface-bright">
             <div className="relative">
               <select className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary">
-                <option>All Statuses</option>
-                <option>Paid</option>
-                <option>Unpaid</option>
-                <option>Overdue</option>
+                <option>{dictionary.list.filters.allStatuses}</option>
+                <option>{dictionary.list.filters.paid}</option>
+                <option>{dictionary.list.filters.unpaid}</option>
+                <option>{dictionary.list.filters.overdue}</option>
               </select>
               <Filter
                 size={14}
@@ -162,25 +164,25 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                     <input type="checkbox" className="rounded border-outline-variant text-primary focus:ring-primary" />
                   </th>
                   <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    Invoice
+                    {dictionary.list.table.invoice}
                   </th>
                   <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    Type
+                    {dictionary.list.table.type}
                   </th>
                   <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    Document
+                    {dictionary.list.table.document}
                   </th>
                   <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    Client
+                    {dictionary.list.table.customer}
                   </th>
                   <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    Issue Date
+                    {dictionary.list.table.issueDate}
                   </th>
                   <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-right">
-                    Amount (SAR)
+                    {dictionary.list.table.amountSar}
                   </th>
                   <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    Status
+                    {dictionary.list.table.status}
                   </th>
                 </tr>
               </thead>
@@ -196,27 +198,27 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                     <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" className="rounded border-outline-variant text-primary focus:ring-primary" />
                     </td>
-                    <td className="px-4 py-4 font-mono font-semibold text-primary">
+                    <td className="px-4 py-4 font-mono font-semibold text-primary" dir="ltr">
                       {inv.invoice_number || inv.id}
                     </td>
-                    <td className="px-4 py-4 text-on-surface capitalize">
-                      {inv.invoice_type || "—"}
-                    </td>
                     <td className="px-4 py-4 text-on-surface">
+                      {inv.invoice_type ? dictionary.invoiceTypes[inv.invoice_type] : "—"}
+                    </td>
+                    <td className="px-4 py-4 text-on-surface" dir="auto">
                       {inv.document_label || "—"}
                     </td>
-                    <td className="px-4 py-4 font-medium text-on-surface">
+                    <td className="px-4 py-4 font-medium text-on-surface" dir="auto">
                       {inv.customer}
                     </td>
-                    <td className="px-4 py-4 text-on-surface-variant">
+                    <td className="px-4 py-4 text-on-surface-variant" dir="ltr">
                       {inv.date}
                     </td>
-                    <td className="px-4 py-4 font-semibold text-on-surface text-right">
+                    <td className="px-4 py-4 font-semibold text-on-surface text-right" dir="ltr">
                       {inv.amount}
                     </td>
                     <td className="px-4 py-4">
                       <StatusBadge variant={invoiceStatusBadgeVariant[inv.status]}>
-                        {statusLabel[inv.status]}
+                        {dictionary.statuses[inv.status]}
                       </StatusBadge>
                     </td>
                   </tr>
@@ -224,7 +226,7 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                 {initialInvoices.length === 0 && (
                   <tr>
                     <td colSpan={8} className="px-4 py-8 text-center text-on-surface-variant">
-                      No invoices found.
+                      {dictionary.list.table.noInvoices}
                     </td>
                   </tr>
                 )}
@@ -238,10 +240,10 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
           <div className="w-1/3 bg-surface-container-lowest border border-surface-variant rounded-xl flex flex-col hidden lg:flex sticky top-0 h-fit max-h-[calc(100vh-8rem)] overflow-y-auto overflow-x-hidden">
             <div className="p-6 border-b border-surface-variant flex justify-between items-start bg-surface-bright">
               <div>
-                <h3 className="text-[20px] leading-[28px] font-semibold text-primary font-mono tracking-tight">
+                <h3 className="text-[20px] leading-[28px] font-semibold text-primary font-mono tracking-tight" dir="ltr">
                   {activeInvoice.invoice_number || activeInvoice.id}
                 </h3>
-                <p className="text-[14px] leading-[20px] text-on-surface-variant mt-1">
+                <p className="text-[14px] leading-[20px] text-on-surface-variant mt-1" dir="auto">
                   {activeInvoice.customer}
                 </p>
               </div>
@@ -257,50 +259,54 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
               <div className="flex justify-between items-center bg-surface p-4 rounded-lg border border-outline-variant/50">
                 <div>
                   <div className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1">
-                    Amount Due
+                    {dictionary.list.sidePanel.amountDue}
                   </div>
-                  <div className="text-[24px] font-bold text-primary">
+                  <div className="text-[24px] font-bold text-primary" dir="ltr">
                     {activeInvoice.balance_due ?? 0} SAR
                   </div>
                 </div>
                 <div className="w-16 h-16 border border-outline-variant bg-white rounded flex items-center justify-center flex-col text-center">
                   <Receipt size={24} className="text-outline mb-1" />
-                  <span className="text-[8px] font-bold text-outline uppercase">Preview</span>
+                  <span className="text-[8px] font-bold text-outline uppercase">{dictionary.list.sidePanel.preview}</span>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <h4 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">
-                  Details
+                  {dictionary.list.sidePanel.details}
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-[12px] text-on-surface-variant mb-1">Issue Date</div>
-                    <div className="text-[14px] font-medium text-on-surface">{activeInvoice.date}</div>
+                    <div className="text-[12px] text-on-surface-variant mb-1">{dictionary.list.table.issueDate}</div>
+                    <div className="text-[14px] font-medium text-on-surface" dir="ltr">{activeInvoice.date}</div>
                   </div>
                   <div>
-                    <div className="text-[12px] text-on-surface-variant mb-1">Due Date</div>
-                    <div className="text-[14px] font-medium text-on-surface">{activeInvoice.dueDate}</div>
+                    <div className="text-[12px] text-on-surface-variant mb-1">{dictionary.list.sidePanel.dueDate}</div>
+                    <div className="text-[14px] font-medium text-on-surface" dir="ltr">{activeInvoice.dueDate}</div>
                   </div>
                   <div>
-                    <div className="text-[12px] text-on-surface-variant mb-1">Type</div>
-                    <div className="text-[14px] font-medium text-on-surface capitalize">{activeInvoice.invoice_type || "—"}</div>
+                    <div className="text-[12px] text-on-surface-variant mb-1">{dictionary.list.sidePanel.type}</div>
+                    <div className="text-[14px] font-medium text-on-surface">
+                      {activeInvoice.invoice_type
+                        ? dictionary.invoiceTypes[activeInvoice.invoice_type]
+                        : "—"}
+                    </div>
                   </div>
                   <div>
-                    <div className="text-[12px] text-on-surface-variant mb-1">Document Label</div>
-                    <div className="text-[14px] font-medium text-on-surface">{activeInvoice.document_label || "—"}</div>
+                    <div className="text-[12px] text-on-surface-variant mb-1">{dictionary.list.sidePanel.documentLabel}</div>
+                    <div className="text-[14px] font-medium text-on-surface" dir="auto">{activeInvoice.document_label || "—"}</div>
                   </div>
                   <div>
-                    <div className="text-[12px] text-on-surface-variant mb-1">Status</div>
+                    <div className="text-[12px] text-on-surface-variant mb-1">{dictionary.list.sidePanel.status}</div>
                     <StatusBadge variant={invoiceStatusBadgeVariant[activeInvoice.status]}>
-                      {statusLabel[activeInvoice.status]}
+                      {dictionary.statuses[activeInvoice.status]}
                     </StatusBadge>
                   </div>
                   <div>
-                    <div className="text-[12px] text-on-surface-variant mb-1">Quotation Ref</div>
+                    <div className="text-[12px] text-on-surface-variant mb-1">{dictionary.list.sidePanel.quotationRef}</div>
                     {activeInvoice.relatedQuote ? (
-                      <Link href={`/quotations/${activeInvoice.relatedQuote}`} className="text-[14px] font-medium text-primary hover:underline truncate block" title={activeInvoice.relatedQuoteNumber || activeInvoice.relatedQuote}>
-                        {activeInvoice.relatedQuoteNumber || "Quotation reference unavailable"}
+                      <Link href={`/quotations/${activeInvoice.relatedQuote}`} className="text-[14px] font-medium text-primary hover:underline truncate block" title={activeInvoice.relatedQuoteNumber || activeInvoice.relatedQuote} dir="ltr">
+                        {activeInvoice.relatedQuoteNumber || dictionary.list.sidePanel.quotationReferenceUnavailable}
                       </Link>
                     ) : (
                       <span className="text-[14px] font-medium text-on-surface-variant">-</span>
@@ -319,22 +325,26 @@ export default function InvoicesListClient({ initialInvoices }: InvoicesListClie
                 onClick={() => window.open(`/invoices/${activeInvoice.id}/pdf`, "_blank", "noopener,noreferrer")}
                 className="w-full flex justify-center items-center gap-2 bg-surface-container-lowest border border-outline-variant text-on-surface py-2 rounded-lg text-[14px] font-semibold hover:bg-surface-container-low transition-colors"
               >
-                View PDF
+                {dictionary.list.actions.viewPdf}
               </button>
               {canRecordPayment ? (
                 <button
                   onClick={() => setShowPaymentModal(true)}
                   className="w-full flex justify-center items-center gap-2 bg-primary border border-primary text-on-primary py-2 rounded-lg text-[14px] font-semibold hover:bg-primary/90 transition-colors"
                 >
-                  Record Payment
+                  {dictionary.list.actions.recordPayment}
                 </button>
               ) : (
                 <button
                   disabled
-                  title={activeInvoice.status === "draft" ? "Draft invoices cannot be paid." : "Invoice is fully paid or unavailable."}
+                  title={
+                    activeInvoice.status === "draft"
+                      ? dictionary.list.tooltips.draftCannotBePaid
+                      : dictionary.list.tooltips.invoiceUnavailableForPayment
+                  }
                   className="w-full flex justify-center items-center gap-2 bg-surface-container-low border border-outline-variant text-on-surface-variant py-2 rounded-lg text-[14px] font-semibold cursor-not-allowed"
                 >
-                  Record Payment
+                  {dictionary.list.actions.recordPayment}
                 </button>
               )}
             </div>

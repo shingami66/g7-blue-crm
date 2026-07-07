@@ -384,6 +384,31 @@
   - no quotation action/query logic changed
   - no RBAC/permission/service-gating/create-flow behavior changed
   - no totals/SAR calculation behavior changed
+### I18N-RTL-INVOICES-RUNTIME-1A
+
+- Type: module runtime implementation
+- Status: DONE
+- Scope:
+  - invoices list route/runtime page
+- Outcome:
+  - module-local invoices dictionary introduced
+  - route permission/error states localized
+  - invoice list header/stats/table/filter/status labels localized
+  - side panel/detail drawer labels and buttons localized
+  - IssueInvoiceAction untouched
+  - RecordPaymentModal untouched
+  - PDF/document/ZATCA routes untouched
+  - invoice actions/queries untouched
+  - no RBAC/permission drift
+  - no stats/calculation drift
+  - no side-panel behavior drift
+  - no route/link behavior drift
+  - focused senior review initially returned HOLD for a glossary mismatch in `partial`
+  - FIX-1 corrected `partial` from `مدفوعة جزئيًا` to `مدفوعة جزئياً`
+  - re-review outcome is `PASS`
+  - Mozfer manual/browser smoke result is `PASS`
+  - invoice numbers, customer names, quotation refs, SAR values, dates, and statuses remained readable/LTR-safe
+  - non-blocking UX follow-up: list feels crowded because it shows more than 10 rows at once; future pagination task suggested as `INVOICES-LIST-PAGINATION-10-1`
 ### I18N-RTL-QUOTATIONS-RUNTIME-1B
 
 - Type: module runtime implementation
