@@ -52,7 +52,7 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-1`
+- `APPROVED-BILLING-SCOPE-DOCS-SYNC-2`
 - Design/schema planning only; no SQL implementation yet.
 
 Backlog / later priority:
@@ -2075,9 +2075,10 @@ Must verify:
 - Mozfer manual smoke result: PASS.
 
 ## Approved Billing Scope
-- `SERVICE-BILLING-SCOPE-DESIGN-1` completed and returned `PASS`.
-- `APPROVED-BILLING-SCOPE-DOCS-SYNC-1` is the current docs-only recording step.
-- Next is `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-1`.
-- After schema design, follow with `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`, `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`, and `QUOTATION-REVISION-FALLBACK-DESIGN-1`.
-- `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` stays a required future follow-up for the V1 package/global-discount ambiguity path.
+- `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-1` completed and returned `PASS`.
+- `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-REVIEW-1` completed and returned `PASS WITH MINOR DOCS-SYNC NOTES`.
+- `APPROVED-BILLING-SCOPE-DOCS-SYNC-2` is the current docs-only recording step.
+- Next safe task is `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`.
+- After the live-schema check, follow with `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1`, `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`, `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`, and `QUOTATION-REVISION-FALLBACK-DESIGN-1`.
+- `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.
 - `SERVICE-PROFITABILITY-DESIGN-1` remains blocked until billing source and supplier-cost permissions are stable.

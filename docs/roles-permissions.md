@@ -33,6 +33,17 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - Quotation `customer_id`, if present, must be derived server-side from the Service rather than accepted from the client.
 - One Service can have multiple Quotations. Do not add `UNIQUE(service_id)` to quotations.
 
+## Approved Billing Scope
+
+- Initial read access should follow normal Service billing visibility, but internal notes and reviewer rationale must be masked from Viewer and any customer-facing output.
+- Draft create and draft edit should start with Admin and Manager only.
+- Approval should start with Admin and Manager only.
+- Sales must not approve scopes.
+- Accountant approval remains a P1 decision and is not locked yet.
+- Supersede and void should stay restricted to elevated approval roles until a later reviewed change expands them.
+- Supplier/internal cost and margin must not exist in customer-facing scope snapshots or outputs.
+- Scope approval, supersede, and void actions must be audited.
+
 ## Service Permissions
 
 - `services:read` allows viewing Services and the Service Hub.

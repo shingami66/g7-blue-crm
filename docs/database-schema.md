@@ -96,10 +96,12 @@ These are approved target rules for future reviewed schema changes; they do not 
 
 ### Approved Billing Scope (Future Design)
 - Approved Billing Scope is a proposed future billing layer and does not exist yet.
-- Proposed tables: `approved_billing_scopes` and `approved_billing_scope_lines`.
+- Proposed tables: `approved_billing_scopes` and `approved_billing_scope_items`.
 - Proposed parent rules: exactly one active approved scope per Service, versioned superseding, immutable approved/invoice-referenced rows, and RLS required.
-- Proposed line rules: `accepted | excluded | adjusted | customer_supplied` decisions, unique scope line per quotation item, `reason` required for `excluded`, `adjusted`, and `customer_supplied`, `customer_supplied.accepted_total = 0`, and `excluded.accepted_total = 0`.
-- Proposed workflow rule: draft scopes are auto-seeded from approved quotation lines and only line-safe quotations may proceed in V1.
+- Proposed scope-header fields: `line_safety_status`, `line_safety_reason_code`, `line_safety_note`, `line_safety_reviewed_by`, `line_safety_reviewed_at`, `source_vat_rate`, `source_discount`, `source_currency`, `source_quotation_subtotal`, `source_quotation_vat_amount`, `source_quotation_grand_total`, and `source_pricing_context`.
+- Proposed item rules: `accepted | excluded | adjusted | customer_supplied` decisions, unique scope item per quotation item, `reason` required for `excluded`, `adjusted`, and `customer_supplied`, `customer_supplied.accepted_total = 0`, and `excluded.accepted_total = 0`.
+- Proposed safety rule: V1 is reductions-only, approval requires `line_safety_status = safe`, and package/global discount ambiguity is a hard V1 block, not an estimate.
+- Proposed integrity direction: `(source_quotation_id, service_id) -> quotations(id, service_id)`, `(approved_billing_scope_id, source_quotation_id) -> approved_billing_scopes(id, source_quotation_id)`, `(source_quotation_item_id, source_quotation_id) -> quotation_items(id, quotation_id)`, with trigger fallback if live schema cannot safely support the required composite unique keys.
 - This note is design-only and must not be read as a claim that the tables or constraints already exist.
 
 ### Invoices And Payments

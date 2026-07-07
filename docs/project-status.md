@@ -866,7 +866,7 @@ Cursor audit gate:
 - SUPPLIER-BOOKINGS-ACTIONS-1A: CLOSED.
 - SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW: CLOSED.
 - SUPPLIER-BOOKINGS-UI-1A: CLOSED.
-- Next safe slice is `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-1`.
+- Current safe slice is `APPROVED-BILLING-SCOPE-DOCS-SYNC-2`.
 
 ### 🚧 Locked Next CRM Priorities
 Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.
@@ -1986,8 +1986,10 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - IssueInvoiceAction and RecordPaymentModal copy were localized without changing behavior, validation, permissions, or action/query logic.
 
 ## Approved Billing Scope Design Sync
-- `SERVICE-BILLING-SCOPE-DESIGN-1` completed and returned `PASS`.
+- `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-1` completed and returned `PASS`.
+- `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-REVIEW-1` completed and returned `PASS WITH MINOR DOCS-SYNC NOTES`.
+- `APPROVED-BILLING-SCOPE-DOCS-SYNC-2` is the current docs-only recording step.
 - The Approved Billing Scope is recorded here as a future design direction, not an implementation.
 - This docs sync records design decisions only.
 - No schema, RLS, RPC, UI, or invoice-calculation changes were made.
-- Next task after this docs sync is `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-1`.
+- Next safe task after this docs sync is `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`.
