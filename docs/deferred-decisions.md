@@ -781,6 +781,27 @@ Decision: Invoices page remains for list/issue/pay/PDF/status. Global invoice cr
 - Reason deferred: this is a trust/copy correctness issue on the detail page and needs its own review.
 - Known requirement boundaries: no query/action/schema/RBAC/auth changes implied.
 
+### SERVICE-DETAIL-BILLING-ACTION-ELIGIBILITY-REVIEW-1
+- Status: Deferred / Separate follow-up.
+- Decision: Review whether the Billing/Invoicing "Next available action" always matches the approved business workflow.
+- Scope: check deposit/final invoice creation eligibility, action labels, and disabled messaging without changing the underlying workflow.
+- Reason deferred: this is not part of the copy fix and needs its own workflow review.
+- Known requirement boundaries: do not change invoice calculations, payment logic, schema, RBAC, auth, PDF behavior, or billing layout unless separately approved.
+
+### QUOTATION-LINE-ITEMS-EXISTENCE-CHECK-1
+- Status: Deferred / Read-only prerequisite.
+- Decision: Verify whether quotation line items are a first-class source of truth before any partial invoice / Approved Billing Scope design.
+- Scope: confirm the current quotation line item model and whether it can safely support future billing scope decisions.
+- Reason deferred: this is a blocking read-only check for future billing scope design.
+- Known requirement boundaries: do not implement free/manual invoices as unconstrained billing, and do not change `BILLING-FLEXIBILITY-1` until the source of truth is verified.
+
+### SERVICE-PROFITABILITY-DESIGN-1
+- Status: Deferred / Design-only follow-up.
+- Decision: Define service profitability reporting after billing source behavior is stable.
+- Scope: capture revenue, direct costs, gross profit, gross margin, and cash position definitions for a future design pass.
+- Reason deferred: this must wait until the billing foundation is stable.
+- Known requirement boundaries: do not change billing calculations, payment logic, schema, RBAC, auth, PDF behavior, or financial record workflows in this follow-up.
+
 ### SERVICE-DETAIL-SUPPLIER-COST-RBAC-VERIFICATION-1
 - Status: Deferred / Separate verification.
 - Decision: Verify supplier cost visibility under lower-privileged access before any broader supplier-cost wording changes.

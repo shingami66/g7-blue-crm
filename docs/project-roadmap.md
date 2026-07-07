@@ -2064,3 +2064,12 @@ Must verify:
 - Focused review result: PASS.
 - Mozfer visual review result: PASS for default Quoted and Completed detail views.
 - Remaining rollout stays separate for the pending-UX follow-up, billing copy, supplier cost verification, related records actions, supplier booking CTA, header hierarchy polish, and broader table standardization.
+
+## Service Detail Billing Copy
+- `SERVICE-DETAIL-BILLING-COPY-FIX-1` completed the Service Detail Billing/Invoicing copy correctness slice.
+- The copy now distinguishes a missing invoice record from an unavailable invoice action.
+- Missing deposit/final invoice states now say the invoice has not been created yet.
+- Disabled/unavailable action states now say the invoice action is not available.
+- The change is dictionary-only and does not alter financial logic, PDF/document behavior, workflow behavior, RBAC, auth, or layout.
+- Focused review result: PASS.
+- Mozfer manual smoke result: PASS.

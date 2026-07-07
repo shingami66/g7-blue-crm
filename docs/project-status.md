@@ -188,6 +188,15 @@
 - [x] No schema/migrations/middleware/cookies/RBAC/financial logic changed.
 - [x] AGENTS.md untouched.
 
+### SERVICE-DETAIL-BILLING-COPY-FIX-1
+- [x] P1 financial-trust copy correctness fix for Service Detail Billing/Invoicing completed in the dictionary only.
+- [x] Billing copy now distinguishes a missing invoice record from an unavailable invoice action.
+- [x] Missing deposit/final invoice states now say the invoice has not been created yet.
+- [x] Disabled/unavailable action states now say the invoice action is not available.
+- [x] No invoice/payment query, action, amount, calculation, PDF/document, schema, RBAC, auth, layout, supplier, or workflow changes were introduced.
+- [x] Focused review passed.
+- [x] Mozfer manual smoke passed.
+
 ### I18N-RTL-SERVICES-RUNTIME-1C
 - [x] Services supplier allocation/booking display panels only.
 - [x] Focused senior review result: PASS.
