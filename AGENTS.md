@@ -36,6 +36,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - Verify Supabase connectivity at `GET /api/health/db` while the local app is running.
 - The local Supabase health-check workflow assumes `.env.local` already provides `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`; never read, print, or edit those secrets during ordinary tasks.
 - `graphify query "<question>"` is the approved manual Graphify command for scoped codebase discovery; do not run Graphify install, hook, or Codex integration commands without explicit approval.
+- Read-only status checks should use `git status --short --untracked-files=all`, `git status -sb`, and `git log -3 --oneline`.
 - Documentation-only changes do not require app build, migrations, or database commands.
 
 ## Working Workflow
@@ -44,6 +45,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - After merges that change delivered behavior, phase status, or decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` as applicable.
 - Before committing docs, run a documentation staleness audit: identify what changed in code, what changed outside code, what moved from pending to complete, any stale wording that must be corrected, what remains truly pending, and the next locked priority.
 - Before staging or commit work, confirm the intended branch.
+- For docs-only sync tasks, verify with `git status --short --untracked-files=all`, `git status -sb`, `git diff --name-only`, `git diff --stat`, `git diff --check`, and targeted `rg -n` against the allowed docs.
 - Before staging or commit work, run `git status --short`.
 - Stage exact files only; confirm no unrelated files, secrets, `.env.local`, or unreviewed SQL/migration files are staged.
 - After staging, run `git diff --cached --stat` and `git diff --cached --check`.
@@ -82,6 +84,7 @@ For every task that includes numbered inspection questions, checks, or required 
 - Do not touch `.env.local`.
 - Do not expose secrets.
 - Follow explicit user scope. If a task is documentation-only, do not edit code, config, migrations, packages, environment files, or local skill files.
+- Return `TASK RESULT: HOLD` on suspicious state, unexpected files, missing prerequisites, failed verification, or scope conflict.
 - If a prompt forbids reading `.agents/skills/*`, do not read, invoke, summarize, or depend on those local skill files for that task.
 - Do not use `git add .`.
 - Do not run SQL without explicit approval.
