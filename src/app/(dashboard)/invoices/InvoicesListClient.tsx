@@ -1,10 +1,10 @@
 "use client";
 
 import PageHeader from "@/components/ui/PageHeader";
-import KpiCard from "@/components/ui/KpiCard";
+import PaginationFooter from "@/components/ui/PaginationFooter";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { Filter, Download, Receipt, FileText, CheckCircle2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Filter, Download, Search, Receipt, X } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
 import type { InvoicesDictionary } from "@/lib/i18n/dictionaries/invoices";
@@ -29,27 +29,6 @@ interface InvoicesListClientProps {
   dictionary: InvoicesDictionary;
 }
 
-const inactiveInvoiceStatuses = new Set<InvoiceStatus>(["cancelled", "voided"]);
-
-const toSafeNumber = (value: number | string | null | undefined) => {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : 0;
-  }
-
-  if (typeof value === "string") {
-    const parsed = Number(value.replace(/,/g, ""));
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  return 0;
-};
-
-const formatSar = (value: number) =>
-  `\u2066SAR ${value.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}\u2069`;
-
 const formatCopy = (template: string, values: Record<string, string | number>) =>
   template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
 
@@ -59,33 +38,36 @@ export default function InvoicesListClient({
   initialInvoices,
   dictionary,
 }: InvoicesListClientProps) {
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const itemsPerPage = 10;
+  const normalizedSearch = searchQuery.trim().toLowerCase();
 
-  const activeInvoice = initialInvoices.find((i) => i.id === selectedInvoiceId);
-  const invoiceStats = useMemo(() => {
-    const activeInvoices = initialInvoices.filter(
-      (invoice) => !inactiveInvoiceStatuses.has(invoice.status)
-    );
+  const filteredInvoices = initialInvoices.filter((invoice) => {
+    const matchesStatus =
+      statusFilter === "all"
+        ? true
+        : invoice.status === statusFilter;
 
-    return activeInvoices.reduce(
-      (stats, invoice) => {
-        const balanceDue = Math.max(toSafeNumber(invoice.balance_due), 0);
-        const amountPaid = Math.max(toSafeNumber(invoice.amount_paid), 0);
+    const matchesSearch =
+      normalizedSearch === ""
+        ? true
+        : [invoice.invoice_number, invoice.customer]
+            .filter((value): value is string => Boolean(value))
+            .some((value) => value.toLowerCase().includes(normalizedSearch));
 
-        return {
-          totalOutstanding: stats.totalOutstanding + balanceDue,
-          openInvoices: stats.openInvoices + (balanceDue > 0 ? 1 : 0),
-          totalCollected: stats.totalCollected + amountPaid,
-        };
-      },
-      {
-        totalOutstanding: 0,
-        openInvoices: 0,
-        totalCollected: 0,
-      }
-    );
-  }, [initialInvoices]);
+    return matchesStatus && matchesSearch;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredInvoices.length / itemsPerPage));
+  const page = Math.min(currentPage, totalPages);
+  const startIndex = (page - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredInvoices.length);
+  const paginatedInvoices = filteredInvoices.slice(startIndex, startIndex + itemsPerPage);
+  const activeInvoice = filteredInvoices.find((invoice) => invoice.id === selectedInvoiceId);
 
   const canRecordPayment = activeInvoice
     ? (activeInvoice.status === "sent" || activeInvoice.status === "partial") &&
@@ -107,33 +89,6 @@ export default function InvoicesListClient({
         </div>
       </PageHeader>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-        <KpiCard
-          label={dictionary.list.stats.totalOutstanding}
-          value={formatSar(invoiceStats.totalOutstanding)}
-          trend="flat"
-          trendLabel={formatCopy(dictionary.list.stats.openInvoicesCount, {
-            count: toLtrText(invoiceStats.openInvoices),
-          })}
-          icon={Receipt}
-        />
-        <KpiCard
-          label={dictionary.list.stats.openInvoices}
-          value={toLtrText(invoiceStats.openInvoices)}
-          trend="flat"
-          trendLabel={dictionary.list.stats.basedOnLiveBalances}
-          icon={FileText}
-        />
-        <KpiCard
-          label={dictionary.list.stats.totalCollected}
-          value={formatSar(invoiceStats.totalCollected)}
-          trend="flat"
-          trendLabel={dictionary.list.stats.collectedOnRecordedInvoices}
-          icon={CheckCircle2}
-        />
-      </div>
-
       <div className="flex flex-1 gap-6 min-h-0 relative">
         {/* Main Table Area */}
         <div
@@ -142,17 +97,53 @@ export default function InvoicesListClient({
           }`}
         >
           <div className="p-4 border-b border-surface-variant flex flex-wrap gap-3 items-center bg-surface-bright">
+            <div className="relative min-w-[220px] flex-1 max-w-sm">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
+              />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder={dictionary.list.filters.searchPlaceholder}
+                className="w-full bg-surface border border-outline-variant rounded-lg pl-9 pr-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
+              />
+            </div>
             <div className="relative">
-              <select className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary">
-                <option>{dictionary.list.filters.allStatuses}</option>
-                <option>{dictionary.list.filters.paid}</option>
-                <option>{dictionary.list.filters.unpaid}</option>
-                <option>{dictionary.list.filters.overdue}</option>
+              <select
+                value={statusFilter}
+                onChange={(event) => {
+                  setStatusFilter(event.target.value);
+                  setCurrentPage(1);
+                }}
+                className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
+              >
+                <option value="all">{dictionary.list.filters.allStatuses}</option>
+                <option value="paid">{dictionary.list.filters.paid}</option>
+                <option value="overdue">{dictionary.list.filters.overdue}</option>
+                <option value="draft">{dictionary.statuses.draft}</option>
+                <option value="sent">{dictionary.statuses.sent}</option>
+                <option value="partial">{dictionary.statuses.partial}</option>
+                <option value="cancelled">{dictionary.statuses.cancelled}</option>
+                <option value="voided">{dictionary.statuses.voided}</option>
               </select>
               <Filter
                 size={14}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
               />
+            </div>
+            <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
+              {filteredInvoices.length === 0
+                ? dictionary.list.summary.showingZero
+                : formatCopy(dictionary.list.summary.showingRange, {
+                    start: toLtrText(startIndex + 1),
+                    end: toLtrText(endIndex),
+                    count: toLtrText(filteredInvoices.length),
+                  })}
             </div>
           </div>
 
@@ -187,7 +178,7 @@ export default function InvoicesListClient({
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant text-[14px]">
-                {initialInvoices.map((inv) => (
+                {paginatedInvoices.map((inv) => (
                   <tr
                     key={inv.id}
                     onClick={() => setSelectedInvoiceId(inv.id)}
@@ -223,16 +214,25 @@ export default function InvoicesListClient({
                     </td>
                   </tr>
                 ))}
-                {initialInvoices.length === 0 && (
+                {filteredInvoices.length === 0 && (
                   <tr>
                     <td colSpan={8} className="px-4 py-8 text-center text-on-surface-variant">
-                      {dictionary.list.table.noInvoices}
+                      {initialInvoices.length === 0
+                        ? dictionary.list.table.noInvoices
+                        : dictionary.list.table.noFilteredInvoices}
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+          {filteredInvoices.length > itemsPerPage && (
+            <PaginationFooter
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </div>
 
         {/* Side Detail Panel */}
@@ -249,9 +249,11 @@ export default function InvoicesListClient({
               </div>
               <button
                 onClick={() => setSelectedInvoiceId(null)}
-                className="text-on-surface-variant hover:text-primary"
+                aria-label="Close invoice details"
+                title="Close invoice details"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface-variant transition-colors hover:border-primary/40 hover:bg-surface-container hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
               >
-                &times;
+                <X size={16} strokeWidth={2.5} />
               </button>
             </div>
 

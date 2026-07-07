@@ -410,6 +410,23 @@
   - invoice numbers, customer names, quotation refs, SAR values, dates, and statuses remained readable/LTR-safe
   - non-blocking UX follow-up: list feels crowded because it shows more than 10 rows at once; future pagination task suggested as `INVOICES-LIST-PAGINATION-10-1`
 
+### I18N-RTL-INVOICES-LIST-SEARCH-FILTER-UX-1
+
+- Type: UX implementation
+- Status: DONE
+- Scope:
+  - invoices list search, status filter, pagination, and list density
+- Outcome:
+  - KPI money cards removed to reduce visual crowding
+  - search by invoice number and customer name added
+  - status filtering fixed to actual invoice status values only
+  - 10-row pagination added and list now filters before paginating
+  - side panel behavior remained safe
+  - close button affordance improved
+  - focused senior review result is `PASS`
+  - Mozfer manual/browser smoke result is `PASS`
+  - separate UX follow-up remains open as `INVOICES-DETAIL-PREVIEW-UX-1`
+
 ### I18N-RTL-INVOICES-RUNTIME-1B
 
 - Type: module runtime implementation
@@ -424,7 +441,6 @@
   - re-review outcome is `PASS`
   - Mozfer manual/browser smoke was recorded as PASS
   - IssueInvoiceAction and RecordPaymentModal copy were localized without changing behavior, validation, permissions, or action/query logic
-  - separate UX follow-up remains open as `INVOICES-LIST-SEARCH-FILTER-UX-1`
 
 ### I18N-RTL-QUOTATIONS-RUNTIME-1B
 

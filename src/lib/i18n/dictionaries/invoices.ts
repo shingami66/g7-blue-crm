@@ -17,16 +17,12 @@ export interface InvoicesDictionary {
     filters: {
       allStatuses: string;
       paid: string;
-      unpaid: string;
       overdue: string;
+      searchPlaceholder: string;
     };
-    stats: {
-      totalOutstanding: string;
-      openInvoices: string;
-      totalCollected: string;
-      openInvoicesCount: string;
-      basedOnLiveBalances: string;
-      collectedOnRecordedInvoices: string;
+    summary: {
+      showingZero: string;
+      showingRange: string;
     };
     table: {
       invoice: string;
@@ -37,6 +33,7 @@ export interface InvoicesDictionary {
       amountSar: string;
       status: string;
       noInvoices: string;
+      noFilteredInvoices: string;
     };
     sidePanel: {
       amountDue: string;
@@ -128,16 +125,12 @@ const invoicesDictionaryEn: InvoicesDictionary = {
     filters: {
       allStatuses: "All Statuses",
       paid: "Paid",
-      unpaid: "Unpaid",
       overdue: "Overdue",
+      searchPlaceholder: "Search by invoice number or customer",
     },
-    stats: {
-      totalOutstanding: "Total Outstanding",
-      openInvoices: "Open Invoices",
-      totalCollected: "Total Collected",
-      openInvoicesCount: "{count} open invoices",
-      basedOnLiveBalances: "Based on live balances",
-      collectedOnRecordedInvoices: "Collected on recorded invoices",
+    summary: {
+      showingZero: "Showing 0 invoices",
+      showingRange: "Showing {start}-{end} of {count} invoices",
     },
     table: {
       invoice: "Invoice",
@@ -148,6 +141,7 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       amountSar: "Amount (SAR)",
       status: "Status",
       noInvoices: "No invoices found.",
+      noFilteredInvoices: "No invoices match your search or filters.",
     },
     sidePanel: {
       amountDue: "Amount Due",
@@ -251,16 +245,12 @@ const invoicesDictionaryAr: InvoicesDictionary = {
     filters: {
       allStatuses: "كل الحالات",
       paid: "مدفوعة",
-      unpaid: "غير مدفوعة",
       overdue: "متأخرة",
+      searchPlaceholder: "ابحث برقم الفاتورة أو اسم العميل",
     },
-    stats: {
-      totalOutstanding: "إجمالي المستحق غير المحصل",
-      openInvoices: "الفواتير المفتوحة",
-      totalCollected: "إجمالي المحصل",
-      openInvoicesCount: "{count} فواتير مفتوحة",
-      basedOnLiveBalances: "بناءً على الأرصدة الحالية",
-      collectedOnRecordedInvoices: "المحصل من الفواتير المسجلة",
+    summary: {
+      showingZero: "عرض 0 فواتير",
+      showingRange: "عرض {start}-{end} من إجمالي {count} فاتورة",
     },
     table: {
       invoice: "الفاتورة",
@@ -271,6 +261,7 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       amountSar: "القيمة (SAR)",
       status: "الحالة",
       noInvoices: "لا توجد فواتير.",
+      noFilteredInvoices: "لا توجد فواتير تطابق البحث أو عوامل التصفية.",
     },
     sidePanel: {
       amountDue: "المبلغ المستحق",

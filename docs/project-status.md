@@ -1885,6 +1885,16 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - Invoices list, stats, table, side panel, and RTL shell passed visually.
 - Invoice numbers, customer names, quotation refs, SAR values, dates, and statuses remained readable/LTR-safe.
 - Non-blocking UX follow-up: list feels crowded because it shows more than 10 rows at once; future pagination task suggested as `INVOICES-LIST-PAGINATION-10-1`.
+## Invoices List Search/Filter UX Sync
+- `INVOICES-LIST-SEARCH-FILTER-UX-1` completed as an invoices list UX slice.
+- KPI money cards were removed to reduce visual crowding.
+- Search by invoice number and customer name was added.
+- Status filtering was fixed to actual invoice status values only.
+- 10-row pagination was added and the list now filters before paginating.
+- Side panel behavior remained safe, and the close button affordance was improved.
+- Focused senior review result: PASS.
+- Mozfer manual/browser smoke result: PASS.
+- Separate UX follow-up remains open as `INVOICES-DETAIL-PREVIEW-UX-1`.
 ## Quotations 1B Docs Sync
 - `I18N-RTL-QUOTATIONS-RUNTIME-1B` completed.
 - Scope: quotation detail runtime page only.
@@ -1913,4 +1923,3 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - Re-review result: PASS.
 - Mozfer manual/browser smoke was recorded as PASS for the slice.
 - IssueInvoiceAction and RecordPaymentModal copy were localized without changing behavior, validation, permissions, or action/query logic.
-- Separate UX follow-up remains open as `INVOICES-LIST-SEARCH-FILTER-UX-1`.
