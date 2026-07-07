@@ -1998,6 +1998,15 @@ Must verify:
 - Focused senior review result: PASS.
 - Mozfer manual/browser smoke result: PASS.
 - Deferred follow-ups remain payment history, richer deposit/advance payment timeline, richer service/event context if needed, first-class invoice line item data if snapshot line data is insufficient, and list-action consistency review for other modules.
+
+## Customers List Actions Consistency
+- `LIST-ACTIONS-CONSISTENCY-CUSTOMERS-1` completed the Customers list action standard slice.
+- Customers list now uses explicit View navigation with the approved pending bolt pattern.
+- No Print/PDF action was added for Customers.
+- Search, filter, export, Add Customer, and customer detail route behavior remained unchanged.
+- Focused review result: PASS.
+- Mozfer manual/visual smoke result: PASS.
+- `CUSTOMERS-PROFILE-UX-POLISH-1` remains a deferred follow-up for profile-only polish.
 - RecordPaymentModal untouched.
 - PDF/document/ZATCA routes untouched.
 - Invoice actions/queries untouched.

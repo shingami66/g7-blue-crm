@@ -27,6 +27,9 @@ export interface CustomersDictionary {
     customersSummaryZero: string;
     allStatuses: string;
     allCities: string;
+    actions: {
+      view: string;
+    };
     table: {
       company: string;
       contactPerson: string;
@@ -166,12 +169,15 @@ const customersDictionaryEn: CustomersDictionary = {
     customersSummaryZero: "Showing 0 of 0 customers",
     allStatuses: "All Statuses",
     allCities: "All Cities",
+    actions: {
+      view: "View",
+    },
     table: {
       company: "Company",
       contactPerson: "Contact Person",
       location: "Location",
       status: "Status",
-      services: "Services",
+      services: "Related Services",
       quotedValue: "Quoted Value",
     },
     report: {
@@ -312,12 +318,15 @@ const customersDictionaryAr: CustomersDictionary = {
     customersSummaryZero: "عرض 0 من 0 عميل",
     allStatuses: "كل الحالات",
     allCities: "كل المدن",
+    actions: {
+      view: "عرض",
+    },
     table: {
       company: "الجهة",
       contactPerson: "جهة الاتصال",
       location: "المدينة",
       status: "الحالة",
-      services: "الخدمات",
+      services: "الخدمات المرتبطة",
       quotedValue: "قيمة العروض",
     },
     report: {

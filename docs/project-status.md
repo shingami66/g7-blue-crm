@@ -1909,6 +1909,16 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - No VAT/ZATCA/FATOORA/QR/XML/Tax Invoice behavior was introduced.
 - Historical snapshots remain read-only source of truth.
 - Deferred follow-ups remain payment history, richer deposit/advance payment timeline, richer service/event context if needed, first-class invoice line item data if snapshot line data is insufficient, and list-action consistency review for other modules.
+
+## Customers List Actions Consistency
+- `LIST-ACTIONS-CONSISTENCY-CUSTOMERS-1` completed as a narrow list-action consistency slice.
+- The Customers list now uses an explicit View action instead of row-wide navigation.
+- View opens `/customers/[id]` through the approved pending navigation pattern.
+- No Print/PDF action was added for Customers.
+- Search, filter, export, Add Customer, and detail route behavior remained unchanged.
+- Focused review result: PASS.
+- Mozfer manual/visual smoke result: PASS.
+- `CUSTOMERS-PROFILE-UX-POLISH-1` remains deferred as a non-blocking follow-up for profile-only polish.
 ## Quotations 1B Docs Sync
 - `I18N-RTL-QUOTATIONS-RUNTIME-1B` completed.
 - Scope: quotation detail runtime page only.

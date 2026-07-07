@@ -4,17 +4,29 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
-import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import Button from "@/components/ui/Button";
-import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
-import { Plus, Filter, Download, X } from "lucide-react";
+import PendingLink from "@/components/ui/PendingLink";
+import { Eye, Plus, Filter, Download, X } from "lucide-react";
 import { createCustomer } from "@/lib/customers/actions";
 import type { CustomersDictionary } from "@/lib/i18n/dictionaries/customers";
 import type { Customer } from "@/types/customer";
 import { CustomerCoreFields, CustomerOfficialBillingFields } from "./CustomerFormFields";
 import { generateExcelReport } from "@/lib/reports/exportExcel";
+
+const TABLE_HEADER_BASE =
+  "px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase";
+const TABLE_CELL_BASE = "px-4 py-4 align-top";
+const COLUMN_LAYOUT = {
+  company: "w-[28%] min-w-[240px] text-left",
+  contact: "w-[24%] min-w-[220px] text-left",
+  location: "w-[12%] min-w-[120px] text-left",
+  status: "w-[12%] min-w-[120px] text-center",
+  services: "w-[10%] min-w-[110px] text-center",
+  quotedValue: "w-[14%] min-w-[140px] text-right",
+  view: "w-[10%] min-w-[110px] text-center",
+} as const;
 
 export default function CustomersClient({
   customers,
@@ -30,7 +42,6 @@ export default function CustomersClient({
   dictionary: CustomersDictionary;
 }) {
   const router = useRouter();
-  const { push } = useGlobalNavigationPending();
   const [showAddModal, setShowAddModal] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -205,53 +216,84 @@ export default function CustomersClient({
                 </p>
               </div>
             ) : (
-              <DataTable
-                columns={[
-                  dictionary.list.table.company,
-                  dictionary.list.table.contactPerson,
-                  dictionary.list.table.location,
-                  dictionary.list.table.status,
-                  dictionary.list.table.services,
-                  dictionary.list.table.quotedValue,
-                ]}
-              >
-                {paginatedCustomers.map((customer) => (
-                  <tr
-                    key={customer.id}
-                    onClick={() => push(`/customers/${customer.id}`)}
-                    className="hover:bg-surface-container-low/50 cursor-pointer transition-colors"
-                  >
-                    <td className="px-4 py-4">
-                      <div className="font-semibold text-primary">
-                        {customer.company}
-                      </div>
-                      <div dir="ltr" className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
-                        {customer.customerNumber}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-on-surface">{customer.contact}</div>
-                      <div dir="ltr" className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
-                        {customer.email}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-on-surface-variant">
-                      {customer.city}
-                    </td>
-                    <td className="px-4 py-4">
-                      <StatusBadge variant={customer.status}>
-                        {dictionary.customerStatuses[customer.status]}
-                      </StatusBadge>
-                    </td>
-                    <td className="px-4 py-4 text-on-surface">
-                      {customer.servicesCount}
-                    </td>
-                    <td dir="ltr" className="px-4 py-4 font-semibold text-on-surface">
-                      SAR {customer.totalQuotedAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                    </td>
-                  </tr>
-                ))}
-              </DataTable>
+              <div className="overflow-x-auto w-full border border-surface-variant rounded-b-xl bg-surface-container-lowest">
+                <table className="w-full min-w-[1060px] table-fixed border-collapse text-left">
+                  <thead>
+                    <tr className="bg-surface-container-low border-b border-surface-variant">
+                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.company}`}>
+                        {dictionary.list.table.company}
+                      </th>
+                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.contact}`}>
+                        {dictionary.list.table.contactPerson}
+                      </th>
+                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.location}`}>
+                        {dictionary.list.table.location}
+                      </th>
+                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.status}`}>
+                        {dictionary.list.table.status}
+                      </th>
+                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.services}`}>
+                        {dictionary.list.table.services}
+                      </th>
+                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.quotedValue}`}>
+                        {dictionary.list.table.quotedValue}
+                      </th>
+                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.view}`}>
+                        {dictionary.list.actions.view}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
+                    {paginatedCustomers.map((customer) => (
+                      <tr key={customer.id} className="hover:bg-surface-container-low/50 transition-colors">
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.company}`}>
+                          <div className="font-semibold text-primary">
+                            {customer.company}
+                          </div>
+                          <div dir="ltr" className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
+                            {customer.customerNumber}
+                          </div>
+                        </td>
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.contact}`}>
+                          <div className="text-on-surface">{customer.contact}</div>
+                          <div dir="ltr" className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
+                            {customer.email}
+                          </div>
+                        </td>
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.location} text-on-surface-variant`}>
+                          {customer.city}
+                        </td>
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.status}`}>
+                          <div className="flex justify-center">
+                            <StatusBadge variant={customer.status}>
+                              {dictionary.customerStatuses[customer.status]}
+                            </StatusBadge>
+                          </div>
+                        </td>
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.services} font-semibold text-on-surface`}>
+                          {customer.servicesCount}
+                        </td>
+                        <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.quotedValue} font-semibold text-on-surface`}>
+                          SAR {customer.totalQuotedAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                        </td>
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}>
+                          <div className="flex justify-center">
+                            <PendingLink
+                              href={`/customers/${customer.id}`}
+                              aria-label={`${dictionary.list.actions.view} ${customer.customerNumber}`}
+                              title={`${dictionary.list.actions.view} ${customer.customerNumber}`}
+                              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-[12px] font-semibold text-on-surface transition-colors hover:border-primary/40 hover:bg-surface-container hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 whitespace-nowrap"
+                            >
+                              <Eye size={14} />
+                              {dictionary.list.actions.view}
+                            </PendingLink>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 

@@ -745,6 +745,13 @@ Decision: Invoices page remains for list/issue/pay/PDF/status. Global invoice cr
 - Reason: Provides a dedicated invoice detail page while keeping Print/PDF separate and preserving the invoice list as the primary navigation surface.
 - Known follow-ups: payment history, richer deposit/advance payment timeline, richer service/event context if needed, and first-class invoice line item data if snapshot line data is insufficient.
 
+### CUSTOMERS-PROFILE-UX-POLISH-1
+- Status: Deferred / Non-blocking follow-up.
+- Decision: Keep this separate from `LIST-ACTIONS-CONSISTENCY-CUSTOMERS-1` so the list-action slice stays narrow and reviewable.
+- Scope: add clear View action in Related Services table, improve long National Address wrapping/spacing, optionally group Official & Billing Details into clearer subsections, and gently polish customer profile header spacing.
+- Reason deferred: profile polish is useful, but it is not required for the list-action consistency standard and should not be mixed into the completed Customers list task.
+- Known requirement boundaries: no query/action/schema/RBAC/auth changes implied.
+
 ### INVOICE-LIST-REMOVE-STANDALONE-CREATE-1
 - Status: Completed.
 - Decision: Standalone invoice creation from `/invoices` is intentionally disabled/removed.
