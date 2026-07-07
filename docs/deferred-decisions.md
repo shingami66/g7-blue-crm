@@ -131,10 +131,10 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** VAT Number, Tax Invoice issuance, ZATCA/FATOORA, and CR confirmation remain deferred/pending. Entity Unified No (7053901414) must not be treated as CR unless officially confirmed. Tax Invoice is blocked while `vat_mode = not_registered`.
 
 ## Company Settings Document Snapshot Wiring
-- **Status:** Partially resolved; Quotations are wired, but Invoices still need wiring during ERP-3.
-- **Reason deferred:** CS-A intentionally implements live singleton settings only. Existing quotation and invoice print views must not mutate when Company Settings changes. Quotation snapshot wiring is completed (`DOCUMENT-SNAPSHOT-WIRING-1B`).
+- **Status:** Partially resolved; quotation snapshot wiring is completed, but invoice snapshot wiring still needs the ERP-3 follow-up.
+- **Reason deferred:** CS-A intentionally implements live singleton settings only. Existing quotation and invoice print views must not mutate when Company Settings changes.
 - **When to return:** Before wiring Company Settings into invoice print views or before invoice issuance workflows depend on seller/legal/VAT/bank settings.
-- **Known requirements:** New documents must snapshot seller legal names, CR, TIN, VAT mode, VAT number, VAT effective date if applicable, national address, terms, and any bank details displayed on the document. Existing documents must keep their own snapshots. Quotations have this implemented; Invoices remain.
+- **Known requirements:** New documents must snapshot seller legal names, CR, TIN, VAT mode, VAT number, VAT effective date if applicable, national address, terms, and any bank details displayed on the document. Existing documents must keep their own snapshots. Quotations are already wired; invoices remain pending.
 
 ## Company Logo Upload
 - **Status:** Deferred.
@@ -782,11 +782,11 @@ Decision: Invoices page remains for list/issue/pay/PDF/status. Global invoice cr
 - Known requirement boundaries: no automation now, and no workflow/schema/query/action/RBAC changes without separate approval.
 
 ### SERVICE-DETAIL-BILLING-COPY-FIX-1
-- Status: Deferred / Separate follow-up.
+- Status: Completed / resolved.
 - Decision: Keep the Service Detail billing/invoicing copy correction separate from the completed Services list consistency slice.
 - Scope: reconcile billing copy so invoice records are not presented in a misleading way when the billing state says invoice is not available.
-- Reason deferred: this is a trust/copy correctness issue on the detail page and needs its own review.
-- Known requirement boundaries: no query/action/schema/RBAC/auth changes implied.
+- Result: completed and pushed in `c3a9636 fix(services): clarify billing invoice availability copy`.
+- Known requirement boundaries: dictionary-only change, no invoice/payment query/action/amount/calculation/PDF/schema/RBAC/auth/layout/workflow changes, focused review PASS, Mozfer manual smoke PASS.
 
 ### SERVICE-DETAIL-BILLING-ACTION-ELIGIBILITY-REVIEW-1
 - Status: Deferred / Separate follow-up.
@@ -796,11 +796,11 @@ Decision: Invoices page remains for list/issue/pay/PDF/status. Global invoice cr
 - Known requirement boundaries: do not change invoice calculations, payment logic, schema, RBAC, auth, PDF behavior, or billing layout unless separately approved.
 
 ### QUOTATION-LINE-ITEMS-EXISTENCE-CHECK-1
-- Status: Deferred / Read-only prerequisite.
-- Decision: Verify whether quotation line items are a first-class source of truth before any partial invoice / Approved Billing Scope design.
+- Status: Resolved / read-only PASS.
+- Decision: Quotation line items are a first-class source of truth and are safe to use as the base for future billing-scope design.
 - Scope: confirm the current quotation line item model and whether it can safely support future billing scope decisions.
-- Reason deferred: this is a blocking read-only check for future billing scope design.
-- Known requirement boundaries: do not implement free/manual invoices as unconstrained billing, and do not change `BILLING-FLEXIBILITY-1` until the source of truth is verified.
+- Result: `quotation_items` exists as normalized data, quotation create/edit supports multiple persisted items, quotation RPCs compute totals server-side, quotation detail/PDF uses quotation items, invoice creation can fetch quotation items, invoice snapshots include quotation items, and `invoice_items` exists but is not the live runtime invoice source today.
+- Known requirement boundaries: current invoice creation/calculation remains total-based from approved quotation `grand_total`; selected-line partial billing is not safe today; Approved Billing Scope design remains required before partial/line-level billing.
 
 ### SERVICE-PROFITABILITY-DESIGN-1
 - Status: Deferred / Design-only follow-up.

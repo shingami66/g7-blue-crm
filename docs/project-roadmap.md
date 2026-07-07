@@ -51,28 +51,28 @@ Cursor audit gates:
 1. SUPPLIER-AUDIT-COLUMNS-TEXT-FIX-1: CLOSED
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
-After P0 gates:
+Current active task:
+- `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-1`
+- Design/schema planning only; no SQL implementation yet.
+
+Backlog / later priority:
 - Supplier Bookings Domain design/planning
 - Supplier Bookings server actions
 - Supplier Bookings UI
 - Supplier Bookings RBAC
-
-Note: This does not mean immediate implementation without design/review. Domain work must follow controlled task workflow.
-
-P1 soon / before production:
 - INVOICE-READ-BOUNDARY-HARDEN-1
 - SERVICE-STATUS-DIRECT-FINAL-PATH-1
 - CUSTOMER-PO-INVOICE-GATE-1
 - INVOICE-ZERO-FINAL-GUARD-1
 - PUBLIC-HEALTH-ROUTE-HARDEN-1
 - MONEY-AUDIT-LOG-COVERAGE-1
-
-P2 before production / deferred:
 - INVOICE-SERVICE-ID-NOT-NULL-1
 - SEC-RLS-PRODUCTION-POLICIES-1
 - INVOICE-VOID-STATUS-MIGRATION-1
 - INVOICE-SNAPSHOT-FREEZE-POINT-1
 - SUPPLIER-BLACKLIST-IMPACT-CHECK-1
+
+Note: This is a controlled design sequence, not immediate implementation.
 
 ### 🚧 Locked Next CRM Priorities
 0. `SEC-AUTHZ-APP-USER-GATE-1`
@@ -165,7 +165,7 @@ Checklist:
 - [x] `company_settings.default_terms` uses professional terms.
 - [x] No Tax Invoice / VAT 15% / VAT Number / ZATCA behavior is enabled while `vat_mode = not_registered`.
 - [x] Do not apply SQL automatically.
-- [x] `SETTINGS-EDIT-MODE-1` remains separate/deferred.
+- [x] `SETTINGS-EDIT-MODE-1` is implemented/repo-ready; manual browser smoke pending.
 
 TAX-0 cleanup is complete, and SEC-RLS-BASELINE-1 manual Supabase apply/database verification is complete. DEV_ONLY broad authenticated policies were removed from the live database. STAB-P0-04 remote DB apply is complete and verified for both the supplier booking number default and the `company_settings` production RLS migration. Real or semi-real company/client data remains blocked only by the remaining operational hardening items: demo-data/security decision, raw error/security checks where applicable, and backup/monitoring/deployment readiness before production. Viewer bank masking verification is complete and passed.
 
@@ -521,16 +521,16 @@ Checklist:
 - [x] VAT mode defaults to `not_registered`
 - [x] `company_settings.default_vat_percent` is only a default for new documents
 - [x] logo upload deferred
-- [x] live settings are not wired into quotation/invoice print views
-- [ ] Company info used by quotation/invoice print views after CS-B snapshot design
-- [ ] CS-B document snapshot wiring
+- [x] live settings are not wired into invoice print views yet
+- [x] Quotation snapshot wiring is completed
+- [ ] Invoice snapshot wiring after CS-B design
 - [ ] quotation/invoice documents keep their own `vat_rate` snapshots
 - [ ] changing company settings never retroactively changes old quotations or invoices
 - [x] Build/test/audit/merge
 - [x] Update docs
 
 ### SETTINGS-EDIT-MODE-1
-Status: Implemented / Repo-ready (Manual browser smoke still required)
+Status: Implemented / Repo-ready; manual browser smoke pending.
 
 Checklist:
 - [x] Protect Company Settings UI behind an Edit Settings toggle.
@@ -1704,7 +1704,7 @@ GLOBAL-INVOICE-WIZARD-1
 - Global invoice creation from Invoices page remains deferred.
 
 ### SETTINGS-EDIT-MODE-1
-Status: Pending before ERP-3
+Status: Implemented / Repo-ready; manual browser smoke pending.
 
 Checklist:
 - [ ] Company Settings page read-only by default.

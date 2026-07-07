@@ -490,7 +490,7 @@
 - Bank details are restricted in the app data flow to Admin and Accountant; Viewer can read settings without receiving bank values.
 - VAT mode defaults to `not_registered`; default VAT percent is `0` while not registered.
 - Logo upload is deferred.
-- Live settings are intentionally not wired into quotation/invoice print views. CS-B document snapshot wiring is required before printed documents depend on Company Settings.
+- Quotation snapshot wiring is completed. Live settings are still intentionally not wired into invoice print views. CS-B document snapshot wiring is required before printed invoices depend on Company Settings.
 - SQL migration was reviewed for manual apply; SQL must never be applied automatically by agents.
 - CS-A was committed on `main` as `8dc380f feat: implement Company Settings CS-A`.
 
@@ -606,14 +606,13 @@
   - bad snapshot terms: 0
 - No Tax Invoice / VAT 15% / VAT Number / ZATCA behavior is enabled while `vat_mode = not_registered`.
 
-### âœ… SETTINGS-EDIT-MODE-1
-- Implemented and repo-ready.
+### SETTINGS-EDIT-MODE-1
+- Implemented and repo-ready; manual browser smoke pending.
 - Company Settings is read-only by default.
 - Edit requires explicit `Edit Settings` action.
 - Save/Cancel appear only in edit mode.
 - Edit button does not render for users without write permission.
 - Existing validation, permissions, and bank masking are expected to remain respected.
-- Manual browser smoke remains pending.
 
 ### âœ… SERVICE-DETAIL-RELATED-QUOTE-CTA-1
 - Status: Completed, reviewed, manual smoke passed, and pushed.
@@ -857,7 +856,7 @@
 
 ### 🚧 Cursor Audit Priority Gates & Blockers
 Cursor audit gate:
-- Current verdict: PROCEED_TO_SUPPLIER_BOOKINGS_DOMAIN.
+- Current verdict: PROCEED_TO_APPROVED_BILLING_SCOPE_SCHEMA_DESIGN.
 - SUPPLIER-AUDIT-COLUMNS-TEXT-FIX-1: CLOSED.
 - SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED.
 - SUPPLIER-BOOKINGS-SCHEMAS-1A: CLOSED.
@@ -867,7 +866,7 @@ Cursor audit gate:
 - SUPPLIER-BOOKINGS-ACTIONS-1A: CLOSED.
 - SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW: CLOSED.
 - SUPPLIER-BOOKINGS-UI-1A: CLOSED.
-- Next safe slice is `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY`.
+- Next safe slice is `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-1`.
 
 ### 🚧 Locked Next CRM Priorities
 Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.
