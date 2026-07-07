@@ -22,6 +22,7 @@ export interface QuotationsDictionary {
     goToServices: string;
     backToServices: string;
     backToService: string;
+    backToDashboard: string;
   };
   list: {
     title: string;
@@ -110,6 +111,43 @@ export interface QuotationsDictionary {
       Quoted: string;
     };
   };
+  detail: {
+    sections: {
+      details: string;
+      lineItems: string;
+      financialSummary: string;
+      depositInvoice: string;
+    };
+    labels: {
+      client: string;
+      eventName: string;
+      issueDate: string;
+      validUntil: string;
+      service: string;
+      qty: string;
+      unitSar: string;
+      totalSar: string;
+      subtotal: string;
+      discount: string;
+      taxVat: string;
+      grandTotal: string;
+    };
+    actions: {
+      edit: string;
+      printPdf: string;
+    };
+    states: {
+      detailForbidden: string;
+      unknownCompany: string;
+      noLineItems: string;
+      notApplied: string;
+    };
+    depositInvoice: {
+      alreadyCreated: string;
+      openFromInvoices: string;
+    };
+    vatWithRate: string;
+  };
   statuses: {
     draft: string;
     sent: string;
@@ -141,6 +179,7 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     goToServices: "Go to Services",
     backToServices: "Back to Services",
     backToService: "Back to Service",
+    backToDashboard: "Back to Dashboard",
   },
   list: {
     title: "Quotations",
@@ -229,6 +268,43 @@ const quotationsDictionaryEn: QuotationsDictionary = {
       Quoted: "Quoted",
     },
   },
+  detail: {
+    sections: {
+      details: "Details",
+      lineItems: "Line Items",
+      financialSummary: "Financial Summary",
+      depositInvoice: "Deposit Invoice",
+    },
+    labels: {
+      client: "Client",
+      eventName: "Event Name",
+      issueDate: "Issue Date",
+      validUntil: "Valid Until",
+      service: "Service",
+      qty: "Qty",
+      unitSar: "Unit (SAR)",
+      totalSar: "Total (SAR)",
+      subtotal: "Subtotal",
+      discount: "Discount",
+      taxVat: "Tax/VAT",
+      grandTotal: "Grand Total",
+    },
+    actions: {
+      edit: "Edit",
+      printPdf: "Print / Save as PDF",
+    },
+    states: {
+      detailForbidden: "You do not have permission to view quotations.",
+      unknownCompany: "Unknown Company",
+      noLineItems: "No line items found.",
+      notApplied: "Not applied",
+    },
+    depositInvoice: {
+      alreadyCreated: "Deposit invoice already created:",
+      openFromInvoices: "Open it from the Invoices list.",
+    },
+    vatWithRate: "VAT ({rate}%)",
+  },
   statuses: {
     draft: "Draft",
     sent: "Sent",
@@ -260,6 +336,7 @@ const quotationsDictionaryAr: QuotationsDictionary = {
     goToServices: "الانتقال إلى الخدمات",
     backToServices: "العودة إلى الخدمات",
     backToService: "العودة إلى الخدمة",
+    backToDashboard: "العودة إلى لوحة التحكم",
   },
   list: {
     title: "عروض السعر",
@@ -347,6 +424,43 @@ const quotationsDictionaryAr: QuotationsDictionary = {
       Inquiry: "استفسار",
       Quoted: "تم تقديم عرض سعر",
     },
+  },
+  detail: {
+    sections: {
+      details: "التفاصيل",
+      lineItems: "بنود العرض",
+      financialSummary: "الملخص المالي",
+      depositInvoice: "فاتورة دفعة مقدمة",
+    },
+    labels: {
+      client: "العميل",
+      eventName: "اسم الفعالية",
+      issueDate: "تاريخ الإصدار",
+      validUntil: "صالح حتى",
+      service: "الخدمة",
+      qty: "الكمية",
+      unitSar: "الوحدة (SAR)",
+      totalSar: "الإجمالي (SAR)",
+      subtotal: "المجموع الفرعي",
+      discount: "الخصم",
+      taxVat: "الضريبة/ضريبة القيمة المضافة",
+      grandTotal: "الإجمالي",
+    },
+    actions: {
+      edit: "تعديل",
+      printPdf: "طباعة / حفظ كملف PDF",
+    },
+    states: {
+      detailForbidden: "ليس لديك صلاحية لعرض عروض السعر.",
+      unknownCompany: "جهة غير معروفة",
+      noLineItems: "لا توجد بنود عرض.",
+      notApplied: "غير مطبق",
+    },
+    depositInvoice: {
+      alreadyCreated: "تم إنشاء فاتورة دفعة مقدمة بالفعل:",
+      openFromInvoices: "افتحها من قائمة الفواتير.",
+    },
+    vatWithRate: "ضريبة القيمة المضافة ({rate}%)",
   },
   statuses: {
     draft: "مسودة",

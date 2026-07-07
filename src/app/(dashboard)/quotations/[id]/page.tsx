@@ -6,6 +6,8 @@ import PendingLink from "@/components/ui/PendingLink";
 import { getQuotationById } from "@/lib/quotations/queries";
 import { requirePermission, checkPermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
+import { getLocale } from "@/lib/i18n/locales";
+import { getQuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
 import type { ComponentProps } from "react";
 import QuotationApprovalActions from "./QuotationApprovalActions";
 import { getInvoicesByQuotationId } from "@/lib/invoices/queries";
@@ -19,6 +21,8 @@ export default async function QuotationDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const locale = getLocale();
+  const dictionary = getQuotationsDictionary(locale);
 
   try {
     await requirePermission("quotations:read");
@@ -45,16 +49,16 @@ export default async function QuotationDetailPage({
             </svg>
           </div>
           <h2 className="text-[24px] font-semibold text-on-surface">
-            Access Denied
+            {dictionary.states.accessDenied}
           </h2>
           <p className="text-on-surface-variant text-[14px]">
-            You do not have permission to view quotations.
+            {dictionary.detail.states.detailForbidden}
           </p>
           <Link
             href="/dashboard"
             className="mt-4 px-4 py-2 bg-primary text-on-primary rounded-lg text-[14px] font-semibold hover:bg-primary-container transition-colors"
           >
-            Back to Dashboard
+            {dictionary.actions.backToDashboard}
           </Link>
         </div>
       );
@@ -89,6 +93,8 @@ export default async function QuotationDetailPage({
     });
   };
   const isTaxVatNotApplied = quotation.vatRate === 0 && quotation.vatAmount === 0;
+  const formatCopy = (template: string, values: Record<string, string | number>) =>
+    template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
 
   return (
     <div className="flex flex-col gap-6 pb-12">
@@ -103,12 +109,11 @@ export default async function QuotationDetailPage({
           </PendingLink>
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight">
+              <h2 className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight" dir="ltr">
                 {quotation.quotationNumber}
               </h2>
               <StatusBadge variant={quotation.status as StatusBadgeVariant}>
-                {quotation.status.charAt(0).toUpperCase() +
-                  quotation.status.slice(1)}
+                {dictionary.statuses[quotation.status]}
               </StatusBadge>
             </div>
           </div>
@@ -123,7 +128,7 @@ export default async function QuotationDetailPage({
               className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors"
             >
               <FileEdit size={18} />
-              Edit
+              {dictionary.detail.actions.edit}
             </PendingLink>
           )}
           <Link
@@ -132,7 +137,7 @@ export default async function QuotationDetailPage({
             className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-primary text-primary hover:bg-surface-container-low rounded-lg text-[14px] font-semibold transition-colors"
           >
             <Printer size={18} />
-            Print / Save as PDF
+            {dictionary.detail.actions.printPdf}
           </Link>
         </div>
       </div>
@@ -144,36 +149,36 @@ export default async function QuotationDetailPage({
           {/* Info Card */}
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
-              <h3 className="font-semibold text-primary">Details</h3>
+              <h3 className="font-semibold text-primary">{dictionary.detail.sections.details}</h3>
             </div>
             <div className="p-6 grid grid-cols-2 gap-6">
               <div>
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-                  Client
+                  {dictionary.detail.labels.client}
                 </div>
-                <div className="text-on-surface font-medium">
-                  {quotation.customer?.company || "Unknown Company"}
+                <div className="text-on-surface font-medium" dir="auto">
+                  {quotation.customer?.company || dictionary.detail.states.unknownCompany}
                 </div>
               </div>
               <div>
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-                  Event Name
+                  {dictionary.detail.labels.eventName}
                 </div>
-                <div className="text-on-surface font-medium">
+                <div className="text-on-surface font-medium" dir="auto">
                   {quotation.event}
                 </div>
               </div>
               <div>
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-                  Issue Date
+                  {dictionary.detail.labels.issueDate}
                 </div>
-                <div className="text-on-surface font-medium">{quotation.date}</div>
+                <div className="text-on-surface font-medium" dir="ltr">{quotation.date}</div>
               </div>
               <div>
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
-                  Valid Until
+                  {dictionary.detail.labels.validUntil}
                 </div>
-                <div className="text-on-surface font-medium">
+                <div className="text-on-surface font-medium" dir="ltr">
                   {quotation.validUntil || "-"}
                 </div>
               </div>
@@ -183,7 +188,7 @@ export default async function QuotationDetailPage({
           {/* Line Items Table */}
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
-              <h3 className="font-semibold text-primary">Line Items</h3>
+              <h3 className="font-semibold text-primary">{dictionary.detail.sections.lineItems}</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -193,40 +198,40 @@ export default async function QuotationDetailPage({
                       #
                     </th>
                     <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                      Service
+                      {dictionary.detail.labels.service}
                     </th>
                     <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-center w-16">
-                      Qty
+                      {dictionary.detail.labels.qty}
                     </th>
                     <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-right">
-                      Unit (SAR)
+                      {dictionary.detail.labels.unitSar}
                     </th>
                     <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-right">
-                      Total (SAR)
+                      {dictionary.detail.labels.totalSar}
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-variant text-[14px]">
                   {quotation.items.map((item, i) => (
                     <tr key={i}>
-                      <td className="px-4 py-4 text-on-surface-variant align-top">
+                      <td className="px-4 py-4 text-on-surface-variant align-top" dir="ltr">
                         {i + 1}
                       </td>
                       <td className="px-4 py-4 align-top">
-                        <div className="font-semibold text-on-surface mb-1">
+                        <div className="font-semibold text-on-surface mb-1" dir="auto">
                           {item.description}
                         </div>
-                        <div className="text-[12px] text-on-surface-variant leading-relaxed">
+                        <div className="text-[12px] text-on-surface-variant leading-relaxed" dir="auto">
                           {item.details}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-center text-on-surface align-top">
+                      <td className="px-4 py-4 text-center text-on-surface align-top" dir="ltr">
                         {formatQuantity(item.qty)}
                       </td>
-                      <td className="px-4 py-4 text-right text-on-surface align-top">
+                      <td className="px-4 py-4 text-right text-on-surface align-top" dir="ltr">
                         {formatMoney(item.unitPrice)}
                       </td>
-                      <td className="px-4 py-4 text-right font-medium text-on-surface align-top">
+                      <td className="px-4 py-4 text-right font-medium text-on-surface align-top" dir="ltr">
                         {formatMoney(item.total)}
                       </td>
                     </tr>
@@ -237,7 +242,7 @@ export default async function QuotationDetailPage({
                         colSpan={5}
                         className="px-4 py-8 text-center text-on-surface-variant"
                       >
-                        No line items found.
+                        {dictionary.detail.states.noLineItems}
                       </td>
                     </tr>
                   )}
@@ -252,25 +257,33 @@ export default async function QuotationDetailPage({
           {/* Financial Summary */}
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
-              <h3 className="font-semibold text-primary">Financial Summary</h3>
+              <h3 className="font-semibold text-primary">{dictionary.detail.sections.financialSummary}</h3>
             </div>
             <div className="p-6">
               <div className="space-y-3">
-                <div className="flex justify-between text-[14px] text-on-surface-variant">
-                  <span>Subtotal</span>
+                <div className="flex justify-between text-[14px] text-on-surface-variant" dir="ltr">
+                  <span>{dictionary.detail.labels.subtotal}</span>
                   <span>{formatMoney(quotation.subtotal)} SAR</span>
                 </div>
-                <div className="flex justify-between text-[14px] text-on-surface-variant">
-                  <span>Discount</span>
+                <div className="flex justify-between text-[14px] text-on-surface-variant" dir="ltr">
+                  <span>{dictionary.detail.labels.discount}</span>
                   <span>{formatMoney(quotation.discount)} SAR</span>
                 </div>
-                <div className="flex justify-between text-[14px] text-on-surface-variant">
-                  <span>{isTaxVatNotApplied ? "Tax/VAT" : `VAT (${quotation.vatRate}%)`}</span>
-                  <span>{isTaxVatNotApplied ? "Not applied" : `${formatMoney(quotation.vatAmount)} SAR`}</span>
+                <div className="flex justify-between text-[14px] text-on-surface-variant" dir="ltr">
+                  <span>
+                    {isTaxVatNotApplied
+                      ? dictionary.detail.labels.taxVat
+                      : formatCopy(dictionary.detail.vatWithRate, { rate: quotation.vatRate })}
+                  </span>
+                  <span>
+                    {isTaxVatNotApplied
+                      ? dictionary.detail.states.notApplied
+                      : `${formatMoney(quotation.vatAmount)} SAR`}
+                  </span>
                 </div>
-                <div className="border-t border-surface-variant pt-3 mt-3 flex justify-between">
+                <div className="border-t border-surface-variant pt-3 mt-3 flex justify-between" dir="ltr">
                   <span className="font-semibold text-[18px] text-primary">
-                    Grand Total
+                    {dictionary.detail.labels.grandTotal}
                   </span>
                   <span className="font-semibold text-[18px] text-primary">
                     {formatMoney(quotation.grandTotal)} SAR
@@ -284,16 +297,19 @@ export default async function QuotationDetailPage({
           {quotation.status === "approved" && (
             <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
               <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
-                <h3 className="font-semibold text-primary">Deposit Invoice</h3>
+                <h3 className="font-semibold text-primary">{dictionary.detail.sections.depositInvoice}</h3>
               </div>
               <div className="p-6">
                 {activeDepositInvoice ? (
                   <div className="flex flex-col gap-1">
                     <span className="text-[14px] text-on-surface-variant">
-                      Deposit invoice already created: <span className="font-medium text-on-surface">{activeDepositInvoice.invoice_number}</span>
+                      {dictionary.detail.depositInvoice.alreadyCreated}{" "}
+                      <span className="font-medium text-on-surface" dir="ltr">
+                        {activeDepositInvoice.invoice_number}
+                      </span>
                     </span>
                     <span className="text-[13px] text-on-surface-variant italic">
-                      Open it from the Invoices list.
+                      {dictionary.detail.depositInvoice.openFromInvoices}
                     </span>
                   </div>
                 ) : (

@@ -384,3 +384,26 @@
   - no quotation action/query logic changed
   - no RBAC/permission/service-gating/create-flow behavior changed
   - no totals/SAR calculation behavior changed
+### I18N-RTL-QUOTATIONS-RUNTIME-1B
+
+- Type: module runtime implementation
+- Status: DONE
+- Scope:
+  - quotation detail runtime page
+- Outcome:
+  - module-local quotations dictionary reused and extended
+  - focused senior review result is `PASS`
+  - Mozfer manual/browser smoke result is `PASS`
+  - detail page rendered correctly
+  - financial summary rendered correctly
+  - deposit invoice card rendered correctly
+  - line items rendered correctly
+  - print / save as PDF button/link remained visible and behavior-preserved
+  - quotation numbers, invoice numbers, customer/service names, SAR values, dates, quantities, and statuses remained readable/LTR-safe
+  - PDFs/document routes untouched
+  - ZATCA/QR/XML/FATOORA untouched
+  - quotation actions/queries untouched
+  - no RBAC/permission drift
+  - no finance/totals drift
+  - no PDF link behavior drift
+  - no deposit invoice behavior drift

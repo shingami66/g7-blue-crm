@@ -284,3 +284,21 @@
 - No quotation action/query logic changed.
 - No RBAC/permission/service-gating/create-flow behavior changed.
 - No totals/SAR calculation behavior changed.
+## Quotations 1B Docs Sync
+
+- `I18N-RTL-QUOTATIONS-RUNTIME-1B` is complete as a Quotations runtime module slice.
+- Focused senior review result is `PASS`.
+- Mozfer manual/browser smoke result is `PASS`.
+- Quotations detail page rendered correctly.
+- Financial Summary rendered correctly.
+- Deposit Invoice card rendered correctly.
+- Line Items rendered correctly.
+- Print / Save as PDF button/link remained visible and behavior-preserved.
+- Quotation numbers, invoice numbers, customer/service names, SAR values, dates, quantities, and statuses remained readable/LTR-safe.
+- No PDFs/document routes touched.
+- No ZATCA/QR/XML/FATOORA touched.
+- No quotation action/query logic changed.
+- No RBAC/permission drift.
+- No finance/totals drift.
+- No PDF link behavior drift.
+- No deposit invoice behavior drift.
