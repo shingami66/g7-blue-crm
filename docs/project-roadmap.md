@@ -2050,3 +2050,17 @@ Must verify:
 - No PDF link behavior drift.
 - No deposit invoice behavior drift.
 - RTL shell passed visually with the known non-blocking English-locale direction note.
+
+## Service Detail Status UX
+- `SERVICE-DETAIL-STATUS-UX-1` completed the Service Detail workflow/status UX slice.
+- The oversized Service Detail status timeline was replaced with a compact A-lite Workflow card.
+- Header status badge remains authoritative.
+- Current Status is not repeated inside the Workflow card.
+- Current Phase and Next Action are shown.
+- Status History is collapsed and secondary.
+- Status Actions remain separate and unchanged.
+- Last Updated is omitted because no dedicated status-transition timestamp exists yet.
+- Completed and Cancelled are terminal.
+- Focused review result: PASS.
+- Mozfer visual review result: PASS for default Quoted and Completed detail views.
+- Remaining rollout stays separate for the pending-UX follow-up, billing copy, supplier cost verification, related records actions, supplier booking CTA, header hierarchy polish, and broader table standardization.

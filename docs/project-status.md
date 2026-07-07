@@ -1954,6 +1954,21 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - No deposit invoice behavior drift.
 - RTL shell passed visually with the known non-blocking English-locale direction note.
 
+## Service Detail Status UX
+- `SERVICE-DETAIL-STATUS-UX-1` completed as a Service Detail workflow/status UX slice.
+- The oversized Service Detail status timeline was replaced with a compact A-lite Workflow card.
+- The header status badge remains the authoritative current status surface.
+- The Workflow card does not repeat Current Status.
+- The Workflow card shows Current Phase and Next Action.
+- Status History is collapsed and secondary.
+- Status Actions remain separate and unchanged.
+- Last Updated is omitted because no dedicated status-transition timestamp was available.
+- Completed and Cancelled are handled as terminal states.
+- No workflow/schema/query/action/RBAC/billing/supplier/PDF changes were introduced.
+- Focused review result: PASS.
+- Mozfer visual review result: PASS for default Quoted and Completed detail views.
+- Expanded history, Cancelled visual state, and mobile/small-width smoke remain to be confirmed manually if needed.
+
 ### I18N-RTL-INVOICES-RUNTIME-1B
 - `I18N-RTL-INVOICES-RUNTIME-1B` completed as an Invoices runtime action/payment slice.
 - Focused senior review initially returned HOLD on the `online` payment label.

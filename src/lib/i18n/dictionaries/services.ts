@@ -145,12 +145,20 @@ export interface ServicesDictionary {
   };
   serviceStatusTimeline: {
     title: string;
-    subtitle: string;
-    cancelledTerminal: string;
-    currentStatus: string;
+    currentPhaseLabel: string;
+    nextActionLabel: string;
+    historyLabel: string;
+    historyHint: string;
+    stopped: string;
+    noFurtherActions: string;
     reached: string;
-    pendingWorkflow: string;
+    current: string;
     pending: string;
+    notConfirmed: string;
+    fallbackPhase: string;
+    fallbackNextAction: string;
+    phaseDescriptions: Record<ServiceStatus, string>;
+    nextActionDescriptions: Record<ServiceStatus, string>;
   };
   editPage: {
     blockedTitle: string;
@@ -736,13 +744,37 @@ const servicesDictionaryEn: ServicesDictionary = {
     updatedSuccessfully: "Status updated successfully!",
   },
   serviceStatusTimeline: {
-    title: "Service Status Timeline",
-    subtitle: "Display-only workflow view. Status changes are controlled by guarded workflow actions.",
-    cancelledTerminal: "Cancelled is terminal and non-linear.",
-    currentStatus: "Current status",
+    title: "Workflow",
+    currentPhaseLabel: "Current Phase",
+    nextActionLabel: "Next Action",
+    historyLabel: "Status History",
+    historyHint: "Review the standard status path for this service.",
+    stopped: "Workflow stopped before the standard path was completed.",
+    noFurtherActions: "No further status actions are available.",
     reached: "Reached",
-    pendingWorkflow: "Pending workflow",
+    current: "Current",
     pending: "Pending",
+    notConfirmed: "Not confirmed",
+    fallbackPhase: "The current workflow state is available in the service header.",
+    fallbackNextAction: "Review the current workflow state and use guarded status actions when available.",
+    phaseDescriptions: {
+      Inquiry: "The service inquiry has been captured and is under review.",
+      Quoted: "A quotation has been prepared and is waiting for approval.",
+      Approved: "The service is approved and awaiting deposit confirmation.",
+      "Deposit Paid": "The deposit is confirmed and the service is ready to begin.",
+      "In Progress": "The service is currently being delivered.",
+      Completed: "The service has been completed.",
+      Cancelled: "The service has been cancelled.",
+    },
+    nextActionDescriptions: {
+      Inquiry: "Complete the service details and issue a quotation when ready.",
+      Quoted: "Approve the quotation to continue the workflow.",
+      Approved: "Confirm the deposit payment to continue the workflow.",
+      "Deposit Paid": "Start delivery when work begins.",
+      "In Progress": "Finish delivery and close the remaining workflow steps.",
+      Completed: "No further status actions are available.",
+      Cancelled: "No further status actions are available.",
+    },
   },
   editPage: {
     blockedTitle: "Edit Blocked",
@@ -1427,13 +1459,37 @@ const servicesDictionaryAr: ServicesDictionary = {
     updatedSuccessfully: "تم تحديث الحالة بنجاح!",
   },
   serviceStatusTimeline: {
-    title: "المسار الزمني لحالة الخدمة",
-    subtitle: "عرض مرجعي فقط لسير العمل. يتم التحكم في تغييرات الحالة من خلال إجراءات سير عمل محمية.",
-    cancelledTerminal: "حالة الإلغاء نهائية وغير خطية.",
-    currentStatus: "الحالة الحالية",
+    title: "سير العمل",
+    currentPhaseLabel: "المرحلة الحالية",
+    nextActionLabel: "الخطوة التالية",
+    historyLabel: "سجل الحالات",
+    historyHint: "راجع مسار الحالة القياسي لهذه الخدمة.",
+    stopped: "توقف سير العمل قبل اكتمال المسار القياسي.",
+    noFurtherActions: "لا توجد إجراءات حالة إضافية متاحة.",
     reached: "تم الوصول",
-    pendingWorkflow: "بانتظار سير العمل",
+    current: "الحالية",
     pending: "قيد الانتظار",
+    notConfirmed: "غير مؤكد",
+    fallbackPhase: "حالة سير العمل الحالية متاحة في رأس صفحة الخدمة.",
+    fallbackNextAction: "راجع حالة سير العمل الحالية واستخدم إجراءات الحالة المحمية عند توفرها.",
+    phaseDescriptions: {
+      Inquiry: "تم تسجيل الاستفسار وتتم مراجعة تفاصيل الخدمة.",
+      Quoted: "تم إعداد عرض السعر وبانتظار الاعتماد.",
+      Approved: "تم اعتماد الخدمة وبانتظار تأكيد الدفعة المقدمة.",
+      "Deposit Paid": "تم تأكيد الدفعة المقدمة والخدمة جاهزة لبدء التنفيذ.",
+      "In Progress": "الخدمة قيد التنفيذ حالياً.",
+      Completed: "تم إكمال الخدمة.",
+      Cancelled: "تم إلغاء الخدمة.",
+    },
+    nextActionDescriptions: {
+      Inquiry: "أكمل تفاصيل الخدمة وأصدر عرض السعر عند الجاهزية.",
+      Quoted: "اعتمد عرض السعر لمتابعة سير العمل.",
+      Approved: "أكد سداد الدفعة المقدمة لمتابعة سير العمل.",
+      "Deposit Paid": "ابدأ التنفيذ عند بدء العمل الفعلي.",
+      "In Progress": "أكمل التنفيذ وأغلق الخطوات المتبقية عند الانتهاء.",
+      Completed: "لا توجد إجراءات حالة إضافية متاحة.",
+      Cancelled: "لا توجد إجراءات حالة إضافية متاحة.",
+    },
   },
   editPage: {
     blockedTitle: "التعديل محظور",

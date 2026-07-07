@@ -1,6 +1,6 @@
 import type { Service } from "@/types/service";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { Check } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 
 const LINEAR_STATUSES = [
   "Inquiry",
@@ -10,6 +10,8 @@ const LINEAR_STATUSES = [
   "In Progress",
   "Completed",
 ] as const;
+
+type HistoryState = "reached" | "current" | "pending" | "notConfirmed";
 
 interface ServiceStatusTimelineProps {
   status: Service["status"];
@@ -22,112 +24,178 @@ export default function ServiceStatusTimeline({
   cancellationReason,
   dictionary,
 }: ServiceStatusTimelineProps) {
-  const currentStatusIndex = LINEAR_STATUSES.indexOf(
-    status as (typeof LINEAR_STATUSES)[number]
-  );
-  const serviceCancelled = status === "Cancelled";
+  const workflowDisplay = getServiceWorkflowDisplay(status, dictionary);
+  const historyItems = getHistoryItems(status);
 
   return (
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
       <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright">
         <h3 className="font-semibold text-primary">{dictionary.serviceStatusTimeline.title}</h3>
-        <p className="mt-1 text-[13px] leading-[18px] text-on-surface-variant">
-          {dictionary.serviceStatusTimeline.subtitle}
-        </p>
       </div>
 
-      <div className="p-6 md:py-8 md:px-6">
-        <ol className="relative flex flex-col md:flex-row w-full">
-          {LINEAR_STATUSES.map((timelineStatus, index) => {
-            const isCurrent = status === timelineStatus;
-            const isPast = !serviceCancelled && currentStatusIndex > index;
-            const isFuture = serviceCancelled || currentStatusIndex < index;
-            const isLast = index === LINEAR_STATUSES.length - 1;
+      <div className="p-6">
+        <dl className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <WorkflowDetail
+            label={dictionary.serviceStatusTimeline.currentPhaseLabel}
+            value={workflowDisplay.currentPhase}
+          />
+          <WorkflowDetail
+            label={dictionary.serviceStatusTimeline.nextActionLabel}
+            value={workflowDisplay.nextAction}
+          />
+        </dl>
 
-            return (
-              <li
-                key={timelineStatus}
-                className="relative flex flex-row md:flex-col items-start md:items-center flex-1 group"
-              >
-                {/* Desktop Connecting Line */}
-                {!isLast && (
-                  <div
-                    className={`hidden md:block absolute top-4 left-[50%] w-full h-[2px] -translate-y-[1px] z-0 transition-colors ${
-                      isPast ? "bg-primary" : "bg-surface-variant"
-                    }`}
-                  />
-                )}
-                {/* Mobile Connecting Line */}
-                {!isLast && (
-                  <div
-                    className={`md:hidden absolute top-8 left-4 w-[2px] h-[calc(100%-32px)] -translate-x-[1px] z-0 transition-colors ${
-                      isPast ? "bg-primary" : "bg-surface-variant"
-                    }`}
-                  />
-                )}
-
-                {/* Step Indicator */}
-                <div
-                  className={`relative z-10 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors ${
-                    isPast
-                      ? "border-primary bg-primary text-on-primary"
-                      : isCurrent
-                      ? "border-primary bg-surface-container-lowest text-primary"
-                      : "border-outline-variant bg-surface-container-lowest text-on-surface-variant"
-                  }`}
-                >
-                  {isPast ? (
-                    <Check size={16} strokeWidth={3} />
-                  ) : isCurrent ? (
-                    <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-                  ) : (
-                    <span className="text-[12px] font-semibold">{index + 1}</span>
-                  )}
-                </div>
-
-                {/* Step Text */}
-                <div className="ml-4 md:ml-0 md:mt-3 md:text-center pb-6 md:pb-0 pt-1 md:pt-0">
-                  <p
-                    className={`text-[13px] leading-[18px] font-semibold transition-colors ${
-                      isCurrent ? "text-primary" : "text-on-surface"
-                    }`}
-                  >
-                    {dictionary.serviceStatuses[timelineStatus]}
-                  </p>
-                  <p className="mt-0.5 text-[12px] leading-[16px] text-on-surface-variant">
-                    {getStatusLabel(dictionary, isCurrent, isPast, isFuture)}
-                  </p>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-
-        {serviceCancelled && (
-          <div className="mt-2 md:mt-6 border border-error-container bg-error-container/40 text-on-error-container rounded-lg px-4 py-3">
-            <div className="text-[13px] leading-[18px] font-semibold">
-              {dictionary.serviceStatusTimeline.cancelledTerminal}
-            </div>
-            {cancellationReason && (
-              <p className="mt-1 text-[13px] leading-[18px]">
-                {cancellationReason}
+        <details className="mt-5 rounded-xl border border-surface-variant bg-surface">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-left marker:hidden [&::-webkit-details-marker]:hidden">
+            <div>
+              <p className="text-[14px] font-semibold text-on-surface">
+                {dictionary.serviceStatusTimeline.historyLabel}
               </p>
+              <p className="mt-1 text-[12px] leading-[16px] text-on-surface-variant">
+                {dictionary.serviceStatusTimeline.historyHint}
+              </p>
+            </div>
+            <ChevronDown
+              aria-hidden="true"
+              className="shrink-0 text-on-surface-variant"
+              size={16}
+            />
+          </summary>
+
+          <div className="border-t border-surface-variant px-4 py-4">
+            {status === "Cancelled" && (
+              <div className="mb-4 rounded-lg border border-error-container bg-error-container/40 px-4 py-3 text-on-error-container">
+                <p className="text-[13px] font-semibold leading-[18px]">
+                  {dictionary.serviceStatusTimeline.stopped}
+                </p>
+                {cancellationReason && (
+                  <p dir="auto" className="mt-2 text-[13px] leading-[18px]">
+                    {cancellationReason}
+                  </p>
+                )}
+              </div>
             )}
+
+            <ol className="space-y-3">
+              {historyItems.map((item, index) => (
+                <li key={item.status} className="flex items-start gap-3">
+                  <HistoryMarker index={index} state={item.state} />
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-semibold text-on-surface">
+                      {dictionary.serviceStatuses[item.status]}
+                    </p>
+                    <p className="mt-1 text-[12px] leading-[16px] text-on-surface-variant">
+                      {getHistoryLabel(dictionary, item.state)}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
-        )}
+        </details>
       </div>
     </section>
   );
 }
 
-function getStatusLabel(
+function WorkflowDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-surface-variant bg-surface px-4 py-4">
+      <dt className="text-[12px] font-semibold uppercase tracking-wider text-on-surface-variant">
+        {label}
+      </dt>
+      <dd dir="auto" className="mt-2 text-[14px] leading-[22px] font-medium text-on-surface">
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function HistoryMarker({
+  index,
+  state,
+}: {
+  index: number;
+  state: HistoryState;
+}) {
+  if (state === "reached") {
+    return (
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary bg-primary text-on-primary">
+        <Check size={16} strokeWidth={3} />
+      </span>
+    );
+  }
+
+  if (state === "current") {
+    return (
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary bg-primary/10 text-primary">
+        <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+      </span>
+    );
+  }
+
+  if (state === "notConfirmed") {
+    return (
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-low text-on-surface-variant text-[12px] font-semibold">
+        ?
+      </span>
+    );
+  }
+
+  return (
+    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface-variant text-[12px] font-semibold">
+      {index + 1}
+    </span>
+  );
+}
+
+function getServiceWorkflowDisplay(
+  status: Service["status"],
   dictionary: ServicesDictionary,
-  isCurrent: boolean,
-  isPast: boolean,
-  isFuture: boolean
 ) {
-  if (isCurrent) return dictionary.serviceStatusTimeline.currentStatus;
-  if (isPast) return dictionary.serviceStatusTimeline.reached;
-  if (isFuture) return dictionary.serviceStatusTimeline.pendingWorkflow;
+  return {
+    currentPhase:
+      dictionary.serviceStatusTimeline.phaseDescriptions[status] ??
+      dictionary.serviceStatusTimeline.fallbackPhase,
+    nextAction:
+      dictionary.serviceStatusTimeline.nextActionDescriptions[status] ??
+      dictionary.serviceStatusTimeline.fallbackNextAction,
+  };
+}
+
+function getHistoryItems(status: Service["status"]) {
+  if (status === "Cancelled") {
+    return LINEAR_STATUSES.map((timelineStatus) => ({
+      status: timelineStatus,
+      state: "notConfirmed" as const,
+    }));
+  }
+
+  const currentStatusIndex = LINEAR_STATUSES.indexOf(
+    status as (typeof LINEAR_STATUSES)[number],
+  );
+
+  if (currentStatusIndex === -1) {
+    return LINEAR_STATUSES.map((timelineStatus) => ({
+      status: timelineStatus,
+      state: "pending" as const,
+    }));
+  }
+
+  return LINEAR_STATUSES.map((timelineStatus, index) => ({
+    status: timelineStatus,
+    state:
+      index < currentStatusIndex
+        ? ("reached" as const)
+        : index === currentStatusIndex
+          ? ("current" as const)
+          : ("pending" as const),
+  }));
+}
+
+function getHistoryLabel(dictionary: ServicesDictionary, state: HistoryState) {
+  if (state === "reached") return dictionary.serviceStatusTimeline.reached;
+  if (state === "current") return dictionary.serviceStatusTimeline.current;
+  if (state === "notConfirmed") return dictionary.serviceStatusTimeline.notConfirmed;
   return dictionary.serviceStatusTimeline.pending;
 }

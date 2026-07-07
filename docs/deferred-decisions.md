@@ -760,6 +760,20 @@ Decision: Invoices page remains for list/issue/pay/PDF/status. Global invoice cr
 - Known requirement boundaries: preserve existing guarded status actions, avoid repeating Current Status, and do not introduce workflow/schema/query/action/RBAC changes.
 - Additional constraints: respect the service i18n glossary and western-digit/latn rules, handle Cancelled as a special terminal state, and include mobile/small-width smoke.
 
+### SERVICE-DETAIL-STATUS-ACTION-PENDING-UX-1
+- Status: Deferred / Separate follow-up.
+- Decision: Improve the pending feedback pattern for guarded service status mutations as its own UX task.
+- Scope: decide whether service status actions should also trigger the global pending bolt or another consistent pending indicator pattern.
+- Reason deferred: the current workflow card work is complete, but mutation pending affordance can be improved separately.
+- Known requirement boundaries: preserve guarded status workflow, and do not automate transitions or change workflow/schema/query/action/RBAC logic.
+
+### SERVICE-WORKFLOW-AUTO-TRANSITIONS-DESIGN-1
+- Status: Deferred / Design-only follow-up.
+- Decision: Keep any future automatic or suggested service workflow transitions as a separate design task.
+- Scope: explore future workflow suggestions such as deposit-paid readiness or invoice/payment-driven prompts only after business rules review.
+- Reason deferred: this is design-only and must not be implemented with the current Service Detail UX slice.
+- Known requirement boundaries: no automation now, and no workflow/schema/query/action/RBAC changes without separate approval.
+
 ### SERVICE-DETAIL-BILLING-COPY-FIX-1
 - Status: Deferred / Separate follow-up.
 - Decision: Keep the Service Detail billing/invoicing copy correction separate from the completed Services list consistency slice.
