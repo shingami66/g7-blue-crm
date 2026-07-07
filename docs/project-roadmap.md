@@ -1984,6 +1984,14 @@ Must verify:
 - No RBAC/permission drift.
 - No stats/calculation drift.
 - No side-panel behavior drift.
+## Invoices 1B Docs Sync
+- `I18N-RTL-INVOICES-RUNTIME-1B` completed as an Invoices runtime action/payment slice.
+- Focused senior review initially returned HOLD on the `online` payment label.
+- FIX-2 corrected `paymentModal.methods.online` to `Online Payment` / `دفع إلكتروني`.
+- Re-review outcome is `PASS`.
+- Mozfer manual/browser smoke was recorded as PASS for the slice.
+- IssueInvoiceAction and RecordPaymentModal copy were localized without changing behavior, validation, permissions, or action/query logic.
+- Separate UX follow-up remains open as `INVOICES-LIST-SEARCH-FILTER-UX-1`.
 ## Quotations 1B Docs Sync
 - `I18N-RTL-QUOTATIONS-RUNTIME-1B` completed as a Quotations runtime module slice.
 - Focused senior review result is `PASS`.

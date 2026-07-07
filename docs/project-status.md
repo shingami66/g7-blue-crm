@@ -1905,3 +1905,12 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - No PDF link behavior drift.
 - No deposit invoice behavior drift.
 - RTL shell passed visually with the known non-blocking English-locale direction note.
+
+### I18N-RTL-INVOICES-RUNTIME-1B
+- `I18N-RTL-INVOICES-RUNTIME-1B` completed as an Invoices runtime action/payment slice.
+- Focused senior review initially returned HOLD on the `online` payment label.
+- FIX-2 corrected `paymentModal.methods.online` to `Online Payment` / `دفع إلكتروني`.
+- Re-review result: PASS.
+- Mozfer manual/browser smoke was recorded as PASS for the slice.
+- IssueInvoiceAction and RecordPaymentModal copy were localized without changing behavior, validation, permissions, or action/query logic.
+- Separate UX follow-up remains open as `INVOICES-LIST-SEARCH-FILTER-UX-1`.

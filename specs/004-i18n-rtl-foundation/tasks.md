@@ -409,6 +409,23 @@
   - Mozfer manual/browser smoke result is `PASS`
   - invoice numbers, customer names, quotation refs, SAR values, dates, and statuses remained readable/LTR-safe
   - non-blocking UX follow-up: list feels crowded because it shows more than 10 rows at once; future pagination task suggested as `INVOICES-LIST-PAGINATION-10-1`
+
+### I18N-RTL-INVOICES-RUNTIME-1B
+
+- Type: module runtime implementation
+- Status: DONE
+- Scope:
+  - invoice issue action UI
+  - record payment modal UI
+- Outcome:
+  - module-local invoices dictionary reused and extended
+  - focused senior review initially returned HOLD on the `online` payment label
+  - FIX-2 corrected `paymentModal.methods.online` to `Online Payment` / `دفع إلكتروني`
+  - re-review outcome is `PASS`
+  - Mozfer manual/browser smoke was recorded as PASS
+  - IssueInvoiceAction and RecordPaymentModal copy were localized without changing behavior, validation, permissions, or action/query logic
+  - separate UX follow-up remains open as `INVOICES-LIST-SEARCH-FILTER-UX-1`
+
 ### I18N-RTL-QUOTATIONS-RUNTIME-1B
 
 - Type: module runtime implementation

@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { X, Receipt, Loader2 } from "lucide-react";
 import { recordPaymentAction } from "@/lib/payments/actions";
+import { getLocale } from "@/lib/i18n/locales";
+import { getInvoicesDictionary } from "@/lib/i18n/dictionaries/invoices";
 
 interface RecordPaymentModalProps {
   invoiceId: string;
@@ -21,11 +23,18 @@ export function RecordPaymentModal({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const dictionary = getInvoicesDictionary(getLocale());
 
   const [amount, setAmount] = useState(balanceDue.toString());
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [method, setMethod] = useState<"bank_transfer" | "cash" | "cheque" | "online">("bank_transfer");
   const [reference, setReference] = useState("");
+
+  const formatCopy = (template: string, values: Record<string, string | number>) =>
+    template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
+  const [helperBeforeInvoiceNumber, helperAfterInvoiceNumber] = dictionary.paymentModal.helper.split(
+    "{invoiceNumber}"
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,17 +42,21 @@ export function RecordPaymentModal({
 
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      setError("Please enter a valid positive amount.");
+      setError(dictionary.paymentModal.validation.positiveAmount);
       return;
     }
 
     if (numericAmount > balanceDue) {
-      setError(`Payment cannot exceed the balance due (${balanceDue}).`);
+      setError(
+        formatCopy(dictionary.paymentModal.validation.exceedsBalance, {
+          balanceDue,
+        })
+      );
       return;
     }
 
     if (!date) {
-      setError("Please select a date.");
+      setError(dictionary.paymentModal.validation.dateRequired);
       return;
     }
 
@@ -60,17 +73,8 @@ export function RecordPaymentModal({
         router.refresh();
         onClose();
       } else {
-        const errorMsg: Record<string, string> = {
-          invalid_payment_input: "Please check your inputs.",
-          invoice_not_found: "The invoice was not found.",
-          payment_exceeds_balance: "Payment exceeds remaining balance.",
-          invoice_not_payable: "This invoice cannot accept payments.",
-          invoice_deleted: "This invoice has been deleted.",
-          invalid_payment_amount: "Invalid payment amount.",
-          Unauthorized: "You must be signed in.",
-          Forbidden: "You don't have permission to record payments.",
-        };
-        setError(errorMsg[result.error!] || result.error || "An error occurred.");
+        const errorMsg = dictionary.paymentModal.errors as Record<string, string>;
+        setError(errorMsg[result.error!] || result.error || dictionary.paymentModal.errors.generic);
       }
     });
   };
@@ -81,7 +85,7 @@ export function RecordPaymentModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-variant bg-surface-bright">
           <div className="flex items-center gap-2">
             <Receipt className="text-primary" size={20} />
-            <h2 className="text-lg font-semibold text-on-surface">Record Payment</h2>
+            <h2 className="text-lg font-semibold text-on-surface">{dictionary.paymentModal.title}</h2>
           </div>
           <button
             onClick={onClose}
@@ -95,15 +99,18 @@ export function RecordPaymentModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <p className="text-sm text-on-surface-variant mb-4">
-              Recording payment for invoice <span className="font-mono font-bold text-primary">{invoiceNumber}</span>
+              {helperBeforeInvoiceNumber}
+              <span className="font-mono font-bold text-primary" dir="ltr">{invoiceNumber}</span>
+              {helperAfterInvoiceNumber}
               <br />
-              Balance due: <span className="font-bold text-on-surface">{balanceDue} SAR</span>
+              {dictionary.paymentModal.balanceDue}:{" "}
+              <span className="font-bold text-on-surface" dir="ltr">{balanceDue} SAR</span>
             </p>
           </div>
 
           <div className="space-y-1">
             <label htmlFor="amount" className="block text-[14px] font-medium text-on-surface">
-              Amount (SAR) <span className="text-red-500">*</span>
+              {dictionary.paymentModal.amountSar} <span className="text-red-500">*</span>
             </label>
             <input
               id="amount"
@@ -115,13 +122,14 @@ export function RecordPaymentModal({
               onChange={(e) => setAmount(e.target.value)}
               disabled={isPending}
               required
+              dir="ltr"
               className="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
             />
           </div>
 
           <div className="space-y-1">
             <label htmlFor="date" className="block text-[14px] font-medium text-on-surface">
-              Payment Date <span className="text-red-500">*</span>
+              {dictionary.paymentModal.paymentDate} <span className="text-red-500">*</span>
             </label>
             <input
               id="date"
@@ -130,13 +138,14 @@ export function RecordPaymentModal({
               onChange={(e) => setDate(e.target.value)}
               disabled={isPending}
               required
+              dir="ltr"
               className="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
             />
           </div>
 
           <div className="space-y-1">
             <label htmlFor="method" className="block text-[14px] font-medium text-on-surface">
-              Payment Method <span className="text-red-500">*</span>
+              {dictionary.paymentModal.paymentMethod} <span className="text-red-500">*</span>
             </label>
             <select
               id="method"
@@ -146,16 +155,16 @@ export function RecordPaymentModal({
               required
               className="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
             >
-              <option value="bank_transfer">Bank Transfer</option>
-              <option value="cash">Cash</option>
-              <option value="cheque">Cheque</option>
-              <option value="online">Online</option>
+              <option value="bank_transfer">{dictionary.paymentModal.methods.bank_transfer}</option>
+              <option value="cash">{dictionary.paymentModal.methods.cash}</option>
+              <option value="cheque">{dictionary.paymentModal.methods.cheque}</option>
+              <option value="online">{dictionary.paymentModal.methods.online}</option>
             </select>
           </div>
 
           <div className="space-y-1">
             <label htmlFor="reference" className="block text-[14px] font-medium text-on-surface">
-              Reference / Notes
+              {dictionary.paymentModal.referenceNotes}
             </label>
             <input
               id="reference"
@@ -163,7 +172,8 @@ export function RecordPaymentModal({
               value={reference}
               onChange={(e) => setReference(e.target.value)}
               disabled={isPending}
-              placeholder="e.g. Transaction ID, Check #..."
+              dir="auto"
+              placeholder={dictionary.paymentModal.referencePlaceholder}
               className="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
             />
           </div>
@@ -181,7 +191,7 @@ export function RecordPaymentModal({
               disabled={isPending}
               className="flex-1 px-4 py-2 text-[14px] font-semibold text-on-surface-variant hover:bg-surface-container rounded-lg border border-transparent hover:border-outline-variant transition-colors disabled:opacity-50"
             >
-              Cancel
+              {dictionary.paymentModal.cancel}
             </button>
             <button
               type="submit"
@@ -191,10 +201,10 @@ export function RecordPaymentModal({
               {isPending ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  Recording...
+                  {dictionary.paymentModal.submitting}
                 </>
               ) : (
-                "Record Payment"
+                dictionary.paymentModal.submit
               )}
             </button>
           </div>

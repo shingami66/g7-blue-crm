@@ -4,16 +4,21 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { issueInvoiceAction } from "@/lib/invoices/actions";
 import Button from "@/components/ui/Button";
+import { getLocale } from "@/lib/i18n/locales";
+import { getInvoicesDictionary } from "@/lib/i18n/dictionaries/invoices";
 
 type IssueInvoiceActionProps = {
   invoiceId: string;
 };
+
+type KnownIssueError = keyof ReturnType<typeof getInvoicesDictionary>["issueAction"]["errors"];
 
 export function IssueInvoiceAction({ invoiceId }: IssueInvoiceActionProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const dictionary = getInvoicesDictionary(getLocale());
 
   const handleSubmit = () => {
     setError(null);
@@ -23,18 +28,13 @@ export function IssueInvoiceAction({ invoiceId }: IssueInvoiceActionProps) {
       const result = await issueInvoiceAction(invoiceId);
 
       if (result.success) {
-        setSuccessMsg("Invoice issued successfully.");
+        setSuccessMsg(dictionary.issueAction.success);
         router.refresh();
       } else {
-        const errMap: Record<string, string> = {
-          "invalid_invoice_id": "Invalid invoice ID.",
-          "invoice_not_found": "Invoice not found or deleted.",
-          "invoice_not_draft": "Only draft invoices can be issued.",
-          "invoice_update_failed": "Failed to update invoice status.",
-          "Unauthorized": "You are not authorized to perform this action.",
-          "Forbidden": "You do not have permission to issue invoices.",
-        };
-        const errMsg = result.error ? (errMap[result.error] || `Unable to issue invoice. Error code: ${result.error}`) : "Unable to issue invoice. Please try again.";
+        const errMap = dictionary.issueAction.errors as Record<KnownIssueError, string>;
+        const errMsg = result.error
+          ? errMap[result.error as KnownIssueError] || result.error
+          : dictionary.issueAction.genericError;
         setError(errMsg);
       }
     });
@@ -43,7 +43,7 @@ export function IssueInvoiceAction({ invoiceId }: IssueInvoiceActionProps) {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-[13px] text-on-surface-variant">
-        Issuing this invoice will mark it as Issued and set the issue date. Amounts and snapshots will not be changed.
+        {dictionary.issueAction.helper}
       </p>
       
       {error && (
@@ -65,7 +65,7 @@ export function IssueInvoiceAction({ invoiceId }: IssueInvoiceActionProps) {
           loading={isPending}
           variant="primary"
         >
-          {isPending ? "Issuing..." : "Issue Invoice"}
+          {isPending ? dictionary.issueAction.submitting : dictionary.issueAction.submit}
         </Button>
       )}
     </div>
