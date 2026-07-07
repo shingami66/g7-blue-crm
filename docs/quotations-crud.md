@@ -50,6 +50,12 @@ draft → sent → approved
 - **rejected**: Client declined. Locked.
 - **expired**: Past valid_until date. Locked.
 
+### Quotation Status Integration Note
+- The current guard remains: one approved quotation per Service.
+- Approved Billing Scope is a future design that will decouple quotation approval from billing authority.
+- No `superseded` quotation status is introduced by this note.
+- Future invoices should bind to the active approved billing scope, not quotation status alone.
+
 ### Editing Rules
 
 | Status    | Edit Items/Totals | Edit Metadata | Soft Delete |

@@ -2073,3 +2073,11 @@ Must verify:
 - The change is dictionary-only and does not alter financial logic, PDF/document behavior, workflow behavior, RBAC, auth, or layout.
 - Focused review result: PASS.
 - Mozfer manual smoke result: PASS.
+
+## Approved Billing Scope
+- `SERVICE-BILLING-SCOPE-DESIGN-1` completed and returned `PASS`.
+- `APPROVED-BILLING-SCOPE-DOCS-SYNC-1` is the current docs-only recording step.
+- Next is `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-1`.
+- After schema design, follow with `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`, `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`, and `QUOTATION-REVISION-FALLBACK-DESIGN-1`.
+- `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` stays a required future follow-up for the V1 package/global-discount ambiguity path.
+- `SERVICE-PROFITABILITY-DESIGN-1` remains blocked until billing source and supplier-cost permissions are stable.

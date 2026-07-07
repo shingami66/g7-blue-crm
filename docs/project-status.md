@@ -1985,3 +1985,10 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - Re-review result: PASS.
 - Mozfer manual/browser smoke was recorded as PASS for the slice.
 - IssueInvoiceAction and RecordPaymentModal copy were localized without changing behavior, validation, permissions, or action/query logic.
+
+## Approved Billing Scope Design Sync
+- `SERVICE-BILLING-SCOPE-DESIGN-1` completed and returned `PASS`.
+- The Approved Billing Scope is recorded here as a future design direction, not an implementation.
+- This docs sync records design decisions only.
+- No schema, RLS, RPC, UI, or invoice-calculation changes were made.
+- Next task after this docs sync is `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-1`.

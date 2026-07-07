@@ -94,6 +94,14 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Index verification passed.
 - `supabase/schema.sql` was synced to reflect this index.
 
+### Approved Billing Scope (Future Design)
+- Approved Billing Scope is a proposed future billing layer and does not exist yet.
+- Proposed tables: `approved_billing_scopes` and `approved_billing_scope_lines`.
+- Proposed parent rules: exactly one active approved scope per Service, versioned superseding, immutable approved/invoice-referenced rows, and RLS required.
+- Proposed line rules: `accepted | excluded | adjusted | customer_supplied` decisions, unique scope line per quotation item, `reason` required for `excluded`, `adjusted`, and `customer_supplied`, `customer_supplied.accepted_total = 0`, and `excluded.accepted_total = 0`.
+- Proposed workflow rule: draft scopes are auto-seeded from approved quotation lines and only line-safe quotations may proceed in V1.
+- This note is design-only and must not be read as a claim that the tables or constraints already exist.
+
 ### Invoices And Payments
 **Status: ERP-3A Invoice Schema Foundation — Manual Supabase apply completed / Verified**
 - Migration 20260623200000_erp3a_invoice_schema.sql was manually applied in Supabase.

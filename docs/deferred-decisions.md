@@ -321,6 +321,13 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **When to return:** ERP-2 Service-linked Quotations approval flow.
 - **Known requirements:** `valid_until` or `expiry_date` must be on or after issue date. Expired quotations cannot be approved without renewal/extension or authorized override. Exact override behavior remains deferred.
 
+## Approved Billing Scope
+- **Status:** Design direction approved; implementation deferred.
+- **Reason deferred:** Approved Billing Scope is the chosen future billing-authority model, but it still needs schema, RBAC/RLS, invoice-integration, and UX implementation design.
+- **When to return:** `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-1` and the follow-up sequence.
+- **Known requirements:** Approved Billing Scope separates quotation approval from billing authority. Draft scope is auto-seeded from an approved quotation. Lines default to accepted. Changed lines require reasons. `customer_supplied` and `excluded` must have `accepted_total = 0`. One active approved scope per Service is required. Approved or invoice-referenced scopes are immutable. Any post-approval change creates a new version and supersedes the old scope. Package/global discount ambiguity is blocked in V1. Profitability remains blocked until scope/invoice integration and supplier-cost RBAC are stable.
+- **Follow-ups:** `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1`, `QUOTATION-REVISION-FALLBACK-DESIGN-1`, and `SERVICE-PROFITABILITY-DESIGN-1`.
+
 ## Soft Delete And Financial Record Retention
 - **Status:** Deferred technical decision.
 - **Reason deferred:** Current schema uses soft-delete patterns, but future financial records need stricter retention rules.
