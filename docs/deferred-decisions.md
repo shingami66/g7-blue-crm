@@ -735,10 +735,15 @@ Status: Deferred.
 Decision: Invoices page remains for list/issue/pay/PDF/status. Global invoice creation is deferred.
 
 ### INVOICE-DETAIL-PAGE-1
-- Status: Deferred / Hard No for now.
-- Decision: Do not create `/invoices/[id]` detail page until a full invoice UX/product design session is completed.
-- Reason: A full invoice detail route requires decisions around issue invoice action, record payment, PDF render, payment history, void/credit note states, RBAC, and deposit vs final invoice differences.
-- Related backlog: `INVOICE-LIST-DEEP-LINK-SELECTION-1` is the approved safer P1 navigation improvement to open the invoice in the existing invoices list panel instead of a dedicated detail page.
+- Status: Superseded by `INVOICES-FULL-DETAIL-VIEW-1`.
+- Decision: The full non-PDF `/invoices/[id]` detail route has now been implemented with explicit View navigation and in-app Back pending navigation.
+- Reason: The route-based invoice detail UX has been validated by focused review and Mozfer smoke; the old "do not create" decision no longer applies to the current invoice UX slice.
+- Related backlog: `INVOICE-PAYMENT-HISTORY-PREVIEW-1`, richer deposit/advance payment timeline, richer service/event context if needed, and first-class invoice line item data remain future follow-ups.
+
+### INVOICES-FULL-DETAIL-VIEW-1
+- Decision: Implemented and documented as the non-PDF invoice detail slice.
+- Reason: Provides a dedicated invoice detail page while keeping Print/PDF separate and preserving the invoice list as the primary navigation surface.
+- Known follow-ups: payment history, richer deposit/advance payment timeline, richer service/event context if needed, and first-class invoice line item data if snapshot line data is insufficient.
 
 ### INVOICE-LIST-REMOVE-STANDALONE-CREATE-1
 - Status: Completed.

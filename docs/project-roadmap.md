@@ -1987,7 +1987,17 @@ Must verify:
 - Side panel behavior remained safe, and the close button affordance was improved.
 - Focused senior review result: PASS.
 - Mozfer manual/browser smoke result: PASS.
-- Separate UX follow-up remains open as `INVOICES-DETAIL-PREVIEW-UX-1`.
+- `INVOICES-DETAIL-PREVIEW-UX-1` has been superseded by `INVOICES-FULL-DETAIL-VIEW-1`.
+
+## Invoices Full Detail View
+- `INVOICES-FULL-DETAIL-VIEW-1` completed the non-PDF invoice detail route.
+- The list uses explicit View navigation instead of row-wide click.
+- The full detail page keeps Print/PDF separate at `/invoices/[id]/pdf`.
+- Global pending navigation is used for View and in-app Back.
+- Raw UUIDs stay hidden from normal business-facing invoice UI.
+- Focused senior review result: PASS.
+- Mozfer manual/browser smoke result: PASS.
+- Deferred follow-ups remain payment history, richer deposit/advance payment timeline, richer service/event context if needed, first-class invoice line item data if snapshot line data is insufficient, and list-action consistency review for other modules.
 - RecordPaymentModal untouched.
 - PDF/document/ZATCA routes untouched.
 - Invoice actions/queries untouched.

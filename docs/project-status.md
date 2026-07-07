@@ -1894,7 +1894,21 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - Side panel behavior remained safe, and the close button affordance was improved.
 - Focused senior review result: PASS.
 - Mozfer manual/browser smoke result: PASS.
-- Separate UX follow-up remains open as `INVOICES-DETAIL-PREVIEW-UX-1`.
+- `INVOICES-DETAIL-PREVIEW-UX-1` is now satisfied by `INVOICES-FULL-DETAIL-VIEW-1`; remaining follow-up focus is payment history and richer detail context.
+
+## Invoices Full Detail View
+- `INVOICES-FULL-DETAIL-VIEW-1` completed as the non-PDF invoice detail slice.
+- Scope: full invoice detail page, list View navigation, and in-app Back navigation.
+- The invoice list stays wide and uncluttered, with no row-wide click and no checkbox column without bulk actions.
+- Explicit View opens `/invoices/[id]`; explicit Print/PDF opens `/invoices/[id]/pdf`.
+- Global pending navigation is used for View and in-app Back.
+- Raw UUIDs stay hidden from normal business-facing invoice UI.
+- Focused senior review result: PASS.
+- Mozfer manual/browser smoke result: PASS.
+- No query/action/payment/PDF/schema/RBAC/auth changes were introduced.
+- No VAT/ZATCA/FATOORA/QR/XML/Tax Invoice behavior was introduced.
+- Historical snapshots remain read-only source of truth.
+- Deferred follow-ups remain payment history, richer deposit/advance payment timeline, richer service/event context if needed, first-class invoice line item data if snapshot line data is insufficient, and list-action consistency review for other modules.
 ## Quotations 1B Docs Sync
 - `I18N-RTL-QUOTATIONS-RUNTIME-1B` completed.
 - Scope: quotation detail runtime page only.

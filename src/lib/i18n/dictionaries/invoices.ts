@@ -32,6 +32,8 @@ export interface InvoicesDictionary {
       issueDate: string;
       amountSar: string;
       status: string;
+      preview: string;
+      printPdf: string;
       noInvoices: string;
       noFilteredInvoices: string;
     };
@@ -39,6 +41,23 @@ export interface InvoicesDictionary {
       amountDue: string;
       preview: string;
       details: string;
+      previewTitle: string;
+      sections: {
+        overview: string;
+        customerReference: string;
+        amounts: string;
+        dates: string;
+        actions: string;
+      };
+      labels: {
+        invoiceNumber: string;
+        customerName: string;
+        totalAmount: string;
+        amountPaid: string;
+        paymentContext: string;
+        noCustomerName: string;
+      };
+      paymentReady: string;
       dueDate: string;
       type: string;
       documentLabel: string;
@@ -53,6 +72,76 @@ export interface InvoicesDictionary {
     tooltips: {
       draftCannotBePaid: string;
       invoiceUnavailableForPayment: string;
+    };
+  };
+  detail: {
+    states: {
+      detailForbidden: string;
+      unavailable: string;
+      unknownBuyer: string;
+      noLineItems: string;
+      serviceUnavailable: string;
+      notApplied: string;
+    };
+    actions: {
+      backToInvoices: string;
+      printPdf: string;
+      viewQuotation: string;
+    };
+    sections: {
+      overview: string;
+      customer: string;
+      serviceEvent: string;
+      quotation: string;
+      lineItems: string;
+      totals: string;
+      settlement: string;
+    };
+    labels: {
+      invoiceNumber: string;
+      invoiceType: string;
+      documentLabel: string;
+      status: string;
+      issueDate: string;
+      createdDate: string;
+      voidedDate: string;
+      voidReason: string;
+      customerName: string;
+      legalName: string;
+      contactName: string;
+      email: string;
+      phone: string;
+      address: string;
+      serviceReference: string;
+      serviceNumber: string;
+      serviceTitle: string;
+      eventName: string;
+      eventType: string;
+      eventDates: string;
+      eventLocation: string;
+      quotationReference: string;
+      quotationNumber: string;
+      approvedQuotation: string;
+      description: string;
+      qty: string;
+      unitPrice: string;
+      vat: string;
+      lineTotal: string;
+      subtotal: string;
+      discount: string;
+      vatAmount: string;
+      grandTotal: string;
+      amountPaid: string;
+      balanceDue: string;
+      approvedQuotationTotal: string;
+      previousInvoices: string;
+      paymentStatus: string;
+    };
+    settlement: {
+      fullyPaid: string;
+      partiallyPaid: string;
+      outstanding: string;
+      draft: string;
     };
   };
   statuses: Record<InvoiceStatus, string>;
@@ -140,6 +229,8 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       issueDate: "Issue Date",
       amountSar: "Amount (SAR)",
       status: "Status",
+      preview: "View",
+      printPdf: "Print / PDF",
       noInvoices: "No invoices found.",
       noFilteredInvoices: "No invoices match your search or filters.",
     },
@@ -147,6 +238,23 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       amountDue: "Amount Due",
       preview: "Preview",
       details: "Details",
+      previewTitle: "Invoice Preview",
+      sections: {
+        overview: "Overview",
+        customerReference: "Customer & Reference",
+        amounts: "Amounts",
+        dates: "Dates",
+        actions: "Actions",
+      },
+      labels: {
+        invoiceNumber: "Invoice Number",
+        customerName: "Customer Name",
+        totalAmount: "Total Amount",
+        amountPaid: "Amount Paid",
+        paymentContext: "Payment Context",
+        noCustomerName: "Customer name unavailable",
+      },
+      paymentReady: "Payment can be recorded for this invoice.",
       dueDate: "Due Date",
       type: "Type",
       documentLabel: "Document Label",
@@ -161,6 +269,76 @@ const invoicesDictionaryEn: InvoicesDictionary = {
     tooltips: {
       draftCannotBePaid: "Draft invoices cannot be paid.",
       invoiceUnavailableForPayment: "Invoice is fully paid or unavailable.",
+    },
+  },
+  detail: {
+    states: {
+      detailForbidden: "You don't have permission to view this invoice.",
+      unavailable: "Not available",
+      unknownBuyer: "Buyer snapshot unavailable",
+      noLineItems: "No service or quotation lines were captured in this invoice snapshot.",
+      serviceUnavailable: "Service details are unavailable with the current permissions or snapshot.",
+      notApplied: "Not applied",
+    },
+    actions: {
+      backToInvoices: "Back to Invoices",
+      printPdf: "Print / Save as PDF",
+      viewQuotation: "View Quotation",
+    },
+    sections: {
+      overview: "Invoice Overview",
+      customer: "Customer / Buyer",
+      serviceEvent: "Service / Event Context",
+      quotation: "Quotation Reference",
+      lineItems: "Service / Quotation Lines",
+      totals: "Amounts / Totals",
+      settlement: "Payment / Settlement Context",
+    },
+    labels: {
+      invoiceNumber: "Invoice Number",
+      invoiceType: "Invoice Type",
+      documentLabel: "Document Label",
+      status: "Status",
+      issueDate: "Issue Date",
+      createdDate: "Created Date",
+      voidedDate: "Voided Date",
+      voidReason: "Void Reason",
+      customerName: "Customer Name",
+      legalName: "Legal Name",
+      contactName: "Contact Name",
+      email: "Email",
+      phone: "Phone",
+      address: "Address",
+      serviceReference: "Service Reference",
+      serviceNumber: "Service Number",
+      serviceTitle: "Service Title",
+      eventName: "Event Name",
+      eventType: "Event Type",
+      eventDates: "Event Dates",
+      eventLocation: "Venue / Location",
+      quotationReference: "Quotation Reference",
+      quotationNumber: "Quotation Number",
+      approvedQuotation: "Approved Quotation ID",
+      description: "Description",
+      qty: "Qty",
+      unitPrice: "Unit Price",
+      vat: "VAT",
+      lineTotal: "Total",
+      subtotal: "Subtotal",
+      discount: "Discount",
+      vatAmount: "Tax / VAT",
+      grandTotal: "Grand Total",
+      amountPaid: "Amount Paid",
+      balanceDue: "Balance Due",
+      approvedQuotationTotal: "Approved Quotation Total",
+      previousInvoices: "Previous Invoices / Deposits",
+      paymentStatus: "Payment Status",
+    },
+    settlement: {
+      fullyPaid: "This invoice is fully settled.",
+      partiallyPaid: "This invoice has partial payment recorded.",
+      outstanding: "This invoice still has an outstanding balance.",
+      draft: "This invoice is still in draft and has not been issued yet.",
     },
   },
   statuses: {
@@ -260,6 +438,8 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       issueDate: "تاريخ الإصدار",
       amountSar: "القيمة (SAR)",
       status: "الحالة",
+      preview: "عرض",
+      printPdf: "طباعة / PDF",
       noInvoices: "لا توجد فواتير.",
       noFilteredInvoices: "لا توجد فواتير تطابق البحث أو عوامل التصفية.",
     },
@@ -267,6 +447,23 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       amountDue: "المبلغ المستحق",
       preview: "معاينة",
       details: "التفاصيل",
+      previewTitle: "معاينة الفاتورة",
+      sections: {
+        overview: "نظرة عامة",
+        customerReference: "العميل والمرجع",
+        amounts: "المبالغ",
+        dates: "التواريخ",
+        actions: "الإجراءات",
+      },
+      labels: {
+        invoiceNumber: "رقم الفاتورة",
+        customerName: "اسم العميل",
+        totalAmount: "إجمالي المبلغ",
+        amountPaid: "المبلغ المسدد",
+        paymentContext: "حالة السداد",
+        noCustomerName: "اسم العميل غير متاح",
+      },
+      paymentReady: "يمكن تسجيل السداد لهذه الفاتورة.",
       dueDate: "تاريخ الاستحقاق",
       type: "النوع",
       documentLabel: "عنوان المستند",
@@ -281,6 +478,76 @@ const invoicesDictionaryAr: InvoicesDictionary = {
     tooltips: {
       draftCannotBePaid: "لا يمكن سداد الفواتير المسودة.",
       invoiceUnavailableForPayment: "الفاتورة مسددة بالكامل أو غير متاحة.",
+    },
+  },
+  detail: {
+    states: {
+      detailForbidden: "ليس لديك صلاحية لعرض هذه الفاتورة.",
+      unavailable: "غير متاح",
+      unknownBuyer: "بيانات العميل المحفوظة غير متاحة",
+      noLineItems: "لم يتم حفظ بنود الخدمة أو عرض السعر ضمن لقطة هذه الفاتورة.",
+      serviceUnavailable: "تفاصيل الخدمة غير متاحة ضمن الصلاحيات الحالية أو اللقطة المحفوظة.",
+      notApplied: "غير مطبق",
+    },
+    actions: {
+      backToInvoices: "العودة إلى الفواتير",
+      printPdf: "طباعة / حفظ كملف PDF",
+      viewQuotation: "عرض عرض السعر",
+    },
+    sections: {
+      overview: "نظرة عامة على الفاتورة",
+      customer: "العميل / المشتري",
+      serviceEvent: "الخدمة / سياق الفعالية",
+      quotation: "مرجع عرض السعر",
+      lineItems: "بنود الخدمة / عرض السعر",
+      totals: "المبالغ / الإجماليات",
+      settlement: "سياق السداد / التسوية",
+    },
+    labels: {
+      invoiceNumber: "رقم الفاتورة",
+      invoiceType: "نوع الفاتورة",
+      documentLabel: "عنوان المستند",
+      status: "الحالة",
+      issueDate: "تاريخ الإصدار",
+      createdDate: "تاريخ الإنشاء",
+      voidedDate: "تاريخ الإبطال",
+      voidReason: "سبب الإبطال",
+      customerName: "اسم العميل",
+      legalName: "الاسم القانوني",
+      contactName: "اسم جهة الاتصال",
+      email: "البريد الإلكتروني",
+      phone: "الهاتف",
+      address: "العنوان",
+      serviceReference: "مرجع الخدمة",
+      serviceNumber: "رقم الخدمة",
+      serviceTitle: "عنوان الخدمة",
+      eventName: "اسم الفعالية",
+      eventType: "نوع الفعالية",
+      eventDates: "تواريخ الفعالية",
+      eventLocation: "الموقع / المكان",
+      quotationReference: "مرجع عرض السعر",
+      quotationNumber: "رقم عرض السعر",
+      approvedQuotation: "معرّف عرض السعر المعتمد",
+      description: "الوصف",
+      qty: "الكمية",
+      unitPrice: "سعر الوحدة",
+      vat: "ضريبة القيمة المضافة",
+      lineTotal: "الإجمالي",
+      subtotal: "المجموع الفرعي",
+      discount: "الخصم",
+      vatAmount: "الضريبة / ضريبة القيمة المضافة",
+      grandTotal: "الإجمالي",
+      amountPaid: "المبلغ المسدد",
+      balanceDue: "الرصيد المستحق",
+      approvedQuotationTotal: "إجمالي عرض السعر المعتمد",
+      previousInvoices: "الفواتير / الدفعات السابقة",
+      paymentStatus: "حالة السداد",
+    },
+    settlement: {
+      fullyPaid: "تمت تسوية هذه الفاتورة بالكامل.",
+      partiallyPaid: "تم تسجيل سداد جزئي لهذه الفاتورة.",
+      outstanding: "لا يزال على هذه الفاتورة رصيد مستحق.",
+      draft: "هذه الفاتورة ما زالت مسودة ولم يتم إصدارها بعد.",
     },
   },
   statuses: {
