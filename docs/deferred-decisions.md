@@ -752,6 +752,52 @@ Decision: Invoices page remains for list/issue/pay/PDF/status. Global invoice cr
 - Reason deferred: profile polish is useful, but it is not required for the list-action consistency standard and should not be mixed into the completed Customers list task.
 - Known requirement boundaries: no query/action/schema/RBAC/auth changes implied.
 
+### SERVICE-DETAIL-STATUS-UX-1
+- Status: Deferred / Separate follow-up.
+- Decision: Keep the Service Detail status timeline redesign separate from the completed Services list consistency slice.
+- Scope: replace the oversized Service Detail status timeline with a compact A-lite Workflow card, keep the header as the owner of the status badge, show Current Phase + Next Action, and optionally collapse status history.
+- Reason deferred: the detail-page workflow UI needs its own focused pass and should not be mixed into the list-action rollout.
+- Known requirement boundaries: preserve existing guarded status actions, avoid repeating Current Status, and do not introduce workflow/schema/query/action/RBAC changes.
+- Additional constraints: respect the service i18n glossary and western-digit/latn rules, handle Cancelled as a special terminal state, and include mobile/small-width smoke.
+
+### SERVICE-DETAIL-BILLING-COPY-FIX-1
+- Status: Deferred / Separate follow-up.
+- Decision: Keep the Service Detail billing/invoicing copy correction separate from the completed Services list consistency slice.
+- Scope: reconcile billing copy so invoice records are not presented in a misleading way when the billing state says invoice is not available.
+- Reason deferred: this is a trust/copy correctness issue on the detail page and needs its own review.
+- Known requirement boundaries: no query/action/schema/RBAC/auth changes implied.
+
+### SERVICE-DETAIL-SUPPLIER-COST-RBAC-VERIFICATION-1
+- Status: Deferred / Separate verification.
+- Decision: Verify supplier cost visibility under lower-privileged access before any broader supplier-cost wording changes.
+- Scope: check the Supplier Allocations cost fields and confirm the current permission gating is correct.
+- Reason deferred: this is a verification task, not a list-action consistency change.
+- Known requirement boundaries: do not change actions, queries, or RBAC in this follow-up.
+
+### SERVICE-DETAIL-RELATED-RECORDS-ACTIONS-1
+- Status: Deferred / Separate follow-up.
+- Decision: Keep related records action polish separate from the Services list consistency work.
+- Scope: refine action affordances around related detail records if still needed.
+- Reason deferred: unrelated to the list-action slice.
+
+### SERVICE-DETAIL-SUPPLIER-BOOKING-EMPTY-CTA-1
+- Status: Deferred / Separate follow-up.
+- Decision: Keep the supplier booking empty-state CTA polish separate from the Services list consistency work.
+- Scope: improve the empty-state call to action for supplier booking areas if needed.
+- Reason deferred: unrelated to the list-action slice.
+
+### SERVICE-DETAIL-HEADER-HIERARCHY-POLISH-1
+- Status: Deferred / Separate follow-up.
+- Decision: Keep service detail header hierarchy polish separate from the Services list consistency work.
+- Scope: refine heading hierarchy and spacing only.
+- Reason deferred: unrelated to the list-action slice.
+
+### TABLES-LAYOUT-STANDARDIZATION-1
+- Status: Deferred / Broader follow-up.
+- Decision: Treat broader table layout standardization as a separate cross-module initiative.
+- Scope: align column density, spacing, and action placement patterns when the product is ready for a shared standard.
+- Reason deferred: the Services list alignment changes are intentionally local and not a blanket table redesign.
+
 ### INVOICE-LIST-REMOVE-STANDALONE-CREATE-1
 - Status: Completed.
 - Decision: Standalone invoice creation from `/invoices` is intentionally disabled/removed.

@@ -2013,6 +2013,18 @@ Must verify:
 - No RBAC/permission drift.
 - No stats/calculation drift.
 - No side-panel behavior drift.
+
+## Services List Actions Consistency
+- `LIST-ACTIONS-CONSISTENCY-SERVICES-1` completed the Services list action standard slice.
+- Services list now uses explicit View navigation with the approved pending bolt pattern.
+- No Print/PDF action was added for Services.
+- Status filter and New Service behavior remained unchanged.
+- Service detail route behavior remained unchanged.
+- Services table alignment was refined locally for readability.
+- Focused review result: PASS.
+- Mozfer visual review result: PASS.
+- Remaining rollout stays separate for Services detail, broader table standardization, and other module-specific follow-ups.
+
 ## Invoices 1B Docs Sync
 - `I18N-RTL-INVOICES-RUNTIME-1B` completed as an Invoices runtime action/payment slice.
 - Focused senior review initially returned HOLD on the `online` payment label.

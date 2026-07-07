@@ -27,6 +27,9 @@ export interface ServicesDictionary {
     allStatuses: string;
     showingZero: string;
     showingRange: string;
+    actions: {
+      view: string;
+    };
     table: {
       serviceNumber: string;
       serviceTitle: string;
@@ -616,6 +619,9 @@ const servicesDictionaryEn: ServicesDictionary = {
     allStatuses: "All Statuses",
     showingZero: "Showing 0 of 0 services",
     showingRange: "Showing {start}-{end} of {total} services",
+    actions: {
+      view: "View",
+    },
     table: {
       serviceNumber: "Service Number",
       serviceTitle: "Service Title / Event Name",
@@ -1304,6 +1310,9 @@ const servicesDictionaryAr: ServicesDictionary = {
     allStatuses: "كل الحالات",
     showingZero: "عرض 0 من 0 خدمة",
     showingRange: "عرض {start}-{end} من إجمالي {total} خدمة",
+    actions: {
+      view: "عرض",
+    },
     table: {
       serviceNumber: "رقم الخدمة",
       serviceTitle: "عنوان الخدمة / اسم الفعالية",

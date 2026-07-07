@@ -1919,6 +1919,20 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - Focused review result: PASS.
 - Mozfer manual/visual smoke result: PASS.
 - `CUSTOMERS-PROFILE-UX-POLISH-1` remains deferred as a non-blocking follow-up for profile-only polish.
+
+## Services List Actions Consistency
+- `LIST-ACTIONS-CONSISTENCY-SERVICES-1` completed as a narrow list-action consistency slice.
+- The Services list now uses an explicit View action instead of row-wide navigation.
+- View opens `/services/[id]` through the approved pending navigation pattern.
+- No Print/PDF action was added for Services.
+- Status filter and New Service behavior remained unchanged.
+- Service detail route remained unchanged.
+- Services table alignment was refined locally for readability.
+- No query/action/schema/RBAC/auth changes were introduced.
+- No supplier/internal cost exposure changes were introduced.
+- Focused review result: PASS.
+- Mozfer visual review result: PASS.
+
 ## Quotations 1B Docs Sync
 - `I18N-RTL-QUOTATIONS-RUNTIME-1B` completed.
 - Scope: quotation detail runtime page only.

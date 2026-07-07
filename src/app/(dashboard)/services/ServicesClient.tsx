@@ -3,13 +3,11 @@
 import { useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
-import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import Button from "@/components/ui/Button";
 import PendingLink from "@/components/ui/PendingLink";
-import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
-import { Filter, Plus } from "lucide-react";
+import { Eye, Filter, Plus } from "lucide-react";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import type { Service } from "@/types/service";
@@ -24,6 +22,19 @@ const STATUS_VARIANT_MAP: Record<string, string> = {
   "Cancelled": "cancelled",
 };
 
+const TABLE_HEADER_BASE =
+  "px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase";
+const TABLE_CELL_BASE = "px-4 py-4 align-top";
+const COLUMN_LAYOUT = {
+  serviceNumber: "w-[16%] min-w-[160px] text-left",
+  serviceTitle: "w-[26%] min-w-[240px] text-left",
+  customer: "w-[18%] min-w-[180px] text-left",
+  eventDate: "w-[12%] min-w-[130px] text-center",
+  status: "w-[12%] min-w-[120px] text-center",
+  budget: "w-[10%] min-w-[140px] text-right",
+  view: "w-[6%] min-w-[110px] text-center",
+} as const;
+
 interface ServicesClientProps {
   services: Service[];
   canWrite: boolean;
@@ -31,7 +42,6 @@ interface ServicesClientProps {
 }
 
 export default function ServicesClient({ services, canWrite, dictionary }: ServicesClientProps) {
-  const { push } = useGlobalNavigationPending();
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -115,52 +125,83 @@ export default function ServicesClient({ services, canWrite, dictionary }: Servi
               </p>
             </div>
           ) : (
-            <DataTable
-              columns={[
-                dictionary.list.table.serviceNumber,
-                dictionary.list.table.serviceTitle,
-                dictionary.list.table.customer,
-                dictionary.list.table.eventDate,
-                dictionary.list.table.status,
-                dictionary.list.table.budget,
-              ]}
-            >
-              {paginatedServices.map((service) => (
-                <tr
-                  key={service.id}
-                  className="hover:bg-surface-container-low/50 transition-colors cursor-pointer"
-                  onClick={() => push(`/services/${service.id}`)}
-                >
-                  <td dir="ltr" className="px-4 py-4 font-mono font-semibold text-primary">
-                    {isolateBidiText(service.serviceNumber)}
-                  </td>
-                  <td className="px-4 py-4">
-                    <div dir="auto" className="font-semibold text-on-surface">
-                      {isolateBidiText(service.serviceTitle)}
-                    </div>
-                    <div dir="auto" className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
-                      {service.eventName ? isolateBidiText(service.eventName) : "—"}
-                    </div>
-                  </td>
-                  <td dir="auto" className="px-4 py-4 text-on-surface-variant">
-                    {service.customer?.company ? isolateBidiText(service.customer.company) : "—"}
-                  </td>
-                  <td dir="ltr" className="px-4 py-4 text-on-surface-variant">
-                    {service.eventStartDate ? isolateBidiText(service.eventStartDate) : "—"}
-                  </td>
-                  <td className="px-4 py-4">
-                    <StatusBadge variant={(STATUS_VARIANT_MAP[service.status] ?? "pending") as React.ComponentProps<typeof StatusBadge>["variant"]}>
-                      {dictionary.serviceStatuses[service.status]}
-                    </StatusBadge>
-                  </td>
-                  <td dir="ltr" className="px-4 py-4 font-semibold text-on-surface">
-                    {service.estimatedBudget != null
-                      ? isolateBidiText(`${Number(service.estimatedBudget).toLocaleString("en-SA")} SAR`)
-                      : "—"}
-                  </td>
-                </tr>
-              ))}
-            </DataTable>
+            <div className="overflow-x-auto w-full border border-surface-variant rounded-b-xl bg-surface-container-lowest">
+              <table className="w-full min-w-[1120px] table-fixed border-collapse text-left">
+                <thead>
+                  <tr className="bg-surface-container-low border-b border-surface-variant">
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.serviceNumber}`}>
+                      {dictionary.list.table.serviceNumber}
+                    </th>
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.serviceTitle}`}>
+                      {dictionary.list.table.serviceTitle}
+                    </th>
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.customer}`}>
+                      {dictionary.list.table.customer}
+                    </th>
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.eventDate}`}>
+                      {dictionary.list.table.eventDate}
+                    </th>
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.status}`}>
+                      {dictionary.list.table.status}
+                    </th>
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.budget}`}>
+                      {dictionary.list.table.budget}
+                    </th>
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.view}`}>
+                      {dictionary.list.actions.view}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
+                  {paginatedServices.map((service) => (
+                    <tr key={service.id} className="hover:bg-surface-container-low/50 transition-colors">
+                      <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.serviceNumber} font-mono font-semibold text-primary`}>
+                        {isolateBidiText(service.serviceNumber)}
+                      </td>
+                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.serviceTitle}`}>
+                        <div dir="auto" className="font-semibold text-on-surface">
+                          {isolateBidiText(service.serviceTitle)}
+                        </div>
+                        <div dir="auto" className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
+                          {service.eventName ? isolateBidiText(service.eventName) : "—"}
+                        </div>
+                      </td>
+                      <td dir="auto" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.customer} text-on-surface-variant`}>
+                        {service.customer?.company ? isolateBidiText(service.customer.company) : "—"}
+                      </td>
+                      <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.eventDate} text-on-surface-variant`}>
+                        {service.eventStartDate ? isolateBidiText(service.eventStartDate) : "—"}
+                      </td>
+                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.status}`}>
+                        <div className="flex justify-center">
+                          <StatusBadge variant={(STATUS_VARIANT_MAP[service.status] ?? "pending") as React.ComponentProps<typeof StatusBadge>["variant"]}>
+                            {dictionary.serviceStatuses[service.status]}
+                          </StatusBadge>
+                        </div>
+                      </td>
+                      <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.budget} font-semibold text-on-surface`}>
+                        {service.estimatedBudget != null
+                          ? isolateBidiText(`${Number(service.estimatedBudget).toLocaleString("en-SA")} SAR`)
+                          : "—"}
+                      </td>
+                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}>
+                        <div className="flex justify-center">
+                          <PendingLink
+                            href={`/services/${service.id}`}
+                            aria-label={`${dictionary.list.actions.view} ${service.serviceNumber}`}
+                            title={`${dictionary.list.actions.view} ${service.serviceNumber}`}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-[12px] font-semibold text-on-surface transition-colors hover:border-primary/40 hover:bg-surface-container hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 whitespace-nowrap"
+                          >
+                            <Eye size={14} />
+                            {dictionary.list.actions.view}
+                          </PendingLink>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
