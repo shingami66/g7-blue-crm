@@ -7,6 +7,11 @@ import { createQuotation, updateQuotation } from "@/lib/quotations/actions";
 import type { QuotationDetail } from "@/lib/quotations/types";
 import Button from "@/components/ui/Button";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
+import {
+  getQuotationsDictionary,
+  type QuotationsDictionary,
+} from "@/lib/i18n/dictionaries/quotations";
+import { getLocale } from "@/lib/i18n/locales";
 
 interface QuotationFormService {
   id: string;
@@ -22,9 +27,14 @@ interface QuotationFormService {
 interface QuotationFormProps {
   service: QuotationFormService;
   initialData?: QuotationDetail;
+  dictionary?: QuotationsDictionary;
 }
 
-export default function QuotationForm({ service, initialData }: QuotationFormProps) {
+export default function QuotationForm({
+  service,
+  initialData,
+  dictionary = getQuotationsDictionary(getLocale()),
+}: QuotationFormProps) {
   const router = useRouter();
   const { back } = useGlobalNavigationPending();
   const isEdit = !!initialData;
@@ -35,7 +45,11 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
     Object.prototype.hasOwnProperty.call(service, "eventStartDate") ||
     Object.prototype.hasOwnProperty.call(service, "eventEndDate");
   const serviceStartDate = service.eventStartDate || undefined;
-  const formatScheduleDate = (value?: string | null) => value || "Not set";
+  const formatScheduleDate = (value?: string | null) => value || dictionary.form.notSet;
+  const serviceStatusLabel =
+    dictionary.form.serviceStatuses[
+      service.status as keyof QuotationsDictionary["form"]["serviceStatuses"]
+    ] || service.status;
 
   // Initialize fields with initialData if present
   const [event, setEvent] = useState(initialData?.event || service.eventName || service.serviceTitle);
@@ -86,33 +100,33 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
     setError(null);
 
     if (serviceStartedBeforeIssueDate) {
-      setError("Cannot create a quotation because the service has already started.");
+      setError(dictionary.form.validation.serviceAlreadyStarted);
       return;
     }
     
     if (!validUntil) {
-      setError("Please select a valid until date.");
+      setError(dictionary.form.validation.validUntilRequired);
       return;
     }
 
     if (new Date(validUntil) < new Date(date)) {
-      setError("Valid until date must be on or after the quotation date.");
+      setError(dictionary.form.validation.validUntilBeforeIssueDate);
       return;
     }
 
     if (validUntilExceedsServiceStart) {
-      setError("Quotation cannot remain valid after the service begins.");
+      setError(dictionary.form.validation.validUntilAfterServiceStart);
       return;
     }
 
     const hasInvalidItems = items.some(i => !i.description || i.qty <= 0 || i.unitPrice < 0);
     if (hasInvalidItems) {
-      setError("All items must have a description, positive quantity, and non-negative unit price.");
+      setError(dictionary.form.validation.invalidItems);
       return;
     }
 
     if (discountExceedsSubtotal) {
-      setError("Discount cannot exceed subtotal. Reduce the discount or adjust line items.");
+      setError(dictionary.form.validation.discountExceedsSubtotal);
       return;
     }
 
@@ -140,7 +154,12 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
       router.push("/quotations");
       router.refresh();
     } else {
-      setError(result.error || `Failed to ${isEdit ? "update" : "create"} quotation.`);
+      setError(
+        result.error ||
+          (isEdit
+            ? dictionary.form.validation.failedToUpdate
+            : dictionary.form.validation.failedToCreate)
+      );
       setIsSubmitting(false);
     }
   };
@@ -157,10 +176,10 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
         </button>
         <div>
           <h2 className="text-[28px] leading-[36px] font-semibold text-primary tracking-tight">
-            {isEdit ? `Edit Quotation ${initialData?.quotationNumber}` : "New Quotation"}
+            {isEdit ? `${dictionary.form.editTitle} ${initialData?.quotationNumber}` : dictionary.form.newTitle}
           </h2>
           <p className="text-on-surface-variant text-[14px]">
-            {isEdit ? "Modify draft quotation details." : "Create a new service-scoped quotation."}
+            {isEdit ? dictionary.form.editSubtitle : dictionary.form.newSubtitle}
           </p>
         </div>
       </div>
@@ -175,34 +194,34 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden p-6 flex flex-col gap-4">
-            <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">Basic Details</h3>
+            <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">{dictionary.form.basicDetails}</h3>
             
             <div className="grid grid-cols-1 gap-3 text-[14px]">
               <div>
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider">
-                  Service
+                  {dictionary.form.service}
                 </div>
-                <div className="font-mono font-semibold text-primary">{service.serviceNumber}</div>
+                <div className="font-mono font-semibold text-primary" dir="ltr">{service.serviceNumber}</div>
               </div>
               <div>
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider">
-                  Service Title
+                  {dictionary.form.serviceTitle}
                 </div>
-                <div className="font-medium text-on-surface">{service.serviceTitle}</div>
+                <div className="font-medium text-on-surface" dir="auto">{service.serviceTitle}</div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider">
-                    Status
+                    {dictionary.form.status}
                   </div>
-                  <div className="font-medium text-on-surface">{service.status}</div>
+                  <div className="font-medium text-on-surface">{serviceStatusLabel}</div>
                 </div>
                 <div>
                   <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider">
-                    Customer
+                    {dictionary.form.customer}
                   </div>
-                  <div className="font-medium text-on-surface">
-                    {service.customer?.company || "Unknown Customer"}
+                  <div className="font-medium text-on-surface" dir="auto">
+                    {service.customer?.company || dictionary.form.unknownCustomer}
                     {service.customer?.contact ? ` (${service.customer.contact})` : ""}
                   </div>
                 </div>
@@ -212,22 +231,22 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
             {hasServiceSchedule && (
               <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-2">
-                  Service Schedule
+                  {dictionary.form.serviceSchedule}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[14px]">
                   <div>
                     <div className="text-[12px] text-on-surface-variant font-semibold">
-                      Start Date
+                      {dictionary.form.startDate}
                     </div>
-                    <div className="font-medium text-on-surface">
+                    <div className="font-medium text-on-surface" dir="ltr">
                       {formatScheduleDate(service.eventStartDate)}
                     </div>
                   </div>
                   <div>
                     <div className="text-[12px] text-on-surface-variant font-semibold">
-                      End Date
+                      {dictionary.form.endDate}
                     </div>
-                    <div className="font-medium text-on-surface">
+                    <div className="font-medium text-on-surface" dir="ltr">
                       {formatScheduleDate(service.eventEndDate)}
                     </div>
                   </div>
@@ -236,12 +255,12 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
             )}
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[14px] font-semibold text-on-surface">Quotation / Event Label</label>
+              <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.quotationEventLabel}</label>
               <input
                 type="text"
                 value={event}
                 onChange={(e) => setEvent(e.target.value)}
-                placeholder="e.g. Annual Tech Conference 2026"
+                placeholder={dictionary.form.quotationEventPlaceholder}
                 className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                 required
               />
@@ -249,21 +268,21 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
           </div>
 
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden p-6 flex flex-col gap-4">
-            <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">Quotation Document Dates & Rates</h3>
+            <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">{dictionary.form.documentDatesRates}</h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[14px] font-semibold text-on-surface">Issue Date</label>
-                <div className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface-variant">
+                <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.issueDate}</label>
+                <div className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface-variant" dir="ltr">
                   {date}
                 </div>
                 <p className="text-[12px] text-on-surface-variant leading-snug">
-                  Issue Date is the quotation document date. Service execution dates are shown in Service Schedule.
+                  {dictionary.form.issueDateHint}
                 </p>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[14px] font-semibold text-on-surface">Quotation Valid Until</label>
+                <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.validUntil}</label>
                 <input
                   type="date"
                   value={validUntil}
@@ -275,18 +294,19 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
                   aria-invalid={validUntilExceedsServiceStart}
                   aria-describedby={validUntilExceedsServiceStart ? "valid-until-service-error" : undefined}
                   className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary disabled:bg-surface-container-low disabled:text-on-surface-variant disabled:cursor-not-allowed"
+                  dir="ltr"
                 />
                 <p className="text-[12px] text-on-surface-variant leading-snug">
-                  Offer expiry date — not related to service execution dates.
+                  {dictionary.form.validUntilHint}
                 </p>
                 {serviceStartedBeforeIssueDate && (
                   <p className="text-[12px] text-error leading-snug">
-                    Cannot create a quotation because the service has already started.
+                    {dictionary.form.validation.serviceAlreadyStarted}
                   </p>
                 )}
                 {validUntilExceedsServiceStart && (
                   <p id="valid-until-service-error" className="text-[12px] text-error leading-snug">
-                    Quotation cannot remain valid after the service begins.
+                    {dictionary.form.validation.validUntilAfterServiceStart}
                   </p>
                 )}
               </div>
@@ -294,7 +314,7 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[14px] font-semibold text-on-surface">Discount (SAR)</label>
+                <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.discountSar}</label>
                 <input
                   type="number"
                   min="0"
@@ -304,22 +324,23 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
                   aria-invalid={discountExceedsSubtotal}
                   aria-describedby={discountExceedsSubtotal ? "discount-error" : undefined}
                   className="no-number-spinner w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                  dir="ltr"
                 />
                 {discountExceedsSubtotal && (
                   <p id="discount-error" className="text-[12px] text-error leading-snug">
-                    Discount cannot exceed subtotal. Server totals will reject this value.
+                    {dictionary.form.discountExceededHint}
                   </p>
                 )}
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[14px] font-semibold text-on-surface">Tax/VAT</label>
+                <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.vat}</label>
                 <input
                   type="text"
-                  value="Not applied"
+                  value={dictionary.form.notApplied}
                   readOnly
                   className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface-variant focus:outline-none cursor-not-allowed"
-                  title="G7 BLUE is not VAT registered. Final totals are calculated on the server."
+                  title={dictionary.form.vatTitle}
                 />
               </div>
             </div>
@@ -328,13 +349,13 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
 
         <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden p-6 flex flex-col gap-4">
           <div className="flex items-center justify-between border-b border-surface-variant pb-2">
-            <h3 className="font-semibold text-primary">Line Items</h3>
+            <h3 className="font-semibold text-primary">{dictionary.form.lineItems}</h3>
             <button
               type="button"
               onClick={addItem}
               className="flex items-center gap-1 text-[14px] text-primary hover:text-primary-container font-semibold transition-colors"
             >
-              <Plus size={16} /> Add Item
+              <Plus size={16} /> {dictionary.form.addItem}
             </button>
           </div>
 
@@ -344,18 +365,18 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
                 <div className="flex-1 flex flex-col gap-3">
                   <div className="grid grid-cols-12 gap-3">
                     <div className="col-span-6 flex flex-col gap-1.5">
-                      <label className="text-[12px] font-semibold text-on-surface-variant">Description</label>
+                      <label className="text-[12px] font-semibold text-on-surface-variant">{dictionary.form.description}</label>
                       <input
                         type="text"
                         value={item.description}
                         onChange={(e) => updateItem(index, "description", e.target.value)}
-                        placeholder="Service or product name"
+                        placeholder={dictionary.form.descriptionPlaceholder}
                         className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                         required
                       />
                     </div>
                     <div className="col-span-3 flex flex-col gap-1.5">
-                      <label className="text-[12px] font-semibold text-on-surface-variant">Qty</label>
+                      <label className="text-[12px] font-semibold text-on-surface-variant">{dictionary.form.qty}</label>
                       <input
                         type="number"
                         min="0.01"
@@ -363,11 +384,12 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
                         value={item.qty}
                         onChange={(e) => updateItem(index, "qty", parseFloat(e.target.value) || 0)}
                         className="no-number-spinner w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                        dir="ltr"
                         required
                       />
                     </div>
                     <div className="col-span-3 flex flex-col gap-1.5">
-                      <label className="text-[12px] font-semibold text-on-surface-variant">Unit Price (SAR)</label>
+                      <label className="text-[12px] font-semibold text-on-surface-variant">{dictionary.form.unitPriceSar}</label>
                       <input
                         type="number"
                         min="0"
@@ -375,25 +397,26 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
                         value={item.unitPrice}
                         onChange={(e) => updateItem(index, "unitPrice", parseFloat(e.target.value) || 0)}
                         className="no-number-spinner w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                        dir="ltr"
                         required
                       />
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[12px] font-semibold text-on-surface-variant">Details / Category (Optional)</label>
+                    <label className="text-[12px] font-semibold text-on-surface-variant">{dictionary.form.detailsCategoryOptional}</label>
                     <div className="flex gap-3">
                       <input
                         type="text"
                         value={item.details}
                         onChange={(e) => updateItem(index, "details", e.target.value)}
-                        placeholder="Additional details..."
+                        placeholder={dictionary.form.detailsPlaceholder}
                         className="flex-1 bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                       />
                       <input
                         type="text"
                         value={item.category}
                         onChange={(e) => updateItem(index, "category", e.target.value)}
-                        placeholder="Category"
+                        placeholder={dictionary.form.categoryPlaceholder}
                         className="w-48 bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:border-primary"
                       />
                     </div>
@@ -404,7 +427,7 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
                   onClick={() => removeItem(index)}
                   disabled={items.length === 1}
                   className="p-2 text-on-surface-variant hover:text-error hover:bg-error-container rounded-lg transition-colors mt-6 disabled:opacity-50 disabled:hover:text-on-surface-variant disabled:hover:bg-transparent"
-                  title={items.length === 1 ? "At least one item is required" : "Remove item"}
+                  title={items.length === 1 ? dictionary.form.minimumOneItem : dictionary.form.removeItem}
                 >
                   <Trash2 size={18} />
                 </button>
@@ -416,29 +439,29 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
         <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden p-6 flex flex-col gap-4">
           <div className="flex items-center gap-2 text-[12px] font-mono text-on-surface-variant bg-surface-container-low p-2 rounded border border-outline-variant/50">
             <AlertCircle size={14} className="text-primary" />
-            Preview only. Final totals are calculated securely on the server.
+            {dictionary.form.previewOnly}
           </div>
           
           <div className="flex flex-col items-end gap-2 text-[14px] text-on-surface">
-            <div className="flex justify-between w-64">
-              <span className="text-on-surface-variant">Subtotal:</span>
+            <div className="flex justify-between w-64" dir="ltr">
+              <span className="text-on-surface-variant">{dictionary.form.subtotal}:</span>
               <span>{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span>
             </div>
-            <div className="flex justify-between w-64 text-error">
-              <span className="text-on-surface-variant">Discount:</span>
+            <div className="flex justify-between w-64 text-error" dir="ltr">
+              <span className="text-on-surface-variant">{dictionary.form.discount}:</span>
               <span>- {parsedDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span>
             </div>
             {discountExceedsSubtotal && (
               <div className="w-64 text-[12px] text-error text-right">
-                Discount is greater than subtotal.
+                {dictionary.form.discountGreaterThanSubtotal}
               </div>
             )}
-            <div className="flex justify-between w-64">
-              <span className="text-on-surface-variant">Tax/VAT:</span>
-              <span>Not applied</span>
+            <div className="flex justify-between w-64" dir="ltr">
+              <span className="text-on-surface-variant">{dictionary.form.vat}:</span>
+              <span>{dictionary.form.notApplied}</span>
             </div>
-            <div className={`flex justify-between w-64 pt-2 border-t border-outline-variant font-semibold text-[16px] ${discountExceedsSubtotal ? "text-error" : "text-primary"}`}>
-              <span>Grand Total:</span>
+            <div className={`flex justify-between w-64 pt-2 border-t border-outline-variant font-semibold text-[16px] ${discountExceedsSubtotal ? "text-error" : "text-primary"}`} dir="ltr">
+              <span>{dictionary.form.grandTotal}:</span>
               <span>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span>
             </div>
           </div>
@@ -454,7 +477,7 @@ export default function QuotationForm({ service, initialData }: QuotationFormPro
               }
             >
               <Save size={18} />
-              {isEdit ? "Save Changes" : "Create Quotation"}
+              {isEdit ? dictionary.form.saveChanges : dictionary.form.createQuotation}
             </Button>
           </div>
         </div>

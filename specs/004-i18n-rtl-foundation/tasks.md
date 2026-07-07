@@ -361,3 +361,26 @@
 - Keep document/PDF language work behind the document language model decision.
 - Keep `document_locale` and Customer `preferred_language` out of Foundation-1.
 - Keep supplier pending UX as a later separate slice.
+### I18N-RTL-QUOTATIONS-RUNTIME-1A
+
+- Type: module runtime implementation
+- Status: DONE
+- Scope:
+  - quotations list page
+  - list client/table/filter UI
+  - New Quotation page
+  - shared quotation form runtime i18n
+- Outcome:
+  - module-local quotations dictionary introduced
+  - initial senior review returned HOLD because an `expired` status filter option was added
+  - FIX-1 removed `expired` from selectable status filter options
+  - final selectable status filter options remain exactly `all`, `draft`, `sent`, `approved`, and `rejected`
+  - focused re-review result is `PASS`
+  - Mozfer manual/browser smoke result is `PASS`
+  - quotation numbers, service numbers, customer names, SAR values, dates, and statuses remained readable/LTR-safe
+  - no quotation detail page implementation was intentionally included in this slice
+  - no PDFs/document routes touched
+  - no ZATCA/QR/XML/FATOORA touched
+  - no quotation action/query logic changed
+  - no RBAC/permission/service-gating/create-flow behavior changed
+  - no totals/SAR calculation behavior changed

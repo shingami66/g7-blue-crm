@@ -10,17 +10,31 @@ import { Plus, Filter, FileSearch, Trash2, Edit, AlertCircle } from "lucide-reac
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
+import {
+  getQuotationsDictionary,
+  type QuotationsDictionary,
+} from "@/lib/i18n/dictionaries/quotations";
+import { getLocale } from "@/lib/i18n/locales";
 import type { QuotationListItem } from "@/lib/quotations/types";
 import { softDeleteQuotation } from "@/lib/quotations/actions";
 
 interface QuotationsClientProps {
   quotations: QuotationListItem[];
   canWrite: boolean;
+  dictionary?: QuotationsDictionary;
 }
 
 type StatusBadgeVariant = React.ComponentProps<typeof StatusBadge>["variant"];
 
-export default function QuotationsClient({ quotations, canWrite }: QuotationsClientProps) {
+function formatCopy(template: string, values: Record<string, string | number>) {
+  return template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
+}
+
+export default function QuotationsClient({
+  quotations,
+  canWrite,
+  dictionary = getQuotationsDictionary(getLocale()),
+}: QuotationsClientProps) {
   const router = useRouter();
   const { push } = useGlobalNavigationPending();
   const [error, setError] = useState<string | null>(null);
@@ -60,12 +74,12 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
     e.stopPropagation();
     setError(null);
 
-    const confirmed = window.confirm("Are you sure you want to delete this quotation?");
+    const confirmed = window.confirm(dictionary.list.deleteConfirm);
     if (!confirmed) return;
 
     const result = await softDeleteQuotation(id);
     if (!result.success) {
-      setError(result.error || "Failed to delete quotation.");
+      setError(result.error || dictionary.list.deleteFailed);
     } else {
       router.refresh();
     }
@@ -74,8 +88,8 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
   return (
     <div className="flex flex-col h-full">
       <PageHeader
-        title="Quotations"
-        subtitle="Manage client proposals, event estimates, and approvals."
+        title={dictionary.list.title}
+        subtitle={dictionary.list.subtitle}
       >
         {canWrite && (
           <Link 
@@ -83,7 +97,7 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
             className="flex items-center gap-2 bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors"
           >
             <Plus size={18} />
-            Select Service
+            {dictionary.list.selectService}
           </Link>
         )}
       </PageHeader>
@@ -96,11 +110,11 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
               onChange={(e) => handleStatusFilterChange(e.target.value)}
               className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
             >
-              <option value="all">All Statuses</option>
-              <option value="draft">Draft</option>
-              <option value="sent">Sent</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
+              <option value="all">{dictionary.list.allStatuses}</option>
+              <option value="draft">{dictionary.statuses.draft}</option>
+              <option value="sent">{dictionary.statuses.sent}</option>
+              <option value="approved">{dictionary.statuses.approved}</option>
+              <option value="rejected">{dictionary.statuses.rejected}</option>
             </select>
             <Filter
               size={14}
@@ -117,8 +131,12 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
           </div>
           <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
             {filteredQuotations.length === 0
-              ? "Showing 0 of 0 quotations"
-              : `Showing ${startIndex + 1}-${endIndex} of ${filteredQuotations.length} quotations`}
+              ? dictionary.list.showingZero
+              : formatCopy(dictionary.list.showingRange, {
+                  start: startIndex + 1,
+                  end: endIndex,
+                  count: filteredQuotations.length,
+                })}
           </div>
         </FilterBar>
 
@@ -132,17 +150,17 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
         <div className="flex-1 overflow-auto">
           {filteredQuotations.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-on-surface-variant">
-              <p>No quotations match the selected filters.</p>
+              <p>{dictionary.list.noFilteredQuotations}</p>
             </div>
           ) : (
             <DataTable
               columns={[
-                "Quote Number",
-                "Client / Event",
-                "Issue Date",
-                "Amount (SAR)",
-                "Status",
-                "Actions",
+                dictionary.list.table.quotationNumber,
+                dictionary.list.table.clientEvent,
+                dictionary.list.table.issueDate,
+                dictionary.list.table.amountSar,
+                dictionary.list.table.status,
+                dictionary.list.table.actions,
               ]}
             >
               {paginatedQuotations.map((q) => (
@@ -151,31 +169,32 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
                   className="hover:bg-surface-container-low/50 transition-colors cursor-pointer"
                   onClick={() => push(`/quotations/${q.id}`)}
                 >
-                  <td className="px-4 py-4 font-mono font-semibold text-primary">
+                  <td className="px-4 py-4 font-mono font-semibold text-primary" dir="ltr">
                     {q.quotationNumber}
                   </td>
                   <td className="px-4 py-4">
-                    <div className="font-semibold text-on-surface">
-                      {q.customer?.company || "Unknown Company"}
+                    <div className="font-semibold text-on-surface" dir="auto">
+                      {q.customer?.company || dictionary.list.unknownCompany}
                     </div>
-                    <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
+                    <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1" dir="auto">
                       {q.event}
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-on-surface-variant">{q.date}</td>
-                  <td className="px-4 py-4 font-semibold text-on-surface">
+                  <td className="px-4 py-4 text-on-surface-variant" dir="ltr">{q.date}</td>
+                  <td className="px-4 py-4 font-semibold text-on-surface" dir="ltr">
                     {q.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-4 py-4">
                     <StatusBadge variant={q.status as StatusBadgeVariant}>
-                      {q.status.charAt(0).toUpperCase() + q.status.slice(1)}
+                      {dictionary.statuses[q.status as keyof QuotationsDictionary["statuses"]] ??
+                        q.status.charAt(0).toUpperCase() + q.status.slice(1)}
                     </StatusBadge>
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex gap-2">
                       <button
                         className="text-primary hover:text-primary-container p-1 rounded transition-colors"
-                        title="View Details"
+                        title={dictionary.list.actionTitles.viewDetails}
                         onClick={(e) => {
                           e.stopPropagation();
                           push(`/quotations/${q.id}`);
@@ -189,7 +208,7 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
                           {q.status === "draft" ? (
                             <button
                               className="text-primary hover:text-primary-container p-1 rounded transition-colors"
-                              title="Edit Quotation"
+                              title={dictionary.list.actionTitles.editQuotation}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 push(`/quotations/${q.id}/edit`);
@@ -200,7 +219,7 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
                           ) : (
                             <button
                               className="text-on-surface-variant opacity-50 p-1 rounded cursor-not-allowed"
-                              title="Only draft quotations can be edited"
+                              title={dictionary.list.actionTitles.onlyDraftEditable}
                               onClick={(e) => e.stopPropagation()}
                             >
                               <Edit size={18} />
@@ -213,7 +232,11 @@ export default function QuotationsClient({ quotations, canWrite }: QuotationsCli
                                 ? "text-on-surface-variant opacity-50 cursor-not-allowed"
                                 : "text-on-surface-variant hover:text-error hover:bg-error-container"
                             }`}
-                            title={q.status === "approved" ? "Approved quotations cannot be deleted" : "Delete Quotation"}
+                            title={
+                              q.status === "approved"
+                                ? dictionary.list.actionTitles.approvedCannotDelete
+                                : dictionary.list.actionTitles.deleteQuotation
+                            }
                             onClick={(e) => {
                               if (q.status !== "approved") {
                                 handleDelete(e, q.id);

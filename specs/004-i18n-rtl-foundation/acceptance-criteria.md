@@ -267,3 +267,20 @@
 - loyalty card is not copied unless separately approved
 - promotions are not copied unless separately approved
 - cleared status is not copied unless real support exists
+## Quotations 1A Docs Sync
+
+- `I18N-RTL-QUOTATIONS-RUNTIME-1A` is complete as a Quotations runtime module slice.
+- Initial senior review returned HOLD because an `expired` status filter option was added.
+- FIX-1 removed `expired` from selectable status filter options.
+- Focused re-review result is `PASS`.
+- Mozfer manual/browser smoke result is `PASS`.
+- Quotations list page rendered correctly.
+- RTL list layout passed visually.
+- New/form quotation surfaces rendered correctly.
+- Quotation numbers, service numbers, customer names, SAR values, dates, and statuses remained readable/LTR-safe.
+- No quotation detail page implementation was intentionally included in this slice.
+- No PDFs/document routes touched.
+- No ZATCA/QR/XML/FATOORA touched.
+- No quotation action/query logic changed.
+- No RBAC/permission/service-gating/create-flow behavior changed.
+- No totals/SAR calculation behavior changed.

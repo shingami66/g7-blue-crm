@@ -1951,3 +1951,20 @@ Must verify:
    - `document_locale` schema/runtime work remains deferred and must stay separate from Foundation-1.
 6. `INVOICE-LIST-ACTIONS-POLISH-1`
    - View/Print icons, list action polish, pagination/page-size/go-to-page review.
+## Quotations 1A Docs Sync
+- `I18N-RTL-QUOTATIONS-RUNTIME-1A` completed as a Quotations runtime module slice.
+- Initial senior review returned HOLD because an `expired` status filter option was added.
+- FIX-1 removed `expired` from selectable status filter options.
+- Final selectable status filter options remain exactly `all`, `draft`, `sent`, `approved`, and `rejected`.
+- Focused re-review result is `PASS`.
+- Mozfer manual/browser smoke result is `PASS`.
+- List page rendered correctly.
+- RTL list layout passed visually.
+- New/form quotation surfaces rendered correctly.
+- Quotation numbers, service numbers, customer names, SAR values, dates, and statuses remained readable/LTR-safe.
+- No quotation detail page implementation was intentionally included in this slice.
+- No PDFs/document routes touched.
+- No ZATCA/QR/XML/FATOORA touched.
+- No quotation action/query logic changed.
+- No RBAC/permission/service-gating/create-flow behavior changed.
+- No totals/SAR calculation behavior changed.

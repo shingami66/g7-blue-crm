@@ -3,6 +3,11 @@ import Link from "next/link";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
+import { getLocale } from "@/lib/i18n/locales";
+import {
+  getQuotationsDictionary,
+  type QuotationsDictionary,
+} from "@/lib/i18n/dictionaries/quotations";
 import QuotationForm from "./QuotationForm";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +26,9 @@ function serviceCanReceiveQuotation(status: string) {
 }
 
 export default async function NewQuotationPage({ searchParams }: NewQuotationPageProps) {
+  const locale = getLocale();
+  const dictionary = getQuotationsDictionary(locale);
+  const formDictionary: QuotationsDictionary = dictionary;
   let authError: unknown = null;
 
   try {
@@ -38,9 +46,9 @@ export default async function NewQuotationPage({ searchParams }: NewQuotationPag
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.accessDenied}</h2>
           <p className="text-sm text-slate-500">
-            You don&apos;t have permission to create quotations.
+            {dictionary.states.createForbidden}
           </p>
         </div>
       </div>
@@ -51,9 +59,9 @@ export default async function NewQuotationPage({ searchParams }: NewQuotationPag
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Something went wrong</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.genericError}</h2>
           <p className="text-sm text-slate-500">
-            We couldn&apos;t load the necessary data at this time. Please try again later.
+            {dictionary.states.createDataLoadError}
           </p>
         </div>
       </div>
@@ -67,12 +75,12 @@ export default async function NewQuotationPage({ searchParams }: NewQuotationPag
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Select a Service First</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.selectServiceTitle}</h2>
           <p className="text-sm text-slate-500 mb-4">
-            Quotations must be created from an active Service.
+            {dictionary.states.selectServiceMessage}
           </p>
           <Link href="/services" className="text-primary hover:underline font-medium">
-            Go to Services
+            {dictionary.actions.goToServices}
           </Link>
         </div>
       </div>
@@ -96,9 +104,9 @@ export default async function NewQuotationPage({ searchParams }: NewQuotationPag
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.accessDenied}</h2>
           <p className="text-sm text-slate-500">
-            You don&apos;t have permission to view the selected Service.
+            {dictionary.states.selectedServiceForbidden}
           </p>
         </div>
       </div>
@@ -109,9 +117,9 @@ export default async function NewQuotationPage({ searchParams }: NewQuotationPag
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Something went wrong</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.genericError}</h2>
           <p className="text-sm text-slate-500">
-            We couldn&apos;t load the selected Service at this time. Please try again later.
+            {dictionary.states.selectedServiceLoadError}
           </p>
         </div>
       </div>
@@ -122,12 +130,12 @@ export default async function NewQuotationPage({ searchParams }: NewQuotationPag
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Service Not Available</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.serviceUnavailableTitle}</h2>
           <p className="text-sm text-slate-500 mb-4">
-            The selected Service does not exist or is no longer available.
+            {dictionary.states.serviceUnavailableMessage}
           </p>
           <Link href="/services" className="text-primary hover:underline font-medium">
-            Back to Services
+            {dictionary.actions.backToServices}
           </Link>
         </div>
       </div>
@@ -138,12 +146,12 @@ export default async function NewQuotationPage({ searchParams }: NewQuotationPag
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Quotation Creation Locked</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.creationLockedTitle}</h2>
           <p className="text-sm text-slate-500 mb-4">
-            Quotations can only be created for Services in Inquiry or Quoted status.
+            {dictionary.states.creationLockedMessage}
           </p>
           <Link href={`/services/${service.id}`} className="text-primary hover:underline font-medium">
-            Back to Service
+            {dictionary.actions.backToService}
           </Link>
         </div>
       </div>
@@ -152,7 +160,7 @@ export default async function NewQuotationPage({ searchParams }: NewQuotationPag
 
   return (
     <div className="flex flex-col h-full max-w-5xl mx-auto w-full pb-12">
-      <QuotationForm service={service} />
+      <QuotationForm service={service} dictionary={formDictionary} />
     </div>
   );
 }

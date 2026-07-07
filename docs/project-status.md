@@ -1846,3 +1846,22 @@ UI fixed value alone is not enough.
 Supplier allocations may be created during active Service planning for internal cost estimation.
 Create/update is blocked only for Services in: `Cancelled`, `Completed`.
 Supplier allocations do not create supplier commitment, issue Supplier Bookings, confirm supplier booking, or create financial commitment.
+## Quotations 1A Docs Sync
+- `I18N-RTL-QUOTATIONS-RUNTIME-1A` completed.
+- Scope: quotations list page, list client/table/filter UI, New Quotation page, and shared quotation form runtime i18n.
+- Introduced module-local quotations dictionary.
+- Initial senior review returned HOLD because an `expired` status filter option was added.
+- FIX-1 removed `expired` from selectable status filter options.
+- Final selectable status filter options remain exactly `all`, `draft`, `sent`, `approved`, and `rejected`.
+- Re-review result: PASS.
+- Mozfer manual/browser smoke result: PASS.
+- List page rendered correctly.
+- RTL list layout passed visually.
+- New/form quotation surfaces rendered correctly.
+- Quotation numbers, service numbers, customer names, SAR values, dates, and statuses remained readable/LTR-safe.
+- No quotation detail page implementation was intentionally included in this slice.
+- No PDFs/document routes touched.
+- No ZATCA/QR/XML/FATOORA touched.
+- No quotation action/query logic changed.
+- No RBAC/permission/service-gating/create-flow behavior changed.
+- No totals/SAR calculation behavior changed.
