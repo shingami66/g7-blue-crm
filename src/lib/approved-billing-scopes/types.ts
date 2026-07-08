@@ -104,6 +104,11 @@ export interface ApprovedBillingScopeItemRow {
   updated_at: string;
 }
 
+export interface ApprovedBillingScopeRowWithItems
+  extends ApprovedBillingScopeRow {
+  approved_billing_scope_items?: ApprovedBillingScopeItemRow[] | null;
+}
+
 export interface ApprovedBillingScope {
   id: string;
   serviceId: string;
@@ -137,6 +142,11 @@ export interface ApprovedBillingScope {
   updatedBy: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ApprovedBillingScopeDetail extends ApprovedBillingScope {
+  items: ApprovedBillingScopeItem[];
+  isActiveApprovedScope: boolean;
 }
 
 export interface ApprovedBillingScopeItem {
@@ -178,6 +188,14 @@ export interface ApprovedBillingScopeSummary {
   supersededAt: string | null;
   voidedAt: string | null;
 }
+
+export type ApprovedBillingScopeReadMaskingOptions = {
+  canReadInternalNotes?: boolean;
+};
+
+export type ApprovedBillingScopeListOptions = {
+  status?: ApprovedBillingScopeStatus;
+};
 
 export interface ApprovedBillingScopeActionResult<T = void> {
   success: boolean;
