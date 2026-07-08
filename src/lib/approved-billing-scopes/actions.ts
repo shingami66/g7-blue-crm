@@ -8,9 +8,12 @@ import { APPROVED_BILLING_SCOPE_PERMISSIONS } from "./permissions";
 import {
   createApprovedBillingScopeDraftSchema,
   discardApprovedBillingScopeDraftSchema,
+  editApprovedBillingScopeItemSchema,
 } from "./schemas";
+import { getApprovedBillingScopeById } from "./queries";
 import type {
   ApprovedBillingScopeActionResult,
+  ApprovedBillingScopeDetail,
   ApprovedBillingScopeErrorCode,
 } from "./types";
 
@@ -579,6 +582,132 @@ export async function discardApprovedBillingScopeDraft(
 
     console.error(
       "[discardApprovedBillingScopeDraft] Unexpected error:",
+      err instanceof Error ? err.message : "Unknown"
+    );
+    return errorResult("scope_unexpected_error");
+  }
+}
+
+export type EditApprovedBillingScopeItemResult =
+  ApprovedBillingScopeActionResult<ApprovedBillingScopeDetail>;
+
+type EditApprovedBillingScopeItemRpcRow = {
+  error_code: string | null;
+  scope_id: string | null;
+  item_id: string | null;
+  accepted_subtotal: number | null;
+  accepted_vat_amount: number | null;
+  accepted_grand_total: number | null;
+  line_safety_status: string | null;
+  updated: boolean;
+};
+
+export async function editApprovedBillingScopeItem(
+  input: unknown
+): Promise<EditApprovedBillingScopeItemResult> {
+  try {
+    await requirePermission(APPROVED_BILLING_SCOPE_PERMISSIONS.update);
+    const parsed = editApprovedBillingScopeItemSchema.safeParse(input);
+    const supabase = createAdminClient();
+
+    if (!parsed.success) {
+      return errorResult("scope_unexpected_error");
+    }
+
+    const {
+      scopeId,
+      itemId,
+      decision,
+      acceptedQty,
+      acceptedUnitPrice,
+      reasonCode,
+      reasonNote,
+      displayOrder,
+    } = parsed.data;
+
+    const { data: editResult, error: editError } = await supabase
+      .rpc("edit_approved_billing_scope_item", {
+        p_scope_id: scopeId,
+        p_item_id: itemId,
+        p_decision: decision,
+        p_accepted_qty: acceptedQty !== undefined ? acceptedQty : null,
+        p_accepted_unit_price: acceptedUnitPrice !== undefined ? acceptedUnitPrice : null,
+        p_reason_code: reasonCode !== undefined ? reasonCode : null,
+        p_reason_note: reasonNote !== undefined ? reasonNote : null,
+        p_display_order: displayOrder !== undefined ? displayOrder : null,
+      })
+      .single<EditApprovedBillingScopeItemRpcRow>();
+
+    if (editError) {
+      console.error(
+        "[editApprovedBillingScopeItem] Atomic edit RPC error:",
+        editError.message
+      );
+      return errorResult("scope_unexpected_error");
+    }
+
+    if (!editResult) {
+      console.error(
+        "[editApprovedBillingScopeItem] Atomic edit RPC returned no row for scope:",
+        scopeId
+      );
+      return errorResult("scope_unexpected_error");
+    }
+
+    if (editResult.error_code === "scope_not_found") {
+      return errorResult("scope_not_found");
+    }
+
+    if (editResult.error_code === "scope_not_draft") {
+      return errorResult("scope_not_draft");
+    }
+
+    if (editResult.error_code === "scope_reduction_invalid") {
+      return errorResult("scope_reduction_invalid");
+    }
+
+    if (editResult.error_code === "scope_reason_required") {
+      return errorResult("scope_reason_required");
+    }
+
+    if (editResult.error_code === "scope_concurrency_conflict") {
+      return errorResult("scope_concurrency_conflict");
+    }
+
+    if (
+      editResult.error_code ||
+      !editResult.updated ||
+      !editResult.scope_id ||
+      !editResult.item_id
+    ) {
+      console.error(
+        "[editApprovedBillingScopeItem] Atomic edit RPC returned unexpected payload for scope:",
+        scopeId
+      );
+      return errorResult("scope_unexpected_error");
+    }
+
+    // Read back scope detail
+    const detail = await getApprovedBillingScopeById(scopeId);
+    if (!detail) {
+      console.error(
+        "[editApprovedBillingScopeItem] Failed to read back updated scope detail for scope:",
+        scopeId
+      );
+      return errorResult("scope_unexpected_error");
+    }
+
+    return {
+      success: true,
+      data: detail,
+    };
+  } catch (err) {
+    if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
+      return errorResult("scope_permission_denied");
+    }
+
+    console.error(
+      "[editApprovedBillingScopeItem] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
     return errorResult("scope_unexpected_error");
