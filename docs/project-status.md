@@ -73,7 +73,24 @@
   - Successfully invoked `discardApprovedBillingScopeDraft` server action.
   - Verified atomic database deletion of both the scope header and its items.
 - [x] Temporary DEV harness removed, restoring clean working tree.
-- [x] Runtime actions (`editApprovedBillingScopeItem`, `reviewApprovedBillingScopeLineSafety`, `approveApprovedBillingScope`, `voidApprovedBillingScope`, `supersedeApprovedBillingScope`), UI screens, invoice integration, and production DB apply remain deferred.
+- [x] Runtime actions (`reviewApprovedBillingScopeLineSafety`, `approveApprovedBillingScope`, `voidApprovedBillingScope`, `supersedeApprovedBillingScope`), UI screens, invoice integration, and production DB apply remain deferred.
+
+### Approved Billing Scope Draft Item Edit
+- [x] Migration draft `supabase/migrations/20260708120000_approved_billing_scope_item_edit_function.sql` was committed and pushed as `3af430a feat(billing): add atomic draft item edit`.
+- [x] Migration was manually applied to the DEV/DEMO database only.
+- [x] Two corrective migrations were manually applied and verified in target demo DB to address PL/pgSQL name collisions:
+  - `supabase/migrations/20260708123000_approved_billing_scope_item_edit_function_column_qualify_fix.sql` (qualifies aggregate `items.accepted_subtotal`, `items.accepted_vat_amount`, `items.accepted_grand_total` references).
+  - `supabase/migrations/20260708124000_approved_billing_scope_item_edit_function_line_safety_qualify_fix.sql` (qualifies RHS `scopes.line_safety_status` and `scope_items.display_order` references).
+- [x] Production query relation disambiguation implemented in `src/lib/approved-billing-scopes/queries.ts` to resolve PostgREST embedding ambiguity for `approved_billing_scope_items`.
+- [x] Verification passed: metadata check, function body check, grants check, and harmless dry-check.
+- [x] Manual browser app smoke test passed via temporary DEV harness `/approved-billing-scopes/dev/item-edit-smoke`:
+  - Loaded existing draft scope (`39949bf2-4b0e-4311-9cef-d84a57da7845`) and child items.
+  - Successfully edited item `353699f1-e7b2-4f73-9c1c-11283b05272c` using `editApprovedBillingScopeItem` server action (set qty to 4, unit price to 400).
+  - Verified atomic totals recalculation and line safety status update in the database.
+  - All 8 correctness checks passed.
+  - Cleaned up database draft scope atomically using discard action.
+- [x] Temporary DEV harness removed, restoring clean working tree.
+- [x] Commit pushed as `7f26ca3 fix(billing): stabilize approved scope item edit`.
 
 ### âœ… Foundation UI / Routes
 - [x] dashboard routes exist
@@ -2026,10 +2043,15 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - `APPROVED-BILLING-SCOPE-DRAFT-CREATE-COMMIT-1` was completed and pushed as `4ec323f feat(billing): add approved scope draft creation`.
 - Manual DEV/DEMO smoke for the create-draft action passed with candidate quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe`.
 - Smoke verification confirmed `scopeId = 2fb8a324-4bd2-44be-8a23-a2b37e9b6e72`, `status = draft`, `line_safety_status = pending_review`, item counts and totals matched, and the duplicate second click returned `scope_duplicate_draft`.
-- Cleanup verification passed with `remaining_item_count = 0` and `remaining_scope_count = 0`; the temporary smoke harness was removed after verification.
 - `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-1` completed with `PASS WITH NOTES`.
 - `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-REVIEW-1` completed with `PASS WITH REQUIRED CHANGES`.
 - `APPROVED-BILLING-SCOPE-RUNTIME-DECISIONS-LOCK-1` records the locked V1 runtime/product/security decisions in docs/spec only.
-- The Approved Billing Scope remains a future implementation direction, not runtime code.
-- No schema, RLS, RPC, UI, or invoice-calculation changes were made in this docs/spec pass.
-- Next safe task after this docs/spec lock is `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`.
+- `APPROVED-BILLING-SCOPE-DRAFT-DISCARD-SMOKE-DOCS-SYNC-1` verified the manual apply of draft discard migration `20260708110000_approved_billing_scope_draft_discard_function.sql` in DEV/DEMO and manual app smoke test (creation of draft `0ace1c81-68c0-4cdd-8d9b-db563cd49949` and its atomic deletion). The temporary local DEV harness was removed.
+- `APPROVED-BILLING-SCOPE-DRAFT-ITEM-EDIT-COMMIT-1` and `APPROVED-BILLING-SCOPE-DRAFT-ITEM-EDIT-PUSH-1` implemented, verified, and pushed atomic draft item edit.
+  - Production query relation disambiguation implemented in `src/lib/approved-billing-scopes/queries.ts` to solve PostgREST embedding ambiguity.
+  - Aggregate column-qualify corrective migration `20260708123000_approved_billing_scope_item_edit_function_column_qualify_fix.sql` applied/verified.
+  - RHS line safety qualify corrective migration `20260708124000_approved_billing_scope_item_edit_function_line_safety_qualify_fix.sql` applied/verified.
+  - Manual browser app smoke test passed via temporary DEV harness `/approved-billing-scopes/dev/item-edit-smoke` using existing draft scope `39949bf2-4b0e-4311-9cef-d84a57da7845` (edited item `353699f1-e7b2-4f73-9c1c-11283b05272c` setting qty to 4 and unit price to 400).
+  - All 8 correctness checks passed. Draft scope discarded. Temporary DEV harness removed.
+  - Commit pushed as `7f26ca3 fix(billing): stabilize approved scope item edit`.
+- Next safe task after this sync is `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`.

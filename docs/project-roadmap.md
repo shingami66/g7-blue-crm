@@ -52,11 +52,10 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `APPROVED-BILLING-SCOPE-DRAFT-DISCARD-SMOKE-DOCS-SYNC-1`
-- Document the DEV/DEMO apply and manual smoke PASS for atomic Approved Billing Scope draft discard.
+- `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`
+- Verify database constraints and trigger enforceability against draft scopes.
 
 Backlog / later priority:
-- `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`
 - `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1`
 - `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`
@@ -2091,6 +2090,13 @@ Must verify:
 - `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-REVIEW-1` completed with `PASS WITH REQUIRED CHANGES`.
 - `APPROVED-BILLING-SCOPE-RUNTIME-DECISIONS-LOCK-1` locks the V1 runtime, product, security, and error-contract decisions in docs/spec only.
 - `APPROVED-BILLING-SCOPE-DRAFT-DISCARD-SMOKE-DOCS-SYNC-1` documents the manual apply of migration `20260708110000_approved_billing_scope_draft_discard_function.sql` in DEV/DEMO and the successful manual app smoke test (creation of draft `0ace1c81-68c0-4cdd-8d9b-db563cd49949` and its atomic deletion). The temporary local DEV harness has been cleaned up.
+- `APPROVED-BILLING-SCOPE-DRAFT-ITEM-EDIT-COMMIT-1` and `APPROVED-BILLING-SCOPE-DRAFT-ITEM-EDIT-PUSH-1` implemented, verified, and pushed atomic draft item edit.
+  - Production query relation disambiguation implemented in `src/lib/approved-billing-scopes/queries.ts` to solve PostgREST embedding ambiguity.
+  - Aggregate column-qualify corrective migration `20260708123000_approved_billing_scope_item_edit_function_column_qualify_fix.sql` applied/verified.
+  - RHS line safety qualify corrective migration `20260708124000_approved_billing_scope_item_edit_function_line_safety_qualify_fix.sql` applied/verified.
+  - Manual browser app smoke test passed via temporary DEV harness `/approved-billing-scopes/dev/item-edit-smoke` using existing draft scope `39949bf2-4b0e-4311-9cef-d84a57da7845` (edited item `353699f1-e7b2-4f73-9c1c-11283b05272c` setting qty to 4 and unit price to 400).
+  - All 8 correctness checks passed. Draft scope discarded. Temporary DEV harness removed.
+  - Commit pushed as `7f26ca3 fix(billing): stabilize approved scope item edit`.
 - Next safe task is `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`.
 - After the live-schema check, follow with `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1`, `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`, `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`, and `QUOTATION-REVISION-FALLBACK-DESIGN-1`.
 - `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.

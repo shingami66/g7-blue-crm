@@ -108,6 +108,11 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Manual DEV/DEMO smoke for the create-draft action also passed after the foundation migration: source quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe` created scope `2fb8a324-4bd2-44be-8a23-a2b37e9b6e72`, duplicate protection returned `scope_duplicate_draft`.
 - The draft discard migration `20260708110000_approved_billing_scope_draft_discard_function.sql` was manually applied in DEV/DEMO. It adds the narrow service_role-only transactional function `discard_approved_billing_scope_draft` for draft discard atomicity; this is a safety exception for one-scope cleanup, not a general Approved Billing Scope RPC direction.
 - Manual app smoke test verified that the function successfully deletes the draft scope (`0ace1c81-68c0-4cdd-8d9b-db563cd49949`) and its child items atomically.
+- The draft item edit migration `20260708120000_approved_billing_scope_item_edit_function.sql` was manually applied in DEV/DEMO. It introduces the narrow service_role-only RPC function `edit_approved_billing_scope_item` for draft item modification.
+- Two corrective migrations were manually applied and verified in the DEV/DEMO database to resolve PL/pgSQL aggregate and RHS variable naming collisions:
+  - `20260708123000_approved_billing_scope_item_edit_function_column_qualify_fix.sql` (qualifies `items.accepted_subtotal`, `items.accepted_vat_amount`, `items.accepted_grand_total`).
+  - `20260708124000_approved_billing_scope_item_edit_function_line_safety_qualify_fix.sql` (qualifies `scopes.line_safety_status` and `scope_items.display_order`).
+- PostgREST embedding ambiguity was resolved by updating the select string constant in `src/lib/approved-billing-scopes/queries.ts` to `approved_billing_scope_items:approved_billing_scope_items!approved_billing_scope_id(*)`.
 - The repo docs still treat this as a future design direction for production until a separate production review authorizes it.
 
 ### Invoices And Payments
