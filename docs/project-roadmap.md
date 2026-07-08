@@ -52,8 +52,8 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `APPROVED-BILLING-SCOPE-DEV-APPLY-DOCS-SYNC-1`
-- Docs-only sync after DEV/DEMO apply and smoke validation; no new SQL implementation.
+- `APPROVED-BILLING-SCOPE-RUNTIME-DECISIONS-LOCK-1`
+- Docs/spec-only lock for the required Approved Billing Scope V1 runtime, product, and security decisions; no runtime implementation.
 
 Backlog / later priority:
 - Supplier Bookings Domain design/planning
@@ -2077,8 +2077,11 @@ Must verify:
 ## Approved Billing Scope
 - `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-1` completed and returned `PASS`.
 - `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-REVIEW-1` completed and returned `PASS WITH MINOR DOCS-SYNC NOTES`.
-- `APPROVED-BILLING-SCOPE-DOCS-SYNC-2` is the current docs-only recording step.
+- `APPROVED-BILLING-SCOPE-DOCS-SYNC-2` was the current docs-only recording step.
 - `APPROVED-BILLING-SCOPE-DEV-APPLY-DOCS-SYNC-1` records the DEV/DEMO apply validation outcome and smoke-clean rollback result.
+- `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-1` completed with `PASS WITH NOTES`.
+- `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-REVIEW-1` completed with `PASS WITH REQUIRED CHANGES`.
+- `APPROVED-BILLING-SCOPE-RUNTIME-DECISIONS-LOCK-1` locks the V1 runtime, product, security, and error-contract decisions in docs/spec only.
 - Next safe task is `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`.
 - After the live-schema check, follow with `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1`, `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`, `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`, and `QUOTATION-REVISION-FALLBACK-DESIGN-1`.
 - `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.

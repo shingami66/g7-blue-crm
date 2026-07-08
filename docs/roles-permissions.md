@@ -35,12 +35,18 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 
 ## Approved Billing Scope
 
-- Initial read access should follow normal Service billing visibility, but internal notes and reviewer rationale must be masked from Viewer and any customer-facing output.
-- Draft create and draft edit should start with Admin and Manager only.
-- Approval should start with Admin and Manager only.
-- Sales must not approve scopes.
-- Accountant approval remains a P1 decision and is not locked yet.
-- Supersede and void should stay restricted to elevated approval roles until a later reviewed change expands them.
+- V1 read access: Admin, Manager, Accountant.
+- V1 create draft: Admin, Manager.
+- V1 edit draft: Admin, Manager.
+- V1 line safety review: Admin, Manager.
+- V1 approve: Admin, Manager.
+- V1 void: Admin, Manager.
+- V1 supersede: Admin, Manager.
+- V1 discard draft: Admin, Manager.
+- Viewer has no Approved Billing Scope access in V1.
+- Sales has no Approved Billing Scope access in V1.
+- Internal notes and reviewer reasons are visible only to Admin and Manager in V1.
+- Accountant may read scope headers and items in V1, but not internal notes or reasons.
 - Supplier/internal cost and margin must not exist in customer-facing scope snapshots or outputs.
 - Scope approval, supersede, and void actions must be audited.
 - The foundation migration has now been applied and smoke-tested in DEV/DEMO only; this does not grant production permission or change the locked approval-role assumptions above.

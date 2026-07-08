@@ -56,6 +56,8 @@
 - [x] Invoice integration remains deferred.
 - [x] Runtime/RPC/UI implementation remains deferred.
 - [x] Production apply is not performed and not authorized.
+- [x] Runtime/product/security decision lock completed in `docs/approved-billing-scope-runtime-decisions.md` after `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-REVIEW-1` returned `PASS WITH REQUIRED CHANGES`.
+- [x] Locked V1 rules cover server-action-only writes, Admin/Manager workflow, Accountant read-only access, no Viewer/Sales access, explicit supersede, approved-only void, and app audit before approval/void/supersede ship.
 
 ### âœ… Foundation UI / Routes
 - [x] dashboard routes exist
@@ -2004,8 +2006,10 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 ## Approved Billing Scope Design Sync
 - `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-1` completed and returned `PASS`.
 - `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-REVIEW-1` completed and returned `PASS WITH MINOR DOCS-SYNC NOTES`.
-- `APPROVED-BILLING-SCOPE-DOCS-SYNC-2` is the current docs-only recording step.
-- The Approved Billing Scope is recorded here as a future design direction, not an implementation.
-- This docs sync records design decisions only.
-- No schema, RLS, RPC, UI, or invoice-calculation changes were made.
-- Next safe task after this docs sync is `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`.
+- `APPROVED-BILLING-SCOPE-DOCS-SYNC-2` was the current docs-only recording step.
+- `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-1` completed with `PASS WITH NOTES`.
+- `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-REVIEW-1` completed with `PASS WITH REQUIRED CHANGES`.
+- `APPROVED-BILLING-SCOPE-RUNTIME-DECISIONS-LOCK-1` records the locked V1 runtime/product/security decisions in docs/spec only.
+- The Approved Billing Scope remains a future implementation direction, not runtime code.
+- No schema, RLS, RPC, UI, or invoice-calculation changes were made in this docs/spec pass.
+- Next safe task after this docs/spec lock is `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`.
