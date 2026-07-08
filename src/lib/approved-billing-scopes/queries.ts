@@ -21,8 +21,7 @@ import type {
 
 const APPROVED_BILLING_SCOPE_WITH_ITEMS_SELECT =
   "*, approved_billing_scope_items(*)";
-const DUPLICATE_DRAFT_ERROR_MESSAGE =
-  "Duplicate approved billing scope draft detected.";
+const DUPLICATE_DRAFT_ERROR_CODE = "scope_duplicate_draft";
 
 function canReadApprovedBillingScopeInternalFields(role: string): boolean {
   return role === "admin" || role === "manager";
@@ -228,7 +227,7 @@ export async function getExistingDraftScopeForQuotation(
         "[getExistingDraftScopeForQuotation] Duplicate draft billing scopes detected for source quotation:",
         sourceQuotationId
       );
-      throw new Error(DUPLICATE_DRAFT_ERROR_MESSAGE);
+      throw new Error(DUPLICATE_DRAFT_ERROR_CODE);
     }
 
     return mapApprovedBillingScopeSummaryRow(
@@ -241,7 +240,7 @@ export async function getExistingDraftScopeForQuotation(
 
     if (
       err instanceof Error &&
-      err.message === DUPLICATE_DRAFT_ERROR_MESSAGE
+      err.message === DUPLICATE_DRAFT_ERROR_CODE
     ) {
       throw err;
     }

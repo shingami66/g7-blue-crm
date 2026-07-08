@@ -16,6 +16,7 @@ export const APPROVED_BILLING_SCOPE_ERROR_CODES = [
   "scope_terminal_voided",
   "scope_supersede_target_required",
   "scope_supersede_service_mismatch",
+  "scope_concurrency_conflict",
   "scope_permission_denied",
   "scope_unexpected_error",
 ] as const;
@@ -59,6 +60,8 @@ export const APPROVED_BILLING_SCOPE_ERROR_MESSAGES: Record<
     "A supersede target billing scope is required for this action.",
   scope_supersede_service_mismatch:
     "The supersede target must belong to the same service as the new scope.",
+  scope_concurrency_conflict:
+    "Approved billing scope creation encountered a concurrency conflict. Please try again.",
   scope_permission_denied:
     "You do not have permission to perform this approved billing scope action.",
   scope_unexpected_error:
