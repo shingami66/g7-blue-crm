@@ -333,7 +333,8 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Draft Item Edit Smoke:** `APPROVED-BILLING-SCOPE-DRAFT-ITEM-EDIT-COMMIT-1` and `APPROVED-BILLING-SCOPE-DRAFT-ITEM-EDIT-PUSH-1` implemented, verified, and pushed atomic draft item edit. Resolves PostgREST query embedding ambiguity and PL/pgSQL variable naming collisions via corrective migrations `20260708123000` and `20260708124000`. Manual browser app smoke test passed via temporary DEV harness `/approved-billing-scopes/dev/item-edit-smoke` using existing draft scope `39949bf2-4b0e-4311-9cef-d84a57da7845` (edited item `353699f1-e7b2-4f73-9c1c-11283b05272c` setting qty to 4 and unit price to 400). All 8 correctness checks passed.
 - **Harness cleanup:** the temporary local smoke harness was removed after verification.
 - **Live Schema Enforceability Audit:** `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1` completed with `WARN` (audit packet expectation mismatch only; all database tables, constraints, FKs, indexes, triggers, RLS, and RPC grants verified and enforceability is sound; the draft creation write path is confirmed to be an app-layer action rather than a database RPC function; no runtime or migration blocker exists; data state is clean).
-- **Follow-ups:** `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1`, `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`, `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`, and `QUOTATION-REVISION-FALLBACK-DESIGN-1`.
+- **Migration Draft Placeholder:** `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` completed as `no-op` after the live audit confirmed that no database schema migrations are currently required.
+- **Follow-ups:** `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`, `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`, and `QUOTATION-REVISION-FALLBACK-DESIGN-1`.
 
 ## Soft Delete And Financial Record Retention
 - **Status:** Deferred technical decision.

@@ -101,6 +101,12 @@
 - [x] Temporary live-schema audit packet expected a database RPC function `create_approved_billing_scope_draft` incorrectly; this is an audit documentation mismatch only, with no migration or runtime blockers.
 - [x] Production apply remains separate and requires explicit authorization.
 
+### Approved Billing Scope Migration Draft Placeholder
+- [x] Backlog check for `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` completed.
+- [x] Result: reclassified as completed/no-op. No concrete database migration is required after the live schema audit.
+- [x] Verified that draft creation is app-layer, draft discard RPC exists, and edit draft item RPC exists. Remaining runtime actions (line safety review, approve, void) operate on the existing database schema via app-layer writes under `requirePermission`. Supersede remains deferred pending transactional RPC design, and invoice integration is a separate design task.
+
+
 ### âœ… Foundation UI / Routes
 - [x] dashboard routes exist
 - [x] UI started with mock data
@@ -2064,4 +2070,5 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
   - All 8 correctness checks passed. Draft scope discarded. Temporary DEV harness removed.
   - Commit pushed as `7f26ca3 fix(billing): stabilize approved scope item edit`.
 - `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1` completed with `WARN` (audit expectation mismatch only; all database tables, constraints, FKs, indexes, triggers, RLS, and RPC grants verified and enforceability is sound; the draft creation write path is confirmed to be an app-layer action rather than a database RPC function; no runtime or migration blocker exists; data state is clean).
-- Next safe task after this sync is `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1`.
+- `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` reclassified as completed/no-op after live schema audit confirmed that no database migration is required. Draft creation is app-layer, draft discard and edit child items RPCs exist, and other runtime actions operate on the existing database schema.
+- Next safe task after this sync is `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`.
