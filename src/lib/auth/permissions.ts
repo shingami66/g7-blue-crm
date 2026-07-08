@@ -2,6 +2,10 @@ import "server-only";
 
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  APPROVED_BILLING_SCOPE_ACCOUNTANT_PERMISSIONS,
+  APPROVED_BILLING_SCOPE_MANAGER_PERMISSIONS,
+} from "@/lib/approved-billing-scopes/permissions";
 import { UnauthorizedError, ForbiddenError } from "./errors";
 
 // ---------------------------------------------------------------------------
@@ -46,6 +50,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     "supplier_bookings:write",
     "supplier_bookings:cancel",
     "dashboard:read",
+    ...APPROVED_BILLING_SCOPE_MANAGER_PERMISSIONS,
   ],
   sales: [
     "customers:read",
@@ -80,6 +85,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     "payments:write",
     "settings:read",
     "dashboard:read",
+    ...APPROVED_BILLING_SCOPE_ACCOUNTANT_PERMISSIONS,
   ],
   viewer: [
     "customers:read",
