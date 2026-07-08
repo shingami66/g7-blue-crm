@@ -92,6 +92,15 @@
 - [x] Temporary DEV harness removed, restoring clean working tree.
 - [x] Commit pushed as `7f26ca3 fix(billing): stabilize approved scope item edit`.
 
+### Approved Billing Scope Live Schema Enforceability Check
+- [x] Live schema enforceability audit completed on DEV/DEMO database.
+- [x] Result: WARN (non-runtime audit packet expectation mismatch only; all target database tables, constraints, FKs, indexes, triggers, RLS, and RPC grants successfully passed).
+- [x] Data state checked: clean (`approved_billing_scopes` count = 0, `approved_billing_scope_items` count = 0).
+- [x] Write path for draft creation clarified: `createApprovedBillingScopeDraft` is an app-layer server action using `createAdminClient` / `service_role` direct table inserts, NOT a database RPC.
+- [x] Concurrency safety and insert authorization are verified to rely on unique constraints, table triggers, and app-layer `requirePermission(approvedBillingScopes:create)`.
+- [x] Temporary live-schema audit packet expected a database RPC function `create_approved_billing_scope_draft` incorrectly; this is an audit documentation mismatch only, with no migration or runtime blockers.
+- [x] Production apply remains separate and requires explicit authorization.
+
 ### âœ… Foundation UI / Routes
 - [x] dashboard routes exist
 - [x] UI started with mock data
@@ -2054,4 +2063,5 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
   - Manual browser app smoke test passed via temporary DEV harness `/approved-billing-scopes/dev/item-edit-smoke` using existing draft scope `39949bf2-4b0e-4311-9cef-d84a57da7845` (edited item `353699f1-e7b2-4f73-9c1c-11283b05272c` setting qty to 4 and unit price to 400).
   - All 8 correctness checks passed. Draft scope discarded. Temporary DEV harness removed.
   - Commit pushed as `7f26ca3 fix(billing): stabilize approved scope item edit`.
-- Next safe task after this sync is `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`.
+- `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1` completed with `WARN` (audit expectation mismatch only; all database tables, constraints, FKs, indexes, triggers, RLS, and RPC grants verified and enforceability is sound; the draft creation write path is confirmed to be an app-layer action rather than a database RPC function; no runtime or migration blocker exists; data state is clean).
+- Next safe task after this sync is `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1`.

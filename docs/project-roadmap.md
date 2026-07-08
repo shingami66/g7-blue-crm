@@ -52,11 +52,10 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`
-- Verify database constraints and trigger enforceability against draft scopes.
+- `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1`
+- Review/audit next schema revision migration drafts.
 
 Backlog / later priority:
-- `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1`
 - `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`
 - `QUOTATION-REVISION-FALLBACK-DESIGN-1`
@@ -2097,7 +2096,7 @@ Must verify:
   - Manual browser app smoke test passed via temporary DEV harness `/approved-billing-scopes/dev/item-edit-smoke` using existing draft scope `39949bf2-4b0e-4311-9cef-d84a57da7845` (edited item `353699f1-e7b2-4f73-9c1c-11283b05272c` setting qty to 4 and unit price to 400).
   - All 8 correctness checks passed. Draft scope discarded. Temporary DEV harness removed.
   - Commit pushed as `7f26ca3 fix(billing): stabilize approved scope item edit`.
-- Next safe task is `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`.
+- `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1` completed with `WARN` (audit expectation mismatch only; all database tables, constraints, FKs, indexes, triggers, RLS, and RPC grants verified and enforceability is sound; the draft creation write path is confirmed to be an app-layer action rather than a database RPC function; no runtime or migration blocker exists; data state is clean).
 - After the live-schema check, follow with `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1`, `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`, `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`, and `QUOTATION-REVISION-FALLBACK-DESIGN-1`.
 - `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.
 - `SERVICE-PROFITABILITY-DESIGN-1` remains blocked until billing source and supplier-cost permissions are stable.

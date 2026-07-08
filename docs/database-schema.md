@@ -113,6 +113,8 @@ These are approved target rules for future reviewed schema changes; they do not 
   - `20260708123000_approved_billing_scope_item_edit_function_column_qualify_fix.sql` (qualifies `items.accepted_subtotal`, `items.accepted_vat_amount`, `items.accepted_grand_total`).
   - `20260708124000_approved_billing_scope_item_edit_function_line_safety_qualify_fix.sql` (qualifies `scopes.line_safety_status` and `scope_items.display_order`).
 - PostgREST embedding ambiguity was resolved by updating the select string constant in `src/lib/approved-billing-scopes/queries.ts` to `approved_billing_scope_items:approved_billing_scope_items!approved_billing_scope_id(*)`.
+- Live schema enforceability audit completed on DEV/DEMO database with `WARN` (audit packet expectation mismatch only; all target database tables, check/FK/unique constraints, indexes, triggers, RLS status, and table grants successfully verified).
+- Clarified draft write path: `createApprovedBillingScopeDraft` is an app-layer server action, NOT a database RPC. There is no expected `public.create_approved_billing_scope_draft` database function. It performs direct table writes using `createAdminClient` / `service_role`, is protected by app-layer `requirePermission(approvedBillingScopes:create)`, and relies on table-level constraints and triggers for enforceability and concurrency safety.
 - The repo docs still treat this as a future design direction for production until a separate production review authorizes it.
 
 ### Invoices And Payments
