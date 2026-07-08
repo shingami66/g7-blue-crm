@@ -29,6 +29,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - `pnpm build` is the required build verification command for build-affecting changes.
 - `pnpm start` runs the built app after a successful `pnpm build`.
 - `pnpm lint` runs the repo ESLint config.
+- `pnpm exec next typegen` is the documented Next.js route type generation check for App Router changes that rely on generated types.
 - `pnpm exec tsc --noEmit` is the documented typecheck verification command for runtime implementation slices.
 - Runtime implementation slices must pass `pnpm lint`, `pnpm exec tsc --noEmit`, and `pnpm build` before commit readiness.
 - `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
