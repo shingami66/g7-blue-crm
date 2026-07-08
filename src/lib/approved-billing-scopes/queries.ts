@@ -20,7 +20,7 @@ import type {
 } from "./types";
 
 const APPROVED_BILLING_SCOPE_WITH_ITEMS_SELECT =
-  "*, approved_billing_scope_items(*)";
+  "*, approved_billing_scope_items:approved_billing_scope_items!approved_billing_scope_id(*)";
 const DUPLICATE_DRAFT_ERROR_CODE = "scope_duplicate_draft";
 
 function canReadApprovedBillingScopeInternalFields(role: string): boolean {
