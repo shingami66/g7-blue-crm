@@ -334,7 +334,9 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Harness cleanup:** the temporary local smoke harness was removed after verification.
 - **Live Schema Enforceability Audit:** `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1` completed with `WARN` (audit packet expectation mismatch only; all database tables, constraints, FKs, indexes, triggers, RLS, and RPC grants verified and enforceability is sound; the draft creation write path is confirmed to be an app-layer action rather than a database RPC function; no runtime or migration blocker exists; data state is clean).
 - **Migration Draft Placeholder:** `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` completed as `no-op` after the live audit confirmed that no database schema migrations are currently required.
-- **Follow-ups:** `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`, `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`, and `QUOTATION-REVISION-FALLBACK-DESIGN-1`.
+- **RBAC & RLS Security Review:** `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1` completed with `PASS` (security review completed; app-layer permissions, RLS posture, table grants, and service-role write paths verified as secure).
+- **Invoice Integration Design:** `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1` completed with `PASS` (invoice ceiling design parameter clear).
+- **Follow-ups:** `QUOTATION-REVISION-FALLBACK-DESIGN-1` and `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1`.
 
 ## Soft Delete And Financial Record Retention
 - **Status:** Deferred technical decision.

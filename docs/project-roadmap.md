@@ -52,12 +52,12 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`
-- Review RBAC permission definitions, app-layer permission enforcement, and RLS policy gates.
+- `QUOTATION-REVISION-FALLBACK-DESIGN-1`
+- Plan the fallback strategy for quotation revisions when active billing scopes exist.
 
 Backlog / later priority:
-- `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`
-- `QUOTATION-REVISION-FALLBACK-DESIGN-1`
+- `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1`
+
 - Supplier Bookings Domain design/planning
 - Supplier Bookings server actions
 - Supplier Bookings UI
@@ -2097,6 +2097,9 @@ Must verify:
   - Commit pushed as `7f26ca3 fix(billing): stabilize approved scope item edit`.
 - `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1` completed with `WARN` (audit expectation mismatch only; all database tables, constraints, FKs, indexes, triggers, RLS, and RPC grants verified and enforceability is sound; the draft creation write path is confirmed to be an app-layer action rather than a database RPC function; no runtime or migration blocker exists; data state is clean).
 - `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` reclassified as completed/no-op after live schema audit confirmed that no database migration is required. Draft creation is app-layer, draft discard and edit child items RPCs exist, and other runtime actions operate on the existing database schema.
-- After this sync, follow with `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`, `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`, and `QUOTATION-REVISION-FALLBACK-DESIGN-1`.
+- `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1` completed with `PASS` (security review completed; app-layer permissions, RLS posture, table grants, and service-role write paths verified as secure).
+- `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1` completed with `PASS` (invoice ceiling design parameter clear).
+- After this sync, follow with `QUOTATION-REVISION-FALLBACK-DESIGN-1` and `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1`.
+
 - `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.
 - `SERVICE-PROFITABILITY-DESIGN-1` remains blocked until billing source and supplier-cost permissions are stable.

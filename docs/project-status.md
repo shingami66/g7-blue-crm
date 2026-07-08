@@ -106,6 +106,15 @@
 - [x] Result: reclassified as completed/no-op. No concrete database migration is required after the live schema audit.
 - [x] Verified that draft creation is app-layer, draft discard RPC exists, and edit draft item RPC exists. Remaining runtime actions (line safety review, approve, void) operate on the existing database schema via app-layer writes under `requirePermission`. Supersede remains deferred pending transactional RPC design, and invoice integration is a separate design task.
 
+### Approved Billing Scope RBAC/RLS Review
+- [x] Read-only security review for Approved Billing Scope (`APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`) completed.
+- [x] Result: PASS (no critical RBAC/RLS security gaps found). All server-side write paths (`createApprovedBillingScopeDraft`, `discardApprovedBillingScopeDraft`, `editApprovedBillingScopeItem`) are verified to be correctly guarded with `await requirePermission(...)` before utilizing the `service_role` client. RLS is enabled with no bypass policies for public roles, and all direct privileges are revoked from `anon` and `authenticated` roles.
+
+### Approved Billing Scope Invoice Integration Design
+- [x] Invoice integration design (`APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`) completed.
+- [x] Result: PASS (design parameters clear). Invoices will reference `approved_billing_scope_id` via a composite FK constraint `(approved_billing_scope_id, service_id) -> approved_billing_scopes(id, service_id)`. The scope `accepted_grand_total` becomes the absolute invoice ceiling, enforced via a DB `BEFORE INSERT OR UPDATE` trigger and app-layer validations.
+
+
 
 ### âœ… Foundation UI / Routes
 - [x] dashboard routes exist
@@ -2071,4 +2080,6 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
   - Commit pushed as `7f26ca3 fix(billing): stabilize approved scope item edit`.
 - `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1` completed with `WARN` (audit expectation mismatch only; all database tables, constraints, FKs, indexes, triggers, RLS, and RPC grants verified and enforceability is sound; the draft creation write path is confirmed to be an app-layer action rather than a database RPC function; no runtime or migration blocker exists; data state is clean).
 - `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` reclassified as completed/no-op after live schema audit confirmed that no database migration is required. Draft creation is app-layer, draft discard and edit child items RPCs exist, and other runtime actions operate on the existing database schema.
-- Next safe task after this sync is `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`.
+- `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1` completed with `PASS` (security review completed; app-layer permissions, RLS posture, table grants, and service-role write paths verified as secure).
+- `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1` completed with `PASS` (invoice ceiling design parameter clear).
+- Next safe task after this sync is `QUOTATION-REVISION-FALLBACK-DESIGN-1`.
