@@ -43,6 +43,7 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - Supersede and void should stay restricted to elevated approval roles until a later reviewed change expands them.
 - Supplier/internal cost and margin must not exist in customer-facing scope snapshots or outputs.
 - Scope approval, supersede, and void actions must be audited.
+- The foundation migration has now been applied and smoke-tested in DEV/DEMO only; this does not grant production permission or change the locked approval-role assumptions above.
 
 ## Service Permissions
 

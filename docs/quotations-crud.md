@@ -53,6 +53,7 @@ draft → sent → approved
 ### Quotation Status Integration Note
 - The current guard remains: one approved quotation per Service.
 - Approved Billing Scope is a future design that will decouple quotation approval from billing authority.
+- The foundation migration for Approved Billing Scope has now been applied and smoke-tested in DEV/DEMO only; production remains deferred.
 - No `superseded` quotation status is introduced by this note.
 - Future invoices should bind to the active approved billing scope, not quotation status alone.
 

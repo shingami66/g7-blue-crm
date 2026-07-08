@@ -41,6 +41,22 @@
 
 ## 3. Completed Milestones
 
+### Approved Billing Scope Foundation
+- [x] Migration draft `supabase/migrations/20260708090000_approved_billing_scope_foundation.sql` was committed and pushed as `8d2aefa feat(billing): draft approved billing scope foundation`.
+- [x] Migration was manually applied to the DEV/DEMO database only.
+- [x] DEV/DEMO post-apply metadata validation passed.
+- [x] Functional smoke test passed.
+- [x] Smoke test ran inside a transaction and ended with `ROLLBACK`.
+- [x] Cleanup verification passed with `smoke_scope_count = 0`.
+- [x] `approved_billing_scopes`, `approved_billing_scope_items`, and `quotation_items_id_quotation_id_key` now exist in DEV/DEMO.
+- [x] Trigger functions/triggers exist in DEV/DEMO.
+- [x] RLS is enabled on both new tables.
+- [x] The invoice composite FK remains preserved.
+- [x] `invoices.approved_billing_scope_id` has not been added yet.
+- [x] Invoice integration remains deferred.
+- [x] Runtime/RPC/UI implementation remains deferred.
+- [x] Production apply is not performed and not authorized.
+
 ### âœ… Foundation UI / Routes
 - [x] dashboard routes exist
 - [x] UI started with mock data

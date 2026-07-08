@@ -103,6 +103,9 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Proposed safety rule: V1 is reductions-only, approval requires `line_safety_status = safe`, and package/global discount ambiguity is a hard V1 block, not an estimate.
 - Proposed integrity direction: `(source_quotation_id, service_id) -> quotations(id, service_id)`, `(approved_billing_scope_id, source_quotation_id) -> approved_billing_scopes(id, source_quotation_id)`, `(source_quotation_item_id, source_quotation_id) -> quotation_items(id, quotation_id)`, with trigger fallback if live schema cannot safely support the required composite unique keys.
 - This note is design-only and must not be read as a claim that the tables or constraints already exist.
+- The foundation migration `20260708090000_approved_billing_scope_foundation.sql` was later applied to the DEV/DEMO database only and validated there; production remains unapplied.
+- DEV/DEMO validation confirmed the foundation objects exist there, including `approved_billing_scopes`, `approved_billing_scope_items`, `quotation_items_id_quotation_id_key`, the trigger functions/triggers, and RLS on the new tables.
+- The repo docs still treat this as a future design direction for production until a separate production review authorizes it.
 
 ### Invoices And Payments
 **Status: ERP-3A Invoice Schema Foundation — Manual Supabase apply completed / Verified**
