@@ -2079,6 +2079,9 @@ Must verify:
 - `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-REVIEW-1` completed and returned `PASS WITH MINOR DOCS-SYNC NOTES`.
 - `APPROVED-BILLING-SCOPE-DOCS-SYNC-2` was the current docs-only recording step.
 - `APPROVED-BILLING-SCOPE-DEV-APPLY-DOCS-SYNC-1` records the DEV/DEMO apply validation outcome and smoke-clean rollback result.
+- `APPROVED-BILLING-SCOPE-DRAFT-CREATE-COMMIT-1` implemented and pushed the create-draft action as `4ec323f feat(billing): add approved scope draft creation`.
+- Manual DEV/DEMO smoke passed for source quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe` and verified `scopeId = 2fb8a324-4bd2-44be-8a23-a2b37e9b6e72`.
+- Duplicate protection returned `scope_duplicate_draft` on the second click, and the temporary harness folder was removed after cleanup verification.
 - `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-1` completed with `PASS WITH NOTES`.
 - `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-REVIEW-1` completed with `PASS WITH REQUIRED CHANGES`.
 - `APPROVED-BILLING-SCOPE-RUNTIME-DECISIONS-LOCK-1` locks the V1 runtime, product, security, and error-contract decisions in docs/spec only.

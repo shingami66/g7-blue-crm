@@ -2007,6 +2007,10 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-1` completed and returned `PASS`.
 - `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-REVIEW-1` completed and returned `PASS WITH MINOR DOCS-SYNC NOTES`.
 - `APPROVED-BILLING-SCOPE-DOCS-SYNC-2` was the current docs-only recording step.
+- `APPROVED-BILLING-SCOPE-DRAFT-CREATE-COMMIT-1` was completed and pushed as `4ec323f feat(billing): add approved scope draft creation`.
+- Manual DEV/DEMO smoke for the create-draft action passed with candidate quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe`.
+- Smoke verification confirmed `scopeId = 2fb8a324-4bd2-44be-8a23-a2b37e9b6e72`, `status = draft`, `line_safety_status = pending_review`, item counts and totals matched, and the duplicate second click returned `scope_duplicate_draft`.
+- Cleanup verification passed with `remaining_item_count = 0` and `remaining_scope_count = 0`; the temporary smoke harness was removed after verification.
 - `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-1` completed with `PASS WITH NOTES`.
 - `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-REVIEW-1` completed with `PASS WITH REQUIRED CHANGES`.
 - `APPROVED-BILLING-SCOPE-RUNTIME-DECISIONS-LOCK-1` records the locked V1 runtime/product/security decisions in docs/spec only.

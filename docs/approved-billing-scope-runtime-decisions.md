@@ -139,6 +139,12 @@
   - `scope_permission_denied`
 - Do not expose raw trigger or constraint text directly to UI users.
 
+### Implementation Smoke Notes
+- `APPROVED-BILLING-SCOPE-DRAFT-CREATE-COMMIT-1` implemented the create-draft action in `4ec323f feat(billing): add approved scope draft creation`.
+- Manual DEV/DEMO smoke passed for source quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe` and produced `scopeId = 2fb8a324-4bd2-44be-8a23-a2b37e9b6e72`.
+- Verification confirmed `status = draft`, `line_safety_status = pending_review`, item count matched quotation items, accepted totals matched item sums, and the duplicate second click returned `scope_duplicate_draft`.
+- The temporary smoke harness was removed after cleanup verification.
+
 ## Deferred
 - Production apply remains not authorized.
 - Runtime implementation remains deferred.
