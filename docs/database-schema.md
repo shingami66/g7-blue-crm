@@ -106,6 +106,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - The foundation migration `20260708090000_approved_billing_scope_foundation.sql` was later applied to the DEV/DEMO database only and validated there; production remains unapplied.
 - DEV/DEMO validation confirmed the foundation objects exist there, including `approved_billing_scopes`, `approved_billing_scope_items`, `quotation_items_id_quotation_id_key`, the trigger functions/triggers, and RLS on the new tables.
 - Manual DEV/DEMO smoke for the create-draft action also passed after the foundation migration: source quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe` created scope `2fb8a324-4bd2-44be-8a23-a2b37e9b6e72`, duplicate protection returned `scope_duplicate_draft`, and cleanup verification returned zero remaining scope and item rows.
+- A later draft migration may add a narrow service_role-only transactional function for draft discard atomicity only; this is a safety exception for one-scope cleanup, not a general Approved Billing Scope RPC direction.
 - The repo docs still treat this as a future design direction for production until a separate production review authorizes it.
 
 ### Invoices And Payments

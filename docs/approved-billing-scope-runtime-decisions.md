@@ -15,6 +15,7 @@
 - DB triggers and constraints remain the invariant backstop.
 - No custom Postgres RPC is approved for V1.
 - Add Postgres RPC later only if concurrency or multi-client integration creates a real need.
+- Narrow safety exception: draft discard may use a service_role-only transactional SQL function if needed to guarantee atomic deletion of one draft scope plus its child items.
 
 ### Permissions
 - Admin: full workflow.
@@ -78,6 +79,7 @@
 - Voided remains terminal.
 - Draft cleanup is a separate discard/delete action.
 - Do not overload void for draft cleanup.
+- If app-layer multi-step deletes cannot guarantee atomicity, a single-purpose transactional discard function is allowed for draft cleanup only.
 
 ### Supersede
 - Supersede is explicit only.

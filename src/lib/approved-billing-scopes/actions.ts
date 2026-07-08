@@ -5,7 +5,10 @@ import { requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { QuotationDetailRow, QuotationItemRow } from "@/lib/quotations/types";
 import { APPROVED_BILLING_SCOPE_PERMISSIONS } from "./permissions";
-import { createApprovedBillingScopeDraftSchema } from "./schemas";
+import {
+  createApprovedBillingScopeDraftSchema,
+  discardApprovedBillingScopeDraftSchema,
+} from "./schemas";
 import type {
   ApprovedBillingScopeActionResult,
   ApprovedBillingScopeErrorCode,
@@ -28,6 +31,24 @@ export interface CreateApprovedBillingScopeDraftData {
 
 export type CreateApprovedBillingScopeDraftResult =
   ApprovedBillingScopeActionResult<CreateApprovedBillingScopeDraftData>;
+
+export interface DiscardApprovedBillingScopeDraftData {
+  scopeId: string;
+  serviceId: string;
+  sourceQuotationId: string;
+  discarded: true;
+}
+
+export type DiscardApprovedBillingScopeDraftResult =
+  ApprovedBillingScopeActionResult<DiscardApprovedBillingScopeDraftData>;
+
+type DiscardApprovedBillingScopeDraftRpcRow = {
+  error_code: string | null;
+  scope_id: string | null;
+  service_id: string | null;
+  source_quotation_id: string | null;
+  discarded: boolean;
+};
 
 type ApprovedBillingScopeDraftInsertRow = {
   approved_billing_scope_id: string;
@@ -251,9 +272,9 @@ async function draftConflictStatus(
   return "existing";
 }
 
-function errorResult(
+function errorResult<T>(
   error: ApprovedBillingScopeErrorCode
-): CreateApprovedBillingScopeDraftResult {
+): ApprovedBillingScopeActionResult<T> {
   return { success: false, error };
 }
 
@@ -480,6 +501,84 @@ export async function createApprovedBillingScopeDraft(
 
     console.error(
       "[createApprovedBillingScopeDraft] Unexpected error:",
+      err instanceof Error ? err.message : "Unknown"
+    );
+    return errorResult("scope_unexpected_error");
+  }
+}
+
+export async function discardApprovedBillingScopeDraft(
+  input: unknown
+): Promise<DiscardApprovedBillingScopeDraftResult> {
+  try {
+    await requirePermission(APPROVED_BILLING_SCOPE_PERMISSIONS.discard);
+    const parsed = discardApprovedBillingScopeDraftSchema.safeParse(input);
+    const supabase = createAdminClient();
+
+    if (!parsed.success) {
+      return errorResult("scope_unexpected_error");
+    }
+
+    const { data: discardResult, error: discardError } = await supabase
+      .rpc("discard_approved_billing_scope_draft", {
+        p_scope_id: parsed.data.scopeId,
+      })
+      .single<DiscardApprovedBillingScopeDraftRpcRow>();
+
+    if (discardError) {
+      console.error(
+        "[discardApprovedBillingScopeDraft] Atomic discard RPC error:",
+        discardError.message
+      );
+      return errorResult("scope_unexpected_error");
+    }
+
+    if (!discardResult) {
+      console.error(
+        "[discardApprovedBillingScopeDraft] Atomic discard RPC returned no row for scope:",
+        parsed.data.scopeId
+      );
+      return errorResult("scope_unexpected_error");
+    }
+
+    if (discardResult.error_code === "scope_not_found") {
+      return errorResult("scope_not_found");
+    }
+
+    if (discardResult.error_code === "scope_not_draft") {
+      return errorResult("scope_not_draft");
+    }
+
+    if (
+      discardResult.error_code ||
+      !discardResult.discarded ||
+      !discardResult.scope_id ||
+      !discardResult.service_id ||
+      !discardResult.source_quotation_id
+    ) {
+      console.error(
+        "[discardApprovedBillingScopeDraft] Atomic discard RPC returned unexpected payload for scope:",
+        parsed.data.scopeId
+      );
+      return errorResult("scope_unexpected_error");
+    }
+
+    return {
+      success: true,
+      data: {
+        scopeId: discardResult.scope_id,
+        serviceId: discardResult.service_id,
+        sourceQuotationId: discardResult.source_quotation_id,
+        discarded: true,
+      },
+    };
+  } catch (err) {
+    if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
+      return errorResult("scope_permission_denied");
+    }
+
+    console.error(
+      "[discardApprovedBillingScopeDraft] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
     return errorResult("scope_unexpected_error");
