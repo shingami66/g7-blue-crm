@@ -145,7 +145,15 @@
 - `APPROVED-BILLING-SCOPE-DRAFT-CREATE-COMMIT-1` implemented the create-draft action in `4ec323f feat(billing): add approved scope draft creation`.
 - Manual DEV/DEMO smoke passed for source quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe` and produced `scopeId = 2fb8a324-4bd2-44be-8a23-a2b37e9b6e72`.
 - Verification confirmed `status = draft`, `line_safety_status = pending_review`, item count matched quotation items, accepted totals matched item sums, and the duplicate second click returned `scope_duplicate_draft`.
-- The temporary smoke harness was removed after cleanup verification.
+- `APPROVED-BILLING-SCOPE-DRAFT-DISCARD-SMOKE-DOCS-SYNC-1` verified the manual apply of draft discard migration `20260708110000_approved_billing_scope_draft_discard_function.sql` in DEV/DEMO.
+- Metadata verification passed (function exists, invoker security, execute permission restricted to service_role).
+- Dry-check passed (zero UUID returns scope_not_found).
+- Manual app smoke test passed via temporary DEV harness `/approved-billing-scopes/dev/draft-discard-smoke`:
+  - Created a draft approved billing scope (`0ace1c81-68c0-4cdd-8d9b-db563cd49949`) linked to source quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe` and service `e9e70297-bc64-4f5b-9560-beeb6cdbd4d9`.
+  - Verified creation of scope header and 2 child items with matching totals.
+  - Successfully invoked `discardApprovedBillingScopeDraft` server action.
+  - Verified atomic database deletion of both the scope header and its items.
+- The temporary smoke harness was removed after verification.
 
 ## Deferred
 - Production apply remains not authorized.

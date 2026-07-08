@@ -59,6 +59,22 @@
 - [x] Runtime/product/security decision lock completed in `docs/approved-billing-scope-runtime-decisions.md` after `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-REVIEW-1` returned `PASS WITH REQUIRED CHANGES`.
 - [x] Locked V1 rules cover server-action-only writes, Admin/Manager workflow, Accountant read-only access, no Viewer/Sales access, explicit supersede, approved-only void, and app audit before approval/void/supersede ship.
 
+### Approved Billing Scope Draft Discard
+- [x] Migration draft `supabase/migrations/20260708110000_approved_billing_scope_draft_discard_function.sql` was committed and pushed as `39c6330 feat(billing): add atomic draft scope discard`.
+- [x] Migration was manually applied to the DEV/DEMO database only.
+- [x] DEV/DEMO post-apply metadata verification passed:
+  - Function `public.discard_approved_billing_scope_draft(p_scope_id uuid)` exists with correct argument and table return signature.
+  - Security model is SECURITY INVOKER.
+  - Execute privilege is revoked from `PUBLIC`, `anon`, and `authenticated` roles, and granted exclusively to `service_role`.
+- [x] Safe dry-check passed: calling the function with a non-existent UUID safely returns `'scope_not_found'` with zero deletes/side-effects.
+- [x] Manual app smoke test passed via temporary DEV harness `/approved-billing-scopes/dev/draft-discard-smoke`:
+  - Created a draft approved billing scope (`0ace1c81-68c0-4cdd-8d9b-db563cd49949`) linked to source quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe` and service `e9e70297-bc64-4f5b-9560-beeb6cdbd4d9`.
+  - Verified creation of scope header (`status = draft`, `line_safety_status = pending_review`) and 2 child items with matching totals.
+  - Successfully invoked `discardApprovedBillingScopeDraft` server action.
+  - Verified atomic database deletion of both the scope header and its items.
+- [x] Temporary DEV harness removed, restoring clean working tree.
+- [x] Runtime actions (`editApprovedBillingScopeItem`, `reviewApprovedBillingScopeLineSafety`, `approveApprovedBillingScope`, `voidApprovedBillingScope`, `supersedeApprovedBillingScope`), UI screens, invoice integration, and production DB apply remain deferred.
+
 ### âœ… Foundation UI / Routes
 - [x] dashboard routes exist
 - [x] UI started with mock data

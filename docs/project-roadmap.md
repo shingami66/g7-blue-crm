@@ -52,10 +52,15 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `APPROVED-BILLING-SCOPE-RUNTIME-DECISIONS-LOCK-1`
-- Docs/spec-only lock for the required Approved Billing Scope V1 runtime, product, and security decisions; no runtime implementation.
+- `APPROVED-BILLING-SCOPE-DRAFT-DISCARD-SMOKE-DOCS-SYNC-1`
+- Document the DEV/DEMO apply and manual smoke PASS for atomic Approved Billing Scope draft discard.
 
 Backlog / later priority:
+- `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`
+- `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1`
+- `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`
+- `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`
+- `QUOTATION-REVISION-FALLBACK-DESIGN-1`
 - Supplier Bookings Domain design/planning
 - Supplier Bookings server actions
 - Supplier Bookings UI
@@ -2085,6 +2090,7 @@ Must verify:
 - `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-1` completed with `PASS WITH NOTES`.
 - `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-REVIEW-1` completed with `PASS WITH REQUIRED CHANGES`.
 - `APPROVED-BILLING-SCOPE-RUNTIME-DECISIONS-LOCK-1` locks the V1 runtime, product, security, and error-contract decisions in docs/spec only.
+- `APPROVED-BILLING-SCOPE-DRAFT-DISCARD-SMOKE-DOCS-SYNC-1` documents the manual apply of migration `20260708110000_approved_billing_scope_draft_discard_function.sql` in DEV/DEMO and the successful manual app smoke test (creation of draft `0ace1c81-68c0-4cdd-8d9b-db563cd49949` and its atomic deletion). The temporary local DEV harness has been cleaned up.
 - Next safe task is `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`.
 - After the live-schema check, follow with `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1`, `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`, `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`, and `QUOTATION-REVISION-FALLBACK-DESIGN-1`.
 - `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.
