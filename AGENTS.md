@@ -53,6 +53,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - Do not force push. Open PRs only when requested.
 - For Services or Quotations UI work, manually smoke test the live ERP path `Customer Profile -> Service -> Quotation`, including `/customers/[id]`, `/services`, `/services/new`, `/services/[id]`, `/services/[id]/edit`, and `/quotations/new?serviceId=<service-id>`.
 - For Service billing, supplier allocation, or Supplier Booking UI work, manually smoke test `/services/[id]`, deposit/final invoice actions in the Billing panel, `/services/[id]/allocations/new`, `/services/[id]/allocations/[allocationId]/edit`, allocation `/cancel`, `/delete`, `/restore`, `?showDeleted=true` when delete/restore behavior changes, and the Service Detail Supplier Bookings panel create/cancel flow from selected allocations.
+- For invoice create/detail/PDF or billing-ceiling changes, manually smoke test `/services/[id]` deposit/final invoice actions, `/invoices`, `/invoices/[id]`, `/invoices/[id]/pdf`, and issue/payment actions when the touched slice can affect them.
 - For Service status workflow changes, manually smoke test the guarded manual status actions on `/services/[id]`. Current status changes are manual from the Service detail page; automation remains deferred.
 - For Payments module UI/read changes, manually smoke test `/payments` against live records and confirm the page still reflects `payments:read`-guarded data rather than mock rows.
 
@@ -158,6 +159,7 @@ Never skip review gates for SQL, migrations, RLS, RPC, triggers, grants/revokes,
 - Quotation numbers use `QT-YYYY-0001`.
 - New quotations are service-scoped. Do not add or restore standalone quotation creation flows; start from a Service context and pass `serviceId`.
 - `/quotations/new` without `serviceId` is intentionally blocked; use the Service detail or related customer flow to reach quotation creation.
+- Invoice creation now resolves the active Approved Billing Scope for the Service when present, stores `approved_billing_scope_id` server-side, and uses that scope's `acceptedGrandTotal` as the billing ceiling. Fall back to the approved quotation total only when no active scope exists.
 - Service create/edit currently keeps status transitions deferred. Treat `customer_id`, `service_number`, and `status` as non-editable in ordinary Service edit work, and keep edit flow limited to Services in `Inquiry` or `Quoted` status.
 - Service editing and quotation creation are currently limited to Services in `Inquiry` or `Quoted` status. Treat other status transitions as deferred unless separately approved.
 - VAT is a document-level snapshot when VAT behavior is valid for that document; after CS-A, future VAT values must come from Company Settings and document snapshots, not hardcoded current-state text.

@@ -163,6 +163,24 @@
 - [x] All static typechecks, lints, and whitespace checks verified.
 - [x] Production unapplied/out of scope.
 
+### Approved Billing Scope Invoice Integration Smoke Test
+- [x] Manual smoke verification (`APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-SMOKE-PLAN-1`) completed.
+- [x] Result: PASS WITH WARN (transitional fallback and final invoice calculation successfully verified; active approved billing scope and ceiling block validation paths not tested because no active approved scope existed).
+- [x] Verified legacy fallback path and final invoice calculation:
+  - Target Service: `SVC-2026-0003` (service_id: `5e12d485-5be7-49c9-b153-ef429f9a6866`).
+  - Target Quotation: `QT-2026-0003` (approved_quotation_id: `7ca1f962-fa55-469a-80f2-db54e4a2f550`, total: `5200.00`).
+  - Created Deposit Invoice: `INV-2026-0021` (draft, type: `deposit`, amount: `1000.00`, `approved_billing_scope_id` is `null`).
+  - Created Final Invoice: `INV-2026-0022` (draft, type: `final`, amount: `4200.00`, `approved_billing_scope_id` is `null`).
+  - Database verification check completed:
+    - invoice_count = 2
+    - total_invoiced = 5200.00
+    - deposit_total = 1000.00
+    - final_total = 4200.00
+    - has_scope_link = false
+  - No `Issue Invoice` actions performed.
+  - Production remains unapplied and completely out of scope.
+
+
 
 
 ### âœ… Foundation UI / Routes
