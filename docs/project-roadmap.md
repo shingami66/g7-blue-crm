@@ -61,6 +61,7 @@ Completed:
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-SMOKE-PLAN-1` (PASS WITH WARN: manual smoke verification of fallback and final invoice calculation on SVC-2026-0003; active scope block paths not tested because no active approved scope existed).
 - `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY` (PASS WITH WARN: verified create/cancel booking actions on SVC-2026-0003; minor loading/pending indicator UX WARN recorded).
 - `INVOICE-SERVICE-ID-NOT-NULL-AUDIT-1` (PASS WITH WARN: audited and verified service_id is nullable in schema but required by product/types/actions; data count is zero).
+- `PUBLIC-HEALTH-ROUTE-HARDEN-1` (PASS WITH WARN: audited public health and webhook routes, verified response sanitization and next 16 proxy convention).
 
 Backlog / later priority:
 - `SUPPLIER-BOOKINGS-LOADING-UX-VERIFY` (Follow-up validation of supplier booking creation/cancellation pending and transition states under throttled networks).
@@ -72,7 +73,7 @@ Backlog / later priority:
 - SERVICE-STATUS-DIRECT-FINAL-PATH-1
 - CUSTOMER-PO-INVOICE-GATE-1
 - INVOICE-ZERO-FINAL-GUARD-1
-- PUBLIC-HEALTH-ROUTE-HARDEN-1
+- PUBLIC-HEALTH-ROUTE-HARDEN-IMPLEMENT-1
 - MONEY-AUDIT-LOG-COVERAGE-1
 - INVOICE-SERVICE-ID-NOT-NULL-MIGRATION-DRAFT-1
 - SEC-RLS-PRODUCTION-POLICIES-1

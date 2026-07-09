@@ -212,6 +212,24 @@
 - [x] WARN: No database migration was drafted, reviewed, or applied during this task. Production remains completely out of scope.
 - [x] Future task required before implementation: `INVOICE-SERVICE-ID-NOT-NULL-MIGRATION-DRAFT-1`.
 
+### Public Health Route Security Audit
+- [x] Public and API routes security audit (`PUBLIC-HEALTH-ROUTE-HARDEN-1`) completed.
+- [x] Result: PASS WITH WARN.
+- [x] Audit findings:
+  - Intentionally Public Routes: `/api/health/db` (health ping) and `/api/webhooks/clerk` (Clerk webhook sync).
+  - Database Touch: `/api/health/db` queries database sequences to verify active connection pool; `/api/webhooks/clerk` queries and updates `app_users`.
+  - Response Sanitization: Public JSON responses are correctly sanitized and do not leak internal database errors or exception stack traces.
+  - Route Protection: Webhooks are protected by Clerk/Svix signature verification. Internal CRM routes are guarded through `src/proxy.ts`.
+  - Next.js 16 conventions: Verified that `src/proxy.ts` is the active Next.js 16 middleware convention (do not recommend renaming to `middleware.ts` as that is deprecated).
+  - Remaining recommendations:
+    1. Secure `/api/health/db` with a secret check header or restrict to internal VPC/load-balancer IP ranges.
+    2. Add rate limiting/throttling to `/api/health/db`.
+    3. Verify `CLERK_WEBHOOK_SIGNING_SECRET` before production.
+- [x] Conclusion: Internal dashboard routes are protected correctly.
+- [x] WARN: No code changes were made; production remains out of scope.
+- [x] Future task required: `PUBLIC-HEALTH-ROUTE-HARDEN-IMPLEMENT-1`.
+
+
 
 
 
