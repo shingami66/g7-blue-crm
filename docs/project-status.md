@@ -41,6 +41,27 @@
 
 ## 3. Completed Milestones
 
+### Approved Billing Scope Review & Approval Actions
+- [x] App-layer review and approval server actions implemented and pushed in commit `b9621bb`:
+  - `reviewApprovedBillingScopeLineSafety`
+  - `approveApprovedBillingScope`
+- [x] Static typecheck (`tsc`) and lints (`lint`) verified.
+- [x] git diff whitespace check (`git diff --check`) passed.
+- [x] Safety & validation rules:
+  - Permission-gated server actions (`APPROVED_BILLING_SCOPE_PERMISSIONS.review` and `.approve`).
+  - Draft-only review and approval restriction.
+  - Verified item decision rules (accepted must match source, excluded/customer_supplied must be 0 and have reason, adjusted must be reduction-only and have reason and match subtotal+vat).
+  - Validation requires `line_safety_status` to be `safe` before approval.
+  - Blocked voided/superseded scopes from being reviewed or approved.
+  - Active approved scope uniqueness conflict handled at DB/application layer.
+  - Concurrency/stale draft checking via conditional updates and zero-row-update detection.
+  - Sanitized error returns, no raw DB errors leaked.
+- [x] Remaining work/Not Done in this slice:
+  - No UI screens or routes.
+  - No DB schema changes or migrations.
+  - No manual browser smoke test performed on live actions (no active approved scope was present to smoke).
+  - Active-scope invoice integration smoke verification remains pending.
+
 ### Approved Billing Scope Foundation
 - [x] Migration draft `supabase/migrations/20260708090000_approved_billing_scope_foundation.sql` was committed and pushed as `8d2aefa feat(billing): draft approved billing scope foundation`.
 - [x] Migration was manually applied to the DEV/DEMO database only.
