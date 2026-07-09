@@ -52,16 +52,17 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY`
-- Transition to the next safe phase for supplier bookings manual verification.
+- Transition to the next safe phase for supplier bookings implementation or follow-ups.
 
 Completed:
 - `QUOTATION-REVISION-FALLBACK-DESIGN-1` & `QUOTATION-REVISION-FALLBACK-PRODUCT-DECISION-DOCS-1` (Option A chosen: quotation status enum remains unchanged; active Approved Billing Scope determines current billing authority; revised quotation flow uses billing scope supersede/versioning).
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1` & `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-FILE-P0-FIX-1` (Add invoices.approved_billing_scope_id composite FK, index, and trigger ceiling guards with fail-closed NULL grand_total guard and null-safe predicates).
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-ACTION-DESIGN-1` & `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-ACTION-IMPLEMENT-1` (Integrate createInvoiceAction with active Approved Billing Scope ID, acceptedGrandTotal ceiling validation, and trigger exception sanitization).
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-SMOKE-PLAN-1` (PASS WITH WARN: manual smoke verification of fallback and final invoice calculation on SVC-2026-0003; active scope block paths not tested because no active approved scope existed).
+- `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY` (PASS WITH WARN: verified create/cancel booking actions on SVC-2026-0003; minor loading/pending indicator UX WARN recorded).
 
 Backlog / later priority:
+- `SUPPLIER-BOOKINGS-LOADING-UX-VERIFY` (Follow-up validation of supplier booking creation/cancellation pending and transition states under throttled networks).
 - Supplier Bookings Domain design/planning
 - Supplier Bookings server actions
 - Supplier Bookings UI

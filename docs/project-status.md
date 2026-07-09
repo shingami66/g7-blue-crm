@@ -180,6 +180,24 @@
   - No `Issue Invoice` actions performed.
   - Production remains unapplied and completely out of scope.
 
+### Supplier Bookings UI manual smoke test
+- [x] Manual smoke verification (`SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY`) completed by Mozfer on DEV/DEMO/local app.
+- [x] Result: PASS WITH WARN.
+- [x] Verified create and cancel supplier booking actions:
+  - Target Service: `SVC-2026-0003` (service_id: `5e12d485-5be7-49c9-b153-ef429f9a6866`).
+  - Target Supplier: `Smoke Test Supplier` (supplier_id: `f4449a06-9094-4f49-adf1-b30bfb79c926`).
+  - Source Allocation: `3cf466a7-ab65-413c-b690-13a8b482ec2f` (status: `selected`, quantity: 10, estimated_unit_cost: `150.00`, estimated_total_cost: `1500.00`, active booking before smoke: `null`).
+  - Created Supplier Booking: `SBK-2026-0007` (id: `06af9a0d-4548-4d75-b2e0-56d0d976b366`, status: `draft`, is_deleted: `false`, and matching expected allocation, supplier, and service IDs).
+  - Cancelled Supplier Booking: `SBK-2026-0007` (status changed to `cancelled`, reason: `ساي`, cancelled_at: `2026-07-09 09:30:00.657+00`, is_deleted: `false`).
+- [x] UI Observations:
+  - Booking appeared in the Supplier Bookings panel list immediately after creation.
+  - Selected allocation correctly linked to `SBK-2026-0007` while it was in `draft` status.
+  - After cancellation, the booking row updated to `Cancelled` and showed the cancellation details and reason inline.
+  - The "Create Supplier Booking" button reappeared for the source allocation after cancellation (expected behavior as cancelled bookings are no longer active).
+- [x] UX WARN: Loading/pending indicator was not clearly visible during creation/cancellation, likely due to fast server response time. Recorded as a minor UX WARN (non-blocking).
+- [x] Production remains unapplied and completely out of scope.
+
+
 
 
 
