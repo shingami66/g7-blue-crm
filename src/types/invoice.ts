@@ -20,6 +20,7 @@ export interface Invoice {
   id: string;
   invoice_number: string;
   approved_quotation_id: string;
+  approved_billing_scope_id: string | null;
   invoice_type: InvoiceType;
   service_id: string;
   status: InvoiceStatus;

@@ -9,6 +9,7 @@ import { buildInvoiceSnapshotData } from "./snapshots";
 import { mapRowToQuotationDetail } from "@/lib/quotations/mappers";
 import type { QuotationDetailRow } from "@/lib/quotations/types";
 import type { CreateInvoiceResult, IssueInvoiceResult } from "./types";
+import { getActiveApprovedBillingScopeForService } from "../approved-billing-scopes/queries";
 
 const QUOTATION_DETAIL_SELECT = "*, quotation_items(*), customers(company, contact), services(service_number, service_title, status, event_name)";
 const RATE_LIMIT_ERROR = "Too many attempts. Please wait a moment and try again.";
@@ -111,11 +112,15 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
       return { success: false, error: "vat_registered_invoice_not_implemented_in_this_slice" };
     }
 
+    // Resolve active approved billing scope if exists for the service
+    const activeScope = await getActiveApprovedBillingScopeForService(serviceId);
+    const billingCeiling = activeScope ? activeScope.acceptedGrandTotal : quotationDetail.grandTotal;
+
     let finalInvoiceAmount = 0;
 
     if (invoiceType === "deposit") {
-      if (requestedAmount! > quotationDetail.grandTotal) {
-        return { success: false, error: "deposit_amount_exceeds_quotation_total" };
+      if (requestedAmount! > billingCeiling) {
+        return { success: false, error: activeScope ? "deposit_amount_exceeds_billing_scope_ceiling" : "deposit_amount_exceeds_quotation_total" };
       }
       finalInvoiceAmount = requestedAmount!;
 
@@ -182,10 +187,10 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
         ? priorDeposits.reduce((sum, inv) => sum + Number(inv.grand_total || 0), 0)
         : 0;
 
-      finalInvoiceAmount = quotationDetail.grandTotal - activePriorInvoiceTotal;
+      finalInvoiceAmount = billingCeiling - activePriorInvoiceTotal;
 
       if (finalInvoiceAmount < 0) {
-        return { success: false, error: "prior_invoices_exceed_quotation_total" };
+        return { success: false, error: activeScope ? "prior_invoices_exceed_billing_scope_ceiling" : "prior_invoices_exceed_quotation_total" };
       }
 
       // Persist final settlement basis in snapshots
@@ -194,6 +199,8 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
         final_invoice_settlement: {
           method: "SIMPLE_SUM_FOR_T018",
           approved_quotation_total: quotationDetail.grandTotal,
+          approved_billing_scope_total: activeScope ? activeScope.acceptedGrandTotal : null,
+          billing_ceiling: billingCeiling,
           active_prior_invoice_total: activePriorInvoiceTotal,
           final_invoice_amount: finalInvoiceAmount,
           prior_invoices: priorDeposits?.map(d => ({
@@ -231,6 +238,7 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
         invoice_number: invoiceNumber,
         customer_id: quotationRow.customer_id,
         approved_quotation_id: quotationId,
+        approved_billing_scope_id: activeScope?.id ?? null,
         service_id: serviceId,
         date: today,
         due_date: today,
@@ -256,6 +264,23 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
 
     if (insertError || !insertedInvoice) {
       console.error("[createInvoiceAction] Invoice insert failed:", insertError);
+
+      if (insertError) {
+        const errorMsg = insertError.message || "";
+        if (errorMsg.includes("exceeds active billing scope ceiling")) {
+          return { success: false, error: "invoice_amount_exceeds_ceiling" };
+        }
+        if (errorMsg.includes("not active or is voided/superseded")) {
+          return { success: false, error: "billing_scope_inactive" };
+        }
+        if (errorMsg.includes("must match invoice service_id")) {
+          return { success: false, error: "billing_scope_service_mismatch" };
+        }
+        if (errorMsg.includes("grand_total cannot be null")) {
+          return { success: false, error: "invoice_grand_total_invalid" };
+        }
+      }
+
       return { success: false, error: "invoice_insert_failed" };
     }
 

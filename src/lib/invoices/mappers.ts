@@ -38,6 +38,7 @@ export function mapRowToInvoice(row: InvoiceRow): Invoice {
     id: row.id,
     invoice_number: row.invoice_number,
     approved_quotation_id: row.approved_quotation_id,
+    approved_billing_scope_id: row.approved_billing_scope_id,
     invoice_type: row.invoice_type as InvoiceType,
     service_id: row.service_id,
     status: row.status as InvoiceStatus,
