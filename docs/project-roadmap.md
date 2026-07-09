@@ -55,6 +55,7 @@ Current active task:
 - Transition to the next safe phase for supplier bookings implementation or follow-ups.
 
 Completed:
+- `APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1` (PASS WITH WARN: manual smoke verification completed on SVC-2026-0015; successfully verified that the UI blocks creation of an above-ceiling deposit invoice and the DB confirmed no invoice was created; browser/client validation blocked submission before server-action over-ceiling request was reached; temporary dev harness was removed; optional server-side direct smoke `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` remains in backlog).
 - `APPROVED-BILLING-SCOPE-BILLING-CALC-REFRESH-REVIEW-1` (PASS: verified billing state calculation fix in commit `270ac66` on SVC-2026-0014; the Billing Calculation UI now correctly reflects the active Approved Billing Scope ceiling and subtracts both deposit and final invoices, displaying Prior Invoiced SAR 20000.00 and Remaining SAR 0.00).
 - `APPROVED-BILLING-SCOPE-APPROVE-ACTIONS-SMOKE-RUN-1` (PASS WITH WARN: manual smoke verification completed on SVC-2026-0014 / QT-2026-0018; successfully verified draft creation, line safety review, approval, and invoice integration; temporary dev harness was removed; ceiling block test bypassed and UI refresh staleness warning noted).
 - `APPROVED-BILLING-SCOPE-APPROVE-ACTIONS-1` (Implemented `reviewApprovedBillingScopeLineSafety` and `approveApprovedBillingScope` server actions in commit `b9621bb`; verified types/lint, safety rules, draft/voided/superseded guards, and concurrency checks).
@@ -67,7 +68,7 @@ Completed:
 - `PUBLIC-HEALTH-ROUTE-HARDEN-1` (PASS WITH WARN: audited public health and webhook routes, verified response sanitization and next 16 proxy convention).
 
 Backlog / later priority:
-- `APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1` (Follow-up smoke verification specifically targeting the active-scope invoice ceiling block error path).
+- `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` (Optional follow-up to perform server-side direct adversarial smoke testing bypassing UI validation).
 - `SUPPLIER-BOOKINGS-LOADING-UX-VERIFY` (Follow-up validation of supplier booking creation/cancellation pending and transition states under throttled networks).
 - Supplier Bookings Domain design/planning
 - Supplier Bookings server actions

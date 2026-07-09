@@ -41,6 +41,20 @@
 
 ## 3. Completed Milestones
 
+### Approved Billing Scope Ceiling Block UI Smoke
+- [x] Manual smoke verification (`APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1`) completed.
+- [x] Result: PASS WITH WARN.
+  - **PASS Reason**: The UI successfully blocked creation of an above-ceiling deposit invoice (attempted `SAR 300001.00` on a `SAR 30000.00` ceiling). The database query confirmed no invoices were created from the blocked attempt.
+  - **WARN Reason**: Browser/client validation blocked submission before a direct server-action over-ceiling request was exercised.
+- [x] Details:
+  - Candidate quotation: `QT-2026-0019` (id: `2402098e-cfaf-4586-be0e-3be6588842a0`).
+  - Candidate service: `SVC-2026-0015` (id: `a825858c-1ed4-42ab-9097-57ea31dddb12`).
+  - Active approved scope ID: `a1626584-1681-4f98-a845-21fa10649f51` (ceiling: `SAR 30000.00`, status: `approved`, approved metadata populated, `voided_at` and `superseded_at` are null).
+  - UI attempted amount: `300001`
+  - UI blocked message: `"Value must be less than or equal to 30000."`
+- [x] Temporary dev harness at `src/app/(dashboard)/approved-billing-scopes/dev` was created, used, and fully cleaned up. Cleanup PASS.
+- [x] Server-side direct adversarial smoke (`APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1`) remains an optional follow-up.
+
 ### Service Detail Billing Calculation Refresh Fix
 - [x] Bug fix implemented and pushed in commit `270ac66 fix(invoices): refresh billing state from active scope totals`:
   - `getServiceBillingState` now queries `approved_billing_scopes` to resolve the active approved billing scope for the service, using its `accepted_grand_total` as the billing ceiling.
@@ -50,7 +64,6 @@
   - Checked on target Service `SVC-2026-0014` (service_id: `2f5091b6-7dbf-405f-b5b4-8f35511e2011`) with Approved Scope `dec043d6-d6d1-4883-b55c-be16bab67504` (total: `SAR 20000.00`).
   - The UI now correctly calculates and displays **Prior Invoiced: SAR 20000.00** and **Remaining: SAR 0.00** after both `INV-2026-0023` (deposit, `10000.00`) and `INV-2026-0024` (final, `10000.00`) are created.
 - [x] No source code changes or commits performed in this docs sync task.
-- [x] Ceiling block smoke verification (`APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1`) remains pending.
 
 ### Approved Billing Scope Review & Approval Smoke Test
 - [x] Manual smoke verification (`APPROVED-BILLING-SCOPE-APPROVE-ACTIONS-SMOKE-RUN-1`) completed.
