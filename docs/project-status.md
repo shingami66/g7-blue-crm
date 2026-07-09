@@ -114,6 +114,14 @@
 - [x] Invoice integration design (`APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`) completed.
 - [x] Result: PASS (design parameters clear). Invoices will reference `approved_billing_scope_id` via a composite FK constraint `(approved_billing_scope_id, service_id) -> approved_billing_scopes(id, service_id)`. The scope `accepted_grand_total` becomes the absolute invoice ceiling, enforced via a DB `BEFORE INSERT OR UPDATE` trigger and app-layer validations.
 
+### Quotation Revision Fallback Design
+- [x] Fallback design review (`QUOTATION-REVISION-FALLBACK-PRODUCT-DECISION-DOCS-1`) completed.
+- [x] Option A chosen: Keep quotation status enum unchanged (no `superseded` status).
+- [x] The active Approved Billing Scope determines current billing authority.
+- [x] Existing approved quotations remain historical agreement records.
+- [x] Any revised quotation flow must utilize the billing scope supersede/versioning mechanism.
+- [x] Integration migration is blocked until this decision is recorded.
+
 
 
 ### âœ… Foundation UI / Routes

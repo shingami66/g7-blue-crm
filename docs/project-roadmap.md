@@ -52,12 +52,13 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `QUOTATION-REVISION-FALLBACK-DESIGN-1`
-- Plan the fallback strategy for quotation revisions when active billing scopes exist.
+- `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1`
+- Transition to the next safe phase for invoice integration migration.
+
+Completed:
+- `QUOTATION-REVISION-FALLBACK-DESIGN-1` & `QUOTATION-REVISION-FALLBACK-PRODUCT-DECISION-DOCS-1` (Option A chosen: quotation status enum remains unchanged; active Approved Billing Scope determines current billing authority; revised quotation flow uses billing scope supersede/versioning).
 
 Backlog / later priority:
-- `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1`
-
 - Supplier Bookings Domain design/planning
 - Supplier Bookings server actions
 - Supplier Bookings UI

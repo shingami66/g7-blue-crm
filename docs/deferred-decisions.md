@@ -24,6 +24,7 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - Service must not be cancelled before creating a deposit invoice.
 - Final Invoice must represent remaining uninvoiced balance, not the full quotation total again.
 - Final invoice calculation: `final_invoice_amount = approved_quotation_total - SUM(active prior deposit/progress invoices)`.
+- **Quotation Revision Fallback (Option A):** Do not add a new `superseded` status to the quotation status enum. The active Approved Billing Scope determines current billing authority. Existing approved quotations remain locked as historical agreements. Any revised quotation flow must utilize the billing scope supersede/versioning model rather than modifying quotation status enums. Do not start the invoice integration migration until this decision is documented.
 - Payments are separate from invoices.
 - Multiple payments against one invoice do not create multiple invoices.
 - Payments affect collected/uncollected balance, not invoiced/uninvoiced balance.
