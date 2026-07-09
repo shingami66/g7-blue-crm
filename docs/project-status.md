@@ -2248,6 +2248,13 @@ Supplier allocations do not create supplier commitment, issue Supplier Bookings,
 - `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-1` completed and returned `PASS`.
 - `APPROVED-BILLING-SCOPE-SCHEMA-DESIGN-V2-REVIEW-1` completed and returned `PASS WITH MINOR DOCS-SYNC NOTES`.
 - `APPROVED-BILLING-SCOPE-DOCS-SYNC-2` was the current docs-only recording step.
+- `APPROVED-BILLING-SCOPE-INVOICE-SNAPSHOT-FROM-SCOPE-DOCS-SYNC-1` records the invoice snapshot fix for approved billing scope billing items.
+- Commit `c66975d` fixed invoice snapshot behavior for approved scope billing items.
+- Manual DEV/DEMO smoke passed for `INV-2026-0025` and `INV-2026-0026`.
+- Deposit invoice `INV-2026-0025` captured one summary snapshot row for `Deposit Payment = 10000`.
+- Final invoice `INV-2026-0026` captured one summary snapshot row for `Final Settlement = 20000`, with prior deposit `INV-2026-0025` for `10000`.
+- Result: `PASS WITH WARN`.
+- WARN: full-scope accepted/adjusted/excluded/customer_supplied item-decision smoke remains untested because there is no real item-decision UI yet.
 - `APPROVED-BILLING-SCOPE-DRAFT-CREATE-COMMIT-1` was completed and pushed as `4ec323f feat(billing): add approved scope draft creation`.
 - Manual DEV/DEMO smoke for the create-draft action passed with candidate quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe`.
 - Smoke verification confirmed `scopeId = 2fb8a324-4bd2-44be-8a23-a2b37e9b6e72`, `status = draft`, `line_safety_status = pending_review`, item counts and totals matched, and the duplicate second click returned `scope_duplicate_draft`.

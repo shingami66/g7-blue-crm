@@ -63,6 +63,7 @@ Completed:
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1` & `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-FILE-P0-FIX-1` (Add invoices.approved_billing_scope_id composite FK, index, and trigger ceiling guards with fail-closed NULL grand_total guard and null-safe predicates).
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-ACTION-DESIGN-1` & `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-ACTION-IMPLEMENT-1` (Integrate createInvoiceAction with active Approved Billing Scope ID, acceptedGrandTotal ceiling validation, and trigger exception sanitization).
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-SMOKE-PLAN-1` (PASS WITH WARN: manual smoke verification of fallback and final invoice calculation on SVC-2026-0003; active scope block paths not tested because no active approved scope existed).
+- `APPROVED-BILLING-SCOPE-INVOICE-SNAPSHOT-FROM-SCOPE-1` (PASS WITH WARN: commit `c66975d` recorded the approved-scope invoice snapshot fix; deposit `INV-2026-0025` and final `INV-2026-0026` manual smoke passed, with the full-scope item-decision smoke gap still pending).
 - `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY` (PASS WITH WARN: verified create/cancel booking actions on SVC-2026-0003; minor loading/pending indicator UX WARN recorded).
 - `INVOICE-SERVICE-ID-NOT-NULL-AUDIT-1` (PASS WITH WARN: audited and verified service_id is nullable in schema but required by product/types/actions; data count is zero).
 - `PUBLIC-HEALTH-ROUTE-HARDEN-1` (PASS WITH WARN: audited public health and webhook routes, verified response sanitization and next 16 proxy convention).
@@ -2112,6 +2113,7 @@ Must verify:
 - `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1` completed with `PASS` (security review completed; app-layer permissions, RLS posture, table grants, and service-role write paths verified as secure).
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1` completed with `PASS` (invoice ceiling design parameter clear).
 - After this sync, follow with `QUOTATION-REVISION-FALLBACK-DESIGN-1` and `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1`.
+- Follow-up: `APPROVED-BILLING-SCOPE-FULL-SCOPE-ITEM-DECISION-SMOKE-1`.
 
 - `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.
 - `SERVICE-PROFITABILITY-DESIGN-1` remains blocked until billing source and supplier-cost permissions are stable.
