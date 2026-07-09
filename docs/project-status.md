@@ -122,6 +122,34 @@
 - [x] Any revised quotation flow must utilize the billing scope supersede/versioning mechanism.
 - [x] Integration migration is blocked until this decision is recorded.
 
+### Approved Billing Scope Invoice Integration Migration
+- [x] Migration file `supabase/migrations/20260709080000_approved_billing_scope_invoice_integration.sql` was committed and pushed as `53fddd6 feat(billing): add invoice approved scope guard`.
+- [x] Migration was manually applied and verified in the DEV/DEMO database only; production remains unapplied.
+- [x] Preflight validation passed:
+  - Required columns (`id`, `service_id`, `status`, `grand_total`, `voided_at`, `is_deleted`, `approved_quotation_id`) existed on `invoices`.
+  - Column `approved_billing_scope_id` was absent before migration.
+  - 17 existing invoices in the database.
+  - Data hygiene verified: 0 null `service_id`, 0 null `grand_total`, 0 null `is_deleted`, and 0 active invoices with null `grand_total`.
+  - Approved billing scopes count was 0.
+  - Composite unique constraint `UNIQUE(id, service_id)` existed on `approved_billing_scopes`.
+  - `services.id` existed for row locking.
+  - RLS was enabled on both `invoices` and `approved_billing_scopes`, with `pg_policies` containing no public bypass rows.
+  - Only `service_role` grants existed on `approved_billing_scopes` and `approved_billing_scope_items`.
+- [x] Post-apply verification passed in DEV/DEMO:
+  - Column `approved_billing_scope_id` exists on `invoices` as a nullable UUID.
+  - Composite foreign key constraint `invoices_approved_billing_scope_id_service_id_fkey` is active and correctly references `approved_billing_scopes(id, service_id)` on delete restrict.
+  - Index `idx_invoices_approved_billing_scope_id` is created for query performance.
+  - Invoice trigger function `check_invoices_before_write` and its trigger are registered and active.
+  - Invoices trigger P0 guards are verified in the database:
+    - Null check `NEW.grand_total IS NULL` exists to fail-closed.
+    - Null-safe id exclusion `id IS DISTINCT FROM NEW.id` exists.
+    - Null-safe soft-delete predicate `COALESCE(is_deleted, false) = false` exists.
+  - Billing scopes trigger function `check_approved_billing_scopes_before_write` is redefined and verified with P0 guards:
+    - Supersede target lookup restricts by same service ID (`service_id = OLD.service_id`).
+    - Supersede target lookup restricts to active approved status (`status = 'approved'`).
+    - Supersede target lookup requires `voided_at IS NULL` and `superseded_at IS NULL`.
+    - Null-safe soft-delete predicate `COALESCE(is_deleted, false) = false` exists for invoice checks.
+
 
 
 ### âœ… Foundation UI / Routes

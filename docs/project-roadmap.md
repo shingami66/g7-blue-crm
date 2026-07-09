@@ -52,11 +52,12 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1`
-- Transition to the next safe phase for invoice integration migration.
+- `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY`
+- Transition to the next safe phase for supplier bookings manual verification.
 
 Completed:
 - `QUOTATION-REVISION-FALLBACK-DESIGN-1` & `QUOTATION-REVISION-FALLBACK-PRODUCT-DECISION-DOCS-1` (Option A chosen: quotation status enum remains unchanged; active Approved Billing Scope determines current billing authority; revised quotation flow uses billing scope supersede/versioning).
+- `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1` & `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-FILE-P0-FIX-1` (Add invoices.approved_billing_scope_id composite FK, index, and trigger ceiling guards with fail-closed NULL grand_total guard and null-safe predicates).
 
 Backlog / later priority:
 - Supplier Bookings Domain design/planning

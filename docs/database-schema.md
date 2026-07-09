@@ -47,6 +47,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 ### Financial & Workflow
 - `quotations` / `quotation_items`: Quotes with subtotal/vat/grand_total calculation foundations.
 - `invoices` / `invoice_items`: Current invoice tables referencing quotes. `invoices.type` exists as text without a CHECK constraint; ERP-3 target design must use `invoice_type = deposit | final` after reviewed schema work.
+  - **Approved Billing Scope Integration:** Added `approved_billing_scope_id` as a nullable UUID referencing `approved_billing_scopes(id, service_id)` via a composite foreign key constraint, enforcing invoice ceiling limits and validation guards via `check_invoices_before_write` trigger.
 - `payments`: Financial tracking of invoice payments. Current `payments.method` allowed values are `bank_transfer`, `cash`, `cheque`, and `online`; ERP-4 planning may later decide whether to change this to Cash / Bank Transfer / Card / Other.
 - `projects` / `project_tasks`: Existing legacy execution tracking. New ERP planning should use Service as the operational unit.
 
