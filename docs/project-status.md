@@ -41,6 +41,26 @@
 
 ## 3. Completed Milestones
 
+### Approved Billing Scope Review & Approval Smoke Test
+- [x] Manual smoke verification (`APPROVED-BILLING-SCOPE-APPROVE-ACTIONS-SMOKE-RUN-1`) completed.
+- [x] Result: PASS WITH WARN.
+- [x] Verified sequence using temporary dev harness (removed after testing; no harness files committed):
+  - Candidate quotation: `QT-2026-0018` (id: `548cbcf9-a88c-490e-a278-c4148dbbd590`).
+  - Candidate service: `SVC-2026-0014` (id: `2f5091b6-7dbf-405f-b5b4-8f35511e2011`).
+  - Created Draft Scope: `dec043d6-d6d1-4883-b55c-be16bab67504` (accepted total: `SAR 20000.00`, 1 draft item).
+  - Draft verification: status = `draft`, `line_safety_status` = `pending_review`.
+  - Line Safety Review: successfully marked safe (`line_safety_status = safe`, reviewed metadata populated).
+  - Scope Approval: successfully approved (`status = approved`, approved metadata populated, active approved scope constraint active).
+  - Invoice Integration: created `INV-2026-0023` (deposit) and `INV-2026-0024` (final) under the service; both correctly linked to `approved_billing_scope_id`.
+  - Aggregates: 2 invoices, total invoiced `SAR 20000.00`, all linked to scope.
+- [x] WARNs recorded during smoke:
+  - Above-ceiling block check was bypassed because the deposit invoice was created before attempting above-ceiling input.
+  - Billing Calculation UI appeared stale after final invoice creation: the screen did not immediately reflect the updated invoiced/remaining totals, while SQL aggregates showed correct values. Needs later review.
+- [x] Remaining follow-ups:
+  - `APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1`
+  - `APPROVED-BILLING-SCOPE-BILLING-CALC-REFRESH-REVIEW-1`
+- [x] No source code changes or commits performed in this docs sync task.
+
 ### Approved Billing Scope Review & Approval Actions
 - [x] App-layer review and approval server actions implemented and pushed in commit `b9621bb`:
   - `reviewApprovedBillingScopeLineSafety`
