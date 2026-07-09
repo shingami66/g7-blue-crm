@@ -25,6 +25,26 @@ export async function getServiceBillingState(serviceId: string): Promise<Service
   const supabase = createAdminClient();
 
   try {
+    // Fetch active approved billing scope for the service
+    const { data: activeScopes, error: scopesError } = await supabase
+      .from("approved_billing_scopes")
+      .select("id, accepted_grand_total, source_quotation_id")
+      .eq("service_id", serviceId)
+      .eq("status", "approved")
+      .is("superseded_at", null)
+      .is("voided_at", null)
+      .limit(1);
+
+    if (scopesError) {
+      console.error("[getServiceBillingState] Error fetching active billing scope:", scopesError);
+      return {
+        ...defaultState,
+        disabledReasons: ["billing_state_unavailable"]
+      };
+    }
+
+    const activeScope = activeScopes && activeScopes.length > 0 ? activeScopes[0] : null;
+
     // 1. Fetch approved quotations for the service
     const { data: quotations, error: quotationsError } = await supabase
       .from("quotations")
@@ -42,14 +62,20 @@ export async function getServiceBillingState(serviceId: string): Promise<Service
       };
     }
 
-    const approvedQuotationRow = quotations && quotations.length > 0 ? quotations[0] : null;
+    const approvedQuotationRow = quotations && quotations.length > 0
+      ? (activeScope
+          ? quotations.find(q => q.id === activeScope.source_quotation_id) || quotations[0]
+          : quotations[0])
+      : null;
 
     if (approvedQuotationRow) {
       defaultState.approvedQuotation = {
         id: approvedQuotationRow.id,
         quotationNumber: approvedQuotationRow.quotation_number,
         status: "approved",
-        grandTotal: Number(approvedQuotationRow.grand_total || 0),
+        grandTotal: activeScope
+          ? Number(activeScope.accepted_grand_total || 0)
+          : Number(approvedQuotationRow.grand_total || 0),
       };
     } else {
       defaultState.disabledReasons.push("approved_quotation_required");
@@ -109,15 +135,17 @@ export async function getServiceBillingState(serviceId: string): Promise<Service
     }
 
     // 3. Amount calculations
-    defaultState.activePriorInvoiceTotal = depositInvoices.reduce((sum, inv) => sum + Number(inv.grand_total || 0), 0);
+    const totalActiveInvoiced = (invoices || []).reduce((sum, inv) => sum + Number(inv.grand_total || 0), 0);
+    defaultState.activePriorInvoiceTotal = totalActiveInvoiced;
     
     if (defaultState.approvedQuotation) {
-      defaultState.remainingUninvoicedAmount = defaultState.approvedQuotation.grandTotal - defaultState.activePriorInvoiceTotal;
+      const remaining = defaultState.approvedQuotation.grandTotal - totalActiveInvoiced;
+      defaultState.remainingUninvoicedAmount = Math.max(0, remaining);
     } else {
       defaultState.remainingUninvoicedAmount = 0;
     }
 
-    if (defaultState.remainingUninvoicedAmount < 0) {
+    if (defaultState.approvedQuotation && totalActiveInvoiced > defaultState.approvedQuotation.grandTotal) {
       defaultState.disabledReasons.push("prior_invoices_exceed_quotation_total");
     }
 
