@@ -197,6 +197,22 @@
 - [x] UX WARN: Loading/pending indicator was not clearly visible during creation/cancellation, likely due to fast server response time. Recorded as a minor UX WARN (non-blocking).
 - [x] Production remains unapplied and completely out of scope.
 
+### Invoice Service ID Not Null Audit
+- [x] Schema and data audit (`INVOICE-SERVICE-ID-NOT-NULL-AUDIT-1`) completed.
+- [x] Result: PASS WITH WARN.
+- [x] Audit findings:
+  - Product Rules: `invoices.service_id` is required by ERP workflow rules; no invoice may exist without a parent Service.
+  - Source Code: Current `createInvoiceAction` always supplies `service_id` in the database insert payload.
+  - TypeScript Types: `Invoice` and `InvoiceRow` interfaces already define `service_id` as non-nullable (`string`).
+  - Database Schema: The baseline migration `20260623200000_erp3a_invoice_schema.sql` leaves `invoices.service_id` as structurally nullable.
+  - Live DEV/DEMO preflight validation:
+    - Column metadata checks: `invoices.service_id` has `is_nullable = YES`.
+    - Active rows check: `null_service_invoices` count is `0`.
+- [x] Conclusion: Existing DEV/DEMO database rows and source components are fully ready in principle for a future reviewed `NOT NULL` constraint migration.
+- [x] WARN: No database migration was drafted, reviewed, or applied during this task. Production remains completely out of scope.
+- [x] Future task required before implementation: `INVOICE-SERVICE-ID-NOT-NULL-MIGRATION-DRAFT-1`.
+
+
 
 
 
