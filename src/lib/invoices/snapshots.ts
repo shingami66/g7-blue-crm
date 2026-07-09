@@ -1,5 +1,6 @@
 import type { CompanySettingsRow } from "@/lib/settings/types";
 import type { QuotationSnapshotSeller, QuotationSnapshotBuyer, QuotationDetail } from "@/lib/quotations/types";
+import type { ApprovedBillingScopeDetail } from "@/lib/approved-billing-scopes/types";
 import type { InvoiceSnapshotData } from "./types";
 import type { JsonValue } from "@/types/invoice";
 
@@ -90,30 +91,138 @@ export function buildBuyerSnapshot(
   return null;
 }
 
-export function buildQuotationSnapshot(quotation: QuotationDetail): JsonValue {
+interface SnapshotQuotationItem {
+  description: string;
+  details: string | null;
+  qty: number;
+  unit_price: number;
+  vat: number;
+  total: number;
+}
+
+/**
+ * Build the quotation snapshot for an invoice.
+ *
+ * Legacy (no active scope):
+ *   Always maps raw quotation items, totals, and metadata exactly as the
+ *   original committed behavior — invoiceAmount and invoiceType have no effect.
+ *
+ * Active scope — partial invoice (deposit or final with prior deposits):
+ *   Creates a single summary line item with the actual invoice amount.
+ *
+ * Active scope — full invoice (invoiceAmount === acceptedGrandTotal):
+ *   Uses only accepted/adjusted scope items. Excluded and customer_supplied
+ *   items are filtered out. Returns null if no billable items are found.
+ */
+export function buildQuotationSnapshot(
+  quotation: QuotationDetail,
+  activeScope?: ApprovedBillingScopeDetail | null,
+  invoiceAmount?: number,
+  invoiceType?: string
+): JsonValue | null {
+  // ── Legacy path: no active scope ──────────────────────────────────
+  // Exactly mirrors the original committed behavior.
+  // invoiceAmount and invoiceType are intentionally ignored.
+  if (!activeScope) {
+    return {
+      quotation_id: quotation.id,
+      quotation_number: quotation.quotationNumber,
+      service_id: quotation.serviceId,
+      customer_id: quotation.customerId,
+      items: quotation.items.map(item => ({
+        description: item.description,
+        details: item.details,
+        qty: item.qty,
+        unit_price: item.unitPrice,
+        vat: item.vat,
+        total: item.total
+      })),
+      subtotal: quotation.subtotal,
+      discount: quotation.discount,
+      vat_rate: quotation.vatRate,
+      vat_amount: quotation.vatAmount,
+      grand_total: quotation.grandTotal,
+      currency: "SAR",
+      status: quotation.status,
+      created_at: quotation.createdAt,
+      updated_at: quotation.updatedAt
+    };
+  }
+
+  // ── Active scope paths ────────────────────────────────────────────
+  const scopeCeiling = Number(activeScope.acceptedGrandTotal || 0);
+
+  // Partial scope invoice: deposit or final where amount < full ceiling
+  const isPartialScopeInvoice =
+    invoiceAmount !== undefined &&
+    invoiceAmount < scopeCeiling;
+
+  let snapshotItems: SnapshotQuotationItem[];
+  let subtotal: number;
+  let vatAmount: number;
+  let grandTotal: number;
+
+  if (isPartialScopeInvoice) {
+    // Single summary line with actual invoice amount
+    const desc = invoiceType === "deposit" ? "Deposit Payment" : "Final Settlement";
+    snapshotItems = [
+      {
+        description: desc,
+        details: `For services related to Quotation ${quotation.quotationNumber}`,
+        qty: 1,
+        unit_price: invoiceAmount,
+        vat: 0,
+        total: invoiceAmount
+      }
+    ];
+    subtotal = invoiceAmount;
+    vatAmount = 0;
+    grandTotal = invoiceAmount;
+  } else {
+    // Full scope invoice: use only accepted/adjusted items
+    const billableItems = (activeScope.items || [])
+      .filter((item) => item.decision === "accepted" || item.decision === "adjusted");
+
+    // Safety: never create a snapshot with a nonzero scope total but no billable items
+    if (billableItems.length === 0) {
+      return null;
+    }
+
+    // Map scope items. vat field = per-item VAT amount (matching legacy
+    // quotation_items.vat semantics per AGENTS.md rule).
+    snapshotItems = billableItems.map((item) => ({
+      description: item.sourceDescription,
+      details: item.sourceDetails,
+      qty: Number(item.acceptedQty || 0),
+      unit_price: Number(item.acceptedUnitPrice || 0),
+      vat: Number(item.acceptedVatAmount || 0),
+      total: Number(item.acceptedGrandTotal || 0)
+    }));
+
+    subtotal = Number(activeScope.acceptedSubtotal || 0);
+    vatAmount = Number(activeScope.acceptedVatAmount || 0);
+    grandTotal = Number(activeScope.acceptedGrandTotal || 0);
+  }
+
   return {
     quotation_id: quotation.id,
     quotation_number: quotation.quotationNumber,
     service_id: quotation.serviceId,
     customer_id: quotation.customerId,
-    items: quotation.items.map(item => ({
-      description: item.description,
-      details: item.details,
-      qty: item.qty,
-      unit_price: item.unitPrice,
-      vat: item.vat,
-      total: item.total
-    })),
-    subtotal: quotation.subtotal,
-    discount: quotation.discount,
-    vat_rate: quotation.vatRate,
-    vat_amount: quotation.vatAmount,
-    grand_total: quotation.grandTotal,
+    items: snapshotItems,
+    subtotal: subtotal,
+    discount: Number(activeScope.sourceDiscount || 0),
+    vat_rate: Number(activeScope.sourceVatRate || 0),
+    vat_amount: vatAmount,
+    grand_total: grandTotal,
     currency: "SAR",
     status: quotation.status,
     created_at: quotation.createdAt,
-    updated_at: quotation.updatedAt
-  };
+    updated_at: quotation.updatedAt,
+    approvedBillingScopeId: activeScope.id,
+    approvedBillingScopeAcceptedGrandTotal: scopeCeiling,
+    sourceQuotationId: activeScope.sourceQuotationId
+  } as unknown as JsonValue;
 }
 
 export function buildBankDetailsSnapshot(settings: CompanySettingsRow): JsonValue {
@@ -148,15 +257,25 @@ export function buildDocumentRulesSnapshot(settings: CompanySettingsRow): JsonVa
 
 export function buildInvoiceSnapshotData(
   settings: CompanySettingsRow,
-  quotation: QuotationDetail
-): InvoiceSnapshotData & { vat_mode: string; vat_rate: number; document_label: string } {
+  quotation: QuotationDetail,
+  activeScope?: ApprovedBillingScopeDetail | null,
+  invoiceAmount?: number,
+  invoiceType?: string
+): (InvoiceSnapshotData & { vat_mode: string; vat_rate: number; document_label: string }) | null {
   const isNotRegistered = settings.vat_mode === "not_registered";
   const documentLabel = isNotRegistered ? "Commercial Invoice" : "Tax Invoice";
+
+  const snapshotQuotation = buildQuotationSnapshot(quotation, activeScope, invoiceAmount, invoiceType);
+
+  // If the scope path returned null (empty billable items), propagate failure
+  if (snapshotQuotation === null) {
+    return null;
+  }
 
   return {
     snapshot_seller: buildSellerSnapshot(settings) as unknown as JsonValue,
     snapshot_buyer: buildBuyerSnapshot(quotation.snapshotBuyer, quotation.customerId, quotation.customer) as unknown as JsonValue,
-    snapshot_quotation: buildQuotationSnapshot(quotation),
+    snapshot_quotation: snapshotQuotation,
     snapshot_bank_details: buildBankDetailsSnapshot(settings),
     snapshot_document_rules: buildDocumentRulesSnapshot(settings),
     vat_mode: settings.vat_mode,

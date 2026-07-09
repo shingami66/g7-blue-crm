@@ -80,35 +80,13 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
     // 5. Compose snapshot data
     const quotationDetail = mapRowToQuotationDetail(quotationRow as unknown as QuotationDetailRow);
 
-    let snapshotData;
-    try {
-      snapshotData = buildInvoiceSnapshotData(settings, quotationDetail);
-
-      if (
-        !snapshotData ||
-        !snapshotData.snapshot_seller ||
-        !snapshotData.snapshot_buyer ||
-        !snapshotData.snapshot_quotation ||
-        !snapshotData.snapshot_bank_details ||
-        !snapshotData.snapshot_document_rules ||
-        !snapshotData.vat_mode ||
-        typeof snapshotData.vat_rate !== "number" ||
-        !snapshotData.document_label
-      ) {
-        return { success: false, error: "invoice_snapshot_unavailable" };
-      }
-    } catch (err) {
-      console.error("[createInvoiceAction] Snapshot error:", err instanceof Error ? err.message : "Unknown");
-      return { success: false, error: "invoice_snapshot_unavailable" };
-    }
-
     // 6. Trusted quotation total
     if (typeof quotationDetail.grandTotal !== "number") {
       return { success: false, error: "quotation_total_unavailable" };
     }
 
     // 7. Reject VAT registered modes for this slice
-    if (snapshotData.vat_mode !== "not_registered") {
+    if (settings.vat_mode !== "not_registered") {
       return { success: false, error: "vat_registered_invoice_not_implemented_in_this_slice" };
     }
 
@@ -117,6 +95,14 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
     const billingCeiling = activeScope ? activeScope.acceptedGrandTotal : quotationDetail.grandTotal;
 
     let finalInvoiceAmount = 0;
+    let priorDepositsData: Array<{
+      id: string;
+      invoice_number: string | null;
+      invoice_type: string;
+      grand_total: number;
+      status: string;
+    }> = [];
+    let activePriorInvoiceTotal = 0;
 
     if (invoiceType === "deposit") {
       if (requestedAmount! > billingCeiling) {
@@ -183,7 +169,8 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
         return { success: false, error: "prior_invoice_lookup_failed" };
       }
 
-      const activePriorInvoiceTotal = priorDeposits
+      priorDepositsData = priorDeposits || [];
+      activePriorInvoiceTotal = priorDeposits
         ? priorDeposits.reduce((sum, inv) => sum + Number(inv.grand_total || 0), 0)
         : 0;
 
@@ -192,7 +179,31 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
       if (finalInvoiceAmount < 0) {
         return { success: false, error: activeScope ? "prior_invoices_exceed_billing_scope_ceiling" : "prior_invoices_exceed_quotation_total" };
       }
+    }
 
+    let snapshotData;
+    try {
+      snapshotData = buildInvoiceSnapshotData(settings, quotationDetail, activeScope, finalInvoiceAmount, invoiceType);
+
+      if (
+        !snapshotData ||
+        !snapshotData.snapshot_seller ||
+        !snapshotData.snapshot_buyer ||
+        !snapshotData.snapshot_quotation ||
+        !snapshotData.snapshot_bank_details ||
+        !snapshotData.snapshot_document_rules ||
+        !snapshotData.vat_mode ||
+        typeof snapshotData.vat_rate !== "number" ||
+        !snapshotData.document_label
+      ) {
+        return { success: false, error: "invoice_snapshot_unavailable" };
+      }
+    } catch (err) {
+      console.error("[createInvoiceAction] Snapshot error:", err instanceof Error ? err.message : "Unknown");
+      return { success: false, error: "invoice_snapshot_unavailable" };
+    }
+
+    if (invoiceType === "final") {
       // Persist final settlement basis in snapshots
       snapshotData.snapshot_quotation = {
         ...(snapshotData.snapshot_quotation && typeof snapshotData.snapshot_quotation === "object" ? (snapshotData.snapshot_quotation as Record<string, unknown>) : {}),
@@ -203,13 +214,13 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
           billing_ceiling: billingCeiling,
           active_prior_invoice_total: activePriorInvoiceTotal,
           final_invoice_amount: finalInvoiceAmount,
-          prior_invoices: priorDeposits?.map(d => ({
+          prior_invoices: priorDepositsData.map(d => ({
             id: d.id,
             invoice_number: d.invoice_number,
             invoice_type: d.invoice_type,
             amount: Number(d.grand_total || 0),
             status: d.status
-          })) || [],
+          })),
           payments_excluded: true,
           invoice_prepayment_applications_used: false
         }
