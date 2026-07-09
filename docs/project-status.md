@@ -41,6 +41,17 @@
 
 ## 3. Completed Milestones
 
+### Service Detail Billing Calculation Refresh Fix
+- [x] Bug fix implemented and pushed in commit `270ac66 fix(invoices): refresh billing state from active scope totals`:
+  - `getServiceBillingState` now queries `approved_billing_scopes` to resolve the active approved billing scope for the service, using its `accepted_grand_total` as the billing ceiling.
+  - `remainingUninvoicedAmount` now correctly subtracts the grand total of all active invoices (both deposit and final), rather than only deposit invoices.
+  - Added safe clamping `Math.max(0, remaining)` to prevent negative remaining displays.
+- [x] Manual verification: PASS.
+  - Checked on target Service `SVC-2026-0014` (service_id: `2f5091b6-7dbf-405f-b5b4-8f35511e2011`) with Approved Scope `dec043d6-d6d1-4883-b55c-be16bab67504` (total: `SAR 20000.00`).
+  - The UI now correctly calculates and displays **Prior Invoiced: SAR 20000.00** and **Remaining: SAR 0.00** after both `INV-2026-0023` (deposit, `10000.00`) and `INV-2026-0024` (final, `10000.00`) are created.
+- [x] No source code changes or commits performed in this docs sync task.
+- [x] Ceiling block smoke verification (`APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1`) remains pending.
+
 ### Approved Billing Scope Review & Approval Smoke Test
 - [x] Manual smoke verification (`APPROVED-BILLING-SCOPE-APPROVE-ACTIONS-SMOKE-RUN-1`) completed.
 - [x] Result: PASS WITH WARN.

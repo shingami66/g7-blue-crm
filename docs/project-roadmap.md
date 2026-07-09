@@ -55,6 +55,7 @@ Current active task:
 - Transition to the next safe phase for supplier bookings implementation or follow-ups.
 
 Completed:
+- `APPROVED-BILLING-SCOPE-BILLING-CALC-REFRESH-REVIEW-1` (PASS: verified billing state calculation fix in commit `270ac66` on SVC-2026-0014; the Billing Calculation UI now correctly reflects the active Approved Billing Scope ceiling and subtracts both deposit and final invoices, displaying Prior Invoiced SAR 20000.00 and Remaining SAR 0.00).
 - `APPROVED-BILLING-SCOPE-APPROVE-ACTIONS-SMOKE-RUN-1` (PASS WITH WARN: manual smoke verification completed on SVC-2026-0014 / QT-2026-0018; successfully verified draft creation, line safety review, approval, and invoice integration; temporary dev harness was removed; ceiling block test bypassed and UI refresh staleness warning noted).
 - `APPROVED-BILLING-SCOPE-APPROVE-ACTIONS-1` (Implemented `reviewApprovedBillingScopeLineSafety` and `approveApprovedBillingScope` server actions in commit `b9621bb`; verified types/lint, safety rules, draft/voided/superseded guards, and concurrency checks).
 - `QUOTATION-REVISION-FALLBACK-DESIGN-1` & `QUOTATION-REVISION-FALLBACK-PRODUCT-DECISION-DOCS-1` (Option A chosen: quotation status enum remains unchanged; active Approved Billing Scope determines current billing authority; revised quotation flow uses billing scope supersede/versioning).
@@ -67,7 +68,6 @@ Completed:
 
 Backlog / later priority:
 - `APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1` (Follow-up smoke verification specifically targeting the active-scope invoice ceiling block error path).
-- `APPROVED-BILLING-SCOPE-BILLING-CALC-REFRESH-REVIEW-1` (Review invoice detail/billing calculation page state refresh behavior to prevent stale remaining totals display).
 - `SUPPLIER-BOOKINGS-LOADING-UX-VERIFY` (Follow-up validation of supplier booking creation/cancellation pending and transition states under throttled networks).
 - Supplier Bookings Domain design/planning
 - Supplier Bookings server actions
