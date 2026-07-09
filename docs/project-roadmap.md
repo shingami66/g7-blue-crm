@@ -58,6 +58,7 @@ Current active task:
 Completed:
 - `QUOTATION-REVISION-FALLBACK-DESIGN-1` & `QUOTATION-REVISION-FALLBACK-PRODUCT-DECISION-DOCS-1` (Option A chosen: quotation status enum remains unchanged; active Approved Billing Scope determines current billing authority; revised quotation flow uses billing scope supersede/versioning).
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1` & `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-FILE-P0-FIX-1` (Add invoices.approved_billing_scope_id composite FK, index, and trigger ceiling guards with fail-closed NULL grand_total guard and null-safe predicates).
+- `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-ACTION-DESIGN-1` & `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-ACTION-IMPLEMENT-1` (Integrate createInvoiceAction with active Approved Billing Scope ID, acceptedGrandTotal ceiling validation, and trigger exception sanitization).
 
 Backlog / later priority:
 - Supplier Bookings Domain design/planning

@@ -150,6 +150,19 @@
     - Supersede target lookup requires `voided_at IS NULL` and `superseded_at IS NULL`.
     - Null-safe soft-delete predicate `COALESCE(is_deleted, false) = false` exists for invoice checks.
 
+### Approved Billing Scope Invoice Integration App Action
+- [x] App-layer invoice integration was committed and pushed as `21eb307 feat(invoices): link invoices to approved scopes`.
+- [x] Refactored `createInvoiceAction` in `src/lib/invoices/actions.ts` to integrate Approved Billing Scopes:
+  - Resolves active approved billing scope using `getActiveApprovedBillingScopeForService(serviceId)`.
+  - Sets `approved_billing_scope_id` to `activeScope.id` on insertion, defaulting to `null` if no active scope is present.
+  - Substitutes the billing ceiling `acceptedGrandTotal` as the authoritative limit in place of the quotation's `grandTotal` when an active scope is present.
+  - Maintains transitional fallback to the approved quotation's `grandTotal` when no active scope is found.
+  - Maps Postgres database trigger exceptions to clean, user-friendly UI error codes (`invoice_amount_exceeds_ceiling`, `billing_scope_inactive`, `billing_scope_service_mismatch`, `invoice_grand_total_invalid`), preventing DB message leaks.
+- [x] Updated typescript types `Invoice` and `InvoiceRow` to support nullable `approved_billing_scope_id`.
+- [x] Updated mapping logic in `src/lib/invoices/mappers.ts` to map `approved_billing_scope_id`.
+- [x] All static typechecks, lints, and whitespace checks verified.
+- [x] Production unapplied/out of scope.
+
 
 
 ### âœ… Foundation UI / Routes
