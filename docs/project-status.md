@@ -104,7 +104,38 @@
   - No UI screens or routes.
   - No DB schema changes or migrations.
   - No manual browser smoke test performed on live actions (no active approved scope was present to smoke).
-  - Active-scope invoice integration smoke verification remains pending.
+  - Active-scope invoice integration smoke verification completed and recorded below.
+
+### Approved Billing Scope Full-Scope Item Decision Smoke Test
+- [x] Manual smoke verification (`APPROVED-BILLING-SCOPE-FULL-SCOPE-ITEM-DECISION-SMOKE-1`) completed in DEV/DEMO.
+- [x] Result: PASS.
+- [x] Verified quotation and scope:
+  - Quotation: `QT-2026-0020` (`quotation_id`: `1bc988dc-fa19-41ca-878f-88beca960a08`).
+  - Service ID: `e19ddc5a-bbdb-44a6-a61e-c34aef7fa60d`.
+  - Scope ID: `eb1f4c46-74f7-4c67-a043-c07935bb1289`.
+  - Source quotation total: `SAR 30000`.
+  - Approved scope total: `SAR 17000`.
+- [x] Verified item decisions:
+  - `شاشات`: `accepted` = `SAR 10000`.
+  - `صوت`: `adjusted` from `SAR 10000` to `SAR 7000`.
+  - `عمال`: `excluded` = `SAR 0`.
+  - `ضيافة`: `customer_supplied` = `SAR 0`.
+- [x] Approval verification passed:
+  - `status = approved`
+  - `line_safety_status = safe`
+  - `approved_at` populated
+  - `voided_at = null`
+  - `superseded_at = null`
+- [x] Invoice verification passed:
+  - Invoice: `INV-2026-0027`
+  - type: `final`
+  - grand_total: `SAR 17000`
+  - `approved_billing_scope_id` matches the scope
+  - snapshot contains exactly `شاشات = SAR 10000` and `صوت = SAR 7000`
+  - snapshot excludes `عمال` and `ضيافة`
+- [x] Temporary item-decision dev harness was removed after smoke.
+- [x] Full-scope snapshot WARN from commit `c66975d` is now closed.
+- [x] No real user-facing Approved Billing Scope management UI exists yet; that remains the next product implementation gap.
 
 ### Approved Billing Scope Foundation
 - [x] Migration draft `supabase/migrations/20260708090000_approved_billing_scope_foundation.sql` was committed and pushed as `8d2aefa feat(billing): draft approved billing scope foundation`.

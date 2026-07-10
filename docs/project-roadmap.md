@@ -63,13 +63,15 @@ Completed:
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1` & `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-FILE-P0-FIX-1` (Add invoices.approved_billing_scope_id composite FK, index, and trigger ceiling guards with fail-closed NULL grand_total guard and null-safe predicates).
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-ACTION-DESIGN-1` & `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-ACTION-IMPLEMENT-1` (Integrate createInvoiceAction with active Approved Billing Scope ID, acceptedGrandTotal ceiling validation, and trigger exception sanitization).
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-SMOKE-PLAN-1` (PASS WITH WARN: manual smoke verification of fallback and final invoice calculation on SVC-2026-0003; active scope block paths not tested because no active approved scope existed).
-- `APPROVED-BILLING-SCOPE-INVOICE-SNAPSHOT-FROM-SCOPE-1` (PASS WITH WARN: commit `c66975d` recorded the approved-scope invoice snapshot fix; deposit `INV-2026-0025` and final `INV-2026-0026` manual smoke passed, with the full-scope item-decision smoke gap still pending).
+- `APPROVED-BILLING-SCOPE-INVOICE-SNAPSHOT-FROM-SCOPE-1` (PASS WITH WARN: commit `c66975d` recorded the approved-scope invoice snapshot fix; deposit `INV-2026-0025` and final `INV-2026-0026` manual smoke passed, and the follow-up full-scope item-decision smoke is now completed in `APPROVED-BILLING-SCOPE-FULL-SCOPE-ITEM-DECISION-SMOKE-1`).
+- `APPROVED-BILLING-SCOPE-FULL-SCOPE-ITEM-DECISION-SMOKE-1` (PASS: manual DEV/DEMO smoke on `QT-2026-0020` / `e19ddc5a-bbdb-44a6-a61e-c34aef7fa60d` / `eb1f4c46-74f7-4c67-a043-c07935bb1289`; verified accepted/adjusted/excluded/customer_supplied decisions, approved scope metadata, and final invoice `INV-2026-0027` with snapshot lines limited to `شاشات = SAR 10000` and `صوت = SAR 7000`; temporary dev harness removed after smoke; no real user-facing Approved Billing Scope management UI yet).
 - `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY` (PASS WITH WARN: verified create/cancel booking actions on SVC-2026-0003; minor loading/pending indicator UX WARN recorded).
 - `INVOICE-SERVICE-ID-NOT-NULL-AUDIT-1` (PASS WITH WARN: audited and verified service_id is nullable in schema but required by product/types/actions; data count is zero).
 - `PUBLIC-HEALTH-ROUTE-HARDEN-1` (PASS WITH WARN: audited public health and webhook routes, verified response sanitization and next 16 proxy convention).
 
 Backlog / later priority:
 - `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` (Optional follow-up to perform server-side direct adversarial smoke testing bypassing UI validation).
+- Approved Billing Scope real management UI planning/implementation
 - `SUPPLIER-BOOKINGS-LOADING-UX-VERIFY` (Follow-up validation of supplier booking creation/cancellation pending and transition states under throttled networks).
 - Supplier Bookings Domain design/planning
 - Supplier Bookings server actions
