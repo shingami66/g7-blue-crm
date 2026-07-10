@@ -57,6 +57,7 @@ Current active task:
 Completed:
 - `APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1` (PASS WITH WARN: manual smoke verification completed on SVC-2026-0015; successfully verified that the UI blocks creation of an above-ceiling deposit invoice and the DB confirmed no invoice was created; browser/client validation blocked submission before server-action over-ceiling request was reached; temporary dev harness was removed; optional server-side direct smoke `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` remains in backlog).
 - `APPROVED-BILLING-SCOPE-BILLING-CALC-REFRESH-REVIEW-1` (PASS: verified billing state calculation fix in commit `270ac66` on SVC-2026-0014; the Billing Calculation UI now correctly reflects the active Approved Billing Scope ceiling and subtracts both deposit and final invoices, displaying Prior Invoiced SAR 20000.00 and Remaining SAR 0.00).
+- `APPROVED-BILLING-SCOPE-SERVICE-ENTRY-CARD-1` (PASS: commit `c07b191` added the permission-gated read-only Approved Billing Scope card on Service Detail. Read contracts remain typed and sanitized, the card now shows empty/populated/unavailable states, and visibility is limited to Admin, Manager, and Accountant.)
 - `APPROVED-BILLING-SCOPE-APPROVE-ACTIONS-SMOKE-RUN-1` (PASS WITH WARN: manual smoke verification completed on SVC-2026-0014 / QT-2026-0018; successfully verified draft creation, line safety review, approval, and invoice integration; temporary dev harness was removed; ceiling block test bypassed and UI refresh staleness warning noted).
 - `APPROVED-BILLING-SCOPE-APPROVE-ACTIONS-1` (Implemented `reviewApprovedBillingScopeLineSafety` and `approveApprovedBillingScope` server actions in commit `b9621bb`; verified types/lint, safety rules, draft/voided/superseded guards, and concurrency checks).
 - `QUOTATION-REVISION-FALLBACK-DESIGN-1` & `QUOTATION-REVISION-FALLBACK-PRODUCT-DECISION-DOCS-1` (Option A chosen: quotation status enum remains unchanged; active Approved Billing Scope determines current billing authority; revised quotation flow uses billing scope supersede/versioning).
@@ -2116,6 +2117,7 @@ Must verify:
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1` completed with `PASS` (invoice ceiling design parameter clear).
 - After this sync, follow with `QUOTATION-REVISION-FALLBACK-DESIGN-1` and `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1`.
 - Follow-up: `APPROVED-BILLING-SCOPE-FULL-SCOPE-ITEM-DECISION-SMOKE-1`.
+- Next bounded step: user-only Service Detail card smoke, then the read-only scope detail route as a separate task.
 
 - `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.
 - `SERVICE-PROFITABILITY-DESIGN-1` remains blocked until billing source and supplier-cost permissions are stable.

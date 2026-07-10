@@ -210,6 +210,17 @@
 - [x] Invoice integration design (`APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1`) completed.
 - [x] Result: PASS (design parameters clear). Invoices will reference `approved_billing_scope_id` via a composite FK constraint `(approved_billing_scope_id, service_id) -> approved_billing_scopes(id, service_id)`. The scope `accepted_grand_total` becomes the absolute invoice ceiling, enforced via a DB `BEFORE INSERT OR UPDATE` trigger and app-layer validations.
 
+### Approved Billing Scope Management UI Foundation
+- [x] Explicit typed read-result contracts were added for Approved Billing Scope reads, including success, not_found, duplicate-draft, and sanitized unexpected-error states where applicable.
+- [x] Linked invoice lookup by approved billing scope is preserved in the read layer, with authorization failures rethrown and legacy caller behavior still available through the empty-list wrapper.
+- [x] A permission-gated, read-only Approved Billing Scope card now appears on Service Detail only for `approvedBillingScopes:read` users.
+- [x] Visibility is limited to Admin, Manager, and Accountant; Sales, Operations, and Viewer do not see the card or receive scope data through the gated page path.
+- [x] The Service Detail card shows separate empty, populated, and temporarily unavailable states.
+- [x] The populated state shows active/latest status, version, line-safety state, accepted SAR total, and a compact scope-history count, without raw UUIDs, internal notes, raw error details, or financial recalculation.
+- [x] Validation for this slice passed: next typegen PASS, TypeScript PASS, lint PASS with two known pre-existing PDF image warnings, build PASS, diff-check PASS.
+- [x] Graphify was refreshed to commit `c07b1915`.
+- [x] Commits were pushed and `origin/main` is aligned with `main`.
+
 ### Quotation Revision Fallback Design
 - [x] Fallback design review (`QUOTATION-REVISION-FALLBACK-PRODUCT-DECISION-DOCS-1`) completed.
 - [x] Option A chosen: Keep quotation status enum unchanged (no `superseded` status).
