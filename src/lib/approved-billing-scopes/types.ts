@@ -197,6 +197,41 @@ export type ApprovedBillingScopeListOptions = {
   status?: ApprovedBillingScopeStatus;
 };
 
+export type ApprovedBillingScopeReadErrorCode =
+  | "scope_not_found"
+  | "scope_duplicate_draft"
+  | "scope_unexpected_error";
+
+export type ApprovedBillingScopeReadResult<
+  T,
+  E extends ApprovedBillingScopeReadErrorCode =
+    | "scope_not_found"
+    | "scope_unexpected_error"
+> =
+  | {
+      status: "success";
+      data: T;
+    }
+  | ("scope_not_found" extends E
+      ? {
+          status: "not_found";
+          data: null;
+          error: "scope_not_found";
+        }
+      : never)
+  | ("scope_duplicate_draft" extends E
+      ? {
+          status: "error";
+          error: "scope_duplicate_draft";
+        }
+      : never)
+  | ("scope_unexpected_error" extends E
+      ? {
+          status: "error";
+          error: "scope_unexpected_error";
+        }
+      : never);
+
 export interface ApprovedBillingScopeActionResult<T = void> {
   success: boolean;
   data?: T;

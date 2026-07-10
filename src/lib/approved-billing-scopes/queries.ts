@@ -16,6 +16,7 @@ import type {
   ApprovedBillingScopeListOptions,
   ApprovedBillingScopeRow,
   ApprovedBillingScopeRowWithItems,
+  ApprovedBillingScopeReadResult,
   ApprovedBillingScopeSummary,
 } from "./types";
 
@@ -45,10 +46,22 @@ function mapApprovedBillingScopeDetail(
   };
 }
 
-export async function listApprovedBillingScopesForService(
+function unexpectedReadResult(): {
+  status: "error";
+  error: "scope_unexpected_error";
+} {
+  return { status: "error", error: "scope_unexpected_error" };
+}
+
+export async function listApprovedBillingScopesForServiceResult(
   serviceId: string,
   options?: ApprovedBillingScopeListOptions
-): Promise<ApprovedBillingScopeSummary[]> {
+): Promise<
+  ApprovedBillingScopeReadResult<
+    ApprovedBillingScopeSummary[],
+    "scope_unexpected_error"
+  >
+> {
   await requirePermission(APPROVED_BILLING_SCOPE_PERMISSIONS.read);
 
   try {
@@ -72,12 +85,15 @@ export async function listApprovedBillingScopesForService(
         "[listApprovedBillingScopesForService] Supabase error:",
         error.message
       );
-      return [];
+      return unexpectedReadResult();
     }
 
-    return (rows ?? []).map((row) =>
-      mapApprovedBillingScopeSummaryRow(row as ApprovedBillingScopeRow)
-    );
+    return {
+      status: "success",
+      data: (rows ?? []).map((row) =>
+        mapApprovedBillingScopeSummaryRow(row as ApprovedBillingScopeRow)
+      ),
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
       throw err;
@@ -87,13 +103,21 @@ export async function listApprovedBillingScopesForService(
       "[listApprovedBillingScopesForService] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
-    return [];
+    return unexpectedReadResult();
   }
 }
 
-export async function getApprovedBillingScopeById(
+export async function listApprovedBillingScopesForService(
+  serviceId: string,
+  options?: ApprovedBillingScopeListOptions
+): Promise<ApprovedBillingScopeSummary[]> {
+  const result = await listApprovedBillingScopesForServiceResult(serviceId, options);
+  return result.status === "success" ? result.data : [];
+}
+
+export async function getApprovedBillingScopeByIdResult(
   scopeId: string
-): Promise<ApprovedBillingScopeDetail | null> {
+): Promise<ApprovedBillingScopeReadResult<ApprovedBillingScopeDetail>> {
   const user = await requirePermission(APPROVED_BILLING_SCOPE_PERMISSIONS.read);
   const canReadInternalNotes = canReadApprovedBillingScopeInternalFields(
     user.role
@@ -113,17 +137,20 @@ export async function getApprovedBillingScopeById(
 
     if (error) {
       console.error("[getApprovedBillingScopeById] Supabase error:", error.message);
-      return null;
+      return unexpectedReadResult();
     }
 
     if (!row) {
-      return null;
+      return { status: "not_found", data: null, error: "scope_not_found" };
     }
 
-    return applyApprovedBillingScopeReadMasking(
-      mapApprovedBillingScopeDetail(row as ApprovedBillingScopeRowWithItems),
-      { canReadInternalNotes }
-    );
+    return {
+      status: "success",
+      data: applyApprovedBillingScopeReadMasking(
+        mapApprovedBillingScopeDetail(row as ApprovedBillingScopeRowWithItems),
+        { canReadInternalNotes }
+      ),
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
       throw err;
@@ -133,13 +160,20 @@ export async function getApprovedBillingScopeById(
       "[getApprovedBillingScopeById] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
-    return null;
+    return unexpectedReadResult();
   }
 }
 
-export async function getActiveApprovedBillingScopeForService(
-  serviceId: string
+export async function getApprovedBillingScopeById(
+  scopeId: string
 ): Promise<ApprovedBillingScopeDetail | null> {
+  const result = await getApprovedBillingScopeByIdResult(scopeId);
+  return result.status === "success" ? result.data : null;
+}
+
+export async function getActiveApprovedBillingScopeForServiceResult(
+  serviceId: string
+): Promise<ApprovedBillingScopeReadResult<ApprovedBillingScopeDetail>> {
   const user = await requirePermission(APPROVED_BILLING_SCOPE_PERMISSIONS.read);
   const canReadInternalNotes = canReadApprovedBillingScopeInternalFields(
     user.role
@@ -165,17 +199,20 @@ export async function getActiveApprovedBillingScopeForService(
         "[getActiveApprovedBillingScopeForService] Supabase error:",
         error.message
       );
-      return null;
+      return unexpectedReadResult();
     }
 
     if (!row) {
-      return null;
+      return { status: "not_found", data: null, error: "scope_not_found" };
     }
 
-    return applyApprovedBillingScopeReadMasking(
-      mapApprovedBillingScopeDetail(row as ApprovedBillingScopeRowWithItems),
-      { canReadInternalNotes }
-    );
+    return {
+      status: "success",
+      data: applyApprovedBillingScopeReadMasking(
+        mapApprovedBillingScopeDetail(row as ApprovedBillingScopeRowWithItems),
+        { canReadInternalNotes }
+      ),
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
       throw err;
@@ -185,13 +222,27 @@ export async function getActiveApprovedBillingScopeForService(
       "[getActiveApprovedBillingScopeForService] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
-    return null;
+    return unexpectedReadResult();
   }
 }
 
-export async function getExistingDraftScopeForQuotation(
+export async function getActiveApprovedBillingScopeForService(
+  serviceId: string
+): Promise<ApprovedBillingScopeDetail | null> {
+  const result = await getActiveApprovedBillingScopeForServiceResult(serviceId);
+  return result.status === "success" ? result.data : null;
+}
+
+export async function getExistingDraftScopeForQuotationResult(
   sourceQuotationId: string
-): Promise<ApprovedBillingScopeSummary | null> {
+): Promise<
+  ApprovedBillingScopeReadResult<
+    ApprovedBillingScopeSummary,
+    | "scope_not_found"
+    | "scope_duplicate_draft"
+    | "scope_unexpected_error"
+  >
+> {
   await requirePermission(APPROVED_BILLING_SCOPE_PERMISSIONS.read);
 
   try {
@@ -213,13 +264,13 @@ export async function getExistingDraftScopeForQuotation(
         "[getExistingDraftScopeForQuotation] Supabase error:",
         error.message
       );
-      return null;
+      return unexpectedReadResult();
     }
 
     const draftRows = rows ?? [];
 
     if (draftRows.length === 0) {
-      return null;
+      return { status: "not_found", data: null, error: "scope_not_found" };
     }
 
     if (draftRows.length > 1) {
@@ -227,21 +278,17 @@ export async function getExistingDraftScopeForQuotation(
         "[getExistingDraftScopeForQuotation] Duplicate draft billing scopes detected for source quotation:",
         sourceQuotationId
       );
-      throw new Error(DUPLICATE_DRAFT_ERROR_CODE);
+      return { status: "error", error: DUPLICATE_DRAFT_ERROR_CODE };
     }
 
-    return mapApprovedBillingScopeSummaryRow(
-      draftRows[0] as ApprovedBillingScopeRow
-    );
+    return {
+      status: "success",
+      data: mapApprovedBillingScopeSummaryRow(
+        draftRows[0] as ApprovedBillingScopeRow
+      ),
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
-      throw err;
-    }
-
-    if (
-      err instanceof Error &&
-      err.message === DUPLICATE_DRAFT_ERROR_CODE
-    ) {
       throw err;
     }
 
@@ -249,13 +296,25 @@ export async function getExistingDraftScopeForQuotation(
       "[getExistingDraftScopeForQuotation] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
-    return null;
+    return unexpectedReadResult();
   }
 }
 
-export async function getApprovedBillingScopeSummary(
-  scopeId: string
+export async function getExistingDraftScopeForQuotation(
+  sourceQuotationId: string
 ): Promise<ApprovedBillingScopeSummary | null> {
+  const result = await getExistingDraftScopeForQuotationResult(sourceQuotationId);
+
+  if (result.status === "error" && result.error === DUPLICATE_DRAFT_ERROR_CODE) {
+    throw new Error(DUPLICATE_DRAFT_ERROR_CODE);
+  }
+
+  return result.status === "success" ? result.data : null;
+}
+
+export async function getApprovedBillingScopeSummaryResult(
+  scopeId: string
+): Promise<ApprovedBillingScopeReadResult<ApprovedBillingScopeSummary>> {
   await requirePermission(APPROVED_BILLING_SCOPE_PERMISSIONS.read);
 
   try {
@@ -273,12 +332,15 @@ export async function getApprovedBillingScopeSummary(
         "[getApprovedBillingScopeSummary] Supabase error:",
         error.message
       );
-      return null;
+      return unexpectedReadResult();
     }
 
     return row
-      ? mapApprovedBillingScopeSummaryRow(row as ApprovedBillingScopeRow)
-      : null;
+      ? {
+          status: "success",
+          data: mapApprovedBillingScopeSummaryRow(row as ApprovedBillingScopeRow),
+        }
+      : { status: "not_found", data: null, error: "scope_not_found" };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
       throw err;
@@ -288,6 +350,13 @@ export async function getApprovedBillingScopeSummary(
       "[getApprovedBillingScopeSummary] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
-    return null;
+    return unexpectedReadResult();
   }
+}
+
+export async function getApprovedBillingScopeSummary(
+  scopeId: string
+): Promise<ApprovedBillingScopeSummary | null> {
+  const result = await getApprovedBillingScopeSummaryResult(scopeId);
+  return result.status === "success" ? result.data : null;
 }
