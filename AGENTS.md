@@ -34,6 +34,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - Runtime implementation slices must pass `pnpm lint`, `pnpm exec tsc --noEmit`, and `pnpm build` before commit readiness.
 - `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
 - `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
+- `speckit.agent-context.update` is the repo-installed Spec Kit command for refreshing the managed `AGENTS.md` Spec Kit block; `.specify/extensions.yml` wires it as the optional auto-executed hook after `specify` and `plan`.
 - Verify Supabase connectivity at `GET /api/health/db` while the local app is running.
 - The local Supabase health-check workflow assumes `.env.local` already provides `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`; never read, print, or edit those secrets during ordinary tasks.
 - `graphify query "<question>"` is the approved manual Graphify command for scoped codebase discovery; do not run Graphify install, hook, or Codex integration commands without explicit approval.
@@ -197,6 +198,8 @@ For CS-A, keep `/settings` limited to the live singleton `company_settings` reco
 ## Local Skills
 
 Local skills are advisory helpers for recurring G7 BLUE CRM work. They must follow and reinforce these project rules; they must not override `AGENTS.md` or explicit user instructions.
+
+The Spec Kit agent-context extension manages only the `<!-- SPECKIT START -->` to `<!-- SPECKIT END -->` block in this file. Do not manually rewrite that managed block during ordinary tasks unless the task explicitly targets Spec Kit context maintenance.
 
 ## Guard Skill Routing
 
