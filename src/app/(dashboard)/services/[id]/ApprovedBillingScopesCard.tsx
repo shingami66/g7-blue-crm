@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode } from "react";
 import StatusBadge from "@/components/ui/StatusBadge";
+import PendingLink from "@/components/ui/PendingLink";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { listApprovedBillingScopesForServiceResult } from "@/lib/approved-billing-scopes/queries";
@@ -54,13 +55,15 @@ export default async function ApprovedBillingScopesCard({
     );
   }
 
-  return <ScopeSummaryCard scopes={scopeResult.data} dictionary={dictionary} />;
+  return <ScopeSummaryCard serviceId={serviceId} scopes={scopeResult.data} dictionary={dictionary} />;
 }
 
 function ScopeSummaryCard({
+  serviceId,
   scopes,
   dictionary,
 }: {
+  serviceId: string;
   scopes: ApprovedBillingScopeSummary[];
   dictionary: ServicesDictionary;
 }) {
@@ -75,11 +78,20 @@ function ScopeSummaryCard({
           <h3 className="font-semibold text-primary">{cardDictionary.title}</h3>
           <p className="mt-1 text-[13px] leading-[18px] text-on-surface-variant">{cardDictionary.subtitle}</p>
         </div>
-        <StatusBadge variant={SCOPE_STATUS_VARIANTS[currentScope.status]}>
-          {currentScope.isActiveApprovedScope
-            ? cardDictionary.active
-            : cardDictionary.statusLabels[currentScope.status]}
-        </StatusBadge>
+        <div className="flex flex-wrap items-center gap-3">
+          <StatusBadge variant={SCOPE_STATUS_VARIANTS[currentScope.status]}>
+            {currentScope.isActiveApprovedScope
+              ? cardDictionary.active
+              : cardDictionary.statusLabels[currentScope.status]}
+          </StatusBadge>
+          <PendingLink
+            href={`/services/${serviceId}/approved-billing-scopes/${currentScope.id}`}
+            className="text-[13px] font-semibold text-primary hover:underline"
+            pendingLabel={cardDictionary.viewDetails}
+          >
+            {cardDictionary.viewDetails}
+          </PendingLink>
+        </div>
       </div>
       <dl className="grid grid-cols-1 gap-5 p-6 sm:grid-cols-3">
         <ScopeDetail

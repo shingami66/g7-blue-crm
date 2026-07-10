@@ -136,6 +136,7 @@ export interface ServicesDictionary {
     subtitle: string;
     empty: string;
     unavailable: string;
+    viewDetails: string;
     active: string;
     versionPrefix: string;
     otherScopeSingular: string;
@@ -147,6 +148,40 @@ export interface ServicesDictionary {
     };
     statusLabels: Record<"draft" | "approved" | "voided", string>;
     lineSafetyLabels: Record<"pending_review" | "safe" | "unsafe", string>;
+    detail: {
+      title: string;
+      backToService: string;
+      viewDetails: string;
+      unavailable: string;
+      sectionSummary: string;
+      sectionItems: string;
+      sectionInvoices: string;
+      labels: {
+        status: string;
+        version: string;
+        lineSafety: string;
+        acceptedGrandTotal: string;
+        createdAt: string;
+        approvedAt: string;
+        description: string;
+        category: string;
+        decision: string;
+        acceptedQuantity: string;
+        unitPrice: string;
+        lineTotal: string;
+        invoiceNumber: string;
+        invoiceType: string;
+        invoiceStatus: string;
+        grandTotal: string;
+        issueDate: string;
+      };
+      itemDecisionLabels: Record<"accepted" | "adjusted" | "excluded" | "customer_supplied", string>;
+      invoiceTypeLabels: Record<"deposit" | "final", string>;
+      invoiceStatusLabels: Record<"draft" | "sent" | "paid" | "partial" | "overdue" | "cancelled" | "voided", string>;
+      noItems: string;
+      noInvoices: string;
+      invoicesUnavailable: string;
+    };
   };
   serviceStatusControl: {
     title: string;
@@ -753,6 +788,7 @@ const servicesDictionaryEn: ServicesDictionary = {
     subtitle: "Read-only accepted scope for this Service.",
     empty: "No Approved Billing Scope exists for this Service.",
     unavailable: "Approved Billing Scope information is temporarily unavailable.",
+    viewDetails: "View details",
     active: "Active approved",
     versionPrefix: "Version",
     otherScopeSingular: "1 other historical or draft scope",
@@ -771,6 +807,48 @@ const servicesDictionaryEn: ServicesDictionary = {
       pending_review: "Pending review",
       safe: "Safe",
       unsafe: "Unsafe",
+    },
+    detail: {
+      title: "Approved Billing Scope details",
+      backToService: "Return to Service",
+      viewDetails: "View details",
+      unavailable: "Approved Billing Scope details are temporarily unavailable.",
+      sectionSummary: "Scope summary",
+      sectionItems: "Accepted scope items",
+      sectionInvoices: "Linked invoices",
+      labels: {
+        status: "Status",
+        version: "Scope version",
+        lineSafety: "Line safety",
+        acceptedGrandTotal: "Accepted grand total",
+        createdAt: "Created",
+        approvedAt: "Approved",
+        description: "Description",
+        category: "Category",
+        decision: "Decision",
+        acceptedQuantity: "Accepted quantity",
+        unitPrice: "Unit price",
+        lineTotal: "Accepted line total",
+        invoiceNumber: "Invoice number",
+        invoiceType: "Invoice type",
+        invoiceStatus: "Status",
+        grandTotal: "Grand total",
+        issueDate: "Issue date",
+      },
+      itemDecisionLabels: {
+        accepted: "Accepted",
+        adjusted: "Adjusted",
+        excluded: "Excluded",
+        customer_supplied: "Customer supplied",
+      },
+      invoiceTypeLabels: { deposit: "Deposit", final: "Final" },
+      invoiceStatusLabels: {
+        draft: "Draft", sent: "Sent", paid: "Paid", partial: "Partially paid",
+        overdue: "Overdue", cancelled: "Cancelled", voided: "Voided",
+      },
+      noItems: "No scope items are available.",
+      noInvoices: "No linked invoices.",
+      invoicesUnavailable: "Linked invoice information is temporarily unavailable.",
     },
   },
   serviceStatusControl: {
@@ -1493,6 +1571,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     subtitle: "النطاق المقبول للطلب، للعرض فقط.",
     empty: "لا يوجد نطاق فوترة معتمد لهذه الخدمة.",
     unavailable: "معلومات نطاق الفوترة المعتمد غير متاحة مؤقتًا.",
+    viewDetails: "عرض التفاصيل",
     active: "معتمد ونشط",
     versionPrefix: "الإصدار",
     otherScopeSingular: "نطاق تاريخي أو مسودة آخر",
@@ -1511,6 +1590,45 @@ const servicesDictionaryAr: ServicesDictionary = {
       pending_review: "بانتظار المراجعة",
       safe: "آمن",
       unsafe: "غير آمن",
+    },
+    detail: {
+      title: "تفاصيل نطاق الفوترة المعتمد",
+      backToService: "العودة إلى الخدمة",
+      viewDetails: "عرض التفاصيل",
+      unavailable: "تفاصيل نطاق الفوترة المعتمد غير متاحة مؤقتًا.",
+      sectionSummary: "ملخص النطاق",
+      sectionItems: "بنود النطاق المقبولة",
+      sectionInvoices: "الفواتير المرتبطة",
+      labels: {
+        status: "الحالة",
+        version: "إصدار النطاق",
+        lineSafety: "سلامة البنود",
+        acceptedGrandTotal: "الإجمالي المقبول",
+        createdAt: "تاريخ الإنشاء",
+        approvedAt: "تاريخ الاعتماد",
+        description: "الوصف",
+        category: "الفئة",
+        decision: "القرار",
+        acceptedQuantity: "الكمية المقبولة",
+        unitPrice: "سعر الوحدة",
+        lineTotal: "إجمالي البند المقبول",
+        invoiceNumber: "رقم الفاتورة",
+        invoiceType: "نوع الفاتورة",
+        invoiceStatus: "الحالة",
+        grandTotal: "الإجمالي",
+        issueDate: "تاريخ الإصدار",
+      },
+      itemDecisionLabels: {
+        accepted: "مقبول", adjusted: "معدل", excluded: "مستبعد", customer_supplied: "مقدم من العميل",
+      },
+      invoiceTypeLabels: { deposit: "دفعة مقدمة", final: "نهائية" },
+      invoiceStatusLabels: {
+        draft: "مسودة", sent: "مرسلة", paid: "مدفوعة", partial: "مدفوعة جزئيًا",
+        overdue: "متأخرة", cancelled: "ملغاة", voided: "ملغاة نهائيًا",
+      },
+      noItems: "لا توجد بنود نطاق متاحة.",
+      noInvoices: "لا توجد فواتير مرتبطة.",
+      invoicesUnavailable: "معلومات الفواتير المرتبطة غير متاحة مؤقتًا.",
     },
   },
   serviceStatusControl: {
