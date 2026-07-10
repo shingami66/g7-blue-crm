@@ -131,6 +131,23 @@ export interface ServicesDictionary {
       grandTotal: string;
     };
   };
+  approvedBillingScopes: {
+    title: string;
+    subtitle: string;
+    empty: string;
+    unavailable: string;
+    active: string;
+    versionPrefix: string;
+    otherScopeSingular: string;
+    otherScopePlural: string;
+    labels: {
+      version: string;
+      lineSafety: string;
+      acceptedGrandTotal: string;
+    };
+    statusLabels: Record<"draft" | "approved" | "voided", string>;
+    lineSafetyLabels: Record<"pending_review" | "safe" | "unsafe", string>;
+  };
   serviceStatusControl: {
     title: string;
     currentStatus: string;
@@ -729,6 +746,31 @@ const servicesDictionaryEn: ServicesDictionary = {
       issueDate: "Issue Date",
       validUntil: "Valid Until",
       grandTotal: "Grand Total",
+    },
+  },
+  approvedBillingScopes: {
+    title: "Approved Billing Scope",
+    subtitle: "Read-only accepted scope for this Service.",
+    empty: "No Approved Billing Scope exists for this Service.",
+    unavailable: "Approved Billing Scope information is temporarily unavailable.",
+    active: "Active approved",
+    versionPrefix: "Version",
+    otherScopeSingular: "1 other historical or draft scope",
+    otherScopePlural: "{count} other historical or draft scopes",
+    labels: {
+      version: "Scope version",
+      lineSafety: "Line safety",
+      acceptedGrandTotal: "Accepted grand total",
+    },
+    statusLabels: {
+      draft: "Draft",
+      approved: "Approved",
+      voided: "Voided",
+    },
+    lineSafetyLabels: {
+      pending_review: "Pending review",
+      safe: "Safe",
+      unsafe: "Unsafe",
     },
   },
   serviceStatusControl: {
@@ -1444,6 +1486,31 @@ const servicesDictionaryAr: ServicesDictionary = {
       issueDate: "تاريخ الإصدار",
       validUntil: "صالح حتى",
       grandTotal: "الإجمالي",
+    },
+  },
+  approvedBillingScopes: {
+    title: "نطاق الفوترة المعتمد",
+    subtitle: "النطاق المقبول للطلب، للعرض فقط.",
+    empty: "لا يوجد نطاق فوترة معتمد لهذه الخدمة.",
+    unavailable: "معلومات نطاق الفوترة المعتمد غير متاحة مؤقتًا.",
+    active: "معتمد ونشط",
+    versionPrefix: "الإصدار",
+    otherScopeSingular: "نطاق تاريخي أو مسودة آخر",
+    otherScopePlural: "{count} نطاقات تاريخية أو مسودات أخرى",
+    labels: {
+      version: "إصدار النطاق",
+      lineSafety: "سلامة البنود",
+      acceptedGrandTotal: "الإجمالي المقبول",
+    },
+    statusLabels: {
+      draft: "مسودة",
+      approved: "معتمد",
+      voided: "ملغى",
+    },
+    lineSafetyLabels: {
+      pending_review: "بانتظار المراجعة",
+      safe: "آمن",
+      unsafe: "غير آمن",
     },
   },
   serviceStatusControl: {

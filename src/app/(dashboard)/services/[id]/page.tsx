@@ -26,6 +26,7 @@ import { getSupplierAllocationsByServiceId } from "@/lib/supplier-allocations/qu
 import { getSupplierBookingsByServiceId } from "@/lib/supplier-bookings/queries";
 import type { Service } from "@/types/service";
 import SupplierBookingsPanel from "./SupplierBookingsPanel";
+import ApprovedBillingScopesCard from "./ApprovedBillingScopesCard";
 
 export const dynamic = "force-dynamic";
 
@@ -98,6 +99,7 @@ export default async function ServiceDetailPage({
   const canReadSupplierBookings = await checkPermission("supplier_bookings:read");
   const canWriteSupplierBookings = await checkPermission("supplier_bookings:write");
   const canCancelSupplierBookings = await checkPermission("supplier_bookings:cancel");
+  const canReadApprovedBillingScopes = await checkPermission("approvedBillingScopes:read");
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
   const today = new Date().toISOString().split("T")[0];
@@ -278,6 +280,9 @@ export default async function ServiceDetailPage({
         dictionary={dictionary}
         disabledReason={quotationDisabledReason}
       />
+      {canReadApprovedBillingScopes && (
+        <ApprovedBillingScopesCard serviceId={service.id} dictionary={dictionary} />
+      )}
       {canReadSupplierAllocations && supplierAllocations && (
         <SupplierAllocationsPanel
           allocations={supplierAllocations}
