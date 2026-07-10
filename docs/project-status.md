@@ -221,7 +221,24 @@
 - [x] User-only manual browser smoke for the Service Detail card passed in DEV/DEMO.
 - [x] Confirmed smoke checks: Admin and Manager can see the card; Accountant can see the read-only card; Sales, Operations, and Viewer do not see the card; empty, populated, and refreshed states render correctly; status, version, line-safety state, accepted SAR total, and additional-scope count render as designed; no blocking issue was reported.
 - [x] No agent browser smoke was performed for this slice.
-- [x] The read-only Approved Billing Scope detail route remains the next separate bounded task.
+
+### Approved Billing Scope Read-Only Detail Route
+- [x] Nested Service-context route `/services/[serviceId]/approved-billing-scopes/[scopeId]` was implemented as a server-rendered page.
+- [x] Access is gated by `approvedBillingScopes:read`, with scope/service ownership verification and established not-found handling for missing scope or route mismatch.
+- [x] Unexpected read failure uses a sanitized unavailable state.
+- [x] UI copy is localized for English and Arabic.
+- [x] The populated Service Detail card links to the detail route; empty and unavailable card states remain unlinked.
+- [x] The detail page renders a read-only scope header and item table using mapped server values only.
+- [x] Linked invoices are shown only when `invoices:read` is granted, with distinct empty, populated, and unavailable states and links to the existing invoice detail route.
+- [x] No page-side financial recalculation is performed.
+- [x] Validation passed: next typegen PASS, TypeScript PASS, lint PASS with two known pre-existing PDF image warnings, build PASS, diff-check PASS, and final review PASS.
+- [x] Graphify was refreshed to commit `35c06923`.
+- [x] Commit `35c0692 feat(billing): add approved scope detail route` was pushed and `origin/main` is aligned.
+- [x] Security and data boundaries: Admin, Manager, and Accountant can access under existing permissions; Sales, Operations, and Viewer remain blocked; protected scope and invoice queries do not run before their respective permission checks; no UUIDs, internal notes, raw reason codes, audit metadata, raw database errors, or unsupported financial calculations are exposed.
+- [x] Scope boundaries remain excluded here: draft creation, item editing, line-safety review controls, approval controls, discard, void, supersede, permission-map changes, Server Action changes, SQL, schema, migrations, billing-ceiling changes, and invoice-calculation changes.
+- [x] Manual/browser smoke for the new detail route remains pending.
+- [x] Manual/browser smoke is user-only; no agent browser smoke was performed.
+- [x] Next bounded step: user-only manual smoke of the read-only detail route.
 
 ### Quotation Revision Fallback Design
 - [x] Fallback design review (`QUOTATION-REVISION-FALLBACK-PRODUCT-DECISION-DOCS-1`) completed.
