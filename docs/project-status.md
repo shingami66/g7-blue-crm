@@ -218,8 +218,10 @@
 - [x] The Service Detail card shows separate empty, populated, and temporarily unavailable states.
 - [x] The populated state shows active/latest status, version, line-safety state, accepted SAR total, and a compact scope-history count, without raw UUIDs, internal notes, raw error details, or financial recalculation.
 - [x] Validation for this slice passed: next typegen PASS, TypeScript PASS, lint PASS with two known pre-existing PDF image warnings, build PASS, diff-check PASS.
-- [x] Graphify was refreshed to commit `c07b1915`.
-- [x] Commits were pushed and `origin/main` is aligned with `main`.
+- [x] User-only manual browser smoke for the Service Detail card passed in DEV/DEMO.
+- [x] Confirmed smoke checks: Admin and Manager can see the card; Accountant can see the read-only card; Sales, Operations, and Viewer do not see the card; empty, populated, and refreshed states render correctly; status, version, line-safety state, accepted SAR total, and additional-scope count render as designed; no blocking issue was reported.
+- [x] No agent browser smoke was performed for this slice.
+- [x] The read-only Approved Billing Scope detail route remains the next separate bounded task.
 
 ### Quotation Revision Fallback Design
 - [x] Fallback design review (`QUOTATION-REVISION-FALLBACK-PRODUCT-DECISION-DOCS-1`) completed.
