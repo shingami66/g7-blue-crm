@@ -52,7 +52,8 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- Transition to the next safe phase for supplier bookings implementation or follow-ups.
+- `G7-CANONICAL-DOCS-STALENESS-AUDIT-1`
+ - Audit `docs/project-status.md`, `docs/project-roadmap.md`, `docs/deferred-decisions.md`, `docs/database-schema.md`, `docs/roles-permissions.md`, and `docs/quotations-crud.md` for staleness after the approved billing scope smoke docs sync.
 
 Completed:
 - `APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1` (PASS WITH WARN: manual smoke verification completed on SVC-2026-0015; successfully verified that the UI blocks creation of an above-ceiling deposit invoice and the DB confirmed no invoice was created; browser/client validation blocked submission before server-action over-ceiling request was reached; temporary dev harness was removed; optional server-side direct smoke `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` remains in backlog).
@@ -76,7 +77,6 @@ Completed:
 Backlog / later priority:
 - `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` (Optional follow-up to perform server-side direct adversarial smoke testing bypassing UI validation).
 - Approved Billing Scope real management UI planning/implementation
-- `APPROVED-BILLING-SCOPE-READ-ONLY-DETAIL-ROUTE-SMOKE-1` (user-only manual smoke of the read-only detail route)
 - `SUPPLIER-BOOKINGS-LOADING-UX-VERIFY` (Follow-up validation of supplier booking creation/cancellation pending and transition states under throttled networks).
 - Supplier Bookings Domain design/planning
 - Supplier Bookings server actions
@@ -93,6 +93,7 @@ Backlog / later priority:
 - INVOICE-VOID-STATUS-MIGRATION-1
 - INVOICE-SNAPSHOT-FREEZE-POINT-1
 - SUPPLIER-BLACKLIST-IMPACT-CHECK-1
+- `RESPONSIVE-LIST-PAGE-HORIZONTAL-OVERFLOW-1` (P1 bounded backlog item to investigate and fix page-level horizontal overflow on narrow mobile widths, especially the Customers and Services list pages; keep full runtime Arabic/English language switching in the existing i18n/deferred sequence)
 
 Note: This is a controlled design sequence, not immediate implementation.
 

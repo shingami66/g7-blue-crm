@@ -236,9 +236,25 @@
 - [x] Commit `35c0692 feat(billing): add approved scope detail route` was pushed and `origin/main` is aligned.
 - [x] Security and data boundaries: Admin, Manager, and Accountant can access under existing permissions; Sales, Operations, and Viewer remain blocked; protected scope and invoice queries do not run before their respective permission checks; no UUIDs, internal notes, raw reason codes, audit metadata, raw database errors, or unsupported financial calculations are exposed.
 - [x] Scope boundaries remain excluded here: draft creation, item editing, line-safety review controls, approval controls, discard, void, supersede, permission-map changes, Server Action changes, SQL, schema, migrations, billing-ceiling changes, and invoice-calculation changes.
-- [x] Manual/browser smoke for the new detail route remains pending.
-- [x] Manual/browser smoke is user-only; no agent browser smoke was performed.
-- [x] Next bounded step: user-only manual smoke of the read-only detail route.
+- [x] Manual/browser smoke completed as a user-only check; no agent browser smoke was performed.
+- [x] Result: PASS WITH WARN.
+- [x] Verified PASS evidence:
+ - The nested route `/services/[serviceId]/approved-billing-scopes/[scopeId]` opened successfully.
+ - The page showed service context, scope status, scope version, line-safety status, accepted grand total, scope item decisions, and linked invoices when present.
+ - All supported item decisions were covered: `accepted`, `adjusted`, `excluded`, `customer_supplied`.
+ - A linked invoice rendered correctly and its detail link worked.
+ - The empty linked-invoices state was verified.
+ - A missing or invalid scope ID returned Not Found.
+ - A real scope under the wrong Service ID returned Not Found and did not expose cross-service data.
+ - Role boundaries matched the expected matrix: Admin allowed, Manager allowed, Accountant allowed read-only, Sales blocked, Operations blocked, Viewer blocked.
+ - Refresh/navigation produced no blocking runtime failure.
+ - The browser console showed no confirmed application-blocking error.
+- [x] WARNs recorded:
+ - Full runtime Arabic/English language switching is not implemented yet and was not claimed as tested.
+ - The route was not separately evidenced with a complete dedicated mobile screenshot set.
+ - The system remains DEV/DEMO only; no production deployment, production data, or real-customer readiness is proven.
+ - During mobile-width review at approximately 385 × 642, the global Customers and Services list pages showed page-level horizontal overflow; that issue is outside this route slice and remains open.
+- [x] Smoke scope boundaries remain unchanged: the route stays read-only, unsupported management actions remain absent, and no code, SQL, migration, schema, permission, or financial-calculation change occurred during this smoke.
 
 ### Quotation Revision Fallback Design
 - [x] Fallback design review (`QUOTATION-REVISION-FALLBACK-PRODUCT-DECISION-DOCS-1`) completed.
