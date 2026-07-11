@@ -55,7 +55,7 @@ draft → sent → approved
 - Approved Billing Scope separates quotation approval from billing authority.
 - The foundation migration for Approved Billing Scope has now been applied and smoke-tested in DEV/DEMO only; production remains deferred.
 - **Quotation Revision Fallback (Option A):** No `superseded` quotation status is introduced. The quotation status enum values remain unchanged. Active Approved Billing Scope determines current billing authority, and existing approved quotations remain as historical agreement records. Any revised quotation flow must utilize the billing scope supersede/versioning model.
-- Future invoices should bind to the active approved billing scope, not quotation status alone.
+- Current invoice creation resolves and binds the active Approved Billing Scope when one exists; it uses the approved quotation total only as the fallback when no active scope exists.
 
 ### Editing Rules
 
@@ -81,7 +81,7 @@ draft → sent → approved
 | valid_until        | date           | Expiry date                                |
 | subtotal           | numeric(12,2)  | Sum of all item totals (server-calculated) |
 | discount           | numeric(12,2)  | Flat discount amount (SAR)                 |
-| vat_rate           | numeric(5,2)   | Snapshot of VAT % at creation (default 15, CHECK 0–100) |
+| vat_rate           | numeric(5,2)   | Snapshot of the authoritative VAT % at creation (currently 0 in `not_registered` mode; CHECK 0–100) |
 | vat_amount         | numeric(12,2)  | (subtotal - discount) × (vat_rate / 100)   |
 | grand_total        | numeric(12,2)  | (subtotal - discount) + vat_amount         |
 | status             | text           | draft/sent/approved/rejected/expired       |
@@ -124,9 +124,17 @@ This ensures: **Σ(quotation_items.vat) = quotations.vat_amount** exactly. A res
 
 ### `vat_rate` Snapshot
 
-The `quotations.vat_rate` column captures the exact VAT percentage used when the quotation was created. If company settings change the default VAT rate later, existing quotations retain their original rate. This ensures financial accuracy and auditability.
+The `quotations.vat_rate` column captures the exact VAT percentage used when the quotation was created. Current Company Settings mode is `not_registered`, so current quotation creation and update derive a zero VAT rate from authoritative Company Settings/server/database rules. Existing quotations retain their original rate if a future approved registered-mode configuration changes the default.
 
 ## VAT and Discount Calculation
+
+### Current `not_registered` Behavior
+
+Current quotation VAT is zero. No VAT 15%, VAT number, Tax Invoice, ZATCA, FATOORA, QR, or XML behavior is enabled while Company Settings remains `not_registered`.
+
+### Future Registered-Mode Formula
+
+The generic percentage formula below is future registered-mode guidance only; it does not describe the current `not_registered` quotation behavior.
 
 ### Financial Formula
 

@@ -7,11 +7,11 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 | Role | Permissions |
 |---|---|
 | **admin** | All permissions across all modules. |
-| **manager** | `customers:read/write/export`, `quotations:read/write`, `quotations:approve`, `services:read/write`, `invoices:read`, `payments:read`, `projects:read/write`, `suppliers:read/write`, `supplier_allocations:read`, `supplier_allocations:read_cost`, `supplier_allocations:write`, `supplier_allocations:cancel`, `dashboard:read` |
+| **manager** | `customers:read/write/export`, `quotations:read/write/approve`, `services:read/write/update_status`, `invoices:read`, `payments:read`, `projects:read/write`, `suppliers:read/write`, Supplier Allocations permissions, Supplier Bookings (`supplier_bookings:read/read_cost/write/cancel`), Approved Billing Scope V1 (`approvedBillingScopes:read/create/update/review/approve/void/supersede/discard`), `dashboard:read`. Detailed sections and `src/lib/auth/permissions.ts` are authoritative. |
 | **sales** | `customers:read/write`, `quotations:read/write`, `services:read/write`, `invoices:read`, `payments:read`, `dashboard:read` |
 | **operations** | `customers:read`, `quotations:read`, `services:read`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
 | **accountant** | `customers:read/export`, `quotations:read`, `services:read`, `invoices:read/write`, `payments:read/write`, `settings:read`, `dashboard:read` |
-| **viewer** | Read-only access to all modules, including `services:read`. Cannot export bulk data. |
+| **viewer** | Limited read-only access: `customers:read`, `quotations:read`, `services:read`, `invoices:read`, `payments:read`, `projects:read`, `suppliers:read`, `dashboard:read`, and `settings:read`. No bulk export, Approved Billing Scope, Supplier Allocation, or Supplier Booking access; no internal supplier cost visibility; and no full bank values in Company Settings responses. |
 
 ## Company Settings CS-A
 

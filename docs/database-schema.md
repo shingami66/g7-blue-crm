@@ -60,9 +60,8 @@ These are approved target rules for future reviewed schema changes; they do not 
 - New ERP planning must follow **Customer Profile → Service → Quotation → Invoice → Payment**.
 - **Service** belongs to a **Customer**.
 - **Quotation** belongs to a **Service** and can keep `customer_id` only for reporting/query convenience.
-- Planned **Invoice** belongs to a **Service** and can reference a **Quotation**.
-- Planned **Payment** must belong to an **Invoice**. Payment is connected to Service through the Invoice.
-- If `payments.service_id` is stored for query convenience, it must match the invoice's `service_id`. Enforce this in the data layer and preferably with database design.
+- **Invoice** is currently Service-linked: invoice creation persists `service_id` and its approved quotation basis. When an active Approved Billing Scope exists, invoice creation also persists `approved_billing_scope_id` and uses the scope accepted grand total as the billing ceiling; otherwise, the approved quotation total remains the transitional fallback.
+- **Payment** belongs to an **Invoice** and therefore connects to the Service through that invoice. The current schema does not establish a direct `payments.service_id` relationship.
 
 ## Planned ERP Schema Notes
 
@@ -79,7 +78,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Service cancellation requires `cancellation_reason`.
 - If no invoice/payment exists, cancellation can be simple. If invoice/payment exists, cancellation must not silently delete financial records.
 - Services app UI/routes/server actions are implemented for list/create/detail/edit, with ordinary edit limited to Inquiry/Quoted and status transitions deferred.
-- ERP-2 service-scoped quotation work added `quotations.service_id`; invoices and payments are still not service-linked.
+- ERP-2 service-scoped quotation work added `quotations.service_id`. Current invoice creation is Service-linked; payments link to invoices and therefore reach the Service through the invoice rather than a direct payment-to-Service foreign key.
 
 ### Quotations
 - Quotations must belong to a Service. Standalone quotations are not allowed in new ERP work.
@@ -95,15 +94,13 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Index verification passed.
 - `supabase/schema.sql` was synced to reflect this index.
 
-### Approved Billing Scope (Future Design)
-- Approved Billing Scope is a proposed future billing layer and does not exist yet.
-- Proposed tables: `approved_billing_scopes` and `approved_billing_scope_items`.
-- Proposed parent rules: exactly one active approved scope per Service, versioned superseding, immutable approved/invoice-referenced rows, and RLS required.
-- Proposed scope-header fields: `line_safety_status`, `line_safety_reason_code`, `line_safety_note`, `line_safety_reviewed_by`, `line_safety_reviewed_at`, `source_vat_rate`, `source_discount`, `source_currency`, `source_quotation_subtotal`, `source_quotation_vat_amount`, `source_quotation_grand_total`, and `source_pricing_context`.
-- Proposed item rules: `accepted | excluded | adjusted | customer_supplied` decisions, unique scope item per quotation item, `reason` required for `excluded`, `adjusted`, and `customer_supplied`, `customer_supplied.accepted_total = 0`, and `excluded.accepted_total = 0`.
-- Proposed safety rule: V1 is reductions-only, approval requires `line_safety_status = safe`, and package/global discount ambiguity is a hard V1 block, not an estimate.
-- Proposed integrity direction: `(source_quotation_id, service_id) -> quotations(id, service_id)`, `(approved_billing_scope_id, source_quotation_id) -> approved_billing_scopes(id, source_quotation_id)`, `(source_quotation_item_id, source_quotation_id) -> quotation_items(id, quotation_id)`, with trigger fallback if live schema cannot safely support the required composite unique keys.
-- This note is design-only and must not be read as a claim that the tables or constraints already exist.
+### Approved Billing Scope (Current DEV/DEMO Implementation)
+- Approved Billing Scope is implemented in DEV/DEMO as the billing-authority layer separate from quotation approval. Its foundation tables are `approved_billing_scopes` and `approved_billing_scope_items`.
+- Implemented foundation rules include one active scope per Service, constraints/triggers, RLS, reductions-only line decisions (`accepted`, `excluded`, `adjusted`, `customer_supplied`), line-safety review before approval, and immutable approved or invoice-referenced records.
+- Implemented runtime includes the app-layer draft-creation path, narrow discard and draft-item-edit RPCs, review and approval actions, invoice integration, a permission-gated Service Detail read-only card, and the nested read-only detail route.
+- Invoice integration persists `approved_billing_scope_id` when an active scope exists and enforces the accepted grand total as the invoice ceiling. The approved quotation total remains the fallback only when no active scope exists.
+- The implemented DEV/DEMO foundation includes the scope tables, related keys, trigger functions/triggers, and RLS. It must not be described as production-ready or production-applied.
+- Still deferred or not authorized: production database authorization/apply, full user-facing management UI, complete void workflow, complete supersede workflow, and unsupported audit/history capabilities.
 - The foundation migration `20260708090000_approved_billing_scope_foundation.sql` was later applied to the DEV/DEMO database only and validated there; production remains unapplied.
 - DEV/DEMO validation confirmed the foundation objects exist there, including `approved_billing_scopes`, `approved_billing_scope_items`, `quotation_items_id_quotation_id_key`, the trigger functions/triggers, and RLS on the new tables.
 - Manual DEV/DEMO smoke for the create-draft action also passed after the foundation migration: source quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe` created scope `2fb8a324-4bd2-44be-8a23-a2b37e9b6e72`, duplicate protection returned `scope_duplicate_draft`.
@@ -116,7 +113,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - PostgREST embedding ambiguity was resolved by updating the select string constant in `src/lib/approved-billing-scopes/queries.ts` to `approved_billing_scope_items:approved_billing_scope_items!approved_billing_scope_id(*)`.
 - Live schema enforceability audit completed on DEV/DEMO database with `WARN` (audit packet expectation mismatch only; all target database tables, check/FK/unique constraints, indexes, triggers, RLS status, and table grants successfully verified).
 - Clarified draft write path: `createApprovedBillingScopeDraft` is an app-layer server action, NOT a database RPC. There is no expected `public.create_approved_billing_scope_draft` database function. It performs direct table writes using `createAdminClient` / `service_role`, is protected by app-layer `requirePermission(approvedBillingScopes:create)`, and relies on table-level constraints and triggers for enforceability and concurrency safety.
-- The repo docs still treat this as a future design direction for production until a separate production review authorizes it.
+- Production authorization remains deferred until a separate production review approves it.
 
 ### Invoices And Payments
 **Status: ERP-3A Invoice Schema Foundation — Manual Supabase apply completed / Verified**
