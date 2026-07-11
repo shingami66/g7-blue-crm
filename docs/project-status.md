@@ -1202,9 +1202,12 @@ Cursor audit gate:
 - SUPPLIER-BOOKINGS-ACTIONS-1A: CLOSED.
 - SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW: CLOSED.
 - SUPPLIER-BOOKINGS-UI-1A: CLOSED.
-- Canonical documentation staleness audit, P0 cleanup, and P1 cleanup are completed history.
-- Current documentation-maintenance slice: `G7-CANONICAL-DOCS-CLEANUP-P2-1`.
-- Next controlled task after successful P2 cleanup: `G7-CANONICAL-DOCS-CLEANUP-P2-COMMIT-1`.
+- Canonical documentation staleness audit, P0 cleanup, P1 cleanup, and P2 history cleanup are completed history.
+- `G7-CLIENT-DELIVERY-ROADMAP-DESIGN-1` completed with PASS WITH WARN; the roadmap was accepted with model-routing and task-sizing corrections.
+- Current phase: **Phase 0 - V1 boundary and decision lock**.
+- Current documentation task: `G7-CLIENT-DELIVERY-ROADMAP-DOCS-1`.
+- Next product task after docs closure: `V1-DELIVERY-DECISIONS-LOCK-1`.
+- No code, SQL, migration, browser smoke, or production work occurred in the client-delivery roadmap design/docs slices.
 
 ### 🚧 Locked Next CRM Priorities
 Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.

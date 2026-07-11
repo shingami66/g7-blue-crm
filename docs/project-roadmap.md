@@ -2121,9 +2121,12 @@ Must verify:
 - `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` reclassified as completed/no-op after live schema audit confirmed that no database migration is required. Draft creation is app-layer, draft discard and edit child items RPCs exist, and other runtime actions operate on the existing database schema.
 - `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1` completed with `PASS` (security review completed; app-layer permissions, RLS posture, table grants, and service-role write paths verified as secure).
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1` completed with `PASS` (invoice ceiling design parameter clear).
-- Canonical documentation staleness audit, P0 cleanup, and P1 cleanup are completed history.
-- Current documentation-maintenance slice: `G7-CANONICAL-DOCS-CLEANUP-P2-1`.
-- Next controlled task after successful P2 cleanup: `G7-CANONICAL-DOCS-CLEANUP-P2-COMMIT-1`.
+- Canonical documentation staleness audit, P0 cleanup, P1 cleanup, and P2 history cleanup are completed history.
+- `G7-CLIENT-DELIVERY-ROADMAP-DESIGN-1` completed with PASS WITH WARN; the roadmap was accepted with model-routing and task-sizing corrections.
+- Current phase: **Phase 0 - V1 boundary and decision lock**.
+- Current documentation task: `G7-CLIENT-DELIVERY-ROADMAP-DOCS-1`.
+- Next product task after docs closure: `V1-DELIVERY-DECISIONS-LOCK-1`.
+- The canonical delivery plan is `docs/client-delivery-plan.md` and preserves conditional Reports Center and Supplier Booking boundaries, decomposed financial implementation, production hardening, and separate UAT phases.
 
 - `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.
 - `SERVICE-PROFITABILITY-DESIGN-1` remains blocked until billing source and supplier-cost permissions are stable.
