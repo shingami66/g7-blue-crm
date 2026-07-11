@@ -1188,7 +1188,7 @@
 - No standalone route, PDF, customer-facing surface, supplier portal, supplier invoice/payment, actual cost, profit/margin reporting, edit/delete/restore, or status expansion was added.
 - `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY` is completed history with a PASS WITH WARN result; the minor loading/pending indicator UX warning remains a separate follow-up.
 
-## 4. Current Documentation Priority
+## 4. Current Delivery Priority
 
 ### 🚧 Cursor Audit Priority Gates & Blockers
 Cursor audit gate:
@@ -1204,9 +1204,11 @@ Cursor audit gate:
 - SUPPLIER-BOOKINGS-UI-1A: CLOSED.
 - Canonical documentation staleness audit, P0 cleanup, P1 cleanup, and P2 history cleanup are completed history.
 - `G7-CLIENT-DELIVERY-ROADMAP-DESIGN-1` completed with PASS WITH WARN; the roadmap was accepted with model-routing and task-sizing corrections.
-- Current phase: **Phase 0 - V1 boundary and decision lock**.
-- Current documentation task: `G7-CLIENT-DELIVERY-ROADMAP-DOCS-1`.
-- Next product task after docs closure: `V1-DELIVERY-DECISIONS-LOCK-1`.
+- Current phase: **Phase 1 - Experience Foundation**.
+- Completed: `V1-DELIVERY-DECISIONS-LOCK-1` locked D01-D09 as product policy; no implementation occurred.
+- Current controlled task: `I18N-RUNTIME-LOCALE-DESIGN-1` using guarded Spec Kit feature `005` in a separate task.
+- Reports Center remains P1 and is not a V1 acceptance gate. Professional Supplier Booking remains outside V1 acceptance scope.
+- Financial correction records use `Internal Credit Adjustment` for current non-VAT work; no Tax Credit Note, VAT, ZATCA, or FATOORA claim is permitted.
 - No code, SQL, migration, browser smoke, or production work occurred in the client-delivery roadmap design/docs slices.
 
 ### 🚧 Locked Next CRM Priorities

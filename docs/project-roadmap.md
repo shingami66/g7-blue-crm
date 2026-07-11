@@ -46,14 +46,28 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 
 ## 2. Current Priority
 
+### V1 Delivery Decisions - Locked
+
+- `V1-DELIVERY-DECISIONS-LOCK-1` is completed. D01-D09 are locked product policy; no implementation occurred.
+- D01: Keep the narrow internal Supplier Booking workflow in V1; professional Supplier Booking redesign is outside V1 acceptance scope.
+- D02: Reports Center is P1 and is not a V1 acceptance gate.
+- D03: Issued invoices are immutable. Unpaid invoices may be voided by Admin with reason and audit. Paid or partially paid invoices require controlled adjustment/reversal and replacement.
+- D04: Recorded payments are append-only. Monetary errors, duplicates, refunds, and wrong invoice allocation require controlled reversal/correction records; no financial deletion.
+- D05: Approved Billing Scopes are immutable. Uninvoiced scopes may be voided or superseded. Invoiced scopes remain frozen; successor versions apply only to future invoices, while existing invoices retain their original scope reference.
+- D06: Runtime Arabic/English is V1 scope. Western digits and bidi-safe financial identifiers are mandatory. Mozfer owns final commercial-language approval; Saudi business-language review is required before UAT. Bilingual documents remain deferred.
+- D07: UAT is role-based and user-executed. Mozfer is final business acceptance owner. Blocker and High defects prevent launch.
+- D08: Named operational ownership is required: minimum 30-day backup retention, RPO within 24 hours, RTO within one business day, named monitoring/incident owner, and 10 business days launch support.
+- D09: The focused V1 package is approved: runtime Arabic/English core UX, mobile core paths, financial correction controls, Approved Billing Scope management, and operational invitation/UAT gates; Reports Center acceptance, professional Supplier Booking, bilingual documents, and VAT/ZATCA/FATOORA remain outside V1.
+- Current controlled task: `I18N-RUNTIME-LOCALE-DESIGN-1` using guarded Spec Kit feature `005` in a separate task.
+
 ### 🚧 Cursor Audit Priority Gates & Blockers
 Cursor audit gates:
 1. SUPPLIER-AUDIT-COLUMNS-TEXT-FIX-1: CLOSED
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `G7-CANONICAL-DOCS-CLEANUP-P2-1`
-- Complete the confirmed P2 canonical documentation cleanup.
+- `I18N-RUNTIME-LOCALE-DESIGN-1`
+- Design runtime Arabic/English locale persistence and RTL rollout using guarded Spec Kit feature `005` in a separate task.
 
 Completed:
 - `APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1` (PASS WITH WARN: manual smoke verification completed on SVC-2026-0015; successfully verified that the UI blocks creation of an above-ceiling deposit invoice and the DB confirmed no invoice was created; browser/client validation blocked submission before server-action over-ceiling request was reached; temporary dev harness was removed; optional server-side direct smoke `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` remains in backlog).
@@ -748,10 +762,10 @@ Checklist:
 - [ ] Deposit amount must be greater than `0`.
 - [ ] Deposit amount must be less than or equal to the approved quotation total or remaining uninvoiced balance.
 - [ ] Deposit is flexible and not fixed at 50%.
-- [ ] Plan invoice voiding/cancellation later; do not implement now.
-- [ ] Do not allow casual deletion of issued or paid invoices in future design.
-- [ ] Issued/paid financial records must be preserved for auditability.
-- [ ] Future flow may require Void status, Credit Note, Refund, and audit trail.
+- [ ] Implement the locked invoice void/adjustment/reversal policy later; do not implement it in this roadmap sync.
+- [ ] Preserve issued and paid financial records; do not allow financial deletion.
+- [ ] Implement controlled adjustment/reversal and replacement with audit records under D03/D04.
+- [ ] Use `Internal Credit Adjustment` for current non-VAT correction records; statutory Tax Credit Note, VAT, ZATCA, and FATOORA behavior remains out of scope.
 - [ ] Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
 - [ ] Financial rounding must be server-side/PostgreSQL-side using SAR 2-decimal rounding rules.
 - [ ] Currency should be snapshotted on issued documents.
@@ -2123,10 +2137,10 @@ Must verify:
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1` completed with `PASS` (invoice ceiling design parameter clear).
 - Canonical documentation staleness audit, P0 cleanup, P1 cleanup, and P2 history cleanup are completed history.
 - `G7-CLIENT-DELIVERY-ROADMAP-DESIGN-1` completed with PASS WITH WARN; the roadmap was accepted with model-routing and task-sizing corrections.
-- Current phase: **Phase 0 - V1 boundary and decision lock**.
-- Current documentation task: `G7-CLIENT-DELIVERY-ROADMAP-DOCS-1`.
-- Next product task after docs closure: `V1-DELIVERY-DECISIONS-LOCK-1`.
-- The canonical delivery plan is `docs/client-delivery-plan.md` and preserves conditional Reports Center and Supplier Booking boundaries, decomposed financial implementation, production hardening, and separate UAT phases.
+- Current phase: **Phase 1 - Experience Foundation**.
+- Completed: `V1-DELIVERY-DECISIONS-LOCK-1` locked D01-D09 as product policy; no implementation occurred.
+- Current controlled task: `I18N-RUNTIME-LOCALE-DESIGN-1` using guarded Spec Kit feature `005` in a separate task.
+- The canonical delivery plan is `docs/client-delivery-plan.md` and preserves the locked Reports Center and Supplier Booking boundaries, decomposed financial implementation, production hardening, and separate UAT phases.
 
 - `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.
 - `SERVICE-PROFITABILITY-DESIGN-1` remains blocked until billing source and supplier-cost permissions are stable.

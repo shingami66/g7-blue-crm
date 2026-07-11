@@ -304,17 +304,18 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **When to return:** Before adding staged invoices beyond deposit/final.
 - **Known requirements:** Progress / milestone invoice type is deferred. `invoice_prepayment_applications` is deferred until final settlement design or until multi-deposit/ZATCA-grade settlement requires it. Before implementing Final Invoice, run a settlement design review to decide whether simple SUM(active prior invoices) is enough or whether `invoice_prepayment_applications` must be introduced before Final implementation. Every invoice must belong to a Service and reference an approved quotation basis.
 
-## Invoice Voiding, Credit Notes, And Refunds
-- **Status:** Deferred.
-- **Reason deferred:** Invoice voiding/cancellation can affect accounting, auditability, payment status, refunds, and future ZATCA direction.
-- **When to return:** Before implementing invoice void/delete behavior, paid invoice cancellation, refunds, or credit notes.
-- **Known requirements:** Credit/debit notes are deferred until invoices, payments, refunds, and lifecycle rules are stable. Financial records must use void/cancel/reversal workflows, not hard deletion. Future flow may require Void status, Credit Note, Refund, and audit trail. Do not allow casual deletion of issued or paid invoices in future design. Issued/paid financial records must be preserved for auditability.
+## Invoice Voiding, Credit Adjustments, And Refunds
+- **Status:** Product policy resolved; implementation remains deferred to a separate financial lifecycle task.
+- **Resolved V1 policy:** Issued invoices are immutable. Unpaid invoices may be voided by Admin with a reason and audit record. Paid or partially paid invoices require a controlled adjustment/reversal and replacement path. Accountant initiates correction requests; Admin authorizes monetary reversals, refunds, and invoice voids.
+- **Current terminology:** Use `Internal Credit Adjustment` for current non-VAT correction records. Do not claim Tax Credit Note, VAT, ZATCA, or FATOORA support.
+- **Still deferred:** schema, permissions implementation, replacement mechanics, accounting treatment, and any statutory credit-note behavior.
+- **Known requirements:** Financial records must use void/cancel/reversal workflows, not hard deletion. Issued and paid records must be preserved for auditability.
 
 ## Service Cancellation With Financial Records
 - **Status:** Partially resolved; detailed financial reversal flow deferred.
 - **Reason deferred:** Simple Service cancellation is straightforward only before invoice/payment records exist.
 - **When to return:** ERP-1 Services status design and again before ERP-3/ERP-4 financial flows.
-- **Known requirements:** Service cancellation requires `cancellation_reason`. If no invoice/payment exists, cancellation is simple. If invoice/payment exists, cancellation must not silently delete financial records. Future invoice void/refund/credit-note flow is required.
+- **Known requirements:** Service cancellation requires `cancellation_reason`. If no invoice/payment exists, cancellation is simple. If invoice/payment exists, cancellation must not silently delete financial records; use the controlled D03/D04 adjustment, reversal, and replacement policy.
 
 ## Quotation Expiry Override
 - **Status:** Deferred.
@@ -323,9 +324,10 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** `valid_until` or `expiry_date` must be on or after issue date. Expired quotations cannot be approved without renewal/extension or authorized override. Exact override behavior remains deferred.
 
 ## Approved Billing Scope
-- **Status:** Foundation and bounded DEV/DEMO runtime slices are implemented or recorded as completed history; full management and production authorization/apply remain deferred.
+- **Status:** Product policy resolved; bounded DEV/DEMO runtime slices are implemented or recorded as completed history; management implementation and production authorization/apply remain deferred.
 - **Implemented DEV/DEMO or completed history:** foundation schema and runtime contracts; draft creation and discard/edit actions; line-safety review and approval; invoice integration and billing ceiling; the Service Detail read-only card; and the nested read-only detail route.
-- **Still deferred:** full management UI; the complete void workflow; the complete supersede/version-management workflow; production database authorization/apply; and unsupported audit/history capabilities.
+- **Resolved V1 policy:** Approved Billing Scopes are immutable. Uninvoiced scopes may be voided or superseded. Invoiced scopes remain frozen, while a Manager may prepare a successor version for future invoices only and Admin authorizes void or supersede. Existing invoices retain their original scope reference.
+- **Still deferred:** full management UI; implementation of the approved void and supersede/version-management workflow; production database authorization/apply; and unsupported audit/history capabilities.
 - **When to return:** The deferred management, lifecycle, production-authorization, and audit/history items require separate reviewed tasks.
 - **Known requirements:** Approved Billing Scope separates quotation approval from billing authority. V1 runtime is reductions-only, server-action driven, and app-audited. `approved_billing_scope_items` is the canonical name. Scope approval requires `line_safety_status = safe`. `line_safety_reason_code` is required when unsafe. Package/global discount ambiguity is a hard V1 block. Source quotation VAT/pricing context is snapshotted on the scope header. `customer_supplied` and `excluded` must have zero accepted amounts. One active approved scope per Service is required. Approved or invoice-referenced scopes are immutable. Any post-approval change creates a new version and supersedes the old scope. Legacy invoices using `approved_quotation_id` remain valid. The current one-approved-quotation guard remains until runtime cutover. Approval and invoicing must use voided terminology for billing-authority records, not cancelled. Profitability remains blocked until scope/invoice integration and supplier-cost RBAC are stable.
 - **Implementation note:** DEV/DEMO validation has already confirmed the foundation migration can be applied safely there; production remains blocked and must not be implied by this note.
@@ -518,11 +520,10 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **When to return:** Before adding staged invoices beyond deposit/final.
 - **Known requirements:** Progress / milestone invoice type is deferred. `invoice_prepayment_applications` is deferred until final settlement design or until multi-deposit/ZATCA-grade settlement requires it. Before implementing Final Invoice, run a settlement design review to decide whether simple SUM(active prior invoices) is enough or whether `invoice_prepayment_applications` must be introduced before Final implementation. Every invoice must belong to a Service and reference an approved quotation basis.
 
-## Invoice Voiding, Credit Notes, And Refunds
-- **Status:** Deferred.
-- **Reason deferred:** Invoice voiding/cancellation can affect accounting, auditability, payment status, refunds, and future ZATCA direction.
-- **When to return:** Before implementing invoice void/delete behavior, paid invoice cancellation, refunds, or credit notes.
-- **Known requirements:** Credit/debit notes are deferred until invoices, payments, refunds, and lifecycle rules are stable. Financial records must use void/cancel/reversal workflows, not hard deletion. Future flow may require Void status, Credit Note, Refund, and audit trail. Do not allow casual deletion of issued or paid invoices in future design. Issued/paid financial records must be preserved for auditability.
+## Historical Invoice Voiding, Credit Notes, And Refunds
+- **Status:** Historical note superseded by the locked D03/D04 product policy above.
+- **Resolved policy:** Issued invoices are immutable; unpaid invoices may be voided by Admin with reason and audit; paid or partially paid invoices require controlled adjustment/reversal and replacement. Recorded payments are append-only and financial deletion is forbidden.
+- **Implementation still deferred:** current non-VAT records use `Internal Credit Adjustment`; statutory Tax Credit Note, VAT, ZATCA, and FATOORA behavior remain out of scope.
 
 ## Service Cancellation With Financial Records
 - **Status:** Partially resolved; detailed financial reversal flow deferred.

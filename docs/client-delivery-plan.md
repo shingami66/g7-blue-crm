@@ -36,9 +36,9 @@ No production-readiness, security-compliance, financial-correctness, VAT, Tax In
 - Runtime Arabic/English switching is not implemented as a saved user preference flow.
 - Mobile list-page horizontal overflow remains open.
 - Invoice/payment correction, void, credit, and reversal controls remain incomplete.
-- Approved Billing Scope full management, complete void, and complete supersede/versioning workflows remain incomplete.
+- Approved Billing Scope policy is locked; full management, complete void, and complete supersede/versioning implementation remain incomplete.
 - Supplier Booking remains narrow and is not a professional end-to-end supplier operations module.
-- Baseline reporting is not yet a confirmed V1 requirement or completed Reports Center.
+- Reports Center is P1 and is not a V1 acceptance gate; the existing lightweight customer export remains a limited convenience.
 - Production RLS/grant, backup, monitoring, deployment, invitation/webhook, and UAT evidence is incomplete.
 
 ## 3. Client-Ready V1 Definition
@@ -56,9 +56,9 @@ V1 does not include VAT-registration behavior, Tax Invoice behavior, ZATCA/FATOO
 
 ## 4. Current Phase and Controlled Task
 
-- Current phase: **Phase 0 - V1 boundary and decision lock**.
-- Current documentation task: `G7-CLIENT-DELIVERY-ROADMAP-DOCS-1`.
-- First product task after this docs workflow is committed and pushed: `V1-DELIVERY-DECISIONS-LOCK-1`.
+- Current phase: **Phase 1 - Experience Foundation**.
+- Completed: `V1-DELIVERY-DECISIONS-LOCK-1` locked D01-D09 as product policy; no implementation occurred.
+- Current controlled task: `I18N-RUNTIME-LOCALE-DESIGN-1` using guarded Spec Kit feature `005` in a separate task.
 
 ## 5. Completed Milestones
 
@@ -73,20 +73,19 @@ V1 does not include VAT-registration behavior, Tax Invoice behavior, ZATCA/FATOO
 
 - Runtime locale persistence and agreed Arabic/English RTL completion.
 - Responsive remediation for confirmed core-route horizontal overflow.
-- Approved Billing Scope management, complete void, and supersede/versioning workflows if the scope remains an active billing authority in V1.
-- Invoice void/cancel/credit/reversal policy and implementation.
-- Payment correction/reversal policy and implementation.
+- Approved Billing Scope management implementation, including controlled void and supersede/versioning actions.
+- Invoice and payment correction implementation under the locked lifecycle policy.
 - Financial snapshot freeze, service-link enforcement, auditability, and permission/RLS review.
 - Production-readiness evidence: RLS/grants, secrets/deployment controls, backup/recovery, monitoring, rate limits, and build gate.
 - Admin invitation/webhook acceptance smoke and role-boundary verification before real client data.
-- Reports Center only if Mozfer confirms it as a client acceptance requirement; otherwise it is P1.
+- Reports Center remains P1 and is not a V1 acceptance gate.
 
 ## 7. P1 Professionalization
 
 - Service Detail workspace structure and information hierarchy.
 - Quotations list and creation UX refinement.
-- Reports Center design and baseline reports when not a P0 acceptance requirement.
-- Professional Supplier Booking redesign only if Mozfer confirms Supplier Booking belongs in V1.
+- Reports Center design and baseline reports as P1 professionalization.
+- Professional Supplier Booking redesign remains outside V1 acceptance scope.
 - Invoice/payment timeline and richer operational context.
 - Cross-module table, action, empty, loading, error, and access-denied consistency.
 
@@ -109,8 +108,8 @@ V1 does not include VAT-registration behavior, Tax Invoice behavior, ZATCA/FATOO
 
 ### Phase 0 - V1 Boundary and Decision Lock
 
-- Goal: approve the V1 boundary and record unresolved decisions without implementation.
-- Included scope: acceptance definition, conditional Reports Center decision, Supplier Booking V1 decision, financial policy decision, UAT ownership, and deployment ownership.
+- Goal: preserve the approved V1 boundary and locked decision policy without implementation.
+- Included scope: the approved focused V1 package, financial policy, UAT ownership, and operational ownership.
 - Explicit exclusions: financial design, schema work, SQL, implementation, and production claims.
 - Entry conditions: clean DEV/DEMO repository and approved roadmap design.
 - Exit criteria: decisions are recorded, dependencies are ordered, and no deferred feature is silently promoted.
@@ -128,7 +127,7 @@ V1 does not include VAT-registration behavior, Tax Invoice behavior, ZATCA/FATOO
 ### Phase 2 - Commercial Workflow Completion
 
 - Goal: complete the user-facing commercial authority and quotation workflow.
-- Included scope: quotation UX, Approved Billing Scope management, review/approval, controlled void, and supersede/versioning as approved.
+- Included scope: quotation UX, Approved Billing Scope management, review/approval, controlled void, and supersede/versioning under the locked policy.
 - Explicit exclusions: Tax Invoice/ZATCA, supplier financial modules, and unsupported audit/history capabilities.
 - Entry conditions: Phase 1 UX baseline and Approved Billing Scope policy/design approval.
 - Exit criteria: authorized roles can manage the active billing authority without changing historical agreements or bypassing Service.
@@ -147,8 +146,8 @@ Financial implementation is an umbrella milestone only. It must be decomposed af
 
 ### Phase 4 - Operations and Reporting
 
-- Goal: provide agreed operational visibility and, conditionally, a professional Supplier Booking workflow.
-- Included scope: Reports Center baseline if confirmed for V1, role-safe exports, and Supplier Booking redesign only if Mozfer confirms it belongs in V1.
+- Goal: provide agreed operational visibility while preserving the narrow internal Supplier Booking workflow.
+- Included scope: P1 Reports Center design and role-safe exports; professional Supplier Booking redesign is outside V1 acceptance scope.
 - Explicit exclusions: supplier payments, supplier invoices, automated costing, margin/P&L, supplier portal, and customer-facing supplier costs.
 - Entry conditions: financial sources of truth and permissions are stable.
 - Exit criteria: reports use trusted server/database sources and the approved supplier workflow has no ambiguous commitment semantics.
@@ -195,17 +194,22 @@ Financial implementation is an umbrella milestone only. It must be decomposed af
 
 The direct client-delivery path is:
 
-`V1-DELIVERY-DECISIONS-LOCK-1 -> I18N/Responsive foundation -> Approved Billing Scope management -> Financial lifecycle design/audit -> bounded financial implementation -> production hardening -> UAT -> handoff`
+`I18N-RUNTIME-LOCALE-DESIGN-1 -> responsive audit -> Approved Billing Scope management -> Financial lifecycle design/audit -> bounded financial implementation -> production hardening -> UAT -> handoff`
 
-Reports Center joins the critical path only if confirmed as a client acceptance requirement. Supplier Booking redesign is parallelizable and conditional. Supplier payments, supplier invoices, automated costing, margin, and P&L are post-V1.
+Reports Center is P1 and does not join the V1 acceptance critical path. Professional Supplier Booking redesign is outside V1 acceptance scope. Supplier payments, supplier invoices, automated costing, margin, and P&L are post-V1.
 
-## 13. Decisions Required from Mozfer
+## 13. Locked V1 Decisions
 
-- Confirm whether baseline Reports Center is a client acceptance requirement, making it P0, or P1 professionalization.
-- Confirm whether professional Supplier Booking redesign belongs in V1 or remains a narrow post-V1 internal workflow.
-- Approve invoice void/cancel/credit/reversal and payment reversal policy before financial design.
-- Confirm Arabic terminology owner, rollout order, UAT owners, representative data, and launch support owner.
-- Confirm hosting, backup retention, recovery objectives, monitoring ownership, and deployment authority.
+- **D01 Supplier Booking:** Keep the current narrow internal Service Detail workflow in V1. Professional Supplier Booking redesign remains outside V1 acceptance scope.
+- **D02 Reports:** Reports Center is P1 and is not a V1 acceptance gate.
+- **D03 Invoices:** Issued invoices are immutable. Unpaid invoices may be voided by Admin with a reason and audit record. Paid or partially paid invoices require a controlled adjustment/reversal and replacement path.
+- **D04 Payments:** Recorded payments are append-only. Monetary errors, duplicates, refunds, and wrong invoice allocation require controlled reversal/correction records. Financial deletion is forbidden.
+- **D05 Approved Billing Scope:** Approved Billing Scopes are immutable. Uninvoiced scopes may be voided or superseded. Invoiced scopes remain frozen, while a new successor version may govern future invoices only. Existing invoices retain their original scope reference.
+- **D06 Arabic and terminology:** Runtime Arabic/English is V1 scope. Western digits and bidi-safe financial identifiers are mandatory. Mozfer owns final commercial-language approval, with Saudi business-language review required before UAT. Bilingual documents remain deferred.
+- **D07 UAT:** UAT is role-based and user-executed. Mozfer is the final business acceptance owner. Blocker and High defects prevent launch.
+- **D08 Operations:** Named operational ownership is required, with at least 30-day backup retention, RPO within 24 hours, RTO within one business day, a named monitoring/incident owner, and 10 business days of launch support.
+- **D09 V1 package:** The focused V1 package is approved: runtime Arabic/English core UX, mobile core paths, financial correction controls, Approved Billing Scope management, and operational invitation/UAT gates; Reports Center acceptance, professional Supplier Booking, bilingual documents, and VAT/ZATCA/FATOORA remain outside V1.
+- **Financial correction terminology:** Use **Internal Credit Adjustment** for current non-VAT correction records. Do not claim Tax Credit Note, VAT, ZATCA, or FATOORA support. Accountant initiates correction requests; Admin authorizes monetary reversals, refunds, and invoice voids. Manager may prepare Approved Billing Scope successor versions; Admin authorizes void or supersede.
 
 ## 14. Assumptions That Must Not Be Made
 
@@ -251,4 +255,5 @@ Reports Center joins the critical path only if confirmed as a client acceptance 
 ## 18. Change Log
 
 - `G7-CLIENT-DELIVERY-ROADMAP-DESIGN-1`: completed with PASS WITH WARN; roadmap accepted after model-routing and task-sizing corrections.
-- `G7-CLIENT-DELIVERY-ROADMAP-DOCS-1`: current documentation slice; no code, SQL, migration, browser smoke, or production work occurred.
+- `G7-CLIENT-DELIVERY-ROADMAP-DOCS-1`: completed documentation slice; no code, SQL, migration, browser smoke, or production work occurred.
+- `V1-DELIVERY-DECISIONS-LOCK-1`: completed with D01-D09 locked as product policy; no implementation occurred.
