@@ -7,6 +7,66 @@ description: Strict execution protocol for G7 BLUE CRM agents. Enforces executio
 
 The agent is a controlled executor, not a decision maker.
 
+## Standing G7 Workflow Rules
+
+These rules apply to every G7 BLUE CRM task and are the workflow authority referenced by `AGENTS.md`:
+
+* Keep DEV and DEMO distinct. Do not present demo data, mock behavior, local-only checks, or a development server as live or production evidence.
+* Follow the exact task mode, allowed files, requested commands, and validation scope. Do not widen scope by inference.
+* Browser or manual smoke is user-only unless the task explicitly authorizes the agent to run it; do not claim human smoke evidence that was not provided.
+* Never read, print, modify, or expose `.env*`, secrets, credentials, tokens, private logs, or connection strings.
+* SQL, Supabase, migrations, RLS, RPC, grants, triggers, schema changes, and database writes require explicit separate authorization and their applicable review gates.
+* Commit, Graphify refresh, and push are separate controlled tasks; one task never implies the others.
+* Never use `git add .`, wildcard staging, force-push, fetch, pull, or destructive repository commands without exact authorization.
+* Use `PASS`, `WARN`, or `HOLD` gates. HOLD on unexpected repository state, scope conflict, missing prerequisites, failed required validation, incomplete evidence, or a control violation.
+* Do not claim production readiness, security compliance, financial correctness, or equivalent outcomes without repository-verifiable evidence for the specific claim.
+
+## Prompt Size Tiers
+
+Use the smallest prompt that still states the task-specific scope, exception, expected state, validation, and next action:
+
+* **Compact:** routine Git or Graphify status, validation, commit, push, or refresh tasks.
+* **Moderate:** bounded documentation or implementation tasks with explicit files and checks.
+* **Detailed:** SQL, migrations, RLS, RBAC, security, financial logic, architecture, recovery, or any task requiring explicit high-risk gates.
+
+Routine prompts must not repeat standing prohibitions unless they create a special exception, address a material risk directly, or are high-risk and require explicit gates.
+
+## Model Routing
+
+Use the lowest model and effort that preserves correctness:
+
+* **GPT-5.4 Mini Light:** status, validation, commit, push, Graphify, and tiny deterministic docs.
+* **GPT-5.6 Luna Light/Medium:** bounded, repeatable cleanup or implementation.
+* **GPT-5.6 Terra Medium/High:** multi-file implementation and substantial audits.
+* **GPT-5.6 Sol High:** architecture, financial logic, RLS/RBAC, security, migrations, and root-cause work.
+* **Sol Extra High:** only the hardest unresolved tasks.
+
+## Compact Task and Report Templates
+
+Routine task prompts may use:
+
+```text
+Task: <id>
+Mode: <one execution mode>
+Repository/branch: <path> / <branch>
+Scope: <allowed files and exact action>
+Expected state: <HEAD/alignment or other required baseline>
+Validation: <exact checks>
+Next: <locked follow-up, or none>
+```
+
+The default compact report is:
+
+```text
+RESULT:
+ACTION:
+VALIDATION:
+FINAL STATE:
+NEXT:
+```
+
+For `WARN` or `HOLD`, include only the exact issue, its impact, and the smallest recovery step.
+
 ## Bootstrap Rule
 
 After this skill exists, every task must read:

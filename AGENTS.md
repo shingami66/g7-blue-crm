@@ -31,6 +31,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - `pnpm lint` runs the repo ESLint config.
 - `pnpm exec next typegen` is the documented Next.js route type generation check for App Router changes that rely on generated types.
 - `pnpm exec tsc --noEmit` is the documented typecheck verification command for runtime implementation slices.
+- `git diff --check` is the documented whitespace/conflict-marker verification command before commit readiness for implementation or docs sync work.
 - Runtime implementation slices must pass `pnpm lint`, `pnpm exec tsc --noEmit`, and `pnpm build` before commit readiness.
 - `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
 - `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
@@ -54,6 +55,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - Do not force push. Open PRs only when requested.
 - For Services or Quotations UI work, manually smoke test the live ERP path `Customer Profile -> Service -> Quotation`, including `/customers/[id]`, `/services`, `/services/new`, `/services/[id]`, `/services/[id]/edit`, and `/quotations/new?serviceId=<service-id>`.
 - For Service billing, supplier allocation, or Supplier Booking UI work, manually smoke test `/services/[id]`, deposit/final invoice actions in the Billing panel, `/services/[id]/allocations/new`, `/services/[id]/allocations/[allocationId]/edit`, allocation `/cancel`, `/delete`, `/restore`, `?showDeleted=true` when delete/restore behavior changes, and the Service Detail Supplier Bookings panel create/cancel flow from selected allocations.
+- For Approved Billing Scope UI/read changes, manually smoke test the Service Detail card states on `/services/[id]` and the nested read-only route `/services/[serviceId]/approved-billing-scopes/[scopeId]` when populated-card navigation or scope detail rendering changes.
 - For invoice create/detail/PDF or billing-ceiling changes, manually smoke test `/services/[id]` deposit/final invoice actions, `/invoices`, `/invoices/[id]`, `/invoices/[id]/pdf`, and issue/payment actions when the touched slice can affect them.
 - For Service status workflow changes, manually smoke test the guarded manual status actions on `/services/[id]`. Current status changes are manual from the Service detail page; automation remains deferred.
 - For Payments module UI/read changes, manually smoke test `/payments` against live records and confirm the page still reflects `payments:read`-guarded data rather than mock rows.
@@ -68,43 +70,13 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 
 ## Reporting Discipline
 
-For every task that includes numbered inspection questions, checks, or required report sections, the final report must answer every number explicitly. Silent omission is a failed report, not an incomplete one.
-
-1. **Mirror the numbering.** If the prompt has numbered items, answer each item under the same number. If an item is not applicable, say so explicitly and explain why.
-
-2. **Absence is not approval.** If something is not found, say "checked, not found" and list the files or paths checked. Do not treat a missing answer as "OK" or "not applicable."
-
-3. **Evidence before acceptance.** Claims such as "same previous behavior", "unchanged", "covered", "safe", or "validated" must include code evidence, file references, command output, or an exact explanation of what was checked. Do not rely on reassuring wording without evidence.
-
-4. **Check sibling paths before generalizing.** Create vs edit, list vs detail, web vs PDF/print, client vs server, UI vs RPC, and read vs write paths must be checked separately when relevant. A fix or finding on one path does not automatically cover its sibling path.
-
-5. **Classify risk by affected domain/files.** Use the risk level implied by the touched domain or files, not by how small the edit feels. For example, invoice, payment, VAT, quotation financial logic, RPC, RLS, migrations, auth, and permissions remain high-risk even for lint, type, or small UI changes.
-
-6. **Self-audit before finalizing.** Before submitting a report, re-read the original prompt line by line and confirm every required item has a matching explicit answer. If any item is missing, go back and answer it before reporting completion.
+Use `.agents/skills/g7-crm-agent-control/SKILL.md` as the standing workflow authority for execution modes, evidence, safety gates, and reporting. It includes the compact task/report protocol; numbered prompts still require every requested item to be answered explicitly.
 
 ## Non-Negotiable Rules
 
-- Do not touch `.env.local`.
-- Do not expose secrets.
-- Follow explicit user scope. If a task is documentation-only, do not edit code, config, migrations, packages, environment files, or local skill files.
-- Return `TASK RESULT: HOLD` on suspicious state, unexpected files, missing prerequisites, failed verification, or scope conflict.
-- If a prompt forbids reading `.agents/skills/*`, do not read, invoke, summarize, or depend on those local skill files for that task.
-- Do not use `git add .`.
-- Do not run SQL without explicit approval.
-- Do not create migrations without separate review.
-- Do not apply migrations automatically.
-- Do not edit already-applied migrations.
-- PostgreSQL RPC is the source of truth for financial totals.
-- Client totals are preview only.
-- Supabase admin client must remain server-side only.
-- Do not import Supabase admin code in Client Components.
-- All write Server Actions must use `requirePermission`.
-- Reads must respect RBAC.
-- `UnauthorizedError` must not be hidden as `[]` or `null`.
-- `ForbiddenError` must not be hidden as `[]` or `null`.
-- Raw Supabase/database errors must not be exposed to UI.
-- Build must pass before commit when `src`, package, config, or build-affecting files change.
-- Docs must be updated after merges when behavior or roadmap changes.
+Standing execution, repository, secret, SQL/Supabase, validation, and HOLD controls live in `.agents/skills/g7-crm-agent-control/SKILL.md` and must not be weakened by task prompts. Preserve the domain-specific rules below and invoke the routed guard skills when their domains apply.
+
+Task prompts should include only task-specific scope, exceptions, expected state, validation, and next action. Routine prompts should not repeat standing prohibitions unless they create a special exception, address a material risk directly, or are high-risk and require explicit gates.
 
 ## Approved ERP Domain Rules
 
