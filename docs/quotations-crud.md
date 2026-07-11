@@ -55,7 +55,7 @@ draft → sent → approved
 - Approved Billing Scope separates quotation approval from billing authority.
 - The foundation migration for Approved Billing Scope has now been applied and smoke-tested in DEV/DEMO only; production remains deferred.
 - **Quotation Revision Fallback (Option A):** No `superseded` quotation status is introduced. The quotation status enum values remain unchanged. Active Approved Billing Scope determines current billing authority, and existing approved quotations remain as historical agreement records. Any revised quotation flow must utilize the billing scope supersede/versioning model.
-- Current invoice creation resolves and binds the active Approved Billing Scope when one exists; it uses the approved quotation total only as the fallback when no active scope exists.
+- **Current truth:** Invoice creation resolves and binds the active Approved Billing Scope when one exists. When no active scope exists, the approved quotation remains the fallback basis.
 
 ### Editing Rules
 

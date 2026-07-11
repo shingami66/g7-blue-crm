@@ -52,8 +52,8 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `G7-CANONICAL-DOCS-STALENESS-AUDIT-1`
- - Audit `docs/project-status.md`, `docs/project-roadmap.md`, `docs/deferred-decisions.md`, `docs/database-schema.md`, `docs/roles-permissions.md`, and `docs/quotations-crud.md` for staleness after the approved billing scope smoke docs sync.
+- `G7-CANONICAL-DOCS-CLEANUP-P1-1`
+- Correct the confirmed P1 documentation findings from the canonical docs staleness audit.
 
 Completed:
 - `APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1` (PASS WITH WARN: manual smoke verification completed on SVC-2026-0015; successfully verified that the UI blocks creation of an above-ceiling deposit invoice and the DB confirmed no invoice was created; browser/client validation blocked submission before server-action over-ceiling request was reached; temporary dev harness was removed; optional server-side direct smoke `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` remains in backlog).
@@ -69,8 +69,9 @@ Completed:
 - `APPROVED-BILLING-SCOPE-INVOICE-SNAPSHOT-FROM-SCOPE-1` (PASS WITH WARN: commit `c66975d` recorded the approved-scope invoice snapshot fix; deposit `INV-2026-0025` and final `INV-2026-0026` manual smoke passed, and the follow-up full-scope item-decision smoke is now completed in `APPROVED-BILLING-SCOPE-FULL-SCOPE-ITEM-DECISION-SMOKE-1`).
 - `APPROVED-BILLING-SCOPE-FULL-SCOPE-ITEM-DECISION-SMOKE-1` (PASS: manual DEV/DEMO smoke on `QT-2026-0020` / `e19ddc5a-bbdb-44a6-a61e-c34aef7fa60d` / `eb1f4c46-74f7-4c67-a043-c07935bb1289`; verified accepted/adjusted/excluded/customer_supplied decisions, approved scope metadata, and final invoice `INV-2026-0027` with snapshot lines limited to `شاشات = SAR 10000` and `صوت = SAR 7000`; temporary dev harness removed after smoke; no real user-facing Approved Billing Scope management UI yet).
 - `APPROVED-BILLING-SCOPE-READ-ONLY-DETAIL-ROUTE-1` (PASS: commit `35c0692` added the nested Service-context read-only detail route `/services/[serviceId]/approved-billing-scopes/[scopeId]`, linked it from the populated Service Detail card, localized it in English and Arabic, and kept linked invoices permission-gated by `invoices:read`).
-- `APPROVED-BILLING-SCOPE-READ-ONLY-DETAIL-ROUTE-DOCS-SYNC-1` (PASS: project status and roadmap updated to record the route milestone; user-only detail-route smoke remains the next bounded step).
+- `APPROVED-BILLING-SCOPE-READ-ONLY-DETAIL-ROUTE-DOCS-SYNC-1` (PASS: project status and roadmap recorded the completed route milestone).
 - `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY` (PASS WITH WARN: verified create/cancel booking actions on SVC-2026-0003; minor loading/pending indicator UX WARN recorded).
+- `G7-CANONICAL-DOCS-STALENESS-AUDIT-1` and `G7-CANONICAL-DOCS-CLEANUP-P0-1` are completed documentation history.
 - `INVOICE-SERVICE-ID-NOT-NULL-AUDIT-1` (PASS WITH WARN: audited and verified service_id is nullable in schema but required by product/types/actions; data count is zero).
 - `PUBLIC-HEALTH-ROUTE-HARDEN-1` (PASS WITH WARN: audited public health and webhook routes, verified response sanitization and next 16 proxy convention).
 
@@ -1087,7 +1088,7 @@ FUTURE SUPPLIER SEQUENCE
 - SUPPLIER-ALLOCATIONS-SERVICE-UI-CANCEL-1D is complete.
 - SUPPLIER-ALLOCATIONS-DELETE-RESTORE-1 is complete (Manual Supplier Allocation lifecycle is now closed).
 - SUPPLIER-ALLOCATIONS-RATE-CARD-CREATE-1 is complete (Rate-card allocation creation).
-- Supplier Booking foundation slices below show completed progress, the next smoke verification slice, and future deferred work. Items marked CLOSED are implemented and pushed; items marked NEXT or FUTURE are not implemented yet.
+- Supplier Booking foundation slices below show completed progress and future deferred work. Items marked CLOSED are implemented and pushed; items marked FUTURE are not implemented yet.
   1. SUPPLIER-ALLOCATIONS-RATE-CARD-AUTOMATION-1 (Rate-card allocation automation / overlap enforcement / etc)
   2. SUPPLIER-BOOKINGS-SCHEMAS-1A: CLOSED
   3. SUPPLIER-BOOKINGS-PERMISSIONS-1A: CLOSED
@@ -1096,7 +1097,7 @@ FUTURE SUPPLIER SEQUENCE
   6. SUPPLIER-BOOKINGS-ACTIONS-1A: CLOSED
   7. SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW: CLOSED
   8. SUPPLIER-BOOKINGS-UI-1A: CLOSED
-  9. SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY: NEXT
+  9. SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY: CLOSED (PASS WITH WARN; minor loading/pending indicator UX warning recorded)
   10. SUPPLIER-BOOKINGS-BROADER-ROUTES-PDFS-MESSAGES-PORTAL-1: FUTURE (standalone Supplier Booking routes, Supplier Booking PDFs, WhatsApp/email, supplier portal, edit/delete/restore, and status expansion)
   11. SUPPLIER-INVOICES-1: FUTURE
   12. SUPPLIER-PAYMENTS-1: FUTURE
@@ -1615,9 +1616,9 @@ SUPPLIER-BOOKINGS-UI-1A (Completed, Closed)
 - Supplier Booking statuses remain limited to `draft` and `cancelled`.
 - No standalone route, PDF, customer-facing surface, supplier portal, supplier invoice/payment, actual cost, profit/margin reporting, edit/delete/restore, or status expansion was added.
 
-SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY (NEXT)
-- Next safe verification slice.
+SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY (COMPLETED, PASS WITH WARN)
 - Scope: Manual/internal smoke verification of the closed Service Detail Supplier Booking UI only.
+- Verified create/cancel booking actions on `SVC-2026-0003`; the minor loading/pending indicator UX warning is recorded as a separate follow-up.
 - Must not add standalone routes, pages, PDFs, customer-facing surfaces, supplier portal, supplier invoice/payment, actual cost, profit/margin reporting, edit/delete/restore, or status expansion.
 
 SUPPLIER-BOOKINGS-RUNTIME-1 (Planned future item)
@@ -2120,9 +2121,9 @@ Must verify:
 - `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` reclassified as completed/no-op after live schema audit confirmed that no database migration is required. Draft creation is app-layer, draft discard and edit child items RPCs exist, and other runtime actions operate on the existing database schema.
 - `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1` completed with `PASS` (security review completed; app-layer permissions, RLS posture, table grants, and service-role write paths verified as secure).
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1` completed with `PASS` (invoice ceiling design parameter clear).
-- After this sync, follow with `QUOTATION-REVISION-FALLBACK-DESIGN-1` and `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1`.
-- Follow-up: `APPROVED-BILLING-SCOPE-FULL-SCOPE-ITEM-DECISION-SMOKE-1`.
-- Next bounded step: user-only Service Detail card smoke, then the read-only scope detail route as a separate task.
+- Canonical documentation staleness audit and P0 documentation cleanup are completed history.
+- Current documentation-maintenance slice: `G7-CANONICAL-DOCS-CLEANUP-P1-1`.
+- Next controlled task after successful P1 cleanup: `G7-CANONICAL-DOCS-CLEANUP-P2-1`.
 
 - `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.
 - `SERVICE-PROFITABILITY-DESIGN-1` remains blocked until billing source and supplier-cost permissions are stable.

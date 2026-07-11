@@ -1186,13 +1186,13 @@
 - Cost/internal fields display only from permission-safe mapped Supplier Booking data.
 - Supplier Booking statuses remain limited to `draft` and `cancelled`.
 - No standalone route, PDF, customer-facing surface, supplier portal, supplier invoice/payment, actual cost, profit/margin reporting, edit/delete/restore, or status expansion was added.
-- Next safe slice is `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY`.
+- `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY` is completed history with a PASS WITH WARN result; the minor loading/pending indicator UX warning remains a separate follow-up.
 
 ## 4. Current Active Phase
 
 ### 🚧 Cursor Audit Priority Gates & Blockers
 Cursor audit gate:
-- Current verdict: PROCEED_TO_APPROVED_BILLING_SCOPE_SCHEMA_DESIGN.
+- Current verdict: PROCEED_TO_G7_CANONICAL_DOCS_CLEANUP_P1.
 - SUPPLIER-AUDIT-COLUMNS-TEXT-FIX-1: CLOSED.
 - SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED.
 - SUPPLIER-BOOKINGS-SCHEMAS-1A: CLOSED.
@@ -1202,7 +1202,9 @@ Cursor audit gate:
 - SUPPLIER-BOOKINGS-ACTIONS-1A: CLOSED.
 - SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW: CLOSED.
 - SUPPLIER-BOOKINGS-UI-1A: CLOSED.
-- Current safe slice is `APPROVED-BILLING-SCOPE-DOCS-SYNC-2`.
+- Canonical documentation staleness audit and P0 documentation cleanup are completed history.
+- Current documentation-maintenance slice: `G7-CANONICAL-DOCS-CLEANUP-P1-1`.
+- Next controlled task after successful P1 cleanup: `G7-CANONICAL-DOCS-CLEANUP-P2-1`.
 
 ### 🚧 Locked Next CRM Priorities
 Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.
