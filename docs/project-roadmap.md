@@ -52,8 +52,8 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `G7-CANONICAL-DOCS-CLEANUP-P1-1`
-- Correct the confirmed P1 documentation findings from the canonical docs staleness audit.
+- `G7-CANONICAL-DOCS-CLEANUP-P2-1`
+- Complete the confirmed P2 canonical documentation cleanup.
 
 Completed:
 - `APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1` (PASS WITH WARN: manual smoke verification completed on SVC-2026-0015; successfully verified that the UI blocks creation of an above-ceiling deposit invoice and the DB confirmed no invoice was created; browser/client validation blocked submission before server-action over-ceiling request was reached; temporary dev harness was removed; optional server-side direct smoke `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` remains in backlog).
@@ -70,7 +70,7 @@ Completed:
 - `APPROVED-BILLING-SCOPE-FULL-SCOPE-ITEM-DECISION-SMOKE-1` (PASS: manual DEV/DEMO smoke on `QT-2026-0020` / `e19ddc5a-bbdb-44a6-a61e-c34aef7fa60d` / `eb1f4c46-74f7-4c67-a043-c07935bb1289`; verified accepted/adjusted/excluded/customer_supplied decisions, approved scope metadata, and final invoice `INV-2026-0027` with snapshot lines limited to `شاشات = SAR 10000` and `صوت = SAR 7000`; temporary dev harness removed after smoke; no real user-facing Approved Billing Scope management UI yet).
 - `APPROVED-BILLING-SCOPE-READ-ONLY-DETAIL-ROUTE-1` (PASS: commit `35c0692` added the nested Service-context read-only detail route `/services/[serviceId]/approved-billing-scopes/[scopeId]`, linked it from the populated Service Detail card, localized it in English and Arabic, and kept linked invoices permission-gated by `invoices:read`).
 - `APPROVED-BILLING-SCOPE-READ-ONLY-DETAIL-ROUTE-DOCS-SYNC-1` (PASS: project status and roadmap recorded the completed route milestone).
-- `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY` (PASS WITH WARN: verified create/cancel booking actions on SVC-2026-0003; minor loading/pending indicator UX WARN recorded).
+- `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY` (Completed History, PASS WITH WARN: verified create/cancel booking actions on SVC-2026-0003; minor loading/pending indicator UX WARN recorded).
 - `G7-CANONICAL-DOCS-STALENESS-AUDIT-1` and `G7-CANONICAL-DOCS-CLEANUP-P0-1` are completed documentation history.
 - `INVOICE-SERVICE-ID-NOT-NULL-AUDIT-1` (PASS WITH WARN: audited and verified service_id is nullable in schema but required by product/types/actions; data count is zero).
 - `PUBLIC-HEALTH-ROUTE-HARDEN-1` (PASS WITH WARN: audited public health and webhook routes, verified response sanitization and next 16 proxy convention).
@@ -409,7 +409,7 @@ Checklist:
 - [x] Manual smoke passed for invoice create submit flows, with inline success/error messages and disabled guards preserved.
 - [ ] Payment recording, service status, supplier allocation workflows, and admin users/RBAC row actions remain separate future follow-up work.
 
-Immediate next priorities:
+Historical Immediate Next Priorities:
 - [x] `SUPPLIER-ACTIONS-PENDING-AUDIT-1` completed as a readonly audit; no code changes were made.
 1. `P1` - `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1`: readonly inventory of shared Modal/Dialog/Toast/Dropdown paths and ownership before shell RTL implementation.
    - Result: no shared overlay primitive layer was found; current overlays are hand-rolled module-local modal blocks; Shell-1A is not blocked by shared overlays.
@@ -2121,9 +2121,9 @@ Must verify:
 - `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` reclassified as completed/no-op after live schema audit confirmed that no database migration is required. Draft creation is app-layer, draft discard and edit child items RPCs exist, and other runtime actions operate on the existing database schema.
 - `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1` completed with `PASS` (security review completed; app-layer permissions, RLS posture, table grants, and service-role write paths verified as secure).
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1` completed with `PASS` (invoice ceiling design parameter clear).
-- Canonical documentation staleness audit and P0 documentation cleanup are completed history.
-- Current documentation-maintenance slice: `G7-CANONICAL-DOCS-CLEANUP-P1-1`.
-- Next controlled task after successful P1 cleanup: `G7-CANONICAL-DOCS-CLEANUP-P2-1`.
+- Canonical documentation staleness audit, P0 cleanup, and P1 cleanup are completed history.
+- Current documentation-maintenance slice: `G7-CANONICAL-DOCS-CLEANUP-P2-1`.
+- Next controlled task after successful P2 cleanup: `G7-CANONICAL-DOCS-CLEANUP-P2-COMMIT-1`.
 
 - `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.
 - `SERVICE-PROFITABILITY-DESIGN-1` remains blocked until billing source and supplier-cost permissions are stable.

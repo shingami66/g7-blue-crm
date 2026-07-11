@@ -377,12 +377,12 @@
 
 
 
-### âœ… Foundation UI / Routes
+### [x] Foundation UI / Routes
 - [x] dashboard routes exist
 - [x] UI started with mock data
 - [x] modules being converted gradually to live Supabase data
 
-### âœ… Global Pending UX
+### [x] Global Pending UX
 - [x] Approved global centered pending bolt UX is implemented and pushed in `aad0ca5 feat(ui): add global centered pending bolt`.
 - [x] Shared `Button` loading state now drives the global centered bolt pattern in the authenticated dashboard.
 - [x] Dashboard route loading uses the same bolt indicator.
@@ -392,19 +392,19 @@
 - [x] Manual smoke passed for the five covered CRUD actions, and validation passed with `pnpm exec next typegen`, `pnpm exec tsc --noEmit`, and `git diff --check`.
 - [ ] Navigation pending coverage remains future follow-up work for non-quotation areas and is not included in this completed CRUD slice.
 
-### âœ… I18N-RTL-FOUNDATION-AUDIT-1
+### [x] I18N-RTL-FOUNDATION-AUDIT-1
 - [x] Readonly i18n / RTL foundation audit completed with no runtime code changes.
 - [x] Audit artifact captured in `specs/004-i18n-rtl-foundation/audit.md`.
 - [x] Latest audited HEAD was `691555b`.
 - [x] The audit confirmed the app shell is still LTR-first, the status glossary and formatting model still need P0 decisions, and the next step remains decision locking before implementation.
 
-### âœ… I18N-P0-DECISIONS-LOCK-1
+### [x] I18N-P0-DECISIONS-LOCK-1
 - [x] Docs/spec-only P0 decision lock completed with no runtime code changes.
 - [x] Team Lead verdict recorded as APPROVED WITH CHANGES, and the approved changes were incorporated into the decision lock.
 - [x] Locked decisions now cover single-language documents with explicit `document_locale`, permanent Western digits for documents/PDFs with explicit `numberingSystem: 'latn'`, and a split status glossary with `invoice_type` kept separate from invoice lifecycle status.
 - [x] Next step is Foundation-1 prompt drafting plus senior review, not runtime implementation.
 
-### âœ… I18N-RTL-FOUNDATION-1
+### [x] I18N-RTL-FOUNDATION-1
 - [x] Minimal runtime foundation is implemented for locale types, safe parsing, direction helpers, bidi isolation, and `numberingSystem: 'latn'` formatting helpers under `src/lib/i18n/`.
 - [x] Root app HTML now uses foundation helpers for safe `lang` / `dir` scaffolding in `src/app/layout.tsx`, still defaulting to `en` / `ltr` until reviewed preference wiring is approved.
 - [x] English-only typed dictionary skeletons were added for common, navigation, statuses, document types, and RBAC-sensitive namespaces; final Arabic wording remains unapproved.
@@ -413,7 +413,7 @@
 - [x] Document/PDF language implementation, `document_locale` schema/runtime wiring, and Customer `preferred_language` remain deferred.
 - [x] No fake VAT, ZATCA, FATOORA, QR, XML, clearance, or cleared-status behavior was introduced.
 
-### âœ… I18N-RTL-SHARED-OVERLAYS-INVENTORY-1
+### [x] I18N-RTL-SHARED-OVERLAYS-INVENTORY-1
 - [x] Readonly inventory completed and recorded in the planning docs.
 - [x] No shared overlay primitive layer was found under `src/components/ui` or `src/components/layout`.
 - [x] No shared `Dialog`, `Popover`, `AlertDialog`, `Sheet`, `Drawer`, `Tooltip`, `Toast`, or similar primitive was found.
@@ -422,7 +422,7 @@
 - [x] Shell-1A is not blocked by shared overlay primitives.
 - [x] Module-local overlays remain important but were deferred to `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1`, which is not a prerequisite blocker before Shell-1A.
 
-### âœ… I18N-RTL-SHELL-1A
+### [x] I18N-RTL-SHELL-1A
 - [x] Implementation commit `3f627b1` is pushed.
 - [x] Manual smoke passed with `G7_DEV_RTL=1`.
 - [x] Verified pages: dashboard/root route, customers, services, invoices, quotations, suppliers, payments, admin/users, settings.
@@ -434,7 +434,7 @@
 - [x] Shell-1B findings observed: DataTable and pagination-related inherited RTL behavior need dedicated Shell-1B handling, including page number order and prev/next behavior.
 - [x] Shell-1B findings are not blockers for Shell-1A and must not be fixed in this docs sync.
 
-### âœ… I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1
+### [x] I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1
 - [x] Readonly review completed.
 - [x] Overall result: DEFER.
 - [x] Reviewed six module-local overlays: `src/app/(dashboard)/invoices/RecordPaymentModal.tsx`, `src/app/(dashboard)/suppliers/SupplierBlacklistActions.tsx`, `src/app/(dashboard)/admin/users/AdminUsersClient.tsx`, `src/app/(dashboard)/customers/CustomersClient.tsx`, `src/app/(dashboard)/customers/[id]/CustomerProfileActions.tsx`, `src/app/(dashboard)/services/[id]/SupplierBookingActions.tsx`.
@@ -660,7 +660,7 @@
 - [x] Supplier/internal cost labels remain RBAC-sensitive and must not appear in customer-facing copy.
 - [x] Arabic-Indic digits remain forbidden in document/PDF contexts; Western digits remain required.
 
-### âœ… Supabase + Clerk Foundation
+### [x] Supabase + Clerk Foundation
 - [x] Supabase schema exists
 - [x] Supabase client/admin setup exists
 - [x] `/api/health/db` works
@@ -668,7 +668,7 @@
 - [x] protected routes redirect correctly
 - [x] `.env.local` ignored and not committed
 
-### âœ… Core Security / RBAC
+### [x] Core Security / RBAC
 - [x] `app_users` table
 - [x] roles: admin, manager, sales, operations, accountant, viewer
 - [x] helpers: `requireUser`, `getCurrentAppUser`, `requireRole`, `requirePermission`
@@ -686,7 +686,7 @@
 - [x] Quotation RPC grants verified: `anon_execute = false`, `authenticated_execute = false`, `service_role_execute = true`
 - [x] Final production RLS hardening is still required
 
-### âœ… SEC-AUTHZ-APP-USER-GATE-1
+### [x] SEC-AUTHZ-APP-USER-GATE-1
 - [x] Security blocker discovered: a Clerk-authenticated user with no `app_users` row could access `/dashboard` and all internal CRM navigation.
 - [x] Root cause: `(dashboard)/layout.tsx` had no `app_users` membership check; Clerk authentication alone was sufficient to enter the internal CRM.
 - [x] Fix: dashboard layout now requires an active `app_users` row (matched on `clerk_user_id` as TEXT); users without membership are redirected to `/unauthorized`.
@@ -701,7 +701,7 @@
 - [x] Implementation passed manual verification by Mozfer (active admin access works, unapproved Clerk users are blocked and see `/unauthorized`, direct route access is blocked).
 - [x] `QUOTE-APPROVAL-FLOW-1B` remains in stash, pending restoration and smoke after this security fix is committed/merged.
 
-### âœ… STAB-P0-04 / Global Pending UX
+### [x] STAB-P0-04 / Global Pending UX
 - [x] Repo-level env validation for the dashboard server paths was centralized.
 - [x] Sensitive authenticated Server Actions now use MVP single-instance in-memory rate limiting.
 - [x] The production `company_settings` RLS migration is committed in-repo and the remote Supabase apply has been verified.
@@ -729,13 +729,13 @@
 - Pagination now uses the filtered quotations list, and changing filters resets the current page to 1.
 - Manual smoke passed for status filtering, month filtering, filtered pagination, clearing filters, and unchanged row actions.
 
-### âœ… CUSTOMER-NUMBER-1
+### [x] CUSTOMER-NUMBER-1
 - [x] DB migration applied manually, adding `customer_number` sequence.
 - [x] App layer generates customer number server-side via `generate_document_number` RPC.
 - [x] UI updated to show customer number instead of UUID prefix.
 - [x] Schema synchronized in `schema.sql`.
 
-### âœ… Customers CRUD
+### [x] Customers CRUD
 - [x] list/read customers from Supabase
 - [x] add customer
 - [x] edit customer
@@ -745,14 +745,14 @@
 - [x] no `[]` returned for Unauthorized/Forbidden
 - [x] merged into main
 
-### âœ… Customers CSV Export
+### [x] Customers CSV Export
 - [x] export visible customers to CSV
 - [x] filename format: `g7-blue-customers-YYYY-MM-DD.csv`
 - [x] correct CSV escaping
 - [x] disabled when list is empty
 - [x] merged into main
 
-### âœ… Quotations RPC Foundation
+### [x] Quotations RPC Foundation
 - [x] `vat_rate` added to quotations
 - [x] quotation number standardized to QT-YYYY-0001
 - [x] `create_quotation_with_items` RPC
@@ -770,13 +770,13 @@
 - [x] `/api/health/db` returned ok:true
 - [x] PR merged into main
 
-### âœ… Quotations Data Layer
+### [x] Quotations Data Layer
 - PR #4 merged into main
 - Branch: `feature/quotations-data-layer`
 - Created `types.ts`, `schemas.ts`, `mappers.ts`, `queries.ts`, `actions.ts`, `index.ts`
 - Audit passed: permissions enforced, soft delete blocked for approved quotations, numeric `Number()` mapping added, `is_deleted` filter applied, safe errors implemented.
 
-### âœ… Phase 5A - Quotations UI Manual Entry: List + Create Form
+### [x] Phase 5A - Quotations UI Manual Entry: List + Create Form
 - `/quotations` now uses live `getQuotations()` data
 - `/quotations/new` creates quotations with manual items only
 - Customer dropdown only receives active and non-deleted customers
@@ -785,7 +785,7 @@
 - Edit, soft delete, detail, and print were deferred to later quotation phases
 - PR merged into main
 
-### âœ… Phase 5B - Quotations Edit + Soft Delete
+### [x] Phase 5B - Quotations Edit + Soft Delete
 - Draft quotations can now be edited
 - Non-draft quotations show locked edit behavior
 - List actions respect `quotations:write`
@@ -794,7 +794,7 @@
 - Backend `softDeleteQuotation` remains the authority
 - `checkPermission` was added as a server-only helper for conditional UI only
 
-### âœ… Phase 6 - Quotation Detail + Browser Print
+### [x] Phase 6 - Quotation Detail + Browser Print
 - Quotation detail page now uses live `getQuotationById` data
 - Print route now uses live quotation data
 - Browser print uses `window.print()` isolated inside a Client Component (`PrintButton`)
@@ -809,7 +809,7 @@
 - Totals are backend/data-layer values, not recalculated in UI
 - PR merged into main
 
-### âœ… Quotation Stabilization + Product Review
+### [x] Quotation Stabilization + Product Review
 - Quotations core flow is stabilized for the current demo path: create, edit draft, view detail, and browser print.
 - Auth error imports were fixed.
 - `src/lib/auth/errors.ts` is the canonical source for `UnauthorizedError` and `ForbiddenError`.
@@ -820,7 +820,7 @@
 - Quotation creation was verified working after manual Supabase apply.
 - Quotation browser print layout was improved.
 
-### âœ… Phase CS-A - Company Settings Mini
+### [x] Phase CS-A - Company Settings Mini
 - Live singleton Company Settings was implemented as CS-A only.
 - CS-A uses server-only settings queries/actions, Zod validation, `settings:read`, and `settings:write`.
 - Bank details are restricted in the app data flow to Admin and Accountant; Viewer can read settings without receiving bank values.
@@ -830,7 +830,7 @@
 - SQL migration was reviewed for manual apply; SQL must never be applied automatically by agents.
 - CS-A was committed on `main` as `8dc380f feat: implement Company Settings CS-A`.
 
-### âœ… ERP-1 - Services DB Foundation
+### [x] ERP-1 - Services DB Foundation
 - ERP-1 Services migration was manually applied in Supabase SQL Editor and verified.
 - `services` now exists as the new operational unit linked to `customers(id)`.
 - Service numbering is supported through `generate_document_number('service')` with `SVC-YYYY-0001`.
@@ -842,13 +842,13 @@
 - Legacy `projects` remain for now.
 - `DEV_ONLY_services` is fake/dev-data only and not production-safe.
 
-### âœ… PRJ-CLEANUP-1 - Retire User-Facing Projects UI
+### [x] PRJ-CLEANUP-1 - Retire User-Facing Projects UI
 - Projects were removed from primary user-facing navigation.
 - Dashboard Project cards/actions/sections were replaced with Service / Booking-oriented surfaces that point to the existing Services route.
 - `/projects` now redirects to `/services`.
 - Legacy project schema, permissions, types, mock data, customer `projects_count`, and supplier PRJ mock references remain deferred for later cleanup.
 
-### âœ… QUOTE-VALIDITY-RULE-1 - Quotation Validity Against Service Schedule
+### [x] QUOTE-VALIDITY-RULE-1 - Quotation Validity Against Service Schedule
 - PR #17 merged into `main` as `96643e6 Merge pull request #17 from shingami66/fix/quotation-validity-service-schedule`.
 - Service Schedule is read-only context in the quotation create UI.
 - Issue Date is read-only and remains the quotation document issue date.
@@ -861,7 +861,7 @@
 - Native number input spinners are hidden in quotation numeric inputs.
 - No schema, migration, RPC, VAT, invoice/payment, or financial total authority changes were made.
 
-### âœ… QUOTE-APPROVAL-FLOW-1B - Quotation Approval Workflow
+### [x] QUOTE-APPROVAL-FLOW-1B - Quotation Approval Workflow
 - Quotation approval logic implemented.
 - Added `approveQuotation` and `rejectQuotation` actions.
 - Enforces one approved quotation per service via database unique constraint (`unique_approved_quotation_per_service`).
@@ -872,7 +872,7 @@
 - Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available.
 - Service status transition on approval remains deferred.
 
-### âœ… ADMIN-USER-MANAGEMENT-1A
+### [x] ADMIN-USER-MANAGEMENT-1A
 - Completed inspection and design phase for invite-only user management.
 - Approved Option D: Clerk Invitations API + invitation metadata + `user.created` webhook.
 - Corrected metadata wording: use Clerk invitation metadata / `publicMetadata` unless future SDK verification proves `privateMetadata` support for user invitations.
@@ -886,7 +886,7 @@
 - Invoice/payment creation remains future ERP scope.
 - VAT/ZATCA remains out of scope.
 
-### âœ… ADMIN-USER-MANAGEMENT-1B
+### [x] ADMIN-USER-MANAGEMENT-1B
 - Implemented `/admin/users` UI built and connected to Server Actions.
 - ADMIN-USER-MANAGEMENT-1B code implementation is complete; real Clerk invitation/webhook smoke testing remains pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and Mozfer explicitly approves creating a real test invitation/user.
 - Server Actions implemented for inviting users, managing roles, revoking invitations, and toggling active status.
@@ -904,7 +904,7 @@
 - Last-active-admin protection and a proper revoke confirmation modal were deferred to ADMIN-USER-MANAGEMENT-1C-B.
 - No schema changes, migrations, SQL, or package changes were made for ADMIN-USER-MANAGEMENT-1B.
 
-### âœ… ADMIN-USER-MANAGEMENT-1C-B
+### [x] ADMIN-USER-MANAGEMENT-1C-B
 - Implemented last-active-admin protection server-side in Admin User Management Server Actions.
 - Deactivating the final active admin is blocked with a safe UI-facing error.
 - Changing the final active admin to a non-admin role is blocked with a safe UI-facing error.
@@ -914,20 +914,20 @@
 - No real Clerk users/invitations were created during implementation.
 - [x] No SQL, migrations, package, environment, or schema changes were made for ADMIN-USER-MANAGEMENT-1C-B.
 
-### âœ… DOCUMENT-BRANDING-PRINT-1B
+### [x] DOCUMENT-BRANDING-PRINT-1B
 - Applied official G7 BLUE identity and logo to Quotation and Invoice PDF/print views.
 - Removed fake VAT, Tax Invoice, and CR values.
 - Used Entity Unified No `7053901414` and TIN `3146944674`.
 - Retained `not_registered` VAT status.
 - Implemented purely in the UI, avoiding premature ERP-3 database snapshots or schema changes.
 
-### âœ… DOCUMENT-SNAPSHOT-WIRING-1B
+### [x] DOCUMENT-SNAPSHOT-WIRING-1B
 - [x] DOCUMENT-SNAPSHOT-WIRING-1A completed.
 - [x] DOCUMENT-SNAPSHOT-WIRING-1B completed.
 - Quotation snapshot UI wiring, DB migrations, backfill, RPC updates, and schema sync completed.
 - `company_settings` and `customers` are decoupled from printed Quotations.
 
-### âœ… COMPANY-SETTINGS-CLEANUP-1B (Applied and verified in Supabase)
+### [x] COMPANY-SETTINGS-CLEANUP-1B (Applied and verified in Supabase)
 - Repo implementation committed and pushed in `0b826a9`.
 - Supabase migration/manual DB cleanup applied manually.
 - `company_settings.cr_number` is nullable in DB.
@@ -950,7 +950,7 @@
 - Edit button does not render for users without write permission.
 - Existing validation, permissions, and bank masking are expected to remain respected.
 
-### âœ… SERVICE-DETAIL-RELATED-QUOTE-CTA-1
+### [x] SERVICE-DETAIL-RELATED-QUOTE-CTA-1
 - Status: Completed, reviewed, manual smoke passed, and pushed.
 - Implementation commits:
   - `80e3765 feat(services): add related quotation create cta`
@@ -1067,7 +1067,7 @@
 - Document/PDF language implementation, `document_locale`, and Customer `preferred_language` remain deferred to later reviewed tasks.
 - P1 decisions to confirm next: whether Booking remains a secondary Service label, Arabic rollout order by role, reuse of existing Company Settings Arabic/English company name fields, and whether Hijri calendar support stays deferred.
 
-### Immediate Next Priorities
+### Historical Immediate Next Priorities
 - `P1`: `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` for readonly shared overlay path/ownership inventory.
 - `P2`: `I18N-RTL-SHELL-1A` for the shell/navigation logical-direction refactor across the approved shell files only.
 - `P3`: `I18N-RTL-SHELL-1B` for the shared list/data-component logical-direction refactor.
@@ -1188,11 +1188,11 @@
 - No standalone route, PDF, customer-facing surface, supplier portal, supplier invoice/payment, actual cost, profit/margin reporting, edit/delete/restore, or status expansion was added.
 - `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY` is completed history with a PASS WITH WARN result; the minor loading/pending indicator UX warning remains a separate follow-up.
 
-## 4. Current Active Phase
+## 4. Current Documentation Priority
 
 ### 🚧 Cursor Audit Priority Gates & Blockers
 Cursor audit gate:
-- Current verdict: PROCEED_TO_G7_CANONICAL_DOCS_CLEANUP_P1.
+- Current verdict: PROCEED_TO_G7_CANONICAL_DOCS_CLEANUP_P2.
 - SUPPLIER-AUDIT-COLUMNS-TEXT-FIX-1: CLOSED.
 - SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED.
 - SUPPLIER-BOOKINGS-SCHEMAS-1A: CLOSED.
@@ -1202,9 +1202,9 @@ Cursor audit gate:
 - SUPPLIER-BOOKINGS-ACTIONS-1A: CLOSED.
 - SUPPLIER-BOOKINGS-UI-1A-DESIGN-REVIEW: CLOSED.
 - SUPPLIER-BOOKINGS-UI-1A: CLOSED.
-- Canonical documentation staleness audit and P0 documentation cleanup are completed history.
-- Current documentation-maintenance slice: `G7-CANONICAL-DOCS-CLEANUP-P1-1`.
-- Next controlled task after successful P1 cleanup: `G7-CANONICAL-DOCS-CLEANUP-P2-1`.
+- Canonical documentation staleness audit, P0 cleanup, and P1 cleanup are completed history.
+- Current documentation-maintenance slice: `G7-CANONICAL-DOCS-CLEANUP-P2-1`.
+- Next controlled task after successful P2 cleanup: `G7-CANONICAL-DOCS-CLEANUP-P2-COMMIT-1`.
 
 ### 🚧 Locked Next CRM Priorities
 Status: SEC-AUTHZ-APP-USER-GATE-1 implemented and manually verified; SERVICE-HUB-1B merged; QUOTE-APPROVAL-FLOW-1B implemented, Admin smoke passed, manual migration applied and schema synced. Multi-role browser smoke for Manager/Sales remains pending until official test users / Admin User Management are available. Full parent QUOTE-APPROVAL-FLOW-1 is considered complete for Phase 1B standards. After merge, follow the locked order: `ERP-3`.
