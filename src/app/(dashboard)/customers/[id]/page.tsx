@@ -8,11 +8,17 @@ import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getCustomerById } from "@/lib/customers/queries";
 import { getServicesByCustomerId } from "@/lib/services/queries";
-import { getLocale } from "@/lib/i18n/locales";
+import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
+import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 import {
+  getCustomerServiceStatusLabel,
+  getCustomerStatusLabel,
   getCustomersDictionary,
   type CustomersDictionary,
 } from "@/lib/i18n/dictionaries/customers";
+import { formatSarAmount, formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import type { Locale } from "@/lib/i18n/locales";
 import type { Customer } from "@/types/customer";
 import type { Service } from "@/types/service";
 import CustomerProfileActions from "./CustomerProfileActions";
@@ -34,8 +40,9 @@ export default async function CustomerProfilePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const locale = getLocale();
+  const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getCustomersDictionary(locale);
+  const sharedStates = getSharedUiStates(locale);
   const { id } = await params;
   let customer: Customer | null = null;
   let canWrite = false;
@@ -49,7 +56,8 @@ export default async function CustomerProfilePage({
       error,
       dictionary.states.customerForbidden,
       dictionary.states.customerLoadError,
-      dictionary
+      sharedStates.accessDenied.title,
+      sharedStates.genericError.title,
     );
   }
 
@@ -67,7 +75,8 @@ export default async function CustomerProfilePage({
       error,
       dictionary.states.customerServicesForbidden,
       dictionary.states.relatedServicesLoadError,
-      dictionary
+      sharedStates.accessDenied.title,
+      sharedStates.genericError.title,
     );
   }
 
@@ -85,10 +94,10 @@ export default async function CustomerProfilePage({
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-[28px] leading-[36px] font-semibold text-primary">
-                {formatNullable(customer.company)}
+                <span dir="auto">{formatNullable(customer.company)}</span>
               </h2>
               <StatusBadge variant={customer.status}>
-                {dictionary.customerStatuses[customer.status]}
+                {getCustomerStatusLabel(locale, customer.status)}
               </StatusBadge>
             </div>
             <p className="mt-1 text-[14px] leading-[20px] text-on-surface-variant">
@@ -108,13 +117,13 @@ export default async function CustomerProfilePage({
             <span dir="ltr">{formatNullable(customer.customerNumber)}</span>
           </DetailItem>
           <DetailItem label={dictionary.list.table.company}>
-            {formatNullable(customer.company)}
+            <span dir="auto">{formatNullable(customer.company)}</span>
           </DetailItem>
           <DetailItem label={dictionary.profile.primaryContact}>
-            {formatNullable(customer.contact)}
+            <span dir="auto">{formatNullable(customer.contact)}</span>
           </DetailItem>
           <DetailItem label={dictionary.list.report.columns.city}>
-            <span className="inline-flex items-center gap-2">
+            <span dir="auto" className="inline-flex items-center gap-2">
               <MapPin size={16} className="text-on-surface-variant" />
               {formatNullable(customer.city)}
             </span>
@@ -148,15 +157,17 @@ export default async function CustomerProfilePage({
             )}
           </DetailItem>
           <DetailItem label={dictionary.list.table.status}>
-            {dictionary.customerStatuses[customer.status]}
+            {getCustomerStatusLabel(locale, customer.status)}
           </DetailItem>
           <DetailItem label={dictionary.profile.servicesCount}>
-            {formatNullable(customer.servicesCount)}
+            <span dir="ltr" className="tabular-nums">
+              {formatUiNumber(locale, customer.servicesCount)}
+            </span>
           </DetailItem>
           <DetailItem label={dictionary.profile.totalQuotedAmount}>
-            <span dir="ltr">
+            <span dir="ltr" className="tabular-nums">
               {customer.totalQuotedAmount !== undefined && customer.totalQuotedAmount !== null
-                ? `SAR ${customer.totalQuotedAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+                ? formatSarAmount(locale, customer.totalQuotedAmount)
                 : "—"}
             </span>
           </DetailItem>
@@ -174,7 +185,10 @@ export default async function CustomerProfilePage({
             </p>
           </div>
           <div className="text-[14px] leading-[20px] text-on-surface-variant">
-            {dictionary.profile.totalServices}: <span dir="ltr">{services.length}</span>
+            {dictionary.profile.totalServices}:{" "}
+            <span dir="ltr" className="tabular-nums">
+              {formatUiNumber(locale, services.length)}
+            </span>
           </div>
         </div>
 
@@ -212,23 +226,23 @@ export default async function CustomerProfilePage({
                     href={`/services/${service.id}`}
                     className="font-semibold text-on-surface hover:text-primary hover:underline"
                   >
-                    {formatNullable(service.serviceTitle)}
+                    <span dir="auto">{formatNullable(service.serviceTitle)}</span>
                   </PendingLink>
                   <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
-                    {formatNullable(service.eventName)}
+                    <span dir="auto">{formatNullable(service.eventName)}</span>
                   </div>
                 </td>
-                <td dir="ltr" className="px-4 py-4 text-on-surface-variant">
-                  {formatEventDate(service)}
+                <td dir="ltr" className="px-4 py-4 text-on-surface-variant tabular-nums">
+                  {formatEventDate(locale, service)}
                 </td>
                 <td className="px-4 py-4">
                   <StatusBadge variant={SERVICE_STATUS_VARIANT_MAP[service.status]}>
-                    {service.status}
+                    {getCustomerServiceStatusLabel(locale, service.status)}
                   </StatusBadge>
                 </td>
-                <td dir="ltr" className="px-4 py-4 font-semibold text-on-surface">
+                <td dir="ltr" className="px-4 py-4 font-semibold text-on-surface tabular-nums">
                   {service.estimatedBudget != null
-                    ? `${Number(service.estimatedBudget).toLocaleString("en-SA")} SAR`
+                    ? formatSarAmount(locale, Number(service.estimatedBudget))
                     : "—"}
                 </td>
               </tr>
@@ -286,7 +300,7 @@ function OfficialBillingDetails({
             {formatCustomerType(customer.customerType, dictionary)}
           </DetailItem>
           <DetailItem label={dictionary.form.officialBilling.legalName}>
-            {formatNullable(customer.legalName)}
+            <span dir="auto">{formatNullable(customer.legalName)}</span>
           </DetailItem>
           <DetailItem label={dictionary.form.officialBilling.crNumber}>
             <span dir="ltr">{formatNullable(customer.commercialRegistrationNumber)}</span>
@@ -312,7 +326,7 @@ function OfficialBillingDetails({
             {formatFinanceContact(customer)}
           </DetailItem>
           <DetailItem label={dictionary.form.officialBilling.paymentTerms}>
-            {formatNullable(customer.paymentTerms)}
+            <span dir="auto">{formatNullable(customer.paymentTerms)}</span>
           </DetailItem>
           <DetailItem label={dictionary.form.officialBilling.poRequired}>
             {customer.poRequired ? dictionary.booleans.yes : dictionary.booleans.no}
@@ -326,32 +340,33 @@ function OfficialBillingDetails({
   );
 }
 
-function ErrorState({ title, message }: { title: string; message: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-      <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-        <h2 className="text-xl font-semibold text-slate-900 mb-2">{title}</h2>
-        <p className="text-sm text-slate-500">{message}</p>
-      </div>
-    </div>
-  );
-}
-
 function renderLoadError(
   error: unknown,
   forbiddenMessage: string,
   genericMessage: string,
-  dictionary: CustomersDictionary
+  accessDeniedTitle: string,
+  genericErrorTitle: string,
 ) {
   if (error instanceof UnauthorizedError) {
     redirect("/sign-in");
   }
 
   if (error instanceof ForbiddenError) {
-    return <ErrorState title={dictionary.states.accessDenied} message={forbiddenMessage} />;
+    return (
+      <SharedAuthenticatedStatePanel
+        title={accessDeniedTitle}
+        message={forbiddenMessage}
+      />
+    );
   }
 
-  return <ErrorState title={dictionary.states.genericError} message={genericMessage} />;
+  return (
+    <SharedAuthenticatedStatePanel
+      title={genericErrorTitle}
+      message={genericMessage}
+      role="alert"
+    />
+  );
 }
 
 function formatNullable(value: string | number | null | undefined) {
@@ -372,9 +387,17 @@ function formatCustomerType(
 }
 
 function formatFinanceContact(customer: Customer) {
-  const parts = [customer.financeContactName, customer.financeContactPhone].filter(Boolean);
+  if (!customer.financeContactName && !customer.financeContactPhone) {
+    return "—";
+  }
 
-  return parts.length > 0 ? <span dir="ltr">{parts.join(" / ")}</span> : "—";
+  return (
+    <span dir="auto">
+      {customer.financeContactName}
+      {customer.financeContactName && customer.financeContactPhone ? " / " : null}
+      {customer.financeContactPhone ? <span dir="ltr">{customer.financeContactPhone}</span> : null}
+    </span>
+  );
 }
 
 function formatNationalAddress(customer: Customer) {
@@ -388,13 +411,21 @@ function formatNationalAddress(customer: Customer) {
     customer.nationalAddressCountry,
   ].filter(Boolean);
 
-  return parts.length > 0 ? parts.join(", ") : "—";
+  return parts.length > 0 ? <span dir="auto">{parts.join(", ")}</span> : "—";
 }
 
-function formatEventDate(service: Service) {
+function formatEventDate(locale: Locale, service: Service) {
   if (service.eventStartDate && service.eventEndDate) {
-    return `${service.eventStartDate} - ${service.eventEndDate}`;
+    return `${formatUiDate(locale, service.eventStartDate)} - ${formatUiDate(locale, service.eventEndDate)}`;
   }
 
-  return service.eventStartDate || service.eventEndDate || "—";
+  if (service.eventStartDate) {
+    return formatUiDate(locale, service.eventStartDate);
+  }
+
+  if (service.eventEndDate) {
+    return formatUiDate(locale, service.eventEndDate);
+  }
+
+  return "—";
 }

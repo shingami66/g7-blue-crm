@@ -39,7 +39,7 @@ export default function CustomerProfileActions({
         setShowEditModal(false);
         router.refresh();
       } else {
-        setActionError(result.error ?? dictionary.states.unknownError);
+        setActionError(getLocalizedActionError(result.error, dictionary));
       }
     });
   }
@@ -106,4 +106,14 @@ export default function CustomerProfileActions({
       )}
     </>
   );
+}
+
+function getLocalizedActionError(
+  error: string | undefined,
+  dictionary: CustomersDictionary,
+): string {
+  if (error === "Unauthorized") return dictionary.states.unauthorized;
+  if (error === "Forbidden") return dictionary.states.forbidden;
+  if (error === "Validation failed") return dictionary.states.validationFailed;
+  return error ? dictionary.states.actionFailed : dictionary.states.unknownError;
 }

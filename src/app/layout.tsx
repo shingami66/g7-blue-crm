@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { getDirection, getLocale } from "@/lib/i18n";
+import { getCurrentAppUser } from "@/lib/auth/permissions";
+import { getDirection } from "@/lib/i18n";
+import {
+  getCurrentSessionEffectiveLocale,
+  getPublicRequestLocale,
+} from "@/lib/i18n/session-locale";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,12 +13,17 @@ export const metadata: Metadata = {
   description: "G7 BLUE Enterprise CRM — Events | Exhibitions | Production | Logistics",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const locale = getLocale();
+  const appUser = await getCurrentAppUser();
+  // Active members: session override → persisted app_users.locale.
+  // Inactive/missing app_users: public session cookie only → English default (no DB).
+  const locale = appUser?.is_active
+    ? await getCurrentSessionEffectiveLocale()
+    : await getPublicRequestLocale();
   const direction = getDirection(locale);
 
   return (

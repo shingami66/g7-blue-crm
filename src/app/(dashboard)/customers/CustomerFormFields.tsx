@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { CustomersDictionary } from "@/lib/i18n/dictionaries/customers";
+import {
+  getCustomerStatusLabel,
+  type CustomersDictionary,
+} from "@/lib/i18n/dictionaries/customers";
 import type { Customer } from "@/types/customer";
 
 type CustomerTypeChoice = NonNullable<Customer["customerType"]> | "";
@@ -64,9 +67,9 @@ export function CustomerCoreFields({
           defaultValue={customer?.status ?? "lead"}
           className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
         >
-          <option value="lead">{dictionary.customerStatuses.lead}</option>
-          <option value="active">{dictionary.customerStatuses.active}</option>
-          <option value="inactive">{dictionary.customerStatuses.inactive}</option>
+        <option value="lead">{getCustomerStatusLabel(dictionary.locale, "lead")}</option>
+        <option value="active">{getCustomerStatusLabel(dictionary.locale, "active")}</option>
+        <option value="inactive">{getCustomerStatusLabel(dictionary.locale, "inactive")}</option>
         </select>
       </div>
     </div>
@@ -121,6 +124,7 @@ export function CustomerOfficialBillingFields({
               name="legal_name"
               defaultValue={customer?.legalName}
               placeholder={labels.legalNamePlaceholder}
+              dir="auto"
             />
             <TextInput
               label={labels.crNumber}
@@ -149,6 +153,7 @@ export function CustomerOfficialBillingFields({
               name="finance_contact_name"
               defaultValue={customer?.financeContactName}
               placeholder={labels.financeContactNamePlaceholder}
+              dir="auto"
             />
             <TextInput
               label={labels.financeContactPhone}
@@ -167,6 +172,7 @@ export function CustomerOfficialBillingFields({
                 rows={3}
                 className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary resize-y"
                 placeholder={labels.paymentTermsPlaceholder}
+                dir="auto"
               />
             </div>
             <label className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] leading-[20px] text-on-surface">
@@ -200,18 +206,21 @@ export function CustomerOfficialBillingFields({
               name="national_address_street"
               defaultValue={customer?.nationalAddressStreet}
               placeholder={labels.streetPlaceholder}
+              dir="auto"
             />
             <TextInput
               label={labels.district}
               name="national_address_district"
               defaultValue={customer?.nationalAddressDistrict}
               placeholder={labels.districtPlaceholder}
+              dir="auto"
             />
             <TextInput
               label={labels.addressCity}
               name="national_address_city"
               defaultValue={customer?.nationalAddressCity}
               placeholder={labels.addressCityPlaceholder}
+              dir="auto"
             />
             <TextInput
               label={labels.postalCode}
@@ -232,6 +241,7 @@ export function CustomerOfficialBillingFields({
               name="national_address_country"
               defaultValue={customer?.nationalAddressCountry}
               placeholder={labels.countryPlaceholder}
+              dir="auto"
             />
           </div>
         </div>
@@ -269,7 +279,7 @@ function TextInput({
         defaultValue={defaultValue ?? ""}
         className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
         placeholder={placeholder}
-        dir={dir}
+        dir={dir ?? "auto"}
       />
     </div>
   );

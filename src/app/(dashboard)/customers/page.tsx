@@ -3,19 +3,22 @@ import { currentUser } from "@clerk/nextjs/server";
 import { getCustomers } from "@/lib/customers/queries";
 import { checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
-import { getLocale } from "@/lib/i18n/locales";
+import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
+import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 import { getCustomersDictionary } from "@/lib/i18n/dictionaries/customers";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import CustomersClient from "./CustomersClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function CustomersPage() {
-  const locale = getLocale();
+  const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getCustomersDictionary(locale);
+  const sharedStates = getSharedUiStates(locale);
   let customers: Awaited<ReturnType<typeof getCustomers>>;
   let canWrite = false;
   let canExport = false;
-  let generatedBy = "System Generated";
+  let generatedBy = dictionary.list.report.chrome.systemGenerated;
 
   try {
     customers = await getCustomers();
@@ -25,6 +28,7 @@ export default async function CustomersPage() {
     if (clerkUser) {
       const email = clerkUser.emailAddresses[0]?.emailAddress;
       const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ");
+      // Stored identity values (name/email) are not translated.
       if (name && email) {
         generatedBy = `${name} (${email})`;
       } else if (email) {
@@ -40,22 +44,19 @@ export default async function CustomersPage() {
 
     if (err instanceof ForbiddenError) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-          <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.accessDenied}</h2>
-            <p className="text-sm text-slate-500">{dictionary.states.customersForbidden}</p>
-          </div>
-        </div>
+        <SharedAuthenticatedStatePanel
+          title={sharedStates.accessDenied.title}
+          message={dictionary.states.customersForbidden}
+        />
       );
     }
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.genericError}</h2>
-          <p className="text-sm text-slate-500">{dictionary.states.customersLoadError}</p>
-        </div>
-      </div>
+      <SharedAuthenticatedStatePanel
+        title={sharedStates.genericError.title}
+        message={dictionary.states.customersLoadError}
+        role="alert"
+      />
     );
   }
 

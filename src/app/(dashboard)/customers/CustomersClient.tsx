@@ -10,7 +10,13 @@ import Button from "@/components/ui/Button";
 import PendingLink from "@/components/ui/PendingLink";
 import { Eye, Plus, Filter, Download, X } from "lucide-react";
 import { createCustomer } from "@/lib/customers/actions";
-import type { CustomersDictionary } from "@/lib/i18n/dictionaries/customers";
+import {
+  formatCustomersSummaryCopy,
+  getCustomerStatusLabel,
+  type CustomersDictionary,
+} from "@/lib/i18n/dictionaries/customers";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import type { Customer } from "@/types/customer";
 import { CustomerCoreFields, CustomerOfficialBillingFields } from "./CustomerFormFields";
 import { generateExcelReport } from "@/lib/reports/exportExcel";
@@ -19,12 +25,12 @@ const TABLE_HEADER_BASE =
   "px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase";
 const TABLE_CELL_BASE = "px-4 py-4 align-top";
 const COLUMN_LAYOUT = {
-  company: "w-[28%] min-w-[240px] text-left",
-  contact: "w-[24%] min-w-[220px] text-left",
-  location: "w-[12%] min-w-[120px] text-left",
+  company: "w-[28%] min-w-[240px] text-start",
+  contact: "w-[24%] min-w-[220px] text-start",
+  location: "w-[12%] min-w-[120px] text-start",
   status: "w-[12%] min-w-[120px] text-center",
   services: "w-[10%] min-w-[110px] text-center",
-  quotedValue: "w-[14%] min-w-[140px] text-right",
+  quotedValue: "w-[14%] min-w-[140px] text-end",
   view: "w-[10%] min-w-[110px] text-center",
 } as const;
 
@@ -72,7 +78,7 @@ export default function CustomersClient({
     const activeFilters = [];
     if (statusFilter !== "all") {
       activeFilters.push(
-        `${dictionary.list.report.statusFilter}: ${dictionary.customerStatuses[statusFilter as Customer["status"]]}`
+        `${dictionary.list.report.statusFilter}: ${getCustomerStatusLabel(dictionary.locale, statusFilter as Customer["status"])}`
       );
     }
     if (cityFilter !== "all") {
@@ -80,14 +86,18 @@ export default function CustomersClient({
     }
 
     await generateExcelReport<Customer>({
+      locale: dictionary.locale,
+      chrome: dictionary.list.report.chrome,
       metadata: {
         companyName: "G SEVEN BLUE Company",
         brandName: "G7 BLUE CRM",
         reportTitle: dictionary.list.report.title,
         generatedAt: date,
-        generatedBy: generatedBy || "System Generated",
+        generatedBy:
+          generatedBy || dictionary.list.report.chrome.systemGenerated,
         filters: activeFilters,
         totalRecords: filteredCustomers.length,
+        sheetName: dictionary.list.report.chrome.defaultSheetName,
         fileName: `g7-blue-customers-${dateStr}.xlsx`,
       },
       columns: [
@@ -115,7 +125,7 @@ export default function CustomersClient({
         setShowAddModal(false);
         router.refresh();
       } else {
-        setActionError(result.error ?? dictionary.states.unknownError);
+        setActionError(getLocalizedActionError(result.error, dictionary));
       }
     });
   }
@@ -125,11 +135,10 @@ export default function CustomersClient({
       return dictionary.list.customersSummaryZero;
     }
 
-    if (dictionary.locale === "ar") {
-      return `عرض ${startIndex + 1}-${endIndex} من إجمالي ${filteredCustomers.length} عميل`;
-    }
-
-    return `Showing ${startIndex + 1}-${endIndex} of ${filteredCustomers.length} customers`;
+    return formatCustomersSummaryCopy(dictionary.list.customersSummary, {
+      range: isolateBidiText(`${startIndex + 1}-${endIndex}`),
+      total: isolateBidiText(String(filteredCustomers.length)),
+    });
   }
 
   return (
@@ -171,9 +180,9 @@ export default function CustomersClient({
                 className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
               >
                 <option value="all">{dictionary.list.allStatuses}</option>
-                <option value="active">{dictionary.customerStatuses.active}</option>
-                <option value="inactive">{dictionary.customerStatuses.inactive}</option>
-                <option value="lead">{dictionary.customerStatuses.lead}</option>
+                <option value="active">{getCustomerStatusLabel(dictionary.locale, "active")}</option>
+                <option value="inactive">{getCustomerStatusLabel(dictionary.locale, "inactive")}</option>
+                <option value="lead">{getCustomerStatusLabel(dictionary.locale, "lead")}</option>
               </select>
               <Filter
                 size={14}
@@ -217,7 +226,7 @@ export default function CustomersClient({
               </div>
             ) : (
               <div className="overflow-x-auto w-full border border-surface-variant rounded-b-xl bg-surface-container-lowest">
-                <table className="w-full min-w-[1060px] table-fixed border-collapse text-left">
+                <table className="w-full min-w-[1060px] table-fixed border-collapse text-start">
                   <thead>
                     <tr className="bg-surface-container-low border-b border-surface-variant">
                       <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.company}`}>
@@ -247,7 +256,7 @@ export default function CustomersClient({
                     {paginatedCustomers.map((customer) => (
                       <tr key={customer.id} className="hover:bg-surface-container-low/50 transition-colors">
                         <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.company}`}>
-                          <div className="font-semibold text-primary">
+                    <div dir="auto" className="font-semibold text-primary">
                             {customer.company}
                           </div>
                           <div dir="ltr" className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
@@ -255,26 +264,26 @@ export default function CustomersClient({
                           </div>
                         </td>
                         <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.contact}`}>
-                          <div className="text-on-surface">{customer.contact}</div>
+                          <div dir="auto" className="text-on-surface">{customer.contact}</div>
                           <div dir="ltr" className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
                             {customer.email}
                           </div>
                         </td>
-                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.location} text-on-surface-variant`}>
+                        <td dir="auto" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.location} text-on-surface-variant`}>
                           {customer.city}
                         </td>
                         <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.status}`}>
                           <div className="flex justify-center">
                             <StatusBadge variant={customer.status}>
-                              {dictionary.customerStatuses[customer.status]}
+                              {getCustomerStatusLabel(dictionary.locale, customer.status)}
                             </StatusBadge>
                           </div>
                         </td>
-                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.services} font-semibold text-on-surface`}>
-                          {customer.servicesCount}
+                        <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.services} font-semibold text-on-surface tabular-nums`}>
+                          {formatUiNumber(dictionary.locale, customer.servicesCount)}
                         </td>
-                        <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.quotedValue} font-semibold text-on-surface`}>
-                          SAR {customer.totalQuotedAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                        <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.quotedValue} font-semibold text-on-surface tabular-nums`}>
+                          {formatSarAmount(dictionary.locale, customer.totalQuotedAmount)}
                         </td>
                         <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}>
                           <div className="flex justify-center">
@@ -354,4 +363,14 @@ export default function CustomersClient({
       )}
     </div>
   );
+}
+
+function getLocalizedActionError(
+  error: string | undefined,
+  dictionary: CustomersDictionary,
+): string {
+  if (error === "Unauthorized") return dictionary.states.unauthorized;
+  if (error === "Forbidden") return dictionary.states.forbidden;
+  if (error === "Validation failed") return dictionary.states.validationFailed;
+  return error ? dictionary.states.actionFailed : dictionary.states.unknownError;
 }

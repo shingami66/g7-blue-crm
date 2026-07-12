@@ -1,16 +1,36 @@
+import type { Metadata } from "next";
 import { SignOutButton } from "@clerk/nextjs";
+import { getDirection } from "@/lib/i18n";
+import { getUnauthorizedDictionary } from "@/lib/i18n/dictionaries/unauthorized";
+import { getPublicRequestLocale } from "@/lib/i18n/session-locale";
 
-export const metadata = {
-  title: "Access Pending — G7 BLUE CRM",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getPublicRequestLocale();
+  const dictionary = getUnauthorizedDictionary(locale);
+  return {
+    title: dictionary.metaTitle,
+  };
+}
 
-export default function UnauthorizedPage() {
+/**
+ * Access-pending surface for signed-in users who are inactive / not approved.
+ * Outside the authenticated dashboard shell. Locale from public/cookie authority only.
+ */
+export default async function UnauthorizedPage() {
+  const locale = await getPublicRequestLocale();
+  const dictionary = getUnauthorizedDictionary(locale);
+  const direction = getDirection(locale);
+
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center p-4">
+    <div
+      className="min-h-screen bg-primary flex items-center justify-center p-4"
+      dir={direction}
+      lang={locale}
+    >
       <div className="w-full max-w-md text-center">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-on-primary mb-2">
-            G7 BLUE
+            {dictionary.brandMark}
           </h1>
           <div className="w-12 h-0.5 bg-tertiary-fixed-dim mx-auto" />
         </div>
@@ -23,6 +43,7 @@ export default function UnauthorizedPage() {
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -33,11 +54,10 @@ export default function UnauthorizedPage() {
           </div>
 
           <h2 className="text-lg font-semibold text-on-surface mb-2">
-            Access Pending
+            {dictionary.title}
           </h2>
           <p className="text-sm text-on-surface-variant mb-6 leading-relaxed">
-            Your sign-in was successful, but your account has not been activated
-            yet. Please contact your administrator to request access.
+            {dictionary.body}
           </p>
 
           <SignOutButton redirectUrl="/sign-in">
@@ -45,14 +65,12 @@ export default function UnauthorizedPage() {
               type="button"
               className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-on-primary hover:bg-primary-container transition-colors"
             >
-              Sign Out
+              {dictionary.signOut}
             </button>
           </SignOutButton>
         </div>
 
-        <p className="mt-6 text-xs text-on-primary/60">
-          G7 BLUE Events CRM
-        </p>
+        <p className="mt-6 text-xs text-on-primary/60">{dictionary.footer}</p>
       </div>
     </div>
   );
