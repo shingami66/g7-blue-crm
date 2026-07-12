@@ -1,11 +1,13 @@
 import "server-only";
 
 import { auth } from "@clerk/nextjs/server";
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   APPROVED_BILLING_SCOPE_ACCOUNTANT_PERMISSIONS,
   APPROVED_BILLING_SCOPE_MANAGER_PERMISSIONS,
 } from "@/lib/approved-billing-scopes/permissions";
+import { normalizePersistedLocale, type Locale } from "@/lib/i18n/locales";
 import { UnauthorizedError, ForbiddenError } from "./errors";
 
 // ---------------------------------------------------------------------------
@@ -108,7 +110,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
  * Retrieves the current app user from Supabase using Clerk's userId.
  * Returns null if the user is not found or if an error occurs.
  */
-export async function getCurrentAppUser() {
+export const getCurrentAppUser = cache(async () => {
   const { userId } = await auth();
   if (!userId) return null;
 
@@ -130,7 +132,7 @@ export async function getCurrentAppUser() {
     console.error("[getCurrentAppUser] Unexpected error");
     return null;
   }
-}
+});
 
 /**
  * Requires a valid user to be signed in and present in `app_users`.
@@ -149,6 +151,11 @@ export async function requireUser() {
   }
 
   return user;
+}
+
+export async function getCurrentUserLocale(): Promise<Locale> {
+  const user = await requireUser();
+  return normalizePersistedLocale(user.locale);
 }
 
 /**

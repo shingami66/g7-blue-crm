@@ -4,21 +4,23 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "en";
 
-export function isSupportedLocale(value: string): value is Locale {
-  return SUPPORTED_LOCALES.includes(value as Locale);
+export function isSupportedLocale(value: unknown): value is Locale {
+  return typeof value === "string" && SUPPORTED_LOCALES.includes(value as Locale);
 }
 
-export function parseLocale(value: string | null | undefined): Locale {
-  if (!value) {
-    return DEFAULT_LOCALE;
-  }
+/** Opposite of the current effective locale for the Topbar language toggle. */
+export function getOppositeLocale(locale: Locale): Locale {
+  return locale === "ar" ? "en" : "ar";
+}
 
-  const normalized = value.trim().toLowerCase();
+export function normalizePersistedLocale(value: unknown): Locale {
+  return isSupportedLocale(value) ? value : DEFAULT_LOCALE;
+}
 
-  return isSupportedLocale(normalized) ? normalized : DEFAULT_LOCALE;
+export function parseLocale(value: unknown): Locale {
+  return normalizePersistedLocale(value);
 }
 
 export function getLocale(): Locale {
-  // TODO: Wire to app_users.locale once locale migration and preference read path are approved.
   return DEFAULT_LOCALE;
 }
