@@ -3,6 +3,8 @@ import Link from "next/link";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getQuotationById } from "@/lib/quotations/queries";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import { getQuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
 import QuotationForm from "../../new/QuotationForm";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +15,8 @@ export default async function EditQuotationPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const locale = await getCurrentSessionEffectiveLocale();
+  const dictionary = getQuotationsDictionary(locale);
   let authOrLoadError: unknown = null;
   let quotation: Awaited<ReturnType<typeof getQuotationById>> = null;
 
@@ -32,9 +36,9 @@ export default async function EditQuotationPage({
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.accessDenied}</h2>
           <p className="text-sm text-slate-500">
-            You don&apos;t have permission to edit quotations.
+            {dictionary.states.createForbidden}
           </p>
         </div>
       </div>
@@ -45,9 +49,9 @@ export default async function EditQuotationPage({
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Something went wrong</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.genericError}</h2>
           <p className="text-sm text-slate-500">
-            We couldn&apos;t load the necessary data at this time. Please try again later.
+            {dictionary.states.createDataLoadError}
           </p>
         </div>
       </div>
@@ -58,9 +62,9 @@ export default async function EditQuotationPage({
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Quotation Not Found</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.editStates.notFound}</h2>
           <p className="text-sm text-slate-500">
-            The quotation you are trying to edit does not exist or has been deleted.
+            {dictionary.editStates.notFoundMessage}
           </p>
         </div>
       </div>
@@ -71,11 +75,11 @@ export default async function EditQuotationPage({
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Locked</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.editStates.locked}</h2>
           <p className="text-sm text-slate-500 mb-4">
-            Only draft quotations can be edited.
+            {dictionary.editStates.lockedMessage}
           </p>
-          <Link href="/quotations" className="text-primary hover:underline font-medium">Back to Quotations</Link>
+          <Link href="/quotations" className="text-primary hover:underline font-medium">{dictionary.editStates.backToQuotations}</Link>
         </div>
       </div>
     );
@@ -85,11 +89,11 @@ export default async function EditQuotationPage({
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Service Context Required</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.editStates.serviceContextRequired}</h2>
           <p className="text-sm text-slate-500 mb-4">
-            This quotation cannot be edited until its Service relationship is available.
+            {dictionary.editStates.serviceContextMessage}
           </p>
-          <Link href="/quotations" className="text-primary hover:underline font-medium">Back to Quotations</Link>
+          <Link href="/quotations" className="text-primary hover:underline font-medium">{dictionary.editStates.backToQuotations}</Link>
         </div>
       </div>
     );
@@ -107,6 +111,7 @@ export default async function EditQuotationPage({
           customer: quotation.customer,
         }}
         initialData={quotation}
+        dictionary={dictionary}
       />
     </div>
   );

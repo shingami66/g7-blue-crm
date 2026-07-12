@@ -7,11 +7,13 @@ import { createQuotation, updateQuotation } from "@/lib/quotations/actions";
 import type { QuotationDetail } from "@/lib/quotations/types";
 import Button from "@/components/ui/Button";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { isolateBidiText } from "@/lib/i18n/bidi";
 import {
   getQuotationsDictionary,
   type QuotationsDictionary,
 } from "@/lib/i18n/dictionaries/quotations";
-import { getLocale } from "@/lib/i18n/locales";
+import { formatSarAmount, formatUiDate } from "@/lib/i18n/formatting";
 
 interface QuotationFormService {
   id: string;
@@ -33,9 +35,11 @@ interface QuotationFormProps {
 export default function QuotationForm({
   service,
   initialData,
-  dictionary = getQuotationsDictionary(getLocale()),
+  dictionary: dictionaryProp,
 }: QuotationFormProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const dictionary = dictionaryProp ?? getQuotationsDictionary(locale);
   const { back } = useGlobalNavigationPending();
   const isEdit = !!initialData;
   
@@ -45,7 +49,8 @@ export default function QuotationForm({
     Object.prototype.hasOwnProperty.call(service, "eventStartDate") ||
     Object.prototype.hasOwnProperty.call(service, "eventEndDate");
   const serviceStartDate = service.eventStartDate || undefined;
-  const formatScheduleDate = (value?: string | null) => value || dictionary.form.notSet;
+  const formatScheduleDate = (value?: string | null) =>
+    value ? formatUiDate(dictionary.locale, value) : dictionary.form.notSet;
   const serviceStatusLabel =
     dictionary.form.serviceStatuses[
       service.status as keyof QuotationsDictionary["form"]["serviceStatuses"]
@@ -154,12 +159,11 @@ export default function QuotationForm({
       router.push("/quotations");
       router.refresh();
     } else {
-      setError(
-        result.error ||
-          (isEdit
+        setError(
+          isEdit
             ? dictionary.form.validation.failedToUpdate
-            : dictionary.form.validation.failedToCreate)
-      );
+            : dictionary.form.validation.failedToCreate
+        );
       setIsSubmitting(false);
     }
   };
@@ -176,7 +180,16 @@ export default function QuotationForm({
         </button>
         <div>
           <h2 className="text-[28px] leading-[36px] font-semibold text-primary tracking-tight">
-            {isEdit ? `${dictionary.form.editTitle} ${initialData?.quotationNumber}` : dictionary.form.newTitle}
+            {isEdit ? (
+              <>
+                {dictionary.form.editTitle}{" "}
+                <span dir="ltr" className="font-mono">
+                  {isolateBidiText(initialData?.quotationNumber ?? "")}
+                </span>
+              </>
+            ) : (
+              dictionary.form.newTitle
+            )}
           </h2>
           <p className="text-on-surface-variant text-[14px]">
             {isEdit ? dictionary.form.editSubtitle : dictionary.form.newSubtitle}
@@ -201,7 +214,9 @@ export default function QuotationForm({
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider">
                   {dictionary.form.service}
                 </div>
-                <div className="font-mono font-semibold text-primary" dir="ltr">{service.serviceNumber}</div>
+                <div className="font-mono font-semibold text-primary" dir="ltr">
+                  {isolateBidiText(service.serviceNumber)}
+                </div>
               </div>
               <div>
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider">
@@ -273,8 +288,8 @@ export default function QuotationForm({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.issueDate}</label>
-                <div className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface-variant" dir="ltr">
-                  {date}
+                <div className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface-variant tabular-nums" dir="ltr">
+                  {formatUiDate(dictionary.locale, date)}
                 </div>
                 <p className="text-[12px] text-on-surface-variant leading-snug">
                   {dictionary.form.issueDateHint}
@@ -443,26 +458,36 @@ export default function QuotationForm({
           </div>
           
           <div className="flex flex-col items-end gap-2 text-[14px] text-on-surface">
-            <div className="flex justify-between w-64" dir="ltr">
+            <div className="flex justify-between w-72 gap-4">
               <span className="text-on-surface-variant">{dictionary.form.subtotal}:</span>
-              <span>{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span>
+              <span dir="ltr" className="tabular-nums">
+                {formatSarAmount(dictionary.locale, subtotal)}
+              </span>
             </div>
-            <div className="flex justify-between w-64 text-error" dir="ltr">
+            <div className="flex justify-between w-72 gap-4 text-error">
               <span className="text-on-surface-variant">{dictionary.form.discount}:</span>
-              <span>- {parsedDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span>
+              <span dir="ltr" className="tabular-nums">
+                - {formatSarAmount(dictionary.locale, parsedDiscount)}
+              </span>
             </div>
             {discountExceedsSubtotal && (
-              <div className="w-64 text-[12px] text-error text-right">
+              <div className="w-72 text-[12px] text-error text-end">
                 {dictionary.form.discountGreaterThanSubtotal}
               </div>
             )}
-            <div className="flex justify-between w-64" dir="ltr">
+            <div className="flex justify-between w-72 gap-4">
               <span className="text-on-surface-variant">{dictionary.form.vat}:</span>
               <span>{dictionary.form.notApplied}</span>
             </div>
-            <div className={`flex justify-between w-64 pt-2 border-t border-outline-variant font-semibold text-[16px] ${discountExceedsSubtotal ? "text-error" : "text-primary"}`} dir="ltr">
+            <div
+              className={`flex justify-between w-72 gap-4 pt-2 border-t border-outline-variant font-semibold text-[16px] ${
+                discountExceedsSubtotal ? "text-error" : "text-primary"
+              }`}
+            >
               <span>{dictionary.form.grandTotal}:</span>
-              <span>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span>
+              <span dir="ltr" className="tabular-nums">
+                {formatSarAmount(dictionary.locale, grandTotal)}
+              </span>
             </div>
           </div>
 

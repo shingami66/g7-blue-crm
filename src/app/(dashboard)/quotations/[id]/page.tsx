@@ -6,8 +6,11 @@ import PendingLink from "@/components/ui/PendingLink";
 import { getQuotationById } from "@/lib/quotations/queries";
 import { requirePermission, checkPermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
-import { getLocale } from "@/lib/i18n/locales";
-import { getQuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import { getQuotationStatusLabel, getQuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
+import { formatSarAmount, formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import type { ComponentProps } from "react";
 import QuotationApprovalActions from "./QuotationApprovalActions";
 import { getInvoicesByQuotationId } from "@/lib/invoices/queries";
@@ -21,7 +24,7 @@ export default async function QuotationDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const locale = getLocale();
+  const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getQuotationsDictionary(locale);
 
   try {
@@ -80,18 +83,13 @@ export default async function QuotationDetailPage({
     (inv) => inv.invoice_type === "deposit" && inv.status !== "cancelled" && inv.status !== "voided"
   );
 
-  // Helper for safe number formatting
-  const formatMoney = (val: number | null | undefined) => {
-    if (val === null || val === undefined) return "0.00";
-    return val.toLocaleString(undefined, { minimumFractionDigits: 2 });
-  };
-  const formatQuantity = (val: number | null | undefined) => {
-    if (val === null || val === undefined) return "0";
-    return val.toLocaleString(undefined, {
+  const formatMoney = (val: number | null | undefined) =>
+    formatSarAmount(locale, val ?? 0);
+  const formatQuantity = (val: number | null | undefined) =>
+    formatUiNumber(locale, val ?? 0, {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     });
-  };
   const isTaxVatNotApplied = quotation.vatRate === 0 && quotation.vatAmount === 0;
   const formatCopy = (template: string, values: Record<string, string | number>) =>
     template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
@@ -110,17 +108,17 @@ export default async function QuotationDetailPage({
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight" dir="ltr">
-                {quotation.quotationNumber}
+                {isolateBidiText(quotation.quotationNumber)}
               </h2>
               <StatusBadge variant={quotation.status as StatusBadgeVariant}>
-                {dictionary.statuses[quotation.status]}
+                {getQuotationStatusLabel(dictionary.locale, quotation.status)}
               </StatusBadge>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {canApprove && (quotation.status === "draft" || quotation.status === "sent") && (
-            <QuotationApprovalActions quotationId={quotation.id} status={quotation.status} />
+            <QuotationApprovalActions quotationId={quotation.id} status={quotation.status} dictionary={dictionary.approval} />
           )}
           {quotation.status === "draft" && (
             <PendingLink
@@ -172,14 +170,16 @@ export default async function QuotationDetailPage({
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
                   {dictionary.detail.labels.issueDate}
                 </div>
-                <div className="text-on-surface font-medium" dir="ltr">{quotation.date}</div>
+                <div className="text-on-surface font-medium tabular-nums" dir="ltr">
+                  {formatUiDate(locale, quotation.date)}
+                </div>
               </div>
               <div>
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
                   {dictionary.detail.labels.validUntil}
                 </div>
-                <div className="text-on-surface font-medium" dir="ltr">
-                  {quotation.validUntil || "-"}
+                <div className="text-on-surface font-medium tabular-nums" dir="ltr">
+                  {quotation.validUntil ? formatUiDate(locale, quotation.validUntil) : "—"}
                 </div>
               </div>
             </div>
@@ -261,32 +261,40 @@ export default async function QuotationDetailPage({
             </div>
             <div className="p-6">
               <div className="space-y-3">
-                <div className="flex justify-between text-[14px] text-on-surface-variant" dir="ltr">
+                <div className="flex justify-between gap-4 text-[14px] text-on-surface-variant">
                   <span>{dictionary.detail.labels.subtotal}</span>
-                  <span>{formatMoney(quotation.subtotal)} SAR</span>
+                  <span dir="ltr" className="tabular-nums">
+                    {formatMoney(quotation.subtotal)}
+                  </span>
                 </div>
-                <div className="flex justify-between text-[14px] text-on-surface-variant" dir="ltr">
+                <div className="flex justify-between gap-4 text-[14px] text-on-surface-variant">
                   <span>{dictionary.detail.labels.discount}</span>
-                  <span>{formatMoney(quotation.discount)} SAR</span>
+                  <span dir="ltr" className="tabular-nums">
+                    {formatMoney(quotation.discount)}
+                  </span>
                 </div>
-                <div className="flex justify-between text-[14px] text-on-surface-variant" dir="ltr">
+                <div className="flex justify-between gap-4 text-[14px] text-on-surface-variant">
                   <span>
                     {isTaxVatNotApplied
                       ? dictionary.detail.labels.taxVat
-                      : formatCopy(dictionary.detail.vatWithRate, { rate: quotation.vatRate })}
+                      : formatCopy(dictionary.detail.vatWithRate, {
+                          rate: formatUiNumber(locale, quotation.vatRate, {
+                            maximumFractionDigits: 2,
+                          }),
+                        })}
                   </span>
-                  <span>
+                  <span dir="ltr" className="tabular-nums">
                     {isTaxVatNotApplied
                       ? dictionary.detail.states.notApplied
-                      : `${formatMoney(quotation.vatAmount)} SAR`}
+                      : formatMoney(quotation.vatAmount)}
                   </span>
                 </div>
-                <div className="border-t border-surface-variant pt-3 mt-3 flex justify-between" dir="ltr">
+                <div className="border-t border-surface-variant pt-3 mt-3 flex justify-between gap-4">
                   <span className="font-semibold text-[18px] text-primary">
                     {dictionary.detail.labels.grandTotal}
                   </span>
-                  <span className="font-semibold text-[18px] text-primary">
-                    {formatMoney(quotation.grandTotal)} SAR
+                  <span dir="ltr" className="font-semibold text-[18px] text-primary tabular-nums">
+                    {formatMoney(quotation.grandTotal)}
                   </span>
                 </div>
               </div>
@@ -305,7 +313,7 @@ export default async function QuotationDetailPage({
                     <span className="text-[14px] text-on-surface-variant">
                       {dictionary.detail.depositInvoice.alreadyCreated}{" "}
                       <span className="font-medium text-on-surface" dir="ltr">
-                        {activeDepositInvoice.invoice_number}
+                        {isolateBidiText(activeDepositInvoice.invoice_number)}
                       </span>
                     </span>
                     <span className="text-[13px] text-on-surface-variant italic">
@@ -319,6 +327,7 @@ export default async function QuotationDetailPage({
                     quotationTotal={quotation.grandTotal}
                     canCreate={canCreateInvoice}
                     disabledReasons={!canCreateInvoice ? ["Forbidden"] : []}
+                    dictionary={getServicesDictionary(locale).billing.depositAction}
                   />
                 )}
               </div>

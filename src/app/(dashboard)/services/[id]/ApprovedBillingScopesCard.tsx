@@ -3,6 +3,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import PendingLink from "@/components/ui/PendingLink";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { formatSarAmount } from "@/lib/i18n/formatting";
 import { listApprovedBillingScopesForServiceResult } from "@/lib/approved-billing-scopes/queries";
 import type {
   ApprovedBillingScopeLineSafetyStatus,
@@ -108,14 +109,21 @@ function ScopeSummaryCard({
         />
         <ScopeDetail
           label={cardDictionary.labels.acceptedGrandTotal}
-          value={<span dir="ltr">{formatSar(currentScope.acceptedGrandTotal)}</span>}
+          value={
+            <span dir="ltr" className="tabular-nums">
+              {formatSarAmount(dictionary.locale, currentScope.acceptedGrandTotal)}
+            </span>
+          }
         />
       </dl>
       {otherScopeCount > 0 && (
         <div className="border-t border-surface-variant bg-surface px-6 py-3 text-[13px] text-on-surface-variant">
           {otherScopeCount === 1
             ? cardDictionary.otherScopeSingular
-            : cardDictionary.otherScopePlural.replace("{count}", String(otherScopeCount))}
+            : cardDictionary.otherScopePlural.replace(
+                "{count}",
+                isolateBidiText(String(otherScopeCount)),
+              )}
         </div>
       )}
     </section>
@@ -149,11 +157,4 @@ function ScopeDetail({ label, value }: { label: string; value: ReactNode }) {
       <dd className="font-medium text-on-surface">{value}</dd>
     </div>
   );
-}
-
-function formatSar(amount: number) {
-  return isolateBidiText(`${amount.toLocaleString("en-SA", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} SAR`);
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import type { Service } from "@/types/service";
 import { updateService } from "@/lib/services/actions";
+import { getEditServiceErrorMessage } from "@/lib/i18n/service-action-feedback";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import Button from "@/components/ui/Button";
@@ -84,7 +85,7 @@ export default function EditServiceForm({ service, dictionary }: EditServiceForm
         router.push(`/services/${service.id}`);
         router.refresh();
       } else {
-        setError(result.error || dictionary.form.validation.failedToUpdate);
+        setError(getEditServiceErrorMessage(result.code, dictionary));
         setIsSubmitting(false);
       }
     } catch {
@@ -107,8 +108,12 @@ export default function EditServiceForm({ service, dictionary }: EditServiceForm
           <h2 className="text-[28px] leading-[36px] font-semibold text-primary tracking-tight">
             {dictionary.form.editTitle}
           </h2>
-          <p dir="ltr" className="text-on-surface-variant text-[14px]">
-            {isolateBidiText(`${service.serviceNumber} - ${dictionary.form.editSubtitle}`)}
+          <p className="text-on-surface-variant text-[14px]">
+            <span dir="ltr" className="font-mono">
+              {isolateBidiText(service.serviceNumber)}
+            </span>
+            <span aria-hidden="true">{" — "}</span>
+            <span>{dictionary.form.editSubtitle}</span>
           </p>
         </div>
       </div>

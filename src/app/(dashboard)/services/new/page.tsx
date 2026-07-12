@@ -2,15 +2,18 @@ import { redirect } from "next/navigation";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getCustomers } from "@/lib/customers/queries";
-import { getLocale } from "@/lib/i18n/locales";
+import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
+import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import ServiceForm from "./ServiceForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewServicePage() {
-  const locale = getLocale();
+  const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getServicesDictionary(locale);
+  const sharedStates = getSharedUiStates(locale);
   let activeCustomers;
 
   try {
@@ -25,22 +28,19 @@ export default async function NewServicePage() {
 
     if (err instanceof ForbiddenError) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-          <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.accessDenied}</h2>
-            <p className="text-sm text-slate-500">{dictionary.states.createForbidden}</p>
-          </div>
-        </div>
+        <SharedAuthenticatedStatePanel
+          title={sharedStates.accessDenied.title}
+          message={dictionary.states.createForbidden}
+        />
       );
     }
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.genericError}</h2>
-          <p className="text-sm text-slate-500">{dictionary.states.serviceDataLoadError}</p>
-        </div>
-      </div>
+      <SharedAuthenticatedStatePanel
+        title={sharedStates.genericError.title}
+        message={dictionary.states.serviceDataLoadError}
+        role="alert"
+      />
     );
   }
 

@@ -7,8 +7,30 @@ import FilterBar from "@/components/ui/FilterBar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import DataTable from "@/components/ui/DataTable";
 import PendingLink from "@/components/ui/PendingLink";
-import { Filter, Search, Star, Phone, Mail, FileText, CheckCircle2, User, MapPin, Plus, ShieldAlert } from "lucide-react";
-import type { Supplier, SupplierStatus } from "@/types/supplier";
+import {
+  Filter,
+  Search,
+  Star,
+  Phone,
+  Mail,
+  FileText,
+  CheckCircle2,
+  User,
+  MapPin,
+  Plus,
+  ShieldAlert,
+} from "lucide-react";
+import type { Supplier, SupplierStatus, SupplierType } from "@/types/supplier";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import {
+  formatSupplierCopy,
+  getSupplierCategoryLabel,
+  getSupplierStatusLabel,
+  getSupplierTypeLabel,
+  getSupplierVatRegistrationLabel,
+  type SuppliersDictionary,
+} from "@/lib/i18n/dictionaries/suppliers";
+import { formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
 import SupplierBlacklistActions from "./SupplierBlacklistActions";
 import SupplierRateCardsList from "./SupplierRateCardsList";
 
@@ -22,26 +44,6 @@ const STATUS_VARIANT_MAP: Record<SupplierStatus, StatusBadgeVariant> = {
   blacklisted: "draft",
   inactive: "inactive",
 };
-
-function formatOption(value: string | null) {
-  if (!value) return "-";
-
-  return value
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function formatStatus(value: SupplierStatus) {
-  return formatOption(value);
-}
-
-function formatVatRegistration(value: Supplier["vatRegistrationStatus"]) {
-  if (value === "not_registered") return "Not Registered";
-  if (value === "registered") return "VAT Registered";
-  if (value === "unknown") return "Unknown";
-  return "-";
-}
 
 function hasRating(supplier: Supplier) {
   return supplier.rating > 0;
@@ -80,12 +82,15 @@ export default function SuppliersClient({
   loadError,
   canCreateSuppliers = false,
   canViewCosting = false,
+  dictionary,
 }: {
   suppliers: Supplier[];
   loadError?: "suppliers_load_failed";
   canCreateSuppliers?: boolean;
   canViewCosting?: boolean;
+  dictionary: SuppliersDictionary;
 }) {
+  const locale = dictionary.locale;
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -113,10 +118,7 @@ export default function SuppliersClient({
 
   return (
     <div className="flex flex-col h-full">
-      <PageHeader
-        title="Supplier Network"
-        subtitle="Review live supplier directory records from the database."
-      />
+      <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle} />
 
       {canCreateSuppliers && (
         <div className="mb-4 flex justify-end">
@@ -125,14 +127,14 @@ export default function SuppliersClient({
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold text-on-primary transition-colors hover:bg-primary-container"
           >
             <Plus size={16} />
-            New Supplier
+            {dictionary.list.newSupplier}
           </PendingLink>
         </div>
       )}
 
       {loadError && (
         <div className="mb-4 rounded-lg border border-error-container bg-error-container/40 px-4 py-3 text-[14px] font-medium text-on-error-container">
-          Suppliers could not be loaded right now.
+          {dictionary.states.listInlineError}
         </div>
       )}
 
@@ -152,7 +154,7 @@ export default function SuppliersClient({
                 type="text"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search suppliers..."
+                placeholder={dictionary.list.searchPlaceholder}
                 className="w-64 pl-9 pr-4 py-2 bg-surface border border-outline-variant rounded-lg text-[14px] text-on-surface focus:outline-none focus:border-primary"
               />
             </div>
@@ -162,10 +164,10 @@ export default function SuppliersClient({
                 onChange={(event) => setStatusFilter(event.target.value)}
                 className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
               >
-                <option value="all">All Statuses</option>
+                <option value="all">{dictionary.list.allStatuses}</option>
                 {STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>
-                    {formatStatus(status)}
+                    {getSupplierStatusLabel(locale, status)}
                   </option>
                 ))}
               </select>
@@ -180,10 +182,10 @@ export default function SuppliersClient({
                 onChange={(event) => setCategoryFilter(event.target.value)}
                 className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
               >
-                <option value="all">All Categories</option>
+                <option value="all">{dictionary.list.allCategories}</option>
                 {categories.map((category) => (
                   <option key={category} value={category}>
-                    {formatOption(category)}
+                    {getSupplierCategoryLabel(locale, category)}
                   </option>
                 ))}
               </select>
@@ -194,13 +196,25 @@ export default function SuppliersClient({
             </div>
             <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
               {filteredSuppliers.length === 0
-                ? "Showing 0 suppliers"
-                : `Showing ${filteredSuppliers.length} of ${suppliers.length} suppliers`}
+                ? dictionary.list.showingZero
+                : formatSupplierCopy(dictionary.list.showingRange, {
+                    filtered: formatUiNumber(locale, filteredSuppliers.length),
+                    total: formatUiNumber(locale, suppliers.length),
+                  })}
             </div>
           </FilterBar>
 
           <div className="flex-1 overflow-auto">
-            <DataTable columns={["Supplier", "Category", "Type", "Location", "Rating", "Status"]}>
+            <DataTable
+              columns={[
+                dictionary.list.columns.supplier,
+                dictionary.list.columns.category,
+                dictionary.list.columns.type,
+                dictionary.list.columns.location,
+                dictionary.list.columns.rating,
+                dictionary.list.columns.status,
+              ]}
+            >
               {filteredSuppliers.map((supplier) => (
                 <tr
                   key={supplier.id}
@@ -216,7 +230,7 @@ export default function SuppliersClient({
                       </div>
                       <div>
                         <div className="font-semibold text-primary flex items-center gap-2">
-                          {supplier.name}
+                          <span dir="auto">{supplier.name}</span>
                           {supplier.isPreferred && (
                             <Star size={14} className="text-tertiary-fixed-dim fill-current" />
                           )}
@@ -228,29 +242,37 @@ export default function SuppliersClient({
                               : "font-mono text-xs text-on-surface-variant opacity-40"
                           }`}
                           title={supplier.supplierNumber ?? supplier.id}
+                          dir="ltr"
                         >
-                          {supplier.supplierNumber ?? supplier.id}
+                          {isolateBidiText(supplier.supplierNumber ?? supplier.id)}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-4">
                     <span className="bg-surface-variant text-on-surface px-2 py-1 rounded text-[12px] font-medium">
-                      {formatOption(supplier.category ?? supplier.service)}
+                      {getSupplierCategoryLabel(locale, supplier.category ?? supplier.service)}
                     </span>
                   </td>
                   <td className="px-4 py-4 text-on-surface-variant">
-                    {formatOption(supplier.supplierType)}
+                    {supplier.supplierType
+                      ? getSupplierTypeLabel(locale, supplier.supplierType as SupplierType)
+                      : "—"}
                   </td>
                   <td className="px-4 py-4 text-on-surface-variant">
-                    {[supplier.city, supplier.country].filter(Boolean).join(", ") || "-"}
+                    <span dir="auto">
+                      {[supplier.city, supplier.country].filter(Boolean).join(", ") || "—"}
+                    </span>
                   </td>
                   <td className="px-4 py-4">
                     {hasRating(supplier) ? (
                       <div className="flex items-center gap-1">
                         <Star size={16} className="text-tertiary-fixed-dim fill-current" />
-                        <span className="font-semibold text-on-surface">
-                          {supplier.rating.toFixed(1)}
+                        <span className="font-semibold text-on-surface tabular-nums" dir="ltr">
+                          {formatUiNumber(locale, supplier.rating, {
+                            minimumFractionDigits: 1,
+                            maximumFractionDigits: 1,
+                          })}
                         </span>
                       </div>
                     ) : (
@@ -259,7 +281,7 @@ export default function SuppliersClient({
                   </td>
                   <td className="px-4 py-4">
                     <StatusBadge variant={STATUS_VARIANT_MAP[supplier.status]}>
-                      {formatStatus(supplier.status)}
+                      {getSupplierStatusLabel(locale, supplier.status)}
                     </StatusBadge>
                   </td>
                 </tr>
@@ -268,8 +290,8 @@ export default function SuppliersClient({
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-on-surface-variant">
                     {suppliers.length === 0
-                      ? "No suppliers found in the live directory."
-                      : "No suppliers match the selected filters."}
+                      ? dictionary.states.noSuppliers
+                      : dictionary.states.noFilteredSuppliers}
                   </td>
                 </tr>
               )}
@@ -285,7 +307,11 @@ export default function SuppliersClient({
                   {getSupplierInitial(activeSupplier)}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-[20px] leading-[28px] font-semibold text-primary truncate" title={activeSupplier.name}>
+                  <h3
+                    className="text-[20px] leading-[28px] font-semibold text-primary truncate"
+                    title={activeSupplier.name}
+                    dir="auto"
+                  >
                     {activeSupplier.name}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
@@ -296,11 +322,15 @@ export default function SuppliersClient({
                           : "max-w-[180px] truncate font-mono text-xs text-on-surface-variant opacity-40"
                       }
                       title={activeSupplier.supplierNumber ?? activeSupplier.id}
+                      dir="ltr"
                     >
-                      {activeSupplier.supplierNumber ?? activeSupplier.id}
+                      {isolateBidiText(activeSupplier.supplierNumber ?? activeSupplier.id)}
                     </span>
                     <span className="bg-surface-variant text-on-surface px-2 py-0.5 rounded text-[10px] font-bold uppercase">
-                      {formatOption(activeSupplier.category ?? activeSupplier.service)}
+                      {getSupplierCategoryLabel(
+                        locale,
+                        activeSupplier.category ?? activeSupplier.service,
+                      )}
                     </span>
                   </div>
                 </div>
@@ -308,12 +338,15 @@ export default function SuppliersClient({
               <div className="flex flex-wrap items-center justify-end gap-2 shrink-0">
                 {canCreateSuppliers && (
                   <>
-                    <SupplierBlacklistActions supplier={activeSupplier} />
+                    <SupplierBlacklistActions
+                      supplier={activeSupplier}
+                      dictionary={dictionary.blacklist}
+                    />
                     <PendingLink
                       href={`/suppliers/${activeSupplier.id}/edit`}
                       className="text-[12px] font-medium text-primary hover:underline px-2 py-1 rounded hover:bg-surface-variant"
                     >
-                      Edit
+                      {dictionary.panel.edit}
                     </PendingLink>
                   </>
                 )}
@@ -322,7 +355,7 @@ export default function SuppliersClient({
                   type="button"
                   onClick={() => setSelectedSupplierId(null)}
                   className="text-on-surface-variant hover:text-primary"
-                  aria-label="Close supplier details"
+                  aria-label={dictionary.panel.closeDetails}
                 >
                   &times;
                 </button>
@@ -332,20 +365,30 @@ export default function SuppliersClient({
             <div className="space-y-6">
               <div>
                 <h4 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider mb-3">
-                  Contact Information
+                  {dictionary.panel.contactInformation}
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 text-[14px]">
                     <User size={18} className="text-outline" />
-                    <span className="text-on-surface font-medium">{activeSupplier.contactName || "-"}</span>
+                    <span className="text-on-surface font-medium" dir="auto">
+                      {activeSupplier.contactName || "—"}
+                    </span>
                   </div>
                   <div className="flex items-center gap-3 text-[14px]">
                     <Phone size={18} className="text-outline" />
-                    <span className="text-on-surface">{activeSupplier.phone || "-"}</span>
+                    <span className="text-on-surface" dir="ltr">
+                      {activeSupplier.phone
+                        ? isolateBidiText(activeSupplier.phone)
+                        : "—"}
+                    </span>
                   </div>
                   <div className="flex items-center gap-3 text-[14px]">
                     <Mail size={18} className="text-outline" />
-                    <span className="text-on-surface">{activeSupplier.email ?? "-"}</span>
+                    <span className="text-on-surface" dir="ltr">
+                      {activeSupplier.email
+                        ? isolateBidiText(activeSupplier.email)
+                        : "—"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -354,16 +397,18 @@ export default function SuppliersClient({
                 <div>
                   <h4 className="text-[12px] font-semibold text-error uppercase tracking-wider mb-3 flex items-center gap-2">
                     <ShieldAlert size={14} />
-                    Blacklist Details
+                    {dictionary.panel.blacklistDetails}
                   </h4>
                   <div className="bg-error-container/20 border border-error/30 rounded-lg p-4 space-y-2 text-[14px]">
                     <div className="text-on-surface-variant">
-                      <span className="font-semibold text-error">Reason: </span>
-                      {activeSupplier.blacklistedReason}
+                      <span className="font-semibold text-error">{dictionary.panel.reason} </span>
+                      <span dir="auto">{activeSupplier.blacklistedReason}</span>
                     </div>
                     {activeSupplier.blacklistedAt && (
                       <div className="text-[12px] text-on-surface-variant mt-2 pt-2 border-t border-error/20">
-                        Blacklisted on {new Date(activeSupplier.blacklistedAt).toLocaleDateString()}
+                        {formatSupplierCopy(dictionary.panel.blacklistedOn, {
+                          date: formatUiDate(locale, activeSupplier.blacklistedAt),
+                        })}
                       </div>
                     )}
                   </div>
@@ -372,26 +417,33 @@ export default function SuppliersClient({
 
               <div>
                 <h4 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider mb-3">
-                  Directory Details
+                  {dictionary.panel.directoryDetails}
                 </h4>
                 <div className="bg-surface p-4 rounded-lg border border-surface-variant space-y-2 text-[14px]">
                   <div className="flex justify-between items-center gap-4">
-                    <span className="text-on-surface-variant">Status</span>
+                    <span className="text-on-surface-variant">{dictionary.panel.status}</span>
                     <StatusBadge variant={STATUS_VARIANT_MAP[activeSupplier.status]}>
-                      {formatStatus(activeSupplier.status)}
+                      {getSupplierStatusLabel(locale, activeSupplier.status)}
                     </StatusBadge>
                   </div>
                   <div className="flex justify-between items-center gap-4">
-                    <span className="text-on-surface-variant">VAT Registration</span>
+                    <span className="text-on-surface-variant">
+                      {dictionary.panel.vatRegistration}
+                    </span>
                     <span className="text-on-surface font-medium">
-                      {formatVatRegistration(activeSupplier.vatRegistrationStatus)}
+                      {getSupplierVatRegistrationLabel(
+                        locale,
+                        activeSupplier.vatRegistrationStatus,
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between items-center gap-4">
-                    <span className="text-on-surface-variant">Preferred</span>
+                    <span className="text-on-surface-variant">{dictionary.panel.preferred}</span>
                     <span className="flex items-center gap-1 text-on-surface font-medium">
                       {activeSupplier.isPreferred && <CheckCircle2 size={14} />}
-                      {activeSupplier.isPreferred ? "Yes" : "No"}
+                      {activeSupplier.isPreferred
+                        ? dictionary.panel.yes
+                        : dictionary.panel.no}
                     </span>
                   </div>
                 </div>
@@ -399,16 +451,17 @@ export default function SuppliersClient({
 
               <div>
                 <h4 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider mb-3">
-                  Coverage
+                  {dictionary.panel.coverage}
                 </h4>
                 <div className="border border-outline-variant/50 rounded-lg p-3 flex items-start gap-3">
                   <MapPin size={18} className="text-outline mt-0.5" />
                   <div>
-                    <div className="text-[14px] font-medium text-on-surface">
-                      {[activeSupplier.city, activeSupplier.country].filter(Boolean).join(", ") || "-"}
+                    <div className="text-[14px] font-medium text-on-surface" dir="auto">
+                      {[activeSupplier.city, activeSupplier.country].filter(Boolean).join(", ") ||
+                        "—"}
                     </div>
-                    <div className="text-[12px] text-on-surface-variant mt-1">
-                      {activeSupplier.coverageArea ?? "No coverage area recorded."}
+                    <div className="text-[12px] text-on-surface-variant mt-1" dir="auto">
+                      {activeSupplier.coverageArea ?? dictionary.panel.noCoverage}
                     </div>
                   </div>
                 </div>
@@ -416,20 +469,22 @@ export default function SuppliersClient({
 
               <div>
                 <h4 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider mb-3">
-                  Recent Activity
+                  {dictionary.panel.recentActivity}
                 </h4>
                 <div className="border border-outline-variant/50 rounded-lg p-3 flex items-center gap-3">
                   <div className="p-2 bg-surface rounded">
                     <FileText size={16} className="text-outline" />
                   </div>
                   <div>
-                    <div className="text-[14px] font-medium text-on-surface">
+                    <div className="text-[14px] font-medium text-on-surface" dir="auto">
                       {activeSupplier.recentProject
-                        ? `Service ${activeSupplier.recentProject}`
-                        : "No recent service recorded"}
+                        ? formatSupplierCopy(dictionary.panel.servicePrefix, {
+                            id: activeSupplier.recentProject,
+                          })
+                        : dictionary.panel.noRecentService}
                     </div>
                     <div className="text-[12px] text-on-surface-variant">
-                      Live supplier directory record
+                      {dictionary.panel.liveRecord}
                     </div>
                   </div>
                 </div>
@@ -438,9 +493,13 @@ export default function SuppliersClient({
               {canViewCosting && (
                 <div>
                   <h4 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider mb-3">
-                    Internal Rate Cards
+                    {dictionary.panel.internalRateCards}
                   </h4>
-                  <SupplierRateCardsList supplierId={activeSupplier.id} />
+                  <SupplierRateCardsList
+                    supplierId={activeSupplier.id}
+                    dictionary={dictionary.rateCards}
+                    locale={locale}
+                  />
                 </div>
               )}
             </div>

@@ -8,8 +8,9 @@ import PaginationFooter from "@/components/ui/PaginationFooter";
 import Button from "@/components/ui/Button";
 import PendingLink from "@/components/ui/PendingLink";
 import { Eye, Filter, Plus } from "lucide-react";
-import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getServiceStatusLabel, type ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { isolateBidiText } from "@/lib/i18n/bidi";
+import { formatSarAmount, formatUiDate } from "@/lib/i18n/formatting";
 import type { Service } from "@/types/service";
 
 const STATUS_VARIANT_MAP: Record<string, string> = {
@@ -26,12 +27,12 @@ const TABLE_HEADER_BASE =
   "px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase";
 const TABLE_CELL_BASE = "px-4 py-4 align-top";
 const COLUMN_LAYOUT = {
-  serviceNumber: "w-[16%] min-w-[160px] text-left",
-  serviceTitle: "w-[26%] min-w-[240px] text-left",
-  customer: "w-[18%] min-w-[180px] text-left",
+  serviceNumber: "w-[16%] min-w-[160px] text-start",
+  serviceTitle: "w-[26%] min-w-[240px] text-start",
+  customer: "w-[18%] min-w-[180px] text-start",
   eventDate: "w-[12%] min-w-[130px] text-center",
   status: "w-[12%] min-w-[120px] text-center",
-  budget: "w-[10%] min-w-[140px] text-right",
+  budget: "w-[10%] min-w-[140px] text-end",
   view: "w-[6%] min-w-[110px] text-center",
 } as const;
 
@@ -62,9 +63,9 @@ export default function ServicesClient({ services, canWrite, dictionary }: Servi
     }
 
     return dictionary.list.showingRange
-      .replace("{start}", String(startIndex + 1))
-      .replace("{end}", String(endIndex))
-      .replace("{total}", String(filtered.length));
+      .replace("{start}", isolateBidiText(String(startIndex + 1)))
+      .replace("{end}", isolateBidiText(String(endIndex)))
+      .replace("{total}", isolateBidiText(String(filtered.length)));
   }
 
   return (
@@ -126,7 +127,7 @@ export default function ServicesClient({ services, canWrite, dictionary }: Servi
             </div>
           ) : (
             <div className="overflow-x-auto w-full border border-surface-variant rounded-b-xl bg-surface-container-lowest">
-              <table className="w-full min-w-[1120px] table-fixed border-collapse text-left">
+              <table className="w-full min-w-[1120px] table-fixed border-collapse text-start">
                 <thead>
                   <tr className="bg-surface-container-low border-b border-surface-variant">
                     <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.serviceNumber}`}>
@@ -169,19 +170,21 @@ export default function ServicesClient({ services, canWrite, dictionary }: Servi
                       <td dir="auto" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.customer} text-on-surface-variant`}>
                         {service.customer?.company ? isolateBidiText(service.customer.company) : "—"}
                       </td>
-                      <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.eventDate} text-on-surface-variant`}>
-                        {service.eventStartDate ? isolateBidiText(service.eventStartDate) : "—"}
+                      <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.eventDate} text-on-surface-variant tabular-nums`}>
+                        {service.eventStartDate
+                          ? formatUiDate(dictionary.locale, service.eventStartDate)
+                          : "—"}
                       </td>
                       <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.status}`}>
                         <div className="flex justify-center">
                           <StatusBadge variant={(STATUS_VARIANT_MAP[service.status] ?? "pending") as React.ComponentProps<typeof StatusBadge>["variant"]}>
-                            {dictionary.serviceStatuses[service.status]}
+                            {getServiceStatusLabel(dictionary.locale, service.status)}
                           </StatusBadge>
                         </div>
                       </td>
-                      <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.budget} font-semibold text-on-surface`}>
+                      <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.budget} font-semibold text-on-surface tabular-nums`}>
                         {service.estimatedBudget != null
-                          ? isolateBidiText(`${Number(service.estimatedBudget).toLocaleString("en-SA")} SAR`)
+                          ? formatSarAmount(dictionary.locale, Number(service.estimatedBudget))
                           : "—"}
                       </td>
                       <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}>

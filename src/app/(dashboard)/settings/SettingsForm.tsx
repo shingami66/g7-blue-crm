@@ -15,6 +15,10 @@ import type { CompanySettingsPageData } from "@/types/settings";
 import { updateCompanySettings } from "@/lib/settings/actions";
 import type { CompanySettingsActionState } from "@/lib/settings/actions";
 import Button from "@/components/ui/Button";
+import {
+  mapSettingsActionMessage,
+  type SettingsDictionary,
+} from "@/lib/i18n/dictionaries/settings";
 
 const fieldClass =
   "w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-[14px] focus:border-primary focus:ring-1 focus:ring-primary outline-none disabled:bg-surface disabled:text-on-surface-variant disabled:cursor-not-allowed";
@@ -32,6 +36,7 @@ function Field({
   disabled,
   readOnly,
   placeholder,
+  dir,
 }: {
   label: string;
   name: string;
@@ -40,6 +45,7 @@ function Field({
   disabled?: boolean;
   readOnly?: boolean;
   placeholder?: string;
+  dir?: "ltr" | "rtl" | "auto";
 }) {
   return (
     <div>
@@ -55,6 +61,7 @@ function Field({
         readOnly={readOnly}
         placeholder={placeholder}
         className={fieldClass}
+        dir={dir}
       />
     </div>
   );
@@ -66,12 +73,14 @@ function TextareaField({
   defaultValue,
   disabled,
   rows = 3,
+  dir,
 }: {
   label: string;
   name: string;
   defaultValue?: string | null;
   disabled?: boolean;
   rows?: number;
+  dir?: "ltr" | "rtl" | "auto";
 }) {
   return (
     <div>
@@ -85,6 +94,7 @@ function TextareaField({
         rows={rows}
         disabled={disabled}
         className={`${fieldClass} resize-none`}
+        dir={dir}
       />
     </div>
   );
@@ -94,7 +104,9 @@ export default function SettingsForm({
   settings,
   canEdit,
   canViewBankDetails,
-}: CompanySettingsPageData) {
+  dictionary,
+}: CompanySettingsPageData & { dictionary: SettingsDictionary }) {
+  const locale = dictionary.locale;
   const [state, formAction, pending] = useActionState(
     updateCompanySettings,
     initialCompanySettingsActionState
@@ -137,44 +149,38 @@ export default function SettingsForm({
     setDefaultVatPercent(nextVatMode === "not_registered" ? "0" : "15");
   };
 
+  const displayError = state.error
+    ? mapSettingsActionMessage(locale, state.error)
+    : null;
+  const displaySuccess =
+    state.success && state.message
+      ? mapSettingsActionMessage(locale, state.message)
+      : null;
+
   return (
     <div className="flex flex-col h-full max-w-7xl mx-auto pb-12">
-      <PageHeader
-        title="Company Settings"
-        subtitle="Manage seller profile, VAT defaults, and company banking details for future documents."
-      >
+      <PageHeader title={dictionary.page.title} subtitle={dictionary.page.subtitle}>
         {canEdit ? (
           isEditing ? (
             <div className="flex items-center gap-3">
-              <Button
-                onClick={handleCancel}
-                disabled={pending}
-                variant="ghost"
-              >
-                Cancel
+              <Button onClick={handleCancel} disabled={pending} variant="ghost">
+                {dictionary.actions.cancel}
               </Button>
-              <Button
-                form="company-settings-form"
-                loading={pending}
-                type="submit"
-              >
+              <Button form="company-settings-form" loading={pending} type="submit">
                 <Save size={18} />
-                {pending ? "Saving..." : "Save Changes"}
+                {pending ? dictionary.actions.saving : dictionary.actions.save}
               </Button>
             </div>
           ) : (
-            <Button
-              onClick={() => setIsEditing(true)}
-              variant="secondary"
-            >
+            <Button onClick={() => setIsEditing(true)} variant="secondary">
               <Settings2 size={18} />
-              Edit Settings
+              {dictionary.actions.edit}
             </Button>
           )
         ) : (
           <div className="flex items-center gap-2 text-[13px] text-on-surface-variant bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2">
             <Lock size={16} />
-            Read only
+            {dictionary.states.readOnly}
           </div>
         )}
       </PageHeader>
@@ -182,14 +188,14 @@ export default function SettingsForm({
       <form key={resetKey} id="company-settings-form" action={canEdit ? formAction : undefined}>
         <input type="hidden" name="currency" value="SAR" />
 
-        {state.error && (
+        {displayError && (
           <div className="mb-6 bg-error-container text-on-error-container border border-error/20 rounded-lg p-4 text-[14px]">
-            {state.error}
+            {displayError}
           </div>
         )}
-        {state.success && state.message && (
+        {displaySuccess && (
           <div className="mb-6 bg-status-active-bg text-status-active-text border border-status-active-text/20 rounded-lg p-4 text-[14px]">
-            {state.message}
+            {displaySuccess}
           </div>
         )}
 
@@ -198,40 +204,47 @@ export default function SettingsForm({
             <section className="bg-surface-container-lowest rounded-xl border border-surface-variant shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex items-center gap-2">
                 <Building2 size={20} className="text-surface-tint" />
-                <h2 className="text-[20px] font-semibold text-primary">Company Profile</h2>
+                <h2 className="text-[20px] font-semibold text-primary">
+                  {dictionary.sections.companyProfile}
+                </h2>
               </div>
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field
-                  label="English Legal Company Name"
+                  label={dictionary.labels.legalNameEn}
                   name="legal_name_en"
                   defaultValue={settings.legalNameEn}
                   disabled={controlsDisabled}
+                  dir="ltr"
                 />
                 <Field
-                  label="Arabic Legal Company Name"
+                  label={dictionary.labels.legalNameAr}
                   name="legal_name_ar"
                   defaultValue={settings.legalNameAr}
                   disabled={controlsDisabled}
+                  dir="auto"
                 />
                 <Field
-                  label="Official Email"
+                  label={dictionary.labels.officialEmail}
                   name="official_email"
                   type="email"
                   defaultValue={settings.officialEmail}
                   disabled={controlsDisabled}
+                  dir="ltr"
                 />
                 <Field
-                  label="Official Phone"
+                  label={dictionary.labels.officialPhone}
                   name="official_phone"
                   defaultValue={settings.officialPhone}
                   disabled={controlsDisabled}
+                  dir="ltr"
                 />
                 <div className="md:col-span-2">
                   <TextareaField
-                    label="National Address"
+                    label={dictionary.labels.nationalAddress}
                     name="national_address"
                     defaultValue={settings.nationalAddress}
                     disabled={controlsDisabled}
+                    dir="auto"
                   />
                 </div>
               </div>
@@ -240,40 +253,50 @@ export default function SettingsForm({
             <section className="bg-surface-container-lowest rounded-xl border border-surface-variant shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex items-center gap-2">
                 <Gavel size={20} className="text-surface-tint" />
-                <h2 className="text-[20px] font-semibold text-primary">Legal & VAT</h2>
+                <h2 className="text-[20px] font-semibold text-primary">
+                  {dictionary.sections.legalVat}
+                </h2>
               </div>
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field
-                  label="Commercial Registration (CR)"
+                  label={dictionary.labels.crNumber}
                   name="cr_number"
                   defaultValue={settings.crNumber}
                   disabled={controlsDisabled}
+                  dir="ltr"
                 />
                 <Field
-                  label="TIN / الرقم المميز"
+                  label={dictionary.labels.tinNumber}
                   name="tin_number"
                   defaultValue={settings.tinNumber}
                   disabled={controlsDisabled}
+                  dir="ltr"
                 />
                 <div>
                   <label className={labelClass} htmlFor="vat_mode">
-                    VAT Registration Status
+                    {dictionary.labels.vatMode}
                   </label>
                   <select
                     id="vat_mode"
                     name="vat_mode"
                     value={vatMode === "phase2_integrated" ? "vat_registered_phase_1" : vatMode}
-                    onChange={(event) => handleVatModeChange(event.target.value as typeof vatMode)}
+                    onChange={(event) =>
+                      handleVatModeChange(event.target.value as typeof vatMode)
+                    }
                     disabled={controlsDisabled}
                     className={fieldClass}
                   >
-                    <option value="not_registered">Not registered</option>
-                    <option value="vat_registered_phase_1">VAT registered - Phase 1</option>
+                    <option value="not_registered">
+                      {dictionary.vatModes.not_registered}
+                    </option>
+                    <option value="vat_registered_phase_1">
+                      {dictionary.vatModes.vat_registered_phase_1}
+                    </option>
                   </select>
                 </div>
                 <div>
                   <label className={labelClass} htmlFor="default_vat_percent">
-                    Default VAT %
+                    {dictionary.labels.defaultVatPercent}
                   </label>
                   <input
                     id="default_vat_percent"
@@ -284,27 +307,27 @@ export default function SettingsForm({
                     readOnly={isNotRegistered}
                     disabled={controlsDisabled}
                     className={fieldClass}
+                    dir="ltr"
                   />
                 </div>
                 <Field
-                  label="VAT Number"
+                  label={dictionary.labels.vatNumber}
                   name="vat_number"
                   defaultValue={isNotRegistered ? "" : settings.vatNumber}
                   disabled={controlsDisabled || isNotRegistered}
+                  dir="ltr"
                 />
                 <Field
-                  label="VAT Effective Date"
+                  label={dictionary.labels.vatEffectiveDate}
                   name="vat_effective_date"
                   type="date"
                   defaultValue={isNotRegistered ? "" : settings.vatEffectiveDate}
                   disabled={controlsDisabled || isNotRegistered}
+                  dir="ltr"
                 />
                 <div className="md:col-span-2 flex items-start gap-2 text-[13px] text-on-surface-variant bg-surface-container-low rounded-lg border border-outline-variant p-3">
                   <ShieldAlert size={16} className="text-primary mt-0.5 shrink-0" />
-                  <p>
-                    Company Settings are defaults for new records only. CS-A does not update old
-                    quotations, invoices, or print layouts.
-                  </p>
+                  <p>{dictionary.help.historicalSnapshot}</p>
                 </div>
               </div>
             </section>
@@ -314,33 +337,38 @@ export default function SettingsForm({
             <section className="bg-surface-container-lowest rounded-xl border border-surface-variant shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex items-center gap-2">
                 <Landmark size={20} className="text-surface-tint" />
-                <h2 className="text-[20px] font-semibold text-primary">Bank Details</h2>
+                <h2 className="text-[20px] font-semibold text-primary">
+                  {dictionary.sections.bankDetails}
+                </h2>
               </div>
               {canViewBankDetails ? (
                 <div className="p-6 space-y-4">
                   <Field
-                    label="Bank Name"
+                    label={dictionary.labels.bankName}
                     name="bank_name"
                     defaultValue={bank?.bankName}
                     disabled={controlsDisabled}
+                    dir="auto"
                   />
                   <Field
-                    label="IBAN"
+                    label={dictionary.labels.iban}
                     name="bank_iban"
                     defaultValue={bank?.bankIban}
                     disabled={controlsDisabled}
+                    dir="ltr"
                   />
                   <Field
-                    label="Account Holder"
+                    label={dictionary.labels.accountHolder}
                     name="bank_account_holder"
                     defaultValue={bank?.bankAccountHolder}
                     disabled={controlsDisabled}
+                    dir="auto"
                   />
                 </div>
               ) : (
                 <div className="p-6 text-[14px] text-on-surface-variant flex items-start gap-2">
                   <Lock size={18} className="text-primary shrink-0 mt-0.5" />
-                  <p>Bank details are restricted to Admin and Accountant roles.</p>
+                  <p>{dictionary.help.bankRestricted}</p>
                 </div>
               )}
             </section>
@@ -348,16 +376,25 @@ export default function SettingsForm({
             <section className="bg-surface-container-lowest rounded-xl border border-surface-variant shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex items-center gap-2">
                 <Settings2 size={20} className="text-surface-tint" />
-                <h2 className="text-[20px] font-semibold text-primary">Finance Defaults</h2>
+                <h2 className="text-[20px] font-semibold text-primary">
+                  {dictionary.sections.financeDefaults}
+                </h2>
               </div>
               <div className="p-6 space-y-4">
-                <Field label="Currency" name="currency_display" defaultValue="SAR" disabled />
+                <Field
+                  label={dictionary.labels.currency}
+                  name="currency_display"
+                  defaultValue="SAR"
+                  disabled
+                  dir="ltr"
+                />
                 <TextareaField
-                  label="Default Terms"
+                  label={dictionary.labels.defaultTerms}
                   name="default_terms"
                   defaultValue={settings.defaultTerms}
                   disabled={controlsDisabled}
                   rows={7}
+                  dir="auto"
                 />
               </div>
             </section>

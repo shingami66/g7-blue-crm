@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cancelSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { getLocale } from "@/lib/i18n/locales";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
@@ -64,7 +64,8 @@ export default function SupplierAllocationCancelForm({
 }) {
   const router = useRouter();
   const { push } = useGlobalNavigationPending();
-  const servicesDictionary = getServicesDictionary(getLocale());
+  const locale = useLocale();
+  const servicesDictionary = getServicesDictionary(locale);
   const dictionary = servicesDictionary.supplierAllocations.subflow.cancelForm;
   const common = servicesDictionary.supplierAllocations.subflow.common;
   const statusLabels = servicesDictionary.supplierAllocations.statusLabels;

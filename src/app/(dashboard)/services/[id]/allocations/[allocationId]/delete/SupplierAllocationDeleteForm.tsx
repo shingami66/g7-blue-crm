@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { getLocale } from "@/lib/i18n/locales";
 import { deleteSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -63,7 +63,8 @@ export default function SupplierAllocationDeleteForm({
 }) {
   const router = useRouter();
   const { push } = useGlobalNavigationPending();
-  const servicesDictionary = getServicesDictionary(getLocale());
+  const locale = useLocale();
+  const servicesDictionary = getServicesDictionary(locale);
   const dictionary = servicesDictionary.supplierAllocations.subflow.deleteForm;
   const common = servicesDictionary.supplierAllocations.subflow.common;
   const statusLabels = servicesDictionary.supplierAllocations.statusLabels;

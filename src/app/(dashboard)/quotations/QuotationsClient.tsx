@@ -10,11 +10,14 @@ import { Plus, Filter, FileSearch, Trash2, Edit, AlertCircle } from "lucide-reac
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { isolateBidiText } from "@/lib/i18n/bidi";
 import {
+  getQuotationStatusLabel,
   getQuotationsDictionary,
   type QuotationsDictionary,
 } from "@/lib/i18n/dictionaries/quotations";
-import { getLocale } from "@/lib/i18n/locales";
+import { formatSarAmount, formatUiDate } from "@/lib/i18n/formatting";
 import type { QuotationListItem } from "@/lib/quotations/types";
 import { softDeleteQuotation } from "@/lib/quotations/actions";
 
@@ -33,9 +36,11 @@ function formatCopy(template: string, values: Record<string, string | number>) {
 export default function QuotationsClient({
   quotations,
   canWrite,
-  dictionary = getQuotationsDictionary(getLocale()),
+  dictionary: dictionaryProp,
 }: QuotationsClientProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const dictionary = dictionaryProp ?? getQuotationsDictionary(locale);
   const { push } = useGlobalNavigationPending();
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,7 +84,7 @@ export default function QuotationsClient({
 
     const result = await softDeleteQuotation(id);
     if (!result.success) {
-      setError(result.error || dictionary.list.deleteFailed);
+      setError(dictionary.list.deleteFailed);
     } else {
       router.refresh();
     }
@@ -150,7 +155,11 @@ export default function QuotationsClient({
         <div className="flex-1 overflow-auto">
           {filteredQuotations.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-on-surface-variant">
-              <p>{dictionary.list.noFilteredQuotations}</p>
+              <p>
+                {quotations.length === 0
+                  ? dictionary.list.noQuotations
+                  : dictionary.list.noFilteredQuotations}
+              </p>
             </div>
           ) : (
             <DataTable
@@ -170,7 +179,7 @@ export default function QuotationsClient({
                   onClick={() => push(`/quotations/${q.id}`)}
                 >
                   <td className="px-4 py-4 font-mono font-semibold text-primary" dir="ltr">
-                    {q.quotationNumber}
+                    {isolateBidiText(q.quotationNumber)}
                   </td>
                   <td className="px-4 py-4">
                     <div className="font-semibold text-on-surface" dir="auto">
@@ -180,14 +189,15 @@ export default function QuotationsClient({
                       {q.event}
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-on-surface-variant" dir="ltr">{q.date}</td>
-                  <td className="px-4 py-4 font-semibold text-on-surface" dir="ltr">
-                    {q.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <td className="px-4 py-4 text-on-surface-variant tabular-nums" dir="ltr">
+                    {formatUiDate(dictionary.locale, q.date)}
+                  </td>
+                  <td className="px-4 py-4 font-semibold text-on-surface tabular-nums" dir="ltr">
+                    {formatSarAmount(dictionary.locale, q.grandTotal)}
                   </td>
                   <td className="px-4 py-4">
                     <StatusBadge variant={q.status as StatusBadgeVariant}>
-                      {dictionary.statuses[q.status as keyof QuotationsDictionary["statuses"]] ??
-                        q.status.charAt(0).toUpperCase() + q.status.slice(1)}
+                      {getQuotationStatusLabel(dictionary.locale, q.status)}
                     </StatusBadge>
                   </td>
                   <td className="px-4 py-4">

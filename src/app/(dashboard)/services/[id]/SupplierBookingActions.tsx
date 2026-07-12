@@ -4,11 +4,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { getLocale } from "@/lib/i18n/locales";
 import {
   cancelSupplierBooking,
   createSupplierBookingFromAllocation,
 } from "@/lib/supplier-bookings/actions";
+import { getSafeActionErrorMessage } from "@/lib/i18n/safe-action-error";
 
 function getCreateSupplierBookingErrorMessage(
   error: string | null | undefined,
@@ -40,7 +40,7 @@ function getCreateSupplierBookingErrorMessage(
     "An unexpected error occurred.": dictionary.errors.unexpected,
   };
 
-  return mappedErrors[error] || error;
+  return getSafeActionErrorMessage(error, mappedErrors, dictionary.errors.unexpected);
 }
 
 function getCancelSupplierBookingErrorMessage(
@@ -68,16 +68,19 @@ function getCancelSupplierBookingErrorMessage(
     "An unexpected error occurred.": dictionary.errors.unexpected,
   };
 
-  return mappedErrors[error] || error;
+  return getSafeActionErrorMessage(error, mappedErrors, dictionary.errors.unexpected);
 }
 
-export function CreateSupplierBookingButton({ allocationId }: { allocationId: string }) {
+export function CreateSupplierBookingButton({
+  allocationId,
+  dictionary,
+}: {
+  allocationId: string;
+  dictionary: ReturnType<typeof getServicesDictionary>["supplierBookings"]["createAction"];
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const dictionary =
-    getServicesDictionary(getLocale()).supplierBookings.createAction;
-
   function createSupplierBooking() {
     setError(null);
 
@@ -110,15 +113,18 @@ export function CreateSupplierBookingButton({ allocationId }: { allocationId: st
   );
 }
 
-export default function SupplierBookingActions({ bookingId }: { bookingId: string }) {
+export default function SupplierBookingActions({
+  bookingId,
+  dictionary,
+}: {
+  bookingId: string;
+  dictionary: ReturnType<typeof getServicesDictionary>["supplierBookings"]["cancelAction"];
+}) {
   const router = useRouter();
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelledReason, setCancelledReason] = useState("");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const dictionary =
-    getServicesDictionary(getLocale()).supplierBookings.cancelAction;
-
   function submitCancellation() {
     const trimmedReason = cancelledReason.trim();
     if (!trimmedReason) {

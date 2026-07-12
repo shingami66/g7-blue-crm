@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { createAdminClient } from "@/lib/supabase/admin";
-import { getLocale } from "@/lib/i18n/locales";
+import type { Locale } from "@/lib/i18n/locales";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import type {
   ServiceStatus,
@@ -53,13 +53,14 @@ export function isTerminalServiceStatus(status: ServiceStatus) {
   return TERMINAL_STATUSES.has(status);
 }
 
-function getTransitionDictionary() {
-  return getServicesDictionary(getLocale()).transitionCopy;
+function getTransitionDictionary(locale: Locale) {
+  return getServicesDictionary(locale).transitionCopy;
 }
 
 async function loadTransitionEvidence(
   supabase: SupabaseAdminClient,
-  serviceId: string
+  serviceId: string,
+  locale: Locale,
 ): Promise<EvidenceResult> {
   const { data: quotations, error: quotationsError } = await supabase
     .from("quotations")
@@ -69,7 +70,7 @@ async function loadTransitionEvidence(
 
   if (quotationsError) {
     console.error("[loadTransitionEvidence] Quotation lookup error:", quotationsError.message);
-    return { success: false, error: getTransitionDictionary().blockedReasons.unableToVerifyQuotationEvidence };
+    return { success: false, error: getTransitionDictionary(locale).blockedReasons.unableToVerifyQuotationEvidence };
   }
 
   const approvedQuotations = (quotations ?? []).filter(
@@ -84,7 +85,7 @@ async function loadTransitionEvidence(
 
   if (allInvoicesError) {
     console.error("[loadTransitionEvidence] Invoice lookup error:", allInvoicesError.message);
-    return { success: false, error: getTransitionDictionary().blockedReasons.unableToVerifyInvoiceEvidence };
+    return { success: false, error: getTransitionDictionary(locale).blockedReasons.unableToVerifyInvoiceEvidence };
   }
 
   const activeInvoices = ((allInvoices ?? []) as InvoiceEvidence[]).filter(
@@ -108,7 +109,7 @@ async function loadTransitionEvidence(
 
     if (paymentsError) {
       console.error("[loadTransitionEvidence] Deposit payment lookup error:", paymentsError.message);
-      return { success: false, error: getTransitionDictionary().blockedReasons.unableToVerifyPaymentEvidence };
+      return { success: false, error: getTransitionDictionary(locale).blockedReasons.unableToVerifyPaymentEvidence };
     }
 
     hasConfirmedDepositPayment = (payments ?? []).length > 0;
@@ -137,9 +138,10 @@ function hasDepositPaymentEvidence(evidence: TransitionEvidence) {
 
 function getPreconditionBlockReason(
   nextStatus: ServiceStatus,
-  evidence: TransitionEvidence
+  evidence: TransitionEvidence,
+  locale: Locale,
 ): string | null {
-  const copy = getTransitionDictionary().blockedReasons;
+  const copy = getTransitionDictionary(locale).blockedReasons;
 
   switch (nextStatus) {
     case "Quoted":
@@ -197,9 +199,10 @@ function getPreconditionBlockReason(
 
 function makeAction(
   status: ServiceStatus,
-  blockedReason: string | null
+  blockedReason: string | null,
+  locale: Locale,
 ): ServiceStatusTransitionAction {
-  const copy = getTransitionDictionary().actions[status];
+  const copy = getTransitionDictionary(locale).actions[status];
 
   return {
     status,
@@ -213,7 +216,8 @@ function makeAction(
 function buildTransitionState(
   currentStatus: ServiceStatus,
   evidence: TransitionEvidence | null,
-  evidenceError: string | null
+  evidenceError: string | null,
+  locale: Locale,
 ): ServiceStatusTransitionState {
   const candidateStatuses = SERVICE_STATUS_ALLOWED_TRANSITIONS[currentStatus] ?? [];
 
@@ -223,7 +227,8 @@ function buildTransitionState(
     actions: candidateStatuses.map((nextStatus) =>
       makeAction(
         nextStatus,
-        evidence ? getPreconditionBlockReason(nextStatus, evidence) : evidenceError
+        evidence ? getPreconditionBlockReason(nextStatus, evidence, locale) : evidenceError,
+        locale,
       )
     ),
   };
@@ -232,19 +237,20 @@ function buildTransitionState(
 export async function getServiceStatusTransitionState(
   supabase: SupabaseAdminClient,
   serviceId: string,
-  currentStatus: ServiceStatus
+  currentStatus: ServiceStatus,
+  locale: Locale,
 ): Promise<ServiceStatusTransitionState> {
   if (isTerminalServiceStatus(currentStatus)) {
-    return buildTransitionState(currentStatus, null, null);
+    return buildTransitionState(currentStatus, null, null, locale);
   }
 
-  const evidenceResult = await loadTransitionEvidence(supabase, serviceId);
+  const evidenceResult = await loadTransitionEvidence(supabase, serviceId, locale);
 
   if (!evidenceResult.success) {
-    return buildTransitionState(currentStatus, null, evidenceResult.error);
+    return buildTransitionState(currentStatus, null, evidenceResult.error, locale);
   }
 
-  return buildTransitionState(currentStatus, evidenceResult.evidence, null);
+  return buildTransitionState(currentStatus, evidenceResult.evidence, null, locale);
 }
 
 export async function validateServiceStatusTransition(
@@ -252,14 +258,15 @@ export async function validateServiceStatusTransition(
   serviceId: string,
   currentStatus: ServiceStatus,
   requestedStatus: ServiceStatus,
-  cancellationReason?: string | null
+  cancellationReason: string | null | undefined,
+  locale: Locale,
 ): Promise<TransitionValidationResult> {
-  const dictionary = getServicesDictionary(getLocale());
+  const dictionary = getServicesDictionary(locale);
 
   if (currentStatus === requestedStatus) {
     return {
       success: false,
-      error: getTransitionDictionary().blockedReasons.alreadyStatus.replace(
+      error: getTransitionDictionary(locale).blockedReasons.alreadyStatus.replace(
         "{status}",
         dictionary.serviceStatuses[currentStatus],
       ),
@@ -269,7 +276,7 @@ export async function validateServiceStatusTransition(
   if (isTerminalServiceStatus(currentStatus)) {
     return {
       success: false,
-      error: getTransitionDictionary().blockedReasons.terminalStatusCannotChange.replace(
+      error: getTransitionDictionary(locale).blockedReasons.terminalStatusCannotChange.replace(
         "{status}",
         dictionary.serviceStatuses[currentStatus],
       ),
@@ -277,23 +284,20 @@ export async function validateServiceStatusTransition(
   }
 
   if (!SERVICE_STATUS_ALLOWED_TRANSITIONS[currentStatus]?.includes(requestedStatus)) {
-    return { success: false, error: getTransitionDictionary().blockedReasons.transitionNotAllowed };
+    return { success: false, error: getTransitionDictionary(locale).blockedReasons.transitionNotAllowed };
   }
 
   if (requestedStatus === "Cancelled" && !cancellationReason?.trim()) {
-    return { success: false, error: getTransitionDictionary().blockedReasons.cancellationReasonRequired };
+    return { success: false, error: getTransitionDictionary(locale).blockedReasons.cancellationReasonRequired };
   }
 
-  const evidenceResult = await loadTransitionEvidence(supabase, serviceId);
+  const evidenceResult = await loadTransitionEvidence(supabase, serviceId, locale);
 
   if (!evidenceResult.success) {
     return { success: false, error: evidenceResult.error };
   }
 
-  const blockedReason = getPreconditionBlockReason(
-    requestedStatus,
-    evidenceResult.evidence
-  );
+  const blockedReason = getPreconditionBlockReason(requestedStatus, evidenceResult.evidence, locale);
 
   if (blockedReason) {
     return { success: false, error: blockedReason };

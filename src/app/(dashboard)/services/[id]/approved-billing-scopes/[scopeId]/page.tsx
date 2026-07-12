@@ -17,8 +17,10 @@ import type {
 import { getInvoicesByApprovedBillingScopeId } from "@/lib/invoices/queries";
 import type { Invoice } from "@/types/invoice";
 import { getServiceById } from "@/lib/services/queries";
-import { getLocale } from "@/lib/i18n/locales";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { formatSarAmount, formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
+import type { Locale } from "@/lib/i18n/locales";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +52,8 @@ export default async function ApprovedBillingScopeDetailPage({
   params: Promise<{ id: string; scopeId: string }>;
 }) {
   const { id: serviceId, scopeId } = await params;
-  const dictionary = getServicesDictionary(getLocale());
+  const locale = await getCurrentSessionEffectiveLocale();
+  const dictionary = getServicesDictionary(locale);
   const detailDictionary = dictionary.approvedBillingScopes.detail;
 
   try {
@@ -109,16 +112,16 @@ export default async function ApprovedBillingScopeDetailPage({
               {scopeStatusLabel(scope, dictionary)}
             </StatusBadge>
           </Field>
-          <Field label={detailDictionary.labels.version} value={formatNumber(scope.scopeVersion)} dir="ltr" />
+          <Field label={detailDictionary.labels.version} value={formatNumber(locale, scope.scopeVersion)} dir="ltr" />
           <Field label={detailDictionary.labels.lineSafety}>
             <StatusBadge variant={lineSafetyVariants[scope.lineSafetyStatus]}>
               {dictionary.approvedBillingScopes.lineSafetyLabels[scope.lineSafetyStatus]}
             </StatusBadge>
           </Field>
-          <Field label={detailDictionary.labels.acceptedGrandTotal} value={formatSar(scope.acceptedGrandTotal)} dir="ltr" />
-          <Field label={detailDictionary.labels.createdAt} value={formatDate(scope.createdAt)} dir="ltr" />
+          <Field label={detailDictionary.labels.acceptedGrandTotal} value={formatSar(locale, scope.acceptedGrandTotal)} dir="ltr" />
+          <Field label={detailDictionary.labels.createdAt} value={formatDate(locale, scope.createdAt)} dir="ltr" />
           {scope.approvedAt && (
-            <Field label={detailDictionary.labels.approvedAt} value={formatDate(scope.approvedAt)} dir="ltr" />
+            <Field label={detailDictionary.labels.approvedAt} value={formatDate(locale, scope.approvedAt)} dir="ltr" />
           )}
         </dl>
       </section>
@@ -149,9 +152,9 @@ export default async function ApprovedBillingScopeDetailPage({
                     </td>
                     <td className="px-4 py-4 align-top text-on-surface-variant" dir="auto">{item.sourceCategory ? isolateBidiText(item.sourceCategory) : "—"}</td>
                     <td className="px-4 py-4 align-top"><StatusBadge variant={decisionVariants[item.decision]}>{detailDictionary.itemDecisionLabels[item.decision]}</StatusBadge></td>
-                    <td className="px-4 py-4 align-top text-on-surface" dir="ltr">{formatNumber(item.acceptedQty)}</td>
-                    <td className="px-4 py-4 align-top text-on-surface" dir="ltr">{formatSar(item.acceptedUnitPrice)}</td>
-                    <td className="px-4 py-4 align-top font-medium text-on-surface" dir="ltr">{formatSar(item.acceptedGrandTotal)}</td>
+                    <td className="px-4 py-4 align-top text-on-surface tabular-nums" dir="ltr">{formatNumber(locale, item.acceptedQty)}</td>
+                    <td className="px-4 py-4 align-top text-on-surface tabular-nums" dir="ltr">{formatSar(locale, item.acceptedUnitPrice)}</td>
+                    <td className="px-4 py-4 align-top font-medium text-on-surface tabular-nums" dir="ltr">{formatSar(locale, item.acceptedGrandTotal)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -169,7 +172,14 @@ export default async function ApprovedBillingScopeDetailPage({
             <div className="p-6 text-[14px] text-on-surface-variant">{detailDictionary.noInvoices}</div>
           ) : (
             <div className="divide-y divide-surface-variant">
-              {invoiceResult?.data.map((invoice) => <InvoiceRow key={invoice.id} invoice={invoice} dictionary={detailDictionary} />)}
+              {invoiceResult?.data.map((invoice) => (
+                <InvoiceRow
+                  key={invoice.id}
+                  invoice={invoice}
+                  dictionary={detailDictionary}
+                  locale={locale}
+                />
+              ))}
             </div>
           )}
         </section>
@@ -198,23 +208,54 @@ function Th({ children }: { children: ReactNode }) {
   return <th className="px-4 py-3 text-[12px] font-semibold uppercase text-on-surface-variant">{children}</th>;
 }
 
-function InvoiceRow({ invoice, dictionary }: { invoice: Invoice; dictionary: ReturnType<typeof getServicesDictionary>["approvedBillingScopes"]["detail"] }) {
-  return <div className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"><div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[14px] sm:grid-cols-5"><Field label={dictionary.labels.invoiceNumber} value={invoice.invoice_number} dir="ltr" /><Field label={dictionary.labels.invoiceType} value={dictionary.invoiceTypeLabels[invoice.invoice_type]} /><Field label={dictionary.labels.invoiceStatus} value={dictionary.invoiceStatusLabels[invoice.status]} /><Field label={dictionary.labels.grandTotal} value={formatSar(invoice.grand_total)} dir="ltr" /><Field label={dictionary.labels.issueDate} value={formatDate(invoice.issued_at ?? invoice.created_at)} dir="ltr" /></div><PendingLink href={`/invoices/${invoice.id}`} className="shrink-0 text-[13px] font-semibold text-primary hover:underline">{dictionary.viewDetails}</PendingLink></div>;
+function InvoiceRow({
+  invoice,
+  dictionary,
+  locale,
+}: {
+  invoice: Invoice;
+  dictionary: ReturnType<typeof getServicesDictionary>["approvedBillingScopes"]["detail"];
+  locale: Locale;
+}) {
+  return (
+    <div className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[14px] sm:grid-cols-5">
+        <Field label={dictionary.labels.invoiceNumber} value={invoice.invoice_number} dir="ltr" />
+        <Field label={dictionary.labels.invoiceType} value={dictionary.invoiceTypeLabels[invoice.invoice_type]} />
+        <Field label={dictionary.labels.invoiceStatus} value={dictionary.invoiceStatusLabels[invoice.status]} />
+        <Field
+          label={dictionary.labels.grandTotal}
+          value={formatSarAmount(locale, invoice.grand_total)}
+          dir="ltr"
+        />
+        <Field
+          label={dictionary.labels.issueDate}
+          value={formatDate(locale, invoice.issued_at ?? invoice.created_at)}
+          dir="ltr"
+        />
+      </div>
+      <PendingLink
+        href={`/invoices/${invoice.id}`}
+        className="shrink-0 text-[13px] font-semibold text-primary hover:underline"
+      >
+        {dictionary.viewDetails}
+      </PendingLink>
+    </div>
+  );
 }
 
 function scopeStatusLabel(scope: ApprovedBillingScopeDetail, dictionary: ReturnType<typeof getServicesDictionary>) {
   return scope.isActiveApprovedScope ? dictionary.approvedBillingScopes.active : dictionary.approvedBillingScopes.statusLabels[scope.status];
 }
 
-function formatNumber(value: number) {
-  return isolateBidiText(value.toLocaleString("en-SA", { maximumFractionDigits: 2 }));
+function formatNumber(locale: Locale, value: number) {
+  return formatUiNumber(locale, value, { maximumFractionDigits: 2 });
 }
 
-function formatSar(value: number) {
-  return isolateBidiText(`${value.toLocaleString("en-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR`);
+function formatSar(locale: Locale, value: number) {
+  return formatSarAmount(locale, value);
 }
 
-function formatDate(value: string) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "—" : isolateBidiText(date.toLocaleDateString());
+function formatDate(locale: Locale, value: string) {
+  return formatUiDate(locale, value);
 }

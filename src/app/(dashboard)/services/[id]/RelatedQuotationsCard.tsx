@@ -3,7 +3,9 @@ import Link from "next/link";
 import { FileText } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getQuotationStatusLabel } from "@/lib/i18n/dictionaries/quotations";
 import { isolateBidiText } from "@/lib/i18n/bidi";
+import { formatSarAmount, formatUiDate } from "@/lib/i18n/formatting";
 import type { QuotationListItem, QuotationStatus } from "@/lib/quotations/types";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
@@ -78,20 +80,20 @@ export default function RelatedQuotationsCard({
           <EmptyMessage message={dictionary.states.noRelatedQuotations} />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full border-collapse text-start">
               <thead>
                 <tr className="border-b border-surface-variant text-[12px] uppercase text-on-surface-variant">
-                  <th className="py-3 pr-4 font-semibold">{dictionary.relatedQuotations.table.quotation}</th>
-                  <th className="py-3 pr-4 font-semibold">{dictionary.relatedQuotations.table.status}</th>
-                  <th className="py-3 pr-4 font-semibold">{dictionary.relatedQuotations.table.issueDate}</th>
-                  <th className="py-3 pr-4 font-semibold">{dictionary.relatedQuotations.table.validUntil}</th>
-                  <th className="py-3 text-right font-semibold">{dictionary.relatedQuotations.table.grandTotal}</th>
+                  <th className="py-3 pe-4 font-semibold">{dictionary.relatedQuotations.table.quotation}</th>
+                  <th className="py-3 pe-4 font-semibold">{dictionary.relatedQuotations.table.status}</th>
+                  <th className="py-3 pe-4 font-semibold">{dictionary.relatedQuotations.table.issueDate}</th>
+                  <th className="py-3 pe-4 font-semibold">{dictionary.relatedQuotations.table.validUntil}</th>
+                  <th className="py-3 text-end font-semibold">{dictionary.relatedQuotations.table.grandTotal}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant text-[14px]">
                 {quotations.map((quotation) => (
                   <tr key={quotation.id}>
-                    <td dir="ltr" className="py-4 pr-4 font-mono font-semibold">
+                    <td dir="ltr" className="py-4 pe-4 font-mono font-semibold">
                       <Link
                         href={`/quotations/${quotation.id}`}
                         className="text-primary hover:underline"
@@ -99,19 +101,21 @@ export default function RelatedQuotationsCard({
                         {isolateBidiText(quotation.quotationNumber)}
                       </Link>
                     </td>
-                    <td className="py-4 pr-4">
+                    <td className="py-4 pe-4">
                       <StatusBadge variant={QUOTATION_STATUS_VARIANTS[quotation.status]}>
-                        {dictionary.quotationStatuses[quotation.status]}
+                        {getQuotationStatusLabel(dictionary.locale, quotation.status)}
                       </StatusBadge>
                     </td>
-                    <td dir="ltr" className="py-4 pr-4 text-on-surface-variant">
-                      {isolateBidiText(quotation.date)}
+                    <td dir="ltr" className="py-4 pe-4 text-on-surface-variant tabular-nums">
+                      {formatUiDate(dictionary.locale, quotation.date)}
                     </td>
-                    <td dir="ltr" className="py-4 pr-4 text-on-surface-variant">
-                      {quotation.validUntil ? isolateBidiText(quotation.validUntil) : "—"}
+                    <td dir="ltr" className="py-4 pe-4 text-on-surface-variant tabular-nums">
+                      {quotation.validUntil
+                        ? formatUiDate(dictionary.locale, quotation.validUntil)
+                        : "—"}
                     </td>
-                    <td dir="ltr" className="py-4 text-right font-semibold text-on-surface">
-                      {formatSar(quotation.grandTotal)}
+                    <td dir="ltr" className="py-4 text-end font-semibold text-on-surface tabular-nums">
+                      {formatSarAmount(dictionary.locale, quotation.grandTotal)}
                     </td>
                   </tr>
                 ))}
@@ -130,11 +134,4 @@ function EmptyMessage({ message }: { message: string }) {
       {message}
     </div>
   );
-}
-
-function formatSar(amount: number) {
-  return isolateBidiText(`${amount.toLocaleString("en-SA", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} SAR`);
 }

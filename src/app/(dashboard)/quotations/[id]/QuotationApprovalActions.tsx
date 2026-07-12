@@ -4,13 +4,15 @@ import { useState } from "react";
 import { approveQuotation, rejectQuotation } from "@/lib/quotations/actions";
 import { CheckCircle, XCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
+import type { QuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
 
 interface Props {
   quotationId: string;
   status: string;
+  dictionary: QuotationsDictionary["approval"];
 }
 
-export default function QuotationApprovalActions({ quotationId, status }: Props) {
+export default function QuotationApprovalActions({ quotationId, status, dictionary }: Props) {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,10 +27,10 @@ export default function QuotationApprovalActions({ quotationId, status }: Props)
     try {
       const res = await approveQuotation(quotationId);
       if (!res.success) {
-        setError(res.error || "Failed to approve quotation");
+        setError(dictionary.approveFailed);
       }
     } catch {
-      setError("An unexpected error occurred");
+      setError(dictionary.unexpectedError);
     } finally {
       setIsApproving(false);
     }
@@ -40,10 +42,10 @@ export default function QuotationApprovalActions({ quotationId, status }: Props)
     try {
       const res = await rejectQuotation(quotationId);
       if (!res.success) {
-        setError(res.error || "Failed to reject quotation");
+        setError(dictionary.rejectFailed);
       }
     } catch {
-      setError("An unexpected error occurred");
+      setError(dictionary.unexpectedError);
     } finally {
       setIsRejecting(false);
     }
@@ -58,7 +60,7 @@ export default function QuotationApprovalActions({ quotationId, status }: Props)
           variant="primary"
         >
           {!isApproving && <CheckCircle size={18} />}
-          Approve
+          {dictionary.approve}
         </Button>
         <Button
           onClick={handleReject}
@@ -66,7 +68,7 @@ export default function QuotationApprovalActions({ quotationId, status }: Props)
           variant="danger"
         >
           {!isRejecting && <XCircle size={18} />}
-          Reject
+          {dictionary.reject}
         </Button>
       </div>
       {error && <p className="text-error text-[13px] font-medium">{error}</p>}

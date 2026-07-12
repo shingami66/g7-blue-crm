@@ -1,5 +1,6 @@
 import type { Locale } from "../locales";
-import type { InvoiceStatus, InvoiceType } from "@/types/invoice";
+import type { InvoiceStatus, InvoiceType } from "../../../types/invoice";
+import { resolveDictionaryValue } from "../fallback.ts";
 
 export interface InvoicesDictionary {
   locale: Locale;
@@ -146,6 +147,13 @@ export interface InvoicesDictionary {
   };
   statuses: Record<InvoiceStatus, string>;
   invoiceTypes: Record<InvoiceType, string>;
+  /**
+   * Authenticated UI display mappings for known document_label values.
+   * Does not mutate stored snapshots or PDF body language.
+   */
+  documentLabels: {
+    commercialInvoice: string;
+  };
   issueAction: {
     helper: string;
     success: string;
@@ -173,6 +181,7 @@ export interface InvoicesDictionary {
     cancel: string;
     submit: string;
     submitting: string;
+    success: string;
     methods: {
       bank_transfer: string;
       cash: string;
@@ -204,7 +213,7 @@ const invoicesDictionaryEn: InvoicesDictionary = {
     accessDenied: "Access Denied",
     genericError: "Something went wrong",
     invoicesForbidden: "You don't have permission to view the invoices module.",
-    invoicesLoadError: "We couldn't load the invoices at this time. Please try again later.",
+    invoicesLoadError: "Invoice data unavailable. Please try again later.",
   },
   list: {
     title: "Invoices",
@@ -222,8 +231,8 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       showingRange: "Showing {start}-{end} of {count} invoices",
     },
     table: {
-      invoice: "Invoice",
-      type: "Type",
+      invoice: "Invoice Number",
+      type: "Invoice Type",
       document: "Document",
       customer: "Customer",
       issueDate: "Issue Date",
@@ -232,7 +241,7 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       preview: "View",
       printPdf: "Print / PDF",
       noInvoices: "No invoices found.",
-      noFilteredInvoices: "No invoices match your search or filters.",
+      noFilteredInvoices: "No invoices match the current filters.",
     },
     sidePanel: {
       amountDue: "Amount Due",
@@ -286,19 +295,19 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       viewQuotation: "View Quotation",
     },
     sections: {
-      overview: "Invoice Overview",
+      overview: "Invoice Details",
       customer: "Customer / Buyer",
       serviceEvent: "Service / Event Context",
-      quotation: "Quotation Reference",
-      lineItems: "Service / Quotation Lines",
+      quotation: "Approved Quotation",
+      lineItems: "Line Items",
       totals: "Amounts / Totals",
-      settlement: "Payment / Settlement Context",
+      settlement: "Payment History",
     },
     labels: {
       invoiceNumber: "Invoice Number",
       invoiceType: "Invoice Type",
       documentLabel: "Document Label",
-      status: "Status",
+      status: "Invoice Status",
       issueDate: "Issue Date",
       createdDate: "Created Date",
       voidedDate: "Voided Date",
@@ -316,17 +325,17 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       eventType: "Event Type",
       eventDates: "Event Dates",
       eventLocation: "Venue / Location",
-      quotationReference: "Quotation Reference",
+      quotationReference: "Approved Quotation",
       quotationNumber: "Quotation Number",
       approvedQuotation: "Approved Quotation ID",
       description: "Description",
-      qty: "Qty",
+      qty: "Quantity",
       unitPrice: "Unit Price",
       vat: "VAT",
-      lineTotal: "Total",
+      lineTotal: "Item Total",
       subtotal: "Subtotal",
       discount: "Discount",
-      vatAmount: "Tax / VAT",
+      vatAmount: "VAT Amount",
       grandTotal: "Grand Total",
       amountPaid: "Amount Paid",
       balanceDue: "Balance Due",
@@ -354,6 +363,9 @@ const invoicesDictionaryEn: InvoicesDictionary = {
     deposit: "Deposit Invoice",
     final: "Final Invoice",
   },
+  documentLabels: {
+    commercialInvoice: "Commercial Invoice",
+  },
   issueAction: {
     helper:
       "Issuing this invoice will mark it as Issued and set the issue date. Amounts and snapshots will not be changed.",
@@ -373,7 +385,7 @@ const invoicesDictionaryEn: InvoicesDictionary = {
   paymentModal: {
     title: "Record Payment",
     helper: "Recording payment for invoice {invoiceNumber}",
-    amountSar: "Amount (SAR)",
+    amountSar: "Payment Amount (SAR)",
     balanceDue: "Balance Due",
     paymentDate: "Payment Date",
     paymentMethod: "Payment Method",
@@ -382,11 +394,12 @@ const invoicesDictionaryEn: InvoicesDictionary = {
     cancel: "Cancel",
     submit: "Record Payment",
     submitting: "Recording...",
+    success: "Payment recorded successfully.",
     methods: {
       bank_transfer: "Bank Transfer",
       cash: "Cash",
       cheque: "Cheque",
-        online: "Online Payment",
+      online: "Online Payment",
     },
     validation: {
       positiveAmount: "Please enter a valid positive amount.",
@@ -413,7 +426,7 @@ const invoicesDictionaryAr: InvoicesDictionary = {
     accessDenied: "تم رفض الوصول",
     genericError: "حدث خطأ ما",
     invoicesForbidden: "ليس لديك صلاحية لعرض وحدة الفواتير.",
-    invoicesLoadError: "تعذر تحميل الفواتير في الوقت الحالي. يرجى المحاولة مرة أخرى لاحقًا.",
+    invoicesLoadError: "بيانات الفواتير غير متاحة. يرجى المحاولة مرة أخرى لاحقًا.",
   },
   list: {
     title: "الفواتير",
@@ -431,17 +444,17 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       showingRange: "عرض {start}-{end} من إجمالي {count} فاتورة",
     },
     table: {
-      invoice: "الفاتورة",
-      type: "النوع",
+      invoice: "رقم الفاتورة",
+      type: "نوع الفاتورة",
       document: "المستند",
       customer: "العميل",
       issueDate: "تاريخ الإصدار",
       amountSar: "القيمة (SAR)",
-      status: "الحالة",
+      status: "حالة الفاتورة",
       preview: "عرض",
       printPdf: "طباعة / PDF",
-      noInvoices: "لا توجد فواتير.",
-      noFilteredInvoices: "لا توجد فواتير تطابق البحث أو عوامل التصفية.",
+      noInvoices: "لم يتم العثور على فواتير",
+      noFilteredInvoices: "لا توجد فواتير مطابقة للفلاتر الحالية",
     },
     sidePanel: {
       amountDue: "المبلغ المستحق",
@@ -495,19 +508,19 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       viewQuotation: "عرض عرض السعر",
     },
     sections: {
-      overview: "نظرة عامة على الفاتورة",
+      overview: "تفاصيل الفاتورة",
       customer: "العميل / المشتري",
       serviceEvent: "الخدمة / سياق الفعالية",
-      quotation: "مرجع عرض السعر",
-      lineItems: "بنود الخدمة / عرض السعر",
+      quotation: "عرض السعر المعتمد",
+      lineItems: "بنود الفاتورة",
       totals: "المبالغ / الإجماليات",
-      settlement: "سياق السداد / التسوية",
+      settlement: "سجل المدفوعات",
     },
     labels: {
       invoiceNumber: "رقم الفاتورة",
       invoiceType: "نوع الفاتورة",
       documentLabel: "عنوان المستند",
-      status: "الحالة",
+      status: "حالة الفاتورة",
       issueDate: "تاريخ الإصدار",
       createdDate: "تاريخ الإنشاء",
       voidedDate: "تاريخ الإبطال",
@@ -525,17 +538,17 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       eventType: "نوع الفعالية",
       eventDates: "تواريخ الفعالية",
       eventLocation: "الموقع / المكان",
-      quotationReference: "مرجع عرض السعر",
+      quotationReference: "عرض السعر المعتمد",
       quotationNumber: "رقم عرض السعر",
       approvedQuotation: "معرّف عرض السعر المعتمد",
       description: "الوصف",
       qty: "الكمية",
       unitPrice: "سعر الوحدة",
       vat: "ضريبة القيمة المضافة",
-      lineTotal: "الإجمالي",
+      lineTotal: "إجمالي البند",
       subtotal: "المجموع الفرعي",
       discount: "الخصم",
-      vatAmount: "الضريبة / ضريبة القيمة المضافة",
+      vatAmount: "مبلغ ضريبة القيمة المضافة",
       grandTotal: "الإجمالي",
       amountPaid: "المبلغ المسدد",
       balanceDue: "الرصيد المستحق",
@@ -563,6 +576,9 @@ const invoicesDictionaryAr: InvoicesDictionary = {
     deposit: "فاتورة دفعة مقدمة",
     final: "الفاتورة النهائية",
   },
+  documentLabels: {
+    commercialInvoice: "فاتورة تجارية",
+  },
   issueAction: {
     helper:
       "سيتم عند إصدار هذه الفاتورة تحويل حالتها إلى صادرة وتحديد تاريخ الإصدار. لن يتم تغيير المبالغ أو اللقطات المحفوظة.",
@@ -580,17 +596,18 @@ const invoicesDictionaryAr: InvoicesDictionary = {
     },
   },
   paymentModal: {
-    title: "تسجيل السداد",
-    helper: "تسجيل السداد للفاتورة {invoiceNumber}",
-    amountSar: "المبلغ (SAR)",
+    title: "تسجيل دفعة",
+    helper: "تسجيل دفعة للفاتورة {invoiceNumber}",
+    amountSar: "مبلغ الدفعة (SAR)",
     balanceDue: "الرصيد المستحق",
-    paymentDate: "تاريخ السداد",
-    paymentMethod: "طريقة السداد",
+    paymentDate: "تاريخ الدفع",
+    paymentMethod: "طريقة الدفع",
     referenceNotes: "المرجع / الملاحظات",
     referencePlaceholder: "مثال: رقم العملية، رقم الشيك...",
     cancel: "إلغاء",
-    submit: "تسجيل السداد",
-    submitting: "جارٍ تسجيل السداد...",
+    submit: "تسجيل دفعة",
+    submitting: "جارٍ تسجيل الدفعة...",
+    success: "تم تسجيل الدفعة بنجاح.",
     methods: {
       bank_transfer: "تحويل بنكي",
       cash: "نقداً",
@@ -599,16 +616,16 @@ const invoicesDictionaryAr: InvoicesDictionary = {
     },
     validation: {
       positiveAmount: "يرجى إدخال مبلغ موجب صالح.",
-      exceedsBalance: "لا يمكن أن يتجاوز السداد المبلغ المستحق ({balanceDue}).",
+      exceedsBalance: "لا يمكن أن يتجاوز مبلغ الدفعة الرصيد المستحق ({balanceDue}).",
       dateRequired: "يرجى اختيار تاريخ.",
     },
     errors: {
       invalid_payment_input: "يرجى التحقق من المدخلات.",
       invoice_not_found: "لم يتم العثور على الفاتورة.",
-      payment_exceeds_balance: "يتجاوز السداد الرصيد المتبقي.",
-      invoice_not_payable: "لا يمكن تسجيل سداد لهذه الفاتورة.",
+      payment_exceeds_balance: "يتجاوز مبلغ الدفعة الرصيد المتبقي.",
+      invoice_not_payable: "لا يمكن تسجيل دفعة لهذه الفاتورة.",
       invoice_deleted: "تم حذف هذه الفاتورة.",
-      invalid_payment_amount: "مبلغ السداد غير صالح.",
+      invalid_payment_amount: "مبلغ الدفعة غير صالح.",
       Unauthorized: "يجب تسجيل الدخول أولاً.",
       Forbidden: "ليس لديك صلاحية لتسجيل المدفوعات.",
       generic: "حدث خطأ ما.",
@@ -623,4 +640,58 @@ const invoicesDictionaries: Record<Locale, InvoicesDictionary> = {
 
 export function getInvoicesDictionary(locale: Locale): InvoicesDictionary {
   return invoicesDictionaries[locale];
+}
+
+export function getInvoiceStatusLabel(locale: Locale, status: InvoiceStatus): string {
+  const activeDictionary = getInvoicesDictionary(locale);
+  const englishDictionary = getInvoicesDictionary("en");
+  const key = `statuses.${status}`;
+
+  return resolveDictionaryValue({
+    activeValue: activeDictionary.statuses[status],
+    category: "label",
+    englishValue: englishDictionary.statuses[status],
+    key,
+    locale,
+    namespace: "invoices",
+    surface: "invoice-status",
+  });
+}
+
+export function getInvoiceTypeLabel(locale: Locale, type: InvoiceType): string {
+  const activeDictionary = getInvoicesDictionary(locale);
+  const englishDictionary = getInvoicesDictionary("en");
+  const key = `invoiceTypes.${type}`;
+
+  return resolveDictionaryValue({
+    activeValue: activeDictionary.invoiceTypes[type],
+    category: "label",
+    englishValue: englishDictionary.invoiceTypes[type],
+    key,
+    locale,
+    namespace: "invoices",
+    surface: "invoice-type",
+  });
+}
+
+/**
+ * Maps known stored document_label values for authenticated UI only.
+ * Does not rewrite snapshots, PDFs, or database fields.
+ * Tax Invoice remains untranslated while company is not VAT registered.
+ */
+export function getInvoiceDocumentLabelDisplay(
+  locale: Locale,
+  documentLabel: string | null | undefined,
+  fallback = "—",
+): string {
+  if (!documentLabel || documentLabel.trim().length === 0) {
+    return fallback;
+  }
+
+  const trimmed = documentLabel.trim();
+  if (trimmed === "Commercial Invoice") {
+    return getInvoicesDictionary(locale).documentLabels.commercialInvoice;
+  }
+
+  return trimmed;
 }

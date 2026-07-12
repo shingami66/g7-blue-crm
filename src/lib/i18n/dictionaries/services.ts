@@ -1,6 +1,7 @@
 import type { Locale } from "../locales";
 import type { ServiceStatus } from "../../../types/service";
 import type { QuotationStatus } from "../../quotations/types";
+import { resolveDictionaryValue } from "../fallback.ts";
 
 export interface ServicesDictionary {
   locale: Locale;
@@ -19,6 +20,18 @@ export interface ServicesDictionary {
     noPermissionToViewQuotations: string;
     noRelatedQuotations: string;
     unknownError: string;
+  };
+  actionErrors: {
+    invalidInput: string;
+    unauthorized: string;
+    forbidden: string;
+    notFound: string;
+    customerUnavailable: string;
+    statusChangeDeferred: string;
+    statusConflict: string;
+    noFields: string;
+    transitionBlocked: string;
+    generic: string;
   };
   list: {
     title: string;
@@ -301,6 +314,60 @@ export interface ServicesDictionary {
         serviceUnavailableMessage: string;
         failedToLoadSuppliersTitle: string;
         failedToLoadSuppliersMessage: string;
+        returnToService: string;
+        backToService: string;
+        title: string;
+        subtitle: string;
+      };
+      editPage: {
+        accessDeniedTitle: string;
+        accessDeniedMessage: string;
+        serviceUnavailableTitle: string;
+        serviceUnavailableMessage: string;
+        cancelledTitle: string;
+        cancelledMessage: string;
+        rateCardTitle: string;
+        rateCardMessage: string;
+        returnToService: string;
+        backToService: string;
+        title: string;
+        subtitle: string;
+      };
+      cancelPage: {
+        accessDeniedTitle: string;
+        accessDeniedMessage: string;
+        serviceUnavailableTitle: string;
+        serviceUnavailableMessage: string;
+        alreadyCancelledTitle: string;
+        alreadyCancelledMessage: string;
+        returnToService: string;
+        backToService: string;
+        title: string;
+        subtitle: string;
+      };
+      deletePage: {
+        accessDeniedTitle: string;
+        accessDeniedMessage: string;
+        serviceUnavailableTitle: string;
+        serviceUnavailableMessage: string;
+        alreadyDeletedTitle: string;
+        alreadyDeletedMessage: string;
+        actionUnavailableTitle: string;
+        actionUnavailableMessage: string;
+        returnToService: string;
+        backToService: string;
+        title: string;
+        subtitle: string;
+      };
+      restorePage: {
+        accessDeniedTitle: string;
+        accessDeniedMessage: string;
+        serviceUnavailableTitle: string;
+        serviceUnavailableMessage: string;
+        notDeletedTitle: string;
+        notDeletedMessage: string;
+        actionUnavailableTitle: string;
+        actionUnavailableMessage: string;
         returnToService: string;
         backToService: string;
         title: string;
@@ -672,6 +739,18 @@ const servicesDictionaryEn: ServicesDictionary = {
     noRelatedQuotations: "No quotations are linked to this service yet.",
     unknownError: "Unknown error",
   },
+  actionErrors: {
+    invalidInput: "Please check the service details and try again.",
+    unauthorized: "You must be signed in to perform this action.",
+    forbidden: "You do not have permission to perform this action.",
+    notFound: "The service could not be found.",
+    customerUnavailable: "The selected customer is unavailable.",
+    statusChangeDeferred: "Service status changes are handled through the status controls.",
+    statusConflict: "This service cannot be edited in its current status.",
+    noFields: "Enter at least one change before saving.",
+    transitionBlocked: "This Service status change is not currently allowed.",
+    generic: "We couldn't complete the service action. Please try again.",
+  },
   list: {
     title: "Services",
     subtitle: "Manage client services, event bookings, and operational workflow.",
@@ -776,11 +855,11 @@ const servicesDictionaryEn: ServicesDictionary = {
     countPlural: "quotations",
     createQuotation: "Create Quotation",
     table: {
-      quotation: "Quotation",
-      status: "Status",
+      quotation: "Quotation Number",
+      status: "Quotation Status",
       issueDate: "Issue Date",
       validUntil: "Valid Until",
-      grandTotal: "Grand Total",
+      grandTotal: "Quoted Amount",
     },
   },
   approvedBillingScopes: {
@@ -864,7 +943,7 @@ const servicesDictionaryEn: ServicesDictionary = {
     updatedSuccessfully: "Status updated successfully!",
   },
   serviceStatusTimeline: {
-    title: "Workflow",
+    title: "Status Timeline",
     currentPhaseLabel: "Current Phase",
     nextActionLabel: "Next Action",
     historyLabel: "Status History",
@@ -995,6 +1074,73 @@ const servicesDictionaryEn: ServicesDictionary = {
         backToService: "Back to Service",
         title: "Create Allocation",
         subtitle: "Create a manual supplier allocation for",
+      },
+      editPage: {
+        accessDeniedTitle: "Access Denied",
+        accessDeniedMessage:
+          "You do not have permission to edit supplier allocations.",
+        serviceUnavailableTitle: "Service Unavailable",
+        serviceUnavailableMessage:
+          "Cannot edit a supplier allocation because the service is {status}.",
+        cancelledTitle: "Allocation Cancelled",
+        cancelledMessage: "Cannot edit a cancelled supplier allocation.",
+        rateCardTitle: "Rate Card Allocation",
+        rateCardMessage:
+          "Cannot manually edit a rate-card based supplier allocation.",
+        returnToService: "Return to Service",
+        backToService: "Back to Service",
+        title: "Edit Allocation",
+        subtitle: "Edit manual supplier allocation for",
+      },
+      cancelPage: {
+        accessDeniedTitle: "Access Denied",
+        accessDeniedMessage:
+          "You do not have permission to cancel supplier allocations.",
+        serviceUnavailableTitle: "Service Unavailable",
+        serviceUnavailableMessage:
+          "Cannot cancel a supplier allocation because the service is {status}.",
+        alreadyCancelledTitle: "Allocation Already Cancelled",
+        alreadyCancelledMessage:
+          "This supplier allocation has already been cancelled.",
+        returnToService: "Return to Service",
+        backToService: "Back to Service",
+        title: "Cancel Allocation",
+        subtitle: "Cancel supplier allocation for",
+      },
+      deletePage: {
+        accessDeniedTitle: "Access Denied",
+        accessDeniedMessage:
+          "You do not have permission to delete supplier allocations.",
+        serviceUnavailableTitle: "Service Unavailable",
+        serviceUnavailableMessage:
+          "Cannot delete a supplier allocation because the service is {status}.",
+        alreadyDeletedTitle: "Allocation Already Deleted",
+        alreadyDeletedMessage:
+          "This supplier allocation has already been deleted.",
+        actionUnavailableTitle: "Action Unavailable",
+        actionUnavailableMessage:
+          "Only manual allocations can be deleted at this time.",
+        returnToService: "Return to Service",
+        backToService: "Back to Service",
+        title: "Delete Allocation",
+        subtitle: "Delete supplier allocation for",
+      },
+      restorePage: {
+        accessDeniedTitle: "Access Denied",
+        accessDeniedMessage:
+          "You do not have permission to restore supplier allocations.",
+        serviceUnavailableTitle: "Service Unavailable",
+        serviceUnavailableMessage:
+          "Cannot restore a supplier allocation because the service is {status}.",
+        notDeletedTitle: "Allocation Not Deleted",
+        notDeletedMessage: "This supplier allocation is currently active.",
+        actionUnavailableTitle: "Action Unavailable",
+        actionUnavailableMessage:
+          "Only manual allocations can be restored at this time.",
+        returnToService: "Return to Service",
+        backToService: "Back to Service",
+        title: "Restore Allocation",
+        subtitle: "Restore supplier allocation for",
       },
       createForm: {
         modes: {
@@ -1275,17 +1421,17 @@ const servicesDictionaryEn: ServicesDictionary = {
     },
   },
   billing: {
-    title: "Billing / Invoicing",
+    title: "Billing",
     cards: {
       approvedQuotation: "Approved Quotation",
       depositInvoice: "Deposit Invoice",
       finalInvoice: "Final Invoice",
-      billingCalculation: "Billing Calculation",
+      billingCalculation: "Billing Summary",
       noApprovedQuotationYet: "No approved quotation yet",
       noActiveDepositInvoice: "Deposit invoice has not been created yet.",
       noActiveFinalInvoice: "Final invoice has not been created yet.",
-      priorInvoiced: "Prior Invoiced",
-      remaining: "Remaining",
+      priorInvoiced: "Previously Invoiced",
+      remaining: "Remaining Amount",
     },
     status: {
       title: "Billing Status",
@@ -1323,7 +1469,7 @@ const servicesDictionaryEn: ServicesDictionary = {
       unavailable: "Deposit invoice action is not available.",
       amountLabel: "Deposit Amount (SAR)",
       amountPlaceholder: "0.00",
-      create: "Create Deposit",
+      create: "Create Deposit Invoice",
       validation: {
         validAmount: "Please enter a valid numeric amount.",
         amountGreaterThanZero: "Deposit amount must be greater than 0.",
@@ -1455,11 +1601,23 @@ const servicesDictionaryAr: ServicesDictionary = {
     noRelatedQuotations: "لا توجد عروض سعر مرتبطة بهذه الخدمة حتى الآن.",
     unknownError: "خطأ غير معروف",
   },
+  actionErrors: {
+    invalidInput: "يرجى التحقق من بيانات الخدمة والمحاولة مرة أخرى.",
+    unauthorized: "يجب تسجيل الدخول لتنفيذ هذا الإجراء.",
+    forbidden: "ليس لديك صلاحية لتنفيذ هذا الإجراء.",
+    notFound: "تعذر العثور على الخدمة.",
+    customerUnavailable: "العميل المحدد غير متاح.",
+    statusChangeDeferred: "تغييرات حالة الخدمة تتم من خلال أدوات الحالة.",
+    statusConflict: "لا يمكن تعديل هذه الخدمة في حالتها الحالية.",
+    noFields: "أدخل تغييرًا واحدًا على الأقل قبل الحفظ.",
+    transitionBlocked: "تغيير حالة هذه الخدمة غير مسموح به حاليًا.",
+    generic: "تعذر إكمال إجراء الخدمة. يرجى المحاولة مرة أخرى.",
+  },
   list: {
     title: "الخدمات",
     subtitle: "إدارة خدمات العملاء وحجوزات الفعاليات وسير العمل التشغيلي.",
     newService: "خدمة جديدة",
-    allStatuses: "كل الحالات",
+    allStatuses: "جميع الحالات",
     showingZero: "عرض 0 من 0 خدمة",
     showingRange: "عرض {start}-{end} من إجمالي {total} خدمة",
     actions: {
@@ -1469,14 +1627,14 @@ const servicesDictionaryAr: ServicesDictionary = {
       serviceNumber: "رقم الخدمة",
       serviceTitle: "عنوان الخدمة / اسم الفعالية",
       customer: "العميل",
-      eventDate: "تاريخ الفعالية",
+      eventDate: "تاريخ البداية",
       status: "الحالة",
       budget: "الميزانية",
     },
   },
   form: {
     newTitle: "خدمة جديدة",
-    newSubtitle: "إنشاء خدمة جديدة أو حجز فعالية.",
+    newSubtitle: "إنشاء خدمة جديدة.",
     editTitle: "تعديل الخدمة",
     editSubtitle: "تحديث بيانات الخدمة.",
     basicDetails: "البيانات الأساسية",
@@ -1526,7 +1684,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     edit: "تعديل",
     quotationDisabledReasonStarted: "لا يمكن إنشاء عرض سعر لأن الخدمة بدأت بالفعل.",
     sections: {
-      serviceSchedule: "جدول الخدمة",
+      serviceSchedule: "الجدول الزمني",
       customerSummary: "ملخص العميل",
       operationalDetails: "التفاصيل التشغيلية",
       descriptionNotes: "الوصف / الملاحظات",
@@ -1538,7 +1696,7 @@ const servicesDictionaryAr: ServicesDictionary = {
       endDate: "تاريخ النهاية",
       location: "الموقع",
       customer: "العميل",
-      primaryContact: "جهة الاتصال الأساسية",
+      primaryContact: "مسؤول التواصل",
       customerRef: "مرجع العميل",
       estimatedBudget: "الميزانية التقديرية",
       createdAt: "تاريخ الإنشاء",
@@ -1553,17 +1711,17 @@ const servicesDictionaryAr: ServicesDictionary = {
     },
   },
   relatedQuotations: {
-    title: "عروض السعر المرتبطة",
-    subtitle: "سجلات عروض السعر المرتبطة بهذه الخدمة.",
+    title: "عروض الأسعار المرتبطة",
+    subtitle: "سجلات عروض الأسعار المرتبطة بهذه الخدمة.",
     countSingular: "عرض سعر",
-    countPlural: "عروض سعر",
+    countPlural: "عروض أسعار",
     createQuotation: "إنشاء عرض سعر",
     table: {
-      quotation: "عرض السعر",
-      status: "الحالة",
+      quotation: "رقم عرض السعر",
+      status: "حالة عرض السعر",
       issueDate: "تاريخ الإصدار",
       validUntil: "صالح حتى",
-      grandTotal: "الإجمالي",
+      grandTotal: "قيمة عرض السعر",
     },
   },
   approvedBillingScopes: {
@@ -1619,7 +1777,7 @@ const servicesDictionaryAr: ServicesDictionary = {
         issueDate: "تاريخ الإصدار",
       },
       itemDecisionLabels: {
-        accepted: "مقبول", adjusted: "معدل", excluded: "مستبعد", customer_supplied: "مقدم من العميل",
+        accepted: "مقبول", adjusted: "معدل", excluded: "مستبعد", customer_supplied: "يوفره العميل",
       },
       invoiceTypeLabels: { deposit: "دفعة مقدمة", final: "نهائية" },
       invoiceStatusLabels: {
@@ -1644,7 +1802,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     updatedSuccessfully: "تم تحديث الحالة بنجاح!",
   },
   serviceStatusTimeline: {
-    title: "سير العمل",
+    title: "مسار حالة الخدمة",
     currentPhaseLabel: "المرحلة الحالية",
     nextActionLabel: "الخطوة التالية",
     historyLabel: "سجل الحالات",
@@ -1775,6 +1933,71 @@ const servicesDictionaryAr: ServicesDictionary = {
         backToService: "رجوع إلى الخدمة",
         title: "إنشاء تخصيص",
         subtitle: "إنشاء تخصيص مورد يدوي للخدمة",
+      },
+      editPage: {
+        accessDeniedTitle: "تم رفض الوصول",
+        accessDeniedMessage:
+          "ليست لديك صلاحية لتعديل تخصيصات الموردين.",
+        serviceUnavailableTitle: "الخدمة غير متاحة",
+        serviceUnavailableMessage:
+          "لا يمكن تعديل تخصيص المورد لأن حالة الخدمة هي {status}.",
+        cancelledTitle: "التخصيص ملغي",
+        cancelledMessage: "لا يمكن تعديل تخصيص مورد ملغي.",
+        rateCardTitle: "تخصيص بطاقة أسعار",
+        rateCardMessage:
+          "لا يمكن تعديل تخصيص مورد مبني على بطاقة أسعار يدويًا.",
+        returnToService: "العودة إلى الخدمة",
+        backToService: "رجوع إلى الخدمة",
+        title: "تعديل التخصيص",
+        subtitle: "تعديل تخصيص المورد اليدوي للخدمة",
+      },
+      cancelPage: {
+        accessDeniedTitle: "تم رفض الوصول",
+        accessDeniedMessage:
+          "ليست لديك صلاحية لإلغاء تخصيصات الموردين.",
+        serviceUnavailableTitle: "الخدمة غير متاحة",
+        serviceUnavailableMessage:
+          "لا يمكن إلغاء تخصيص المورد لأن حالة الخدمة هي {status}.",
+        alreadyCancelledTitle: "التخصيص ملغي بالفعل",
+        alreadyCancelledMessage: "تم إلغاء تخصيص المورد هذا مسبقًا.",
+        returnToService: "العودة إلى الخدمة",
+        backToService: "رجوع إلى الخدمة",
+        title: "إلغاء التخصيص",
+        subtitle: "إلغاء تخصيص المورد للخدمة",
+      },
+      deletePage: {
+        accessDeniedTitle: "تم رفض الوصول",
+        accessDeniedMessage:
+          "ليست لديك صلاحية لحذف تخصيصات الموردين.",
+        serviceUnavailableTitle: "الخدمة غير متاحة",
+        serviceUnavailableMessage:
+          "لا يمكن حذف تخصيص المورد لأن حالة الخدمة هي {status}.",
+        alreadyDeletedTitle: "التخصيص محذوف بالفعل",
+        alreadyDeletedMessage: "تم حذف تخصيص المورد هذا مسبقًا.",
+        actionUnavailableTitle: "الإجراء غير متاح",
+        actionUnavailableMessage:
+          "يمكن حذف التخصيصات اليدوية فقط في الوقت الحالي.",
+        returnToService: "العودة إلى الخدمة",
+        backToService: "رجوع إلى الخدمة",
+        title: "حذف التخصيص",
+        subtitle: "حذف تخصيص المورد للخدمة",
+      },
+      restorePage: {
+        accessDeniedTitle: "تم رفض الوصول",
+        accessDeniedMessage:
+          "ليست لديك صلاحية لاستعادة تخصيصات الموردين.",
+        serviceUnavailableTitle: "الخدمة غير متاحة",
+        serviceUnavailableMessage:
+          "لا يمكن استعادة تخصيص المورد لأن حالة الخدمة هي {status}.",
+        notDeletedTitle: "التخصيص غير محذوف",
+        notDeletedMessage: "تخصيص المورد هذا نشط حاليًا.",
+        actionUnavailableTitle: "الإجراء غير متاح",
+        actionUnavailableMessage:
+          "يمكن استعادة التخصيصات اليدوية فقط في الوقت الحالي.",
+        returnToService: "العودة إلى الخدمة",
+        backToService: "رجوع إلى الخدمة",
+        title: "استعادة التخصيص",
+        subtitle: "استعادة تخصيص المورد للخدمة",
       },
       createForm: {
         modes: {
@@ -2050,17 +2273,17 @@ const servicesDictionaryAr: ServicesDictionary = {
     },
   },
   billing: {
-    title: "الفوترة / الفواتير",
+    title: "الفوترة",
     cards: {
       approvedQuotation: "عرض السعر المعتمد",
       depositInvoice: "فاتورة دفعة مقدمة",
       finalInvoice: "الفاتورة النهائية",
-      billingCalculation: "احتساب الفوترة",
+      billingCalculation: "ملخص الفوترة",
       noApprovedQuotationYet: "لا يوجد عرض سعر معتمد حتى الآن",
-      noActiveDepositInvoice: "لم يتم إنشاء فاتورة الدفعة المقدمة بعد.",
+      noActiveDepositInvoice: "لم يتم إنشاء فاتورة دفعة مقدمة بعد.",
       noActiveFinalInvoice: "لم يتم إنشاء الفاتورة النهائية بعد.",
-      priorInvoiced: "المفوتر سابقًا",
-      remaining: "المتبقي",
+      priorInvoiced: "المفوتر سابقاً",
+      remaining: "المبلغ المتبقي",
     },
     status: {
       title: "حالة الفوترة",
@@ -2087,7 +2310,7 @@ const servicesDictionaryAr: ServicesDictionary = {
       duplicateActiveDepositInvoices: "تم العثور على أكثر من فاتورة دفعة مقدمة نشطة لهذه الخدمة.",
       duplicateActiveFinalInvoices: "تم العثور على أكثر من فاتورة نهائية نشطة لهذه الخدمة.",
       missingServiceId: "معلومات الفوترة غير متاحة لأن معرف الخدمة غير موجود.",
-      depositInvoiceAlreadyExists: "تم بالفعل إنشاء فاتورة دفعة مقدمة لهذه الخدمة.",
+      depositInvoiceAlreadyExists: "توجد فاتورة دفعة مقدمة نشطة بالفعل.",
       finalInvoiceAlreadyExists: "تم بالفعل إنشاء الفاتورة النهائية لهذه الخدمة.",
       priorInvoicesExceedQuotationTotal: "إجمالي الفواتير السابقة يتجاوز إجمالي عرض السعر المعتمد.",
       quotationNotApproved: "عرض السعر المحدد غير معتمد حتى الآن.",
@@ -2095,21 +2318,21 @@ const servicesDictionaryAr: ServicesDictionary = {
       unavailable: "الإجراء غير متاح حاليًا.",
     },
     depositAction: {
-      unavailable: "إجراء فاتورة الدفعة المقدمة غير متاح.",
-      amountLabel: "قيمة الدفعة المقدمة (SAR)",
+      unavailable: "فاتورة الدفعة المقدمة غير متاحة.",
+      amountLabel: "مبلغ الدفعة المقدمة (SAR)",
       amountPlaceholder: "0.00",
-      create: "إنشاء دفعة مقدمة",
+      create: "إنشاء فاتورة دفعة مقدمة",
       validation: {
         validAmount: "يرجى إدخال مبلغ رقمي صحيح.",
-        amountGreaterThanZero: "يجب أن تكون قيمة الدفعة المقدمة أكبر من 0.",
-        amountCannotExceedQuotationTotal: "لا يمكن أن تتجاوز قيمة الدفعة المقدمة إجمالي عرض السعر.",
+        amountGreaterThanZero: "يجب أن يكون مبلغ الدفعة المقدمة أكبر من 0.",
+        amountCannotExceedQuotationTotal: "لا يمكن أن يتجاوز مبلغ الدفعة المقدمة إجمالي عرض السعر.",
       },
       success: "تم إنشاء فاتورة الدفعة المقدمة بنجاح. الفاتورة: {invoiceNumber}.",
       errors: {
         invalidInvoiceInput: "تم إدخال بيانات غير صحيحة.",
-        depositAmountRequired: "قيمة الدفعة المقدمة مطلوبة.",
-        depositAmountExceedsQuotationTotal: "قيمة الدفعة المقدمة تتجاوز إجمالي عرض السعر.",
-        depositInvoiceAlreadyExists: "توجد بالفعل فاتورة دفعة مقدمة نشطة.",
+        depositAmountRequired: "مبلغ الدفعة المقدمة مطلوب.",
+        depositAmountExceedsQuotationTotal: "مبلغ الدفعة المقدمة يتجاوز إجمالي عرض السعر.",
+        depositInvoiceAlreadyExists: "توجد فاتورة دفعة مقدمة نشطة بالفعل.",
         quotationNotFound: "تعذر العثور على عرض السعر.",
         quotationNotApproved: "عرض السعر غير معتمد.",
         quotationServiceMismatch: "عرض السعر لا يطابق الخدمة الحالية.",
@@ -2118,8 +2341,8 @@ const servicesDictionaryAr: ServicesDictionary = {
         invoiceCreationFailed: "تعذر إنشاء الفاتورة.",
         unauthorized: "يجب تسجيل الدخول لتنفيذ هذا الإجراء.",
         forbidden: "ليس لديك صلاحية لإنشاء الفواتير.",
-        fallbackWithCode: "تعذر إنشاء فاتورة الدفعة المقدمة. رمز الخطأ: {code}",
-        fallback: "تعذر إنشاء فاتورة الدفعة المقدمة. يرجى المحاولة مرة أخرى.",
+        fallbackWithCode: "تعذر إنشاء فاتورة دفعة مقدمة. رمز الخطأ: {code}",
+        fallback: "تعذر إنشاء فاتورة دفعة مقدمة. يرجى المحاولة مرة أخرى.",
       },
     },
     finalAction: {
@@ -2219,4 +2442,20 @@ const servicesDictionaries: Record<Locale, ServicesDictionary> = {
 
 export function getServicesDictionary(locale: Locale): ServicesDictionary {
   return servicesDictionaries[locale];
+}
+
+export function getServiceStatusLabel(locale: Locale, status: ServiceStatus): string {
+  const activeDictionary = getServicesDictionary(locale);
+  const englishDictionary = getServicesDictionary("en");
+  const key = `serviceStatuses.${status}`;
+
+  return resolveDictionaryValue({
+    activeValue: activeDictionary.serviceStatuses[status],
+    category: "label",
+    englishValue: englishDictionary.serviceStatuses[status],
+    key,
+    locale,
+    namespace: "services",
+    surface: "service-status",
+  });
 }

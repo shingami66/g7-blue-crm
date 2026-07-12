@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { requirePermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
-import { getLocale } from "@/lib/i18n/locales";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import {
   getInvoicesDictionary,
   type InvoicesDictionary,
@@ -21,7 +21,7 @@ type InvoicesPageState =
   | { status: "error" };
 
 export default async function InvoicesPage() {
-  const locale = getLocale();
+  const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getInvoicesDictionary(locale);
   let pageState: InvoicesPageState;
 

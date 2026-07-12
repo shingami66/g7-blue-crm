@@ -10,6 +10,7 @@ import {
   BriefcaseBusiness,
 } from "lucide-react";
 import KpiCard from "@/components/ui/KpiCard";
+import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -20,6 +21,15 @@ import { getQuotations } from "@/lib/quotations/queries";
 import { getInvoices } from "@/lib/invoices/queries";
 import { getServices } from "@/lib/services/queries";
 import type { QuotationListItem } from "@/lib/quotations/types";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import {
+  getDashboardDictionary,
+  type DashboardWorkflowStage,
+} from "@/lib/i18n/dictionaries/dashboard";
+import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
+import { getQuotationStatusLabel } from "@/lib/i18n/dictionaries/quotations";
+import type { Locale } from "@/lib/i18n/locales";
 
 export const dynamic = "force-dynamic";
 
@@ -27,24 +37,13 @@ type LoadState<T> =
   | { status: "ready"; data: T }
   | { status: "unavailable" };
 
-const serviceWorkflow = [
-  { stage: "Inquiry", focus: "Capture event or booking request", owner: "Sales" },
-  { stage: "Quoted", focus: "Prepare Service-scoped quotation", owner: "Sales" },
-  { stage: "Approved", focus: "Record customer approval", owner: "Manager" },
-  { stage: "Deposit Paid", focus: "Confirm cleared deposit payment", owner: "Accountant" },
-];
+function formatDashboardCount(locale: Locale, value: number): string {
+  return formatUiNumber(locale, value);
+}
 
-const formatCount = (value: number) => new Intl.NumberFormat("en-SA").format(value);
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-SA", {
-    style: "currency",
-    currency: "SAR",
-    minimumFractionDigits: 2,
-  }).format(value);
-
-const formatStatus = (value: string) =>
-  value.charAt(0).toUpperCase() + value.slice(1);
+function formatDashboardAmount(locale: Locale, value: number): string {
+  return formatSarAmount(locale, value);
+}
 
 async function loadIfAllowed<T>(
   permission: string,
@@ -73,20 +72,24 @@ function getRecentQuotations(quotations: QuotationListItem[]) {
     .slice(0, 4);
 }
 
-function SafeErrorState() {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-      <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-        <h2 className="text-xl font-semibold text-slate-900 mb-2">Something went wrong</h2>
-        <p className="text-sm text-slate-500">
-          We couldn&apos;t load the dashboard at this time. Please try again later.
-        </p>
-      </div>
-    </div>
-  );
+function recentQuotationPrimaryLabel(quotation: QuotationListItem): {
+  text: string;
+  dir: "auto" | "ltr";
+} {
+  if (quotation.customer?.company) {
+    return { text: quotation.customer.company, dir: "auto" };
+  }
+  if (quotation.event) {
+    return { text: quotation.event, dir: "auto" };
+  }
+  return { text: quotation.quotationNumber, dir: "ltr" };
 }
 
 export default async function DashboardPage() {
+  const locale = await getCurrentSessionEffectiveLocale();
+  const dictionary = getDashboardDictionary(locale);
+  const sharedStates = getSharedUiStates(locale);
+
   try {
     await requirePermission("dashboard:read");
   } catch (err) {
@@ -96,18 +99,20 @@ export default async function DashboardPage() {
 
     if (err instanceof ForbiddenError) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-          <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
-            <p className="text-sm text-slate-500">
-              You don&apos;t have permission to view the dashboard.
-            </p>
-          </div>
-        </div>
+        <SharedAuthenticatedStatePanel
+          title={sharedStates.accessDenied.title}
+          message={dictionary.states.unavailableForRole}
+        />
       );
     }
 
-    return <SafeErrorState />;
+    return (
+      <SharedAuthenticatedStatePanel
+        title={sharedStates.genericError.title}
+        message={dictionary.states.loadError}
+        role="alert"
+      />
+    );
   }
 
   const [customersState, quotationsState, invoicesState, servicesState] =
@@ -131,191 +136,202 @@ export default async function DashboardPage() {
     0,
   );
   const recentQuotations =
-    quotationsState.status === "ready" ? getRecentQuotations(quotationsState.data) : [];
+    quotationsState.status === "ready"
+      ? getRecentQuotations(quotationsState.data)
+      : [];
 
   return (
     <>
-      {/* Page Header */}
       <div className="mb-8">
-        <h2 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-primary">
-          Executive Dashboard
+        <h2 className="text-[28px] font-semibold leading-[36px] tracking-[-0.01em] text-primary">
+          {dictionary.header.title}
         </h2>
-        <p className="text-[14px] leading-[20px] text-on-surface-variant mt-2">
-          Welcome back. Here is your overview for today.
+        <p className="mt-2 text-[14px] leading-[20px] text-on-surface-variant">
+          {dictionary.header.subtitle}
         </p>
       </div>
 
-      {/* Bento Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
-        {/* KPI Cards */}
-        <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-12 md:gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:col-span-8 lg:grid-cols-3">
           <KpiCard
-            label="Total Customers"
+            label={dictionary.metrics.totalCustomers}
             value={
               customersState.status === "ready"
-                ? formatCount(customersState.data.length)
-                : "Unavailable"
+                ? formatDashboardCount(locale, customersState.data.length)
+                : dictionary.states.unavailable
             }
             trend="flat"
             trendLabel={
               customersState.status === "ready"
-                ? "Based on live records"
-                : "Unavailable for this role"
+                ? dictionary.metrics.basedOnLiveRecords
+                : dictionary.states.unavailableForRole
             }
             icon={Users}
           />
           <KpiCard
-            label="Total Quotations"
+            label={dictionary.metrics.totalQuotations}
             value={
               quotationsState.status === "ready"
-                ? formatCount(quotationsState.data.length)
-                : "Unavailable"
+                ? formatDashboardCount(locale, quotationsState.data.length)
+                : dictionary.states.unavailable
             }
             trend="flat"
             trendLabel={
               quotationsState.status === "ready"
-                ? "Based on live records"
-                : "Unavailable for this role"
+                ? dictionary.metrics.basedOnLiveRecords
+                : dictionary.states.unavailableForRole
             }
             icon={FileText}
           />
           <KpiCard
-            label="Open Invoices"
+            label={dictionary.metrics.openInvoices}
             value={
               invoicesState.status === "ready"
-                ? formatCount(openInvoiceCount)
-                : "Unavailable"
+                ? formatDashboardCount(locale, openInvoiceCount)
+                : dictionary.states.unavailable
             }
             trend="flat"
             trendLabel={
               invoicesState.status === "ready"
-                ? "From current invoices"
-                : "Unavailable for this role"
+                ? dictionary.metrics.fromCurrentInvoices
+                : dictionary.states.unavailableForRole
             }
             icon={Receipt}
           />
           <KpiCard
-            label="Services"
+            label={dictionary.metrics.services}
             value={
               servicesState.status === "ready"
-                ? formatCount(servicesState.data.length)
-                : "Unavailable"
+                ? formatDashboardCount(locale, servicesState.data.length)
+                : dictionary.states.unavailable
             }
             trend="flat"
             trendLabel={
               servicesState.status === "ready"
-                ? "Based on live records"
-                : "Unavailable for this role"
+                ? dictionary.metrics.basedOnLiveRecords
+                : dictionary.states.unavailableForRole
             }
             icon={BriefcaseBusiness}
           />
           <KpiCard
-            label="Total Collected"
+            label={dictionary.metrics.totalCollected}
             value={
               invoicesState.status === "ready"
-                ? formatCurrency(totalCollected)
-                : "Unavailable"
+                ? formatDashboardAmount(locale, totalCollected)
+                : dictionary.states.unavailable
             }
             trend="flat"
             trendLabel={
               invoicesState.status === "ready"
-                ? "Collected on recorded invoices"
-                : "Unavailable for this role"
+                ? dictionary.metrics.collectedOnRecordedInvoices
+                : dictionary.states.unavailableForRole
             }
             icon={DollarSign}
           />
           <KpiCard
-            label="Pending Balance"
+            label={dictionary.metrics.pendingBalance}
             value={
               invoicesState.status === "ready"
-                ? formatCurrency(pendingBalance)
-                : "Unavailable"
+                ? formatDashboardAmount(locale, pendingBalance)
+                : dictionary.states.unavailable
             }
             trend="flat"
             trendLabel={
               invoicesState.status === "ready"
-                ? "From current invoices"
-                : "Unavailable for this role"
+                ? dictionary.metrics.fromCurrentInvoices
+                : dictionary.states.unavailableForRole
             }
             icon={CreditCard}
           />
         </div>
 
-        {/* Quick Actions */}
-        <div className="md:col-span-4 bg-surface-container-lowest rounded-xl border border-surface-variant p-8 flex flex-col">
-          <h3 className="text-[20px] leading-[28px] font-semibold text-primary border-b border-surface-variant pb-2 mb-4">
-            Quick Actions
+        <div className="flex flex-col rounded-xl border border-surface-variant bg-surface-container-lowest p-8 md:col-span-4">
+          <h3 className="mb-4 border-b border-surface-variant pb-2 text-[20px] font-semibold leading-[28px] text-primary">
+            {dictionary.actions.title}
           </h3>
-          <div className="space-y-4 flex-1">
-            <button className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-on-primary py-3 px-4 rounded-lg text-[14px] leading-[20px] transition-colors">
+          <div className="flex-1 space-y-4">
+            <button
+              type="button"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-[14px] leading-[20px] text-on-primary transition-colors hover:bg-primary-container"
+            >
               <UserPlus size={18} />
-              New Customer
+              {dictionary.actions.newCustomer}
             </button>
-            <button className="w-full flex items-center justify-center gap-2 bg-surface-container-lowest border border-primary text-primary hover:bg-surface-container-low py-3 px-4 rounded-lg text-[14px] leading-[20px] transition-colors">
+            <button
+              type="button"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-primary bg-surface-container-lowest px-4 py-3 text-[14px] leading-[20px] text-primary transition-colors hover:bg-surface-container-low"
+            >
               <FilePlus size={18} />
-              New Quotation
+              {dictionary.actions.newQuotation}
             </button>
-            <button className="w-full flex items-center justify-center gap-2 bg-surface-container-lowest border border-primary text-primary hover:bg-surface-container-low py-3 px-4 rounded-lg text-[14px] leading-[20px] transition-colors">
+            <button
+              type="button"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-primary bg-surface-container-lowest px-4 py-3 text-[14px] leading-[20px] text-primary transition-colors hover:bg-surface-container-low"
+            >
               <ReceiptText size={18} />
-              New Invoice
+              {dictionary.actions.newInvoice}
             </button>
             <Link
               href="/services/new"
-              className="w-full flex items-center justify-center gap-2 bg-surface-container-lowest border border-primary text-primary hover:bg-surface-container-low py-3 px-4 rounded-lg text-[14px] leading-[20px] transition-colors"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-primary bg-surface-container-lowest px-4 py-3 text-[14px] leading-[20px] text-primary transition-colors hover:bg-surface-container-low"
             >
               <BriefcaseBusiness size={18} />
-              New Service
+              {dictionary.actions.newService}
             </Link>
           </div>
         </div>
 
-        {/* Recent Quotations */}
-        <div className="md:col-span-6 bg-surface-container-lowest rounded-xl border border-surface-variant overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-surface-variant flex justify-between items-center">
-            <h3 className="text-[20px] leading-[28px] font-semibold text-primary">
-              Recent Quotations
+        <div className="flex flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest md:col-span-6">
+          <div className="flex items-center justify-between border-b border-surface-variant p-4">
+            <h3 className="text-[20px] font-semibold leading-[28px] text-primary">
+              {dictionary.quotations.title}
             </h3>
             <Link
               href="/quotations"
-              className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-primary hover:underline"
+              className="text-[12px] font-semibold leading-[16px] tracking-[0.05em] text-primary hover:underline"
             >
-              View All
+              {dictionary.quotations.viewAll}
             </Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full border-collapse text-start">
               <thead>
                 <tr className="bg-surface-container-low">
-                  <th className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase px-4 py-2">
-                    Client
+                  <th className="px-4 py-2 text-start text-[12px] font-semibold uppercase leading-[16px] tracking-[0.05em] text-on-surface-variant">
+                    {dictionary.quotations.client}
                   </th>
-                  <th className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase px-4 py-2">
-                    Value
+                  <th className="px-4 py-2 text-start text-[12px] font-semibold uppercase leading-[16px] tracking-[0.05em] text-on-surface-variant">
+                    {dictionary.quotations.value}
                   </th>
-                  <th className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase px-4 py-2">
-                    Status
+                  <th className="px-4 py-2 text-start text-[12px] font-semibold uppercase leading-[16px] tracking-[0.05em] text-on-surface-variant">
+                    {dictionary.quotations.status}
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
-                {recentQuotations.map((q) => (
-                  <tr
-                    key={q.id}
-                    className="hover:bg-surface-container-low/50 transition-colors"
-                  >
-                    <td className="px-4 py-2 text-on-surface">
-                      {q.customer?.company ?? q.event ?? q.quotationNumber}
-                    </td>
-                    <td className="px-4 py-2 text-on-surface-variant">
-                      {formatCurrency(q.grandTotal)}
-                    </td>
-                    <td className="px-4 py-2">
-                      <StatusBadge variant={q.status}>
-                        {formatStatus(q.status)}
-                      </StatusBadge>
-                    </td>
-                  </tr>
-                ))}
+                {recentQuotations.map((quotation) => {
+                  const primary = recentQuotationPrimaryLabel(quotation);
+                  return (
+                    <tr
+                      key={quotation.id}
+                      className="transition-colors hover:bg-surface-container-low/50"
+                    >
+                      <td className="px-4 py-2 text-on-surface">
+                        <span dir={primary.dir}>{primary.text}</span>
+                      </td>
+                      <td className="px-4 py-2 text-on-surface-variant">
+                        <span dir="ltr" className="tabular-nums">
+                          {formatDashboardAmount(locale, quotation.grandTotal)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        <StatusBadge variant={quotation.status}>
+                          {getQuotationStatusLabel(locale, quotation.status)}
+                        </StatusBadge>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {recentQuotations.length === 0 && (
                   <tr>
                     <td
@@ -323,8 +339,8 @@ export default async function DashboardPage() {
                       className="px-4 py-8 text-center text-on-surface-variant"
                     >
                       {quotationsState.status === "ready"
-                        ? "No recent activity yet"
-                        : "Recent quotations unavailable for this role."}
+                        ? dictionary.quotations.noRecentActivity
+                        : dictionary.quotations.unavailableForRole}
                     </td>
                   </tr>
                 )}
@@ -333,51 +349,52 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Service Workflow */}
-        <div className="md:col-span-6 bg-surface-container-lowest rounded-xl border border-surface-variant overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-surface-variant flex justify-between items-center">
-            <h3 className="text-[20px] leading-[28px] font-semibold text-primary">
-              Service Workflow
+        <div className="flex flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest md:col-span-6">
+          <div className="flex items-center justify-between border-b border-surface-variant p-4">
+            <h3 className="text-[20px] font-semibold leading-[28px] text-primary">
+              {dictionary.workflow.title}
             </h3>
             <Link
               href="/services"
-              className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-primary hover:underline"
+              className="text-[12px] font-semibold leading-[16px] tracking-[0.05em] text-primary hover:underline"
             >
-              View Services
+              {dictionary.workflow.viewServices}
             </Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full border-collapse text-start">
               <thead>
                 <tr className="bg-surface-container-low">
-                  <th className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase px-4 py-2">
-                    Service Stage
+                  <th className="px-4 py-2 text-start text-[12px] font-semibold uppercase leading-[16px] tracking-[0.05em] text-on-surface-variant">
+                    {dictionary.workflow.stage}
                   </th>
-                  <th className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase px-4 py-2">
-                    Focus
+                  <th className="px-4 py-2 text-start text-[12px] font-semibold uppercase leading-[16px] tracking-[0.05em] text-on-surface-variant">
+                    {dictionary.workflow.focus}
                   </th>
-                  <th className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase px-4 py-2">
-                    Owner
+                  <th className="px-4 py-2 text-start text-[12px] font-semibold uppercase leading-[16px] tracking-[0.05em] text-on-surface-variant">
+                    {dictionary.workflow.owner}
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
-                {serviceWorkflow.map((stage, i) => (
-                  <tr
-                    key={i}
-                    className="hover:bg-surface-container-low/50 transition-colors"
-                  >
-                    <td className="px-4 py-2 text-on-surface font-medium">
-                      {stage.stage}
-                    </td>
-                    <td className="px-4 py-2 text-on-surface-variant">
-                      {stage.focus}
-                    </td>
-                    <td className="px-4 py-2 text-on-surface-variant">
-                      {stage.owner}
-                    </td>
-                  </tr>
-                ))}
+                {(Object.keys(dictionary.workflow.rows) as DashboardWorkflowStage[]).map(
+                  (stage) => (
+                    <tr
+                      key={stage}
+                      className="transition-colors hover:bg-surface-container-low/50"
+                    >
+                      <td className="px-4 py-2 font-medium text-on-surface">
+                        {dictionary.workflow.rows[stage].label}
+                      </td>
+                      <td className="px-4 py-2 text-on-surface-variant">
+                        {dictionary.workflow.rows[stage].focus}
+                      </td>
+                      <td className="px-4 py-2 text-on-surface-variant">
+                        {dictionary.workflow.rows[stage].owner}
+                      </td>
+                    </tr>
+                  ),
+                )}
               </tbody>
             </table>
           </div>

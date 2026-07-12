@@ -1,5 +1,5 @@
 import type { Service } from "@/types/service";
-import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getServiceStatusLabel, type ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { Check, ChevronDown } from "lucide-react";
 
 const LINEAR_STATUSES = [
@@ -82,7 +82,7 @@ export default function ServiceStatusTimeline({
                   <HistoryMarker index={index} state={item.state} />
                   <div className="min-w-0">
                     <p className="text-[14px] font-semibold text-on-surface">
-                      {dictionary.serviceStatuses[item.status]}
+                      {getServiceStatusLabel(dictionary.locale, item.status)}
                     </p>
                     <p className="mt-1 text-[12px] leading-[16px] text-on-surface-variant">
                       {getHistoryLabel(dictionary, item.state)}

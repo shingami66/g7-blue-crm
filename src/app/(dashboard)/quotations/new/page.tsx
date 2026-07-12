@@ -3,7 +3,7 @@ import Link from "next/link";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
-import { getLocale } from "@/lib/i18n/locales";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import {
   getQuotationsDictionary,
   type QuotationsDictionary,
@@ -26,7 +26,7 @@ function serviceCanReceiveQuotation(status: string) {
 }
 
 export default async function NewQuotationPage({ searchParams }: NewQuotationPageProps) {
-  const locale = getLocale();
+  const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getQuotationsDictionary(locale);
   const formDictionary: QuotationsDictionary = dictionary;
   let authError: unknown = null;

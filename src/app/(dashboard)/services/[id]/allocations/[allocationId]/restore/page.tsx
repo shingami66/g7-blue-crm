@@ -3,6 +3,9 @@ import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
 import { getSupplierAllocationById } from "@/lib/supplier-allocations/queries";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import SupplierAllocationRestoreForm from "./SupplierAllocationRestoreForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -15,6 +18,9 @@ export default async function RestoreSupplierAllocationPage({
   params: Promise<{ id: string; allocationId: string }>;
 }) {
   const { id, allocationId } = await params;
+  const locale = await getCurrentSessionEffectiveLocale();
+  const servicesDictionary = getServicesDictionary(locale);
+  const dictionary = servicesDictionary.supplierAllocations.subflow.restorePage;
 
   try {
     await requirePermission("supplier_allocations:read");
@@ -25,10 +31,15 @@ export default async function RestoreSupplierAllocationPage({
       return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
           <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
-            <p className="text-sm text-slate-500">You do not have permission to restore supplier allocations.</p>
-            <Link href={`/services/${id}?showDeleted=true`} className="mt-6 inline-flex items-center gap-2 text-primary hover:underline font-medium">
-              <ArrowLeft size={16} /> Return to Service
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+              {dictionary.accessDeniedTitle}
+            </h2>
+            <p className="text-sm text-slate-500">{dictionary.accessDeniedMessage}</p>
+            <Link
+              href={`/services/${id}?showDeleted=true`}
+              className="mt-6 inline-flex items-center gap-2 text-primary hover:underline font-medium"
+            >
+              <ArrowLeft size={16} /> {dictionary.returnToService}
             </Link>
           </div>
         </div>
@@ -44,14 +55,26 @@ export default async function RestoreSupplierAllocationPage({
   if (!allocation) notFound();
   if (allocation.serviceId !== service.id) notFound();
 
+  const localizedServiceStatus =
+    servicesDictionary.serviceStatuses[
+      service.status as keyof typeof servicesDictionary.serviceStatuses
+    ] ?? service.status;
+
   if (service.status === "Completed" || service.status === "Cancelled") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Service Unavailable</h2>
-          <p className="text-sm text-slate-500">Cannot restore a supplier allocation because the service is {service.status.toLowerCase()}.</p>
-          <Link href={`/services/${id}?showDeleted=true`} className="mt-6 inline-flex items-center gap-2 text-primary hover:underline font-medium">
-            <ArrowLeft size={16} /> Return to Service
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">
+            {dictionary.serviceUnavailableTitle}
+          </h2>
+          <p className="text-sm text-slate-500">
+            {dictionary.serviceUnavailableMessage.replace("{status}", localizedServiceStatus)}
+          </p>
+          <Link
+            href={`/services/${id}?showDeleted=true`}
+            className="mt-6 inline-flex items-center gap-2 text-primary hover:underline font-medium"
+          >
+            <ArrowLeft size={16} /> {dictionary.returnToService}
           </Link>
         </div>
       </div>
@@ -62,10 +85,15 @@ export default async function RestoreSupplierAllocationPage({
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Allocation Not Deleted</h2>
-          <p className="text-sm text-slate-500">This supplier allocation is currently active.</p>
-          <Link href={`/services/${id}`} className="mt-6 inline-flex items-center gap-2 text-primary hover:underline font-medium">
-            <ArrowLeft size={16} /> Return to Service
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">
+            {dictionary.notDeletedTitle}
+          </h2>
+          <p className="text-sm text-slate-500">{dictionary.notDeletedMessage}</p>
+          <Link
+            href={`/services/${id}`}
+            className="mt-6 inline-flex items-center gap-2 text-primary hover:underline font-medium"
+          >
+            <ArrowLeft size={16} /> {dictionary.returnToService}
           </Link>
         </div>
       </div>
@@ -76,10 +104,15 @@ export default async function RestoreSupplierAllocationPage({
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Action Unavailable</h2>
-          <p className="text-sm text-slate-500">Only manual allocations can be restored at this time.</p>
-          <Link href={`/services/${id}?showDeleted=true`} className="mt-6 inline-flex items-center gap-2 text-primary hover:underline font-medium">
-            <ArrowLeft size={16} /> Return to Service
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">
+            {dictionary.actionUnavailableTitle}
+          </h2>
+          <p className="text-sm text-slate-500">{dictionary.actionUnavailableMessage}</p>
+          <Link
+            href={`/services/${id}?showDeleted=true`}
+            className="mt-6 inline-flex items-center gap-2 text-primary hover:underline font-medium"
+          >
+            <ArrowLeft size={16} /> {dictionary.returnToService}
           </Link>
         </div>
       </div>
@@ -89,13 +122,21 @@ export default async function RestoreSupplierAllocationPage({
   return (
     <div className="max-w-3xl mx-auto pb-12">
       <div className="mb-6">
-        <Link href={`/services/${service.id}?showDeleted=true`} className="inline-flex items-center gap-2 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">
-          <ArrowLeft size={16} /> Back to Service
+        <Link
+          href={`/services/${service.id}?showDeleted=true`}
+          className="inline-flex items-center gap-2 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors"
+        >
+          <ArrowLeft size={16} /> {dictionary.backToService}
         </Link>
       </div>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-on-surface">Restore Supplier Allocation</h1>
-        <p className="text-on-surface-variant mt-1">Restore supplier allocation for {service.serviceNumber} - {service.serviceTitle}</p>
+        <h1 className="text-2xl font-semibold text-on-surface">{dictionary.title}</h1>
+        <p className="text-on-surface-variant mt-1">
+          {dictionary.subtitle}{" "}
+          <span dir="ltr">{isolateBidiText(service.serviceNumber)}</span>
+          {" - "}
+          <span dir="auto">{isolateBidiText(service.serviceTitle)}</span>
+        </p>
       </div>
       <SupplierAllocationRestoreForm serviceId={service.id} allocation={allocation} />
     </div>

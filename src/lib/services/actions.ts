@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { createServiceSchema, updateServiceSchema, updateServiceStatusSchema } from "./schemas";
 import { validateServiceStatusTransition } from "./status-transitions";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import type {
   CreatedServiceResult,
   CreateServiceInput,
@@ -17,8 +18,21 @@ import type { ServiceStatus } from "@/types/service";
 export type ActionResult<T = void> = {
   success: boolean;
   error?: string;
+  code?: ServiceActionErrorCode;
   data?: T;
 };
+
+export type ServiceActionErrorCode =
+  | "INVALID_INPUT"
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "NOT_FOUND"
+  | "CUSTOMER_UNAVAILABLE"
+  | "STATUS_CHANGE_DEFERRED"
+  | "STATUS_CONFLICT"
+  | "NO_FIELDS"
+  | "TRANSITION_BLOCKED"
+  | "GENERIC_FAILURE";
 
 function firstValidationError(parsed: { error: { issues: { message: string }[] } }) {
   return parsed.error.issues[0]?.message ?? "Validation failed";
@@ -173,12 +187,12 @@ export async function createService(
       parsed.data.customer_id
     );
     if (!customerValidationResult.success) {
-      return { success: false, error: customerValidationResult.error };
+      return { success: false, code: "CUSTOMER_UNAVAILABLE", error: customerValidationResult.error };
     }
 
     const serviceNumberResult = await generateServiceNumber(supabase);
     if (!serviceNumberResult.success || !serviceNumberResult.data) {
-      return { success: false, error: serviceNumberResult.error };
+      return { success: false, code: "GENERIC_FAILURE", error: serviceNumberResult.error };
     }
 
     const { data: createdService, error } = await supabase
@@ -195,7 +209,7 @@ export async function createService(
 
     if (error) {
       console.error("[createService] Supabase error:", error.message);
-      return { success: false, error: "Failed to create service. Please try again." };
+      return { success: false, code: "GENERIC_FAILURE", error: "Failed to create service. Please try again." };
     }
 
     revalidatePath("/services");
@@ -207,10 +221,10 @@ export async function createService(
       },
     };
   } catch (err) {
-    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
-    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
     console.error("[createService] Unexpected error:", err instanceof Error ? err.message : "Unknown");
-    return { success: false, error: "An unexpected error occurred." };
+    return { success: false, code: "GENERIC_FAILURE", error: "An unexpected error occurred." };
   }
 }
 
@@ -238,7 +252,7 @@ export async function updateService(
     if (input && typeof input === "object") {
       for (const field of forbiddenFields) {
         if (field in input) {
-          return { success: false, error: "This field cannot be edited." };
+          return { success: false, code: "INVALID_INPUT", error: "This field cannot be edited." };
         }
       }
     }
@@ -246,11 +260,11 @@ export async function updateService(
     const parsed = updateServiceSchema.safeParse(input);
 
     if (!parsed.success) {
-      return { success: false, error: firstValidationError(parsed) };
+      return { success: false, code: "INVALID_INPUT", error: firstValidationError(parsed) };
     }
 
     if (parsed.data.status !== undefined) {
-      return { success: false, error: "Service status changes are deferred." };
+      return { success: false, code: "STATUS_CHANGE_DEFERRED", error: "Service status changes are deferred." };
     }
 
     const currentService = await getServiceById(id);
@@ -259,12 +273,12 @@ export async function updateService(
     }
 
     if (currentService.status !== "Inquiry" && currentService.status !== "Quoted") {
-      return { success: false, error: `Editing is not allowed when service status is ${currentService.status}.` };
+      return { success: false, code: "STATUS_CONFLICT", error: `Editing is not allowed when service status is ${currentService.status}.` };
     }
 
     const updates = serviceUpdatePayload(parsed.data, user.clerk_user_id);
     if (Object.keys(updates).length === 1) {
-      return { success: false, error: "No fields to update." };
+      return { success: false, code: "NO_FIELDS", error: "No fields to update." };
     }
 
     const supabase = createAdminClient();
@@ -278,20 +292,20 @@ export async function updateService(
 
     if (error) {
       if (error.code === "PGRST116") {
-        return { success: false, error: "Service not found." };
+        return { success: false, code: "NOT_FOUND", error: "Service not found." };
       }
       console.error("[updateService] Supabase error:", error.message);
-      return { success: false, error: "Failed to update service. Please try again." };
+      return { success: false, code: "GENERIC_FAILURE", error: "Failed to update service. Please try again." };
     }
 
     revalidatePath("/services");
     revalidatePath(`/services/${id}`);
     return { success: true, data: { id } };
   } catch (err) {
-    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
-    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
     console.error("[updateService] Unexpected error:", err instanceof Error ? err.message : "Unknown");
-    return { success: false, error: "An unexpected error occurred." };
+    return { success: false, code: "GENERIC_FAILURE", error: "An unexpected error occurred." };
   }
 }
 
@@ -344,7 +358,7 @@ export async function updateServiceStatusAction(
     const parsed = updateServiceStatusSchema.safeParse(input);
 
     if (!parsed.success) {
-      return { success: false, error: firstValidationError(parsed) };
+      return { success: false, code: "INVALID_INPUT", error: firstValidationError(parsed) };
     }
 
     const supabase = createAdminClient();
@@ -357,11 +371,11 @@ export async function updateServiceStatusAction(
 
     if (serviceError) {
       console.error("[updateServiceStatusAction] Service lookup error:", serviceError.message);
-      return { success: false, error: "Failed to update service status. Please try again." };
+      return { success: false, code: "GENERIC_FAILURE", error: "Failed to update service status. Please try again." };
     }
 
     if (!currentService) {
-      return { success: false, error: "Service not found." };
+      return { success: false, code: "NOT_FOUND", error: "Service not found." };
     }
 
     const validationResult = await validateServiceStatusTransition(
@@ -369,11 +383,12 @@ export async function updateServiceStatusAction(
       id,
       currentService.status as ServiceStatus,
       parsed.data.status,
-      parsed.data.cancellation_reason
+      parsed.data.cancellation_reason,
+      await getCurrentSessionEffectiveLocale(),
     );
 
     if (!validationResult.success) {
-      return { success: false, error: validationResult.error };
+      return { success: false, code: "TRANSITION_BLOCKED", error: validationResult.error };
     }
 
     const updates: Record<string, unknown> = {
@@ -396,19 +411,19 @@ export async function updateServiceStatusAction(
 
     if (error) {
       if (error.code === "PGRST116") {
-        return { success: false, error: "Service not found." };
+        return { success: false, code: "NOT_FOUND", error: "Service not found." };
       }
       console.error("[updateServiceStatusAction] Supabase error:", error.message);
-      return { success: false, error: "Failed to update service status. Please try again." };
+      return { success: false, code: "GENERIC_FAILURE", error: "Failed to update service status. Please try again." };
     }
 
     revalidatePath("/services");
     revalidatePath(`/services/${id}`);
     return { success: true, data: { id } };
   } catch (err) {
-    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
-    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
     console.error("[updateServiceStatusAction] Unexpected error:", err instanceof Error ? err.message : "Unknown");
-    return { success: false, error: "An unexpected error occurred." };
+    return { success: false, code: "GENERIC_FAILURE", error: "An unexpected error occurred." };
   }
 }

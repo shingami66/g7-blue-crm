@@ -4,11 +4,23 @@ import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { isolateBidiText } from "@/lib/i18n/bidi";
-import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { getLocale } from "@/lib/i18n/locales";
+import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { formatSarAmount, formatUiDateTime, formatUiNumber } from "@/lib/i18n/formatting";
+import type { Locale } from "@/lib/i18n/locales";
 import SupplierBookingActions, {
   CreateSupplierBookingButton,
 } from "./SupplierBookingActions";
+
+function formatBookingMoney(locale: Locale, value: number | null, currency: string) {
+  if (value === null) return "—";
+  if (currency === "SAR") {
+    return formatSarAmount(locale, value);
+  }
+  return `${formatUiNumber(locale, value, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} ${currency}`;
+}
 
 type SupplierBookingsPanelProps = {
   bookings: SupplierBooking[];
@@ -16,6 +28,7 @@ type SupplierBookingsPanelProps = {
   canCreate?: boolean;
   canCancel?: boolean;
   serviceStatus?: string;
+  dictionary: ServicesDictionary;
 };
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
@@ -31,9 +44,8 @@ export default function SupplierBookingsPanel({
   canCreate,
   canCancel,
   serviceStatus,
+  dictionary,
 }: SupplierBookingsPanelProps) {
-  const locale = getLocale();
-  const dictionary = getServicesDictionary(locale);
   const panelDictionary = dictionary.supplierBookings;
   const isServiceBookingLocked =
     serviceStatus === "Completed" || serviceStatus === "Cancelled";
@@ -98,28 +110,40 @@ export default function SupplierBookingsPanel({
                 <span dir="auto" className="block font-medium">{isolateBidiText(booking.itemName)}</span>
                 <span dir="auto" className="block text-[12px] text-on-surface-variant">{isolateBidiText(booking.category)}</span>
               </td>
-              <td dir="ltr" className="px-4 py-3 align-top text-on-surface-variant">
-                {isolateBidiText(`${booking.quantity} ${booking.unit}`)}
+              <td dir="ltr" className="px-4 py-3 align-top text-on-surface-variant tabular-nums">
+                {`${formatUiNumber(dictionary.locale, booking.quantity)} ${booking.unit}`}
               </td>
               {hasCostColumns && (
                 <>
-                  <td dir="ltr" className="px-4 py-3 align-top text-right text-on-surface">
-                    {formatMoney(booking.estimatedUnitCost, booking.currency)}
+                  <td dir="ltr" className="px-4 py-3 align-top text-end text-on-surface tabular-nums">
+                    {formatBookingMoney(
+                      dictionary.locale,
+                      booking.estimatedUnitCost,
+                      booking.currency,
+                    )}
                   </td>
-                  <td dir="ltr" className="px-4 py-3 align-top text-right text-on-surface font-semibold">
-                    {formatMoney(booking.estimatedTotalCost, booking.currency)}
+                  <td dir="ltr" className="px-4 py-3 align-top text-end font-semibold text-on-surface tabular-nums">
+                    {formatBookingMoney(
+                      dictionary.locale,
+                      booking.estimatedTotalCost,
+                      booking.currency,
+                    )}
                   </td>
                 </>
               )}
-              <td dir="ltr" className="px-4 py-3 align-top text-on-surface-variant">
-                {formatDateTime(booking.createdAt)}
+              <td dir="ltr" className="px-4 py-3 align-top text-on-surface-variant tabular-nums">
+                {formatUiDateTime(dictionary.locale, booking.createdAt)}
               </td>
               <td className="px-4 py-3 align-top text-on-surface-variant min-w-[280px]">
-                <BookingInternalDetails booking={booking} />
+                <BookingInternalDetails
+                  booking={booking}
+                  dictionary={dictionary.supplierBookings.details}
+                  locale={dictionary.locale}
+                />
               </td>
               <td className="px-4 py-3 align-top text-right min-w-[140px]">
                 {canCancel && booking.status === "draft" && (
-                  <SupplierBookingActions bookingId={booking.id} />
+                  <SupplierBookingActions bookingId={booking.id} dictionary={dictionary.supplierBookings.cancelAction} />
                 )}
               </td>
             </tr>
@@ -164,7 +188,7 @@ export default function SupplierBookingsPanel({
                       </div>
                     </div>
                   ) : canCreateForService ? (
-                    <CreateSupplierBookingButton allocationId={allocation.id} />
+                    <CreateSupplierBookingButton allocationId={allocation.id} dictionary={dictionary.supplierBookings.createAction} />
                   ) : isServiceBookingLocked ? (
                     <span className="text-[13px] font-medium text-on-surface-variant">
                       {panelDictionary.locked}
@@ -184,50 +208,44 @@ export default function SupplierBookingsPanel({
   );
 }
 
-function BookingInternalDetails({ booking }: { booking: SupplierBooking }) {
-  const locale = getLocale();
-  const dictionary = getServicesDictionary(locale);
-  const detailsDictionary = dictionary.supplierBookings.details;
-
+function BookingInternalDetails({
+  booking,
+  dictionary: detailsDictionary,
+  locale,
+}: {
+  booking: SupplierBooking;
+  dictionary: ServicesDictionary["supplierBookings"]["details"];
+  locale: Locale;
+}) {
   return (
     <div className="max-w-md space-y-1">
       {booking.scopeOfWork && (
         <p dir="auto">
-          <span className="font-semibold text-on-surface">{detailsDictionary.scope}</span> {isolateBidiText(booking.scopeOfWork)}
+          <span className="font-semibold text-on-surface">{detailsDictionary.scope}</span>{" "}
+          {isolateBidiText(booking.scopeOfWork)}
         </p>
       )}
       {booking.internalNotes && (
         <p dir="auto">
-          <span className="font-semibold text-on-surface">{detailsDictionary.notes}</span> {isolateBidiText(booking.internalNotes)}
+          <span className="font-semibold text-on-surface">{detailsDictionary.notes}</span>{" "}
+          {isolateBidiText(booking.internalNotes)}
         </p>
       )}
       {booking.status === "cancelled" && (
         <p dir="auto">
           <span className="font-semibold text-error">{detailsDictionary.cancelled}</span>{" "}
           {isolateBidiText(booking.cancelledReason || detailsDictionary.noReason)}{" "}
-          {booking.cancelledAt ? `(${formatDateTime(booking.cancelledAt)})` : ""}
+          {booking.cancelledAt ? (
+            <span dir="ltr">({formatUiDateTime(locale, booking.cancelledAt)})</span>
+          ) : (
+            ""
+          )}
         </p>
       )}
-      {!booking.scopeOfWork && !booking.internalNotes && booking.status !== "cancelled" && detailsDictionary.empty}
+      {!booking.scopeOfWork &&
+        !booking.internalNotes &&
+        booking.status !== "cancelled" &&
+        detailsDictionary.empty}
     </div>
   );
-}
-
-function formatMoney(value: number | null, currency: string) {
-  if (value === null) return "—";
-
-  return isolateBidiText(`${value.toLocaleString("en-SA", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} ${currency}`);
-}
-
-function formatDateTime(value: string) {
-  return isolateBidiText(new Date(value).toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }));
 }

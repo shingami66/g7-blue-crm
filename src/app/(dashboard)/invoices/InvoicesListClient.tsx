@@ -12,7 +12,14 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
-import type { InvoicesDictionary } from "@/lib/i18n/dictionaries/invoices";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import {
+  getInvoiceDocumentLabelDisplay,
+  getInvoiceStatusLabel,
+  getInvoiceTypeLabel,
+  type InvoicesDictionary,
+} from "@/lib/i18n/dictionaries/invoices";
+import { formatSarAmount, formatUiDate } from "@/lib/i18n/formatting";
 import PendingLink from "@/components/ui/PendingLink";
 
 const invoiceStatusBadgeVariant = {
@@ -36,12 +43,11 @@ interface InvoicesListClientProps {
 const formatCopy = (template: string, values: Record<string, string | number>) =>
   template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
 
-const toLtrText = (value: string | number) => `\u2066${String(value)}\u2069`;
-
 export default function InvoicesListClient({
   initialInvoices,
   dictionary,
 }: InvoicesListClientProps) {
+  const locale = dictionary.locale;
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -133,9 +139,9 @@ export default function InvoicesListClient({
               {filteredInvoices.length === 0
                 ? dictionary.list.summary.showingZero
                 : formatCopy(dictionary.list.summary.showingRange, {
-                    start: toLtrText(startIndex + 1),
-                    end: toLtrText(endIndex),
-                    count: toLtrText(filteredInvoices.length),
+                    start: startIndex + 1,
+                    end: endIndex,
+                    count: filteredInvoices.length,
                   })}
             </div>
           </div>
@@ -180,26 +186,28 @@ export default function InvoicesListClient({
                     className="hover:bg-surface-container-low/50 transition-colors"
                   >
                     <td className="px-4 py-4 font-mono font-semibold text-primary" dir="ltr">
-                      {inv.invoice_number || inv.id}
+                      {isolateBidiText(inv.invoice_number || inv.id)}
                     </td>
                     <td className="px-4 py-4 text-on-surface">
-                      {inv.invoice_type ? dictionary.invoiceTypes[inv.invoice_type] : "—"}
+                      {inv.invoice_type
+                        ? getInvoiceTypeLabel(locale, inv.invoice_type)
+                        : "—"}
                     </td>
                     <td className="px-4 py-4 text-on-surface" dir="auto">
-                      {inv.document_label || "—"}
+                      {getInvoiceDocumentLabelDisplay(locale, inv.document_label)}
                     </td>
                     <td className="px-4 py-4 font-medium text-on-surface" dir="auto">
                       {inv.customer}
                     </td>
-                    <td className="px-4 py-4 text-on-surface-variant" dir="ltr">
-                      {inv.date}
+                    <td className="px-4 py-4 text-on-surface-variant tabular-nums" dir="ltr">
+                      {formatUiDate(locale, inv.issued_at ?? inv.created_at)}
                     </td>
-                    <td className="px-4 py-4 font-semibold text-on-surface text-right" dir="ltr">
-                      {inv.amount}
+                    <td className="px-4 py-4 font-semibold text-on-surface text-right tabular-nums" dir="ltr">
+                      {formatSarAmount(locale, inv.grand_total)}
                     </td>
                     <td className="px-4 py-4">
                       <StatusBadge variant={invoiceStatusBadgeVariant[inv.status]}>
-                        {dictionary.statuses[inv.status]}
+                        {getInvoiceStatusLabel(dictionary.locale, inv.status)}
                       </StatusBadge>
                     </td>
                     <td className="px-4 py-4">

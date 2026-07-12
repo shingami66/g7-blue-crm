@@ -8,10 +8,18 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import KpiCard from "@/components/ui/KpiCard";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import type { PaymentListItem, PaymentStatus, PaymentsListResult } from "@/lib/payments/types";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import {
+  getPaymentMethodLabel,
+  getPaymentStatusLabel,
+  type PaymentsDictionary,
+} from "@/lib/i18n/dictionaries/payments";
+import { formatSarAmount, formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
 
 type PaymentsClientProps = {
   payments: PaymentListItem[];
   error?: PaymentsListResult["error"];
+  dictionary: PaymentsDictionary;
 };
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
@@ -28,29 +36,6 @@ const getPaymentStatusBadgeVariant = (
   return status;
 };
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-SA", {
-    style: "currency",
-    currency: "SAR",
-    minimumFractionDigits: 2,
-  }).format(value);
-
-const formatDate = (value: string) =>
-  new Date(`${value}T00:00:00`).toLocaleDateString("en-SA", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-
-const formatMethod = (value: string) =>
-  value
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-
-const formatStatus = (value: string) =>
-  value.charAt(0).toUpperCase() + value.slice(1);
-
 function buildPaymentStats(payments: PaymentListItem[]) {
   const confirmedPayments = payments.filter((payment) => payment.status === "confirmed");
   const confirmedTotal = confirmedPayments.reduce((sum, payment) => sum + payment.amount, 0);
@@ -63,8 +48,9 @@ function buildPaymentStats(payments: PaymentListItem[]) {
   };
 }
 
-export default function PaymentsClient({ payments, error }: PaymentsClientProps) {
+export default function PaymentsClient({ payments, error, dictionary }: PaymentsClientProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const locale = dictionary.locale;
   const stats = buildPaymentStats(payments);
   const totalPages = Math.max(1, Math.ceil(payments.length / itemsPerPage));
   const paginatedPayments = payments.slice(
@@ -75,31 +61,31 @@ export default function PaymentsClient({ payments, error }: PaymentsClientProps)
   return (
     <div className="flex flex-col h-full">
       <PageHeader
-        title="Payments Tracking"
-        subtitle="Review recorded invoice payments from the live database."
+        title={dictionary.title}
+        subtitle={dictionary.subtitle}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <KpiCard
-          label="Confirmed Collected"
-          value={formatCurrency(stats.confirmedTotal)}
+          label={dictionary.stats.confirmedCollected}
+          value={formatSarAmount(locale, stats.confirmedTotal)}
           icon={CheckCircle2}
         />
         <KpiCard
-          label="Payment Records"
-          value={stats.paymentCount.toString()}
+          label={dictionary.stats.paymentRecords}
+          value={formatUiNumber(locale, stats.paymentCount)}
           icon={Banknote}
         />
         <KpiCard
-          label="Pending Payments"
-          value={stats.pendingCount.toString()}
+          label={dictionary.stats.pendingPayments}
+          value={formatUiNumber(locale, stats.pendingCount)}
           icon={Clock}
         />
       </div>
 
       {error && (
         <div className="mb-4 rounded-lg border border-error-container bg-error-container/40 px-4 py-3 text-[14px] font-medium text-on-error-container">
-          Payments could not be loaded right now.
+          {dictionary.states.inlineError}
         </div>
       )}
 
@@ -107,46 +93,48 @@ export default function PaymentsClient({ payments, error }: PaymentsClientProps)
         <div className="flex-1 overflow-auto">
           <DataTable
             columns={[
-              "Payment",
-              "Date",
-              "Customer",
-              "Invoice",
-              "Service",
-              "Method",
-              "Reference",
-              "Amount",
-              "Status",
+              dictionary.table.payment,
+              dictionary.table.date,
+              dictionary.table.customer,
+              dictionary.table.invoice,
+              dictionary.table.service,
+              dictionary.table.method,
+              dictionary.table.reference,
+              dictionary.table.amount,
+              dictionary.table.status,
             ]}
           >
             {paginatedPayments.map((payment) => (
               <tr key={payment.id} className="hover:bg-surface-container-low/50 transition-colors">
                 <td className="px-4 py-4 font-mono font-semibold text-primary">
-                  {payment.paymentNumber}
+                  <span dir="ltr">{isolateBidiText(payment.paymentNumber)}</span>
                 </td>
-                <td className="px-4 py-4 text-on-surface-variant">
-                  {formatDate(payment.date)}
+                <td className="px-4 py-4 text-on-surface-variant tabular-nums" dir="ltr">
+                  {formatUiDate(locale, payment.date)}
                 </td>
                 <td className="px-4 py-4 font-medium text-on-surface">
-                  {payment.customerName}
+                  <span dir="auto">{payment.customerName}</span>
                 </td>
                 <td className="px-4 py-4 font-mono text-[12px] text-primary">
-                  {payment.invoiceNumber ?? payment.invoiceId}
+                  <span dir="ltr">
+                    {isolateBidiText(payment.invoiceNumber ?? payment.invoiceId)}
+                  </span>
                 </td>
                 <td className="px-4 py-4 text-on-surface-variant">
-                  {payment.serviceLabel ?? "-"}
+                  <span dir="auto">{payment.serviceLabel ?? "—"}</span>
                 </td>
                 <td className="px-4 py-4 text-on-surface-variant">
-                  {formatMethod(payment.method)}
+                  {getPaymentMethodLabel(locale, payment.method)}
                 </td>
                 <td className="px-4 py-4 text-on-surface-variant">
-                  {payment.reference ?? "-"}
+                  <span dir="auto">{payment.reference ?? "—"}</span>
                 </td>
-                <td className="px-4 py-4 font-semibold text-on-surface">
-                  {formatCurrency(payment.amount)}
+                <td className="px-4 py-4 font-semibold text-on-surface tabular-nums">
+                  <span dir="ltr">{formatSarAmount(locale, payment.amount)}</span>
                 </td>
                 <td className="px-4 py-4">
                   <StatusBadge variant={getPaymentStatusBadgeVariant(payment.status)}>
-                    {formatStatus(payment.status)}
+                    {getPaymentStatusLabel(locale, payment.status)}
                   </StatusBadge>
                 </td>
               </tr>
@@ -154,7 +142,9 @@ export default function PaymentsClient({ payments, error }: PaymentsClientProps)
             {payments.length === 0 && (
               <tr>
                 <td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">
-                  No payments have been recorded yet.
+                  {error
+                    ? dictionary.states.paymentDataUnavailable
+                    : dictionary.table.empty}
                 </td>
               </tr>
             )}

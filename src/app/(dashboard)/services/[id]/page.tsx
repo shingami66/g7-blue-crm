@@ -7,14 +7,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getQuotationsByServiceId } from "@/lib/quotations/queries";
 import { getServiceBillingState } from "@/lib/invoices";
 import { getServiceStatusTransitionState } from "@/lib/services/status-transitions";
-import { isolateBidiText } from "@/lib/i18n/bidi";
-import { getLocale } from "@/lib/i18n/locales";
-import {
-  getServicesDictionary,
-  type ServicesDictionary,
-} from "@/lib/i18n/dictionaries/services";
+import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PendingLink from "@/components/ui/PendingLink";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
+import {
+  getServicesDictionary,
+  getServiceStatusLabel,
+  type ServicesDictionary,
+} from "@/lib/i18n/dictionaries/services";
+import { formatSarAmount, formatUiDate, formatUiDateTime } from "@/lib/i18n/formatting";
+import type { Locale } from "@/lib/i18n/locales";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { ArrowLeft, CalendarDays, Edit, FileText, MapPin, UserRound } from "lucide-react";
 import Link from "next/link";
 import ServiceStatusTimeline from "./ServiceStatusTimeline";
@@ -49,8 +54,9 @@ export default async function ServiceDetailPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const locale = getLocale();
+  const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getServicesDictionary(locale);
+  const sharedStates = getSharedUiStates(locale);
   const { id } = await params;
   const resolvedSearchParams = await searchParams;
   const showDeleted = resolvedSearchParams?.showDeleted === "true";
@@ -63,22 +69,19 @@ export default async function ServiceDetailPage({
     }
     if (error instanceof ForbiddenError) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-          <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.accessDenied}</h2>
-            <p className="text-sm text-slate-500">{dictionary.states.serviceReadForbidden}</p>
-          </div>
-        </div>
+        <SharedAuthenticatedStatePanel
+          title={sharedStates.accessDenied.title}
+          message={dictionary.states.serviceReadForbidden}
+        />
       );
     }
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.genericError}</h2>
-          <p className="text-sm text-slate-500">{dictionary.states.serviceDataLoadError}</p>
-        </div>
-      </div>
+      <SharedAuthenticatedStatePanel
+        title={sharedStates.genericError.title}
+        message={dictionary.states.serviceDataLoadError}
+        role="alert"
+      />
     );
   }
 
@@ -113,7 +116,7 @@ export default async function ServiceDetailPage({
     : null;
   const billingState = await getServiceBillingState(service.id);
   const statusTransitionState = canUpdateServiceStatus
-    ? await getServiceStatusTransitionState(createAdminClient(), service.id, service.status)
+    ? await getServiceStatusTransitionState(createAdminClient(), service.id, service.status, locale)
     : null;
 
   const supplierAllocations = canReadSupplierAllocations
@@ -134,7 +137,7 @@ export default async function ServiceDetailPage({
                 {isolateBidiText(service.serviceNumber)}
               </h2>
               <StatusBadge variant={STATUS_VARIANT_MAP[service.status]}>
-                {dictionary.serviceStatuses[service.status]}
+                {getServiceStatusLabel(dictionary.locale, service.status)}
               </StatusBadge>
             </div>
             <div>
@@ -150,9 +153,9 @@ export default async function ServiceDetailPage({
                   <UserRound size={16} />
                   {formatCustomerName(service, dictionary)}
                 </PendingLink>
-                <span dir="ltr" className="inline-flex items-center gap-2">
+                <span dir="ltr" className="inline-flex items-center gap-2 tabular-nums">
                   <CalendarDays size={16} />
-                  {formatServiceSchedule(service, dictionary)}
+                  {formatServiceSchedule(locale, service, dictionary)}
                 </span>
                 {service.eventLocation && (
                   <span dir="auto" className="inline-flex items-center gap-2">
@@ -218,8 +221,24 @@ export default async function ServiceDetailPage({
           <dl className="p-6 grid grid-cols-1 gap-5">
             <DetailItem label={dictionary.detail.labels.eventName}>{formatNullable(service.eventName, "auto", dictionary)}</DetailItem>
             <DetailItem label={dictionary.detail.labels.eventType}>{formatNullable(service.eventType, "auto", dictionary)}</DetailItem>
-            <DetailItem label={dictionary.detail.labels.startDate}>{formatNullable(service.eventStartDate, "ltr", dictionary)}</DetailItem>
-            <DetailItem label={dictionary.detail.labels.endDate}>{formatNullable(service.eventEndDate, "ltr", dictionary)}</DetailItem>
+            <DetailItem label={dictionary.detail.labels.startDate}>
+              {service.eventStartDate ? (
+                <span dir="ltr" className="tabular-nums">
+                  {formatUiDate(locale, service.eventStartDate)}
+                </span>
+              ) : (
+                dictionary.detail.fallbacks.empty
+              )}
+            </DetailItem>
+            <DetailItem label={dictionary.detail.labels.endDate}>
+              {service.eventEndDate ? (
+                <span dir="ltr" className="tabular-nums">
+                  {formatUiDate(locale, service.eventEndDate)}
+                </span>
+              ) : (
+                dictionary.detail.fallbacks.empty
+              )}
+            </DetailItem>
             <DetailItem label={dictionary.detail.labels.location}>{formatNullable(service.eventLocation, "auto", dictionary)}</DetailItem>
           </dl>
         </section>
@@ -252,14 +271,20 @@ export default async function ServiceDetailPage({
         <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
           <SectionHeader title={dictionary.detail.sections.operationalDetails} />
           <dl className="p-6 grid grid-cols-1 gap-5">
-            <DetailItem label={dictionary.detail.labels.estimatedBudget}>{formatBudget(service, dictionary)}</DetailItem>
+            <DetailItem label={dictionary.detail.labels.estimatedBudget}>
+              {formatBudget(locale, service, dictionary)}
+            </DetailItem>
             <DetailItem label={dictionary.detail.labels.createdAt}>
-              <span dir="ltr">{formatDateTime(service.createdAt)}</span>
+              <span dir="ltr" className="tabular-nums">
+                {formatUiDateTime(locale, service.createdAt)}
+              </span>
             </DetailItem>
             <DetailItem label={dictionary.detail.labels.updatedAt}>
-              <span dir="ltr">{formatDateTime(service.updatedAt)}</span>
+              <span dir="ltr" className="tabular-nums">
+                {formatUiDateTime(locale, service.updatedAt)}
+              </span>
             </DetailItem>
-            <DetailItem label={dictionary.detail.labels.status}>{dictionary.serviceStatuses[service.status]}</DetailItem>
+            <DetailItem label={dictionary.detail.labels.status}>{getServiceStatusLabel(dictionary.locale, service.status)}</DetailItem>
           </dl>
         </section>
       </div>
@@ -292,6 +317,7 @@ export default async function ServiceDetailPage({
           serviceId={service.id}
           serviceStatus={service.status}
           showDeleted={showDeleted}
+          dictionary={dictionary}
         />
       )}
       {canReadSupplierBookings && supplierBookings && (
@@ -301,9 +327,10 @@ export default async function ServiceDetailPage({
           canCreate={canWriteSupplierBookings}
           canCancel={canCancelSupplierBookings}
           serviceStatus={service.status}
+          dictionary={dictionary}
         />
       )}
-      <BillingPanel billingState={billingState} />
+      <BillingPanel billingState={billingState} dictionary={dictionary} />
     </div>
   );
 }
@@ -356,14 +383,24 @@ function formatCustomerName(service: Service, dictionary: ServicesDictionary) {
   return isolateBidiText(company || contact || dictionary.detail.fallbacks.customerProfile);
 }
 
-function formatServiceSchedule(service: Service, dictionary: ServicesDictionary) {
+function formatServiceSchedule(
+  locale: Locale,
+  service: Service,
+  dictionary: ServicesDictionary,
+) {
   if (service.eventStartDate && service.eventEndDate) {
-    return isolateBidiText(`${service.eventStartDate} - ${service.eventEndDate}`);
+    return `${formatUiDate(locale, service.eventStartDate)} - ${formatUiDate(locale, service.eventEndDate)}`;
   }
 
-  return isolateBidiText(
-    service.eventStartDate || service.eventEndDate || dictionary.detail.fallbacks.scheduleNotSet,
-  );
+  if (service.eventStartDate) {
+    return formatUiDate(locale, service.eventStartDate);
+  }
+
+  if (service.eventEndDate) {
+    return formatUiDate(locale, service.eventEndDate);
+  }
+
+  return dictionary.detail.fallbacks.scheduleNotSet;
 }
 
 function formatNullable(
@@ -378,31 +415,18 @@ function formatNullable(
   return <span dir={dir}>{isolateBidiText(value)}</span>;
 }
 
-function formatBudget(service: Service, dictionary: ServicesDictionary) {
+function formatBudget(
+  locale: Locale,
+  service: Service,
+  dictionary: ServicesDictionary,
+) {
   if (service.estimatedBudget == null) {
     return dictionary.detail.fallbacks.empty;
   }
 
   return (
-    <span dir="ltr">
-      {isolateBidiText(
-        `${service.estimatedBudget.toLocaleString("en-SA", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })} SAR`,
-      )}
+    <span dir="ltr" className="tabular-nums">
+      {formatSarAmount(locale, Number(service.estimatedBudget))}
     </span>
-  );
-}
-
-function formatDateTime(value: string) {
-  return isolateBidiText(
-    new Date(value).toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
   );
 }

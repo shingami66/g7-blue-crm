@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getQuotations } from "@/lib/quotations/queries";
 import { checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
-import { getLocale } from "@/lib/i18n/locales";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import {
   getQuotationsDictionary,
   type QuotationsDictionary,
@@ -23,7 +23,7 @@ type QuotationsPageState =
   | { status: "error" };
 
 export default async function QuotationsPage() {
-  const locale = getLocale();
+  const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getQuotationsDictionary(locale);
   let pageState: QuotationsPageState;
 

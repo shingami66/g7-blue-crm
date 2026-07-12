@@ -4,11 +4,23 @@ import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PendingLink from "@/components/ui/PendingLink";
 import { isolateBidiText } from "@/lib/i18n/bidi";
-import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { getLocale } from "@/lib/i18n/locales";
+import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import type { Locale } from "@/lib/i18n/locales";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import SupplierAllocationStatusActions from "./SupplierAllocationStatusActions";
+
+function formatAllocationMoney(locale: Locale, value: number, currency: string) {
+  if (currency === "SAR") {
+    return formatSarAmount(locale, value);
+  }
+
+  return `${formatUiNumber(locale, value, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} ${currency}`;
+}
 
 type SupplierAllocationsPanelProps = {
   allocations: SupplierAllocation[];
@@ -18,6 +30,7 @@ type SupplierAllocationsPanelProps = {
   serviceId?: string;
   serviceStatus?: string;
   showDeleted?: boolean;
+  dictionary: ServicesDictionary;
 };
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
@@ -37,9 +50,8 @@ export default function SupplierAllocationsPanel({
   serviceId,
   serviceStatus,
   showDeleted = false,
+  dictionary,
 }: SupplierAllocationsPanelProps) {
-  const locale = getLocale();
-  const dictionary = getServicesDictionary(locale);
   const panelDictionary = dictionary.supplierAllocations;
   const hasAllocations = allocations.length > 0;
   const isServiceEditable =
@@ -129,8 +141,8 @@ export default function SupplierAllocationsPanel({
               <td className="px-4 py-3 align-top text-on-surface-variant">
                 <span dir="ltr">{isolateBidiText(a.unit)}</span>
               </td>
-              <td dir="ltr" className="px-4 py-3 align-top text-on-surface">
-                {isolateBidiText(String(a.quantity))}
+              <td dir="ltr" className="px-4 py-3 align-top text-on-surface tabular-nums">
+                {formatUiNumber(dictionary.locale, a.quantity)}
               </td>
               <td className="px-4 py-3 align-top text-on-surface-variant">
                 {a.costSource === "manual_estimate"
@@ -142,25 +154,34 @@ export default function SupplierAllocationsPanel({
               </td>
               {canReadCost && (
                 <>
-                  <td dir="ltr" className="px-4 py-3 align-top text-on-surface text-right">
-                    {a.estimatedUnitCost !== null 
-                      ? isolateBidiText(`${a.estimatedUnitCost.toLocaleString("en-SA", { minimumFractionDigits: 2 })} ${a.currency}`)
+                  <td dir="ltr" className="px-4 py-3 align-top text-end text-on-surface tabular-nums">
+                    {a.estimatedUnitCost !== null
+                      ? formatAllocationMoney(
+                          dictionary.locale,
+                          a.estimatedUnitCost,
+                          a.currency,
+                        )
                       : "—"}
                   </td>
-                  <td dir="ltr" className="px-4 py-3 align-top text-on-surface text-right font-semibold">
-                    {a.estimatedTotalCost !== null 
-                      ? isolateBidiText(`${a.estimatedTotalCost.toLocaleString("en-SA", { minimumFractionDigits: 2 })} ${a.currency}`)
+                  <td dir="ltr" className="px-4 py-3 align-top text-end font-semibold text-on-surface tabular-nums">
+                    {a.estimatedTotalCost !== null
+                      ? formatAllocationMoney(
+                          dictionary.locale,
+                          a.estimatedTotalCost,
+                          a.currency,
+                        )
                       : "—"}
                   </td>
                 </>
               )}
-              <td className="px-4 py-3 align-top text-right">
+              <td className="px-4 py-3 align-top text-end">
                 <div className="flex flex-col items-end gap-2">
                   <div className="flex flex-wrap items-center justify-end gap-3">
                     {!a.isDeleted && canWrite && a.status !== "cancelled" && isServiceEditable && (
                       <SupplierAllocationStatusActions
                         allocationId={a.id}
                         status={a.status}
+                        dictionary={panelDictionary.statusActions}
                       />
                     )}
                     {!a.isDeleted && canWrite && canReadCost && a.status !== "cancelled" && a.costSource === "manual_estimate" && isServiceEditable && (

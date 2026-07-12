@@ -6,8 +6,16 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import PendingLink from "@/components/ui/PendingLink";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
-import { getLocale } from "@/lib/i18n/locales";
-import { getInvoicesDictionary } from "@/lib/i18n/dictionaries/invoices";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import { isolateBidiText } from "@/lib/i18n/bidi";
+import {
+  getInvoiceDocumentLabelDisplay,
+  getInvoiceStatusLabel,
+  getInvoiceTypeLabel,
+  getInvoicesDictionary,
+} from "@/lib/i18n/dictionaries/invoices";
+import { formatSarAmount, formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
+import type { Locale } from "@/lib/i18n/locales";
 import { getInvoiceById } from "@/lib/invoices/queries";
 import { getServiceById } from "@/lib/services/queries";
 import type { QuotationItem } from "@/lib/quotations/types";
@@ -29,10 +37,6 @@ const invoiceStatusBadgeVariant: Record<
   cancelled: "rejected",
   voided: "rejected",
 };
-
-function toLtrText(value: string | number) {
-  return `\u2066${String(value)}\u2069`;
-}
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -64,31 +68,22 @@ function readFiniteNumber(value: unknown): number | null {
   return null;
 }
 
-function formatDate(value: string | null | undefined, fallback = "—") {
+function formatDate(locale: Locale, value: string | null | undefined, fallback = "—") {
   if (!value) {
     return fallback;
   }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? fallback : toLtrText(parsed.toLocaleDateString());
+  return formatUiDate(locale, value, { fallback });
 }
 
-function formatAmount(value: number | null | undefined, currency = "SAR") {
-  return `${toLtrText(
-    (value ?? 0).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }),
-  )} ${currency}`;
+function formatAmount(locale: Locale, value: number | null | undefined) {
+  return formatSarAmount(locale, value ?? 0);
 }
 
-function formatQuantity(value: number | null | undefined) {
-  return toLtrText(
-    (value ?? 0).toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }),
-  );
+function formatQuantity(locale: Locale, value: number | null | undefined) {
+  return formatUiNumber(locale, value ?? 0, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
 }
 
 function Field({
@@ -145,7 +140,7 @@ export default async function InvoiceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const locale = getLocale();
+  const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getInvoicesDictionary(locale);
 
   try {
@@ -190,7 +185,6 @@ export default async function InvoiceDetailPage({
     readFiniteNumber(snapshotQuotation?.grand_total) ??
     readFiniteNumber(finalInvoiceSettlement?.approved_quotation_total);
   const previousInvoicesTotal = readFiniteNumber(finalInvoiceSettlement?.active_prior_invoice_total);
-  const currency = readString(invoice.currency) ?? "SAR";
   const customerName =
     readString(buyer?.name) ??
     readString(buyer?.legalName) ??
@@ -209,7 +203,10 @@ export default async function InvoiceDetailPage({
   );
   const serviceEventDates =
     service?.eventStartDate || service?.eventEndDate
-      ? [service.eventStartDate ? formatDate(service.eventStartDate, "") : "", service.eventEndDate ? formatDate(service.eventEndDate, "") : ""]
+      ? [
+          service.eventStartDate ? formatDate(locale, service.eventStartDate, "") : "",
+          service.eventEndDate ? formatDate(locale, service.eventEndDate, "") : "",
+        ]
           .filter(Boolean)
           .join(" - ")
       : null;
@@ -237,14 +234,18 @@ export default async function InvoiceDetailPage({
           <div className="space-y-2 min-w-0">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight" dir="ltr">
-                {invoice.invoice_number || invoice.id}
+                {isolateBidiText(invoice.invoice_number || invoice.id)}
               </h1>
               <StatusBadge variant={invoiceStatusBadgeVariant[invoice.status]}>
-                {dictionary.statuses[invoice.status]}
+                {getInvoiceStatusLabel(dictionary.locale, invoice.status)}
               </StatusBadge>
             </div>
             <p className="text-[14px] text-on-surface-variant" dir="auto">
-              {invoice.document_label || dictionary.detail.states.unavailable}
+              {getInvoiceDocumentLabelDisplay(
+                locale,
+                invoice.document_label,
+                dictionary.detail.states.unavailable,
+              )}
             </p>
           </div>
         </div>
@@ -269,17 +270,37 @@ export default async function InvoiceDetailPage({
               <h2 className="font-semibold text-primary">{dictionary.detail.sections.overview}</h2>
             </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Field label={dictionary.detail.labels.invoiceNumber} value={invoice.invoice_number || invoice.id} dir="ltr" />
-              <Field label={dictionary.detail.labels.status} value={dictionary.statuses[invoice.status]} />
+              <Field
+                label={dictionary.detail.labels.invoiceNumber}
+                value={isolateBidiText(invoice.invoice_number || invoice.id)}
+                dir="ltr"
+              />
+              <Field label={dictionary.detail.labels.status} value={getInvoiceStatusLabel(dictionary.locale, invoice.status)} />
               <Field
                 label={dictionary.detail.labels.invoiceType}
-                value={invoice.invoice_type ? dictionary.invoiceTypes[invoice.invoice_type] : "—"}
+                value={invoice.invoice_type ? getInvoiceTypeLabel(locale, invoice.invoice_type) : "—"}
               />
-              <Field label={dictionary.detail.labels.documentLabel} value={invoice.document_label || "—"} dir="auto" />
-              <Field label={dictionary.detail.labels.issueDate} value={formatDate(invoice.issued_at ?? invoice.created_at)} dir="ltr" />
-              <Field label={dictionary.detail.labels.createdDate} value={formatDate(invoice.created_at)} dir="ltr" />
+              <Field
+                label={dictionary.detail.labels.documentLabel}
+                value={getInvoiceDocumentLabelDisplay(locale, invoice.document_label)}
+                dir="auto"
+              />
+              <Field
+                label={dictionary.detail.labels.issueDate}
+                value={formatDate(locale, invoice.issued_at ?? invoice.created_at)}
+                dir="ltr"
+              />
+              <Field
+                label={dictionary.detail.labels.createdDate}
+                value={formatDate(locale, invoice.created_at)}
+                dir="ltr"
+              />
               {(invoice.voided_at || invoice.status === "voided") && (
-                <Field label={dictionary.detail.labels.voidedDate} value={formatDate(invoice.voided_at)} dir="ltr" />
+                <Field
+                  label={dictionary.detail.labels.voidedDate}
+                  value={formatDate(locale, invoice.voided_at)}
+                  dir="ltr"
+                />
               )}
               {invoice.void_reason && (
                 <Field label={dictionary.detail.labels.voidReason} value={invoice.void_reason} dir="auto" />
@@ -310,7 +331,11 @@ export default async function InvoiceDetailPage({
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               {hasServiceDetails ? (
                 <>
-                  <Field label={dictionary.detail.labels.serviceNumber} value={service?.serviceNumber || "—"} dir="ltr" />
+                  <Field
+                    label={dictionary.detail.labels.serviceNumber}
+                    value={service?.serviceNumber ? isolateBidiText(service.serviceNumber) : "—"}
+                    dir="ltr"
+                  />
                   <Field label={dictionary.detail.labels.serviceTitle} value={service?.serviceTitle || "—"} dir="auto" />
                   {service?.eventName && <Field label={dictionary.detail.labels.eventName} value={service.eventName} dir="auto" />}
                   {service?.eventType && <Field label={dictionary.detail.labels.eventType} value={service.eventType} dir="auto" />}
@@ -343,7 +368,7 @@ export default async function InvoiceDetailPage({
                     className="text-[14px] font-medium text-primary hover:underline"
                     dir="ltr"
                   >
-                    {quotationNumber}
+                    {isolateBidiText(quotationNumber)}
                   </Link>
                 </div>
               ) : (
@@ -395,8 +420,8 @@ export default async function InvoiceDetailPage({
 
                       return (
                         <tr key={`${invoice.id}-line-${index}`}>
-                          <td className="px-4 py-4 text-on-surface-variant align-top" dir="ltr">
-                            {toLtrText(index + 1)}
+                          <td className="px-4 py-4 text-on-surface-variant align-top tabular-nums" dir="ltr">
+                            {formatUiNumber(locale, index + 1)}
                           </td>
                           <td className="px-4 py-4 align-top">
                             <p className="font-medium text-on-surface" dir="auto">
@@ -408,21 +433,21 @@ export default async function InvoiceDetailPage({
                               </p>
                             )}
                           </td>
-                          <td className="px-4 py-4 text-center text-on-surface align-top" dir="ltr">
-                            {qty !== null ? formatQuantity(qty) : "—"}
+                          <td className="px-4 py-4 text-center text-on-surface align-top tabular-nums" dir="ltr">
+                            {qty !== null ? formatQuantity(locale, qty) : "—"}
                           </td>
-                          <td className="px-4 py-4 text-right text-on-surface align-top" dir="ltr">
-                            {unitPrice !== null ? formatAmount(unitPrice, currency) : "—"}
+                          <td className="px-4 py-4 text-right text-on-surface align-top tabular-nums" dir="ltr">
+                            {unitPrice !== null ? formatAmount(locale, unitPrice) : "—"}
                           </td>
-                          <td className="px-4 py-4 text-right text-on-surface-variant align-top" dir="ltr">
+                          <td className="px-4 py-4 text-right text-on-surface-variant align-top tabular-nums" dir="ltr">
                             {invoice.vat_mode === "not_registered"
                               ? dictionary.detail.states.notApplied
                               : vat !== null
-                                ? `${toLtrText(vat)}%`
+                                ? `${formatUiNumber(locale, vat, { maximumFractionDigits: 2 })}%`
                                 : "—"}
                           </td>
-                          <td className="px-4 py-4 text-right text-on-surface font-medium align-top" dir="ltr">
-                            {total !== null ? formatAmount(total, currency) : "—"}
+                          <td className="px-4 py-4 text-right text-on-surface font-medium align-top tabular-nums" dir="ltr">
+                            {total !== null ? formatAmount(locale, total) : "—"}
                           </td>
                         </tr>
                       );
@@ -449,42 +474,42 @@ export default async function InvoiceDetailPage({
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between gap-4">
                 <span className="text-[14px] text-on-surface-variant">{dictionary.detail.labels.subtotal}</span>
-                <span className="text-[14px] font-medium text-on-surface" dir="ltr">
-                  {formatAmount(invoice.subtotal, currency)}
+                <span className="text-[14px] font-medium text-on-surface tabular-nums" dir="ltr">
+                  {formatAmount(locale, invoice.subtotal)}
                 </span>
               </div>
               {invoice.discount_amount > 0 && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-[14px] text-on-surface-variant">{dictionary.detail.labels.discount}</span>
-                  <span className="text-[14px] font-medium text-on-surface" dir="ltr">
-                    -{formatAmount(invoice.discount_amount, currency)}
+                  <span className="text-[14px] font-medium text-on-surface tabular-nums" dir="ltr">
+                    -{formatAmount(locale, invoice.discount_amount)}
                   </span>
                 </div>
               )}
               <div className="flex items-center justify-between gap-4">
                 <span className="text-[14px] text-on-surface-variant">{dictionary.detail.labels.vatAmount}</span>
-                <span className="text-[14px] font-medium text-on-surface" dir="ltr">
+                <span className="text-[14px] font-medium text-on-surface tabular-nums" dir="ltr">
                   {invoice.vat_mode === "not_registered"
                     ? dictionary.detail.states.notApplied
-                    : formatAmount(invoice.vat_amount, currency)}
+                    : formatAmount(locale, invoice.vat_amount)}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-4 pt-3 border-t border-surface-variant">
                 <span className="text-[16px] font-semibold text-on-surface">{dictionary.detail.labels.grandTotal}</span>
-                <span className="text-[16px] font-semibold text-primary" dir="ltr">
-                  {formatAmount(invoice.grand_total, currency)}
+                <span className="text-[16px] font-semibold text-primary tabular-nums" dir="ltr">
+                  {formatAmount(locale, invoice.grand_total)}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <span className="text-[14px] text-on-surface-variant">{dictionary.detail.labels.amountPaid}</span>
-                <span className="text-[14px] font-medium text-on-surface" dir="ltr">
-                  {formatAmount(invoice.amount_paid, currency)}
+                <span className="text-[14px] font-medium text-on-surface tabular-nums" dir="ltr">
+                  {formatAmount(locale, invoice.amount_paid)}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <span className="text-[14px] text-on-surface-variant">{dictionary.detail.labels.balanceDue}</span>
-                <span className="text-[14px] font-semibold text-on-surface" dir="ltr">
-                  {formatAmount(invoice.balance_due, currency)}
+                <span className="text-[14px] font-semibold text-on-surface tabular-nums" dir="ltr">
+                  {formatAmount(locale, invoice.balance_due)}
                 </span>
               </div>
             </div>
@@ -500,25 +525,25 @@ export default async function InvoiceDetailPage({
               {approvedQuotationTotal !== null && (
                 <Field
                   label={dictionary.detail.labels.approvedQuotationTotal}
-                  value={formatAmount(approvedQuotationTotal, currency)}
+                  value={formatAmount(locale, approvedQuotationTotal)}
                   dir="ltr"
                 />
               )}
               {previousInvoicesTotal !== null && (
                 <Field
                   label={dictionary.detail.labels.previousInvoices}
-                  value={formatAmount(previousInvoicesTotal, currency)}
+                  value={formatAmount(locale, previousInvoicesTotal)}
                   dir="ltr"
                 />
               )}
               <Field
                 label={dictionary.detail.labels.invoiceType}
-                value={dictionary.invoiceTypes[invoice.invoice_type]}
+                value={getInvoiceTypeLabel(locale, invoice.invoice_type)}
                 dir="auto"
               />
               {canIssueInvoice && (
                 <div className="pt-4 border-t border-surface-variant">
-                  <IssueInvoiceAction invoiceId={invoice.id} />
+                  <IssueInvoiceAction invoiceId={invoice.id} dictionary={dictionary.issueAction} />
                 </div>
               )}
             </div>

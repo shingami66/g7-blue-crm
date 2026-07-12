@@ -1,22 +1,21 @@
 import type { ServiceBillingState } from "@/lib/invoices/types";
 import { isolateBidiText } from "@/lib/i18n/bidi";
-import { getLocale } from "@/lib/i18n/locales";
-import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { formatSarAmount } from "@/lib/i18n/formatting";
 import { CreateDepositInvoiceAction } from "./CreateDepositInvoiceAction";
 import { CreateFinalInvoiceAction } from "./CreateFinalInvoiceAction";
 
-export default function BillingPanel({ billingState }: { billingState: ServiceBillingState }) {
-  const locale = getLocale();
-  const dictionary = getServicesDictionary(locale);
+export default function BillingPanel({
+  billingState,
+  dictionary,
+}: {
+  billingState: ServiceBillingState;
+  dictionary: ServicesDictionary;
+}) {
   const billingDictionary = dictionary.billing;
+  const locale = dictionary.locale;
 
-  const formatCurrency = (value: number) => {
-    return isolateBidiText(new Intl.NumberFormat("en-SA", {
-      style: "currency",
-      currency: "SAR",
-      numberingSystem: "latn",
-    }).format(value));
-  };
+  const formatCurrency = (value: number) => formatSarAmount(locale, value);
 
   const formatStatus = (status: string) => {
     if (status === "sent") return billingDictionary.invoiceStatuses.sent;

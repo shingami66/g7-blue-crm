@@ -8,7 +8,8 @@ import type {
   ServiceStatusTransitionState,
 } from "@/types/service";
 import { updateServiceStatusAction } from "@/lib/services/actions";
-import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getServiceStatusErrorMessage } from "@/lib/i18n/service-action-feedback";
+import { getServiceStatusLabel, type ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 
 interface ServiceStatusControlProps {
   serviceId: string;
@@ -47,7 +48,7 @@ export default function ServiceStatusControl({
         router.refresh();
         setTimeout(() => setSuccess(false), 3000);
       } else {
-        setError(result.error || dictionary.serviceStatusControl.failedToUpdate);
+        setError(getServiceStatusErrorMessage(result.code, dictionary));
       }
     });
   };
@@ -73,7 +74,7 @@ export default function ServiceStatusControl({
         <div>
           <h3 className="font-semibold text-primary">{dictionary.serviceStatusControl.title}</h3>
           <p className="text-[13px] text-on-surface-variant mt-1">
-            {dictionary.serviceStatusControl.currentStatus}: {dictionary.serviceStatuses[currentStatus]}
+            {dictionary.serviceStatusControl.currentStatus}: {getServiceStatusLabel(dictionary.locale, currentStatus)}
           </p>
         </div>
       </div>

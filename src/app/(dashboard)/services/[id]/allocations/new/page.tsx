@@ -4,7 +4,7 @@ import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import PendingLink from "@/components/ui/PendingLink";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { getLocale } from "@/lib/i18n/locales";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getActiveSupplierOptions } from "@/lib/suppliers/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import SupplierAllocationCreateForm from "./SupplierAllocationCreateForm";
@@ -26,8 +26,9 @@ export default async function NewSupplierAllocationPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const dictionary =
-    getServicesDictionary(getLocale()).supplierAllocations.subflow.createPage;
+  const locale = await getCurrentSessionEffectiveLocale();
+  const servicesDictionary = getServicesDictionary(locale);
+  const dictionary = servicesDictionary.supplierAllocations.subflow.createPage;
 
   try {
     await requirePermission("services:read");
@@ -122,8 +123,8 @@ export default async function NewSupplierAllocationPage({
 
   const serviceRecord = service as NewAllocationServiceRow;
   const localizedServiceStatus =
-    getServicesDictionary(getLocale()).serviceStatuses[
-      serviceRecord.status as keyof ReturnType<typeof getServicesDictionary>["serviceStatuses"]
+    servicesDictionary.serviceStatuses[
+      serviceRecord.status as keyof typeof servicesDictionary.serviceStatuses
     ] ?? serviceRecord.status;
 
   if (serviceRecord.status === "Completed" || serviceRecord.status === "Cancelled") {

@@ -2,6 +2,11 @@ import { Metadata } from "next";
 import { getAppUsers } from "@/lib/admin/users/queries";
 import { getPendingInvitations } from "@/lib/admin/users/actions";
 import { requirePermission } from "@/lib/auth/permissions";
+import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import {
+  getAdminUsersDictionary,
+  mapAdminUsersActionError,
+} from "@/lib/i18n/dictionaries/admin-users";
 import { AdminUsersClient } from "./AdminUsersClient";
 
 export const metadata: Metadata = {
@@ -10,6 +15,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminUsersPage() {
+  const locale = await getCurrentSessionEffectiveLocale();
+  const dictionary = getAdminUsersDictionary(locale);
   const currentUser = await requirePermission("users:manage");
 
   const [usersResult, pendingInvitationsResult] = await Promise.all([
@@ -21,34 +28,37 @@ export default async function AdminUsersPage() {
     return (
       <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">User Management</h1>
-          <p className="text-sm text-on-surface-variant mt-1">
-            Invite users, manage roles, and control access.
-          </p>
+          <h1 className="text-2xl font-bold text-on-surface">{dictionary.page.title}</h1>
+          <p className="text-sm text-on-surface-variant mt-1">{dictionary.page.subtitle}</p>
         </div>
 
         <div className="bg-error-container text-on-error-container border border-error/20 rounded-lg p-6">
-          <h2 className="text-lg font-semibold">Unable to load users</h2>
-          <p className="mt-2 text-sm">{usersResult.error}</p>
+          <h2 className="text-lg font-semibold">{dictionary.page.loadUsersFailed}</h2>
+          <p className="mt-2 text-sm">
+            {mapAdminUsersActionError(
+              locale,
+              usersResult.error,
+              dictionary.page.loadUsersFailed,
+            )}
+          </p>
         </div>
       </div>
     );
   }
 
-  const pendingInvitations = pendingInvitationsResult.success && pendingInvitationsResult.data
-    ? pendingInvitationsResult.data
-    : [];
+  const pendingInvitations =
+    pendingInvitationsResult.success && pendingInvitationsResult.data
+      ? pendingInvitationsResult.data
+      : [];
   const pendingInvitationsWarning = pendingInvitationsResult.success
     ? null
-    : "Unable to load pending invitations. User management remains available.";
+    : dictionary.page.invitationsWarning;
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
       <div>
-        <h1 className="text-2xl font-bold text-on-surface">User Management</h1>
-        <p className="text-sm text-on-surface-variant mt-1">
-          Invite users, manage roles, and control access.
-        </p>
+        <h1 className="text-2xl font-bold text-on-surface">{dictionary.page.title}</h1>
+        <p className="text-sm text-on-surface-variant mt-1">{dictionary.page.subtitle}</p>
       </div>
 
       <AdminUsersClient
@@ -56,6 +66,7 @@ export default async function AdminUsersPage() {
         initialPendingInvitations={pendingInvitations}
         pendingInvitationsWarning={pendingInvitationsWarning}
         currentUserId={currentUser.id}
+        dictionary={dictionary}
       />
     </div>
   );

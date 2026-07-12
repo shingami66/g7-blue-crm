@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import type { Customer } from "@/types/customer";
 import { createService } from "@/lib/services/actions";
+import { getCreateServiceErrorMessage } from "@/lib/i18n/service-action-feedback";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import Button from "@/components/ui/Button";
@@ -91,7 +92,7 @@ export default function ServiceForm({ customers, dictionary }: ServiceFormProps)
         router.push("/services");
         router.refresh();
       } else {
-        setError(result.error || dictionary.form.validation.failedToCreate);
+        setError(getCreateServiceErrorMessage(result.code, dictionary));
         setIsSubmitting(false);
       }
     } catch {

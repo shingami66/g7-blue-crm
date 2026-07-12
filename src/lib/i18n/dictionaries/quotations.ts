@@ -1,4 +1,6 @@
 import type { Locale } from "../locales";
+import type { QuotationStatus } from "../../quotations/types";
+import { resolveDictionaryValue } from "../fallback.ts";
 
 export interface QuotationsDictionary {
   locale: Locale;
@@ -31,6 +33,7 @@ export interface QuotationsDictionary {
     allStatuses: string;
     showingZero: string;
     showingRange: string;
+    noQuotations: string;
     noFilteredQuotations: string;
     unknownCompany: string;
     table: {
@@ -155,6 +158,22 @@ export interface QuotationsDictionary {
     rejected: string;
     expired: string;
   };
+  approval: {
+    approve: string;
+    reject: string;
+    approveFailed: string;
+    rejectFailed: string;
+    unexpectedError: string;
+  };
+  editStates: {
+    notFound: string;
+    notFoundMessage: string;
+    locked: string;
+    lockedMessage: string;
+    serviceContextRequired: string;
+    serviceContextMessage: string;
+    backToQuotations: string;
+  };
 }
 
 const quotationsDictionaryEn: QuotationsDictionary = {
@@ -188,10 +207,11 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     allStatuses: "All Statuses",
     showingZero: "Showing 0 of 0 quotations",
     showingRange: "Showing {start}-{end} of {count} quotations",
-    noFilteredQuotations: "No quotations match the selected filters.",
+    noQuotations: "No quotations found.",
+    noFilteredQuotations: "No quotations match the current filters.",
     unknownCompany: "Unknown Company",
     table: {
-      quotationNumber: "Quote Number",
+      quotationNumber: "Quotation Number",
       clientEvent: "Client / Event",
       issueDate: "Issue Date",
       amountSar: "Amount (SAR)",
@@ -228,7 +248,7 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     documentDatesRates: "Quotation Document Dates & Rates",
     issueDate: "Issue Date",
     issueDateHint: "Issue Date is the quotation document date. Service execution dates are shown in Service Schedule.",
-    validUntil: "Quotation Valid Until",
+    validUntil: "Valid Until",
     validUntilHint: "Offer expiry date - not related to service execution dates.",
     discountSar: "Discount (SAR)",
     discountExceededHint: "Discount cannot exceed subtotal. Server totals will reject this value.",
@@ -244,7 +264,7 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     detailsCategoryOptional: "Details / Category (Optional)",
     detailsPlaceholder: "Additional details...",
     categoryPlaceholder: "Category",
-    removeItem: "Remove item",
+    removeItem: "Remove Item",
     minimumOneItem: "At least one item is required",
     previewOnly: "Preview only. Final totals are calculated securely on the server.",
     subtotal: "Subtotal",
@@ -312,6 +332,22 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     rejected: "Rejected",
     expired: "Expired",
   },
+  approval: {
+    approve: "Approve Quotation",
+    reject: "Reject Quotation",
+    approveFailed: "Failed to approve quotation",
+    rejectFailed: "Failed to reject quotation",
+    unexpectedError: "An unexpected error occurred",
+  },
+  editStates: {
+    notFound: "Quotation Not Found",
+    notFoundMessage: "The quotation you are trying to edit does not exist or has been deleted.",
+    locked: "Locked",
+    lockedMessage: "Only draft quotations can be edited.",
+    serviceContextRequired: "Service Context Required",
+    serviceContextMessage: "This quotation cannot be edited until its Service relationship is available.",
+    backToQuotations: "Back to Quotations",
+  },
 };
 
 const quotationsDictionaryAr: QuotationsDictionary = {
@@ -319,18 +355,18 @@ const quotationsDictionaryAr: QuotationsDictionary = {
   states: {
     accessDenied: "تم رفض الوصول",
     genericError: "حدث خطأ ما",
-    quotationsForbidden: "ليس لديك صلاحية لعرض وحدة عروض السعر.",
-    quotationsLoadError: "تعذر تحميل عروض السعر في الوقت الحالي. يرجى المحاولة مرة أخرى لاحقًا.",
-    createForbidden: "ليس لديك صلاحية لإنشاء عروض السعر.",
+    quotationsForbidden: "ليس لديك صلاحية لعرض وحدة عروض الأسعار.",
+    quotationsLoadError: "بيانات عروض الأسعار غير متاحة في الوقت الحالي. يرجى المحاولة مرة أخرى لاحقًا.",
+    createForbidden: "ليس لديك صلاحية لإنشاء عروض أسعار.",
     createDataLoadError: "تعذر تحميل البيانات المطلوبة في الوقت الحالي. يرجى المحاولة مرة أخرى لاحقًا.",
     selectServiceTitle: "اختر خدمة أولًا",
-    selectServiceMessage: "يجب إنشاء عروض السعر من خدمة نشطة.",
+    selectServiceMessage: "يجب إنشاء عروض الأسعار من خدمة نشطة.",
     selectedServiceForbidden: "ليس لديك صلاحية لعرض الخدمة المحددة.",
     selectedServiceLoadError: "تعذر تحميل الخدمة المحددة في الوقت الحالي. يرجى المحاولة مرة أخرى لاحقًا.",
     serviceUnavailableTitle: "الخدمة غير متاحة",
     serviceUnavailableMessage: "الخدمة المحددة غير موجودة أو لم تعد متاحة.",
     creationLockedTitle: "إنشاء عرض السعر غير متاح",
-    creationLockedMessage: "يمكن إنشاء عروض السعر فقط للخدمات التي حالتها استفسار أو تم تقديم عرض سعر.",
+    creationLockedMessage: "يمكن إنشاء عروض الأسعار فقط للخدمات التي حالتها استفسار أو تم تقديم عرض سعر.",
   },
   actions: {
     goToServices: "الانتقال إلى الخدمات",
@@ -339,13 +375,14 @@ const quotationsDictionaryAr: QuotationsDictionary = {
     backToDashboard: "العودة إلى لوحة التحكم",
   },
   list: {
-    title: "عروض السعر",
+    title: "عروض الأسعار",
     subtitle: "إدارة عروض العملاء وتقديرات الفعاليات وحالات الاعتماد.",
     selectService: "اختر خدمة",
     allStatuses: "كل الحالات",
-    showingZero: "عرض 0 من 0 من عروض السعر",
-    showingRange: "عرض {start}-{end} من {count} من عروض السعر",
-    noFilteredQuotations: "لا توجد عروض سعر مطابقة للفلاتر المحددة.",
+    showingZero: "عرض 0 من 0 من عروض الأسعار",
+    showingRange: "عرض {start}-{end} من {count} من عروض الأسعار",
+    noQuotations: "لم يتم العثور على عروض أسعار",
+    noFilteredQuotations: "لا توجد عروض أسعار مطابقة للفلاتر الحالية",
     unknownCompany: "جهة غير معروفة",
     table: {
       quotationNumber: "رقم عرض السعر",
@@ -358,8 +395,8 @@ const quotationsDictionaryAr: QuotationsDictionary = {
     actionTitles: {
       viewDetails: "عرض التفاصيل",
       editQuotation: "تعديل عرض السعر",
-      onlyDraftEditable: "يمكن تعديل عروض السعر المسودة فقط",
-      approvedCannotDelete: "لا يمكن حذف عروض السعر المعتمدة",
+      onlyDraftEditable: "يمكن تعديل عروض الأسعار المسودة فقط",
+      approvedCannotDelete: "لا يمكن حذف عروض الأسعار المعتمدة",
       deleteQuotation: "حذف عرض السعر",
     },
     deleteConfirm: "هل أنت متأكد من رغبتك في حذف عرض السعر هذا؟",
@@ -392,7 +429,7 @@ const quotationsDictionaryAr: QuotationsDictionary = {
     vat: "ضريبة القيمة المضافة",
     notApplied: "غير مطبقة",
     vatTitle: "G7 BLUE غير مسجلة في ضريبة القيمة المضافة. يتم احتساب الإجماليات النهائية على الخادم.",
-    lineItems: "بنود العرض",
+    lineItems: "بنود عرض السعر",
     addItem: "إضافة بند",
     description: "الوصف",
     descriptionPlaceholder: "اسم الخدمة أو المنتج",
@@ -427,8 +464,8 @@ const quotationsDictionaryAr: QuotationsDictionary = {
   },
   detail: {
     sections: {
-      details: "التفاصيل",
-      lineItems: "بنود العرض",
+      details: "تفاصيل عرض السعر",
+      lineItems: "بنود عرض السعر",
       financialSummary: "الملخص المالي",
       depositInvoice: "فاتورة دفعة مقدمة",
     },
@@ -439,8 +476,8 @@ const quotationsDictionaryAr: QuotationsDictionary = {
       validUntil: "صالح حتى",
       service: "الخدمة",
       qty: "الكمية",
-      unitSar: "الوحدة (SAR)",
-      totalSar: "الإجمالي (SAR)",
+      unitSar: "سعر الوحدة (SAR)",
+      totalSar: "إجمالي البند (SAR)",
       subtotal: "المجموع الفرعي",
       discount: "الخصم",
       taxVat: "الضريبة/ضريبة القيمة المضافة",
@@ -451,9 +488,9 @@ const quotationsDictionaryAr: QuotationsDictionary = {
       printPdf: "طباعة / حفظ كملف PDF",
     },
     states: {
-      detailForbidden: "ليس لديك صلاحية لعرض عروض السعر.",
+      detailForbidden: "ليس لديك صلاحية لعرض عروض الأسعار.",
       unknownCompany: "جهة غير معروفة",
-      noLineItems: "لا توجد بنود عرض.",
+      noLineItems: "لا توجد بنود لعرض السعر.",
       notApplied: "غير مطبق",
     },
     depositInvoice: {
@@ -464,10 +501,26 @@ const quotationsDictionaryAr: QuotationsDictionary = {
   },
   statuses: {
     draft: "مسودة",
-    sent: "مرسل",
+    sent: "مُرسل",
     approved: "معتمد",
     rejected: "مرفوض",
     expired: "منتهي الصلاحية",
+  },
+  approval: {
+    approve: "اعتماد عرض السعر",
+    reject: "رفض عرض السعر",
+    approveFailed: "تعذر اعتماد عرض السعر",
+    rejectFailed: "تعذر رفض عرض السعر",
+    unexpectedError: "حدث خطأ غير متوقع",
+  },
+  editStates: {
+    notFound: "عرض السعر غير موجود",
+    notFoundMessage: "عرض السعر الذي تحاول تعديله غير موجود أو تم حذفه.",
+    locked: "مقفل",
+    lockedMessage: "يمكن تعديل عروض الأسعار المسودة فقط.",
+    serviceContextRequired: "سياق الخدمة مطلوب",
+    serviceContextMessage: "لا يمكن تعديل عرض السعر حتى تتوفر علاقته بالخدمة.",
+    backToQuotations: "العودة إلى عروض الأسعار",
   },
 };
 
@@ -478,4 +531,20 @@ const quotationsDictionaries: Record<Locale, QuotationsDictionary> = {
 
 export function getQuotationsDictionary(locale: Locale): QuotationsDictionary {
   return quotationsDictionaries[locale];
+}
+
+export function getQuotationStatusLabel(locale: Locale, status: QuotationStatus): string {
+  const activeDictionary = getQuotationsDictionary(locale);
+  const englishDictionary = getQuotationsDictionary("en");
+  const key = `statuses.${status}`;
+
+  return resolveDictionaryValue({
+    activeValue: activeDictionary.statuses[status],
+    category: "label",
+    englishValue: englishDictionary.statuses[status],
+    key,
+    locale,
+    namespace: "quotations",
+    surface: "quotation-status",
+  });
 }

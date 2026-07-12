@@ -4,13 +4,14 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { getLocale } from "@/lib/i18n/locales";
 import { transitionSupplierAllocationStatus } from "@/lib/supplier-allocations/actions";
+import { getSafeActionErrorMessage } from "@/lib/i18n/safe-action-error";
 import type { SupplierAllocationStatus } from "@/lib/supplier-allocations/types";
 
 type SupplierAllocationStatusActionsProps = {
   allocationId: string;
   status: SupplierAllocationStatus;
+  dictionary: ReturnType<typeof getServicesDictionary>["supplierAllocations"]["statusActions"];
 };
 
 function getAllocationStatusErrorMessage(
@@ -41,19 +42,17 @@ function getAllocationStatusErrorMessage(
     "An unexpected error occurred.": dictionary.errors.unexpected,
   };
 
-  return mappedErrors[error] || error;
+  return getSafeActionErrorMessage(error, mappedErrors, dictionary.errors.unexpected);
 }
 
 export default function SupplierAllocationStatusActions({
   allocationId,
   status,
+  dictionary,
 }: SupplierAllocationStatusActionsProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const dictionary =
-    getServicesDictionary(getLocale()).supplierAllocations.statusActions;
-
   if (status === "selected") {
     return (
       <span className="text-[12px] font-semibold text-primary">

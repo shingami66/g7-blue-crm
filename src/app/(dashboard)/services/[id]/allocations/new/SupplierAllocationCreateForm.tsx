@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { getLocale } from "@/lib/i18n/locales";
 import { createSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import { getActiveSupplierRateCardsForAllocation } from "@/lib/suppliers/rate-card-actions";
 import type { SupplierOption } from "@/lib/suppliers/types";
@@ -59,8 +59,9 @@ export default function SupplierAllocationCreateForm({
 }) {
   const router = useRouter();
   const { push } = useGlobalNavigationPending();
+  const locale = useLocale();
   const dictionary =
-    getServicesDictionary(getLocale()).supplierAllocations.subflow.createForm;
+    getServicesDictionary(locale).supplierAllocations.subflow.createForm;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   

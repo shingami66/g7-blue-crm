@@ -3,9 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { getLocale } from "@/lib/i18n/locales";
 import { createInvoiceAction } from "@/lib/invoices/actions";
 
 type FinalActionDictionary = {
@@ -42,9 +42,12 @@ export function CreateFinalInvoiceAction({
   quotationId,
   remainingAmount,
   canCreate,
-  dictionary = getServicesDictionary(getLocale()).billing.finalAction,
+  dictionary: dictionaryProp,
 }: CreateFinalInvoiceActionProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const dictionary =
+    dictionaryProp ?? getServicesDictionary(locale).billing.finalAction;
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);

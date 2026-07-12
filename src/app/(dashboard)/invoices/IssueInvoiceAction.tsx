@@ -4,21 +4,20 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { issueInvoiceAction } from "@/lib/invoices/actions";
 import Button from "@/components/ui/Button";
-import { getLocale } from "@/lib/i18n/locales";
-import { getInvoicesDictionary } from "@/lib/i18n/dictionaries/invoices";
+import type { InvoicesDictionary } from "@/lib/i18n/dictionaries/invoices";
 
 type IssueInvoiceActionProps = {
   invoiceId: string;
+  dictionary: InvoicesDictionary["issueAction"];
 };
 
-type KnownIssueError = keyof ReturnType<typeof getInvoicesDictionary>["issueAction"]["errors"];
+type KnownIssueError = keyof InvoicesDictionary["issueAction"]["errors"];
 
-export function IssueInvoiceAction({ invoiceId }: IssueInvoiceActionProps) {
+export function IssueInvoiceAction({ invoiceId, dictionary }: IssueInvoiceActionProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const dictionary = getInvoicesDictionary(getLocale());
 
   const handleSubmit = () => {
     setError(null);
@@ -28,13 +27,13 @@ export function IssueInvoiceAction({ invoiceId }: IssueInvoiceActionProps) {
       const result = await issueInvoiceAction(invoiceId);
 
       if (result.success) {
-        setSuccessMsg(dictionary.issueAction.success);
+        setSuccessMsg(dictionary.success);
         router.refresh();
       } else {
-        const errMap = dictionary.issueAction.errors as Record<KnownIssueError, string>;
+        const errMap = dictionary.errors as Record<KnownIssueError, string>;
         const errMsg = result.error
-          ? errMap[result.error as KnownIssueError] || result.error
-          : dictionary.issueAction.genericError;
+          ? errMap[result.error as KnownIssueError] || dictionary.genericError
+          : dictionary.genericError;
         setError(errMsg);
       }
     });
@@ -43,7 +42,7 @@ export function IssueInvoiceAction({ invoiceId }: IssueInvoiceActionProps) {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-[13px] text-on-surface-variant">
-        {dictionary.issueAction.helper}
+        {dictionary.helper}
       </p>
       
       {error && (
@@ -65,7 +64,7 @@ export function IssueInvoiceAction({ invoiceId }: IssueInvoiceActionProps) {
           loading={isPending}
           variant="primary"
         >
-          {isPending ? dictionary.issueAction.submitting : dictionary.issueAction.submit}
+          {isPending ? dictionary.submitting : dictionary.submit}
         </Button>
       )}
     </div>

@@ -3,9 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { getLocale } from "@/lib/i18n/locales";
 import { createInvoiceAction } from "@/lib/invoices/actions";
 
 type DepositActionDictionary = {
@@ -51,9 +51,12 @@ export function CreateDepositInvoiceAction({
   quotationId,
   quotationTotal,
   canCreate,
-  dictionary = getServicesDictionary(getLocale()).billing.depositAction,
+  dictionary: dictionaryProp,
 }: CreateDepositInvoiceActionProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const dictionary =
+    dictionaryProp ?? getServicesDictionary(locale).billing.depositAction;
   const [isPending, startTransition] = useTransition();
   const [amountStr, setAmountStr] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +151,8 @@ export function CreateDepositInvoiceAction({
             value={amountStr}
             onChange={(e) => setAmountStr(e.target.value)}
             disabled={isPending}
-            className="flex-1 px-3 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface text-[14px] focus:outline-none focus:ring-2 focus:ring-primary/50"
+            dir="ltr"
+            className="flex-1 px-3 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface text-[14px] tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/50"
             placeholder={dictionary.amountPlaceholder}
             required
           />
