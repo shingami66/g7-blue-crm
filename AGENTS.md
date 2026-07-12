@@ -32,6 +32,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - `pnpm exec next typegen` is the documented Next.js route type generation check for App Router changes that rely on generated types.
 - `pnpm exec tsc --noEmit` is the documented typecheck verification command for runtime implementation slices.
 - `git diff --check` is the documented whitespace/conflict-marker verification command before commit readiness for implementation or docs sync work.
+- Controlled commit verification also uses `git diff --name-only`, `git diff --stat`, `git diff --cached --name-only`, `git diff --cached --stat`, `git show --check --stat HEAD`, and `git show --name-only --oneline --stat HEAD` as documented in `docs/workflow-prompt-templates.md`.
 - Runtime implementation slices must pass `pnpm lint`, `pnpm exec tsc --noEmit`, and `pnpm build` before commit readiness.
 - `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
 - `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
@@ -52,6 +53,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - Before staging or commit work, run `git status --short`.
 - Stage exact files only; confirm no unrelated files, secrets, `.env.local`, or unreviewed SQL/migration files are staged.
 - After staging, run `git diff --cached --stat` and `git diff --cached --check`.
+- For controlled push-only tasks, verify the exact outgoing commit with `git log -1 --oneline` and `git log origin/main..HEAD --oneline` before and after `git push origin main`.
 - Do not force push. Open PRs only when requested.
 - For Services or Quotations UI work, manually smoke test the live ERP path `Customer Profile -> Service -> Quotation`, including `/customers/[id]`, `/services`, `/services/new`, `/services/[id]`, `/services/[id]/edit`, and `/quotations/new?serviceId=<service-id>`.
 - For Service billing, supplier allocation, or Supplier Booking UI work, manually smoke test `/services/[id]`, deposit/final invoice actions in the Billing panel, `/services/[id]/allocations/new`, `/services/[id]/allocations/[allocationId]/edit`, allocation `/cancel`, `/delete`, `/restore`, `?showDeleted=true` when delete/restore behavior changes, and the Service Detail Supplier Bookings panel create/cancel flow from selected allocations.
