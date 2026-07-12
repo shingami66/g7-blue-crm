@@ -39,7 +39,38 @@
 - **Data Access:** Supabase Admin client runs server-side only; all write Server Actions enforce `requirePermission`; no raw Supabase errors exposed to UI.
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
+## 2.1 Current Active Work (docs sync)
+- **Active program:** Feature `005-i18n-runtime-locale` runtime Arabic/English UX (working-tree implementation; not yet controlled-committed/pushed as of this docs sync).
+- **Docs sync task:** `G7-AR-UX-P4-I18N-DOCS-SYNC` records independent-review PASS and residual open gates only.
+- **Next controlled process step:** `G7-AR-UX-P4-I18N-COMMIT-INVENTORY` (exact file inventory before any stage/commit). Do not treat docs sync as commit authorization.
+
 ## 3. Completed Milestones
+
+### Feature 005 Runtime Arabic/English UX (working tree; independent review PASS)
+- [x] Authenticated Arabic/English UX implemented for shell + modules: Dashboard, Customers, Services (core + operational subflows), Quotations (non-PDF), Invoices (non-PDF), Payments, Suppliers, **Settings**, and **Admin Users**.
+- [x] Settings and Admin Users are intentional **P3 extensions** beyond the original Feature 005 core route slice (spec C01 had excluded full Settings/Admin from core acceptance; P3 localized those surfaces under separate G7-AR-UX-P3 tasks).
+- [x] Shell / shared states: Sidebar, Topbar locale selector, loading, error, not-found, shared access-denied/empty/unavailable patterns, RTL/LTR shell direction.
+- [x] Formatting contracts: Western digits (`numberingSystem: latn`), `formatUiDate` / `formatUiDateTime`, `formatUiNumber` / percent helpers, `formatSarAmount`, bidi isolation helpers.
+- [x] Locale authority: active users use session-effective locale (`g7_session_locale` override bound to Clerk session → `app_users.locale`); public/inactive path uses `getPublicRequestLocale()` (session cookie if bound → English default, no DB).
+- [x] `/unauthorized` localized EN/AR; root `<html lang>` / `dir` aligned with public request locale for inactive/missing `app_users` (`G7-AR-UX-P4-ROOT-PUBLIC-LOCALE-ALIGNED`).
+- [x] Customers Excel export **workbook chrome** localized (labels/meta/filters/date digits); company/brand names and stored customer values preserved; `customers:export` gate preserved. Filename pattern unchanged.
+- [x] Independent review `G7_AR_UX_P4_I18N_INDEPENDENT_REVIEW_PASS`: **no P0** findings. Residual P1/P2 noted (tree hygiene, T032 smoke, non-blocking metadata, etc.).
+- [x] Automated validation evidence (DEV agent runs; not production claims):
+  - Aggregate i18n + export tests: **223/223** pass.
+  - Root/public/unauthorized alignment suite (with related regressions): **21/21** pass.
+  - Focused ESLint on i18n surfaces: PASS.
+  - `pnpm exec tsc --noEmit`: PASS.
+  - Full `git diff --check`: PASS.
+- [ ] **OPEN — T032** full authenticated Arabic/English browser smoke: **Mozfer-only**, remains **HOLD** (do not mark PASS).
+- [ ] **OPEN — Controlled commit/push** of the Feature 005 working tree (next inventory task; no stage/commit from this docs task).
+- [x] `app_users.locale` migration file: `supabase/migrations/20260711090000_add_app_users_locale.sql`. Mozfer-supplied DEV/DEMO apply + T009 post-apply verification evidence exists under `specs/005-i18n-runtime-locale/evidence/`. **Not** claimed as production-applied; re-apply is blocked by fail-loud guard when column exists. Controlled DB tasks remain separate from app commit.
+- [x] Explicit exclusions remaining (not claimed complete):
+  - PDF / generated-document localization (quotation & invoice PDF bodies and Print buttons).
+  - Clerk-hosted sign-in / sign-up widget localization.
+  - Invoices list **Export** button remains a **non-functional product stub** (localized label only; **no** invoice Excel export implementation).
+  - Browser-tab metadata consistency and other P2 items remain non-blocking.
+  - No production-readiness, ZATCA/FATOORA, or bilingual-document claim.
+- [x] Locked workflow preserved: Customer Profile → Service → Quotation → Invoice → Payment; Service remains the operational core; VAT/ZATCA exclusions preserved.
 
 ### Approved Billing Scope Ceiling Block UI Smoke
 - [x] Manual smoke verification (`APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1`) completed.

@@ -911,7 +911,8 @@ The following items are explicitly documented as deferred or production hardenin
 - Use CSS logical utilities for RTL work, mirror directional icons only, and bidi-isolate numbers, SAR amounts, dates, and document numbers.
 - Document/PDF language must reuse the existing snapshot approach and preserve historical meaning after locale/settings changes.
 - Do not add fake Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, XML, clearance, or cleared-status claims through localization work.
-- Use a temporary manual/dev-only RTL verification method until real `app_users.locale` runtime wiring is approved and implemented.
+- Runtime `app_users.locale` + session cookie override wiring is implemented in application code (Feature 005). Prefer real session/persisted locale over `G7_DEV_RTL` for normal authenticated use. `G7_DEV_RTL` remains diagnostic-only if still present in any residual path.
+- Temporary manual/dev-only RTL verification was used for foundation Shell-1A/1B; normal runtime verification is now Mozfer T032 browser smoke on real locale switching.
 - Future Shell-1A and Shell-1B prompts must collect Tailwind compatibility evidence before refactor and HOLD if logical utility support is uncertain.
 - `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` completed as readonly evidence; no shared overlay primitive layer was found.
 - Module-local overlays remain important but are deferred to `I18N-RTL-MODULE-OVERLAYS-A11Y-REVIEW-1` for RTL/accessibility review only, and that follow-up is not a prerequisite blocker before Shell-1A.
@@ -924,23 +925,25 @@ The following items are explicitly documented as deferred or production hardenin
 - `I18N-RTL-MODULE-TEXT-INVENTORY-1` completed as readonly inventory with overall result `PASS` and no file changes.
 - `ARABIC-COPY-REVIEW-1` completed as readonly Arabic copy/glossary review with overall result `PASS`.
 - The next runtime phase must not begin as a broad "translate everything" pass.
-- Arabic copy is not finally approved yet.
-- The next recommended task is `I18N-RTL-MODULE-TEXT-INVENTORY-1` as a readonly module text inventory before runtime translation.
-- Recommended rollout order remains Customers, Services, Quotations list/detail non-PDF surfaces, Invoices list non-PDF surfaces, Payments, Suppliers, then Settings/Admin later.
-- Service remains the locked operational core; Booking terminology still needs explicit copy review.
-- Supplier/internal cost labels remain RBAC-sensitive during future translation work.
+- Arabic commercial terminology is **not** finally approved by Mozfer; UI ships with current professional EN/AR dictionary copy pending T032 smoke and commercial-language review.
+- Module-by-module authenticated UI localization (Dashboard → Admin Users), shell, shared states, Customers Excel chrome, `/unauthorized`, and root public locale alignment are **implemented in the working tree** (Feature 005 + intentional P3 Settings/Admin). Independent review: PASS, no P0.
+- Next process steps: commit inventory → controlled commit (after approval) → Mozfer **T032** smoke HOLD until user evidence.
+- Service remains the locked operational core; Booking terminology still needs explicit commercial copy review.
+- Supplier/internal cost labels remain RBAC-sensitive; localization must not leak costs.
 
 ## I18N / RTL Still Deferred
-- Final Arabic terminology.
-- Module-local overlay accessibility hardening implementation as `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`.
-- Readonly module text inventory planning as `I18N-RTL-MODULE-TEXT-INVENTORY-1`.
-- Module-by-module translation rollout after `I18N-RTL-MODULE-TEXT-INVENTORY-1` and `ARABIC-COPY-REVIEW-1`.
-- Module-by-module translation rollout after `I18N-RTL-MODULE-TEXT-INVENTORY-1` and `ARABIC-COPY-REVIEW-1`.
+- **T032** full authenticated EN/AR browser smoke (Mozfer-only; HOLD — not agent-claimable).
+- Final Mozfer commercial Arabic terminology approval / Saudi business-language review before UAT.
+- Module-local overlay accessibility hardening as `I18N-RTL-MODULE-OVERLAYS-A11Y-HARDEN-1`.
 - Bilingual side-by-side documents.
-- Document/PDF language implementation.
-- `document_locale` schema/runtime wiring.
+- Document/PDF language implementation (quotation & invoice PDF bodies remain English; excluded from authenticated UI completion).
+- `document_locale` schema/runtime wiring (must not inherit creator UI session locale).
 - Customer `preferred_language`.
 - Hijri calendar.
-- Booking terminology final copy.
-- Arabic rollout order by role.
-- Invoice cancelled/voided business-logic correctness.
+- Booking terminology final commercial copy.
+- Arabic rollout order by role (if still product-desired beyond global user locale).
+- Clerk-hosted sign-in / sign-up widget localization.
+- Invoices list Export as a real export feature (current control is a non-functional stub with localized label only — do not document as implemented export).
+- Browser-tab metadata consistency (P2 non-blocking).
+- Controlled production-readiness and production migration claims (out of scope for this feature docs sync).
+- Invoice cancelled/voided business-logic correctness (pre-existing lifecycle gap; not an i18n deliverable).
