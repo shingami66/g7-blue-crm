@@ -2,6 +2,10 @@ import { type LucideIcon, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 type TrendDirection = "up" | "down" | "flat" | "warning";
 
+/**
+ * Shared KPI summary card.
+ * Value area supports long SAR/count strings without page overflow or clipped digits.
+ */
 export default function KpiCard({
   label,
   value,
@@ -19,38 +23,39 @@ export default function KpiCard({
     trend === "up"
       ? "text-surface-tint"
       : trend === "down" || trend === "warning"
-      ? "text-error"
-      : "text-on-surface-variant";
+        ? "text-error"
+        : "text-on-surface-variant";
 
   const TrendIcon =
-    trend === "up"
-      ? TrendingUp
-      : trend === "down"
-      ? TrendingDown
-      : Minus;
+    trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
 
   return (
-    <div className="bg-surface-container-lowest rounded-xl border border-surface-variant p-4 flex flex-col justify-between hover:border-outline-variant transition-colors">
-      <div className="flex justify-between items-start">
-        <span className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase">
+    <div className="flex min-w-0 flex-col justify-between rounded-xl border border-surface-variant bg-surface-container-lowest p-4 transition-colors hover:border-outline-variant">
+      <div className="flex items-start justify-between gap-2">
+        <span className="min-w-0 text-[12px] font-semibold uppercase leading-[16px] tracking-[0.05em] text-on-surface-variant">
           {label}
         </span>
-        <span className="text-primary bg-primary-fixed/30 p-1.5 rounded-lg">
+        <span className="shrink-0 rounded-lg bg-primary-fixed/30 p-1.5 text-primary">
           <Icon size={20} />
         </span>
       </div>
-      <div className="mt-4">
-        <span className="text-[36px] leading-[44px] tracking-[-0.02em] font-bold text-on-surface">
+      <div className="mt-4 min-w-0">
+        <span
+          className="block max-w-full break-words font-bold tracking-[-0.02em] text-on-surface tabular-nums [overflow-wrap:anywhere] text-[clamp(1.25rem,2.8vw,2.25rem)] leading-[1.15]"
+          dir="ltr"
+        >
           {value}
         </span>
-        {trendLabel && (
-          <div className="flex items-center gap-1 mt-1">
-            <TrendIcon size={16} className={trendColor} />
-            <span className={`text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${trendColor}`}>
+        {trendLabel ? (
+          <div className="mt-1 flex min-w-0 items-center gap-1">
+            <TrendIcon size={16} className={`shrink-0 ${trendColor}`} />
+            <span
+              className={`min-w-0 text-[12px] font-semibold leading-[16px] tracking-[0.05em] ${trendColor}`}
+            >
               {trendLabel}
             </span>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

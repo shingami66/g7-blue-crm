@@ -9,7 +9,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import CenterPendingBolt from "@/components/ui/CenterPendingBolt";
+import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 
 type PendingEntry = {
   id: symbol;
@@ -29,6 +31,8 @@ const GlobalPendingContext = createContext<GlobalPendingContextValue>({
 });
 
 export function GlobalPendingProvider({ children }: { children: ReactNode }) {
+  const locale = useLocale();
+  const defaultLoadingLabel = getSharedUiStates(locale).loading.label;
   const entriesRef = useRef<PendingEntry[]>([]);
   const [activeEntry, setActiveEntry] = useState<PendingEntry | null>(null);
 
@@ -66,10 +70,12 @@ export function GlobalPendingProvider({ children }: { children: ReactNode }) {
     [hidePending, showPending]
   );
 
+  const boltLabel = activeEntry?.label ?? defaultLoadingLabel;
+
   return (
     <GlobalPendingContext.Provider value={value}>
       {children}
-      {activeEntry ? <CenterPendingBolt label={activeEntry.label} /> : null}
+      {activeEntry ? <CenterPendingBolt label={boltLabel} /> : null}
     </GlobalPendingContext.Provider>
   );
 }

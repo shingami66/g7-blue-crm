@@ -16,20 +16,26 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import {
+  navigationDictionaryAr,
+  navigationDictionaryEn,
+  type NavigationDictionary,
+} from "@/lib/i18n/dictionaries/navigation";
 
 const navItems = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Customers", href: "/customers", icon: Users },
-  { label: "Services", href: "/services", icon: BriefcaseBusiness },
-  { label: "Quotations", href: "/quotations", icon: FileText },
-  { label: "Invoices", href: "/invoices", icon: Receipt },
-  { label: "Suppliers", href: "/suppliers", icon: Package },
-  { label: "Payments", href: "/payments", icon: CreditCard },
-];
+  { labelKey: "dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { labelKey: "customers", href: "/customers", icon: Users },
+  { labelKey: "services", href: "/services", icon: BriefcaseBusiness },
+  { labelKey: "quotations", href: "/quotations", icon: FileText },
+  { labelKey: "invoices", href: "/invoices", icon: Receipt },
+  { labelKey: "suppliers", href: "/suppliers", icon: Package },
+  { labelKey: "payments", href: "/payments", icon: CreditCard },
+] as const;
 
 const bottomItems = [
-  { label: "Settings", href: "/settings", icon: Settings },
-];
+  { labelKey: "settings", href: "/settings", icon: Settings },
+] as const;
 
 export default function Sidebar({
   isAdmin = false,
@@ -38,6 +44,9 @@ export default function Sidebar({
   isAdmin?: boolean;
   shellDirection?: "ltr" | "rtl";
 }) {
+  const locale = useLocale();
+  const dictionary: NavigationDictionary =
+    locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn;
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isRtl = shellDirection === "rtl";
@@ -52,10 +61,10 @@ export default function Sidebar({
       {/* Brand */}
       <div className="mb-8 px-4">
         <h1 className="text-[36px] leading-[44px] tracking-[-0.02em] font-bold text-white">
-          G7 BLUE
+          {dictionary.app.name}
         </h1>
         <p className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-white/70 mt-1">
-          Enterprise CRM
+          {dictionary.app.subtitle}
         </p>
       </div>
 
@@ -76,7 +85,7 @@ export default function Sidebar({
               }`}
             >
               <Icon size={20} className={active ? "opacity-100" : "opacity-70"} />
-              <span>{item.label}</span>
+              <span>{dictionary.modules[item.labelKey]}</span>
             </Link>
           );
         })}
@@ -86,7 +95,7 @@ export default function Sidebar({
       {isAdmin && (
         <div className="mt-4 mb-2 flex flex-col gap-1">
           <div className="px-4 py-2">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-white/50">Admin</span>
+            <span className="text-[10px] uppercase tracking-wider font-bold text-white/50">{dictionary.admin}</span>
           </div>
           <Link
             href="/admin/users"
@@ -98,7 +107,7 @@ export default function Sidebar({
             }`}
           >
             <ShieldAlert size={20} className={isActive("/admin/users") ? "opacity-100" : "opacity-70"} />
-            <span>Users</span>
+            <span>{dictionary.modules.users}</span>
           </Link>
         </div>
       )}
@@ -120,7 +129,7 @@ export default function Sidebar({
               }`}
             >
               <Icon size={20} className={active ? "opacity-100" : "opacity-70"} />
-              <span>{item.label}</span>
+              <span>{dictionary.modules[item.labelKey]}</span>
             </Link>
           );
         })}
