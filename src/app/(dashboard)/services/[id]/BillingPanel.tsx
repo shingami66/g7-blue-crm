@@ -107,13 +107,13 @@ export default function BillingPanel({
         <div className="flex flex-col gap-2">
           <h4 className="text-[13px] font-semibold text-on-surface uppercase tracking-wide">{billingDictionary.cards.billingCalculation}</h4>
           <div className="bg-surface p-4 rounded-lg border border-outline-variant flex flex-col gap-3">
-            <div className="flex justify-between items-center text-[14px]">
-              <span className="text-on-surface-variant">{billingDictionary.cards.priorInvoiced}</span>
-              <span dir="ltr" className="font-medium text-on-surface">{formatCurrency(activePriorInvoiceTotal)}</span>
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 text-[14px]">
+              <span className="min-w-0 text-on-surface-variant">{billingDictionary.cards.priorInvoiced}</span>
+              <span dir="ltr" className="shrink-0 font-medium tabular-nums text-on-surface">{formatCurrency(activePriorInvoiceTotal)}</span>
             </div>
-            <div className="flex justify-between items-center text-[14px] pt-2 border-t border-outline-variant">
-              <span className="text-on-surface-variant">{billingDictionary.cards.remaining}</span>
-              <span dir="ltr" className={`font-semibold ${remainingUninvoicedAmount < 0 ? 'text-red-600' : 'text-primary'}`}>
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-t border-outline-variant pt-2 text-[14px]">
+              <span className="min-w-0 text-on-surface-variant">{billingDictionary.cards.remaining}</span>
+              <span dir="ltr" className={`shrink-0 font-semibold tabular-nums ${remainingUninvoicedAmount < 0 ? 'text-red-600' : 'text-primary'}`}>
                 {formatCurrency(remainingUninvoicedAmount)}
               </span>
             </div>

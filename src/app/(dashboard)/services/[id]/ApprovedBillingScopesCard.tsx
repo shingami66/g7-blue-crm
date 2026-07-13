@@ -5,17 +5,28 @@ import { isolateBidiText } from "@/lib/i18n/bidi";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { formatSarAmount } from "@/lib/i18n/formatting";
 import { listApprovedBillingScopesForServiceResult } from "@/lib/approved-billing-scopes/queries";
+import {
+  buildAbsCardBillingSnapshot,
+  pickAbsCardScopes,
+  resolveAbsCardMoneyFields,
+  resolveAbsCardScenario,
+  resolveSourceQuotationNumber,
+  type AbsCardEffectiveStatus,
+  type AbsCardMoneyField,
+  type AbsCardScenario,
+} from "@/lib/approved-billing-scopes/card-view-model";
 import type {
   ApprovedBillingScopeLineSafetyStatus,
-  ApprovedBillingScopeStatus,
   ApprovedBillingScopeSummary,
 } from "@/lib/approved-billing-scopes/types";
+import type { ServiceBillingState } from "@/lib/invoices/types";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
-const SCOPE_STATUS_VARIANTS: Record<ApprovedBillingScopeStatus, StatusBadgeVariant> = {
+const EFFECTIVE_STATUS_VARIANTS: Record<AbsCardEffectiveStatus, StatusBadgeVariant> = {
   draft: "draft",
-  approved: "approved",
+  active: "approved",
+  superseded: "inactive",
   voided: "cancelled",
 };
 
@@ -31,62 +42,223 @@ const LINE_SAFETY_VARIANTS: Record<
 type ApprovedBillingScopesCardProps = {
   serviceId: string;
   dictionary: ServicesDictionary;
+  billingState: ServiceBillingState;
+  canReadInvoices: boolean;
+  canReadQuotations: boolean;
+  /** Safe quotation number lookup by id (from related quotations when permitted). */
+  quotationNumbersById: Readonly<Record<string, string>>;
 };
 
 export default async function ApprovedBillingScopesCard({
   serviceId,
   dictionary,
+  billingState,
+  canReadInvoices,
+  canReadQuotations,
+  quotationNumbersById,
 }: ApprovedBillingScopesCardProps) {
   const cardDictionary = dictionary.approvedBillingScopes;
   const scopeResult = await listApprovedBillingScopesForServiceResult(serviceId);
 
-  if (scopeResult.status === "error") {
+  const scopesLoadError = scopeResult.status === "error";
+  const scopes = scopeResult.status === "success" ? scopeResult.data : [];
+
+  const billing = buildAbsCardBillingSnapshot({
+    approvedQuotation: billingState.approvedQuotation,
+    activePriorInvoiceTotal: billingState.activePriorInvoiceTotal,
+    remainingUninvoicedAmount: billingState.remainingUninvoicedAmount,
+    disabledReasons: billingState.disabledReasons,
+  });
+
+  const scenario = resolveAbsCardScenario({
+    scopesLoadError,
+    scopes,
+    hasApprovedQuotation: billing.hasApprovedQuotation,
+  });
+
+  if (scenario === "unavailable") {
     return (
-      <ScopeCard title={cardDictionary.title} subtitle={cardDictionary.subtitle}>
-        {cardDictionary.unavailable}
-      </ScopeCard>
+      <ScopeCardShell title={cardDictionary.title} subtitle={cardDictionary.subtitle}>
+        <p className="text-[14px] leading-[20px] text-on-surface-variant">
+          {cardDictionary.unavailable}
+        </p>
+      </ScopeCardShell>
     );
   }
 
-  if (scopeResult.data.length === 0) {
+  if (scenario === "no_approved_quotation") {
     return (
-      <ScopeCard title={cardDictionary.title} subtitle={cardDictionary.subtitle}>
-        {cardDictionary.empty}
-      </ScopeCard>
+      <ScopeCardShell title={cardDictionary.title} subtitle={cardDictionary.subtitle}>
+        <p className="text-[14px] leading-[20px] text-on-surface-variant">
+          {cardDictionary.noApprovedQuotation}
+        </p>
+        {canReadQuotations && (
+          <p className="mt-3">
+            <a
+              href="#related-quotations"
+              className="text-[13px] font-semibold text-primary hover:underline"
+            >
+              {cardDictionary.viewRelatedQuotations}
+            </a>
+          </p>
+        )}
+      </ScopeCardShell>
     );
   }
 
-  return <ScopeSummaryCard serviceId={serviceId} scopes={scopeResult.data} dictionary={dictionary} />;
+  if (scenario === "legacy_quotation_only") {
+    const money = resolveAbsCardMoneyFields({
+      scenario,
+      primary: null,
+      billing,
+      canReadInvoices,
+    });
+    const quotationNumber =
+      resolveSourceQuotationNumber({
+        sourceQuotationId: billing.approvedQuotationId,
+        quotationNumbersById,
+        billingQuotation: billingState.approvedQuotation
+          ? {
+              id: billingState.approvedQuotation.id,
+              quotationNumber: billingState.approvedQuotation.quotationNumber,
+            }
+          : null,
+      }) ?? billing.approvedQuotationNumber;
+
+    return (
+      <ScopeCardShell title={cardDictionary.title} subtitle={cardDictionary.subtitle}>
+        <p className="mb-5 text-[14px] leading-[20px] text-on-surface-variant">
+          {cardDictionary.legacyQuotationAuthority}
+        </p>
+        <dl className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <ScopeDetail
+            label={cardDictionary.labels.sourceQuotation}
+            value={
+              quotationNumber ? (
+                <span dir="ltr" className="font-mono tabular-nums">
+                  {isolateBidiText(quotationNumber)}
+                </span>
+              ) : (
+                cardDictionary.sourceQuotationUnavailable
+              )
+            }
+          />
+          <MoneyDetail
+            label={cardDictionary.labels.billingCeiling}
+            field={money.ceiling}
+            locale={dictionary.locale}
+            restrictedLabel={cardDictionary.invoiceTotalsRestricted}
+            unavailableLabel={cardDictionary.unavailable}
+          />
+          <MoneyDetail
+            label={cardDictionary.labels.invoicedAmount}
+            field={money.invoiced}
+            locale={dictionary.locale}
+            restrictedLabel={cardDictionary.invoiceTotalsRestricted}
+            unavailableLabel={cardDictionary.invoiceTotalsUnavailable}
+          />
+          <MoneyDetail
+            label={cardDictionary.labels.remainingBillable}
+            field={money.remaining}
+            locale={dictionary.locale}
+            restrictedLabel={cardDictionary.invoiceTotalsRestricted}
+            unavailableLabel={cardDictionary.invoiceTotalsUnavailable}
+          />
+        </dl>
+      </ScopeCardShell>
+    );
+  }
+
+  return (
+    <ScopeSummaryCard
+      serviceId={serviceId}
+      scopes={scopes}
+      scenario={scenario}
+      dictionary={dictionary}
+      billing={billing}
+      billingState={billingState}
+      canReadInvoices={canReadInvoices}
+      quotationNumbersById={quotationNumbersById}
+    />
+  );
 }
 
 function ScopeSummaryCard({
   serviceId,
   scopes,
+  scenario,
   dictionary,
+  billing,
+  billingState,
+  canReadInvoices,
+  quotationNumbersById,
 }: {
   serviceId: string;
   scopes: ApprovedBillingScopeSummary[];
+  scenario: Exclude<AbsCardScenario, "unavailable" | "no_approved_quotation" | "legacy_quotation_only">;
   dictionary: ServicesDictionary;
+  billing: ReturnType<typeof buildAbsCardBillingSnapshot>;
+  billingState: ServiceBillingState;
+  canReadInvoices: boolean;
+  quotationNumbersById: Readonly<Record<string, string>>;
 }) {
   const cardDictionary = dictionary.approvedBillingScopes;
-  const currentScope = scopes.find((scope) => scope.isActiveApprovedScope) ?? scopes[0];
-  const otherScopeCount = scopes.length - 1;
+  const pick = pickAbsCardScopes(scopes);
+  const primary = pick.primary;
+  if (!primary || !pick.effectiveStatus) {
+    return (
+      <ScopeCardShell title={cardDictionary.title} subtitle={cardDictionary.subtitle}>
+        <p className="text-[14px] leading-[20px] text-on-surface-variant">
+          {cardDictionary.empty}
+        </p>
+      </ScopeCardShell>
+    );
+  }
+
+  const money = resolveAbsCardMoneyFields({
+    scenario,
+    primary,
+    billing,
+    canReadInvoices,
+  });
+
+  const sourceQuotationNumber = resolveSourceQuotationNumber({
+    sourceQuotationId: primary.sourceQuotationId,
+    quotationNumbersById,
+    billingQuotation: billingState.approvedQuotation
+      ? {
+          id: billingState.approvedQuotation.id,
+          quotationNumber: billingState.approvedQuotation.quotationNumber,
+        }
+      : null,
+  });
+
+  const statusLabel =
+    pick.effectiveStatus === "active"
+      ? cardDictionary.active
+      : cardDictionary.effectiveStatusLabels[pick.effectiveStatus];
+
+  const detailHref = `/services/${serviceId}/approved-billing-scopes/${primary.id}`;
+  const draftHref =
+    pick.draft && pick.draft.id !== primary.id
+      ? `/services/${serviceId}/approved-billing-scopes/${pick.draft.id}`
+      : null;
 
   return (
     <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
       <div className="flex flex-col gap-3 border-b border-surface-variant bg-surface-bright px-6 py-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <h3 className="font-semibold text-primary">{cardDictionary.title}</h3>
-          <p className="mt-1 text-[13px] leading-[18px] text-on-surface-variant">{cardDictionary.subtitle}</p>
+          <p className="mt-1 text-[13px] leading-[18px] text-on-surface-variant">
+            {cardDictionary.subtitle}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <StatusBadge variant={SCOPE_STATUS_VARIANTS[currentScope.status]}>
-            {currentScope.isActiveApprovedScope
-              ? cardDictionary.active
-              : cardDictionary.statusLabels[currentScope.status]}
+          <StatusBadge variant={EFFECTIVE_STATUS_VARIANTS[pick.effectiveStatus]}>
+            {statusLabel}
           </StatusBadge>
           <PendingLink
-            href={`/services/${serviceId}/approved-billing-scopes/${currentScope.id}`}
+            href={detailHref}
             className="text-[13px] font-semibold text-primary hover:underline"
             pendingLabel={cardDictionary.viewDetails}
           >
@@ -94,50 +266,181 @@ function ScopeSummaryCard({
           </PendingLink>
         </div>
       </div>
-      <dl className="grid grid-cols-1 gap-5 p-6 sm:grid-cols-3">
+
+      {scenario === "historical_only" && (
+        <div className="border-b border-surface-variant bg-surface px-6 py-3 text-[13px] leading-[18px] text-on-surface-variant">
+          {cardDictionary.historicalNotAuthority}
+        </div>
+      )}
+
+      {money.usesLegacyQuotationAuthority &&
+        (scenario === "draft_only" || scenario === "historical_only") && (
+          <div className="border-b border-surface-variant bg-surface px-6 py-3 text-[13px] leading-[18px] text-on-surface-variant">
+            {cardDictionary.legacyQuotationAuthority}
+          </div>
+        )}
+
+      {pick.hasDraftRevision && (
+        <div className="flex flex-col gap-2 border-b border-surface-variant bg-surface px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[13px] font-medium text-on-surface">
+            {cardDictionary.draftRevisionExists}
+          </p>
+          {draftHref && (
+            <PendingLink
+              href={draftHref}
+              className="text-[13px] font-semibold text-primary hover:underline"
+              pendingLabel={cardDictionary.viewDraft}
+            >
+              {cardDictionary.viewDraft}
+            </PendingLink>
+          )}
+        </div>
+      )}
+
+      <dl className="grid grid-cols-1 gap-5 p-6 sm:grid-cols-2 xl:grid-cols-3">
         <ScopeDetail
           label={cardDictionary.labels.version}
-          value={isolateBidiText(`${cardDictionary.versionPrefix} ${currentScope.scopeVersion}`)}
+          value={
+            <span dir="ltr" className="tabular-nums">
+              {isolateBidiText(`${cardDictionary.versionPrefix} ${primary.scopeVersion}`)}
+            </span>
+          }
+        />
+        <ScopeDetail
+          label={cardDictionary.labels.sourceQuotation}
+          value={
+            sourceQuotationNumber ? (
+              <span dir="ltr" className="font-mono tabular-nums">
+                {isolateBidiText(sourceQuotationNumber)}
+              </span>
+            ) : (
+              <span className="text-on-surface-variant">
+                {cardDictionary.sourceQuotationUnavailable}
+              </span>
+            )
+          }
         />
         <ScopeDetail
           label={cardDictionary.labels.lineSafety}
           value={
-            <StatusBadge variant={LINE_SAFETY_VARIANTS[currentScope.lineSafetyStatus]}>
-              {cardDictionary.lineSafetyLabels[currentScope.lineSafetyStatus]}
+            <StatusBadge variant={LINE_SAFETY_VARIANTS[primary.lineSafetyStatus]}>
+              {cardDictionary.lineSafetyLabels[primary.lineSafetyStatus]}
             </StatusBadge>
           }
         />
-        <ScopeDetail
+        <MoneyDetail
+          label={cardDictionary.labels.billingCeiling}
+          field={money.ceiling}
+          locale={dictionary.locale}
+          restrictedLabel={cardDictionary.invoiceTotalsRestricted}
+          unavailableLabel={cardDictionary.unavailable}
+        />
+        <MoneyDetail
           label={cardDictionary.labels.acceptedGrandTotal}
-          value={
-            <span dir="ltr" className="tabular-nums">
-              {formatSarAmount(dictionary.locale, currentScope.acceptedGrandTotal)}
-            </span>
-          }
+          field={{ kind: "value", amount: primary.acceptedGrandTotal }}
+          locale={dictionary.locale}
+          restrictedLabel={cardDictionary.invoiceTotalsRestricted}
+          unavailableLabel={cardDictionary.unavailable}
+        />
+        <MoneyDetail
+          label={cardDictionary.labels.invoicedAmount}
+          field={money.invoiced}
+          locale={dictionary.locale}
+          restrictedLabel={cardDictionary.invoiceTotalsRestricted}
+          unavailableLabel={cardDictionary.invoiceTotalsUnavailable}
+        />
+        <MoneyDetail
+          label={cardDictionary.labels.remainingBillable}
+          field={money.remaining}
+          locale={dictionary.locale}
+          restrictedLabel={cardDictionary.invoiceTotalsRestricted}
+          unavailableLabel={cardDictionary.invoiceTotalsUnavailable}
         />
       </dl>
-      {otherScopeCount > 0 && (
-        <div className="border-t border-surface-variant bg-surface px-6 py-3 text-[13px] text-on-surface-variant">
-          {otherScopeCount === 1
-            ? cardDictionary.otherScopeSingular
-            : cardDictionary.otherScopePlural.replace(
-                "{count}",
-                isolateBidiText(String(otherScopeCount)),
-              )}
+
+      {(pick.otherScopeCount > 0 || pick.historyCount > 0) && (
+        <div className="flex flex-col gap-1 border-t border-surface-variant bg-surface px-6 py-3 text-[13px] text-on-surface-variant">
+          {pick.otherScopeCount > 0 && (
+            <p>
+              {pick.otherScopeCount === 1
+                ? cardDictionary.otherScopeSingular
+                : cardDictionary.otherScopePlural.replace(
+                    "{count}",
+                    isolateBidiText(String(pick.otherScopeCount)),
+                  )}
+            </p>
+          )}
+          {pick.historyCount > 0 && (
+            <p>
+              {pick.historyCount === 1
+                ? cardDictionary.historyCountSingular
+                : cardDictionary.historyCountPlural.replace(
+                    "{count}",
+                    isolateBidiText(String(pick.historyCount)),
+                  )}
+            </p>
+          )}
         </div>
       )}
     </section>
   );
 }
 
-function ScopeCard({
+function MoneyDetail({
+  label,
+  field,
+  locale,
+  restrictedLabel,
+  unavailableLabel,
+}: {
+  label: string;
+  field: AbsCardMoneyField;
+  locale: ServicesDictionary["locale"];
+  restrictedLabel: string;
+  unavailableLabel: string;
+}) {
+  if (field.kind === "hidden") {
+    return (
+      <ScopeDetail
+        label={label}
+        value={
+          <span className="text-[14px] text-on-surface-variant">{restrictedLabel}</span>
+        }
+      />
+    );
+  }
+
+  if (field.kind === "unavailable") {
+    return (
+      <ScopeDetail
+        label={label}
+        value={
+          <span className="text-[14px] text-on-surface-variant">{unavailableLabel}</span>
+        }
+      />
+    );
+  }
+
+  return (
+    <ScopeDetail
+      label={label}
+      value={
+        <span dir="ltr" className="tabular-nums">
+          {formatSarAmount(locale, field.amount)}
+        </span>
+      }
+    />
+  );
+}
+
+function ScopeCardShell({
   title,
   subtitle,
   children,
 }: {
   title: string;
   subtitle: string;
-  children: string;
+  children: ReactNode;
 }) {
   return (
     <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
@@ -145,15 +448,17 @@ function ScopeCard({
         <h3 className="font-semibold text-primary">{title}</h3>
         <p className="mt-1 text-[13px] leading-[18px] text-on-surface-variant">{subtitle}</p>
       </div>
-      <div className="p-6 text-[14px] leading-[20px] text-on-surface-variant">{children}</div>
+      <div className="p-6">{children}</div>
     </section>
   );
 }
 
 function ScopeDetail({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div>
-      <dt className="mb-1 text-[12px] font-semibold uppercase tracking-wider text-on-surface-variant">{label}</dt>
+    <div className="min-w-0">
+      <dt className="mb-1 text-[12px] font-semibold uppercase tracking-wider text-on-surface-variant">
+        {label}
+      </dt>
       <dd className="font-medium text-on-surface">{value}</dd>
     </div>
   );

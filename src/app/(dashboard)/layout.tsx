@@ -31,21 +31,21 @@ export default async function DashboardLayout({
     <LocaleProvider locale={locale}>
       <GlobalPendingProvider>
         <div
-          className="dashboard-shell flex min-h-screen bg-surface"
+          className="dashboard-shell flex min-h-screen max-w-full bg-surface"
           dir={shellDirection}
         >
           <div className="dashboard-sidebar">
             <Sidebar isAdmin={isAdmin} shellDirection={shellDirection} />
           </div>
           <div
-            className={`dashboard-content flex-1 flex flex-col min-h-screen ${
+            className={`dashboard-content flex min-h-screen min-w-0 max-w-full flex-1 flex-col ${
               shellDirection === "rtl" ? "md:mr-[260px]" : "md:ml-[260px]"
             }`}
           >
             <div className="dashboard-topbar">
               <Topbar />
             </div>
-            <main className="dashboard-main flex-1 p-4 md:p-6 max-w-[1440px] mx-auto w-full">
+            <main className="dashboard-main mx-auto w-full min-w-0 max-w-[1440px] flex-1 p-4 md:p-6">
               {children}
             </main>
           </div>

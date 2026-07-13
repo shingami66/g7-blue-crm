@@ -69,16 +69,16 @@ export default function ServiceStatusControl({
     !!cancellationAction && cancellationReason.trim().length === 0;
 
   return (
-    <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden mt-6 mb-6">
-      <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
-        <div>
+    <div className="mt-6 mb-6 min-w-0 max-w-full overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
+      <div className="flex items-center justify-between border-b border-surface-variant bg-surface-bright px-6 py-4">
+        <div className="min-w-0">
           <h3 className="font-semibold text-primary">{dictionary.serviceStatusControl.title}</h3>
-          <p className="text-[13px] text-on-surface-variant mt-1">
+          <p className="mt-1 break-words text-[13px] text-on-surface-variant">
             {dictionary.serviceStatusControl.currentStatus}: {getServiceStatusLabel(dictionary.locale, currentStatus)}
           </p>
         </div>
       </div>
-      <div className="p-6 space-y-5">
+      <div className="min-w-0 space-y-5 p-6">
         {transitionState.isTerminal ? (
           <p className="text-[14px] text-on-surface-variant">
             {dictionary.serviceStatusControl.terminalMessage}
@@ -134,13 +134,16 @@ export default function ServiceStatusControl({
             )}
 
             {blockedActions.length > 0 && (
-              <div className="rounded-lg border border-outline-variant bg-surface p-4">
-                <h4 className="text-[13px] font-semibold text-on-surface mb-2">
+              <div className="min-w-0 rounded-lg border border-outline-variant bg-surface p-4">
+                <h4 className="mb-2 text-[13px] font-semibold text-on-surface">
                   {dictionary.serviceStatusControl.blockedActions}
                 </h4>
-                <ul className="space-y-2">
+                <ul className="min-w-0 space-y-2">
                   {blockedActions.map((action) => (
-                    <li key={action.status} className="text-[13px] text-on-surface-variant">
+                    <li
+                      key={action.status}
+                      className="min-w-0 break-words text-[13px] text-on-surface-variant"
+                    >
                       <span className="font-semibold text-on-surface">{action.label}:</span>{" "}
                       {action.blockedReason}
                     </li>

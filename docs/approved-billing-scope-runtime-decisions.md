@@ -9,11 +9,12 @@
 ## Current implementation status (source-grounded)
 
 - **READY (server):** create draft, discard draft, edit draft item, line-safety review, approve; invoice ceiling when active scope present; legacy quotation fallback when no active scope.
-- **PARTIAL / read UI:** Service Detail card + nested read-only detail route; no full management write CTAs.
+- **READY (read UI):** Service Detail **read-enriched** summary card (`ABS-MGMT-UI-READ-ENRICH-1`) + nested read-only detail route. Card surfaces effective display state, source quotation, ceiling, invoiced/remaining (when `invoices:read`), line safety, draft/history indicators, and detail navigation. Accountant masking of internal notes/reasons preserved.
+- **PARTIAL (write UI):** no Create/Edit/Discard/Review/Approve CTAs yet; next slice is `ABS-MGMT-UI-DRAFT-CREATE-1`.
 - **MISSING:** `voidApprovedBillingScope` / `supersedeApprovedBillingScope` **action functions** (Zod schemas + permission keys + DB columns exist; **not** working actions).
 - **Status model:** DB status enum is `draft | approved | voided` only. **`superseded` is not a status value** — use `superseded_at` / `superseded_by_scope_id` for display.
 - **Custom RPC exceptions (shipped):** draft discard RPC and draft item-edit RPC (narrow `service_role` helpers). General ABS business logic remains app-layer server actions.
-- **Management design:** locked in `docs/approved-billing-scope-management-design.md`. Active implement task: `ABS-MGMT-UI-READ-ENRICH-1`. Void/supersede blocked on **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`**.
+- **Management design:** locked in `docs/approved-billing-scope-management-design.md`. Active implement task: `ABS-MGMT-UI-DRAFT-CREATE-1`. Void/supersede blocked on **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`**.
 
 ## Locked V1 Decisions
 
@@ -157,7 +158,7 @@
 
 ## Deferred (current)
 - Production apply remains not authorized.
-- Full management **write** UI remains incomplete (ordered slices; active: `ABS-MGMT-UI-READ-ENRICH-1`).
+- Full management **write** UI remains incomplete (ordered slices; active: `ABS-MGMT-UI-DRAFT-CREATE-1`; read-enrich complete).
 - Void and supersede **actions** remain not implemented and **blocked** on `ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`.
 - Tax, ZATCA, FATOORA, QR, and XML behavior remain deferred.
-- **Historical:** live schema enforceability check, draft create/discard/edit, review/approve, invoice integration, and read-only card/detail are completed history — not current deferred work.
+- **Historical:** live schema enforceability check, draft create/discard/edit, review/approve, invoice integration, read-only card/detail, and **read-enrichment** are completed history — not current deferred work.

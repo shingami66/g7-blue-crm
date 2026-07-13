@@ -154,12 +154,29 @@ export interface ServicesDictionary {
     versionPrefix: string;
     otherScopeSingular: string;
     otherScopePlural: string;
+    draftRevisionExists: string;
+    viewDraft: string;
+    historyCountSingular: string;
+    historyCountPlural: string;
+    noApprovedQuotation: string;
+    legacyQuotationAuthority: string;
+    historicalNotAuthority: string;
+    invoiceTotalsRestricted: string;
+    invoiceTotalsUnavailable: string;
+    sourceQuotationUnavailable: string;
+    viewRelatedQuotations: string;
     labels: {
       version: string;
       lineSafety: string;
       acceptedGrandTotal: string;
+      sourceQuotation: string;
+      billingCeiling: string;
+      invoicedAmount: string;
+      remainingBillable: string;
     };
     statusLabels: Record<"draft" | "approved" | "voided", string>;
+    /** Display-only effective status labels (not DB enum values). */
+    effectiveStatusLabels: Record<"draft" | "active" | "superseded" | "voided", string>;
     lineSafetyLabels: Record<"pending_review" | "safe" | "unsafe", string>;
     detail: {
       title: string;
@@ -872,14 +889,38 @@ const servicesDictionaryEn: ServicesDictionary = {
     versionPrefix: "Version",
     otherScopeSingular: "1 other historical or draft scope",
     otherScopePlural: "{count} other historical or draft scopes",
+    draftRevisionExists: "Draft revision exists",
+    viewDraft: "View draft",
+    historyCountSingular: "1 historical scope on record",
+    historyCountPlural: "{count} historical scopes on record",
+    noApprovedQuotation:
+      "An Approved Billing Scope cannot be created yet. Approve a Service quotation first.",
+    legacyQuotationAuthority:
+      "No active Approved Billing Scope. Current billing uses the approved quotation ceiling.",
+    historicalNotAuthority:
+      "No active Approved Billing Scope. Historical scopes below are not the current billing authority.",
+    invoiceTotalsRestricted: "Invoice totals are restricted for your role.",
+    invoiceTotalsUnavailable: "Invoice totals are temporarily unavailable.",
+    sourceQuotationUnavailable: "Source quotation reference unavailable",
+    viewRelatedQuotations: "View related quotations",
     labels: {
       version: "Scope version",
       lineSafety: "Line safety",
       acceptedGrandTotal: "Accepted grand total",
+      sourceQuotation: "Source quotation",
+      billingCeiling: "Billing ceiling",
+      invoicedAmount: "Invoiced amount",
+      remainingBillable: "Remaining billable",
     },
     statusLabels: {
       draft: "Draft",
       approved: "Approved",
+      voided: "Voided",
+    },
+    effectiveStatusLabels: {
+      draft: "Draft",
+      active: "Active",
+      superseded: "Superseded",
       voided: "Voided",
     },
     lineSafetyLabels: {
@@ -1734,14 +1775,38 @@ const servicesDictionaryAr: ServicesDictionary = {
     versionPrefix: "الإصدار",
     otherScopeSingular: "نطاق تاريخي أو مسودة آخر",
     otherScopePlural: "{count} نطاقات تاريخية أو مسودات أخرى",
+    draftRevisionExists: "توجد مسودة مراجعة",
+    viewDraft: "عرض المسودة",
+    historyCountSingular: "نطاق تاريخي واحد مسجل",
+    historyCountPlural: "{count} نطاقات تاريخية مسجلة",
+    noApprovedQuotation:
+      "لا يمكن إنشاء نطاق فوترة معتمد بعد. اعتمد عرض سعر للخدمة أولاً.",
+    legacyQuotationAuthority:
+      "لا يوجد نطاق فوترة معتمد نشط. الفوترة الحالية تعتمد على سقف عرض السعر المعتمد.",
+    historicalNotAuthority:
+      "لا يوجد نطاق فوترة معتمد نشط. النطاقات التاريخية أدناه ليست سلطة الفوترة الحالية.",
+    invoiceTotalsRestricted: "إجماليات الفواتير مقيدة لدورك.",
+    invoiceTotalsUnavailable: "إجماليات الفواتير غير متاحة مؤقتًا.",
+    sourceQuotationUnavailable: "مرجع عرض السعر المصدر غير متاح",
+    viewRelatedQuotations: "عرض عروض الأسعار المرتبطة",
     labels: {
       version: "إصدار النطاق",
       lineSafety: "سلامة البنود",
       acceptedGrandTotal: "الإجمالي المقبول",
+      sourceQuotation: "عرض السعر المصدر",
+      billingCeiling: "سقف الفوترة",
+      invoicedAmount: "المبلغ المفوتر",
+      remainingBillable: "المتبقي للفوترة",
     },
     statusLabels: {
       draft: "مسودة",
       approved: "معتمد",
+      voided: "ملغى",
+    },
+    effectiveStatusLabels: {
+      draft: "مسودة",
+      active: "نشط",
+      superseded: "مُستبدل",
       voided: "ملغى",
     },
     lineSafetyLabels: {

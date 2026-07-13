@@ -5,3 +5,4 @@ export * from "./permissions";
 export * from "./mappers";
 export * from "./queries";
 export * from "./actions";
+export * from "./card-view-model";

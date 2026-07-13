@@ -76,14 +76,14 @@ export default function SupplierAllocationsPanel({
 
   return (
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden mt-6">
-      <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center gap-4">
-        <div className="flex items-center gap-4">
-          <h3 className="font-semibold text-primary">{panelDictionary.title}</h3>
+      <div className="flex min-w-0 flex-col gap-3 border-b border-surface-variant bg-surface-bright px-6 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+          <h3 className="min-w-0 font-semibold text-primary">{panelDictionary.title}</h3>
           {serviceId && (
-            <div className="flex items-center gap-2 text-[13px]">
+            <div className="flex min-w-0 flex-wrap items-center gap-2 text-[13px]">
               <Link
                 href={`/services/${serviceId}`}
-                className={`px-3 py-1 rounded-full transition-colors ${
+                className={`rounded-full px-3 py-1 transition-colors ${
                   !showDeleted
                     ? "bg-primary-container text-on-primary-container font-semibold"
                     : "text-on-surface-variant hover:bg-surface-variant"
@@ -93,7 +93,7 @@ export default function SupplierAllocationsPanel({
               </Link>
               <Link
                 href={`/services/${serviceId}?showDeleted=true`}
-                className={`px-3 py-1 rounded-full transition-colors ${
+                className={`rounded-full px-3 py-1 transition-colors ${
                   showDeleted
                     ? "bg-primary-container text-on-primary-container font-semibold"
                     : "text-on-surface-variant hover:bg-surface-variant"
@@ -107,7 +107,7 @@ export default function SupplierAllocationsPanel({
         {canCreate && serviceId && (
           <PendingLink
             href={`/services/${serviceId}/allocations/new`}
-            className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[13px] font-semibold transition-colors"
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-[13px] font-semibold text-on-primary transition-colors hover:bg-primary-container"
           >
             <Plus size={16} />
             {panelDictionary.actions.newAllocation}

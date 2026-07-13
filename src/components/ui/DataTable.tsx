@@ -84,7 +84,7 @@ export default function DataTable({
     : children;
 
   return (
-    <div className="overflow-x-auto w-full border border-surface-variant rounded-b-xl bg-surface-container-lowest">
+    <div className="w-full min-w-0 max-w-full overflow-x-auto border border-surface-variant rounded-b-xl bg-surface-container-lowest">
       <table className="w-full border-collapse" style={{ textAlign: "start" }}>
         <thead>
           <tr className="bg-surface-container-low border-b border-surface-variant">

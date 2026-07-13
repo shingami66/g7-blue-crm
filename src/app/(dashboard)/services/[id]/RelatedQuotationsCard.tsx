@@ -35,7 +35,10 @@ export default function RelatedQuotationsCard({
   disabledReason,
 }: RelatedQuotationsCardProps) {
   return (
-    <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
+    <section
+      id="related-quotations"
+      className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden"
+    >
       <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h3 className="font-semibold text-primary">{dictionary.relatedQuotations.title}</h3>
@@ -80,7 +83,7 @@ export default function RelatedQuotationsCard({
         ) : quotations.length === 0 ? (
           <EmptyMessage message={dictionary.states.noRelatedQuotations} />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="min-w-0 max-w-full overflow-x-auto">
             <table className="w-full min-w-[720px] table-fixed border-collapse text-start">
               <thead>
                 <tr className="border-b border-surface-variant text-[12px] uppercase text-on-surface-variant">

@@ -105,6 +105,7 @@ export default async function ServiceDetailPage({
   const canWriteSupplierBookings = await checkPermission("supplier_bookings:write");
   const canCancelSupplierBookings = await checkPermission("supplier_bookings:cancel");
   const canReadApprovedBillingScopes = await checkPermission("approvedBillingScopes:read");
+  const canReadInvoices = await checkPermission("invoices:read");
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
   const today = new Date().toISOString().split("T")[0];
@@ -129,11 +130,11 @@ export default async function ServiceDetailPage({
     : null;
 
   return (
-    <div className="flex flex-col gap-6 pb-12">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex items-start gap-4">
+    <div className="flex w-full min-w-0 max-w-full flex-col gap-6 pb-12">
+      <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
           <BackToServicesLink label={dictionary.detail.backToServices} />
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-3">
               <h2 dir="ltr" className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight">
                 {isolateBidiText(service.serviceNumber)}
@@ -300,7 +301,19 @@ export default async function ServiceDetailPage({
         disabledReason={quotationDisabledReason}
       />
       {canReadApprovedBillingScopes && (
-        <ApprovedBillingScopesCard serviceId={service.id} dictionary={dictionary} />
+        <ApprovedBillingScopesCard
+          serviceId={service.id}
+          dictionary={dictionary}
+          billingState={billingState}
+          canReadInvoices={canReadInvoices}
+          canReadQuotations={canReadQuotations}
+          quotationNumbersById={Object.fromEntries(
+            (relatedQuotations ?? []).map((quotation) => [
+              quotation.id,
+              quotation.quotationNumber,
+            ]),
+          )}
+        />
       )}
       {canReadSupplierAllocations && supplierAllocations && (
         <SupplierAllocationsPanel

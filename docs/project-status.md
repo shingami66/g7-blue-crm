@@ -40,29 +40,32 @@
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 2.1 Current Active Work
-- **Current active implementation task (exactly one):** `ABS-MGMT-UI-READ-ENRICH-1`
-- **Purpose:** Enrich the Service Detail Approved Billing Scope summary card (source quotation label, invoiced/remaining context, draft badge / history count as designed) using existing read queries — first bounded slice of the locked ABS management implementation order.
-- **Design complete:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → canonical record in `docs/approved-billing-scope-management-design.md` (`APPROVED_BILLING_SCOPE_MANAGEMENT_DESIGN_COMPLETE`; docs sync `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-DOCS-SYNC-1`).
+- **Current active implementation task (exactly one):** `ABS-MGMT-UI-DRAFT-CREATE-1`
+- **Purpose:** Add Service-scoped Create Draft CTA and error handling for Approved Billing Scope using the existing `createApprovedBillingScopeDraft` server action (write UI slice after accepted read-enrichment).
+- **Design complete:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
+- **ABS read-enrichment complete (source + accepted):** `ABS-MGMT-UI-READ-ENRICH-1` — Service Detail read-only ABS summary card enriched; controlled commit/push of implementation remain separate pending tasks.
 - **Locked ABS UI slice order (backend-ready first):**
-  1. `ABS-MGMT-UI-READ-ENRICH-1` **(active)**
-  2. `ABS-MGMT-UI-DRAFT-CREATE-1`
+  1. `ABS-MGMT-UI-READ-ENRICH-1` **complete** (source implemented; accepted)
+  2. `ABS-MGMT-UI-DRAFT-CREATE-1` **(active)**
   3. `ABS-MGMT-UI-DRAFT-EDIT-1`
   4. `ABS-MGMT-UI-REVIEW-APPROVE-1`
   5. `ABS-MGMT-VOID-ACTION-1` **blocked**
   6. `ABS-MGMT-SUPERSEDE-ACTION-1` **blocked**
   Optional later: `ABS-MGMT-HISTORY-LIST-1`.
-- **Source-truth (ABS):** UI is **read-oriented** (Service card + nested detail). Server actions READY: create draft, discard draft, edit draft item, line-safety review, approve. **Void and supersede actions are not implemented** (schemas/permission keys/columns only). Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship). Custom RPC exceptions: draft discard + draft item edit.
+- **Source-truth (ABS):** UI remains **read-oriented for write actions not yet shipped** (create/edit/discard/review/approve CTAs not in read-enrich slice). Server actions READY: create draft, discard draft, edit draft item, line-safety review, approve. **Void and supersede actions are not implemented** (schemas/permission keys/columns only). Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship). Custom RPC exceptions: draft discard + draft item edit.
 - **Durable flags:**
-  - **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`** — must resolve before slices 5–6 (void active-scope invoice fallback vs block; atomic supersede after partial invoicing; migration/RPC need).
-  - **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`** — preserved; not reopened; not complete.
-- **V1 critical-path order (locked):** Feature 005 closed → responsive audit → responsive implement (source complete; smoke pending) → ABS management design (complete) → **ABS management UI slices starting with read enrich (active)** → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates).
+  - **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`** — remains open; must resolve before slices 5–6.
+  - Responsive P0 manual smoke: **closed** — see Responsive core P0 below (**PASS by Mozfer manual browser evidence**). Flag `RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING` is **no longer active**.
+- **V1 critical-path order (locked):** Feature 005 closed → responsive audit/implement + Mozfer re-smoke **PASS** → ABS management design (complete) → ABS read-enrich (complete; commit/push pending) → **ABS draft-create UI (active)** → draft edit → review/approve → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates).
 - **Preserved locks:** Customer Profile → Service → Quotation → Invoice → Payment; Service as operational core; no standalone top-nav ABS module; active scope ceiling authoritative when present; legacy quotation fallback when no active scope; existing invoices never rewritten; DEV/DEMO wording; Reports Center is P1; professional Supplier Booking redesign outside V1 acceptance; supplier payments/invoices/costing/margin outside V1; no VAT/ZATCA/FATOORA claims; no production-readiness claim.
 
-### Responsive core P0 (source implemented; manual smoke pending)
+### Responsive core P0 (source implemented; Mozfer manual smoke PASS)
 - [x] Audit `RESPONSIVE-CORE-P0-AUDIT-1` completed (`RESPONSIVE_CORE_P0_AUDIT_COMPLETE`).
 - [x] Implementation `RESPONSIVE-CORE-P0-IMPLEMENT-1` source complete (`RESPONSIVE_CORE_P0_IMPLEMENTED`).
 - [x] Automated validation: responsive-core + affected module + visual-acceptance **107/107 PASS**; focused ESLint PASS; `tsc --noEmit` PASS.
-- [ ] **Durable flag — `RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`:** Team Lead deferred Mozfer browser/mobile smoke. Tracked as `RESPONSIVE-CORE-P0-MOZFER-SMOKE-1`. **Do not claim manual acceptance PASS.** Responsive acceptance is **not** formally closed until that smoke is later completed.
+- [x] **Body-overflow remediation** `RESPONSIVE-CORE-P0-SMOKE-FIX-1` source implemented (dashboard shell `min-w-0` containment; DataTable / Related Quotations local-scroll width constraints; Service Detail status Blocked Actions wrap; Supplier Allocations header stack/wrap; billing calculation row wrap). No global `overflow-x-hidden` concealment.
+- [x] **Manual browser re-smoke:** `RESPONSIVE-CORE-P0-MOZFER-RE-SMOKE-1` — **PASS by Mozfer manual browser evidence.** Agent did **not** perform browser smoke.
+- [x] Durable flag **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING` is closed** (no longer an unresolved active flag).
 - **Implemented scope (source contracts):**
   - quotation line-item mobile stacking (`grid-cols-1 md:grid-cols-12`)
   - quotation date/financial-field stacking (`grid-cols-1 md:grid-cols-2`)
@@ -71,6 +74,7 @@
   - related-quotation header wrapping
   - invoice search-width correction
   - accepted table-local scrolling preserved
+  - dashboard flex main column width containment and Service Detail body-overflow fix
 - **Exclusions:**
   - Supplier mobile detail / panel fallback deferred to full Supplier redesign (`R-P0-02` / `DEFERRED_SUPPLIER_REDESIGN`)
   - no PDF body changes
@@ -81,12 +85,21 @@
 
 ## 3. Completed Milestones
 
+### ABS-MGMT-UI-READ-ENRICH-1 (source implemented; docs sync)
+- [x] Service Detail Approved Billing Scope summary card enriched as **read-only** management UI (`ABS-MGMT-UI-READ-ENRICH-1`).
+- [x] Displayed (when data/permissions allow): effective display state (active / draft / voided / superseded-derived — **not** a DB `superseded` status), scope version, source quotation reference, billing ceiling, invoiced amount, remaining billable, line safety, draft-revision and history/other-scope indicators, read-only nested detail navigation.
+- [x] Invoice money fields shown only when `invoices:read` permits; otherwise restricted/unavailable (not fake zeros).
+- [x] Accountant masking of internal notes/reasons preserved (card does not surface masked internal reason fields).
+- [x] Uses existing server billing-state / ABS list contracts; no client recomputation of invoice authority; no write CTAs (create/edit/discard/review/approve/void/supersede).
+- [x] Implementation remains unstaged/uncommitted at docs-sync time; controlled commit and push are separate tasks.
+- [x] Docs sync: `ABS-MGMT-UI-READ-ENRICH-DOCS-SYNC-1`. Next active implementation task: `ABS-MGMT-UI-DRAFT-CREATE-1`.
+
 ### Approved Billing Scope Management Design (docs lock)
 - [x] Design task `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` completed for product/implementation slicing (`APPROVED_BILLING_SCOPE_MANAGEMENT_DESIGN_COMPLETE`).
 - [x] Canonical design document: `docs/approved-billing-scope-management-design.md` (capability matrix READY/PARTIAL/MISSING/DEFERRED; Service-scoped entry; card state matrix; status model; permissions; stable errors; financial invariants; bilingual/responsive requirements; slice order).
-- [x] Source-truth corrections locked: void/supersede **not** implemented as actions; schemas ≠ working actions; `superseded` not a DB status; UI read-oriented; discard + item-edit RPC exceptions recorded.
+- [x] Source-truth corrections locked: void/supersede **not** implemented as actions; schemas ≠ working actions; `superseded` not a DB status; UI read-oriented for non-shipped write CTAs; discard + item-edit RPC exceptions recorded.
 - [x] Void/supersede slices remain **blocked** behind durable flag **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`** (behavior not solved in design/docs sync).
-- [x] Next implementation task locked (exactly one): `ABS-MGMT-UI-READ-ENRICH-1`.
+- [x] Read-enrich slice later completed (see `ABS-MGMT-UI-READ-ENRICH-1` milestone above).
 - [x] Docs-only sync: `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-DOCS-SYNC-1` (no implementation, SQL, stage, commit, or push in that task).
 
 ### Feature 005 Runtime Arabic/English UX (formally closed)
@@ -219,7 +232,7 @@
   - snapshot excludes `عمال` and `ضيافة`
 - [x] Temporary item-decision dev harness was removed after smoke.
 - [x] Full-scope snapshot WARN from commit `c66975d` is now closed.
-- [x] No full user-facing Approved Billing Scope **management** UI existed at full-scope smoke close (read-only card/detail only). Management design is now locked; next implementation gap is the ordered UI slices starting with `ABS-MGMT-UI-READ-ENRICH-1`.
+- [x] No full user-facing Approved Billing Scope **management** UI existed at full-scope smoke close (read-only card/detail only). **Later progress:** management design locked; `ABS-MGMT-UI-READ-ENRICH-1` completed; next active write slice is `ABS-MGMT-UI-DRAFT-CREATE-1`.
 
 ### Approved Billing Scope Foundation
 - [x] Migration draft `supabase/migrations/20260708090000_approved_billing_scope_foundation.sql` was committed and pushed as `8d2aefa feat(billing): draft approved billing scope foundation`.

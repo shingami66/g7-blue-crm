@@ -254,6 +254,9 @@ test("7. ABS headings, statuses, line-safety, and item-decision labels localize"
   assert.equal(ar.approvedBillingScopes.statusLabels.draft, "مسودة");
   assert.equal(ar.approvedBillingScopes.statusLabels.approved, "معتمد");
   assert.equal(ar.approvedBillingScopes.statusLabels.voided, "ملغى");
+  assert.equal(ar.approvedBillingScopes.effectiveStatusLabels.active, "نشط");
+  assert.equal(ar.approvedBillingScopes.effectiveStatusLabels.superseded, "مُستبدل");
+  assert.equal(en.approvedBillingScopes.effectiveStatusLabels.superseded, "Superseded");
   assert.equal(ar.approvedBillingScopes.lineSafetyLabels.pending_review, "بانتظار المراجعة");
   assert.equal(ar.approvedBillingScopes.lineSafetyLabels.safe, "آمن");
   assert.equal(ar.approvedBillingScopes.detail.itemDecisionLabels.accepted, "مقبول");
@@ -264,7 +267,14 @@ test("7. ABS headings, statuses, line-safety, and item-decision labels localize"
     "يوفره العميل",
   );
   assert.equal(ar.approvedBillingScopes.labels.acceptedGrandTotal, "الإجمالي المقبول");
+  assert.equal(ar.approvedBillingScopes.labels.billingCeiling, "سقف الفوترة");
+  assert.equal(ar.approvedBillingScopes.labels.invoicedAmount, "المبلغ المفوتر");
+  assert.equal(ar.approvedBillingScopes.labels.remainingBillable, "المتبقي للفوترة");
+  assert.equal(ar.approvedBillingScopes.labels.sourceQuotation, "عرض السعر المصدر");
+  assert.equal(en.approvedBillingScopes.draftRevisionExists, "Draft revision exists");
+  assert.equal(ar.approvedBillingScopes.draftRevisionExists, "توجد مسودة مراجعة");
   assert.equal(ar.approvedBillingScopes.detail.sectionInvoices, "الفواتير المرتبطة");
+  assert.deepEqual(listNestedKeys(en.approvedBillingScopes).sort(), listNestedKeys(ar.approvedBillingScopes).sort());
 });
 
 test("8. ABS internal status and decision codes remain unchanged", () => {
@@ -274,6 +284,10 @@ test("8. ABS internal status and decision codes remain unchanged", () => {
     "draft",
     "voided",
   ]);
+  assert.deepEqual(
+    Object.keys(en.approvedBillingScopes.effectiveStatusLabels).sort(),
+    ["active", "draft", "superseded", "voided"],
+  );
   assert.deepEqual(Object.keys(en.approvedBillingScopes.lineSafetyLabels).sort(), [
     "pending_review",
     "safe",
@@ -284,8 +298,16 @@ test("8. ABS internal status and decision codes remain unchanged", () => {
     ["accepted", "adjusted", "customer_supplied", "excluded"],
   );
   const card = read(ABS_CARD);
-  assert.match(card, /statusLabels\[currentScope\.status\]/);
-  assert.match(card, /lineSafetyLabels\[currentScope\.lineSafetyStatus\]/);
+  assert.match(card, /effectiveStatusLabels/);
+  assert.match(card, /lineSafetyLabels\[primary\.lineSafetyStatus\]/);
+  // Read-only enrich: no write CTAs
+  assert.doesNotMatch(card, /createApprovedBillingScopeDraft|Create Draft|voidApproved|supersedeApproved/);
+  assert.doesNotMatch(card, /approveApprovedBillingScope|discardApprovedBillingScopeDraft/);
+  assert.match(card, /canReadInvoices/);
+  assert.match(card, /billingState/);
+  assert.match(card, /dir="ltr"/);
+  assert.match(card, /formatSarAmount/);
+  assert.match(card, /legacyQuotationAuthority|draftRevisionExists/);
 });
 
 test("9-11. ABS permissions and masking: accountant read-only; viewer/sales blocked", () => {
