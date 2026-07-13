@@ -39,11 +39,36 @@
 - **Data Access:** Supabase Admin client runs server-side only; all write Server Actions enforce `requirePermission`; no raw Supabase errors exposed to UI.
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
-## 2.1 Current Active Work (docs sync)
-- **Feature 005 status:** Formally **closed** for authenticated bilingual CRM UI after pushed commit `aaf6563 fix(i18n): complete bilingual visual acceptance`.
-- **Git alignment (post-push):** local `main` and `origin/main` are both `aaf65633654a404acf67c82f999536c4343150db`; ahead/behind **0/0**; working tree was clean at push verification.
-- **Closeout docs:** `G7-AR-UX-FEATURE-005-CLOSEOUT-DOCS-SYNC` content; controlled docs commit `G7-AR-UX-FEATURE-005-CLOSEOUT-DOCS-COMMIT` (no push in that task).
-- **Current active implementation task:** none selected — Team Lead prioritization required.
+## 2.1 Current Active Work
+- **Current active implementation task (exactly one):** `RESPONSIVE-CORE-P0-AUDIT-1`
+- **Purpose:** Produce an evidence-backed audit of page-level horizontal overflow and narrow-width usability across the agreed core CRM paths (audit only; no UI/CSS/application fixes in the audit task).
+- **Dependency state:**
+  - Feature 005 authenticated bilingual UX: **formally closed** (acceptance `aaf6563`; closeout docs `e731d4d` on `main` / `origin/main`).
+  - Responsive audit entry gate: **satisfied** (i18n closed; V1 critical path places responsive core audit immediately after i18n).
+  - Responsive **implementation** remains blocked until this audit identifies exact source-proven defects.
+- **V1 critical-path order (locked):** `RESPONSIVE-CORE-P0-AUDIT-1` → `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → financial lifecycle design/audit (then bounded financial implementation only after those gates). Do not promote ABS management, financial lifecycle, Reports Center, or professional Supplier Booking redesign as active now.
+- **Audit surface (future task must inspect source-proven narrow-width risks on):**
+  - authenticated shell/navigation
+  - Dashboard
+  - Customers
+  - Services and Service Detail
+  - Quotations
+  - Invoices
+  - Payments
+  - Settings
+  - Admin Users
+  - core create/edit forms
+  - overlays/modals/drawers where they block core paths
+- **Audit classification (must distinguish):**
+  - true page-level horizontal overflow
+  - intentional table-local horizontal scrolling
+  - long stored data (names, IDs, notes) that wrap or scroll without page overflow
+  - PDF/generated-document exclusions (out of responsive UI audit scope for body localization claims)
+  - deferred supplier full-page redesign (outside V1 acceptance; not this audit’s redesign scope)
+- **Audit execution boundary:** No UI edits, CSS fixes, application code changes, mobile redesign, staging, commit, or push inside the audit itself. Browser/manual smoke remains user-only when later authorized.
+- **Following critical-path task (not active yet):** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1`
+- **Preserved locks:** Customer Profile → Service → Quotation → Invoice → Payment; Service as operational core; DEV/DEMO wording; Reports Center is P1; professional Supplier Booking redesign outside V1 acceptance; supplier payments/invoices/costing/margin outside V1; no VAT/ZATCA/FATOORA claims; no production-readiness claim.
+- **Task lock docs:** `G7-ROADMAP-NEXT-TASK-LOCK` (docs-only; no stage/commit in this task).
 
 ## 3. Completed Milestones
 
