@@ -40,10 +40,23 @@
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 2.1 Current Active Work
-- **Current active implementation task (exactly one):** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1`
-- **Purpose:** Design Approved Billing Scope management (state, permissions, audit, void/supersede) for the V1 critical path after responsive core work.
-- **V1 critical-path order (locked):** Feature 005 closed → responsive audit → responsive implement (source complete) → **ABS management design (active)** → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates).
-- **Preserved locks:** Customer Profile → Service → Quotation → Invoice → Payment; Service as operational core; DEV/DEMO wording; Reports Center is P1; professional Supplier Booking redesign outside V1 acceptance; supplier payments/invoices/costing/margin outside V1; no VAT/ZATCA/FATOORA claims; no production-readiness claim.
+- **Current active implementation task (exactly one):** `ABS-MGMT-UI-READ-ENRICH-1`
+- **Purpose:** Enrich the Service Detail Approved Billing Scope summary card (source quotation label, invoiced/remaining context, draft badge / history count as designed) using existing read queries — first bounded slice of the locked ABS management implementation order.
+- **Design complete:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → canonical record in `docs/approved-billing-scope-management-design.md` (`APPROVED_BILLING_SCOPE_MANAGEMENT_DESIGN_COMPLETE`; docs sync `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-DOCS-SYNC-1`).
+- **Locked ABS UI slice order (backend-ready first):**
+  1. `ABS-MGMT-UI-READ-ENRICH-1` **(active)**
+  2. `ABS-MGMT-UI-DRAFT-CREATE-1`
+  3. `ABS-MGMT-UI-DRAFT-EDIT-1`
+  4. `ABS-MGMT-UI-REVIEW-APPROVE-1`
+  5. `ABS-MGMT-VOID-ACTION-1` **blocked**
+  6. `ABS-MGMT-SUPERSEDE-ACTION-1` **blocked**
+  Optional later: `ABS-MGMT-HISTORY-LIST-1`.
+- **Source-truth (ABS):** UI is **read-oriented** (Service card + nested detail). Server actions READY: create draft, discard draft, edit draft item, line-safety review, approve. **Void and supersede actions are not implemented** (schemas/permission keys/columns only). Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship). Custom RPC exceptions: draft discard + draft item edit.
+- **Durable flags:**
+  - **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`** — must resolve before slices 5–6 (void active-scope invoice fallback vs block; atomic supersede after partial invoicing; migration/RPC need).
+  - **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`** — preserved; not reopened; not complete.
+- **V1 critical-path order (locked):** Feature 005 closed → responsive audit → responsive implement (source complete; smoke pending) → ABS management design (complete) → **ABS management UI slices starting with read enrich (active)** → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates).
+- **Preserved locks:** Customer Profile → Service → Quotation → Invoice → Payment; Service as operational core; no standalone top-nav ABS module; active scope ceiling authoritative when present; legacy quotation fallback when no active scope; existing invoices never rewritten; DEV/DEMO wording; Reports Center is P1; professional Supplier Booking redesign outside V1 acceptance; supplier payments/invoices/costing/margin outside V1; no VAT/ZATCA/FATOORA claims; no production-readiness claim.
 
 ### Responsive core P0 (source implemented; manual smoke pending)
 - [x] Audit `RESPONSIVE-CORE-P0-AUDIT-1` completed (`RESPONSIVE_CORE_P0_AUDIT_COMPLETE`).
@@ -67,6 +80,14 @@
 
 
 ## 3. Completed Milestones
+
+### Approved Billing Scope Management Design (docs lock)
+- [x] Design task `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` completed for product/implementation slicing (`APPROVED_BILLING_SCOPE_MANAGEMENT_DESIGN_COMPLETE`).
+- [x] Canonical design document: `docs/approved-billing-scope-management-design.md` (capability matrix READY/PARTIAL/MISSING/DEFERRED; Service-scoped entry; card state matrix; status model; permissions; stable errors; financial invariants; bilingual/responsive requirements; slice order).
+- [x] Source-truth corrections locked: void/supersede **not** implemented as actions; schemas ≠ working actions; `superseded` not a DB status; UI read-oriented; discard + item-edit RPC exceptions recorded.
+- [x] Void/supersede slices remain **blocked** behind durable flag **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`** (behavior not solved in design/docs sync).
+- [x] Next implementation task locked (exactly one): `ABS-MGMT-UI-READ-ENRICH-1`.
+- [x] Docs-only sync: `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-DOCS-SYNC-1` (no implementation, SQL, stage, commit, or push in that task).
 
 ### Feature 005 Runtime Arabic/English UX (formally closed)
 - [x] Authenticated Arabic/English UX implemented for shell + modules: Dashboard, Customers, Services (core + operational subflows), Quotations (non-PDF), Invoices (non-PDF), Payments, Suppliers, **Settings**, and **Admin Users**.
@@ -198,7 +219,7 @@
   - snapshot excludes `عمال` and `ضيافة`
 - [x] Temporary item-decision dev harness was removed after smoke.
 - [x] Full-scope snapshot WARN from commit `c66975d` is now closed.
-- [x] No real user-facing Approved Billing Scope management UI exists yet; that remains the next product implementation gap.
+- [x] No full user-facing Approved Billing Scope **management** UI existed at full-scope smoke close (read-only card/detail only). Management design is now locked; next implementation gap is the ordered UI slices starting with `ABS-MGMT-UI-READ-ENRICH-1`.
 
 ### Approved Billing Scope Foundation
 - [x] Migration draft `supabase/migrations/20260708090000_approved_billing_scope_foundation.sql` was committed and pushed as `8d2aefa feat(billing): draft approved billing scope foundation`.
@@ -232,7 +253,7 @@
   - Successfully invoked `discardApprovedBillingScopeDraft` server action.
   - Verified atomic database deletion of both the scope header and its items.
 - [x] Temporary DEV harness removed, restoring clean working tree.
-- [x] Runtime actions (`reviewApprovedBillingScopeLineSafety`, `approveApprovedBillingScope`, `voidApprovedBillingScope`, `supersedeApprovedBillingScope`), UI screens, invoice integration, and production DB apply remain deferred.
+- [x] **Historical note at draft-discard close:** remaining work at that time included review/approve/void/supersede actions, UI screens, invoice integration, and production apply. **Current truth (later slices + management design):** `reviewApprovedBillingScopeLineSafety` and `approveApprovedBillingScope` server actions exist; invoice integration and read-only Service card/detail UI exist; **`voidApprovedBillingScope` and `supersedeApprovedBillingScope` action functions do not exist** (schemas/permissions/columns only); full management write UI incomplete; production DB apply remains unauthorized. See `docs/approved-billing-scope-management-design.md`.
 
 ### Approved Billing Scope Draft Item Edit
 - [x] Migration draft `supabase/migrations/20260708120000_approved_billing_scope_item_edit_function.sql` was committed and pushed as `3af430a feat(billing): add atomic draft item edit`.
@@ -263,7 +284,7 @@
 ### Approved Billing Scope Migration Draft Placeholder
 - [x] Backlog check for `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` completed.
 - [x] Result: reclassified as completed/no-op. No concrete database migration is required after the live schema audit.
-- [x] Verified that draft creation is app-layer, draft discard RPC exists, and edit draft item RPC exists. Remaining runtime actions (line safety review, approve, void) operate on the existing database schema via app-layer writes under `requirePermission`. Supersede remains deferred pending transactional RPC design, and invoice integration is a separate design task.
+- [x] **Historical note:** verified draft creation is app-layer; draft discard RPC and draft item-edit RPC exist as narrow service_role exceptions. **Current truth:** line-safety review and approve are implemented as app-layer server actions; invoice integration shipped separately; **void and supersede actions remain not implemented**; supersede still needs explicit transactional design after **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`**; full management UI incomplete. See `docs/approved-billing-scope-management-design.md`.
 
 ### Approved Billing Scope RBAC/RLS Review
 - [x] Read-only security review for Approved Billing Scope (`APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`) completed.

@@ -3,19 +3,28 @@
 ## Review Provenance
 - Source review: `APPROVED-BILLING-SCOPE-RUNTIME-RPC-DESIGN-REVIEW-1`
 - Review result: `PASS WITH REQUIRED CHANGES`
-- This document locks the required V1 runtime, product, and security decisions before implementation starts.
-- Docs/spec only. No runtime implementation has started.
+- This document locks the required V1 runtime, product, and security **policy** decisions.
+- **Historical note:** Originally written before runtime implementation. **Current implementation status** is recorded below and in `docs/approved-billing-scope-management-design.md` — do not treat “no runtime has started” as current truth.
+
+## Current implementation status (source-grounded)
+
+- **READY (server):** create draft, discard draft, edit draft item, line-safety review, approve; invoice ceiling when active scope present; legacy quotation fallback when no active scope.
+- **PARTIAL / read UI:** Service Detail card + nested read-only detail route; no full management write CTAs.
+- **MISSING:** `voidApprovedBillingScope` / `supersedeApprovedBillingScope` **action functions** (Zod schemas + permission keys + DB columns exist; **not** working actions).
+- **Status model:** DB status enum is `draft | approved | voided` only. **`superseded` is not a status value** — use `superseded_at` / `superseded_by_scope_id` for display.
+- **Custom RPC exceptions (shipped):** draft discard RPC and draft item-edit RPC (narrow `service_role` helpers). General ABS business logic remains app-layer server actions.
+- **Management design:** locked in `docs/approved-billing-scope-management-design.md`. Active implement task: `ABS-MGMT-UI-READ-ENRICH-1`. Void/supersede blocked on **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`**.
 
 ## Locked V1 Decisions
 
 ### Runtime Architecture
-- V1 uses app-layer server actions and server-only service functions as the only supported write path.
+- V1 uses app-layer server actions and server-only service functions as the primary supported write path.
 - Use the service-role Supabase client only from server-only code after app-layer permission checks.
 - Every write action must pass `requirePermission(...)` before any service-role write.
 - DB triggers and constraints remain the invariant backstop.
-- No custom Postgres RPC is approved for V1.
-- Add Postgres RPC later only if concurrency or multi-client integration creates a real need.
-- Narrow safety exception: draft discard may use a service_role-only transactional SQL function if needed to guarantee atomic deletion of one draft scope plus its child items.
+- **Original lock wording:** no general custom Postgres RPC program for V1 business workflows.
+- **Current exceptions (implemented):** (1) draft discard transactional function; (2) draft item-edit transactional function — both narrow, `service_role`-only, not a general RPC direction.
+- Add further Postgres RPC only if concurrency or multi-step atomicity creates a real need (expected candidates: supersede once financial behavior is locked).
 
 ### Permissions
 - Admin: full workflow.
@@ -72,23 +81,14 @@
 - The DB partial unique index remains the final backstop.
 
 ### Void and Draft Discard
-- Void applies to approved scopes only in V1.
-- Void requires Admin or Manager.
-- Void requires a non-empty reason.
-- Server sets `voided_at`, `voided_by`, and `void_reason`.
-- Voided remains terminal.
-- Draft cleanup is a separate discard/delete action.
+- **Policy (locked intent):** Void applies to approved scopes only in V1; Admin/Manager; non-empty reason; server sets `voided_at`, `voided_by`, and `void_reason`; voided remains terminal.
+- **Implementation status:** **void action not implemented.** Do not claim void is available in the CRM UI or as a server action. Financial behavior after voiding an **active** scope is **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`** (may expose legacy quotation fallback; expected future-invoice behavior not locked).
+- Draft cleanup is a separate discard action (**implemented** via `discardApprovedBillingScopeDraft` + discard RPC).
 - Do not overload void for draft cleanup.
-- If app-layer multi-step deletes cannot guarantee atomicity, a single-purpose transactional discard function is allowed for draft cleanup only.
 
 ### Supersede
-- Supersede is explicit only.
-- Same service only.
-- A revised approved quotation source is allowed if it belongs to the same service.
-- Supersede should be framed as approve-new-scope-with-supersede-target inside one transaction.
-- The transaction must mark the old active scope superseded and approve the new scope.
-- Exactly one active approved scope per service remains.
-- Admin and Manager only.
+- **Policy (locked intent):** Supersede is explicit only; same service only; framed as approve-new-scope-with-supersede-target inside one atomic transaction; mark old active scope via `superseded_at` / relationship (not a `status = superseded` enum); exactly one active approved scope per service; Admin/Manager only.
+- **Implementation status:** **supersede action not implemented.** Ordinary approve must **not** silently supersede (`scope_active_conflict`). Partial-invoicing supersede behavior is part of **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`**.
 
 ### Invoice Boundary
 - No invoice runtime changes in this phase.
@@ -155,9 +155,9 @@
   - Verified atomic database deletion of both the scope header and its items.
 - The temporary smoke harness was removed after verification.
 
-## Deferred
+## Deferred (current)
 - Production apply remains not authorized.
-- Runtime implementation remains deferred.
-- Invoice integration remains deferred.
+- Full management **write** UI remains incomplete (ordered slices; active: `ABS-MGMT-UI-READ-ENRICH-1`).
+- Void and supersede **actions** remain not implemented and **blocked** on `ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`.
 - Tax, ZATCA, FATOORA, QR, and XML behavior remain deferred.
-- The next safe follow-up remains `APPROVED-BILLING-SCOPE-LIVE-SCHEMA-ENFORCEABILITY-CHECK-1`.
+- **Historical:** live schema enforceability check, draft create/discard/edit, review/approve, invoice integration, and read-only card/detail are completed history — not current deferred work.

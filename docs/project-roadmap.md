@@ -69,20 +69,30 @@ Cursor audit gates:
 
 Current active task:
 - **Feature 005 closed** (authenticated bilingual CRM UI; acceptance `aaf6563`, closeout docs `e731d4d`).
-- **Current active implementation task (exactly one):** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1`
-  - **Purpose:** Design Approved Billing Scope management (state, permissions, audit, void/supersede) on the V1 critical path.
-  - **Mode:** design only — no ABS implementation, SQL, or UI coding until a separate implementation gate.
+- **ABS management design complete:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md` (`APPROVED_BILLING_SCOPE_MANAGEMENT_DESIGN_COMPLETE`).
+- **Current active implementation task (exactly one):** `ABS-MGMT-UI-READ-ENRICH-1`
+  - **Purpose:** Enrich Service Detail ABS summary card using existing read path (source QT label, invoiced/remaining context, draft/history indicators). Service-scoped only; no standalone ABS module.
+  - **Mode:** bounded UI implementation after separate implement gate; uses existing backend reads — no void/supersede, no SQL apply in this slice.
+- **Locked ABS management order:**
+  1. `ABS-MGMT-UI-READ-ENRICH-1` **(active)**
+  2. `ABS-MGMT-UI-DRAFT-CREATE-1`
+  3. `ABS-MGMT-UI-DRAFT-EDIT-1`
+  4. `ABS-MGMT-UI-REVIEW-APPROVE-1`
+  5. `ABS-MGMT-VOID-ACTION-1` **blocked** (`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`)
+  6. `ABS-MGMT-SUPERSEDE-ACTION-1` **blocked** (same flag)
+  - Optional later: `ABS-MGMT-HISTORY-LIST-1`
+- **ABS source-truth:** void/supersede **not** implemented as actions; UI read-oriented today; status enum `draft|approved|voided` only (`superseded` is timestamp, not status); discard + item-edit RPC exceptions exist.
 - **Responsive core P0 (not active; source complete, smoke deferred):**
   - Audit + implement source: `RESPONSIVE_CORE_P0_IMPLEMENTED` (quotation/service stacking, logical filter icons, related-quotations header, invoice search width; table-local scroll preserved).
   - Automated validation: **107/107** PASS; ESLint PASS; `tsc --noEmit` PASS.
-  - Durable flag: **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`** — Team Lead deferred Mozfer smoke (`RESPONSIVE-CORE-P0-MOZFER-SMOKE-1`). Manual acceptance is **not** PASS; responsive acceptance is **not** formally closed until smoke completes.
+  - Durable flag: **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`** — Team Lead deferred Mozfer smoke (`RESPONSIVE-CORE-P0-MOZFER-SMOKE-1`). Manual acceptance is **not** PASS; responsive acceptance is **not** formally closed until smoke completes. **Do not reopen or mark complete.**
   - Supplier mobile detail remains deferred to full Supplier redesign (no temporary panel/drawer).
-- **Locked V1 critical-path order:** responsive audit → responsive implement (source done) → **ABS management design (active)** → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates).
+- **Locked V1 critical-path order:** responsive audit → responsive implement (source done; smoke pending) → ABS management design (complete) → **ABS management UI (read enrich active)** → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates).
 - Residual open (outside Feature 005 formal close): PDF/document localization and bilingual documents (deferred).
 - Residual open: final Mozfer commercial Arabic terminology approval for UAT (separate from T032 visual smoke PASS).
 - Professional Supplier Booking redesign remains outside V1 acceptance scope and is **not** active.
 - Reports Center remains P1 and is **not** active on the V1 critical path.
-- Do not promote financial implementation, Supplier Booking redesign, or Reports Center as the active task.
+- Do not promote financial implementation, Supplier Booking redesign, void/supersede, or Reports Center as the active task.
 - Related backlog note: `RESPONSIVE-LIST-PAGE-HORIZONTAL-OVERFLOW-1` remains historical P1 backlog wording.
 
 Completed:
@@ -106,8 +116,10 @@ Completed:
 - `PUBLIC-HEALTH-ROUTE-HARDEN-1` (PASS WITH WARN: audited public health and webhook routes, verified response sanitization and next 16 proxy convention).
 
 Backlog / later priority:
+- `ABS-MGMT-UI-DRAFT-CREATE-1` → `ABS-MGMT-UI-DRAFT-EDIT-1` → `ABS-MGMT-UI-REVIEW-APPROVE-1` (after active read-enrich; existing backend)
+- `ABS-MGMT-VOID-ACTION-1` / `ABS-MGMT-SUPERSEDE-ACTION-1` (**blocked** until `ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING` resolved — not implementation-ready)
+- `ABS-MGMT-HISTORY-LIST-1` (optional later)
 - `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` (Optional follow-up to perform server-side direct adversarial smoke testing bypassing UI validation).
-- Approved Billing Scope real management UI planning/implementation
 - `SUPPLIER-BOOKINGS-LOADING-UX-VERIFY` (Follow-up validation of supplier booking creation/cancellation pending and transition states under throttled networks).
 - Supplier Bookings Domain design/planning
 - Supplier Bookings server actions
@@ -124,11 +136,12 @@ Backlog / later priority:
 - INVOICE-VOID-STATUS-MIGRATION-1
 - INVOICE-SNAPSHOT-FREEZE-POINT-1
 - SUPPLIER-BLACKLIST-IMPACT-CHECK-1
-- `RESPONSIVE-LIST-PAGE-HORIZONTAL-OVERFLOW-1` (historical P1 backlog label for list-page overflow; **not** the current active task — superseded as entry by locked `RESPONSIVE-CORE-P0-AUDIT-1`)
-- `RESPONSIVE-CORE-P0-IMPLEMENT-1` (blocked until `RESPONSIVE-CORE-P0-AUDIT-1` completes)
-- `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` (next on V1 critical path after responsive audit; **not** active yet)
+- `RESPONSIVE-LIST-PAGE-HORIZONTAL-OVERFLOW-1` (historical P1 backlog label for list-page overflow; **not** the current active task)
+- `RESPONSIVE-CORE-P0-MOZFER-SMOKE-1` (deferred manual smoke; flag `RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`)
+- `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` (**complete** — design locked in `docs/approved-billing-scope-management-design.md`)
 
-Note: This is a controlled design sequence, not immediate implementation.
+Completed ABS design gate (docs):
+- `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` / docs sync — management design recorded; next implement task is `ABS-MGMT-UI-READ-ENRICH-1` only.
 
 ### 🚧 Locked Next CRM Priorities
 0. `SEC-AUTHZ-APP-USER-GATE-1`
