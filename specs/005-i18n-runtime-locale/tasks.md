@@ -4,9 +4,9 @@
 **Mode for this artifact**: Planning only — no task below is authorized by creating this file.
 **Source artifacts**: [spec.md](./spec.md), [plan.md](./plan.md), [research.md](./research.md), [data-model.md](./data-model.md), [locale contract](./contracts/locale-preference.md), [fallback contract](./contracts/dictionary-fallback.md), and [quickstart.md](./quickstart.md).
 
-## Progress Snapshot (acceptance commit `G7-AR-UX-P5-FINAL-ACCEPTANCE-COMMIT`)
+## Progress Snapshot (formal closeout after `aaf6563`)
 
-> Evidence-backed acceptance status after P5 visual remediation and Mozfer-provided browser smoke. **T032 is PASS (user evidence).** Not a production-readiness claim. PDF bodies and Clerk-hosted widgets remain excluded.
+> Feature 005 authenticated bilingual UI is **formally closed**. **T032 is PASS** (user evidence). Final automated evidence **243/243**. Not a production-readiness claim. PDF bodies and Clerk-hosted widgets remain excluded.
 
 | Area | Status |
 |---|---|
@@ -14,15 +14,16 @@
 | T010–T020 locale read/write, shell, fallback | Implemented |
 | T021–T026 core modules (dashboard→payments) | Implemented |
 | P3 extensions: Suppliers, Settings, Admin Users, Customers Excel chrome, `/unauthorized`, root public locale alignment | Implemented (intentional extensions beyond original C01 Settings/Admin exclusion) |
-| P5 bilingual visual remediation | PASS — date/time/range/bidi, list alignment, Settings copy, global bolt lifecycle, Supplier panel title wrap |
+| P5 bilingual visual remediation | PASS |
 | T027–T029 reconciliation / independent review | Independent review PASS (`G7_AR_UX_P4_I18N_INDEPENDENT_REVIEW_PASS`, no P0) |
 | T030 static/focused tests | Automated i18n + export **243/243**; visual-acceptance + Settings included; ESLint + `tsc --noEmit` + `git diff --check` PASS |
 | T031 smoke checklist prep | Folded into Mozfer T032 / P5 re-smoke sequence |
 | **T032 Mozfer browser smoke** | **PASS** (`G7_AR_UX_P5_MOZFER_FOCUSED_RE_SMOKE_3_PASS`; English LTR regression PASS; global bolt PASS) |
-| T033 root public locale alignment (P1 from independent review) | Done (`G7_AR_UX_P4_ROOT_PUBLIC_LOCALE_ALIGNED`) |
-| T035–T036 acceptance + canonical docs | Updated for P5 acceptance; formal commercial-language UAT remains separate |
-| Controlled commit | `G7-AR-UX-P5-FINAL-ACCEPTANCE-COMMIT` |
-| Push | Next: `G7-AR-UX-P5-FINAL-ACCEPTANCE-PUSH` only |
+| T033 root public locale alignment | Done (`G7_AR_UX_P4_ROOT_PUBLIC_LOCALE_ALIGNED`) |
+| Controlled commit | `aaf6563 fix(i18n): complete bilingual visual acceptance` |
+| Controlled push | Done — `main` / `origin/main` = `aaf6563` (0/0) |
+| Formal closeout docs | `G7-AR-UX-FEATURE-005-CLOSEOUT-DOCS-SYNC` |
+| Commercial-language UAT approval | Still deferred (separate from Feature 005 formal close) |
 
 ## Controller Boundaries
 
@@ -464,14 +465,16 @@ Each task's `Dependencies` and `Expected next task` fields remain authoritative 
 
 ### T036 — Canonical documentation sync
 
-- [x] T036 Update applicable `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` after accepted Feature 005 evidence. **Done as `G7-AR-UX-P4-I18N-DOCS-SYNC` (records independent review PASS + residuals; does not claim T032, production, or controlled commit).**
-  - **Purpose**: Keep canonical status, V1 scope, unresolved items, and `G7_DEV_RTL` transition accurate.
+- [x] T036 Update applicable `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` after accepted Feature 005 evidence.
+  - **Historical note:** First landed as `G7-AR-UX-P4-I18N-DOCS-SYNC`, which recorded independent-review PASS and residuals while **T032 was still HOLD** and controlled commit/push were still pending. That P4 narrative is historical only.
+  - **Current closeout:** Canonical docs now record T032 PASS, P5 PASS, final automated evidence **243/243**, pushed commit `aaf6563`, and formal Feature 005 close via `G7-AR-UX-FEATURE-005-CLOSEOUT-DOCS-SYNC`.
+  - **Purpose**: Keep canonical status, V1 scope, unresolved exclusions, and process state accurate.
   - **Dependencies**: T035.
   - **Guards**: `g7-crm-agent-control`, `docs-guard`, `g7-blue-crm-product-erp-reviewer`.
   - **Validation**: Documentation staleness audit; no claims beyond verified DEV/DEMO evidence; `git diff --check` passes.
   - **Manual smoke**: None; cite existing user evidence only.
-  - **Exclusions**: No implementation, migration, selector reset, staging, or commit.
-  - **Expected next task**: T037 (after commit inventory / selector restore sequence as separately authorized).
+  - **Exclusions**: No implementation, migration, selector reset, staging, or commit in docs-only closeout.
+  - **Expected next task**: Team Lead prioritization of the next non–Feature-005 product task from the roadmap backlog (T037–T040 process items are obsolete once Feature 005 is already committed/pushed).
 
 ### T037 — Restore temporary selector before commit
 

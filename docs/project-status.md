@@ -40,13 +40,14 @@
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 2.1 Current Active Work (docs sync)
-- **Active program:** Feature `005-i18n-runtime-locale` bilingual visual acceptance (P5 remediation closed; controlled commit of accepted working tree).
-- **Latest acceptance handoffs (user-provided):** `G7_AR_UX_P5_VISUAL_ACCEPTANCE_REMEDIATED`, `G7_AR_UX_P5_DATE_BIDI_AND_RESIDUALS_FIXED`, `G7_AR_UX_P5_RANGE_TIME_SUPPLIER_PENDING_FIXED`, `G7_AR_UX_P5_SETTINGS_COPY_LEAKAGE_FIXED`, `G7_AR_UX_P5_MOZFER_FOCUSED_RE_SMOKE_3_PASS`, English LTR browser regression PASS, existing global lightning bolt PASS.
-- **Next controlled process step:** `G7-AR-UX-P5-FINAL-ACCEPTANCE-PUSH` (push only after this commit; do not push from the commit task).
+- **Feature 005 status:** Formally **closed** for authenticated bilingual CRM UI after pushed commit `aaf6563 fix(i18n): complete bilingual visual acceptance`.
+- **Git alignment (post-push):** local `main` and `origin/main` are both `aaf65633654a404acf67c82f999536c4343150db`; ahead/behind **0/0**; working tree was clean at push verification.
+- **Closeout docs:** `G7-AR-UX-FEATURE-005-CLOSEOUT-DOCS-SYNC` content; controlled docs commit `G7-AR-UX-FEATURE-005-CLOSEOUT-DOCS-COMMIT` (no push in that task).
+- **Current active implementation task:** none selected — Team Lead prioritization required.
 
 ## 3. Completed Milestones
 
-### Feature 005 Runtime Arabic/English UX (accepted; controlled commit pending push)
+### Feature 005 Runtime Arabic/English UX (formally closed)
 - [x] Authenticated Arabic/English UX implemented for shell + modules: Dashboard, Customers, Services (core + operational subflows), Quotations (non-PDF), Invoices (non-PDF), Payments, Suppliers, **Settings**, and **Admin Users**.
 - [x] Settings and Admin Users are intentional **P3 extensions** beyond the original Feature 005 core route slice (spec C01 had excluded full Settings/Admin from core acceptance; P3 localized those surfaces under separate G7-AR-UX-P3 tasks).
 - [x] Shell / shared states: Sidebar, Topbar locale selector, loading, error, not-found, shared access-denied/empty/unavailable patterns, RTL/LTR shell direction.
@@ -55,28 +56,31 @@
 - [x] `/unauthorized` localized EN/AR; root `<html lang>` / `dir` aligned with public request locale for inactive/missing `app_users` (`G7-AR-UX-P4-ROOT-PUBLIC-LOCALE-ALIGNED`).
 - [x] Customers Excel export **workbook chrome** localized (labels/meta/filters/date digits); company/brand names and stored customer values preserved; `customers:export` gate preserved. Filename pattern unchanged.
 - [x] Independent review `G7_AR_UX_P4_I18N_INDEPENDENT_REVIEW_PASS`: **no P0** findings.
-- [x] **P5 bilingual visual remediation accepted** (date/time/range order, table bidi alignment, RTL back icon, Settings ISO date + copy leakage, locale-switch global bolt lifecycle, Supplier panel title wrap).
+- [x] **P5 bilingual visual remediation: PASS** (date/time/range order, table bidi alignment, RTL back icon, Settings ISO date + copy leakage, locale-switch global bolt lifecycle, Supplier panel title wrap).
 - [x] **T032 Mozfer authenticated browser smoke: PASS** (`G7_AR_UX_P5_MOZFER_FOCUSED_RE_SMOKE_3_PASS` and English LTR regression PASS — user-provided evidence).
 - [x] Arabic authenticated CRM UX: PASS.
 - [x] English LTR regression: PASS.
 - [x] Locale-switch global lightning bolt: PASS (existing `GlobalPendingProvider` / centered bolt; no second loader).
 - [x] Date, time, date-range, and bidi acceptance: PASS.
 - [x] Customers, Services, Quotations, Invoices, and Payments visual acceptance: PASS.
-- [x] Settings EN/AR customer-facing copy leakage closed (subtitle, TIN label, no visible `CS-A`).
+- [x] Settings EN/AR customer-facing copy leakage closed (subtitle, TIN label, no visible `CS-A`): PASS.
 - [x] Automated validation evidence (DEV agent runs; not production claims):
   - Aggregate i18n + export tests: **243/243** pass (final P5 suite including `visual-acceptance` and Settings).
   - Focused ESLint on changed i18n surfaces: PASS.
   - `pnpm exec tsc --noEmit`: PASS.
   - Full `git diff --check`: PASS.
-- [x] Controlled acceptance commit task: `G7-AR-UX-P5-FINAL-ACCEPTANCE-COMMIT` (push is a separate task).
+- [x] Controlled acceptance commit: `aaf6563 fix(i18n): complete bilingual visual acceptance` (`G7-AR-UX-P5-FINAL-ACCEPTANCE-COMMIT`).
+- [x] Controlled push: `G7-AR-UX-P5-FINAL-ACCEPTANCE-PUSH` — `main` / `origin/main` aligned at `aaf6563` (ahead/behind 0/0).
+- [x] Formal closeout recorded: `G7-AR-UX-FEATURE-005-CLOSEOUT-DOCS-SYNC` (this docs sync).
 - [x] `app_users.locale` migration file: `supabase/migrations/20260711090000_add_app_users_locale.sql`. Mozfer-supplied DEV/DEMO apply + T009 post-apply verification evidence exists under `specs/005-i18n-runtime-locale/evidence/`. **Not** claimed as production-applied; re-apply is blocked by fail-loud guard when column exists. Controlled DB tasks remain separate from app commit.
-- [x] Explicit exclusions remaining (not claimed complete):
+- [x] Explicit exclusions remaining (not claimed complete; outside Feature 005 formal close):
   - PDF / generated-document localization (quotation & invoice PDF bodies and Print buttons).
   - Clerk-hosted sign-in / sign-up widget localization.
   - Invoices list **Export** button remains a **non-functional product stub** (localized label only; **no** invoice Excel export implementation).
   - Supplier **full page redesign** remains a separate planned product task and is **not** a Feature 005 acceptance blocker (visual compatibility fixes in P5 are accepted).
   - Browser-tab metadata consistency and other P2 items remain non-blocking.
   - No production-readiness, ZATCA/FATOORA, or bilingual-document claim.
+  - Stored customer/business data is not translated by locale switching.
 - [x] Locked workflow preserved: Customer Profile → Service → Quotation → Invoice → Payment; Service remains the operational core; VAT/ZATCA exclusions preserved.
 
 ### Approved Billing Scope Ceiling Block UI Smoke

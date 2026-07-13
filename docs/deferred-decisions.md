@@ -926,8 +926,8 @@ The following items are explicitly documented as deferred or production hardenin
 - `ARABIC-COPY-REVIEW-1` completed as readonly Arabic copy/glossary review with overall result `PASS`.
 - The next runtime phase must not begin as a broad "translate everything" pass.
 - **T032 Mozfer authenticated browser smoke: PASS** (`G7_AR_UX_P5_MOZFER_FOCUSED_RE_SMOKE_3_PASS`; English LTR regression PASS; locale-switch global bolt PASS).
-- Feature 005 + P3 + **P5 visual acceptance** are closed for authenticated CRM UI (date/time/range/bidi, list alignment, Settings copy leakage, structured date components). Controlled commit task: `G7-AR-UX-P5-FINAL-ACCEPTANCE-COMMIT`; next: push-only.
-- Arabic commercial terminology is **not** finally approved by Mozfer for UAT; UI ships with current professional EN/AR dictionary copy pending commercial-language review (separate from T032 visual smoke).
+- Feature 005 + P3 + **P5 visual acceptance** are **formally closed** for authenticated CRM UI (date/time/range/bidi, list alignment, Settings copy leakage, structured date components). Pushed commit: `aaf6563 fix(i18n): complete bilingual visual acceptance` (`main` / `origin/main` aligned, 0/0). Closeout docs: `G7-AR-UX-FEATURE-005-CLOSEOUT-DOCS-SYNC`.
+- Arabic commercial terminology is **not** finally approved by Mozfer for UAT; UI ships with current professional EN/AR dictionary copy pending commercial-language review (separate from T032 visual smoke and Feature 005 formal close).
 - Service remains the locked operational core; Booking terminology still needs explicit commercial copy review.
 - Supplier/internal cost labels remain RBAC-sensitive; localization must not leak costs.
 - Supplier **full-page redesign** remains a separate planned product task and is **not** a Feature 005 acceptance blocker.

@@ -2,7 +2,7 @@
 
 **Feature**: `005-i18n-runtime-locale`
 **Created**: 2026-07-11
-**Status**: Authenticated UI acceptance complete (independent review PASS; **T032 Mozfer smoke PASS**; P5 visual remediation PASS); not production-closed; controlled commit/push process
+**Status**: **Formally closed** for authenticated bilingual CRM UI (independent review PASS; **T032 Mozfer smoke PASS**; P5 visual remediation PASS; automated i18n/export **243/243**). Pushed commit `aaf6563 fix(i18n): complete bilingual visual acceptance` (`main`/`origin/main` aligned). Not production-closed; PDF bodies, Clerk-hosted widgets, bilingual documents, and production migration apply remain out of scope.
 
 ## Clarifications
 

@@ -58,9 +58,9 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 - D07: UAT is role-based and user-executed. Mozfer is final business acceptance owner. Blocker and High defects prevent launch.
 - D08: Named operational ownership is required: minimum 30-day backup retention, RPO within 24 hours, RTO within one business day, named monitoring/incident owner, and 10 business days launch support.
 - D09: The focused V1 package is approved: runtime Arabic/English core UX, mobile core paths, financial correction controls, Approved Billing Scope management, and operational invitation/UAT gates; Reports Center acceptance, professional Supplier Booking, bilingual documents, and VAT/ZATCA/FATOORA remain outside V1.
-- Feature `005-i18n-runtime-locale` runtime Arabic/English UI is **acceptance-complete** for authenticated CRM visual UX (independent review PASS; T032 Mozfer smoke PASS; P5 visual remediation PASS). See `docs/project-status.md` Feature 005 milestone.
-- Controlled acceptance commit: `G7-AR-UX-P5-FINAL-ACCEPTANCE-COMMIT`. **Next process step:** `G7-AR-UX-P5-FINAL-ACCEPTANCE-PUSH` (push only; separate task).
-- Not claimed: production readiness, PDF-body localization, Clerk-hosted widget localization, bilingual documents.
+- Feature `005-i18n-runtime-locale` authenticated bilingual CRM UI is **formally closed** after pushed commit `aaf6563 fix(i18n): complete bilingual visual acceptance` (independent review PASS; T032 Mozfer smoke PASS; P5 visual remediation PASS; automated i18n/export **243/243**). See `docs/project-status.md` Feature 005 milestone.
+- Closure process history: `G7-AR-UX-P5-FINAL-ACCEPTANCE-COMMIT` → `G7-AR-UX-P5-FINAL-ACCEPTANCE-PUSH` → `G7-AR-UX-FEATURE-005-CLOSEOUT-DOCS-SYNC`. Local `main` and `origin/main` aligned at `aaf6563` (0/0).
+- Not claimed: production readiness, PDF-body localization, Clerk-hosted widget localization, bilingual documents, real Invoices Excel export, stored business-data translation.
 
 ### 🚧 Cursor Audit Priority Gates & Blockers
 Cursor audit gates:
@@ -68,10 +68,12 @@ Cursor audit gates:
 2. SUPPLIER-ALLOCATION-BOOKING-GUARD-1: CLOSED
 
 Current active task:
-- `G7-AR-UX-P5-FINAL-ACCEPTANCE-PUSH` — push the accepted Feature 005 / P5 bilingual visual-acceptance commit (push-only; no amend).
-- Residual open (outside Feature 005 UI acceptance): PDF/document localization and bilingual documents (deferred).
+- **Feature 005 closed.**
+- Current active implementation task: none selected — Team Lead prioritization required.
+- Residual open (outside Feature 005 formal close): PDF/document localization and bilingual documents (deferred).
 - Residual open: final Mozfer commercial Arabic terminology approval for UAT (separate from T032 visual smoke PASS).
 - Supplier full-page redesign remains a separate planned product task (not a Feature 005 acceptance blocker).
+- Do not invent or auto-select a backlog task ID here.
 
 Completed:
 - `APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1` (PASS WITH WARN: manual smoke verification completed on SVC-2026-0015; successfully verified that the UI blocks creation of an above-ceiling deposit invoice and the DB confirmed no invoice was created; browser/client validation blocked submission before server-action over-ceiling request was reached; temporary dev harness was removed; optional server-side direct smoke `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` remains in backlog).
