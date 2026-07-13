@@ -148,21 +148,21 @@ export default function SuppliersClient({
             <div className="relative">
               <Search
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-outline"
+                className="absolute start-3 top-1/2 -translate-y-1/2 text-outline"
               />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder={dictionary.list.searchPlaceholder}
-                className="w-64 pl-9 pr-4 py-2 bg-surface border border-outline-variant rounded-lg text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                className="w-full min-w-0 max-w-xs ps-9 pe-4 py-2 bg-surface border border-outline-variant rounded-lg text-[14px] text-on-surface focus:outline-none focus:border-primary sm:w-64"
               />
             </div>
             <div className="relative">
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
-                className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
+                className="appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
               >
                 <option value="all">{dictionary.list.allStatuses}</option>
                 {STATUS_OPTIONS.map((status) => (
@@ -173,14 +173,14 @@ export default function SuppliersClient({
               </select>
               <Filter
                 size={14}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
               />
             </div>
             <div className="relative">
               <select
                 value={categoryFilter}
                 onChange={(event) => setCategoryFilter(event.target.value)}
-                className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
+                className="appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
               >
                 <option value="all">{dictionary.list.allCategories}</option>
                 {categories.map((category) => (
@@ -191,7 +191,7 @@ export default function SuppliersClient({
               </select>
               <Filter
                 size={14}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
               />
             </div>
             <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">

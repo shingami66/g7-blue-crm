@@ -40,35 +40,31 @@
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 2.1 Current Active Work
-- **Current active implementation task (exactly one):** `RESPONSIVE-CORE-P0-AUDIT-1`
-- **Purpose:** Produce an evidence-backed audit of page-level horizontal overflow and narrow-width usability across the agreed core CRM paths (audit only; no UI/CSS/application fixes in the audit task).
-- **Dependency state:**
-  - Feature 005 authenticated bilingual UX: **formally closed** (acceptance `aaf6563`; closeout docs `e731d4d` on `main` / `origin/main`).
-  - Responsive audit entry gate: **satisfied** (i18n closed; V1 critical path places responsive core audit immediately after i18n).
-  - Responsive **implementation** remains blocked until this audit identifies exact source-proven defects.
-- **V1 critical-path order (locked):** `RESPONSIVE-CORE-P0-AUDIT-1` → `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → financial lifecycle design/audit (then bounded financial implementation only after those gates). Do not promote ABS management, financial lifecycle, Reports Center, or professional Supplier Booking redesign as active now.
-- **Audit surface (future task must inspect source-proven narrow-width risks on):**
-  - authenticated shell/navigation
-  - Dashboard
-  - Customers
-  - Services and Service Detail
-  - Quotations
-  - Invoices
-  - Payments
-  - Settings
-  - Admin Users
-  - core create/edit forms
-  - overlays/modals/drawers where they block core paths
-- **Audit classification (must distinguish):**
-  - true page-level horizontal overflow
-  - intentional table-local horizontal scrolling
-  - long stored data (names, IDs, notes) that wrap or scroll without page overflow
-  - PDF/generated-document exclusions (out of responsive UI audit scope for body localization claims)
-  - deferred supplier full-page redesign (outside V1 acceptance; not this audit’s redesign scope)
-- **Audit execution boundary:** No UI edits, CSS fixes, application code changes, mobile redesign, staging, commit, or push inside the audit itself. Browser/manual smoke remains user-only when later authorized.
-- **Following critical-path task (not active yet):** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1`
+- **Current active implementation task (exactly one):** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1`
+- **Purpose:** Design Approved Billing Scope management (state, permissions, audit, void/supersede) for the V1 critical path after responsive core work.
+- **V1 critical-path order (locked):** Feature 005 closed → responsive audit → responsive implement (source complete) → **ABS management design (active)** → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates).
 - **Preserved locks:** Customer Profile → Service → Quotation → Invoice → Payment; Service as operational core; DEV/DEMO wording; Reports Center is P1; professional Supplier Booking redesign outside V1 acceptance; supplier payments/invoices/costing/margin outside V1; no VAT/ZATCA/FATOORA claims; no production-readiness claim.
-- **Task lock docs:** `G7-ROADMAP-NEXT-TASK-LOCK` (docs-only; no stage/commit in this task).
+
+### Responsive core P0 (source implemented; manual smoke pending)
+- [x] Audit `RESPONSIVE-CORE-P0-AUDIT-1` completed (`RESPONSIVE_CORE_P0_AUDIT_COMPLETE`).
+- [x] Implementation `RESPONSIVE-CORE-P0-IMPLEMENT-1` source complete (`RESPONSIVE_CORE_P0_IMPLEMENTED`).
+- [x] Automated validation: responsive-core + affected module + visual-acceptance **107/107 PASS**; focused ESLint PASS; `tsc --noEmit` PASS.
+- [ ] **Durable flag — `RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`:** Team Lead deferred Mozfer browser/mobile smoke. Tracked as `RESPONSIVE-CORE-P0-MOZFER-SMOKE-1`. **Do not claim manual acceptance PASS.** Responsive acceptance is **not** formally closed until that smoke is later completed.
+- **Implemented scope (source contracts):**
+  - quotation line-item mobile stacking (`grid-cols-1 md:grid-cols-12`)
+  - quotation date/financial-field stacking (`grid-cols-1 md:grid-cols-2`)
+  - service create/edit date stacking
+  - logical RTL/LTR filter/search icon positioning (`start`/`end`, `ps`/`pe`)
+  - related-quotation header wrapping
+  - invoice search-width correction
+  - accepted table-local scrolling preserved
+- **Exclusions:**
+  - Supplier mobile detail / panel fallback deferred to full Supplier redesign (`R-P0-02` / `DEFERRED_SUPPLIER_REDESIGN`)
+  - no PDF body changes
+  - no Clerk widget changes
+  - no SQL/schema/RBAC/workflow changes
+  - no production-readiness claim
+
 
 ## 3. Completed Milestones
 

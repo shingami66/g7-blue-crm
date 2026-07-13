@@ -178,9 +178,11 @@ Financial implementation is an umbrella milestone only. It must be decomposed af
 | `G7-CLIENT-DELIVERY-ROADMAP-DOCS-1` | docs | Approved design | GPT-5.6 Luna Medium | Canonical plan and synchronized status/roadmap. |
 | `V1-DELIVERY-DECISIONS-LOCK-1` | design | Docs closure | GPT-5.6 Terra Medium | Decisions recorded only; no financial design or implementation. |
 | `I18N-RUNTIME-LOCALE-DESIGN-1` | design | Decision lock | GPT-5.6 Terra Medium | Locale persistence, RTL, rollout, and document boundary design. |
-| `RESPONSIVE-CORE-P0-AUDIT-1` | audit | Feature 005 closed (entry gate satisfied); **current active task** per `G7-ROADMAP-NEXT-TASK-LOCK` | GPT-5.6 Luna Medium | Evidence-backed mobile blocker list and acceptance widths. Audit only — no UI/CSS/app fixes until defects are source-proven. |
+| `RESPONSIVE-CORE-P0-AUDIT-1` | audit | Feature 005 closed | GPT-5.6 Luna Medium | Completed — evidence-backed mobile blocker list. |
+| `RESPONSIVE-CORE-P0-IMPLEMENT-1` | implementation | Responsive audit | GPT-5.6 Luna Medium | Source complete (`RESPONSIVE_CORE_P0_IMPLEMENTED`); automated **107/107**. Manual smoke deferred: **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`**. |
+| `RESPONSIVE-CORE-P0-MOZFER-SMOKE-1` | manual smoke | Responsive implement | User-only (Mozfer) | Deferred by Team Lead; not PASS until executed. |
 | `SERVICE-DETAIL-WORKSPACE-DESIGN-1` | design | Decision lock | GPT-5.6 Terra Medium | Service workspace structure using existing patterns. |
-| `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` | design | Decision lock | GPT-5.6 Sol High | State, permission, audit, void, and supersede design. |
+| `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` | design | Responsive implement source complete (smoke may still be pending) | GPT-5.6 Sol High | **Current active task** — state, permission, audit, void, and supersede design. |
 | `INVOICE-PAYMENT-CORRECTION-LIFECYCLE-DESIGN-1` | design | Decision lock | GPT-5.6 Sol High | Approved correction/reversal policy and acceptance matrix. |
 | `FINANCIAL-LIFECYCLE-SCHEMA-RLS-AUDIT-1` | audit | Financial design | GPT-5.6 Sol High; Sol Extra High only if Sol High cannot resolve a material issue | Evidence-backed schema, RLS, grant, snapshot, and migration gaps. |
 | `I18N-RUNTIME-IMPLEMENT-1` | implementation | I18N design | GPT-5.6 Terra High | Approved runtime locale and RTL behavior implemented and validated. |
@@ -196,9 +198,9 @@ The direct client-delivery path is:
 
 `I18N-RUNTIME-LOCALE-DESIGN-1 -> responsive audit -> Approved Billing Scope management -> Financial lifecycle design/audit -> bounded financial implementation -> production hardening -> UAT -> handoff`
 
-**Current locked step (Team Lead):** `RESPONSIVE-CORE-P0-AUDIT-1` is the **only** active product task after Feature 005 formal close. Following critical-path design task (not active yet): `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1`. Critical-path order: responsive audit → Approved Billing Scope management → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates). Do not promote financial implementation before its required design/audit gates.
+**Current locked step (Team Lead):** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` is the **only** active product task. Responsive core source is implemented (`RESPONSIVE_CORE_P0_IMPLEMENTED`) with durable flag **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`** (Mozfer smoke deferred; not manual PASS). Critical-path order: responsive audit → responsive implement (source done) → **ABS management design (active)** → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates). Do not promote financial implementation before its required design/audit gates.
 
-**Responsive audit surface (when executed):** shell/navigation, Dashboard, Customers, Services and Service Detail, Quotations, Invoices, Payments, Settings, Admin Users, core create/edit forms, and overlays/modals/drawers that block core paths. Findings must distinguish true page-level horizontal overflow, intentional table-local horizontal scrolling, long stored data, PDF/generated-document exclusions, and deferred supplier full-page redesign.
+**Responsive core (implemented scope, smoke pending):** quotation/service form stacking, logical filter icons, related-quotations header wrap, invoice search width; table-local scroll preserved; Supplier mobile detail deferred to full redesign.
 
 Reports Center is P1 and does not join the V1 acceptance critical path. Professional Supplier Booking redesign is outside V1 acceptance scope. Supplier payments, supplier invoices, automated costing, margin, and P&L are post-V1.
 

@@ -114,7 +114,7 @@ export default function QuotationsClient({
             <select
               value={statusFilter}
               onChange={(e) => handleStatusFilterChange(e.target.value)}
-              className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
+              className="appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
             >
               <option value="all">{dictionary.list.allStatuses}</option>
               <option value="draft">{dictionary.statuses.draft}</option>
@@ -124,7 +124,7 @@ export default function QuotationsClient({
             </select>
             <Filter
               size={14}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
+              className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
             />
           </div>
           <div className="relative">

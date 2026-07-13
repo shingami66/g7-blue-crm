@@ -69,21 +69,21 @@ Cursor audit gates:
 
 Current active task:
 - **Feature 005 closed** (authenticated bilingual CRM UI; acceptance `aaf6563`, closeout docs `e731d4d`).
-- **Current active implementation task (exactly one):** `RESPONSIVE-CORE-P0-AUDIT-1`
-  - **Purpose:** Evidence-backed audit of page-level horizontal overflow and narrow-width usability on agreed core CRM paths.
-  - **Mode:** audit only — no UI edits, CSS fixes, application code, mobile redesign, staging, commit, or push.
-  - **Entry gate:** satisfied after Feature 005 close; confirmed core-route horizontal overflow remains a P0 client-delivery blocker (`docs/client-delivery-plan.md`).
-  - **Implementation gate:** `RESPONSIVE-CORE-P0-IMPLEMENT-1` (and related fixes) stay blocked until audit names exact source-proven defects.
-  - **Audit surface:** shell/navigation, Dashboard, Customers, Services and Service Detail, Quotations, Invoices, Payments, Settings, Admin Users, core create/edit forms, and overlays/modals/drawers where they block core paths.
-  - **Must classify findings as:** true page-level horizontal overflow vs intentional table-local horizontal scrolling vs long stored data vs PDF/generated-document exclusions vs deferred supplier full-page redesign.
-- **Following critical-path task (not active yet):** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1`
-- **Locked V1 critical-path order:** responsive audit (`RESPONSIVE-CORE-P0-AUDIT-1`) → Approved Billing Scope management design (`APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1`) → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates).
+- **Current active implementation task (exactly one):** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1`
+  - **Purpose:** Design Approved Billing Scope management (state, permissions, audit, void/supersede) on the V1 critical path.
+  - **Mode:** design only — no ABS implementation, SQL, or UI coding until a separate implementation gate.
+- **Responsive core P0 (not active; source complete, smoke deferred):**
+  - Audit + implement source: `RESPONSIVE_CORE_P0_IMPLEMENTED` (quotation/service stacking, logical filter icons, related-quotations header, invoice search width; table-local scroll preserved).
+  - Automated validation: **107/107** PASS; ESLint PASS; `tsc --noEmit` PASS.
+  - Durable flag: **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`** — Team Lead deferred Mozfer smoke (`RESPONSIVE-CORE-P0-MOZFER-SMOKE-1`). Manual acceptance is **not** PASS; responsive acceptance is **not** formally closed until smoke completes.
+  - Supplier mobile detail remains deferred to full Supplier redesign (no temporary panel/drawer).
+- **Locked V1 critical-path order:** responsive audit → responsive implement (source done) → **ABS management design (active)** → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates).
 - Residual open (outside Feature 005 formal close): PDF/document localization and bilingual documents (deferred).
 - Residual open: final Mozfer commercial Arabic terminology approval for UAT (separate from T032 visual smoke PASS).
 - Professional Supplier Booking redesign remains outside V1 acceptance scope and is **not** active.
 - Reports Center remains P1 and is **not** active on the V1 critical path.
-- Do not promote financial implementation, ABS management implementation, Supplier Booking redesign, or Reports Center as the active task.
-- Related backlog note: `RESPONSIVE-LIST-PAGE-HORIZONTAL-OVERFLOW-1` remains historical P1 backlog wording; the **only** current active product task is `RESPONSIVE-CORE-P0-AUDIT-1` (no dual active responsive task).
+- Do not promote financial implementation, Supplier Booking redesign, or Reports Center as the active task.
+- Related backlog note: `RESPONSIVE-LIST-PAGE-HORIZONTAL-OVERFLOW-1` remains historical P1 backlog wording.
 
 Completed:
 - `APPROVED-BILLING-SCOPE-CEILING-BLOCK-SMOKE-1` (PASS WITH WARN: manual smoke verification completed on SVC-2026-0015; successfully verified that the UI blocks creation of an above-ceiling deposit invoice and the DB confirmed no invoice was created; browser/client validation blocked submission before server-action over-ceiling request was reached; temporary dev harness was removed; optional server-side direct smoke `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` remains in backlog).

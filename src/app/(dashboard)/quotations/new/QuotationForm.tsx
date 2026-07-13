@@ -290,7 +290,7 @@ export default function QuotationForm({
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden p-6 flex flex-col gap-4">
             <h3 className="font-semibold text-primary border-b border-surface-variant pb-2">{dictionary.form.documentDatesRates}</h3>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.issueDate}</label>
                 <div className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface-variant">
@@ -332,7 +332,7 @@ export default function QuotationForm({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.discountSar}</label>
                 <input
@@ -381,21 +381,24 @@ export default function QuotationForm({
 
           <div className="flex flex-col gap-4">
             {items.map((item, index) => (
-              <div key={index} className="flex gap-4 items-start p-4 bg-surface-bright border border-surface-variant rounded-lg">
-                <div className="flex-1 flex flex-col gap-3">
-                  <div className="grid grid-cols-12 gap-3">
-                    <div className="col-span-6 flex flex-col gap-1.5">
+              <div
+                key={index}
+                className="flex flex-col gap-3 p-4 bg-surface-bright border border-surface-variant rounded-lg sm:flex-row sm:items-start sm:gap-4"
+              >
+                <div className="min-w-0 flex-1 flex flex-col gap-3">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                    <div className="flex flex-col gap-1.5 md:col-span-6">
                       <label className="text-[12px] font-semibold text-on-surface-variant">{dictionary.form.description}</label>
                       <input
                         type="text"
                         value={item.description}
                         onChange={(e) => updateItem(index, "description", e.target.value)}
                         placeholder={dictionary.form.descriptionPlaceholder}
-                        className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                        className="w-full min-w-0 bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                         required
                       />
                     </div>
-                    <div className="col-span-3 flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1.5 md:col-span-3">
                       <label className="text-[12px] font-semibold text-on-surface-variant">{dictionary.form.qty}</label>
                       <input
                         type="number"
@@ -403,12 +406,12 @@ export default function QuotationForm({
                         step="0.01"
                         value={item.qty}
                         onChange={(e) => updateItem(index, "qty", parseFloat(e.target.value) || 0)}
-                        className="no-number-spinner w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                        className="no-number-spinner w-full min-w-0 bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                         dir="ltr"
                         required
                       />
                     </div>
-                    <div className="col-span-3 flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1.5 md:col-span-3">
                       <label className="text-[12px] font-semibold text-on-surface-variant">{dictionary.form.unitPriceSar}</label>
                       <input
                         type="number"
@@ -416,7 +419,7 @@ export default function QuotationForm({
                         step="0.01"
                         value={item.unitPrice}
                         onChange={(e) => updateItem(index, "unitPrice", parseFloat(e.target.value) || 0)}
-                        className="no-number-spinner w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                        className="no-number-spinner w-full min-w-0 bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                         dir="ltr"
                         required
                       />
@@ -424,20 +427,20 @@ export default function QuotationForm({
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[12px] font-semibold text-on-surface-variant">{dictionary.form.detailsCategoryOptional}</label>
-                    <div className="flex gap-3">
+                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row">
                       <input
                         type="text"
                         value={item.details}
                         onChange={(e) => updateItem(index, "details", e.target.value)}
                         placeholder={dictionary.form.detailsPlaceholder}
-                        className="flex-1 bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
+                        className="min-w-0 flex-1 bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary"
                       />
                       <input
                         type="text"
                         value={item.category}
                         onChange={(e) => updateItem(index, "category", e.target.value)}
                         placeholder={dictionary.form.categoryPlaceholder}
-                        className="w-48 bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:border-primary"
+                        className="w-full min-w-0 bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:border-primary sm:w-48"
                       />
                     </div>
                   </div>
@@ -446,7 +449,7 @@ export default function QuotationForm({
                   type="button"
                   onClick={() => removeItem(index)}
                   disabled={items.length === 1}
-                  className="p-2 text-on-surface-variant hover:text-error hover:bg-error-container rounded-lg transition-colors mt-6 disabled:opacity-50 disabled:hover:text-on-surface-variant disabled:hover:bg-transparent"
+                  className="shrink-0 self-end p-2 text-on-surface-variant hover:text-error hover:bg-error-container rounded-lg transition-colors sm:mt-6 sm:self-start disabled:opacity-50 disabled:hover:text-on-surface-variant disabled:hover:bg-transparent"
                   title={items.length === 1 ? dictionary.form.minimumOneItem : dictionary.form.removeItem}
                 >
                   <Trash2 size={18} />

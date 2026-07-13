@@ -36,14 +36,14 @@ export default function RelatedQuotationsCard({
 }: RelatedQuotationsCardProps) {
   return (
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex items-center justify-between gap-3">
-        <div>
+      <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h3 className="font-semibold text-primary">{dictionary.relatedQuotations.title}</h3>
           <p className="mt-1 text-[13px] leading-[18px] text-on-surface-variant">
             {dictionary.relatedQuotations.subtitle}
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 shrink-0">
           {quotations && (
             <div className="text-[13px] leading-[18px] text-on-surface-variant">
               {quotations.length}{" "}
@@ -55,7 +55,7 @@ export default function RelatedQuotationsCard({
           {canCreateQuotation && (
             disabledReason ? (
               <span
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-outline-variant text-on-surface-variant rounded-lg text-[13px] font-semibold cursor-not-allowed opacity-60"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-outline-variant text-on-surface-variant rounded-lg text-[13px] font-semibold cursor-not-allowed opacity-60"
                 title={disabledReason}
               >
                 <FileText size={16} />
@@ -64,7 +64,7 @@ export default function RelatedQuotationsCard({
             ) : (
               <Link
                 href={`/quotations/new?serviceId=${serviceId}`}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[13px] font-semibold transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[13px] font-semibold transition-colors"
               >
                 <FileText size={16} />
                 {dictionary.relatedQuotations.createQuotation}

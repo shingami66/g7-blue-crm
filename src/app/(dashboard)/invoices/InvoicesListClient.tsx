@@ -97,10 +97,10 @@ export default function InvoicesListClient({
           className="flex-1 flex flex-col bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden"
         >
           <div className="p-4 border-b border-surface-variant flex flex-wrap gap-3 items-center bg-surface-bright">
-            <div className="relative min-w-[220px] flex-1 max-w-sm">
+            <div className="relative w-full min-w-0 flex-1 max-w-sm sm:min-w-[220px]">
               <Search
                 size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
+                className="absolute start-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
               />
               <input
                 type="search"
@@ -110,7 +110,7 @@ export default function InvoicesListClient({
                   setCurrentPage(1);
                 }}
                 placeholder={dictionary.list.filters.searchPlaceholder}
-                className="w-full bg-surface border border-outline-variant rounded-lg pl-9 pr-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
+                className="w-full min-w-0 bg-surface border border-outline-variant rounded-lg ps-9 pe-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
               />
             </div>
             <div className="relative">
@@ -120,7 +120,7 @@ export default function InvoicesListClient({
                   setStatusFilter(event.target.value);
                   setCurrentPage(1);
                 }}
-                className="appearance-none bg-surface border border-outline-variant rounded-lg pl-3 pr-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
+                className="appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
               >
                 <option value="all">{dictionary.list.filters.allStatuses}</option>
                 <option value="paid">{dictionary.list.filters.paid}</option>
@@ -133,7 +133,7 @@ export default function InvoicesListClient({
               </select>
               <Filter
                 size={14}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
               />
             </div>
             <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
