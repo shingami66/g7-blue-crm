@@ -4,6 +4,8 @@ import test, { mock } from "node:test";
 
 const SOURCE_QUOTATION_ID = "11111111-1111-4111-8111-111111111111";
 const SOURCE_SERVICE_ID = "22222222-2222-4222-8222-222222222222";
+const SCOPE_ID = "33333333-3333-4333-8333-333333333333";
+const ITEM_ID = "44444444-4444-4444-8444-444444444444";
 
 type ServiceRow = {
   status: string;
@@ -17,6 +19,9 @@ type ActionScenario = {
   insertTables: string[];
   operations: string[];
   permissionCalls: string[];
+  rpcCalls: Array<{ name: string; args: Record<string, unknown> }>;
+  rpcResponses: Record<string, { data: unknown; error: { message: string } | null }>;
+  readBackDetail: unknown;
 };
 
 let activeScenario: ActionScenario | null = null;
@@ -97,10 +102,28 @@ function createFakeSupabase() {
 
       return query;
     },
+    rpc(name: string, args: Record<string, unknown>) {
+      const scenario = currentScenario();
+      scenario.rpcCalls.push({ name, args });
+      const response = scenario.rpcResponses[name];
+      if (!response) {
+        throw new Error(`Unexpected RPC: ${name}`);
+      }
+
+      return {
+        async single<T>() {
+          return { data: response.data as T, error: response.error };
+        },
+      };
+    },
   };
 }
 
-function startScenario(service: ServiceRow | null, denyPermission = false) {
+function startScenario(
+  service: ServiceRow | null,
+  denyPermission = false,
+  options: Partial<Pick<ActionScenario, "rpcResponses" | "readBackDetail">> = {},
+) {
   activeScenario = {
     service,
     denyPermission,
@@ -108,6 +131,9 @@ function startScenario(service: ServiceRow | null, denyPermission = false) {
     insertTables: [],
     operations: [],
     permissionCalls: [],
+    rpcCalls: [],
+    rpcResponses: options.rpcResponses ?? {},
+    readBackDetail: options.readBackDetail ?? null,
   };
 
   return activeScenario;
@@ -149,11 +175,15 @@ mock.module("@/lib/services/status-transitions", {
 mock.module("./queries.ts", {
   namedExports: {
     getActiveApprovedBillingScopeForService: async () => null,
-    getApprovedBillingScopeById: async () => null,
+    getApprovedBillingScopeById: async () => currentScenario().readBackDetail,
   },
 });
 
-const { createApprovedBillingScopeDraft } = await import("./actions.ts");
+const {
+  createApprovedBillingScopeDraft,
+  discardApprovedBillingScopeDraft,
+  editApprovedBillingScopeItem,
+} = await import("./actions.ts");
 
 function assertNoDraftWrites(scenario: ActionScenario) {
   assert.deepEqual(scenario.insertTables, []);
@@ -167,6 +197,18 @@ function assertNoDraftWrites(scenario: ActionScenario) {
     scenario.operations.some((operation) =>
       operation.startsWith("from:approved_billing_scope_items"),
     ),
+    false,
+  );
+}
+
+function assertNoScopeItemInserts(scenario: ActionScenario) {
+  assert.deepEqual(scenario.insertTables, []);
+  assert.equal(
+    scenario.operations.some((operation) => operation.startsWith("from:approved_billing_scopes")),
+    false,
+  );
+  assert.equal(
+    scenario.operations.some((operation) => operation.startsWith("from:approved_billing_scope_items")),
     false,
   );
 }
@@ -261,4 +303,192 @@ test("createApprovedBillingScopeDraft checks authorization before creating a wri
   assert.equal(scenario.clientCalls, 0);
   assert.deepEqual(scenario.operations, []);
   assertNoDraftWrites(scenario);
+});
+
+test("editApprovedBillingScopeItem sends only the editable draft-item fields and reads back success", async () => {
+  const detail = { id: SCOPE_ID, items: [] };
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+    readBackDetail: detail,
+    rpcResponses: {
+      edit_approved_billing_scope_item: {
+        data: {
+          error_code: null,
+          scope_id: SCOPE_ID,
+          item_id: ITEM_ID,
+          accepted_subtotal: 100,
+          accepted_vat_amount: 15,
+          accepted_grand_total: 115,
+          line_safety_status: "pending_review",
+          updated: true,
+        },
+        error: null,
+      },
+    },
+  });
+
+  const response = await editApprovedBillingScopeItem({
+    scopeId: SCOPE_ID,
+    itemId: ITEM_ID,
+    decision: "adjusted",
+    acceptedQty: 2,
+    acceptedUnitPrice: 50,
+    reasonCode: "customer_reduced_quantity",
+    reasonNote: "Customer confirmed",
+  });
+
+  assert.deepEqual(response, { success: true, data: detail });
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:update"]);
+  assert.deepEqual(scenario.rpcCalls, [{
+    name: "edit_approved_billing_scope_item",
+    args: {
+      p_scope_id: SCOPE_ID,
+      p_item_id: ITEM_ID,
+      p_decision: "adjusted",
+      p_accepted_qty: 2,
+      p_accepted_unit_price: 50,
+      p_reason_code: "customer_reduced_quantity",
+      p_reason_note: "Customer confirmed",
+      p_display_order: null,
+    },
+  }]);
+  assertNoScopeItemInserts(scenario);
+});
+
+for (const [label, errorCode] of [
+  ["a non-draft scope", "scope_not_draft"],
+  ["a missing scope or item", "scope_not_found"],
+  ["a quantity increase", "scope_reduction_invalid"],
+  ["a concurrent edit", "scope_concurrency_conflict"],
+] as const) {
+  test(`editApprovedBillingScopeItem rejects ${label} without scope-item inserts`, async () => {
+    const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+      rpcResponses: {
+        edit_approved_billing_scope_item: {
+          data: {
+            error_code: errorCode,
+            scope_id: null,
+            item_id: null,
+            accepted_subtotal: null,
+            accepted_vat_amount: null,
+            accepted_grand_total: null,
+            line_safety_status: null,
+            updated: false,
+          },
+          error: null,
+        },
+      },
+    });
+
+    const response = await editApprovedBillingScopeItem({
+      scopeId: SCOPE_ID,
+      itemId: ITEM_ID,
+      decision: "adjusted",
+      acceptedQty: 101,
+      reasonCode: "customer_reduced_quantity",
+    });
+
+    assert.deepEqual(response, { success: false, error: errorCode });
+    assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:update"]);
+    assertNoScopeItemInserts(scenario);
+  });
+}
+
+test("editApprovedBillingScopeItem rejects a missing required reason before the RPC", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null });
+
+  const response = await editApprovedBillingScopeItem({
+    scopeId: SCOPE_ID,
+    itemId: ITEM_ID,
+    decision: "excluded",
+  });
+
+  assert.deepEqual(response, { success: false, error: "scope_unexpected_error" });
+  assert.deepEqual(scenario.rpcCalls, []);
+  assertNoScopeItemInserts(scenario);
+});
+
+test("editApprovedBillingScopeItem checks authorization before creating its write client", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, true);
+
+  const response = await editApprovedBillingScopeItem({
+    scopeId: SCOPE_ID,
+    itemId: ITEM_ID,
+    decision: "accepted",
+  });
+
+  assert.deepEqual(response, { success: false, error: "scope_permission_denied" });
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:update"]);
+  assert.equal(scenario.clientCalls, 0);
+  assert.deepEqual(scenario.rpcCalls, []);
+  assertNoScopeItemInserts(scenario);
+});
+
+test("discardApprovedBillingScopeDraft returns its server-confirmed identifiers on success", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+    rpcResponses: {
+      discard_approved_billing_scope_draft: {
+        data: {
+          error_code: null,
+          scope_id: SCOPE_ID,
+          service_id: SOURCE_SERVICE_ID,
+          source_quotation_id: SOURCE_QUOTATION_ID,
+          discarded: true,
+        },
+        error: null,
+      },
+    },
+  });
+
+  const response = await discardApprovedBillingScopeDraft({ scopeId: SCOPE_ID });
+
+  assert.deepEqual(response, {
+    success: true,
+    data: {
+      scopeId: SCOPE_ID,
+      serviceId: SOURCE_SERVICE_ID,
+      sourceQuotationId: SOURCE_QUOTATION_ID,
+      discarded: true,
+    },
+  });
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:discard"]);
+  assert.deepEqual(scenario.rpcCalls, [{
+    name: "discard_approved_billing_scope_draft",
+    args: { p_scope_id: SCOPE_ID },
+  }]);
+  assertNoScopeItemInserts(scenario);
+});
+
+for (const errorCode of ["scope_not_found", "scope_not_draft"] as const) {
+  test(`discardApprovedBillingScopeDraft returns ${errorCode}`, async () => {
+    const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+      rpcResponses: {
+        discard_approved_billing_scope_draft: {
+          data: {
+            error_code: errorCode,
+            scope_id: null,
+            service_id: null,
+            source_quotation_id: null,
+            discarded: false,
+          },
+          error: null,
+        },
+      },
+    });
+
+    const response = await discardApprovedBillingScopeDraft({ scopeId: SCOPE_ID });
+    assert.deepEqual(response, { success: false, error: errorCode });
+    assertNoScopeItemInserts(scenario);
+  });
+}
+
+test("discardApprovedBillingScopeDraft checks authorization before creating its write client", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, true);
+
+  const response = await discardApprovedBillingScopeDraft({ scopeId: SCOPE_ID });
+
+  assert.deepEqual(response, { success: false, error: "scope_permission_denied" });
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:discard"]);
+  assert.equal(scenario.clientCalls, 0);
+  assert.deepEqual(scenario.rpcCalls, []);
+  assertNoScopeItemInserts(scenario);
 });

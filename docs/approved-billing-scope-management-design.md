@@ -19,9 +19,9 @@ This document is the **current** product/technical management design for Service
 | View active approved scope | Service card + nested detail (read-enrich) | list / getActive / getById | `approved_billing_scopes` | `approvedBillingScopes:read` | **READY** (read UI) |
 | View draft scope | Detail by id; card primary when no active | list / get | `status=draft` | read | **READY** (read UI) |
 | View historical / voided / superseded | Detail by id; card history/other counts + display state | list for service | `voided_at`, `superseded_at` | read | **READY** (read UI; no full history page) |
-| Create draft from approved quotation | Service card Create Draft action + nested detail navigation | `createApprovedBillingScopeDraft` | inserts + constraints | create | **READY** (source implemented; Mozfer smoke PASS; commit/push pending) |
-| Edit draft item (decision/qty/price/reason) | **None** | `editApprovedBillingScopeItem` + item-edit RPC | draft-only | update | **PARTIAL** |
-| Discard draft | **None** | `discardApprovedBillingScopeDraft` + discard RPC | draft cleanup | discard | **PARTIAL** |
+| Create draft from approved quotation | Service card Create Draft action + nested detail navigation | `createApprovedBillingScopeDraft` | inserts + constraints | create | **READY** (source implemented; Mozfer smoke PASS; pushed on main) |
+| Edit draft item (decision/qty/price/reason) | Draft detail page + bordered item editor | `editApprovedBillingScopeItem` + item-edit RPC | draft-only | update | **READY** (source implemented; Mozfer smoke PASS; commit/push pending) |
+| Discard draft | Draft detail page + discard confirmation | `discardApprovedBillingScopeDraft` + discard RPC | draft cleanup | discard | **READY** (source implemented; Mozfer smoke PASS; commit/push pending) |
 | Line-safety review | **None** | `reviewApprovedBillingScopeLineSafety` | header fields | review | **PARTIAL** |
 | Approve / activate draft | **None** | `approveApprovedBillingScope` | `status→approved`; one-active guard | approve | **PARTIAL** |
 | Add/remove items after create | **None** | **None** | items only from quotation snapshot | — | **MISSING** / **DEFERRED** |
@@ -56,13 +56,13 @@ This document is the **current** product/technical management design for Service
 | Void/supersede “actions implemented” | **Schemas + permission keys + columns exist; no `voidApprovedBillingScope` / `supersedeApprovedBillingScope` action functions** |
 | “No custom Postgres RPC for V1” without exception | **Exceptions exist:** draft discard RPC and draft item edit RPC (narrow service_role helpers) |
 | Status = `superseded` | **Not** a DB status; use timestamps for display “Superseded” |
-| ABS fully managed in CRM UI | **Read-enrichment + Create Draft implemented in current uncommitted source**; edit/discard/review/approve/void/supersede UI is not implemented |
+| ABS fully managed in CRM UI | **Read-enrichment + Create Draft + Draft Edit/Discard implemented in source**; review/approve/void/supersede UI is not implemented |
 
 Historical milestone notes elsewhere may still mention planned void/supersede; treat those as historical unless labeled current.
 
 ### Read-enrichment slice status (`ABS-MGMT-UI-READ-ENRICH-1`)
 
-- **Source implemented and accepted** (controlled commit/push separate and pending at docs-sync time).
+- **Source implemented and accepted; pushed on main.**
 - Service Detail **read-only** card shows: effective display state (active / draft / voided / superseded-derived), version, source quotation reference, billing ceiling, invoiced amount, remaining billable, line safety, draft-revision and history/other-scope indicators, link to nested read-only detail.
 - Invoice totals appear **only when `invoices:read` permits**; otherwise restricted/unavailable (not coerced to zero).
 - Accountant masking of internal notes/reasons remains preserved (not exposed on the summary card).
@@ -70,13 +70,33 @@ Historical milestone notes elsewhere may still mention planned void/supersede; t
 
 ### Draft-create slice status (`ABS-MGMT-UI-DRAFT-CREATE-1`)
 
-- **Source implemented and manually accepted; PASS by Mozfer manual browser evidence.** Controlled commit and push remain separate pending tasks.
+- **Source implemented and manually accepted; PASS by Mozfer manual browser evidence.** Pushed on main in `47d9a4f14f019e837224e6db6cababdab12a7610` and `7054cf34654266ca033c58c62f9dca6d94092967`.
 - Admin/Manager can create from Service Detail only when an approved, non-deleted quotation exists and the complete Service-scoped ABS list contains zero records. Accountant remains read-only; Viewer/Sales/Operations have no ABS access.
 - Existing draft, active, voided, superseded-derived, or mixed ABS history blocks Create Draft.
 - `Completed` and `Cancelled` Services cannot create an ABS draft. The UI hides the control; the server action independently resolves the Service through the quotation relationship and rejects terminal, deleted, or missing Services.
 - Browser payload remains `sourceQuotationId` only. Service identity/status, version, quotation/item snapshots, and totals remain server-derived.
 - Manual evidence: the Cancelled-Service control was hidden; an eligible non-terminal Service with approved quotation, zero ABS history, zero invoices, and zero discount exposed Create Draft; creation navigated to the nested draft detail route; the scope displayed Draft, version 1, Pending review, the copied quotation item, and `SAR 1,000.00`; returning to Service Detail showed the existing Draft, View details, and no Create Draft; Viewer denial and Arabic/English rendering passed.
 - No manual double-click stress test is claimed. Pending duplicate-submit protection is implementation/test-covered, not separately proven by manual browser evidence. Agent did not perform browser smoke.
+
+### Draft-edit + discard slice status (`ABS-MGMT-UI-DRAFT-EDIT-1`)
+
+- **Source implemented; automated validation passed; PASS by Mozfer manual browser evidence.** Current source remains uncommitted and unpushed until the controlled commit/push tasks run.
+- The Service Detail card now exposes a clear bordered View details action instead of visually hidden text.
+- The nested ABS draft-detail route opened correctly.
+- The draft item editor displayed immutable source values and editable accepted values.
+- An adjusted unit-price reduction saved successfully.
+- Refreshed item and header totals reflected the server-authoritative result.
+- Line safety remained Pending review after the material edit.
+- Cancelling an unsaved edit preserved the last saved value.
+- Selecting Excluded zeroed accepted quantity, unit price, item total, and scope total after save.
+- Cancelling the discard confirmation left the draft unchanged.
+- Confirming discard deleted the draft and its items.
+- After discard, the Service Detail page showed Create Draft again.
+- Arabic and English rendering passed.
+- The first discard navigation attempt exposed a UX weakness: the modal remained visible during slow destination rendering.
+- The source fix now closes the modal, clears local error state, performs one router.push, and removes the redundant router.refresh.
+- The fixed redirect was manually re-tested and returned automatically to Service Detail without a manual refresh.
+- Pending duplicate-submit protection is implementation/test-covered, not separately proven by manual browser evidence. Agent did not perform browser smoke.
 
 ---
 
@@ -168,9 +188,9 @@ Before implementing void or supersede:
 ### Ready to implement (existing backend)
 
 1. **`ABS-MGMT-UI-READ-ENRICH-1`** — enrich Service card (source QT label, invoiced/remaining, draft badge); optional history count. **complete**
-2. **`ABS-MGMT-UI-DRAFT-CREATE-1`** — create-draft CTA + error handling. **complete; commit/push pending**
-3. **`ABS-MGMT-UI-DRAFT-EDIT-1`** — draft item edit + discard. **← current active task**
-4. **`ABS-MGMT-UI-REVIEW-APPROVE-1`** — line-safety review + approve
+2. **`ABS-MGMT-UI-DRAFT-CREATE-1`** — create-draft CTA + error handling. **complete; pushed on main**
+3. **`ABS-MGMT-UI-DRAFT-EDIT-1`** — draft item edit + discard. **complete; source implemented and manually accepted; current source remains uncommitted and unpushed**
+4. **`ABS-MGMT-UI-REVIEW-APPROVE-1`** — line-safety review + approve **← current active task**
 
 ### Blocked until financial behavior decision + action design
 
@@ -181,7 +201,7 @@ Before implementing void or supersede:
 
 - **`ABS-MGMT-HISTORY-LIST-1`** — full history list UI
 
-**Current active implementation task (exactly one):** `ABS-MGMT-UI-DRAFT-EDIT-1`
+**Current active implementation task (exactly one):** `ABS-MGMT-UI-REVIEW-APPROVE-1`
 
 ---
 

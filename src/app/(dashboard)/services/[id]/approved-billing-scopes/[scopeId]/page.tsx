@@ -23,6 +23,8 @@ import { UiDateText } from "@/components/i18n/UiDateText";
 import type { Locale } from "@/lib/i18n/locales";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { isolateBidiText } from "@/lib/i18n/bidi";
+import { ApprovedBillingScopeDraftItemEditor } from "./ApprovedBillingScopeDraftItemEditor";
+import { DiscardApprovedBillingScopeDraftAction } from "./DiscardApprovedBillingScopeDraftAction";
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +79,12 @@ export default async function ApprovedBillingScopeDetailPage({
   const service = await getServiceById(serviceId);
   if (!service || scope.serviceId !== service.id) notFound();
 
-  const canReadInvoices = await checkPermission("invoices:read");
+  const isDraft = scope.status === "draft";
+  const [canUpdateDraftItems, canDiscardDraft, canReadInvoices] = await Promise.all([
+    isDraft ? checkPermission("approvedBillingScopes:update") : false,
+    isDraft ? checkPermission("approvedBillingScopes:discard") : false,
+    checkPermission("invoices:read"),
+  ]);
   const invoiceResult = canReadInvoices
     ? await getInvoicesByApprovedBillingScopeId(scope.id)
     : null;
@@ -103,6 +110,13 @@ export default async function ApprovedBillingScopeDetailPage({
             </h1>
           </div>
         </div>
+        {canDiscardDraft ? (
+          <DiscardApprovedBillingScopeDraftAction
+            scopeId={scope.id}
+            serviceId={service.id}
+            dictionary={detailDictionary.discardDraft}
+          />
+        ) : null}
       </div>
 
       <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
@@ -142,6 +156,7 @@ export default async function ApprovedBillingScopeDetailPage({
                   <Th>{detailDictionary.labels.acceptedQuantity}</Th>
                   <Th>{detailDictionary.labels.unitPrice}</Th>
                   <Th>{detailDictionary.labels.lineTotal}</Th>
+                  {canUpdateDraftItems ? <Th>{detailDictionary.editItem.trigger}</Th> : null}
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant text-[14px]">
@@ -156,6 +171,18 @@ export default async function ApprovedBillingScopeDetailPage({
                     <td className="px-4 py-4 align-top text-on-surface tabular-nums" dir="ltr">{formatNumber(locale, item.acceptedQty)}</td>
                     <td className="px-4 py-4 align-top text-on-surface tabular-nums" dir="ltr">{formatSar(locale, item.acceptedUnitPrice)}</td>
                     <td className="px-4 py-4 align-top font-medium text-on-surface tabular-nums" dir="ltr">{formatSar(locale, item.acceptedGrandTotal)}</td>
+                    {canUpdateDraftItems ? (
+                      <td className="px-4 py-4 align-top">
+                        <ApprovedBillingScopeDraftItemEditor
+                          scopeId={scope.id}
+                          sourceVatRate={scope.sourceVatRate}
+                          item={item}
+                          locale={locale}
+                          dictionary={detailDictionary.editItem}
+                          decisionLabels={detailDictionary.itemDecisionLabels}
+                        />
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>

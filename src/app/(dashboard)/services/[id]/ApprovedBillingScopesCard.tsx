@@ -300,8 +300,9 @@ function ScopeSummaryCard({
           </StatusBadge>
           <PendingLink
             href={detailHref}
-            className="text-[13px] font-semibold text-primary hover:underline"
+            className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-[13px] font-semibold text-on-surface transition-colors hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary-fixed focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
             pendingLabel={cardDictionary.viewDetails}
+            aria-label={cardDictionary.viewDetails}
           >
             {cardDictionary.viewDetails}
           </PendingLink>

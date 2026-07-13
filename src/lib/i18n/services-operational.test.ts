@@ -40,6 +40,14 @@ const ABS_DETAIL = join(
   REPO_ROOT,
   "src/app/(dashboard)/services/[id]/approved-billing-scopes/[scopeId]/page.tsx",
 );
+const ABS_DRAFT_ITEM_EDITOR = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/services/[id]/approved-billing-scopes/[scopeId]/ApprovedBillingScopeDraftItemEditor.tsx",
+);
+const ABS_DRAFT_DISCARD = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/services/[id]/approved-billing-scopes/[scopeId]/DiscardApprovedBillingScopeDraftAction.tsx",
+);
 const ALLOCATIONS = join(
   REPO_ROOT,
   "src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx",
@@ -96,6 +104,8 @@ const OPERATIONAL_UI_FILES = [
   FINAL,
   ABS_CARD,
   ABS_DETAIL,
+  ABS_DRAFT_ITEM_EDITOR,
+  ABS_DRAFT_DISCARD,
   ALLOCATIONS,
   BOOKINGS,
   BOOKING_ACTIONS,
@@ -417,6 +427,51 @@ test("8b. ABS draft-create action client contracts and EN/AR copy", () => {
   assert.match(queries, /\.eq\("service_id", serviceId\)/);
   // Default path does not force a single status when options.status omitted
   assert.match(queries, /if \(options\?\.status\)/);
+});
+
+test("8c. ABS draft-edit and discard client contracts are localized and draft-gated", () => {
+  const en = getServicesDictionary("en");
+  const ar = getServicesDictionary("ar");
+  assert.equal(en.approvedBillingScopes.detail.editItem.trigger, "Edit item");
+  assert.equal(ar.approvedBillingScopes.detail.editItem.trigger, "تعديل البند");
+  assert.equal(en.approvedBillingScopes.detail.discardDraft.trigger, "Discard draft");
+  assert.equal(ar.approvedBillingScopes.detail.discardDraft.trigger, "حذف المسودة");
+  assert.deepEqual(
+    listNestedKeys(en.approvedBillingScopes.detail.editItem).sort(),
+    listNestedKeys(ar.approvedBillingScopes.detail.editItem).sort(),
+  );
+
+  const editor = read(ABS_DRAFT_ITEM_EDITOR);
+  assert.match(editor, /editApprovedBillingScopeItem/);
+  assert.match(editor, /scopeId,/);
+  assert.match(editor, /itemId: item\.id/);
+  assert.match(editor, /decision: values\.decision/);
+  assert.match(editor, /acceptedQty/);
+  assert.match(editor, /acceptedUnitPrice/);
+  assert.match(editor, /reasonCode/);
+  assert.match(editor, /reasonNote/);
+  assert.match(editor, /sourceVatRate/);
+  assert.match(editor, /useTransition/);
+  assert.match(editor, /disabled=\{isPending\}/);
+  assert.match(editor, /router\.refresh/);
+  assert.doesNotMatch(editor, /acceptedGrandTotal:\s*|sourceGrandTotal:\s*/);
+
+  const discard = read(ABS_DRAFT_DISCARD);
+  assert.match(discard, /discardApprovedBillingScopeDraft/);
+  assert.match(discard, /\{ scopeId \}/);
+  assert.match(discard, /useTransition/);
+  assert.match(discard, /disabled=\{isPending\}/);
+  assert.match(discard, /if \(!result\.success\) \{[\s\S]*?setError\(errorFor\(result\.error \?\? "scope_unexpected_error"\)\);[\s\S]*?return;/);
+  assert.match(discard, /setIsOpen\(false\);[\s\S]*?setError\(null\);[\s\S]*?router\.push\(`\/services\/\$\{serviceId\}`\)/);
+  assert.match(discard, /router\.push\(`\/services\/\$\{serviceId\}`\)/);
+  assert.doesNotMatch(discard, /router\.refresh/);
+
+  const detail = read(ABS_DETAIL);
+  assert.match(detail, /scope\.status === "draft"/);
+  assert.match(detail, /checkPermission\("approvedBillingScopes:update"\)/);
+  assert.match(detail, /checkPermission\("approvedBillingScopes:discard"\)/);
+  assert.match(detail, /ApprovedBillingScopeDraftItemEditor/);
+  assert.match(detail, /DiscardApprovedBillingScopeDraftAction/);
 });
 
 test("9-11. ABS permissions and masking: accountant read-only; viewer/sales blocked", () => {

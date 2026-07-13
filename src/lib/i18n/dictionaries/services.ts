@@ -233,6 +233,8 @@ export interface ServicesDictionary {
       noItems: string;
       noInvoices: string;
       invoicesUnavailable: string;
+      editItem: AbsDraftItemEditorDictionary;
+      discardDraft: AbsDraftDiscardDictionary;
     };
   };
   serviceStatusControl: {
@@ -1023,6 +1025,69 @@ const servicesDictionaryEn: ServicesDictionary = {
       noItems: "No scope items are available.",
       noInvoices: "No linked invoices.",
       invoicesUnavailable: "Linked invoice information is temporarily unavailable.",
+      editItem: {
+        trigger: "Edit item",
+        title: "Edit draft item",
+        sourceValues: "Source values",
+        acceptedValues: "Accepted values",
+        sourceQuantity: "Source quantity",
+        sourceUnitPrice: "Source unit price",
+        vatRate: "VAT rate",
+        sourceLineTotal: "Source line total",
+        decision: "Decision",
+        acceptedQuantity: "Accepted quantity",
+        acceptedUnitPrice: "Accepted unit price",
+        acceptedLineTotal: "Accepted line total",
+        reasonCode: "Reason code",
+        reasonNote: "Reason note",
+        reasonNoteOptional: "Optional",
+        cancel: "Cancel",
+        save: "Save changes",
+        saving: "Saving changes…",
+        success: "Draft item updated.",
+        reasonCodeLabels: {
+          customer_reduced_quantity: "Customer reduced quantity",
+          customer_reduced_price: "Customer reduced price",
+          customer_removed_item: "Customer removed item",
+          customer_supplied: "Customer supplied",
+          internal_scope_correction: "Internal scope correction",
+          source_pricing_issue: "Source pricing issue",
+          unsafe_line_item: "Unsafe line item",
+          other: "Other",
+        },
+        validation: {
+          adjustedValueRequired: "Enter an accepted quantity or unit price for an adjusted item.",
+          reasonRequired: "Select a reason code for this decision.",
+          quantityCannotIncrease: "Accepted quantity cannot exceed the source quantity.",
+          unitPriceCannotIncrease: "Accepted unit price cannot exceed the source unit price.",
+        },
+        errors: {
+          scope_not_found: "This billing scope item is no longer available.",
+          scope_not_draft: "Only draft billing scopes can be edited.",
+          scope_reduction_invalid: "Accepted values must follow the reductions-only rules.",
+          scope_reason_required: "A reason code is required for this change.",
+          scope_concurrency_conflict: "This draft changed while you were editing it. Refresh and try again.",
+          scope_permission_denied: "You do not have permission to edit this draft item.",
+          scope_unexpected_error: "Could not update the draft item. Please try again.",
+        },
+      },
+      discardDraft: {
+        trigger: "Discard draft",
+        title: "Discard draft billing scope?",
+        body: "This permanently removes the draft billing scope and all of its draft items.",
+        cancel: "Keep draft",
+        confirm: "Discard draft",
+        discarding: "Discarding draft…",
+        errors: {
+          scope_not_found: "This draft billing scope is no longer available.",
+          scope_not_draft: "Only draft billing scopes can be discarded.",
+          scope_reduction_invalid: "The draft could not be discarded.",
+          scope_reason_required: "The draft could not be discarded.",
+          scope_concurrency_conflict: "This draft changed while you were discarding it. Refresh and try again.",
+          scope_permission_denied: "You do not have permission to discard this draft.",
+          scope_unexpected_error: "Could not discard the draft. Please try again.",
+        },
+      },
     },
   },
   serviceStatusControl: {
@@ -1678,6 +1743,66 @@ const servicesDictionaryEn: ServicesDictionary = {
   },
 };
 
+type AbsDraftActionErrors = {
+  scope_not_found: string;
+  scope_not_draft: string;
+  scope_reduction_invalid: string;
+  scope_reason_required: string;
+  scope_concurrency_conflict: string;
+  scope_permission_denied: string;
+  scope_unexpected_error: string;
+};
+
+type AbsDraftItemEditorDictionary = {
+  trigger: string;
+  title: string;
+  sourceValues: string;
+  acceptedValues: string;
+  sourceQuantity: string;
+  sourceUnitPrice: string;
+  vatRate: string;
+  sourceLineTotal: string;
+  decision: string;
+  acceptedQuantity: string;
+  acceptedUnitPrice: string;
+  acceptedLineTotal: string;
+  reasonCode: string;
+  reasonNote: string;
+  reasonNoteOptional: string;
+  cancel: string;
+  save: string;
+  saving: string;
+  success: string;
+  reasonCodeLabels: Record<
+    | "customer_reduced_quantity"
+    | "customer_reduced_price"
+    | "customer_removed_item"
+    | "customer_supplied"
+    | "internal_scope_correction"
+    | "source_pricing_issue"
+    | "unsafe_line_item"
+    | "other",
+    string
+  >;
+  validation: {
+    adjustedValueRequired: string;
+    reasonRequired: string;
+    quantityCannotIncrease: string;
+    unitPriceCannotIncrease: string;
+  };
+  errors: AbsDraftActionErrors;
+};
+
+type AbsDraftDiscardDictionary = {
+  trigger: string;
+  title: string;
+  body: string;
+  cancel: string;
+  confirm: string;
+  discarding: string;
+  errors: AbsDraftActionErrors;
+};
+
 const servicesDictionaryAr: ServicesDictionary = {
   locale: "ar",
   states: {
@@ -1938,6 +2063,69 @@ const servicesDictionaryAr: ServicesDictionary = {
       noItems: "لا توجد بنود نطاق متاحة.",
       noInvoices: "لا توجد فواتير مرتبطة.",
       invoicesUnavailable: "معلومات الفواتير المرتبطة غير متاحة مؤقتًا.",
+      editItem: {
+        trigger: "تعديل البند",
+        title: "تعديل بند المسودة",
+        sourceValues: "القيم المصدرية",
+        acceptedValues: "القيم المقبولة",
+        sourceQuantity: "كمية المصدر",
+        sourceUnitPrice: "سعر وحدة المصدر",
+        vatRate: "نسبة ضريبة القيمة المضافة",
+        sourceLineTotal: "إجمالي بند المصدر",
+        decision: "القرار",
+        acceptedQuantity: "الكمية المقبولة",
+        acceptedUnitPrice: "سعر الوحدة المقبول",
+        acceptedLineTotal: "إجمالي البند المقبول",
+        reasonCode: "رمز السبب",
+        reasonNote: "ملاحظة السبب",
+        reasonNoteOptional: "اختياري",
+        cancel: "إلغاء",
+        save: "حفظ التغييرات",
+        saving: "جارٍ حفظ التغييرات…",
+        success: "تم تحديث بند المسودة.",
+        reasonCodeLabels: {
+          customer_reduced_quantity: "تخفيض العميل للكمية",
+          customer_reduced_price: "تخفيض العميل للسعر",
+          customer_removed_item: "إزالة العميل للبند",
+          customer_supplied: "توفير العميل",
+          internal_scope_correction: "تصحيح داخلي للنطاق",
+          source_pricing_issue: "مشكلة في تسعير المصدر",
+          unsafe_line_item: "بند غير آمن",
+          other: "أخرى",
+        },
+        validation: {
+          adjustedValueRequired: "أدخل الكمية المقبولة أو سعر الوحدة لبند معدل.",
+          reasonRequired: "اختر رمز سبب لهذا القرار.",
+          quantityCannotIncrease: "لا يمكن أن تتجاوز الكمية المقبولة كمية المصدر.",
+          unitPriceCannotIncrease: "لا يمكن أن يتجاوز سعر الوحدة المقبول سعر وحدة المصدر.",
+        },
+        errors: {
+          scope_not_found: "بند نطاق الفوترة هذا لم يعد متاحًا.",
+          scope_not_draft: "لا يمكن تعديل سوى مسودات نطاقات الفوترة.",
+          scope_reduction_invalid: "يجب أن تتبع القيم المقبولة قواعد التخفيض فقط.",
+          scope_reason_required: "رمز السبب مطلوب لهذا التغيير.",
+          scope_concurrency_conflict: "تم تغيير المسودة أثناء التعديل. حدّث الصفحة وحاول مرة أخرى.",
+          scope_permission_denied: "ليست لديك صلاحية تعديل بند المسودة هذا.",
+          scope_unexpected_error: "تعذر تحديث بند المسودة. يرجى المحاولة مرة أخرى.",
+        },
+      },
+      discardDraft: {
+        trigger: "حذف المسودة",
+        title: "حذف مسودة نطاق الفوترة؟",
+        body: "سيؤدي ذلك إلى إزالة مسودة نطاق الفوترة وجميع بنودها نهائيًا.",
+        cancel: "الاحتفاظ بالمسودة",
+        confirm: "حذف المسودة",
+        discarding: "جارٍ حذف المسودة…",
+        errors: {
+          scope_not_found: "مسودة نطاق الفوترة هذه لم تعد متاحة.",
+          scope_not_draft: "لا يمكن حذف سوى مسودات نطاقات الفوترة.",
+          scope_reduction_invalid: "تعذر حذف المسودة.",
+          scope_reason_required: "تعذر حذف المسودة.",
+          scope_concurrency_conflict: "تم تغيير المسودة أثناء حذفها. حدّث الصفحة وحاول مرة أخرى.",
+          scope_permission_denied: "ليست لديك صلاحية حذف هذه المسودة.",
+          scope_unexpected_error: "تعذر حذف المسودة. يرجى المحاولة مرة أخرى.",
+        },
+      },
     },
   },
   serviceStatusControl: {
