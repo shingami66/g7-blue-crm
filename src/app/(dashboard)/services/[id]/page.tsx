@@ -105,6 +105,9 @@ export default async function ServiceDetailPage({
   const canWriteSupplierBookings = await checkPermission("supplier_bookings:write");
   const canCancelSupplierBookings = await checkPermission("supplier_bookings:cancel");
   const canReadApprovedBillingScopes = await checkPermission("approvedBillingScopes:read");
+  const canCreateApprovedBillingScopeDraft = await checkPermission(
+    "approvedBillingScopes:create",
+  );
   const canReadInvoices = await checkPermission("invoices:read");
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
@@ -305,8 +308,10 @@ export default async function ServiceDetailPage({
           serviceId={service.id}
           dictionary={dictionary}
           billingState={billingState}
+          serviceStatus={service.status}
           canReadInvoices={canReadInvoices}
           canReadQuotations={canReadQuotations}
+          canCreateDraft={canCreateApprovedBillingScopeDraft}
           quotationNumbersById={Object.fromEntries(
             (relatedQuotations ?? []).map((quotation) => [
               quotation.id,

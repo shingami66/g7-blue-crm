@@ -4,6 +4,7 @@ export const APPROVED_BILLING_SCOPE_ERROR_CODES = [
   "scope_source_deleted",
   "scope_discount_not_supported",
   "scope_source_service_mismatch",
+  "scope_service_lifecycle_ineligible",
   "scope_duplicate_draft",
   "scope_no_items",
   "scope_no_billable_items",
@@ -37,6 +38,8 @@ export const APPROVED_BILLING_SCOPE_ERROR_MESSAGES: Record<
     "Approved Billing Scope V1 does not support source quotations with discount.",
   scope_source_service_mismatch:
     "The source quotation does not belong to the expected service.",
+  scope_service_lifecycle_ineligible:
+    "A billing scope draft cannot be created for this Service lifecycle state.",
   scope_duplicate_draft:
     "An active draft billing scope already exists for this source quotation.",
   scope_no_items:

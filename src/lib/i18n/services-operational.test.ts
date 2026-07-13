@@ -8,6 +8,10 @@ import {
   APPROVED_BILLING_SCOPE_PERMISSIONS,
 } from "../approved-billing-scopes/permissions.ts";
 import {
+  APPROVED_BILLING_SCOPE_ERROR_CODES,
+  getApprovedBillingScopeErrorMessage,
+} from "../approved-billing-scopes/errors.ts";
+import {
   getServiceStatusLabel,
   getServicesDictionary,
 } from "./dictionaries/services.ts";
@@ -72,6 +76,12 @@ const SERVICE_DETAIL = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/page.t
 const INVOICE_ACTIONS = join(REPO_ROOT, "src/lib/invoices/actions.ts");
 const INVOICE_BILLING_STATE = join(REPO_ROOT, "src/lib/invoices/billing-state.ts");
 const INVOICE_SCHEMAS = join(REPO_ROOT, "src/lib/invoices/schemas.ts");
+const ABS_ACTIONS = join(REPO_ROOT, "src/lib/approved-billing-scopes/actions.ts");
+const ABS_SCHEMAS = join(REPO_ROOT, "src/lib/approved-billing-scopes/schemas.ts");
+const SERVICE_STATUS_TRANSITIONS = join(
+  REPO_ROOT,
+  "src/lib/services/status-transitions.ts",
+);
 const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/permissions.ts");
 const PENDING = join(REPO_ROOT, "src/components/ui/GlobalPendingProvider.tsx");
 const QUOTATIONS_PAGE = join(REPO_ROOT, "src/app/(dashboard)/quotations/page.tsx");
@@ -273,6 +283,8 @@ test("7. ABS headings, statuses, line-safety, and item-decision labels localize"
   assert.equal(ar.approvedBillingScopes.labels.sourceQuotation, "عرض السعر المصدر");
   assert.equal(en.approvedBillingScopes.draftRevisionExists, "Draft revision exists");
   assert.equal(ar.approvedBillingScopes.draftRevisionExists, "توجد مسودة مراجعة");
+  assert.equal(en.approvedBillingScopes.createDraft.action, "Create draft");
+  assert.equal(ar.approvedBillingScopes.createDraft.action, "إنشاء مسودة");
   assert.equal(ar.approvedBillingScopes.detail.sectionInvoices, "الفواتير المرتبطة");
   assert.deepEqual(listNestedKeys(en.approvedBillingScopes).sort(), listNestedKeys(ar.approvedBillingScopes).sort());
 });
@@ -300,14 +312,111 @@ test("8. ABS internal status and decision codes remain unchanged", () => {
   const card = read(ABS_CARD);
   assert.match(card, /effectiveStatusLabels/);
   assert.match(card, /lineSafetyLabels\[primary\.lineSafetyStatus\]/);
-  // Read-only enrich: no write CTAs
-  assert.doesNotMatch(card, /createApprovedBillingScopeDraft|Create Draft|voidApproved|supersedeApproved/);
-  assert.doesNotMatch(card, /approveApprovedBillingScope|discardApprovedBillingScopeDraft/);
+  // Draft-create UI is permission-gated; void/supersede/approve/discard still absent
+  assert.match(card, /canCreateDraft/);
+  assert.match(card, /CreateApprovedBillingScopeDraftAction/);
+  assert.match(card, /createApprovedBillingScopeDraft|sourceQuotationId/);
+  assert.doesNotMatch(card, /voidApproved|supersedeApproved|approveApprovedBillingScope|discardApprovedBillingScopeDraft/);
   assert.match(card, /canReadInvoices/);
   assert.match(card, /billingState/);
   assert.match(card, /dir="ltr"/);
   assert.match(card, /formatSarAmount/);
   assert.match(card, /legacyQuotationAuthority|draftRevisionExists/);
+  assert.match(card, /resolveDraftCreateContext|showCreateDraft/);
+  // Zero-scope gate: historical-only must not authorize create via "no active" alone
+  assert.match(card, /scopes\.length === 0|showCreateDraft/);
+  assert.doesNotMatch(card, /historical_only[\s\S]{0,80}showCreateDraft|showCreateDraft[\s\S]{0,120}historical_only/);
+  // Active-scope path must not expose supersede action or revision-create workflow
+  assert.doesNotMatch(card, /voidApproved|supersedeApproved|createRevision|revision-draft/);
+});
+
+test("8b. ABS draft-create action client contracts and EN/AR copy", () => {
+  const en = getServicesDictionary("en");
+  const ar = getServicesDictionary("ar");
+  assert.equal(en.approvedBillingScopes.createDraft.action, "Create draft");
+  assert.equal(ar.approvedBillingScopes.createDraft.action, "إنشاء مسودة");
+  assert.ok(en.approvedBillingScopes.createDraft.errors.scope_duplicate_draft.length > 0);
+  assert.ok(ar.approvedBillingScopes.createDraft.errors.scope_permission_denied.length > 0);
+  assert.ok(
+    en.approvedBillingScopes.createDraft.errors.scope_service_lifecycle_ineligible.length > 0,
+  );
+  assert.ok(
+    ar.approvedBillingScopes.createDraft.errors.scope_service_lifecycle_ineligible.length > 0,
+  );
+  assert.deepEqual(
+    listNestedKeys(en.approvedBillingScopes.createDraft).sort(),
+    listNestedKeys(ar.approvedBillingScopes.createDraft).sort(),
+  );
+
+  const createAction = read(
+    join(REPO_ROOT, "src/app/(dashboard)/services/[id]/CreateApprovedBillingScopeDraftAction.tsx"),
+  );
+  assert.match(createAction, /createApprovedBillingScopeDraft/);
+  assert.match(createAction, /sourceQuotationId/);
+  assert.match(createAction, /useTransition|isPending/);
+  assert.match(createAction, /disabled=\{isPending\}/);
+  assert.match(createAction, /scope_duplicate_draft/);
+  assert.match(createAction, /router\.refresh|router\.push/);
+  assert.doesNotMatch(createAction, /acceptedGrandTotal|requestedAmount|scopeVersion/);
+  assert.doesNotMatch(createAction, /voidApproved|supersedeApproved|discardApproved|approveApproved/);
+
+  const serviceDetail = read(SERVICE_DETAIL);
+  assert.match(serviceDetail, /approvedBillingScopes:create/);
+  assert.match(serviceDetail, /canCreateDraft/);
+
+  const serviceStatuses = read(SERVICE_STATUS_TRANSITIONS);
+  assert.match(serviceStatuses, /TERMINAL_STATUSES[\s\S]*?"Completed"[\s\S]*?"Cancelled"/);
+  assert.match(serviceStatuses, /export function isTerminalServiceStatus/);
+  assert.match(read(ABS_CARD), /isTerminalServiceStatus\(serviceStatus\)/);
+
+  const absActions = read(ABS_ACTIONS);
+  const createDraftStart = absActions.indexOf(
+    "export async function createApprovedBillingScopeDraft",
+  );
+  const discardDraftStart = absActions.indexOf(
+    "export async function discardApprovedBillingScopeDraft",
+  );
+  const createDraftAction = absActions.slice(createDraftStart, discardDraftStart);
+  assert.match(
+    createDraftAction,
+    /requirePermission\(APPROVED_BILLING_SCOPE_PERMISSIONS\.create\)/,
+  );
+  assert.match(createDraftAction, /\.from\("services"\)/);
+  assert.match(createDraftAction, /\.eq\("id", quotation\.service_id\)/);
+  assert.match(createDraftAction, /isTerminalServiceStatus\(sourceService\.status\)/);
+  assert.match(
+    createDraftAction,
+    /errorResult\("scope_service_lifecycle_ineligible"\)/,
+  );
+  assert.ok(
+    createDraftAction.indexOf("requirePermission") <
+      createDraftAction.indexOf('.from("quotations")'),
+  );
+
+  const createSchema = read(ABS_SCHEMAS).match(
+    /export const createApprovedBillingScopeDraftSchema = z\.object\(\{[\s\S]*?\n\}\);/,
+  )?.[0] ?? "";
+  assert.match(createSchema, /sourceQuotationId/);
+  assert.doesNotMatch(createSchema, /serviceStatus|serviceId|status/);
+  assert.ok(
+    APPROVED_BILLING_SCOPE_ERROR_CODES.includes(
+      "scope_service_lifecycle_ineligible",
+    ),
+  );
+  assert.ok(
+    getApprovedBillingScopeErrorMessage(
+      "scope_service_lifecycle_ineligible",
+    ).length > 0,
+  );
+
+  // List completeness for historical gate: unfiltered service list
+  const queries = read(
+    join(REPO_ROOT, "src/lib/approved-billing-scopes/queries.ts"),
+  );
+  assert.match(queries, /listApprovedBillingScopesForServiceResult/);
+  assert.match(queries, /\.eq\("service_id", serviceId\)/);
+  // Default path does not force a single status when options.status omitted
+  assert.match(queries, /if \(options\?\.status\)/);
 });
 
 test("9-11. ABS permissions and masking: accountant read-only; viewer/sales blocked", () => {

@@ -303,3 +303,54 @@ export function buildAbsCardBillingSnapshot(input: {
     hasApprovedQuotation: input.approvedQuotation != null,
   };
 }
+
+export type AbsDraftCreateScopeInput = {
+  id: string;
+  status: string;
+  sourceQuotationId: string;
+  isActiveApprovedScope?: boolean;
+};
+
+/**
+ * Create Draft eligibility (UI gate only).
+ * Requires a deterministic approved source quotation and **zero** ABS rows
+ * for the Service (any status/history). Historical/voided/superseded-derived
+ * or draft/active rows must not authorize create.
+ */
+export function resolveDraftCreateContext(
+  scopes: readonly AbsDraftCreateScopeInput[],
+  billing: { approvedQuotationId: string | null } | { approvedQuotation: { id: string } | null },
+  options: {
+    scopesLoadError: boolean;
+    serviceLifecycleEligible: boolean;
+  },
+): {
+  sourceQuotationId: string | null;
+  existingDraftScopeId: string | null;
+  showCreateDraft: boolean;
+} {
+  const sourceQuotationId =
+    "approvedQuotationId" in billing
+      ? billing.approvedQuotationId
+      : (billing.approvedQuotation?.id ?? null);
+
+  const existingDraftScopeId =
+    sourceQuotationId == null
+      ? null
+      : (scopes.find(
+          (scope) =>
+            scope.status === "draft" && scope.sourceQuotationId === sourceQuotationId,
+        )?.id ?? null);
+
+  const showCreateDraft =
+    !options.scopesLoadError &&
+    options.serviceLifecycleEligible &&
+    sourceQuotationId != null &&
+    scopes.length === 0;
+
+  return {
+    sourceQuotationId,
+    existingDraftScopeId,
+    showCreateDraft,
+  };
+}

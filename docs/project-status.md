@@ -40,23 +40,23 @@
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 2.1 Current Active Work
-- **Current active implementation task (exactly one):** `ABS-MGMT-UI-DRAFT-CREATE-1`
-- **Purpose:** Add Service-scoped Create Draft CTA and error handling for Approved Billing Scope using the existing `createApprovedBillingScopeDraft` server action (write UI slice after accepted read-enrichment).
+- **Current active implementation task (exactly one):** `ABS-MGMT-UI-DRAFT-EDIT-1`
+- **Purpose:** Add the bounded draft item edit and discard UI using the existing backend contracts; review/approve remains a later slice.
 - **Design complete:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
 - **ABS read-enrichment complete (source + accepted):** `ABS-MGMT-UI-READ-ENRICH-1` — Service Detail read-only ABS summary card enriched; controlled commit/push of implementation remain separate pending tasks.
 - **Locked ABS UI slice order (backend-ready first):**
   1. `ABS-MGMT-UI-READ-ENRICH-1` **complete** (source implemented; accepted)
-  2. `ABS-MGMT-UI-DRAFT-CREATE-1` **(active)**
-  3. `ABS-MGMT-UI-DRAFT-EDIT-1`
+  2. `ABS-MGMT-UI-DRAFT-CREATE-1` **complete** (source implemented; PASS by Mozfer manual browser evidence; commit/push pending)
+  3. `ABS-MGMT-UI-DRAFT-EDIT-1` **(active)**
   4. `ABS-MGMT-UI-REVIEW-APPROVE-1`
   5. `ABS-MGMT-VOID-ACTION-1` **blocked**
   6. `ABS-MGMT-SUPERSEDE-ACTION-1` **blocked**
   Optional later: `ABS-MGMT-HISTORY-LIST-1`.
-- **Source-truth (ABS):** UI remains **read-oriented for write actions not yet shipped** (create/edit/discard/review/approve CTAs not in read-enrich slice). Server actions READY: create draft, discard draft, edit draft item, line-safety review, approve. **Void and supersede actions are not implemented** (schemas/permission keys/columns only). Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship). Custom RPC exceptions: draft discard + draft item edit.
+- **Source-truth (ABS):** Create Draft is the only write CTA implemented in the current, uncommitted source; draft edit/discard/review/approve UI is not implemented. Server actions READY: create draft, discard draft, edit draft item, line-safety review, approve. **Void and supersede actions are not implemented** (schemas/permission keys/columns only). Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship). Custom RPC exceptions: draft discard + draft item edit.
 - **Durable flags:**
   - **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`** — remains open; must resolve before slices 5–6.
   - Responsive P0 manual smoke: **closed** — see Responsive core P0 below (**PASS by Mozfer manual browser evidence**). Flag `RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING` is **no longer active**.
-- **V1 critical-path order (locked):** Feature 005 closed → responsive audit/implement + Mozfer re-smoke **PASS** → ABS management design (complete) → ABS read-enrich (complete; commit/push pending) → **ABS draft-create UI (active)** → draft edit → review/approve → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates).
+- **V1 critical-path order (locked):** Feature 005 closed → responsive audit/implement + Mozfer re-smoke **PASS** → ABS management design (complete) → ABS read-enrich (complete; commit/push pending) → ABS draft-create UI (complete; commit/push pending) → **draft edit (active)** → review/approve → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates).
 - **Preserved locks:** Customer Profile → Service → Quotation → Invoice → Payment; Service as operational core; no standalone top-nav ABS module; active scope ceiling authoritative when present; legacy quotation fallback when no active scope; existing invoices never rewritten; DEV/DEMO wording; Reports Center is P1; professional Supplier Booking redesign outside V1 acceptance; supplier payments/invoices/costing/margin outside V1; no VAT/ZATCA/FATOORA claims; no production-readiness claim.
 
 ### Responsive core P0 (source implemented; Mozfer manual smoke PASS)
@@ -85,6 +85,18 @@
 
 ## 3. Completed Milestones
 
+### ABS-MGMT-UI-DRAFT-CREATE-1 (source implemented; Mozfer manual smoke PASS)
+- [x] Service Detail exposes Create Draft only to Admin/Manager when there is an approved, non-deleted quotation and the Service has zero ABS records across all statuses/history.
+- [x] Existing draft, active, voided, superseded-derived, or mixed ABS history blocks Create Draft; returning after creation shows the existing Draft and View details without another Create Draft control.
+- [x] `Completed` and `Cancelled` Services cannot create a draft. The UI hides the control, and the server action independently rejects terminal, deleted, or missing Services after resolving lifecycle state through the quotation's Service relationship.
+- [x] Browser payload remains `sourceQuotationId` only; Service status, Service ID, snapshots, items, versions, and totals remain server-derived.
+- [x] **PASS by Mozfer manual browser evidence:** Admin confirmed Create Draft hidden on a Cancelled Service; an eligible non-terminal Service with approved quotation, zero ABS history, zero invoices, and zero discount exposed Create Draft; creation navigated to the nested draft detail route; the resulting scope was Draft, version 1, Pending review, with the copied quotation item and `SAR 1,000.00` total; returning to Service Detail showed the existing Draft, View details, and no Create Draft; Viewer had no ABS access; Arabic and English rendering passed.
+- [x] No manual double-click stress test was claimed. Pending duplicate-submit protection is implementation/test-covered, not separately proven by manual browser evidence.
+- [x] Admin/Manager create and Accountant read-only roles are preserved. Active ABS ceiling authority, approved-quotation fallback, invoice snapshots, and no-silent-supersede behavior are unchanged.
+- [x] Implementation remains unstaged/uncommitted at this docs-sync point; controlled commit and push remain separate pending tasks.
+- [x] Agent did not perform browser smoke. No production readiness/apply or VAT/ZATCA/FATOORA/QR/XML support is claimed.
+- [x] Next active implementation task: `ABS-MGMT-UI-DRAFT-EDIT-1`.
+
 ### ABS-MGMT-UI-READ-ENRICH-1 (source implemented; docs sync)
 - [x] Service Detail Approved Billing Scope summary card enriched as **read-only** management UI (`ABS-MGMT-UI-READ-ENRICH-1`).
 - [x] Displayed (when data/permissions allow): effective display state (active / draft / voided / superseded-derived — **not** a DB `superseded` status), scope version, source quotation reference, billing ceiling, invoiced amount, remaining billable, line safety, draft-revision and history/other-scope indicators, read-only nested detail navigation.
@@ -92,7 +104,7 @@
 - [x] Accountant masking of internal notes/reasons preserved (card does not surface masked internal reason fields).
 - [x] Uses existing server billing-state / ABS list contracts; no client recomputation of invoice authority; no write CTAs (create/edit/discard/review/approve/void/supersede).
 - [x] Implementation remains unstaged/uncommitted at docs-sync time; controlled commit and push are separate tasks.
-- [x] Docs sync: `ABS-MGMT-UI-READ-ENRICH-DOCS-SYNC-1`. Next active implementation task: `ABS-MGMT-UI-DRAFT-CREATE-1`.
+- [x] Docs sync: `ABS-MGMT-UI-READ-ENRICH-DOCS-SYNC-1`. Draft-create later completed; current active implementation task is `ABS-MGMT-UI-DRAFT-EDIT-1`.
 
 ### Approved Billing Scope Management Design (docs lock)
 - [x] Design task `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` completed for product/implementation slicing (`APPROVED_BILLING_SCOPE_MANAGEMENT_DESIGN_COMPLETE`).
@@ -232,7 +244,7 @@
   - snapshot excludes `عمال` and `ضيافة`
 - [x] Temporary item-decision dev harness was removed after smoke.
 - [x] Full-scope snapshot WARN from commit `c66975d` is now closed.
-- [x] No full user-facing Approved Billing Scope **management** UI existed at full-scope smoke close (read-only card/detail only). **Later progress:** management design locked; `ABS-MGMT-UI-READ-ENRICH-1` completed; next active write slice is `ABS-MGMT-UI-DRAFT-CREATE-1`.
+- [x] No full user-facing Approved Billing Scope **management** UI existed at full-scope smoke close (read-only card/detail only). **Later progress:** management design locked; `ABS-MGMT-UI-READ-ENRICH-1` completed; `ABS-MGMT-UI-DRAFT-CREATE-1` is source-complete and manually accepted; the current active write slice is `ABS-MGMT-UI-DRAFT-EDIT-1`.
 
 ### Approved Billing Scope Foundation
 - [x] Migration draft `supabase/migrations/20260708090000_approved_billing_scope_foundation.sql` was committed and pushed as `8d2aefa feat(billing): draft approved billing scope foundation`.

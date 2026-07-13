@@ -165,6 +165,28 @@ export interface ServicesDictionary {
     invoiceTotalsUnavailable: string;
     sourceQuotationUnavailable: string;
     viewRelatedQuotations: string;
+    createDraft: {
+      action: string;
+      creating: string;
+      success: string;
+      openExistingDraft: string;
+      sourceLabel: string;
+      errors: {
+        scope_duplicate_draft: string;
+        scope_source_not_approved: string;
+        scope_source_deleted: string;
+        scope_discount_not_supported: string;
+        scope_source_service_mismatch: string;
+        scope_service_lifecycle_ineligible: string;
+        scope_no_items: string;
+        scope_permission_denied: string;
+        scope_not_found: string;
+        scope_concurrency_conflict: string;
+        scope_unexpected_error: string;
+        fallback: string;
+        fallbackWithCode: string;
+      };
+    };
     labels: {
       version: string;
       lineSafety: string;
@@ -903,6 +925,38 @@ const servicesDictionaryEn: ServicesDictionary = {
     invoiceTotalsUnavailable: "Invoice totals are temporarily unavailable.",
     sourceQuotationUnavailable: "Source quotation reference unavailable",
     viewRelatedQuotations: "View related quotations",
+    createDraft: {
+      action: "Create draft",
+      creating: "Creating draft…",
+      success: "Draft billing scope created.",
+      openExistingDraft: "A draft billing scope already exists for this quotation.",
+      sourceLabel: "Source quotation",
+      errors: {
+        scope_duplicate_draft:
+          "An active draft billing scope already exists for this source quotation.",
+        scope_source_not_approved:
+          "The source quotation must be approved before creating a billing scope.",
+        scope_source_deleted:
+          "The source quotation is deleted and cannot be used for billing scope work.",
+        scope_discount_not_supported:
+          "Approved Billing Scope does not support source quotations with discount.",
+        scope_source_service_mismatch:
+          "The source quotation does not belong to this service.",
+        scope_service_lifecycle_ineligible:
+          "A billing scope draft cannot be created for a completed, cancelled, or deleted Service.",
+        scope_no_items:
+          "The source quotation does not have any items to copy into a billing scope.",
+        scope_permission_denied:
+          "You do not have permission to create an approved billing scope draft.",
+        scope_not_found: "Source quotation was not found.",
+        scope_concurrency_conflict:
+          "Draft creation encountered a concurrency conflict. Please try again.",
+        scope_unexpected_error:
+          "An unexpected error occurred while creating the draft. Please try again.",
+        fallback: "Could not create the draft. Please try again.",
+        fallbackWithCode: "Could not create the draft ({code}).",
+      },
+    },
     labels: {
       version: "Scope version",
       lineSafety: "Line safety",
@@ -1789,6 +1843,38 @@ const servicesDictionaryAr: ServicesDictionary = {
     invoiceTotalsUnavailable: "إجماليات الفواتير غير متاحة مؤقتًا.",
     sourceQuotationUnavailable: "مرجع عرض السعر المصدر غير متاح",
     viewRelatedQuotations: "عرض عروض الأسعار المرتبطة",
+    createDraft: {
+      action: "إنشاء مسودة",
+      creating: "جاري إنشاء المسودة…",
+      success: "تم إنشاء مسودة نطاق الفوترة.",
+      openExistingDraft: "توجد مسودة نطاق فوترة لهذا العرض بالفعل.",
+      sourceLabel: "عرض السعر المصدر",
+      errors: {
+        scope_duplicate_draft:
+          "توجد مسودة نطاق فوترة نشطة لهذا العرض بالفعل.",
+        scope_source_not_approved:
+          "يجب اعتماد عرض السعر المصدر قبل إنشاء نطاق فوترة.",
+        scope_source_deleted:
+          "عرض السعر المصدر محذوف ولا يمكن استخدامه لنطاق الفوترة.",
+        scope_discount_not_supported:
+          "نطاق الفوترة المعتمد لا يدعم عروض الأسعار التي تتضمن خصمًا.",
+        scope_source_service_mismatch:
+          "عرض السعر المصدر لا ينتمي إلى هذه الخدمة.",
+        scope_service_lifecycle_ineligible:
+          "لا يمكن إنشاء مسودة نطاق فوترة لخدمة مكتملة أو ملغاة أو محذوفة.",
+        scope_no_items:
+          "عرض السعر المصدر لا يحتوي على بنود لنسخها إلى نطاق الفوترة.",
+        scope_permission_denied:
+          "ليست لديك صلاحية إنشاء مسودة نطاق فوترة معتمد.",
+        scope_not_found: "لم يتم العثور على عرض السعر المصدر.",
+        scope_concurrency_conflict:
+          "حدث تعارض أثناء إنشاء المسودة. يرجى المحاولة مرة أخرى.",
+        scope_unexpected_error:
+          "حدث خطأ غير متوقع أثناء إنشاء المسودة. يرجى المحاولة مرة أخرى.",
+        fallback: "تعذر إنشاء المسودة. يرجى المحاولة مرة أخرى.",
+        fallbackWithCode: "تعذر إنشاء المسودة ({code}).",
+      },
+    },
     labels: {
       version: "إصدار النطاق",
       lineSafety: "سلامة البنود",

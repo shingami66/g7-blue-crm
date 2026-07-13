@@ -10,6 +10,7 @@ import {
   pickAbsCardScopes,
   resolveAbsCardMoneyFields,
   resolveAbsCardScenario,
+  resolveDraftCreateContext,
   resolveSourceQuotationNumber,
   type AbsCardEffectiveStatus,
   type AbsCardMoneyField,
@@ -20,6 +21,9 @@ import type {
   ApprovedBillingScopeSummary,
 } from "@/lib/approved-billing-scopes/types";
 import type { ServiceBillingState } from "@/lib/invoices/types";
+import { isTerminalServiceStatus } from "@/lib/services/status-transitions";
+import type { ServiceStatus } from "@/types/service";
+import CreateApprovedBillingScopeDraftAction from "./CreateApprovedBillingScopeDraftAction";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -43,8 +47,11 @@ type ApprovedBillingScopesCardProps = {
   serviceId: string;
   dictionary: ServicesDictionary;
   billingState: ServiceBillingState;
+  serviceStatus: ServiceStatus;
   canReadInvoices: boolean;
   canReadQuotations: boolean;
+  /** `approvedBillingScopes:create` — UI gate only; server action remains authoritative. */
+  canCreateDraft: boolean;
   /** Safe quotation number lookup by id (from related quotations when permitted). */
   quotationNumbersById: Readonly<Record<string, string>>;
 };
@@ -53,8 +60,10 @@ export default async function ApprovedBillingScopesCard({
   serviceId,
   dictionary,
   billingState,
+  serviceStatus,
   canReadInvoices,
   canReadQuotations,
+  canCreateDraft,
   quotationNumbersById,
 }: ApprovedBillingScopesCardProps) {
   const cardDictionary = dictionary.approvedBillingScopes;
@@ -75,6 +84,26 @@ export default async function ApprovedBillingScopesCard({
     scopes,
     hasApprovedQuotation: billing.hasApprovedQuotation,
   });
+
+  const draftCreate = resolveDraftCreateContext(scopes, billingState, {
+    scopesLoadError,
+    serviceLifecycleEligible: !isTerminalServiceStatus(serviceStatus),
+  });
+  // Completeness: listApprovedBillingScopesForServiceResult (no status filter)
+  // returns draft, approved, voided, and superseded-derived rows for the Service.
+  const sourceQuotationNumber =
+    draftCreate.sourceQuotationId == null
+      ? null
+      : resolveSourceQuotationNumber({
+          sourceQuotationId: draftCreate.sourceQuotationId,
+          quotationNumbersById,
+          billingQuotation: billingState.approvedQuotation
+            ? {
+                id: billingState.approvedQuotation.id,
+                quotationNumber: billingState.approvedQuotation.quotationNumber,
+              }
+            : null,
+        }) ?? billing.approvedQuotationNumber;
 
   if (scenario === "unavailable") {
     return (
@@ -130,7 +159,7 @@ export default async function ApprovedBillingScopesCard({
         <p className="mb-5 text-[14px] leading-[20px] text-on-surface-variant">
           {cardDictionary.legacyQuotationAuthority}
         </p>
-        <dl className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <dl className="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           <ScopeDetail
             label={cardDictionary.labels.sourceQuotation}
             value={
@@ -165,6 +194,18 @@ export default async function ApprovedBillingScopesCard({
             unavailableLabel={cardDictionary.invoiceTotalsUnavailable}
           />
         </dl>
+        {canCreateDraft &&
+          draftCreate.showCreateDraft &&
+          draftCreate.sourceQuotationId && (
+            <CreateApprovedBillingScopeDraftAction
+              serviceId={serviceId}
+              sourceQuotationId={draftCreate.sourceQuotationId}
+              sourceQuotationNumber={sourceQuotationNumber}
+              existingDraftScopeId={null}
+              dictionary={cardDictionary.createDraft}
+              viewDraftLabel={cardDictionary.viewDraft}
+            />
+          )}
       </ScopeCardShell>
     );
   }
@@ -382,6 +423,11 @@ function ScopeSummaryCard({
           )}
         </div>
       )}
+
+      {/*
+        Create Draft is only for zero ABS history (legacy_quotation_only card path).
+        Draft / active / historical summary states must not offer create.
+      */}
     </section>
   );
 }

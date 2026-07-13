@@ -10,11 +10,11 @@
 
 - **READY (server):** create draft, discard draft, edit draft item, line-safety review, approve; invoice ceiling when active scope present; legacy quotation fallback when no active scope.
 - **READY (read UI):** Service Detail **read-enriched** summary card (`ABS-MGMT-UI-READ-ENRICH-1`) + nested read-only detail route. Card surfaces effective display state, source quotation, ceiling, invoiced/remaining (when `invoices:read`), line safety, draft/history indicators, and detail navigation. Accountant masking of internal notes/reasons preserved.
-- **PARTIAL (write UI):** no Create/Edit/Discard/Review/Approve CTAs yet; next slice is `ABS-MGMT-UI-DRAFT-CREATE-1`.
+- **PARTIAL (write UI):** Create Draft is implemented in current uncommitted source and manually accepted; Edit/Discard/Review/Approve CTAs are not implemented. Next slice: `ABS-MGMT-UI-DRAFT-EDIT-1`.
 - **MISSING:** `voidApprovedBillingScope` / `supersedeApprovedBillingScope` **action functions** (Zod schemas + permission keys + DB columns exist; **not** working actions).
 - **Status model:** DB status enum is `draft | approved | voided` only. **`superseded` is not a status value** — use `superseded_at` / `superseded_by_scope_id` for display.
 - **Custom RPC exceptions (shipped):** draft discard RPC and draft item-edit RPC (narrow `service_role` helpers). General ABS business logic remains app-layer server actions.
-- **Management design:** locked in `docs/approved-billing-scope-management-design.md`. Active implement task: `ABS-MGMT-UI-DRAFT-CREATE-1`. Void/supersede blocked on **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`**.
+- **Management design:** locked in `docs/approved-billing-scope-management-design.md`. Active implementation task: `ABS-MGMT-UI-DRAFT-EDIT-1`. Void/supersede blocked on **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`**.
 
 ## Locked V1 Decisions
 
@@ -47,6 +47,9 @@
 - Default copied item decision is `accepted`.
 - Accepted values initially equal source values.
 - Header accepted totals are recalculated server-side from copied child items.
+- Create Draft UI eligibility additionally requires zero ABS records for the complete Service-scoped list. Existing draft, active, voided, superseded-derived, or mixed history blocks the control.
+- `Completed` and `Cancelled` Services cannot create an ABS draft. The UI hides the control, and the server action independently resolves Service lifecycle through the quotation relationship and rejects terminal, deleted, or missing Services.
+- The browser payload remains `sourceQuotationId` only; browser-supplied Service identity or status is not accepted.
 
 ### Draft Item Editing
 - `accepted`: accepted qty and unit price must equal source qty and unit price.
@@ -127,6 +130,7 @@
   - `scope_source_deleted`
   - `scope_discount_not_supported`
   - `scope_source_service_mismatch`
+  - `scope_service_lifecycle_ineligible`
   - `scope_duplicate_draft`
   - `scope_no_items`
   - `scope_no_billable_items`
@@ -143,6 +147,10 @@
 - Do not expose raw trigger or constraint text directly to UI users.
 
 ### Implementation Smoke Notes
+- `ABS-MGMT-UI-DRAFT-CREATE-1` is source implemented and **PASS by Mozfer manual browser evidence**; controlled commit and push remain pending separate tasks.
+- Observed evidence only: Admin saw no Create Draft on a Cancelled terminal Service; an eligible non-terminal Service with approved quotation, zero ABS history, zero invoices, and zero discount exposed Create Draft; creation succeeded and navigated to the nested draft detail route; the scope displayed Draft, version 1, Pending review, the copied quotation item, and `SAR 1,000.00`; returning to Service Detail showed the existing Draft, View details, and no Create Draft; Viewer had no ABS access; Arabic and English rendering passed.
+- No manual double-click stress test is claimed. Pending duplicate-submit protection is implementation/test-covered, not separately proven by manual browser evidence. Agent did not perform browser smoke.
+- The older server-action smoke record below is separate historical evidence; its duplicate request check is not a manual UI double-click stress-test claim for `ABS-MGMT-UI-DRAFT-CREATE-1`.
 - `APPROVED-BILLING-SCOPE-DRAFT-CREATE-COMMIT-1` implemented the create-draft action in `4ec323f feat(billing): add approved scope draft creation`.
 - Manual DEV/DEMO smoke passed for source quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe` and produced `scopeId = 2fb8a324-4bd2-44be-8a23-a2b37e9b6e72`.
 - Verification confirmed `status = draft`, `line_safety_status = pending_review`, item count matched quotation items, accepted totals matched item sums, and the duplicate second click returned `scope_duplicate_draft`.
@@ -158,7 +166,7 @@
 
 ## Deferred (current)
 - Production apply remains not authorized.
-- Full management **write** UI remains incomplete (ordered slices; active: `ABS-MGMT-UI-DRAFT-CREATE-1`; read-enrich complete).
+- Full management **write** UI remains incomplete (Create Draft implemented; active next slice: `ABS-MGMT-UI-DRAFT-EDIT-1`; review/approve follows).
 - Void and supersede **actions** remain not implemented and **blocked** on `ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`.
 - Tax, ZATCA, FATOORA, QR, and XML behavior remain deferred.
 - **Historical:** live schema enforceability check, draft create/discard/edit, review/approve, invoice integration, read-only card/detail, and **read-enrichment** are completed history — not current deferred work.

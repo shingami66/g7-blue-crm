@@ -4,6 +4,8 @@ import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { QuotationDetailRow, QuotationItemRow } from "@/lib/quotations/types";
+import { isTerminalServiceStatus } from "@/lib/services/status-transitions";
+import type { ServiceStatus } from "@/types/service";
 import { APPROVED_BILLING_SCOPE_PERMISSIONS } from "./permissions";
 import {
   createApprovedBillingScopeDraftSchema,
@@ -53,6 +55,11 @@ type DiscardApprovedBillingScopeDraftRpcRow = {
   service_id: string | null;
   source_quotation_id: string | null;
   discarded: boolean;
+};
+
+type SourceServiceLifecycleRow = {
+  status: ServiceStatus;
+  deleted_at: string | null;
 };
 
 type ApprovedBillingScopeDraftInsertRow = {
@@ -315,19 +322,6 @@ export async function createApprovedBillingScopeDraft(
       return errorResult("scope_unexpected_error");
     }
 
-    const draftConflict = await draftConflictStatus(
-      supabase,
-      parsed.data.sourceQuotationId
-    );
-
-    if (draftConflict === "error") {
-      return errorResult("scope_unexpected_error");
-    }
-
-    if (draftConflict === "existing" || draftConflict === "duplicate") {
-      return errorResult("scope_duplicate_draft");
-    }
-
     const { data: quotationRow, error: quotationError } = await supabase
       .from("quotations")
       .select(SOURCE_QUOTATION_SELECT)
@@ -360,6 +354,33 @@ export async function createApprovedBillingScopeDraft(
       return errorResult("scope_source_service_mismatch");
     }
 
+    const { data: serviceRow, error: serviceError } = await supabase
+      .from("services")
+      .select("status, deleted_at")
+      .eq("id", quotation.service_id)
+      .maybeSingle();
+
+    if (serviceError) {
+      console.error(
+        "[createApprovedBillingScopeDraft] Source Service lookup error:",
+        serviceError.message
+      );
+      return errorResult("scope_unexpected_error");
+    }
+
+    if (!serviceRow) {
+      return errorResult("scope_source_service_mismatch");
+    }
+
+    const sourceService = serviceRow as SourceServiceLifecycleRow;
+
+    if (
+      sourceService.deleted_at != null ||
+      isTerminalServiceStatus(sourceService.status)
+    ) {
+      return errorResult("scope_service_lifecycle_ineligible");
+    }
+
     if (parseMoney(quotation.discount) > 0) {
       return errorResult("scope_discount_not_supported");
     }
@@ -368,6 +389,16 @@ export async function createApprovedBillingScopeDraft(
 
     if (normalizedItems.length === 0) {
       return errorResult("scope_no_items");
+    }
+
+    const draftConflict = await draftConflictStatus(supabase, quotation.id);
+
+    if (draftConflict === "error") {
+      return errorResult("scope_unexpected_error");
+    }
+
+    if (draftConflict === "existing" || draftConflict === "duplicate") {
+      return errorResult("scope_duplicate_draft");
     }
 
     for (

@@ -7,6 +7,7 @@ import {
   pickAbsCardScopes,
   resolveAbsCardMoneyFields,
   resolveAbsCardScenario,
+  resolveDraftCreateContext,
   resolveSourceQuotationNumber,
 } from "./card-view-model.ts";
 
@@ -27,6 +28,11 @@ function scope(
     ...partial,
   };
 }
+
+const ELIGIBLE_DRAFT_CREATE_OPTIONS = {
+  scopesLoadError: false,
+  serviceLifecycleEligible: true,
+} as const;
 
 test("deriveAbsCardEffectiveStatus: draft / active / superseded / voided", () => {
   assert.equal(
@@ -291,7 +297,6 @@ test("resolveAbsCardMoneyFields: legacy quotation and unavailable billing", () =
   });
   assert.equal(unavailable.invoiced.kind, "unavailable");
   assert.equal(unavailable.remaining.kind, "unavailable");
-  // Zero is allowed only when server proves zero — unavailable path must not coerce to 0.
   assert.notEqual(unavailable.invoiced.kind, "value");
 });
 
@@ -303,4 +308,138 @@ test("does not treat superseded as a database status string", () => {
   });
   assert.equal(status, "superseded");
   assert.notEqual(status, "approved");
+});
+
+// ---------------------------------------------------------------------------
+// Draft-create historical gate
+// ---------------------------------------------------------------------------
+
+test("draft-create: approved QT + zero ABS records shows Create Draft", () => {
+  const result = resolveDraftCreateContext(
+    [],
+    { approvedQuotation: { id: "qt-1" } },
+    ELIGIBLE_DRAFT_CREATE_OPTIONS,
+  );
+  assert.equal(result.sourceQuotationId, "qt-1");
+  assert.equal(result.existingDraftScopeId, null);
+  assert.equal(result.showCreateDraft, true);
+});
+
+test("draft-create: existing draft hides Create Draft and exposes draft id", () => {
+  const result = resolveDraftCreateContext(
+    [scope({ id: "d1", status: "draft", sourceQuotationId: "qt-1" })],
+    { approvedQuotation: { id: "qt-1" } },
+    ELIGIBLE_DRAFT_CREATE_OPTIONS,
+  );
+  assert.equal(result.showCreateDraft, false);
+  assert.equal(result.existingDraftScopeId, "d1");
+});
+
+test("draft-create: active approved scope hides Create Draft", () => {
+  const result = resolveDraftCreateContext(
+    [
+      scope({
+        id: "a1",
+        status: "approved",
+        isActiveApprovedScope: true,
+      }),
+    ],
+    { approvedQuotation: { id: "qt-1" } },
+    ELIGIBLE_DRAFT_CREATE_OPTIONS,
+  );
+  assert.equal(result.showCreateDraft, false);
+});
+
+test("draft-create: voided-only history hides Create Draft", () => {
+  const result = resolveDraftCreateContext(
+    [scope({ id: "v1", status: "voided", voidedAt: "2026-01-01T00:00:00Z" })],
+    { approvedQuotation: { id: "qt-1" } },
+    ELIGIBLE_DRAFT_CREATE_OPTIONS,
+  );
+  assert.equal(result.showCreateDraft, false);
+});
+
+test("draft-create: superseded-derived-only history hides Create Draft", () => {
+  const result = resolveDraftCreateContext(
+    [
+      scope({
+        id: "s1",
+        status: "approved",
+        isActiveApprovedScope: false,
+        supersededAt: "2026-03-01T00:00:00Z",
+      }),
+    ],
+    { approvedQuotation: { id: "qt-1" } },
+    ELIGIBLE_DRAFT_CREATE_OPTIONS,
+  );
+  assert.equal(result.showCreateDraft, false);
+});
+
+test("draft-create: mixed historical records hide Create Draft", () => {
+  const result = resolveDraftCreateContext(
+    [
+      scope({
+        id: "s1",
+        status: "approved",
+        supersededAt: "2026-01-01T00:00:00Z",
+        scopeVersion: 1,
+      }),
+      scope({
+        id: "v1",
+        status: "voided",
+        voidedAt: "2026-02-01T00:00:00Z",
+        scopeVersion: 2,
+      }),
+    ],
+    { approvedQuotation: { id: "qt-1" } },
+    ELIGIBLE_DRAFT_CREATE_OPTIONS,
+  );
+  assert.equal(result.showCreateDraft, false);
+});
+
+test("draft-create: no-active is not equivalent to zero-scope", () => {
+  // Voided history is not active, but must not authorize create.
+  const result = resolveDraftCreateContext(
+    [scope({ id: "v1", status: "voided", voidedAt: "2026-01-01T00:00:00Z" })],
+    { approvedQuotationId: "qt-1" },
+    ELIGIBLE_DRAFT_CREATE_OPTIONS,
+  );
+  assert.equal(result.showCreateDraft, false);
+});
+
+test("draft-create: Cancelled Service hides Create Draft", () => {
+  const result = resolveDraftCreateContext(
+    [],
+    { approvedQuotationId: "qt-1" },
+    { scopesLoadError: false, serviceLifecycleEligible: false },
+  );
+  assert.equal(result.showCreateDraft, false);
+});
+
+test("draft-create: Completed Service hides Create Draft", () => {
+  const result = resolveDraftCreateContext(
+    [],
+    { approvedQuotationId: "qt-1" },
+    { scopesLoadError: false, serviceLifecycleEligible: false },
+  );
+  assert.equal(result.showCreateDraft, false);
+});
+
+test("draft-create: scopes load error hides Create Draft", () => {
+  const result = resolveDraftCreateContext(
+    [],
+    { approvedQuotationId: "qt-1" },
+    { scopesLoadError: true, serviceLifecycleEligible: true },
+  );
+  assert.equal(result.showCreateDraft, false);
+});
+
+test("draft-create: no approved quotation hides Create Draft", () => {
+  const result = resolveDraftCreateContext(
+    [],
+    { approvedQuotation: null },
+    ELIGIBLE_DRAFT_CREATE_OPTIONS,
+  );
+  assert.equal(result.showCreateDraft, false);
+  assert.equal(result.sourceQuotationId, null);
 });

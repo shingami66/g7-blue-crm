@@ -19,7 +19,7 @@ This document is the **current** product/technical management design for Service
 | View active approved scope | Service card + nested detail (read-enrich) | list / getActive / getById | `approved_billing_scopes` | `approvedBillingScopes:read` | **READY** (read UI) |
 | View draft scope | Detail by id; card primary when no active | list / get | `status=draft` | read | **READY** (read UI) |
 | View historical / voided / superseded | Detail by id; card history/other counts + display state | list for service | `voided_at`, `superseded_at` | read | **READY** (read UI; no full history page) |
-| Create draft from approved quotation | **None** (next slice) | `createApprovedBillingScopeDraft` | inserts + constraints | create | **PARTIAL** (server READY, UI MISSING) |
+| Create draft from approved quotation | Service card Create Draft action + nested detail navigation | `createApprovedBillingScopeDraft` | inserts + constraints | create | **READY** (source implemented; Mozfer smoke PASS; commit/push pending) |
 | Edit draft item (decision/qty/price/reason) | **None** | `editApprovedBillingScopeItem` + item-edit RPC | draft-only | update | **PARTIAL** |
 | Discard draft | **None** | `discardApprovedBillingScopeDraft` + discard RPC | draft cleanup | discard | **PARTIAL** |
 | Line-safety review | **None** | `reviewApprovedBillingScopeLineSafety` | header fields | review | **PARTIAL** |
@@ -56,7 +56,7 @@ This document is the **current** product/technical management design for Service
 | Void/supersede “actions implemented” | **Schemas + permission keys + columns exist; no `voidApprovedBillingScope` / `supersedeApprovedBillingScope` action functions** |
 | “No custom Postgres RPC for V1” without exception | **Exceptions exist:** draft discard RPC and draft item edit RPC (narrow service_role helpers) |
 | Status = `superseded` | **Not** a DB status; use timestamps for display “Superseded” |
-| ABS fully managed in CRM UI | **Read-enrichment shipped** (card + read-only detail); **write CTAs** (create/edit/discard/review/approve/void/supersede) **not** shipped |
+| ABS fully managed in CRM UI | **Read-enrichment + Create Draft implemented in current uncommitted source**; edit/discard/review/approve/void/supersede UI is not implemented |
 
 Historical milestone notes elsewhere may still mention planned void/supersede; treat those as historical unless labeled current.
 
@@ -67,6 +67,16 @@ Historical milestone notes elsewhere may still mention planned void/supersede; t
 - Invoice totals appear **only when `invoices:read` permits**; otherwise restricted/unavailable (not coerced to zero).
 - Accountant masking of internal notes/reasons remains preserved (not exposed on the summary card).
 - No Create / Edit / Discard / Review / Approve / Void / Supersede controls in this slice.
+
+### Draft-create slice status (`ABS-MGMT-UI-DRAFT-CREATE-1`)
+
+- **Source implemented and manually accepted; PASS by Mozfer manual browser evidence.** Controlled commit and push remain separate pending tasks.
+- Admin/Manager can create from Service Detail only when an approved, non-deleted quotation exists and the complete Service-scoped ABS list contains zero records. Accountant remains read-only; Viewer/Sales/Operations have no ABS access.
+- Existing draft, active, voided, superseded-derived, or mixed ABS history blocks Create Draft.
+- `Completed` and `Cancelled` Services cannot create an ABS draft. The UI hides the control; the server action independently resolves the Service through the quotation relationship and rejects terminal, deleted, or missing Services.
+- Browser payload remains `sourceQuotationId` only. Service identity/status, version, quotation/item snapshots, and totals remain server-derived.
+- Manual evidence: the Cancelled-Service control was hidden; an eligible non-terminal Service with approved quotation, zero ABS history, zero invoices, and zero discount exposed Create Draft; creation navigated to the nested draft detail route; the scope displayed Draft, version 1, Pending review, the copied quotation item, and `SAR 1,000.00`; returning to Service Detail showed the existing Draft, View details, and no Create Draft; Viewer denial and Arabic/English rendering passed.
+- No manual double-click stress test is claimed. Pending duplicate-submit protection is implementation/test-covered, not separately proven by manual browser evidence. Agent did not perform browser smoke.
 
 ---
 
@@ -83,7 +93,7 @@ Historical milestone notes elsewhere may still mention planned void/supersede; t
 | State | Show | Primary CTA |
 |-------|------|-------------|
 | No approved quotation | Empty + guidance | Link to quotations if permitted |
-| Approved QT, no scope | Legacy: invoices use QT total | Create draft (`create`) |
+| Approved QT, no scope; eligible non-terminal Service | Legacy: invoices use QT total | Create draft (`create`) |
 | Draft only | Draft status, version, line safety, ceiling | Open draft (edit/review/approve/discard) |
 | Active approved | Active badge, version, ceiling | View details; later “revision draft” when supersede ready |
 | Active + draft | Active summary + draft indicator | Open active; open draft; block second draft per same QT |
@@ -111,7 +121,7 @@ Historical milestone notes elsewhere may still mention planned void/supersede; t
 Accountant: headers/items; mask internal notes/reasons (existing masking pattern).
 
 Stable error codes (dictionary-map only):
-`scope_not_found`, `scope_not_draft`, `scope_not_safe`, `scope_active_conflict`, `scope_concurrency_conflict`, `scope_no_items`, `scope_no_billable_items`, `scope_reduction_invalid`, `scope_reason_required`, `scope_duplicate_draft`, `scope_permission_denied`, `scope_unexpected_error`, plus invoice ceiling codes.
+`scope_not_found`, `scope_not_draft`, `scope_not_safe`, `scope_active_conflict`, `scope_concurrency_conflict`, `scope_no_items`, `scope_no_billable_items`, `scope_reduction_invalid`, `scope_reason_required`, `scope_duplicate_draft`, `scope_service_lifecycle_ineligible`, `scope_permission_denied`, `scope_unexpected_error`, plus invoice ceiling codes.
 
 ---
 
@@ -158,8 +168,8 @@ Before implementing void or supersede:
 ### Ready to implement (existing backend)
 
 1. **`ABS-MGMT-UI-READ-ENRICH-1`** — enrich Service card (source QT label, invoiced/remaining, draft badge); optional history count. **complete**
-2. **`ABS-MGMT-UI-DRAFT-CREATE-1`** — create-draft CTA + error handling. **← current active task**
-3. **`ABS-MGMT-UI-DRAFT-EDIT-1`** — draft item edit + discard
+2. **`ABS-MGMT-UI-DRAFT-CREATE-1`** — create-draft CTA + error handling. **complete; commit/push pending**
+3. **`ABS-MGMT-UI-DRAFT-EDIT-1`** — draft item edit + discard. **← current active task**
 4. **`ABS-MGMT-UI-REVIEW-APPROVE-1`** — line-safety review + approve
 
 ### Blocked until financial behavior decision + action design
@@ -171,7 +181,7 @@ Before implementing void or supersede:
 
 - **`ABS-MGMT-HISTORY-LIST-1`** — full history list UI
 
-**Current active implementation task (exactly one):** `ABS-MGMT-UI-DRAFT-CREATE-1`
+**Current active implementation task (exactly one):** `ABS-MGMT-UI-DRAFT-EDIT-1`
 
 ---
 
