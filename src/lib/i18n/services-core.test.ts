@@ -204,12 +204,12 @@ test("15-17. Service/quotation numbers LTR; dates and SAR use shared formatters"
   const related = readFileSync(RELATED_QUOTATIONS, "utf8");
   assert.match(client, /isolateBidiText\(service\.serviceNumber\)/);
   assert.match(related, /isolateBidiText\(quotation\.quotationNumber\)/);
-  assert.match(client, /formatUiDate/);
+  assert.match(client, /UiDateText|formatUiDate/);
   assert.match(client, /formatSarAmount/);
-  assert.match(detail, /formatUiDate/);
-  assert.match(detail, /formatUiDateTime/);
+  assert.match(detail, /UiDateText|formatUiDate/);
+  assert.match(detail, /UiDateTimeText|formatUiDateTime/);
   assert.match(detail, /formatSarAmount/);
-  assert.match(related, /formatUiDate/);
+  assert.match(related, /UiDateText|formatUiDate/);
   assert.match(related, /formatSarAmount/);
   assert.doesNotMatch(client, /toLocaleString/);
   assert.doesNotMatch(detail, /toLocaleString/);

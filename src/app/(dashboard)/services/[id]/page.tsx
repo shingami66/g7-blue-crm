@@ -17,10 +17,12 @@ import {
   getServiceStatusLabel,
   type ServicesDictionary,
 } from "@/lib/i18n/dictionaries/services";
-import { formatSarAmount, formatUiDate, formatUiDateTime } from "@/lib/i18n/formatting";
+import { formatSarAmount } from "@/lib/i18n/formatting";
+import { UiDateRangeText, UiDateText, UiDateTimeText } from "@/components/i18n/UiDateText";
 import type { Locale } from "@/lib/i18n/locales";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
-import { ArrowLeft, CalendarDays, Edit, FileText, MapPin, UserRound } from "lucide-react";
+import { CalendarDays, Edit, FileText, MapPin, UserRound } from "lucide-react";
+import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import Link from "next/link";
 import ServiceStatusTimeline from "./ServiceStatusTimeline";
 import RelatedQuotationsCard from "./RelatedQuotationsCard";
@@ -223,18 +225,14 @@ export default async function ServiceDetailPage({
             <DetailItem label={dictionary.detail.labels.eventType}>{formatNullable(service.eventType, "auto", dictionary)}</DetailItem>
             <DetailItem label={dictionary.detail.labels.startDate}>
               {service.eventStartDate ? (
-                <span dir="ltr" className="tabular-nums">
-                  {formatUiDate(locale, service.eventStartDate)}
-                </span>
+                <UiDateText locale={locale} value={service.eventStartDate} />
               ) : (
                 dictionary.detail.fallbacks.empty
               )}
             </DetailItem>
             <DetailItem label={dictionary.detail.labels.endDate}>
               {service.eventEndDate ? (
-                <span dir="ltr" className="tabular-nums">
-                  {formatUiDate(locale, service.eventEndDate)}
-                </span>
+                <UiDateText locale={locale} value={service.eventEndDate} />
               ) : (
                 dictionary.detail.fallbacks.empty
               )}
@@ -275,14 +273,10 @@ export default async function ServiceDetailPage({
               {formatBudget(locale, service, dictionary)}
             </DetailItem>
             <DetailItem label={dictionary.detail.labels.createdAt}>
-              <span dir="ltr" className="tabular-nums">
-                {formatUiDateTime(locale, service.createdAt)}
-              </span>
+              <UiDateTimeText locale={locale} value={service.createdAt} />
             </DetailItem>
             <DetailItem label={dictionary.detail.labels.updatedAt}>
-              <span dir="ltr" className="tabular-nums">
-                {formatUiDateTime(locale, service.updatedAt)}
-              </span>
+              <UiDateTimeText locale={locale} value={service.updatedAt} />
             </DetailItem>
             <DetailItem label={dictionary.detail.labels.status}>{getServiceStatusLabel(dictionary.locale, service.status)}</DetailItem>
           </dl>
@@ -342,7 +336,7 @@ function BackToServicesLink({ label }: { label: string }) {
       className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
       aria-label={label}
     >
-      <ArrowLeft size={18} />
+      <LocaleBackIcon size={18} />
     </PendingLink>
   );
 }
@@ -389,15 +383,21 @@ function formatServiceSchedule(
   dictionary: ServicesDictionary,
 ) {
   if (service.eventStartDate && service.eventEndDate) {
-    return `${formatUiDate(locale, service.eventStartDate)} - ${formatUiDate(locale, service.eventEndDate)}`;
+    return (
+      <UiDateRangeText
+        locale={locale}
+        start={service.eventStartDate}
+        end={service.eventEndDate}
+      />
+    );
   }
 
   if (service.eventStartDate) {
-    return formatUiDate(locale, service.eventStartDate);
+    return <UiDateText locale={locale} value={service.eventStartDate} />;
   }
 
   if (service.eventEndDate) {
-    return formatUiDate(locale, service.eventEndDate);
+    return <UiDateText locale={locale} value={service.eventEndDate} />;
   }
 
   return dictionary.detail.fallbacks.scheduleNotSet;

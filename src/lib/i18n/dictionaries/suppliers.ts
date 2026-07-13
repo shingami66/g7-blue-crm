@@ -172,12 +172,12 @@ const suppliersDictionaryEn: SuppliersDictionary = {
     editForbidden: "You don't have permission to edit suppliers.",
     editLoadError: "We couldn't load the supplier for editing at this time. Please try again later.",
     listInlineError: "Suppliers could not be loaded right now.",
-    noSuppliers: "No suppliers found in the live directory.",
+    noSuppliers: "No suppliers found.",
     noFilteredSuppliers: "No suppliers match the selected filters.",
   },
   list: {
     title: "Suppliers",
-    subtitle: "Review live supplier directory records from the database.",
+    subtitle: "Manage the supplier directory and operational supplier records.",
     newSupplier: "New Supplier",
     searchPlaceholder: "Search suppliers...",
     allStatuses: "All Statuses",
@@ -211,7 +211,7 @@ const suppliersDictionaryEn: SuppliersDictionary = {
     recentActivity: "Recent Activity",
     servicePrefix: "Service {id}",
     noRecentService: "No recent service recorded",
-    liveRecord: "Live supplier directory record",
+    liveRecord: "Supplier directory record",
     internalRateCards: "Internal Rate Cards",
   },
   form: {
@@ -345,7 +345,7 @@ const suppliersDictionaryAr: SuppliersDictionary = {
   },
   list: {
     title: "الموردون",
-    subtitle: "مراجعة سجلات دليل الموردين المباشرة من قاعدة البيانات.",
+    subtitle: "إدارة دليل الموردين وبياناتهم التشغيلية.",
     newSupplier: "مورد جديد",
     searchPlaceholder: "ابحث عن الموردين...",
     allStatuses: "كل الحالات",

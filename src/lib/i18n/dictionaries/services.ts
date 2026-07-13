@@ -1044,7 +1044,7 @@ const servicesDictionaryEn: ServicesDictionary = {
       },
     },
     deletedRecord: "Deleted Record",
-    selectedHint: "Supplier Booking create or linked SBK appears in the panel below.",
+    selectedHint: "Supplier Booking create or a linked booking appears in the panel below.",
     subflow: {
       common: {
         allocationSummary: "Allocation Summary",
@@ -1342,13 +1342,13 @@ const servicesDictionaryEn: ServicesDictionary = {
   },
   supplierBookings: {
     title: "Supplier Bookings",
-    subtitle: "Internal SBK records created from selected supplier allocations.",
+    subtitle: "Internal supplier bookings created from selected allocations.",
     empty: {
       noBookings: "No Supplier Bookings recorded for this service yet.",
       selectAllocation: "Select a planned supplier allocation to create a Supplier Booking.",
     },
     columns: {
-      bookingNumber: "SBK Number",
+      bookingNumber: "Booking Number",
       status: "Status",
       supplier: "Supplier",
       item: "Item",
@@ -1409,7 +1409,7 @@ const servicesDictionaryEn: ServicesDictionary = {
       },
     },
     selectedAllocations: "Selected Allocations",
-    linkedBooking: "Linked SBK",
+    linkedBooking: "Linked supplier booking",
     locked: "Supplier Booking locked for completed or cancelled services.",
     noPermission: "You do not have permission to create Supplier Bookings.",
     details: {
@@ -1726,7 +1726,7 @@ const servicesDictionaryAr: ServicesDictionary = {
   },
   approvedBillingScopes: {
     title: "نطاق الفوترة المعتمد",
-    subtitle: "النطاق المقبول للطلب، للعرض فقط.",
+    subtitle: "النطاق المعتمد للفوترة لهذه الخدمة.",
     empty: "لا يوجد نطاق فوترة معتمد لهذه الخدمة.",
     unavailable: "معلومات نطاق الفوترة المعتمد غير متاحة مؤقتًا.",
     viewDetails: "عرض التفاصيل",
@@ -1842,7 +1842,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     title: "تخصيصات الموردين",
     tabs: {
       active: "النشطة",
-      showDeleted: "عرض المحذوف",
+      showDeleted: "إظهار المحذوفة",
     },
     actions: {
       newAllocation: "تخصيص جديد",
@@ -1903,7 +1903,7 @@ const servicesDictionaryAr: ServicesDictionary = {
       },
     },
     deletedRecord: "سجل محذوف",
-    selectedHint: "يظهر إنشاء حجز المورد أو رقم SBK المرتبط في اللوحة أدناه.",
+    selectedHint: "يظهر إنشاء حجز المورد أو الحجز المرتبط في اللوحة أدناه.",
     subflow: {
       common: {
         allocationSummary: "ملخص التخصيص",
@@ -2136,7 +2136,7 @@ const servicesDictionaryAr: ServicesDictionary = {
       },
       deleteForm: {
         warning:
-          "هل أنت متأكد من حذف هذا التخصيص؟ ستتم إزالته من العرض الافتراضي، ويمكنك عرضه أو استعادته لاحقًا عبر تفعيل \"عرض المحذوف\".",
+          "هل أنت متأكد من حذف هذا التخصيص؟ ستتم إزالته من العرض الافتراضي، ويمكنك عرضه أو استعادته لاحقًا عبر تفعيل \"إظهار المحذوفة\".",
         back: "رجوع",
         confirm: "حذف التخصيص",
         failed: "تعذر حذف تخصيص المورد.",
@@ -2195,13 +2195,13 @@ const servicesDictionaryAr: ServicesDictionary = {
   },
   supplierBookings: {
     title: "حجوزات الموردين",
-    subtitle: "سجلات SBK داخلية تم إنشاؤها من تخصيصات الموردين المحددة.",
+    subtitle: "حجوزات الموردين الداخلية المُنشأة من التخصيصات المحددة.",
     empty: {
       noBookings: "لا توجد حجوزات موردين مسجلة لهذه الخدمة حتى الآن.",
       selectAllocation: "حدد تخصيص مورد مخططًا لإنشاء حجز مورد.",
     },
     columns: {
-      bookingNumber: "رقم SBK",
+      bookingNumber: "رقم حجز المورد",
       status: "الحالة",
       supplier: "المورد",
       item: "العنصر",
@@ -2261,7 +2261,7 @@ const servicesDictionaryAr: ServicesDictionary = {
       },
     },
     selectedAllocations: "التخصيصات المحددة",
-    linkedBooking: "SBK مرتبط",
+    linkedBooking: "حجز مورد مرتبط",
     locked: "حجز المورد مقفل للخدمات المكتملة أو الملغاة.",
     noPermission: "ليست لديك صلاحية لإنشاء حجوزات موردين.",
     details: {

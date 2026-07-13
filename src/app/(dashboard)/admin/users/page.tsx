@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { getAppUsers } from "@/lib/admin/users/queries";
 import { getPendingInvitations } from "@/lib/admin/users/actions";
 import { requirePermission } from "@/lib/auth/permissions";
@@ -9,10 +9,17 @@ import {
 } from "@/lib/i18n/dictionaries/admin-users";
 import { AdminUsersClient } from "./AdminUsersClient";
 
-export const metadata: Metadata = {
-  title: "Admin Users - G7 BLUE CRM",
-  description: "Manage CRM users and invitations.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getCurrentSessionEffectiveLocale();
+  const dictionary = getAdminUsersDictionary(locale);
+  return {
+    title:
+      locale === "ar"
+        ? "إدارة المستخدمين - G7 BLUE CRM"
+        : "Admin Users - G7 BLUE CRM",
+    description: dictionary.page.subtitle,
+  };
+}
 
 export default async function AdminUsersPage() {
   const locale = await getCurrentSessionEffectiveLocale();

@@ -1,10 +1,12 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, Loader2 } from "lucide-react";
+import { Globe } from "lucide-react";
+import { useGlobalPending } from "@/components/ui/GlobalPendingProvider";
 import { applyCurrentUserLocalePreference } from "@/lib/i18n/actions";
 import {
+  getSharedUiStates,
   localeSelectorDictionaryAr,
   localeSelectorDictionaryEn,
 } from "@/lib/i18n/dictionaries/common";
@@ -17,7 +19,10 @@ type LocaleSelectorFeedback = "failure" | "persistence-warning" | "persistence-p
 export function LocaleSelector() {
   const providerLocale = useLocale();
   const router = useRouter();
+  const { showPending, hidePending } = useGlobalPending();
   const submissionInFlight = useRef(false);
+  const pendingIdRef = useRef<symbol | null>(null);
+  const awaitingLocaleRef = useRef<Locale | null>(null);
   const [optimisticLocale, setOptimisticLocale] = useState<Locale | null>(null);
   const [seenProviderLocale, setSeenProviderLocale] = useState(providerLocale);
   const [isPending, startTransition] = useTransition();
@@ -29,6 +34,27 @@ export function LocaleSelector() {
     setSeenProviderLocale(providerLocale);
     setOptimisticLocale(null);
   }
+
+  function clearPendingSafely() {
+    if (pendingIdRef.current != null) {
+      hidePending(pendingIdRef.current);
+      pendingIdRef.current = null;
+    }
+    awaitingLocaleRef.current = null;
+    submissionInFlight.current = false;
+  }
+
+  // Keep the global bolt active through preference update + router.refresh().
+  // Clear only after the provider/locale contract observes the requested locale
+  // (not merely because refresh was invoked).
+  useEffect(() => {
+    const awaited = awaitingLocaleRef.current;
+    if (awaited != null && providerLocale === awaited) {
+      clearPendingSafely();
+    }
+    // clearPendingSafely closes over hidePending; re-run when locale or hidePending changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional locale observation
+  }, [providerLocale, hidePending]);
 
   const displayLocale = optimisticLocale ?? providerLocale;
   const copy =
@@ -62,6 +88,10 @@ export function LocaleSelector() {
       setFeedback(null);
     }
     submissionInFlight.current = true;
+    // Existing global centered bolt only — no local button spinner or pending text.
+    const pendingId = showPending(getSharedUiStates(providerLocale).loading.label);
+    pendingIdRef.current = pendingId;
+    awaitingLocaleRef.current = null;
 
     startTransition(async () => {
       try {
@@ -82,11 +112,22 @@ export function LocaleSelector() {
 
         applyDecisionDisplayLocale(decision.displayLocale, providerSnapshot);
         setFeedback(decision.feedback);
+
         if (decision.shouldRefresh) {
+          // Hold bolt until providerLocale reflects the requested locale after refresh.
+          awaitingLocaleRef.current = requestedLocale;
           router.refresh();
+          // If provider already matches (e.g. same-locale edge), clear immediately.
+          if (providerLocale === requestedLocale) {
+            clearPendingSafely();
+          }
+          return;
         }
-      } finally {
-        submissionInFlight.current = false;
+
+        // No refresh path (error, or session-pending): clear bolt safely now.
+        clearPendingSafely();
+      } catch {
+        clearPendingSafely();
       }
     });
   }
@@ -124,35 +165,23 @@ export function LocaleSelector() {
         aria-busy={isPending || undefined}
         aria-controls={showWarning || showFailure ? feedbackId : undefined}
         aria-describedby={statusId}
-        aria-label={
-          isPending
-            ? copy.updating
-            : `${copy.label}: ${targetLabel}`
-        }
+        aria-label={`${copy.label}: ${targetLabel}`}
         className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-low px-2.5 py-1.5 text-[12px] leading-[16px] font-medium text-on-surface transition-colors hover:bg-surface-container hover:text-primary focus:outline-none focus:ring-2 focus:ring-tertiary-fixed disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isPending}
         onClick={handleToggle}
       >
-        {isPending ? (
-          <Loader2
-            aria-hidden
-            className="size-4 shrink-0 animate-spin text-primary"
-            size={16}
-          />
-        ) : (
-          <Globe aria-hidden className="size-4 shrink-0 text-on-surface-variant" size={16} />
-        )}
+        <Globe aria-hidden className="size-4 shrink-0 text-on-surface-variant" size={16} />
         <span
           className="max-w-[7.5rem] truncate sm:max-w-none"
-          dir={isPending ? undefined : targetLocale === "ar" ? "rtl" : "ltr"}
-          lang={isPending ? undefined : targetLocale}
+          dir={targetLocale === "ar" ? "rtl" : "ltr"}
+          lang={targetLocale}
         >
-          {isPending ? copy.updating : targetLabel}
+          {targetLabel}
         </span>
       </button>
 
       <span aria-live="polite" className="sr-only" id={statusId}>
-        {isPending ? copy.updating : ""}
+        {isPending ? getSharedUiStates(providerLocale).loading.label : ""}
       </span>
 
       {showWarning ? (

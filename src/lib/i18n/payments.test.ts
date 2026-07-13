@@ -128,7 +128,7 @@ test("14-16. Sort/pagination/KPI contracts match baseline", () => {
 
 test("17-20. Formatting, Western digits, bidi, stored data", () => {
   assert.match(read(LIST_CLIENT), /formatSarAmount/);
-  assert.match(read(LIST_CLIENT), /formatUiDate/);
+  assert.match(read(LIST_CLIENT), /UiDateText|formatUiDate/);
   assert.match(read(LIST_CLIENT), /formatUiNumber/);
   assert.match(read(LIST_CLIENT), /isolateBidiText\(payment\.paymentNumber\)/);
   assert.doesNotMatch(read(LIST_CLIENT), /toLocaleString|Intl\.NumberFormat/);

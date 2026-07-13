@@ -18,7 +18,8 @@ import { getInvoicesByApprovedBillingScopeId } from "@/lib/invoices/queries";
 import type { Invoice } from "@/types/invoice";
 import { getServiceById } from "@/lib/services/queries";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { formatSarAmount, formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
+import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import { UiDateText } from "@/components/i18n/UiDateText";
 import type { Locale } from "@/lib/i18n/locales";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { isolateBidiText } from "@/lib/i18n/bidi";
@@ -119,9 +120,9 @@ export default async function ApprovedBillingScopeDetailPage({
             </StatusBadge>
           </Field>
           <Field label={detailDictionary.labels.acceptedGrandTotal} value={formatSar(locale, scope.acceptedGrandTotal)} dir="ltr" />
-          <Field label={detailDictionary.labels.createdAt} value={formatDate(locale, scope.createdAt)} dir="ltr" />
+          <Field label={detailDictionary.labels.createdAt} value={formatDate(locale, scope.createdAt)} />
           {scope.approvedAt && (
-            <Field label={detailDictionary.labels.approvedAt} value={formatDate(locale, scope.approvedAt)} dir="ltr" />
+            <Field label={detailDictionary.labels.approvedAt} value={formatDate(locale, scope.approvedAt)} />
           )}
         </dl>
       </section>
@@ -200,7 +201,7 @@ function SectionHeader({ title }: { title: string }) {
   return <div className="border-b border-surface-variant bg-surface-bright px-6 py-4"><h2 className="font-semibold text-primary">{title}</h2></div>;
 }
 
-function Field({ label, value, dir, children }: { label: string; value?: string; dir?: "ltr" | "auto"; children?: ReactNode }) {
+function Field({ label, value, dir, children }: { label: string; value?: ReactNode; dir?: "ltr" | "auto"; children?: ReactNode }) {
   return <div><dt className="mb-1 text-[12px] font-semibold uppercase tracking-wider text-on-surface-variant">{label}</dt><dd className="font-medium text-on-surface" dir={dir}>{children ?? value}</dd></div>;
 }
 
@@ -231,7 +232,6 @@ function InvoiceRow({
         <Field
           label={dictionary.labels.issueDate}
           value={formatDate(locale, invoice.issued_at ?? invoice.created_at)}
-          dir="ltr"
         />
       </div>
       <PendingLink
@@ -257,5 +257,5 @@ function formatSar(locale: Locale, value: number) {
 }
 
 function formatDate(locale: Locale, value: string) {
-  return formatUiDate(locale, value);
+  return <UiDateText locale={locale} value={value} />;
 }

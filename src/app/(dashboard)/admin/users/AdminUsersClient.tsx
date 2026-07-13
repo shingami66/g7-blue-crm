@@ -25,7 +25,8 @@ import {
   mapAdminUsersActionError,
   type AdminUsersDictionary,
 } from "@/lib/i18n/dictionaries/admin-users";
-import { formatUiDate, formatUiDateTime, formatUiNumber } from "@/lib/i18n/formatting";
+import { formatUiNumber } from "@/lib/i18n/formatting";
+import { UiDateText, UiDateTimeText } from "@/components/i18n/UiDateText";
 
 type PendingInvitation = {
   id: string;
@@ -342,8 +343,8 @@ export function AdminUsersClient({
                             : dictionary.usersTable.inactive}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-on-surface-variant tabular-nums" dir="ltr">
-                        {formatUiDate(locale, user.created_at)}
+                      <td className="px-6 py-4 text-on-surface-variant">
+                        <UiDateText locale={locale} value={user.created_at} />
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
@@ -423,8 +424,8 @@ export function AdminUsersClient({
                           {getCrmRoleLabel(locale, inv.role)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-on-surface-variant tabular-nums" dir="ltr">
-                        {formatUiDateTime(locale, inv.createdAt)}
+                      <td className="px-6 py-4 text-on-surface-variant">
+                        <UiDateTimeText locale={locale} value={inv.createdAt} />
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button

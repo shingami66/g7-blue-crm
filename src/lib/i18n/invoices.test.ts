@@ -175,9 +175,9 @@ test("17-20. Issue action and no financial mutation changes; payment modal defer
 
 test("21-24. Formatters, Western digits, bidi, stored data", () => {
   assert.match(read(LIST_CLIENT), /formatSarAmount/);
-  assert.match(read(LIST_CLIENT), /formatUiDate/);
+  assert.match(read(LIST_CLIENT), /UiDateText|formatUiDate/);
   assert.match(read(LIST_CLIENT), /isolateBidiText/);
-  assert.match(read(DETAIL), /formatSarAmount|formatUiDate|formatUiNumber/);
+  assert.match(read(DETAIL), /formatSarAmount|UiDateText|formatUiDate|formatUiNumber/);
   assert.match(read(DETAIL), /isolateBidiText/);
   assert.doesNotMatch(read(LIST_CLIENT), /toLocaleString/);
   assert.doesNotMatch(read(DETAIL), /toLocaleString/);

@@ -5,7 +5,8 @@ import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { formatSarAmount, formatUiDateTime, formatUiNumber } from "@/lib/i18n/formatting";
+import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import { UiDateTimeText } from "@/components/i18n/UiDateText";
 import type { Locale } from "@/lib/i18n/locales";
 import SupplierBookingActions, {
   CreateSupplierBookingButton,
@@ -131,8 +132,8 @@ export default function SupplierBookingsPanel({
                   </td>
                 </>
               )}
-              <td dir="ltr" className="px-4 py-3 align-top text-on-surface-variant tabular-nums">
-                {formatUiDateTime(dictionary.locale, booking.createdAt)}
+              <td className="px-4 py-3 align-top text-on-surface-variant">
+                <UiDateTimeText locale={dictionary.locale} value={booking.createdAt} />
               </td>
               <td className="px-4 py-3 align-top text-on-surface-variant min-w-[280px]">
                 <BookingInternalDetails
@@ -236,7 +237,9 @@ function BookingInternalDetails({
           <span className="font-semibold text-error">{detailsDictionary.cancelled}</span>{" "}
           {isolateBidiText(booking.cancelledReason || detailsDictionary.noReason)}{" "}
           {booking.cancelledAt ? (
-            <span dir="ltr">({formatUiDateTime(locale, booking.cancelledAt)})</span>
+            <span>
+              (<UiDateTimeText locale={locale} value={booking.cancelledAt} />)
+            </span>
           ) : (
             ""
           )}

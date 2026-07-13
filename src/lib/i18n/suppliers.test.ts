@@ -96,7 +96,7 @@ test("9-11. Rate cards read-only; costing permission gate; no cost leak to unaut
   assert.match(read(LIST_PAGE), /supplier_costing:read/);
   assert.match(read(RATE_CARDS), /getSupplierRateCards/);
   assert.doesNotMatch(read(RATE_CARDS), /createRateCard|updateRateCard|deleteRateCard/);
-  assert.match(read(RATE_CARDS), /formatSarAmount|formatUiDate/);
+  assert.match(read(RATE_CARDS), /formatSarAmount|UiDateText|formatUiDate/);
   // Panel only when canViewCosting
   assert.match(read(LIST_CLIENT), /canViewCosting &&/);
 });
@@ -113,7 +113,7 @@ test("12-14. Blacklist UI localized; no delete/restore; permissions", () => {
 
 test("15-17. Formatting, bidi, stored data preserved", () => {
   assert.match(read(LIST_CLIENT), /isolateBidiText/);
-  assert.match(read(LIST_CLIENT), /formatUiNumber|formatUiDate/);
+  assert.match(read(LIST_CLIENT), /formatUiNumber|formatUiDate|UiDateText/);
   assert.match(read(LIST_CLIENT), /dir="auto"/);
   assert.match(read(LIST_CLIENT), /supplier\.name|supplier\.contactName/);
   assert.doesNotMatch(read(LIST_CLIENT), /toLocaleString|toLocaleDateString/);

@@ -9,7 +9,8 @@ import {
   formatSupplierCopy,
   type SuppliersDictionary,
 } from "@/lib/i18n/dictionaries/suppliers";
-import { formatSarAmount, formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
+import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import { UiDateText } from "@/components/i18n/UiDateText";
 import type { Locale } from "@/lib/i18n/locales";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 
@@ -126,17 +127,17 @@ export default function SupplierRateCardsList({
               <span className="block text-[10px] uppercase font-semibold text-outline tracking-wider mb-0.5">
                 {dictionary.validFrom}
               </span>
-              <span dir="ltr" className="tabular-nums">
-                {formatUiDate(locale, rate.validFrom)}
-              </span>
+              <UiDateText locale={locale} value={rate.validFrom} />
             </div>
             <div>
               <span className="block text-[10px] uppercase font-semibold text-outline tracking-wider mb-0.5">
                 {dictionary.validTo}
               </span>
-              <span dir="ltr" className="tabular-nums">
-                {rate.validTo ? formatUiDate(locale, rate.validTo) : dictionary.current}
-              </span>
+              {rate.validTo ? (
+                <UiDateText locale={locale} value={rate.validTo} />
+              ) : (
+                dictionary.current
+              )}
             </div>
           </div>
 

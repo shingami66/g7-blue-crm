@@ -223,7 +223,7 @@ test("14. Dates use approved locale formatters with Arabic month names where pre
   assert.match(arabicDate, ARABIC_MONTH);
   assert.doesNotMatch(arabicDate, ARABIC_INDIC);
   const profile = readFileSync(CUSTOMER_PROFILE, "utf8");
-  assert.match(profile, /formatUiDate/);
+  assert.match(profile, /UiDateText|UiDateRangeText|formatUiDate/);
   assert.match(profile, /formatEventDate\(locale,/);
 });
 

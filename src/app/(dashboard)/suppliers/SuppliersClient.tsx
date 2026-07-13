@@ -302,19 +302,19 @@ export default function SuppliersClient({
         {selectedSupplierId && activeSupplier && (
           <div className="w-1/3 bg-surface-container-lowest border border-surface-variant rounded-xl p-6 flex-col hidden lg:flex sticky top-0 h-fit max-h-[calc(100vh-8rem)] overflow-y-auto">
             <div className="flex justify-between items-start mb-6 border-b border-surface-variant pb-6 gap-4">
-              <div className="flex items-center gap-4 min-w-0">
+              <div className="flex min-w-0 flex-1 basis-0 items-start gap-4">
                 <div className="w-16 h-16 rounded-lg bg-primary-fixed flex items-center justify-center text-primary font-bold text-[24px] shrink-0">
                   {getSupplierInitial(activeSupplier)}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <h3
-                    className="text-[20px] leading-[28px] font-semibold text-primary truncate"
+                    className="text-[20px] leading-[28px] font-semibold text-primary min-w-0 max-h-[56px] overflow-hidden whitespace-normal break-words"
                     title={activeSupplier.name}
-                    dir="auto"
+                    data-supplier-panel-title="true"
                   >
-                    {activeSupplier.name}
+                    <span dir="auto">{activeSupplier.name}</span>
                   </h3>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1 min-w-0">
                     <span
                       className={
                         activeSupplier.supplierNumber
@@ -326,7 +326,7 @@ export default function SuppliersClient({
                     >
                       {isolateBidiText(activeSupplier.supplierNumber ?? activeSupplier.id)}
                     </span>
-                    <span className="bg-surface-variant text-on-surface px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                    <span className="bg-surface-variant text-on-surface px-2 py-0.5 rounded text-[10px] font-bold uppercase shrink-0">
                       {getSupplierCategoryLabel(
                         locale,
                         activeSupplier.category ?? activeSupplier.service,

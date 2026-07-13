@@ -55,6 +55,8 @@ test("2. Page and invite copy localize", () => {
   );
   assert.match(read(PAGE), /getCurrentSessionEffectiveLocale/);
   assert.match(read(PAGE), /getAdminUsersDictionary/);
+  assert.match(read(PAGE), /generateMetadata/);
+  assert.match(read(PAGE), /إدارة المستخدمين - G7 BLUE CRM/);
   assert.match(read(CLIENT), /dictionary\.invite\.title/);
 });
 
@@ -71,7 +73,7 @@ test("3-5. Roles stable; default viewer; labels display-only", () => {
     Object.keys(getAdminUsersDictionary("en").roles).sort(),
     [...CRM_ROLES].sort(),
   );
-  assert.equal(getCrmRoleLabel("ar", "admin"), "مسؤول");
+  assert.equal(getCrmRoleLabel("ar", "admin"), "مدير النظام");
   assert.equal(getCrmRoleLabel("ar", "viewer"), "عرض فقط");
   assert.match(read(CLIENT), /useState<string>\("viewer"\)|setInviteRole\("viewer"\)/);
   assert.match(read(CLIENT), /CRM_ROLES\.map/);
@@ -115,7 +117,7 @@ test("12-14. Safe error mapping; no real Clerk calls in tests; formatters/bidi",
     "يجب أن يبقى مسؤول نشط واحد على الأقل.",
   );
   assert.match(read(CLIENT), /mapAdminUsersActionError/);
-  assert.match(read(CLIENT), /formatUiDate|formatUiDateTime|formatUiNumber/);
+  assert.match(read(CLIENT), /UiDateText|UiDateTimeText|formatUiNumber/);
   assert.match(read(CLIENT), /isolateBidiText/);
   assert.match(read(CLIENT), /dir="ltr"/);
   assert.match(read(CLIENT), /dir="auto"/);

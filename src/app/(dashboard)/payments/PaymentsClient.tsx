@@ -14,7 +14,8 @@ import {
   getPaymentStatusLabel,
   type PaymentsDictionary,
 } from "@/lib/i18n/dictionaries/payments";
-import { formatSarAmount, formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
+import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import { UiDateText } from "@/components/i18n/UiDateText";
 
 type PaymentsClientProps = {
   payments: PaymentListItem[];
@@ -109,8 +110,8 @@ export default function PaymentsClient({ payments, error, dictionary }: Payments
                 <td className="px-4 py-4 font-mono font-semibold text-primary">
                   <span dir="ltr">{isolateBidiText(payment.paymentNumber)}</span>
                 </td>
-                <td className="px-4 py-4 text-on-surface-variant tabular-nums" dir="ltr">
-                  {formatUiDate(locale, payment.date)}
+                <td className="px-4 py-4 text-on-surface-variant">
+                  <UiDateText locale={locale} value={payment.date} />
                 </td>
                 <td className="px-4 py-4 font-medium text-on-surface">
                   <span dir="auto">{payment.customerName}</span>
@@ -130,7 +131,9 @@ export default function PaymentsClient({ payments, error, dictionary }: Payments
                   <span dir="auto">{payment.reference ?? "—"}</span>
                 </td>
                 <td className="px-4 py-4 font-semibold text-on-surface tabular-nums">
-                  <span dir="ltr">{formatSarAmount(locale, payment.amount)}</span>
+                  <span dir="ltr" className="inline-block whitespace-nowrap">
+                    {formatSarAmount(locale, payment.amount)}
+                  </span>
                 </td>
                 <td className="px-4 py-4">
                   <StatusBadge variant={getPaymentStatusBadgeVariant(payment.status)}>

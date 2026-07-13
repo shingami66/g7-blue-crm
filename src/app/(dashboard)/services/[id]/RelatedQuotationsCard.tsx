@@ -2,10 +2,11 @@ import type { ComponentProps } from "react";
 import Link from "next/link";
 import { FileText } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { UiDateText } from "@/components/i18n/UiDateText";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { getQuotationStatusLabel } from "@/lib/i18n/dictionaries/quotations";
 import { isolateBidiText } from "@/lib/i18n/bidi";
-import { formatSarAmount, formatUiDate } from "@/lib/i18n/formatting";
+import { formatSarAmount } from "@/lib/i18n/formatting";
 import type { QuotationListItem, QuotationStatus } from "@/lib/quotations/types";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
@@ -80,42 +81,58 @@ export default function RelatedQuotationsCard({
           <EmptyMessage message={dictionary.states.noRelatedQuotations} />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-start">
+            <table className="w-full min-w-[720px] table-fixed border-collapse text-start">
               <thead>
                 <tr className="border-b border-surface-variant text-[12px] uppercase text-on-surface-variant">
-                  <th className="py-3 pe-4 font-semibold">{dictionary.relatedQuotations.table.quotation}</th>
-                  <th className="py-3 pe-4 font-semibold">{dictionary.relatedQuotations.table.status}</th>
-                  <th className="py-3 pe-4 font-semibold">{dictionary.relatedQuotations.table.issueDate}</th>
-                  <th className="py-3 pe-4 font-semibold">{dictionary.relatedQuotations.table.validUntil}</th>
-                  <th className="py-3 text-end font-semibold">{dictionary.relatedQuotations.table.grandTotal}</th>
+                  <th className="py-3 pe-6 w-[22%] font-semibold">
+                    {dictionary.relatedQuotations.table.quotation}
+                  </th>
+                  <th className="py-3 pe-6 w-[16%] font-semibold">
+                    {dictionary.relatedQuotations.table.status}
+                  </th>
+                  <th className="py-3 pe-6 w-[18%] font-semibold">
+                    {dictionary.relatedQuotations.table.issueDate}
+                  </th>
+                  <th className="py-3 pe-6 w-[18%] font-semibold">
+                    {dictionary.relatedQuotations.table.validUntil}
+                  </th>
+                  <th className="py-3 w-[26%] text-end font-semibold">
+                    {dictionary.relatedQuotations.table.grandTotal}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant text-[14px]">
                 {quotations.map((quotation) => (
                   <tr key={quotation.id}>
-                    <td dir="ltr" className="py-4 pe-4 font-mono font-semibold">
+                    <td className="py-4 pe-6 font-mono font-semibold align-top">
                       <Link
                         href={`/quotations/${quotation.id}`}
                         className="text-primary hover:underline"
                       >
-                        {isolateBidiText(quotation.quotationNumber)}
+                        <span dir="ltr" className="inline-block whitespace-nowrap">
+                          {isolateBidiText(quotation.quotationNumber)}
+                        </span>
                       </Link>
                     </td>
-                    <td className="py-4 pe-4">
+                    <td className="py-4 pe-6 align-top">
                       <StatusBadge variant={QUOTATION_STATUS_VARIANTS[quotation.status]}>
                         {getQuotationStatusLabel(dictionary.locale, quotation.status)}
                       </StatusBadge>
                     </td>
-                    <td dir="ltr" className="py-4 pe-4 text-on-surface-variant tabular-nums">
-                      {formatUiDate(dictionary.locale, quotation.date)}
+                    <td className="py-4 pe-6 text-on-surface-variant align-top">
+                      <UiDateText locale={dictionary.locale} value={quotation.date} />
                     </td>
-                    <td dir="ltr" className="py-4 pe-4 text-on-surface-variant tabular-nums">
-                      {quotation.validUntil
-                        ? formatUiDate(dictionary.locale, quotation.validUntil)
-                        : "—"}
+                    <td className="py-4 pe-6 text-on-surface-variant align-top">
+                      {quotation.validUntil ? (
+                        <UiDateText locale={dictionary.locale} value={quotation.validUntil} />
+                      ) : (
+                        "—"
+                      )}
                     </td>
-                    <td dir="ltr" className="py-4 text-end font-semibold text-on-surface tabular-nums">
-                      {formatSarAmount(dictionary.locale, quotation.grandTotal)}
+                    <td className="py-4 text-end font-semibold text-on-surface tabular-nums align-top">
+                      <span dir="ltr" className="inline-block whitespace-nowrap">
+                        {formatSarAmount(dictionary.locale, quotation.grandTotal)}
+                      </span>
                     </td>
                   </tr>
                 ))}

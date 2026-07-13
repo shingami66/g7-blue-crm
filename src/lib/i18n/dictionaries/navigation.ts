@@ -68,7 +68,7 @@ export const navigationDictionaryAr: NavigationDictionary = {
     title: "الحساب",
   },
   app: {
-    name: "جي 7 بلو CRM",
+    name: "G7 BLUE CRM",
     subtitle: "نظام إدارة علاقات المؤسسات",
   },
   admin: "الإدارة",

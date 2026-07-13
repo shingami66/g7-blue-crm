@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
-import { ArrowLeft, CalendarDays, FileText, Printer, Receipt, UserRound, Wallet } from "lucide-react";
+import { CalendarDays, FileText, Printer, Receipt, UserRound, Wallet } from "lucide-react";
+import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PendingLink from "@/components/ui/PendingLink";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
@@ -14,8 +15,9 @@ import {
   getInvoiceTypeLabel,
   getInvoicesDictionary,
 } from "@/lib/i18n/dictionaries/invoices";
-import { formatSarAmount, formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
+import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import type { Locale } from "@/lib/i18n/locales";
+import { UiDateRangeText, UiDateText } from "@/components/i18n/UiDateText";
 import { getInvoiceById } from "@/lib/invoices/queries";
 import { getServiceById } from "@/lib/services/queries";
 import type { QuotationItem } from "@/lib/quotations/types";
@@ -72,7 +74,7 @@ function formatDate(locale: Locale, value: string | null | undefined, fallback =
   if (!value) {
     return fallback;
   }
-  return formatUiDate(locale, value, { fallback });
+  return <UiDateText locale={locale} value={value} options={{ fallback }} />;
 }
 
 function formatAmount(locale: Locale, value: number | null | undefined) {
@@ -202,14 +204,17 @@ export default async function InvoiceDetailPage({
     dictionary,
   );
   const serviceEventDates =
-    service?.eventStartDate || service?.eventEndDate
-      ? [
-          service.eventStartDate ? formatDate(locale, service.eventStartDate, "") : "",
-          service.eventEndDate ? formatDate(locale, service.eventEndDate, "") : "",
-        ]
-          .filter(Boolean)
-          .join(" - ")
-      : null;
+    service?.eventStartDate && service?.eventEndDate ? (
+      <UiDateRangeText
+        locale={locale}
+        start={service.eventStartDate}
+        end={service.eventEndDate}
+      />
+    ) : service?.eventStartDate ? (
+      <UiDateText locale={locale} value={service.eventStartDate} />
+    ) : service?.eventEndDate ? (
+      <UiDateText locale={locale} value={service.eventEndDate} />
+    ) : null;
   const hasServiceDetails = Boolean(
     service?.serviceNumber ||
       service?.serviceTitle ||
@@ -229,7 +234,7 @@ export default async function InvoiceDetailPage({
             aria-label={dictionary.detail.actions.backToInvoices}
             title={dictionary.detail.actions.backToInvoices}
           >
-            <ArrowLeft size={18} />
+            <LocaleBackIcon size={18} />
           </PendingLink>
           <div className="space-y-2 min-w-0">
             <div className="flex flex-wrap items-center gap-3">
@@ -288,18 +293,15 @@ export default async function InvoiceDetailPage({
               <Field
                 label={dictionary.detail.labels.issueDate}
                 value={formatDate(locale, invoice.issued_at ?? invoice.created_at)}
-                dir="ltr"
               />
               <Field
                 label={dictionary.detail.labels.createdDate}
                 value={formatDate(locale, invoice.created_at)}
-                dir="ltr"
               />
               {(invoice.voided_at || invoice.status === "voided") && (
                 <Field
                   label={dictionary.detail.labels.voidedDate}
                   value={formatDate(locale, invoice.voided_at)}
-                  dir="ltr"
                 />
               )}
               {invoice.void_reason && (

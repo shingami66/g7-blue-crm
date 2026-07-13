@@ -216,11 +216,11 @@ const adminUsersDictionaryAr: AdminUsersDictionary = {
     revokeFailed: "تعذر إلغاء الدعوة.",
   },
   roles: {
-    admin: "مسؤول",
+    admin: "مدير النظام",
     manager: "مدير",
-    sales: "مبيعات",
-    operations: "عمليات",
-    accountant: "محاسب",
+    sales: "المبيعات",
+    operations: "العمليات",
+    accountant: "المحاسب",
     viewer: "عرض فقط",
   },
   actionErrorMap: {

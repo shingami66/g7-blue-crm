@@ -17,7 +17,8 @@ import {
   getQuotationsDictionary,
   type QuotationsDictionary,
 } from "@/lib/i18n/dictionaries/quotations";
-import { formatSarAmount, formatUiDate } from "@/lib/i18n/formatting";
+import { formatSarAmount } from "@/lib/i18n/formatting";
+import { UiDateText } from "@/components/i18n/UiDateText";
 import type { QuotationListItem } from "@/lib/quotations/types";
 import { softDeleteQuotation } from "@/lib/quotations/actions";
 
@@ -178,22 +179,28 @@ export default function QuotationsClient({
                   className="hover:bg-surface-container-low/50 transition-colors cursor-pointer"
                   onClick={() => push(`/quotations/${q.id}`)}
                 >
-                  <td className="px-4 py-4 font-mono font-semibold text-primary" dir="ltr">
-                    {isolateBidiText(q.quotationNumber)}
+                  <td className="px-4 py-4 font-mono font-semibold text-primary">
+                    <span dir="ltr" className="inline-block whitespace-nowrap">
+                      {isolateBidiText(q.quotationNumber)}
+                    </span>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="font-semibold text-on-surface" dir="auto">
-                      {q.customer?.company || dictionary.list.unknownCompany}
+                    <div className="font-semibold text-on-surface">
+                      <span dir="auto">
+                        {q.customer?.company || dictionary.list.unknownCompany}
+                      </span>
                     </div>
-                    <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1" dir="auto">
-                      {q.event}
+                    <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
+                      <span dir="auto">{q.event}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-on-surface-variant tabular-nums" dir="ltr">
-                    {formatUiDate(dictionary.locale, q.date)}
+                  <td className="px-4 py-4 text-on-surface-variant">
+                    <UiDateText locale={dictionary.locale} value={q.date} />
                   </td>
-                  <td className="px-4 py-4 font-semibold text-on-surface tabular-nums" dir="ltr">
-                    {formatSarAmount(dictionary.locale, q.grandTotal)}
+                  <td className="px-4 py-4 font-semibold text-on-surface tabular-nums">
+                    <span dir="ltr" className="inline-block whitespace-nowrap">
+                      {formatSarAmount(dictionary.locale, q.grandTotal)}
+                    </span>
                   </td>
                   <td className="px-4 py-4">
                     <StatusBadge variant={q.status as StatusBadgeVariant}>

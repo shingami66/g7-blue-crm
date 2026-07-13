@@ -70,7 +70,7 @@ const settingsDictionaryEn: SettingsDictionary = {
   page: {
     title: "Company Settings",
     subtitle:
-      "Manage seller profile, VAT defaults, and company banking details for future documents.",
+      "Manage the company profile, VAT defaults, and banking details for future documents.",
   },
   states: {
     accessDenied: "Access Denied",
@@ -98,7 +98,7 @@ const settingsDictionaryEn: SettingsDictionary = {
     officialPhone: "Official Phone",
     nationalAddress: "National Address",
     crNumber: "Commercial Registration (CR)",
-    tinNumber: "TIN / الرقم المميز",
+    tinNumber: "Tax Identification Number (TIN)",
     vatMode: "VAT Registration Status",
     defaultVatPercent: "Default VAT %",
     vatNumber: "VAT Number",
@@ -111,7 +111,7 @@ const settingsDictionaryEn: SettingsDictionary = {
   },
   help: {
     historicalSnapshot:
-      "Company Settings are defaults for new records only. CS-A does not update old quotations, invoices, or print layouts.",
+      "Changes apply to new records only and do not update previously created quotations, invoices, or generated documents.",
     bankRestricted: "Bank details are restricted to Admin and Accountant roles.",
   },
   vatModes: {
@@ -164,7 +164,7 @@ const settingsDictionaryAr: SettingsDictionary = {
   page: {
     title: "إعدادات الشركة",
     subtitle:
-      "إدارة ملف البائع وإعدادات ضريبة القيمة المضافة الافتراضية والبيانات البنكية للمستندات المستقبلية.",
+      "إدارة ملف الشركة وإعدادات ضريبة القيمة المضافة الافتراضية والبيانات البنكية للمستندات المستقبلية.",
   },
   states: {
     accessDenied: "تم رفض الوصول",
@@ -192,7 +192,7 @@ const settingsDictionaryAr: SettingsDictionary = {
     officialPhone: "الهاتف الرسمي",
     nationalAddress: "العنوان الوطني",
     crNumber: "السجل التجاري",
-    tinNumber: "الرقم المميز / TIN",
+    tinNumber: "الرقم المميز (TIN)",
     vatMode: "حالة تسجيل ضريبة القيمة المضافة",
     defaultVatPercent: "نسبة ضريبة القيمة المضافة الافتراضية %",
     vatNumber: "الرقم الضريبي",
@@ -205,7 +205,7 @@ const settingsDictionaryAr: SettingsDictionary = {
   },
   help: {
     historicalSnapshot:
-      "إعدادات الشركة هي قيم افتراضية للسجلات الجديدة فقط. لا تقوم CS-A بتحديث عروض الأسعار أو الفواتير أو تخطيطات الطباعة السابقة.",
+      "تُطبَّق التغييرات على السجلات الجديدة فقط، ولا تُحدِّث عروض الأسعار أو الفواتير أو المستندات المُنشأة سابقاً.",
     bankRestricted: "البيانات البنكية مقيدة بأدوار المسؤول والمحاسب.",
   },
   vatModes: {

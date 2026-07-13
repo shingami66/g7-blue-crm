@@ -175,11 +175,11 @@ test("18-20. Server total authority; no client-trusted totals; number generation
 
 test("21-23. Shared formatters, Western digits, bidi isolation", () => {
   assert.match(read(LIST_CLIENT), /formatSarAmount/);
-  assert.match(read(LIST_CLIENT), /formatUiDate/);
+  assert.match(read(LIST_CLIENT), /UiDateText|formatUiDate/);
   assert.match(read(LIST_CLIENT), /isolateBidiText\(q\.quotationNumber\)/);
   assert.match(read(FORM), /formatSarAmount/);
   assert.match(read(FORM), /isolateBidiText\(service\.serviceNumber\)/);
-  assert.match(read(DETAIL), /formatSarAmount|formatUiDate|formatUiNumber/);
+  assert.match(read(DETAIL), /formatSarAmount|UiDateText|formatUiDate|formatUiNumber/);
   assert.match(read(DETAIL), /isolateBidiText\(quotation\.quotationNumber\)/);
   assert.doesNotMatch(read(LIST_CLIENT), /toLocaleString/);
   assert.doesNotMatch(read(FORM), /toLocaleString/);

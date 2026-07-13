@@ -13,6 +13,7 @@ import {
   UI_EMPTY_VALUE,
   formatSarAmount,
   formatUiDate,
+  formatUiDateRange,
   formatUiDateTime,
   formatUiNumber,
   formatUiPercent,
@@ -114,6 +115,8 @@ test("Arabic UI date uses Arabic long month names and Western digits", () => {
   assert.match(arabic, /يوليو/, "July must render as يوليو");
   assert.match(arabic, /\b10\b/, "day 10 must be present");
   assert.match(arabic, /2026/, "year 2026 must be present");
+  // Stable logical order for RTL parents: day then month then year.
+  assert.match(arabic, /^10\s+يوليو\s+2026$/);
   assert.doesNotMatch(arabic, ENGLISH_MONTH_ABBREV, "Arabic date must not use English month abbreviations");
   assert.equal(arabic.includes(LRI), false, "default date output must not embed LRI markers");
   assert.equal(arabic.includes(PDI), false, "default date output must not embed PDI markers");
@@ -139,7 +142,19 @@ test("Arabic UI date-time keeps Arabic month names with Western date/time digits
   assert.match(arabic, /2026/);
   // Readable hour/minute present (12h clock with latn digits).
   assert.match(arabic, /[0-9]{1,2}:[0-9]{2}/);
+  assert.match(arabic, /^10\s+يوليو\s+2026،\s+\d{1,2}:\d{2}/);
   assert.equal(arabic.includes(LRI), false);
+});
+
+test("Arabic UI date range keeps stable day-month-year order on both sides", () => {
+  const start = new Date(2026, 6, 3, 9, 0, 0);
+  const end = new Date(2026, 6, 10, 9, 0, 0);
+  const range = formatUiDateRange("ar", start, end);
+  assert.match(range, /^3\s+يوليو\s+2026\s+–\s+10\s+يوليو\s+2026$/);
+  assertWesternDigits(range, "Arabic date range");
+  const english = formatUiDateRange("en", start, end);
+  assert.match(english, /Jul/);
+  assert.match(english, /–/);
 });
 
 test("English UI date-time keeps coherent en-SA presentation with Western digits", () => {

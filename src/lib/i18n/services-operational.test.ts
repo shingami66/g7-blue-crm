@@ -433,9 +433,9 @@ test("16-17. Supplier cost remains permission-gated and does not leak to ABS/cus
 test("18-19. Shared SAR/quantity/date formatters used; Arabic retains Western digits", () => {
   assert.match(read(BILLING), /formatSarAmount/);
   assert.match(read(ABS_CARD), /formatSarAmount/);
-  assert.match(read(ABS_DETAIL), /formatSarAmount|formatUiDate|formatUiNumber/);
+  assert.match(read(ABS_DETAIL), /formatSarAmount|UiDateText|formatUiDate|formatUiNumber/);
   assert.match(read(ALLOCATIONS), /formatSarAmount|formatUiNumber/);
-  assert.match(read(BOOKINGS), /formatSarAmount|formatUiDateTime|formatUiNumber/);
+  assert.match(read(BOOKINGS), /formatSarAmount|UiDateTimeText|formatUiDateTime|formatUiNumber/);
 
   assert.equal(formatSarAmount("ar", 17000), "SAR 17,000.00");
   assert.doesNotMatch(formatSarAmount("ar", 17000), ARABIC_INDIC);

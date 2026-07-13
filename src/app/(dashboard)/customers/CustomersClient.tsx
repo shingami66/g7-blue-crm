@@ -256,21 +256,27 @@ export default function CustomersClient({
                     {paginatedCustomers.map((customer) => (
                       <tr key={customer.id} className="hover:bg-surface-container-low/50 transition-colors">
                         <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.company}`}>
-                    <div dir="auto" className="font-semibold text-primary">
-                            {customer.company}
+                          <div className="font-semibold text-primary">
+                            <span dir="auto">{customer.company}</span>
                           </div>
-                          <div dir="ltr" className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
-                            {customer.customerNumber}
+                          <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
+                            <span dir="ltr" className="inline-block whitespace-nowrap">
+                              {customer.customerNumber}
+                            </span>
                           </div>
                         </td>
                         <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.contact}`}>
-                          <div dir="auto" className="text-on-surface">{customer.contact}</div>
-                          <div dir="ltr" className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
-                            {customer.email}
+                          <div className="text-on-surface">
+                            <span dir="auto">{customer.contact}</span>
+                          </div>
+                          <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
+                            <span dir="ltr" className="inline-block whitespace-nowrap">
+                              {customer.email}
+                            </span>
                           </div>
                         </td>
-                        <td dir="auto" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.location} text-on-surface-variant`}>
-                          {customer.city}
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.location} text-on-surface-variant`}>
+                          <span dir="auto">{customer.city}</span>
                         </td>
                         <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.status}`}>
                           <div className="flex justify-center">
@@ -279,11 +285,15 @@ export default function CustomersClient({
                             </StatusBadge>
                           </div>
                         </td>
-                        <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.services} font-semibold text-on-surface tabular-nums`}>
-                          {formatUiNumber(dictionary.locale, customer.servicesCount)}
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.services} font-semibold text-on-surface tabular-nums`}>
+                          <span dir="ltr" className="inline-block whitespace-nowrap">
+                            {formatUiNumber(dictionary.locale, customer.servicesCount)}
+                          </span>
                         </td>
-                        <td dir="ltr" className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.quotedValue} font-semibold text-on-surface tabular-nums`}>
-                          {formatSarAmount(dictionary.locale, customer.totalQuotedAmount)}
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.quotedValue} font-semibold text-on-surface tabular-nums`}>
+                          <span dir="ltr" className="inline-block whitespace-nowrap">
+                            {formatSarAmount(dictionary.locale, customer.totalQuotedAmount)}
+                          </span>
                         </td>
                         <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}>
                           <div className="flex justify-center">

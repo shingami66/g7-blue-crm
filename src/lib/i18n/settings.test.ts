@@ -42,7 +42,16 @@ test("2. Page headings and actions localize", () => {
   const en = getSettingsDictionary("en");
   const ar = getSettingsDictionary("ar");
   assert.equal(en.page.title, "Company Settings");
+  assert.equal(
+    en.page.subtitle,
+    "Manage the company profile, VAT defaults, and banking details for future documents.",
+  );
   assert.equal(ar.page.title, "إعدادات الشركة");
+  assert.equal(
+    ar.page.subtitle,
+    "إدارة ملف الشركة وإعدادات ضريبة القيمة المضافة الافتراضية والبيانات البنكية للمستندات المستقبلية.",
+  );
+  assert.doesNotMatch(en.page.subtitle, /seller profile/i);
   assert.equal(ar.actions.edit, "تعديل الإعدادات");
   assert.equal(ar.actions.save, "حفظ التغييرات");
   assert.equal(ar.actions.saving, "جارٍ الحفظ...");
@@ -52,6 +61,7 @@ test("2. Page headings and actions localize", () => {
 });
 
 test("3. Sections and labels localize", () => {
+  const en = getSettingsDictionary("en");
   const ar = getSettingsDictionary("ar");
   assert.equal(ar.sections.companyProfile, "ملف الشركة");
   assert.equal(ar.sections.legalVat, "البيانات النظامية وضريبة القيمة المضافة");
@@ -59,6 +69,9 @@ test("3. Sections and labels localize", () => {
   assert.equal(ar.sections.financeDefaults, "الإعدادات المالية الافتراضية");
   assert.equal(ar.labels.iban, "رقم الآيبان");
   assert.equal(ar.labels.defaultVatPercent.includes("%"), true);
+  assert.equal(en.labels.tinNumber, "Tax Identification Number (TIN)");
+  assert.equal(ar.labels.tinNumber, "الرقم المميز (TIN)");
+  assert.doesNotMatch(en.labels.tinNumber, /الرقم المميز/);
 });
 
 test("4-6. VAT modes: internal codes stable; Phase 2 not selectable; not_registered forces 0", () => {
@@ -109,11 +122,26 @@ test("10-12. Action message mapping; no schema/action behavior rewrite; no ZATCA
 
 test("13-15. Historical help text; field names preserved; denied/unavailable distinct", () => {
   const en = getSettingsDictionary("en");
+  const ar = getSettingsDictionary("ar");
   assert.notEqual(en.states.accessDeniedMessage, en.states.unavailableMessage);
-  assert.match(en.help.historicalSnapshot, /new records only|CS-A/i);
+  assert.equal(
+    en.help.historicalSnapshot,
+    "Changes apply to new records only and do not update previously created quotations, invoices, or generated documents.",
+  );
+  assert.equal(
+    ar.help.historicalSnapshot,
+    "تُطبَّق التغييرات على السجلات الجديدة فقط، ولا تُحدِّث عروض الأسعار أو الفواتير أو المستندات المُنشأة سابقاً.",
+  );
+  // No customer-facing CS-A token in Settings dictionary UI copy.
+  assert.doesNotMatch(en.help.historicalSnapshot, /CS-A/);
+  assert.doesNotMatch(ar.help.historicalSnapshot, /CS-A/);
+  assert.doesNotMatch(JSON.stringify(en.page) + JSON.stringify(en.labels) + JSON.stringify(en.help), /CS-A/);
+  assert.doesNotMatch(JSON.stringify(ar.page) + JSON.stringify(ar.labels) + JSON.stringify(ar.help), /CS-A/);
   assert.match(read(FORM), /legal_name_en|vat_mode|bank_iban|default_vat_percent/);
   assert.match(read(FORM), /historicalSnapshot|help\.historicalSnapshot/);
   assert.match(read(PAGE), /accessDeniedMessage|unavailableMessage/);
+  // Field name payload contract unchanged (label-only change).
+  assert.match(read(FORM), /name="tin_number"|tinNumber/);
 });
 
 test("16. No hardcoded English shells on Settings UI sources", () => {

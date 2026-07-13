@@ -4,23 +4,25 @@
 **Mode for this artifact**: Planning only — no task below is authorized by creating this file.
 **Source artifacts**: [spec.md](./spec.md), [plan.md](./plan.md), [research.md](./research.md), [data-model.md](./data-model.md), [locale contract](./contracts/locale-preference.md), [fallback contract](./contracts/dictionary-fallback.md), and [quickstart.md](./quickstart.md).
 
-## Progress Snapshot (docs sync `G7-AR-UX-P4-I18N-DOCS-SYNC`)
+## Progress Snapshot (acceptance commit `G7-AR-UX-P5-FINAL-ACCEPTANCE-COMMIT`)
 
-> Evidence-backed working-tree status. Checkbox markers below are updated only where this sync can source-prove them. **T032 remains open / HOLD.**
+> Evidence-backed acceptance status after P5 visual remediation and Mozfer-provided browser smoke. **T032 is PASS (user evidence).** Not a production-readiness claim. PDF bodies and Clerk-hosted widgets remain excluded.
 
 | Area | Status |
 |---|---|
 | T001–T009 schema gate + migration design/file + Mozfer DEV/DEMO apply evidence | Done (see `evidence/`; DEV/DEMO only; not production claim) |
-| T010–T020 locale read/write, shell, fallback | Implemented in working tree |
-| T021–T026 core modules (dashboard→payments) | Implemented in working tree |
+| T010–T020 locale read/write, shell, fallback | Implemented |
+| T021–T026 core modules (dashboard→payments) | Implemented |
 | P3 extensions: Suppliers, Settings, Admin Users, Customers Excel chrome, `/unauthorized`, root public locale alignment | Implemented (intentional extensions beyond original C01 Settings/Admin exclusion) |
+| P5 bilingual visual remediation | PASS — date/time/range/bidi, list alignment, Settings copy, global bolt lifecycle, Supplier panel title wrap |
 | T027–T029 reconciliation / independent review | Independent review PASS (`G7_AR_UX_P4_I18N_INDEPENDENT_REVIEW_PASS`, no P0) |
-| T030 static/focused tests | Automated: i18n/export **223/223**, root/public suite **21/21**, ESLint + `tsc --noEmit` + `git diff --check` PASS (full `pnpm build` / whole-repo `pnpm lint` not re-asserted in this docs sync) |
-| T031 smoke checklist prep | Optional / fold into T032 prep — not separately claimed complete |
-| **T032 Mozfer browser smoke** | **OPEN — HOLD (Mozfer-only)** |
+| T030 static/focused tests | Automated i18n + export **243/243**; visual-acceptance + Settings included; ESLint + `tsc --noEmit` + `git diff --check` PASS |
+| T031 smoke checklist prep | Folded into Mozfer T032 / P5 re-smoke sequence |
+| **T032 Mozfer browser smoke** | **PASS** (`G7_AR_UX_P5_MOZFER_FOCUSED_RE_SMOKE_3_PASS`; English LTR regression PASS; global bolt PASS) |
 | T033 root public locale alignment (P1 from independent review) | Done (`G7_AR_UX_P4_ROOT_PUBLIC_LOCALE_ALIGNED`) |
-| T035–T036 acceptance + canonical docs | This docs sync records status; formal UAT still waits on T032 |
-| T037–T040 selector restore / commit / Graphify / push | Not started — next process step `G7-AR-UX-P4-I18N-COMMIT-INVENTORY` |
+| T035–T036 acceptance + canonical docs | Updated for P5 acceptance; formal commercial-language UAT remains separate |
+| Controlled commit | `G7-AR-UX-P5-FINAL-ACCEPTANCE-COMMIT` |
+| Push | Next: `G7-AR-UX-P5-FINAL-ACCEPTANCE-PUSH` only |
 
 ## Controller Boundaries
 
@@ -416,14 +418,14 @@ Each task's `Dependencies` and `Expected next task` fields remain authoritative 
 
 ### T032 — Mozfer browser smoke
 
-- [ ] T032 Mozfer performs the prepared browser smoke on included authenticated routes. **STATUS: OPEN / HOLD — Mozfer-only; do not mark PASS without Mozfer evidence.**
+- [x] T032 Mozfer performs the prepared browser smoke on included authenticated routes. **STATUS: PASS** — user-provided evidence: `G7_AR_UX_P5_MOZFER_FOCUSED_RE_SMOKE_3_PASS`, English LTR browser regression PASS, existing global lightning bolt PASS (after P5 visual remediation).
   - **Purpose**: Obtain human evidence for selector accessibility, route coverage, persistence, failure/retry, fallback, bidi, and unchanged CRM behavior.
   - **Dependencies**: T031 and a running environment chosen by Mozfer.
   - **Guards**: User-owned manual smoke; `g7-crm-agent-control` reporting discipline.
   - **Validation**: Record only Mozfer-provided observations, route examples, and deviations; distinguish DEV/DEMO from production.
   - **Manual smoke**: Mozfer-only.
-  - **Exclusions**: No agent claim of smoke, no production claim, no feature expansion.
-  - **Expected next task**: T033 if issues are found; T035 if all acceptance observations pass.
+  - **Exclusions**: No agent invention of smoke; no production claim; no PDF-body or Clerk-widget localization claim; no feature expansion.
+  - **Expected next task**: controlled acceptance commit / push process (P5 final acceptance).
 
 ### T033 — Narrow remediation task
 

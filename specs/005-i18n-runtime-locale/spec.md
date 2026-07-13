@@ -2,7 +2,7 @@
 
 **Feature**: `005-i18n-runtime-locale`
 **Created**: 2026-07-11
-**Status**: Implementation complete in working tree (independent review PASS); **T032 Mozfer smoke HOLD**; not production-closed; controlled commit/push pending
+**Status**: Authenticated UI acceptance complete (independent review PASS; **T032 Mozfer smoke PASS**; P5 visual remediation PASS); not production-closed; controlled commit/push process
 
 ## Clarifications
 

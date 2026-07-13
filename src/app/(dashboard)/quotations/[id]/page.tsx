@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { ArrowLeft, Printer, FileEdit } from "lucide-react";
+import { Printer, FileEdit } from "lucide-react";
+import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import Link from "next/link";
 import PendingLink from "@/components/ui/PendingLink";
 import { getQuotationById } from "@/lib/quotations/queries";
@@ -9,7 +10,8 @@ import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getQuotationStatusLabel, getQuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
-import { formatSarAmount, formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
+import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import { UiDateText } from "@/components/i18n/UiDateText";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import type { ComponentProps } from "react";
 import QuotationApprovalActions from "./QuotationApprovalActions";
@@ -103,7 +105,7 @@ export default async function QuotationDetailPage({
             href="/quotations"
             className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
           >
-            <ArrowLeft size={18} />
+            <LocaleBackIcon size={18} />
           </PendingLink>
           <div>
             <div className="flex items-center gap-3">
@@ -170,16 +172,20 @@ export default async function QuotationDetailPage({
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
                   {dictionary.detail.labels.issueDate}
                 </div>
-                <div className="text-on-surface font-medium tabular-nums" dir="ltr">
-                  {formatUiDate(locale, quotation.date)}
+                <div className="text-on-surface font-medium">
+                  <UiDateText locale={locale} value={quotation.date} />
                 </div>
               </div>
               <div>
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
                   {dictionary.detail.labels.validUntil}
                 </div>
-                <div className="text-on-surface font-medium tabular-nums" dir="ltr">
-                  {quotation.validUntil ? formatUiDate(locale, quotation.validUntil) : "—"}
+                <div className="text-on-surface font-medium">
+                  {quotation.validUntil ? (
+                    <UiDateText locale={locale} value={quotation.validUntil} />
+                  ) : (
+                    "—"
+                  )}
                 </div>
               </div>
             </div>

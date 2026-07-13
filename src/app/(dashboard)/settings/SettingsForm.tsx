@@ -37,6 +37,7 @@ function Field({
   readOnly,
   placeholder,
   dir,
+  lang,
 }: {
   label: string;
   name: string;
@@ -46,6 +47,8 @@ function Field({
   readOnly?: boolean;
   placeholder?: string;
   dir?: "ltr" | "rtl" | "auto";
+  /** Optional BCP 47 language tag for the control presentation. */
+  lang?: string;
 }) {
   return (
     <div>
@@ -62,7 +65,64 @@ function Field({
         placeholder={placeholder}
         className={fieldClass}
         dir={dir}
+        lang={lang}
       />
+    </div>
+  );
+}
+
+/**
+ * Deterministic ISO calendar date control for Settings.
+ * Avoids ambiguous empty browser date-picker placeholders.
+ * Value remains YYYY-MM-DD for existing server actions.
+ */
+function IsoDateField({
+  label,
+  name,
+  defaultValue,
+  disabled,
+}: {
+  label: string;
+  name: string;
+  defaultValue?: string | null;
+  disabled?: boolean;
+}) {
+  const [value, setValue] = useState(defaultValue ?? "");
+  const isValid =
+    value.trim() === "" || /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
+
+  return (
+    <div>
+      <label className={labelClass} htmlFor={name}>
+        {label}
+      </label>
+      <input
+        id={name}
+        name={name}
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        spellCheck={false}
+        placeholder="YYYY-MM-DD"
+        value={value}
+        disabled={disabled}
+        dir="ltr"
+        lang="en"
+        pattern="\d{4}-\d{2}-\d{2}"
+        title="YYYY-MM-DD"
+        className={fieldClass}
+        onChange={(event) => {
+          // Allow only digits and hyphens while typing toward ISO shape.
+          const next = event.target.value.replace(/[^\d-]/g, "").slice(0, 10);
+          setValue(next);
+        }}
+        aria-invalid={isValid ? undefined : true}
+      />
+      {!isValid && (
+        <p className="mt-1 text-[12px] text-error" dir="ltr">
+          YYYY-MM-DD
+        </p>
+      )}
     </div>
   );
 }
@@ -317,13 +377,11 @@ export default function SettingsForm({
                   disabled={controlsDisabled || isNotRegistered}
                   dir="ltr"
                 />
-                <Field
+                <IsoDateField
                   label={dictionary.labels.vatEffectiveDate}
                   name="vat_effective_date"
-                  type="date"
                   defaultValue={isNotRegistered ? "" : settings.vatEffectiveDate}
                   disabled={controlsDisabled || isNotRegistered}
-                  dir="ltr"
                 />
                 <div className="md:col-span-2 flex items-start gap-2 text-[13px] text-on-surface-variant bg-surface-container-low rounded-lg border border-outline-variant p-3">
                   <ShieldAlert size={16} className="text-primary mt-0.5 shrink-0" />

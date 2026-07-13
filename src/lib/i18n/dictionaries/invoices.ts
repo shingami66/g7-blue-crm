@@ -510,7 +510,7 @@ const invoicesDictionaryAr: InvoicesDictionary = {
     sections: {
       overview: "تفاصيل الفاتورة",
       customer: "العميل / المشتري",
-      serviceEvent: "الخدمة / سياق الفعالية",
+      serviceEvent: "الخدمة والفعالية",
       quotation: "عرض السعر المعتمد",
       lineItems: "بنود الفاتورة",
       totals: "المبالغ / الإجماليات",

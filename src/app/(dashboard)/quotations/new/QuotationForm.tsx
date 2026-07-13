@@ -13,7 +13,8 @@ import {
   getQuotationsDictionary,
   type QuotationsDictionary,
 } from "@/lib/i18n/dictionaries/quotations";
-import { formatSarAmount, formatUiDate } from "@/lib/i18n/formatting";
+import { formatSarAmount } from "@/lib/i18n/formatting";
+import { UiDateText } from "@/components/i18n/UiDateText";
 
 interface QuotationFormService {
   id: string;
@@ -50,7 +51,11 @@ export default function QuotationForm({
     Object.prototype.hasOwnProperty.call(service, "eventEndDate");
   const serviceStartDate = service.eventStartDate || undefined;
   const formatScheduleDate = (value?: string | null) =>
-    value ? formatUiDate(dictionary.locale, value) : dictionary.form.notSet;
+    value ? (
+      <UiDateText locale={dictionary.locale} value={value} />
+    ) : (
+      dictionary.form.notSet
+    );
   const serviceStatusLabel =
     dictionary.form.serviceStatuses[
       service.status as keyof QuotationsDictionary["form"]["serviceStatuses"]
@@ -288,8 +293,8 @@ export default function QuotationForm({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[14px] font-semibold text-on-surface">{dictionary.form.issueDate}</label>
-                <div className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface-variant tabular-nums" dir="ltr">
-                  {formatUiDate(dictionary.locale, date)}
+                <div className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface-variant">
+                  <UiDateText locale={dictionary.locale} value={date} />
                 </div>
                 <p className="text-[12px] text-on-surface-variant leading-snug">
                   {dictionary.form.issueDateHint}

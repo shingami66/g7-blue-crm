@@ -37,7 +37,7 @@ export interface PaymentsDictionary {
 const paymentsDictionaryEn: PaymentsDictionary = {
   locale: "en",
   title: "Payments",
-  subtitle: "Review recorded invoice payments from the live database.",
+  subtitle: "Track recorded payments linked to invoices and services.",
   stats: {
     confirmedCollected: "Confirmed Collected",
     paymentRecords: "Payment Records",
@@ -79,7 +79,7 @@ const paymentsDictionaryEn: PaymentsDictionary = {
 const paymentsDictionaryAr: PaymentsDictionary = {
   locale: "ar",
   title: "المدفوعات",
-  subtitle: "مراجعة مدفوعات الفواتير المسجلة من قاعدة البيانات المباشرة.",
+  subtitle: "متابعة المدفوعات المسجلة المرتبطة بالفواتير والخدمات.",
   stats: {
     confirmedCollected: "المبالغ المحصلة المؤكدة",
     paymentRecords: "سجلات المدفوعات",

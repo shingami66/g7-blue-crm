@@ -19,7 +19,8 @@ import {
   getInvoiceTypeLabel,
   type InvoicesDictionary,
 } from "@/lib/i18n/dictionaries/invoices";
-import { formatSarAmount, formatUiDate } from "@/lib/i18n/formatting";
+import { formatSarAmount } from "@/lib/i18n/formatting";
+import { UiDateText } from "@/components/i18n/UiDateText";
 import PendingLink from "@/components/ui/PendingLink";
 
 const invoiceStatusBadgeVariant = {
@@ -185,25 +186,31 @@ export default function InvoicesListClient({
                     key={inv.id}
                     className="hover:bg-surface-container-low/50 transition-colors"
                   >
-                    <td className="px-4 py-4 font-mono font-semibold text-primary" dir="ltr">
-                      {isolateBidiText(inv.invoice_number || inv.id)}
+                    <td className="px-4 py-4 font-mono font-semibold text-primary">
+                      <span dir="ltr" className="inline-block whitespace-nowrap">
+                        {isolateBidiText(inv.invoice_number || inv.id)}
+                      </span>
                     </td>
                     <td className="px-4 py-4 text-on-surface">
                       {inv.invoice_type
                         ? getInvoiceTypeLabel(locale, inv.invoice_type)
                         : "—"}
                     </td>
-                    <td className="px-4 py-4 text-on-surface" dir="auto">
-                      {getInvoiceDocumentLabelDisplay(locale, inv.document_label)}
+                    <td className="px-4 py-4 text-on-surface">
+                      <span dir="auto">
+                        {getInvoiceDocumentLabelDisplay(locale, inv.document_label)}
+                      </span>
                     </td>
-                    <td className="px-4 py-4 font-medium text-on-surface" dir="auto">
-                      {inv.customer}
+                    <td className="px-4 py-4 font-medium text-on-surface">
+                      <span dir="auto">{inv.customer}</span>
                     </td>
-                    <td className="px-4 py-4 text-on-surface-variant tabular-nums" dir="ltr">
-                      {formatUiDate(locale, inv.issued_at ?? inv.created_at)}
+                    <td className="px-4 py-4 text-on-surface-variant">
+                      <UiDateText locale={locale} value={inv.issued_at ?? inv.created_at} />
                     </td>
-                    <td className="px-4 py-4 font-semibold text-on-surface text-right tabular-nums" dir="ltr">
-                      {formatSarAmount(locale, inv.grand_total)}
+                    <td className="px-4 py-4 font-semibold text-on-surface text-right tabular-nums">
+                      <span dir="ltr" className="inline-block whitespace-nowrap">
+                        {formatSarAmount(locale, inv.grand_total)}
+                      </span>
                     </td>
                     <td className="px-4 py-4">
                       <StatusBadge variant={invoiceStatusBadgeVariant[inv.status]}>

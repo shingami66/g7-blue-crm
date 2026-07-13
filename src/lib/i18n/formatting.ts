@@ -220,9 +220,170 @@ function hasExplicitDateShape(
   return Object.keys(options).length > 0;
 }
 
+export type UiDateSegmentTokens = {
+  kind: "segments";
+  locale: Locale;
+  day: string;
+  month: string;
+  year: string;
+  /** Present only for date-time. Western-digit time + optional dayPeriod. */
+  time?: string;
+  dayPeriod?: string;
+};
+
+export type UiDatePlainTokens = {
+  kind: "plain";
+  locale: Locale;
+  text: string;
+};
+
+export type UiDateEmptyTokens = {
+  kind: "empty";
+  text: string;
+};
+
+export type UiDateDisplayTokens =
+  | UiDateSegmentTokens
+  | UiDatePlainTokens
+  | UiDateEmptyTokens;
+
+function collectFormatParts(
+  locale: Locale,
+  date: Date,
+  options: Intl.DateTimeFormatOptions,
+): Partial<Record<Intl.DateTimeFormatPartTypes, string>> {
+  const parts = new Intl.DateTimeFormat(
+    getIntlLocale(locale),
+    withLatnNumberingSystem(options),
+  ).formatToParts(date);
+
+  const byType: Partial<Record<Intl.DateTimeFormatPartTypes, string>> = {};
+  for (const part of parts) {
+    if (part.type !== "literal") {
+      byType[part.type] = part.value;
+    }
+  }
+  return byType;
+}
+
+/**
+ * Tokenize a UI date for structured rendering.
+ * Arabic uses day / month / year segments so the visual order stays
+ * `16 يونيو 2026` under RTL shells (never wrap the whole phrase in dir=ltr).
+ * English remains a plain formatted string.
+ */
+export function resolveUiDateDisplay(
+  locale: Locale,
+  value: FormatDateInput,
+  options: FormatUiDateOptions = {},
+): UiDateDisplayTokens {
+  const parsed = parseUiDateInput(value);
+  if (!parsed) {
+    return { kind: "empty", text: resolveFallback(options.fallback) };
+  }
+
+  const intlOptions = omitUiOptions(options);
+  const formatOptions = hasExplicitDateShape(intlOptions)
+    ? intlOptions
+    : getDefaultDateOptions(locale);
+
+  if (locale === "ar") {
+    const byType = collectFormatParts("ar", parsed, formatOptions);
+    return {
+      kind: "segments",
+      locale: "ar",
+      day: byType.day ?? "",
+      month: byType.month ?? "",
+      year: byType.year ?? "",
+    };
+  }
+
+  const text = new Intl.DateTimeFormat(
+    getIntlLocale(locale),
+    withLatnNumberingSystem(formatOptions),
+  ).format(parsed);
+
+  return { kind: "plain", locale, text };
+}
+
+/**
+ * Tokenize a UI date-time for structured rendering.
+ * Arabic: date segments + isolated LTR time (`25 يونيو 2026، 03:10 م`).
+ */
+export function resolveUiDateTimeDisplay(
+  locale: Locale,
+  value: FormatDateInput,
+  options: FormatUiDateTimeOptions = {},
+): UiDateDisplayTokens {
+  const parsed = parseUiDateInput(value);
+  if (!parsed) {
+    return { kind: "empty", text: resolveFallback(options.fallback) };
+  }
+
+  const intlOptions = omitUiOptions(options);
+  const formatOptions = hasExplicitDateShape(intlOptions)
+    ? intlOptions
+    : getDefaultDateTimeOptions(locale);
+
+  if (locale === "ar") {
+    const byType = collectFormatParts("ar", parsed, formatOptions);
+    const hour = byType.hour ?? "";
+    const minute = byType.minute ?? "";
+    const timeCore = hour && minute ? `${hour}:${minute}` : hour || minute;
+    return {
+      kind: "segments",
+      locale: "ar",
+      day: byType.day ?? "",
+      month: byType.month ?? "",
+      year: byType.year ?? "",
+      time: timeCore || undefined,
+      dayPeriod: byType.dayPeriod,
+    };
+  }
+
+  const text = new Intl.DateTimeFormat(
+    getIntlLocale(locale),
+    withLatnNumberingSystem(formatOptions),
+  ).format(parsed);
+
+  return { kind: "plain", locale, text };
+}
+
+/**
+ * Assemble Arabic Gregorian dates in a stable logical order for plain-text contexts
+ * (exports, templates). Prefer structured React rendering via resolveUiDateDisplay
+ * for on-screen Arabic UI.
+ */
+function formatArabicGregorianFromParts(
+  date: Date,
+  options: Intl.DateTimeFormatOptions,
+): string {
+  const byType = collectFormatParts("ar", date, options);
+  const day = byType.day ?? "";
+  const month = byType.month ?? "";
+  const year = byType.year ?? "";
+  const dateCore = [day, month, year].filter(Boolean).join(" ");
+
+  if (!options.hour && !options.minute && !options.timeStyle) {
+    return dateCore;
+  }
+
+  const hour = byType.hour ?? "";
+  const minute = byType.minute ?? "";
+  const dayPeriod = byType.dayPeriod ?? "";
+  const timeCore = hour && minute ? `${hour}:${minute}` : hour || minute;
+  const timeWithPeriod = [timeCore, dayPeriod].filter(Boolean).join(" ");
+
+  if (!timeWithPeriod) {
+    return dateCore;
+  }
+
+  return `${dateCore}، ${timeWithPeriod}`;
+}
+
 /**
  * Locale-aware calendar date with Western digits.
- * Arabic → long Arabic month names; English → short en-SA month.
+ * Arabic → long Arabic month names in day–month–year order; English → short en-SA month.
  * Signature follows repo convention: `(locale, value, options?)`.
  */
 export function formatUiDate(
@@ -240,10 +401,13 @@ export function formatUiDate(
     ? intlOptions
     : getDefaultDateOptions(locale);
 
-  const formatted = new Intl.DateTimeFormat(
-    getIntlLocale(locale),
-    withLatnNumberingSystem(formatOptions),
-  ).format(parsed);
+  const formatted =
+    locale === "ar"
+      ? formatArabicGregorianFromParts(parsed, formatOptions)
+      : new Intl.DateTimeFormat(
+          getIntlLocale(locale),
+          withLatnNumberingSystem(formatOptions),
+        ).format(parsed);
 
   return maybeIsolate(formatted, options.isolate);
 }
@@ -267,12 +431,43 @@ export function formatUiDateTime(
     ? intlOptions
     : getDefaultDateTimeOptions(locale);
 
-  const formatted = new Intl.DateTimeFormat(
-    getIntlLocale(locale),
-    withLatnNumberingSystem(formatOptions),
-  ).format(parsed);
+  const formatted =
+    locale === "ar"
+      ? formatArabicGregorianFromParts(parsed, formatOptions)
+      : new Intl.DateTimeFormat(
+          getIntlLocale(locale),
+          withLatnNumberingSystem(formatOptions),
+        ).format(parsed);
 
   return maybeIsolate(formatted, options.isolate);
+}
+
+/**
+ * Inclusive UI date range with a stable en-dash separator.
+ * Arabic example: `3 يوليو 2026 – 10 يوليو 2026`.
+ * Prefer wrapping the full range in `dir="ltr"` at the call site.
+ */
+export function formatUiDateRange(
+  locale: Locale,
+  start: FormatDateInput,
+  end: FormatDateInput,
+  options: FormatUiDateOptions = {},
+): string {
+  const startText = formatUiDate(locale, start, { ...options, isolate: false });
+  const endText = formatUiDate(locale, end, { ...options, isolate: false });
+  const empty = resolveFallback(options.fallback);
+
+  if (startText === empty && endText === empty) {
+    return empty;
+  }
+  if (startText === empty) {
+    return maybeIsolate(endText, options.isolate);
+  }
+  if (endText === empty) {
+    return maybeIsolate(startText, options.isolate);
+  }
+
+  return maybeIsolate(`${startText} – ${endText}`, options.isolate);
 }
 
 /**

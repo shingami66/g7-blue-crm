@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import type { ComponentProps, ReactNode } from "react";
-import { ArrowLeft, Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
+import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import PendingLink from "@/components/ui/PendingLink";
 import StatusBadge from "@/components/ui/StatusBadge";
 import DataTable from "@/components/ui/DataTable";
@@ -16,7 +17,8 @@ import {
   getCustomersDictionary,
   type CustomersDictionary,
 } from "@/lib/i18n/dictionaries/customers";
-import { formatSarAmount, formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
+import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import { UiDateRangeText, UiDateText } from "@/components/i18n/UiDateText";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Customer } from "@/types/customer";
@@ -89,7 +91,7 @@ export default async function CustomerProfilePage({
             className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
             aria-label={dictionary.profile.backToCustomers}
           >
-            <ArrowLeft size={18} />
+            <LocaleBackIcon size={18} />
           </PendingLink>
           <div>
             <div className="flex flex-wrap items-center gap-3">
@@ -414,17 +416,23 @@ function formatNationalAddress(customer: Customer) {
   return parts.length > 0 ? <span dir="auto">{parts.join(", ")}</span> : "—";
 }
 
-function formatEventDate(locale: Locale, service: Service) {
+function formatEventDate(locale: Locale, service: Service): ReactNode {
   if (service.eventStartDate && service.eventEndDate) {
-    return `${formatUiDate(locale, service.eventStartDate)} - ${formatUiDate(locale, service.eventEndDate)}`;
+    return (
+      <UiDateRangeText
+        locale={locale}
+        start={service.eventStartDate}
+        end={service.eventEndDate}
+      />
+    );
   }
 
   if (service.eventStartDate) {
-    return formatUiDate(locale, service.eventStartDate);
+    return <UiDateText locale={locale} value={service.eventStartDate} />;
   }
 
   if (service.eventEndDate) {
-    return formatUiDate(locale, service.eventEndDate);
+    return <UiDateText locale={locale} value={service.eventEndDate} />;
   }
 
   return "—";
