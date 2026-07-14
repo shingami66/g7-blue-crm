@@ -7,6 +7,7 @@ import type { QuotationDetailRow, QuotationItemRow } from "@/lib/quotations/type
 import { isTerminalServiceStatus } from "@/lib/services/status-transitions";
 import type { ServiceStatus } from "@/types/service";
 import { APPROVED_BILLING_SCOPE_PERMISSIONS } from "./permissions";
+import { APPROVED_BILLING_SCOPE_ERROR_CODES } from "./errors";
 import {
   createApprovedBillingScopeDraftSchema,
   discardApprovedBillingScopeDraftSchema,
@@ -14,7 +15,7 @@ import {
   reviewApprovedBillingScopeLineSafetySchema,
   approveApprovedBillingScopeSchema,
 } from "./schemas";
-import { getApprovedBillingScopeById, getActiveApprovedBillingScopeForService } from "./queries";
+import { getApprovedBillingScopeById } from "./queries";
 import type {
   ApprovedBillingScopeActionResult,
   ApprovedBillingScopeDetail,
@@ -935,208 +936,94 @@ export async function reviewApprovedBillingScopeLineSafety(
 export type ApproveApprovedBillingScopeResult =
   ApprovedBillingScopeActionResult<ApprovedBillingScopeDetail>;
 
+type ApproveApprovedBillingScopeRpcRow = {
+  error_code: string | null;
+  scope_id: string | null;
+  service_id: string | null;
+  scope_version: number | null;
+  approved_at: string | null;
+  approved: boolean;
+};
+
+function isApprovedBillingScopeErrorCode(
+  errorCode: string
+): errorCode is ApprovedBillingScopeErrorCode {
+  return APPROVED_BILLING_SCOPE_ERROR_CODES.some((code) => code === errorCode);
+}
+
+function isApprovedBillingScopeRpcSuccess(
+  approval: ApproveApprovedBillingScopeRpcRow,
+  scopeId: string
+): boolean {
+  return (
+    approval.error_code === null &&
+    approval.scope_id === scopeId &&
+    typeof approval.service_id === "string" &&
+    approval.service_id.length > 0 &&
+    Number.isInteger(approval.scope_version) &&
+    (approval.scope_version ?? 0) > 0 &&
+    typeof approval.approved_at === "string" &&
+    !Number.isNaN(Date.parse(approval.approved_at)) &&
+    approval.approved === true
+  );
+}
+
 export async function approveApprovedBillingScope(
   input: unknown
 ): Promise<ApproveApprovedBillingScopeResult> {
   try {
-    const user = await requirePermission(APPROVED_BILLING_SCOPE_PERMISSIONS.approve);
     const parsed = approveApprovedBillingScopeSchema.safeParse(input);
-    const supabase = createAdminClient();
 
     if (!parsed.success) {
       return errorResult("scope_unexpected_error");
     }
 
+    const user = await requirePermission(APPROVED_BILLING_SCOPE_PERMISSIONS.approve);
     const { scopeId } = parsed.data;
-
-    // Load scope and its items
-    const { data: scope, error: scopeError } = await supabase
-      .from("approved_billing_scopes")
-      .select("*")
-      .eq("id", scopeId)
-      .maybeSingle();
-
-    if (scopeError) {
-      console.error("[approveApprovedBillingScope] Error loading scope:", scopeError.message);
-      return errorResult("scope_unexpected_error");
-    }
-
-    if (!scope) {
-      return errorResult("scope_not_found");
-    }
-
-    if (scope.voided_at) {
-      return errorResult("scope_terminal_voided");
-    }
-
-    if (scope.superseded_at) {
-      return errorResult("scope_not_draft");
-    }
-
-    if (scope.status !== "draft") {
-      return errorResult("scope_not_draft");
-    }
-
-    if (scope.line_safety_status !== "safe") {
-      return errorResult("scope_not_safe");
-    }
-
-    const { data: items, error: itemsError } = await supabase
-      .from("approved_billing_scope_items")
-      .select("*")
-      .eq("approved_billing_scope_id", scopeId);
-
-    if (itemsError) {
-      console.error("[approveApprovedBillingScope] Error loading items:", itemsError.message);
-      return errorResult("scope_unexpected_error");
-    }
-
-    if (!items || items.length === 0) {
-      return errorResult("scope_no_items");
-    }
-
-    // Verify all item decisions and accepted totals are internally consistent
-    let computedSubtotal = 0;
-    let computedVat = 0;
-    let computedGrandTotal = 0;
-
-    for (const item of items) {
-      const decision = item.decision;
-      const acceptedQty = Number(item.accepted_qty);
-      const acceptedUnitPrice = Number(item.accepted_unit_price);
-      const acceptedSubtotal = Number(item.accepted_subtotal);
-      const acceptedVatAmount = Number(item.accepted_vat_amount);
-      const acceptedGrandTotal = Number(item.accepted_grand_total);
-      const sourceQty = Number(item.source_qty);
-      const sourceUnitPrice = Number(item.source_unit_price);
-      const sourceSubtotal = Number(item.source_subtotal);
-      const sourceVatAmount = Number(item.source_vat_amount);
-      const sourceGrandTotal = Number(item.source_grand_total);
-
-      if (
-        !Number.isFinite(acceptedQty) ||
-        !Number.isFinite(acceptedUnitPrice) ||
-        !Number.isFinite(acceptedSubtotal) ||
-        !Number.isFinite(acceptedVatAmount) ||
-        !Number.isFinite(acceptedGrandTotal)
-      ) {
-        return errorResult("scope_unexpected_error");
+    const supabase = createAdminClient();
+    const { data: approvals, error: approvalError } = await supabase.rpc(
+      "approve_approved_billing_scope",
+      {
+        p_scope_id: scopeId,
+        p_actor_id: user.clerk_user_id,
+        p_actor_role: user.role,
       }
+    );
 
-      if (decision === "accepted") {
-        if (
-          acceptedQty !== sourceQty ||
-          acceptedUnitPrice !== sourceUnitPrice ||
-          acceptedSubtotal !== sourceSubtotal ||
-          acceptedVatAmount !== sourceVatAmount ||
-          acceptedGrandTotal !== sourceGrandTotal
-        ) {
-          return errorResult("scope_reduction_invalid");
-        }
-      } else if (decision === "excluded" || decision === "customer_supplied") {
-        if (
-          acceptedQty !== 0 ||
-          acceptedUnitPrice !== 0 ||
-          acceptedSubtotal !== 0 ||
-          acceptedVatAmount !== 0 ||
-          acceptedGrandTotal !== 0
-        ) {
-          return errorResult("scope_reduction_invalid");
-        }
-        if (!item.reason_code || !item.reason_code.trim()) {
-          return errorResult("scope_reason_required");
-        }
-      } else if (decision === "adjusted") {
-        if (
-          acceptedQty > sourceQty ||
-          acceptedUnitPrice > sourceUnitPrice ||
-          acceptedSubtotal > sourceSubtotal ||
-          acceptedVatAmount > sourceVatAmount ||
-          acceptedGrandTotal > sourceGrandTotal
-        ) {
-          return errorResult("scope_reduction_invalid");
-        }
-        if (Math.abs(acceptedGrandTotal - (acceptedSubtotal + acceptedVatAmount)) > 0.01) {
-          return errorResult("scope_reduction_invalid");
-        }
-        if (!item.reason_code || !item.reason_code.trim()) {
-          return errorResult("scope_reason_required");
-        }
-      } else {
-        return errorResult("scope_unexpected_error");
-      }
-
-      computedSubtotal += acceptedSubtotal;
-      computedVat += acceptedVatAmount;
-      computedGrandTotal += acceptedGrandTotal;
-    }
-
-    if (
-      Math.abs(computedSubtotal - Number(scope.accepted_subtotal)) > 0.01 ||
-      Math.abs(computedVat - Number(scope.accepted_vat_amount)) > 0.01 ||
-      Math.abs(computedGrandTotal - Number(scope.accepted_grand_total)) > 0.01
-    ) {
+    if (approvalError) {
       console.error(
-        "[approveApprovedBillingScope] Accepted totals mismatch: Header subtotal/vat/grand_total =",
-        scope.accepted_subtotal, scope.accepted_vat_amount, scope.accepted_grand_total,
-        "vs computed sum =", computedSubtotal, computedVat, computedGrandTotal
+        "[approveApprovedBillingScope] Atomic approval RPC error:",
+        approvalError.message
       );
       return errorResult("scope_unexpected_error");
     }
 
-    // Verify at least one billable item with positive accepted total
-    const hasBillable = items.some(item => Number(item.accepted_grand_total) > 0);
-    if (!hasBillable) {
-      return errorResult("scope_no_billable_items");
-    }
-
-    // Verify no active approved scope already exists for the same service
-    const activeScope = await getActiveApprovedBillingScopeForService(scope.service_id);
-    if (activeScope) {
-      return errorResult("scope_active_conflict");
-    }
-
-    // Perform database update
-    const { data: updatedScope, error: approveError } = await supabase
-      .from("approved_billing_scopes")
-      .update({
-        status: "approved",
-        approved_at: new Date().toISOString(),
-        approved_by: user.clerk_user_id,
-        updated_by: user.clerk_user_id,
-      })
-      .eq("id", scopeId)
-      .eq("status", "draft")
-      .eq("line_safety_status", "safe")
-      .is("voided_at", null)
-      .is("superseded_at", null)
-      .select("id")
-      .maybeSingle();
-
-    if (approveError) {
-      console.error("[approveApprovedBillingScope] Error approving scope:", approveError.message);
-
-      const msg = approveError.message || "";
-      if (approveError.code === UNIQUE_VIOLATION_CODE || msg.includes("one_active_per_service")) {
-        return errorResult("scope_active_conflict");
-      }
-
+    if (!Array.isArray(approvals) || approvals.length !== 1) {
+      console.error(
+        "[approveApprovedBillingScope] Atomic approval RPC returned an invalid row count for scope:",
+        scopeId
+      );
       return errorResult("scope_unexpected_error");
     }
 
-    if (!updatedScope) {
-      return errorResult("scope_concurrency_conflict");
+    const approval = approvals[0] as ApproveApprovedBillingScopeRpcRow;
+
+    if (typeof approval?.error_code === "string") {
+      return isApprovedBillingScopeErrorCode(approval.error_code)
+        ? errorResult(approval.error_code)
+        : errorResult("scope_unexpected_error");
     }
 
-    const detail = await getApprovedBillingScopeById(scopeId);
-    if (!detail) {
-      console.error("[approveApprovedBillingScope] Failed to read back approved scope detail:", scopeId);
+    if (!isApprovedBillingScopeRpcSuccess(approval, scopeId)) {
+      console.error(
+        "[approveApprovedBillingScope] Atomic approval RPC returned an invalid success payload for scope:",
+        scopeId
+      );
       return errorResult("scope_unexpected_error");
     }
 
     return {
       success: true,
-      data: detail,
     };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {

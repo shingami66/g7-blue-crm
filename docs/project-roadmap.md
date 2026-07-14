@@ -73,20 +73,20 @@ Current active task:
 - **ABS read-enrichment complete:** `ABS-MGMT-UI-READ-ENRICH-1` — Service Detail **read-only** ABS summary card shows effective display state (active/draft/voided/superseded-derived), version, source quotation, billing ceiling, invoiced/remaining (when `invoices:read`), line safety, draft/history indicators, and detail navigation. Source implemented and pushed on main.
 - **ABS draft-edit/discard complete:** `ABS-MGMT-UI-DRAFT-EDIT-1` — bounded draft item edit and discard UI using the existing backend contracts; automated validation passed; PASS by Mozfer manual browser evidence; pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`.
 - **ABS review/approve complete and pushed:** `ABS-MGMT-UI-REVIEW-APPROVE-1` — automated validation passed; PASS by Mozfer manual browser evidence; committed and pushed in `d8b654f2c89622837b75531aa44d79a66e024ad8`.
-- **Financial lifecycle design locked:** `ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED` resolves the prior pending flag. The design is docs-only; void/successor RPCs/actions/UI are not implemented.
-- **Current active task (exactly one):** `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-COMMIT-1`
-  - **Purpose:** controlled commit of the five canonical design docs only.
-  - **Mode:** separate controlled commit gate; do not implement or apply SQL.
+- **Financial lifecycle implementation verified:** `ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED` remains the governing design decision. The reviewed migration/RPC implementation is installed and read-only verified in DEV/DEMO; successful mutation smoke and void/successor UI remain pending.
+- **Current active task (exactly one):** `ABS-MGMT-FINANCIAL-LIFECYCLE-DOCS-SYNC-1`
+  - **Purpose:** synchronize the three canonical status/schema/roadmap docs with the verified DEV/DEMO implementation and apply.
+  - **Mode:** docs-only; do not edit source/migrations or access DB/Supabase.
 - **Locked ABS management order:**
   1. `ABS-MGMT-UI-READ-ENRICH-1` **complete**
   2. `ABS-MGMT-UI-DRAFT-CREATE-1` **complete** (source implemented; PASS by Mozfer manual browser evidence; pushed on main in `47d9a4f14f019e837224e6db6cababdab12a7610` and `7054cf34654266ca033c58c62f9dca6d94092967`)
   3. `ABS-MGMT-UI-DRAFT-EDIT-1` **complete and pushed** on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`
   4. `ABS-MGMT-UI-REVIEW-APPROVE-1` **complete and pushed** in `d8b654f2c89622837b75531aa44d79a66e024ad8`
-  5. `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-1` **complete in current docs; commit pending**
-  6. `ABS-MGMT-FINANCIAL-LIFECYCLE-MIGRATION-PREFLIGHT-1` **next after design commit**
-  7. reviewed SQL -> migration -> separate DEV/DEMO apply/verification -> actions/tests -> read/history -> Void UI -> successor UI -> manual smoke
+  5. `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-1` **complete**
+  6. migration/RPC preflight, SQL review, DEV/DEMO apply, read-only verification, actions, and tests **complete**
+  7. successful lifecycle mutation smoke -> read/history -> Void UI -> successor UI -> manual smoke
   - Optional later: `ABS-MGMT-HISTORY-LIST-1`
-- **ABS source-truth:** void/successor **not** implemented as actions/RPCs/UI; all UI slices through Review/Approve are implemented and pushed; status enum `draft|approved|voided` only (Superseded is timestamp/link-derived); current runtime still falls back to quotation whenever no active scope. Locked future policy blocks that fallback after approved ABS authority has existed and uses Service-lifetime applicable invoice exposure across all historical/current/null scope links.
+- **ABS source-truth:** all UI slices through Review/Approve are implemented and pushed; status enum `draft|approved|voided` only (Superseded is timestamp/link-derived). The lifecycle migration/RPC surface is installed and read-only verified in DEV/DEMO, while successful mutation smoke and void/successor app actions/UI remain pending. Current runtime fallback and the locked post-authority fail-closed policy remain distinct and must not be conflated.
 - **Responsive core P0 (complete; Mozfer smoke PASS):**
   - Audit + implement source: `RESPONSIVE_CORE_P0_IMPLEMENTED` (quotation/service stacking, logical filter icons, related-quotations header, invoice search width; table-local scroll preserved).
   - Body-overflow remediation: `RESPONSIVE-CORE-P0-SMOKE-FIX-1` (shell `min-w-0` containment; DataTable/Related Quotations local-scroll constraints; Service Detail Blocked Actions wrap; allocations header wrap; billing row wrap). No global `overflow-x-hidden` concealment.
@@ -94,7 +94,7 @@ Current active task:
   - Manual re-smoke: `RESPONSIVE-CORE-P0-MOZFER-RE-SMOKE-1` — **PASS by Mozfer manual browser evidence.** Agent did **not** perform browser smoke.
   - Flag **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING` closed** (no longer unresolved/active).
   - Supplier mobile detail remains deferred to full Supplier redesign (no temporary panel/drawer).
-- **Locked V1 critical-path order:** responsive audit -> responsive implementation/smoke PASS -> ABS management/read/create/edit/review/approve complete and pushed -> financial lifecycle design docs -> **design commit** -> migration/RPC preflight -> SQL/migration review -> separate DEV/DEMO apply/verification -> actions/tests -> history/read -> Void UI -> successor UI -> manual smoke -> docs/commit/push.
+- **Locked V1 critical-path order:** responsive audit -> responsive implementation/smoke PASS -> ABS management/read/create/edit/review/approve complete and pushed -> financial lifecycle design docs -> **design commit** -> migration/RPC preflight -> SQL/migration review -> separate DEV/DEMO apply and read-only verification -> actions/tests -> successful lifecycle mutation smoke -> history/read -> Void UI -> successor UI -> manual smoke -> docs/commit/push.
 - Residual open (outside Feature 005 formal close): PDF/document localization and bilingual documents (deferred).
 - Residual open: final Mozfer commercial Arabic terminology approval for UAT (separate from T032 visual smoke PASS).
 - Professional Supplier Booking redesign remains outside V1 acceptance scope and is **not** active.
@@ -126,8 +126,8 @@ Completed:
 - `PUBLIC-HEALTH-ROUTE-HARDEN-1` (PASS WITH WARN: audited public health and webhook routes, verified response sanitization and next 16 proxy convention).
 
 Backlog / later priority:
-- `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-COMMIT-1` **next active task** (five canonical docs only)
-- `ABS-MGMT-FINANCIAL-LIFECYCLE-MIGRATION-PREFLIGHT-1` follows the design commit; void/successor implementation remains unavailable until reviewed migration/RPC apply and verification.
+- `ABS-MGMT-FINANCIAL-LIFECYCLE-DOCS-SYNC-1` **current docs-only sync**; implementation/apply verification is already recorded for DEV/DEMO.
+- Successful lifecycle mutation smoke, Void UI, successor UI, and user/manual smoke remain pending; production apply remains unauthorized.
 - `ABS-MGMT-HISTORY-LIST-1` (optional later)
 - `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` (Optional follow-up to perform server-side direct adversarial smoke testing bypassing UI validation).
 - `SUPPLIER-BOOKINGS-LOADING-UX-VERIFY` (Follow-up validation of supplier booking creation/cancellation pending and transition states under throttled networks).

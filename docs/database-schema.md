@@ -3,7 +3,7 @@
 ## Overview
 This document outlines the Supabase PostgreSQL database schema reference for the G7 BLUE CRM backend.
 
-`supabase/schema.sql` is a schema reference snapshot of the verified live Supabase DB shape after manually applied SQL through the Core Security, Quotations RPC, Company Settings CS-A, and ERP-1 Services DB foundation work. It is not migration tracking, and it should not be treated as proof that `supabase_migrations.schema_migrations` exists. SQL has been applied manually through the Supabase SQL Editor, so migration tracking tables may be absent.
+`supabase/schema.sql` is a schema reference snapshot of the verified Supabase DB shape after the Core Security, Quotations RPC, Company Settings CS-A, ERP-1 Services DB foundation, and subsequent DEV/DEMO ERP work. It is not a complete migration ledger. The approved billing scope financial-lifecycle migration has connector-generated DEV/DEMO history (`20260714113857`); this does not authorize production apply or imply that every older manually applied change has migration history.
 
 **WARNING: DO NOT apply migrations through the MCP connection.** The current setup is purely local for development. Follow the manual application steps if needed on a live instance.
 
@@ -99,10 +99,10 @@ These are approved target rules for future reviewed schema changes; they do not 
 - **Status model (DB):** scope `status` is `draft | approved | voided` only. **`superseded` is not a status enum value** — supersession uses `superseded_at` / `superseded_by_scope_id` (and related columns). Active scope = `status = approved` AND `superseded_at IS NULL` AND `voided_at IS NULL`.
 - Implemented foundation rules include one active scope per Service, constraints/triggers, RLS, reductions-only line decisions (`accepted`, `excluded`, `adjusted`, `customer_supplied`), line-safety review before approval, and immutable approved or invoice-referenced records under ordinary edit.
 - Implemented runtime includes the app-layer draft-creation path, narrow discard and draft-item-edit RPCs, review and approval **server actions**, invoice integration, a permission-gated Service Detail **read-only** card, and the nested **read-only** detail route.
-- **Not implemented:** void **action** and supersede **action** (columns/permissions/schemas alone do not equal working actions). Financial behavior for voiding an active scope / superseding after partial invoicing is pending: **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`**. Management design: `docs/approved-billing-scope-management-design.md`.
+- **Lifecycle implementation status:** the reviewed void/supersede financial lifecycle migration and RPC surface is installed and read-only verified in DEV/DEMO. This does not mean successful mutation smoke has run: Void, successor creation, approve-and-supersede, payment, Invoice creation, and browser/manual lifecycle smoke remain unperformed. Management design: `docs/approved-billing-scope-management-design.md`.
 - Invoice integration persists `approved_billing_scope_id` when an active scope exists and enforces the accepted grand total as the invoice ceiling. The approved quotation total remains the fallback only when no active scope exists.
 - The implemented DEV/DEMO foundation includes the scope tables, related keys, trigger functions/triggers, and RLS. It must not be described as production-ready or production-applied.
-- Still deferred or not authorized: production database authorization/apply, full user-facing management write UI, void/supersede action implementation, and unsupported audit/history capabilities.
+- Still deferred or not authorized: production database authorization/apply, successful mutation smoke, full user-facing Void/successor management UI, and unsupported audit/history capabilities.
 - The foundation migration `20260708090000_approved_billing_scope_foundation.sql` was later applied to the DEV/DEMO database only and validated there; production remains unapplied.
 - DEV/DEMO validation confirmed the foundation objects exist there, including `approved_billing_scopes`, `approved_billing_scope_items`, `quotation_items_id_quotation_id_key`, the trigger functions/triggers, and RLS on the new tables.
 - Manual DEV/DEMO smoke for the create-draft action also passed after the foundation migration: source quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe` created scope `2fb8a324-4bd2-44be-8a23-a2b37e9b6e72`, duplicate protection returned `scope_duplicate_draft`.
@@ -116,6 +116,8 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Live schema enforceability audit completed on DEV/DEMO database with `WARN` (audit packet expectation mismatch only; all target database tables, check/FK/unique constraints, indexes, triggers, RLS status, and table grants successfully verified).
 - Clarified draft write path: `createApprovedBillingScopeDraft` is an app-layer server action, NOT a database RPC. There is no expected `public.create_approved_billing_scope_draft` database function. It performs direct table writes using `createAdminClient` / `service_role`, is protected by app-layer `requirePermission(approvedBillingScopes:create)`, and relies on table-level constraints and triggers for enforceability and concurrency safety.
 - Production authorization remains deferred until a separate production review approves it.
+- The financial-lifecycle migration is `supabase/migrations/20260714090000_approved_billing_scope_financial_lifecycle.sql` (local hash `414bb40863c10a5294f254e11d198d2f874467b3`) and is installed in G7 BLUE CRM DEV/DEMO as connector history version `20260714113857`, name `approved_billing_scope_financial_lifecycle`.
+- Post-apply read-only verification passed for the 14 reviewed functions, trigger/search-path/security boundaries, Service-first locking, empty-resource/missing-resource behavior, unchanged baseline counts, and zero persistent mutation/audit rows. No production readiness claim is made.
 
 ### Invoices And Payments
 **Status: ERP-3A Invoice Schema Foundation — Manual Supabase apply completed / Verified**

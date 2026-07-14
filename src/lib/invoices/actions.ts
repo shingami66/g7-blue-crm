@@ -281,6 +281,9 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
         if (errorMsg.includes("exceeds active billing scope ceiling")) {
           return { success: false, error: "invoice_amount_exceeds_ceiling" };
         }
+        if (errorMsg.trim() === "billing_scope_inactive") {
+          return { success: false, error: "billing_scope_inactive" };
+        }
         if (errorMsg.includes("not active or is voided/superseded")) {
           return { success: false, error: "billing_scope_inactive" };
         }

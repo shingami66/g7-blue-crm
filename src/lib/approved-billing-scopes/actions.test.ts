@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { register } from "node:module";
 import test, { mock } from "node:test";
+import {
+  APPROVED_BILLING_SCOPE_ERROR_CODES,
+  APPROVED_BILLING_SCOPE_ERROR_MESSAGES,
+  type ApprovedBillingScopeErrorCode,
+} from "./errors.ts";
 
 const SOURCE_QUOTATION_ID = "11111111-1111-4111-8111-111111111111";
 const SOURCE_SERVICE_ID = "22222222-2222-4222-8222-222222222222";
@@ -67,6 +72,33 @@ function currentScenario(): ActionScenario {
 
   return activeScenario;
 }
+
+test("Approved billing scope taxonomy keeps scope_not_active exact and distinct", () => {
+  const stableCode: ApprovedBillingScopeErrorCode = "scope_not_active";
+
+  assert.equal(
+    APPROVED_BILLING_SCOPE_ERROR_CODES.filter((code) => code === stableCode).length,
+    1,
+  );
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(
+      APPROVED_BILLING_SCOPE_ERROR_MESSAGES,
+      stableCode,
+    ),
+    true,
+  );
+  assert.equal(
+    APPROVED_BILLING_SCOPE_ERROR_MESSAGES[stableCode],
+    "The approved billing scope is not the active approved scope for this service.",
+  );
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(
+      APPROVED_BILLING_SCOPE_ERROR_MESSAGES,
+      "scope_not_active_typo",
+    ),
+    false,
+  );
+});
 
 function sourceQuotation() {
   return {
@@ -184,6 +216,12 @@ function createFakeSupabase() {
         async single<T>() {
           return { data: response.data as T, error: response.error };
         },
+        then<TResult1 = { data: unknown; error: { message: string } | null }, TResult2 = never>(
+          onfulfilled?: ((value: { data: unknown; error: { message: string } | null }) => TResult1 | PromiseLike<TResult1>) | null,
+          onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+        ) {
+          return Promise.resolve({ data: response.data, error: response.error }).then(onfulfilled, onrejected);
+        },
       };
     },
   };
@@ -231,7 +269,7 @@ mock.module("@/lib/auth/permissions", {
         throw new TestForbiddenError("Denied by test scenario");
       }
 
-      return { clerk_user_id: "test-user" };
+      return { clerk_user_id: "test-user", role: "manager" };
     },
   },
 });
@@ -485,6 +523,38 @@ test("editApprovedBillingScopeItem rejects a missing required reason before the 
   assertNoScopeItemInserts(scenario);
 });
 
+test("editApprovedBillingScopeItem keeps a nearby unknown RPC code on the safe fallback path", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+    rpcResponses: {
+      edit_approved_billing_scope_item: {
+        data: {
+          error_code: "scope_not_active_typo",
+          scope_id: null,
+          item_id: null,
+          accepted_subtotal: null,
+          accepted_vat_amount: null,
+          accepted_grand_total: null,
+          line_safety_status: null,
+          updated: false,
+        },
+        error: null,
+      },
+    },
+  });
+
+  const response = await editApprovedBillingScopeItem({
+    scopeId: SCOPE_ID,
+    itemId: ITEM_ID,
+    decision: "adjusted",
+    acceptedQty: 101,
+    reasonCode: "customer_reduced_quantity",
+  });
+
+  assert.deepEqual(response, { success: false, error: "scope_unexpected_error" });
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:update"]);
+  assertNoScopeItemInserts(scenario);
+});
+
 test("editApprovedBillingScopeItem checks authorization before creating its write client", async () => {
   const scenario = startScenario({ status: "Approved", deleted_at: null }, true);
 
@@ -691,102 +761,45 @@ test("reviewApprovedBillingScopeLineSafety checks permission before creating its
   assert.deepEqual(scenario.updates, []);
 });
 
-test("approveApprovedBillingScope approves a safe draft with a positive billable item", async () => {
-  const detail = { id: SCOPE_ID, status: "approved" };
-  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
-    scope: draftScope({ line_safety_status: "safe" }),
-    readBackDetail: detail,
-  });
+function approvedRpcRow(overrides: Record<string, unknown> = {}) {
+  return {
+    error_code: null,
+    scope_id: SCOPE_ID,
+    service_id: SOURCE_SERVICE_ID,
+    scope_version: 1,
+    approved_at: "2026-07-14T00:00:00.000Z",
+    approved: true,
+    ...overrides,
+  };
+}
 
-  const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
-
-  assert.deepEqual(response, { success: true, data: detail });
-  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:approve"]);
-  assert.equal(scenario.updates.length, 1);
-  assert.deepEqual(
-    {
-      status: scenario.updates[0]?.values.status,
-      approved_by: scenario.updates[0]?.values.approved_by,
-      updated_by: scenario.updates[0]?.values.updated_by,
+function approvalScenario(
+  data: unknown = [approvedRpcRow()],
+  error: { message: string } | null = null,
+) {
+  return startScenario({ status: "Approved", deleted_at: null }, false, {
+    rpcResponses: {
+      approve_approved_billing_scope: { data, error },
     },
-    { status: "approved", approved_by: "test-user", updated_by: "test-user" },
-  );
-});
-
-for (const lineSafetyStatus of ["pending_review", "unsafe"] as const) {
-  test(`approveApprovedBillingScope rejects ${lineSafetyStatus} drafts before updating`, async () => {
-    const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
-      scope: draftScope({ line_safety_status: lineSafetyStatus }),
-    });
-
-    const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
-
-    assert.deepEqual(response, { success: false, error: "scope_not_safe" });
-    assert.deepEqual(scenario.updates, []);
   });
 }
 
-for (const [label, scope, errorCode] of [
-  ["a missing scope", null, "scope_not_found"],
-  ["a non-draft scope", draftScope({ status: "approved", line_safety_status: "safe" }), "scope_not_draft"],
-] as const) {
-  test(`approveApprovedBillingScope rejects ${label} before updating`, async () => {
-    const scenario = startScenario({ status: "Approved", deleted_at: null }, false, { scope });
-
-    const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
-
-    assert.deepEqual(response, { success: false, error: errorCode });
-    assert.deepEqual(scenario.updates, []);
-  });
+function assertNoApprovalTableMutation(scenario: ActionScenario) {
+  assert.equal(scenario.updates.length, 0);
+  assert.deepEqual(scenario.insertTables, []);
+  assert.deepEqual(scenario.operations, []);
 }
 
-test("approveApprovedBillingScope rejects a safe draft with no billable item before updating", async () => {
-  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
-    scope: draftScope({
-      line_safety_status: "safe",
-      accepted_subtotal: 0,
-      accepted_vat_amount: 0,
-      accepted_grand_total: 0,
-    }),
-    items: [acceptedItem({
-      decision: "excluded",
-      accepted_qty: 0,
-      accepted_unit_price: 0,
-      accepted_subtotal: 0,
-      accepted_vat_amount: 0,
-      accepted_grand_total: 0,
-      reason_code: "customer_removed_item",
-    })],
-  });
+test("approveApprovedBillingScope validates before privileged execution", async () => {
+  const scenario = approvalScenario();
 
-  const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
+  const response = await approveApprovedBillingScope({ scopeId: "not-a-uuid" });
 
-  assert.deepEqual(response, { success: false, error: "scope_no_billable_items" });
-  assert.deepEqual(scenario.updates, []);
-});
-
-test("approveApprovedBillingScope rejects an active-scope conflict before updating", async () => {
-  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
-    scope: draftScope({ line_safety_status: "safe" }),
-    activeScope: { id: "another-active-scope" },
-  });
-
-  const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
-
-  assert.deepEqual(response, { success: false, error: "scope_active_conflict" });
-  assert.deepEqual(scenario.updates, []);
-});
-
-test("approveApprovedBillingScope maps a conditional update miss to a concurrency conflict", async () => {
-  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
-    scope: draftScope({ line_safety_status: "safe" }),
-    scopeUpdateResult: null,
-  });
-
-  const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
-
-  assert.deepEqual(response, { success: false, error: "scope_concurrency_conflict" });
-  assert.equal(scenario.updates.length, 1);
+  assert.deepEqual(response, { success: false, error: "scope_unexpected_error" });
+  assert.deepEqual(scenario.permissionCalls, []);
+  assert.equal(scenario.clientCalls, 0);
+  assert.deepEqual(scenario.rpcCalls, []);
+  assertNoApprovalTableMutation(scenario);
 });
 
 test("approveApprovedBillingScope checks permission before creating its write client", async () => {
@@ -797,6 +810,90 @@ test("approveApprovedBillingScope checks permission before creating its write cl
   assert.deepEqual(response, { success: false, error: "scope_permission_denied" });
   assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:approve"]);
   assert.equal(scenario.clientCalls, 0);
-  assert.deepEqual(scenario.operations, []);
-  assert.deepEqual(scenario.updates, []);
+  assert.deepEqual(scenario.rpcCalls, []);
+  assertNoApprovalTableMutation(scenario);
 });
+
+test("approveApprovedBillingScope invokes the ordinary approval RPC with trusted actor context", async () => {
+  const scenario = approvalScenario();
+
+  const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
+
+  assert.deepEqual(response, { success: true });
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:approve"]);
+  assert.equal(scenario.clientCalls, 1);
+  assert.deepEqual(scenario.rpcCalls, [{
+    name: "approve_approved_billing_scope",
+    args: {
+      p_scope_id: SCOPE_ID,
+      p_actor_id: "test-user",
+      p_actor_role: "manager",
+    },
+  }]);
+  assertNoApprovalTableMutation(scenario);
+});
+
+test("approveApprovedBillingScope rejects browser-supplied approval authority fields", async () => {
+  const scenario = approvalScenario();
+
+  const response = await approveApprovedBillingScope({
+    scopeId: SCOPE_ID,
+    actorId: "browser-user",
+    actorRole: "admin",
+    serviceId: "browser-service",
+    acceptedGrandTotal: 1,
+  });
+
+  assert.deepEqual(response, { success: false, error: "scope_unexpected_error" });
+  assert.deepEqual(scenario.permissionCalls, []);
+  assert.equal(scenario.clientCalls, 0);
+  assert.deepEqual(scenario.rpcCalls, []);
+  assertNoApprovalTableMutation(scenario);
+});
+
+for (const errorCode of [
+  "scope_not_found",
+  "scope_not_active",
+  "scope_not_draft",
+  "scope_not_safe",
+  "scope_no_items",
+  "scope_no_billable_items",
+  "scope_reduction_invalid",
+  "scope_reason_required",
+  "scope_active_conflict",
+  "scope_service_lifecycle_ineligible",
+  "scope_concurrency_conflict",
+  "scope_unexpected_error",
+] as const) {
+  test(`approveApprovedBillingScope preserves RPC error ${errorCode}`, async () => {
+    const scenario = approvalScenario([approvedRpcRow({ error_code: errorCode })]);
+
+    const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
+
+    assert.deepEqual(response, { success: false, error: errorCode });
+    assert.equal(scenario.rpcCalls.length, 1);
+    assertNoApprovalTableMutation(scenario);
+  });
+}
+
+for (const [label, data, error] of [
+  ["a transport error", null, { message: "RPC transport failed" }],
+  ["null data", null, null],
+  ["an empty result", [], null],
+  ["multiple result rows", [approvedRpcRow(), approvedRpcRow()], null],
+  ["an unknown business error", [approvedRpcRow({ error_code: "scope_not_active_typo" })], null],
+  ["a malformed scope version", [approvedRpcRow({ scope_version: "1" })], null],
+  ["approved false", [approvedRpcRow({ approved: false })], null],
+  ["a missing approval timestamp", [approvedRpcRow({ approved_at: null })], null],
+  ["a mismatched scope id", [approvedRpcRow({ scope_id: ITEM_ID })], null],
+] as const) {
+  test(`approveApprovedBillingScope rejects ${label}`, async () => {
+    const scenario = approvalScenario(data, error);
+
+    const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
+
+    assert.deepEqual(response, { success: false, error: "scope_unexpected_error" });
+    assert.equal(scenario.rpcCalls.length, 1);
+    assertNoApprovalTableMutation(scenario);
+  });
+}

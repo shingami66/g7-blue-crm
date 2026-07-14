@@ -10,6 +10,7 @@ export const APPROVED_BILLING_SCOPE_ERROR_CODES = [
   "scope_no_billable_items",
   "scope_not_draft",
   "scope_not_safe",
+  "scope_not_active",
   "scope_active_conflict",
   "scope_reduction_invalid",
   "scope_reason_required",
@@ -49,6 +50,8 @@ export const APPROVED_BILLING_SCOPE_ERROR_MESSAGES: Record<
   scope_not_draft: "Only draft billing scopes can be edited or approved.",
   scope_not_safe:
     "The billing scope must be marked safe before it can be approved.",
+  scope_not_active:
+    "The approved billing scope is not the active approved scope for this service.",
   scope_active_conflict:
     "Another active approved billing scope already exists for this service.",
   scope_reduction_invalid:
