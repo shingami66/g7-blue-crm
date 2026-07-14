@@ -235,6 +235,8 @@ export interface ServicesDictionary {
       invoicesUnavailable: string;
       editItem: AbsDraftItemEditorDictionary;
       discardDraft: AbsDraftDiscardDictionary;
+      reviewLineSafety: AbsLineSafetyReviewDictionary;
+      approveScope: AbsScopeApprovalDictionary;
     };
   };
   serviceStatusControl: {
@@ -1088,6 +1090,67 @@ const servicesDictionaryEn: ServicesDictionary = {
           scope_unexpected_error: "Could not discard the draft. Please try again.",
         },
       },
+      reviewLineSafety: {
+        trigger: "Review line safety",
+        title: "Review line safety",
+        body: "Confirm whether the current draft items meet the line-safety rules before approval.",
+        currentStatus: "Current line safety",
+        markSafe: "Mark safe",
+        markUnsafe: "Mark unsafe",
+        reasonCode: "Reason code",
+        reviewerNote: "Reviewer note",
+        cancel: "Cancel",
+        save: "Save review",
+        saving: "Saving review…",
+        success: "Line-safety review saved.",
+        validation: {
+          unsafeReasonRequired: "Select a reason before marking this scope unsafe.",
+          unsafeNoteRequired: "Enter a reviewer note before marking this scope unsafe.",
+        },
+        errors: {
+          scope_not_found: "This billing scope is no longer available.",
+          scope_not_draft: "Only a draft billing scope can be reviewed.",
+          scope_no_items: "Add draft items before reviewing line safety.",
+          scope_reduction_invalid: "The draft item decisions do not meet the permitted reduction rules.",
+          scope_reason_required: "A reason is required for the current draft item decisions.",
+          scope_terminal_voided: "A voided billing scope cannot be reviewed.",
+          scope_concurrency_conflict: "This draft changed while you were reviewing it. Refresh and try again.",
+          scope_permission_denied: "You do not have permission to review line safety.",
+          scope_unexpected_error: "Could not save the line-safety review. Please try again.",
+        },
+      },
+      approveScope: {
+        trigger: "Approve scope",
+        title: "Approve billing scope?",
+        body: "Approval makes this scope the active billing ceiling for this Service. This action cannot be undone from this screen.",
+        readiness: "Approval readiness",
+        sourceQuotation: "Source quotation",
+        acceptedCeiling: "Accepted billing ceiling",
+        itemCount: "Scope items",
+        billableItemCount: "Billable items",
+        lineSafety: "Line safety",
+        ready: "This draft is ready for approval.",
+        pendingReview: "Complete a safe line-safety review before approval.",
+        unsafe: "Unsafe drafts cannot be approved.",
+        cancel: "Cancel",
+        confirm: "Approve scope",
+        approving: "Approving scope…",
+        success: "Billing scope approved.",
+        errors: {
+          scope_not_found: "This billing scope is no longer available.",
+          scope_not_draft: "Only a draft billing scope can be approved.",
+          scope_not_safe: "Line safety must be marked safe before approval.",
+          scope_no_items: "Add draft items before approving this scope.",
+          scope_no_billable_items: "This scope needs at least one billable item before approval.",
+          scope_active_conflict: "Another active billing scope already exists for this Service.",
+          scope_reduction_invalid: "The draft item decisions do not meet the permitted reduction rules.",
+          scope_reason_required: "A reason is required for the current draft item decisions.",
+          scope_terminal_voided: "A voided billing scope cannot be approved.",
+          scope_concurrency_conflict: "This draft changed while you were approving it. Refresh and try again.",
+          scope_permission_denied: "You do not have permission to approve this billing scope.",
+          scope_unexpected_error: "Could not approve the billing scope. Please try again.",
+        },
+      },
     },
   },
   serviceStatusControl: {
@@ -1803,6 +1866,69 @@ type AbsDraftDiscardDictionary = {
   errors: AbsDraftActionErrors;
 };
 
+type AbsLineSafetyReviewDictionary = {
+  trigger: string;
+  title: string;
+  body: string;
+  currentStatus: string;
+  markSafe: string;
+  markUnsafe: string;
+  reasonCode: string;
+  reviewerNote: string;
+  cancel: string;
+  save: string;
+  saving: string;
+  success: string;
+  validation: {
+    unsafeReasonRequired: string;
+    unsafeNoteRequired: string;
+  };
+  errors: {
+    scope_not_found: string;
+    scope_not_draft: string;
+    scope_no_items: string;
+    scope_reduction_invalid: string;
+    scope_reason_required: string;
+    scope_terminal_voided: string;
+    scope_concurrency_conflict: string;
+    scope_permission_denied: string;
+    scope_unexpected_error: string;
+  };
+};
+
+type AbsScopeApprovalDictionary = {
+  trigger: string;
+  title: string;
+  body: string;
+  readiness: string;
+  sourceQuotation: string;
+  acceptedCeiling: string;
+  itemCount: string;
+  billableItemCount: string;
+  lineSafety: string;
+  ready: string;
+  pendingReview: string;
+  unsafe: string;
+  cancel: string;
+  confirm: string;
+  approving: string;
+  success: string;
+  errors: {
+    scope_not_found: string;
+    scope_not_draft: string;
+    scope_not_safe: string;
+    scope_no_items: string;
+    scope_no_billable_items: string;
+    scope_active_conflict: string;
+    scope_reduction_invalid: string;
+    scope_reason_required: string;
+    scope_terminal_voided: string;
+    scope_concurrency_conflict: string;
+    scope_permission_denied: string;
+    scope_unexpected_error: string;
+  };
+};
+
 const servicesDictionaryAr: ServicesDictionary = {
   locale: "ar",
   states: {
@@ -2124,6 +2250,67 @@ const servicesDictionaryAr: ServicesDictionary = {
           scope_concurrency_conflict: "تم تغيير المسودة أثناء حذفها. حدّث الصفحة وحاول مرة أخرى.",
           scope_permission_denied: "ليست لديك صلاحية حذف هذه المسودة.",
           scope_unexpected_error: "تعذر حذف المسودة. يرجى المحاولة مرة أخرى.",
+        },
+      },
+      reviewLineSafety: {
+        trigger: "مراجعة سلامة البنود",
+        title: "مراجعة سلامة البنود",
+        body: "أكد ما إذا كانت بنود المسودة الحالية تستوفي قواعد سلامة البنود قبل الاعتماد.",
+        currentStatus: "حالة سلامة البنود الحالية",
+        markSafe: "تحديد كآمن",
+        markUnsafe: "تحديد كغير آمن",
+        reasonCode: "رمز السبب",
+        reviewerNote: "ملاحظة المراجع",
+        cancel: "إلغاء",
+        save: "حفظ المراجعة",
+        saving: "جارٍ حفظ المراجعة…",
+        success: "تم حفظ مراجعة سلامة البنود.",
+        validation: {
+          unsafeReasonRequired: "اختر سببًا قبل تحديد هذا النطاق كغير آمن.",
+          unsafeNoteRequired: "أدخل ملاحظة للمراجع قبل تحديد هذا النطاق كغير آمن.",
+        },
+        errors: {
+          scope_not_found: "نطاق الفوترة هذا لم يعد متاحًا.",
+          scope_not_draft: "يمكن مراجعة مسودة نطاق الفوترة فقط.",
+          scope_no_items: "أضف بنود المسودة قبل مراجعة سلامة البنود.",
+          scope_reduction_invalid: "قرارات بنود المسودة لا تستوفي قواعد التخفيض المسموح بها.",
+          scope_reason_required: "السبب مطلوب لقرارات بنود المسودة الحالية.",
+          scope_terminal_voided: "لا يمكن مراجعة نطاق فوترة ملغى نهائيًا.",
+          scope_concurrency_conflict: "تم تغيير المسودة أثناء مراجعتها. حدّث الصفحة وحاول مرة أخرى.",
+          scope_permission_denied: "ليست لديك صلاحية مراجعة سلامة البنود.",
+          scope_unexpected_error: "تعذر حفظ مراجعة سلامة البنود. يرجى المحاولة مرة أخرى.",
+        },
+      },
+      approveScope: {
+        trigger: "اعتماد النطاق",
+        title: "اعتماد نطاق الفوترة؟",
+        body: "سيجعل الاعتماد هذا النطاق سقف الفوترة النشط لهذه الخدمة. لا يمكن التراجع عن هذا الإجراء من هذه الشاشة.",
+        readiness: "جاهزية الاعتماد",
+        sourceQuotation: "عرض السعر المصدر",
+        acceptedCeiling: "سقف الفوترة المقبول",
+        itemCount: "بنود النطاق",
+        billableItemCount: "البنود القابلة للفوترة",
+        lineSafety: "سلامة البنود",
+        ready: "هذه المسودة جاهزة للاعتماد.",
+        pendingReview: "أكمل مراجعة آمنة لسلامة البنود قبل الاعتماد.",
+        unsafe: "لا يمكن اعتماد المسودات غير الآمنة.",
+        cancel: "إلغاء",
+        confirm: "اعتماد النطاق",
+        approving: "جارٍ اعتماد النطاق…",
+        success: "تم اعتماد نطاق الفوترة.",
+        errors: {
+          scope_not_found: "نطاق الفوترة هذا لم يعد متاحًا.",
+          scope_not_draft: "يمكن اعتماد مسودة نطاق الفوترة فقط.",
+          scope_not_safe: "يجب تحديد سلامة البنود كآمنة قبل الاعتماد.",
+          scope_no_items: "أضف بنود المسودة قبل اعتماد هذا النطاق.",
+          scope_no_billable_items: "يحتاج هذا النطاق إلى بند واحد قابل للفوترة على الأقل قبل الاعتماد.",
+          scope_active_conflict: "يوجد بالفعل نطاق فوترة نشط آخر لهذه الخدمة.",
+          scope_reduction_invalid: "قرارات بنود المسودة لا تستوفي قواعد التخفيض المسموح بها.",
+          scope_reason_required: "السبب مطلوب لقرارات بنود المسودة الحالية.",
+          scope_terminal_voided: "لا يمكن اعتماد نطاق فوترة ملغى نهائيًا.",
+          scope_concurrency_conflict: "تم تغيير المسودة أثناء اعتمادها. حدّث الصفحة وحاول مرة أخرى.",
+          scope_permission_denied: "ليست لديك صلاحية اعتماد نطاق الفوترة هذا.",
+          scope_unexpected_error: "تعذر اعتماد نطاق الفوترة. يرجى المحاولة مرة أخرى.",
         },
       },
     },

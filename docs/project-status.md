@@ -40,24 +40,26 @@
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 2.1 Current Active Work
-- **Current active implementation task (exactly one):** `ABS-MGMT-UI-REVIEW-APPROVE-1`
-- **Purpose:** Add the bounded line-safety review and approval slice after the source-implemented draft edit/discard work.
+- **Current active implementation task (exactly one):** `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-1`
+- **Purpose:** Define and audit the next bounded financial lifecycle behavior after the source-implemented Review/Approve slice.
 - **Design complete:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
 - **ABS read-enrichment complete (source + accepted):** `ABS-MGMT-UI-READ-ENRICH-1` — Service Detail read-only ABS summary card enriched and pushed on main.
-- **ABS draft-edit/discard complete (source + accepted):** `ABS-MGMT-UI-DRAFT-EDIT-1` — draft item edit/discard UI implemented, automated validation passed, and PASS by Mozfer manual browser evidence recorded; commit/push remain separate controlled tasks.
+- **ABS draft-edit/discard complete (source + accepted):** `ABS-MGMT-UI-DRAFT-EDIT-1` — draft item edit/discard UI implemented, automated validation passed, PASS by Mozfer manual browser evidence recorded, and pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`.
+- **ABS review/approve complete in current source:** `ABS-MGMT-UI-REVIEW-APPROVE-1` — automated validation passed and PASS by Mozfer manual browser evidence recorded; currently uncommitted and unpushed pending controlled commit/push.
 - **Locked ABS UI slice order (backend-ready first):**
   1. `ABS-MGMT-UI-READ-ENRICH-1` **complete** (source implemented; accepted)
   2. `ABS-MGMT-UI-DRAFT-CREATE-1` **complete** (source implemented; PASS by Mozfer manual browser evidence; pushed on main in `47d9a4f14f019e837224e6db6cababdab12a7610` and `7054cf34654266ca033c58c62f9dca6d94092967`)
-  3. `ABS-MGMT-UI-DRAFT-EDIT-1` **complete** (source implemented; automated validation passed; PASS by Mozfer manual browser evidence; current source remains uncommitted and unpushed until controlled commit/push)
-  4. `ABS-MGMT-UI-REVIEW-APPROVE-1` **(active)**
+  3. `ABS-MGMT-UI-DRAFT-EDIT-1` **complete and pushed** on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`
+  4. `ABS-MGMT-UI-REVIEW-APPROVE-1` **complete in current source; commit/push pending**
+  5. `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-1` **(next active implementation task)**
   5. `ABS-MGMT-VOID-ACTION-1` **blocked**
   6. `ABS-MGMT-SUPERSEDE-ACTION-1` **blocked**
   Optional later: `ABS-MGMT-HISTORY-LIST-1`.
-- **Source-truth (ABS):** Create Draft and draft edit/discard UI are source implemented and manually accepted; review/approve/void/supersede UI is not implemented. Server actions READY: create draft, discard draft, edit draft item, line-safety review, approve. **Void and supersede actions are not implemented** (schemas/permission keys/columns only). Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship). Custom RPC exceptions: draft discard + draft item edit.
+- **Source-truth (ABS):** Create Draft, draft edit/discard, and Review/Approve UI are source implemented and manually accepted; void/supersede UI is not implemented. Server actions READY: create draft, discard draft, edit draft item, line-safety review, approve. **Void and supersede actions are not implemented** (schemas/permission keys/columns only). Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship). Custom RPC exceptions: draft discard + draft item edit.
 - **Durable flags:**
   - **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`** — remains open; must resolve before slices 5–6.
   - Responsive P0 manual smoke: **closed** — see Responsive core P0 below (**PASS by Mozfer manual browser evidence**). Flag `RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING` is **no longer active**.
-- **V1 critical-path order (locked):** Feature 005 closed → responsive audit/implement + Mozfer re-smoke **PASS** → ABS management design (complete) → ABS read-enrich (complete; pushed) → ABS draft-create UI (complete; pushed) → ABS draft-edit/discard UI (complete; source implemented and manually accepted; current source remains uncommitted and unpushed) → **review/approve (active)** → financial lifecycle design/audit → bounded financial implementation (only after design/audit gates).
+- **V1 critical-path order (locked):** Feature 005 closed → responsive audit/implement + Mozfer re-smoke **PASS** → ABS management design (complete) → ABS read-enrich (complete; pushed) → ABS draft-create UI (complete; pushed) → ABS draft-edit/discard UI (complete; pushed in `df7cf1e9ef9d5302162735bcc87a8aa567385073`) → Review/Approve (complete in current source; commit/push pending) → **financial lifecycle design/audit** → bounded financial implementation (only after design/audit gates).
 - **Preserved locks:** Customer Profile → Service → Quotation → Invoice → Payment; Service as operational core; no standalone top-nav ABS module; active scope ceiling authoritative when present; legacy quotation fallback when no active scope; existing invoices never rewritten; DEV/DEMO wording; Reports Center is P1; professional Supplier Booking redesign outside V1 acceptance; supplier payments/invoices/costing/margin outside V1; no VAT/ZATCA/FATOORA claims; no production-readiness claim.
 
 ### Responsive core P0 (source implemented; Mozfer manual smoke PASS)
@@ -96,8 +98,10 @@
 - [x] Admin/Manager create and Accountant read-only roles are preserved. Active ABS ceiling authority, approved-quotation fallback, invoice snapshots, and no-silent-supersede behavior are unchanged.
 - [x] Commit and push are complete on main in `47d9a4f14f019e837224e6db6cababdab12a7610` and `7054cf34654266ca033c58c62f9dca6d94092967`.
 - [x] Agent did not perform browser smoke. No production readiness/apply or VAT/ZATCA/FATOORA/QR/XML support is claimed.
-- [x] Draft-edit/discard source implementation is complete in the current dirty source; automated validation passed; PASS by Mozfer manual browser evidence was recorded; commit/push remain separate pending tasks.
-- [x] Next active implementation task: `ABS-MGMT-UI-REVIEW-APPROVE-1`.
+- [x] Draft-edit/discard source implementation is complete and pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`; automated validation passed; PASS by Mozfer manual browser evidence was recorded.
+- [x] Review/Approve source implementation is complete in current dirty source; automated validation passed; PASS by Mozfer manual browser evidence was recorded in English only; commit/push remain separate pending tasks.
+- [x] Review/Approve automated coverage: runtime action tests `35/35` PASS; focused ABS/UI tests `46/46` PASS; permission gates, draft-only guards, blocked readiness, localized errors, pending protection, refresh wiring, and identifier-only payloads are covered. Arabic parity/wiring is automated-test-covered; no Arabic manual evidence is claimed.
+- [x] Next active implementation task: `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-1`.
 
 ### ABS-MGMT-UI-DRAFT-EDIT-1 (source implemented; Mozfer manual smoke PASS)
 - [x] The Service Detail card now exposes a clear bordered View details action instead of visually hidden text.
@@ -124,7 +128,7 @@
 - [x] Accountant masking of internal notes/reasons preserved (card does not surface masked internal reason fields).
 - [x] Uses existing server billing-state / ABS list contracts; no client recomputation of invoice authority; no write CTAs (create/edit/discard/review/approve/void/supersede).
 - [x] Commit and push are complete on main for the read-enrichment slice and the draft-create slice.
-- [x] Docs sync: `ABS-MGMT-UI-READ-ENRICH-DOCS-SYNC-1`. Draft-create later completed; current active implementation task is `ABS-MGMT-UI-REVIEW-APPROVE-1`.
+- [x] Docs sync: `ABS-MGMT-UI-READ-ENRICH-DOCS-SYNC-1`. Draft-create, Draft Edit/Discard, and Review/Approve later completed in source; current active implementation task is `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-1`.
 
 ### Approved Billing Scope Management Design (docs lock)
 - [x] Design task `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` completed for product/implementation slicing (`APPROVED_BILLING_SCOPE_MANAGEMENT_DESIGN_COMPLETE`).
@@ -264,7 +268,7 @@
   - snapshot excludes `عمال` and `ضيافة`
 - [x] Temporary item-decision dev harness was removed after smoke.
 - [x] Full-scope snapshot WARN from commit `c66975d` is now closed.
-- [x] No full user-facing Approved Billing Scope **management** UI existed at full-scope smoke close (read-only card/detail only). **Later progress:** management design locked; `ABS-MGMT-UI-READ-ENRICH-1` completed; `ABS-MGMT-UI-DRAFT-CREATE-1` is source-complete and manually accepted; `ABS-MGMT-UI-DRAFT-EDIT-1` is source-complete and manually accepted; the current active write slice is `ABS-MGMT-UI-REVIEW-APPROVE-1`.
+- [x] No full user-facing Approved Billing Scope **management** UI existed at full-scope smoke close (read-only card/detail only). **Later progress:** management design locked; `ABS-MGMT-UI-READ-ENRICH-1`, `ABS-MGMT-UI-DRAFT-CREATE-1`, `ABS-MGMT-UI-DRAFT-EDIT-1`, and `ABS-MGMT-UI-REVIEW-APPROVE-1` are source-complete and manually accepted; Review/Approve remains uncommitted and unpushed pending controlled actions.
 
 ### Approved Billing Scope Foundation
 - [x] Migration draft `supabase/migrations/20260708090000_approved_billing_scope_foundation.sql` was committed and pushed as `8d2aefa feat(billing): draft approved billing scope foundation`.
@@ -298,7 +302,7 @@
   - Successfully invoked `discardApprovedBillingScopeDraft` server action.
   - Verified atomic database deletion of both the scope header and its items.
 - [x] Temporary DEV harness removed, restoring clean working tree.
-- [x] **Historical note at draft-discard close:** remaining work at that time included review/approve/void/supersede actions, UI screens, invoice integration, and production apply. **Current truth (later slices + management design):** `reviewApprovedBillingScopeLineSafety` and `approveApprovedBillingScope` server actions exist; invoice integration and read-only Service card/detail UI exist; **`voidApprovedBillingScope` and `supersedeApprovedBillingScope` action functions do not exist** (schemas/permissions/columns only); full management write UI incomplete; production DB apply remains unauthorized. See `docs/approved-billing-scope-management-design.md`.
+- [x] **Historical note at draft-discard close:** remaining work at that time included review/approve/void/supersede actions, UI screens, invoice integration, and production apply. **Current truth (later slices + management design):** `reviewApprovedBillingScopeLineSafety` and `approveApprovedBillingScope` server actions and current UI exist; invoice integration and read-only Service card/detail UI exist; **`voidApprovedBillingScope` and `supersedeApprovedBillingScope` action functions do not exist** (schemas/permissions/columns only); Review/Approve commit/push and financial lifecycle design remain next controlled work; production DB apply remains unauthorized. See `docs/approved-billing-scope-management-design.md`.
 
 ### Approved Billing Scope Draft Item Edit
 - [x] Migration draft `supabase/migrations/20260708120000_approved_billing_scope_item_edit_function.sql` was committed and pushed as `3af430a feat(billing): add atomic draft item edit`.
@@ -329,7 +333,7 @@
 ### Approved Billing Scope Migration Draft Placeholder
 - [x] Backlog check for `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` completed.
 - [x] Result: reclassified as completed/no-op. No concrete database migration is required after the live schema audit.
-- [x] **Historical note:** verified draft creation is app-layer; draft discard RPC and draft item-edit RPC exist as narrow service_role exceptions. **Current truth:** line-safety review and approve are implemented as app-layer server actions; invoice integration shipped separately; **void and supersede actions remain not implemented**; supersede still needs explicit transactional design after **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`**; full management UI incomplete. See `docs/approved-billing-scope-management-design.md`.
+- [x] **Historical note:** verified draft creation is app-layer; draft discard RPC and draft item-edit RPC exist as narrow service_role exceptions. **Current truth:** line-safety review and approve are implemented as app-layer server actions with current UI; invoice integration shipped separately; **void and supersede actions remain not implemented**; supersede still needs explicit transactional design after **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`**; Review/Approve commit/push remain pending controlled actions. See `docs/approved-billing-scope-management-design.md`.
 
 ### Approved Billing Scope RBAC/RLS Review
 - [x] Read-only security review for Approved Billing Scope (`APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`) completed.

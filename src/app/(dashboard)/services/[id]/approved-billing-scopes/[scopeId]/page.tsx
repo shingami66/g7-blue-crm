@@ -25,6 +25,8 @@ import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { ApprovedBillingScopeDraftItemEditor } from "./ApprovedBillingScopeDraftItemEditor";
 import { DiscardApprovedBillingScopeDraftAction } from "./DiscardApprovedBillingScopeDraftAction";
+import { ReviewApprovedBillingScopeLineSafetyAction } from "./ReviewApprovedBillingScopeLineSafetyAction";
+import { ApproveApprovedBillingScopeAction } from "./ApproveApprovedBillingScopeAction";
 
 export const dynamic = "force-dynamic";
 
@@ -80,8 +82,10 @@ export default async function ApprovedBillingScopeDetailPage({
   if (!service || scope.serviceId !== service.id) notFound();
 
   const isDraft = scope.status === "draft";
-  const [canUpdateDraftItems, canDiscardDraft, canReadInvoices] = await Promise.all([
+  const [canUpdateDraftItems, canReviewDraft, canApproveDraft, canDiscardDraft, canReadInvoices] = await Promise.all([
     isDraft ? checkPermission("approvedBillingScopes:update") : false,
+    isDraft ? checkPermission("approvedBillingScopes:review") : false,
+    isDraft ? checkPermission("approvedBillingScopes:approve") : false,
     isDraft ? checkPermission("approvedBillingScopes:discard") : false,
     checkPermission("invoices:read"),
   ]);
@@ -110,12 +114,38 @@ export default async function ApprovedBillingScopeDetailPage({
             </h1>
           </div>
         </div>
-        {canDiscardDraft ? (
-          <DiscardApprovedBillingScopeDraftAction
-            scopeId={scope.id}
-            serviceId={service.id}
-            dictionary={detailDictionary.discardDraft}
-          />
+        {isDraft && (canReviewDraft || canApproveDraft || canDiscardDraft) ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {canReviewDraft ? (
+              <ReviewApprovedBillingScopeLineSafetyAction
+                scopeId={scope.id}
+                lineSafetyStatus={scope.lineSafetyStatus}
+                dictionary={detailDictionary.reviewLineSafety}
+                lineSafetyLabels={dictionary.approvedBillingScopes.lineSafetyLabels}
+                reasonCodeLabels={detailDictionary.editItem.reasonCodeLabels}
+              />
+            ) : null}
+            {canApproveDraft ? (
+              <ApproveApprovedBillingScopeAction
+                scopeId={scope.id}
+                sourceQuotationId={scope.sourceQuotationId}
+                acceptedGrandTotal={scope.acceptedGrandTotal}
+                itemCount={scope.items.length}
+                billableItemCount={scope.items.filter((item) => item.acceptedGrandTotal > 0).length}
+                lineSafetyStatus={scope.lineSafetyStatus}
+                locale={locale}
+                dictionary={detailDictionary.approveScope}
+                lineSafetyLabels={dictionary.approvedBillingScopes.lineSafetyLabels}
+              />
+            ) : null}
+            {canDiscardDraft ? (
+              <DiscardApprovedBillingScopeDraftAction
+                scopeId={scope.id}
+                serviceId={service.id}
+                dictionary={detailDictionary.discardDraft}
+              />
+            ) : null}
+          </div>
         ) : null}
       </div>
 

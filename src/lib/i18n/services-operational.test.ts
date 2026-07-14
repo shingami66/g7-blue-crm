@@ -48,6 +48,14 @@ const ABS_DRAFT_DISCARD = join(
   REPO_ROOT,
   "src/app/(dashboard)/services/[id]/approved-billing-scopes/[scopeId]/DiscardApprovedBillingScopeDraftAction.tsx",
 );
+const ABS_LINE_SAFETY_REVIEW = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/services/[id]/approved-billing-scopes/[scopeId]/ReviewApprovedBillingScopeLineSafetyAction.tsx",
+);
+const ABS_SCOPE_APPROVAL = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/services/[id]/approved-billing-scopes/[scopeId]/ApproveApprovedBillingScopeAction.tsx",
+);
 const ALLOCATIONS = join(
   REPO_ROOT,
   "src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx",
@@ -106,6 +114,8 @@ const OPERATIONAL_UI_FILES = [
   ABS_DETAIL,
   ABS_DRAFT_ITEM_EDITOR,
   ABS_DRAFT_DISCARD,
+  ABS_LINE_SAFETY_REVIEW,
+  ABS_SCOPE_APPROVAL,
   ALLOCATIONS,
   BOOKINGS,
   BOOKING_ACTIONS,
@@ -472,6 +482,55 @@ test("8c. ABS draft-edit and discard client contracts are localized and draft-ga
   assert.match(detail, /checkPermission\("approvedBillingScopes:discard"\)/);
   assert.match(detail, /ApprovedBillingScopeDraftItemEditor/);
   assert.match(detail, /DiscardApprovedBillingScopeDraftAction/);
+});
+
+test("8d. ABS review and approval controls are localized, permission-gated, and refresh from authoritative data", () => {
+  const en = getServicesDictionary("en");
+  const ar = getServicesDictionary("ar");
+  assert.equal(en.approvedBillingScopes.detail.reviewLineSafety.trigger, "Review line safety");
+  assert.equal(ar.approvedBillingScopes.detail.reviewLineSafety.trigger, "مراجعة سلامة البنود");
+  assert.equal(en.approvedBillingScopes.detail.approveScope.trigger, "Approve scope");
+  assert.equal(ar.approvedBillingScopes.detail.approveScope.trigger, "اعتماد النطاق");
+  assert.ok(en.approvedBillingScopes.detail.reviewLineSafety.errors.scope_no_items.length > 0);
+  assert.ok(ar.approvedBillingScopes.detail.approveScope.errors.scope_active_conflict.length > 0);
+  assert.deepEqual(
+    listNestedKeys(en.approvedBillingScopes.detail.reviewLineSafety).sort(),
+    listNestedKeys(ar.approvedBillingScopes.detail.reviewLineSafety).sort(),
+  );
+  assert.deepEqual(
+    listNestedKeys(en.approvedBillingScopes.detail.approveScope).sort(),
+    listNestedKeys(ar.approvedBillingScopes.detail.approveScope).sort(),
+  );
+
+  const review = read(ABS_LINE_SAFETY_REVIEW);
+  assert.match(review, /reviewApprovedBillingScopeLineSafety/);
+  assert.match(review, /scopeId,/);
+  assert.match(review, /lineSafetyStatus: reviewStatus/);
+  assert.match(review, /reasonCode:/);
+  assert.match(review, /reviewerNote:/);
+  assert.match(review, /useTransition/);
+  assert.match(review, /disabled=\{isPending\}/);
+  assert.match(review, /router\.refresh/);
+  assert.doesNotMatch(review, /acceptedGrandTotal|sourceQuotationId|serviceStatus/);
+
+  const approval = read(ABS_SCOPE_APPROVAL);
+  assert.match(approval, /approveApprovedBillingScope/);
+  assert.match(approval, /\{ scopeId \}/);
+  assert.match(approval, /lineSafetyStatus === "safe"/);
+  assert.match(approval, /disabled=\{isPending \|\| !canConfirm\}/);
+  assert.match(approval, /sourceQuotationId/);
+  assert.match(approval, /acceptedGrandTotal/);
+  assert.match(approval, /itemCount/);
+  assert.match(approval, /billableItemCount/);
+  assert.match(approval, /router\.refresh/);
+  assert.doesNotMatch(approval, /approveApprovedBillingScope\(\{[^}]*?(?:lineSafetyStatus|status|acceptedGrandTotal|sourceQuotationId)/);
+
+  const detail = read(ABS_DETAIL);
+  assert.match(detail, /checkPermission\("approvedBillingScopes:review"\)/);
+  assert.match(detail, /checkPermission\("approvedBillingScopes:approve"\)/);
+  assert.match(detail, /ReviewApprovedBillingScopeLineSafetyAction/);
+  assert.match(detail, /ApproveApprovedBillingScopeAction/);
+  assert.match(detail, /isDraft && \(canReviewDraft \|\| canApproveDraft \|\| canDiscardDraft\)/);
 });
 
 test("9-11. ABS permissions and masking: accountant read-only; viewer/sales blocked", () => {

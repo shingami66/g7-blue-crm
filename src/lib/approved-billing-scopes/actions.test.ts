@@ -12,6 +12,9 @@ type ServiceRow = {
   deleted_at: string | null;
 };
 
+type ScopeRow = Record<string, unknown> | null;
+type ItemRow = Record<string, unknown>;
+
 type ActionScenario = {
   service: ServiceRow | null;
   denyPermission?: boolean;
@@ -22,6 +25,12 @@ type ActionScenario = {
   rpcCalls: Array<{ name: string; args: Record<string, unknown> }>;
   rpcResponses: Record<string, { data: unknown; error: { message: string } | null }>;
   readBackDetail: unknown;
+  scope: ScopeRow;
+  items: ItemRow[];
+  activeScope: unknown;
+  scopeUpdateResult: ScopeRow;
+  scopeUpdateError: { message: string; code?: string } | null;
+  updates: Array<{ table: string; values: Record<string, unknown> }>;
 };
 
 let activeScenario: ActionScenario | null = null;
@@ -68,6 +77,40 @@ function sourceQuotation() {
   };
 }
 
+function draftScope(overrides: Record<string, unknown> = {}) {
+  return {
+    id: SCOPE_ID,
+    status: "draft",
+    service_id: SOURCE_SERVICE_ID,
+    line_safety_status: "pending_review",
+    accepted_subtotal: 100,
+    accepted_vat_amount: 15,
+    accepted_grand_total: 115,
+    voided_at: null,
+    superseded_at: null,
+    ...overrides,
+  };
+}
+
+function acceptedItem(overrides: Record<string, unknown> = {}) {
+  return {
+    id: ITEM_ID,
+    decision: "accepted",
+    source_qty: 1,
+    source_unit_price: 100,
+    source_subtotal: 100,
+    source_vat_amount: 15,
+    source_grand_total: 115,
+    accepted_qty: 1,
+    accepted_unit_price: 100,
+    accepted_subtotal: 100,
+    accepted_vat_amount: 15,
+    accepted_grand_total: 115,
+    reason_code: null,
+    ...overrides,
+  };
+}
+
 function createFakeSupabase() {
   return {
     from(table: string) {
@@ -75,12 +118,23 @@ function createFakeSupabase() {
       scenario.operations.push(`from:${table}`);
 
       const query = {
+        isUpdate: false,
         select(columns: string) {
           scenario.operations.push(`select:${table}:${columns}`);
           return query;
         },
         eq(column: string, value: string) {
           scenario.operations.push(`eq:${table}:${column}:${value}`);
+          return query;
+        },
+        is(column: string, value: unknown) {
+          scenario.operations.push(`is:${table}:${column}:${String(value)}`);
+          return query;
+        },
+        update(values: Record<string, unknown>) {
+          scenario.operations.push(`update:${table}`);
+          scenario.updates.push({ table, values });
+          query.isUpdate = true;
           return query;
         },
         async maybeSingle() {
@@ -92,7 +146,23 @@ function createFakeSupabase() {
             return { data: scenario.service, error: null };
           }
 
+          if (table === "approved_billing_scopes") {
+            return query.isUpdate
+              ? { data: scenario.scopeUpdateResult, error: scenario.scopeUpdateError }
+              : { data: scenario.scope, error: null };
+          }
+
           throw new Error(`Unexpected lookup table: ${table}`);
+        },
+        then<TResult1 = { data: unknown; error: null }, TResult2 = never>(
+          onfulfilled?: ((value: { data: unknown; error: null }) => TResult1 | PromiseLike<TResult1>) | null,
+          onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+        ) {
+          if (table !== "approved_billing_scope_items") {
+            return Promise.resolve({ data: null, error: null }).then(onfulfilled, onrejected);
+          }
+
+          return Promise.resolve({ data: scenario.items, error: null }).then(onfulfilled, onrejected);
         },
         insert() {
           scenario.insertTables.push(table);
@@ -122,7 +192,7 @@ function createFakeSupabase() {
 function startScenario(
   service: ServiceRow | null,
   denyPermission = false,
-  options: Partial<Pick<ActionScenario, "rpcResponses" | "readBackDetail">> = {},
+  options: Partial<Pick<ActionScenario, "rpcResponses" | "readBackDetail" | "scope" | "items" | "activeScope" | "scopeUpdateResult" | "scopeUpdateError">> = {},
 ) {
   activeScenario = {
     service,
@@ -134,6 +204,12 @@ function startScenario(
     rpcCalls: [],
     rpcResponses: options.rpcResponses ?? {},
     readBackDetail: options.readBackDetail ?? null,
+    scope: "scope" in options ? options.scope ?? null : draftScope(),
+    items: options.items ?? [acceptedItem()],
+    activeScope: "activeScope" in options ? options.activeScope ?? null : null,
+    scopeUpdateResult: "scopeUpdateResult" in options ? options.scopeUpdateResult ?? null : { id: SCOPE_ID },
+    scopeUpdateError: options.scopeUpdateError ?? null,
+    updates: [],
   };
 
   return activeScenario;
@@ -174,7 +250,7 @@ mock.module("@/lib/services/status-transitions", {
 });
 mock.module("./queries.ts", {
   namedExports: {
-    getActiveApprovedBillingScopeForService: async () => null,
+    getActiveApprovedBillingScopeForService: async () => currentScenario().activeScope,
     getApprovedBillingScopeById: async () => currentScenario().readBackDetail,
   },
 });
@@ -183,6 +259,8 @@ const {
   createApprovedBillingScopeDraft,
   discardApprovedBillingScopeDraft,
   editApprovedBillingScopeItem,
+  reviewApprovedBillingScopeLineSafety,
+  approveApprovedBillingScope,
 } = await import("./actions.ts");
 
 function assertNoDraftWrites(scenario: ActionScenario) {
@@ -491,4 +569,234 @@ test("discardApprovedBillingScopeDraft checks authorization before creating its 
   assert.equal(scenario.clientCalls, 0);
   assert.deepEqual(scenario.rpcCalls, []);
   assertNoScopeItemInserts(scenario);
+});
+
+test("reviewApprovedBillingScopeLineSafety marks consistent draft items safe and reads back the scope", async () => {
+  const detail = { id: SCOPE_ID, lineSafetyStatus: "safe" };
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+    readBackDetail: detail,
+  });
+
+  const response = await reviewApprovedBillingScopeLineSafety({
+    scopeId: SCOPE_ID,
+    lineSafetyStatus: "safe",
+  });
+
+  assert.deepEqual(response, { success: true, data: detail });
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:review"]);
+  assert.equal(scenario.updates.length, 1);
+  assert.equal(scenario.updates[0]?.table, "approved_billing_scopes");
+  assert.equal(scenario.updates[0]?.values.line_safety_status, "safe");
+  assert.equal(scenario.updates[0]?.values.line_safety_reason_code, null);
+  assert.equal(scenario.updates[0]?.values.line_safety_note, null);
+});
+
+test("reviewApprovedBillingScopeLineSafety records an unsafe review with its allowed fields only", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+    readBackDetail: { id: SCOPE_ID, lineSafetyStatus: "unsafe" },
+  });
+
+  const response = await reviewApprovedBillingScopeLineSafety({
+    scopeId: SCOPE_ID,
+    lineSafetyStatus: "unsafe",
+    reasonCode: "unsafe_line_item",
+    reviewerNote: "Item decision needs correction",
+  });
+
+  assert.equal(response.success, true);
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:review"]);
+  assert.deepEqual(
+    {
+      line_safety_status: scenario.updates[0]?.values.line_safety_status,
+      line_safety_reason_code: scenario.updates[0]?.values.line_safety_reason_code,
+      line_safety_note: scenario.updates[0]?.values.line_safety_note,
+    },
+    {
+      line_safety_status: "unsafe",
+      line_safety_reason_code: "unsafe_line_item",
+      line_safety_note: "Item decision needs correction",
+    },
+  );
+});
+
+for (const [label, input] of [
+  ["reason", { scopeId: SCOPE_ID, lineSafetyStatus: "unsafe", reviewerNote: "Needs correction" }],
+  ["note", { scopeId: SCOPE_ID, lineSafetyStatus: "unsafe", reasonCode: "unsafe_line_item" }],
+] as const) {
+  test(`reviewApprovedBillingScopeLineSafety rejects an unsafe review without a ${label}`, async () => {
+    const scenario = startScenario({ status: "Approved", deleted_at: null });
+
+    const response = await reviewApprovedBillingScopeLineSafety(input);
+
+    assert.deepEqual(response, { success: false, error: "scope_unexpected_error" });
+    assert.deepEqual(scenario.updates, []);
+  });
+}
+
+test("reviewApprovedBillingScopeLineSafety rejects inconsistent safe decisions before updating", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+    items: [acceptedItem({ accepted_grand_total: 110 })],
+  });
+
+  const response = await reviewApprovedBillingScopeLineSafety({
+    scopeId: SCOPE_ID,
+    lineSafetyStatus: "safe",
+  });
+
+  assert.deepEqual(response, { success: false, error: "scope_reduction_invalid" });
+  assert.deepEqual(scenario.updates, []);
+});
+
+test("reviewApprovedBillingScopeLineSafety rejects missing draft items before updating", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, { items: [] });
+
+  const response = await reviewApprovedBillingScopeLineSafety({
+    scopeId: SCOPE_ID,
+    lineSafetyStatus: "safe",
+  });
+
+  assert.deepEqual(response, { success: false, error: "scope_no_items" });
+  assert.deepEqual(scenario.updates, []);
+});
+
+for (const [label, scope, errorCode] of [
+  ["a missing scope", null, "scope_not_found"],
+  ["a non-draft scope", draftScope({ status: "approved" }), "scope_not_draft"],
+] as const) {
+  test(`reviewApprovedBillingScopeLineSafety rejects ${label} before updating`, async () => {
+    const scenario = startScenario({ status: "Approved", deleted_at: null }, false, { scope });
+
+    const response = await reviewApprovedBillingScopeLineSafety({
+      scopeId: SCOPE_ID,
+      lineSafetyStatus: "safe",
+    });
+
+    assert.deepEqual(response, { success: false, error: errorCode });
+    assert.deepEqual(scenario.updates, []);
+  });
+}
+
+test("reviewApprovedBillingScopeLineSafety checks permission before creating its write client", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, true);
+
+  const response = await reviewApprovedBillingScopeLineSafety({
+    scopeId: SCOPE_ID,
+    lineSafetyStatus: "safe",
+  });
+
+  assert.deepEqual(response, { success: false, error: "scope_permission_denied" });
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:review"]);
+  assert.equal(scenario.clientCalls, 0);
+  assert.deepEqual(scenario.operations, []);
+  assert.deepEqual(scenario.updates, []);
+});
+
+test("approveApprovedBillingScope approves a safe draft with a positive billable item", async () => {
+  const detail = { id: SCOPE_ID, status: "approved" };
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+    scope: draftScope({ line_safety_status: "safe" }),
+    readBackDetail: detail,
+  });
+
+  const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
+
+  assert.deepEqual(response, { success: true, data: detail });
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:approve"]);
+  assert.equal(scenario.updates.length, 1);
+  assert.deepEqual(
+    {
+      status: scenario.updates[0]?.values.status,
+      approved_by: scenario.updates[0]?.values.approved_by,
+      updated_by: scenario.updates[0]?.values.updated_by,
+    },
+    { status: "approved", approved_by: "test-user", updated_by: "test-user" },
+  );
+});
+
+for (const lineSafetyStatus of ["pending_review", "unsafe"] as const) {
+  test(`approveApprovedBillingScope rejects ${lineSafetyStatus} drafts before updating`, async () => {
+    const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+      scope: draftScope({ line_safety_status: lineSafetyStatus }),
+    });
+
+    const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
+
+    assert.deepEqual(response, { success: false, error: "scope_not_safe" });
+    assert.deepEqual(scenario.updates, []);
+  });
+}
+
+for (const [label, scope, errorCode] of [
+  ["a missing scope", null, "scope_not_found"],
+  ["a non-draft scope", draftScope({ status: "approved", line_safety_status: "safe" }), "scope_not_draft"],
+] as const) {
+  test(`approveApprovedBillingScope rejects ${label} before updating`, async () => {
+    const scenario = startScenario({ status: "Approved", deleted_at: null }, false, { scope });
+
+    const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
+
+    assert.deepEqual(response, { success: false, error: errorCode });
+    assert.deepEqual(scenario.updates, []);
+  });
+}
+
+test("approveApprovedBillingScope rejects a safe draft with no billable item before updating", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+    scope: draftScope({
+      line_safety_status: "safe",
+      accepted_subtotal: 0,
+      accepted_vat_amount: 0,
+      accepted_grand_total: 0,
+    }),
+    items: [acceptedItem({
+      decision: "excluded",
+      accepted_qty: 0,
+      accepted_unit_price: 0,
+      accepted_subtotal: 0,
+      accepted_vat_amount: 0,
+      accepted_grand_total: 0,
+      reason_code: "customer_removed_item",
+    })],
+  });
+
+  const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
+
+  assert.deepEqual(response, { success: false, error: "scope_no_billable_items" });
+  assert.deepEqual(scenario.updates, []);
+});
+
+test("approveApprovedBillingScope rejects an active-scope conflict before updating", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+    scope: draftScope({ line_safety_status: "safe" }),
+    activeScope: { id: "another-active-scope" },
+  });
+
+  const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
+
+  assert.deepEqual(response, { success: false, error: "scope_active_conflict" });
+  assert.deepEqual(scenario.updates, []);
+});
+
+test("approveApprovedBillingScope maps a conditional update miss to a concurrency conflict", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, false, {
+    scope: draftScope({ line_safety_status: "safe" }),
+    scopeUpdateResult: null,
+  });
+
+  const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
+
+  assert.deepEqual(response, { success: false, error: "scope_concurrency_conflict" });
+  assert.equal(scenario.updates.length, 1);
+});
+
+test("approveApprovedBillingScope checks permission before creating its write client", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, true);
+
+  const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
+
+  assert.deepEqual(response, { success: false, error: "scope_permission_denied" });
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:approve"]);
+  assert.equal(scenario.clientCalls, 0);
+  assert.deepEqual(scenario.operations, []);
+  assert.deepEqual(scenario.updates, []);
 });

@@ -20,10 +20,10 @@ This document is the **current** product/technical management design for Service
 | View draft scope | Detail by id; card primary when no active | list / get | `status=draft` | read | **READY** (read UI) |
 | View historical / voided / superseded | Detail by id; card history/other counts + display state | list for service | `voided_at`, `superseded_at` | read | **READY** (read UI; no full history page) |
 | Create draft from approved quotation | Service card Create Draft action + nested detail navigation | `createApprovedBillingScopeDraft` | inserts + constraints | create | **READY** (source implemented; Mozfer smoke PASS; pushed on main) |
-| Edit draft item (decision/qty/price/reason) | Draft detail page + bordered item editor | `editApprovedBillingScopeItem` + item-edit RPC | draft-only | update | **READY** (source implemented; Mozfer smoke PASS; commit/push pending) |
-| Discard draft | Draft detail page + discard confirmation | `discardApprovedBillingScopeDraft` + discard RPC | draft cleanup | discard | **READY** (source implemented; Mozfer smoke PASS; commit/push pending) |
-| Line-safety review | **None** | `reviewApprovedBillingScopeLineSafety` | header fields | review | **PARTIAL** |
-| Approve / activate draft | **None** | `approveApprovedBillingScope` | `status→approved`; one-active guard | approve | **PARTIAL** |
+| Edit draft item (decision/qty/price/reason) | Draft detail page + bordered item editor | `editApprovedBillingScopeItem` + item-edit RPC | draft-only | update | **READY** (source implemented; Mozfer smoke PASS; pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`) |
+| Discard draft | Draft detail page + discard confirmation | `discardApprovedBillingScopeDraft` + discard RPC | draft cleanup | discard | **READY** (source implemented; Mozfer smoke PASS; pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`) |
+| Line-safety review | Draft detail review dialog | `reviewApprovedBillingScopeLineSafety` | header fields | review | **READY** (source implemented; automated validation passed; Mozfer English smoke PASS; commit/push pending) |
+| Approve / activate draft | Draft detail approval dialog | `approveApprovedBillingScope` | `status→approved`; one-active guard | approve | **READY** (source implemented; automated validation passed; Mozfer English smoke PASS; commit/push pending) |
 | Add/remove items after create | **None** | **None** | items only from quotation snapshot | — | **MISSING** / **DEFERRED** |
 | Calculate / store ceiling totals | Server at create/edit/approve | recalculate header/items | totals columns | — | **READY** |
 | Display invoiced amount on ABS card | Service card (gated) | `getServiceBillingState` prior total | invoices FK | `invoices:read` | **READY** (read UI; hidden/restricted without permission) |
@@ -56,7 +56,7 @@ This document is the **current** product/technical management design for Service
 | Void/supersede “actions implemented” | **Schemas + permission keys + columns exist; no `voidApprovedBillingScope` / `supersedeApprovedBillingScope` action functions** |
 | “No custom Postgres RPC for V1” without exception | **Exceptions exist:** draft discard RPC and draft item edit RPC (narrow service_role helpers) |
 | Status = `superseded` | **Not** a DB status; use timestamps for display “Superseded” |
-| ABS fully managed in CRM UI | **Read-enrichment + Create Draft + Draft Edit/Discard implemented in source**; review/approve/void/supersede UI is not implemented |
+| ABS fully managed in CRM UI | **Read-enrichment + Create Draft + Draft Edit/Discard + Review/Approve implemented in source**; void/supersede UI is not implemented |
 
 Historical milestone notes elsewhere may still mention planned void/supersede; treat those as historical unless labeled current.
 
@@ -80,7 +80,7 @@ Historical milestone notes elsewhere may still mention planned void/supersede; t
 
 ### Draft-edit + discard slice status (`ABS-MGMT-UI-DRAFT-EDIT-1`)
 
-- **Source implemented; automated validation passed; PASS by Mozfer manual browser evidence.** Current source remains uncommitted and unpushed until the controlled commit/push tasks run.
+- **Source implemented; automated validation passed; PASS by Mozfer manual browser evidence.** Pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073` (`feat(billing): add approved scope draft edit and discard`).
 - The Service Detail card now exposes a clear bordered View details action instead of visually hidden text.
 - The nested ABS draft-detail route opened correctly.
 - The draft item editor displayed immutable source values and editable accepted values.
@@ -97,6 +97,15 @@ Historical milestone notes elsewhere may still mention planned void/supersede; t
 - The source fix now closes the modal, clears local error state, performs one router.push, and removes the redundant router.refresh.
 - The fixed redirect was manually re-tested and returned automatically to Service Detail without a manual refresh.
 - Pending duplicate-submit protection is implementation/test-covered, not separately proven by manual browser evidence. Agent did not perform browser smoke.
+
+### Review and approval slice status (`ABS-MGMT-UI-REVIEW-APPROVE-1`)
+
+- **Source implemented; automated validation passed; currently uncommitted and unpushed.** PASS by Mozfer manual browser evidence.
+- Manual evidence was observed in English only: a Pending review draft exposed Review and Approval; Approval readiness showed the source quotation, accepted ceiling, item counts, billable-item count, and Pending review; the final approval action stayed disabled until a Safe review was saved; Safe review changed line safety to Safe; accepted totals remained `SAR 1,000.00`; approval confirmation showed the financial-authority and immutability warning; approval succeeded; the scope became Active approved with an approved date; controls disappeared; Service Detail showed the active scope with ceiling `SAR 1,000.00`, accepted grand total `SAR 1,000.00`, invoiced `SAR 0.00`, remaining `SAR 1,000.00`, Safe line safety, View details only, and no Create Draft.
+- Arabic/English dictionary parity and Arabic wiring are automated-test-covered; no Arabic manual browser evidence is claimed. No manual duplicate-click or browser stale-form test is claimed.
+- Review preserves `approvedBillingScopes:review`, draft-only state, safe/unsafe choices, server-side consistency checks, mandatory unsafe reason/note, reviewer audit fields, no financial-total recalculation, re-review while draft, and authorization before write-client creation.
+- Approval preserves `approvedBillingScopes:approve`, draft-only state, Safe line safety, item/billable-item and total consistency guards, active-scope conflict protection, metadata-only approval, active invoice-ceiling authority, scopeId-only payload, and server-derived identity/totals.
+- Automated coverage passed: runtime action tests `35/35`; focused ABS/UI tests `46/46`; coverage includes review safe/unsafe/invalid/guard/error paths, approval success/guard/conflict/concurrency paths, permission-before-client ordering, no-write rejection paths, localized dictionary parity, draft-only controls, pending protection, refresh wiring, and identifier-only payloads. Admin/Manager write permissions are preserved; Accountant remains read-only and Viewer/Sales/Operations have no ABS access.
 
 ---
 
@@ -122,10 +131,10 @@ Historical milestone notes elsewhere may still mention planned void/supersede; t
 ### Detail / edit / review / approve / history
 
 1. **Detail (exists):** metadata, items table, totals, linked invoices (`invoices:read`).
-2. **Draft edit (missing UI):** per-item decision/qty/price/reason via `editApprovedBillingScopeItem`; non-optimistic; financial edit → `pending_review`.
-3. **Discard (missing UI):** confirm → `discardApprovedBillingScopeDraft` (draft only).
-4. **Line safety (missing UI):** Admin/Manager → `reviewApprovedBillingScopeLineSafety` (`safe`/`unsafe` + reasons).
-5. **Approve (missing UI):** confirm → `approveApprovedBillingScope`; fails if active exists (`scope_active_conflict`); no silent supersede.
+2. **Draft edit:** per-item decision/qty/price/reason via `editApprovedBillingScopeItem`; non-optimistic; financial edit → `pending_review`.
+3. **Discard:** confirm → `discardApprovedBillingScopeDraft` (draft only).
+4. **Line safety review:** Admin/Manager → `reviewApprovedBillingScopeLineSafety` (`safe`/`unsafe` + reasons).
+5. **Approve:** confirm → `approveApprovedBillingScope`; fails if active exists (`scope_active_conflict`); no silent supersede.
 6. **History (missing UI):** list all scopes for service by version; optional slice later.
 
 ---
@@ -189,8 +198,8 @@ Before implementing void or supersede:
 
 1. **`ABS-MGMT-UI-READ-ENRICH-1`** — enrich Service card (source QT label, invoiced/remaining, draft badge); optional history count. **complete**
 2. **`ABS-MGMT-UI-DRAFT-CREATE-1`** — create-draft CTA + error handling. **complete; pushed on main**
-3. **`ABS-MGMT-UI-DRAFT-EDIT-1`** — draft item edit + discard. **complete; source implemented and manually accepted; current source remains uncommitted and unpushed**
-4. **`ABS-MGMT-UI-REVIEW-APPROVE-1`** — line-safety review + approve **← current active task**
+3. **`ABS-MGMT-UI-DRAFT-EDIT-1`** — draft item edit + discard. **complete; pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`**
+4. **`ABS-MGMT-UI-REVIEW-APPROVE-1`** — line-safety review + approve. **complete in current source; commit/push pending**
 
 ### Blocked until financial behavior decision + action design
 
@@ -201,7 +210,7 @@ Before implementing void or supersede:
 
 - **`ABS-MGMT-HISTORY-LIST-1`** — full history list UI
 
-**Current active implementation task (exactly one):** `ABS-MGMT-UI-REVIEW-APPROVE-1`
+**Current active implementation task (exactly one):** `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-1`
 
 ---
 
