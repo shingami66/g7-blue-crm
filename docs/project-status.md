@@ -40,8 +40,8 @@
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 2.1 Current Active Work
-- **Current active task (exactly one):** `ABS-MGMT-FINANCIAL-LIFECYCLE-DOCS-SYNC-1`
-- **Purpose:** Synchronize the three canonical status/schema/roadmap docs with the verified DEV/DEMO implementation and apply; no source, migration, or database changes in this docs-only task.
+- **Current active task (exactly one):** `ABS-MGMT-FINANCIAL-LIFECYCLE-SUCCESSFUL-MUTATION-SMOKE-DOCS-COMMIT-1` (controlled docs commit after this docs-only milestone sync).
+- **Next safe product/engineering direction:** history/read exposure → Void UI → successor UI → user/manual smoke. Void/successor app actions and UI remain unshipped. Production apply remains unauthorized.
 - **Design complete:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
 - **ABS read-enrichment complete (source + accepted):** `ABS-MGMT-UI-READ-ENRICH-1` — Service Detail read-only ABS summary card enriched and pushed on main.
 - **ABS draft-edit/discard complete (source + accepted):** `ABS-MGMT-UI-DRAFT-EDIT-1` — draft item edit/discard UI implemented, automated validation passed, PASS by Mozfer manual browser evidence recorded, and pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`.
@@ -53,13 +53,13 @@
   4. `ABS-MGMT-UI-REVIEW-APPROVE-1` **complete and pushed** in `d8b654f2c89622837b75531aa44d79a66e024ad8`
   5. `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-1` **complete**
   6. migration/RPC preflight, SQL review, DEV/DEMO apply, read-only post-apply verification, actions, and tests **complete**
-  7. successful lifecycle mutation smoke -> history/read -> Void UI -> successor UI -> manual smoke
+  7. successful lifecycle mutation smoke + independent review **complete** (DEV/DEMO synthetic) → history/read → Void UI → successor UI → manual smoke
   Optional later: `ABS-MGMT-HISTORY-LIST-1`.
-- **Source-truth (ABS):** Create Draft, draft edit/discard, and Review/Approve UI are source implemented and manually accepted; void/supersede UI and app actions are not implemented. The reviewed Void/supersede transactional RPCs now exist in DEV/DEMO, but successful mutation smoke is still pending. Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship). Custom RPC exceptions include draft discard, draft item edit, and the financial lifecycle RPC surface.
-- **Financial lifecycle decision:** **`ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`** resolves and replaces the former pending flag. The reviewed migration/RPC implementation is installed and read-only verified in DEV/DEMO. Void stops future billing and requires zero financial exposure; successor activation is atomic and uses Service-lifetime applicable invoice exposure. Successful mutation smoke and Void/successor UI remain pending.
+- **Source-truth (ABS):** Create Draft, draft edit/discard, and Review/Approve UI are source implemented and manually accepted; void/supersede UI and app actions are not implemented. The reviewed Void/supersede transactional RPCs are installed in G7 DEV/DEMO and the successful mutation smoke has been executed and independently reviewed (synthetic DEV/DEMO only). Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship). Custom RPC exceptions include draft discard, draft item edit, and the financial lifecycle RPC surface.
+- **Financial lifecycle decision:** **`ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`** remains locked. Migration/RPC implementation is installed in DEV/DEMO; successful mutation smoke and independent review are complete (see milestone below). Void stops future billing and requires zero Invoice exposure and zero payment history; historical authority is retained after Void; successor activation is atomic and uses Service-lifetime applicable invoice exposure; equality with current exposure is allowed. Void/successor UI remain pending. Browser/manual smoke remains outside agent authority.
 - **Durable flags:**
   - Responsive P0 manual smoke: **closed** — see Responsive core P0 below (**PASS by Mozfer manual browser evidence**). Flag `RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING` is **no longer active**.
-- **V1 critical-path order (locked):** prior UI slices complete/pushed -> financial lifecycle design docs -> design commit -> migration/RPC preflight -> SQL/migration review -> separate DEV/DEMO apply and read-only verification -> actions/tests -> successful lifecycle mutation smoke -> history/read -> Void UI -> successor UI -> manual smoke -> docs/commit/push.
+- **V1 critical-path order (locked):** prior UI slices complete/pushed -> financial lifecycle design docs -> design commit -> migration/RPC preflight -> SQL/migration review -> separate DEV/DEMO apply and read-only verification -> actions/tests -> successful lifecycle mutation smoke (**complete**, DEV/DEMO synthetic) -> history/read -> Void UI -> successor UI -> manual smoke -> docs/commit/push.
 - **Preserved locks:** Customer Profile -> Service -> Quotation -> Invoice -> Payment; Service as operational core; no standalone top-nav ABS module; current active-scope ceiling behavior remains factual; future fallback is allowed only before approved ABS authority has ever existed; existing invoices/payments are never rewritten; DEV/DEMO wording; no VAT/ZATCA/FATOORA or production-readiness claim.
 
 ### Responsive core P0 (source implemented; Mozfer manual smoke PASS)
@@ -134,7 +134,7 @@
 - [x] Design task `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` completed for product/implementation slicing (`APPROVED_BILLING_SCOPE_MANAGEMENT_DESIGN_COMPLETE`).
 - [x] Canonical design document: `docs/approved-billing-scope-management-design.md` (capability matrix READY/PARTIAL/MISSING/DEFERRED; Service-scoped entry; card state matrix; status model; permissions; stable errors; financial invariants; bilingual/responsive requirements; slice order).
 - [x] Source-truth corrections locked: void/supersede **not** implemented as actions; schemas ≠ working actions; `superseded` not a DB status; UI read-oriented for non-shipped write CTAs; discard + item-edit RPC exceptions recorded.
-- [x] Financial lifecycle decision **`ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`** is now locked. Void/successor implementation remains gated by migration/RPC preflight and review, not by an unresolved product question.
+- [x] Financial lifecycle decision **`ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`** is now locked. Migration/RPC implementation and successful mutation smoke are complete in DEV/DEMO (synthetic); void/successor user-facing UI remains unshipped and is not gated by an unresolved product question.
 - [x] Read-enrich slice later completed (see `ABS-MGMT-UI-READ-ENRICH-1` milestone above).
 - [x] Docs-only sync: `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-DOCS-SYNC-1` (no implementation, SQL, stage, commit, or push in that task).
 
@@ -154,8 +154,31 @@
 - [x] Verified schema/runtime surface includes the supersession lineage, same-Service foreign keys, required indexes, enabled Invoice/ABS triggers, all 14 reviewed functions, `SECURITY DEFINER`, fixed search path, service-role grants, denied public mutation execution, revoked direct client mutation privileges, and enabled RLS.
 - [x] Read-only verification confirmed Service-first locking for financial RPCs and writes, unchanged baseline counts, harmless missing-resource branches, empty-resource helper results, no persistent mutation/audit rows, and no DDL row-count change.
 - [x] Local validation passed: Invoice tests 7/7, ABS tests 53/53, TypeScript, lint, build, and diff-check; lint/build retained only known workspace/PDF warnings.
-- [x] Successful mutation scenarios, Void, successor creation, approve-and-supersede, payment, Invoice creation, lifecycle mutation smoke, and browser/manual smoke were not performed in this verification packet.
-- [x] DEV/DEMO only; production apply and production readiness are not claimed. The current source still has no shipped Void/successor UI, and no successful mutation smoke is recorded.
+- [x] Successful mutation smoke was **not** part of the original read-only verification packet; it is recorded in the milestone below.
+- [x] DEV/DEMO only; production apply and production readiness are not claimed. The current source still has no shipped Void/successor UI.
+
+### ABS Financial Lifecycle Successful Mutation Smoke (DEV/DEMO synthetic)
+- [x] Execution task `ABS-MGMT-FINANCIAL-LIFECYCLE-SUCCESSFUL-MUTATION-SMOKE-EXECUTE-4` completed with verdict `ABS_MGMT_FINANCIAL_LIFECYCLE_SUCCESSFUL_MUTATION_SMOKE_EXECUTED`.
+- [x] Independent review task `ABS-MGMT-FINANCIAL-LIFECYCLE-SUCCESSFUL-MUTATION-SMOKE-REVIEW-3` completed with verdict `ABS_MGMT_FINANCIAL_LIFECYCLE_SUCCESSFUL_MUTATION_SMOKE_REVIEWED`.
+- [x] Run ID: `300d4edd-5c8e-45bc-bc85-b4f033750a14`. Synthetic marker: `ABS_LIFECYCLE_SMOKE_300d4edd-5c8e-45bc-bc85-b4f033750a14`.
+- [x] **All retained evidence is synthetic DEV/DEMO test data** — not customer, live, production, or operational data.
+- [x] Isolated synthetic lifecycle lanes A–E all passed.
+- [x] Draft item edit and exact replay passed.
+- [x] Line-safety review and ordinary approval passed.
+- [x] Draft discard and not-found replay passed.
+- [x] Eligible Void at zero Invoice exposure and zero payment history passed; historical financial authority remains detectable after Void.
+- [x] Invoice creation against the voided authority was blocked with `billing_scope_inactive`.
+- [x] Successor creation and its idempotent replay passed.
+- [x] Atomic approve-and-supersede passed.
+- [x] Equality between active ceiling and current Service exposure is allowed.
+- [x] Invoice financial authority and Service-lifetime exposure checks passed.
+- [x] Invoice number allocations: exactly **+2**. Payment recording allocated exactly **one** payment number. Payment replay rejected without duplicate payment, audit, or allocation.
+- [x] Audit delta: exactly **+13**. No orphan or duplicate synthetic records found.
+- [x] No sequence rewind or cleanup after lifecycle mutation started.
+- [x] Browser/manual smoke remained outside agent authority and is not claimed.
+- [x] Installed catalog gates (DEV/DEMO review-time): functions **14/14**; unexpected overloads **0**; triggers **3/3**; constraints **29/29**; indexes **14/14**; RLS **11/11**; privilege matrix **176/176**; missing, duplicate, and failed catalog counts **0**.
+- [x] Locked decisions preserved: Service-lifetime exposure; Void only at zero Invoice exposure and zero payment history; historical authority retained after Void; atomic successor/supersession; equality with current exposure allowed; service-role-only financial mutations; Admin/Manager lifecycle authority; Accountant lifecycle read-only; browser has no direct financial mutation authority; no VAT/ZATCA/FATOORA/QR/XML/notification expansion.
+- [x] This milestone does **not** make Approved Billing Scope or broader invoicing production-ready. Production apply remains unauthorized. Void/successor user-facing UI remains unshipped.
 
 ### Feature 005 Runtime Arabic/English UX (formally closed)
 - [x] Authenticated Arabic/English UX implemented for shell + modules: Dashboard, Customers, Services (core + operational subflows), Quotations (non-PDF), Invoices (non-PDF), Payments, Suppliers, **Settings**, and **Admin Users**.
@@ -287,7 +310,7 @@
   - snapshot excludes `عمال` and `ضيافة`
 - [x] Temporary item-decision dev harness was removed after smoke.
 - [x] Full-scope snapshot WARN from commit `c66975d` is now closed.
-- [x] No full user-facing Approved Billing Scope **management** UI existed at full-scope smoke close (read-only card/detail only). **Later progress:** all management slices through Review/Approve are implemented, accepted, committed, and pushed; void/successor remains future work under the locked lifecycle design.
+- [x] No full user-facing Approved Billing Scope **management** UI existed at full-scope smoke close (read-only card/detail only). **Later progress:** all management slices through Review/Approve are implemented, accepted, committed, and pushed; lifecycle migration/RPC and successful mutation smoke are complete in DEV/DEMO; void/successor user-facing UI remains unshipped.
 
 ### Approved Billing Scope Foundation
 - [x] Migration draft `supabase/migrations/20260708090000_approved_billing_scope_foundation.sql` was committed and pushed as `8d2aefa feat(billing): draft approved billing scope foundation`.
@@ -321,7 +344,7 @@
   - Successfully invoked `discardApprovedBillingScopeDraft` server action.
   - Verified atomic database deletion of both the scope header and its items.
 - [x] Temporary DEV harness removed, restoring clean working tree.
-- [x] **Historical note at draft-discard close:** remaining work then included review/approve/void/supersede actions, UI, invoice integration, and production apply. **Current truth:** review/approve and invoice integration exist and are pushed; void/successor actions/RPCs/UI do not exist; lifecycle behavior is locked but requires migration preflight/review and separate implementation. Production DB apply remains unauthorized.
+- [x] **Historical note at draft-discard close:** remaining work then included review/approve/void/supersede actions, UI, invoice integration, and production apply. **Current truth:** review/approve and invoice integration exist and are pushed; lifecycle migration/RPC is installed in DEV/DEMO and successful mutation smoke is complete (synthetic); void/successor user-facing UI remains unshipped. Production DB apply remains unauthorized.
 
 ### Approved Billing Scope Draft Item Edit
 - [x] Migration draft `supabase/migrations/20260708120000_approved_billing_scope_item_edit_function.sql` was committed and pushed as `3af430a feat(billing): add atomic draft item edit`.
@@ -352,7 +375,7 @@
 ### Approved Billing Scope Migration Draft Placeholder
 - [x] Backlog check for `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` completed.
 - [x] Result: reclassified as completed/no-op. No concrete database migration is required after the live schema audit.
-- [x] **Historical note:** draft creation is app-layer; discard and item-edit RPCs are narrow service-role exceptions. **Current truth:** line-safety review/approval and UI are pushed; void/successor actions remain unimplemented; transactional design is locked by `ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED` and now requires migration preflight/review.
+- [x] **Historical note:** draft creation is app-layer; discard and item-edit RPCs are narrow service-role exceptions. **Current truth:** line-safety review/approval and UI are pushed; lifecycle migration/RPC is installed and successful mutation smoke is complete in DEV/DEMO (synthetic); void/successor user-facing UI remains unshipped; design remains `ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`.
 
 ### Approved Billing Scope RBAC/RLS Review
 - [x] Read-only security review for Approved Billing Scope (`APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`) completed.
