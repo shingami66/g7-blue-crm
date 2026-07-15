@@ -61,6 +61,7 @@ export interface ApprovedBillingScopeRow {
   source_pricing_context: Record<string, unknown>;
   line_safety_status: ApprovedBillingScopeLineSafetyStatus;
   line_safety_reason_code: ApprovedBillingScopeReasonCode | null;
+  /** Free-text line-safety reviewer note (DB: line_safety_note). */
   line_safety_note: string | null;
   line_safety_reviewed_by: string | null;
   line_safety_reviewed_at: string | null;
@@ -69,8 +70,11 @@ export interface ApprovedBillingScopeRow {
   approved_by: string | null;
   superseded_at: string | null;
   superseded_by_scope_id: string | null;
+  /** Predecessor lineage (DB: supersedes_scope_id). Installed by financial lifecycle migration. */
+  supersedes_scope_id?: string | null;
   voided_at: string | null;
   voided_by: string | null;
+  /** Free-text void note (DB: void_reason). No separate void_reason_note column exists. */
   void_reason: string | null;
   created_by: string | null;
   updated_by: string | null;
@@ -127,6 +131,7 @@ export interface ApprovedBillingScope {
   sourcePricingContext: Record<string, unknown>;
   lineSafetyStatus: ApprovedBillingScopeLineSafetyStatus;
   lineSafetyReasonCode: ApprovedBillingScopeReasonCode | null;
+  /** Maps DB line_safety_note (reviewer free text). */
   lineSafetyNote: string | null;
   lineSafetyReviewedBy: string | null;
   lineSafetyReviewedAt: string | null;
@@ -135,8 +140,11 @@ export interface ApprovedBillingScope {
   approvedBy: string | null;
   supersededAt: string | null;
   supersededByScopeId: string | null;
+  /** Maps DB supersedes_scope_id (predecessor). */
+  supersedesScopeId: string | null;
   voidedAt: string | null;
   voidedBy: string | null;
+  /** Maps DB void_reason (free text). */
   voidReason: string | null;
   createdBy: string | null;
   updatedBy: string | null;
@@ -148,6 +156,157 @@ export interface ApprovedBillingScopeDetail extends ApprovedBillingScope {
   items: ApprovedBillingScopeItem[];
   isActiveApprovedScope: boolean;
 }
+
+/** Display-only effective status. Not a DB enum (`superseded` is timestamp-derived). */
+export type AbsEffectiveDisplayStatus =
+  | "draft"
+  | "active"
+  | "superseded"
+  | "voided";
+
+export type AbsMoneyField =
+  | { kind: "value"; amount: number }
+  | { kind: "hidden" }
+  | { kind: "unavailable" };
+
+export interface AbsScopeHistoryRow {
+  id: string;
+  serviceId: string;
+  scopeVersion: number;
+  status: ApprovedBillingScopeStatus;
+  effectiveStatus: AbsEffectiveDisplayStatus;
+  sourceQuotationId: string;
+  sourceQuotationNumber: string | null;
+  acceptedSubtotal: number;
+  acceptedVatAmount: number;
+  acceptedGrandTotal: number;
+  lineSafetyStatus: ApprovedBillingScopeLineSafetyStatus;
+  createdAt: string;
+  lineSafetyReviewedAt: string | null;
+  approvedAt: string | null;
+  voidedAt: string | null;
+  supersededAt: string | null;
+  supersedesScopeId: string | null;
+  supersededByScopeId: string | null;
+  isActiveApprovedScope: boolean;
+}
+
+export interface AbsScopeHistoryListData {
+  rows: AbsScopeHistoryRow[];
+  limit: number;
+  limitReached: boolean;
+}
+
+export interface AbsScopeLineageSummary {
+  id: string;
+  scopeVersion: number;
+  status: ApprovedBillingScopeStatus;
+  effectiveStatus: AbsEffectiveDisplayStatus;
+  acceptedGrandTotal: number;
+  isActiveApprovedScope: boolean;
+  approvedAt: string | null;
+  supersededAt: string | null;
+  voidedAt: string | null;
+}
+
+export interface AbsSourceQuotationSummary {
+  id: string;
+  quotationNumber: string | null;
+}
+
+export interface AbsServiceOwnedScopeDetail {
+  scope: ApprovedBillingScopeDetail;
+  sourceQuotation: AbsSourceQuotationSummary | null;
+  predecessor: AbsScopeLineageSummary | null;
+  successor: AbsScopeLineageSummary | null;
+}
+
+export type AbsAuthorityScenario =
+  | "unavailable"
+  | "no_approved_quotation"
+  | "legacy_quotation_only"
+  | "draft_only"
+  | "active"
+  | "active_with_draft"
+  | "historical_only";
+
+export interface ServiceAbsAuthoritySummary {
+  scenario: AbsAuthorityScenario;
+  activeScope: ApprovedBillingScopeSummary | null;
+  activeScopeVersion: number | null;
+  activeCeiling: AbsMoneyField;
+  lifetimeInvoiceExposure: AbsMoneyField;
+  remainingAuthority: AbsMoneyField;
+  sourceQuotation: AbsSourceQuotationSummary | null;
+  lineSafetyStatus: ApprovedBillingScopeLineSafetyStatus | null;
+  approvedAt: string | null;
+  hasHistoricalAbsAuthority: boolean;
+  canReadInvoiceFinancials: boolean;
+  /** True only for pre-authority transitional QT fallback (never after historical ABS). */
+  usesLegacyQuotationFallback: boolean;
+}
+
+/**
+ * Authoritative raw audit_logs.details.event_type values emitted by the
+ * financial lifecycle migration RPCs. Single source for types, filters, and recognition.
+ */
+export const ABS_LIFECYCLE_AUDIT_EVENT_TYPES = [
+  "approved_billing_scope_line_safety_reviewed",
+  "approved_billing_scope_approved",
+  "approved_billing_scope_voided",
+  "approved_billing_scope_successor_created",
+  "approved_billing_scope_superseded",
+] as const;
+
+export type AbsLifecycleAuditEventType =
+  (typeof ABS_LIFECYCLE_AUDIT_EVENT_TYPES)[number];
+
+export type AbsAuditActorDisplay =
+  | { kind: "identified"; actorId: string; actorRole: string | null }
+  | { kind: "recorded" };
+
+export interface AbsLifecycleAuditEvent {
+  id: string;
+  action: string;
+  eventType: AbsLifecycleAuditEventType;
+  scopeId: string;
+  timestamp: string;
+  actor: AbsAuditActorDisplay;
+  scopeVersion: number | null;
+  lifecycleOutcome: string | null;
+  reasonCode: string | null;
+  /** Internal free text; null for Accountant and when absent. */
+  reasonNote: string | null;
+  sourceScopeId: string | null;
+  successorScopeId: string | null;
+}
+
+/**
+ * Bounded Service lifecycle audit page.
+ * Does not claim complete lifetime history when discovery or candidate caps are hit.
+ */
+export interface AbsLifecycleAuditListData {
+  events: AbsLifecycleAuditEvent[];
+  /** Clamped page size for recognized lifecycle events. */
+  limit: number;
+  /**
+   * True when more Service-owned ABS scope IDs exist than the discovery cap
+   * (ABS_SCOPE_HISTORY_HARD_LIMIT) used to bound the audit entity_id set.
+   */
+  scopeDiscoveryLimitReached: boolean;
+  /**
+   * True when more candidate audit_logs rows matched the Service-owned filters
+   * than the candidate page size (limit + 1 fetch). After DB filtering to
+   * recognized event types, this means the recognized result may be truncated.
+   */
+  candidateAuditLimitReached: boolean;
+  /** events.length — recognized lifecycle events returned for this page. */
+  recognizedEventCount: number;
+}
+
+export const ABS_SCOPE_HISTORY_HARD_LIMIT = 50;
+export const ABS_LIFECYCLE_AUDIT_DEFAULT_LIMIT = 40;
+export const ABS_LIFECYCLE_AUDIT_MAX_LIMIT = 100;
 
 export interface ApprovedBillingScopeItem {
   id: string;
@@ -200,6 +359,7 @@ export type ApprovedBillingScopeListOptions = {
 export type ApprovedBillingScopeReadErrorCode =
   | "scope_not_found"
   | "scope_duplicate_draft"
+  | "scope_invalid_id"
   | "scope_unexpected_error";
 
 export type ApprovedBillingScopeReadResult<
@@ -223,6 +383,12 @@ export type ApprovedBillingScopeReadResult<
       ? {
           status: "error";
           error: "scope_duplicate_draft";
+        }
+      : never)
+  | ("scope_invalid_id" extends E
+      ? {
+          status: "error";
+          error: "scope_invalid_id";
         }
       : never)
   | ("scope_unexpected_error" extends E

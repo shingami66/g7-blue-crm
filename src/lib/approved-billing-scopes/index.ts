@@ -4,5 +4,6 @@ export * from "./errors";
 export * from "./permissions";
 export * from "./mappers";
 export * from "./queries";
+export * from "./audit-queries";
 export * from "./actions";
 export * from "./card-view-model";
