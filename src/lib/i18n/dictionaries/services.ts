@@ -161,6 +161,9 @@ export interface ServicesDictionary {
     noApprovedQuotation: string;
     legacyQuotationAuthority: string;
     historicalNotAuthority: string;
+    noActiveAuthority: string;
+    historicalAuthorityRetained: string;
+    fullyAllocated: string;
     invoiceTotalsRestricted: string;
     invoiceTotalsUnavailable: string;
     sourceQuotationUnavailable: string;
@@ -194,7 +197,24 @@ export interface ServicesDictionary {
       sourceQuotation: string;
       billingCeiling: string;
       invoicedAmount: string;
+      lifetimeInvoiceExposure: string;
       remainingBillable: string;
+      approvedAt: string;
+    };
+    history: {
+      title: string;
+      empty: string;
+      showingLatestBounded: string;
+      activeIndicator: string;
+      columns: {
+        version: string;
+        status: string;
+        acceptedTotal: string;
+        sourceQuotation: string;
+        lifecycleDate: string;
+        details: string;
+      };
+      detailsAria: string;
     };
     statusLabels: Record<"draft" | "approved" | "voided", string>;
     /** Display-only effective status labels (not DB enum values). */
@@ -925,6 +945,11 @@ const servicesDictionaryEn: ServicesDictionary = {
       "No active Approved Billing Scope. Current billing uses the approved quotation ceiling.",
     historicalNotAuthority:
       "No active Approved Billing Scope. Historical scopes below are not the current billing authority.",
+    noActiveAuthority:
+      "There is no active billing authority for this Service.",
+    historicalAuthorityRetained:
+      "Future billing authority is inactive. Historical Approved Billing Scope records are retained.",
+    fullyAllocated: "Fully allocated",
     invoiceTotalsRestricted: "Invoice totals are restricted for your role.",
     invoiceTotalsUnavailable: "Invoice totals are temporarily unavailable.",
     sourceQuotationUnavailable: "Source quotation reference unavailable",
@@ -968,7 +993,25 @@ const servicesDictionaryEn: ServicesDictionary = {
       sourceQuotation: "Source quotation",
       billingCeiling: "Billing ceiling",
       invoicedAmount: "Invoiced amount",
+      lifetimeInvoiceExposure: "Service-lifetime invoiced exposure",
       remainingBillable: "Remaining billable",
+      approvedAt: "Approved",
+    },
+    history: {
+      title: "Scope history",
+      empty: "No scope history is available for this Service.",
+      showingLatestBounded:
+        "Showing the latest {limit} scopes only. Older history is not listed here.",
+      activeIndicator: "Current active",
+      columns: {
+        version: "Version",
+        status: "Status",
+        acceptedTotal: "Accepted total",
+        sourceQuotation: "Source quotation",
+        lifecycleDate: "Lifecycle date",
+        details: "Details",
+      },
+      detailsAria: "View details for scope version {version}",
     },
     statusLabels: {
       draft: "Draft",
@@ -2090,6 +2133,10 @@ const servicesDictionaryAr: ServicesDictionary = {
       "لا يوجد نطاق فوترة معتمد نشط. الفوترة الحالية تعتمد على سقف عرض السعر المعتمد.",
     historicalNotAuthority:
       "لا يوجد نطاق فوترة معتمد نشط. النطاقات التاريخية أدناه ليست سلطة الفوترة الحالية.",
+    noActiveAuthority: "لا توجد سلطة فوترة نشطة لهذه الخدمة.",
+    historicalAuthorityRetained:
+      "سلطة الفوترة المستقبلية غير نشطة. سجلات نطاق الفوترة المعتمد التاريخية محفوظة.",
+    fullyAllocated: "مخصص بالكامل",
     invoiceTotalsRestricted: "إجماليات الفواتير مقيدة لدورك.",
     invoiceTotalsUnavailable: "إجماليات الفواتير غير متاحة مؤقتًا.",
     sourceQuotationUnavailable: "مرجع عرض السعر المصدر غير متاح",
@@ -2133,7 +2180,25 @@ const servicesDictionaryAr: ServicesDictionary = {
       sourceQuotation: "عرض السعر المصدر",
       billingCeiling: "سقف الفوترة",
       invoicedAmount: "المبلغ المفوتر",
+      lifetimeInvoiceExposure: "التعرض المفوتر طوال عمر الخدمة",
       remainingBillable: "المتبقي للفوترة",
+      approvedAt: "تاريخ الاعتماد",
+    },
+    history: {
+      title: "سجل النطاقات",
+      empty: "لا يوجد سجل نطاقات لهذه الخدمة.",
+      showingLatestBounded:
+        "يُعرض أحدث {limit} نطاق فقط. السجل الأقدم غير مدرج هنا.",
+      activeIndicator: "النشط الحالي",
+      columns: {
+        version: "الإصدار",
+        status: "الحالة",
+        acceptedTotal: "الإجمالي المقبول",
+        sourceQuotation: "عرض السعر المصدر",
+        lifecycleDate: "تاريخ دورة الحياة",
+        details: "التفاصيل",
+      },
+      detailsAria: "عرض تفاصيل إصدار النطاق {version}",
     },
     statusLabels: {
       draft: "مسودة",

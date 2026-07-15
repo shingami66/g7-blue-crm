@@ -301,6 +301,25 @@ test("7. ABS headings, statuses, line-safety, and item-decision labels localize"
   assert.equal(ar.approvedBillingScopes.labels.invoicedAmount, "المبلغ المفوتر");
   assert.equal(ar.approvedBillingScopes.labels.remainingBillable, "المتبقي للفوترة");
   assert.equal(ar.approvedBillingScopes.labels.sourceQuotation, "عرض السعر المصدر");
+  assert.equal(
+    en.approvedBillingScopes.labels.lifetimeInvoiceExposure,
+    "Service-lifetime invoiced exposure",
+  );
+  assert.equal(en.approvedBillingScopes.fullyAllocated, "Fully allocated");
+  assert.equal(en.approvedBillingScopes.history.title, "Scope history");
+  assert.equal(ar.approvedBillingScopes.history.title, "سجل النطاقات");
+  assert.match(en.approvedBillingScopes.history.showingLatestBounded, /\{limit\}/);
+  assert.match(ar.approvedBillingScopes.history.showingLatestBounded, /\{limit\}/);
+  assert.ok(en.approvedBillingScopes.noActiveAuthority.length > 0);
+  assert.ok(en.approvedBillingScopes.historicalAuthorityRetained.length > 0);
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(en.approvedBillingScopes, "voidAction"),
+    false,
+  );
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(en.approvedBillingScopes, "successorAction"),
+    false,
+  );
   assert.equal(en.approvedBillingScopes.draftRevisionExists, "Draft revision exists");
   assert.equal(ar.approvedBillingScopes.draftRevisionExists, "توجد مسودة مراجعة");
   assert.equal(en.approvedBillingScopes.createDraft.action, "Create draft");
@@ -331,7 +350,7 @@ test("8. ABS internal status and decision codes remain unchanged", () => {
   );
   const card = read(ABS_CARD);
   assert.match(card, /effectiveStatusLabels/);
-  assert.match(card, /lineSafetyLabels\[primary\.lineSafetyStatus\]/);
+  assert.match(card, /lineSafetyLabels\[lineSafetyStatus\]|lineSafetyLabels\[primary\.lineSafetyStatus\]/);
   // Draft-create UI is permission-gated; void/supersede/approve/discard still absent
   assert.match(card, /canCreateDraft/);
   assert.match(card, /CreateApprovedBillingScopeDraftAction/);
@@ -343,8 +362,16 @@ test("8. ABS internal status and decision codes remain unchanged", () => {
   assert.match(card, /formatSarAmount/);
   assert.match(card, /legacyQuotationAuthority|draftRevisionExists/);
   assert.match(card, /resolveDraftCreateContext|showCreateDraft/);
+  // History/authority read contracts — no redundant full-list card query
+  assert.match(card, /getServiceApprovedBillingAuthoritySummaryResult/);
+  assert.match(card, /listServiceApprovedBillingScopeHistoryResult/);
+  assert.doesNotMatch(card, /listApprovedBillingScopesForServiceResult/);
+  assert.match(card, /AbsScopeHistoryTable/);
+  assert.match(card, /lifetimeInvoiceExposure|fullyAllocated/);
+  assert.match(card, /historyProvesZeroScopes|zeroHistoryProven/);
+  assert.match(card, /authorityFailed/);
   // Zero-scope gate: historical-only must not authorize create via "no active" alone
-  assert.match(card, /scopes\.length === 0|showCreateDraft/);
+  assert.match(card, /zeroHistoryProven|showCreateDraft/);
   assert.doesNotMatch(card, /historical_only[\s\S]{0,80}showCreateDraft|showCreateDraft[\s\S]{0,120}historical_only/);
   // Active-scope path must not expose supersede action or revision-create workflow
   assert.doesNotMatch(card, /voidApproved|supersedeApproved|createRevision|revision-draft/);
