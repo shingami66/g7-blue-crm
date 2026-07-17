@@ -1,6 +1,7 @@
 "use server";
 
 import { requirePermission } from "@/lib/auth/permissions";
+import { INVOICE_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { consumeRateLimit } from "@/lib/security/rate-limit";
@@ -8,17 +9,137 @@ import { createInvoiceSchema } from "./schemas";
 import { buildInvoiceSnapshotData } from "./snapshots";
 import { mapRowToQuotationDetail } from "@/lib/quotations/mappers";
 import type { QuotationDetailRow } from "@/lib/quotations/types";
+import type { InvoiceStatus } from "@/types/invoice";
 import type { CreateInvoiceResult, IssueInvoiceResult } from "./types";
-import { getActiveApprovedBillingScopeForService } from "../approved-billing-scopes/queries";
+import { resolveInvoiceBillingAuthorityForService } from "../approved-billing-scopes/queries";
+import {
+  parseAuthoritativeMoney,
+  sumAuthoritativeMoney,
+} from "./money";
+import {
+  applyApplicableServiceInvoiceExposurePredicate,
+  parseApplicableServiceInvoiceExposureResult,
+} from "./exposure";
+import { getServiceInvoiceLifecycleDecision } from "./service-invoice-lifecycle";
 
 const QUOTATION_DETAIL_SELECT = "*, quotation_items(*), customers(company, contact), services(service_number, service_title, status, event_name)";
 const RATE_LIMIT_ERROR = "Too many attempts. Please wait a moment and try again.";
 const CREATE_INVOICE_RATE_LIMIT = { limit: 5, windowMs: 60_000 };
 const ISSUE_INVOICE_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
 
+type ApplicablePriorDepositStatus = Exclude<
+  InvoiceStatus,
+  "cancelled" | "voided"
+>;
+
+type PriorDepositRow = {
+  id: string;
+  invoice_number: string;
+  invoice_type: "deposit";
+  grand_total: unknown;
+  status: ApplicablePriorDepositStatus;
+};
+
+const PRIOR_DEPOSIT_QUERY_RESULT_KEYS = ["data", "error"] as const;
+const SERVICE_QUERY_RESULT_KEYS = ["data", "error"] as const;
+const SERVICE_ROW_KEYS = ["id", "status", "deleted_at"] as const;
+const PRIOR_DEPOSIT_ROW_KEYS = [
+  "id",
+  "invoice_number",
+  "invoice_type",
+  "grand_total",
+  "status",
+] as const;
+
+// The query excludes only cancelled and voided canonical Invoice statuses.
+const APPLICABLE_PRIOR_DEPOSIT_STATUSES = new Set<ApplicablePriorDepositStatus>([
+  "draft",
+  "sent",
+  "paid",
+  "partial",
+  "overdue",
+]);
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function hasOwnDataProperties(
+  value: object,
+  propertyNames: readonly string[],
+): boolean {
+  return propertyNames.every((propertyName) => {
+    const descriptor = Object.getOwnPropertyDescriptor(value, propertyName);
+    return descriptor !== undefined && "value" in descriptor;
+  });
+}
+
+function isPriorDepositQueryResultContainer(
+  value: unknown,
+): value is { data: unknown; error: unknown } {
+  return (
+    isPlainObject(value) &&
+    hasOwnDataProperties(value, PRIOR_DEPOSIT_QUERY_RESULT_KEYS)
+  );
+}
+
+function isServiceQueryResultContainer(
+  value: unknown,
+): value is { data: unknown; error: unknown } {
+  return (
+    isPlainObject(value) &&
+    hasOwnDataProperties(value, SERVICE_QUERY_RESULT_KEYS)
+  );
+}
+
+function isCurrentServiceRow(
+  value: unknown,
+  serviceId: string,
+): value is Record<(typeof SERVICE_ROW_KEYS)[number], unknown> {
+  return (
+    isPlainObject(value) &&
+    hasOwnDataProperties(value, SERVICE_ROW_KEYS) &&
+    value.id === serviceId
+  );
+}
+
+function isApplicablePriorDepositStatus(
+  value: unknown,
+): value is ApplicablePriorDepositStatus {
+  return (
+    typeof value === "string" &&
+    APPLICABLE_PRIOR_DEPOSIT_STATUSES.has(
+      value as ApplicablePriorDepositStatus,
+    )
+  );
+}
+
+function isPriorDepositRow(row: unknown): row is PriorDepositRow {
+  if (
+    !isPlainObject(row) ||
+    !hasOwnDataProperties(row, PRIOR_DEPOSIT_ROW_KEYS)
+  ) {
+    return false;
+  }
+
+  return (
+    typeof row.id === "string" &&
+    row.id.trim().length > 0 &&
+    typeof row.invoice_number === "string" &&
+    row.invoice_number.trim().length > 0 &&
+    row.invoice_type === "deposit" &&
+    isApplicablePriorDepositStatus(row.status)
+  );
+}
+
 export async function createInvoiceAction(input: unknown): Promise<CreateInvoiceResult> {
   try {
-    const user = await requirePermission("invoices:write");
+    const user = await requirePermission(INVOICE_PERMISSIONS.write);
 
     if (!consumeRateLimit("createInvoiceAction", user.clerk_user_id, CREATE_INVOICE_RATE_LIMIT)) {
       return { success: false, error: RATE_LIMIT_ERROR };
@@ -66,18 +187,35 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
       return { success: false, error: "quotation_service_mismatch" };
     }
 
-    // 4. Fetch company settings
-    const { data: settings, error: settingsError } = await supabase
-      .from("company_settings")
-      .select("*")
-      .eq("setting_key", "default")
+    // 4. Resolve the current Service lifecycle independently from the Quotation projection.
+    const serviceQueryResult = await supabase
+      .from("services")
+      .select("id, status, deleted_at")
+      .eq("id", serviceId)
       .maybeSingle();
 
-    if (settingsError || !settings || !settings.vat_mode) {
-      return { success: false, error: "company_settings_unavailable" };
+    if (
+      !isServiceQueryResultContainer(serviceQueryResult) ||
+      serviceQueryResult.error !== null ||
+      !isCurrentServiceRow(serviceQueryResult.data, serviceId)
+    ) {
+      return { success: false, error: "service_lifecycle_unavailable" };
     }
 
-    // 5. Compose snapshot data
+    const lifecycleDecision = getServiceInvoiceLifecycleDecision({
+      status: serviceQueryResult.data.status,
+      deletedAt: serviceQueryResult.data.deleted_at,
+    });
+    const lifecycleDenial =
+      invoiceType === "deposit"
+        ? lifecycleDecision.depositDenial
+        : lifecycleDecision.finalDenial;
+
+    if (lifecycleDenial) {
+      return { success: false, error: lifecycleDenial };
+    }
+
+    // 5. Compose trusted Quotation data.
     const quotationDetail = mapRowToQuotationDetail(quotationRow as unknown as QuotationDetailRow);
 
     // 6. Trusted quotation total
@@ -85,28 +223,60 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
       return { success: false, error: "quotation_total_unavailable" };
     }
 
-    // 7. Reject VAT registered modes for this slice
-    if (settings.vat_mode !== "not_registered") {
-      return { success: false, error: "vat_registered_invoice_not_implemented_in_this_slice" };
+    const billingAuthority =
+      await resolveInvoiceBillingAuthorityForService(serviceId);
+
+    if (billingAuthority.status === "unavailable") {
+      return { success: false, error: "billing_scope_authority_unavailable" };
     }
 
-    // Resolve active approved billing scope if exists for the service
-    const activeScope = await getActiveApprovedBillingScopeForService(serviceId);
-    const billingCeiling = activeScope ? activeScope.acceptedGrandTotal : quotationDetail.grandTotal;
+    if (billingAuthority.status === "historical_only") {
+      return { success: false, error: "billing_scope_inactive" };
+    }
+
+    const activeScope =
+      billingAuthority.status === "active" ? billingAuthority.scope : null;
+
+    const billingCeiling = activeScope
+      ? activeScope.acceptedGrandTotal
+      : quotationDetail.grandTotal;
 
     let finalInvoiceAmount = 0;
-    let priorDepositsData: Array<{
+    const priorDepositsData: Array<{
       id: string;
-      invoice_number: string | null;
-      invoice_type: string;
-      grand_total: number;
-      status: string;
+      invoice_number: string;
+      invoice_type: "deposit";
+      amount: number;
+      status: ApplicablePriorDepositStatus;
     }> = [];
     let activePriorInvoiceTotal = 0;
 
     if (invoiceType === "deposit") {
-      if (requestedAmount! > billingCeiling) {
-        return { success: false, error: activeScope ? "deposit_amount_exceeds_billing_scope_ceiling" : "deposit_amount_exceeds_quotation_total" };
+      const authoritativeBillingCeiling =
+        parseAuthoritativeMoney(billingCeiling);
+      if (authoritativeBillingCeiling == null) {
+        return { success: false, error: "billing_scope_authority_unavailable" };
+      }
+
+      const exposureQueryResult = await applyApplicableServiceInvoiceExposurePredicate(
+        supabase.from("invoices").select("id, grand_total"),
+        serviceId,
+      );
+      const exposureResult = parseApplicableServiceInvoiceExposureResult(
+        exposureQueryResult,
+      );
+      if (exposureResult.status !== "success") {
+        return { success: false, error: "invoice_exposure_unavailable" };
+      }
+
+      const remainingBillable =
+        authoritativeBillingCeiling - exposureResult.exposure;
+      if (
+        !Number.isFinite(remainingBillable) ||
+        remainingBillable < 0 ||
+        requestedAmount! > remainingBillable
+      ) {
+        return { success: false, error: "deposit_amount_exceeds_remaining" };
       }
       finalInvoiceAmount = requestedAmount!;
 
@@ -155,7 +325,7 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
       }
 
       // Find active prior deposit invoices
-      const { data: priorDeposits, error: priorDepositsError } = await supabase
+      const priorDepositsResult = await supabase
         .from("invoices")
         .select("id, invoice_number, invoice_type, grand_total, status")
         .eq("service_id", serviceId)
@@ -164,21 +334,67 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
         .is("voided_at", null)
         .eq("is_deleted", false);
 
-      if (priorDepositsError) {
-        console.error("[createInvoiceAction] Error querying prior deposits:", priorDepositsError);
+      if (!isPriorDepositQueryResultContainer(priorDepositsResult)) {
         return { success: false, error: "prior_invoice_lookup_failed" };
       }
 
-      priorDepositsData = priorDeposits || [];
-      activePriorInvoiceTotal = priorDeposits
-        ? priorDeposits.reduce((sum, inv) => sum + Number(inv.grand_total || 0), 0)
-        : 0;
+      if (priorDepositsResult.error !== null) {
+        if (priorDepositsResult.error) {
+          console.error("[createInvoiceAction] Error querying prior deposits:", priorDepositsResult.error);
+        }
+        return { success: false, error: "prior_invoice_lookup_failed" };
+      }
+
+      if (!Array.isArray(priorDepositsResult.data)) {
+        return { success: false, error: "prior_invoice_lookup_failed" };
+      }
+
+      for (const priorDeposit of priorDepositsResult.data) {
+        if (!isPriorDepositRow(priorDeposit)) {
+          return { success: false, error: "prior_invoice_lookup_failed" };
+        }
+
+        const amount = parseAuthoritativeMoney(priorDeposit.grand_total);
+        if (amount == null) {
+          return { success: false, error: "prior_invoice_lookup_failed" };
+        }
+
+        priorDepositsData.push({
+          id: priorDeposit.id,
+          invoice_number: priorDeposit.invoice_number,
+          invoice_type: priorDeposit.invoice_type,
+          amount,
+          status: priorDeposit.status,
+        });
+      }
+
+      const priorDepositTotal = sumAuthoritativeMoney(
+        priorDepositsData.map((deposit) => deposit.amount),
+      );
+      if (priorDepositTotal == null) {
+        return { success: false, error: "prior_invoice_lookup_failed" };
+      }
+      activePriorInvoiceTotal = priorDepositTotal;
 
       finalInvoiceAmount = billingCeiling - activePriorInvoiceTotal;
 
       if (finalInvoiceAmount < 0) {
         return { success: false, error: activeScope ? "prior_invoices_exceed_billing_scope_ceiling" : "prior_invoices_exceed_quotation_total" };
       }
+    }
+
+    const { data: settings, error: settingsError } = await supabase
+      .from("company_settings")
+      .select("*")
+      .eq("setting_key", "default")
+      .maybeSingle();
+
+    if (settingsError || !settings || !settings.vat_mode) {
+      return { success: false, error: "company_settings_unavailable" };
+    }
+
+    if (settings.vat_mode !== "not_registered") {
+      return { success: false, error: "vat_registered_invoice_not_implemented_in_this_slice" };
     }
 
     let snapshotData;
@@ -218,7 +434,7 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
             id: d.id,
             invoice_number: d.invoice_number,
             invoice_type: d.invoice_type,
-            amount: Number(d.grand_total || 0),
+            amount: d.amount,
             status: d.status
           })),
           payments_excluded: true,
@@ -313,7 +529,7 @@ export async function createInvoiceAction(input: unknown): Promise<CreateInvoice
 
 export async function issueInvoiceAction(invoiceId: string): Promise<IssueInvoiceResult> {
   try {
-    const user = await requirePermission("invoices:write");
+    const user = await requirePermission(INVOICE_PERMISSIONS.write);
 
     if (!consumeRateLimit("issueInvoiceAction", user.clerk_user_id, ISSUE_INVOICE_RATE_LIMIT)) {
       return { success: false, error: RATE_LIMIT_ERROR };
