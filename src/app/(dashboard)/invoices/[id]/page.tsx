@@ -6,6 +6,7 @@ import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PendingLink from "@/components/ui/PendingLink";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
+import { INVOICE_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { isolateBidiText } from "@/lib/i18n/bidi";
@@ -172,7 +173,9 @@ export default async function InvoiceDetailPage({
     notFound();
   }
 
-  const canIssueInvoice = invoice.status === "draft" ? await checkPermission("invoices:write") : false;
+  const canIssueInvoice = invoice.status === "draft"
+    ? await checkPermission(INVOICE_PERMISSIONS.write)
+    : false;
   const canReadServices = invoice.service_id ? await checkPermission("services:read") : false;
   const service = canReadServices && invoice.service_id ? await getServiceById(invoice.service_id) : null;
 

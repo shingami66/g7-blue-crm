@@ -3,104 +3,11 @@ import "server-only";
 import { auth } from "@clerk/nextjs/server";
 import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
-import {
-  APPROVED_BILLING_SCOPE_ACCOUNTANT_PERMISSIONS,
-  APPROVED_BILLING_SCOPE_MANAGER_PERMISSIONS,
-} from "@/lib/approved-billing-scopes/permissions";
 import { normalizePersistedLocale, type Locale } from "@/lib/i18n/locales";
+import { hasPermissionForRole } from "./role-permissions";
 import { UnauthorizedError, ForbiddenError } from "./errors";
 
-// ---------------------------------------------------------------------------
-// PERMISSION MAP
-// ---------------------------------------------------------------------------
-export const ROLE_PERMISSIONS: Record<string, string[]> = {
-  admin: [
-    "*",
-    "users:invite",
-    "users:manage",
-    "supplier_costing:read",
-    "supplier_costing:write",
-    "supplier_allocations:read",
-    "supplier_allocations:read_cost",
-    "supplier_allocations:write",
-    "supplier_allocations:cancel",
-  ], // Special case: wildcard means all permissions
-  manager: [
-    "customers:read",
-    "customers:write",
-    "customers:export",
-    "quotations:read",
-    "quotations:write",
-    "quotations:approve",
-    "services:read",
-    "services:write",
-    "services:update_status",
-    "invoices:read",
-    "payments:read",
-    "projects:read",
-    "projects:write",
-    "suppliers:read",
-    "suppliers:write",
-    "supplier_costing:read",
-    "supplier_costing:write",
-    "supplier_allocations:read",
-    "supplier_allocations:read_cost",
-    "supplier_allocations:write",
-    "supplier_allocations:cancel",
-    "supplier_bookings:read",
-    "supplier_bookings:read_cost",
-    "supplier_bookings:write",
-    "supplier_bookings:cancel",
-    "dashboard:read",
-    ...APPROVED_BILLING_SCOPE_MANAGER_PERMISSIONS,
-  ],
-  sales: [
-    "customers:read",
-    "customers:write",
-    "quotations:read",
-    "quotations:write",
-    "services:read",
-    "services:write",
-    "invoices:read",
-    "payments:read",
-    "dashboard:read",
-  ],
-  operations: [
-    "customers:read",
-    "quotations:read",
-    "services:read",
-    "services:update_status",
-    "projects:read",
-    "projects:write",
-    "suppliers:read",
-    "suppliers:write",
-    "dashboard:read",
-  ],
-  accountant: [
-    "customers:read",
-    "customers:export",
-    "quotations:read",
-    "services:read",
-    "invoices:read",
-    "invoices:write",
-    "payments:read",
-    "payments:write",
-    "settings:read",
-    "dashboard:read",
-    ...APPROVED_BILLING_SCOPE_ACCOUNTANT_PERMISSIONS,
-  ],
-  viewer: [
-    "customers:read",
-    "quotations:read",
-    "services:read",
-    "invoices:read",
-    "payments:read",
-    "projects:read",
-    "suppliers:read",
-    "dashboard:read",
-    "settings:read",
-  ],
-};
+export { ROLE_PERMISSIONS } from "./role-permissions";
 
 // ---------------------------------------------------------------------------
 // HELPERS
@@ -177,11 +84,7 @@ export async function requireRole(role: string) {
 export async function requirePermission(permission: string) {
   const user = await requireUser();
   
-  const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
-  
-  const hasPermission = rolePermissions.includes("*") || rolePermissions.includes(permission);
-  
-  if (!hasPermission) {
+  if (!hasPermissionForRole(user.role, permission)) {
     throw new ForbiddenError(`Permission '${permission}' required`);
   }
 
@@ -198,6 +101,5 @@ export async function checkPermission(permission: string): Promise<boolean> {
     return false;
   }
   
-  const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
-  return rolePermissions.includes("*") || rolePermissions.includes(permission);
+  return hasPermissionForRole(user.role, permission);
 }

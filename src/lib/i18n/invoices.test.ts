@@ -18,7 +18,7 @@ const ISSUE = join(REPO_ROOT, "src/app/(dashboard)/invoices/IssueInvoiceAction.t
 const PAYMENT_MODAL = join(REPO_ROOT, "src/app/(dashboard)/invoices/RecordPaymentModal.tsx");
 const PDF = join(REPO_ROOT, "src/app/(dashboard)/invoices/[id]/pdf/page.tsx");
 // RecordPaymentModal is Payments-deferred; path retained only for ownership boundary assertions.
-const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/permissions.ts");
+const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/role-permissions.ts");
 const ACTIONS = join(REPO_ROOT, "src/lib/invoices/actions.ts");
 const SCHEMAS = join(REPO_ROOT, "src/lib/invoices/schemas.ts");
 const MAPPERS = join(REPO_ROOT, "src/lib/invoices/mappers.ts");
