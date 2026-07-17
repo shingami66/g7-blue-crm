@@ -40,8 +40,9 @@
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 2.1 Current Active Work
-- **Current active task (exactly one):** `ABS-MGMT-FINANCIAL-LIFECYCLE-SUCCESSFUL-MUTATION-SMOKE-DOCS-COMMIT-1` (controlled docs commit after this docs-only milestone sync).
-- **Next safe product/engineering direction:** history/read exposure → Void UI → successor UI → user/manual smoke. Void/successor app actions and UI remain unshipped. Production apply remains unauthorized.
+- **Current active task (exactly one):** `G7-FINANCIAL-LIFECYCLE-DOCS-PUSH-1` (controlled push of the three local documentation commits that record the already-pushed financial lifecycle source wave).
+- **Financial lifecycle application source wave:** **pushed** to `origin/main` through `45cdfb73` (ten source/test commits). Local documentation commits for this wave are prepared next; they must not be described as uncommitted source work.
+- **Next safe product/engineering direction (after docs push):** ABS history/read polish → Void UI → successor UI → optional role browser smoke. Void/successor app actions and UI remain unshipped. Production apply remains unauthorized.
 - **Design complete:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
 - **ABS read-enrichment complete (source + accepted):** `ABS-MGMT-UI-READ-ENRICH-1` — Service Detail read-only ABS summary card enriched and pushed on main.
 - **ABS draft-edit/discard complete (source + accepted):** `ABS-MGMT-UI-DRAFT-EDIT-1` — draft item edit/discard UI implemented, automated validation passed, PASS by Mozfer manual browser evidence recorded, and pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`.
@@ -53,13 +54,15 @@
   4. `ABS-MGMT-UI-REVIEW-APPROVE-1` **complete and pushed** in `d8b654f2c89622837b75531aa44d79a66e024ad8`
   5. `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-1` **complete**
   6. migration/RPC preflight, SQL review, DEV/DEMO apply, read-only post-apply verification, actions, and tests **complete**
-  7. successful lifecycle mutation smoke + independent review **complete** (DEV/DEMO synthetic) → history/read → Void UI → successor UI → manual smoke
-  Optional later: `ABS-MGMT-HISTORY-LIST-1`.
+  7. successful lifecycle mutation smoke + independent review **complete** (DEV/DEMO synthetic)
+  8. application financial lifecycle stack (money, exposure, lifecycle, RBAC, authority modes, ABS history alignment, Deposit/Final actions, Service billing UI, Quotation display-only authority) **implemented, tested, DEV/DEMO browser-accepted (PASS WITH WARN), and pushed** through `45cdfb73`
+  Optional later: `ABS-MGMT-HISTORY-LIST-1`; Void UI; successor UI; Manager/Accountant browser smoke.
 - **Source-truth (ABS):** Create Draft, draft edit/discard, and Review/Approve UI are source implemented and manually accepted; void/supersede UI and app actions are not implemented. The reviewed Void/supersede transactional RPCs are installed in G7 DEV/DEMO and the successful mutation smoke has been executed and independently reviewed (synthetic DEV/DEMO only). Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship). Custom RPC exceptions include draft discard, draft item edit, and the financial lifecycle RPC surface.
-- **Financial lifecycle decision:** **`ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`** remains locked. Migration/RPC implementation is installed in DEV/DEMO; successful mutation smoke and independent review are complete (see milestone below). Void stops future billing and requires zero Invoice exposure and zero payment history; historical authority is retained after Void; successor activation is atomic and uses Service-lifetime applicable invoice exposure; equality with current exposure is allowed. Void/successor UI remain pending. Browser/manual smoke remains outside agent authority.
+- **Financial lifecycle decision:** **`ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`** remains locked. Migration/RPC implementation is installed in DEV/DEMO; successful mutation smoke and independent review are complete (see milestones below). Application Deposit/Final creation, five-mode billing authority, Service-lifetime exposure, and Service-detail mutation UI are now pushed on main (see `Invoice Financial Lifecycle Application Stack` milestone). Void stops future billing and requires zero Invoice exposure and zero payment history; historical authority is retained after Void; successor activation is atomic and uses Service-lifetime applicable invoice exposure; equality with current exposure is allowed. Void/successor UI remain pending.
+- **Browser/manual smoke rule:** Practical browser/manual smoke remains user-controlled by default. It may be delegated to an agent only through explicit bounded user authorization. The completed financial lifecycle browser acceptance was executed in DEV/DEMO under such explicit authorization (verdict `ABS_MGMT_FINANCIAL_LIFECYCLE_GROK_BROWSER_ACCEPTANCE_CLOSED_WITH_WARN`).
 - **Durable flags:**
   - Responsive P0 manual smoke: **closed** — see Responsive core P0 below (**PASS by Mozfer manual browser evidence**). Flag `RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING` is **no longer active**.
-- **V1 critical-path order (locked):** prior UI slices complete/pushed -> financial lifecycle design docs -> design commit -> migration/RPC preflight -> SQL/migration review -> separate DEV/DEMO apply and read-only verification -> actions/tests -> successful lifecycle mutation smoke (**complete**, DEV/DEMO synthetic) -> history/read -> Void UI -> successor UI -> manual smoke -> docs/commit/push.
+- **V1 critical-path order (locked):** prior UI slices complete/pushed -> financial lifecycle design docs -> design commit -> migration/RPC preflight -> SQL/migration review -> separate DEV/DEMO apply and read-only verification -> actions/tests -> successful lifecycle mutation smoke (**complete**, DEV/DEMO synthetic) -> application financial lifecycle stack (**pushed** through `45cdfb73`) -> documentation sync/push (**current**) -> history/read polish → Void UI → successor UI → optional role browser smoke.
 - **Preserved locks:** Customer Profile -> Service -> Quotation -> Invoice -> Payment; Service as operational core; no standalone top-nav ABS module; current active-scope ceiling behavior remains factual; future fallback is allowed only before approved ABS authority has ever existed; existing invoices/payments are never rewritten; DEV/DEMO wording; no VAT/ZATCA/FATOORA or production-readiness claim.
 
 ### Responsive core P0 (source implemented; Mozfer manual smoke PASS)
@@ -87,6 +90,21 @@
 
 
 ## 3. Completed Milestones
+
+### Invoice Financial Lifecycle Application Stack (pushed on main through `45cdfb73`)
+- [x] Ten source/test commits pushed to `origin/main` ending at `45cdfb73 feat(quotations): add display-only billing authority` (wave also includes money, exposure, lifecycle, action-error presentation, invoice RBAC alignment, five-mode billing authority, ABS history/exposure alignment, Deposit/Final server actions, and Service billing controls).
+- [x] Five billing-authority modes are implemented in application code: `active_abs`, `historical_abs_only`, `legacy_quotation`, `no_authority`, and `unavailable`.
+- [x] Historical ABS blocks Quotation fallback; active ABS ceiling overrides the Quotation total; legacy Quotation authority requires proven zero ABS history.
+- [x] Service-lifetime Invoice exposure sums applicable Invoice `grand_total` for the Service; Draft and other active non-voided statuses can count; soft-deleted, `voided_at`, `voided`, and `cancelled` Invoices are excluded; payments do not reduce exposure.
+- [x] Authoritative money helpers distinguish numeric values from unavailable evidence; zero remains a valid amount and is not treated as unavailable; malformed values fail closed.
+- [x] Deposit/Final Service lifecycle matrix and control visibility enforce Inquiry/Quoted/Approved (both allowed when other gates pass), Deposit Paid/In Progress (Final only), and Completed/Cancelled (neither).
+- [x] Safe localized action-error presentation maps known codes to dictionary messages and uses a generic fallback for unknown/internal evidence (no raw SQL, stack, role, or constraint leakage).
+- [x] Service Detail is the Invoice mutation authority (Deposit/Final controls). Quotation Detail is display-only billing authority with navigation to Service billing only.
+- [x] Automated validation for the wave: relevant financial suite **459/459 PASS**; TypeScript PASS; lint PASS with two pre-existing PDF `<img>` warnings only; build PASS; `git diff --check` PASS; Graphify source graph refreshed at `45cdfb73`.
+- [x] DEV/DEMO browser acceptance (`ABS_MGMT_FINANCIAL_LIFECYCLE_GROK_BROWSER_ACCEPTANCE_CLOSED_WITH_WARN` / **PASS WITH WARN**): Phase 1 authority/presentation lanes; linked-invoice reconciliation; Deposit exact-remaining on `SVC-2026-0017` → `INV-2026-0030` (SAR 1,000); Direct Final on `SVC-2026-0018` / `QT-2026-0022` → `INV-2026-0031` (SAR 100); both paths reached remaining zero and Fully allocated with no duplicate Invoice.
+- [x] Accepted browser limitations: Deposit-above-remaining browser lane remains AUTOMATED-EVIDENCE-ONLY; dedicated Manager and Accountant browser sessions were not run; some lifecycle statuses rely partly on automated evidence; immediate success screenshots timed out but were replaced by success text, after-state, and Invoice detail evidence; **no production-readiness claim**.
+- [x] Retained DEV/DEMO smoke evidence (protected from cleanup; not customer data): `SVC-2026-0017`, `INV-2026-0030`, `SVC-2026-0018`, `QT-2026-0022`, `INV-2026-0031`, `SVC-2026-9001` through `SVC-2026-9005` where applicable, and `ABS_LIFECYCLE_SMOKE_300d4edd-5c8e-45bc-bc85-b4f033750a14`.
+- [x] Residual accepted non-blocking technical debt is recorded under deferred decisions (legacy Quotation race/ceiling DB branch, non-atomic lifecycle insert, incomplete seven-state DB triggers, ABS history strictness gap, Deposit client max using full ceiling, broad ABS numeric normalization).
 
 ### ABS-MGMT-UI-DRAFT-CREATE-1 (source implemented; Mozfer manual smoke PASS)
 - [x] Service Detail exposes Create Draft only to Admin/Manager when there is an approved, non-deleted quotation and the Service has zero ABS records across all statuses/history.
