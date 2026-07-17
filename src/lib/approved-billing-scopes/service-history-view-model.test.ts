@@ -5,6 +5,7 @@ import {
   formatBoundedHistoryNotice,
   formatDetailsAriaLabel,
   historyProvesAbsExists,
+  historyProvesExactlyZeroAbsScopesForLegacyFallback,
   historyProvesZeroScopes,
   isFullyAllocatedRemaining,
   mapAuthorityMoneyToCardField,
@@ -166,6 +167,48 @@ test("historyProvesZeroScopes requires success empty without limitReached", () =
     historyProvesZeroScopes(
       {
         rows: [row({ id: "1", effectiveStatus: "active" })],
+        limit: 50,
+        limitReached: false,
+      },
+      false
+    ),
+    false
+  );
+});
+
+test("historyProvesZeroScopes: draft/voided/superseded rows never prove zero", () => {
+  for (const effectiveStatus of ["draft", "voided", "superseded", "active"] as const) {
+    assert.equal(
+      historyProvesZeroScopes(
+        {
+          rows: [row({ id: "h1", effectiveStatus })],
+          limit: 50,
+          limitReached: false,
+        },
+        false
+      ),
+      false
+    );
+    assert.equal(
+      historyProvesAbsExists({
+        rows: [row({ id: "h1", effectiveStatus })],
+        limit: 50,
+        limitReached: false,
+      }),
+      true
+    );
+  }
+  assert.equal(
+    historyProvesExactlyZeroAbsScopesForLegacyFallback(
+      { rows: [], limit: 50, limitReached: false },
+      false
+    ),
+    true
+  );
+  assert.equal(
+    historyProvesExactlyZeroAbsScopesForLegacyFallback(
+      {
+        rows: [row({ id: "d1", effectiveStatus: "draft", status: "draft" })],
         limit: 50,
         limitReached: false,
       },

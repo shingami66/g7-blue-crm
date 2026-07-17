@@ -256,6 +256,35 @@ test("resolveAbsCardMoneyFields: active uses server totals; hidden without invoi
   assert.deepEqual(hidden.ceiling, { kind: "value", amount: 30000 });
 });
 
+test("resolveAbsCardMoneyFields: draft-only never reopens legacy Quotation authority", () => {
+  const draft = scope({
+    id: "d1",
+    status: "draft",
+    isActiveApprovedScope: false,
+    acceptedGrandTotal: 1000,
+  });
+  const draftOnly = resolveAbsCardMoneyFields({
+    scenario: "draft_only",
+    primary: draft,
+    billing: buildAbsCardBillingSnapshot({
+      approvedQuotation: {
+        id: "qt-1",
+        quotationNumber: "QT-1",
+        grandTotal: 50000,
+      },
+      billingCeiling: 50000,
+      activePriorInvoiceTotal: 0,
+      remainingUninvoicedAmount: 50000,
+      disabledReasons: [],
+    }),
+    canReadInvoices: true,
+  });
+  assert.equal(draftOnly.usesLegacyQuotationAuthority, false);
+  // Draft ABS is history — remaining authority is not legacy QT remaining.
+  assert.equal(draftOnly.remaining.kind, "unavailable");
+  assert.deepEqual(draftOnly.invoiced, { kind: "value", amount: 0 });
+});
+
 test("resolveAbsCardMoneyFields: legacy quotation and unavailable billing", () => {
   const legacy = resolveAbsCardMoneyFields({
     scenario: "legacy_quotation_only",

@@ -125,8 +125,15 @@ export function mapHistoryRowsToSummaries(
 }
 
 /**
- * Zero-history is proven only on successful history with empty rows and no cap.
- * Query failure must never be treated as zero history.
+ * Positive proof of exactly zero ABS scopes for legacy Quotation eligibility.
+ *
+ * Requires a successful history payload with empty rows and no limit/truncation.
+ * Never true for:
+ * - query failure / unavailable history
+ * - null history
+ * - any Draft/Approved/Voided/Superseded row
+ * - limitReached / truncated history
+ * - contradictory non-empty rows
  */
 export function historyProvesZeroScopes(
   history: AbsScopeHistoryListData | null,
@@ -135,10 +142,19 @@ export function historyProvesZeroScopes(
   if (historyUnavailable || history == null) {
     return false;
   }
-  return history.rows.length === 0 && history.limitReached === false;
+  if (history.limitReached) {
+    return false;
+  }
+  if (!Array.isArray(history.rows) || history.rows.length !== 0) {
+    return false;
+  }
+  return true;
 }
 
-/** Any returned row or limitReached proves ABS history exists. */
+/**
+ * Positive proof that ABS history exists (any status, including Draft).
+ * limitReached alone also proves existence when rows may be truncated.
+ */
 export function historyProvesAbsExists(
   history: AbsScopeHistoryListData | null
 ): boolean {
@@ -146,4 +162,15 @@ export function historyProvesAbsExists(
     return false;
   }
   return history.rows.length > 0 || history.limitReached === true;
+}
+
+/**
+ * Alias for callers that must emphasize positive zero-history proof for
+ * legacy Quotation authority (never assume empty when proof is incomplete).
+ */
+export function historyProvesExactlyZeroAbsScopesForLegacyFallback(
+  history: AbsScopeHistoryListData | null,
+  historyUnavailable: boolean
+): boolean {
+  return historyProvesZeroScopes(history, historyUnavailable);
 }

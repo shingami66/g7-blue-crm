@@ -89,9 +89,10 @@ export function pickAbsCardScopes(
   const draft = scopes.find((scope) => scope.status === "draft") ?? null;
   const primary = active ?? draft ?? scopes[0] ?? null;
   const otherScopeCount = Math.max(0, scopes.length - (primary ? 1 : 0));
+  // Any ABS row except the primary card subject counts as history evidence.
+  // Drafts are ABS history and must never be treated as zero-history for legacy QT.
   const historyCount = scopes.filter((scope) => {
     if (scope.id === primary?.id) return false;
-    if (scope.status === "draft") return false;
     return true;
   }).length;
 
@@ -205,8 +206,9 @@ export function resolveAbsCardMoneyFields(input: {
       ceiling = ceilingFromPrimary ?? ceilingFromBilling ?? { kind: "unavailable" };
       break;
     case "draft_only":
+      // Draft ABS is proven history: never reopen Quotation legacy authority.
       ceiling = ceilingFromPrimary ?? { kind: "unavailable" };
-      usesLegacyQuotationAuthority = billing.hasApprovedQuotation;
+      usesLegacyQuotationAuthority = false;
       break;
     case "legacy_quotation_only":
       ceiling = ceilingFromBilling ?? { kind: "unavailable" };
@@ -252,11 +254,12 @@ export function resolveAbsCardMoneyFields(input: {
     };
   }
 
+  // Invoice authority for card money: active ABS, or proven zero-history legacy QT.
+  // draft_only / historical_only never qualify as legacy Quotation fallback.
   const hasInvoiceAuthority =
     scenario === "active" ||
     scenario === "active_with_draft" ||
-    scenario === "legacy_quotation_only" ||
-    (scenario === "draft_only" && billing.hasApprovedQuotation);
+    scenario === "legacy_quotation_only";
 
   if (!hasInvoiceAuthority) {
     return {

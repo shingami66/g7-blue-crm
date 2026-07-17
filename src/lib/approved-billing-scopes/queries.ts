@@ -340,6 +340,26 @@ async function readInvoiceHistoryEvidence(
   return parseInvoiceHistoryEvidence(data, count, serviceId);
 }
 
+/**
+ * Positive proof of exactly zero ABS rows (all statuses including Draft).
+ * Failed/malformed/unavailable history never qualifies.
+ */
+export function invoiceHistoryProvesExactlyZero(
+  history: InvoiceHistoryEvidence
+): boolean {
+  return history.status === "success" && history.count === 0;
+}
+
+/**
+ * Positive proof that one or more ABS rows exist (Draft/Approved/Voided/etc.).
+ * Any positive exact count is historical evidence — never legacy Quotation.
+ */
+export function invoiceHistoryProvesAbsExists(
+  history: InvoiceHistoryEvidence
+): boolean {
+  return history.status === "success" && history.count > 0;
+}
+
 function reconcileInvoiceBillingAuthority(
   active: InvoiceActiveScopeEvidence,
   history: InvoiceHistoryEvidence
@@ -351,9 +371,11 @@ function reconcileInvoiceBillingAuthority(
     return unavailableInvoiceBillingAuthority(history.reason);
   }
 
+  // history.status === "success" beyond this point (positive proof path only).
+
   if (active.status === "active") {
     if (
-      history.count === 0 ||
+      invoiceHistoryProvesExactlyZero(history) ||
       (history.probeIsActive && history.probeId !== active.scope.id)
     ) {
       return unavailableInvoiceBillingAuthority("authority_contradiction");
@@ -364,9 +386,18 @@ function reconcileInvoiceBillingAuthority(
   if (history.probeIsActive) {
     return unavailableInvoiceBillingAuthority("authority_contradiction");
   }
-  return history.count > 0
-    ? { status: "historical_only", historyCount: history.count }
-    : { status: "zero_history", historyCount: 0 };
+
+  // No active ABS: Draft/voided/superseded/any positive count blocks QT fallback.
+  if (invoiceHistoryProvesAbsExists(history)) {
+    return { status: "historical_only", historyCount: history.count };
+  }
+
+  // Only positive zero-row proof allows legacy Quotation qualification upstream.
+  if (invoiceHistoryProvesExactlyZero(history)) {
+    return { status: "zero_history", historyCount: 0 };
+  }
+
+  return unavailableInvoiceBillingAuthority("history_payload_malformed");
 }
 
 export async function listApprovedBillingScopesForServiceResult(

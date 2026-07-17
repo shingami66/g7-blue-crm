@@ -368,6 +368,59 @@ test("invoice authority: exact zero active and history counts prove legacy eligi
   assert.deepEqual(result, { status: "zero_history", historyCount: 0 });
 });
 
+test("invoice authority: draft-only history is historical_only and never zero_history", async () => {
+  resetScenario({
+    responses: {
+      approved_billing_scopes: [
+        { data: [], error: null, count: 0 },
+        {
+          data: [
+            historyProbe({
+              id: "draft-1",
+              status: "draft",
+              superseded_at: null,
+              voided_at: null,
+            }),
+          ],
+          error: null,
+          count: 1,
+        },
+      ],
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.deepEqual(result, { status: "historical_only", historyCount: 1 });
+  assert.notEqual(result.status, "zero_history");
+});
+
+test("invoice authority: voided-only history is historical_only", async () => {
+  resetScenario({
+    responses: {
+      approved_billing_scopes: [
+        { data: [], error: null, count: 0 },
+        {
+          data: [
+            historyProbe({
+              id: "void-1",
+              status: "voided",
+              superseded_at: null,
+              voided_at: "2026-07-01T00:00:00.000Z",
+            }),
+          ],
+          error: null,
+          count: 1,
+        },
+      ],
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.deepEqual(result, { status: "historical_only", historyCount: 1 });
+});
+
 test("invoice authority: active query error is unavailable and stops before history", async () => {
   const scenario = resetScenario({
     responses: {
