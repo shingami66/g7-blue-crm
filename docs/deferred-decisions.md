@@ -347,56 +347,56 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 
 ## Invoice Financial Lifecycle Residual Risks
 
-Accepted **non-blocking technical debt** for the current DEV/DEMO browser acceptance (`PASS WITH WARN`). These are **not** resolved. No invented deadlines. Application/server checks reduce risk where noted; none of the following are production-readiness claims.
+Accepted **non-blocking technical debt** for the current DEV/DEMO browser acceptance (`PASS WITH WARN`). Residuals **1–4 remain unresolved** (implementation pending). Canonical create-path contract: [`docs/atomic-invoice-creation-contract.md`](./atomic-invoice-creation-contract.md) (**contract locked; RPC/migration not installed**). No invented deadlines. None of the following are production-readiness claims.
 
 ### 1. Legacy Quotation concurrent Deposit race remains non-atomic
-- **Current behavior:** Under legacy Quotation authority, concurrent Deposit creates can race before remaining is re-read.
-- **Why deferred:** Requires reviewed transactional/DB design beyond the application stack already shipped.
+- **Status:** **Contract locked, implementation pending** (not closed).
+- **Current behavior:** Under legacy Quotation authority, concurrent Deposit creates can race before remaining is re-read (multi-query `createInvoiceAction`).
+- **Why deferred:** Requires reviewed transactional RPC beyond the application stack already shipped.
 - **Risk classification:** Medium (concurrency / over-ceiling create under concurrent writers).
 - **Mitigation today:** Server-side remaining/ceiling checks, single-Deposit MVP guard, and rate limiting on create; no full atomic reservation.
-- **Future hardening:** Atomic remaining reservation or DB-enforced remaining check inside a single transaction.
+- **Future hardening:** `public.create_invoice_atomic` per atomic Invoice creation contract (Service `FOR UPDATE`, recompute remaining, single insert).
 
 ### 2. Database enforcement lacks the legacy Quotation ceiling branch
+- **Status:** **Contract locked, implementation pending** (not closed).
 - **Current behavior:** App-layer authority resolves legacy Quotation ceilings; DB invoice write guards emphasize active ABS linkage/ceiling paths.
 - **Why deferred:** Separate reviewed migration; must not invent unbuilt SQL as installed.
 - **Risk classification:** Medium (DB does not fully mirror app legacy ceiling).
 - **Mitigation today:** Application `createInvoiceAction` and billing-state authority resolution enforce ceiling/remaining fail-closed.
-- **Future hardening:** Explicit DB branch for legacy Quotation ceiling when zero ABS history.
+- **Future hardening:** Explicit legacy Quotation ceiling branch inside `create_invoice_atomic` when ABS history is exactly zero.
 
 ### 3. Lifecycle validation and Invoice insert remain non-atomic
+- **Status:** **Contract locked, implementation pending** (not closed).
 - **Current behavior:** Service lifecycle decision and Invoice insert are sequential application steps, not one DB transaction with the lifecycle evidence row.
-- **Why deferred:** Broader transactional design; void/supersede RPCs already use Service-first locking for ABS mutations, but Deposit/Final create path is still app-orchestrated.
+- **Why deferred:** Transactional create RPC not yet implemented/applied/integrated.
 - **Risk classification:** Medium (status change between check and insert).
 - **Mitigation today:** Fail-closed lifecycle matrix on create; Completed/Cancelled deny both Deposit and Final.
-- **Future hardening:** Atomic lifecycle re-check + insert under Service row lock.
+- **Future hardening:** Atomic lifecycle re-check + insert under Service row lock inside `create_invoice_atomic`.
 
 ### 4. Database triggers do not enforce the complete seven-state Deposit/Final lifecycle
+- **Status:** **Contract locked, implementation pending** (not closed for create path).
 - **Current behavior:** Seven-state matrix (Inquiry/Quoted/Approved/Deposit Paid/In Progress/Completed/Cancelled) is application-enforced.
-- **Why deferred:** Full DB trigger matrix needs reviewed SQL and careful interaction with terminal/cancelled Services.
+- **Why deferred:** Atomic create RPC (not a separate full-table trigger redesign) is the locked hardening vehicle for create.
 - **Risk classification:** Medium (bypass if a future write path skips app gates).
 - **Mitigation today:** `getServiceInvoiceLifecycleDecision` + control visibility + action gates; permission denial before privileged work.
-- **Future hardening:** Complete seven-state DB trigger/RPC enforcement for Deposit vs Final.
+- **Future hardening:** Seven-state Deposit/Final enforcement inside `create_invoice_atomic`; broader update-path triggers remain separate if ever needed.
 
 ### 5. Application ABS draft-only history behavior may be stricter than the DB helper
-- **Current behavior:** App ABS history/read paths may treat draft/history consistency more strictly than some DB helpers.
-- **Why deferred:** Aligning app and DB without breaking historical truth requires careful review.
-- **Risk classification:** Low–medium (consistency / UX edge cases).
-- **Mitigation today:** App fail-closed authority modes; historical ABS blocks Quotation fallback in application resolution.
-- **Future hardening:** ABS history consistency hardening across app queries and DB helpers.
+- **Status:** Materially reduced by Wave A history alignment (app card/resolver); residual DB-helper parity may remain.
+- **Current behavior:** App requires positive proof of exact zero ABS history before legacy Quotation; Draft counts as history.
+- **Risk classification:** Low–medium.
+- **Mitigation today:** `invoiceHistoryProvesExactlyZero` / card `draft_only` no longer reopens legacy authority.
+- **Future hardening:** Optional DB helper alignment if still divergent after create RPC lands.
 
 ### 6. Deposit client maximum currently uses the full ceiling rather than remaining
-- **Current behavior:** Client-side Deposit max may present full ceiling while server enforces remaining.
-- **Why deferred:** UX polish after server authority is stable; not a server-security bypass when server checks remain authoritative.
-- **Risk classification:** Low (client UX; server still denies above remaining).
-- **Mitigation today:** Server rejects above-remaining Deposit; browser above-remaining lane is automated-evidence-only for acceptance.
-- **Future hardening:** Deposit client maximum = remaining authority.
+- **Status:** **Addressed in application** (Wave A Task 14): Deposit client max/validation use remaining authority.
+- **Residual:** Server atomic race (residual 1) still open; browser above-remaining lane remains automated-evidence-only.
+- **Risk classification:** Low for client UX after Task 14.
 
 ### 7. Broad ABS write-side numeric normalization remains deferred
-- **Current behavior:** Authoritative money helpers and selected ABS/invoice paths reject non-canonical values; broad ABS write-side normalization is incomplete.
-- **Why deferred:** Wide surface area across ABS draft edit/review/approve; must stay fail-closed rather than silent coercion.
-- **Risk classification:** Medium (malformed input handling breadth).
-- **Mitigation today:** Canonical non-negative decimal parsing on Invoice exposure/authority paths; fail-closed on unavailable.
-- **Future hardening:** Broad ABS write-side numeric normalization using the same authoritative helpers.
+- **Status:** Materially reduced for ABS write actions (Wave A Task 16 uses `parseAuthoritativeMoney`); other ABS surfaces may still need review.
+- **Risk classification:** Low–medium on remaining surfaces.
+- **Mitigation today:** Fail-closed ABS draft create/edit money boundary; Invoice money helpers unchanged.
 
 ### Accepted browser limitations (DEV/DEMO)
 - Deposit-above-remaining browser lane is **automated-evidence-only**.
