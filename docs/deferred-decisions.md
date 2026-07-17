@@ -324,14 +324,14 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **Known requirements:** `valid_until` or `expiry_date` must be on or after issue date. Expired quotations cannot be approved without renewal/extension or authorized override. Exact override behavior remains deferred.
 
 ## Approved Billing Scope
-- **Status:** Product policy and management design are locked in `docs/approved-billing-scope-management-design.md`; read-enrichment, draft create/edit/discard, and Review/Approve are implemented, accepted, committed, and pushed through `d8b654f2c89622837b75531aa44d79a66e024ad8`. Production authorization/apply remain deferred.
-- **Implemented DEV/DEMO or completed history:** foundation schema/runtime contracts; draft creation and discard/edit actions (+ narrow discard/item-edit RPCs); line-safety review and ordinary approval actions/UI; invoice integration and current active-scope ceiling; Service Detail card/read-enrichment; nested detail; and Admin/Manager Create Draft, Draft Edit/Discard, Review/Approve UI.
-- **Not implemented (current truth):** void action/RPC/UI; successor-draft action/RPC/UI; atomic successor activation action/RPC/UI; historical-authority fallback gate; Service-lifetime successor activation logic; atomic lifecycle audit. Existing schemas, permissions, columns, and partial trigger capability are not working lifecycle actions. Status remains `draft | approved | voided`; Superseded is timestamp/link-derived.
+- **Status:** Product policy and management design are locked in `docs/approved-billing-scope-management-design.md`; read-enrichment, draft create/edit/discard, and Review/Approve are implemented, accepted, committed, and pushed through `d8b654f2c89622837b75531aa44d79a66e024ad8`. The reviewed void/supersede financial-lifecycle migration/RPC surface is installed in DEV/DEMO and successful synthetic mutation smoke has passed. Application Deposit/Final financial lifecycle stack is pushed through `45cdfb73`. Production authorization/apply remain deferred.
+- **Implemented DEV/DEMO or completed history:** foundation schema/runtime contracts; draft creation and discard/edit actions (+ narrow discard/item-edit RPCs); line-safety review and ordinary approval actions/UI; invoice integration and current active-scope ceiling; Service Detail card/read-enrichment; nested detail; Admin/Manager Create Draft, Draft Edit/Discard, Review/Approve UI; reviewed void/supersede transactional RPCs + Service-lifetime exposure helpers (installed; synthetic mutation smoke complete); application five-mode billing authority, Service-lifetime exposure parsing, Deposit/Final server actions, Service billing UI, and Quotation display-only authority (pushed through `45cdfb73`).
+- **Not implemented (current truth for product UI):** user-facing Void UI; user-facing successor/supersede UI; optional richer history list UI. Status remains `draft | approved | voided`; Superseded is timestamp/link-derived. Do **not** describe installed ABS lifecycle RPCs as “not implemented”; distinguish installed DEV/DEMO RPC surface from unshipped management UI.
 - **Resolved decision — `ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`:** Void is active-approved-only, Admin/Manager, reason+note, and allowed only with zero applicable Service invoices and zero payment history; it blocks future billing and never resumes quotation fallback. Supersede clones the active ABS into one successor draft and atomically retires old/activates new. Existing invoices/payments remain immutable. Successor minimum ceiling equals Service-lifetime applicable invoiced `grand_total` across all historical/current/null scope links. Equality yields zero remaining; lower is blocked.
-- **Former durable flag:** `ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING` is resolved and replaced by the locked decision above. This does not mean implementation exists or SQL is authorized.
-- **Still deferred:** migration/RPC preflight and reviewed SQL; DEV/DEMO apply/verification; void/successor actions/tests/UI; optional richer history list; production database authorization/apply.
-- **Locked implementation order:** completed UI slices -> `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-COMMIT-1` (**current active task**) -> `ABS-MGMT-FINANCIAL-LIFECYCLE-MIGRATION-PREFLIGHT-1` -> SQL review -> migration creation/review -> separately authorized DEV/DEMO apply/verification -> actions/tests -> history/read exposure -> Void UI -> successor UI -> Mozfer EN/AR role/race/ceiling/fallback smoke -> docs/commit/push.
-- **When to return:** Commit this design first. Do not authorize lifecycle implementation before the migration preflight and review gates.
+- **Former durable flag:** `ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING` is resolved and replaced by the locked decision above. Migration/RPC implementation and synthetic mutation smoke are complete in DEV/DEMO; production apply is still unauthorized.
+- **Still deferred:** Void/successor management UI; optional richer history list; production database authorization/apply; residual app/DB enforcement gaps listed under **Invoice Financial Lifecycle Residual Risks** below.
+- **Locked implementation order (historical + current):** completed UI slices through Review/Approve → design/migration/RPC/DEV-DEMO apply/mutation smoke (**complete**) → application Deposit/Final stack (**pushed** through `45cdfb73`) → documentation sync/push → history/read polish → Void UI → successor UI → optional role browser smoke.
+- **When to return for Void/successor UI:** after documentation push; do not treat unshipped UI as blocking the already-pushed Invoice creation stack.
 - **Known requirements:** Approved Billing Scope separates quotation approval from billing authority. V1 runtime is reductions-only, server-action driven, and app-audited. `approved_billing_scope_items` is the canonical name. Scope approval requires `line_safety_status = safe`. `line_safety_reason_code` is required when unsafe. Package/global discount ambiguity is a hard V1 block. Source quotation VAT/pricing context is snapshotted on the scope header. `customer_supplied` and `excluded` must have zero accepted amounts. One active approved scope per Service is required. Approved or invoice-referenced scopes are immutable under ordinary edit. Post-approval change of billing authority requires explicit supersede design (not ordinary approve). Legacy invoices using `approved_quotation_id` remain valid when no active scope. Approval and invoicing must use voided terminology for billing-authority records, not cancelled. Profitability remains blocked until scope/invoice integration and supplier-cost RBAC are stable.
 - **Implementation note:** DEV/DEMO validation has already confirmed the foundation migration can be applied safely there; production remains blocked and must not be implied by this note.
 - **Historical server-action smoke result (separate from the current UI slice):** `APPROVED-BILLING-SCOPE-DRAFT-CREATE-COMMIT-1` implemented the create-draft action in `4ec323f feat(billing): add approved scope draft creation` and manual DEV/DEMO smoke passed for quotation `9778cf05-ae13-4072-8d6d-0b2ec1e970fe`.
@@ -344,6 +344,64 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 - **RBAC & RLS Security Review:** `APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1` completed with `PASS` (security review completed; app-layer permissions, RLS posture, table grants, and service-role write paths verified as secure).
 - **Invoice Integration Design:** `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1` completed with `PASS` (invoice ceiling design parameter clear).
 - **Follow-ups:** `QUOTATION-REVISION-FALLBACK-DESIGN-1` and `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-MIGRATION-DRAFT-1`.
+
+## Invoice Financial Lifecycle Residual Risks
+
+Accepted **non-blocking technical debt** for the current DEV/DEMO browser acceptance (`PASS WITH WARN`). These are **not** resolved. No invented deadlines. Application/server checks reduce risk where noted; none of the following are production-readiness claims.
+
+### 1. Legacy Quotation concurrent Deposit race remains non-atomic
+- **Current behavior:** Under legacy Quotation authority, concurrent Deposit creates can race before remaining is re-read.
+- **Why deferred:** Requires reviewed transactional/DB design beyond the application stack already shipped.
+- **Risk classification:** Medium (concurrency / over-ceiling create under concurrent writers).
+- **Mitigation today:** Server-side remaining/ceiling checks, single-Deposit MVP guard, and rate limiting on create; no full atomic reservation.
+- **Future hardening:** Atomic remaining reservation or DB-enforced remaining check inside a single transaction.
+
+### 2. Database enforcement lacks the legacy Quotation ceiling branch
+- **Current behavior:** App-layer authority resolves legacy Quotation ceilings; DB invoice write guards emphasize active ABS linkage/ceiling paths.
+- **Why deferred:** Separate reviewed migration; must not invent unbuilt SQL as installed.
+- **Risk classification:** Medium (DB does not fully mirror app legacy ceiling).
+- **Mitigation today:** Application `createInvoiceAction` and billing-state authority resolution enforce ceiling/remaining fail-closed.
+- **Future hardening:** Explicit DB branch for legacy Quotation ceiling when zero ABS history.
+
+### 3. Lifecycle validation and Invoice insert remain non-atomic
+- **Current behavior:** Service lifecycle decision and Invoice insert are sequential application steps, not one DB transaction with the lifecycle evidence row.
+- **Why deferred:** Broader transactional design; void/supersede RPCs already use Service-first locking for ABS mutations, but Deposit/Final create path is still app-orchestrated.
+- **Risk classification:** Medium (status change between check and insert).
+- **Mitigation today:** Fail-closed lifecycle matrix on create; Completed/Cancelled deny both Deposit and Final.
+- **Future hardening:** Atomic lifecycle re-check + insert under Service row lock.
+
+### 4. Database triggers do not enforce the complete seven-state Deposit/Final lifecycle
+- **Current behavior:** Seven-state matrix (Inquiry/Quoted/Approved/Deposit Paid/In Progress/Completed/Cancelled) is application-enforced.
+- **Why deferred:** Full DB trigger matrix needs reviewed SQL and careful interaction with terminal/cancelled Services.
+- **Risk classification:** Medium (bypass if a future write path skips app gates).
+- **Mitigation today:** `getServiceInvoiceLifecycleDecision` + control visibility + action gates; permission denial before privileged work.
+- **Future hardening:** Complete seven-state DB trigger/RPC enforcement for Deposit vs Final.
+
+### 5. Application ABS draft-only history behavior may be stricter than the DB helper
+- **Current behavior:** App ABS history/read paths may treat draft/history consistency more strictly than some DB helpers.
+- **Why deferred:** Aligning app and DB without breaking historical truth requires careful review.
+- **Risk classification:** Low–medium (consistency / UX edge cases).
+- **Mitigation today:** App fail-closed authority modes; historical ABS blocks Quotation fallback in application resolution.
+- **Future hardening:** ABS history consistency hardening across app queries and DB helpers.
+
+### 6. Deposit client maximum currently uses the full ceiling rather than remaining
+- **Current behavior:** Client-side Deposit max may present full ceiling while server enforces remaining.
+- **Why deferred:** UX polish after server authority is stable; not a server-security bypass when server checks remain authoritative.
+- **Risk classification:** Low (client UX; server still denies above remaining).
+- **Mitigation today:** Server rejects above-remaining Deposit; browser above-remaining lane is automated-evidence-only for acceptance.
+- **Future hardening:** Deposit client maximum = remaining authority.
+
+### 7. Broad ABS write-side numeric normalization remains deferred
+- **Current behavior:** Authoritative money helpers and selected ABS/invoice paths reject non-canonical values; broad ABS write-side normalization is incomplete.
+- **Why deferred:** Wide surface area across ABS draft edit/review/approve; must stay fail-closed rather than silent coercion.
+- **Risk classification:** Medium (malformed input handling breadth).
+- **Mitigation today:** Canonical non-negative decimal parsing on Invoice exposure/authority paths; fail-closed on unavailable.
+- **Future hardening:** Broad ABS write-side numeric normalization using the same authoritative helpers.
+
+### Accepted browser limitations (DEV/DEMO)
+- Deposit-above-remaining browser lane is **automated-evidence-only**.
+- Dedicated Manager and Accountant browser sessions were **not** executed for the financial lifecycle acceptance.
+- **No production-readiness claim** from DEV/DEMO acceptance.
 
 ## Soft Delete And Financial Record Retention
 - **Status:** Deferred technical decision.

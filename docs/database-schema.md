@@ -99,8 +99,8 @@ These are approved target rules for future reviewed schema changes; they do not 
 - **Status model (DB):** scope `status` is `draft | approved | voided` only. **`superseded` is not a status enum value** — supersession uses `superseded_at` / `superseded_by_scope_id` (and related columns). Active scope = `status = approved` AND `superseded_at IS NULL` AND `voided_at IS NULL`.
 - Implemented foundation rules include one active scope per Service, constraints/triggers, RLS, reductions-only line decisions (`accepted`, `excluded`, `adjusted`, `customer_supplied`), line-safety review before approval, and immutable approved or invoice-referenced records under ordinary edit.
 - Implemented runtime includes the app-layer draft-creation path, narrow discard and draft-item-edit RPCs, review and approval **server actions**, invoice integration, a permission-gated Service Detail **read-only** card, and the nested **read-only** detail route.
-- **Lifecycle implementation status:** the reviewed void/supersede financial lifecycle migration and RPC surface is installed once in G7 BLUE CRM DEV/DEMO (local `20260714090000_...`; connector history `20260714113857`) and was the latest lifecycle migration at successful-mutation-smoke review time. Successful mutation smoke and independent review have **passed** on synthetic DEV/DEMO data only (run ID `300d4edd-5c8e-45bc-bc85-b4f033750a14`). Browser/manual lifecycle smoke was not performed by the agent. Management design: `docs/approved-billing-scope-management-design.md`.
-- **Service-lifetime Invoice exposure:** applicable Invoice exposure is summed across the Service lifetime (active, historical, and null scope links), excluding validly cancelled/voided/deleted invoices. Payments do not reduce invoiced exposure. Equality between the active scope ceiling and current Service exposure is allowed.
+- **Lifecycle implementation status:** the reviewed void/supersede financial lifecycle migration and RPC surface is installed once in G7 BLUE CRM DEV/DEMO (local `20260714090000_...`; connector history `20260714113857`) and was the latest lifecycle migration at successful-mutation-smoke review time. Successful mutation smoke and independent review have **passed** on synthetic DEV/DEMO data only (run ID `300d4edd-5c8e-45bc-bc85-b4f033750a14`). Application Deposit/Final stack and five-mode authority are pushed through `45cdfb73`. Explicitly authorized DEV/DEMO browser acceptance for Invoice creation closed **PASS WITH WARN**. Void/successor **management UI** remains unshipped. Management design: `docs/approved-billing-scope-management-design.md`.
+- **Service-lifetime Invoice exposure:** applicable Invoice exposure is summed across the Service lifetime (active, historical, and null scope links), excluding validly cancelled/voided/deleted invoices (including soft-deleted). Draft can count. Payments do not reduce invoiced exposure. Equality between the active scope ceiling and current Service exposure is allowed (Fully allocated / remaining zero).
 - **Void rule:** Void is allowed only for the active approved authority at zero Invoice exposure and zero payment history. Void does not delete invoices/payments; historical financial authority remains detectable after Void and quotation fallback stays closed once approved/voided ABS history exists.
 - **Successor / supersession lineage:** successor drafts use `supersedes_scope_id`; the retired source keeps `superseded_at` / `superseded_by_scope_id`. Supersession is not a status enum value. Approve-and-supersede is atomic (retire old / activate new under Service-first locking).
 - **Invoice write guard:** `check_invoices_before_write` enforces active-authority linkage and Service-lifetime ceiling; writes against inactive (including voided) authority fail closed (e.g. `billing_scope_inactive`).
@@ -125,7 +125,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Post-apply read-only verification and later successful mutation smoke review confirmed the lifecycle surface in DEV/DEMO. Aggregate catalog gates at review: functions 14/14, unexpected overloads 0, triggers 3/3, constraints 29/29, indexes 14/14, RLS 11/11, privilege matrix 176/176, missing/duplicate/failed catalog counts 0. Successful mutation smoke retained only synthetic DEV/DEMO evidence (no production claim).
 
 ### Invoices And Payments
-**Status: ERP-3A Invoice Schema Foundation — Manual Supabase apply completed / Verified**
+**Status: ERP-3A Invoice Schema Foundation — Manual Supabase apply completed / Verified; application Deposit/Final create stack pushed through `45cdfb73` (DEV/DEMO only; not production-ready)**
 - Migration 20260623200000_erp3a_invoice_schema.sql was manually applied in Supabase.
 - Post-apply verification passed.
 - approved_quotation_id exists.
@@ -137,20 +137,29 @@ These are approved target rules for future reviewed schema changes; they do not 
 - quotations_id_service_id_key exists.
 - invoices_approved_quotation_id_service_id_fkey exists.
 - Composite FK enforcement remains partial while service_id is nullable.
-- ERP-3B must enforce approved quotation + service alignment in Server Action/RPC.
-- No invoice UI/server action/RPC/payment workflow was implemented in ERP-3A.
+- Application Invoice create/actions enforce approved quotation + service alignment, authority modes, exposure, and remaining; full DB guarantees for every app rule remain incomplete (see Application vs database enforcement below).
 - ZATCA/FATOORA/QR/XML remain deferred.
-- TypeScript invoice type mismatch remains deferred to ERP-3B.
+- Do not document unbuilt migrations as installed.
+
+#### Application vs database enforcement (Invoice financial lifecycle)
+**Database-enforced (committed/installed DEV/DEMO facts):** invoice foundation columns/FKs; ABS foundation + financial-lifecycle migration/RPC surface where applied; `check_invoices_before_write` active-authority linkage and Service-lifetime ceiling guards for ABS-linked paths; service-role-only financial lifecycle RPCs; numbering via `generate_document_number('invoice')`; soft-delete and non-negative amount CHECKs where present.
+
+**Application-enforced (pushed source; not full DB guarantees):** five billing-authority modes (`active_abs`, `historical_abs_only`, `legacy_quotation`, `no_authority`, `unavailable`); legacy zero-history Quotation fallback qualification; full seven-state Deposit/Final lifecycle matrix; control visibility; remaining/ceiling checks for Deposit/Final create; safe UI error presentation; authoritative money parsing distinguishing zero from unavailable.
+
+**Deferred database hardening (not installed):** legacy Quotation ceiling branch in DB; atomic lifecycle validation plus insert; complete seven-state Deposit/Final DB trigger enforcement; broader ABS write-side numeric normalization.
+
+**Service-lifetime exposure (application predicate + server reads):** exposure is based on active non-deleted, non-voided, non-cancelled Invoice rows for the Service (`is_deleted` not true, `voided_at` null, status not in `voided`/`cancelled`); includes Draft and other applicable active statuses; **Payment amounts do not reduce Invoice exposure** (payments affect collected balance, not invoiced exposure).
 
 - Invoices must belong to a Service. Standalone invoices are not allowed in new ERP work.
 - Every invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
 - Invoice numbering uses one shared `INV-YYYY-0001` sequence.
 - Do not create separate `DEP-` or `FIN-` invoice sequences.
 - Invoice type uses `invoice_type = deposit | final`.
-- Deposit Invoice is created manually after quotation approval.
+- Deposit Invoice is created manually after quotation approval (Service Detail mutation authority).
 - Deposit amount must be greater than `0`.
-- Deposit amount must be less than or equal to the approved quotation total or remaining uninvoiced balance.
+- Deposit amount must be less than or equal to the remaining uninvoiced authority (application-enforced; active ABS ceiling overrides Quotation total when active).
 - Deposit is flexible and not fixed at 50%.
+- Direct Final is supported when lifecycle and authority gates allow (Final amount derived from remaining; no requirement that a Deposit already exist solely for Direct Final).
 - `Deposit Paid` requires a valid/cleared deposit payment.
 - A Deposit Invoice alone does not confirm booking.
 - A pending payment does not confirm booking.
