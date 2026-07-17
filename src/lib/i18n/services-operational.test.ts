@@ -98,7 +98,7 @@ const SERVICE_STATUS_TRANSITIONS = join(
   REPO_ROOT,
   "src/lib/services/status-transitions.ts",
 );
-const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/permissions.ts");
+const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/role-permissions.ts");
 const PENDING = join(REPO_ROOT, "src/components/ui/GlobalPendingProvider.tsx");
 const QUOTATIONS_PAGE = join(REPO_ROOT, "src/app/(dashboard)/quotations/page.tsx");
 const INVOICES_PAGE = join(REPO_ROOT, "src/app/(dashboard)/invoices/page.tsx");
@@ -174,10 +174,29 @@ test("2. Billing headings and labels resolve in both locales", () => {
   assert.equal(ar.billing.title, "الفوترة");
   assert.equal(en.billing.cards.billingCalculation, "Billing Summary");
   assert.equal(ar.billing.cards.billingCalculation, "ملخص الفوترة");
-  assert.equal(en.billing.cards.priorInvoiced, "Previously Invoiced");
-  assert.equal(ar.billing.cards.priorInvoiced, "المفوتر سابقاً");
-  assert.equal(en.billing.cards.remaining, "Remaining Amount");
-  assert.equal(ar.billing.cards.remaining, "المبلغ المتبقي");
+  assert.equal(
+    en.billing.cards.priorInvoiced,
+    "Service-lifetime invoiced exposure",
+  );
+  assert.equal(ar.billing.cards.priorInvoiced, "التعرض المفوتر طوال عمر الخدمة");
+  assert.equal(en.billing.cards.remaining, "Remaining billable");
+  assert.equal(ar.billing.cards.remaining, "المتبقي للفوترة");
+  assert.equal(en.billing.cards.amountUnavailable, "Amount unavailable");
+  assert.equal(ar.billing.cards.amountUnavailable, "المبلغ غير متاح");
+  assert.equal(en.billing.cards.exposureUnavailable, "Exposure unavailable");
+  assert.equal(ar.billing.cards.exposureUnavailable, "التعرض غير متاح");
+  assert.equal(
+    en.billing.cards.remainingUnavailable,
+    "Remaining billable unavailable",
+  );
+  assert.equal(
+    ar.billing.cards.remainingUnavailable,
+    "المتبقي للفوترة غير متاح",
+  );
+  assert.equal(en.billing.cards.billingAuthorityAbs, "Approved Billing Scope");
+  assert.equal(en.billing.cards.fullyAllocated, "Fully allocated");
+  assert.ok(en.billing.authority.historicalOnlyNotice.length > 0);
+  assert.ok(ar.billing.authority.historicalOnlyNotice.length > 0);
   assert.equal(en.billing.cards.depositInvoice, "Deposit Invoice");
   assert.equal(ar.billing.cards.depositInvoice, "فاتورة دفعة مقدمة");
   assert.equal(en.billing.cards.finalInvoice, "Final Invoice");
@@ -195,14 +214,51 @@ test("3. Deposit and final invoice action copy resolves in both locales", () => 
     ar.billing.depositAction.errors.depositInvoiceAlreadyExists,
     "توجد فاتورة دفعة مقدمة نشطة بالفعل.",
   );
+  assert.equal(
+    en.billing.depositAction.errors.depositAmountExceedsRemaining,
+    "Deposit amount exceeds the remaining billable amount.",
+  );
+  assert.ok(
+    ar.billing.depositAction.errors.invoiceExposureUnavailable.length > 0,
+  );
+  assert.ok(
+    en.billing.depositAction.errors.serviceLifecycleUnavailable.length > 0,
+  );
+  assert.ok(
+    ar.billing.depositAction.errors.serviceNotEligibleForDeposit.length > 0,
+  );
+  assert.ok(
+    ar.billing.depositAction.errors.serviceNotEligibleForDeposit.length > 0,
+  );
   assert.equal(en.billing.finalAction.create, "Create Final Invoice");
   assert.equal(ar.billing.finalAction.create, "إنشاء الفاتورة النهائية");
+  assert.ok(
+    en.billing.finalAction.errors.serviceLifecycleUnavailable.length > 0,
+  );
+  assert.ok(
+    ar.billing.finalAction.errors.serviceNotEligibleForFinal.length > 0,
+  );
+  assert.ok(
+    ar.billing.finalAction.errors.serviceNotEligibleForFinal.length > 0,
+  );
   assert.match(en.billing.depositAction.success, /\{invoiceNumber\}/);
   assert.match(ar.billing.finalAction.success, /\{invoiceNumber\}/);
   assert.match(read(DEPOSIT), /useLocale/);
   assert.match(read(FINAL), /useLocale/);
   assert.match(read(BILLING), /billingDictionary\.depositAction/);
   assert.match(read(BILLING), /billingDictionary\.finalAction/);
+  assert.match(read(DEPOSIT), /presentDepositInvoiceActionError/);
+  assert.match(read(FINAL), /presentFinalInvoiceActionError/);
+  assert.doesNotMatch(read(DEPOSIT), /fallbackWithCode/);
+  assert.doesNotMatch(read(FINAL), /fallbackWithCode/);
+  assert.doesNotMatch(read(DEPOSIT), /\.replace\("\{code\}"/);
+  assert.doesNotMatch(read(FINAL), /\.replace\("\{code\}"/);
+  assert.equal("fallbackWithCode" in en.billing.depositAction.errors, false);
+  assert.equal("fallbackWithCode" in ar.billing.depositAction.errors, false);
+  assert.equal("fallbackWithCode" in en.billing.finalAction.errors, false);
+  assert.equal("fallbackWithCode" in ar.billing.finalAction.errors, false);
+  assert.ok(en.billing.depositAction.errors.fallback.length > 0);
+  assert.ok(ar.billing.finalAction.errors.fallback.length > 0);
 });
 
 test("3b. Deposit invoice Arabic glossary: no canonical فاتورة عربون; codes stable", () => {
@@ -247,10 +303,19 @@ test("5. Invoice disabled reasons map from safe codes without changing eligibili
   assert.match(billing, /deposit_invoice_already_exists/);
   assert.match(billing, /final_invoice_already_exists/);
   assert.match(billing, /prior_invoices_exceed_quotation_total/);
+  assert.match(billing, /abs_historical_authority_no_active/);
   assert.match(billing, /disabledReasonLabels\[reason\]/);
   const en = getServicesDictionary("en");
+  const ar = getServicesDictionary("ar");
   assert.ok(en.billing.disabledReasons.approvedQuotationRequired.length > 0);
   assert.ok(en.billing.disabledReasons.unavailable.length > 0);
+  assert.ok(
+    en.billing.disabledReasons.invoiceExposureUnavailable.length > 0,
+  );
+  assert.ok(
+    ar.billing.disabledReasons.invoiceExposureUnavailable.length > 0,
+  );
+  assert.ok(en.billing.disabledReasons.absHistoricalAuthorityNoActive.length > 0);
   assert.notEqual(
     en.billing.disabledReasons.approvedQuotationRequired,
     en.billing.disabledReasons.billingStateUnavailable,
@@ -263,10 +328,13 @@ test("6. Billing ceiling / prior invoiced / remaining calculations remain in bil
   assert.match(billingState, /remainingUninvoicedAmount/);
   assert.match(billingState, /canCreateDepositInvoice/);
   assert.match(billingState, /canCreateFinalInvoice/);
+  assert.match(billingState, /historical_abs_only/);
+  assert.match(billingState, /authorityMode/);
   // UI must not recompute remaining amounts
   const panel = read(BILLING);
   assert.match(panel, /billingState\.remainingUninvoicedAmount|remainingUninvoicedAmount/);
   assert.doesNotMatch(panel, /Math\.max\(0,\s*.*grandTotal/);
+  assert.match(panel, /sourceQuotationTotal|billingCeiling/);
   assert.match(read(DEPOSIT), /createInvoiceAction/);
   assert.match(read(FINAL), /invoiceType: "final"/);
   assert.match(read(DEPOSIT), /invoiceType: "deposit"/);
@@ -781,7 +849,7 @@ test("24. No financial calculation, query, mutation, action signature, schema, o
   assert.doesNotMatch(read(BILLING), /billingCeiling\s*=/);
 });
 
-test("25. No RBAC, RLS, grants, middleware, or auth behavior changes from operational UI", () => {
+test("25. Canonical RBAC stays centralized and operational UI does not redefine roles", () => {
   const permissions = read(PERMISSIONS);
   assert.match(permissions, /ROLE_PERMISSIONS/);
   assert.match(permissions, /supplier_allocations:read_cost/);

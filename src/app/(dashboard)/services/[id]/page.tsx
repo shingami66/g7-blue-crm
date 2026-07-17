@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import type { ComponentProps, ReactNode } from "react";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
+import { INVOICE_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -108,7 +109,8 @@ export default async function ServiceDetailPage({
   const canCreateApprovedBillingScopeDraft = await checkPermission(
     "approvedBillingScopes:create",
   );
-  const canReadInvoices = await checkPermission("invoices:read");
+  const canReadInvoices = await checkPermission(INVOICE_PERMISSIONS.read);
+  const canCreateInvoices = await checkPermission(INVOICE_PERMISSIONS.write);
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
   const today = new Date().toISOString().split("T")[0];
@@ -342,7 +344,12 @@ export default async function ServiceDetailPage({
           dictionary={dictionary}
         />
       )}
-      <BillingPanel billingState={billingState} dictionary={dictionary} />
+      <BillingPanel
+        billingState={billingState}
+        dictionary={dictionary}
+        canCreateInvoices={canCreateInvoices}
+        serviceStatus={service.status}
+      />
     </div>
   );
 }

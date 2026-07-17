@@ -666,6 +666,11 @@ export interface ServicesDictionary {
   };
   billing: {
     title: string;
+    authority: {
+      historicalOnlyBody: string;
+      historicalOnlyNotice: string;
+      unavailableNotice: string;
+    };
     cards: {
       approvedQuotation: string;
       depositInvoice: string;
@@ -676,6 +681,21 @@ export interface ServicesDictionary {
       noActiveFinalInvoice: string;
       priorInvoiced: string;
       remaining: string;
+      amountUnavailable: string;
+      exposureUnavailable: string;
+      remainingUnavailable: string;
+      fullyAllocated: string;
+      billingAuthorityAbs: string;
+      billingAuthorityQuotation: string;
+      billingAuthorityHistorical: string;
+      billingAuthorityUnavailable: string;
+      billingAuthorityNone: string;
+      billingAuthority: string;
+      billingCeiling: string;
+      sourceQuotation: string;
+      sourceQuotationTotal: string;
+      sourceQuotationProvenance: string;
+      sourceQuotationNotAuthority: string;
     };
     status: {
       title: string;
@@ -708,6 +728,9 @@ export interface ServicesDictionary {
       quotationNotApproved: string;
       quotationServiceMismatch: string;
       unavailable: string;
+      invoiceExposureUnavailable: string;
+      absHistoricalAuthorityNoActive: string;
+      priorInvoicesExceedBillingScopeCeiling: string;
     };
     depositAction: {
       unavailable: string;
@@ -733,8 +756,11 @@ export interface ServicesDictionary {
         invoiceCreationFailed: string;
         unauthorized: string;
         forbidden: string;
-        fallbackWithCode: string;
         fallback: string;
+        depositAmountExceedsRemaining: string;
+        invoiceExposureUnavailable: string;
+        serviceLifecycleUnavailable: string;
+        serviceNotEligibleForDeposit: string;
       };
     };
     finalAction: {
@@ -753,8 +779,9 @@ export interface ServicesDictionary {
         invoiceCreationFailed: string;
         unauthorized: string;
         forbidden: string;
-        fallbackWithCode: string;
         fallback: string;
+        serviceLifecycleUnavailable: string;
+        serviceNotEligibleForFinal: string;
       };
     };
   };
@@ -1688,6 +1715,11 @@ const servicesDictionaryEn: ServicesDictionary = {
   },
   billing: {
     title: "Billing",
+    authority: {
+      historicalOnlyBody: "This service has an approved quotation, but it is not active. The billing information shown is based on historical records.",
+      historicalOnlyNotice: "Historical Billing Information",
+      unavailableNotice: "Billing authority is unavailable. Quotations and invoices cannot be processed.",
+    },
     cards: {
       approvedQuotation: "Approved Quotation",
       depositInvoice: "Deposit Invoice",
@@ -1696,8 +1728,23 @@ const servicesDictionaryEn: ServicesDictionary = {
       noApprovedQuotationYet: "No approved quotation yet",
       noActiveDepositInvoice: "Deposit invoice has not been created yet.",
       noActiveFinalInvoice: "Final invoice has not been created yet.",
-      priorInvoiced: "Previously Invoiced",
-      remaining: "Remaining Amount",
+      priorInvoiced: "Service-lifetime invoiced exposure",
+      remaining: "Remaining billable",
+      amountUnavailable: "Amount unavailable",
+      exposureUnavailable: "Exposure unavailable",
+      remainingUnavailable: "Remaining billable unavailable",
+      fullyAllocated: "Fully allocated",
+      billingAuthorityAbs: "Approved Billing Scope",
+      billingAuthorityQuotation: "Approved Quotation",
+      billingAuthorityHistorical: "Historical Record",
+      billingAuthorityUnavailable: "Unavailable",
+      billingAuthorityNone: "None",
+      billingAuthority: "Billing Authority",
+      billingCeiling: "Billing Ceiling",
+      sourceQuotation: "Source Quotation",
+      sourceQuotationTotal: "Quotation Total",
+      sourceQuotationProvenance: "Source Quotation",
+      sourceQuotationNotAuthority: "Historical Record",
     },
     status: {
       title: "Billing Status",
@@ -1730,6 +1777,9 @@ const servicesDictionaryEn: ServicesDictionary = {
       quotationNotApproved: "The selected quotation is not approved yet.",
       quotationServiceMismatch: "The quotation does not match this service.",
       unavailable: "Action is currently unavailable.",
+      invoiceExposureUnavailable: "Invoice exposure is unavailable. Action disabled.",
+      absHistoricalAuthorityNoActive: "No active approved billing scope exists for this service.",
+      priorInvoicesExceedBillingScopeCeiling: "Prior invoices exceed billing scope ceiling.",
     },
     depositAction: {
       unavailable: "Deposit invoice action is not available.",
@@ -1755,8 +1805,11 @@ const servicesDictionaryEn: ServicesDictionary = {
         invoiceCreationFailed: "Failed to insert the invoice.",
         unauthorized: "You are not authorized to perform this action.",
         forbidden: "You do not have permission to create invoices.",
-        fallbackWithCode: "Unable to create deposit invoice. Error code: {code}",
         fallback: "Unable to create deposit invoice. Please try again.",
+        depositAmountExceedsRemaining: "Deposit amount exceeds the remaining billable amount.",
+        invoiceExposureUnavailable: "Invoice exposure is unavailable. Deposit creation is disabled.",
+        serviceLifecycleUnavailable: "Service lifecycle is unavailable.",
+        serviceNotEligibleForDeposit: "The current service status does not allow a new deposit invoice.",
       },
     },
     finalAction: {
@@ -1775,8 +1828,9 @@ const servicesDictionaryEn: ServicesDictionary = {
         invoiceCreationFailed: "Failed to insert the invoice.",
         unauthorized: "You are not authorized to perform this action.",
         forbidden: "You do not have permission to create invoices.",
-        fallbackWithCode: "Unable to create final invoice. Error code: {code}",
         fallback: "Unable to create final invoice. Please try again.",
+        serviceLifecycleUnavailable: "Service lifecycle is unavailable.",
+        serviceNotEligibleForFinal: "The current service status does not allow a new final invoice.",
       },
     },
   },
@@ -2865,6 +2919,11 @@ const servicesDictionaryAr: ServicesDictionary = {
   },
   billing: {
     title: "الفوترة",
+    authority: {
+      historicalOnlyBody: "تحتوي هذه الخدمة على عرض سعر معتمد، غير أنه غير نشط. تستند معلومات الفوترة المعروضة إلى السجلات التاريخية.",
+      historicalOnlyNotice: "معلومات فوترة تاريخية",
+      unavailableNotice: "صلاحية الفوترة غير متاحة. لا يمكن معالجة عروض الأسعار والفواتير.",
+    },
     cards: {
       approvedQuotation: "عرض السعر المعتمد",
       depositInvoice: "فاتورة دفعة مقدمة",
@@ -2873,8 +2932,23 @@ const servicesDictionaryAr: ServicesDictionary = {
       noApprovedQuotationYet: "لا يوجد عرض سعر معتمد حتى الآن",
       noActiveDepositInvoice: "لم يتم إنشاء فاتورة دفعة مقدمة بعد.",
       noActiveFinalInvoice: "لم يتم إنشاء الفاتورة النهائية بعد.",
-      priorInvoiced: "المفوتر سابقاً",
-      remaining: "المبلغ المتبقي",
+      priorInvoiced: "التعرض المفوتر طوال عمر الخدمة",
+      remaining: "المتبقي للفوترة",
+      amountUnavailable: "المبلغ غير متاح",
+      exposureUnavailable: "التعرض غير متاح",
+      remainingUnavailable: "المتبقي للفوترة غير متاح",
+      fullyAllocated: "مخصص بالكامل",
+      billingAuthorityAbs: "نطاق الفوترة المعتمد",
+      billingAuthorityQuotation: "عرض السعر المعتمد",
+      billingAuthorityHistorical: "سجل تاريخي",
+      billingAuthorityUnavailable: "غير متاح",
+      billingAuthorityNone: "لا يوجد",
+      billingAuthority: "صلاحية الفوترة",
+      billingCeiling: "سقف الفوترة",
+      sourceQuotation: "عرض السعر المصدري",
+      sourceQuotationTotal: "إجمالي عرض السعر",
+      sourceQuotationProvenance: "عرض السعر المصدري",
+      sourceQuotationNotAuthority: "سجل تاريخي",
     },
     status: {
       title: "حالة الفوترة",
@@ -2907,6 +2981,9 @@ const servicesDictionaryAr: ServicesDictionary = {
       quotationNotApproved: "عرض السعر المحدد غير معتمد حتى الآن.",
       quotationServiceMismatch: "عرض السعر لا يطابق هذه الخدمة.",
       unavailable: "الإجراء غير متاح حاليًا.",
+      invoiceExposureUnavailable: "التعرض للفاتورة غير متاح. تم تعطيل الإجراء.",
+      absHistoricalAuthorityNoActive: "لا يوجد نطاق فوترة معتمد نشط لهذه الخدمة.",
+      priorInvoicesExceedBillingScopeCeiling: "الفواتير السابقة تتجاوز سقف الفوترة.",
     },
     depositAction: {
       unavailable: "فاتورة الدفعة المقدمة غير متاحة.",
@@ -2932,8 +3009,11 @@ const servicesDictionaryAr: ServicesDictionary = {
         invoiceCreationFailed: "تعذر إنشاء الفاتورة.",
         unauthorized: "يجب تسجيل الدخول لتنفيذ هذا الإجراء.",
         forbidden: "ليس لديك صلاحية لإنشاء الفواتير.",
-        fallbackWithCode: "تعذر إنشاء فاتورة دفعة مقدمة. رمز الخطأ: {code}",
         fallback: "تعذر إنشاء فاتورة دفعة مقدمة. يرجى المحاولة مرة أخرى.",
+        depositAmountExceedsRemaining: "مبلغ الدفعة المقدمة يتجاوز المبلغ القابل للفوترة المتبقي.",
+        invoiceExposureUnavailable: "التعرض للفاتورة غير متاح. تم تعطيل إنشاء فاتورة الدفعة المقدمة.",
+        serviceLifecycleUnavailable: "دورة حياة الخدمة غير متاحة.",
+        serviceNotEligibleForDeposit: "حالة الخدمة الحالية لا تسمح بإنشاء فاتورة دفعة مقدمة جديدة.",
       },
     },
     finalAction: {
@@ -2952,8 +3032,9 @@ const servicesDictionaryAr: ServicesDictionary = {
         invoiceCreationFailed: "تعذر إنشاء الفاتورة.",
         unauthorized: "يجب تسجيل الدخول لتنفيذ هذا الإجراء.",
         forbidden: "ليس لديك صلاحية لإنشاء الفواتير.",
-        fallbackWithCode: "تعذر إنشاء الفاتورة النهائية. رمز الخطأ: {code}",
         fallback: "تعذر إنشاء الفاتورة النهائية. يرجى المحاولة مرة أخرى.",
+        serviceLifecycleUnavailable: "دورة حياة الخدمة غير متاحة.",
+        serviceNotEligibleForFinal: "حالة الخدمة الحالية لا تسمح بإنشاء فاتورة نهائية جديدة.",
       },
     },
   },

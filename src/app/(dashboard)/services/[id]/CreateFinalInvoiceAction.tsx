@@ -7,6 +7,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { createInvoiceAction } from "@/lib/invoices/actions";
+import { presentFinalInvoiceActionError } from "@/lib/invoices/action-error-presentation";
 
 type FinalActionDictionary = {
   unavailable: string;
@@ -21,10 +22,11 @@ type FinalActionDictionary = {
     quotationServiceMismatch: string;
     companySettingsUnavailable: string;
     invoiceSnapshotUnavailable: string;
+    serviceLifecycleUnavailable: string;
+    serviceNotEligibleForFinal: string;
     invoiceCreationFailed: string;
     unauthorized: string;
     forbidden: string;
-    fallbackWithCode: string;
     fallback: string;
   };
 };
@@ -32,7 +34,8 @@ type FinalActionDictionary = {
 type CreateFinalInvoiceActionProps = {
   serviceId: string;
   quotationId: string | null;
-  remainingAmount: number;
+  /** Null when remaining is not authoritative (e.g. historical ABS without active authority). */
+  remainingAmount: number | null;
   canCreate: boolean;
   dictionary?: FinalActionDictionary;
 };
@@ -52,7 +55,11 @@ export function CreateFinalInvoiceAction({
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const disabled = !canCreate || !quotationId || remainingAmount <= 0;
+  const disabled =
+    !canCreate ||
+    !quotationId ||
+    remainingAmount == null ||
+    remainingAmount <= 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,22 +81,9 @@ export function CreateFinalInvoiceAction({
         );
         router.refresh();
       } else {
-        const errMap: Record<string, string> = {
-          "invalid_invoice_input": dictionary.errors.invalidInvoiceInput,
-          "final_invoice_already_exists": dictionary.errors.finalInvoiceAlreadyExists,
-          "quotation_not_found": dictionary.errors.quotationNotFound,
-          "quotation_not_approved": dictionary.errors.quotationNotApproved,
-          "quotation_service_mismatch": dictionary.errors.quotationServiceMismatch,
-          "company_settings_unavailable": dictionary.errors.companySettingsUnavailable,
-          "invoice_snapshot_unavailable": dictionary.errors.invoiceSnapshotUnavailable,
-          "invoice_creation_failed": dictionary.errors.invoiceCreationFailed,
-          "Unauthorized": dictionary.errors.unauthorized,
-          "Forbidden": dictionary.errors.forbidden,
-        };
-        const errMsg = result.error
-          ? (errMap[result.error] || dictionary.errors.fallbackWithCode.replace("{code}", result.error))
-          : dictionary.errors.fallback;
-        setError(errMsg);
+        setError(
+          presentFinalInvoiceActionError(result.error, dictionary.errors),
+        );
       }
     });
   };

@@ -7,6 +7,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { createInvoiceAction } from "@/lib/invoices/actions";
+import { presentDepositInvoiceActionError } from "@/lib/invoices/action-error-presentation";
 
 type DepositActionDictionary = {
   unavailable: string;
@@ -23,16 +24,19 @@ type DepositActionDictionary = {
     invalidInvoiceInput: string;
     depositAmountRequired: string;
     depositAmountExceedsQuotationTotal: string;
+    depositAmountExceedsRemaining: string;
     depositInvoiceAlreadyExists: string;
     quotationNotFound: string;
     quotationNotApproved: string;
     quotationServiceMismatch: string;
     companySettingsUnavailable: string;
     invoiceSnapshotUnavailable: string;
+    invoiceExposureUnavailable: string;
+    serviceLifecycleUnavailable: string;
+    serviceNotEligibleForDeposit: string;
     invoiceCreationFailed: string;
     unauthorized: string;
     forbidden: string;
-    fallbackWithCode: string;
     fallback: string;
   };
 };
@@ -40,7 +44,7 @@ type DepositActionDictionary = {
 type CreateDepositInvoiceActionProps = {
   serviceId: string;
   quotationId: string | null;
-  quotationTotal: number;
+  quotationTotal: number | null;
   canCreate: boolean;
   disabledReasons: string[];
   dictionary?: DepositActionDictionary;
@@ -62,14 +66,14 @@ export function CreateDepositInvoiceAction({
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const disabled = !canCreate || !quotationId;
+  const disabled = !canCreate || !quotationId || quotationTotal == null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccessMsg(null);
 
-    if (disabled) return;
+    if (disabled || quotationTotal == null) return;
 
     const parsedAmount = parseFloat(amountStr);
 
@@ -103,24 +107,9 @@ export function CreateDepositInvoiceAction({
         setAmountStr("");
         router.refresh();
       } else {
-        const errMap: Record<string, string> = {
-          "invalid_invoice_input": dictionary.errors.invalidInvoiceInput,
-          "deposit_amount_required": dictionary.errors.depositAmountRequired,
-          "deposit_amount_exceeds_quotation_total": dictionary.errors.depositAmountExceedsQuotationTotal,
-          "deposit_invoice_already_exists": dictionary.errors.depositInvoiceAlreadyExists,
-          "quotation_not_found": dictionary.errors.quotationNotFound,
-          "quotation_not_approved": dictionary.errors.quotationNotApproved,
-          "quotation_service_mismatch": dictionary.errors.quotationServiceMismatch,
-          "company_settings_unavailable": dictionary.errors.companySettingsUnavailable,
-          "invoice_snapshot_unavailable": dictionary.errors.invoiceSnapshotUnavailable,
-          "invoice_creation_failed": dictionary.errors.invoiceCreationFailed,
-          "Unauthorized": dictionary.errors.unauthorized,
-          "Forbidden": dictionary.errors.forbidden,
-        };
-        const errMsg = result.error
-          ? (errMap[result.error] || dictionary.errors.fallbackWithCode.replace("{code}", result.error))
-          : dictionary.errors.fallback;
-        setError(errMsg);
+        setError(
+          presentDepositInvoiceActionError(result.error, dictionary.errors),
+        );
       }
     });
   };
