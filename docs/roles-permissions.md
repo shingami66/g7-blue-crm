@@ -6,11 +6,11 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 
 | Role | Permissions |
 |---|---|
-| **admin** | All permissions across all modules. |
-| **manager** | `customers:read/write/export`, `quotations:read/write/approve`, `services:read/write/update_status`, `invoices:read`, `payments:read`, `projects:read/write`, `suppliers:read/write`, Supplier Allocations permissions, Supplier Bookings (`supplier_bookings:read/read_cost/write/cancel`), Approved Billing Scope V1 (`approvedBillingScopes:read/create/update/review/approve/void/supersede/discard`), `dashboard:read`. Detailed sections and `src/lib/auth/permissions.ts` are authoritative. |
+| **admin** | All permissions across all modules via `*` (includes `invoices:read`, `invoices:write`, and relevant ABS write permissions). Canonical map: `src/lib/auth/role-permissions.ts` (re-exported through `src/lib/auth/permissions.ts`). |
+| **manager** | `customers:read/write/export`, `quotations:read/write/approve`, `services:read/write/update_status`, **`invoices:read` and `invoices:write`** (bounded application workflow for Deposit/Final creation under the same server gates as Admin), `payments:read`, `projects:read/write`, `suppliers:read/write`, Supplier Allocations permissions, Supplier Bookings (`supplier_bookings:read/read_cost/write/cancel`), Approved Billing Scope V1 (`approvedBillingScopes:read/create/update/review/approve/void/supersede/discard` via manager ABS grant set), `dashboard:read`. Detailed sections and `role-permissions.ts` / `permissions.ts` are authoritative. |
 | **sales** | `customers:read/write`, `quotations:read/write`, `services:read/write`, `invoices:read`, `payments:read`, `dashboard:read` |
-| **operations** | `customers:read`, `quotations:read`, `services:read`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
-| **accountant** | `customers:read/export`, `quotations:read`, `services:read`, `invoices:read/write`, `payments:read/write`, `settings:read`, `dashboard:read` |
+| **operations** | `customers:read`, `quotations:read`, `services:read`, `services:update_status`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
+| **accountant** | `customers:read/export`, `quotations:read`, `services:read`, **`invoices:read` only (no `invoices:write`)**, `payments:read/write`, `settings:read`, `dashboard:read`, plus ABS accountant read grants. Financial visibility without Invoice mutation authority. |
 | **viewer** | Limited read-only access: `customers:read`, `quotations:read`, `services:read`, `invoices:read`, `payments:read`, `projects:read`, `suppliers:read`, `dashboard:read`, and `settings:read`. No bulk export, Approved Billing Scope, Supplier Allocation, or Supplier Booking access; no internal supplier cost visibility; and no full bank values in Company Settings responses. |
 
 ## Company Settings CS-A
@@ -60,6 +60,11 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 
 ## Invoice And Payment Permissions
 
+- Canonical permission constants: `INVOICE_PERMISSIONS.read` (`invoices:read`) and `INVOICE_PERMISSIONS.write` (`invoices:write`) live in `src/lib/auth/role-permissions.ts`.
+- **Admin:** retains Invoice write authority through wildcard `*` (and therefore `invoices:write`).
+- **Manager:** receives bounded Invoice write parity (`invoices:write`) for Service Detail Deposit/Final creation under the same server-side lifecycle, authority, exposure, and ceiling checks as Admin. UI control visibility is not sufficient authorization.
+- **Accountant:** remains Invoice **read-only** (`invoices:read` only; no `invoices:write`). May view financial billing/ABS surfaces granted for read, but cannot create or mutate Invoices through application write paths.
+- Server-side `requirePermission` / `checkPermission` (via `hasPermissionForRole`) are the security boundary. Permission denial must occur before privileged service-role / admin-client work.
 - No Invoice may exist without a Service.
 - Every Invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
 - Invoice type uses `invoice_type = deposit | final`.
@@ -69,6 +74,7 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - Deposit is flexible, not fixed at 50%.
 - `Deposit Paid` requires a valid/cleared deposit payment. A Deposit Invoice alone and a pending payment do not confirm booking.
 - Financial records must use void/cancel/reversal workflows rather than hard deletion.
+- **Browser evidence (DEV/DEMO):** Admin path browser-proven for the financial lifecycle acceptance. Manager and Accountant Invoice RBAC behavior is covered by automated permission tests; dedicated Manager and Accountant browser sessions remain optional future smoke and must not be claimed as completed.
 
 ## Supplier Allocations Permissions
 

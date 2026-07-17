@@ -55,7 +55,21 @@ draft → sent → approved
 - Approved Billing Scope separates quotation approval from billing authority.
 - The foundation migration for Approved Billing Scope has now been applied and smoke-tested in DEV/DEMO only; production remains deferred.
 - **Quotation Revision Fallback (Option A):** No `superseded` quotation status is introduced. The quotation status enum values remain unchanged. Active Approved Billing Scope determines current billing authority, and existing approved quotations remain as historical agreement records. Any revised quotation flow must utilize the billing scope supersede/versioning model.
-- **Current truth:** Invoice creation resolves and binds the active Approved Billing Scope when one exists. When no active scope exists, the approved quotation remains the fallback basis.
+- **Current truth:** Invoice creation resolves and binds the active Approved Billing Scope when one exists. When no active scope exists, the approved quotation remains the fallback basis only when ABS history is proven empty (legacy mode). Historical ABS authority blocks Quotation fallback.
+
+### Billing Authority Presentation (display-only)
+
+Quotation Detail may show a **display-only** billing-authority card (`QuotationBillingAuthorityCard` / `buildQuotationBillingAuthority`). This is presentation, not mutation.
+
+- Quotation detail does **not** create Deposit or Final Invoices and has no Deposit/Final mutation CTAs.
+- **Open Service billing** (or equivalent) is navigation only to the linked Service Detail billing surface.
+- Invoice mutation authority remains on **Service Detail** (permission-, lifecycle-, authority-, and exposure-gated).
+- Authority modes presented: `active_abs`, `historical_abs_only`, `legacy_quotation`, `no_authority`, `unavailable`.
+- Active ABS can override the Quotation total as the billing ceiling.
+- Historical ABS blocks legacy Quotation fallback; legacy Quotation authority requires zero ABS history.
+- Zero amounts and unavailable financial evidence remain distinct (authoritative money helpers).
+- English and Arabic labels are supported through the quotations dictionary.
+- This subsection does not change Quotation CRUD, soft-delete, RPC math, or approval rules above.
 
 ### Editing Rules
 
