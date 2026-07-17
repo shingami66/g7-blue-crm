@@ -64,23 +64,53 @@ export type BillingInvoiceSummary = {
   invoiceNumber: string;
   invoiceType: "deposit" | "final";
   status: string;
-  amount: number;
+  amount: number | null;
 };
 
+/** Provenance identity for an approved quotation — totals are the real QT amount. */
 export type BillingApprovedQuotationSummary = {
   id: string;
   quotationNumber: string;
   status: "approved";
-  grandTotal: number;
+  grandTotal: number | null;
 };
+
+/**
+ * Canonical Service Detail billing authority mode.
+ * Historical ABS (any ABS row without an active approved scope) must never revive QT fallback.
+ */
+export type ServiceBillingAuthorityMode =
+  | "active_abs"
+  | "historical_abs_only"
+  | "legacy_quotation"
+  | "no_authority"
+  | "unavailable";
 
 export type ServiceBillingState = {
   serviceId: string;
+  /** Authoritative scenario for Billing panel + Invoice action eligibility. */
+  authorityMode: ServiceBillingAuthorityMode;
+  /**
+   * Source approved quotation identity and **actual quotation total**.
+   * Never overwrite grandTotal with an ABS ceiling.
+   */
   approvedQuotation: BillingApprovedQuotationSummary | null;
+  /**
+   * Billable ceiling when authority is active ABS or legacy QT.
+   * Null when historical-only, no authority, or unavailable.
+   */
+  billingCeiling: number | null;
+  /** Active ABS id when authorityMode is active_abs. */
+  activeBillingScopeId: string | null;
   depositInvoice: BillingInvoiceSummary | null;
   finalInvoice: BillingInvoiceSummary | null;
-  activePriorInvoiceTotal: number;
-  remainingUninvoicedAmount: number;
+  /** Service-lifetime applicable Invoice exposure; null means unavailable. */
+  activePriorInvoiceTotal: number | null;
+  /**
+   * Remaining billable under active authority: max(0, ceiling - exposure).
+   * Null when remaining is not authoritative (historical-only / unavailable / no authority).
+   */
+  remainingUninvoicedAmount: number | null;
   canCreateDepositInvoice: boolean;
   canCreateFinalInvoice: boolean;
   disabledReasons: string[];
