@@ -362,6 +362,40 @@ test("zero remaining authority when ceiling equals exposure", () => {
   assert.deepEqual(result.remainingAuthority, { kind: "value", amount: 0 });
   assert.equal(clampNonNegativeMoney(2000 - 2000), 0);
   assert.equal(clampNonNegativeMoney(-50), 0);
+  assert.equal(clampNonNegativeMoney(Number.POSITIVE_INFINITY), null);
+});
+
+test("malformed authority money remains unavailable", () => {
+  const malformed = composeServiceAbsAuthoritySummary({
+    scenario: "active",
+    scopes: [
+      summary({
+        id: SCOPE_A,
+        status: "approved",
+        isActiveApprovedScope: true,
+        acceptedGrandTotal: Number.POSITIVE_INFINITY,
+      }),
+    ],
+    activeScope: summary({
+      id: SCOPE_A,
+      status: "approved",
+      isActiveApprovedScope: true,
+      acceptedGrandTotal: Number.POSITIVE_INFINITY,
+    }),
+    canReadInvoiceFinancials: true,
+    billing: {
+      billingUnavailable: false,
+      lifetimeInvoiceExposure: -1,
+      approvedQuotation: { id: QT_ID, quotationNumber: "QT-1" },
+      billingCeilingFromBillingState: Number.NaN,
+    },
+  });
+
+  assert.deepEqual(malformed.activeCeiling, { kind: "unavailable" });
+  assert.deepEqual(malformed.lifetimeInvoiceExposure, {
+    kind: "unavailable",
+  });
+  assert.deepEqual(malformed.remainingAuthority, { kind: "unavailable" });
 });
 
 test("historical authority prevents invalid quotation fallback", () => {

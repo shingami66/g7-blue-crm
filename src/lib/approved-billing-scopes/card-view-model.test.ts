@@ -228,6 +228,7 @@ test("resolveAbsCardMoneyFields: active uses server totals; hidden without invoi
       quotationNumber: "QT-1",
       grandTotal: 30000,
     },
+    billingCeiling: 30000,
     activePriorInvoiceTotal: 10000,
     remainingUninvoicedAmount: 20000,
     disabledReasons: [],
@@ -265,6 +266,7 @@ test("resolveAbsCardMoneyFields: legacy quotation and unavailable billing", () =
         quotationNumber: "QT-1",
         grandTotal: 50000,
       },
+      billingCeiling: 50000,
       activePriorInvoiceTotal: 0,
       remainingUninvoicedAmount: 50000,
       disabledReasons: [],
@@ -289,6 +291,7 @@ test("resolveAbsCardMoneyFields: legacy quotation and unavailable billing", () =
         quotationNumber: "QT-1",
         grandTotal: 1000,
       },
+      billingCeiling: 1000,
       activePriorInvoiceTotal: 0,
       remainingUninvoicedAmount: 0,
       disabledReasons: ["billing_state_unavailable"],
@@ -298,6 +301,76 @@ test("resolveAbsCardMoneyFields: legacy quotation and unavailable billing", () =
   assert.equal(unavailable.invoiced.kind, "unavailable");
   assert.equal(unavailable.remaining.kind, "unavailable");
   assert.notEqual(unavailable.invoiced.kind, "value");
+});
+
+test("ABS billing snapshot preserves unavailable and authoritative zero money", () => {
+  const unavailable = buildAbsCardBillingSnapshot({
+    approvedQuotation: null,
+    billingCeiling: null,
+    activePriorInvoiceTotal: null,
+    remainingUninvoicedAmount: null,
+    disabledReasons: ["invoice_exposure_unavailable"],
+  });
+  assert.equal(unavailable.billingCeiling, null);
+  assert.equal(unavailable.activePriorInvoiceTotal, null);
+  assert.equal(unavailable.remainingUninvoicedAmount, null);
+
+  const zero = buildAbsCardBillingSnapshot({
+    approvedQuotation: {
+      id: "qt-1",
+      quotationNumber: "QT-1",
+      grandTotal: 0,
+    },
+    billingCeiling: 0,
+    activePriorInvoiceTotal: 0,
+    remainingUninvoicedAmount: 0,
+    disabledReasons: [],
+  });
+  assert.equal(zero.billingCeiling, 0);
+  assert.equal(zero.activePriorInvoiceTotal, 0);
+  assert.equal(zero.remainingUninvoicedAmount, 0);
+});
+
+test("historical-only money shows proven exposure without reviving a ceiling", () => {
+  const historical = resolveAbsCardMoneyFields({
+    scenario: "historical_only",
+    primary: scope({
+      id: "historical",
+      status: "voided",
+      acceptedGrandTotal: 40,
+    }),
+    billing: buildAbsCardBillingSnapshot({
+      approvedQuotation: {
+        id: "qt-1",
+        quotationNumber: "QT-1",
+        grandTotal: 100,
+      },
+      billingCeiling: null,
+      activePriorInvoiceTotal: 0,
+      remainingUninvoicedAmount: null,
+      disabledReasons: ["abs_historical_authority_no_active"],
+    }),
+    canReadInvoices: true,
+  });
+
+  assert.deepEqual(historical.ceiling, { kind: "unavailable" });
+  assert.deepEqual(historical.invoiced, { kind: "value", amount: 0 });
+  assert.deepEqual(historical.remaining, { kind: "unavailable" });
+  assert.equal(historical.usesLegacyQuotationAuthority, false);
+});
+
+test("ABS billing snapshot rejects malformed money instead of fabricating zero", () => {
+  const malformed = buildAbsCardBillingSnapshot({
+    approvedQuotation: null,
+    billingCeiling: Number.POSITIVE_INFINITY,
+    activePriorInvoiceTotal: -1,
+    remainingUninvoicedAmount: Number.NaN,
+    disabledReasons: [],
+  });
+
+  assert.equal(malformed.billingCeiling, null);
+  assert.equal(malformed.activePriorInvoiceTotal, null);
+  assert.equal(malformed.remainingUninvoicedAmount, null);
 });
 
 test("does not treat superseded as a database status string", () => {

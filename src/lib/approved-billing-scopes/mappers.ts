@@ -17,6 +17,7 @@ import type {
   AbsAuthorityScenario,
 } from "./types";
 import { ABS_LIFECYCLE_AUDIT_EVENT_TYPES } from "./types";
+import { parseAuthoritativeMoney } from "../invoices/money.ts";
 
 /** Derived from the single authoritative constant — do not maintain a parallel list. */
 const RECOGNIZED_ABS_LIFECYCLE_AUDIT_EVENT_TYPES: ReadonlySet<string> = new Set(
@@ -30,8 +31,8 @@ export function buildAbsLifecycleAuditEventTypeOrFilter(): string {
   ).join(",");
 }
 
-function toNumber(value: number | string): number {
-  return Number(value);
+function mapAuthoritativeDecimal(value: number | string): number {
+  return parseAuthoritativeMoney(value) ?? Number.NaN;
 }
 
 export function isActiveApprovedScope(row: {
@@ -100,15 +101,15 @@ export function mapApprovedBillingScopeRow(
     sourceQuotationId: row.source_quotation_id,
     scopeVersion: row.scope_version,
     status: row.status,
-    acceptedSubtotal: toNumber(row.accepted_subtotal),
-    acceptedVatAmount: toNumber(row.accepted_vat_amount),
-    acceptedGrandTotal: toNumber(row.accepted_grand_total),
-    sourceVatRate: toNumber(row.source_vat_rate),
-    sourceDiscount: toNumber(row.source_discount),
+    acceptedSubtotal: mapAuthoritativeDecimal(row.accepted_subtotal),
+    acceptedVatAmount: mapAuthoritativeDecimal(row.accepted_vat_amount),
+    acceptedGrandTotal: mapAuthoritativeDecimal(row.accepted_grand_total),
+    sourceVatRate: mapAuthoritativeDecimal(row.source_vat_rate),
+    sourceDiscount: mapAuthoritativeDecimal(row.source_discount),
     sourceCurrency: row.source_currency,
-    sourceQuotationSubtotal: toNumber(row.source_quotation_subtotal),
-    sourceQuotationVatAmount: toNumber(row.source_quotation_vat_amount),
-    sourceQuotationGrandTotal: toNumber(row.source_quotation_grand_total),
+    sourceQuotationSubtotal: mapAuthoritativeDecimal(row.source_quotation_subtotal),
+    sourceQuotationVatAmount: mapAuthoritativeDecimal(row.source_quotation_vat_amount),
+    sourceQuotationGrandTotal: mapAuthoritativeDecimal(row.source_quotation_grand_total),
     sourcePricingContext: row.source_pricing_context,
     lineSafetyStatus: row.line_safety_status,
     lineSafetyReasonCode: row.line_safety_reason_code,
@@ -144,16 +145,16 @@ export function mapApprovedBillingScopeItemRow(
     sourceDescription: row.source_description,
     sourceDetails: row.source_details,
     sourceCategory: row.source_category,
-    sourceQty: toNumber(row.source_qty),
-    sourceUnitPrice: toNumber(row.source_unit_price),
-    sourceSubtotal: toNumber(row.source_subtotal),
-    sourceVatAmount: toNumber(row.source_vat_amount),
-    sourceGrandTotal: toNumber(row.source_grand_total),
-    acceptedQty: toNumber(row.accepted_qty),
-    acceptedUnitPrice: toNumber(row.accepted_unit_price),
-    acceptedSubtotal: toNumber(row.accepted_subtotal),
-    acceptedVatAmount: toNumber(row.accepted_vat_amount),
-    acceptedGrandTotal: toNumber(row.accepted_grand_total),
+    sourceQty: mapAuthoritativeDecimal(row.source_qty),
+    sourceUnitPrice: mapAuthoritativeDecimal(row.source_unit_price),
+    sourceSubtotal: mapAuthoritativeDecimal(row.source_subtotal),
+    sourceVatAmount: mapAuthoritativeDecimal(row.source_vat_amount),
+    sourceGrandTotal: mapAuthoritativeDecimal(row.source_grand_total),
+    acceptedQty: mapAuthoritativeDecimal(row.accepted_qty),
+    acceptedUnitPrice: mapAuthoritativeDecimal(row.accepted_unit_price),
+    acceptedSubtotal: mapAuthoritativeDecimal(row.accepted_subtotal),
+    acceptedVatAmount: mapAuthoritativeDecimal(row.accepted_vat_amount),
+    acceptedGrandTotal: mapAuthoritativeDecimal(row.accepted_grand_total),
     reasonCode: row.reason_code,
     reasonNote: row.reason_note,
     createdAt: row.created_at,
@@ -171,7 +172,7 @@ export function mapApprovedBillingScopeSummaryRow(
     scopeVersion: row.scope_version,
     status: row.status,
     lineSafetyStatus: row.line_safety_status,
-    acceptedGrandTotal: toNumber(row.accepted_grand_total),
+    acceptedGrandTotal: mapAuthoritativeDecimal(row.accepted_grand_total),
     isActiveApprovedScope: isActiveApprovedScope(row),
     approvedAt: row.approved_at,
     supersededAt: row.superseded_at,
@@ -195,9 +196,9 @@ export function mapAbsScopeHistoryRow(
     effectiveStatus: deriveAbsEffectiveDisplayStatus(row),
     sourceQuotationId: row.source_quotation_id,
     sourceQuotationNumber: quotationNumbersById[row.source_quotation_id] ?? null,
-    acceptedSubtotal: toNumber(row.accepted_subtotal),
-    acceptedVatAmount: toNumber(row.accepted_vat_amount),
-    acceptedGrandTotal: toNumber(row.accepted_grand_total),
+    acceptedSubtotal: mapAuthoritativeDecimal(row.accepted_subtotal),
+    acceptedVatAmount: mapAuthoritativeDecimal(row.accepted_vat_amount),
+    acceptedGrandTotal: mapAuthoritativeDecimal(row.accepted_grand_total),
     lineSafetyStatus: row.line_safety_status,
     createdAt: row.created_at,
     lineSafetyReviewedAt: row.line_safety_reviewed_at,
@@ -218,7 +219,7 @@ export function mapAbsScopeLineageSummary(
     scopeVersion: row.scope_version,
     status: row.status,
     effectiveStatus: deriveAbsEffectiveDisplayStatus(row),
-    acceptedGrandTotal: toNumber(row.accepted_grand_total),
+    acceptedGrandTotal: mapAuthoritativeDecimal(row.accepted_grand_total),
     isActiveApprovedScope: isActiveApprovedScope(row),
     approvedAt: row.approved_at,
     supersededAt: row.superseded_at,
@@ -248,9 +249,9 @@ export function applyApprovedBillingScopeReadMasking(
   };
 }
 
-export function clampNonNegativeMoney(amount: number): number {
+export function clampNonNegativeMoney(amount: number): number | null {
   if (!Number.isFinite(amount)) {
-    return 0;
+    return null;
   }
   return Math.max(0, amount);
 }
@@ -278,18 +279,28 @@ export function composeServiceAbsAuthoritySummary(input: {
   let remainingAuthority: AbsMoneyField = { kind: "unavailable" };
   let lifetimeInvoiceExposure: AbsMoneyField = { kind: "unavailable" };
   let usesLegacyQuotationFallback = false;
+  const activeCeilingAmount = parseAuthoritativeMoney(
+    active?.acceptedGrandTotal ?? null
+  );
+  const fallbackCeilingAmount = parseAuthoritativeMoney(
+    input.billing.billingCeilingFromBillingState
+  );
+  const invoiceExposure = parseAuthoritativeMoney(
+    input.billing.lifetimeInvoiceExposure
+  );
 
-  if (active) {
-    activeCeiling = { kind: "value", amount: active.acceptedGrandTotal };
+  if (active && activeCeilingAmount != null) {
+    activeCeiling = { kind: "value", amount: activeCeilingAmount };
   } else if (
+    !active &&
     !hasHistorical &&
     (input.scenario === "legacy_quotation_only" ||
       input.scenario === "draft_only") &&
-    input.billing.billingCeilingFromBillingState != null
+    fallbackCeilingAmount != null
   ) {
     activeCeiling = {
       kind: "value",
-      amount: input.billing.billingCeilingFromBillingState,
+      amount: fallbackCeilingAmount,
     };
     usesLegacyQuotationFallback = true;
   } else if (hasHistorical) {
@@ -304,22 +315,22 @@ export function composeServiceAbsAuthoritySummary(input: {
   } else if (input.billing.billingUnavailable) {
     lifetimeInvoiceExposure = { kind: "unavailable" };
     remainingAuthority = { kind: "unavailable" };
-  } else if (input.billing.lifetimeInvoiceExposure == null) {
+  } else if (invoiceExposure == null) {
     lifetimeInvoiceExposure = { kind: "unavailable" };
     remainingAuthority = { kind: "unavailable" };
   } else {
     lifetimeInvoiceExposure = {
       kind: "value",
-      amount: input.billing.lifetimeInvoiceExposure,
+      amount: invoiceExposure,
     };
 
     if (activeCeiling.kind === "value") {
-      remainingAuthority = {
-        kind: "value",
-        amount: clampNonNegativeMoney(
-          activeCeiling.amount - input.billing.lifetimeInvoiceExposure
-        ),
-      };
+      const remaining = clampNonNegativeMoney(
+        activeCeiling.amount - invoiceExposure
+      );
+      remainingAuthority = remaining == null
+        ? { kind: "unavailable" }
+        : { kind: "value", amount: remaining };
     } else {
       remainingAuthority = { kind: "unavailable" };
     }

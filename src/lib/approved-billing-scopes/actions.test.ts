@@ -21,6 +21,7 @@ type ScopeRow = Record<string, unknown> | null;
 type ItemRow = Record<string, unknown>;
 
 type ActionScenario = {
+  role: unknown;
   service: ServiceRow | null;
   denyPermission?: boolean;
   clientCalls: number;
@@ -64,6 +65,7 @@ export async function resolve(specifier, context, nextResolve) {
 register(`data:text/javascript,${encodeURIComponent(testModuleLoader)}`, import.meta.url);
 
 const { isTerminalServiceStatus } = await import("../services/status-transitions.ts");
+const { hasPermissionForRole } = await import("../auth/role-permissions.ts");
 
 function currentScenario(): ActionScenario {
   if (!activeScenario) {
@@ -230,9 +232,12 @@ function createFakeSupabase() {
 function startScenario(
   service: ServiceRow | null,
   denyPermission = false,
-  options: Partial<Pick<ActionScenario, "rpcResponses" | "readBackDetail" | "scope" | "items" | "activeScope" | "scopeUpdateResult" | "scopeUpdateError">> = {},
+  options: Partial<Pick<ActionScenario, "role" | "rpcResponses" | "readBackDetail" | "scope" | "items" | "activeScope" | "scopeUpdateResult" | "scopeUpdateError">> = {},
 ) {
   activeScenario = {
+    role: Object.prototype.hasOwnProperty.call(options, "role")
+      ? options.role
+      : "manager",
     service,
     denyPermission,
     clientCalls: 0,
@@ -265,11 +270,14 @@ mock.module("@/lib/auth/permissions", {
       const scenario = currentScenario();
       scenario.permissionCalls.push(permission);
 
-      if (scenario.denyPermission) {
+      if (
+        scenario.denyPermission ||
+        !hasPermissionForRole(scenario.role, permission)
+      ) {
         throw new TestForbiddenError("Denied by test scenario");
       }
 
-      return { clerk_user_id: "test-user", role: "manager" };
+      return { clerk_user_id: "test-user", role: scenario.role };
     },
   },
 });
@@ -300,6 +308,95 @@ const {
   reviewApprovedBillingScopeLineSafety,
   approveApprovedBillingScope,
 } = await import("./actions.ts");
+
+const lifecyclePermissionCases = [
+  {
+    name: "create draft",
+    permission: "approvedBillingScopes:create",
+    invoke: () =>
+      createApprovedBillingScopeDraft({
+        sourceQuotationId: SOURCE_QUOTATION_ID,
+      }),
+  },
+  {
+    name: "edit draft item",
+    permission: "approvedBillingScopes:update",
+    invoke: () =>
+      editApprovedBillingScopeItem({
+        scopeId: SCOPE_ID,
+        itemId: ITEM_ID,
+        decision: "accepted",
+      }),
+  },
+  {
+    name: "discard draft",
+    permission: "approvedBillingScopes:discard",
+    invoke: () => discardApprovedBillingScopeDraft({ scopeId: SCOPE_ID }),
+  },
+  {
+    name: "review line safety",
+    permission: "approvedBillingScopes:review",
+    invoke: () =>
+      reviewApprovedBillingScopeLineSafety({
+        scopeId: SCOPE_ID,
+        lineSafetyStatus: "safe",
+      }),
+  },
+  {
+    name: "approve scope",
+    permission: "approvedBillingScopes:approve",
+    invoke: () => approveApprovedBillingScope({ scopeId: SCOPE_ID }),
+  },
+] as const;
+
+for (const role of ["admin", "manager"] as const) {
+  for (const lifecycleCase of lifecyclePermissionCases) {
+    test(`${lifecycleCase.name} permits ${role} past the canonical ABS guard`, async () => {
+      const scenario = startScenario(
+        { status: "Cancelled", deleted_at: null },
+        false,
+        { role },
+      );
+
+      const result = await lifecycleCase.invoke();
+
+      assert.notDeepEqual(result, {
+        success: false,
+        error: "scope_permission_denied",
+      });
+      assert.deepEqual(scenario.permissionCalls, [lifecycleCase.permission]);
+      assert.equal(scenario.clientCalls, 1);
+    });
+  }
+}
+
+for (const [label, role] of [
+  ["Accountant", "accountant"],
+  ["unknown role", "unknown"],
+  ["missing role", null],
+] as const) {
+  for (const lifecycleCase of lifecyclePermissionCases) {
+    test(`${lifecycleCase.name} denies ${label} before privileged ABS access`, async () => {
+      const scenario = startScenario(
+        { status: "Approved", deleted_at: null },
+        false,
+        { role },
+      );
+
+      const result = await lifecycleCase.invoke();
+
+      assert.deepEqual(result, {
+        success: false,
+        error: "scope_permission_denied",
+      });
+      assert.deepEqual(scenario.permissionCalls, [lifecycleCase.permission]);
+      assert.equal(scenario.clientCalls, 0);
+      assert.deepEqual(scenario.rpcCalls, []);
+      assert.deepEqual(scenario.updates, []);
+      assert.deepEqual(scenario.insertTables, []);
+    });
+  }
+}
 
 function assertNoDraftWrites(scenario: ActionScenario) {
   assert.deepEqual(scenario.insertTables, []);

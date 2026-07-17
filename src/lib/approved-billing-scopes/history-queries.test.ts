@@ -4,6 +4,7 @@ import test, { mock } from "node:test";
 
 const SERVICE_ID = "11111111-1111-4111-8111-111111111111";
 const SCOPE_ID = "22222222-2222-4222-8222-222222222222";
+const SECOND_SCOPE_ID = "33333333-3333-4333-8333-333333333333";
 const QT_ID = "44444444-4444-4444-8444-444444444444";
 
 type QueryCall = {
@@ -12,8 +13,11 @@ type QueryCall = {
   orders: Array<{ column: string; ascending?: boolean }>;
   limit?: number;
   select?: string;
+  selectOptions?: unknown;
   terminal?: string;
 };
+
+type QueryResponse = { data: unknown; error: unknown; count?: unknown };
 
 type Scenario = {
   role: string;
@@ -23,7 +27,7 @@ type Scenario = {
   billingStateCalls: number;
   checkPermissionResults: Record<string, boolean>;
   queryCalls: QueryCall[];
-  responses: Record<string, { data: unknown; error: unknown }>;
+  responses: Record<string, QueryResponse | QueryResponse[]>;
 };
 
 let activeScenario: Scenario | null = null;
@@ -73,8 +77,9 @@ function createQueryBuilder(table: string) {
 
   const builder: Record<string, unknown> = {};
 
-  builder.select = (cols: string) => {
+  builder.select = (cols: string, options?: unknown) => {
     call.select = cols;
+    call.selectOptions = options;
     return builder;
   };
   builder.eq = (...args: unknown[]) => {
@@ -104,20 +109,34 @@ function createQueryBuilder(table: string) {
     call.limit = n;
     return builder;
   };
+  const responseFor = (terminal: string): QueryResponse => {
+    const configured =
+      currentScenario().responses[`${table}:${terminal}`] ??
+      currentScenario().responses[table];
+
+    if (!configured) {
+      return { data: terminal === "list" ? [] : null, error: null };
+    }
+
+    if (Array.isArray(configured)) {
+      const nextResponse = configured.shift();
+      if (!nextResponse) {
+        throw new Error(`No queued response for ${table}:${terminal}`);
+      }
+      return nextResponse;
+    }
+
+    return configured;
+  };
+
   builder.maybeSingle = async () => {
     call.terminal = "maybeSingle";
-    return (
-      currentScenario().responses[`${table}:maybeSingle`] ??
-      currentScenario().responses[table] ?? { data: null, error: null }
-    );
+    return responseFor("maybeSingle");
   };
 
   const execute = async () => {
     call.terminal = "list";
-    return (
-      currentScenario().responses[`${table}:list`] ??
-      currentScenario().responses[table] ?? { data: [], error: null }
-    );
+    return responseFor("list");
   };
 
 Object.assign(builder, {
@@ -195,12 +214,15 @@ mock.module("@/lib/invoices/billing-state", {
       currentScenario().billingStateCalls += 1;
       return {
         serviceId: SERVICE_ID,
+        authorityMode: "active_abs" as const,
         approvedQuotation: {
           id: QT_ID,
           quotationNumber: "QT-1",
           status: "approved",
           grandTotal: 1000,
         },
+        billingCeiling: 1000,
+        activeBillingScopeId: null,
         depositInvoice: null,
         finalInvoice: null,
         activePriorInvoiceTotal: 250,
@@ -217,6 +239,7 @@ const {
   listServiceApprovedBillingScopeHistoryResult,
   getApprovedBillingScopeDetailForServiceResult,
   getServiceApprovedBillingAuthoritySummaryResult,
+  resolveInvoiceBillingAuthorityForService,
   isApprovedBillingScopeUuid,
 } = await import("./queries.ts");
 
@@ -260,6 +283,313 @@ const activeScopeRow = {
   updated_at: "2026-07-02T00:00:00Z",
   approved_billing_scope_items: [],
 };
+
+function historyProbe(
+  overrides: Partial<{
+    id: string;
+    service_id: string;
+    status: string;
+    superseded_at: string | null;
+    voided_at: string | null;
+  }> = {}
+) {
+  return {
+    id: SCOPE_ID,
+    service_id: SERVICE_ID,
+    status: "approved",
+    superseded_at: null,
+    voided_at: null,
+    ...overrides,
+  };
+}
+
+test("invoice authority: exactly one valid active ABS reconciles with history", async () => {
+  const scenario = resetScenario({
+    responses: {
+      approved_billing_scopes: [
+        { data: [activeScopeRow], error: null, count: 1 },
+        { data: [historyProbe()], error: null, count: 1 },
+      ],
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.equal(result.status, "active");
+  if (result.status === "active") {
+    assert.equal(result.scope.id, SCOPE_ID);
+    assert.equal(result.scope.serviceId, SERVICE_ID);
+    assert.equal(result.scope.acceptedGrandTotal, 1000);
+    assert.equal(result.historyCount, 1);
+  }
+  assert.equal(scenario.queryCalls.length, 2);
+  assert.equal(scenario.queryCalls[0]?.limit, 2);
+  assert.deepEqual(scenario.queryCalls[0]?.selectOptions, { count: "exact" });
+  assert.equal(scenario.queryCalls[1]?.limit, 1);
+  assert.deepEqual(scenario.queryCalls[1]?.selectOptions, { count: "exact" });
+});
+
+test("invoice authority: no active ABS with positive history is historical-only", async () => {
+  resetScenario({
+    responses: {
+      approved_billing_scopes: [
+        { data: [], error: null, count: 0 },
+        {
+          data: [
+            historyProbe({
+              status: "voided",
+              voided_at: "2026-07-03T00:00:00Z",
+            }),
+          ],
+          error: null,
+          count: 3,
+        },
+      ],
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.deepEqual(result, { status: "historical_only", historyCount: 3 });
+});
+
+test("invoice authority: exact zero active and history counts prove legacy eligibility", async () => {
+  resetScenario({
+    responses: {
+      approved_billing_scopes: [
+        { data: [], error: null, count: 0 },
+        { data: [], error: null, count: 0 },
+      ],
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.deepEqual(result, { status: "zero_history", historyCount: 0 });
+});
+
+test("invoice authority: active query error is unavailable and stops before history", async () => {
+  const scenario = resetScenario({
+    responses: {
+      approved_billing_scopes: {
+        data: null,
+        error: { message: "active lookup failed" },
+        count: null,
+      },
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.deepEqual(result, {
+    status: "unavailable",
+    reason: "active_query_error",
+  });
+  assert.equal(scenario.queryCalls.length, 1);
+});
+
+test("invoice authority: null active payload is unavailable", async () => {
+  resetScenario({
+    responses: {
+      approved_billing_scopes: { data: null, error: null, count: 0 },
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.deepEqual(result, {
+    status: "unavailable",
+    reason: "active_payload_malformed",
+  });
+});
+
+test("invoice authority: history query error is unavailable", async () => {
+  resetScenario({
+    responses: {
+      approved_billing_scopes: [
+        { data: [], error: null, count: 0 },
+        { data: null, error: { message: "history failed" }, count: null },
+      ],
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.deepEqual(result, {
+    status: "unavailable",
+    reason: "history_query_error",
+  });
+});
+
+test("invoice authority: null history payload is unavailable", async () => {
+  resetScenario({
+    responses: {
+      approved_billing_scopes: [
+        { data: [], error: null, count: 0 },
+        { data: null, error: null, count: 0 },
+      ],
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.deepEqual(result, {
+    status: "unavailable",
+    reason: "history_payload_malformed",
+  });
+});
+
+for (const malformedCount of [null, -1, 1.5, "0"]) {
+  test(`invoice authority: malformed history count ${String(malformedCount)} is unavailable`, async () => {
+    resetScenario({
+      responses: {
+        approved_billing_scopes: [
+          { data: [], error: null, count: 0 },
+          { data: [], error: null, count: malformedCount },
+        ],
+      },
+    });
+
+    const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+    assert.deepEqual(result, {
+      status: "unavailable",
+      reason: "history_payload_malformed",
+    });
+  });
+}
+
+test("invoice authority: duplicate active ABS rows fail closed", async () => {
+  resetScenario({
+    responses: {
+      approved_billing_scopes: {
+        data: [activeScopeRow, { ...activeScopeRow, id: SECOND_SCOPE_ID }],
+        error: null,
+        count: 2,
+      },
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.deepEqual(result, {
+    status: "unavailable",
+    reason: "duplicate_active_scopes",
+  });
+});
+
+test("invoice authority: active result with zero history is contradictory", async () => {
+  resetScenario({
+    responses: {
+      approved_billing_scopes: [
+        { data: [activeScopeRow], error: null, count: 1 },
+        { data: [], error: null, count: 0 },
+      ],
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.deepEqual(result, {
+    status: "unavailable",
+    reason: "authority_contradiction",
+  });
+});
+
+test("invoice authority: history active evidence with no active result is contradictory", async () => {
+  resetScenario({
+    responses: {
+      approved_billing_scopes: [
+        { data: [], error: null, count: 0 },
+        { data: [historyProbe()], error: null, count: 1 },
+      ],
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.deepEqual(result, {
+    status: "unavailable",
+    reason: "authority_contradiction",
+  });
+});
+
+for (const invalidCeiling of [
+  null,
+  -1,
+  Number.POSITIVE_INFINITY,
+  "not-money",
+  "0x10",
+  "0b10",
+  "1e3",
+  "+5",
+]) {
+  test(`invoice authority: invalid active ceiling ${String(invalidCeiling)} fails closed`, async () => {
+    const scenario = resetScenario({
+      responses: {
+        approved_billing_scopes: {
+          data: [
+            { ...activeScopeRow, accepted_grand_total: invalidCeiling },
+          ],
+          error: null,
+          count: 1,
+        },
+      },
+    });
+
+    const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+    assert.deepEqual(result, {
+      status: "unavailable",
+      reason: "invalid_active_scope",
+    });
+    assert.equal(scenario.queryCalls.length, 1);
+  });
+}
+
+for (const [field, malformedAmount] of [
+  ["accepted_subtotal", "0x10"],
+  ["accepted_vat_amount", "1e3"],
+] as const) {
+  test(`invoice authority: invalid active ${field} fails closed`, async () => {
+    const scenario = resetScenario({
+      responses: {
+        approved_billing_scopes: {
+          data: [{ ...activeScopeRow, [field]: malformedAmount }],
+          error: null,
+          count: 1,
+        },
+      },
+    });
+
+    const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+    assert.deepEqual(result, {
+      status: "unavailable",
+      reason: "invalid_active_scope",
+    });
+    assert.equal(scenario.queryCalls.length, 1);
+  });
+}
+
+test("invoice authority: cross-Service active row fails closed", async () => {
+  resetScenario({
+    responses: {
+      approved_billing_scopes: {
+        data: [{ ...activeScopeRow, service_id: SECOND_SCOPE_ID }],
+        error: null,
+        count: 1,
+      },
+    },
+  });
+
+  const result = await resolveInvoiceBillingAuthorityForService(SERVICE_ID);
+
+  assert.deepEqual(result, {
+    status: "unavailable",
+    reason: "invalid_active_scope",
+  });
+});
 
 test("isApprovedBillingScopeUuid validates UUID shape", () => {
   assert.equal(isApprovedBillingScopeUuid(SERVICE_ID), true);

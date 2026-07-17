@@ -104,6 +104,7 @@ export default async function ApprovedBillingScopesCard({
 
   const billing = buildAbsCardBillingSnapshot({
     approvedQuotation: billingState.approvedQuotation,
+    billingCeiling: billingState.billingCeiling,
     activePriorInvoiceTotal: billingState.activePriorInvoiceTotal,
     remainingUninvoicedAmount: billingState.remainingUninvoicedAmount,
     disabledReasons: billingState.disabledReasons,

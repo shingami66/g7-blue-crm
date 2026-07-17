@@ -1,4 +1,5 @@
 import type { ApprovedBillingScopeSummary } from "./types";
+import { parseAuthoritativeMoney } from "../invoices/money.ts";
 
 /** Display-only effective status. Does not invent a DB `superseded` status value. */
 export type AbsCardEffectiveStatus = "draft" | "active" | "superseded" | "voided";
@@ -181,14 +182,18 @@ export function resolveAbsCardMoneyFields(input: {
 } {
   const { scenario, primary, billing, canReadInvoices } = input;
 
+  const primaryCeiling = parseAuthoritativeMoney(
+    primary?.acceptedGrandTotal ?? null,
+  );
   const ceilingFromPrimary =
-    primary != null
-      ? ({ kind: "value", amount: primary.acceptedGrandTotal } as const)
+    primaryCeiling != null
+      ? ({ kind: "value", amount: primaryCeiling } as const)
       : null;
 
+  const snapshotCeiling = parseAuthoritativeMoney(billing.billingCeiling);
   const ceilingFromBilling =
-    billing.billingCeiling != null
-      ? ({ kind: "value", amount: billing.billingCeiling } as const)
+    snapshotCeiling != null
+      ? ({ kind: "value", amount: snapshotCeiling } as const)
       : null;
 
   let ceiling: AbsCardMoneyField = { kind: "unavailable" };
@@ -208,9 +213,8 @@ export function resolveAbsCardMoneyFields(input: {
       usesLegacyQuotationAuthority = true;
       break;
     case "historical_only":
-      // Historical ceiling is informational only — not current billing authority.
-      ceiling = ceilingFromPrimary ?? { kind: "unavailable" };
-      usesLegacyQuotationAuthority = billing.hasApprovedQuotation;
+      ceiling = { kind: "unavailable" };
+      usesLegacyQuotationAuthority = false;
       break;
     case "no_approved_quotation":
     case "unavailable":
@@ -236,15 +240,10 @@ export function resolveAbsCardMoneyFields(input: {
     };
   }
 
-  // Invoice totals only meaningful when a billing ceiling authority exists (ABS or QT).
-  const hasInvoiceAuthority =
-    scenario === "active" ||
-    scenario === "active_with_draft" ||
-    scenario === "legacy_quotation_only" ||
-    (scenario === "draft_only" && billing.hasApprovedQuotation) ||
-    (scenario === "historical_only" && billing.hasApprovedQuotation);
-
-  if (!hasInvoiceAuthority) {
+  const invoiceExposure = parseAuthoritativeMoney(
+    billing.activePriorInvoiceTotal,
+  );
+  if (invoiceExposure == null) {
     return {
       ceiling,
       invoiced: { kind: "unavailable" },
@@ -253,13 +252,28 @@ export function resolveAbsCardMoneyFields(input: {
     };
   }
 
-  if (
-    billing.activePriorInvoiceTotal == null ||
-    billing.remainingUninvoicedAmount == null
-  ) {
+  const hasInvoiceAuthority =
+    scenario === "active" ||
+    scenario === "active_with_draft" ||
+    scenario === "legacy_quotation_only" ||
+    (scenario === "draft_only" && billing.hasApprovedQuotation);
+
+  if (!hasInvoiceAuthority) {
     return {
       ceiling,
-      invoiced: { kind: "unavailable" },
+      invoiced: { kind: "value", amount: invoiceExposure },
+      remaining: { kind: "unavailable" },
+      usesLegacyQuotationAuthority,
+    };
+  }
+
+  const remaining = parseAuthoritativeMoney(
+    billing.remainingUninvoicedAmount,
+  );
+  if (remaining == null) {
+    return {
+      ceiling,
+      invoiced: { kind: "value", amount: invoiceExposure },
       remaining: { kind: "unavailable" },
       usesLegacyQuotationAuthority,
     };
@@ -267,8 +281,8 @@ export function resolveAbsCardMoneyFields(input: {
 
   return {
     ceiling,
-    invoiced: { kind: "value", amount: billing.activePriorInvoiceTotal },
-    remaining: { kind: "value", amount: billing.remainingUninvoicedAmount },
+    invoiced: { kind: "value", amount: invoiceExposure },
+    remaining: { kind: "value", amount: remaining },
     usesLegacyQuotationAuthority,
   };
 }
@@ -277,28 +291,27 @@ export function buildAbsCardBillingSnapshot(input: {
   approvedQuotation: {
     id: string;
     quotationNumber: string;
-    grandTotal: number;
+    grandTotal: number | null;
   } | null;
-  activePriorInvoiceTotal: number;
-  remainingUninvoicedAmount: number;
+  billingCeiling: number | null;
+  activePriorInvoiceTotal: number | null;
+  remainingUninvoicedAmount: number | null;
   disabledReasons: readonly string[];
 }): AbsCardBillingSnapshot {
-  const billingUnavailable = input.disabledReasons.includes(
-    "billing_state_unavailable",
-  );
+  const billingUnavailable =
+    input.disabledReasons.includes("billing_state_unavailable") ||
+    input.disabledReasons.includes("invoice_exposure_unavailable");
 
   return {
     approvedQuotationId: input.approvedQuotation?.id ?? null,
     approvedQuotationNumber: input.approvedQuotation?.quotationNumber ?? null,
-    billingCeiling: input.approvedQuotation
-      ? input.approvedQuotation.grandTotal
-      : null,
-    activePriorInvoiceTotal: billingUnavailable
-      ? null
-      : input.activePriorInvoiceTotal,
-    remainingUninvoicedAmount: billingUnavailable
-      ? null
-      : input.remainingUninvoicedAmount,
+    billingCeiling: parseAuthoritativeMoney(input.billingCeiling),
+    activePriorInvoiceTotal: parseAuthoritativeMoney(
+      input.activePriorInvoiceTotal,
+    ),
+    remainingUninvoicedAmount: parseAuthoritativeMoney(
+      input.remainingUninvoicedAmount,
+    ),
     billingUnavailable,
     hasApprovedQuotation: input.approvedQuotation != null,
   };

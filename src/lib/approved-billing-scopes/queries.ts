@@ -6,6 +6,7 @@ import {
   requirePermission,
 } from "@/lib/auth/permissions";
 import { getServiceBillingState } from "@/lib/invoices/billing-state";
+import { parseAuthoritativeMoney } from "@/lib/invoices/money";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { APPROVED_BILLING_SCOPE_PERMISSIONS } from "./permissions";
 import {
@@ -31,14 +32,57 @@ import type {
   ApprovedBillingScopeRow,
   ApprovedBillingScopeRowWithItems,
   ApprovedBillingScopeReadResult,
+  ApprovedBillingScopeStatus,
   ApprovedBillingScopeSummary,
   ServiceAbsAuthoritySummary,
 } from "./types";
-import { ABS_SCOPE_HISTORY_HARD_LIMIT } from "./types";
+import {
+  ABS_SCOPE_HISTORY_HARD_LIMIT,
+  APPROVED_BILLING_SCOPE_STATUSES,
+} from "./types";
 
 const APPROVED_BILLING_SCOPE_WITH_ITEMS_SELECT =
   "*, approved_billing_scope_items:approved_billing_scope_items!approved_billing_scope_id(*)";
 const DUPLICATE_DRAFT_ERROR_CODE = "scope_duplicate_draft";
+
+export type InvoiceBillingAuthorityUnavailableReason =
+  | "active_query_error"
+  | "active_payload_malformed"
+  | "duplicate_active_scopes"
+  | "invalid_active_scope"
+  | "history_query_error"
+  | "history_payload_malformed"
+  | "authority_contradiction"
+  | "unexpected_error";
+
+export type InvoiceBillingAuthorityResult =
+  | {
+      status: "active";
+      scope: ApprovedBillingScopeDetail;
+      historyCount: number;
+    }
+  | { status: "historical_only"; historyCount: number }
+  | { status: "zero_history"; historyCount: 0 }
+  | {
+      status: "unavailable";
+      reason: InvoiceBillingAuthorityUnavailableReason;
+    };
+
+type InvoiceActiveScopeEvidence =
+  | { status: "active"; scope: ApprovedBillingScopeDetail }
+  | { status: "none" }
+  | { status: "unavailable"; reason: InvoiceBillingAuthorityUnavailableReason };
+
+type InvoiceHistoryEvidence =
+  | {
+      status: "success";
+      count: number;
+      probeId: string | null;
+      probeIsActive: boolean;
+    }
+  | { status: "unavailable"; reason: InvoiceBillingAuthorityUnavailableReason };
+
+type ApprovedBillingScopeAdminClient = ReturnType<typeof createAdminClient>;
 
 const HISTORY_SELECT =
   "id, service_id, source_quotation_id, scope_version, status, accepted_subtotal, accepted_vat_amount, accepted_grand_total, line_safety_status, created_at, line_safety_reviewed_at, approved_at, voided_at, superseded_at, supersedes_scope_id, superseded_by_scope_id";
@@ -84,6 +128,245 @@ function invalidIdResult(): {
   error: "scope_invalid_id";
 } {
   return { status: "error", error: "scope_invalid_id" };
+}
+
+function unavailableInvoiceBillingAuthority(
+  reason: InvoiceBillingAuthorityUnavailableReason
+): InvoiceBillingAuthorityResult {
+  return { status: "unavailable", reason };
+}
+
+function hasValidInvoiceScopeSnapshotValues(
+  scope: ApprovedBillingScopeDetail
+): boolean {
+  const scopeMoney = [
+    scope.acceptedSubtotal,
+    scope.acceptedVatAmount,
+    scope.acceptedGrandTotal,
+    scope.sourceVatRate,
+    scope.sourceDiscount,
+    scope.sourceQuotationSubtotal,
+    scope.sourceQuotationVatAmount,
+    scope.sourceQuotationGrandTotal,
+  ];
+  const scopeMoneyIsValid = scopeMoney.every(
+    (amount) => Number.isFinite(amount) && amount >= 0
+  );
+  const itemsAreValid = scope.items.every(
+    (item) =>
+      typeof item.id === "string" &&
+      item.id.length > 0 &&
+      typeof item.sourceDescription === "string" &&
+      [
+        item.acceptedQty,
+        item.acceptedUnitPrice,
+        item.acceptedSubtotal,
+        item.acceptedVatAmount,
+        item.acceptedGrandTotal,
+      ].every((amount) => Number.isFinite(amount) && amount >= 0)
+  );
+
+  return (
+    typeof scope.sourceQuotationId === "string" &&
+    scope.sourceQuotationId.length > 0 &&
+    Number.isInteger(scope.scopeVersion) &&
+    scope.scopeVersion > 0 &&
+    scope.lineSafetyStatus === "safe" &&
+    scopeMoneyIsValid &&
+    itemsAreValid
+  );
+}
+
+function mapValidInvoiceActiveScope(
+  row: unknown,
+  serviceId: string,
+  canReadInternalNotes: boolean
+): ApprovedBillingScopeDetail | null {
+  if (!row || typeof row !== "object") {
+    return null;
+  }
+
+  const typedRow = row as ApprovedBillingScopeRowWithItems;
+  const acceptedCeiling = parseAuthoritativeMoney(
+    typedRow.accepted_grand_total
+  );
+
+  if (
+    typeof typedRow.id !== "string" ||
+    typedRow.id.length === 0 ||
+    typedRow.service_id !== serviceId ||
+    typedRow.status !== "approved" ||
+    typedRow.superseded_at !== null ||
+    typedRow.voided_at !== null ||
+    typeof typedRow.approved_at !== "string" ||
+    typedRow.approved_at.length === 0 ||
+    (typedRow.approved_billing_scope_items !== null &&
+      typedRow.approved_billing_scope_items !== undefined &&
+      !Array.isArray(typedRow.approved_billing_scope_items)) ||
+    acceptedCeiling == null
+  ) {
+    return null;
+  }
+
+  const scope = mapApprovedBillingScopeDetail(typedRow);
+  if (
+    scope.serviceId !== serviceId ||
+    scope.status !== "approved" ||
+    !scope.isActiveApprovedScope ||
+    !hasValidInvoiceScopeSnapshotValues(scope)
+  ) {
+    return null;
+  }
+
+  return applyApprovedBillingScopeReadMasking(scope, {
+    canReadInternalNotes,
+  });
+}
+
+async function readInvoiceActiveScopeEvidence(
+  supabase: ApprovedBillingScopeAdminClient,
+  serviceId: string,
+  canReadInternalNotes: boolean
+): Promise<InvoiceActiveScopeEvidence> {
+  const { data: rows, error, count } = await supabase
+    .from("approved_billing_scopes")
+    .select(APPROVED_BILLING_SCOPE_WITH_ITEMS_SELECT, { count: "exact" })
+    .eq("service_id", serviceId)
+    .eq("status", "approved")
+    .is("superseded_at", null)
+    .is("voided_at", null)
+    .order("display_order", {
+      ascending: true,
+      foreignTable: "approved_billing_scope_items",
+    })
+    .limit(2);
+
+  if (error) {
+    console.error(
+      "[resolveInvoiceBillingAuthorityForService] Active query error:",
+      error.message
+    );
+    return { status: "unavailable", reason: "active_query_error" };
+  }
+
+  if (!Array.isArray(rows) || count === null || !Number.isInteger(count) || count < 0) {
+    return { status: "unavailable", reason: "active_payload_malformed" };
+  }
+  if (count > 1 || rows.length > 1) {
+    return { status: "unavailable", reason: "duplicate_active_scopes" };
+  }
+  if (rows.length !== count) {
+    return { status: "unavailable", reason: "active_payload_malformed" };
+  }
+  if (count === 0) {
+    return { status: "none" };
+  }
+
+  const scope = mapValidInvoiceActiveScope(
+    rows[0],
+    serviceId,
+    canReadInternalNotes
+  );
+  return scope
+    ? { status: "active", scope }
+    : { status: "unavailable", reason: "invalid_active_scope" };
+}
+
+function parseInvoiceHistoryEvidence(
+  rows: unknown,
+  count: number | null,
+  serviceId: string
+): InvoiceHistoryEvidence {
+  if (
+    !Array.isArray(rows) ||
+    count === null ||
+    !Number.isInteger(count) ||
+    count < 0 ||
+    (count === 0 && rows.length !== 0) ||
+    (count > 0 && rows.length !== 1)
+  ) {
+    return { status: "unavailable", reason: "history_payload_malformed" };
+  }
+  if (count === 0) {
+    return { status: "success", count: 0, probeId: null, probeIsActive: false };
+  }
+
+  const probe = rows[0] as Record<string, unknown> | undefined;
+  if (
+    !probe ||
+    typeof probe.id !== "string" ||
+    probe.id.length === 0 ||
+    probe.service_id !== serviceId ||
+    !APPROVED_BILLING_SCOPE_STATUSES.includes(
+      probe.status as ApprovedBillingScopeStatus
+    ) ||
+    (probe.superseded_at !== null && typeof probe.superseded_at !== "string") ||
+    (probe.voided_at !== null && typeof probe.voided_at !== "string")
+  ) {
+    return { status: "unavailable", reason: "history_payload_malformed" };
+  }
+
+  return {
+    status: "success",
+    count,
+    probeId: probe.id,
+    probeIsActive:
+      probe.status === "approved" &&
+      probe.superseded_at === null &&
+      probe.voided_at === null,
+  };
+}
+
+async function readInvoiceHistoryEvidence(
+  supabase: ApprovedBillingScopeAdminClient,
+  serviceId: string
+): Promise<InvoiceHistoryEvidence> {
+  const { data, error, count } = await supabase
+    .from("approved_billing_scopes")
+    .select("id, service_id, status, superseded_at, voided_at", {
+      count: "exact",
+    })
+    .eq("service_id", serviceId)
+    .limit(1);
+
+  if (error) {
+    console.error(
+      "[resolveInvoiceBillingAuthorityForService] History query error:",
+      error.message
+    );
+    return { status: "unavailable", reason: "history_query_error" };
+  }
+
+  return parseInvoiceHistoryEvidence(data, count, serviceId);
+}
+
+function reconcileInvoiceBillingAuthority(
+  active: InvoiceActiveScopeEvidence,
+  history: InvoiceHistoryEvidence
+): InvoiceBillingAuthorityResult {
+  if (active.status === "unavailable") {
+    return unavailableInvoiceBillingAuthority(active.reason);
+  }
+  if (history.status === "unavailable") {
+    return unavailableInvoiceBillingAuthority(history.reason);
+  }
+
+  if (active.status === "active") {
+    if (
+      history.count === 0 ||
+      (history.probeIsActive && history.probeId !== active.scope.id)
+    ) {
+      return unavailableInvoiceBillingAuthority("authority_contradiction");
+    }
+    return { status: "active", scope: active.scope, historyCount: history.count };
+  }
+
+  if (history.probeIsActive) {
+    return unavailableInvoiceBillingAuthority("authority_contradiction");
+  }
+  return history.count > 0
+    ? { status: "historical_only", historyCount: history.count }
+    : { status: "zero_history", historyCount: 0 };
 }
 
 export async function listApprovedBillingScopesForServiceResult(
@@ -264,6 +547,40 @@ export async function getActiveApprovedBillingScopeForService(
 ): Promise<ApprovedBillingScopeDetail | null> {
   const result = await getActiveApprovedBillingScopeForServiceResult(serviceId);
   return result.status === "success" ? result.data : null;
+}
+
+export async function resolveInvoiceBillingAuthorityForService(
+  serviceId: string
+): Promise<InvoiceBillingAuthorityResult> {
+  const user = await requirePermission(APPROVED_BILLING_SCOPE_PERMISSIONS.read);
+  const canReadInternalNotes = canReadApprovedBillingScopeInternalFields(
+    user.role
+  );
+
+  try {
+    const supabase = createAdminClient();
+    const active = await readInvoiceActiveScopeEvidence(
+      supabase,
+      serviceId,
+      canReadInternalNotes
+    );
+    if (active.status === "unavailable") {
+      return unavailableInvoiceBillingAuthority(active.reason);
+    }
+
+    const history = await readInvoiceHistoryEvidence(supabase, serviceId);
+    return reconcileInvoiceBillingAuthority(active, history);
+  } catch (err) {
+    if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
+      throw err;
+    }
+
+    console.error(
+      "[resolveInvoiceBillingAuthorityForService] Unexpected error:",
+      err instanceof Error ? err.message : "Unknown"
+    );
+    return unavailableInvoiceBillingAuthority("unexpected_error");
+  }
 }
 
 export async function getExistingDraftScopeForQuotationResult(
@@ -533,9 +850,9 @@ export async function getServiceApprovedBillingAuthoritySummaryResult(
 
     if (canReadInvoiceFinancials) {
       const billingState = await getServiceBillingState(serviceId);
-      billingUnavailable = billingState.disabledReasons.includes(
-        "billing_state_unavailable"
-      );
+      billingUnavailable =
+        billingState.disabledReasons.includes("billing_state_unavailable") ||
+        billingState.disabledReasons.includes("invoice_exposure_unavailable");
       lifetimeInvoiceExposure = billingUnavailable
         ? null
         : billingState.activePriorInvoiceTotal;
@@ -545,8 +862,7 @@ export async function getServiceApprovedBillingAuthoritySummaryResult(
           id: billingState.approvedQuotation.id,
           quotationNumber: billingState.approvedQuotation.quotationNumber,
         };
-        billingCeilingFromBillingState =
-          billingState.approvedQuotation.grandTotal;
+        billingCeilingFromBillingState = billingState.billingCeiling;
       }
     } else {
       // Still need QT presence for scenario without invoice totals.
