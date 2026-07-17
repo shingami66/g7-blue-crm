@@ -17,7 +17,7 @@ type DepositActionDictionary = {
   validation: {
     validAmount: string;
     amountGreaterThanZero: string;
-    amountCannotExceedQuotationTotal: string;
+    amountCannotExceedRemaining: string;
   };
   success: string;
   errors: {
@@ -41,10 +41,61 @@ type DepositActionDictionary = {
   };
 };
 
+/**
+ * Authoritative remaining billable authority is usable only when it is a finite
+ * number strictly greater than zero. Unavailable/null/NaN/zero must fail closed
+ * (never substitute ceiling or coerce to zero for submission).
+ */
+export function isDepositRemainingAuthorityUsable(
+  remainingAmount: number | null | undefined,
+): remainingAmount is number {
+  return (
+    typeof remainingAmount === "number" &&
+    Number.isFinite(remainingAmount) &&
+    remainingAmount > 0
+  );
+}
+
+/**
+ * Client-side deposit max equals remaining authority when usable; otherwise null
+ * (no HTML max / no client acceptance path).
+ */
+export function getDepositClientMax(
+  remainingAmount: number | null | undefined,
+): number | null {
+  return isDepositRemainingAuthorityUsable(remainingAmount)
+    ? remainingAmount
+    : null;
+}
+
+/**
+ * Client validation against remaining authority. Server remains authoritative.
+ * Returns null when the amount is acceptable for client submission.
+ */
+export function validateDepositAmountAgainstRemaining(
+  parsedAmount: number,
+  remainingAmount: number | null | undefined,
+): "invalid" | "non_positive" | "exceeds_remaining" | "remaining_unavailable" | null {
+  if (!Number.isFinite(parsedAmount)) {
+    return "invalid";
+  }
+  if (parsedAmount <= 0) {
+    return "non_positive";
+  }
+  if (!isDepositRemainingAuthorityUsable(remainingAmount)) {
+    return "remaining_unavailable";
+  }
+  if (parsedAmount > remainingAmount) {
+    return "exceeds_remaining";
+  }
+  return null;
+}
+
 type CreateDepositInvoiceActionProps = {
   serviceId: string;
   quotationId: string | null;
-  quotationTotal: number | null;
+  /** Authoritative remaining billable authority from Service billing state. */
+  remainingAmount: number | null;
   canCreate: boolean;
   disabledReasons: string[];
   dictionary?: DepositActionDictionary;
@@ -53,7 +104,7 @@ type CreateDepositInvoiceActionProps = {
 export function CreateDepositInvoiceAction({
   serviceId,
   quotationId,
-  quotationTotal,
+  remainingAmount,
   canCreate,
   dictionary: dictionaryProp,
 }: CreateDepositInvoiceActionProps) {
@@ -66,29 +117,36 @@ export function CreateDepositInvoiceAction({
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const disabled = !canCreate || !quotationId || quotationTotal == null;
+  const remainingUsable = isDepositRemainingAuthorityUsable(remainingAmount);
+  const clientMax = getDepositClientMax(remainingAmount);
+  const disabled = !canCreate || !quotationId || !remainingUsable;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccessMsg(null);
 
-    if (disabled || quotationTotal == null) return;
+    if (disabled || !remainingUsable) return;
 
     const parsedAmount = parseFloat(amountStr);
+    const validation = validateDepositAmountAgainstRemaining(
+      parsedAmount,
+      remainingAmount,
+    );
 
-    if (isNaN(parsedAmount) || !isFinite(parsedAmount)) {
+    if (validation === "invalid") {
       setError(dictionary.validation.validAmount);
       return;
     }
-
-    if (parsedAmount <= 0) {
+    if (validation === "non_positive") {
       setError(dictionary.validation.amountGreaterThanZero);
       return;
     }
-
-    if (parsedAmount > quotationTotal) {
-      setError(dictionary.validation.amountCannotExceedQuotationTotal);
+    if (
+      validation === "remaining_unavailable" ||
+      validation === "exceeds_remaining"
+    ) {
+      setError(dictionary.validation.amountCannotExceedRemaining);
       return;
     }
 
@@ -102,7 +160,10 @@ export function CreateDepositInvoiceAction({
 
       if (result.success) {
         setSuccessMsg(
-          dictionary.success.replace("{invoiceNumber}", isolateBidiText(result.invoiceNumber ?? "")),
+          dictionary.success.replace(
+            "{invoiceNumber}",
+            isolateBidiText(result.invoiceNumber ?? ""),
+          ),
         );
         setAmountStr("");
         router.refresh();
@@ -127,7 +188,10 @@ export function CreateDepositInvoiceAction({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 max-w-sm">
       <div className="flex flex-col gap-1">
-        <label htmlFor="depositAmount" className="text-[13px] font-semibold text-on-surface uppercase tracking-wide">
+        <label
+          htmlFor="depositAmount"
+          className="text-[13px] font-semibold text-on-surface uppercase tracking-wide"
+        >
           {dictionary.amountLabel}
         </label>
         <div className="flex gap-2">
@@ -136,7 +200,7 @@ export function CreateDepositInvoiceAction({
             type="number"
             min="0.01"
             step="0.01"
-            max={quotationTotal}
+            max={clientMax ?? undefined}
             value={amountStr}
             onChange={(e) => setAmountStr(e.target.value)}
             disabled={isPending}

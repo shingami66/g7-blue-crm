@@ -479,6 +479,13 @@ test("BillingPanel preserves nullable money and never passes a zero fallback", (
   assert.match(panelSource, /exposureUnavailable/);
   assert.match(panelSource, /remainingUnavailable/);
   assert.match(panelSource, /amountUnavailable/);
-  assert.match(panelSource, /quotationTotal=\{billingState\.billingCeiling\}/);
+  assert.match(
+    panelSource,
+    /remainingAmount=\{billingState\.remainingUninvoicedAmount\}/,
+  );
   assert.doesNotMatch(panelSource, /billingState\.billingCeiling \?\? 0/);
+  assert.doesNotMatch(
+    panelSource,
+    /quotationTotal=\{billingState\.billingCeiling\}/,
+  );
 });

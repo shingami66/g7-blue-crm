@@ -417,7 +417,7 @@ export default function BillingPanel({
                 <CreateDepositInvoiceAction
                   serviceId={billingState.serviceId}
                   quotationId={billingState.approvedQuotation?.id ?? null}
-                  quotationTotal={billingState.billingCeiling}
+                  remainingAmount={billingState.remainingUninvoicedAmount}
                   canCreate={invoiceControls.canCreateDepositInvoice}
                   disabledReasons={billingState.disabledReasons}
                   dictionary={billingDictionary.depositAction}

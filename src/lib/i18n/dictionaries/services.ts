@@ -740,7 +740,7 @@ export interface ServicesDictionary {
       validation: {
         validAmount: string;
         amountGreaterThanZero: string;
-        amountCannotExceedQuotationTotal: string;
+        amountCannotExceedRemaining: string;
       };
       success: string;
       errors: {
@@ -1789,7 +1789,8 @@ const servicesDictionaryEn: ServicesDictionary = {
       validation: {
         validAmount: "Please enter a valid numeric amount.",
         amountGreaterThanZero: "Deposit amount must be greater than 0.",
-        amountCannotExceedQuotationTotal: "Deposit amount cannot exceed quotation total.",
+        amountCannotExceedRemaining:
+          "Deposit amount cannot exceed the remaining billable amount.",
       },
       success: "Deposit invoice created successfully. Invoice: {invoiceNumber}.",
       errors: {
@@ -2993,7 +2994,8 @@ const servicesDictionaryAr: ServicesDictionary = {
       validation: {
         validAmount: "يرجى إدخال مبلغ رقمي صحيح.",
         amountGreaterThanZero: "يجب أن يكون مبلغ الدفعة المقدمة أكبر من 0.",
-        amountCannotExceedQuotationTotal: "لا يمكن أن يتجاوز مبلغ الدفعة المقدمة إجمالي عرض السعر.",
+        amountCannotExceedRemaining:
+          "لا يمكن أن يتجاوز مبلغ الدفعة المقدمة المبلغ القابل للفوترة المتبقي.",
       },
       success: "تم إنشاء فاتورة الدفعة المقدمة بنجاح. الفاتورة: {invoiceNumber}.",
       errors: {

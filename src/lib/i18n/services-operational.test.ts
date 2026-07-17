@@ -215,6 +215,22 @@ test("3. Deposit and final invoice action copy resolves in both locales", () => 
     "توجد فاتورة دفعة مقدمة نشطة بالفعل.",
   );
   assert.equal(
+    en.billing.depositAction.validation.amountCannotExceedRemaining,
+    "Deposit amount cannot exceed the remaining billable amount.",
+  );
+  assert.equal(
+    ar.billing.depositAction.validation.amountCannotExceedRemaining,
+    "لا يمكن أن يتجاوز مبلغ الدفعة المقدمة المبلغ القابل للفوترة المتبقي.",
+  );
+  assert.match(
+    en.billing.depositAction.validation.amountCannotExceedRemaining,
+    /remaining/i,
+  );
+  assert.doesNotMatch(
+    en.billing.depositAction.validation.amountCannotExceedRemaining,
+    /quotation total/i,
+  );
+  assert.equal(
     en.billing.depositAction.errors.depositAmountExceedsRemaining,
     "Deposit amount exceeds the remaining billable amount.",
   );
@@ -249,6 +265,9 @@ test("3. Deposit and final invoice action copy resolves in both locales", () => 
   assert.match(read(BILLING), /billingDictionary\.finalAction/);
   assert.match(read(DEPOSIT), /presentDepositInvoiceActionError/);
   assert.match(read(FINAL), /presentFinalInvoiceActionError/);
+  assert.match(read(DEPOSIT), /remainingAmount/);
+  assert.match(read(BILLING), /remainingAmount=\{billingState\.remainingUninvoicedAmount\}/);
+  assert.doesNotMatch(read(BILLING), /quotationTotal=\{billingState\.billingCeiling\}/);
   assert.doesNotMatch(read(DEPOSIT), /fallbackWithCode/);
   assert.doesNotMatch(read(FINAL), /fallbackWithCode/);
   assert.doesNotMatch(read(DEPOSIT), /\.replace\("\{code\}"/);
@@ -259,6 +278,56 @@ test("3. Deposit and final invoice action copy resolves in both locales", () => 
   assert.equal("fallbackWithCode" in ar.billing.finalAction.errors, false);
   assert.ok(en.billing.depositAction.errors.fallback.length > 0);
   assert.ok(ar.billing.finalAction.errors.fallback.length > 0);
+});
+
+test("3c. Deposit client max and validation use remaining authority, not ceiling", () => {
+  // Source-level contracts: helpers + wiring must use remaining, not ceiling.
+  const depositSource = read(DEPOSIT);
+  assert.match(depositSource, /export function isDepositRemainingAuthorityUsable/);
+  assert.match(depositSource, /export function getDepositClientMax/);
+  assert.match(depositSource, /export function validateDepositAmountAgainstRemaining/);
+  assert.match(depositSource, /remainingAmount > 0/);
+  assert.match(depositSource, /parsedAmount > remainingAmount/);
+  assert.match(depositSource, /max=\{clientMax/);
+  assert.match(depositSource, /amountCannotExceedRemaining/);
+  assert.doesNotMatch(depositSource, /quotationTotal/);
+  assert.doesNotMatch(depositSource, /amountCannotExceedQuotationTotal/);
+
+  // Pure remaining-authority rules mirrored from exported helpers (no TSX import).
+  const isUsable = (remaining: unknown): remaining is number =>
+    typeof remaining === "number" &&
+    Number.isFinite(remaining) &&
+    remaining > 0;
+  const clientMax = (remaining: unknown): number | null =>
+    isUsable(remaining) ? remaining : null;
+  const validate = (
+    amount: number,
+    remaining: unknown,
+  ): string | null => {
+    if (!Number.isFinite(amount)) return "invalid";
+    if (amount <= 0) return "non_positive";
+    if (!isUsable(remaining)) return "remaining_unavailable";
+    if (amount > remaining) return "exceeds_remaining";
+    return null;
+  };
+
+  // Remaining 20 (ceiling 50 is irrelevant): max is 20; 20 ok; above 20 rejected.
+  assert.equal(clientMax(20), 20);
+  assert.equal(validate(20, 20), null);
+  assert.equal(validate(20.01, 20), "exceeds_remaining");
+  assert.equal(validate(50, 20), "exceeds_remaining");
+
+  // Fully allocated remaining zero: not a usable submission path.
+  assert.equal(isUsable(0), false);
+  assert.equal(clientMax(0), null);
+  assert.equal(validate(1, 0), "remaining_unavailable");
+
+  // Unavailable remaining does not become zero or ceiling.
+  assert.equal(isUsable(null), false);
+  assert.equal(clientMax(null), null);
+  assert.equal(validate(10, null), "remaining_unavailable");
+  assert.equal(validate(Number.NaN, 20), "invalid");
+  assert.equal(validate(0, 20), "non_positive");
 });
 
 test("3b. Deposit invoice Arabic glossary: no canonical فاتورة عربون; codes stable", () => {
