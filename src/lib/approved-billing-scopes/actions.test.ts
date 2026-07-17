@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { register } from "node:module";
 import test, { mock } from "node:test";
 import {
@@ -308,6 +310,17 @@ const {
   reviewApprovedBillingScopeLineSafety,
   approveApprovedBillingScope,
 } = await import("./actions.ts");
+
+test("ABS write actions use authoritative money and never coerce malformed values to zero", () => {
+  const actionsPath = join(import.meta.dirname, "actions.ts");
+  const source = readFileSync(actionsPath, "utf8");
+
+  assert.match(source, /parseAuthoritativeMoney/);
+  assert.match(source, /function parseAbsWriteMoney/);
+  assert.doesNotMatch(source, /Number\(value \?\? 0\)/);
+  assert.doesNotMatch(source, /function parseMoney\(/);
+  assert.match(source, /from "@\/lib\/invoices\/money"/);
+});
 
 const lifecyclePermissionCases = [
   {

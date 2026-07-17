@@ -2,6 +2,7 @@
 
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { requirePermission } from "@/lib/auth/permissions";
+import { parseAuthoritativeMoney } from "@/lib/invoices/money";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { QuotationDetailRow, QuotationItemRow } from "@/lib/quotations/types";
 import { isTerminalServiceStatus } from "@/lib/services/status-transitions";
@@ -90,9 +91,13 @@ function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-function parseMoney(value: number | string | null | undefined): number {
-  const parsed = Number(value ?? 0);
-  return Number.isFinite(parsed) ? roundMoney(parsed) : 0;
+/**
+ * ABS write-side money boundary: reuse Invoice authoritative money helpers.
+ * Never coerce malformed/non-finite/negative values to zero.
+ * Returns null when the value is unavailable or non-canonical.
+ */
+function parseAbsWriteMoney(value: unknown): number | null {
+  return parseAuthoritativeMoney(value);
 }
 
 function sourceCurrencyFromQuotation(row: QuotationDetailRow): string {
@@ -137,18 +142,47 @@ function buildDraftItemInsertRows(
   scopeId: string,
   sourceQuotationId: string,
   items: QuotationItemRow[]
-): ApprovedBillingScopeDraftInsertRow[] {
-  return items.map((item, index) => {
-    const sourceQty = parseMoney(item.qty);
-    const sourceUnitPrice = parseMoney(item.unit_price);
-    const sourceSubtotal = roundMoney(sourceQty * sourceUnitPrice);
-    const sourceVatAmount = parseMoney(item.vat);
-    const sourceGrandTotal =
-      item.total != null
-        ? parseMoney(item.total)
-        : roundMoney(sourceSubtotal + sourceVatAmount);
+): ApprovedBillingScopeDraftInsertRow[] | null {
+  const rows: ApprovedBillingScopeDraftInsertRow[] = [];
 
-    return {
+  for (const [index, item] of items.entries()) {
+    const sourceQty = parseAbsWriteMoney(item.qty);
+    const sourceUnitPrice = parseAbsWriteMoney(item.unit_price);
+    const sourceVatAmount = parseAbsWriteMoney(item.vat);
+
+    if (
+      sourceQty == null ||
+      sourceUnitPrice == null ||
+      sourceVatAmount == null
+    ) {
+      return null;
+    }
+
+    // Domain: source qty must be positive for draft copy.
+    if (sourceQty <= 0) {
+      return null;
+    }
+
+    const sourceSubtotal = roundMoney(sourceQty * sourceUnitPrice);
+    if (!Number.isFinite(sourceSubtotal) || sourceSubtotal < 0) {
+      return null;
+    }
+
+    let sourceGrandTotal: number;
+    if (item.total != null) {
+      const parsedTotal = parseAbsWriteMoney(item.total);
+      if (parsedTotal == null) {
+        return null;
+      }
+      sourceGrandTotal = parsedTotal;
+    } else {
+      sourceGrandTotal = roundMoney(sourceSubtotal + sourceVatAmount);
+      if (!Number.isFinite(sourceGrandTotal) || sourceGrandTotal < 0) {
+        return null;
+      }
+    }
+
+    rows.push({
       approved_billing_scope_id: scopeId,
       source_quotation_id: sourceQuotationId,
       source_quotation_item_id: item.id,
@@ -169,8 +203,36 @@ function buildDraftItemInsertRows(
       accepted_grand_total: sourceGrandTotal,
       reason_code: null,
       reason_note: null,
-    };
-  });
+    });
+  }
+
+  return rows;
+}
+
+function parseQuotationHeaderMoney(quotation: QuotationDetailRow): {
+  vatRate: number;
+  discount: number;
+  subtotal: number;
+  vatAmount: number;
+  grandTotal: number;
+} | null {
+  const vatRate = parseAbsWriteMoney(quotation.vat_rate);
+  const discount = parseAbsWriteMoney(quotation.discount);
+  const subtotal = parseAbsWriteMoney(quotation.subtotal);
+  const vatAmount = parseAbsWriteMoney(quotation.vat_amount);
+  const grandTotal = parseAbsWriteMoney(quotation.grand_total);
+
+  if (
+    vatRate == null ||
+    discount == null ||
+    subtotal == null ||
+    vatAmount == null ||
+    grandTotal == null
+  ) {
+    return null;
+  }
+
+  return { vatRate, discount, subtotal, vatAmount, grandTotal };
 }
 
 function draftTotals(items: ApprovedBillingScopeDraftInsertRow[]) {
@@ -382,7 +444,12 @@ export async function createApprovedBillingScopeDraft(
       return errorResult("scope_service_lifecycle_ineligible");
     }
 
-    if (parseMoney(quotation.discount) > 0) {
+    const headerMoney = parseQuotationHeaderMoney(quotation);
+    if (headerMoney == null) {
+      return errorResult("scope_unexpected_error");
+    }
+
+    if (headerMoney.discount > 0) {
       return errorResult("scope_discount_not_supported");
     }
 
@@ -434,6 +501,9 @@ export async function createApprovedBillingScopeDraft(
         quotation.id,
         normalizedItems
       );
+      if (itemInsertRows == null || itemInsertRows.length === 0) {
+        return errorResult("scope_unexpected_error");
+      }
       const totals = draftTotals(itemInsertRows);
 
       const { data: createdScope, error: scopeInsertError } = await supabase
@@ -447,12 +517,12 @@ export async function createApprovedBillingScopeDraft(
           accepted_subtotal: totals.acceptedSubtotal,
           accepted_vat_amount: totals.acceptedVatAmount,
           accepted_grand_total: totals.acceptedGrandTotal,
-          source_vat_rate: parseMoney(quotation.vat_rate),
-          source_discount: parseMoney(quotation.discount),
+          source_vat_rate: headerMoney.vatRate,
+          source_discount: headerMoney.discount,
           source_currency: sourceCurrencyFromQuotation(quotation),
-          source_quotation_subtotal: parseMoney(quotation.subtotal),
-          source_quotation_vat_amount: parseMoney(quotation.vat_amount),
-          source_quotation_grand_total: parseMoney(quotation.grand_total),
+          source_quotation_subtotal: headerMoney.subtotal,
+          source_quotation_vat_amount: headerMoney.vatAmount,
+          source_quotation_grand_total: headerMoney.grandTotal,
           source_pricing_context: buildSourcePricingContext(quotation),
           line_safety_status: "pending_review",
           created_by: user.clerk_user_id,
@@ -659,13 +729,32 @@ export async function editApprovedBillingScopeItem(
       displayOrder,
     } = parsed.data;
 
+    let normalizedAcceptedQty: number | null = null;
+    if (acceptedQty !== undefined) {
+      const qty = parseAbsWriteMoney(acceptedQty);
+      if (qty == null) {
+        return errorResult("scope_unexpected_error");
+      }
+      // Domain: accepted qty must remain non-negative; zero allowed for exclude paths.
+      normalizedAcceptedQty = qty;
+    }
+
+    let normalizedAcceptedUnitPrice: number | null = null;
+    if (acceptedUnitPrice !== undefined) {
+      const unitPrice = parseAbsWriteMoney(acceptedUnitPrice);
+      if (unitPrice == null) {
+        return errorResult("scope_unexpected_error");
+      }
+      normalizedAcceptedUnitPrice = unitPrice;
+    }
+
     const { data: editResult, error: editError } = await supabase
       .rpc("edit_approved_billing_scope_item", {
         p_scope_id: scopeId,
         p_item_id: itemId,
         p_decision: decision,
-        p_accepted_qty: acceptedQty !== undefined ? acceptedQty : null,
-        p_accepted_unit_price: acceptedUnitPrice !== undefined ? acceptedUnitPrice : null,
+        p_accepted_qty: normalizedAcceptedQty,
+        p_accepted_unit_price: normalizedAcceptedUnitPrice,
         p_reason_code: reasonCode !== undefined ? reasonCode : null,
         p_reason_note: reasonNote !== undefined ? reasonNote : null,
         p_display_order: displayOrder !== undefined ? displayOrder : null,
