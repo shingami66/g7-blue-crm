@@ -12,11 +12,12 @@ import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getQuotationStatusLabel, getQuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import { UiDateText } from "@/components/i18n/UiDateText";
-import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import type { ComponentProps } from "react";
 import QuotationApprovalActions from "./QuotationApprovalActions";
-import { getInvoicesByQuotationId } from "@/lib/invoices/queries";
-import { CreateDepositInvoiceAction } from "@/app/(dashboard)/services/[id]/CreateDepositInvoiceAction";
+import { getServiceById } from "@/lib/services/queries";
+import { getServiceBillingState } from "@/lib/invoices";
+import { buildQuotationBillingAuthority } from "@/lib/quotations/billing-authority";
+import QuotationBillingAuthorityCard from "./QuotationBillingAuthorityCard";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -77,13 +78,18 @@ export default async function QuotationDetailPage({
     notFound();
   }
 
-  const canApprove = await checkPermission("quotations:approve");
-  const canCreateInvoice = await checkPermission("invoices:write");
-
-  const relatedInvoices = await getInvoicesByQuotationId(quotation.id);
-  const activeDepositInvoice = relatedInvoices.find(
-    (inv) => inv.invoice_type === "deposit" && inv.status !== "cancelled" && inv.status !== "voided"
-  );
+  const [canApprove, linkedService] = await Promise.all([
+    checkPermission("quotations:approve"),
+    getServiceById(quotation.serviceId),
+  ]);
+  const billingState = linkedService
+    ? await getServiceBillingState(linkedService.id)
+    : null;
+  const billingAuthority = buildQuotationBillingAuthority({
+    quotationId: quotation.id,
+    linkedServiceId: linkedService?.id ?? null,
+    billingState,
+  });
 
   const formatMoney = (val: number | null | undefined) =>
     formatSarAmount(locale, val ?? 0);
@@ -307,37 +313,12 @@ export default async function QuotationDetailPage({
             </div>
           </div>
 
-          {/* Billing / Invoicing Actions */}
+          {/* Canonical Service billing authority */}
           {quotation.status === "approved" && (
-            <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
-                <h3 className="font-semibold text-primary">{dictionary.detail.sections.depositInvoice}</h3>
-              </div>
-              <div className="p-6">
-                {activeDepositInvoice ? (
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[14px] text-on-surface-variant">
-                      {dictionary.detail.depositInvoice.alreadyCreated}{" "}
-                      <span className="font-medium text-on-surface" dir="ltr">
-                        {isolateBidiText(activeDepositInvoice.invoice_number)}
-                      </span>
-                    </span>
-                    <span className="text-[13px] text-on-surface-variant italic">
-                      {dictionary.detail.depositInvoice.openFromInvoices}
-                    </span>
-                  </div>
-                ) : (
-                  <CreateDepositInvoiceAction
-                    serviceId={quotation.serviceId}
-                    quotationId={quotation.id}
-                    quotationTotal={quotation.grandTotal}
-                    canCreate={canCreateInvoice}
-                    disabledReasons={!canCreateInvoice ? ["Forbidden"] : []}
-                    dictionary={getServicesDictionary(locale).billing.depositAction}
-                  />
-                )}
-              </div>
-            </div>
+            <QuotationBillingAuthorityCard
+              authority={billingAuthority}
+              dictionary={dictionary}
+            />
           )}
         </div>
       </div>

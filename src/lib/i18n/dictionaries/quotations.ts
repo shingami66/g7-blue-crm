@@ -120,6 +120,7 @@ export interface QuotationsDictionary {
       lineItems: string;
       financialSummary: string;
       depositInvoice: string;
+      billingAuthority: string;
     };
     labels: {
       client: string;
@@ -148,6 +149,26 @@ export interface QuotationsDictionary {
     depositInvoice: {
       alreadyCreated: string;
       openFromInvoices: string;
+    };
+    billingAuthority: {
+      activeAbsTitle: string;
+      activeAbsNotice: string;
+      historicalTitle: string;
+      historicalNotice: string;
+      legacyTitle: string;
+      legacyNotice: string;
+      noAuthorityTitle: string;
+      noAuthorityNotice: string;
+      unavailableTitle: string;
+      unavailableNotice: string;
+      differentQuotationNotice: string;
+      sourceQuotationTotal: string;
+      billingCeiling: string;
+      invoiceExposure: string;
+      remainingBillable: string;
+      amountUnavailable: string;
+      fullyAllocated: string;
+      openServiceBilling: string;
     };
     vatWithRate: string;
   };
@@ -294,6 +315,7 @@ const quotationsDictionaryEn: QuotationsDictionary = {
       lineItems: "Line Items",
       financialSummary: "Financial Summary",
       depositInvoice: "Deposit Invoice",
+      billingAuthority: "Billing Authority",
     },
     labels: {
       client: "Client",
@@ -322,6 +344,32 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     depositInvoice: {
       alreadyCreated: "Deposit invoice already created:",
       openFromInvoices: "Open it from the Invoices list.",
+    },
+    billingAuthority: {
+      activeAbsTitle: "Active approved scope governs billing",
+      activeAbsNotice:
+        "The active approved scope is the billing authority. This Quotation total is shown for reference only; Invoice actions are managed from Service billing.",
+      historicalTitle: "Quotation billing fallback is blocked",
+      historicalNotice:
+        "Historical approved-scope records exist without an active scope. This Quotation cannot become live billing authority, and no Invoice actions are available here.",
+      legacyTitle: "Legacy Quotation authority is verified",
+      legacyNotice:
+        "Zero approved-scope history is proven for the linked Service. This approved Quotation remains legacy billing authority; Invoice actions are managed from Service billing.",
+      noAuthorityTitle: "No billing authority is available",
+      noAuthorityNotice:
+        "The linked Service has no usable approved billing authority. No Invoice actions are available here.",
+      unavailableTitle: "Billing authority is unavailable",
+      unavailableNotice:
+        "Billing authority could not be verified safely. No financial values or Invoice actions are inferred from this Quotation.",
+      differentQuotationNotice:
+        "This Quotation is not the canonical source Quotation for current Service billing.",
+      sourceQuotationTotal: "Source Quotation total (reference)",
+      billingCeiling: "Authoritative billing ceiling",
+      invoiceExposure: "Service-lifetime Invoice exposure",
+      remainingBillable: "Remaining billable",
+      amountUnavailable: "Amount unavailable",
+      fullyAllocated: "Fully allocated",
+      openServiceBilling: "Open Service billing",
     },
     vatWithRate: "VAT ({rate}%)",
   },
@@ -468,6 +516,7 @@ const quotationsDictionaryAr: QuotationsDictionary = {
       lineItems: "بنود عرض السعر",
       financialSummary: "الملخص المالي",
       depositInvoice: "فاتورة دفعة مقدمة",
+      billingAuthority: "مرجعية الفوترة",
     },
     labels: {
       client: "العميل",
@@ -496,6 +545,32 @@ const quotationsDictionaryAr: QuotationsDictionary = {
     depositInvoice: {
       alreadyCreated: "تم إنشاء فاتورة دفعة مقدمة بالفعل:",
       openFromInvoices: "افتحها من قائمة الفواتير.",
+    },
+    billingAuthority: {
+      activeAbsTitle: "نطاق الفوترة المعتمد النشط هو المرجع",
+      activeAbsNotice:
+        "نطاق الفوترة المعتمد النشط هو مرجعية الفوترة. يظهر إجمالي عرض السعر للمرجعية فقط، وتُدار إجراءات الفواتير من فوترة الخدمة.",
+      historicalTitle: "تم حظر الرجوع إلى عرض السعر للفوترة",
+      historicalNotice:
+        "توجد سجلات سابقة لنطاق فوترة معتمد من دون نطاق نشط. لا يمكن أن يصبح عرض السعر مرجعية فوترة حالية، ولا تتوفر إجراءات فواتير هنا.",
+      legacyTitle: "تم التحقق من مرجعية عرض السعر القديمة",
+      legacyNotice:
+        "تم التحقق من عدم وجود أي سجل لنطاق فوترة معتمد للخدمة المرتبطة. يظل عرض السعر المعتمد مرجعية الفوترة القديمة، وتُدار إجراءات الفواتير من فوترة الخدمة.",
+      noAuthorityTitle: "لا توجد مرجعية فوترة متاحة",
+      noAuthorityNotice:
+        "لا توجد للخدمة المرتبطة مرجعية فوترة معتمدة قابلة للاستخدام. لا تتوفر إجراءات فواتير هنا.",
+      unavailableTitle: "مرجعية الفوترة غير متاحة",
+      unavailableNotice:
+        "تعذر التحقق من مرجعية الفوترة بأمان. لا يتم استنتاج أي مبالغ أو إجراءات فواتير من عرض السعر هذا.",
+      differentQuotationNotice:
+        "عرض السعر هذا ليس عرض السعر المصدر المعتمد لفوترة الخدمة الحالية.",
+      sourceQuotationTotal: "إجمالي عرض السعر المصدر (للمرجعية)",
+      billingCeiling: "سقف الفوترة المعتمد",
+      invoiceExposure: "إجمالي تعرض فواتير الخدمة",
+      remainingBillable: "المتبقي للفوترة",
+      amountUnavailable: "المبلغ غير متاح",
+      fullyAllocated: "مخصص بالكامل",
+      openServiceBilling: "فتح فوترة الخدمة",
     },
     vatWithRate: "ضريبة القيمة المضافة ({rate}%)",
   },

@@ -19,7 +19,7 @@ const APPROVAL = join(
   REPO_ROOT,
   "src/app/(dashboard)/quotations/[id]/QuotationApprovalActions.tsx",
 );
-const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/permissions.ts");
+const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/role-permissions.ts");
 const ACTIONS = join(REPO_ROOT, "src/lib/quotations/actions.ts");
 const SCHEMAS = join(REPO_ROOT, "src/lib/quotations/schemas.ts");
 
@@ -114,12 +114,23 @@ test("7-8. Create/edit form copy and draft-only edit contracts", () => {
 });
 
 test("9. Detail headings, item table, totals, and metadata localize", () => {
+  const en = getQuotationsDictionary("en");
   const ar = getQuotationsDictionary("ar");
   assert.equal(ar.detail.sections.details, "تفاصيل عرض السعر");
   assert.equal(ar.detail.sections.lineItems, "بنود عرض السعر");
   assert.equal(ar.detail.labels.issueDate, "تاريخ الإصدار");
   assert.equal(ar.detail.labels.validUntil, "صالح حتى");
   assert.equal(ar.detail.labels.grandTotal, "الإجمالي");
+  assert.equal(en.detail.sections.billingAuthority, "Billing Authority");
+  assert.equal(ar.detail.sections.billingAuthority, "مرجعية الفوترة");
+  assert.equal(
+    en.detail.billingAuthority.openServiceBilling,
+    "Open Service billing",
+  );
+  assert.equal(
+    ar.detail.billingAuthority.amountUnavailable,
+    "المبلغ غير متاح",
+  );
   assert.match(read(DETAIL), /getQuotationStatusLabel/);
   assert.match(read(DETAIL), /formatSarAmount|formatMoney/);
   assert.match(read(DETAIL), /item\.description/);
@@ -224,10 +235,13 @@ test("27-28. VAT mode and tax claims remain safe", () => {
   assert.equal(getQuotationsDictionary("ar").form.notApplied, "غير مطبقة");
 });
 
-test("29-30. ABS and Invoices/Payments modules excluded from this slice", () => {
+test("29-30. Quotation detail delegates billing authority without managing ABS lifecycle", () => {
   assert.doesNotMatch(read(LIST_CLIENT), /ApprovedBillingScope|approved_billing_scope/);
   assert.doesNotMatch(read(FORM), /approvedBillingScopes|createInvoiceAction/);
-  // Detail may show passive deposit action for approved quotations only — ABS management not added
+  assert.match(read(DETAIL), /getServiceBillingState/);
+  assert.match(read(DETAIL), /QuotationBillingAuthorityCard/);
+  assert.doesNotMatch(read(DETAIL), /CreateDepositInvoiceAction|CreateFinalInvoiceAction/);
+  assert.doesNotMatch(read(DETAIL), /getInvoicesByQuotationId/);
   assert.doesNotMatch(read(DETAIL), /supersede|voidApprovedBillingScope/);
   assert.doesNotMatch(read(LIST_PAGE), /PaymentsClient|InvoicesListClient/);
 });
