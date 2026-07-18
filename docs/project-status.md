@@ -40,10 +40,11 @@
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 2.1 Current Active Work
-- **Current active task (exactly one):** `G7-FIN-HARDEN-20-ATOMIC-INVOICE-APP-INTEGRATION` (route `createInvoiceAction` through verified DEV/DEMO RPC `public.create_invoice_atomic`; no silent fallback to multi-query create).
-- **Atomic Invoice create RPC (DEV/DEMO):** migration `supabase/migrations/20260717180000_atomic_invoice_create.sql` committed/pushed as `5ad23f257b542aa2edc5d01cf403d7dcd1bd1925` and **manually applied + verified in DEV/DEMO** (Mozfer evidence). Application integration remains **pending** — Deposit/Final create still uses multi-query `createInvoiceAction` until Task 20.
-- **Financial lifecycle application source wave:** **pushed** to `origin/main` through `45cdfb73` (ten source/test commits). Atomic Invoice RPC source is pushed through `5ad23f25` and installed in DEV/DEMO only.
-- **Next safe product/engineering direction:** application integration of Invoice create via `create_invoice_atomic` (Task 20) → then ABS history/read polish → Void UI → successor UI → optional role browser smoke. Void/successor app actions and UI remain unshipped. Production apply remains unauthorized.
+- **Current active task (exactly one):** Task 20 closeout / documentation sync for verified DEV/DEMO runtime smoke of Deposit/Final Invoice create after atomic RPC integration (`G7-FIN-HARDEN-20` code closeout complete at `a83c1d28`).
+- **Atomic Invoice create (DEV/DEMO code path closed):** migration `supabase/migrations/20260717180000_atomic_invoice_create.sql` pushed as `5ad23f25`, **manually applied + verified in DEV/DEMO** (Mozfer evidence), and **application integrated** in `a83c1d28` — Deposit and Final creation route only through `public.create_invoice_atomic` via service-role `createAdminClient` (no multi-query create write; no silent fallback).
+- **Financial lifecycle / atomic create milestone count:** **20** meaningful commits from baseline `a32be762` to HEAD `a83c1d28` (includes Wave A financial lifecycle stack, atomic contract/migration/DEV apply docs, and Task 20 app integration).
+- **Financial lifecycle application source wave:** **pushed** to `origin/main` through `45cdfb73` (ten source/test commits). Atomic Invoice RPC + app integration are pushed through `a83c1d28` and installed in DEV/DEMO only.
+- **Next safe product/engineering direction:** ABS history/read polish → Void UI → successor UI → optional role browser smoke. Void/successor app actions and UI remain unshipped. Production apply remains unauthorized.
 - **Design complete:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
 - **ABS read-enrichment complete (source + accepted):** `ABS-MGMT-UI-READ-ENRICH-1` — Service Detail read-only ABS summary card enriched and pushed on main.
 - **ABS draft-edit/discard complete (source + accepted):** `ABS-MGMT-UI-DRAFT-EDIT-1` — draft item edit/discard UI implemented, automated validation passed, PASS by Mozfer manual browser evidence recorded, and pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`.
@@ -57,14 +58,15 @@
   6. migration/RPC preflight, SQL review, DEV/DEMO apply, read-only post-apply verification, actions, and tests **complete**
   7. successful lifecycle mutation smoke + independent review **complete** (DEV/DEMO synthetic)
   8. application financial lifecycle stack (money, exposure, lifecycle, RBAC, authority modes, ABS history alignment, Deposit/Final actions, Service billing UI, Quotation display-only authority) **implemented, tested, DEV/DEMO browser-accepted (PASS WITH WARN), and pushed** through `45cdfb73`
-  9. atomic Invoice create RPC migration **pushed** (`5ad23f25`) and **installed + verified in DEV/DEMO** (metadata, grants, dry-checks; no real Invoice created) — application routing through the RPC **not yet integrated**
+  9. atomic Invoice create RPC migration **pushed** (`5ad23f25`) and **installed + verified in DEV/DEMO** (metadata, grants, dry-checks; no real Invoice created)
+  10. application Invoice create integration **complete and pushed** (`a83c1d28`) — Deposit/Final route through `create_invoice_atomic`; focused invoice action tests **46/46** PASS; DEV/DEMO Admin runtime smoke **PASS** (Deposit `INV-2026-0032`, Final `INV-2026-0033`)
   Optional later: `ABS-MGMT-HISTORY-LIST-1`; Void UI; successor UI; Manager/Accountant browser smoke.
-- **Source-truth (ABS):** Create Draft, draft edit/discard, and Review/Approve UI are source implemented and manually accepted; void/supersede UI and app actions are not implemented. The reviewed Void/supersede transactional RPCs are installed in G7 DEV/DEMO and the successful mutation smoke has been executed and independently reviewed (synthetic DEV/DEMO only). Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship). Custom RPC exceptions include draft discard, draft item edit, the financial lifecycle RPC surface, and **DEV/DEMO-installed** `public.create_invoice_atomic` (app create path not yet routed through it).
+- **Source-truth (ABS):** Create Draft, draft edit/discard, and Review/Approve UI are source implemented and manually accepted; void/supersede UI and app actions are not implemented. The reviewed Void/supersede transactional RPCs are installed in G7 DEV/DEMO and the successful mutation smoke has been executed and independently reviewed (synthetic DEV/DEMO only). Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship). Custom RPC exceptions include draft discard, draft item edit, the financial lifecycle RPC surface, and **DEV/DEMO-installed + app-routed** `public.create_invoice_atomic` for Deposit/Final create.
 - **Financial lifecycle decision:** **`ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`** remains locked. Migration/RPC implementation is installed in DEV/DEMO; successful mutation smoke and independent review are complete (see milestones below). Application Deposit/Final creation, five-mode billing authority, Service-lifetime exposure, and Service-detail mutation UI are now pushed on main (see `Invoice Financial Lifecycle Application Stack` milestone). Void stops future billing and requires zero Invoice exposure and zero payment history; historical authority is retained after Void; successor activation is atomic and uses Service-lifetime applicable invoice exposure; equality with current exposure is allowed. Void/successor UI remain pending.
 - **Browser/manual smoke rule:** Practical browser/manual smoke remains user-controlled by default. It may be delegated to an agent only through explicit bounded user authorization. The completed financial lifecycle browser acceptance was executed in DEV/DEMO under such explicit authorization (verdict `ABS_MGMT_FINANCIAL_LIFECYCLE_GROK_BROWSER_ACCEPTANCE_CLOSED_WITH_WARN`).
 - **Durable flags:**
   - Responsive P0 manual smoke: **closed** — see Responsive core P0 below (**PASS by Mozfer manual browser evidence**). Flag `RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING` is **no longer active**.
-- **V1 critical-path order (locked):** prior UI slices complete/pushed -> financial lifecycle design docs -> design commit -> migration/RPC preflight -> SQL/migration review -> separate DEV/DEMO apply and read-only verification -> actions/tests -> successful lifecycle mutation smoke (**complete**, DEV/DEMO synthetic) -> application financial lifecycle stack (**pushed** through `45cdfb73`) -> atomic Invoice create contract + migration push + DEV/DEMO apply verification (**complete** through `5ad23f25`) -> **application integration of create through RPC (next)** -> history/read polish → Void UI → successor UI → optional role browser smoke.
+- **V1 critical-path order (locked):** prior UI slices complete/pushed -> financial lifecycle design docs -> design commit -> migration/RPC preflight -> SQL/migration review -> separate DEV/DEMO apply and read-only verification -> actions/tests -> successful lifecycle mutation smoke (**complete**, DEV/DEMO synthetic) -> application financial lifecycle stack (**pushed** through `45cdfb73`) -> atomic Invoice create contract + migration push + DEV/DEMO apply verification (**complete** through `5ad23f25`) -> application integration of create through RPC (**complete** at `a83c1d28`) -> Task 20 DEV/DEMO Admin runtime smoke (**PASS**) -> history/read polish -> Void UI -> successor UI -> optional role browser smoke.
 - **Preserved locks:** Customer Profile -> Service -> Quotation -> Invoice -> Payment; Service as operational core; no standalone top-nav ABS module; current active-scope ceiling behavior remains factual; future fallback is allowed only before approved ABS authority has ever existed; existing invoices/payments are never rewritten; DEV/DEMO wording; no VAT/ZATCA/FATOORA or production-readiness claim.
 
 ### Responsive core P0 (source implemented; Mozfer manual smoke PASS)
@@ -93,9 +95,9 @@
 
 ## 3. Completed Milestones
 
-### Atomic Invoice create RPC DEV/DEMO apply (migration `5ad23f25`)
+### Atomic Invoice create RPC + app integration (through `a83c1d28`)
 - [x] Migration file: `supabase/migrations/20260717180000_atomic_invoice_create.sql`.
-- [x] Source commit pushed on `main`: `5ad23f257b542aa2edc5d01cf403d7dcd1bd1925` (`feat(billing): add atomic invoice creation RPC`); reviewed and pushed under `G7-FIN-HARDEN-18`.
+- [x] Migration commit pushed on `main`: `5ad23f257b542aa2edc5d01cf403d7dcd1bd1925` (`feat(billing): add atomic invoice creation RPC`); reviewed and pushed under `G7-FIN-HARDEN-18`.
 - [x] Canonical contract: `docs/atomic-invoice-creation-contract.md` (locked before migration).
 - [x] **Mozfer manual DEV/DEMO apply:** migration executed successfully on the DEV/DEMO dataset only (not production).
 - [x] **Post-apply metadata verified:** function `public.create_invoice_atomic(uuid, uuid, text, numeric, text, text, text, jsonb, jsonb, jsonb, jsonb, jsonb, date, date)` exists; returns `TABLE(error_code text, invoice_id uuid, invoice_number text)`; language `plpgsql`; `SECURITY DEFINER` true; fixed `search_path` = `pg_catalog, public`; owner `postgres`.
@@ -106,8 +108,26 @@
   - Dry-check 3 → `error_code = invalid_invoice_input`, `invoice_id` null, `invoice_number` null
   - Invoices for zero Service UUID count = `0`
 - [x] No unexpected SQL errors during verification; dry-check codes were stable (no raw SQLSTATE/constraint/stack leakage through `error_code`).
-- [x] **Not claimed:** production apply, production readiness, VAT/ZATCA/FATOORA, or application integration of `createInvoiceAction` through this RPC (Task 20 pending). Residuals 1–4 stay open for the live app create path until integration.
-- [x] **Next active step:** route application Invoice create through the verified RPC (`G7-FIN-HARDEN-20`).
+- [x] DEV apply docs recorded in `a14ecc0b` (`docs(billing): record atomic invoice DEV apply`).
+- [x] **Application integration complete** (`G7-FIN-HARDEN-20`) pushed as `a83c1d28c416066a5879acf204006af41341ed48` (`feat(billing): route invoice creation through atomic RPC`):
+  - Deposit and Final create both call `create_invoice_atomic` only
+  - no direct `invoices` insert and no `generate_document_number` in the create path
+  - service-role client only; auth/rate-limit/schema/snapshot preparation preserved
+  - RPC transport failures and `error_code` rows map to stable non-leaking action errors
+  - success returns RPC `invoice_id` / `invoice_number`
+  - focused invoice action + presentation tests **46/46 PASS**
+- [x] Milestone count from baseline `a32be762` to HEAD `a83c1d28`: **20** meaningful commits.
+- [x] **DEV/DEMO runtime smoke verified (Admin; local application using DEV/DEMO data only):**
+  - Deposit creation PASS: amount `10,000.00 SAR`, invoice `INV-2026-0032`, exactly one Draft Deposit created, correct Service and Quotation linkage verified.
+  - Final creation PASS: server-derived amount `50,840.00 SAR`, invoice `INV-2026-0033`, exactly one Draft Final created, correct linkage verified.
+  - Remaining billing authority reached `0.00 SAR`.
+  - Deposit and Final creation controls disappeared after full allocation.
+  - Duplicate and fully allocated creation was safely prevented.
+  - No SQL, stack trace, constraint, or internal database details appeared in the UI.
+  - Repository preflight and postflight matched byte-for-byte; no unexpected tracked or untracked files were created.
+  - Production was not touched.
+- [x] **Not claimed:** production apply, production readiness, or VAT/ZATCA/FATOORA.
+- [x] **Task 20 live Deposit/Final create path closeout:** implemented, DEV-applied, automatically tested, and runtime-smoke verified for DEV/DEMO. `issueInvoiceAction` remains a separate update path; some uncommon RPC errors may still use safe fallback presentation.
 
 ### Invoice Financial Lifecycle Application Stack (pushed on main through `45cdfb73`)
 - [x] Ten source/test commits pushed to `origin/main` ending at `45cdfb73 feat(quotations): add display-only billing authority` (wave also includes money, exposure, lifecycle, action-error presentation, invoice RBAC alignment, five-mode billing authority, ABS history/exposure alignment, Deposit/Final server actions, and Service billing controls).
@@ -122,7 +142,7 @@
 - [x] DEV/DEMO browser acceptance (`ABS_MGMT_FINANCIAL_LIFECYCLE_GROK_BROWSER_ACCEPTANCE_CLOSED_WITH_WARN` / **PASS WITH WARN**): Phase 1 authority/presentation lanes; linked-invoice reconciliation; Deposit exact-remaining on `SVC-2026-0017` → `INV-2026-0030` (SAR 1,000); Direct Final on `SVC-2026-0018` / `QT-2026-0022` → `INV-2026-0031` (SAR 100); both paths reached remaining zero and Fully allocated with no duplicate Invoice.
 - [x] Accepted browser limitations: Deposit-above-remaining browser lane remains AUTOMATED-EVIDENCE-ONLY; dedicated Manager and Accountant browser sessions were not run; some lifecycle statuses rely partly on automated evidence; immediate success screenshots timed out but were replaced by success text, after-state, and Invoice detail evidence; **no production-readiness claim**.
 - [x] Retained DEV/DEMO smoke evidence (protected from cleanup; not customer data): `SVC-2026-0017`, `INV-2026-0030`, `SVC-2026-0018`, `QT-2026-0022`, `INV-2026-0031`, `SVC-2026-9001` through `SVC-2026-9005` where applicable, and `ABS_LIFECYCLE_SMOKE_300d4edd-5c8e-45bc-bc85-b4f033750a14`.
-- [x] Residual accepted non-blocking technical debt is recorded under deferred decisions. Residuals **1–4** (atomic create race/ceiling/lifecycle) have **DB implementation + DEV/DEMO install** for `create_invoice_atomic` complete; they remain **not fully closed** until application create routes through the RPC (Task 20). Other residual notes (ABS history helper parity, browser limitations, optional broader numeric work) remain as recorded.
+- [x] Residual accepted non-blocking technical debt is recorded under deferred decisions. Residuals **1–4** for the live Deposit/Final create path are **closed** by DEV/DEMO-installed + app-integrated + runtime-smoke-verified `create_invoice_atomic` (`a83c1d28`). Remaining caveats: production not claimed; `issueInvoiceAction` remains a separate update path; some RPC error codes still use safe presentation fallback.
 
 ### ABS-MGMT-UI-DRAFT-CREATE-1 (source implemented; Mozfer manual smoke PASS)
 - [x] Service Detail exposes Create Draft only to Admin/Manager when there is an approved, non-deleted quotation and the Service has zero ABS records across all statuses/history.

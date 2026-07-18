@@ -137,26 +137,29 @@ These are approved target rules for future reviewed schema changes; they do not 
 - quotations_id_service_id_key exists.
 - invoices_approved_quotation_id_service_id_fkey exists.
 - Composite FK enforcement remains partial while service_id is nullable.
-- Application Invoice create/actions enforce approved quotation + service alignment, authority modes, exposure, and remaining; full DB guarantees for every app rule remain incomplete (see Application vs database enforcement below).
+- Application Invoice create uses the service-role RPC for financial authority; UI/control visibility and billing-state presentation remain application-side (see Application vs database enforcement below).
 - ZATCA/FATOORA/QR/XML remain deferred.
 - Do not document unbuilt migrations as installed.
 
 #### Application vs database enforcement (Invoice financial lifecycle)
-**Database-enforced (committed/installed DEV/DEMO facts):** invoice foundation columns/FKs; ABS foundation + financial-lifecycle migration/RPC surface where applied; `check_invoices_before_write` active-authority linkage and Service-lifetime ceiling guards for ABS-linked paths; service-role-only financial lifecycle RPCs; **DEV/DEMO-installed** `public.create_invoice_atomic` (atomic Deposit/Final create RPC); numbering via `generate_document_number('invoice')`; soft-delete and non-negative amount CHECKs where present.
+**Database-enforced (committed/installed DEV/DEMO facts):** invoice foundation columns/FKs; ABS foundation + financial-lifecycle migration/RPC surface where applied; `check_invoices_before_write` active-authority linkage and Service-lifetime ceiling guards for ABS-linked paths; service-role-only financial lifecycle RPCs; **DEV/DEMO-installed and app-used** `public.create_invoice_atomic` (atomic Deposit/Final create RPC; owns service/quotation validation, ABS history/active authority, exposure, lifecycle eligibility, duplicates, Deposit/Final amounts, numbering, and insert); soft-delete and non-negative amount CHECKs where present.
 
-**Application-enforced (pushed source; not full DB guarantees on the live create path yet):** five billing-authority modes (`active_abs`, `historical_abs_only`, `legacy_quotation`, `no_authority`, `unavailable`); legacy zero-history Quotation fallback qualification; full seven-state Deposit/Final lifecycle matrix; control visibility; remaining/ceiling checks for Deposit/Final create; safe UI error presentation; authoritative money parsing distinguishing zero from unavailable. **Live Deposit/Final create still uses multi-query `createInvoiceAction`** until Task 20 routes create through the verified RPC (no silent fallback after integration).
+**Application-enforced (presentation / gates around the RPC):** five billing-authority modes for Service Detail UI and reads (`active_abs`, `historical_abs_only`, `legacy_quotation`, `no_authority`, `unavailable`); control visibility; safe UI error presentation; authoritative money parsing for non-create surfaces. **Live Deposit/Final create** uses `createInvoiceAction` → single `create_invoice_atomic` call (service_role only); no multi-query financial create write and no silent fallback to direct insert.
 
-**Atomic Invoice create RPC (installed in DEV/DEMO; application integration pending):**
+**Atomic Invoice create RPC (installed in DEV/DEMO; used by application create path):**
 - Contract: [`docs/atomic-invoice-creation-contract.md`](./atomic-invoice-creation-contract.md)
 - Migration: `supabase/migrations/20260717180000_atomic_invoice_create.sql` (commit `5ad23f257b542aa2edc5d01cf403d7dcd1bd1925`)
+- App integration: `a83c1d28c416066a5879acf204006af41341ed48` (`createInvoiceAction` Deposit + Final)
 - Function: `public.create_invoice_atomic(uuid, uuid, text, numeric, text, text, text, jsonb, jsonb, jsonb, jsonb, jsonb, date, date)`
 - Returns: `TABLE(error_code text, invoice_id uuid, invoice_number text)`
 - Language: `plpgsql`; `SECURITY DEFINER` true; fixed `search_path = pg_catalog, public`; owner verified as `postgres` in DEV/DEMO
 - Grants: `EXECUTE` to **`service_role` only**; `PUBLIC`, `anon`, and `authenticated` execute **revoked/false**
+- Financial authority: RPC-owned (app supplies presentation snapshots + actor audit id only; does not trust client totals)
 - Mozfer DEV/DEMO apply verification: metadata + privilege matrix PASS; three structural dry-checks returned stable codes (`invalid_invoice_input`, `invalid_deposit_amount`, `invalid_invoice_input`) with null IDs/numbers; zero invoices for zero Service UUID; no real Invoice created by dry-checks
-- **Not installed / not claimed for production.** **Not yet used by application create** — residuals 1–4 remain open for the live app path until Task 20 integration.
+- DEV/DEMO runtime smoke verification (local application, DEV/DEMO data only, Admin): Deposit creation PASS for `10,000.00 SAR` as `INV-2026-0032` with exactly one Draft Deposit and verified Service/Quotation linkage; Final creation PASS for server-derived `50,840.00 SAR` as `INV-2026-0033` with exactly one Draft Final and verified linkage; remaining billing authority reached `0.00 SAR`; Deposit/Final controls disappeared after full allocation; duplicate and fully allocated creation was safely prevented; no SQL, stack trace, constraint, or internal database details appeared in the UI; repository preflight/postflight matched byte-for-byte; no unexpected tracked or untracked files were created; production was not touched.
+- **Not installed / not claimed for production.**
 
-**Deferred / incomplete for live create path:** application routing through `create_invoice_atomic` (Task 20); optional broader write-side numeric work beyond current ABS write normalization; production database apply.
+**Still deferred / separate:** optional broader write-side numeric work beyond current ABS write normalization; production database apply; `issueInvoiceAction` remains a separate non-create update path; some RPC `error_code` values still present via safe generic UI fallback until dictionary expansion.
 
 **Service-lifetime exposure (application predicate + server reads):** exposure is based on active non-deleted, non-voided, non-cancelled Invoice rows for the Service (`is_deleted` not true, `voided_at` null, status not in `voided`/`cancelled`); includes Draft and other applicable active statuses; **Payment amounts do not reduce Invoice exposure** (payments affect collected balance, not invoiced exposure).
 
@@ -167,7 +170,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Invoice type uses `invoice_type = deposit | final`.
 - Deposit Invoice is created manually after quotation approval (Service Detail mutation authority).
 - Deposit amount must be greater than `0`.
-- Deposit amount must be less than or equal to the remaining uninvoiced authority (application-enforced; active ABS ceiling overrides Quotation total when active).
+- Deposit amount must be less than or equal to the remaining uninvoiced authority (enforced on create by `create_invoice_atomic`; active ABS ceiling overrides Quotation total when active).
 - Deposit is flexible and not fixed at 50%.
 - Direct Final is supported when lifecycle and authority gates allow (Final amount derived from remaining; no requirement that a Deposit already exist solely for Direct Final).
 - `Deposit Paid` requires a valid/cleared deposit payment.
