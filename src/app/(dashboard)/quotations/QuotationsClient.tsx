@@ -6,7 +6,7 @@ import FilterBar from "@/components/ui/FilterBar";
 import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
-import { Plus, Filter, FileSearch, Trash2, Edit, AlertCircle } from "lucide-react";
+import { Plus, Filter, Eye, Trash2, Edit, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
@@ -210,14 +210,15 @@ export default function QuotationsClient({
                   <td className="px-4 py-4">
                     <div className="flex gap-2">
                       <button
-                        className="text-primary hover:text-primary-container p-1 rounded transition-colors"
+                        className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed"
+                        aria-label={`${dictionary.list.actionTitles.viewDetails} ${q.quotationNumber}`}
                         title={dictionary.list.actionTitles.viewDetails}
                         onClick={(e) => {
                           e.stopPropagation();
                           push(`/quotations/${q.id}`);
                         }}
                       >
-                        <FileSearch size={18} />
+                        <Eye size={17} />
                       </button>
                       
                       {canWrite && (

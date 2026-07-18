@@ -1,117 +1,223 @@
 import "server-only";
 
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
-import { requirePermission } from "@/lib/auth/permissions";
+import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { mapRowToSupplier } from "./mappers";
-import type { Supplier, SupplierStatus } from "@/types/supplier";
-import type { SupplierRow, SuppliersListResult, SupplierOption } from "./types";
+import { mapRowToSupplier, mapRowToSupplierDirectoryItem } from "./mappers";
+import {
+  SUPPLIER_PAGE_SIZE,
+  type Supplier,
+  type SupplierListQuery,
+  type SupplierOption,
+  type SuppliersListResult,
+  normalizeSupplierListSearch,
+} from "./types";
 
-const SUPPLIER_LIST_SELECT = `
+const SUPPLIER_DIRECTORY_SELECT = `
   id,
   supplier_number,
   supplier_type,
   category,
-  legal_name,
   display_name,
-  contact_name,
-  whatsapp_phone,
-  email,
+  name,
   city,
   country,
-  coverage_area,
-  name,
-  service,
-  contact,
-  phone,
   rating,
   status,
-  recent_project,
+  is_preferred,
+  is_deleted
+`;
+
+const SUPPLIER_DETAIL_SELECT = `
+  id,
+  supplier_number,
+  supplier_type,
+  category,
+  display_name,
+  name,
+  city,
+  country,
+  rating,
+  status,
+  is_preferred,
+  is_deleted,
+  contact_name,
+  contact,
+  phone,
+  whatsapp_phone,
+  email,
+  coverage_area
+`;
+
+const SENSITIVE_DETAIL_SELECT = `
+  legal_name,
   vat_registration_status,
   vat_number,
   cr_number,
-  is_preferred,
+  payment_terms,
   notes,
-  created_at,
-  updated_at,
   blacklisted_reason,
-  blacklisted_by,
   blacklisted_at
 `;
 
-const STATUS_SORT_ORDER: Record<SupplierStatus, number> = {
-  active: 0,
-  on_hold: 1,
-  blacklisted: 2,
-  inactive: 3,
-};
+const BANK_DETAIL_SELECT = `
+  bank_name,
+  bank_account_name,
+  iban
+`;
 
-function sortSuppliers(a: Supplier, b: Supplier) {
-  if (a.isPreferred !== b.isPreferred) {
-    return a.isPreferred ? -1 : 1;
-  }
-
-  const statusDelta = STATUS_SORT_ORDER[a.status] - STATUS_SORT_ORDER[b.status];
-  if (statusDelta !== 0) return statusDelta;
-
-  return a.name.localeCompare(b.name);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export async function getSuppliersList(): Promise<SuppliersListResult> {
+function readString(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function detailSelect(canViewSensitive: boolean, canReadBank: boolean) {
+  return [
+    SUPPLIER_DETAIL_SELECT,
+    canViewSensitive ? SENSITIVE_DETAIL_SELECT : "",
+    canReadBank ? BANK_DETAIL_SELECT : "",
+  ]
+    .filter(Boolean)
+    .join(",");
+}
+
+function supplierSearchFilter(search: string) {
+  return ["display_name", "name", "supplier_number", "category", "city", "country"]
+    .map((column) => `${column}.ilike.*${search}*`)
+    .join(",");
+}
+
+function emptySupplierListResult(): SuppliersListResult {
+  return {
+    suppliers: [],
+    pagination: { page: 1, pageSize: SUPPLIER_PAGE_SIZE, total: 0, totalPages: 1 },
+  };
+}
+
+function mapSupplierOption(row: unknown): SupplierOption | null {
+  if (!isRecord(row)) return null;
+
+  const id = readString(row.id);
+  const name =
+    readString(row.display_name) ??
+    readString(row.name) ??
+    readString(row.legal_name) ??
+    readString(row.contact) ??
+    "Unnamed Supplier";
+
+  return id ? { id, name } : null;
+}
+
+export async function getSuppliersList(
+  options: SupplierListQuery = {},
+): Promise<SuppliersListResult> {
   await requirePermission("suppliers:read");
+
+  if (options.includeDeleted) {
+    await requirePermission("suppliers:delete");
+  }
 
   try {
     const supabase = createAdminClient();
-
-    const { data, error } = await supabase
+    const search = normalizeSupplierListSearch(options.search);
+    let countRequest = supabase
       .from("suppliers")
-      .select(SUPPLIER_LIST_SELECT)
-      .eq("is_deleted", false)
-      .is("deleted_at", null)
+      .select("id", { count: "exact", head: true });
+
+    countRequest = options.includeDeleted
+      ? countRequest.eq("is_deleted", true)
+      : countRequest.eq("is_deleted", false).is("deleted_at", null);
+    if (options.status) countRequest = countRequest.eq("status", options.status);
+    if (options.category) countRequest = countRequest.eq("category", options.category);
+    if (search) countRequest = countRequest.or(supplierSearchFilter(search));
+
+    const { count, error: countError } = await countRequest;
+
+    if (countError) {
+      console.error("[getSuppliersList] Count error:", countError.message);
+      return { ...emptySupplierListResult(), error: "suppliers_load_failed" };
+    }
+
+    const total = count ?? 0;
+    const totalPages = Math.max(1, Math.ceil(total / SUPPLIER_PAGE_SIZE));
+    const page = Math.min(Math.max(options.page ?? 1, 1), totalPages);
+    const rangeStart = (page - 1) * SUPPLIER_PAGE_SIZE;
+
+    let dataRequest = supabase
+      .from("suppliers")
+      .select(SUPPLIER_DIRECTORY_SELECT)
       .order("is_preferred", { ascending: false })
       .order("name", { ascending: true });
 
+    dataRequest = options.includeDeleted
+      ? dataRequest.eq("is_deleted", true)
+      : dataRequest.eq("is_deleted", false).is("deleted_at", null);
+    if (options.status) dataRequest = dataRequest.eq("status", options.status);
+    if (options.category) dataRequest = dataRequest.eq("category", options.category);
+    if (search) dataRequest = dataRequest.or(supplierSearchFilter(search));
+
+    const { data, error } = await dataRequest.range(
+      rangeStart,
+      rangeStart + SUPPLIER_PAGE_SIZE - 1,
+    );
+
     if (error) {
-      console.error("[getSuppliersList] Supabase error:", error.message);
-      return { suppliers: [], error: "suppliers_load_failed" };
+      console.error("[getSuppliersList] Data error:", error.message);
+      return { ...emptySupplierListResult(), error: "suppliers_load_failed" };
     }
 
+    const suppliers = Array.isArray(data) ? data.map(mapRowToSupplierDirectoryItem) : [];
     return {
-      suppliers: ((data ?? []) as unknown as SupplierRow[])
-        .map(mapRowToSupplier)
-        .sort(sortSuppliers),
+      suppliers,
+      pagination: { page, pageSize: SUPPLIER_PAGE_SIZE, total, totalPages },
     };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error("[getSuppliersList] Unexpected error:", err instanceof Error ? err.message : "Unknown");
-    return { suppliers: [], error: "suppliers_load_failed" };
+    return { ...emptySupplierListResult(), error: "suppliers_load_failed" };
   }
 }
 
-export async function getSupplierById(id: string): Promise<{ supplier: Supplier | null; error?: string }> {
+export async function getSupplierById(
+  id: string,
+  options: { includeDeleted?: boolean } = {},
+): Promise<{ supplier: Supplier | null; error?: string }> {
   await requirePermission("suppliers:read");
+
+  if (options.includeDeleted) {
+    await requirePermission("suppliers:delete");
+  }
+
+  const [canViewSensitive, canReadBank] = await Promise.all([
+    checkPermission("suppliers:write"),
+    checkPermission("suppliers:read_bank"),
+  ]);
 
   try {
     const supabase = createAdminClient();
-
-    const { data, error } = await supabase
+    let request = supabase
       .from("suppliers")
-      .select(SUPPLIER_LIST_SELECT)
-      .eq("id", id)
-      .eq("is_deleted", false)
-      .is("deleted_at", null)
-      .single();
+      .select(detailSelect(canViewSensitive, canReadBank))
+      .eq("id", id);
+
+    request = options.includeDeleted
+      ? request.eq("is_deleted", true)
+      : request.eq("is_deleted", false).is("deleted_at", null);
+
+    const { data, error } = await request.maybeSingle();
 
     if (error) {
-      if (error.code === "PGRST116") {
-        return { supplier: null };
-      }
       console.error("[getSupplierById] Supabase error:", error.message);
       return { supplier: null, error: "supplier_load_failed" };
     }
 
+    if (!data) return { supplier: null };
+
     return {
-      supplier: mapRowToSupplier((data as unknown) as SupplierRow),
+      supplier: mapRowToSupplier(data, { canViewSensitive, canReadBank }),
     };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
@@ -126,7 +232,6 @@ export async function getActiveSupplierOptions(): Promise<{ suppliers: SupplierO
 
   try {
     const supabase = createAdminClient();
-
     const { data, error } = await supabase
       .from("suppliers")
       .select("id, name, display_name, legal_name, contact")
@@ -140,10 +245,9 @@ export async function getActiveSupplierOptions(): Promise<{ suppliers: SupplierO
       return { suppliers: [], error: "suppliers_load_failed" };
     }
 
-    const suppliers = (data ?? []).map((row) => ({
-      id: row.id,
-      name: row.display_name || row.name || row.legal_name || row.contact || row.id,
-    }));
+    const suppliers = Array.isArray(data)
+      ? data.map(mapSupplierOption).filter((supplier): supplier is SupplierOption => supplier !== null)
+      : [];
 
     return { suppliers };
   } catch (err) {

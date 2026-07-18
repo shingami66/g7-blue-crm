@@ -1,46 +1,70 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
+import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createSupplierSchema, updateSupplierSchema } from "./schemas";
+import {
+  blacklistSupplierSchema,
+  createSupplierSchema,
+  supplierIdSchema,
+  updateSupplierSchema,
+} from "./schemas";
 import type { CreateSupplierInput, UpdateSupplierInput } from "./schemas";
+import type { SupplierStatus } from "@/types/supplier";
 
-export type CreateSupplierResult = {
-  success: boolean;
-  error?: string;
-  supplierId?: string;
-};
+type ActionResult = { success: boolean; error?: string };
+
+export type CreateSupplierResult = ActionResult & { supplierId?: string };
+export type UpdateSupplierResult = ActionResult;
+export type BlacklistSupplierResult = ActionResult;
+export type UnblacklistSupplierResult = ActionResult;
+export type DeleteSupplierResult = ActionResult;
+export type RestoreSupplierResult = ActionResult;
 
 function firstValidationError(parsed: { error: { issues: { message: string }[] } }) {
   return parsed.error.issues[0]?.message ?? "Validation failed";
 }
 
-function supplierInsertPayload(input: CreateSupplierInput, clerkUserId: string) {
-  const displayName = input.displayName;
-  const contactName = input.contactName ?? displayName;
-  const category = input.category ?? null;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
+function affectedRow(data: unknown): data is { id: string } {
+  return isRecord(data) && typeof data.id === "string";
+}
+
+function supplierStatus(value: unknown): SupplierStatus | null {
+  return value === "active" || value === "on_hold" || value === "blacklisted" || value === "inactive"
+    ? value
+    : null;
+}
+
+function hasBankUpdate(input: UpdateSupplierInput) {
+  return input.bankName !== undefined || input.bankAccountName !== undefined || input.iban !== undefined;
+}
+
+function supplierInsertPayload(input: CreateSupplierInput, clerkUserId: string) {
   return {
     supplier_type: input.supplierType,
-    category,
+    category: input.category,
     legal_name: input.legalName,
-    display_name: displayName,
-    contact_name: contactName,
+    display_name: input.displayName,
+    contact_name: input.contactName,
     whatsapp_phone: input.whatsappPhone,
     email: input.email,
     city: input.city,
     country: input.country,
     coverage_area: input.coverageArea,
-    name: displayName,
-    service: category ?? "other",
-    contact: contactName,
+    name: input.displayName,
+    service: input.category,
+    contact: input.contactName,
     phone: input.phone,
     status: input.status,
     cr_number: input.crNumber,
     vat_registration_status: input.vatRegistrationStatus,
     vat_number: input.vatRegistrationStatus === "registered" ? input.vatNumber : null,
+    payment_terms: input.paymentTerms,
     is_preferred: input.isPreferred,
     notes: input.notes,
     created_by: clerkUserId,
@@ -48,28 +72,66 @@ function supplierInsertPayload(input: CreateSupplierInput, clerkUserId: string) 
   };
 }
 
+function supplierUpdatePayload(input: UpdateSupplierInput, clerkUserId: string) {
+  const bankPayload = hasBankUpdate(input)
+    ? {
+        bank_name: input.bankName ?? null,
+        bank_account_name: input.bankAccountName ?? null,
+        iban: input.iban ?? null,
+      }
+    : {};
+
+  return {
+    supplier_type: input.supplierType,
+    category: input.category,
+    legal_name: input.legalName,
+    display_name: input.displayName,
+    contact_name: input.contactName,
+    whatsapp_phone: input.whatsappPhone,
+    email: input.email,
+    city: input.city,
+    country: input.country,
+    coverage_area: input.coverageArea,
+    name: input.displayName,
+    service: input.category,
+    contact: input.contactName,
+    phone: input.phone,
+    status: input.status,
+    cr_number: input.crNumber,
+    vat_registration_status: input.vatRegistrationStatus,
+    vat_number: input.vatRegistrationStatus === "registered" ? input.vatNumber : null,
+    payment_terms: input.paymentTerms,
+    is_preferred: input.isPreferred,
+    notes: input.notes,
+    updated_by: clerkUserId,
+    ...bankPayload,
+  };
+}
+
+function revalidateSupplierPaths(id: string) {
+  revalidatePath("/suppliers");
+  revalidatePath(`/suppliers/${id}`);
+}
+
 export async function createSupplier(input: unknown): Promise<CreateSupplierResult> {
   try {
     const user = await requirePermission("suppliers:write");
     const parsed = createSupplierSchema.safeParse(input);
-
-    if (!parsed.success) {
-      return { success: false, error: firstValidationError(parsed) };
-    }
+    if (!parsed.success) return { success: false, error: firstValidationError(parsed) };
 
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("suppliers")
       .insert(supplierInsertPayload(parsed.data, user.clerk_user_id))
       .select("id")
-      .single();
+      .maybeSingle();
 
-    if (error) {
-      console.error("[createSupplier] Supabase error:", error.message);
+    if (error || !affectedRow(data)) {
+      if (error) console.error("[createSupplier] Supabase error:", error.message);
       return { success: false, error: "Failed to create supplier. Please try again." };
     }
 
-    revalidatePath("/suppliers");
+    revalidateSupplierPaths(data.id);
     return { success: true, supplierId: data.id };
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
@@ -79,83 +141,46 @@ export async function createSupplier(input: unknown): Promise<CreateSupplierResu
   }
 }
 
-export type UpdateSupplierResult = {
-  success: boolean;
-  error?: string;
-};
-
-function supplierUpdatePayload(input: UpdateSupplierInput, clerkUserId: string) {
-  const displayName = input.displayName;
-  const contactName = input.contactName ?? displayName;
-  const category = input.category ?? null;
-
-  return {
-    supplier_type: input.supplierType,
-    category,
-    legal_name: input.legalName,
-    display_name: displayName,
-    contact_name: contactName,
-    whatsapp_phone: input.whatsappPhone,
-    email: input.email,
-    city: input.city,
-    country: input.country,
-    coverage_area: input.coverageArea,
-    name: displayName,
-    service: category ?? "other",
-    contact: contactName,
-    phone: input.phone,
-    status: input.status,
-    cr_number: input.crNumber,
-    vat_registration_status: input.vatRegistrationStatus,
-    vat_number: input.vatRegistrationStatus === "registered" ? input.vatNumber : null,
-    is_preferred: input.isPreferred,
-    notes: input.notes,
-    updated_by: clerkUserId,
-  };
-}
-
 export async function updateSupplier(input: unknown): Promise<UpdateSupplierResult> {
   try {
     const user = await requirePermission("suppliers:write");
     const parsed = updateSupplierSchema.safeParse(input);
-
-    if (!parsed.success) {
-      return { success: false, error: firstValidationError(parsed) };
-    }
+    if (!parsed.success) return { success: false, error: firstValidationError(parsed) };
+    if (hasBankUpdate(parsed.data)) await requirePermission("suppliers:write_bank");
 
     const supabase = createAdminClient();
-
-    // Prevent bypass: Check existing status
-    const { data: existingSupplier, error: fetchError } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from("suppliers")
       .select("status")
       .eq("id", parsed.data.id)
-      .single();
+      .eq("is_deleted", false)
+      .maybeSingle();
 
-    if (fetchError || !existingSupplier) {
-      return { success: false, error: "Supplier not found." };
-    }
+    const existingStatus = isRecord(existing) ? supplierStatus(existing.status) : null;
+    if (existingError || !existingStatus) return { success: false, error: "Supplier not found." };
 
-    if (existingSupplier.status === "blacklisted" && parsed.data.status !== "blacklisted") {
+    if (existingStatus === "blacklisted" && parsed.data.status !== "blacklisted") {
       return { success: false, error: "Cannot unblacklist via normal edit. Use the dedicated workflow." };
     }
-    if (existingSupplier.status !== "blacklisted" && parsed.data.status === "blacklisted") {
+    if (existingStatus !== "blacklisted" && parsed.data.status === "blacklisted") {
       return { success: false, error: "Cannot blacklist via normal edit. Use the dedicated workflow." };
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("suppliers")
       .update(supplierUpdatePayload(parsed.data, user.clerk_user_id))
       .eq("id", parsed.data.id)
-      .eq("is_deleted", false);
+      .eq("is_deleted", false)
+      .eq("status", existingStatus)
+      .select("id")
+      .maybeSingle();
 
-
-    if (error) {
-      console.error("[updateSupplier] Supabase error:", error.message);
-      return { success: false, error: "Failed to update supplier. Please try again." };
+    if (error || !affectedRow(data)) {
+      if (error) console.error("[updateSupplier] Supabase error:", error.message);
+      return { success: false, error: "Supplier changed before it could be updated. Refresh and try again." };
     }
 
-    revalidatePath("/suppliers");
+    revalidateSupplierPaths(parsed.data.id);
     return { success: true };
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
@@ -165,23 +190,14 @@ export async function updateSupplier(input: unknown): Promise<UpdateSupplierResu
   }
 }
 
-export type BlacklistSupplierResult = {
-  success: boolean;
-  error?: string;
-};
-
 export async function blacklistSupplier(input: unknown): Promise<BlacklistSupplierResult> {
   try {
     const user = await requirePermission("suppliers:write");
-    const { blacklistSupplierSchema } = await import("./schemas");
     const parsed = blacklistSupplierSchema.safeParse(input);
-
-    if (!parsed.success) {
-      return { success: false, error: firstValidationError(parsed) };
-    }
+    if (!parsed.success) return { success: false, error: firstValidationError(parsed) };
 
     const supabase = createAdminClient();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("suppliers")
       .update({
         status: "blacklisted",
@@ -191,14 +207,17 @@ export async function blacklistSupplier(input: unknown): Promise<BlacklistSuppli
         updated_by: user.clerk_user_id,
       })
       .eq("id", parsed.data.id)
-      .eq("is_deleted", false);
+      .eq("is_deleted", false)
+      .neq("status", "blacklisted")
+      .select("id")
+      .maybeSingle();
 
-    if (error) {
-      console.error("[blacklistSupplier] Supabase error:", error.message);
-      return { success: false, error: "Failed to blacklist supplier. Please try again." };
+    if (error || !affectedRow(data)) {
+      if (error) console.error("[blacklistSupplier] Supabase error:", error.message);
+      return { success: false, error: "Supplier changed before it could be blacklisted. Refresh and try again." };
     }
 
-    revalidatePath("/suppliers");
+    revalidateSupplierPaths(parsed.data.id);
     return { success: true };
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
@@ -208,23 +227,14 @@ export async function blacklistSupplier(input: unknown): Promise<BlacklistSuppli
   }
 }
 
-export type UnblacklistSupplierResult = {
-  success: boolean;
-  error?: string;
-};
-
 export async function unblacklistSupplier(input: unknown): Promise<UnblacklistSupplierResult> {
   try {
     const user = await requirePermission("suppliers:write");
-    const { unblacklistSupplierSchema } = await import("./schemas");
-    const parsed = unblacklistSupplierSchema.safeParse(input);
-
-    if (!parsed.success) {
-      return { success: false, error: firstValidationError(parsed) };
-    }
+    const parsed = supplierIdSchema.safeParse(input);
+    if (!parsed.success) return { success: false, error: firstValidationError(parsed) };
 
     const supabase = createAdminClient();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("suppliers")
       .update({
         status: "inactive",
@@ -234,19 +244,132 @@ export async function unblacklistSupplier(input: unknown): Promise<UnblacklistSu
         updated_by: user.clerk_user_id,
       })
       .eq("id", parsed.data.id)
-      .eq("is_deleted", false);
+      .eq("is_deleted", false)
+      .eq("status", "blacklisted")
+      .select("id")
+      .maybeSingle();
 
-    if (error) {
-      console.error("[unblacklistSupplier] Supabase error:", error.message);
-      return { success: false, error: "Failed to unblacklist supplier. Please try again." };
+    if (error || !affectedRow(data)) {
+      if (error) console.error("[unblacklistSupplier] Supabase error:", error.message);
+      return { success: false, error: "Supplier changed before it could be restored. Refresh and try again." };
     }
 
-    revalidatePath("/suppliers");
+    revalidateSupplierPaths(parsed.data.id);
     return { success: true };
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
     console.error("[unblacklistSupplier] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export async function deleteSupplier(input: unknown): Promise<DeleteSupplierResult> {
+  try {
+    const user = await requirePermission("suppliers:delete");
+    const parsed = supplierIdSchema.safeParse(input);
+    if (!parsed.success) return { success: false, error: firstValidationError(parsed) };
+
+    const supabase = createAdminClient();
+    const [allocationResult, bookingResult] = await Promise.all([
+      supabase
+        .from("service_supplier_allocations")
+        .select("id")
+        .eq("supplier_id", parsed.data.id)
+        .eq("is_deleted", false)
+        .neq("status", "cancelled")
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("supplier_bookings")
+        .select("id")
+        .eq("supplier_id", parsed.data.id)
+        .eq("is_deleted", false)
+        .neq("status", "cancelled")
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if (allocationResult.error || bookingResult.error) {
+      console.error("[deleteSupplier] Dependency check failed");
+      return { success: false, error: "Unable to verify supplier dependencies. Please try again." };
+    }
+    if (allocationResult.data || bookingResult.data) {
+      return { success: false, error: "Supplier has active Allocations or Supplier Bookings and cannot be deleted." };
+    }
+
+    const { data, error } = await supabase
+      .from("suppliers")
+      .update({
+        is_deleted: true,
+        deleted_at: new Date().toISOString(),
+        deleted_by: user.clerk_user_id,
+        updated_by: user.clerk_user_id,
+      })
+      .eq("id", parsed.data.id)
+      .eq("is_deleted", false)
+      .select("id")
+      .maybeSingle();
+
+    if (error || !affectedRow(data)) {
+      if (error) console.error("[deleteSupplier] Supabase error:", error.message);
+      return { success: false, error: "Supplier changed before it could be deleted. Refresh and try again." };
+    }
+
+    revalidateSupplierPaths(parsed.data.id);
+    return { success: true };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[deleteSupplier] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export async function restoreSupplier(input: unknown): Promise<RestoreSupplierResult> {
+  try {
+    const user = await requirePermission("suppliers:delete");
+    const parsed = supplierIdSchema.safeParse(input);
+    if (!parsed.success) return { success: false, error: firstValidationError(parsed) };
+
+    const supabase = createAdminClient();
+    const { data: existing, error: existingError } = await supabase
+      .from("suppliers")
+      .select("status")
+      .eq("id", parsed.data.id)
+      .eq("is_deleted", true)
+      .maybeSingle();
+
+    const existingStatus = isRecord(existing) ? supplierStatus(existing.status) : null;
+    if (existingError || !existingStatus) return { success: false, error: "Deleted supplier not found." };
+
+    const restoredStatus = existingStatus === "blacklisted" ? "blacklisted" : "inactive";
+    const { data, error } = await supabase
+      .from("suppliers")
+      .update({
+        is_deleted: false,
+        deleted_at: null,
+        deleted_by: null,
+        status: restoredStatus,
+        updated_by: user.clerk_user_id,
+      })
+      .eq("id", parsed.data.id)
+      .eq("is_deleted", true)
+      .eq("status", existingStatus)
+      .select("id")
+      .maybeSingle();
+
+    if (error || !affectedRow(data)) {
+      if (error) console.error("[restoreSupplier] Supabase error:", error.message);
+      return { success: false, error: "Supplier changed before it could be restored. Refresh and try again." };
+    }
+
+    revalidateSupplierPaths(parsed.data.id);
+    return { success: true };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[restoreSupplier] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { success: false, error: "An unexpected error occurred." };
   }
 }

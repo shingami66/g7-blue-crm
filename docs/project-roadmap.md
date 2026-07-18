@@ -1083,20 +1083,27 @@ SUPPLIERS-LIVE-READ-FOUNDATION-1
 - Permission gate uses `suppliers:read`; this slice does not use `suppliers:write`.
 - Verification passed: lint passed with only existing PDF `<img>` warnings; `pnpm exec tsc --noEmit` passed; no bank/IBAN fields were selected, mapped, typed for UI, or rendered.
 - No create/edit/delete/restore behavior, SQL/schema/migration changes, or supplier finance/future modules were introduced.
-- Still deferred after this read-only slice: supplier create/edit/delete/restore CRUD, supplier write actions/server actions, supplier rate cards runtime workflows, service supplier allocations, Supplier Bookings, supplier invoices, supplier payments, Supplier Booking PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow.
+- Historical read-only-slice deferrals were supplier create/edit/delete/restore CRUD and supplier write actions/server actions; those are superseded by `G7-SUPPLIERS-V1-DIRECTORY-AND-LIST-UX`. Supplier rate-card runtime workflows, broader Supplier Bookings, supplier invoices/payments, Supplier Booking PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
 
 SUPPLIERS-CREATE-FORM-1
 - Status: Completed and pushed.
 - Implemented in commit `05affcd feat(suppliers): add create form`.
 - Create-only supplier flow is complete: create form/page, validation, server action, and list navigation.
-- This is not full Supplier CRUD. Supplier Delete/Restore remain deferred.
+- At that milestone stage, this was not full Supplier CRUD. Supplier Delete/Restore was subsequently implemented in `G7-SUPPLIERS-V1-DIRECTORY-AND-LIST-UX`.
 
 SUPPLIERS-CREATE-UX-FIX-1
 - Status: Completed and pushed.
 - Implemented in commit `9ed7a59 fix(suppliers): refine create ui`.
 - Team Lead create-flow UI/UX fixes are complete.
-- Basic profile Supplier Edit is complete. Supplier Delete/Restore remain deferred.
+- Basic profile Supplier Edit is complete. Supplier Delete/Restore was subsequently implemented in `G7-SUPPLIERS-V1-DIRECTORY-AND-LIST-UX`.
 - Supplier finance/workflow modules remain deferred: rate cards runtime workflows, allocations, Supplier Bookings, supplier invoices/payments, Supplier Booking PDF/WhatsApp/email, supplier portal, costing/margin/P&L, and payment approval workflow.
+
+G7-SUPPLIERS-V1-DIRECTORY-AND-LIST-UX
+- Status: Supplier Directory V1 implementation is complete and user-owned runtime smoke passed in local DEV/DEMO; this is not a production-readiness or RLS claim.
+- `/suppliers/[id]` now provides responsive detail, while the directory uses a safe summary DTO and server-backed 10-row pagination that preserves search and lifecycle filters.
+- Required create/edit validation, VAT pairing, lifecycle and blacklist workflows, Admin-only bank access, and Admin-only soft delete/restore are implemented. Delete checks active allocations/bookings in the application layer and is not transactional.
+- Static Supplier data, UUID fallback display, and `recent_project` remnants are removed. Supplier invoices, payables, outbound payments, accounting workflows, and Accountant Supplier-bank access remain deferred.
+- Customers, Services, Quotations, and Invoices use the matching accessible eye-only View control without changing their business actions.
 
 SUPPLIERS-EDIT-FORM-1
 - Status: Completed and pushed.

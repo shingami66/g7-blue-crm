@@ -1,40 +1,103 @@
-import type { Supplier } from "@/types/supplier";
-import type { SupplierRow } from "./types";
+import type {
+  Supplier,
+  SupplierDirectoryItem,
+  SupplierStatus,
+  SupplierType,
+  SupplierVatRegistrationStatus,
+} from "@/types/supplier";
 
-function normalizeRating(value: SupplierRow["rating"]): number {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function nullableText(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function requiredText(value: unknown, fallback: string): string {
+  return nullableText(value) ?? fallback;
+}
+
+function booleanValue(value: unknown): boolean {
+  return value === true;
+}
+
+function numberValue(value: unknown): number {
   const parsed = typeof value === "number" ? value : Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export function mapRowToSupplier(row: SupplierRow): Supplier {
+function supplierStatus(value: unknown): SupplierStatus {
+  if (value === "active" || value === "on_hold" || value === "blacklisted" || value === "inactive") {
+    return value;
+  }
+  throw new Error("Invalid supplier status");
+}
+
+function supplierType(value: unknown): SupplierType | null {
+  return value === "company" || value === "individual" ? value : null;
+}
+
+function vatRegistrationStatus(value: unknown): SupplierVatRegistrationStatus | null {
+  return value === "unknown" || value === "not_registered" || value === "registered" ? value : null;
+}
+
+function supplierRecord(row: unknown): Record<string, unknown> {
+  if (!isRecord(row)) throw new Error("Invalid supplier row");
+  return row;
+}
+
+export function mapRowToSupplierDirectoryItem(row: unknown): SupplierDirectoryItem {
+  const source = supplierRecord(row);
+  const displayName = nullableText(source.display_name);
+  const legalName = nullableText(source.legal_name);
+  const name = displayName ?? requiredText(source.name, legalName ?? "Unnamed Supplier");
+
   return {
-    id: row.id,
-    supplierNumber: row.supplier_number,
-    name: row.display_name || row.name || row.legal_name || "Unnamed Supplier",
-    legalName: row.legal_name,
-    displayName: row.display_name,
-    supplierType: row.supplier_type,
-    category: row.category,
-    service: row.category || row.service,
-    contactName: row.contact_name || row.contact,
-    phone: row.phone,
-    whatsappPhone: row.whatsapp_phone,
-    email: row.email,
-    city: row.city,
-    country: row.country,
-    coverageArea: row.coverage_area,
-    vatRegistrationStatus: row.vat_registration_status,
-    vatNumber: row.vat_number,
-    crNumber: row.cr_number,
-    isPreferred: row.is_preferred ?? false,
-    rating: normalizeRating(row.rating),
-    status: row.status,
-    recentProject: row.recent_project,
-    notes: row.notes,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    blacklistedReason: row.blacklisted_reason,
-    blacklistedBy: row.blacklisted_by,
-    blacklistedAt: row.blacklisted_at,
+    id: requiredText(source.id, ""),
+    supplierNumber: nullableText(source.supplier_number),
+    name,
+    supplierType: supplierType(source.supplier_type),
+    category: nullableText(source.category),
+    city: nullableText(source.city),
+    country: nullableText(source.country),
+    isPreferred: booleanValue(source.is_preferred),
+    rating: numberValue(source.rating),
+    status: supplierStatus(source.status),
+    isDeleted: booleanValue(source.is_deleted),
+  };
+}
+
+export function mapRowToSupplier(
+  row: unknown,
+  options: { canViewSensitive: boolean; canReadBank: boolean },
+): Supplier {
+  const source = supplierRecord(row);
+  const directoryItem = mapRowToSupplierDirectoryItem(source);
+  const contactName = nullableText(source.contact_name) ?? requiredText(source.contact, directoryItem.name);
+
+  return {
+    ...directoryItem,
+    legalName: options.canViewSensitive ? nullableText(source.legal_name) : null,
+    displayName: nullableText(source.display_name),
+    contactName,
+    phone: requiredText(source.phone, ""),
+    whatsappPhone: nullableText(source.whatsapp_phone),
+    email: nullableText(source.email),
+    coverageArea: nullableText(source.coverage_area),
+    vatRegistrationStatus: options.canViewSensitive
+      ? vatRegistrationStatus(source.vat_registration_status)
+      : null,
+    vatNumber: options.canViewSensitive ? nullableText(source.vat_number) : null,
+    crNumber: options.canViewSensitive ? nullableText(source.cr_number) : null,
+    paymentTerms: options.canViewSensitive ? nullableText(source.payment_terms) : null,
+    notes: options.canViewSensitive ? nullableText(source.notes) : null,
+    blacklistedReason: options.canViewSensitive ? nullableText(source.blacklisted_reason) : null,
+    blacklistedAt: options.canViewSensitive ? nullableText(source.blacklisted_at) : null,
+    canViewSensitive: options.canViewSensitive,
+    canReadBank: options.canReadBank,
+    bankName: options.canReadBank ? nullableText(source.bank_name) : null,
+    bankAccountName: options.canReadBank ? nullableText(source.bank_account_name) : null,
+    iban: options.canReadBank ? nullableText(source.iban) : null,
   };
 }

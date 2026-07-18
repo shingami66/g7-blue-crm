@@ -1,34 +1,39 @@
 export type SupplierStatus = "active" | "on_hold" | "blacklisted" | "inactive";
 export type SupplierType = "company" | "individual";
-export type SupplierVatRegistrationStatus = "not_registered" | "registered" | "unknown";
+export type SupplierVatRegistrationStatus = "unknown" | "not_registered" | "registered";
 
-export interface Supplier {
+export interface SupplierDirectoryItem {
   id: string;
   supplierNumber: string | null;
   name: string;
-  legalName: string | null;
-  displayName: string | null;
   supplierType: SupplierType | null;
   category: string | null;
-  service: string;
+  city: string | null;
+  country: string | null;
+  isPreferred: boolean;
+  rating: number;
+  status: SupplierStatus;
+  isDeleted: boolean;
+}
+
+export interface Supplier extends SupplierDirectoryItem {
+  legalName: string | null;
+  displayName: string | null;
   contactName: string;
   phone: string;
   whatsappPhone: string | null;
   email: string | null;
-  city: string | null;
-  country: string | null;
   coverageArea: string | null;
   vatRegistrationStatus: SupplierVatRegistrationStatus | null;
   vatNumber: string | null;
   crNumber: string | null;
-  isPreferred: boolean;
-  rating: number;
-  status: SupplierStatus;
-  recentProject: string | null;
+  paymentTerms: string | null;
   notes: string | null;
-  createdAt: string;
-  updatedAt: string;
   blacklistedReason: string | null;
-  blacklistedBy: string | null;
   blacklistedAt: string | null;
+  canViewSensitive: boolean;
+  canReadBank: boolean;
+  bankName: string | null;
+  bankAccountName: string | null;
+  iban: string | null;
 }

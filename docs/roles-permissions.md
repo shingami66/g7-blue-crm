@@ -21,6 +21,15 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - Production RLS must be planned for `company_settings` before real/semi-real data because it contains bank, legal, CR/TIN, and VAT data.
 - Viewer bank-detail masking test case: Viewer opens `/settings`; response/data passed to the client must not include full IBAN, bank account holder, or bank account values.
 
+## Supplier Directory V1
+
+- `suppliers:read` permits the live Supplier directory and detail route. The normal directory DTO is summary-only and excludes notes, CR/VAT values, bank values, blacklist audit details, and Clerk audit IDs.
+- `suppliers:write` permits the non-bank create, edit, lifecycle, and blacklist workflows for the roles defined in the matrix. Visible controls do not replace server-side permission enforcement.
+- `suppliers:read_bank`, `suppliers:write_bank`, and `suppliers:delete` are Admin-only through the Admin wildcard `*`. Manager and Operations do not receive bank values; bank write actions, soft delete, and restore enforce their permission server-side.
+- Soft delete is blocked when active Supplier Allocations or Supplier Bookings exist. The application-layer dependency check is not transactional.
+- Accountant has no Supplier Directory bank grant in the current role map. Accountant Supplier-bank access is deferred. This rule is distinct from Company Settings bank visibility.
+- Production RLS/readiness is not asserted by Supplier Directory V1.
+
 ## Quotation Approval
 
 - Approval requires `quotations:approve`.

@@ -20,67 +20,81 @@ export const SUPPLIER_CATEGORIES = [
 ] as const;
 
 export const SAFE_SUPPLIER_CREATE_STATUSES = ["active", "on_hold", "inactive"] as const;
+export const SUPPLIER_VAT_STATUSES = ["unknown", "not_registered", "registered"] as const;
 
-const optionalTrimmedText = z.preprocess((value) => {
-  if (value === null || value === undefined || value === "") return null;
-  if (typeof value !== "string") return value;
+function optionalText(maxLength: number) {
+  return z.preprocess(
+    (value) => {
+      if (value === null || value === undefined || value === "") return null;
+      if (typeof value !== "string") return value;
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    },
+    z.string().max(maxLength).nullable(),
+  );
+}
 
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}, z.string().nullable());
+function optionalUpdateText(maxLength: number) {
+  return z.preprocess(
+    (value) => {
+      if (value === undefined || value === null || value === "") return value ?? null;
+      if (typeof value !== "string") return value;
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    },
+    z.string().max(maxLength).nullable().optional(),
+  );
+}
 
-const requiredTrimmedText = (message: string) =>
-  z.string().trim().min(1, message);
+function requiredText(message: string, maxLength: number) {
+  return z.string().trim().min(1, message).max(maxLength);
+}
 
-const optionalEmail = z.preprocess((value) => {
-  if (value === null || value === undefined || value === "") return null;
-  if (typeof value !== "string") return value;
-
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}, z.string().email("Invalid email address").nullable());
-
-const optionalSupplierType = z.preprocess((value) => {
-  if (value === null || value === undefined || value === "") return null;
-  return value;
-}, z.enum(["company", "individual"]).nullable());
-
-const optionalSupplierCategory = z.preprocess((value) => {
-  if (value === null || value === undefined || value === "") return null;
-  return value;
-}, z.enum(SUPPLIER_CATEGORIES).nullable());
-
-const optionalVatRegistrationStatus = z.preprocess((value) => {
-  if (value === null || value === undefined || value === "") return null;
-  return value;
-}, z.enum(["not_registered", "registered"]).nullable());
+const optionalEmail = z.preprocess(
+  (value) => {
+    if (value === null || value === undefined || value === "") return null;
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  },
+  z.string().email("Invalid email address").max(254).nullable(),
+);
 
 export const baseSupplierSchema = z
   .object({
-    displayName: requiredTrimmedText("Supplier name is required"),
-    legalName: optionalTrimmedText,
-    supplierType: optionalSupplierType,
-    category: optionalSupplierCategory,
-    contactName: optionalTrimmedText,
-    phone: requiredTrimmedText("Phone is required"),
-    whatsappPhone: optionalTrimmedText,
+    displayName: requiredText("Supplier name is required", 160),
+    legalName: optionalText(200),
+    supplierType: z.enum(["company", "individual"], "Supplier type is required"),
+    category: z.enum(SUPPLIER_CATEGORIES, "Supplier category is required"),
+    contactName: requiredText("Primary contact name is required", 160),
+    phone: requiredText("Phone is required", 40),
+    whatsappPhone: optionalText(40),
     email: optionalEmail,
-    city: optionalTrimmedText,
-    country: optionalTrimmedText,
-    coverageArea: optionalTrimmedText,
-    crNumber: optionalTrimmedText,
-    vatRegistrationStatus: optionalVatRegistrationStatus,
-    vatNumber: optionalTrimmedText,
-    status: z.enum(SAFE_SUPPLIER_CREATE_STATUSES).default("active"),
+    city: requiredText("City is required", 120),
+    country: requiredText("Country is required", 120),
+    coverageArea: optionalText(500),
+    crNumber: optionalText(80),
+    vatRegistrationStatus: z.enum(SUPPLIER_VAT_STATUSES),
+    vatNumber: optionalText(80),
+    paymentTerms: optionalText(1000),
+    status: z.enum(SAFE_SUPPLIER_CREATE_STATUSES),
     isPreferred: z.boolean().default(false),
-    notes: optionalTrimmedText,
+    notes: optionalText(2000),
   })
   .strict();
 
 function validateVatNumber(
-  input: { vatRegistrationStatus?: string | null; vatNumber?: string | null },
-  context: z.RefinementCtx
+  input: { vatRegistrationStatus: string; vatNumber: string | null },
+  context: z.RefinementCtx,
 ) {
+  if (input.vatRegistrationStatus === "registered" && !input.vatNumber) {
+    context.addIssue({
+      code: "custom",
+      message: "VAT number is required when VAT status is registered",
+      path: ["vatNumber"],
+    });
+  }
+
   if (input.vatRegistrationStatus !== "registered" && input.vatNumber) {
     context.addIssue({
       code: "custom",
@@ -97,21 +111,24 @@ export type CreateSupplierInput = z.infer<typeof createSupplierSchema>;
 export const updateSupplierSchema = baseSupplierSchema
   .extend({
     id: z.string().uuid("Invalid supplier ID"),
-    status: z.enum(["active", "on_hold", "blacklisted", "inactive"]).default("active"),
+    status: z.enum(["active", "on_hold", "blacklisted", "inactive"]),
+    bankName: optionalUpdateText(160),
+    bankAccountName: optionalUpdateText(200),
+    iban: optionalUpdateText(80),
   })
   .superRefine(validateVatNumber);
 
 export type UpdateSupplierInput = z.infer<typeof updateSupplierSchema>;
 
-export const blacklistSupplierSchema = z.object({
-  id: z.string().uuid("Invalid supplier ID"),
-  reason: requiredTrimmedText("Reason is required to blacklist a supplier"),
-});
+export const blacklistSupplierSchema = z
+  .object({
+    id: z.string().uuid("Invalid supplier ID"),
+    reason: requiredText("Reason is required to blacklist a supplier", 2000),
+  })
+  .strict();
+
+export const supplierIdSchema = z
+  .object({ id: z.string().uuid("Invalid supplier ID") })
+  .strict();
 
 export type BlacklistSupplierInput = z.infer<typeof blacklistSupplierSchema>;
-
-export const unblacklistSupplierSchema = z.object({
-  id: z.string().uuid("Invalid supplier ID"),
-});
-
-export type UnblacklistSupplierInput = z.infer<typeof unblacklistSupplierSchema>;

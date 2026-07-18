@@ -40,7 +40,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `number_sequences`: Atomic counters for generated IDs (e.g., QT-2026-0001). Current allowed types are `quotation`, `invoice`, `payment`, `project`, `service`, and `customer`. Current prefixes are `QT`, `INV`, `PAY`, `PRJ`, `SVC`, and `CUST`.
 - `customers`: Client database with revenue metrics, soft deletes, and a system-generated unique `customer_number`.
 - `services`: ERP-1 operational unit linked to `customers(id)` with `service_number`, event fields, status, ownership, cancellation reason, timestamps, audit text fields, and soft-delete timestamp. The DB foundation and app list/create/detail/edit foundation are implemented; controlled status transitions remain deferred.
-- `suppliers`: Third-party vendor database.
+- `suppliers`: Third-party vendor directory. Supplier Directory V1 uses a summary-only normal list projection (no notes, CR/VAT, bank, blacklist-audit, or Clerk audit values), responsive detail reads, required create/edit validation, lifecycle/blacklist workflows, and `is_deleted`/`deleted_at`/`deleted_by` soft delete audit fields. Bank reads/writes and delete/restore are enforced in the application server layer for Admin only; the active Allocation/Booking delete check is application-layer and nontransactional. No Supplier production-RLS/readiness claim is made.
 - `service_supplier_allocations`: Supplier Allocations planning layer. Database/permissions foundation implemented under `SUPPLIER-ALLOCATIONS-FOUNDATION-1A`; domain types, Zod schemas, and mappers implemented under `SUPPLIER-ALLOCATIONS-SCHEMAS-1A`; runtime CRUD/actions/UI are deferred.
 - `audit_logs`: Centralized event tracking for actions (`create`, `update`, etc.).
 

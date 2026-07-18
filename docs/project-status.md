@@ -952,6 +952,16 @@
 - Payments page now paginates 10 records per page using the shared `PaginationFooter`, while KPI cards still use the full payment dataset.
 - Manual smoke passed for page ordering, pagination controls, KPI counts, and the unchanged `RecordPaymentModal`.
 
+### ✅ G7-SUPPLIERS-V1-DIRECTORY-AND-LIST-UX
+- Supplier Directory V1 is implemented, automatically validated, and user-owned DEV/DEMO runtime-smoke verified; production was not touched.
+- `/suppliers/[id]` is a responsive live detail route. The normal directory query returns a safe summary DTO only; it excludes notes, CR/VAT values, bank values, blacklist audit details, and Clerk audit IDs.
+- Create and edit enforce the required directory fields and VAT-registration/VAT-number pairing. Lifecycle and blacklist/unblacklist workflows are preserved.
+- Supplier bank reads and writes, soft delete, and restore are server-gated for Admin only. Delete is blocked when an active Supplier Allocation or Supplier Booking exists; that dependency check is application-layer and nontransactional.
+- Deleted suppliers are excluded from normal directory/detail reads. Restore returns a non-blacklisted supplier to `inactive`.
+- The legacy static Supplier dataset, UUID fallback display, and `recent_project` mapping/UI remnants are removed.
+- Server-backed Supplier pagination uses 10 records per page and preserves search/lifecycle filters. Customers, Services, Quotations, and Invoices now use the matching accessible eye-only detail control.
+- Supplier invoices, payables, outbound payments, accounting workflows, Accountant Supplier-bank access, and production RLS/readiness remain deferred.
+
 ### ✅ QUOTATIONS-FILTERS-FIX-1
 - Status: Completed, reviewed, manual smoke passed, and pushed.
 - Implementation commit:

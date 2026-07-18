@@ -301,10 +301,9 @@ export default function CustomersClient({
                               href={`/customers/${customer.id}`}
                               aria-label={`${dictionary.list.actions.view} ${customer.customerNumber}`}
                               title={`${dictionary.list.actions.view} ${customer.customerNumber}`}
-                              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-[12px] font-semibold text-on-surface transition-colors hover:border-primary/40 hover:bg-surface-container hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 whitespace-nowrap"
+                              className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed"
                             >
-                              <Eye size={14} />
-                              {dictionary.list.actions.view}
+                              <Eye size={17} />
                             </PendingLink>
                           </div>
                         </td>

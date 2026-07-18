@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
-import { requirePermission } from "@/lib/auth/permissions";
+import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getSuppliersDictionary } from "@/lib/i18n/dictionaries/suppliers";
 import { getSupplierById } from "@/lib/suppliers/queries";
@@ -66,9 +66,7 @@ export default async function EditSupplierPage({
     notFound();
   }
 
-  return (
-    <div className="flex flex-col h-full max-w-5xl mx-auto w-full pb-12">
-      <SupplierEditForm supplier={result.supplier} dictionary={dictionary} />
-    </div>
-  );
+  const canManageBankDetails = await checkPermission("suppliers:write_bank");
+
+  return <div className="flex h-full w-full max-w-5xl flex-col pb-12"><SupplierEditForm supplier={result.supplier} dictionary={dictionary} canManageBankDetails={canManageBankDetails} /></div>;
 }

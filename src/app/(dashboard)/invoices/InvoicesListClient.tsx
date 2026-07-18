@@ -222,10 +222,9 @@ export default function InvoicesListClient({
                         href={`/invoices/${inv.id}`}
                         aria-label={`${dictionary.list.table.preview} ${inv.invoice_number || inv.id}`}
                         title={`${dictionary.list.table.preview} ${inv.invoice_number || inv.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-[12px] font-semibold text-on-surface transition-colors hover:border-primary/40 hover:bg-surface-container hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed"
                       >
-                        <Eye size={14} />
-                        {dictionary.list.table.preview}
+                        <Eye size={17} />
                       </PendingLink>
                     </td>
                     <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>

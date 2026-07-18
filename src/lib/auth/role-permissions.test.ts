@@ -114,3 +114,18 @@ test("Canonical role inventory remains complete", () => {
     "viewer",
   ]);
 });
+
+test("Supplier bank and deletion permissions remain Admin-only", () => {
+  const protectedPermissions = [
+    "suppliers:read_bank",
+    "suppliers:write_bank",
+    "suppliers:delete",
+  ];
+
+  for (const permission of protectedPermissions) {
+    assert.equal(hasPermissionForRole("admin", permission), true);
+    for (const role of ["manager", "operations", "sales", "accountant", "viewer"] as const) {
+      assert.equal(hasPermissionForRole(role, permission), false);
+    }
+  }
+});
