@@ -347,39 +347,43 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 
 ## Invoice Financial Lifecycle Residual Risks
 
-Accepted **non-blocking technical debt** for the current DEV/DEMO browser acceptance (`PASS WITH WARN`). Residuals **1–4 remain unresolved** (implementation pending). Canonical create-path contract: [`docs/atomic-invoice-creation-contract.md`](./atomic-invoice-creation-contract.md) (**contract locked; RPC/migration not installed**). No invented deadlines. None of the following are production-readiness claims.
+Accepted **non-blocking technical debt** for the current DEV/DEMO browser acceptance (`PASS WITH WARN`). Residuals **1–4 are not fully closed yet**: database implementation and Mozfer DEV/DEMO apply of `public.create_invoice_atomic` are **complete**; **application routing through the RPC remains pending Task 20**, so the live create path is still multi-query. Canonical create-path contract: [`docs/atomic-invoice-creation-contract.md`](./atomic-invoice-creation-contract.md). Migration: `supabase/migrations/20260717180000_atomic_invoice_create.sql` (commit `5ad23f25`, installed DEV/DEMO only). No invented deadlines. **No production apply and no VAT/ZATCA/FATOORA claim.**
 
 ### 1. Legacy Quotation concurrent Deposit race remains non-atomic
-- **Status:** **Contract locked, implementation pending** (not closed).
-- **Current behavior:** Under legacy Quotation authority, concurrent Deposit creates can race before remaining is re-read (multi-query `createInvoiceAction`).
-- **Why deferred:** Requires reviewed transactional RPC beyond the application stack already shipped.
-- **Risk classification:** Medium (concurrency / over-ceiling create under concurrent writers).
-- **Mitigation today:** Server-side remaining/ceiling checks, single-Deposit MVP guard, and rate limiting on create; no full atomic reservation.
-- **Future hardening:** `public.create_invoice_atomic` per atomic Invoice creation contract (Service `FOR UPDATE`, recompute remaining, single insert).
+- **Status:** **DB RPC installed in DEV/DEMO; live app path not closed** (application still multi-query until Task 20).
+- **Current behavior:** Under legacy Quotation authority, concurrent Deposit creates can still race in **`createInvoiceAction`** (multi-query) before remaining is re-read.
+- **DB status:** `public.create_invoice_atomic` implements Service `FOR UPDATE`, recomputes remaining, and inserts once (Mozfer-verified DEV/DEMO; service_role only).
+- **Why still open for product path:** App does not yet call the RPC; no silent fallback rule applies until integration lands.
+- **Risk classification:** Medium (concurrency / over-ceiling create under concurrent writers on the live app path).
+- **Mitigation today:** Server-side remaining/ceiling checks, single-Deposit MVP guard, and rate limiting on create; RPC available but unused by app.
+- **Next hardening:** Task 20 — route create through `create_invoice_atomic` with fail-closed if RPC missing.
 
-### 2. Database enforcement lacks the legacy Quotation ceiling branch
-- **Status:** **Contract locked, implementation pending** (not closed).
-- **Current behavior:** App-layer authority resolves legacy Quotation ceilings; DB invoice write guards emphasize active ABS linkage/ceiling paths.
-- **Why deferred:** Separate reviewed migration; must not invent unbuilt SQL as installed.
-- **Risk classification:** Medium (DB does not fully mirror app legacy ceiling).
+### 2. Database enforcement lacks the legacy Quotation ceiling branch (on the live app path)
+- **Status:** **DB RPC includes legacy branch (exact-zero ABS history); live app path not closed** until Task 20.
+- **Current behavior:** App-layer authority still resolves legacy Quotation ceilings for create; live insert is not yet the RPC.
+- **DB status:** Installed `create_invoice_atomic` enforces legacy Quotation ceiling only after exact-zero ABS history proof, and active ABS ceiling otherwise (DEV/DEMO verified install).
+- **Why still open for product path:** Application create does not yet rely on the RPC.
+- **Risk classification:** Medium (live path still app-orchestrated).
 - **Mitigation today:** Application `createInvoiceAction` and billing-state authority resolution enforce ceiling/remaining fail-closed.
-- **Future hardening:** Explicit legacy Quotation ceiling branch inside `create_invoice_atomic` when ABS history is exactly zero.
+- **Next hardening:** Task 20 integration so create uses the installed RPC branch.
 
-### 3. Lifecycle validation and Invoice insert remain non-atomic
-- **Status:** **Contract locked, implementation pending** (not closed).
-- **Current behavior:** Service lifecycle decision and Invoice insert are sequential application steps, not one DB transaction with the lifecycle evidence row.
-- **Why deferred:** Transactional create RPC not yet implemented/applied/integrated.
-- **Risk classification:** Medium (status change between check and insert).
+### 3. Lifecycle validation and Invoice insert remain non-atomic (on the live app path)
+- **Status:** **DB RPC is atomic; live app path not closed** until Task 20.
+- **Current behavior:** Service lifecycle decision and Invoice insert remain sequential application steps in `createInvoiceAction`.
+- **DB status:** Installed `create_invoice_atomic` re-checks the seven-state matrix under Service row lock before insert (DEV/DEMO).
+- **Why still open for product path:** App not routed through the RPC yet.
+- **Risk classification:** Medium (status change between check and insert on live multi-query path).
 - **Mitigation today:** Fail-closed lifecycle matrix on create; Completed/Cancelled deny both Deposit and Final.
-- **Future hardening:** Atomic lifecycle re-check + insert under Service row lock inside `create_invoice_atomic`.
+- **Next hardening:** Task 20 — atomic lifecycle re-check + insert via the verified RPC.
 
-### 4. Database triggers do not enforce the complete seven-state Deposit/Final lifecycle
-- **Status:** **Contract locked, implementation pending** (not closed for create path).
-- **Current behavior:** Seven-state matrix (Inquiry/Quoted/Approved/Deposit Paid/In Progress/Completed/Cancelled) is application-enforced.
-- **Why deferred:** Atomic create RPC (not a separate full-table trigger redesign) is the locked hardening vehicle for create.
-- **Risk classification:** Medium (bypass if a future write path skips app gates).
+### 4. Complete seven-state Deposit/Final create enforcement not on the live path yet
+- **Status:** **DB RPC implements seven-state create guards; live app path not closed** until Task 20.
+- **Current behavior:** Seven-state matrix (Inquiry/Quoted/Approved/Deposit Paid/In Progress/Completed/Cancelled) is still application-enforced on live create.
+- **DB status:** Installed `create_invoice_atomic` enforces the same matrix on create inside the RPC (DEV/DEMO).
+- **Why still open for product path:** App create has not switched to the RPC; broader update-path triggers remain separate if ever needed.
+- **Risk classification:** Medium (bypass if a future write path skips app gates before integration).
 - **Mitigation today:** `getServiceInvoiceLifecycleDecision` + control visibility + action gates; permission denial before privileged work.
-- **Future hardening:** Seven-state Deposit/Final enforcement inside `create_invoice_atomic`; broader update-path triggers remain separate if ever needed.
+- **Next hardening:** Task 20 integration; no claim that all invoice write paths are fully DB-enforced.
 
 ### 5. Application ABS draft-only history behavior may be stricter than the DB helper
 - **Status:** Materially reduced by Wave A history alignment (app card/resolver); residual DB-helper parity may remain.
@@ -390,7 +394,7 @@ Accepted **non-blocking technical debt** for the current DEV/DEMO browser accept
 
 ### 6. Deposit client maximum currently uses the full ceiling rather than remaining
 - **Status:** **Addressed in application** (Wave A Task 14): Deposit client max/validation use remaining authority.
-- **Residual:** Server atomic race (residual 1) still open; browser above-remaining lane remains automated-evidence-only.
+- **Residual:** Live-path server atomic race (residual 1) remains open until Task 20 routes create through the DEV/DEMO-installed RPC; browser above-remaining lane remains automated-evidence-only.
 - **Risk classification:** Low for client UX after Task 14.
 
 ### 7. Broad ABS write-side numeric normalization remains deferred
