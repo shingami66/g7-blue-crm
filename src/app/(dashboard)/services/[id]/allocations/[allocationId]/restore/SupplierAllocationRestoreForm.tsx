@@ -11,6 +11,7 @@ import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
 import type { ComponentProps } from "react";
+import { getSafeActionErrorMessage } from "@/lib/i18n/safe-action-error";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -36,12 +37,18 @@ function getRestoreSupplierAllocationErrorMessage(
       dictionary.errors.allocationIdRequired,
     "Supplier allocation not found.": dictionary.errors.notFound,
     "Supplier allocation is not deleted.": dictionary.errors.notDeleted,
+    "Rate-card allocations cannot be restored.":
+      dictionary.errors.rateCardRestricted,
+    "Supplier is unavailable for allocation restoration.":
+      dictionary.errors.supplierUnavailable,
     "This allocation cannot be modified because it is linked to an active supplier booking.":
       dictionary.errors.linkedActiveBooking,
     "Service is unavailable for supplier allocation restoration.":
       dictionary.errors.serviceUnavailable,
     "Failed to restore supplier allocation. Please try again.":
       dictionary.errors.restoreFailedRetry,
+    "Supplier allocation changed before this action could be completed. Refresh and try again.":
+      dictionary.errors.staleConflict,
     "Failed to verify booking status. Please try again.":
       dictionary.errors.bookingStatusVerifyFailed,
     "An unexpected error occurred while verifying booking status.":
@@ -51,7 +58,7 @@ function getRestoreSupplierAllocationErrorMessage(
     "An unexpected error occurred.": dictionary.errors.unexpected,
   };
 
-  return mappedErrors[error] || error;
+  return getSafeActionErrorMessage(error, mappedErrors, dictionary.errors.unexpected);
 }
 
 export default function SupplierAllocationRestoreForm({

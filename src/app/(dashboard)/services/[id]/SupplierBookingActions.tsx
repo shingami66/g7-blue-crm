@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
@@ -31,6 +31,10 @@ function getCreateSupplierBookingErrorMessage(
       dictionary.errors.serviceStatusVerifyFailed,
     "Service is unavailable for Supplier Booking.":
       dictionary.errors.serviceUnavailable,
+    "Failed to verify Supplier status. Please try again.":
+      dictionary.errors.supplierStatusVerifyFailed,
+    "Supplier is unavailable for Supplier Booking.":
+      dictionary.errors.supplierUnavailable,
     "Source allocation already has an active Supplier Booking.":
       dictionary.errors.activeBookingExists,
     "Failed to create Supplier Booking. Please try again.":
@@ -63,6 +67,8 @@ function getCancelSupplierBookingErrorMessage(
       dictionary.errors.serviceUnavailable,
     "Failed to cancel Supplier Booking. Please try again.":
       dictionary.errors.cancelFailedRetry,
+    "Supplier Booking changed before this action could be completed. Refresh and try again.":
+      dictionary.errors.staleConflict,
     Unauthorized: dictionary.errors.unauthorized,
     Forbidden: dictionary.errors.forbidden,
     "An unexpected error occurred.": dictionary.errors.unexpected,
@@ -125,6 +131,66 @@ export default function SupplierBookingActions({
   const [cancelledReason, setCancelledReason] = useState("");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const reasonRef = useRef<HTMLTextAreaElement>(null);
+  const pendingRef = useRef(false);
+  const titleId = useId();
+  const descriptionId = useId();
+  const triggerId = `cancel-supplier-booking-trigger-${bookingId}`;
+
+  useEffect(() => {
+    pendingRef.current = isPending;
+  }, [isPending]);
+
+  useEffect(() => {
+    if (!isCancelling) return;
+
+    const previousFocus = document.activeElement;
+    reasonRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && !pendingRef.current) {
+        event.preventDefault();
+        setIsCancelling(false);
+        setCancelledReason("");
+        setError(null);
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable?.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      if (previousFocus instanceof HTMLElement) {
+        previousFocus.focus();
+      }
+    };
+  }, [isCancelling]);
+
+  function closeDialog() {
+    if (pendingRef.current) return;
+    setIsCancelling(false);
+    setCancelledReason("");
+    setError(null);
+  }
+
   function submitCancellation() {
     const trimmedReason = cancelledReason.trim();
     if (!trimmedReason) {
@@ -152,9 +218,12 @@ export default function SupplierBookingActions({
   if (!isCancelling) {
     return (
       <Button
+        id={triggerId}
         onClick={() => setIsCancelling(true)}
         size="sm"
         variant="ghost"
+        aria-haspopup="dialog"
+        aria-expanded={isCancelling}
       >
         {dictionary.trigger}
       </Button>
@@ -163,16 +232,23 @@ export default function SupplierBookingActions({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
-      <div className="w-full max-w-lg rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+        className="w-full max-w-lg rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl"
+      >
         <div className="border-b border-outline-variant px-6 py-4">
-          <h4 className="text-base font-semibold text-on-surface">
+          <h4 id={titleId} className="text-base font-semibold text-on-surface">
             {dictionary.title}
           </h4>
-          <p className="mt-1 text-[13px] text-on-surface-variant">
+          <p id={descriptionId} className="mt-1 text-[13px] text-on-surface-variant">
             {dictionary.subtitle}
           </p>
         </div>
-        <div className="space-y-3 px-6 py-5 text-left">
+        <div className="space-y-3 px-6 py-5 text-start">
           <label
             htmlFor={`cancel-supplier-booking-${bookingId}`}
             className="block text-[12px] font-semibold text-on-surface"
@@ -180,6 +256,7 @@ export default function SupplierBookingActions({
             {dictionary.reasonLabel}
           </label>
           <textarea
+            ref={reasonRef}
             id={`cancel-supplier-booking-${bookingId}`}
             value={cancelledReason}
             onChange={(event) => setCancelledReason(event.target.value)}
@@ -188,16 +265,12 @@ export default function SupplierBookingActions({
             className="w-full resize-none rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
             placeholder={dictionary.reasonPlaceholder}
           />
-          {error && <p className="text-[12px] font-medium text-error">{error}</p>}
+          {error && <p className="text-[12px] font-medium text-error" role="alert">{error}</p>}
         </div>
         <div className="flex justify-end gap-3 border-t border-outline-variant px-6 py-4">
           <Button
             type="button"
-            onClick={() => {
-              setIsCancelling(false);
-              setCancelledReason("");
-              setError(null);
-            }}
+            onClick={closeDialog}
             disabled={isPending}
             variant="ghost"
           >

@@ -24,6 +24,8 @@ function formatAllocationMoney(locale: Locale, value: number, currency: string) 
 
 type SupplierAllocationsPanelProps = {
   allocations: SupplierAllocation[];
+  activeBookingAllocationIds?: string[];
+  loadError?: boolean;
   canReadCost: boolean;
   canWrite?: boolean;
   canCancel?: boolean;
@@ -44,6 +46,8 @@ const STATUS_VARIANT_MAP: Record<SupplierAllocation["status"], StatusBadgeVarian
 
 export default function SupplierAllocationsPanel({
   allocations,
+  activeBookingAllocationIds = [],
+  loadError = false,
   canReadCost,
   canWrite,
   canCancel,
@@ -53,6 +57,7 @@ export default function SupplierAllocationsPanel({
   dictionary,
 }: SupplierAllocationsPanelProps) {
   const panelDictionary = dictionary.supplierAllocations;
+  const activeBookingIds = new Set(activeBookingAllocationIds);
   const hasAllocations = allocations.length > 0;
   const isServiceEditable =
     serviceStatus !== "Completed" && serviceStatus !== "Cancelled";
@@ -115,7 +120,11 @@ export default function SupplierAllocationsPanel({
         )}
       </div>
       
-      {!hasAllocations ? (
+      {loadError ? (
+        <div className="p-8 text-center text-error text-[14px]" role="alert">
+          {panelDictionary.loadError}
+        </div>
+      ) : !hasAllocations ? (
         <div className="p-8 text-center text-on-surface-variant text-[14px]">
           {panelDictionary.empty}
         </div>
@@ -177,14 +186,14 @@ export default function SupplierAllocationsPanel({
               <td className="px-4 py-3 align-top text-end">
                 <div className="flex flex-col items-end gap-2">
                   <div className="flex flex-wrap items-center justify-end gap-3">
-                    {!a.isDeleted && canWrite && a.status !== "cancelled" && isServiceEditable && (
+                    {!a.isDeleted && canWrite && a.status !== "cancelled" && isServiceEditable && !activeBookingIds.has(a.id) && (
                       <SupplierAllocationStatusActions
                         allocationId={a.id}
                         status={a.status}
                         dictionary={panelDictionary.statusActions}
                       />
                     )}
-                    {!a.isDeleted && canWrite && canReadCost && a.status !== "cancelled" && a.costSource === "manual_estimate" && isServiceEditable && (
+                    {!a.isDeleted && canWrite && canReadCost && a.status !== "cancelled" && a.costSource === "manual_estimate" && isServiceEditable && !activeBookingIds.has(a.id) && (
                       <PendingLink
                         href={`/services/${serviceId}/allocations/${a.id}/edit`}
                         className="text-[13px] font-semibold text-primary hover:underline"
@@ -192,7 +201,7 @@ export default function SupplierAllocationsPanel({
                         {panelDictionary.actions.edit}
                       </PendingLink>
                     )}
-                    {!a.isDeleted && canCancel && a.status !== "cancelled" && isServiceEditable && (
+                    {!a.isDeleted && canCancel && a.status !== "cancelled" && isServiceEditable && !activeBookingIds.has(a.id) && (
                       <PendingLink
                         href={`/services/${serviceId}/allocations/${a.id}/cancel`}
                         className="text-[13px] font-semibold text-error hover:underline"
@@ -200,7 +209,7 @@ export default function SupplierAllocationsPanel({
                         {panelDictionary.actions.cancel}
                       </PendingLink>
                     )}
-                    {!a.isDeleted && canWrite && isServiceEditable && (
+                    {!a.isDeleted && canWrite && a.costSource === "manual_estimate" && isServiceEditable && !activeBookingIds.has(a.id) && (
                       <PendingLink
                         href={`/services/${serviceId}/allocations/${a.id}/delete`}
                         className="text-[13px] font-semibold text-error hover:underline"
@@ -208,7 +217,7 @@ export default function SupplierAllocationsPanel({
                         {panelDictionary.actions.delete}
                       </PendingLink>
                     )}
-                    {a.isDeleted && canWrite && isServiceEditable && (
+                    {a.isDeleted && canWrite && a.costSource === "manual_estimate" && isServiceEditable && (
                       <PendingLink
                         href={`/services/${serviceId}/allocations/${a.id}/restore`}
                         className="text-[13px] font-semibold text-primary hover:underline"
@@ -217,8 +226,13 @@ export default function SupplierAllocationsPanel({
                       </PendingLink>
                     )}
                   </div>
-                  {!a.isDeleted && a.status === "selected" && (
-                    <span className="max-w-[220px] text-right text-[11px] font-medium text-on-surface-variant">
+                  {!a.isDeleted && activeBookingIds.has(a.id) && (
+                    <span className="max-w-[240px] text-end text-[11px] font-medium text-on-surface-variant">
+                      {panelDictionary.activeBookingLock}
+                    </span>
+                  )}
+                  {!a.isDeleted && a.status === "selected" && !activeBookingIds.has(a.id) && (
+                    <span className="max-w-[220px] text-end text-[11px] font-medium text-on-surface-variant">
                       {panelDictionary.selectedHint}
                     </span>
                   )}

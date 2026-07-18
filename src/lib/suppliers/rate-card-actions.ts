@@ -87,11 +87,14 @@ export async function getActiveSupplierRateCardsForAllocation(supplierId: string
 
     const rows = (data ?? []) as unknown as SupplierRateCardRow[];
     
-    // Filter out expired cards: valid_to must be null OR >= today
+    // Allocation options must be currently effective, not merely unexpired.
     const today = new Date().toISOString().split("T")[0];
-    const unexpiredRows = rows.filter((row) => !row.valid_to || row.valid_to >= today);
+    const currentRows = rows.filter(
+      (row) =>
+        row.valid_from <= today && (!row.valid_to || row.valid_to >= today),
+    );
 
-    const sorted = unexpiredRows.map(mapRowToSupplierRateCard).sort((a, b) => {
+    const sorted = currentRows.map(mapRowToSupplierRateCard).sort((a, b) => {
       // valid_from desc
       const dateA = new Date(a.validFrom).getTime();
       const dateB = new Date(b.validFrom).getTime();

@@ -90,3 +90,8 @@ export type SupplierAllocationCancelInput = z.infer<typeof supplierAllocationCan
 export type SupplierAllocationMapperOptions = {
   canReadCost: boolean;
 };
+
+export type SupplierAllocationsListResult = {
+  allocations: SupplierAllocation[];
+  error?: "supplier_allocations_load_failed";
+};

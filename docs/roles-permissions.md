@@ -95,7 +95,7 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - No `supplier_allocations:approve` permission exists for allocations in the MVP.
 - Operations, Sales, Viewer, and Accountant still have no Supplier Allocations access.
 - MVP separation between `supplier_allocations:read` and `supplier_allocations:read_cost` ensures cost visibility remains restricted.
-- Domain module `src/lib/supplier-allocations/` implements types, Zod schemas, and mappers under `SUPPLIER-ALLOCATIONS-SCHEMAS-1A`. Mappers enforce the `canReadCost` option to redact sensitive cost fields (`estimatedUnitCost`, `estimatedTotalCost`, `rateCardSnapshot`) when `supplier_allocations:read_cost` is not present, and Zod schemas validate create/update inputs (e.g. blocking `estimatedTotalCost` and `serviceId` updates) while keeping the database and permissions foundation secure. Server-only read queries (`queries.ts`) are implemented under `SUPPLIER-ALLOCATIONS-READ-1A`. These query functions enforce `requirePermission("supplier_allocations:read")` and use `checkPermission("supplier_allocations:read_cost")` server-side to set `canReadCost` before mapping, preventing any cost exposure to unauthorized users. `SUPPLIER-ALLOCATIONS-CREATE-MANUAL-1A` implemented the `createSupplierAllocation` server action which enforces `supplier_allocations:write` and forces status to `draft`. `SUPPLIER-ALLOCATIONS-CANCEL-1A` implemented the `cancelSupplierAllocation` server action which enforces `supplier_allocations:cancel` and safely cherry-picks payload to update status to `cancelled` and sets `cancelled_by` using `user.clerk_user_id`. `SUPPLIER-ALLOCATIONS-UPDATE-MANUAL-1A` implemented the `updateSupplierAllocation` server action which enforces `supplier_allocations:write` and updates the allocation's fields using `supplierAllocationUpdateSchema` (with `supplierId` removed from required input). UI Panel `SUPPLIER-ALLOCATIONS-SERVICE-UI-PANEL-1A` implemented the read-only Service detail panel. Mutation forms (create/edit/cancel CRUD workflows) remain deferred.
+- Domain module `src/lib/supplier-allocations/` implements types, Zod schemas, mappers, server-only reads, and Service-scoped create/edit/transition/cancel/delete/restore actions. Mappers redact `estimatedUnitCost`, `estimatedTotalCost`, and `rateCardSnapshot` without `supplier_allocations:read_cost`; server reads require `supplier_allocations:read` and evaluate `read_cost` before mapping. Create/update inputs do not accept generated totals or service reassignment. Manual mutations require the applicable server permission, are blocked for terminal Services and active Bookings, and use conditional affected-row checks. Restore rechecks the active, non-deleted, non-blacklisted Supplier. Rate-card allocations may be created only from currently valid active cards and cannot be deleted or restored.
 
 
 ### Status Transitions
@@ -105,6 +105,13 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - `Any -> cancelled`: `supplier_allocations:cancel`
 
 Avoid confirmed status at allocation level because confirmation/commitment belongs to future Supplier Booking / Internal PO.
+
+## Supplier Bookings Permissions
+
+- Supplier Bookings are internal, Service-scoped Admin/Manager workflows only: `supplier_bookings:read`, `supplier_bookings:read_cost`, `supplier_bookings:write`, and `supplier_bookings:cancel`.
+- Operations, Sales, Viewer, and Accountant have no Supplier Booking access in this V1 slice.
+- Booking creation derives the allocation, Supplier, Service, and cost snapshot server-side. It requires an active, non-deleted, non-blacklisted Supplier and prevents a second active Booking for the same allocation.
+- Booking cancellation requires `supplier_bookings:cancel`, a non-empty reason, and a conditional affected-row check. The UI does not surface raw server/database error text.
 
 ## Security Notes
 

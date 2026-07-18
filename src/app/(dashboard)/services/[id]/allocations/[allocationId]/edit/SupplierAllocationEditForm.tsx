@@ -8,6 +8,7 @@ import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { updateSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
+import { getSafeActionErrorMessage } from "@/lib/i18n/safe-action-error";
 
 function getUpdateSupplierAllocationErrorMessage(
   error: string | null | undefined,
@@ -39,6 +40,8 @@ function getUpdateSupplierAllocationErrorMessage(
       dictionary.errors.approvedQuotationInvalid,
     "Failed to update supplier allocation. Please try again.":
       dictionary.errors.updateFailedRetry,
+    "Supplier allocation changed before this action could be completed. Refresh and try again.":
+      dictionary.errors.staleConflict,
     "Failed to verify booking status. Please try again.":
       dictionary.errors.bookingStatusVerifyFailed,
     "An unexpected error occurred while verifying booking status.":
@@ -48,7 +51,7 @@ function getUpdateSupplierAllocationErrorMessage(
     "An unexpected error occurred.": dictionary.errors.unexpected,
   };
 
-  return mappedErrors[error] || error;
+  return getSafeActionErrorMessage(error, mappedErrors, dictionary.errors.unexpected);
 }
 
 export default function SupplierAllocationEditForm({
@@ -192,8 +195,9 @@ export default function SupplierAllocationEditForm({
             id="quantity"
             name="quantity"
             defaultValue={allocation.quantity}
-            min="0.01"
-            step="0.01"
+            min="0.001"
+            max="9999999.999"
+            step="0.001"
             required
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             placeholder={dictionary.placeholders.quantity}
@@ -212,6 +216,7 @@ export default function SupplierAllocationEditForm({
             name="estimatedUnitCost"
             defaultValue={allocation.estimatedUnitCost ?? ""}
             min="0"
+            max="999999999999.99"
             step="0.01"
             required
             className="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"

@@ -998,3 +998,30 @@ test("28. No hardcoded English remains in source-proven Service operational-subf
   assert.match(read(DEPOSIT), /useLocale/);
   assert.match(read(FINAL), /useLocale/);
 });
+
+test("29. Supplier operational failure and stale states stay localized and non-leaking", () => {
+  const en = getServicesDictionary("en");
+  const ar = getServicesDictionary("ar");
+
+  assert.notEqual(en.supplierAllocations.loadError, en.supplierAllocations.empty);
+  assert.notEqual(ar.supplierAllocations.loadError, ar.supplierAllocations.empty);
+  assert.notEqual(
+    en.supplierBookings.loadError,
+    en.supplierBookings.empty.noBookings,
+  );
+  assert.notEqual(
+    ar.supplierBookings.loadError,
+    ar.supplierBookings.empty.noBookings,
+  );
+  assert.ok(en.supplierAllocations.activeBookingLock.length > 0);
+  assert.ok(ar.supplierAllocations.activeBookingLock.length > 0);
+  assert.ok(en.supplierBookings.cancelAction.errors.staleConflict.length > 0);
+  assert.ok(ar.supplierBookings.cancelAction.errors.staleConflict.length > 0);
+
+  const bookingActions = read(BOOKING_ACTIONS);
+  assert.match(bookingActions, /getSafeActionErrorMessage/);
+  assert.match(bookingActions, /role="dialog"/);
+  assert.match(bookingActions, /aria-modal="true"/);
+  assert.match(bookingActions, /text-start/);
+  assert.doesNotMatch(bookingActions, /mappedErrors\[error\] \|\| error/);
+});

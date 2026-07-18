@@ -127,12 +127,17 @@ export default async function ServiceDetailPage({
     ? await getServiceStatusTransitionState(createAdminClient(), service.id, service.status, locale)
     : null;
 
-  const supplierAllocations = canReadSupplierAllocations
+  const supplierAllocationsResult = canReadSupplierAllocations
     ? await getSupplierAllocationsByServiceId(service.id, { includeDeleted: showDeleted })
     : null;
-  const supplierBookings = canReadSupplierBookings
+  const supplierBookingsResult = canReadSupplierBookings
     ? await getSupplierBookingsByServiceId(service.id)
     : null;
+  const supplierAllocations = supplierAllocationsResult?.allocations ?? null;
+  const supplierBookings = supplierBookingsResult?.bookings ?? null;
+  const activeBookingAllocationIds = (supplierBookings ?? [])
+    .filter((booking) => booking.status !== "cancelled")
+    .map((booking) => booking.sourceAllocationId);
 
   return (
     <div className="flex w-full min-w-0 max-w-full flex-col gap-6 pb-12">
@@ -322,9 +327,11 @@ export default async function ServiceDetailPage({
           )}
         />
       )}
-      {canReadSupplierAllocations && supplierAllocations && (
+      {canReadSupplierAllocations && supplierAllocationsResult && supplierAllocations && (
         <SupplierAllocationsPanel
           allocations={supplierAllocations}
+          loadError={!!supplierAllocationsResult.error}
+          activeBookingAllocationIds={activeBookingAllocationIds}
           canReadCost={canReadCost}
           canWrite={canWriteAllocations}
           canCancel={canCancelAllocations}
@@ -334,10 +341,11 @@ export default async function ServiceDetailPage({
           dictionary={dictionary}
         />
       )}
-      {canReadSupplierBookings && supplierBookings && (
+      {canReadSupplierBookings && supplierBookingsResult && supplierBookings && (
         <SupplierBookingsPanel
           bookings={supplierBookings}
           allocations={supplierAllocations ?? []}
+          loadError={!!supplierBookingsResult.error}
           canCreate={canWriteSupplierBookings}
           canCancel={canCancelSupplierBookings}
           serviceStatus={service.status}

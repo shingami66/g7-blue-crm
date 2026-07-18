@@ -8,6 +8,7 @@ import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { createSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import { getActiveSupplierRateCardsForAllocation } from "@/lib/suppliers/rate-card-actions";
+import { getSafeActionErrorMessage } from "@/lib/i18n/safe-action-error";
 import type { SupplierOption } from "@/lib/suppliers/types";
 import type { SupplierRateCard } from "@/lib/suppliers/rate-card-types";
 
@@ -38,6 +39,7 @@ function getCreateSupplierAllocationErrorMessage(
     "Invalid rate card cost or currency.":
       dictionary.errors.invalidRateCardCostOrCurrency,
     "Rate card is expired.": dictionary.errors.rateCardExpired,
+    "Rate card is not currently valid.": dictionary.errors.rateCardNotCurrent,
     "Failed to create supplier allocation. Please try again.":
       dictionary.errors.createFailedRetry,
     Unauthorized: dictionary.errors.unauthorized,
@@ -45,7 +47,7 @@ function getCreateSupplierAllocationErrorMessage(
     "An unexpected error occurred.": dictionary.errors.unexpected,
   };
 
-  return mappedErrors[error] || error;
+  return getSafeActionErrorMessage(error, mappedErrors, dictionary.errors.unexpected);
 }
 
 export default function SupplierAllocationCreateForm({
@@ -354,8 +356,9 @@ export default function SupplierAllocationCreateForm({
             type="number"
             id="quantity"
             name="quantity"
-            min="0.01"
-            step="0.01"
+            min="0.001"
+            max="9999999.999"
+            step="0.001"
             value={quantity}
             onChange={(event) => setQuantity(event.target.value)}
             required
@@ -378,6 +381,7 @@ export default function SupplierAllocationCreateForm({
             id="estimatedUnitCost"
             name="estimatedUnitCost"
             min="0"
+            max="999999999999.99"
             step="0.01"
             required={mode === "manual_estimate"}
             value={mode === "rate_card" ? rcBaseCost : manualEstimatedUnitCost}

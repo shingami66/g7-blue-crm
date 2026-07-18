@@ -75,8 +75,9 @@ Current active task:
 - **ABS review/approve complete and pushed:** `ABS-MGMT-UI-REVIEW-APPROVE-1` — automated validation passed; PASS by Mozfer manual browser evidence; committed and pushed in `d8b654f2c89622837b75531aa44d79a66e024ad8`.
 - **Financial lifecycle implementation verified:** `ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED` remains the governing design decision. The reviewed migration/RPC implementation is installed in DEV/DEMO. Successful mutation smoke and independent review are **complete** (synthetic DEV/DEMO only; run ID `300d4edd-5c8e-45bc-bc85-b4f033750a14`).
 - **Invoice financial lifecycle application stack:** **implemented, tested, DEV/DEMO browser-accepted (PASS WITH WARN), and pushed** through `45cdfb73` (ten source/test commits: money, exposure, lifecycle, safe action errors, invoice RBAC, five-mode authority, ABS history alignment, Deposit/Final actions, Service billing UI, Quotation display-only authority). Service Detail is mutation authority; Quotation Detail is display-only.
-- **Current active task (exactly one):** `G7-FINANCIAL-LIFECYCLE-DOCS-PUSH-1` (controlled push of the documentation commits that record the already-pushed source wave). Immediate next step after local docs commits is the controlled documentation push — not production rollout.
-- **Next safe product/engineering direction (after docs push):** history/read polish → Void UI → successor UI → optional Manager/Accountant browser smoke. Production apply remains unauthorized. No production-readiness claim from DEV/DEMO acceptance.
+- **Current active task (exactly one):** `G7-SUPPLIER-OPS-04-V1-FINAL-CLOSEOUT-1` (controlled documentation, validation, Graphify refresh, commit, and push for Supplier Operations V1). No production rollout is implied.
+- **Supplier Operations V1 closeout:** Service-scoped internal Allocation and Supplier Booking workflows are implemented. Booking creation and Allocation restore require an active, non-deleted, non-blacklisted Supplier; active Bookings lock Allocation edit, transition, cancel, delete, and restore controls. Cancellation uses an accessible, RTL-safe reason dialog. The closeout preserves the application-layer/nontransactional stale-check caveat and does not claim browser runtime verification or production readiness.
+- **Next safe product/engineering direction (after this closeout):** select the next highest-value G7 CRM milestone. Production apply remains unauthorized.
 - **Deferred / optional (not complete):** Manager and Accountant browser smoke sessions; Deposit client maximum using remaining rather than full ceiling; legacy Quotation database ceiling hardening; lifecycle atomicity hardening; full seven-state DB enforcement; ABS history consistency hardening; broad ABS numeric normalization; future production/database hardening; future VAT or compliance work. Do **not** mark production rollout, VAT readiness, ZATCA readiness, or accounting finality complete.
 - **Locked ABS management order:**
   1. `ABS-MGMT-UI-READ-ENRICH-1` **complete**
@@ -1155,7 +1156,7 @@ FUTURE SUPPLIER SEQUENCE
 - SUPPLIER-ALLOCATIONS-SERVICE-UI-CANCEL-1D is complete.
 - SUPPLIER-ALLOCATIONS-DELETE-RESTORE-1 is complete (Manual Supplier Allocation lifecycle is now closed).
 - SUPPLIER-ALLOCATIONS-RATE-CARD-CREATE-1 is complete (Rate-card allocation creation).
-- Supplier Booking foundation slices below show completed progress and future deferred work. Items marked CLOSED are implemented and pushed; items marked FUTURE are not implemented yet.
+- Supplier Booking foundation and Service-scoped operational V1 slices below show completed progress; only broader routes, portals, financial workflows, capacity/overlap, and status expansion remain future work.
   1. SUPPLIER-ALLOCATIONS-RATE-CARD-AUTOMATION-1 (Rate-card allocation automation / overlap enforcement / etc)
   2. SUPPLIER-BOOKINGS-SCHEMAS-1A: CLOSED
   3. SUPPLIER-BOOKINGS-PERMISSIONS-1A: CLOSED
@@ -1688,9 +1689,10 @@ SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY (COMPLETED, PASS WITH WARN)
 - Verified create/cancel booking actions on `SVC-2026-0003`; the minor loading/pending indicator UX warning is recorded as a separate follow-up.
 - Must not add standalone routes, pages, PDFs, customer-facing surfaces, supplier portal, supplier invoice/payment, actual cost, profit/margin reporting, edit/delete/restore, or status expansion.
 
-SUPPLIER-BOOKINGS-RUNTIME-1 (Planned future item)
-- Status: Not implemented, Not started, Not complete.
-- Scope: Standalone routes/pages, PDFs, WhatsApp/email, supplier portal, supplier invoices/payments, actual supplier costs, profit/margin reporting, edit/delete/restore, status expansion, and broader runtime behavior.
+SUPPLIER-BOOKINGS-RUNTIME-1 (Service-scoped V1 Closed; broader expansion future)
+- Status: Service-scoped internal create/cancel runtime is closed in Supplier Operations V1; no standalone route is added.
+- Completed scope: active Supplier lifecycle gate, server-derived Booking snapshot/create, duplicate active Booking prevention, conditional affected-row cancellation, active-Booking Allocation locks, accessible cancellation dialog, and EN/AR/RTL loading and empty-state hardening.
+- Deferred scope: standalone routes/pages, PDFs, WhatsApp/email, supplier portal, supplier invoices/payments, actual supplier costs, profit/margin reporting, booking edit/delete/restore, status expansion, allocation deduplication, and cross-Service overlap/capacity.
 - Design/review is strictly required before future UI/runtime expansion.
 
 

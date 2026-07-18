@@ -24,6 +24,9 @@ export type ActionResult<T = void> = {
   data?: T;
 };
 
+const SUPPLIER_BOOKING_STALE_ERROR =
+  "Supplier Booking changed before this action could be completed. Refresh and try again.";
+
 type SelectedAllocationRow = {
   id: string;
   service_id: string;
@@ -171,6 +174,33 @@ async function serviceAllowsSupplierBooking(
   return { success: true };
 }
 
+async function supplierAllowsSupplierBooking(
+  supabase: ReturnType<typeof createAdminClient>,
+  supplierId: string
+): Promise<ActionResult> {
+  const { data: supplier, error } = await supabase
+    .from("suppliers")
+    .select("status, is_blacklisted")
+    .eq("id", supplierId)
+    .eq("is_deleted", false)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[supplierAllowsSupplierBooking] Supabase error:", error.message);
+    return { success: false, error: "Failed to verify Supplier status. Please try again." };
+  }
+
+  if (!supplier) {
+    return { success: false, error: "Supplier is unavailable for Supplier Booking." };
+  }
+
+  if (supplier.status !== "active" || supplier.is_blacklisted) {
+    return { success: false, error: "Supplier is unavailable for Supplier Booking." };
+  }
+
+  return { success: true };
+}
+
 async function sourceAllocationHasActiveBooking(
   supabase: ReturnType<typeof createAdminClient>,
   allocationId: string
@@ -223,6 +253,14 @@ export async function createSupplierBookingFromAllocation(
     );
     if (!serviceResult.success) {
       return { success: false, error: serviceResult.error };
+    }
+
+    const supplierResult = await supplierAllowsSupplierBooking(
+      supabase,
+      allocationResult.data.supplier_id
+    );
+    if (!supplierResult.success) {
+      return { success: false, error: supplierResult.error };
     }
 
     const activeBookingResult = await sourceAllocationHasActiveBooking(supabase, allocationResult.data.id);
@@ -331,12 +369,18 @@ export async function cancelSupplierBooking(
         updated_by: user.clerk_user_id,
       })
       .eq("id", parsedId.data)
+      .eq("status", existingBooking.status)
+      .eq("is_deleted", false)
       .select("*, supplier:suppliers(name, display_name, legal_name, contact)")
-      .single();
+      .maybeSingle();
 
     if (updateError) {
       console.error("[cancelSupplierBooking] Supabase update error:", updateError.message);
       return { success: false, error: "Failed to cancel Supplier Booking. Please try again." };
+    }
+
+    if (!updatedRow) {
+      return { success: false, error: SUPPLIER_BOOKING_STALE_ERROR };
     }
 
     const canReadCost = await checkPermission("supplier_bookings:read_cost");

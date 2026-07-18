@@ -10,6 +10,7 @@ import { deleteSupplierAllocation } from "@/lib/supplier-allocations/actions";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import StatusBadge from "@/components/ui/StatusBadge";
 import type { ComponentProps } from "react";
+import { getSafeActionErrorMessage } from "@/lib/i18n/safe-action-error";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -36,12 +37,16 @@ function getDeleteSupplierAllocationErrorMessage(
     "Supplier allocation not found.": dictionary.errors.notFound,
     "Supplier allocation is already deleted.":
       dictionary.errors.alreadyDeleted,
+    "Rate-card allocations cannot be deleted.":
+      dictionary.errors.rateCardRestricted,
     "This allocation cannot be modified because it is linked to an active supplier booking.":
       dictionary.errors.linkedActiveBooking,
     "Service is unavailable for supplier allocation deletion.":
       dictionary.errors.serviceUnavailable,
     "Failed to delete supplier allocation. Please try again.":
       dictionary.errors.deleteFailedRetry,
+    "Supplier allocation changed before this action could be completed. Refresh and try again.":
+      dictionary.errors.staleConflict,
     "Failed to verify booking status. Please try again.":
       dictionary.errors.bookingStatusVerifyFailed,
     "An unexpected error occurred while verifying booking status.":
@@ -51,7 +56,7 @@ function getDeleteSupplierAllocationErrorMessage(
     "An unexpected error occurred.": dictionary.errors.unexpected,
   };
 
-  return mappedErrors[error] || error;
+  return getSafeActionErrorMessage(error, mappedErrors, dictionary.errors.unexpected);
 }
 
 export default function SupplierAllocationDeleteForm({

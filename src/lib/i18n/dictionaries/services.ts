@@ -306,6 +306,7 @@ export interface ServicesDictionary {
       restore: string;
     };
     empty: string;
+    loadError: string;
     columns: {
       status: string;
       supplier: string;
@@ -357,6 +358,7 @@ export interface ServicesDictionary {
     };
     deletedRecord: string;
     selectedHint: string;
+    activeBookingLock: string;
     subflow: {
       common: {
         allocationSummary: string;
@@ -478,6 +480,7 @@ export interface ServicesDictionary {
           rateCardSupplierMismatch: string;
           invalidRateCardCostOrCurrency: string;
           rateCardExpired: string;
+          rateCardNotCurrent: string;
           createFailedRetry: string;
           unauthorized: string;
           forbidden: string;
@@ -517,6 +520,7 @@ export interface ServicesDictionary {
           supplierUnavailable: string;
           approvedQuotationInvalid: string;
           updateFailedRetry: string;
+          staleConflict: string;
           unauthorized: string;
           forbidden: string;
           unexpected: string;
@@ -539,6 +543,7 @@ export interface ServicesDictionary {
           linkedActiveBooking: string;
           serviceUnavailable: string;
           cancelFailedRetry: string;
+          staleConflict: string;
           unauthorized: string;
           forbidden: string;
           unexpected: string;
@@ -555,9 +560,11 @@ export interface ServicesDictionary {
           allocationIdRequired: string;
           notFound: string;
           alreadyDeleted: string;
+          rateCardRestricted: string;
           linkedActiveBooking: string;
           serviceUnavailable: string;
           deleteFailedRetry: string;
+          staleConflict: string;
           unauthorized: string;
           forbidden: string;
           unexpected: string;
@@ -575,9 +582,12 @@ export interface ServicesDictionary {
           allocationIdRequired: string;
           notFound: string;
           notDeleted: string;
+          rateCardRestricted: string;
+          supplierUnavailable: string;
           linkedActiveBooking: string;
           serviceUnavailable: string;
           restoreFailedRetry: string;
+          staleConflict: string;
           unauthorized: string;
           forbidden: string;
           unexpected: string;
@@ -590,6 +600,7 @@ export interface ServicesDictionary {
   supplierBookings: {
     title: string;
     subtitle: string;
+    loadError: string;
     empty: {
       noBookings: string;
       selectAllocation: string;
@@ -622,6 +633,8 @@ export interface ServicesDictionary {
         sourceMustBeSelected: string;
         serviceStatusVerifyFailed: string;
         serviceUnavailable: string;
+        supplierStatusVerifyFailed: string;
+        supplierUnavailable: string;
         activeBookingExists: string;
         createFailedRetry: string;
         unauthorized: string;
@@ -647,6 +660,7 @@ export interface ServicesDictionary {
         serviceStatusVerifyFailed: string;
         serviceUnavailable: string;
         cancelFailedRetry: string;
+        staleConflict: string;
         unauthorized: string;
         forbidden: string;
         unexpected: string;
@@ -1286,6 +1300,7 @@ const servicesDictionaryEn: ServicesDictionary = {
       restore: "Restore",
     },
     empty: "No supplier allocations recorded for this service yet.",
+    loadError: "Supplier Allocations could not be loaded. Please try again.",
     columns: {
       status: "Status",
       supplier: "Supplier",
@@ -1338,6 +1353,8 @@ const servicesDictionaryEn: ServicesDictionary = {
     },
     deletedRecord: "Deleted Record",
     selectedHint: "Supplier Booking create or a linked booking appears in the panel below.",
+    activeBookingLock:
+      "Allocation actions are locked while an active Supplier Booking is linked.",
     subflow: {
       common: {
         allocationSummary: "Allocation Summary",
@@ -1480,6 +1497,7 @@ const servicesDictionaryEn: ServicesDictionary = {
             "Rate card does not belong to the selected supplier.",
           invalidRateCardCostOrCurrency: "Invalid rate card cost or currency.",
           rateCardExpired: "Rate card is expired.",
+          rateCardNotCurrent: "Rate card is not currently valid.",
           createFailedRetry:
             "Failed to create supplier allocation. Please try again.",
           unauthorized:
@@ -1530,6 +1548,8 @@ const servicesDictionaryEn: ServicesDictionary = {
             "Approved quotation is invalid for this service.",
           updateFailedRetry:
             "Failed to update supplier allocation. Please try again.",
+          staleConflict:
+            "This Supplier Allocation changed. Refresh the page and try again.",
           unauthorized:
             "You must be signed in to update supplier allocations.",
           forbidden:
@@ -1562,6 +1582,8 @@ const servicesDictionaryEn: ServicesDictionary = {
             "Service is unavailable for supplier allocation cancel.",
           cancelFailedRetry:
             "Failed to cancel supplier allocation. Please try again.",
+          staleConflict:
+            "This Supplier Allocation changed. Refresh the page and try again.",
           unauthorized:
             "You must be signed in to cancel supplier allocations.",
           forbidden:
@@ -1584,12 +1606,15 @@ const servicesDictionaryEn: ServicesDictionary = {
           allocationIdRequired: "Supplier allocation ID is required.",
           notFound: "Supplier allocation not found.",
           alreadyDeleted: "Supplier allocation is already deleted.",
+          rateCardRestricted: "Rate-card allocations cannot be deleted.",
           linkedActiveBooking:
             "This allocation cannot be modified because it is linked to an active supplier booking.",
           serviceUnavailable:
             "Service is unavailable for supplier allocation deletion.",
           deleteFailedRetry:
             "Failed to delete supplier allocation. Please try again.",
+          staleConflict:
+            "This Supplier Allocation changed. Refresh the page and try again.",
           unauthorized:
             "You must be signed in to delete supplier allocations.",
           forbidden:
@@ -1613,12 +1638,17 @@ const servicesDictionaryEn: ServicesDictionary = {
           allocationIdRequired: "Supplier allocation ID is required.",
           notFound: "Supplier allocation not found.",
           notDeleted: "Supplier allocation is not deleted.",
+          rateCardRestricted: "Rate-card allocations cannot be restored.",
+          supplierUnavailable:
+            "The Supplier is not active and available, so this allocation cannot be restored.",
           linkedActiveBooking:
             "This allocation cannot be modified because it is linked to an active supplier booking.",
           serviceUnavailable:
             "Service is unavailable for supplier allocation restoration.",
           restoreFailedRetry:
             "Failed to restore supplier allocation. Please try again.",
+          staleConflict:
+            "This Supplier Allocation changed. Refresh the page and try again.",
           unauthorized:
             "You must be signed in to restore supplier allocations.",
           forbidden:
@@ -1636,6 +1666,7 @@ const servicesDictionaryEn: ServicesDictionary = {
   supplierBookings: {
     title: "Supplier Bookings",
     subtitle: "Internal supplier bookings created from selected allocations.",
+    loadError: "Supplier Bookings could not be loaded. Please try again.",
     empty: {
       noBookings: "No Supplier Bookings recorded for this service yet.",
       selectAllocation: "Select a planned supplier allocation to create a Supplier Booking.",
@@ -1670,6 +1701,9 @@ const servicesDictionaryEn: ServicesDictionary = {
           "The Supplier Allocation must be in Selected status before creating a Supplier Booking.",
         serviceStatusVerifyFailed: "Failed to verify service status. Please try again.",
         serviceUnavailable: "Service data is unavailable for Supplier Booking creation.",
+        supplierStatusVerifyFailed: "Failed to verify Supplier status. Please try again.",
+        supplierUnavailable:
+          "The Supplier must be active, available, and not blacklisted before booking.",
         activeBookingExists:
           "This Supplier Allocation already has an active Supplier Booking.",
         createFailedRetry: "Failed to create Supplier Booking. Please try again.",
@@ -1696,6 +1730,8 @@ const servicesDictionaryEn: ServicesDictionary = {
         serviceStatusVerifyFailed: "Failed to verify service status. Please try again.",
         serviceUnavailable: "Service data is unavailable for Supplier Booking cancellation.",
         cancelFailedRetry: "Failed to cancel Supplier Booking. Please try again.",
+        staleConflict:
+          "This Supplier Booking changed. Refresh the page and try again.",
         unauthorized: "You must be signed in to cancel Supplier Bookings.",
         forbidden: "You do not have permission to cancel Supplier Bookings.",
         unexpected: "An unexpected error occurred while cancelling the Supplier Booking.",
@@ -2498,6 +2534,7 @@ const servicesDictionaryAr: ServicesDictionary = {
       restore: "استعادة",
     },
     empty: "لا توجد تخصيصات موردين مسجلة لهذه الخدمة حتى الآن.",
+    loadError: "تعذر تحميل تخصيصات الموردين. يرجى المحاولة مرة أخرى.",
     columns: {
       status: "الحالة",
       supplier: "المورد",
@@ -2550,6 +2587,8 @@ const servicesDictionaryAr: ServicesDictionary = {
     },
     deletedRecord: "سجل محذوف",
     selectedHint: "يظهر إنشاء حجز المورد أو الحجز المرتبط في اللوحة أدناه.",
+    activeBookingLock:
+      "إجراءات التخصيص مقفلة أثناء ارتباطه بحجز مورد نشط.",
     subflow: {
       common: {
         allocationSummary: "ملخص التخصيص",
@@ -2689,6 +2728,7 @@ const servicesDictionaryAr: ServicesDictionary = {
           invalidRateCardCostOrCurrency:
             "تكلفة بطاقة الأسعار أو عملتها غير صالحة.",
           rateCardExpired: "انتهت صلاحية بطاقة الأسعار.",
+          rateCardNotCurrent: "بطاقة الأسعار غير سارية حاليًا.",
           createFailedRetry:
             "تعذر إنشاء تخصيص المورد. يرجى المحاولة مرة أخرى.",
           unauthorized:
@@ -2737,6 +2777,8 @@ const servicesDictionaryAr: ServicesDictionary = {
           approvedQuotationInvalid: "عرض السعر المعتمد غير صالح لهذه الخدمة.",
           updateFailedRetry:
             "تعذر تحديث تخصيص المورد. يرجى المحاولة مرة أخرى.",
+          staleConflict:
+            "تم تغيير تخصيص المورد. حدّث الصفحة ثم حاول مرة أخرى.",
           unauthorized:
             "يجب تسجيل الدخول لتحديث تخصيصات الموردين.",
           forbidden:
@@ -2768,6 +2810,8 @@ const servicesDictionaryAr: ServicesDictionary = {
             "الخدمة غير متاحة لإلغاء تخصيص المورد.",
           cancelFailedRetry:
             "تعذر إلغاء تخصيص المورد. يرجى المحاولة مرة أخرى.",
+          staleConflict:
+            "تم تغيير تخصيص المورد. حدّث الصفحة ثم حاول مرة أخرى.",
           unauthorized:
             "يجب تسجيل الدخول لإلغاء تخصيصات الموردين.",
           forbidden:
@@ -2790,12 +2834,15 @@ const servicesDictionaryAr: ServicesDictionary = {
           allocationIdRequired: "معرّف تخصيص المورد مطلوب.",
           notFound: "تعذر العثور على تخصيص المورد.",
           alreadyDeleted: "تم حذف تخصيص المورد بالفعل.",
+          rateCardRestricted: "لا يمكن حذف تخصيصات بطاقة الأسعار.",
           linkedActiveBooking:
             "لا يمكن تعديل هذا التخصيص لأنه مرتبط بحجز مورد نشط.",
           serviceUnavailable:
             "الخدمة غير متاحة لحذف تخصيص المورد.",
           deleteFailedRetry:
             "تعذر حذف تخصيص المورد. يرجى المحاولة مرة أخرى.",
+          staleConflict:
+            "تم تغيير تخصيص المورد. حدّث الصفحة ثم حاول مرة أخرى.",
           unauthorized:
             "يجب تسجيل الدخول لحذف تخصيصات الموردين.",
           forbidden:
@@ -2819,12 +2866,17 @@ const servicesDictionaryAr: ServicesDictionary = {
           allocationIdRequired: "معرّف تخصيص المورد مطلوب.",
           notFound: "تعذر العثور على تخصيص المورد.",
           notDeleted: "تخصيص المورد غير محذوف.",
+          rateCardRestricted: "لا يمكن استعادة تخصيصات بطاقة الأسعار.",
+          supplierUnavailable:
+            "المورد غير نشط أو غير متاح، لذلك لا يمكن استعادة هذا التخصيص.",
           linkedActiveBooking:
             "لا يمكن تعديل هذا التخصيص لأنه مرتبط بحجز مورد نشط.",
           serviceUnavailable:
             "الخدمة غير متاحة لاستعادة تخصيص المورد.",
           restoreFailedRetry:
             "تعذر استعادة تخصيص المورد. يرجى المحاولة مرة أخرى.",
+          staleConflict:
+            "تم تغيير تخصيص المورد. حدّث الصفحة ثم حاول مرة أخرى.",
           unauthorized:
             "يجب تسجيل الدخول لاستعادة تخصيصات الموردين.",
           forbidden:
@@ -2842,6 +2894,7 @@ const servicesDictionaryAr: ServicesDictionary = {
   supplierBookings: {
     title: "حجوزات الموردين",
     subtitle: "حجوزات الموردين الداخلية المُنشأة من التخصيصات المحددة.",
+    loadError: "تعذر تحميل حجوزات الموردين. يرجى المحاولة مرة أخرى.",
     empty: {
       noBookings: "لا توجد حجوزات موردين مسجلة لهذه الخدمة حتى الآن.",
       selectAllocation: "حدد تخصيص مورد مخططًا لإنشاء حجز مورد.",
@@ -2876,6 +2929,9 @@ const servicesDictionaryAr: ServicesDictionary = {
           "يجب أن تكون حالة تخصيص المورد محدد قبل إنشاء حجز المورد.",
         serviceStatusVerifyFailed: "تعذر التحقق من حالة الخدمة. يرجى المحاولة مرة أخرى.",
         serviceUnavailable: "بيانات الخدمة غير متاحة لإنشاء حجز المورد.",
+        supplierStatusVerifyFailed: "تعذر التحقق من حالة المورد. يرجى المحاولة مرة أخرى.",
+        supplierUnavailable:
+          "يجب أن يكون المورد نشطًا ومتاحًا وغير مدرج في القائمة السوداء قبل الحجز.",
         activeBookingExists: "يوجد بالفعل حجز مورد نشط لهذا التخصيص.",
         createFailedRetry: "تعذر إنشاء حجز المورد. يرجى المحاولة مرة أخرى.",
         unauthorized: "يجب تسجيل الدخول لإنشاء حجوزات الموردين.",
@@ -2901,6 +2957,8 @@ const servicesDictionaryAr: ServicesDictionary = {
         serviceStatusVerifyFailed: "تعذر التحقق من حالة الخدمة. يرجى المحاولة مرة أخرى.",
         serviceUnavailable: "بيانات الخدمة غير متاحة لإلغاء حجز المورد.",
         cancelFailedRetry: "تعذر إلغاء حجز المورد. يرجى المحاولة مرة أخرى.",
+        staleConflict:
+          "تم تغيير حجز المورد. حدّث الصفحة ثم حاول مرة أخرى.",
         unauthorized: "يجب تسجيل الدخول لإلغاء حجوزات الموردين.",
         forbidden: "ليست لديك صلاحية لإلغاء حجوزات الموردين.",
         unexpected: "حدث خطأ غير متوقع أثناء إلغاء حجز المورد.",

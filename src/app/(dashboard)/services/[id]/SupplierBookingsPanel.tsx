@@ -26,6 +26,7 @@ function formatBookingMoney(locale: Locale, value: number | null, currency: stri
 type SupplierBookingsPanelProps = {
   bookings: SupplierBooking[];
   allocations: SupplierAllocation[];
+  loadError?: boolean;
   canCreate?: boolean;
   canCancel?: boolean;
   serviceStatus?: string;
@@ -42,6 +43,7 @@ const STATUS_VARIANT_MAP: Record<SupplierBooking["status"], StatusBadgeVariant> 
 export default function SupplierBookingsPanel({
   bookings,
   allocations,
+  loadError = false,
   canCreate,
   canCancel,
   serviceStatus,
@@ -83,7 +85,11 @@ export default function SupplierBookingsPanel({
         </p>
       </div>
 
-      {bookings.length === 0 ? (
+      {loadError ? (
+        <div className="p-8 text-center text-error text-[14px]" role="alert">
+          {panelDictionary.loadError}
+        </div>
+      ) : bookings.length === 0 ? (
         <div className="p-8 text-center text-on-surface-variant text-[14px]">
           <p>{panelDictionary.empty.noBookings}</p>
           {selectedAllocations.length === 0 ? (
@@ -152,7 +158,7 @@ export default function SupplierBookingsPanel({
         </DataTable>
       )}
 
-      {selectedAllocations.length > 0 && (
+      {!loadError && selectedAllocations.length > 0 && (
         <div className="border-t border-surface-variant bg-surface px-6 py-5">
           <h4 className="text-[13px] font-semibold text-on-surface uppercase tracking-wide mb-3">
             {panelDictionary.selectedAllocations}

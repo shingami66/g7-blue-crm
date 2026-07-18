@@ -76,3 +76,8 @@ export type SupplierBookingMapperOptions = {
   canReadCost?: boolean;
   canReadInternalDetails?: boolean;
 };
+
+export type SupplierBookingsListResult = {
+  bookings: SupplierBooking[];
+  error?: "supplier_bookings_load_failed";
+};

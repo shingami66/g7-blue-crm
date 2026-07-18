@@ -41,7 +41,8 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `customers`: Client database with revenue metrics, soft deletes, and a system-generated unique `customer_number`.
 - `services`: ERP-1 operational unit linked to `customers(id)` with `service_number`, event fields, status, ownership, cancellation reason, timestamps, audit text fields, and soft-delete timestamp. The DB foundation and app list/create/detail/edit foundation are implemented; controlled status transitions remain deferred.
 - `suppliers`: Third-party vendor directory. Supplier Directory V1 uses a summary-only normal list projection (no notes, CR/VAT, bank, blacklist-audit, or Clerk audit values), responsive detail reads, required create/edit validation, lifecycle/blacklist workflows, and `is_deleted`/`deleted_at`/`deleted_by` soft delete audit fields. Bank reads/writes and delete/restore are enforced in the application server layer for Admin only; the active Allocation/Booking delete check is application-layer and nontransactional. No Supplier production-RLS/readiness claim is made.
-- `service_supplier_allocations`: Supplier Allocations planning layer. Database/permissions foundation implemented under `SUPPLIER-ALLOCATIONS-FOUNDATION-1A`; domain types, Zod schemas, and mappers implemented under `SUPPLIER-ALLOCATIONS-SCHEMAS-1A`; runtime CRUD/actions/UI are deferred.
+- `service_supplier_allocations`: internal, Service-scoped Supplier Allocation planning layer. V1 provides server-gated manual and rate-card creation, manual edit/status transitions/cancel, soft delete/restore for manual allocations, rate-card date validity, generated totals, and active Supplier/Booking lifecycle guards. Current stale/dependency checks are application-layer and nontransactional.
+- `supplier_bookings`: internal, Service-scoped Supplier Booking records created from one source Allocation with server-derived snapshot fields and DB-generated `SBK` numbering. V1 provides guarded create/cancel flows; active Bookings lock Allocation mutations. Standalone routes, supplier financial workflows, and customer-facing surfaces are deferred.
 - `audit_logs`: Centralized event tracking for actions (`create`, `update`, etc.).
 
 ### Financial & Workflow
@@ -184,7 +185,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
 
 ### Supplier Allocations
-- **Table:** `service_supplier_allocations` exists (database/permissions foundation implemented under `SUPPLIER-ALLOCATIONS-FOUNDATION-1A` via migration `20260629100000_service_supplier_allocations_foundation.sql` and synced in `schema.sql`; domain types, Zod schemas, and mappers implemented under `SUPPLIER-ALLOCATIONS-SCHEMAS-1A`; server-only read queries implemented under `SUPPLIER-ALLOCATIONS-READ-1A`; manual create action implemented under `SUPPLIER-ALLOCATIONS-CREATE-MANUAL-1A`). Other server actions, write mutations, and UI remain deferred.
+- **Table/workflow:** `service_supplier_allocations` is an internal Service-scoped planning table. V1 supports server-gated manual/rate-card create, manual edit and forward status transitions, cancel, soft delete, and restore. Delete/restore is unavailable for rate-card allocations. Active Bookings lock Allocation edit, transition, cancel, delete, and restore actions.
 - **Costing:** Manual cost is allowed (`cost_source` = `rate_card` | `manual_estimate`).
 - **Statuses:** `draft` | `planned` | `selected` | `cancelled`.
 - **Planned Fields:**
@@ -203,7 +204,9 @@ These are approved target rules for future reviewed schema changes; they do not 
   - `approved_quotation_id` is nullable and present on allocation.
   - If `approved_quotation_id` is set, it must belong to the same `service_id` and reference only an approved quotation. MVP enforcement for `approved_quotation_id` integrity is server-side validation (preferred future DB integrity rule should be considered in DB foundation).
   - Block new allocations for blacklisted or inactive suppliers.
-  - Cancelled parent Service: If the parent Service is cancelled, block new allocations and keep existing allocations read-only historical records.
+- Cancelled parent Service: If the parent Service is cancelled, block new allocations and keep existing allocations read-only historical records.
+- Booking creation and Allocation restore require a Supplier that is active, non-deleted, and not blacklisted. These application-layer prechecks are not a transactional production-concurrency guarantee.
+- Rate-card allocation creation requires a rate card that is active, non-deleted, and valid on the creation date (`valid_from <= today` and `valid_to` unset or `>= today`).
 
 ### Index Planning
 - Implemented ERP-1 service indexes: `services.customer_id`, `services.status`, `services.deleted_at`, `services.event_start_date`, `services.sales_owner_id`, and `services.created_at`.

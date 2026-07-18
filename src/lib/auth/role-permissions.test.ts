@@ -129,3 +129,24 @@ test("Supplier bank and deletion permissions remain Admin-only", () => {
     }
   }
 });
+
+test("Supplier Allocation and Booking operations remain limited to Admin and Manager", () => {
+  const operationalPermissions = [
+    "supplier_allocations:read",
+    "supplier_allocations:read_cost",
+    "supplier_allocations:write",
+    "supplier_allocations:cancel",
+    "supplier_bookings:read",
+    "supplier_bookings:read_cost",
+    "supplier_bookings:write",
+    "supplier_bookings:cancel",
+  ];
+
+  for (const permission of operationalPermissions) {
+    assert.equal(hasPermissionForRole("admin", permission), true);
+    assert.equal(hasPermissionForRole("manager", permission), true);
+    for (const role of ["operations", "sales", "accountant", "viewer"] as const) {
+      assert.equal(hasPermissionForRole(role, permission), false);
+    }
+  }
+});

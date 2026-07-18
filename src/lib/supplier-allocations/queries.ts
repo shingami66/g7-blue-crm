@@ -4,7 +4,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission, checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { mapSupplierAllocationRow, mapSupplierAllocationRows } from "./mappers";
-import type { SupplierAllocation, SupplierAllocationRow } from "./types";
+import type {
+  SupplierAllocation,
+  SupplierAllocationRow,
+  SupplierAllocationsListResult,
+} from "./types";
 
 /**
  * Supplier allocation costs are internal only.
@@ -16,7 +20,7 @@ import type { SupplierAllocation, SupplierAllocationRow } from "./types";
 export async function getSupplierAllocationsByServiceId(
   serviceId: string,
   options?: { includeDeleted?: boolean }
-): Promise<SupplierAllocation[]> {
+): Promise<SupplierAllocationsListResult> {
   await requirePermission("supplier_allocations:read");
   const canReadCost = await checkPermission("supplier_allocations:read_cost");
 
@@ -35,24 +39,28 @@ export async function getSupplierAllocationsByServiceId(
 
     if (error) {
       console.error("[getSupplierAllocationsByServiceId] Supabase error:", error.message);
-      return [];
+      return { allocations: [], error: "supplier_allocations_load_failed" };
     }
 
-    return mapSupplierAllocationRows((rows ?? []) as SupplierAllocationRow[], { canReadCost });
+    return {
+      allocations: mapSupplierAllocationRows((rows ?? []) as SupplierAllocationRow[], {
+        canReadCost,
+      }),
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error(
       "[getSupplierAllocationsByServiceId] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
-    return [];
+    return { allocations: [], error: "supplier_allocations_load_failed" };
   }
 }
 
 export async function getSupplierAllocationsBySupplierId(
   supplierId: string,
   options?: { includeDeleted?: boolean }
-): Promise<SupplierAllocation[]> {
+): Promise<SupplierAllocationsListResult> {
   await requirePermission("supplier_allocations:read");
   const canReadCost = await checkPermission("supplier_allocations:read_cost");
 
@@ -71,17 +79,21 @@ export async function getSupplierAllocationsBySupplierId(
 
     if (error) {
       console.error("[getSupplierAllocationsBySupplierId] Supabase error:", error.message);
-      return [];
+      return { allocations: [], error: "supplier_allocations_load_failed" };
     }
 
-    return mapSupplierAllocationRows((rows ?? []) as SupplierAllocationRow[], { canReadCost });
+    return {
+      allocations: mapSupplierAllocationRows((rows ?? []) as SupplierAllocationRow[], {
+        canReadCost,
+      }),
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error(
       "[getSupplierAllocationsBySupplierId] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
-    return [];
+    return { allocations: [], error: "supplier_allocations_load_failed" };
   }
 }
 

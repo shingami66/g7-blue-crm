@@ -220,7 +220,7 @@ Return exactly these sections:
 ## Supplier/Future ERP Rules
 
 - Suppliers are basic master data now.
-- Supplier Bookings DB Foundation is complete. Domain, UI, permissions, actions, pages, and runtime behavior are explicitly deferred to future tasks (Not implemented, Not started, Not complete). Terminology constraint: Uses Supplier Booking / SBK. Do not use Internal PO / Purchase Order.
+- Supplier Operations V1 is complete for internal, Service-scoped Allocation and Supplier Booking create/cancel workflows. Supplier Bookings use the Supplier Booking / SBK terminology; do not use Internal PO / Purchase Order. Standalone Booking routes, portals, customer-facing documents, invoices/payments, actual costing, and margin reporting remain deferred.
 - Supplier payments, service expenses, event costing, and profit margin are deferred.
 - Keep current design extensible for supplier bookings, supplier payments, service expenses, event costing, and service profit reports.
 - Do not build supplier bookings/costing now unless explicitly approved in its planned sequence.
@@ -325,7 +325,7 @@ The following remain deferred:
 - supplier costing/margin reports
 - rate-card automation
 - rate-card snapshot workflow
-- `Supplier Bookings` (Domain, UI, permissions, actions, and runtime behavior)
+- standalone Supplier Booking routes, PDFs, messages, portal, edit/delete/restore, status expansion, invoices/payments, actual costing, and margin reporting
 - supplier invoices/payments
 - customer-facing supplier cost exposure
 - customer PDF supplier cost exposure
@@ -374,7 +374,7 @@ Escalate back to Team Lead / Project Owner only for:
 - DB/RLS/migration changes
 - new dependencies
 - rate-card automation
-- `Supplier Bookings` (Domain, UI, permissions, actions, and runtime behavior)
+- Supplier Booking scope expansion beyond the locked internal Service Detail create/cancel workflow
 - supplier invoice/payment workflows
 - costing/margin report workflows
 - security/build validation failures
@@ -389,3 +389,14 @@ supplier_bookings.is_deleted = false
 AND supplier_bookings.status <> 'cancelled'.
 
 Supplier audit user columns store Clerk userId strings as text. Do not cast Clerk user IDs to UUID.
+
+## Supplier Operations V1 Rules
+
+- Supplier Allocations and Supplier Bookings are internal Service-scoped workflows. Keep their costs out of customer-facing routes, quotations, invoices, PDFs, and portals.
+- Booking creation and Allocation restore require an active, non-deleted, non-blacklisted Supplier. New, updated, cancelled, deleted, restored, and Booking-cancelled records remain blocked for Completed or Cancelled Services.
+- Allocation edit, transitions, cancel, delete, restore, and Booking cancel must use conditional affected-row checks and return safe stale/conflict presentation. These checks are application-layer and nontransactional.
+- An active Booking (`is_deleted = false` and `status <> cancelled`) locks Allocation edit, transition, cancel, delete, and restore. Booking cancellation requires a non-empty reason.
+- Manual Allocation quantity follows `NUMERIC(10,3)` and unit cost follows `NUMERIC(14,2)`; generated totals are never accepted from clients.
+- Rate-card allocation creation requires an active, non-deleted card within `valid_from` / `valid_to`; rate-card allocations cannot be deleted or restored.
+- Preserve distinct load-failure and empty states plus accessible English/Arabic RTL cancellation dialogs.
+- Do not claim browser runtime verification or production readiness from automated tests or local server availability.

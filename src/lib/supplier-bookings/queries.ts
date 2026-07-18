@@ -4,7 +4,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission, checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { mapSupplierBookingRow, mapSupplierBookingRows } from "./mappers";
-import type { SupplierBooking, SupplierBookingRow } from "./types";
+import type {
+  SupplierBooking,
+  SupplierBookingRow,
+  SupplierBookingsListResult,
+} from "./types";
 
 /**
  * Supplier Booking queries are internal-only.
@@ -14,7 +18,7 @@ import type { SupplierBooking, SupplierBookingRow } from "./types";
 
 export async function getSupplierBookingsByServiceId(
   serviceId: string
-): Promise<SupplierBooking[]> {
+): Promise<SupplierBookingsListResult> {
   await requirePermission("supplier_bookings:read");
   const canReadCost = await checkPermission("supplier_bookings:read_cost");
 
@@ -31,26 +35,28 @@ export async function getSupplierBookingsByServiceId(
 
     if (error) {
       console.error("[getSupplierBookingsByServiceId] Supabase error:", error.message);
-      return [];
+      return { bookings: [], error: "supplier_bookings_load_failed" };
     }
 
-    return mapSupplierBookingRows((rows ?? []) as SupplierBookingRow[], {
-      canReadCost,
-      canReadInternalDetails: canReadCost,
-    });
+    return {
+      bookings: mapSupplierBookingRows((rows ?? []) as SupplierBookingRow[], {
+        canReadCost,
+        canReadInternalDetails: canReadCost,
+      }),
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error(
       "[getSupplierBookingsByServiceId] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
-    return [];
+    return { bookings: [], error: "supplier_bookings_load_failed" };
   }
 }
 
 export async function getSupplierBookingsBySupplierId(
   supplierId: string
-): Promise<SupplierBooking[]> {
+): Promise<SupplierBookingsListResult> {
   await requirePermission("supplier_bookings:read");
   const canReadCost = await checkPermission("supplier_bookings:read_cost");
 
@@ -67,20 +73,22 @@ export async function getSupplierBookingsBySupplierId(
 
     if (error) {
       console.error("[getSupplierBookingsBySupplierId] Supabase error:", error.message);
-      return [];
+      return { bookings: [], error: "supplier_bookings_load_failed" };
     }
 
-    return mapSupplierBookingRows((rows ?? []) as SupplierBookingRow[], {
-      canReadCost,
-      canReadInternalDetails: canReadCost,
-    });
+    return {
+      bookings: mapSupplierBookingRows((rows ?? []) as SupplierBookingRow[], {
+        canReadCost,
+        canReadInternalDetails: canReadCost,
+      }),
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error(
       "[getSupplierBookingsBySupplierId] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
-    return [];
+    return { bookings: [], error: "supplier_bookings_load_failed" };
   }
 }
 

@@ -11,6 +11,7 @@ import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
 import type { ComponentProps } from "react";
+import { getSafeActionErrorMessage } from "@/lib/i18n/safe-action-error";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -43,6 +44,8 @@ function getCancelSupplierAllocationErrorMessage(
       dictionary.errors.serviceUnavailable,
     "Failed to cancel supplier allocation. Please try again.":
       dictionary.errors.cancelFailedRetry,
+    "Supplier allocation changed before this action could be completed. Refresh and try again.":
+      dictionary.errors.staleConflict,
     "Failed to verify booking status. Please try again.":
       dictionary.errors.bookingStatusVerifyFailed,
     "An unexpected error occurred while verifying booking status.":
@@ -52,7 +55,7 @@ function getCancelSupplierAllocationErrorMessage(
     "An unexpected error occurred.": dictionary.errors.unexpected,
   };
 
-  return mappedErrors[error] || error;
+  return getSafeActionErrorMessage(error, mappedErrors, dictionary.errors.unexpected);
 }
 
 export default function SupplierAllocationCancelForm({
