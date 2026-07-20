@@ -40,7 +40,13 @@
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 2.1 Current Active Work
-- **Current active task (exactly one):** `G7-DOCS-GOVERNANCE-PAYMENTS-SYNC-4-COMMITS-1` for documentation sync/push and worktree governance locking.
+- **Current active task (exactly one):** None. The governance and payments documentation sync task (`G7-DOCS-GOVERNANCE-PAYMENTS-SYNC-4-COMMITS-1`) is completed.
+- **Next active task (pending owner approval):** Repository reconciliation planning (no reconciliation or checkout switch has occurred).
+- **Workspace Location and Governance Rules:**
+  - Active authorized checkout: `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5` (this is the only authorized path for active execution).
+  - Historical checkout (forbidden): `D:/G7/g7-crm` (must remain untouched; no command execution or editing).
+  - Silent worktree switching, path changes, and manual copying/merging of folders between checkouts are strictly banned.
+  - Reconciliation of the historical checkout is a separate, future task pending explicit approval.
 - **Supplier Operations V1:** internal Service Detail Allocations and Supplier Bookings are implemented for Admin/Manager under server permission gates. The slice validates `NUMERIC(10,3)` quantity and `NUMERIC(14,2)` unit cost, distinguishes load failure from genuine empty state, applies Supplier lifecycle checks to Booking creation and Allocation restore, locks Allocation mutations while an active Booking exists, and uses conditional affected-row checks for Allocation and Booking mutations. Rate-card allocation creation enforces active date validity and rate-card allocations cannot be deleted or restored.
 - **Validation/runtime evidence:** 59 focused tests plus lint, Next type generation, TypeScript, and production build passed for the closeout. Codex browser automation could not render the G7 login DOM despite a healthy local Next.js server; this is an automation-tool blocker, not an observed application failure. Mozfer approved milestone closeout without further browser smoke. DEV/DEMO and production-readiness claims remain separate.
 - **Atomic Invoice create (DEV/DEMO code path closed):** migration `supabase/migrations/20260717180000_atomic_invoice_create.sql` pushed as `5ad23f25`, **manually applied + verified in DEV/DEMO** (Mozfer evidence), and **application integrated** in `a83c1d28` — Deposit and Final creation route only through `public.create_invoice_atomic` via service-role `createAdminClient` (no multi-query create write; no silent fallback).

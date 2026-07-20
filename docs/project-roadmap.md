@@ -77,7 +77,13 @@ Current active task:
 - **Invoice financial lifecycle application stack:** **implemented, tested, DEV/DEMO browser-accepted (PASS WITH WARN), and pushed** through `45cdfb73` (ten source/test commits: money, exposure, lifecycle, safe action errors, invoice RBAC, five-mode authority, ABS history alignment, Deposit/Final actions, Service billing UI, Quotation display-only authority). Service Detail is mutation authority; Quotation Detail is display-only.
 - **Supplier Operations V1 closeout:** **complete** — internal Allocations and Supplier Bookings implemented under server gates; cancel/restore checks and booking concurrency limits verified.
 - **Hardened Payment Recording & Table Pagination:** **complete** — atomic `record_invoice_payment` RPC applied/verified in DEV/DEMO; 12 commits pushed up to `ded8daa`; 78 payment tests passed; pagination layout scroll-reset stabilized; manual smoke verification (fully paid INV-2026-0022 with 4,200.00 SAR) passed.
-- **Current active task (exactly one):** `G7-DOCS-GOVERNANCE-PAYMENTS-SYNC-4-COMMITS-1` (controlled documentation, validation, commit, and push for worktree governance and payment recording milestones).
+- **Current active task (exactly one):** None. The governance and payments documentation sync task (`G7-DOCS-GOVERNANCE-PAYMENTS-SYNC-4-COMMITS-1`) is completed.
+- **Next active task (pending owner approval):** Repository reconciliation planning (no reconciliation or checkout switch has occurred).
+- **Workspace Location and Governance Rules:**
+  - Active authorized checkout: `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5` (only authorized path for active execution).
+  - Historical checkout (forbidden): `D:/G7/g7-crm` (must remain untouched).
+  - Silent worktree switching, path changes, and manual copying/merging of folders between checkouts are strictly banned.
+  - Reconciliation of the historical checkout is a separate, future task pending explicit approval.
 - **Next safe product/engineering direction:** Repository reconciliation planning is pending owner approval (no reconciliation or checkout switch has occurred). ABS history/read polish, Void UI, successor UI, and role browser smoke remain deferred.
 - **Deferred / optional (not complete):** Manager and Accountant browser smoke sessions; Deposit client maximum using remaining rather than full ceiling; legacy Quotation database ceiling hardening; lifecycle atomicity hardening; full seven-state DB enforcement; ABS history consistency hardening; broad ABS numeric normalization; future production/database hardening; future VAT or compliance work. Do **not** mark production rollout, VAT readiness, ZATCA readiness, or accounting finality complete.
 - **Locked ABS management order:**
