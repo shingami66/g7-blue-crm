@@ -45,6 +45,19 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 
 ## Working Workflow
 
+- **Durable Plan-and-Owner-Approval Gate:** Before executing any non-trivial task (which includes code edits, dependency changes, database migrations, commits, or pushes), the agent MUST present a bounded implementation plan to the user. No edit or modifying command may start until Mozfer explicitly approves the plan. Silence or an earlier broad request does not constitute permission to modify files or widen scope. The plan must contain:
+  1. Task ID and purpose.
+  2. Authorized repository path and branch.
+  3. Verified starting HEAD and working-tree state.
+  4. Exact files or systems in scope.
+  5. Explicit exclusions.
+  6. Expected behavior and acceptance criteria.
+  7. Database/data/security impact (migrations, schemas, RLS, Clerk).
+  8. Validation plan.
+  9. Commit and push plan.
+  10. Expected final repository state.
+  11. Worktree/branch lifecycle and cleanup plan when applicable.
+- **Worktree Governance:** Active development runs under the authorized Git worktree `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5`. The old local checkout `D:/G7/g7-crm` is forbidden, historical, and must remain untouched. Silent worktree creation, path switching, and manual folder merging are strictly prohibited. Reconciliation of `D:/G7/g7-crm` is a separate, future task pending explicit approval. Canonical documentation of this governance resides in `docs/repository-worktree-governance.md`.
 - Follow `Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge`.
 - After merges that change delivered behavior, phase status, or decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` as applicable.
 - Before committing docs, run a documentation staleness audit: identify what changed in code, what changed outside code, what moved from pending to complete, any stale wording that must be corrected, what remains truly pending, and the next locked priority.
