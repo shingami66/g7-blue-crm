@@ -8,10 +8,12 @@ Customer Profile -> Service / Booking -> Quotation -> Invoice -> Payment
 
 ## Current State
 
-- Customers, RBAC, quotations foundation, quotation manual entry/edit/detail/print, Company Settings CS-A, and the ERP-1 Services DB foundation are documented as complete.
-- Services now exist as the new operational unit at the DB foundation level, but Services UI/routes/server actions remain pending.
-- Quotations, invoices, and payments are still being moved toward the final Service-linked ERP flow.
-- Real or semi-real data remains blocked until the remaining production-hardening follow-up is finished.
+- **Operational Core:** Service / Booking is the operational core of the CRM and billing system.
+- **Main CRM & Billing Flow:** The complete path `Customer Profile -> Service -> Quotation -> Invoice -> Payment` is implemented.
+- **Atomic Invoicing:** Atomic Deposit and Final Invoice creation is implemented and integrated in DEV/DEMO (routed through `public.create_invoice_atomic` RPC).
+- **Hardened Payment Recording:** Hardened atomic customer payment recording is implemented and integrated in DEV/DEMO (routed through the seven-argument `public.record_invoice_payment` RPC with `request_id` idempotency, concurrency protection, and overpayment prevention).
+- **Supplier Operations V1:** Supplier Directory V1 and internal Supplier Operations V1 (Service-scoped Allocations and Supplier Bookings) are implemented.
+- **Production Status:** Production readiness remains unclaimed. Production RLS, production deployment, backups, monitoring, logging, financial correction/reversal workflows, and VAT/ZATCA/FATOORA integration remain separate.
 
 ## Approved ERP Rules
 
@@ -39,12 +41,15 @@ Customer Profile -> Service / Booking -> Quotation -> Invoice -> Payment
 
 ## Documentation Map
 
-- `docs/project-status.md`: current project status and resolved decisions.
-- `docs/project-roadmap.md`: phase plan, active priorities, and ERP checkpoints.
-- `docs/deferred-decisions.md`: deferred and partially resolved decisions.
-- `docs/database-schema.md`: current schema reference and approved target schema direction.
-- `docs/roles-permissions.md`: RBAC roles, permission boundaries, and security rules.
-- `AGENTS.md`: repository guidance for coding agents.
+- [README.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/README.md): concise repository entry point only.
+- [docs/project-status.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/project-status.md): current verified project state and completed milestones.
+- [docs/project-roadmap.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/project-roadmap.md): execution order and pending priorities.
+- [docs/deferred-decisions.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/deferred-decisions.md): deferred, unresolved, and partially completed decisions.
+- [docs/database-schema.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/database-schema.md): implemented schema facts and approved target direction.
+- [docs/atomic-invoice-creation-contract.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/atomic-invoice-creation-contract.md): atomic Deposit/Final Invoice creation contract.
+- [docs/atomic-payment-recording-contract.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/atomic-payment-recording-contract.md): hardened atomic payment recording contract.
+- [docs/repository-worktree-governance.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/repository-worktree-governance.md): repository path, worktree, reconciliation, and owner-approval rules.
+- [AGENTS.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/AGENTS.md): mandatory agent execution and safety rules.
 
 ## Local Development
 

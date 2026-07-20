@@ -152,12 +152,12 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 ## Quotation Approval Workflow
 - **Status:** QUOTE-APPROVAL-FLOW-1B implemented/code-ready. Migration was manually applied and schema is synced. Pending manual smoke. Several features remain deferred.
 - **Reason deferred:** Core approval RBAC and uniqueness guards are implemented in 1B, but broader status transitions and audit trails need separate implementation.
-- **When to return:** Before ERP-3 invoice creation or when business needs audit tracking.
+- **When to return:** Before production deployment or when business needs audit tracking.
 - **Known requirements:**
   - Multiple draft quotations per Service are allowed for negotiation. More than one approved quotation per Service must be prevented. Approval requires `quotations:approve`, separate from `quotations:write`.
   - **Deferred:** Service status transition on quotation approval is deferred. Exact `Quoted` trigger remains future quotation workflow decision. `Sent` workflow/action is deferred.
   - **Deferred Audit Fields:** `approved_at`, `approved_by`, `sent_at`, `rejected_at`, `rejected_by` remain future-scope.
-  - **Deferred ERP Scope:** Invoice/payment creation from approved quotation remains future ERP scope. VAT/ZATCA behavior remains out of scope.
+  - **Deferred ERP Scope:** Basic Invoice/payment creation is implemented and integrated in DEV/DEMO. Financial correction workflows, production RLS/deployment, and VAT/ZATCA behavior remain out of scope.
 
 ## Customer Official Details Before ERP-3
 - **Status:** Implementation review; CUST-OFFICIAL-DETAILS-1B was manually applied and DB-verified, and CUST-OFFICIAL-DETAILS-1C wires optional fields into the customer data layer, create UI, profile-only edit UI, and profile card. Mozfer manual smoke passed.
@@ -174,14 +174,14 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 ## Service Hub
 - **Status:** SERVICE-HUB-1B implements the minimal read-only Service/Booking Hub detail page and is ready for review/manual smoke.
 - **Reason deferred:** Service is the operational source of truth, but richer hub behavior still needs future workflow-safe slices after the minimal profile foundation.
-- **When to return:** `SERVICE-HUB-1`, before or alongside ERP-3.
-- **Known requirements:** The minimal hub includes a read-only status timeline, service schedule, customer context, and related quotations. Future invoice/payment cards require real service-linked financial records from ERP-3/ERP-4. Notes/activity/attachments and controlled status transition actions remain deferred. Service remains the operational source of truth.
+- **When to return:** Before production deployment or when notes/activity features are added.
+- **Known requirements:** The minimal hub includes a read-only status timeline, service schedule, customer context, related quotations, and the Service Billing UI showing linked invoices and payments. Notes/activity/attachments and controlled status transition actions remain deferred. Service remains the operational core.
 
 ## Full Invoice Schema And Service Linkage
-- **Status:** ERP-3 scope.
-- **Reason deferred:** Invoice schema/service linkage must wait for customer official details, quotation approval, and Service-centered hub/readiness work.
-- **When to return:** ERP-3.
-- **Known requirements:** Deposit/final invoices must be created from Approved Quotation + Service. No invoice without Service. No invoice without Approved Quotation. Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
+- **Status:** Implemented (in DEV/DEMO).
+- **Details:** Service-linked Invoice and Payment flow, including atomic Deposit/Final Invoice creation (routed through `public.create_invoice_atomic` RPC), is implemented and integrated.
+- **When to return:** Before production database apply or production RLS validation.
+- **Known requirements:** Ensure invoices cannot be created without Service/Approved Quotation. Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
 ## GLOBAL-PENDING-QUOTATION-FORMS-1B
 - **Status:** Completed in code and documented.
@@ -285,7 +285,7 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
     - Each Supplier Allocation is an internal service-specific cost/expense planning line.
     - A Supplier Allocation belongs to one Service; a Service can have many Supplier Allocations.
     - A Supplier can appear in many Services, and can appear multiple times in the same Service when there are separate cost lines.
-    - **Future Purpose:** Supplier Allocations will later support Service expenses, Service costing, Profit/margin calculation, Supplier Bookings, Supplier invoices/payments, and Costing reports.
+    - **Future Purpose:** Supplier Allocations will later support Service expenses, Service costing, Profit/margin calculation, Supplier invoices/payments, and Costing reports (basic Supplier Bookings V1 is implemented).
     - **Strict Boundary:** Supplier Allocations remain internal costing/planning data. Supplier costs must not be exposed to customer-facing documents, PDFs, public routes, or the customer portal.
 - **Supplier Booking:** DB foundation, schemas, permissions, queries, DB numbering default, narrow actions, and narrow internal Service Detail UI complete (`SUPPLIER-BOOKINGS-FOUNDATION-1`, `SUPPLIER-BOOKINGS-SCHEMAS-1A`, `SUPPLIER-BOOKINGS-PERMISSIONS-1A`, `SUPPLIER-BOOKINGS-QUERIES-1A`, `SUPPLIER-BOOKINGS-NUMBERING-DB-1`, `SUPPLIER-BOOKINGS-ACTIONS-1A`, `SUPPLIER-BOOKINGS-UI-1A`). The Service Detail UI is internal only, appears near Supplier Allocations, gates read/create/cancel with `supplier_bookings:read`, `supplier_bookings:write`, and `supplier_bookings:cancel`, sends only `sourceAllocationId` for create, sends only `cancelledReason` for cancel, displays cost/internal fields only from permission-safe mapped Supplier Booking data, and keeps statuses limited to `draft` / `cancelled`. Standalone/broader Supplier Booking routes/UI, customer-facing documents/messages/portal, supplier invoices, supplier payments, actual supplier costs, profit/margin reporting, edit/delete/restore, status expansion, and broader runtime behavior remain deferred. Terminology remains Supplier Booking / SBK.
 - **Security and financial cautions:** Supplier rate cards contain internal supplier cost data and must never appear in customer-facing quotations, invoices, PDFs, receipts, broad supplier list views, or unauthorized role views. Accountant, Sales, Operations, and Viewer do not have `supplier_costing:read` or `supplier_costing:write` permissions in this MVP slice. Do not add Tax Invoice, VAT 15%, ZATCA, FATOORA, QR, or XML behavior while G7 BLUE remains `not_registered`.
@@ -314,7 +314,7 @@ These are no longer open decisions and must remain aligned with `docs/project-ro
 ## Service Cancellation With Financial Records
 - **Status:** Partially resolved; detailed financial reversal flow deferred.
 - **Reason deferred:** Simple Service cancellation is straightforward only before invoice/payment records exist.
-- **When to return:** ERP-1 Services status design and again before ERP-3/ERP-4 financial flows.
+- **When to return:** Before implementing payment correction/reversal, refunds, or reallocation.
 - **Known requirements:** Service cancellation requires `cancellation_reason`. If no invoice/payment exists, cancellation is simple. If invoice/payment exists, cancellation must not silently delete financial records; use the controlled D03/D04 adjustment, reversal, and replacement policy.
 
 ## Quotation Expiry Override
@@ -393,19 +393,19 @@ Accepted **non-blocking technical debt** notes from the DEV/DEMO browser accepta
 ## Soft Delete And Financial Record Retention
 - **Status:** Deferred technical decision.
 - **Reason deferred:** Current schema uses soft-delete patterns, but future financial records need stricter retention rules.
-- **When to return:** Before ERP-1 schema work and before invoice/payment delete or void behavior.
-- **Known requirements:** Use soft delete for business records where applicable. SEC-SERVICE-INVARIANTS-1B blocks Service soft delete when non-deleted linked quotations exist. Future invoice/payment service deletion guards remain ERP-3/ERP-4 scope once service-linked financial records exist. Prefer `deleted_at` timestamp over only `is_deleted` for future soft deletes, or document current `is_deleted` usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion. Issued/paid financial records must not be casually deleted. Soft-delete documentation cleanup remains a follow-up task: `DOC-SOFTDELETE-FIX`.
+- **When to return:** Before implementing payment correction/reversal or refunds.
+- **Known requirements:** Use soft delete for business records where applicable. SEC-SERVICE-INVARIANTS-1B blocks Service soft delete when non-deleted linked quotations exist. Service deletion is guarded when linked invoices/payments exist. Prefer `deleted_at` timestamp over only `is_deleted` for future soft deletes, or document current `is_deleted` usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion. Issued/paid financial records must not be casually deleted. Soft-delete documentation cleanup remains a follow-up task: `DOC-SOFTDELETE-FIX`.
 
 ## Financial Rounding And Currency Snapshots
-- **Status:** Deferred implementation detail; rule is required before ERP-3.
-- **Reason deferred:** Invoice/payment implementation has not started.
-- **When to return:** ERP-3 Invoices and ERP-4 Payments.
+- **Status:** Partially Implemented / Core Rules Sync.
+- **Reason deferred:** Core atomic invoice creation and hardened payment recording are implemented; advanced distributed rounding/pricing rules are deferred.
+- **When to return:** Before production deployment or when multi-currency is required.
 - **Known requirements:** Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic. Document SAR 2-decimal rounding rules. Financial rounding must be server-side/PostgreSQL-side. Currency should be snapshotted on issued documents.
 
 ## Planned ERP Indexes
-- **Status:** Deferred technical planning.
-- **Reason deferred:** ERP service-linked tables are not implemented yet.
-- **When to return:** During SQL review for ERP-1 through ERP-4 and audit logs.
+- **Status:** Partially Implemented.
+- **Reason deferred:** Basic ERP service-linked indexes are planned; full production database index optimization is deferred.
+- **When to return:** Before production database apply.
 - **Known requirements:** Plan indexes on `services.customer_id`, `quotations.service_id`, `invoices.service_id`, `payments.invoice_id`, `payments.service_id` only if stored, and `audit_logs.user_id`.
 
 ## Migration Rollback Procedure
@@ -492,14 +492,14 @@ Accepted **non-blocking technical debt** notes from the DEV/DEMO browser accepta
 ## Service Hub
 - **Status:** SERVICE-HUB-1B implements the minimal read-only Service/Booking Hub detail page and is ready for review/manual smoke.
 - **Reason deferred:** Service is the operational source of truth, but richer hub behavior still needs future workflow-safe slices after the minimal profile foundation.
-- **When to return:** `SERVICE-HUB-1`, before or alongside ERP-3.
-- **Known requirements:** The minimal hub includes a read-only status timeline, service schedule, customer context, and related quotations. Future invoice/payment cards require real service-linked financial records from ERP-3/ERP-4. Notes/activity/attachments and controlled status transition actions remain deferred. Service remains the operational source of truth.
+- **When to return:** Before production deployment or when notes/activity features are added.
+- **Known requirements:** The minimal hub includes a read-only status timeline, service schedule, customer context, related quotations, and the Service Billing UI showing linked invoices and payments. Notes/activity/attachments and controlled status transition actions remain deferred. Service remains the operational core.
 
 ## Full Invoice Schema And Service Linkage
-- **Status:** ERP-3 scope.
-- **Reason deferred:** Invoice schema/service linkage must wait for customer official details, quotation approval, and Service-centered hub/readiness work.
-- **When to return:** ERP-3.
-- **Known requirements:** Deposit/final invoices must be created from Approved Quotation + Service. No invoice without Service. No invoice without Approved Quotation. Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
+- **Status:** Implemented (in DEV/DEMO).
+- **Details:** Service-linked Invoice and Payment flow, including atomic Deposit/Final Invoice creation (routed through `public.create_invoice_atomic` RPC), is implemented and integrated.
+- **When to return:** Before production database apply or production RLS validation.
+- **Known requirements:** Ensure invoices cannot be created without Service/Approved Quotation. Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
 ## Production RLS Hardening
 - **Status:** SEC-RLS-BASELINE-1 manual Supabase SQL Editor apply and database verification completed; remaining production hardening is still required before hosted demo with real/semi-real data.
@@ -588,19 +588,19 @@ Accepted **non-blocking technical debt** notes from the DEV/DEMO browser accepta
 ## Soft Delete And Financial Record Retention
 - **Status:** Deferred technical decision.
 - **Reason deferred:** Current schema uses soft-delete patterns, but future financial records need stricter retention rules.
-- **When to return:** Before ERP-1 schema work and before invoice/payment delete or void behavior.
-- **Known requirements:** Use soft delete for business records where applicable. SEC-SERVICE-INVARIANTS-1B blocks Service soft delete when non-deleted linked quotations exist. Future invoice/payment service deletion guards remain ERP-3/ERP-4 scope once service-linked financial records exist. Prefer `deleted_at` timestamp over only `is_deleted` for future soft deletes, or document current `is_deleted` usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion. Issued/paid financial records must not be casually deleted. Soft-delete documentation cleanup remains a follow-up task: `DOC-SOFTDELETE-FIX`.
+- **When to return:** Before implementing payment correction/reversal or refunds.
+- **Known requirements:** Use soft delete for business records where applicable. SEC-SERVICE-INVARIANTS-1B blocks Service soft delete when non-deleted linked quotations exist. Service deletion is guarded when linked invoices/payments exist. Prefer `deleted_at` timestamp over only `is_deleted` for future soft deletes, or document current `is_deleted` usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion. Issued/paid financial records must not be casually deleted. Soft-delete documentation cleanup remains a follow-up task: `DOC-SOFTDELETE-FIX`.
 
 ## Financial Rounding And Currency Snapshots
-- **Status:** Deferred implementation detail; rule is required before ERP-3.
-- **Reason deferred:** Invoice/payment implementation has not started.
-- **When to return:** ERP-3 Invoices and ERP-4 Payments.
+- **Status:** Partially Implemented / Core Rules Sync.
+- **Reason deferred:** Core atomic invoice creation and hardened payment recording are implemented; advanced distributed rounding/pricing rules are deferred.
+- **When to return:** Before production deployment or when multi-currency is required.
 - **Known requirements:** Client-submitted financial totals must never be trusted. Totals must be calculated server-side and/or in PostgreSQL/RPC logic. Document SAR 2-decimal rounding rules. Financial rounding must be server-side/PostgreSQL-side. Currency should be snapshotted on issued documents.
 
 ## Planned ERP Indexes
-- **Status:** Deferred technical planning.
-- **Reason deferred:** ERP service-linked tables are not implemented yet.
-- **When to return:** During SQL review for ERP-1 through ERP-4 and audit logs.
+- **Status:** Partially Implemented.
+- **Reason deferred:** Basic ERP service-linked indexes are planned; full production database index optimization is deferred.
+- **When to return:** Before production database apply.
 - **Known requirements:** Plan indexes on `services.customer_id`, `quotations.service_id`, `invoices.service_id`, `payments.invoice_id`, `payments.service_id` only if stored, and `audit_logs.user_id`.
 
 ## Migration Rollback Procedure
@@ -682,7 +682,7 @@ Accepted **non-blocking technical debt** notes from the DEV/DEMO browser accepta
 - **Status:** Deferred until ERP-3B / Tracked as gap
 - **Reason:** src/types/invoice.ts was not updated in ERP-3A because it is outside the approved file list.
 - **When to return:** During ERP-3B Invoice Generation / Future Void Migration
-- **Known requirements:** TypeScript currently includes status 'voided', but the current DB CHECK may not allow 'voided'. This must remain a tracked deferred schema gap until void/credit-note lifecycle migration. Type mismatch between schema fields (approved_quotation_id, invoice_type) and TypeScript type fields (quotation_id, type) is deferred to ERP-3B. Furthermore, snapshot_* columns are staged nullable jsonb and NOT NULL enforcement is deferred to ERP-3B. Composite FK enforcement is partial while service_id remains nullable. Payment workflow and confirmation remain deferred. Service status transition on invoice creation remains deferred.
+- **Known requirements:** TypeScript currently includes status 'voided', but the current DB CHECK may not allow 'voided'. This must remain a tracked deferred schema gap until void/credit-note lifecycle migration. Type mismatch between schema fields (approved_quotation_id, invoice_type) and TypeScript type fields (quotation_id, type) is deferred to ERP-3B. Furthermore, snapshot_* columns are staged nullable jsonb and NOT NULL enforcement is deferred to ERP-3B. Composite FK enforcement is partial while service_id remains nullable. Basic payment workflow, payment confirmation, and Service status transitions on Deposit Invoice payment are implemented.
 
 ## Global Invoice Wizard & Recent Invoicing Decisions
 - **Status:** Deferred/Pending.
@@ -764,7 +764,7 @@ Decision: Stage 1 manual Service status control is complete. Implemented in comm
 ### SERVICE-STATUS-STATE-MACHINE-SPEC-1
 Status: Spec Complete / Implementation Pending.
 Decision: Completed and pushed in commit `760c569 spec(services): define status state machine`. This is Spec Kit design only under `specs/003-service-status-state-machine/`; it does not implement guarded transitions, `services:update_status`, UI next-state filtering, status audit/history persistence, or automation.
-Still deferred: quotation approval auto-updates, payment-to-Deposit-Paid automation, status audit/history table, cancellation overrides with financial records, reopen/reversal flow, and any hard enforcement or role-based override behavior.
+Still deferred: quotation approval auto-updates, status audit/history table, cancellation overrides with financial records, reopen/reversal flow, and any hard enforcement or role-based override behavior. Basic payment-to-Deposit-Paid automation is implemented in DEV/DEMO.
 
 ### TEAM-LEAD-CODEX-UX-ERP-BACKLOG-1
 Status: Captured / Deferred for targeted implementation.
@@ -775,7 +775,7 @@ Supplier deferrals remain for supplier delete/restore, supplier bank/IBAN collec
 ### SERVICE-STATUS-GUARDED-TRANSITIONS-1
 Status: Implemented / Partial Automation Deferred.
 Decision: Guarded manual transitions have been implemented based on the state machine spec in commit `1a4748f feat(services): guard status transitions`. Free status jumping is removed, and transitions are now restricted based on logical next steps and evidence (approved quotation, deposit invoice). `services:update_status` permission is enforced.
-Still deferred: quotation approval auto-updates, payment-to-Deposit-Paid automation, status audit/history table, cancellation override with financial records, reopen/reversal flow. Do not treat `services:write` as status automation. (Supplier features remain deferred).
+Still deferred: quotation approval auto-updates, status audit/history table, cancellation override with financial records, reopen/reversal flow. Basic payment-to-Deposit-Paid automation is implemented in DEV/DEMO. Do not treat `services:write` as status automation. (Supplier features remain deferred).
 Follow-up backlog items identified during manual smoke: currency/date formatting inconsistencies (`FORMAT-STANDARDIZATION-1`/`DATE-FORMAT-STANDARDIZATION-1`), data typos (`DATA-QUALITY-INPUT-NORMALIZATION-1`), billing label copy (`BILLING-LABEL-COPY-POLISH-1`), and DevTools warnings (`UI-QUALITY-WARNINGS-CLEANUP-1`).
 
 ### HUMAN-REFERENCE-DISPLAY-1
