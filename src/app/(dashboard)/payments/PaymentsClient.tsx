@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ComponentProps } from "react";
+import { useState, useRef, useEffect, type ComponentProps } from "react";
 import { Banknote, CheckCircle2, Clock } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import DataTable from "@/components/ui/DataTable";
@@ -51,6 +51,18 @@ function buildPaymentStats(payments: PaymentListItem[]) {
 
 export default function PaymentsClient({ payments, error, dictionary }: PaymentsClientProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = 0;
+    }
+  }, [currentPage]);
+
   const locale = dictionary.locale;
   const stats = buildPaymentStats(payments);
   const totalPages = Math.max(1, Math.ceil(payments.length / itemsPerPage));
@@ -91,74 +103,78 @@ export default function PaymentsClient({ payments, error, dictionary }: Payments
       )}
 
       <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex-1 overflow-auto">
-          <DataTable
-            columns={[
-              dictionary.table.payment,
-              dictionary.table.date,
-              dictionary.table.customer,
-              dictionary.table.invoice,
-              dictionary.table.service,
-              dictionary.table.method,
-              dictionary.table.reference,
-              dictionary.table.amount,
-              dictionary.table.status,
-            ]}
-          >
-            {paginatedPayments.map((payment) => (
-              <tr key={payment.id} className="hover:bg-surface-container-low/50 transition-colors">
-                <td className="px-4 py-4 font-mono font-semibold text-primary">
-                  <span dir="ltr">{isolateBidiText(payment.paymentNumber)}</span>
-                </td>
-                <td className="px-4 py-4 text-on-surface-variant">
-                  <UiDateText locale={locale} value={payment.date} />
-                </td>
-                <td className="px-4 py-4 font-medium text-on-surface">
-                  <span dir="auto">{payment.customerName}</span>
-                </td>
-                <td className="px-4 py-4 font-mono text-[12px] text-primary">
-                  <span dir="ltr">
-                    {isolateBidiText(payment.invoiceNumber ?? payment.invoiceId)}
-                  </span>
-                </td>
-                <td className="px-4 py-4 text-on-surface-variant">
-                  <span dir="auto">{payment.serviceLabel ?? "—"}</span>
-                </td>
-                <td className="px-4 py-4 text-on-surface-variant">
-                  {getPaymentMethodLabel(locale, payment.method)}
-                </td>
-                <td className="px-4 py-4 text-on-surface-variant">
-                  <span dir="auto">{payment.reference ?? "—"}</span>
-                </td>
-                <td className="px-4 py-4 font-semibold text-on-surface tabular-nums">
-                  <span dir="ltr" className="inline-block whitespace-nowrap">
-                    {formatSarAmount(locale, payment.amount)}
-                  </span>
-                </td>
-                <td className="px-4 py-4">
-                  <StatusBadge variant={getPaymentStatusBadgeVariant(payment.status)}>
-                    {getPaymentStatusLabel(locale, payment.status)}
-                  </StatusBadge>
-                </td>
-              </tr>
-            ))}
-            {payments.length === 0 && (
-              <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">
-                  {error
-                    ? dictionary.states.paymentDataUnavailable
-                    : dictionary.table.empty}
-                </td>
-              </tr>
-            )}
-          </DataTable>
+        <div className="flex-1 overflow-auto min-h-0 overflow-y-auto overflow-x-hidden">
+          <div ref={scrollRef} className="w-full overflow-x-auto">
+            <div className="min-w-[980px]">
+              <DataTable
+              columns={[
+                dictionary.table.payment,
+                dictionary.table.date,
+                dictionary.table.customer,
+                dictionary.table.invoice,
+                dictionary.table.service,
+                dictionary.table.method,
+                dictionary.table.reference,
+                dictionary.table.amount,
+                dictionary.table.status,
+              ]}
+            >
+              {paginatedPayments.map((payment) => (
+                <tr key={payment.id} className="hover:bg-surface-container-low/50 transition-colors">
+                  <td className="px-4 py-4 font-mono font-semibold text-primary whitespace-nowrap">
+                    <span dir="ltr">{isolateBidiText(payment.paymentNumber)}</span>
+                  </td>
+                  <td className="px-4 py-4 text-on-surface-variant whitespace-nowrap">
+                    <UiDateText locale={locale} value={payment.date} />
+                  </td>
+                  <td className="px-4 py-4 font-medium text-on-surface max-w-[180px] truncate" title={payment.customerName}>
+                    <span dir="auto">{payment.customerName}</span>
+                  </td>
+                  <td className="px-4 py-4 font-mono text-[12px] text-primary whitespace-nowrap">
+                    <span dir="ltr">
+                      {isolateBidiText(payment.invoiceNumber ?? payment.invoiceId)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 text-on-surface-variant max-w-[200px] whitespace-normal break-words" title={payment.serviceLabel ?? undefined}>
+                    <span dir="auto">{payment.serviceLabel ?? "—"}</span>
+                  </td>
+                  <td className="px-4 py-4 text-on-surface-variant whitespace-nowrap">
+                    {getPaymentMethodLabel(locale, payment.method)}
+                  </td>
+                  <td className="px-4 py-4 text-on-surface-variant max-w-[150px] truncate" title={payment.reference ?? undefined}>
+                    <span dir="auto">{payment.reference ?? "—"}</span>
+                  </td>
+                  <td className="px-4 py-4 font-semibold text-on-surface tabular-nums whitespace-nowrap">
+                    <span dir="ltr" className="inline-block whitespace-nowrap">
+                      {formatSarAmount(locale, payment.amount)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <StatusBadge variant={getPaymentStatusBadgeVariant(payment.status)}>
+                      {getPaymentStatusLabel(locale, payment.status)}
+                    </StatusBadge>
+                  </td>
+                </tr>
+              ))}
+              {payments.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">
+                    {error
+                      ? dictionary.states.paymentDataUnavailable
+                      : dictionary.table.empty}
+                  </td>
+                </tr>
+              )}
+            </DataTable>
+            </div>
+          </div>
         </div>
 
         {payments.length > itemsPerPage && (
           <PaginationFooter
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={setCurrentPage}
+            onPageChange={handlePageChange}
             className="border-t-0"
           />
         )}
