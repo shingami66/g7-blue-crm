@@ -49,7 +49,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `quotations` / `quotation_items`: Quotes with subtotal/vat/grand_total calculation foundations.
 - `invoices` / `invoice_items`: Current invoice tables referencing quotes. `invoices.type` exists as text without a CHECK constraint; ERP-3 target design must use `invoice_type = deposit | final` after reviewed schema work.
   - **Approved Billing Scope Integration:** Added `approved_billing_scope_id` as a nullable UUID referencing `approved_billing_scopes(id, service_id)` via a composite foreign key constraint, enforcing invoice ceiling limits and validation guards via `check_invoices_before_write` trigger.
-- `payments`: Financial tracking of invoice payments. Current `payments.method` allowed values are `bank_transfer`, `cash`, `cheque`, and `online`; ERP-4 planning may later decide whether to change this to Cash / Bank Transfer / Card / Other.
+- `payments`: Financial tracking of invoice payments. Current `payments.method` allowed values are `bank_transfer`, `cash`, `cheque`, and `online`; ERP-4 planning may later decide whether to change this to Cash / Bank Transfer / Card / Other. Contains the idempotent `request_id` (UUID, nullable, unique when not null) column to block double-submits.
 - `projects` / `project_tasks`: Existing legacy execution tracking. New ERP planning should use Service as the operational unit.
 
 ### Views
@@ -126,19 +126,21 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Post-apply read-only verification and later successful mutation smoke review confirmed the lifecycle surface in DEV/DEMO. Aggregate catalog gates at review: functions 14/14, unexpected overloads 0, triggers 3/3, constraints 29/29, indexes 14/14, RLS 11/11, privilege matrix 176/176, missing/duplicate/failed catalog counts 0. Successful mutation smoke retained only synthetic DEV/DEMO evidence (no production claim).
 
 ### Invoices And Payments
-**Status: ERP-3A Invoice Schema Foundation — Manual Supabase apply completed / Verified; application Deposit/Final create stack pushed through `45cdfb73` (DEV/DEMO only; not production-ready)**
-- Migration 20260623200000_erp3a_invoice_schema.sql was manually applied in Supabase.
-- Post-apply verification passed.
-- approved_quotation_id exists.
-- invoice_type exists.
+**Status: ERP-3A Invoice Schema Foundation & Hardened Payment Recording — Manual Supabase apply completed / Verified; application Deposit/Final and hard payment paths pushed (DEV/DEMO only; not production-ready)**
+- Migration `20260623200000_erp3a_invoice_schema.sql` was manually applied in Supabase.
+- Migration `20260718190000_payment_recording_hardening.sql` was manually applied and verified in Supabase DEV/DEMO (implements atomic payment recording, locks, transaction isolation, and idempotency).
+- Post-apply verification passed for both.
+- `approved_quotation_id` exists on invoices.
+- `invoice_type` exists on invoices.
 - old quotation_id and type columns are gone.
-- service_id exists but remains nullable.
-- snapshot_* columns exist and remain nullable jsonb.
-- invoices_invoice_type_check exists and remains NOT VALID by design.
-- quotations_id_service_id_key exists.
-- invoices_approved_quotation_id_service_id_fkey exists.
+- `service_id` exists but remains nullable.
+- `snapshot_*` columns exist and remain nullable jsonb.
+- `payments.request_id` exists (UUID, nullable, protected by `payments_request_id_idx` unique constraint when not null).
+- `invoices_invoice_type_check` exists and remains NOT VALID by design.
+- `quotations_id_service_id_key` exists.
+- `invoices_approved_quotation_id_service_id_fkey` exists.
 - Composite FK enforcement remains partial while service_id is nullable.
-- Application Invoice create uses the service-role RPC for financial authority; UI/control visibility and billing-state presentation remain application-side (see Application vs database enforcement below).
+- Application Invoice create and Payment recording use service-role RPCs (`public.create_invoice_atomic` and `public.record_invoice_payment`) for financial authority; UI control visibility and state presentation remain application-side (see Application vs database enforcement below).
 - ZATCA/FATOORA/QR/XML remain deferred.
 - Do not document unbuilt migrations as installed.
 
