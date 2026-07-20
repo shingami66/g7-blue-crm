@@ -1,5 +1,6 @@
 export interface RecordPaymentInput {
   invoiceId: string;
+  requestId: string;
   amount: number;
   date: string;
   method: "bank_transfer" | "cash" | "cheque" | "online";
