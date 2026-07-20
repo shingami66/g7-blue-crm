@@ -41,15 +41,15 @@ Customer Profile -> Service / Booking -> Quotation -> Invoice -> Payment
 
 ## Documentation Map
 
-- [README.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/README.md): concise repository entry point only.
-- [docs/project-status.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/project-status.md): current verified project state and completed milestones.
-- [docs/project-roadmap.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/project-roadmap.md): execution order and pending priorities.
-- [docs/deferred-decisions.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/deferred-decisions.md): deferred, unresolved, and partially completed decisions.
-- [docs/database-schema.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/database-schema.md): implemented schema facts and approved target direction.
-- [docs/atomic-invoice-creation-contract.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/atomic-invoice-creation-contract.md): atomic Deposit/Final Invoice creation contract.
-- [docs/atomic-payment-recording-contract.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/atomic-payment-recording-contract.md): hardened atomic payment recording contract.
-- [docs/repository-worktree-governance.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/docs/repository-worktree-governance.md): repository path, worktree, reconciliation, and owner-approval rules.
-- [AGENTS.md](file:///C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5/AGENTS.md): mandatory agent execution and safety rules.
+- [README.md](./README.md): concise repository entry point only.
+- [docs/project-status.md](./docs/project-status.md): current verified project state and completed milestones.
+- [docs/project-roadmap.md](./docs/project-roadmap.md): execution order and pending priorities.
+- [docs/deferred-decisions.md](./docs/deferred-decisions.md): deferred, unresolved, and partially completed decisions.
+- [docs/database-schema.md](./docs/database-schema.md): implemented schema facts and approved target direction.
+- [docs/atomic-invoice-creation-contract.md](./docs/atomic-invoice-creation-contract.md): atomic Deposit/Final Invoice creation contract.
+- [docs/atomic-payment-recording-contract.md](./docs/atomic-payment-recording-contract.md): hardened atomic payment recording contract.
+- [docs/repository-worktree-governance.md](./docs/repository-worktree-governance.md): repository path, worktree, reconciliation, and owner-approval rules.
+- [AGENTS.md](./AGENTS.md): mandatory agent execution and safety rules.
 
 ## Local Development
 
