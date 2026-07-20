@@ -23,6 +23,7 @@ import { getInvoiceById } from "@/lib/invoices/queries";
 import { getServiceById } from "@/lib/services/queries";
 import type { QuotationItem } from "@/lib/quotations/types";
 import { IssueInvoiceAction } from "../IssueInvoiceAction";
+import { RecordPaymentAction } from "./RecordPaymentAction";
 
 export const dynamic = "force-dynamic";
 
@@ -176,6 +177,11 @@ export default async function InvoiceDetailPage({
   const canIssueInvoice = invoice.status === "draft"
     ? await checkPermission(INVOICE_PERMISSIONS.write)
     : false;
+  const canRecordPayment =
+    !["draft", "cancelled", "voided"].includes(invoice.status) &&
+    (invoice.balance_due ?? 0) > 0 &&
+    invoice.service_id !== null &&
+    (await checkPermission("payments:write"));
   const canReadServices = invoice.service_id ? await checkPermission("services:read") : false;
   const service = canReadServices && invoice.service_id ? await getServiceById(invoice.service_id) : null;
 
@@ -549,6 +555,17 @@ export default async function InvoiceDetailPage({
               {canIssueInvoice && (
                 <div className="pt-4 border-t border-surface-variant">
                   <IssueInvoiceAction invoiceId={invoice.id} dictionary={dictionary.issueAction} />
+                </div>
+              )}
+              {canRecordPayment && (
+                <div className="pt-4 border-t border-surface-variant">
+                  <RecordPaymentAction
+                    invoiceId={invoice.id}
+                    invoiceNumber={invoice.invoice_number || invoice.id}
+                    balanceDue={invoice.balance_due ?? 0}
+                    dictionary={dictionary.paymentModal}
+                    buttonLabel={dictionary.list.actions.recordPayment}
+                  />
                 </div>
               )}
             </div>
