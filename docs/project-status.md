@@ -40,13 +40,13 @@
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 2.1 Current Active Work
-- **Current active task (exactly one):** `G7-SUPPLIER-OPS-04-V1-FINAL-CLOSEOUT-1` for the validated Supplier Operations V1 Service-scoped Allocation and Booking workflows.
+- **Current active task (exactly one):** `G7-DOCS-GOVERNANCE-PAYMENTS-SYNC-4-COMMITS-1` for documentation sync/push and worktree governance locking.
 - **Supplier Operations V1:** internal Service Detail Allocations and Supplier Bookings are implemented for Admin/Manager under server permission gates. The slice validates `NUMERIC(10,3)` quantity and `NUMERIC(14,2)` unit cost, distinguishes load failure from genuine empty state, applies Supplier lifecycle checks to Booking creation and Allocation restore, locks Allocation mutations while an active Booking exists, and uses conditional affected-row checks for Allocation and Booking mutations. Rate-card allocation creation enforces active date validity and rate-card allocations cannot be deleted or restored.
 - **Validation/runtime evidence:** 59 focused tests plus lint, Next type generation, TypeScript, and production build passed for the closeout. Codex browser automation could not render the G7 login DOM despite a healthy local Next.js server; this is an automation-tool blocker, not an observed application failure. Mozfer approved milestone closeout without further browser smoke. DEV/DEMO and production-readiness claims remain separate.
 - **Atomic Invoice create (DEV/DEMO code path closed):** migration `supabase/migrations/20260717180000_atomic_invoice_create.sql` pushed as `5ad23f25`, **manually applied + verified in DEV/DEMO** (Mozfer evidence), and **application integrated** in `a83c1d28` — Deposit and Final creation route only through `public.create_invoice_atomic` via service-role `createAdminClient` (no multi-query create write; no silent fallback).
 - **Financial lifecycle / atomic create milestone count:** **20** meaningful commits from baseline `a32be762` to HEAD `a83c1d28` (includes Wave A financial lifecycle stack, atomic contract/migration/DEV apply docs, and Task 20 app integration).
 - **Financial lifecycle application source wave:** **pushed** to `origin/main` through `45cdfb73` (ten source/test commits). Atomic Invoice RPC + app integration are pushed through `a83c1d28` and installed in DEV/DEMO only.
-- **Next safe product/engineering direction:** ABS history/read polish → Void UI → successor UI → optional role browser smoke. Void/successor app actions and UI remain unshipped. Production apply remains unauthorized.
+- **Next safe product/engineering direction:** Repository reconciliation planning is pending owner approval (no reconciliation or checkout switch has occurred). ABS history/read polish, Void UI, successor UI, and role browser smoke remain deferred.
 - **Design complete:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
 - **ABS read-enrichment complete (source + accepted):** `ABS-MGMT-UI-READ-ENRICH-1` — Service Detail read-only ABS summary card enriched and pushed on main.
 - **ABS draft-edit/discard complete (source + accepted):** `ABS-MGMT-UI-DRAFT-EDIT-1` — draft item edit/discard UI implemented, automated validation passed, PASS by Mozfer manual browser evidence recorded, and pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`.
@@ -96,6 +96,26 @@
 
 
 ## 3. Completed Milestones
+
+### Hardened Payment Recording and Table Pagination Layout (through `ded8daa`)
+- [x] Migration file: `supabase/migrations/20260718190000_payment_recording_hardening.sql`.
+- [x] Migration commit pushed on `main`: `d392405` (`feat(payments): add atomic settlement migration`); reviewed and pushed.
+- [x] Canonical contract: `docs/atomic-payment-recording-contract.md`.
+- [x] **Mozfer manual DEV/DEMO apply:** migration executed successfully on the DEV/DEMO dataset only (not production).
+- [x] **Post-apply metadata verified:** function `public.record_invoice_payment(uuid, numeric, date, text, text, text, uuid)` exists; returns `TABLE(error_code text, payment_id uuid, payment_number text, amount_paid numeric, balance_due numeric, invoice_status text)`; language `plpgsql`; `SECURITY DEFINER` true; fixed `search_path` = `pg_catalog, public`; owner `postgres`.
+- [x] **Privilege matrix verified:** `PUBLIC` execute false; `anon` execute false; `authenticated` execute false; `service_role` execute true.
+- [x] **Application integration complete:** 12 commits pushed on `main` up to `ded8daa1d42d2e63a9eef5a92ac5df01c2f96e1c` (stabilize payment table pagination layout).
+- [x] **Automated validation:** all 78 payment-related tests passed (`node --test`). Lint, typecheck (`tsc --noEmit`), and production build succeeded.
+- [x] **DEV/DEMO runtime smoke verified (Admin; local application using DEV/DEMO data only):**
+  - Fully paid Invoice `INV-2026-0022` with `4,200.00 SAR`, changing payment count from 22 to 23 and total collected amount from `633,221.04 SAR` to `637,421.04 SAR` (+4,200.00 SAR).
+  - Status changed to Paid, balance reached 0. Record Payment action disappeared.
+  - Preserved accidental DEV/DEMO record `PAY-2026-0021` (amount `50,780.00 SAR` on Invoice `INV-2026-0021` for `SVC-2026-0021`, request ID `cea6c0cd-315b-4d3f-9b9b-75d802ceb5fc`) remains in database pending separately reviewed correction/recovery plan.
+- [x] **Not claimed:** production apply, production readiness, or Graphify refresh.
+
+### Supplier Operations V1 Closeout (through `G7-SUPPLIER-OPS-04`)
+- [x] Internal Service Detail Allocations and Supplier Bookings implemented under server permission gates.
+- [x] Checked logic for decimal quantity, unit cost, status transitions, restore block, active booking locks, and soft delete.
+- [x] Committed, validated, and pushed on main.
 
 ### Atomic Invoice create RPC + app integration (through `a83c1d28`)
 - [x] Migration file: `supabase/migrations/20260717180000_atomic_invoice_create.sql`.

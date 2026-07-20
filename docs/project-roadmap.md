@@ -75,9 +75,10 @@ Current active task:
 - **ABS review/approve complete and pushed:** `ABS-MGMT-UI-REVIEW-APPROVE-1` — automated validation passed; PASS by Mozfer manual browser evidence; committed and pushed in `d8b654f2c89622837b75531aa44d79a66e024ad8`.
 - **Financial lifecycle implementation verified:** `ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED` remains the governing design decision. The reviewed migration/RPC implementation is installed in DEV/DEMO. Successful mutation smoke and independent review are **complete** (synthetic DEV/DEMO only; run ID `300d4edd-5c8e-45bc-bc85-b4f033750a14`).
 - **Invoice financial lifecycle application stack:** **implemented, tested, DEV/DEMO browser-accepted (PASS WITH WARN), and pushed** through `45cdfb73` (ten source/test commits: money, exposure, lifecycle, safe action errors, invoice RBAC, five-mode authority, ABS history alignment, Deposit/Final actions, Service billing UI, Quotation display-only authority). Service Detail is mutation authority; Quotation Detail is display-only.
-- **Current active task (exactly one):** `G7-SUPPLIER-OPS-04-V1-FINAL-CLOSEOUT-1` (controlled documentation, validation, Graphify refresh, commit, and push for Supplier Operations V1). No production rollout is implied.
-- **Supplier Operations V1 closeout:** Service-scoped internal Allocation and Supplier Booking workflows are implemented. Booking creation and Allocation restore require an active, non-deleted, non-blacklisted Supplier; active Bookings lock Allocation edit, transition, cancel, delete, and restore controls. Cancellation uses an accessible, RTL-safe reason dialog. The closeout preserves the application-layer/nontransactional stale-check caveat and does not claim browser runtime verification or production readiness.
-- **Next safe product/engineering direction (after this closeout):** select the next highest-value G7 CRM milestone. Production apply remains unauthorized.
+- **Supplier Operations V1 closeout:** **complete** — internal Allocations and Supplier Bookings implemented under server gates; cancel/restore checks and booking concurrency limits verified.
+- **Hardened Payment Recording & Table Pagination:** **complete** — atomic `record_invoice_payment` RPC applied/verified in DEV/DEMO; 12 commits pushed up to `ded8daa`; 78 payment tests passed; pagination layout scroll-reset stabilized; manual smoke verification (fully paid INV-2026-0022 with 4,200.00 SAR) passed.
+- **Current active task (exactly one):** `G7-DOCS-GOVERNANCE-PAYMENTS-SYNC-4-COMMITS-1` (controlled documentation, validation, commit, and push for worktree governance and payment recording milestones).
+- **Next safe product/engineering direction:** Repository reconciliation planning is pending owner approval (no reconciliation or checkout switch has occurred). ABS history/read polish, Void UI, successor UI, and role browser smoke remain deferred.
 - **Deferred / optional (not complete):** Manager and Accountant browser smoke sessions; Deposit client maximum using remaining rather than full ceiling; legacy Quotation database ceiling hardening; lifecycle atomicity hardening; full seven-state DB enforcement; ABS history consistency hardening; broad ABS numeric normalization; future production/database hardening; future VAT or compliance work. Do **not** mark production rollout, VAT readiness, ZATCA readiness, or accounting finality complete.
 - **Locked ABS management order:**
   1. `ABS-MGMT-UI-READ-ENRICH-1` **complete**
@@ -87,7 +88,11 @@ Current active task:
   5. `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-1` **complete**
   6. migration/RPC preflight, SQL review, DEV/DEMO apply, read-only verification, actions, and tests **complete**
   7. successful lifecycle mutation smoke + independent review **complete** (DEV/DEMO synthetic)
-  8. application Deposit/Final financial lifecycle stack **pushed** through `45cdfb73` → documentation sync/push (**current**) → read/history polish → Void UI → successor UI → optional role browser smoke
+  8. application Deposit/Final financial lifecycle stack **pushed** through `45cdfb73`
+  9. atomic Invoice create RPC complete and app-routed in `a83c1d28`
+  10. atomic record_invoice_payment RPC complete and app-routed in `ded8daa`
+  11. documentation sync/push for governance and payments (current active task)
+  12. repository reconciliation planning is pending owner approval (no reconciliation or checkout switch has occurred)
   - Optional later: `ABS-MGMT-HISTORY-LIST-1`
 - **ABS source-truth:** all UI slices through Review/Approve are implemented and pushed; status enum `draft|approved|voided` only (Superseded is timestamp/link-derived). The lifecycle migration/RPC surface is installed in DEV/DEMO and successful mutation smoke has been executed and independently reviewed (synthetic only). Application Invoice authority/exposure/Deposit/Final controls are pushed; Void/successor app actions/UI remain pending. Current runtime fallback and the locked post-authority fail-closed policy remain distinct and must not be conflated.
 - **Browser/manual smoke rule:** Practical browser/manual smoke remains user-controlled by default and may be delegated to an agent only through explicit bounded user authorization. The financial lifecycle browser acceptance was executed in DEV/DEMO under such authorization.
