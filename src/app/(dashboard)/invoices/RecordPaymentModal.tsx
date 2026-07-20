@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { X, Receipt, Loader2 } from "lucide-react";
 import { recordPaymentAction } from "@/lib/payments/actions";
+import { PaymentSubmissionController } from "@/lib/payments/submission-controller";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import type { InvoicesDictionary } from "@/lib/i18n/dictionaries/invoices";
@@ -33,6 +34,7 @@ export function RecordPaymentModal({
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [method, setMethod] = useState<"bank_transfer" | "cash" | "cheque" | "online">("bank_transfer");
   const [reference, setReference] = useState("");
+  const controllerRef = useRef(new PaymentSubmissionController(() => crypto.randomUUID()));
 
   const formatCopy = (template: string, values: Record<string, string | number>) =>
     template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
@@ -43,6 +45,12 @@ export function RecordPaymentModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleConfirmPayment = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setError(null);
     setSuccessMsg(null);
 
@@ -66,20 +74,39 @@ export function RecordPaymentModal({
       return;
     }
 
-    startTransition(async () => {
-      const result = await recordPaymentAction({
+    const intent = {
+      invoiceId,
+      amount: numericAmount,
+      date,
+      method,
+      reference: reference.trim() || undefined,
+    };
+
+    const { accepted, requestId, inFlightPromise } = controllerRef.current.begin(intent, async (reqId) => {
+      return await recordPaymentAction({
         invoiceId,
+        requestId: reqId,
         amount: numericAmount,
         date,
         method,
         reference: reference.trim() || undefined,
       });
+    });
+
+    if (!accepted || !requestId || !inFlightPromise) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await inFlightPromise;
 
       if (result.success) {
+        controllerRef.current.settleSuccess(intent);
         setSuccessMsg(dictionary.success);
         router.refresh();
         onClose();
       } else {
+        controllerRef.current.settleFailure(intent);
         const errorMsg = dictionary.errors as Record<string, string>;
         setError(errorMsg[result.error!] || dictionary.errors.generic);
       }
@@ -95,7 +122,16 @@ export function RecordPaymentModal({
             <h2 className="text-lg font-semibold text-on-surface">{dictionary.title}</h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={() => {
+              controllerRef.current.reset({
+                invoiceId,
+                amount: parseFloat(amount) || 0,
+                date,
+                method,
+                reference: reference.trim() || undefined,
+              });
+              onClose();
+            }}
             className="text-on-surface-variant hover:text-on-surface transition-colors rounded-full p-1 hover:bg-surface-container"
             disabled={isPending}
             type="button"
@@ -201,18 +237,27 @@ export function RecordPaymentModal({
               {successMsg}
             </div>
           )}
-
           <div className="pt-4 flex gap-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                controllerRef.current.reset({
+                  invoiceId,
+                  amount: parseFloat(amount) || 0,
+                  date,
+                  method,
+                  reference: reference.trim() || undefined,
+                });
+                onClose();
+              }}
               disabled={isPending}
               className="flex-1 px-4 py-2 text-[14px] font-semibold text-on-surface-variant hover:bg-surface-container rounded-lg border border-transparent hover:border-outline-variant transition-colors disabled:opacity-50"
             >
               {dictionary.cancel}
             </button>
             <button
-              type="submit"
+              type="button"
+              onClick={handleConfirmPayment}
               disabled={isPending}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-[14px] font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
