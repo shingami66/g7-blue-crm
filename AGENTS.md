@@ -6,6 +6,24 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # G7 BLUE CRM — Agent Project Guidance
 
+## STRICT GATES AND GOVERNANCE PRECEDENCE
+
+1. `AGENTS.md`
+   Top-level repository authority and mandatory skill routing.
+2. `.agents/skills/g7-crm-agent-control/SKILL.md`
+   Execution modes, plan lock, Git separation, HOLD behavior, evidence, and report truthfulness.
+3. Routed domain guard skills
+   Such as ERP, security, documentation, tests, migrations, and precommit gates.
+4. `docs/repository-worktree-governance.md`
+   Checkout ownership, worktree lifecycle, and reconciliation rules.
+5. Task prompt
+   Defines task-specific scope only.
+
+A task prompt must never weaken, bypass, rename, or override a higher-level guard. Only a separately owner-approved GUARD_EDIT_ONLY task may change guard behavior.
+
+Every task MUST read this file and `g7-crm-agent-control`. Failure to provide skill-read evidence causes HOLD.
+Exactly one mode from the canonical list in Agent Control must be declared per task.
+
 ## Project Identity
 
 G7 BLUE CRM is an Events CRM + Billing System. It supports an event-company workflow where customer relationships, quotations, invoices, payments, and operations must stay connected.
@@ -57,6 +75,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
   9. Commit and push plan.
   10. Expected final repository state.
   11. Worktree/branch lifecycle and cleanup plan when applicable.
+- **Stage Separation:** Implementation, review, commit, and push are separate tasks. No "low-risk combined mode" exception is allowed. Sequential stages may occur in the same conversation only as separate prompts after Mozfer reviews and explicitly approves the next stage.
 - **Worktree Governance:** Active development runs under the authorized Git worktree `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5`. The old local checkout `D:/G7/g7-crm` is forbidden, historical, and must remain untouched. Silent worktree creation, path switching, and manual folder merging are strictly prohibited. Reconciliation of `D:/G7/g7-crm` is a separate, future task pending explicit approval. Canonical documentation of this governance resides in `docs/repository-worktree-governance.md`.
 - Follow `Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge`.
 - After merges that change delivered behavior, phase status, or decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` as applicable.
@@ -184,7 +203,7 @@ For CS-A, keep `/settings` limited to the live singleton `company_settings` reco
 
 ## Local Skills
 
-Local skills are advisory helpers for recurring G7 BLUE CRM work. They must follow and reinforce these project rules; they must not override `AGENTS.md` or explicit user instructions.
+Local guard skills are mandatory when their domain applies. They must follow and reinforce these project rules. Task prompts cannot weaken these repository guards.
 
 The Spec Kit agent-context extension manages only the `<!-- SPECKIT START -->` to `<!-- SPECKIT END -->` block in this file. Do not manually rewrite that managed block during ordinary tasks unless the task explicitly targets Spec Kit context maintenance.
 
@@ -225,7 +244,7 @@ When using Spec Kit in this repository, the following rules constrain all Spec K
    - `.agents/skills/g7-crm-erp-guard/SKILL.md`
    - `.agents/skills/g7-crm-agent-control/SKILL.md`
 3. Spec Kit does not authorize staging, committing, pushing, opening PRs, applying SQL, running Supabase commands, reading `.env*`, reading secrets, starting dev servers, or killing ports/processes.
-4. Spec Kit implementation work must still begin in `MODE: IMPLEMENT_NO_STAGE` and may only move to `CONTROLLED_COMMIT` or `CONTROLLED_PUSH` after explicit user approval.
+4. Spec Kit implementation work must still begin in `MODE: IMPLEMENT_NO_STAGE` and may only move to `COMMIT_ONLY` or `PUSH_ONLY` after explicit user approval.
 5. All Spec Kit specs and plans must preserve the G7 BLUE CRM locked flow: Customer Profile → Service / Booking → Quotation → Invoice → Payment.
 6. While `company_settings.vat_mode = not_registered`, Spec Kit work must not create or display Tax Invoice wording, VAT 15%, VAT Number, ZATCA, FATOORA, QR, XML, clearance, or official Saudi e-invoicing behavior.
 7. Financial totals must not be trusted from client input. Invoice and payment logic must use trusted server/database logic and approved quotation snapshots.

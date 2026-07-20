@@ -7,18 +7,34 @@ description: Gatekeeper for G7 BLUE CRM before staging, committing, pushing, ope
 
 Use this skill before staging, committing, pushing, opening PRs, or merging.
 
-## Git Safety
+## Precommit Exact Plan Checks
 
-- Confirm the exact branch.
-- Run `git status --short`.
-- Confirm only expected files changed.
-- Stage exact files only.
-- Never use `git add .`.
-- Confirm no unrelated files are staged.
-- Confirm no `.env.local` or secret files are staged.
-- Confirm no `src` changes are included in docs-only branches.
-- Confirm no `AGENTS.md` changes are included unless the task explicitly includes agent guidance.
-- Confirm no SQL/migrations are included unless explicitly reviewed and approved.
+Before staging:
+- Verify mode is `COMMIT_ONLY`.
+- Verify working tree contains exactly the approved changed files.
+- Verify no file was modified after the approved `REVIEW_ONLY` result.
+- Verify the approved review result exists.
+- For docs, verify Docs Guard result is PASS or explicitly owner-accepted PASS WITH WARN.
+- Verify exact approved commit count.
+- Verify exact approved commit subject.
+- Verify exact approved file group.
+
+After staging:
+- `git diff --cached --name-only` must match the approved file list exactly.
+- Staged file count must match.
+- Staged diff must contain no unexpected file.
+- No broad staging (`git add .` is forbidden).
+
+Before commit:
+- Commit subject must match byte-for-byte.
+- Any difference causes HOLD.
+- The agent must not choose a "clearer" or "better" subject.
+
+Required HOLD reasons:
+`PRECOMMIT_PLAN_MISMATCH`
+`PRECOMMIT_FILE_MISMATCH`
+`PRECOMMIT_SUBJECT_MISMATCH`
+`PRECOMMIT_REVIEW_MISSING`
 
 ## Validation
 
@@ -31,10 +47,9 @@ Use this skill before staging, committing, pushing, opening PRs, or merging.
 
 ## Commit / Push / PR
 
-- Commit only after branch, staged files, checks, and build/test expectations are satisfied.
-- Do not force push.
-- Push only the intended branch.
-- Open PRs only when requested.
+- Commit only after all exact plan checks are satisfied.
+- Push and PR actions are forbidden in `COMMIT_ONLY` mode.
+- Pushes require `PUSH_ONLY` mode.
 
 ## Required Final Report
 

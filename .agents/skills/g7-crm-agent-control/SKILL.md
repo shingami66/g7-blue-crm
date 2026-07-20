@@ -101,12 +101,12 @@ Do not modify these files unless the task explicitly uses `GUARD_EDIT_ONLY` mode
 ## Universal Rules
 
 1. Evidence over claims. No PASS without raw reproducible evidence.
-2. Final report must start exactly with `TASK RESULT: PASS` or `TASK RESULT: HOLD`.
+2. Final report must start exactly with `TASK RESULT: PASS`, `TASK RESULT: PASS WITH WARN`, `TASK RESULT: HOLD`, or `TASK RESULT: FAIL`.
 3. Do not say “done”, “completed”, or “success” unless supported by raw evidence.
-4. The task prompt must specify exactly one `MODE`.
-5. If MODE is missing, default to `READONLY_REVIEW`.
+4. Exactly one mode must be declared per task from the canonical list.
+5. If MODE is missing, default to `READONLY_REVIEW` only if the action is entirely read-only.
 6. If MODE is missing and the task's required actions exceed `READONLY_REVIEW` boundaries, return HOLD.
-7. If task instructions conflict with the selected mode, return HOLD.
+7. An explicitly supplied unknown mode causes HOLD. Two or more modes cause HOLD.
 8. The task prompt remains responsible for allowed files, acceptance criteria, and validation commands.
 9. Do not run `git add .`.
 10. Do not stage unless mode is `COMMIT_ONLY`.
@@ -186,7 +186,55 @@ UPDATE without narrow WHERE
 
 When in doubt, return HOLD.
 
+## Strict Gates
+
+### Plan Lock Gate
+The approved plan locks: task ID, execution mode, authorized repository path, branch, starting HEAD, exact allowed files, exact purpose, exclusions, validation, expected file count, commit count, exact commit subjects, and expected final repository state. Any material deviation causes HOLD (`PLAN_LOCK_VIOLATION`). The agent must not replace the approved plan with a "better" plan, substitute files, change commit subjects/counts, add scripts, docs, tests, or database work, or treat its revised plan as owner-approved.
+
+### Owner Approval Gate
+Owner approval applies only to the exact presented plan. Silence is not approval. Earlier broad approval is not permission to widen the current task. A materially changed plan requires fresh approval. An agent cannot approve its own substitute plan.
+
+### No Self-Widening Gate
+The agent may not add any unapproved file, folder, helper script, temporary file, generated document, dependency, command with side effects, validation beyond safe checks, product task, docs cleanup, database action, Git action, or Graphify action. Required HOLD reason: `UNAPPROVED_SCOPE_EXPANSION`.
+
+### Mass Change Gate
+Fresh owner approval is required before any edit that would delete >100 lines from one file, remove >20% of a file's original lines, replace an entire file, remove >5 Markdown headings, collapse a multi-section document, reduce a document below minimum, rewrite via generated content, or materially change the purpose of a canonical document. Before such edit, stop with `MASS_CHANGE_APPROVAL_REQUIRED` and report: file path, original count, final count, additions, deletions, percentage changed, headings removed, unique info at risk, preservation map, and reason.
+
+### Generated Content and Scratch Gate
+Unless exact path and purpose are owner-approved, the agent must not create or use Python/PowerShell/shell scripts, generated Markdown replacements, temporary analysis files, intermediate transformed files, IDE brain/scratch artifacts, AppData/user-profile scratch files, or copied files used as replacement sources. Repository cleanliness is not proof of compliance if artifacts exist outside Git. Required HOLD reason: `EXTERNAL_OR_GENERATED_ARTIFACT_VIOLATION`.
+
+### Report Truthfulness Gate
+The first line of the final report must be exactly `TASK RESULT: PASS`, `TASK RESULT: PASS WITH WARN`, `TASK RESULT: HOLD`, or `TASK RESULT: FAIL`. PASS is forbidden when any requirement was skipped, plan changed, required file unread, validation missing, token/subject/file differs, or control violated. A requested success token must match exactly. Empty output must be shown as `<empty>`. Claims must be backed by raw evidence.
+
 ## Execution Modes
+
+Exactly one mode must be declared per task. A task cannot transition to another mode during execution. Each follow-up stage requires a new task and explicit owner approval.
+
+Canonical Mode List:
+- READONLY_REVIEW
+- PLAN_ONLY
+- IMPLEMENT_NO_STAGE
+- DOCS_ONLY
+- REVIEW_ONLY
+- COMMIT_ONLY
+- PUSH_ONLY
+- GRAPHIFY_REFRESH_ONLY
+- SQL_DRAFT_ONLY
+- SUPABASE_APPLY_ONLY
+- MANUAL_SMOKE_ONLY
+- GUARD_EDIT_ONLY
+
+### PLAN_ONLY
+Allowed: Read files, draft plan.
+Forbidden: Code changes, staging, commit, push, DB writes.
+
+### REVIEW_ONLY
+Allowed: Read files, inspect diff.
+Forbidden: Modifying files, staging, commit, push.
+
+### GRAPHIFY_REFRESH_ONLY
+Allowed: Refresh only explicitly approved repository path. Report path and HEAD used. Graphify is navigation evidence only.
+Forbidden: Edits, staging, commit, push, checkout switch.
 
 ### READONLY_REVIEW
 
@@ -269,21 +317,19 @@ Required evidence:
 Allowed:
 
 * Stage exact files named in the task.
-* Commit with the exact or approved message.
+* Commit with the exact approved message.
 
 Forbidden:
 
 * Modifying files.
-* `git add .`.
+* `git add .` or broad staging.
 * Push.
+* Graphify.
 * SQL/database writes.
 * Supabase connection.
+* Self-selected subject.
 
-If no files are explicitly named in the task, return HOLD.
-
-```text
-Reason: Cannot stage without explicit file list.
-```
+If no files are explicitly named in the task, return HOLD. Any mismatch in subject or files causes HOLD (`PRECOMMIT_SUBJECT_MISMATCH` or `PRECOMMIT_FILE_MISMATCH`).
 
 Required evidence:
 
@@ -298,15 +344,20 @@ Required evidence:
 Allowed:
 
 * Push explicitly approved existing commit(s).
+* Verify exact approved outgoing commit, branch, and divergence.
 
 Forbidden:
 
 * Modifying files.
 * Staging.
 * Commit.
+* Force push.
+* Graphify.
 * SQL/database writes.
 * Supabase connection.
 * Opening PR unless explicitly authorized.
+
+Any unexpected outgoing commit causes HOLD.
 
 Required evidence:
 

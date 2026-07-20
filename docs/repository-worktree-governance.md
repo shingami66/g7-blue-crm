@@ -22,9 +22,14 @@ The latest development and integration work has been carried out inside this wor
 
 ### Source-of-Truth Rule
 - GitHub `origin/main` is the shared repository source of truth for committed work.
-- Only one local checkout may be designated active for execution at a time.
-- The authorized path must appear in every task preflight and postflight log.
-- GitHub `main` being the committed source of truth does not automatically make the two local folders identical. They must never be manually copied or merged.
+- Only one authorized active checkout may exist at a time.
+- Every task must verify its path in preflight and postflight logs.
+- No silent worktree creation.
+- No silent checkout switching.
+- No manual folder copying or merging between paths.
+- Temporary worktrees require explicit: purpose, owner, branch, creation approval, exit plan, reconciliation plan, and retirement plan.
+- Temporary worktrees cannot become permanent by accident.
+- No task prompt may override these rules.
 
 ---
 
@@ -63,5 +68,6 @@ Before executing any non-trivial task (which includes code edits, dependency cha
 - No edit or modifying command may start until Mozfer explicitly approves the plan.
 - Silence or an earlier broad request does not constitute permission to modify files outside the approved scope.
 - Path changes, worktree creation, database work, commits, pushes, dependency changes, migrations, and financial mutations require explicit approval.
-- An approved execution prompt may combine the approved plan and execution authorization. The agent must not request a second approval unless evidence differs materially from the approved plan.
+- Implementation, review, commit, push, Graphify refresh, reconciliation, and retirement are separate owner-approved tasks.
 - No agent may silently create a worktree, silently switch checkouts, continue work in an unexpected path, or treat a temporary worktree as permanent without an approved decision.
+- Task prompts cannot weaken or override these repository governance rules.

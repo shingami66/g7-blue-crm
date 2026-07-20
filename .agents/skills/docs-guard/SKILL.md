@@ -25,6 +25,21 @@ These rules exist because AI agents document from memory of how APIs *usually* l
 
 ## The Rules
 
+### Mandatory Docs Guard Gate
+
+This skill is a MANDATORY gate for any documentation-affecting task. A docs task may not proceed to COMMIT_ONLY while Docs Guard is HOLD. No docs PASS without a Docs Guard result.
+Required docs outcomes: `DOCS GUARD: PASS`, `DOCS GUARD: PASS WITH WARN`, `DOCS GUARD: HOLD`.
+
+1. **Verify all claims** against source or canonical repository documents.
+2. **Reject local-machine links**: `file:///`, `C:/...`, `D:/...`, and user-profile paths are forbidden.
+3. **Repository-document links must be relative.**
+4. **Verify all added internal links resolve.**
+5. **Run a contradiction and stale-status review.**
+6. **For consolidation or deletion**: inventory unique decisions first; produce a preservation/removal map; apply the Mass Change Gate.
+7. **Do not turn a canonical decision register into a summary** unless explicitly approved.
+8. **Do not mark a fully implemented topic as deferred.**
+9. **Do not mark a partially implemented topic as fully complete.**
+
 ### Accuracy — must fix
 
 1. **Every referenced symbol must exist.** Every function, method, class, hook, CLI command, flag, endpoint, config key, env var, and file path mentioned in the docs gets verified against the actual source, CLI help output, route table, or schema — by reading it, not recalling it. The verification procedure is in [references/verification.md](references/verification.md). An unverifiable reference does not ship.
