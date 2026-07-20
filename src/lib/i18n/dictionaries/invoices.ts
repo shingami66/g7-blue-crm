@@ -200,6 +200,7 @@ export interface InvoicesDictionary {
       invoice_not_payable: string;
       invoice_deleted: string;
       invalid_payment_amount: string;
+      idempotency_conflict: string;
       Unauthorized: string;
       Forbidden: string;
       generic: string;
@@ -413,6 +414,7 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       invoice_not_payable: "This invoice cannot accept payments.",
       invoice_deleted: "This invoice has been deleted.",
       invalid_payment_amount: "Invalid payment amount.",
+      idempotency_conflict: "A conflicting payment was submitted at the same time.",
       Unauthorized: "You must be signed in.",
       Forbidden: "You don't have permission to record payments.",
       generic: "An error occurred.",
@@ -626,6 +628,7 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       invoice_not_payable: "لا يمكن تسجيل دفعة لهذه الفاتورة.",
       invoice_deleted: "تم حذف هذه الفاتورة.",
       invalid_payment_amount: "مبلغ الدفعة غير صالح.",
+      idempotency_conflict: "تم تقديم دفعة متعارضة في نفس الوقت.",
       Unauthorized: "يجب تسجيل الدخول أولاً.",
       Forbidden: "ليس لديك صلاحية لتسجيل المدفوعات.",
       generic: "حدث خطأ ما.",
