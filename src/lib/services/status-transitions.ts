@@ -2,7 +2,7 @@ import "server-only";
 
 import type { createAdminClient } from "@/lib/supabase/admin";
 import type { Locale } from "@/lib/i18n/locales";
-import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getServicesDictionary } from "../i18n/dictionaries/services.ts";
 import type {
   ServiceStatus,
   ServiceStatusTransitionAction,
@@ -17,6 +17,7 @@ type InvoiceEvidence = {
   status: string;
   grand_total: number | string | null;
   balance_due: number | string | null;
+  voided_at: string | null;
 };
 
 type TransitionEvidence = {
@@ -26,7 +27,6 @@ type TransitionEvidence = {
   nonDeletedInvoiceCount: number;
   activeInvoices: InvoiceEvidence[];
   activeDepositInvoices: InvoiceEvidence[];
-  hasConfirmedDepositPayment: boolean;
 };
 
 type EvidenceResult =
@@ -79,7 +79,7 @@ async function loadTransitionEvidence(
 
   const { data: allInvoices, error: allInvoicesError } = await supabase
     .from("invoices")
-    .select("id, invoice_type, status, grand_total, balance_due")
+    .select("id, invoice_type, status, grand_total, balance_due, voided_at")
     .eq("service_id", serviceId)
     .eq("is_deleted", false);
 
@@ -89,31 +89,14 @@ async function loadTransitionEvidence(
   }
 
   const activeInvoices = ((allInvoices ?? []) as InvoiceEvidence[]).filter(
-    (invoice) => invoice.status !== "voided" && invoice.status !== "cancelled"
+    (invoice) =>
+      invoice.voided_at === null &&
+      invoice.status !== "voided" &&
+      invoice.status !== "cancelled"
   );
   const activeDepositInvoices = activeInvoices.filter(
     (invoice) => invoice.invoice_type === "deposit"
   );
-
-  let hasConfirmedDepositPayment = false;
-  const depositInvoiceIds = activeDepositInvoices.map((invoice) => invoice.id);
-
-  if (depositInvoiceIds.length > 0) {
-    const { data: payments, error: paymentsError } = await supabase
-      .from("payments")
-      .select("id")
-      .in("invoice_id", depositInvoiceIds)
-      .eq("status", "confirmed")
-      .gt("amount", 0)
-      .limit(1);
-
-    if (paymentsError) {
-      console.error("[loadTransitionEvidence] Deposit payment lookup error:", paymentsError.message);
-      return { success: false, error: getTransitionDictionary(locale).blockedReasons.unableToVerifyPaymentEvidence };
-    }
-
-    hasConfirmedDepositPayment = (payments ?? []).length > 0;
-  }
 
   return {
     success: true,
@@ -127,13 +110,27 @@ async function loadTransitionEvidence(
       nonDeletedInvoiceCount: allInvoices?.length ?? 0,
       activeInvoices,
       activeDepositInvoices,
-      hasConfirmedDepositPayment,
     },
   };
 }
 
-function hasDepositPaymentEvidence(evidence: TransitionEvidence) {
-  return evidence.activeDepositInvoices.length > 0 && evidence.hasConfirmedDepositPayment;
+function hasFullySettledActiveDeposit(evidence: TransitionEvidence) {
+  if (evidence.activeDepositInvoices.length !== 1) {
+    return false;
+  }
+
+  const balanceDue = evidence.activeDepositInvoices[0].balance_due;
+  if (typeof balanceDue !== "number" && typeof balanceDue !== "string") {
+    return false;
+  }
+
+  const normalizedText = typeof balanceDue === "string" ? balanceDue.trim() : String(balanceDue);
+  if (!/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(normalizedText)) {
+    return false;
+  }
+
+  const normalizedBalance = Number(normalizedText);
+  return Number.isFinite(normalizedBalance) && normalizedBalance === 0;
 }
 
 function getPreconditionBlockReason(
@@ -157,11 +154,11 @@ function getPreconditionBlockReason(
       }
       return null;
     case "Deposit Paid":
-      return hasDepositPaymentEvidence(evidence)
+      return hasFullySettledActiveDeposit(evidence)
         ? null
         : copy.depositPaymentRequired;
     case "In Progress":
-      return hasDepositPaymentEvidence(evidence)
+      return hasFullySettledActiveDeposit(evidence)
         ? null
         : copy.depositPaymentBeforeWork;
     case "Completed": {
