@@ -45,9 +45,6 @@ export default async function QuotationPdfPage({
     );
   }
 
-  // Extremely basic number to words logic for the placeholder
-  const amountInWords = "System generated totals shown as values.";
-
   const formatMoney = (val: number | null | undefined) => {
     if (val === null || val === undefined) return "0.00";
     return val.toLocaleString(undefined, { minimumFractionDigits: 2 });
@@ -138,8 +135,6 @@ export default async function QuotationPdfPage({
               <div className="text-on-surface">{quotation.date}</div>
               <div className="text-on-surface-variant">Valid Until:</div>
               <div className="text-on-surface">{quotation.validUntil || "-"}</div>
-              <div className="text-on-surface-variant">Prepared By:</div>
-              <div className="text-on-surface">System Generated</div>
             </div>
           </div>
 
@@ -207,9 +202,6 @@ export default async function QuotationPdfPage({
                   </td>
                   <td className="py-4 px-2 align-top">
                     <div className="font-semibold mb-1">{item.description}</div>
-                    <div className="text-[12px] text-on-surface-variant whitespace-pre-wrap">
-                      {item.details}
-                    </div>
                   </td>
                   <td className="py-4 px-2 align-top text-[12px]">{item.category}</td>
                   <td className="py-4 px-2 align-top text-center">{formatQuantity(item.qty)}</td>
@@ -237,17 +229,7 @@ export default async function QuotationPdfPage({
         </div>
 
         {/* Financial Summary */}
-        <div className="quotation-print-summary flex justify-between items-start mb-12">
-          {/* Amount in Words */}
-          <div className="w-1/2 pr-8">
-            <div className="bg-surface-container-low p-4 rounded border border-outline-variant/50">
-              <p className="text-[10px] font-semibold text-on-surface-variant uppercase mb-1">
-                Note
-              </p>
-              <p className="text-[14px] font-medium text-on-surface">{amountInWords}</p>
-            </div>
-          </div>
-
+        <div className="quotation-print-summary flex justify-end items-start mb-12">
           {/* Totals Grid */}
           <div className="w-[300px]">
             <div className="flex justify-between py-2 border-b border-outline-variant/30 text-[14px]">
@@ -275,37 +257,16 @@ export default async function QuotationPdfPage({
           </div>
         </div>
 
-        {/* Terms & Conditions */}
-        <div className="quotation-print-terms mb-12">
-          <h4 className="text-[12px] font-semibold text-primary-container uppercase mb-2">
-            Terms & Conditions
-          </h4>
-          <p className="text-[12px] text-on-surface-variant whitespace-pre-wrap">
-            {seller.terms}
-          </p>
-        </div>
-
         {/* Signatures Section */}
-        <div className="quotation-print-signatures mt-auto pt-8 border-t border-outline-variant flex justify-between px-4">
-          <div className="w-1/4 text-center">
-            <div className="h-20 flex items-end justify-center mb-2">
-              <span className="font-[cursive] text-2xl text-primary-container opacity-80">
-                System
-              </span>
-            </div>
-            <div className="border-t border-outline-variant pt-2">
-              <p className="text-[12px] font-semibold text-on-surface">Prepared By</p>
-              <p className="text-[12px] text-on-surface-variant">System Generated</p>
-            </div>
-          </div>
-          <div className="w-1/4 text-center">
+        <div className="quotation-print-signatures mt-auto pt-8 border-t border-outline-variant flex justify-around px-4">
+          <div className="w-1/3 text-center">
             <div className="h-20 flex items-end justify-center mb-2"></div>
             <div className="border-t border-outline-variant pt-2">
               <p className="text-[12px] font-semibold text-on-surface">Client Approval</p>
               <p className="text-[12px] text-on-surface-variant">Signature & Date</p>
             </div>
           </div>
-          <div className="w-1/4 text-center">
+          <div className="w-1/3 text-center">
             <div className="h-20 flex items-center justify-center mb-2">
               <div className="w-16 h-16 rounded-full border-2 border-primary-container/20 flex items-center justify-center text-[10px] text-primary-container/40 uppercase text-center leading-tight transform -rotate-12">
                 Company
@@ -335,7 +296,6 @@ export default async function QuotationPdfPage({
               <span className="font-semibold text-on-surface">IBAN:</span> {seller.bank.iban}
             </p>
           </div>
-          <p>This is a system generated document. Page 1 of 1.</p>
         </footer>
       </div>
     </div>

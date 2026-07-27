@@ -182,9 +182,7 @@ body {
   .quotation-print-document header,
   .quotation-print-meta,
   .quotation-print-summary,
-  .quotation-print-terms,
-  .quotation-print-signatures,
-  .quotation-print-footer {
+  .quotation-print-signatures {
     break-inside: avoid;
     page-break-inside: avoid;
   }
@@ -225,8 +223,7 @@ body {
   }
 
   .quotation-print-services,
-  .quotation-print-summary,
-  .quotation-print-terms {
+  .quotation-print-summary {
     margin-bottom: 5mm !important;
   }
 
@@ -275,7 +272,7 @@ body {
   }
 
   .quotation-print-footer {
-    margin-top: 5mm !important;
+    margin-top: 3mm !important;
     padding-top: 3mm !important;
   }
 
