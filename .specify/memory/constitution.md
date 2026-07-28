@@ -26,9 +26,12 @@
 
 ## 4. Locked ERP Flow
 - Customer Profile → Service / Booking → Quotation → Invoice → Payment
+- Quotations and Invoices are Service-scoped; no standalone Quotation or Invoice is allowed.
 - No invoice without linked Service / Booking.
 - No invoice without approved quotation basis.
 - Service is the core entity name, not Project.
+- Global module entry points may select an eligible Service first, but they must delegate to the same Service-scoped authority.
+- Global Invoice creation is not implemented. Any future global Invoice chooser must deep-link to Service Billing and must not add a second mutation authority.
 
 ## 5. VAT and Saudi E-Invoicing Constraints
 - Current `company_settings.vat_mode = not_registered`.
@@ -41,13 +44,19 @@
 ## 6. Financial Correctness
 - Never trust client financial totals.
 - Server/database logic must calculate/validate financial totals.
+- Invoice creation is implemented through the ordered-migration `create_invoice_atomic` RPC path.
+- Payment recording is implemented through the hardened atomic `record_invoice_payment` RPC path with request-id idempotency.
 - Invoice totals must derive from approved quotation snapshots.
 - Deposit amount is flexible, not fixed 50%.
 - Financial records require void/cancel/reversal workflows rather than hard delete.
 
 ## 7. Snapshot Immutability
 - Customer-facing documents must snapshot seller, buyer, quotation, bank, VAT mode, document label, and rules at issue time.
-- Historical documents must not mutate if company settings, customers, VAT mode, or bank details change later.
+- Issued financial snapshots are historical truth and must not mutate if company settings, customers, VAT mode, or bank details change later.
+- A Quotation or Invoice is one authoritative financial record. Future Arabic and English output are rendering options over that same record, not duplicated financial data.
+- A future default rendering locale must not prevent rendering the same authoritative record in Arabic or English.
+- Stored customer, event, and item text must not be silently machine-translated. Explicit stored translations or a reviewed fallback are required.
+- Side-by-side bilingual presentation remains a separate future decision.
 
 ## 8. RBAC and Security
 - UI checks are not security.
@@ -62,8 +71,9 @@
 - Small bounded fixes may remain normal controlled prompts instead of Spec Kit specs.
 
 ## 10. Deferred Items
-- ERP-3B invoice creation not started.
-- Payment workflow not started.
+- ERP-3B Invoice creation and Payment recording are implemented and the historical Feature 001 planning packet is closed.
+- Global Invoice creation is not implemented.
+- Invoice void/correction, Payment reversal/refund, and customer credit-note workflows remain deferred to separate features.
+- Supplier AP, Vendor Bills, Supplier Credits, Supplier Payments, Company Expenses, direct Event costing, and Event Margin remain unimplemented.
 - ZATCA/FATOORA/QR/XML deferred.
 - Tax Invoice deferred until VAT registration.
-- TypeScript invoice type mismatch deferred to ERP-3B.

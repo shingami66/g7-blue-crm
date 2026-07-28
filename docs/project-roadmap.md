@@ -46,6 +46,18 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 
 ## 2. Current Priority
 
+### Active Spec Kit Feature — 006 Invoice PDF Customer Cleanup
+
+- `001-erp-3b-invoice` is **CLOSED / HISTORICAL**. Its unchecked tasks are preserved as history and are not an active implementation backlog.
+- `.specify/feature.json` selects `specs/006-invoice-pdf-customer-cleanup`.
+- Feature 006 is planning-complete only; implementation requires a separate `IMPLEMENT_NO_STAGE` task.
+- Immediate scope: remove rendered Invoice `item.details`, internal notes/terms, Prepared By/System Generated presentation, and generated-document disclosure while preserving snapshots, financial values, Deposit/Final behavior, status, Draft watermark, and intended customer-facing fields.
+- Quotation PDF customer cleanup is completed and pushed at `09bbe3b08aae64c1ec8c6e2e36e0d740e8ff02ae`.
+- After Feature 006: add the Quotations eligible-Service selector, then an Invoices eligible-Service chooser that deep-links to Service Billing. No standalone Quotation/Invoice and no duplicate Invoice authority is approved.
+- Company Expenses, direct Event costing, Procurement/RFQ/PO, Vendor Bills/Supplier AP, Supplier Credits/Payments, and Event Margin remain later separately designed programs.
+- Graphify remains stale; force remediation remains deferred.
+- No production-readiness, VAT-readiness, ZATCA-readiness, backup-readiness, or accounting-finality claim is made.
+
 ### V1 Delivery Decisions - Locked
 
 - `V1-DELIVERY-DECISIONS-LOCK-1` is completed. D01-D09 are locked product policy; no implementation occurred.
@@ -54,10 +66,10 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 - D03: Issued invoices are immutable. Unpaid invoices may be voided by Admin with reason and audit. Paid or partially paid invoices require controlled adjustment/reversal and replacement.
 - D04: Recorded payments are append-only. Monetary errors, duplicates, refunds, and wrong invoice allocation require controlled reversal/correction records; no financial deletion.
 - D05: Approved Billing Scopes are immutable. Void is allowed only for the active scope with zero applicable Service invoices and zero payment history, blocks future billing, and never restores quotation fallback. Supersede preserves historical invoices/payments, uses one cloned successor draft, and enforces a Service-lifetime applicable-invoice ceiling atomically.
-- D06: Runtime Arabic/English is V1 scope. Western digits and bidi-safe financial identifiers are mandatory. Mozfer owns final commercial-language approval; Saudi business-language review is required before UAT. Bilingual documents remain deferred. Runtime authenticated UI localization (Feature 005 + P3 + P5 visual acceptance) is **accepted** with Mozfer T032 browser smoke PASS; commercial-language review for UAT remains separate.
+- D06: Runtime Arabic/English is V1 scope. Western digits and bidi-safe financial identifiers are mandatory. Mozfer owns final commercial-language approval; Saudi business-language review is required before UAT. Future Arabic and English renderings of the same authoritative financial document remain deferred; side-by-side bilingual presentation is a separate decision. Runtime authenticated UI localization (Feature 005 + P3 + P5 visual acceptance) is **accepted** with Mozfer T032 browser smoke PASS; commercial-language review for UAT remains separate.
 - D07: UAT is role-based and user-executed. Mozfer is final business acceptance owner. Blocker and High defects prevent launch.
 - D08: Named operational ownership is required: minimum 30-day backup retention, RPO within 24 hours, RTO within one business day, named monitoring/incident owner, and 10 business days launch support.
-- D09: The focused V1 package is approved: runtime Arabic/English core UX, mobile core paths, financial correction controls, Approved Billing Scope management, and operational invitation/UAT gates; Reports Center acceptance, professional Supplier Booking, bilingual documents, and VAT/ZATCA/FATOORA remain outside V1.
+- D09: The focused V1 package is approved: runtime Arabic/English core UX, mobile core paths, financial correction controls, Approved Billing Scope management, and operational invitation/UAT gates; Reports Center acceptance, professional Supplier Booking, Arabic/English financial-document rendering, side-by-side bilingual presentation, and VAT/ZATCA/FATOORA remain outside V1.
 - Feature `005-i18n-runtime-locale` authenticated bilingual CRM UI is **formally closed** after pushed commit `aaf6563 fix(i18n): complete bilingual visual acceptance` (independent review PASS; T032 Mozfer smoke PASS; P5 visual remediation PASS; automated i18n/export **243/243**). See `docs/project-status.md` Feature 005 milestone.
 - Closure process history: `G7-AR-UX-P5-FINAL-ACCEPTANCE-COMMIT` → `G7-AR-UX-P5-FINAL-ACCEPTANCE-PUSH` → `G7-AR-UX-FEATURE-005-CLOSEOUT-DOCS-SYNC`. Local `main` and `origin/main` aligned at `aaf6563` (0/0).
 - Not claimed: production readiness, PDF-body localization, Clerk-hosted widget localization, bilingual documents, real Invoices Excel export, stored business-data translation.
@@ -77,14 +89,14 @@ Current active task:
 - **Invoice financial lifecycle application stack:** **implemented, tested, DEV/DEMO browser-accepted (PASS WITH WARN), and pushed** through `45cdfb73` (ten source/test commits: money, exposure, lifecycle, safe action errors, invoice RBAC, five-mode authority, ABS history alignment, Deposit/Final actions, Service billing UI, Quotation display-only authority). Service Detail is mutation authority; Quotation Detail is display-only.
 - **Supplier Operations V1 closeout:** **complete** — internal Allocations and Supplier Bookings implemented under server gates; cancel/restore checks and booking concurrency limits verified.
 - **Hardened Payment Recording & Table Pagination:** **complete** — atomic `record_invoice_payment` RPC applied/verified in DEV/DEMO; 12 commits pushed up to `ded8daa`; 78 payment tests passed; pagination layout scroll-reset stabilized; manual smoke verification (fully paid INV-2026-0022 with 4,200.00 SAR) passed.
-- **Current active task (exactly one):** None. The governance and payments documentation sync task (`G7-DOCS-GOVERNANCE-PAYMENTS-SYNC-4-COMMITS-1`) is completed.
-- **Next active task (pending owner approval):** Repository reconciliation planning (no reconciliation or checkout switch has occurred).
+- **Active Spec Kit feature:** `006-invoice-pdf-customer-cleanup` (planning packet active; implementation not started).
+- **Next implementation task (pending separate owner approval):** bounded Invoice PDF customer cleanup.
 - **Workspace Location and Governance Rules:**
   - Active authorized checkout: `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5` (only authorized path for active execution).
   - Historical checkout (forbidden): `D:/G7/g7-crm` (must remain untouched).
   - Silent worktree switching, path changes, and manual copying/merging of folders between checkouts are strictly banned.
   - Reconciliation of the historical checkout is a separate, future task pending explicit approval.
-- **Next safe product/engineering direction:** Repository reconciliation planning is pending owner approval (no reconciliation or checkout switch has occurred). ABS history/read polish, Void UI, successor UI, and role browser smoke remain deferred.
+- **Next safe product/engineering direction:** implement and review Feature 006, complete Mozfer-owned Print Preview smoke, then separately plan the Quotations eligible-Service selector and the Invoices Service chooser. ABS history/read polish, Void UI, successor UI, and role browser smoke remain deferred.
 - **Deferred / optional (not complete):** Manager and Accountant browser smoke sessions; Deposit client maximum using remaining rather than full ceiling; legacy Quotation database ceiling hardening; lifecycle atomicity hardening; full seven-state DB enforcement; ABS history consistency hardening; broad ABS numeric normalization; future production/database hardening; future VAT or compliance work. Do **not** mark production rollout, VAT readiness, ZATCA readiness, or accounting finality complete.
 - **Locked ABS management order:**
   1. `ABS-MGMT-UI-READ-ENRICH-1` **complete**
@@ -97,7 +109,7 @@ Current active task:
   8. application Deposit/Final financial lifecycle stack **pushed** through `45cdfb73`
   9. atomic Invoice create RPC complete and app-routed in `a83c1d28`
   10. atomic record_invoice_payment RPC complete and app-routed in `ded8daa`
-  11. documentation sync/push for governance and payments (current active task)
+  11. governance and payments documentation sync/push **completed** (historical sequence item; not the current active task)
   12. repository reconciliation planning is pending owner approval (no reconciliation or checkout switch has occurred)
   - Optional later: `ABS-MGMT-HISTORY-LIST-1`
 - **ABS source-truth:** all UI slices through Review/Approve are implemented and pushed; status enum `draft|approved|voided` only (Superseded is timestamp/link-derived). The lifecycle migration/RPC surface is installed in DEV/DEMO and successful mutation smoke has been executed and independently reviewed (synthetic only). Application Invoice authority/exposure/Deposit/Final controls are pushed; Void/successor app actions/UI remain pending. Current runtime fallback and the locked post-authority fail-closed policy remain distinct and must not be conflated.
@@ -109,12 +121,12 @@ Current active task:
   - Manual re-smoke: `RESPONSIVE-CORE-P0-MOZFER-RE-SMOKE-1` — **PASS by Mozfer manual browser evidence.** Agent did **not** perform browser smoke.
   - Flag **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING` closed** (no longer unresolved/active).
   - Supplier mobile detail remains deferred to full Supplier redesign (no temporary panel/drawer).
-- **Locked V1 critical-path order:** responsive audit -> responsive implementation/smoke PASS -> ABS management/read/create/edit/review/approve complete and pushed -> financial lifecycle design docs -> **design commit** -> migration/RPC preflight -> SQL/migration review -> separate DEV/DEMO apply and read-only verification -> actions/tests -> successful lifecycle mutation smoke (**complete**, DEV/DEMO synthetic) -> application financial lifecycle stack (**pushed** through `45cdfb73`) -> documentation sync/push (**current**) -> history/read polish -> Void UI -> successor UI -> optional role browser smoke.
-- Residual open (outside Feature 005 formal close): PDF/document localization and bilingual documents (deferred).
+- **Historical V1 critical-path record:** responsive audit -> responsive implementation/smoke PASS -> ABS management/read/create/edit/review/approve -> financial lifecycle design/migration/DEV/DEMO verification -> application financial lifecycle stack through `45cdfb73` -> governance/payments documentation sync. The current active feature order is Feature 006 implementation/review/Mozfer smoke, followed by separately approved Quotation and Invoice Service-first entry work.
+- Residual open (outside Feature 005 formal close): future Arabic and English rendering of the same authoritative Quotation/Invoice, including any default rendering locale; side-by-side bilingual layout remains separately undecided.
 - Residual open: final Mozfer commercial Arabic terminology approval for UAT (separate from T032 visual smoke PASS).
 - Professional Supplier Booking redesign remains outside V1 acceptance scope and is **not** active.
 - Reports Center remains P1 and is **not** active on the V1 critical path.
-- Do not promote Supplier Booking redesign, Void/successor UI, Reports Center, VAT/ZATCA, or production apply as the active task while documentation push is open.
+- Do not promote Supplier Booking redesign, Void/successor UI, Reports Center, VAT/ZATCA, or production apply as the active task while Feature 006 is open.
 - Related backlog note: `RESPONSIVE-LIST-PAGE-HORIZONTAL-OVERFLOW-1` remains historical P1 backlog wording.
 
 Completed:
@@ -141,7 +153,7 @@ Completed:
 - `PUBLIC-HEALTH-ROUTE-HARDEN-1` (PASS WITH WARN: audited public health and webhook routes, verified response sanitization and next 16 proxy convention).
 
 Backlog / later priority:
-- Successful lifecycle mutation smoke and independent review are **complete** (DEV/DEMO synthetic). Application financial lifecycle stack is **pushed** through `45cdfb73` and DEV/DEMO browser-accepted with **PASS WITH WARN**. Controlled documentation push is the immediate next step.
+- Successful lifecycle mutation smoke and independent review are **complete** (DEV/DEMO synthetic). Application financial lifecycle stack is **pushed** through `45cdfb73` and DEV/DEMO browser-accepted with **PASS WITH WARN**. Feature 006 Invoice PDF customer cleanup is the current next implementation slice under separate approval.
 - Remaining ABS product path: history/read polish → Void UI → successor UI → optional Manager/Accountant browser smoke. Production apply remains unauthorized. DEV/DEMO acceptance does not make ABS or broader invoicing production-ready.
 - Optional/deferred financial hardening: Deposit client max = remaining; legacy Quotation DB ceiling branch; lifecycle atomicity; full seven-state DB triggers; ABS history consistency; broad ABS numeric normalization.
 - `ABS-MGMT-HISTORY-LIST-1` (optional later)
@@ -170,7 +182,10 @@ Completed ABS / responsive gates (docs):
 - `ABS-MGMT-UI-READ-ENRICH-1` — read-only Service Detail ABS card enrichment source complete; docs sync records accepted status; controlled commit/push separate.
 - `RESPONSIVE-CORE-P0-SMOKE-FIX-1` + `RESPONSIVE-CORE-P0-MOZFER-RE-SMOKE-1` — body-overflow remediation implemented; **PASS by Mozfer manual browser evidence**; `RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING` closed.
 
-### 🚧 Locked Next CRM Priorities
+### 🚧 Historical / Superseded CRM Priority Sequence
+
+> Retained as an earlier roadmap sequence. It is not the current execution authority and does not override Feature 006 or the approved Quotation-selector then Invoice-chooser order.
+
 0. `SEC-AUTHZ-APP-USER-GATE-1`
    - Security blocker: Clerk-authenticated users without an `app_users` row could access dashboard and internal CRM.
    - Fix: dashboard layout now requires active `app_users` membership; blocked users redirect to `/unauthorized`.
@@ -208,7 +223,10 @@ Completed ABS / responsive gates (docs):
    - No invoice without Approved Quotation.
    - Invoice totals must derive from approved quotation snapshots, not arbitrary client input.
 
-### ERP-3B Docs & Implementation Next Steps
+### Historical ERP-3B Follow-up Plan
+
+> ERP-3B is now **CLOSED / HISTORICAL**. The items below are retained as planning lineage only and are not active implementation authorization. Current future Invoice entry direction is governed by the post-Feature-006 Service chooser that deep-links to Service Billing after the Quotation selector.
+
 1. Payment MVP
 2. Environment / UAT / smoke test docs
 3. Global Invoice Wizard ERP-3F
@@ -2039,7 +2057,10 @@ Must verify:
 - no direct table access exposing cost fields without mapper redaction
 - RLS behavior aligns with server-action/application RBAC
 
-## I18N / RTL Next Priority Order
+## Historical / Superseded I18N and RTL Priority Order
+
+> Retained as an earlier i18n planning sequence. It does not override active Feature 006. Completed Feature 005 runtime UI localization history and future Arabic/English document rendering remain separate programs; no document-language implementation has started.
+
 1. `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1`
    - Readonly inventory of shared Modal/Dialog/Toast/Dropdown file paths, ownership, and wrapper type before shell implementation.
 2. `I18N-RTL-SHELL-1A`
@@ -2203,9 +2224,9 @@ Must verify:
 - `APPROVED-BILLING-SCOPE-INVOICE-INTEGRATION-DESIGN-1` completed with `PASS` (invoice ceiling design parameter clear).
 - Canonical documentation staleness audit, P0 cleanup, P1 cleanup, and P2 history cleanup are completed history.
 - `G7-CLIENT-DELIVERY-ROADMAP-DESIGN-1` completed with PASS WITH WARN; the roadmap was accepted with model-routing and task-sizing corrections.
-- Current phase: **Phase 1 - Experience Foundation**.
+- Historical sync-point phase: **Phase 1 - Experience Foundation**. This is retained as historical context and is no longer the current phase.
 - Completed: `V1-DELIVERY-DECISIONS-LOCK-1` locked D01-D09 as product policy; no implementation occurred.
-- Current controlled task: `I18N-RUNTIME-LOCALE-DESIGN-1` using guarded Spec Kit feature `005` in a separate task.
+- Historical sync-point controlled task: `I18N-RUNTIME-LOCALE-DESIGN-1`, using guarded Spec Kit Feature 005 in a separate task. This authority is superseded and does not override active Feature 006.
 - The canonical delivery plan is `docs/client-delivery-plan.md` and preserves the locked Reports Center and Supplier Booking boundaries, decomposed financial implementation, production hardening, and separate UAT phases.
 
 - `BILLING-SCOPE-PACKAGE-DISCOUNT-DESIGN-1` remains a future follow-up if package decomposition and discount allocation metadata are later needed.

@@ -23,7 +23,8 @@
 - **Financial retention and no hard deletion:** Financial records must use void/cancel/reversal workflows rather than hard deletion.
 - **Rounding/currency hardening:** Currency and rounding standardization across the application remains deferred.
 - **Payment evidence/attachments:** Attaching evidence to payments remains deferred.
-- **Global Invoice Wizard:** Invoice creation from a global view is deferred; invoices are created from a valid workflow context.
+- **Global Quotation entry selector:** After Invoice PDF customer cleanup, the Quotations module may add an eligible-Service selector that delegates to the existing Service-scoped creation authority. It must not create a standalone Quotation.
+- **Global Invoice chooser:** After the Quotation selector, the Invoices module may add an eligible-Service chooser that deep-links to Service Billing. It must not create a standalone Invoice, duplicate financial calculations, or introduce a second mutation authority.
 - **Multi-stage invoices beyond Deposit/Final:** Additional staged/progress invoice behavior remains deferred until final settlement design or ZATCA-grade settlement requires it.
 
 ## 4. Approved Billing Scope Deferrals
@@ -36,6 +37,8 @@
 - **Supplier rate-card management/automation:** Rate-card management edit/delete/restore and overlap enforcement, as well as rate-card automation for quotations, remain deferred.
 - **Broader Supplier Booking routes and workflows:** Standalone/broader Supplier Booking routes, UI, customer-facing documents, portal, edit/delete/restore, and expanded statuses remain deferred. Narrow internal Service-scoped V1 is implemented.
 - **Supplier invoices/payments:** Supplier invoices, payables, outbound payments, accounting workflows, and supplier payment approval workflow remain deferred.
+- **Company Expenses:** Company overhead expenses remain a separate future program and must not be conflated with Service/Event direct costs.
+- **Direct Event costing:** Direct Service/Event expenses, committed/actual/paid/outstanding costs, and expected/actual Event Margin remain deferred to a separately designed costing program.
 - **Actual-cost posting:** Posting of actual supplier costs remains deferred.
 - **Profit/margin reporting:** Supplier costing, margin, and P&L reports remain deferred.
 - **Customer-facing supplier cost exposure prohibition:** Any customer-facing exposure of supplier costs (documents, PDFs, portal) is strictly prohibited. Accountant, Sales, Operations, and Viewer do not have supplier cost access by default.
@@ -50,6 +53,7 @@
 - **Clerk live invitation/webhook smoke:** Real Clerk invitation/webhook smoke testing remains pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and approved.
 - **Session timeout:** Idle session timeout and inactivity auto-logout remain deferred.
 - **Repository reconciliation:** Repository checkout reconciliation and worktree retirement remain pending separate owner approval.
+- **Graphify index:** The index remains stale; force remediation or refresh remains deferred and requires a separate approved task.
 - **Sensitive Server Action Rate Limiting:** Current MVP process-local rate limiting is implemented. Distributed/multi-instance enforcement remains deferred.
 
 ## 7. Documents, VAT, And Compliance Deferrals
@@ -59,7 +63,7 @@
 - **QR/XML/clearance:** QR codes, XML generation, clearance, and statutory reporting remain deferred.
 - **Server-generated PDF:** Server-side PDF generation remains deferred (browser print is currently sufficient).
 - **Browser print headers/footers:** Customizing browser print headers/footers remains deferred.
-- **Document locale and bilingual documents:** Bilingual side-by-side documents and `document_locale` schema/runtime wiring remain deferred.
+- **Document rendering locale:** The authoritative Quotation or Invoice is singular and may later render in Arabic or English. A future stored default rendering locale must not prevent either rendering. Financial data and snapshots are not duplicated, stored business text is not silently machine-translated, and side-by-side bilingual layout remains a separate decision. Locale schema/runtime and font work remain deferred.
 - **Logo upload where still deferred:** Company Logo upload remains deferred.
 
 ## 8. UX, Reporting, And Product Expansion Deferrals
@@ -84,6 +88,7 @@
 - **Remaining mock/demo cleanup:** Auditing remaining mock/static app surfaces before further live-data polish remains deferred.
 
 ## 10. Historical And Superseded Notes
+- **ERP-3B / Feature 001:** `001-erp-3b-invoice` is closed and historical. Its unchecked tasks are preserved as planning evidence and are not an active backlog. Current source and ordered migrations are authoritative.
 - **ERP-1:** Historical / Superseded Planning Note. Refers to the initial CRM/Service flow. The basic corresponding implementation is already complete. See `project-status.md`.
 - **ERP-2:** Historical / Superseded Planning Note. Refers to quotation approval flow. The basic corresponding implementation is already complete. See `project-status.md`.
 - **ERP-3 / ERP-3A / Full Invoice Schema:** Historical / Superseded Planning Note. Refers to basic invoice integration. Basic customer invoice/payment creation is implemented in DEV/DEMO. Financial correction workflows remain deferred.

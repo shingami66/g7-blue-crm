@@ -1,5 +1,9 @@
 # Tasks: ERP-3B Invoice Creation
 
+**Status**: **CLOSED / HISTORICAL**
+
+> **Historical checklist notice:** Every unchecked item below is preserved as original ERP-3B planning evidence. Unchecked does not mean pending, approved, or safe to implement. Do not execute, check off, delete, or silently reinterpret these tasks. Current source, focused tests, and ordered migrations are authoritative.
+
 **Input**: Design documents from `/specs/001-erp-3b-invoice/`
 
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
@@ -34,7 +38,13 @@ The following items remain explicitly deferred and must not be implemented by an
 ---
 
 
-## Current Status (Sync ERP-3B)
+## Historical Delivery Record
+- Feature 001 is closed in place and no longer selected by `.specify/feature.json`.
+- Service-scoped Deposit and Final Invoice creation is implemented through `create_invoice_atomic`.
+- Payment recording is implemented through the hardened atomic `record_invoice_payment` path.
+- Invoice snapshots, Service Billing authority, PDF/detail/list surfaces, and guarded financial lifecycle behavior are implemented in current source.
+- DEV/DEMO migration and smoke evidence remains DEV/DEMO only; no production-readiness claim is made.
+- Invoice corrections, refunds, credit notes, Supplier AP, VAT/ZATCA, and broader accounting or Event-costing work remain separate future features.
 - T017D Billing UX Cleanup completed and pushed: 42df67e
 - Draft invoice issued_at fix completed and pushed: 88507ab
 - Snapshot DB verification passed for INV-2026-0004

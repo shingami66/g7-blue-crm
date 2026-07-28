@@ -4,9 +4,24 @@
 
 **Created**: 2026-06-23
 
-**Status**: Draft
+**Status**: **CLOSED / HISTORICAL**
 
 **Input**: User description: "ERP-3B Invoice Creation"
+
+## Historical Closeout
+
+This Feature 001 packet is retained as planning history and is not an active implementation authority or backlog. Its original scenarios, assumptions, and unchecked task references record the state in which ERP-3B was designed; they must not be executed as current pending work.
+
+Current source and ordered migrations are authoritative. The delivered repository now includes:
+
+- Service-scoped Deposit and Final Invoice creation through `create_invoice_atomic`;
+- hardened atomic Payment recording through `record_invoice_payment`;
+- Invoice seller, buyer, Quotation, bank, document-rule, VAT, and financial snapshots;
+- Service Billing authority backed by Approved Quotation or Approved Billing Scope rules;
+- live Invoice detail/list/PDF and Payment read surfaces; and
+- guarded financial lifecycle, status, exposure, and duplicate-Invoice behavior.
+
+Repository and DEV/DEMO evidence do not establish production readiness. Invoice correction/voiding, Payment reversal/refund, customer credit notes, Supplier AP, Vendor Bills, Supplier Credits, Supplier Payments, Company Expenses, Event Costing/Margin, VAT registration, Tax Invoice, ZATCA, FATOORA, QR, XML, and clearance remain separate future features.
 
 ## User Scenarios & Testing *(mandatory)*
 

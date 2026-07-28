@@ -2,7 +2,15 @@
 
 **Feature Branch**: `[001-erp-3b-invoice]`
 
-**Status**: Draft
+**Status**: **CLOSED / HISTORICAL**
+
+## Historical Closeout
+
+This plan is preserved as the original ERP-3B design record. It is not a current implementation plan. Current source and ordered migrations supersede its future-tense architecture statements.
+
+Delivered work includes atomic Service-scoped Deposit/Final creation, hardened atomic Payment recording, historical snapshots, Service Billing authority, Invoice issue/detail/PDF surfaces, and guarded Invoice/Payment lifecycle behavior. DEV/DEMO apply or smoke evidence remains DEV/DEMO only and does not establish production readiness.
+
+Unchecked tasks in `tasks.md` remain visible as historical planning evidence and are explicitly not pending implementation. Corrections, refunds, credit notes, Supplier AP, VAT/ZATCA, and broader accounting or Event-costing work require separate approved features.
 
 ## Technical Context
 
