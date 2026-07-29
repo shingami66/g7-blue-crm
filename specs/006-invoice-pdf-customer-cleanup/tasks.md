@@ -2,9 +2,9 @@
 
 **Feature**: `006-invoice-pdf-customer-cleanup`
 
-**Status**: **Active planning — implementation not started**
+**Status**: **Implementation, independent review, and owner acceptance complete; controlled commit/push pending**
 
-Unchecked tasks below are future controlled work. They are not authorized by creation of this packet.
+Original unchecked task-history boxes below remain preserved for provenance; the completion-evidence section records the current implementation/review/acceptance state without rewriting that history.
 
 ## Phase 0 — Planning Packet
 
@@ -81,4 +81,12 @@ Unchecked tasks below are future controlled work. They are not authorized by cre
 
 ## Feature Completion Rule
 
-Feature 006 may be marked complete only after implementation review, Mozfer manual Print Preview acceptance, controlled commit, controlled push, and a separately approved closeout/docs sync. Planning completion or automated tests alone do not close the feature.
+Feature 006 implementation, independent review, and the supplied Mozfer short-example Print Preview acceptance are complete. Controlled commit, controlled push, and any additional long-fixture smoke remain separate boundaries; this DOCS_ONLY task does not claim them complete.
+
+## Completion Evidence Recorded By Docs Sync
+
+- [x] Implementation, independent review, and owner-approved short-example acceptance are recorded above without rewriting the original task history.
+- [x] Automated evidence recorded: focused contract 12/12, Invoice actions 38/38, related Invoice suites 64/64, lint, typecheck, and build.
+- [x] Accepted short examples recorded: `INV-2026-0021` Deposit and `INV-2026-0022` Final.
+- [ ] Long multi-row Print Preview remains unverified in the supplied evidence.
+- [ ] Controlled commit and controlled push remain pending separate tasks.

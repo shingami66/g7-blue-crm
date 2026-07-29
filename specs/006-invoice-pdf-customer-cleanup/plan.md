@@ -4,7 +4,7 @@
 
 **Date**: 2026-07-28
 
-**Status**: **Planned — implementation requires a separate approved task**
+**Status**: **Implemented, independently reviewed, and owner-accepted; controlled commit/push remain separate**
 
 ## Summary
 
@@ -136,3 +136,27 @@ No stage authorizes the next.
 - Any retained financial field changes unexpectedly.
 - Required automated validation fails.
 - Mozfer Print Preview finds clipped, split, missing, or misleading customer output.
+
+## Final Delivery Evidence
+
+- The implemented rendering strategy uses strict historical snapshot classification: full quotation snapshots render Approved Quotation Items, active Service scope snapshots render Approved Service Scope, and synthetic or ambiguous shapes render Invoice-summary-only output.
+- Persisted authoritative financial values remain the source for Deposit and Final summaries; no live Quotation lookup, financial reconstruction, or historical snapshot rewrite was introduced.
+- The runtime, Invoice print CSS, and contract test remained within the bounded approved manifest. Remediation 9 strengthened exact custom-property case handling and same-rule `!important`/source-order resolution without changing runtime source.
+- Automated evidence: focused contract 12/12, Invoice actions 38/38, related Invoice suites 64/64, lint with only two existing image warnings, typecheck pass, and production build pass with the known workspace warning.
+- Independent review passed. Mozfer-owned repeat Print Preview accepted `INV-2026-0021` Deposit and `INV-2026-0022` Final as short one-page A4 documents with truthful item pricing and type-specific summaries.
+- No database, schema, migration, RPC, action, VAT, lifecycle, ABS, Payment, snapshot-builder, or live Quotation lookup change was made. Production-readiness, VAT-readiness, ZATCA-readiness, backup-readiness, and accounting-finality remain unclaimed.
+
+## Locked Future Eight-Commit Alignment
+
+The documentation supports the following future commit boundaries without creating them in this DOCS_ONLY task:
+
+1. `feat(invoices): render truthful customer PDF statements` — Invoice PDF page.
+2. `style(invoices): fit customer PDFs to A4 print` — global print CSS.
+3. `test(invoices): lock customer-safe PDF contracts` — Invoice contract test.
+4. `docs(spec): close invoice PDF requirements` — `spec.md` and requirements checklist.
+5. `docs(plan): record invoice PDF delivery evidence` — `plan.md` and `tasks.md`.
+6. `docs(project): record invoice PDF acceptance` — `docs/project-status.md`.
+7. `docs(roadmap): advance service-scoped entry flow` — `docs/project-roadmap.md`.
+8. `docs(decisions): preserve post-PDF boundaries` — `docs/deferred-decisions.md`.
+
+No commit hashes are invented, and no commit or push completion is claimed here.
