@@ -2,7 +2,7 @@
 
 **Feature**: `006-invoice-pdf-customer-cleanup`
 
-**Purpose**: Verify that the completed implementation and acceptance evidence remain bounded, testable, and faithful to current source. Checked items record only the evidence available; they do not claim commit or push completion.
+**Purpose**: Verify that the completed implementation and acceptance evidence remain bounded, testable, and faithful to current source. Checked items record the evidence available, including commit and push completion.
 
 ## Scope And Authority
 
@@ -51,11 +51,11 @@
 - [x] Removed and retained source-contract assertions are specified.
 - [x] Standard runtime validation passed for the completed implementation.
 - [x] Mozfer owns normal and long Print Preview smoke; supplied evidence covers the accepted short Deposit and Final examples only.
-- [x] Implementation, review, smoke, commit, and push are separate tasks.
+- [x] Implementation, review, smoke, commit, and push were separate tasks and are now complete.
 - [x] No unchecked implementation task is represented as complete.
 
 ## Checklist Result
 
 **IMPLEMENTATION EVIDENCE CHECKLIST: PASS WITH LIMITS**
 
-Feature 006 implementation, independent review, and the accepted short Print Preview examples are recorded. Long-fixture smoke, controlled commit, and controlled push remain separate or pending boundaries.
+Feature 006 implementation, independent review, the accepted short Print Preview examples, controlled commit, and controlled push are recorded. Long-fixture smoke remains a separate boundary.

@@ -4,7 +4,7 @@
 
 **Created**: 2026-07-28
 
-**Status**: **Implementation, independent review, and owner acceptance complete; controlled commit/push remain separate**
+**Status**: **Implementation, independent review, owner acceptance, commit, and push complete**
 
 **Input**: Owner-approved Invoice customer-output cleanup direction following the completed Quotation PDF cleanup.
 
@@ -135,4 +135,4 @@ Automated source-contract checks can verify retained and removed template conten
 - Mozfer-owned repeat Print Preview accepted `INV-2026-0021` Deposit and `INV-2026-0022` Final. Both short documents fit one A4 page and showed truthful item pricing and type-specific summaries without trailing blank, stamp-only, summary-only, clipping, or overlap issues.
 - Customer rows retain Description, Quantity, Unit Price, and Line Total; unsupported item-level Discount is not rendered. Internal details, notes, terms, preparation/system disclosures, internal identity, and raw quotation UUIDs remain absent.
 - No database, schema, migration, RPC, action, VAT, lifecycle, ABS, Payment, snapshot-builder, or live Quotation lookup change was made. Historical issued snapshots remain immutable and ambiguous historical shapes fail closed.
-- This evidence does not claim production, VAT, ZATCA, backup, or accounting finality. Controlled commit, push, and any additional long-fixture smoke remain separate boundaries.
+- This evidence does not claim production, VAT, ZATCA, backup, or accounting finality. Long-fixture smoke remains outside the supplied evidence.
