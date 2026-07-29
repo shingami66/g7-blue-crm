@@ -4,7 +4,7 @@
 
 **Date**: 2026-07-28
 
-**Status**: **Implemented, independently reviewed, and owner-accepted; controlled commit/push remain separate**
+**Status**: **Implemented, independently reviewed, owner-accepted, committed, and pushed**
 
 ## Summary
 
