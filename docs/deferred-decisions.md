@@ -23,8 +23,8 @@
 - **Financial retention and no hard deletion:** Financial records must use void/cancel/reversal workflows rather than hard deletion.
 - **Rounding/currency hardening:** Currency and rounding standardization across the application remains deferred.
 - **Payment evidence/attachments:** Attaching evidence to payments remains deferred.
-- **Global Quotation entry selector:** After Invoice PDF customer cleanup, the Quotations module may add an eligible-Service selector that delegates to the existing Service-scoped creation authority. It must not create a standalone Quotation.
-- **Global Invoice chooser:** After the Quotation selector, the Invoices module may add an eligible-Service chooser that deep-links to Service Billing. It must not create a standalone Invoice, duplicate financial calculations, or introduce a second mutation authority.
+- **Global Quotation entry selector:** Following the completed Invoice PDF customer cleanup, the Quotations module may add an eligible-Service selector that delegates to the existing Service-scoped creation authority. It must not create a standalone Quotation.
+- **Global Invoice chooser:** Following the Quotation selector, the Invoices module may add an eligible-Service chooser that deep-links to Service Billing. It must not create a standalone Invoice, duplicate financial calculations, or introduce a second mutation authority.
 - **Multi-stage invoices beyond Deposit/Final:** Additional staged/progress invoice behavior remains deferred until final settlement design or ZATCA-grade settlement requires it.
 
 ## 4. Approved Billing Scope Deferrals
@@ -64,6 +64,7 @@
 - **Server-generated PDF:** Server-side PDF generation remains deferred (browser print is currently sufficient).
 - **Browser print headers/footers:** Customizing browser print headers/footers remains deferred.
 - **Document rendering locale:** The authoritative Quotation or Invoice is singular and may later render in Arabic or English. A future stored default rendering locale must not prevent either rendering. Financial data and snapshots are not duplicated, stored business text is not silently machine-translated, and side-by-side bilingual layout remains a separate decision. Locale schema/runtime and font work remain deferred.
+- **Formal historical snapshot discriminator:** A persisted discriminator for full quotation versus active Service scope versus synthetic historical shapes remains deferred. The current strict classifier fails ambiguous shapes closed to Invoice-summary-only presentation.
 - **Logo upload where still deferred:** Company Logo upload remains deferred.
 
 ## 8. UX, Reporting, And Product Expansion Deferrals
