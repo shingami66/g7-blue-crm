@@ -4,7 +4,7 @@
 
 **Created**: 2026-07-28
 
-**Status**: **Active planning packet — implementation not started**
+**Status**: **Implementation, independent review, and owner acceptance complete; controlled commit/push remain separate**
 
 **Input**: Owner-approved Invoice customer-output cleanup direction following the completed Quotation PDF cleanup.
 
@@ -125,3 +125,14 @@ As a customer or internal reviewer, I need the cleaned Invoice PDF to preserve t
 ## Evidence And Completion Boundary
 
 Automated source-contract checks can verify retained and removed template content. Mozfer owns browser and Print Preview acceptance using normal and long Deposit/Final fixtures. Automated validation alone does not establish visual acceptance, production readiness, VAT readiness, ZATCA readiness, backup readiness, or accounting finality.
+
+## Feature 006 Delivery Evidence
+
+- Implementation is complete in the approved Invoice PDF runtime, print CSS, and source-contract test scope.
+- Independent review passed, including the Remediation 9 custom-property case and same-rule cascade contract hardening.
+- The focused Invoice PDF contract passed 12/12; the Invoice action suite remained 38/38 and related Invoice suites remained 64/64.
+- Lint passed with only the two existing Next.js image warnings; typecheck and production build passed with only the known workspace/multiple-lockfile warning.
+- Mozfer-owned repeat Print Preview accepted `INV-2026-0021` Deposit and `INV-2026-0022` Final. Both short documents fit one A4 page and showed truthful item pricing and type-specific summaries without trailing blank, stamp-only, summary-only, clipping, or overlap issues.
+- Customer rows retain Description, Quantity, Unit Price, and Line Total; unsupported item-level Discount is not rendered. Internal details, notes, terms, preparation/system disclosures, internal identity, and raw quotation UUIDs remain absent.
+- No database, schema, migration, RPC, action, VAT, lifecycle, ABS, Payment, snapshot-builder, or live Quotation lookup change was made. Historical issued snapshots remain immutable and ambiguous historical shapes fail closed.
+- This evidence does not claim production, VAT, ZATCA, backup, or accounting finality. Controlled commit, push, and any additional long-fixture smoke remain separate boundaries.
