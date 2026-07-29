@@ -3,26 +3,9 @@ import { getInvoiceById } from "@/lib/invoices/queries";
 import { requirePermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import PrintButton from "./PrintButton";
-import type { QuotationSnapshotSeller, QuotationSnapshotBuyer, QuotationItem } from "@/lib/quotations/types";
+import type { QuotationSnapshotSeller, QuotationSnapshotBuyer } from "@/lib/quotations/types";
 
-function normalizeStringList(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value
-      .filter((item): item is string => typeof item === "string")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  if (typeof value === "string") {
-    return value
-      .split(/\r?\n/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  return [];
-}
-
+/* INVOICE_PDF_SNAPSHOT_CLASSIFIER_START */
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (value && typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -47,6 +30,225 @@ function readFiniteNumber(value: unknown): number | null {
 function readRecordNumber(record: Record<string, unknown> | null, key: string): number | null {
   return record ? readFiniteNumber(record[key]) : null;
 }
+
+function readNonBlankString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() !== "" ? value.trim() : null;
+}
+
+function readRecordString(record: Record<string, unknown> | null, key: string): string | null {
+  return record ? readNonBlankString(record[key]) : null;
+}
+
+type SnapshotInvoiceItem = {
+  description: string | null;
+  qty: number | null;
+  unitPrice: number | null;
+  total: number | null;
+};
+
+function normalizeSnapshotInvoiceItem(value: unknown): SnapshotInvoiceItem | null {
+  const item = asRecord(value);
+  if (!item) {
+    return null;
+  }
+
+  return {
+    description: readNonBlankString(item.description),
+    qty: readFiniteNumber(item.qty),
+    unitPrice: readFiniteNumber(item.unit_price) ?? readFiniteNumber(item.unitPrice),
+    total: readFiniteNumber(item.total),
+  };
+}
+
+type SnapshotClassification =
+  | "full_quotation"
+  | "active_scope"
+  | "synthetic_deposit"
+  | "synthetic_final"
+  | "ambiguous";
+
+function hasOwnRecordField(record: Record<string, unknown>, key: string) {
+  return Object.prototype.hasOwnProperty.call(record, key);
+}
+
+function hasAnyActiveScopeMarker(record: Record<string, unknown>) {
+  return [
+    "approvedBillingScopeId",
+    "approvedBillingScopeAcceptedGrandTotal",
+    "sourceQuotationId",
+  ].some((key) => hasOwnRecordField(record, key));
+}
+
+function hasActiveScopeMarkers(record: Record<string, unknown>) {
+  return (
+    readNonBlankString(record.approvedBillingScopeId) !== null &&
+    readSupportedSnapshotNumber(record.approvedBillingScopeAcceptedGrandTotal) !== null &&
+    readNonBlankString(record.sourceQuotationId) !== null
+  );
+}
+
+function readSupportedSnapshotNumber(value: unknown): number | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value >= 0 ? value : null;
+  }
+
+  if (typeof value !== "string" || !/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(value)) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function readOwnRecordValue(record: Record<string, unknown>, key: string): unknown {
+  const descriptor = Object.getOwnPropertyDescriptor(record, key);
+  return descriptor && "value" in descriptor ? descriptor.value : undefined;
+}
+
+function readStoredItemNumber(item: Record<string, unknown>, snakeCaseKey: string, camelCaseKey?: string) {
+  const hasSnakeCaseKey = hasOwnRecordField(item, snakeCaseKey);
+  const hasCamelCaseKey = camelCaseKey ? hasOwnRecordField(item, camelCaseKey) : false;
+  if (hasSnakeCaseKey === hasCamelCaseKey) {
+    return null;
+  }
+
+  return readSupportedSnapshotNumber(readOwnRecordValue(item, hasSnakeCaseKey ? snakeCaseKey : camelCaseKey!));
+}
+
+function hasRequiredSnapshotItemFields(item: Record<string, unknown>, requireDetails: boolean) {
+  const details = readOwnRecordValue(item, "details");
+  return (
+    readNonBlankString(readOwnRecordValue(item, "description")) !== null &&
+    (!requireDetails || (hasOwnRecordField(item, "details") && (details === null || typeof details === "string"))) &&
+    readStoredItemNumber(item, "qty") !== null &&
+    readStoredItemNumber(item, "unit_price", "unitPrice") !== null &&
+    readStoredItemNumber(item, "vat") !== null &&
+    readStoredItemNumber(item, "total") !== null
+  );
+}
+
+function hasSyntheticSettlementTopLevelInvariants(record: Record<string, unknown>) {
+  return (
+    readNonBlankString(record.quotation_id) !== null &&
+    readNonBlankString(record.quotation_number) !== null &&
+    readNonBlankString(record.service_id) !== null &&
+    readNonBlankString(record.customer_id) !== null &&
+    readNonBlankString(record.sourceQuotationId) === readNonBlankString(record.quotation_id) &&
+    readNonBlankString(record.status) !== null
+  );
+}
+
+function isSyntheticSettlementRow(
+  item: Record<string, unknown>,
+  description: "Deposit Payment" | "Final Settlement",
+  record: Record<string, unknown>,
+  invoiceType: string,
+) {
+  const unitPrice = readStoredItemNumber(item, "unit_price", "unitPrice");
+  const quotationNumber = readOwnRecordValue(record, "quotation_number");
+  const expectedInvoiceType = description === "Deposit Payment" ? "deposit" : "final";
+
+  return (
+    hasSyntheticSettlementTopLevelInvariants(record) &&
+    invoiceType === expectedInvoiceType &&
+    readNonBlankString(readOwnRecordValue(item, "description")) === description &&
+    readNonBlankString(readOwnRecordValue(item, "details")) ===
+      (typeof quotationNumber === "string" && quotationNumber.trim() !== "" ? `For services related to Quotation ${quotationNumber}` : null) &&
+    readStoredItemNumber(item, "qty") === 1 &&
+    unitPrice !== null &&
+    readStoredItemNumber(item, "vat") === 0 &&
+    readStoredItemNumber(item, "total") === unitPrice &&
+    readSupportedSnapshotNumber(record.subtotal) === unitPrice &&
+    readSupportedSnapshotNumber(record.vat_amount) === 0 &&
+    readSupportedSnapshotNumber(record.grand_total) === unitPrice &&
+    readSupportedSnapshotNumber(record.discount) !== null &&
+    readSupportedSnapshotNumber(record.vat_rate) !== null
+  );
+}
+
+function hasSyntheticSettlementIdentity(
+  item: Record<string, unknown>,
+  description: "Deposit Payment" | "Final Settlement",
+  record: Record<string, unknown>,
+) {
+  const quotationNumber = readOwnRecordValue(record, "quotation_number");
+  return (
+    hasSyntheticSettlementTopLevelInvariants(record) &&
+    readNonBlankString(readOwnRecordValue(item, "description")) === description &&
+    readNonBlankString(readOwnRecordValue(item, "details")) ===
+      (typeof quotationNumber === "string" && quotationNumber.trim() !== "" ? `For services related to Quotation ${quotationNumber}` : null)
+  );
+}
+
+function hasFullQuotationSnapshotInvariants(record: Record<string, unknown>, items: unknown[]) {
+  return (
+    !hasAnyActiveScopeMarker(record) &&
+    readNonBlankString(record.quotation_id) !== null &&
+    readNonBlankString(record.quotation_number) !== null &&
+    readNonBlankString(record.service_id) !== null &&
+    readNonBlankString(record.customer_id) !== null &&
+    readSupportedSnapshotNumber(record.subtotal) !== null &&
+    readSupportedSnapshotNumber(record.discount) !== null &&
+    readSupportedSnapshotNumber(record.vat_rate) !== null &&
+    readSupportedSnapshotNumber(record.vat_amount) !== null &&
+    readSupportedSnapshotNumber(record.grand_total) !== null &&
+    items.length > 0 &&
+    items.every((value) => {
+      const item = asRecord(value);
+      return item !== null && hasRequiredSnapshotItemFields(item, true);
+    })
+  );
+}
+
+function classifySnapshotQuotation(record: Record<string, unknown> | null, invoiceType: string): SnapshotClassification {
+  if (!record || !Array.isArray(record.items)) {
+    return "ambiguous";
+  }
+
+  const { items } = record;
+  if (hasFullQuotationSnapshotInvariants(record, items)) {
+    return "full_quotation";
+  }
+
+  if (!hasActiveScopeMarkers(record) || items.length === 0) {
+    return "ambiguous";
+  }
+
+  const itemRecords = items.map(asRecord);
+  if (itemRecords.some((item) => item === null)) {
+    return "ambiguous";
+  }
+
+  const [onlyItem] = itemRecords;
+  if (items.length === 1 && onlyItem && isSyntheticSettlementRow(onlyItem, "Deposit Payment", record, invoiceType)) {
+    return "synthetic_deposit";
+  }
+
+  if (items.length === 1 && onlyItem && hasSyntheticSettlementIdentity(onlyItem, "Deposit Payment", record)) {
+    return "ambiguous";
+  }
+
+  if (items.length === 1 && onlyItem && isSyntheticSettlementRow(onlyItem, "Final Settlement", record, invoiceType)) {
+    return "synthetic_final";
+  }
+
+  if (items.length === 1 && onlyItem && hasSyntheticSettlementIdentity(onlyItem, "Final Settlement", record)) {
+    return "ambiguous";
+  }
+
+  const hasScopeRowInvariants = itemRecords.every((item) => {
+    if (!item) {
+      return false;
+    }
+
+    return (
+      hasRequiredSnapshotItemFields(item, true)
+    );
+  });
+
+  return hasScopeRowInvariants ? "active_scope" : "ambiguous";
+}
+/* INVOICE_PDF_SNAPSHOT_CLASSIFIER_END */
 
 export default async function InvoicePdfPage({
   params,
@@ -79,24 +281,33 @@ export default async function InvoicePdfPage({
 
   const seller = invoice.snapshot_seller as QuotationSnapshotSeller | null;
   const buyer = invoice.snapshot_buyer as QuotationSnapshotBuyer | null;
-  const snapshotQuotation = invoice.snapshot_quotation as { items?: QuotationItem[]; quotationNumber?: string } | null;
-  const items: QuotationItem[] = snapshotQuotation?.items || [];
   const bankDetails = invoice.snapshot_bank_details as { bankName?: string; accountName?: string; accountNo?: string; iban?: string } | null;
-  const documentRules = invoice.snapshot_document_rules as {
-    notes?: string;
-    terms?: unknown;
-    validityDays?: number;
-  } | null;
-
-  const documentRuleTerms = normalizeStringList(documentRules?.terms);
-  const documentNotes = typeof documentRules?.notes === "string" ? documentRules.notes.trim() : "";
-  const shouldShowNotes = documentNotes.length > 0 && documentNotes !== "Not available";
   const snapshotQuotationRecord = asRecord(invoice.snapshot_quotation);
+  const snapshotClassification = classifySnapshotQuotation(snapshotQuotationRecord, invoice.invoice_type);
+  const snapshotItems = Array.isArray(snapshotQuotationRecord?.items)
+    ? snapshotQuotationRecord.items
+    : [];
+  const items = (
+    snapshotClassification === "full_quotation" || snapshotClassification === "active_scope"
+      ? snapshotItems
+      : []
+  )
+    .map(normalizeSnapshotInvoiceItem)
+    .filter((item): item is SnapshotInvoiceItem => item !== null);
   const finalInvoiceSettlement = asRecord(snapshotQuotationRecord?.final_invoice_settlement);
+  const fullQuotationTotal =
+    snapshotClassification === "full_quotation"
+      ? readRecordNumber(snapshotQuotationRecord, "grand_total")
+      : null;
   const approvedQuotationTotal =
-    readRecordNumber(snapshotQuotationRecord, "grand_total") ??
-    readRecordNumber(finalInvoiceSettlement, "approved_quotation_total");
-  const previousInvoicesTotal = readRecordNumber(finalInvoiceSettlement, "active_prior_invoice_total");
+    invoice.invoice_type === "final"
+      ? readRecordNumber(finalInvoiceSettlement, "approved_quotation_total") ?? fullQuotationTotal
+      : fullQuotationTotal;
+  const previousInvoicesTotal =
+    invoice.invoice_type === "final"
+      ? readRecordNumber(finalInvoiceSettlement, "service_lifetime_exposure") ??
+        readRecordNumber(finalInvoiceSettlement, "active_prior_invoice_total")
+      : null;
 
   if (!seller || !buyer) {
     return (
@@ -105,8 +316,6 @@ export default async function InvoicePdfPage({
       </div>
     );
   }
-
-
 
   const formatMoney = (val: number | null | undefined) => {
     if (val === null || val === undefined) return "0.00";
@@ -120,6 +329,41 @@ export default async function InvoicePdfPage({
       maximumFractionDigits: 2,
     });
   };
+
+  const formatQuantityOrUnavailable = (val: number | null | undefined) =>
+    val === null || val === undefined ? "Not available" : formatQuantity(val);
+
+  const documentCurrency =
+    readRecordString(snapshotQuotationRecord, "currency") ??
+    readNonBlankString(seller.currency);
+  const formatAmountWithCurrency = (val: number | null | undefined) =>
+    `${formatMoney(val)}${documentCurrency ? ` ${documentCurrency}` : ""}`;
+  const formatItemAmountWithCurrency = (val: number | null | undefined) =>
+    val === null || val === undefined ? "Not available" : formatAmountWithCurrency(val);
+  const relatedQuoteNumber =
+    readNonBlankString(invoice.relatedQuoteNumber) ??
+    readRecordString(snapshotQuotationRecord, "quotation_number") ??
+    readRecordString(snapshotQuotationRecord, "quotationNumber");
+  const summaryLabel =
+    invoice.invoice_type === "deposit"
+      ? "Deposit Summary"
+      : invoice.invoice_type === "final"
+        ? "Final Settlement Summary"
+        : "Invoice Summary";
+  const invoiceAmountLabel =
+    invoice.invoice_type === "deposit"
+      ? "Deposit Amount"
+      : invoice.invoice_type === "final"
+        ? "Final Amount Due"
+        : "Total Amount";
+  const itemHeading =
+    snapshotClassification === "active_scope"
+      ? "Approved Service Scope"
+      : "Approved Quotation Items";
+  const itemDescription =
+    snapshotClassification === "active_scope"
+      ? "Accepted service scope items connected to this Invoice."
+      : "Full approved service items connected to this Invoice.";
 
   const isDraft = invoice.status === "draft";
   const displayStatus = invoice.status === "sent" ? "Issued" : invoice.status;
@@ -135,7 +379,7 @@ export default async function InvoicePdfPage({
       </div>
 
       {/* A4 Document Wrapper */}
-      <div className="a4-page bg-surface-container-lowest p-[28px] print:p-[22px] relative">
+      <div className="a4-page invoice-print-document bg-surface-container-lowest p-[28px] print:p-[22px] relative">
         {/* Draft Watermark/Badge */}
         {isDraft && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-5">
@@ -194,7 +438,7 @@ export default async function InvoicePdfPage({
           </header>
 
           {/* Invoice Title & Meta */}
-          <div className="mb-6">
+          <div className="mb-6 invoice-print-title">
             <div className="flex justify-between items-end mb-5">
               <h2 className="text-[30px] font-bold text-primary-container uppercase tracking-tight">
                 {invoice.vat_mode === "not_registered" ? "Commercial Invoice" : invoice.document_label}
@@ -208,7 +452,7 @@ export default async function InvoicePdfPage({
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-2 gap-8 invoice-print-meta">
               {/* Billed To */}
               <div className="bg-surface p-3 rounded border border-outline-variant">
                 <h3 className="text-[12px] font-semibold text-primary-container uppercase border-b border-outline-variant pb-2 mb-3">
@@ -242,8 +486,12 @@ export default async function InvoicePdfPage({
                   <span className="text-on-surface uppercase text-[12px] font-medium">{invoice.invoice_type}</span>
                   <span className="text-on-surface-variant">Issue Date:</span>
                   <span className="text-on-surface">{invoice.issued_at ? new Date(invoice.issued_at).toLocaleDateString() : (invoice.date || "-")}</span>
-                  <span className="text-on-surface-variant">Related Quote:</span>
-                  <span className="text-on-surface">{snapshotQuotation?.quotationNumber || invoice.relatedQuote || "-"}</span>
+                  {relatedQuoteNumber && (
+                    <>
+                      <span className="text-on-surface-variant">Related Quote:</span>
+                      <span className="text-on-surface">{relatedQuoteNumber}</span>
+                    </>
+                  )}
                   <span className="text-on-surface-variant mt-2">Status:</span>
                   <div className="mt-2">
                     <span className={`inline-block px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider ${invoice.status === 'paid' ? 'bg-status-completed-bg text-status-completed-text' :
@@ -258,76 +506,50 @@ export default async function InvoicePdfPage({
             </div>
           </div>
 
-          {/* Line Items Table */}
-          <div className="mb-6 flex-grow">
-            <table className="w-full text-left border-collapse">
+          {/* Render only positively classified historical itemization. */}
+          {items.length > 0 && (
+            <div className="mb-6 flex-grow invoice-print-items">
+              <h3 className="text-[12px] font-semibold text-primary-container uppercase mb-1 border-b border-outline-variant pb-1">
+                {itemHeading}
+              </h3>
+              <p className="text-[11px] text-on-surface-variant mb-3">
+                {itemDescription}
+              </p>
+              <table className="w-full text-left border-collapse invoice-print-item-table">
               <thead>
                 <tr className="bg-surface-container-low border-y border-outline-variant">
                   <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase w-8">#</th>
                   <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase">Description</th>
                   <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase w-16 text-center">Qty</th>
-                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-right w-28">
-                    Unit Price<br /><span className="text-[10px] text-on-surface-variant font-normal">({invoice.currency})</span>
-                  </th>
-                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-right w-20">Tax/VAT</th>
-                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-right w-32">
-                    Total<br /><span className="text-[10px] text-on-surface-variant font-normal">({invoice.currency})</span>
-                  </th>
+                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-right w-24">Unit Price</th>
+                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-right w-28">Line Total</th>
                 </tr>
               </thead>
               <tbody className="align-top border-b border-surface-variant text-[14px]">
-                {items.length > 0 ? items.map((item, i) => (
+                {items.map((item, i) => (
                   <tr key={i} className="border-b border-outline-variant/50">
                     <td className="py-2 px-2 text-on-surface-variant">{i + 1}</td>
                     <td className="py-2 px-2">
-                      <p className="font-semibold text-on-surface">{item.description}</p>
-                      <p className="text-on-surface-variant text-[12px] mt-1 whitespace-pre-wrap">{item.details}</p>
+                      <p className="font-semibold text-on-surface">{item.description || "Not available"}</p>
                     </td>
-                    <td className="py-2 px-2 text-on-surface text-center">{formatQuantity(item.qty)}</td>
+                    <td className="py-2 px-2 text-on-surface text-center">{formatQuantityOrUnavailable(item.qty)}</td>
                     <td className="py-2 px-2 text-on-surface text-right">
-                      {formatMoney(item.unitPrice)}
-                    </td>
-                    <td className="py-2 px-2 text-on-surface-variant text-[12px] text-right">
-                      {invoice.vat_mode === "not_registered" ? "Not applied" : `${item.vat}%`}
+                      {formatItemAmountWithCurrency(item.unitPrice)}
                     </td>
                     <td className="py-2 px-2 text-on-surface text-right font-medium">
-                      {formatMoney(item.total)}
+                      {formatItemAmountWithCurrency(item.total)}
                     </td>
                   </tr>
-                )) : (
-                  <tr className="border-b border-outline-variant/50">
-                    <td className="py-2 px-2 text-on-surface-variant">1</td>
-                    <td className="py-2 px-2">
-                      <p className="font-semibold text-on-surface">{invoice.invoice_type === "deposit" ? "Deposit Payment" : "Final Settlement"}</p>
-                      <p className="text-on-surface-variant text-[12px] mt-1">For services related to Quotation {snapshotQuotation?.quotationNumber || invoice.relatedQuote || "-"}</p>
-                    </td>
-                    <td className="py-2 px-2 text-on-surface text-center">1</td>
-                    <td className="py-2 px-2 text-on-surface text-right">
-                      {formatMoney(invoice.grand_total)}
-                    </td>
-                    <td className="py-2 px-2 text-on-surface-variant text-[12px] text-right">
-                      {invoice.vat_mode === "not_registered" ? "Not applied" : `${invoice.vat_rate}%`}
-                    </td>
-                    <td className="py-2 px-2 text-on-surface text-right font-medium">
-                      {formatMoney(invoice.grand_total)}
-                    </td>
-                  </tr>
-                )}
-                {items.length === 0 && !invoice.grand_total && (
-                  <tr>
-                    <td colSpan={6} className="py-5 text-center text-on-surface-variant">
-                      No line items found.
-                    </td>
-                  </tr>
-                )}
+                ))}
               </tbody>
-            </table>
-          </div>
+              </table>
+            </div>
+          )}
 
           {/* Summary & Payment Info */}
-          <div className="grid grid-cols-2 gap-8 mb-6 break-inside-avoid">
+          <div className="grid grid-cols-2 gap-8 mb-6 invoice-print-summary">
             {/* Payment Instructions */}
-            <div>
+            <div className="invoice-print-payment-instructions">
               <h3 className="text-[12px] font-semibold text-primary-container uppercase mb-3 border-b border-outline-variant pb-1">
                 Payment Instructions
               </h3>
@@ -347,13 +569,16 @@ export default async function InvoicePdfPage({
             </div>
 
             {/* Financial Totals */}
-            <div>
+            <div className="invoice-print-summary-totals">
+              <h3 className="text-[12px] font-semibold text-primary-container uppercase mb-3 border-b border-outline-variant pb-1">
+                {summaryLabel}
+              </h3>
               <div className="space-y-2 break-inside-avoid">
                 {approvedQuotationTotal !== null && (
                   <div className="flex justify-between items-center text-[14px]">
                     <span className="text-on-surface-variant">Approved Quotation Total</span>
                     <span className="text-on-surface">
-                      {formatMoney(approvedQuotationTotal)} {invoice.currency}
+                      {formatAmountWithCurrency(approvedQuotationTotal)}
                     </span>
                   </div>
                 )}
@@ -361,82 +586,53 @@ export default async function InvoicePdfPage({
                   <div className="flex justify-between items-center text-[14px]">
                     <span className="text-on-surface-variant">Previous Invoices / Deposits</span>
                     <span className="text-on-surface">
-                      {formatMoney(previousInvoicesTotal)} {invoice.currency}
+                      {formatAmountWithCurrency(previousInvoicesTotal)}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between items-center text-[14px]">
                   <span className="text-on-surface-variant">Subtotal</span>
                   <span className="text-on-surface">
-                    {formatMoney(invoice.subtotal)} {invoice.currency}
+                    {formatAmountWithCurrency(invoice.subtotal)}
                   </span>
                 </div>
                 {invoice.discount_amount > 0 && (
                   <div className="flex justify-between items-center text-[14px]">
                     <span className="text-on-surface-variant">Discount</span>
                     <span className="text-on-surface">
-                      -{formatMoney(invoice.discount_amount)} {invoice.currency}
+                      -{formatAmountWithCurrency(invoice.discount_amount)}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between items-center text-[14px] border-b border-outline-variant/50 pb-3">
                   <span className="text-on-surface-variant">Tax/VAT</span>
                   <span className="text-on-surface">
-                    {invoice.vat_mode === "not_registered" ? "Not applied" : `${formatMoney(invoice.vat_amount)} ${invoice.currency}`}
+                    {invoice.vat_mode === "not_registered" ? "Not applied" : formatAmountWithCurrency(invoice.vat_amount)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-1.5 bg-surface px-3 -mx-3">
-                  <span className="text-[20px] font-semibold text-primary-container">Total Amount</span>
-                  <span className="text-[20px] font-semibold text-primary-container">{formatMoney(invoice.grand_total)} {invoice.currency}</span>
+                  <span className="text-[20px] font-semibold text-primary-container">{invoiceAmountLabel}</span>
+                  <span className="text-[20px] font-semibold text-primary-container">{formatAmountWithCurrency(invoice.grand_total)}</span>
                 </div>
                 <div className="flex justify-between items-center text-[14px] pt-1">
                   <span className="text-on-surface-variant">Amount Paid</span>
-                  <span className="text-on-surface">{formatMoney(invoice.amount_paid)} {invoice.currency}</span>
+                  <span className="text-on-surface">{formatAmountWithCurrency(invoice.amount_paid)}</span>
                 </div>
                 <div className="flex justify-between items-center text-[14px] border-t border-outline-variant pt-2 mt-1">
                   <span className="font-semibold text-on-surface">Balance Due</span>
                   <span className="font-semibold text-on-error-container bg-error-container px-2 py-1 rounded-sm">
-                    {formatMoney(invoice.balance_due)} {invoice.currency}
+                    {formatAmountWithCurrency(invoice.balance_due)}
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Notes & Terms */}
-          {(shouldShowNotes || documentRuleTerms.length > 0) && (
-            <div className="mb-4 border-l-2 border-primary-container pl-3 py-1">
-              {shouldShowNotes && (
-                <div>
-                  <p className="text-[9px] font-semibold text-on-surface-variant uppercase leading-tight">Notes</p>
-                  <p className="text-[11px] leading-tight text-on-surface font-medium mt-0.5 whitespace-pre-wrap">
-                    {documentNotes}
-                  </p>
-                </div>
-              )}
-              {documentRuleTerms.length > 0 && (
-                <div className={shouldShowNotes ? "mt-1.5" : ""}>
-                  <p className="text-[9px] font-semibold text-on-surface-variant uppercase leading-tight mb-0.5">Terms</p>
-                  <ul className="list-disc pl-3 text-[10px] leading-tight text-on-surface space-y-0.5">
-                    {documentRuleTerms.map((term, i) => (
-                      <li key={i}>{term}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Footer */}
-          <footer className="mt-2 pt-1.5 border-t border-outline-variant/30 text-[9px] leading-tight text-on-surface-variant">
-            <div className="grid grid-cols-2 gap-4 mb-1">
-              <p>
-                <span className="font-semibold text-on-surface">Prepared By:</span> System Generated | System generated document
-              </p>
-              <p className="text-right">
-                <span className="font-semibold text-on-surface">Official Stamp:</span> {seller.legalNameEn}
-              </p>
-            </div>
+          <footer className="mt-2 pt-1.5 border-t border-outline-variant/30 text-[9px] leading-tight text-on-surface-variant invoice-print-footer">
+            <p className="text-right">
+              <span className="font-semibold text-on-surface">Official Stamp:</span> {seller.legalNameEn}
+            </p>
           </footer>
         </div>
       </div>
