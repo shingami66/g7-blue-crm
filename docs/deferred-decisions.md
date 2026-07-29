@@ -23,8 +23,9 @@
 - **Financial retention and no hard deletion:** Financial records must use void/cancel/reversal workflows rather than hard deletion.
 - **Rounding/currency hardening:** Currency and rounding standardization across the application remains deferred.
 - **Payment evidence/attachments:** Attaching evidence to payments remains deferred.
-- **Global Quotation entry selector:** Following the completed Invoice PDF customer cleanup, the Quotations module may add an eligible-Service selector that delegates to the existing Service-scoped creation authority. It must not create a standalone Quotation.
-- **Global Invoice chooser:** Following the Quotation selector, the Invoices module may add an eligible-Service chooser that deep-links to Service Billing. It must not create a standalone Invoice, duplicate financial calculations, or introduce a second mutation authority.
+- **Global Quotation entry selector:** Moved into active Feature 007 planning (`007-quotations-eligible-service-selector`). The bounded selector may delegate only to the existing Service-scoped creation authority; implementation remains separate and it must not create a standalone Quotation.
+- **Global Invoice chooser:** Remains deferred until Feature 007 is complete. It may later deep-link to Service Billing, but must not create a standalone Invoice, duplicate financial calculations, or introduce a second mutation authority.
+- **Selector scale and eligibility redesign:** Server-side search/cursor pagination and any event-date eligibility redesign remain deferred unless Service-volume evidence or a separately approved design requires them.
 - **Multi-stage invoices beyond Deposit/Final:** Additional staged/progress invoice behavior remains deferred until final settlement design or ZATCA-grade settlement requires it.
 
 ## 4. Approved Billing Scope Deferrals
