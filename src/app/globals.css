@@ -279,4 +279,82 @@ body {
   .quotation-print-footer .gap-8 {
     gap: 5mm !important;
   }
+
+  .invoice-print-document {
+    display: block !important;
+    font-size: 9pt !important;
+    line-height: 1.2 !important;
+    padding: 4mm !important;
+  }
+
+  .invoice-print-document header {
+    padding-bottom: 3mm !important;
+    margin-bottom: 3mm !important;
+  }
+
+  .invoice-print-document h1 {
+    font-size: 13pt !important;
+    line-height: 1.2 !important;
+  }
+
+  .invoice-print-title {
+    margin-bottom: 4mm !important;
+  }
+
+  .invoice-print-title h2 {
+    font-size: 22pt !important;
+    line-height: 1.1 !important;
+  }
+
+  .invoice-print-meta {
+    gap: 4mm !important;
+  }
+
+  .invoice-print-meta > div,
+  .invoice-print-payment-instructions .bg-surface {
+    padding: 2.5mm !important;
+  }
+
+  .invoice-print-items {
+    margin-bottom: 4mm !important;
+  }
+
+  .invoice-print-item-table thead {
+    display: table-header-group;
+  }
+
+  .invoice-print-item-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .invoice-print-item-table th {
+    padding: 1.5mm !important;
+    font-size: 7.5pt !important;
+    line-height: 1.2 !important;
+  }
+
+  .invoice-print-item-table td {
+    padding: 1.75mm 1.5mm !important;
+    font-size: 8.5pt !important;
+    line-height: 1.2 !important;
+  }
+
+  .invoice-print-summary {
+    gap: 4mm !important;
+    margin-bottom: 3mm !important;
+    align-items: flex-start !important;
+  }
+
+  .invoice-print-summary-totals .py-1\.5 {
+    padding-top: 1.25mm !important;
+    padding-bottom: 1.25mm !important;
+  }
+
+  .invoice-print-footer {
+    margin-top: 2mm !important;
+    padding-top: 2mm !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
