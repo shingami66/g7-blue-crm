@@ -55,7 +55,7 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 - Implemented scope removes rendered Invoice `item.details`, internal notes/terms, Prepared By/System Generated presentation, and generated-document disclosure while preserving snapshots, financial values, Deposit/Final behavior, status, Draft watermark, and intended customer-facing fields.
 - Strict snapshot classification renders Approved Quotation Items for full quotation snapshots, Approved Service Scope for active scope snapshots, and Invoice-summary-only output for synthetic or ambiguous shapes. No live Quotation lookup or historical snapshot rewrite was introduced.
 - Accepted short examples `INV-2026-0021` Deposit and `INV-2026-0022` Final fit one A4 page with truthful item pricing and type-specific summaries. Long-fixture smoke remains outside the supplied evidence.
-- Commit and push remain pending separate controlled tasks; no production-readiness, VAT-readiness, ZATCA-readiness, backup-readiness, or accounting-finality claim is made.
+- Commit and push are complete; no production-readiness, VAT-readiness, ZATCA-readiness, backup-readiness, or accounting-finality claim is made.
 - Quotation PDF customer cleanup is completed and pushed at `09bbe3b08aae64c1ec8c6e2e36e0d740e8ff02ae`.
 - Next product sequence: add the Quotations eligible-Service selector, then an Invoices eligible-Service chooser that deep-links to Service Billing. No standalone Quotation creation, standalone Invoice creation, or second Invoice mutation authority is approved.
 - Company Expenses, direct Event costing, Procurement/RFQ/PO, Vendor Bills/Supplier AP, Supplier Credits/Payments, and Event Margin remain later separately designed programs.
@@ -93,7 +93,7 @@ Current active task:
 - **Invoice financial lifecycle application stack:** **implemented, tested, DEV/DEMO browser-accepted (PASS WITH WARN), and pushed** through `45cdfb73` (ten source/test commits: money, exposure, lifecycle, safe action errors, invoice RBAC, five-mode authority, ABS history alignment, Deposit/Final actions, Service billing UI, Quotation display-only authority). Service Detail is mutation authority; Quotation Detail is display-only.
 - **Supplier Operations V1 closeout:** **complete** — internal Allocations and Supplier Bookings implemented under server gates; cancel/restore checks and booking concurrency limits verified.
 - **Hardened Payment Recording & Table Pagination:** **complete** — atomic `record_invoice_payment` RPC applied/verified in DEV/DEMO; 12 commits pushed up to `ded8daa`; 78 payment tests passed; pagination layout scroll-reset stabilized; manual smoke verification (fully paid INV-2026-0022 with 4,200.00 SAR) passed.
-- **Feature 006 closeout:** `006-invoice-pdf-customer-cleanup` implementation, independent review, and supplied short-example Print Preview acceptance are complete; controlled commit and push remain pending separate owner-approved tasks.
+- **Feature 006 closeout:** `006-invoice-pdf-customer-cleanup` implementation, independent review, owner acceptance, commit, push, and supplied short-example Print Preview acceptance are complete.
 - **Next implementation task (pending separate owner approval):** Quotations eligible-Service selector, followed by the Invoices eligible-Service chooser that deep-links to Service Billing.
 - **Workspace Location and Governance Rules:**
   - Active authorized checkout: `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5` (only authorized path for active execution).
