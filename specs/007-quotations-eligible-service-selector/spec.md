@@ -1,7 +1,7 @@
 # Specification: Quotations Eligible-Service Selector
 
 **Feature**: `007-quotations-eligible-service-selector`  
-**Status**: Active planning packet; implementation requires separate approval
+**Status**: Implementation complete; independent review finding remediated; Mozfer browser smoke PASS WITH WARN
 
 ## Purpose
 
@@ -34,6 +34,14 @@ Replace the global Quotations page's indirect `/services` navigation with a boun
 - A Service with existing Quotations remains selectable when it otherwise meets eligibility.
 - A user without either required permission cannot use the selector; existing unauthorized/forbidden behavior remains distinct.
 - Arabic RTL retains logical alignment and LTR-safe Service identifiers; mobile retains usable tap targets and scroll behavior.
+
+## Delivery Status
+
+- Implementation completed in the approved six-file runtime/test manifest.
+- Independent review first returned `HOLD` with one medium focus-return accessibility finding, then the finding was remediated by capturing the opener element in the dialog effect and restoring focus from the stable local reference.
+- Focused selector contract validation passed `5/5`; related authority and i18n tests passed `42/42`; lint, typecheck, build, and diff-check passed.
+- Mozfer-owned browser smoke completed with `PASS WITH WARN`.
+- Commit and push remain separate controlled tasks.
 
 ## Explicit Exclusions
 

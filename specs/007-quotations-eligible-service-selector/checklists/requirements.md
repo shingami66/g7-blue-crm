@@ -21,11 +21,11 @@
 - [x] The implementation manifest is bounded to six runtime/test files.
 - [x] Focused contract testing and Mozfer-owned manual smoke are required.
 - [x] Implementation, review, manual smoke, commit, and push are separated.
-- [ ] Runtime implementation is complete.
-- [ ] Independent review is complete.
-- [ ] Mozfer browser smoke is complete.
+- [x] Runtime implementation is complete.
+- [x] Independent review is complete.
+- [x] Mozfer browser smoke is complete.
 - [ ] Commit and push are complete.
 
 ## Checklist Result
 
-**PLANNING-QUALITY CHECKLIST: PASS**
+**IMPLEMENTATION-CLOSEOUT CHECKLIST: PASS WITH WARN**
