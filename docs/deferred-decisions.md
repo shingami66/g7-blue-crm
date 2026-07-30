@@ -24,7 +24,7 @@
 - **Rounding/currency hardening:** Currency and rounding standardization across the application remains deferred.
 - **Payment evidence/attachments:** Attaching evidence to payments remains deferred.
 - **Global Quotation entry selector:** Implemented in Feature 007 (`007-quotations-eligible-service-selector`). The bounded selector delegates only to the existing Service-scoped creation authority and does not create a standalone Quotation.
-- **Global Invoice chooser:** Remains deferred until Feature 007 is fully closed. It may later deep-link to Service Billing, but must not create a standalone Invoice, duplicate financial calculations, or introduce a second mutation authority.
+- **Global Invoice chooser:** Is now the next separately planned item. It may later deep-link to Service Billing, but must not create a standalone Invoice, duplicate financial calculations, or introduce a second mutation authority.
 - **Selector scale and eligibility redesign:** Server-side search/cursor pagination and any event-date eligibility redesign remain deferred unless Service-volume evidence or a separately approved design requires them.
 - **Multi-stage invoices beyond Deposit/Final:** Additional staged/progress invoice behavior remains deferred until final settlement design or ZATCA-grade settlement requires it.
 
