@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
 import { getQuotations } from "@/lib/quotations/queries";
+import {
+  getEligibleServicesForQuotation,
+  type EligibleQuotationService,
+} from "@/lib/services/queries";
 import { checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
@@ -17,6 +21,8 @@ type QuotationsPageState =
       status: "ready";
       quotations: QuotationListItem[];
       canWrite: boolean;
+      canSelectService: boolean;
+      eligibleServices: EligibleQuotationService[];
       dictionary: QuotationsDictionary;
     }
   | { status: "forbidden" }
@@ -29,8 +35,22 @@ export default async function QuotationsPage() {
 
   try {
     const quotations = await getQuotations();
-    const canWrite = await checkPermission("quotations:write");
-    pageState = { status: "ready", quotations, canWrite, dictionary };
+    const [canWrite, canReadServices] = await Promise.all([
+      checkPermission("quotations:write"),
+      checkPermission("services:read"),
+    ]);
+    const canSelectService = canWrite && canReadServices;
+    const eligibleServices = canSelectService
+      ? await getEligibleServicesForQuotation()
+      : [];
+    pageState = {
+      status: "ready",
+      quotations,
+      canWrite,
+      canSelectService,
+      eligibleServices,
+      dictionary,
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       redirect("/sign-in");
@@ -73,6 +93,8 @@ export default async function QuotationsPage() {
     <QuotationsClient
       quotations={pageState.quotations}
       canWrite={pageState.canWrite}
+      canSelectService={pageState.canSelectService}
+      eligibleServices={pageState.eligibleServices}
       dictionary={pageState.dictionary}
     />
   );

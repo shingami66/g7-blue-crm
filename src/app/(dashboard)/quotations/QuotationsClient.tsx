@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import { Plus, Filter, Eye, Trash2, Edit, AlertCircle } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -20,11 +19,15 @@ import {
 import { formatSarAmount } from "@/lib/i18n/formatting";
 import { UiDateText } from "@/components/i18n/UiDateText";
 import type { QuotationListItem } from "@/lib/quotations/types";
+import type { EligibleQuotationService } from "@/lib/services/queries";
 import { softDeleteQuotation } from "@/lib/quotations/actions";
+import EligibleServiceSelector from "./EligibleServiceSelector";
 
 interface QuotationsClientProps {
   quotations: QuotationListItem[];
   canWrite: boolean;
+  canSelectService: boolean;
+  eligibleServices: EligibleQuotationService[];
   dictionary?: QuotationsDictionary;
 }
 
@@ -37,6 +40,8 @@ function formatCopy(template: string, values: Record<string, string | number>) {
 export default function QuotationsClient({
   quotations,
   canWrite,
+  canSelectService,
+  eligibleServices,
   dictionary: dictionaryProp,
 }: QuotationsClientProps) {
   const router = useRouter();
@@ -47,6 +52,8 @@ export default function QuotationsClient({
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("");
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+  const selectorTriggerRef = useRef<HTMLButtonElement>(null);
   const itemsPerPage = 10;
 
   const handleStatusFilterChange = (value: string) => {
@@ -97,14 +104,18 @@ export default function QuotationsClient({
         title={dictionary.list.title}
         subtitle={dictionary.list.subtitle}
       >
-        {canWrite && (
-          <Link 
-            href="/services"
+        {canSelectService && (
+          <button
+            ref={selectorTriggerRef}
+            type="button"
+            onClick={() => setIsSelectorOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={isSelectorOpen}
             className="flex items-center gap-2 bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors"
           >
             <Plus size={18} />
             {dictionary.list.selectService}
-          </Link>
+          </button>
         )}
       </PageHeader>
 
@@ -286,6 +297,15 @@ export default function QuotationsClient({
           />
         )}
       </div>
+
+      {canSelectService && isSelectorOpen && (
+        <EligibleServiceSelector
+          services={eligibleServices}
+          dictionary={dictionary}
+          triggerRef={selectorTriggerRef}
+          onClose={() => setIsSelectorOpen(false)}
+        />
+      )}
     </div>
   );
 }
