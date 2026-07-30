@@ -1,15 +1,15 @@
 # Implementation Plan: Quotations Eligible-Service Selector
 
 **Feature**: `007-quotations-eligible-service-selector`  
-**Status**: Planning only; implementation requires separate approval
+**Status**: Implemented; independent review finding remediated; commit and push remain separate
 
 ## Source-Truth And Authority Checks
 
-- Global Quotations currently sends its writable CTA to `/services`.
-- Service Detail already deep-links to `/quotations/new?serviceId=<service-id>`.
-- The creation page requires `quotations:write`, `services:read`, and a valid `serviceId`; it reloads the Service and permits only `Inquiry` or `Quoted`.
-- `createQuotation` is the single application mutation authority. It repeats both permissions, reloads/revalidates the Service, validates submitted quotation dates, and delegates to `create_quotation_with_items`.
-- The UI submits no independent customer; customer identity is derived through the selected Service. Admin, Manager, and Sales can create; Admin and Manager can approve.
+- Global Quotations now opens the eligible-Service selector instead of redirecting to `/services`.
+- Service Detail still deep-links to `/quotations/new?serviceId=<service-id>`.
+- The creation page still requires `quotations:write`, `services:read`, and a valid `serviceId`; it reloads the Service and permits only `Inquiry` or `Quoted`.
+- `createQuotation` remains the single application mutation authority. It repeats both permissions, reloads/revalidates the Service, validates submitted quotation dates, and delegates to `create_quotation_with_items`.
+- The UI still submits no independent customer; customer identity is derived through the selected Service. Admin, Manager, and Sales can create; Admin and Manager can approve.
 
 ## Recommended UX And Eligibility
 
@@ -44,4 +44,4 @@ Create only:
 
 Run the focused selector contract test, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build`, `git diff --check`, and manifest/index checks. Mozfer owns browser smoke for desktop/mobile, English/Arabic RTL, no eligible Services, no-match, permission boundaries, stale selection, and Service Detail parity.
 
-The current all-Services/client-pagination pattern supports this bounded implementation. Server-side search/cursor pagination is deferred until Service-volume evidence requires a separate decision. Implementation, review, manual smoke, commit, and push remain separate tasks; recommend one later reviewed code-and-test commit only after approval.
+The selector implementation is complete within the approved six-file manifest. Server-side search/cursor pagination is deferred until Service-volume evidence requires a separate decision. Implementation, review, manual smoke, commit, and push remain separate tasks; the review found one focus-return accessibility issue, it was remediated, and the current documented validation is PASS/ PASS WITH WARN as recorded in the task packet.
