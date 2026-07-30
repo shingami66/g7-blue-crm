@@ -9,6 +9,31 @@ import type { ServiceRowWithCustomer } from "./types";
 
 const SERVICE_SELECT = "*, customers(company, contact, customer_number)";
 
+export type EligibleQuotationService = Pick<
+  Service,
+  | "id"
+  | "serviceNumber"
+  | "serviceTitle"
+  | "customer"
+  | "status"
+  | "eventName"
+  | "eventStartDate"
+  | "eventLocation"
+>;
+
+function toEligibleQuotationService(service: Service): EligibleQuotationService {
+  return {
+    id: service.id,
+    serviceNumber: service.serviceNumber,
+    serviceTitle: service.serviceTitle,
+    customer: service.customer,
+    status: service.status,
+    eventName: service.eventName,
+    eventStartDate: service.eventStartDate,
+    eventLocation: service.eventLocation,
+  };
+}
+
 export async function getServices(): Promise<Service[]> {
   await requirePermission("services:read");
 
@@ -31,6 +56,37 @@ export async function getServices(): Promise<Service[]> {
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error("[getServices] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return [];
+  }
+}
+
+export async function getEligibleServicesForQuotation(): Promise<EligibleQuotationService[]> {
+  await requirePermission("services:read");
+
+  try {
+    const supabase = createAdminClient();
+    const { data: serviceRows, error } = await supabase
+      .from("services")
+      .select(SERVICE_SELECT)
+      .is("deleted_at", null)
+      .in("status", ["Inquiry", "Quoted"])
+      .order("service_number", { ascending: true })
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.error("[getEligibleServicesForQuotation] Supabase error:", error.message);
+      return [];
+    }
+
+    return (serviceRows ?? [])
+      .map((serviceRow) => mapRowToService(serviceRow as ServiceRowWithCustomer))
+      .map(toEligibleQuotationService);
+  } catch (err) {
+    if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
+    console.error(
+      "[getEligibleServicesForQuotation] Unexpected error:",
+      err instanceof Error ? err.message : "Unknown"
+    );
     return [];
   }
 }
