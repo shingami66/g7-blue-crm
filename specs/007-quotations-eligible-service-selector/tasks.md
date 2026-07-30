@@ -1,7 +1,7 @@
 # Tasks: Quotations Eligible-Service Selector
 
 **Feature**: `007-quotations-eligible-service-selector`  
-**Status**: Runtime implementation complete; independent review finding remediated; documentation sync pending
+**Status**: Delivered, reviewed, remediated, browser-accepted, committed, and pushed
 
 ## Phase 0 — Planning And Approval
 
@@ -39,10 +39,10 @@
 
 **Mode**: `COMMIT_ONLY`
 
-- [ ] Receive explicit approved manifest and subject; stage only exact approved files; do not push.
+- [x] Receive explicit approved manifest and subject; stage only exact approved files; do not push.
 
 ## Phase 5 — Controlled Push
 
 **Mode**: `PUSH_ONLY`
 
-- [ ] Receive explicit outgoing-commit approval; verify and push without force.
+- [x] Receive explicit outgoing-commit approval; verify and push without force.

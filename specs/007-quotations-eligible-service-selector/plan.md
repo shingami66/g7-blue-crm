@@ -1,7 +1,7 @@
 # Implementation Plan: Quotations Eligible-Service Selector
 
 **Feature**: `007-quotations-eligible-service-selector`  
-**Status**: Implemented; independent review finding remediated; commit and push remain separate
+**Status**: Delivered and pushed
 
 ## Source-Truth And Authority Checks
 
