@@ -36,6 +36,19 @@ export interface QuotationsDictionary {
     noQuotations: string;
     noFilteredQuotations: string;
     unknownCompany: string;
+    selector: {
+      title: string;
+      description: string;
+      searchPlaceholder: string;
+      chooseService: string;
+      customer: string;
+      eventDate: string;
+      location: string;
+      noEligibleServices: string;
+      noSearchResults: string;
+      close: string;
+      navigationPending: string;
+    };
     table: {
       quotationNumber: string;
       clientEvent: string;
@@ -231,6 +244,19 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     noQuotations: "No quotations found.",
     noFilteredQuotations: "No quotations match the current filters.",
     unknownCompany: "Unknown Company",
+    selector: {
+      title: "Select an eligible Service",
+      description: "Choose a Service to continue to the existing quotation form.",
+      searchPlaceholder: "Search Services, customers, event details, or locations",
+      chooseService: "Choose Service",
+      customer: "Customer",
+      eventDate: "Service date",
+      location: "Location",
+      noEligibleServices: "No eligible Services are available for quotation creation.",
+      noSearchResults: "No eligible Services match your search.",
+      close: "Close Service selector",
+      navigationPending: "Opening quotation form…",
+    },
     table: {
       quotationNumber: "Quotation Number",
       clientEvent: "Client / Event",
@@ -432,6 +458,19 @@ const quotationsDictionaryAr: QuotationsDictionary = {
     noQuotations: "لم يتم العثور على عروض أسعار",
     noFilteredQuotations: "لا توجد عروض أسعار مطابقة للفلاتر الحالية",
     unknownCompany: "جهة غير معروفة",
+    selector: {
+      title: "اختر خدمة مؤهلة",
+      description: "اختر خدمة للمتابعة إلى نموذج عرض السعر الحالي.",
+      searchPlaceholder: "ابحث في الخدمات والعملاء وتفاصيل الفعالية أو المواقع",
+      chooseService: "اختر الخدمة",
+      customer: "العميل",
+      eventDate: "تاريخ الخدمة",
+      location: "الموقع",
+      noEligibleServices: "لا توجد خدمات مؤهلة متاحة لإنشاء عرض سعر.",
+      noSearchResults: "لا توجد خدمات مؤهلة مطابقة لبحثك.",
+      close: "إغلاق محدد الخدمة",
+      navigationPending: "جارٍ فتح نموذج عرض السعر…",
+    },
     table: {
       quotationNumber: "رقم عرض السعر",
       clientEvent: "العميل / الفعالية",
