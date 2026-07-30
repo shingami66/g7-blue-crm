@@ -49,7 +49,7 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 ### Active Spec Kit Feature — 007 Quotations Eligible-Service Selector
 
 - `.specify/feature.json` selects `specs/007-quotations-eligible-service-selector`.
-- Feature 007 is implementation-complete in the approved six-file manifest. Independent review briefly held on a focus-return accessibility issue, then passed after remediation; Mozfer browser smoke completed with PASS WITH WARN. Controlled commit and push remain separate stages.
+- Feature 007 is fully implemented, reviewed, remediated, browser-accepted, committed, and pushed.
 - The global Quotations entry may select a non-deleted Service in `Inquiry` or `Quoted` status that the current user can read, then navigate only to `/quotations/new?serviceId=<service-id>`.
 - The selector has no Quotation mutation, independent customer selection, financial calculation, or second authority. Existing route and action revalidation remain authoritative.
 - The order remains: (1) Quotations eligible-Service selector, then (2) Invoices eligible-Service chooser. The Invoices chooser is outside Feature 007 and remains deferred.
@@ -103,13 +103,13 @@ Current active task:
 - **Supplier Operations V1 closeout:** **complete** — internal Allocations and Supplier Bookings implemented under server gates; cancel/restore checks and booking concurrency limits verified.
 - **Hardened Payment Recording & Table Pagination:** **complete** — atomic `record_invoice_payment` RPC applied/verified in DEV/DEMO; 12 commits pushed up to `ded8daa`; 78 payment tests passed; pagination layout scroll-reset stabilized; manual smoke verification (fully paid INV-2026-0022 with 4,200.00 SAR) passed.
 - **Feature 006 closeout:** `006-invoice-pdf-customer-cleanup` implementation, independent review, owner acceptance, commit, push, and supplied short-example Print Preview acceptance are complete.
-- **Current planning task:** Feature 007 Quotations eligible-Service selector is complete at the implementation/docs stage and awaiting controlled commit/push. The Invoices eligible-Service chooser remains deferred and will deep-link to Service Billing only after Feature 007 is fully closed.
+- **Current planning task:** Feature 007 Quotations eligible-Service selector is complete and pushed. The Invoices eligible-Service chooser is now the next product-planning direction, but it remains separately unauthorized.
 - **Workspace Location and Governance Rules:**
   - Active authorized checkout: `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5` (only authorized path for active execution).
   - Historical checkout (forbidden): `D:/G7/g7-crm` (must remain untouched).
   - Silent worktree switching, path changes, and manual copying/merging of folders between checkouts are strictly banned.
   - Reconciliation of the historical checkout is a separate, future task pending explicit approval.
-- **Next safe product/engineering direction:** complete Feature 007 closeout through the separate controlled commit/push stages. The Invoices Service chooser remains deferred. ABS history/read polish, Void UI, successor UI, and role browser smoke remain deferred.
+- **Next safe product/engineering direction:** plan the separately unauthorized Invoices eligible-Service chooser. ABS history/read polish, Void UI, successor UI, and role browser smoke remain deferred.
 - **Deferred / optional (not complete):** Manager and Accountant browser smoke sessions; Deposit client maximum using remaining rather than full ceiling; legacy Quotation database ceiling hardening; lifecycle atomicity hardening; full seven-state DB enforcement; ABS history consistency hardening; broad ABS numeric normalization; future production/database hardening; future VAT or compliance work. Do **not** mark production rollout, VAT readiness, ZATCA readiness, or accounting finality complete.
 - **Locked ABS management order:**
   1. `ABS-MGMT-UI-READ-ENRICH-1` **complete**
