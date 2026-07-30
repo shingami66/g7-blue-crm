@@ -46,14 +46,16 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 
 ## 2. Current Priority
 
-### Active Spec Kit Feature — 007 Quotations Eligible-Service Selector
+### Active Spec Kit Feature — 008 Invoices Eligible-Service Chooser
 
-- `.specify/feature.json` selects `specs/007-quotations-eligible-service-selector`.
-- Feature 007 is fully implemented, reviewed, remediated, browser-accepted, committed, and pushed.
-- The global Quotations entry may select a non-deleted Service in `Inquiry` or `Quoted` status that the current user can read, then navigate only to `/quotations/new?serviceId=<service-id>`.
-- The selector has no Quotation mutation, independent customer selection, financial calculation, or second authority. Existing route and action revalidation remain authoritative.
-- The order remains: (1) Quotations eligible-Service selector, then (2) Invoices eligible-Service chooser. The Invoices chooser is outside Feature 007 and remains deferred.
-- Server-side search/cursor pagination and event-date eligibility redesign are deferred unless Service-volume evidence or a separately approved design requires them.
+- `.specify/feature.json` selects `specs/008-invoices-eligible-service-chooser`.
+- Feature 007 is completed, committed, pushed, and historical.
+- Feature 008 planning is complete and approved, and the packet is the current active Spec Kit feature.
+- The approved product direction is one global `Create Invoice` CTA, then a Deposit or Final first-step choice, then a type-specific eligible-Service selector that navigates back to existing Service Detail billing authority.
+- The chooser must remain navigation-only and must not create a standalone Invoice or introduce a second mutation authority.
+- Runtime implementation has not started.
+- The next controlled phase is runtime implementation, subject to separate owner authorization.
+- Server-side search/cursor pagination and event-date eligibility redesign remain deferred unless Service-volume evidence or a separately approved design requires them.
 
 ### Completed Spec Kit Feature — 006 Invoice PDF Customer Cleanup
 
@@ -66,7 +68,7 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 - Accepted short examples `INV-2026-0021` Deposit and `INV-2026-0022` Final fit one A4 page with truthful item pricing and type-specific summaries. Long-fixture smoke remains outside the supplied evidence.
 - Commit and push are complete; no production-readiness, VAT-readiness, ZATCA-readiness, backup-readiness, or accounting-finality claim is made.
 - Quotation PDF customer cleanup is completed and pushed at `09bbe3b08aae64c1ec8c6e2e36e0d740e8ff02ae`.
-- Product sequence is now governed by Feature 007 planning: Quotations eligible-Service selector first, then the separately deferred Invoices eligible-Service chooser that deep-links to Service Billing. No standalone Quotation creation, standalone Invoice creation, or second mutation authority is approved.
+- Product sequence is now governed by Feature 007 historical completion and Feature 008 planning approval: Quotations eligible-Service selector is complete and historical, and the Invoices eligible-Service chooser is the approved active feature that deep-links to Service Billing. No standalone Quotation creation, standalone Invoice creation, or second mutation authority is approved.
 - Company Expenses, direct Event costing, Procurement/RFQ/PO, Vendor Bills/Supplier AP, Supplier Credits/Payments, and Event Margin remain later separately designed programs.
 - Graphify remains stale; force remediation remains deferred.
 - No production-readiness, VAT-readiness, ZATCA-readiness, backup-readiness, or accounting-finality claim is made.
@@ -103,13 +105,13 @@ Current active task:
 - **Supplier Operations V1 closeout:** **complete** — internal Allocations and Supplier Bookings implemented under server gates; cancel/restore checks and booking concurrency limits verified.
 - **Hardened Payment Recording & Table Pagination:** **complete** — atomic `record_invoice_payment` RPC applied/verified in DEV/DEMO; 12 commits pushed up to `ded8daa`; 78 payment tests passed; pagination layout scroll-reset stabilized; manual smoke verification (fully paid INV-2026-0022 with 4,200.00 SAR) passed.
 - **Feature 006 closeout:** `006-invoice-pdf-customer-cleanup` implementation, independent review, owner acceptance, commit, push, and supplied short-example Print Preview acceptance are complete.
-- **Current planning task:** Feature 007 Quotations eligible-Service selector is complete and pushed. The Invoices eligible-Service chooser is now the next product-planning direction, but it remains separately unauthorized.
+- **Current planning task:** Feature 007 Quotations eligible-Service selector is complete and pushed. Feature 008 Invoices eligible-Service chooser is the approved active feature, and runtime implementation remains separately owner-authorized.
 - **Workspace Location and Governance Rules:**
   - Active authorized checkout: `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5` (only authorized path for active execution).
   - Historical checkout (forbidden): `D:/G7/g7-crm` (must remain untouched).
   - Silent worktree switching, path changes, and manual copying/merging of folders between checkouts are strictly banned.
   - Reconciliation of the historical checkout is a separate, future task pending explicit approval.
-- **Next safe product/engineering direction:** plan the separately unauthorized Invoices eligible-Service chooser. ABS history/read polish, Void UI, successor UI, and role browser smoke remain deferred.
+- **Next safe product/engineering direction:** move from approved Feature 008 planning into runtime implementation only after separate owner authorization. ABS history/read polish, Void UI, successor UI, and role browser smoke remain deferred.
 - **Deferred / optional (not complete):** Manager and Accountant browser smoke sessions; Deposit client maximum using remaining rather than full ceiling; legacy Quotation database ceiling hardening; lifecycle atomicity hardening; full seven-state DB enforcement; ABS history consistency hardening; broad ABS numeric normalization; future production/database hardening; future VAT or compliance work. Do **not** mark production rollout, VAT readiness, ZATCA readiness, or accounting finality complete.
 - **Locked ABS management order:**
   1. `ABS-MGMT-UI-READ-ENRICH-1` **complete**
