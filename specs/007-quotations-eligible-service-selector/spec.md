@@ -1,7 +1,7 @@
 # Specification: Quotations Eligible-Service Selector
 
 **Feature**: `007-quotations-eligible-service-selector`  
-**Status**: Implementation complete; independent review finding remediated; Mozfer browser smoke PASS WITH WARN
+**Status**: Fully implemented, reviewed, remediated, browser-accepted, committed, and pushed
 
 ## Purpose
 
@@ -41,7 +41,7 @@ Replace the global Quotations page's indirect `/services` navigation with a boun
 - Independent review first returned `HOLD` with one medium focus-return accessibility finding, then the finding was remediated by capturing the opener element in the dialog effect and restoring focus from the stable local reference.
 - Focused selector contract validation passed `5/5`; related authority and i18n tests passed `42/42`; lint, typecheck, build, and diff-check passed.
 - Mozfer-owned browser smoke completed with `PASS WITH WARN`.
-- Commit and push remain separate controlled tasks.
+- Ten meaningful commits were created and pushed on `main`; the closeout HEAD is `1e9cfb870b5ecfc05dd02d70ff50d63b96dc822e`.
 
 ## Explicit Exclusions
 
