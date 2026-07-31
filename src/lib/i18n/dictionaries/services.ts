@@ -680,6 +680,25 @@ export interface ServicesDictionary {
   };
   billing: {
     title: string;
+    workspaceTitle: string;
+    workspacePageTitle: string;
+    workspaceSubtitle: string;
+    openWorkspace: string;
+    viewFullService: string;
+    backToInvoices: string;
+    switchToFinal: string;
+    switchToDeposit: string;
+    finalAlsoAvailable: string;
+    depositAlsoAvailable: string;
+    selectBillingAction: string;
+    createDepositInvoiceTitle: string;
+    createFinalInvoiceTitle: string;
+    costMarginTitle: string;
+    costMarginSubtitle: string;
+    totalSupplierCost: string;
+    grossMargin: string;
+    estimatedGrossMargin: string;
+    costMarginUnavailable: string;
     authority: {
       historicalOnlyBody: string;
       historicalOnlyNotice: string;
@@ -1751,6 +1770,25 @@ const servicesDictionaryEn: ServicesDictionary = {
   },
   billing: {
     title: "Billing",
+    workspaceTitle: "Service Billing Workspace",
+    workspacePageTitle: "Service Billing",
+    workspaceSubtitle: "Dedicated billing management and invoice creation for this Service.",
+    openWorkspace: "Open Billing Workspace",
+    viewFullService: "View Full Service",
+    backToInvoices: "Back to Invoices",
+    switchToFinal: "Switch to Final Invoice",
+    switchToDeposit: "Switch to Deposit Invoice",
+    finalAlsoAvailable: "Final Invoice is also available for this Service.",
+    depositAlsoAvailable: "Deposit Invoice is also available for this Service.",
+    selectBillingAction: "Select a Billing Action",
+    createDepositInvoiceTitle: "Create Deposit Invoice",
+    createFinalInvoiceTitle: "Create Final Invoice",
+    costMarginTitle: "Estimated Cost & Margin",
+    costMarginSubtitle: "Read-only operational cost analytics.",
+    totalSupplierCost: "Total Supplier Cost",
+    grossMargin: "Gross Margin",
+    estimatedGrossMargin: "Estimated Gross Margin",
+    costMarginUnavailable: "Cost and margin analysis is currently unavailable.",
     authority: {
       historicalOnlyBody: "This service has an approved quotation, but it is not active. The billing information shown is based on historical records.",
       historicalOnlyNotice: "Historical Billing Information",
@@ -1764,7 +1802,7 @@ const servicesDictionaryEn: ServicesDictionary = {
       noApprovedQuotationYet: "No approved quotation yet",
       noActiveDepositInvoice: "Deposit invoice has not been created yet.",
       noActiveFinalInvoice: "Final invoice has not been created yet.",
-      priorInvoiced: "Service-lifetime invoiced exposure",
+      priorInvoiced: "Invoiced to date",
       remaining: "Remaining billable",
       amountUnavailable: "Amount unavailable",
       exposureUnavailable: "Exposure unavailable",
@@ -1851,7 +1889,7 @@ const servicesDictionaryEn: ServicesDictionary = {
     },
     finalAction: {
       unavailable: "Final invoice action is not available.",
-      amountSummary: "Final invoice amount will be calculated automatically from the approved quotation minus active deposit invoices.",
+      amountSummary: "The final invoice amount is calculated automatically from the remaining billable amount.",
       create: "Create Final Invoice",
       success: "Final invoice created successfully. Invoice: {invoiceNumber}.",
       errors: {
@@ -2978,6 +3016,25 @@ const servicesDictionaryAr: ServicesDictionary = {
   },
   billing: {
     title: "الفوترة",
+    workspaceTitle: "مساحة فوترة الخدمة",
+    workspacePageTitle: "فوترة الخدمة",
+    workspaceSubtitle: "مساحة متخصصة لإدارة الفوترة وإصدار الفواتير لهذه الخدمة.",
+    openWorkspace: "فتح مساحة فوترة الخدمة",
+    viewFullService: "عرض تفاصيل الخدمة الكاملة",
+    backToInvoices: "العودة إلى الفواتير",
+    switchToFinal: "الانتقال إلى الفاتورة النهائية",
+    switchToDeposit: "الانتقال إلى فاتورة الدفعة المقدمة",
+    finalAlsoAvailable: "الفاتورة النهائية متاحة أيضاً لهذه الخدمة.",
+    depositAlsoAvailable: "فاتورة الدفعة المقدمة متاحة أيضاً لهذه الخدمة.",
+    selectBillingAction: "اختر إجراء الفوترة",
+    createDepositInvoiceTitle: "إنشاء فاتورة دفعة مقدمة",
+    createFinalInvoiceTitle: "إنشاء الفاتورة النهائية",
+    costMarginTitle: "التكلفة والهامش التقديري",
+    costMarginSubtitle: "تحليلات تشغيلية للقراءة فقط.",
+    totalSupplierCost: "إجمالي تكلفة الموردين",
+    grossMargin: "هامش الربح الإجمالي",
+    estimatedGrossMargin: "هامش الربح الإجمالي التقديري",
+    costMarginUnavailable: "تحليل التكاليف وهامش الربح غير متاح حالياً.",
     authority: {
       historicalOnlyBody: "تحتوي هذه الخدمة على عرض سعر معتمد، غير أنه غير نشط. تستند معلومات الفوترة المعروضة إلى السجلات التاريخية.",
       historicalOnlyNotice: "معلومات فوترة تاريخية",
@@ -2991,7 +3048,7 @@ const servicesDictionaryAr: ServicesDictionary = {
       noApprovedQuotationYet: "لا يوجد عرض سعر معتمد حتى الآن",
       noActiveDepositInvoice: "لم يتم إنشاء فاتورة دفعة مقدمة بعد.",
       noActiveFinalInvoice: "لم يتم إنشاء الفاتورة النهائية بعد.",
-      priorInvoiced: "التعرض المفوتر طوال عمر الخدمة",
+      priorInvoiced: "المفوتر حتى الآن",
       remaining: "المتبقي للفوترة",
       amountUnavailable: "المبلغ غير متاح",
       exposureUnavailable: "التعرض غير متاح",
@@ -3078,7 +3135,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     },
     finalAction: {
       unavailable: "إجراء الفاتورة النهائية غير متاح.",
-      amountSummary: "سيتم احتساب قيمة الفاتورة النهائية تلقائيًا من عرض السعر المعتمد بعد خصم فواتير الدفعة المقدمة النشطة.",
+      amountSummary: "يُحتسب مبلغ الفاتورة النهائية تلقائياً من المبلغ المتبقي القابل للفوترة.",
       create: "إنشاء الفاتورة النهائية",
       success: "تم إنشاء الفاتورة النهائية بنجاح. الفاتورة: {invoiceNumber}.",
       errors: {

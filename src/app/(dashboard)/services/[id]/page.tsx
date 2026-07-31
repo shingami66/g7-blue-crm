@@ -27,7 +27,7 @@ import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import Link from "next/link";
 import ServiceStatusTimeline from "./ServiceStatusTimeline";
 import RelatedQuotationsCard from "./RelatedQuotationsCard";
-import BillingPanel from "./BillingPanel";
+import ServiceBillingSummaryCard from "./ServiceBillingSummaryCard";
 import ServiceStatusControl from "./ServiceStatusControl";
 import SupplierAllocationsPanel from "./SupplierAllocationsPanel";
 import { getSupplierAllocationsByServiceId } from "@/lib/supplier-allocations/queries";
@@ -63,6 +63,10 @@ export default async function ServiceDetailPage({
   const { id } = await params;
   const resolvedSearchParams = await searchParams;
   const showDeleted = resolvedSearchParams?.showDeleted === "true";
+  const requestedInvoiceAction = resolvedSearchParams?.invoiceAction;
+  if (requestedInvoiceAction === "deposit" || requestedInvoiceAction === "final") {
+    redirect(`/services/${encodeURIComponent(id)}/billing?intent=${requestedInvoiceAction}`);
+  }
 
   try {
     await requirePermission("services:read");
@@ -110,7 +114,6 @@ export default async function ServiceDetailPage({
     "approvedBillingScopes:create",
   );
   const canReadInvoices = await checkPermission(INVOICE_PERMISSIONS.read);
-  const canCreateInvoices = await checkPermission(INVOICE_PERMISSIONS.write);
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
   const today = new Date().toISOString().split("T")[0];
@@ -352,11 +355,10 @@ export default async function ServiceDetailPage({
           dictionary={dictionary}
         />
       )}
-      <BillingPanel
+      <ServiceBillingSummaryCard
+        serviceId={service.id}
         billingState={billingState}
         dictionary={dictionary}
-        canCreateInvoices={canCreateInvoices}
-        serviceStatus={service.status}
       />
     </div>
   );
