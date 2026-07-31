@@ -15,6 +15,38 @@ export interface InvoicesDictionary {
     subtitle: string;
     export: string;
     creationHint: string;
+    invoiceChooser: {
+      createInvoice: string;
+      title: string;
+      description: string;
+      depositTitle: string;
+      depositDescription: string;
+      finalTitle: string;
+      finalDescription: string;
+      selectDepositServiceTitle: string;
+      selectDepositServiceDescription: string;
+      selectFinalServiceTitle: string;
+      selectFinalServiceDescription: string;
+      searchPlaceholder: string;
+      back: string;
+      close: string;
+      select: string;
+      chooseDepositService: string;
+      chooseFinalService: string;
+      navigating: string;
+      resultsCount: string;
+      loading: string;
+      loadError: string;
+      partialWarning: string;
+      customer: string;
+      eventDate: string;
+      eventName: string;
+      location: string;
+      noEligibleDeposit: string;
+      noEligibleFinal: string;
+      noMatchingDeposit: string;
+      noMatchingFinal: string;
+    };
     filters: {
       allStatuses: string;
       paid: string;
@@ -221,6 +253,38 @@ const invoicesDictionaryEn: InvoicesDictionary = {
     subtitle: "Manage billing documents and payment tracking.",
     export: "Export",
     creationHint: "Invoices are created from approved quotations or service billing actions.",
+    invoiceChooser: {
+      createInvoice: "Create Invoice",
+      title: "Create Invoice",
+      description: "Choose an invoice type, then select an eligible Service. No invoice is created until the Service Billing action is completed.",
+      depositTitle: "Deposit Invoice",
+      depositDescription: "Choose a Service that can accept a deposit invoice.",
+      finalTitle: "Final Invoice",
+      finalDescription: "Choose a Service with remaining billable balance for a final invoice.",
+      selectDepositServiceTitle: "Select an eligible Service",
+      selectDepositServiceDescription: "Only Services currently eligible for a Deposit Invoice are shown.",
+      selectFinalServiceTitle: "Select an eligible Service",
+      selectFinalServiceDescription: "Only Services currently eligible for a Final Invoice are shown.",
+      searchPlaceholder: "Search Services, customers, or events",
+      back: "Back",
+      close: "Close",
+      select: "Select",
+      chooseDepositService: "Select",
+      chooseFinalService: "Select",
+      navigating: "Opening Service Billing…",
+      resultsCount: "{count} eligible Services",
+      loading: "Loading currently eligible Services…",
+      loadError: "Eligible Services are unavailable. Close the chooser and try again.",
+      partialWarning: "Some Services could not be evaluated and are not shown. Existing Service Billing checks remain authoritative.",
+      customer: "Customer",
+      eventDate: "Event Date",
+      eventName: "Event",
+      location: "Location",
+      noEligibleDeposit: "No eligible Services",
+      noEligibleFinal: "No eligible Services",
+      noMatchingDeposit: "No matching Services",
+      noMatchingFinal: "No matching Services",
+    },
     filters: {
       allStatuses: "All Statuses",
       paid: "Paid",
@@ -435,6 +499,38 @@ const invoicesDictionaryAr: InvoicesDictionary = {
     subtitle: "إدارة مستندات الفوترة ومتابعة السداد.",
     export: "تصدير",
     creationHint: "يتم إنشاء الفواتير من عروض السعر المعتمدة أو من إجراءات فوترة الخدمة.",
+    invoiceChooser: {
+      createInvoice: "إنشاء فاتورة",
+      title: "إنشاء فاتورة",
+      description: "اختر نوع الفاتورة ثم اختر خدمة مؤهلة. لن يتم إنشاء فاتورة حتى يكتمل إجراء الفوترة في الخدمة.",
+      depositTitle: "فاتورة دفعة مقدمة",
+      depositDescription: "اختر خدمة يمكنها استقبال فاتورة دفعة مقدمة.",
+      finalTitle: "الفاتورة النهائية",
+      finalDescription: "اختر خدمة لديها رصيد قابل للفوترة لإصدار فاتورة نهائية.",
+      selectDepositServiceTitle: "اختر خدمة مؤهلة",
+      selectDepositServiceDescription: "تظهر فقط الخدمات المؤهلة حالياً لفاتورة دفعة مقدمة.",
+      selectFinalServiceTitle: "اختر خدمة مؤهلة",
+      selectFinalServiceDescription: "تظهر فقط الخدمات المؤهلة حالياً لفاتورة نهائية.",
+      searchPlaceholder: "ابحث في الخدمات أو العملاء أو الفعاليات",
+      back: "رجوع",
+      close: "إغلاق",
+      select: "اختيار",
+      chooseDepositService: "اختيار",
+      chooseFinalService: "اختيار",
+      navigating: "جارٍ فتح فوترة الخدمة…",
+      resultsCount: "{count} خدمة مؤهلة",
+      loading: "جارٍ تحميل الخدمات المؤهلة حالياً…",
+      loadError: "الخدمات المؤهلة غير متاحة. أغلق نافذة الاختيار وحاول مرة أخرى.",
+      partialWarning: "تعذر تقييم بعض الخدمات ولذلك لا تظهر هنا. تظل ضوابط فوترة الخدمة الحالية هي المرجع المعتمد.",
+      customer: "العميل",
+      eventDate: "تاريخ الفعالية",
+      eventName: "الفعالية",
+      location: "الموقع",
+      noEligibleDeposit: "لا توجد خدمات مؤهلة",
+      noEligibleFinal: "لا توجد خدمات مؤهلة",
+      noMatchingDeposit: "لا توجد خدمات مطابقة",
+      noMatchingFinal: "لا توجد خدمات مطابقة",
+    },
     filters: {
       allStatuses: "كل الحالات",
       paid: "مدفوعة",

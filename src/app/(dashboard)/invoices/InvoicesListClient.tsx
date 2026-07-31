@@ -8,9 +8,10 @@ import {
   Filter,
   Eye,
   Printer,
+  Plus,
   Search,
 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import {
@@ -22,6 +23,12 @@ import {
 import { formatSarAmount } from "@/lib/i18n/formatting";
 import { UiDateText } from "@/components/i18n/UiDateText";
 import PendingLink from "@/components/ui/PendingLink";
+import type {
+  EligibleInvoiceService,
+  InvoiceChooserLoadStatus,
+} from "@/lib/invoices/eligible-service-selector";
+import CreateInvoiceChooser from "./CreateInvoiceChooser";
+import { loadEligibleInvoiceServicesAction } from "./actions";
 
 const invoiceStatusBadgeVariant = {
   draft: "draft",
@@ -38,6 +45,7 @@ const invoiceStatusBadgeVariant = {
 
 interface InvoicesListClientProps {
   initialInvoices: Invoice[];
+  canCreateInvoiceChooser: boolean;
   dictionary: InvoicesDictionary;
 }
 
@@ -46,12 +54,21 @@ const formatCopy = (template: string, values: Record<string, string | number>) =
 
 export default function InvoicesListClient({
   initialInvoices,
+  canCreateInvoiceChooser,
   dictionary,
 }: InvoicesListClientProps) {
   const locale = dictionary.locale;
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isInvoiceChooserOpen, setIsInvoiceChooserOpen] = useState(false);
+  const [eligibleServices, setEligibleServices] = useState<
+    EligibleInvoiceService[]
+  >([]);
+  const [eligibleServicesLoadStatus, setEligibleServicesLoadStatus] =
+    useState<InvoiceChooserLoadStatus>("loading");
+  const createInvoiceTriggerRef = useRef<HTMLButtonElement>(null);
+  const chooserLoadRequestRef = useRef(0);
   const itemsPerPage = 10;
   const normalizedSearch = searchQuery.trim().toLowerCase();
 
@@ -76,6 +93,29 @@ export default function InvoicesListClient({
   const startIndex = (page - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, filteredInvoices.length);
   const paginatedInvoices = filteredInvoices.slice(startIndex, startIndex + itemsPerPage);
+  const closeInvoiceChooser = useCallback(() => {
+    chooserLoadRequestRef.current += 1;
+    setIsInvoiceChooserOpen(false);
+  }, []);
+
+  async function openInvoiceChooser() {
+    const requestId = chooserLoadRequestRef.current + 1;
+    chooserLoadRequestRef.current = requestId;
+    setEligibleServices([]);
+    setEligibleServicesLoadStatus("loading");
+    setIsInvoiceChooserOpen(true);
+
+    try {
+      const result = await loadEligibleInvoiceServicesAction();
+      if (chooserLoadRequestRef.current !== requestId) return;
+      setEligibleServices(result.services);
+      setEligibleServicesLoadStatus(result.status);
+    } catch {
+      if (chooserLoadRequestRef.current !== requestId) return;
+      setEligibleServices([]);
+      setEligibleServicesLoadStatus("error");
+    }
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -83,6 +123,17 @@ export default function InvoicesListClient({
         title={dictionary.list.title}
         subtitle={dictionary.list.subtitle}
       >
+        {canCreateInvoiceChooser && (
+          <button
+            ref={createInvoiceTriggerRef}
+            type="button"
+            onClick={() => void openInvoiceChooser()}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold leading-[20px] text-on-primary transition-colors hover:bg-primary-container"
+          >
+            <Plus size={18} aria-hidden="true" />
+            {dictionary.list.invoiceChooser.createInvoice}
+          </button>
+        )}
         <button className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-low px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors">
           <Download size={18} />
           {dictionary.list.export}
@@ -262,6 +313,15 @@ export default function InvoicesListClient({
           )}
         </div>
       </div>
+      {isInvoiceChooserOpen && (
+        <CreateInvoiceChooser
+          services={eligibleServices}
+          loadStatus={eligibleServicesLoadStatus}
+          dictionary={dictionary}
+          triggerRef={createInvoiceTriggerRef}
+          onClose={closeInvoiceChooser}
+        />
+      )}
     </div>
   );
 }

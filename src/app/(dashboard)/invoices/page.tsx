@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { requirePermission } from "@/lib/auth/permissions";
+import { checkPermission, requirePermission } from "@/lib/auth/permissions";
+import { INVOICE_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import {
@@ -15,6 +16,7 @@ type InvoicesPageState =
   | {
       status: "ready";
       invoices: Awaited<ReturnType<typeof getInvoices>>;
+      canCreateInvoiceChooser: boolean;
       dictionary: InvoicesDictionary;
     }
   | { status: "forbidden" }
@@ -27,8 +29,18 @@ export default async function InvoicesPage() {
 
   try {
     await requirePermission("invoices:read");
-    const invoices = await getInvoices();
-    pageState = { status: "ready", invoices, dictionary };
+    const [invoices, canWriteInvoices, canReadServices] = await Promise.all([
+      getInvoices(),
+      checkPermission(INVOICE_PERMISSIONS.write),
+      checkPermission("services:read"),
+    ]);
+    const canCreateInvoiceChooser = canWriteInvoices && canReadServices;
+    pageState = {
+      status: "ready",
+      invoices,
+      canCreateInvoiceChooser,
+      dictionary,
+    };
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       redirect("/sign-in");
@@ -63,5 +75,11 @@ export default async function InvoicesPage() {
     );
   }
 
-  return <InvoicesListClient initialInvoices={pageState.invoices} dictionary={pageState.dictionary} />;
+  return (
+    <InvoicesListClient
+      initialInvoices={pageState.invoices}
+      canCreateInvoiceChooser={pageState.canCreateInvoiceChooser}
+      dictionary={pageState.dictionary}
+    />
+  );
 }
