@@ -1,32 +1,35 @@
 # Implementation Plan: Invoices Eligible-Service Chooser
 
 **Feature**: `008-invoices-eligible-service-chooser`  
-**Status**: Planned
+**Status**: Implemented (Runtime Committed Locally, Docs Syncing)
 
 ## Source-Truth And Authority Checks
 
-- The global Invoices page currently has no create-invoice CTA; it is a read/export/preview/print surface only.
-- Existing invoice creation is Service-scoped from `/services/[id]` through the Billing panel and the existing Deposit and Final actions.
+- The global Invoices page exposes one global `Create Invoice` CTA when authorized (`invoices:write` + `services:read`).
+- Existing invoice creation is Service-scoped and managed through the dedicated Service Billing Workspace (`/services/[id]/billing`) using `createInvoiceAction` and the atomic `create_invoice_atomic` stored procedure.
 - `createInvoiceAction` remains the single application mutation authority for both Deposit and Final invoice creation and delegates to the single atomic invoice RPC path.
 - Existing server-side authority already revalidates permissions, Service/quotation alignment, lifecycle, billing authority mode, duplicate active invoice state, and remaining authoritative billing exposure.
 - Current Final Invoice runtime source truth is preserved: Final creation does not require an existing Deposit Invoice or Deposit Payment and derives the final amount server-side from remaining billable balance.
 
-## Recommended UX And Eligibility
+## Approved Service Billing Workspace UX And Navigation
 
 Use one global `Create Invoice` CTA on the Invoices page. The CTA opens a first-step chooser that asks the user to select `Create Deposit Invoice` or `Create Final Invoice`. After the user chooses the invoice type, open a type-specific eligible-Service selector that shows only Services currently eligible for the selected invoice type.
 
-The selector remains read-only and navigation-only. Selecting a Service deep-links only to the existing Service Detail route, with the Service ID encoded in the path:
+The selector remains read-only and navigation-only. Selecting a Service deep-links to the dedicated Service Billing Workspace route:
 
-- Deposit: `/services/{encoded-service-id}?invoiceAction=deposit`
-- Final: `/services/{encoded-service-id}?invoiceAction=final`
+- Deposit: `/services/{encoded-service-id}/billing?intent=deposit`
+- Final: `/services/{encoded-service-id}/billing?intent=final`
+- General workspace: `/services/{encoded-service-id}/billing`
 
-The Service Detail page interprets `invoiceAction` only as a UI hint. It scrolls to and focuses the relevant billing action while preserving the existing Service Detail route, Billing panel, and invoice server action as the sole mutation authority.
+Legacy deep links using `/services/{encoded-service-id}?invoiceAction=deposit|final` issue a backward-compatible HTTP 307 redirect to the new Billing Workspace routes.
 
-Desktop should use a bounded centered dialog. Mobile should use a full-width, scrollable single-column layout. RTL should use logical spacing, `dir=\"auto\"` for stored text, and LTR-safe rendering for identifiers such as Service numbers and Invoice numbers.
+The Service Billing Workspace interprets `intent` only as a UI selection hint to focus the relevant primary action (Deposit input or Final button). It presents a compact financial metric strip, authority details, intent-focused action panel, and read-only Estimated Cost & Margin section. The general Service Detail page (`/services/[id]`) renders a compact `ServiceBillingSummaryCard` with a link to open the full workspace.
+
+Desktop uses a bounded centered dialog for the chooser. Mobile uses a scrollable single-column layout. RTL uses logical spacing, `dir="auto"` for stored text, start-aligned content wrappers (`w-fit max-w-full text-start`), and LTR-safe rendering for identifiers such as Service numbers and Invoice numbers.
 
 ## Query, Reuse, And Safety
 
-- Use one shared eligible-Service query with derived capabilities, then filter by invoice type.
+- Use one shared eligible-Service query (`getEligibleInvoiceServicesAction`) with derived capabilities, then filter by invoice type.
 - Reuse existing runtime helpers for invoice billing authority, lifecycle, and control visibility rather than duplicating rules.
 - Require `invoices:write` and `services:read` to load eligible-Service data for the chooser.
 - Do not introduce customer selection, financial payloads, or a second invoice mutation path.
@@ -44,69 +47,42 @@ Desktop should use a bounded centered dialog. Mobile should use a full-width, sc
 - `canCreateDeposit`
 - `canCreateFinal`
 
-## Likely Runtime/Test Manifest
+## Actual Feature 008 File Manifest & Local Commit Sequence
 
-Modify only:
+Committed runtime paths (16 files across 3 local commits):
 
-- `src/lib/services/queries.ts`
-- `src/app/(dashboard)/invoices/page.tsx`
-- `src/app/(dashboard)/invoices/InvoicesListClient.tsx`
-- `src/lib/i18n/dictionaries/invoices.ts`
-- `src/app/(dashboard)/services/[id]/page.tsx`
-- `src/app/(dashboard)/services/[id]/BillingPanel.tsx`
+1. Commit `67dea92fd9dafeccaf71efc20512bb12fec65159` (`feat(invoices): add eligible service selection`):
+   - `src/lib/services/queries.ts`
+   - `src/app/(dashboard)/invoices/actions.ts`
+   - `src/lib/invoices/eligible-service-selector.ts`
+   - `src/lib/invoices/eligible-service-selector.test.ts`
+2. Commit `0e4380311015cdf9a211daa14a76a5b62624013b` (`feat(invoices): add global invoice chooser`):
+   - `src/app/(dashboard)/invoices/InvoicesListClient.tsx`
+   - `src/app/(dashboard)/invoices/page.tsx`
+   - `src/app/(dashboard)/invoices/CreateInvoiceChooser.tsx`
+   - `src/app/(dashboard)/invoices/EligibleInvoiceServiceSelector.tsx`
+   - `src/lib/i18n/dictionaries/invoices.ts`
+3. Commit `2197c36ce4d37111e63d4a8b71b42dd7cc29c8f5` (`feat(services): add billing workspace`):
+   - `src/app/(dashboard)/services/[id]/BillingPanel.tsx`
+   - `src/app/(dashboard)/services/[id]/page.tsx`
+   - `src/app/(dashboard)/services/[id]/ServiceBillingSummaryCard.tsx`
+   - `src/app/(dashboard)/services/[id]/billing/ServiceBillingWorkspaceClient.tsx`
+   - `src/app/(dashboard)/services/[id]/billing/ServiceCostMarginSection.tsx`
+   - `src/app/(dashboard)/services/[id]/billing/page.tsx`
+   - `src/lib/i18n/dictionaries/services.ts`
 
-Create only:
+Local `main` is 3 commits ahead of `origin/main` (divergence `0 3`). The final documentation commit and remote push remain separate pending gates.
 
-- `src/app/(dashboard)/invoices/CreateInvoiceChooser.tsx`
-- `src/app/(dashboard)/invoices/EligibleInvoiceServiceSelector.tsx`
-- `src/lib/invoices/eligible-service-selector.test.ts`
+## Validation And Evidence
 
-## Validation And Delivery
+Implementation validation evidence:
 
-Expected implementation validation:
-
- - focused eligible-selector contract tests covering:
-  - existing global `invoices:read` list behavior
-  - global creation capability requiring `invoices:write` and `services:read`
-  - one global `Create Invoice` CTA
-  - first-step Deposit versus Final choice
-  - type-specific eligible-Service filtering
-  - encoded Service ID navigation
-  - Deposit navigation to `/services/{encoded-service-id}?invoiceAction=deposit`
-  - Final navigation to `/services/{encoded-service-id}?invoiceAction=final`
-  - invalid or unknown `invoiceAction` handling
-  - no automatic mutation on Service Detail arrival
-  - no chooser invocation of `createInvoiceAction`
-  - no chooser invocation of `create_invoice_atomic`
-  - no customer ID payload
-  - no requested amount or financial payload
-  - no standalone Invoice route or form
-  - Service Detail remains the final action-launch surface
-  - server-side stale-state and eligibility revalidation remains authoritative
-  - Deposit and Final eligibility remain independently tested
-  - accessible two-step dialog behavior
-  - mobile, Arabic RTL, bidi-safe dates, and dictionary alignment
-  - type-specific empty states
-  - local search and local pagination
-  - deterministic ordering by `service_number` ascending then `id` ascending
-  - search reset to page 1
-  - separate Deposit and Final English and Arabic copy
-  - initial focus on the search field
-- focused Service Detail query-parameter and focus-behavior tests
-- `pnpm lint`
-- `pnpm exec tsc --noEmit`
-- `pnpm build`
-- `git diff --check`
-- manifest and index checks
-
-Mozfer-owned manual smoke remains required for:
-
-- global Invoices chooser flow
-- Deposit and Final type selection
-- empty and no-match states
-- stale-selection handling
-- Service Detail scroll/focus behavior
-- desktop/mobile
-- English/Arabic RTL
-
-Implementation, review, manual smoke, commit, and push remain separate approved tasks.
+- focused eligible-selector contract tests (`src/lib/invoices/eligible-service-selector.test.ts`) **26/26 PASS**
+- Invoice dictionary tests (`src/lib/i18n/invoices.test.ts`) **13/13 PASS**
+- `pnpm lint` **PASS** (0 errors)
+- `pnpm exec tsc --noEmit` **PASS** (0 errors)
+- `pnpm test` **9/9 PASS**
+- `pnpm build` **PASS** (all routes including `/services/[id]/billing` compiled statically/dynamically)
+- `git diff --check` **PASS** (0 whitespace errors)
+- independent runtime and post-sync reviews **PASS** (`G7-FEATURE-008-POST-SYNC-FINAL-REVIEW-1-PASS`)
+- Mozfer manual visual smoke **PASS** (`FEATURE-008-MANUAL-VISUAL-SMOKE-PASS`)
