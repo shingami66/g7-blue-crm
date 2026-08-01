@@ -33,9 +33,9 @@ No production-readiness, security-compliance, financial-correctness, VAT, Tax In
 
 ### Prevents client delivery
 
-- Responsive core source is implemented; durable flag **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`** (Mozfer smoke deferred — not formal responsive acceptance close).
+- Responsive core source and Mozfer manual smoke acceptance are complete; no responsive-smoke blocker remains.
 - Invoice/payment correction, void, credit, and reversal controls remain incomplete.
-- Approved Billing Scope **management design is locked** (`docs/approved-billing-scope-management-design.md`); full management write UI incomplete; **void and supersede actions not implemented** (blocked on **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`**).
+- Approved Billing Scope **management design and lifecycle policy are locked** (`docs/approved-billing-scope-management-design.md`); Draft/Create, Edit/Discard, Review/Approve, and invoice integration are delivered. **Void/Supersede application actions and UI remain missing.** Repository migration/RPC definitions and historical synthetic DEV/DEMO evidence exist, but current database state, migration application state, grants, and RPC definitions require fresh verification before implementation.
 - Supplier Booking remains narrow and is not a professional end-to-end supplier operations module.
 - Reports Center is P1 and is not a V1 acceptance gate; the existing lightweight customer export remains a limited convenience.
 - Production RLS/grant, backup, monitoring, deployment, invitation/webhook, and UAT evidence is incomplete.
@@ -56,10 +56,10 @@ V1 does not include VAT-registration behavior, Tax Invoice behavior, ZATCA/FATOO
 
 ## 4. Current Phase and Controlled Task
 
-- Current phase: **Phase 2 - Commercial Workflow Completion** (ABS management UI slices), after Phase 1 experience foundations (Feature 005 closed; responsive source complete with smoke pending).
+- Current phase: **Phase 2 - Commercial Workflow Completion** is materially advanced: Feature 005, Feature 008, the latest Quotation/Invoice UX batch, and ABS management UI through Review/Approve are delivered. No implementation task is active; the preferred next candidate is ABS Void/Supersede, pending formal feature activation and planning.
 - Completed decision lock: `V1-DELIVERY-DECISIONS-LOCK-1` locked D01-D09 as product policy.
 - ABS management design complete: `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
-- **Current controlled task (exactly one):** `ABS-MGMT-UI-READ-ENRICH-1`.
+- **Current controlled task:** none.
 
 ## 5. Completed Milestones
 
@@ -72,8 +72,8 @@ V1 does not include VAT-registration behavior, Tax Invoice behavior, ZATCA/FATOO
 
 ## 6. P0 Launch Blockers
 
-- Responsive core Mozfer smoke (`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`) and any residual overflow acceptance.
-- Approved Billing Scope management UI completion (ordered slices; void/supersede only after `ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`).
+- Any newly identified responsive regression; the responsive-smoke blocker is closed.
+- Formal activation, current-state verification, planning, and implementation of the missing ABS Void/Supersede application actions and UI.
 - Invoice and payment correction implementation under the locked lifecycle policy.
 - Financial snapshot freeze, service-link enforcement, auditability, and permission/RLS review.
 - Production-readiness evidence: RLS/grants, secrets/deployment controls, backup/recovery, monitoring, rate limits, and build gate.
@@ -179,16 +179,16 @@ Financial implementation is an umbrella milestone only. It must be decomposed af
 | `V1-DELIVERY-DECISIONS-LOCK-1` | design | Docs closure | GPT-5.6 Terra Medium | Decisions recorded only; no financial design or implementation. |
 | `I18N-RUNTIME-LOCALE-DESIGN-1` | design | Decision lock | GPT-5.6 Terra Medium | Locale persistence, RTL, rollout, and document boundary design. |
 | `RESPONSIVE-CORE-P0-AUDIT-1` | audit | Feature 005 closed | GPT-5.6 Luna Medium | Completed — evidence-backed mobile blocker list. |
-| `RESPONSIVE-CORE-P0-IMPLEMENT-1` | implementation | Responsive audit | GPT-5.6 Luna Medium | Source complete (`RESPONSIVE_CORE_P0_IMPLEMENTED`); automated **107/107**. Manual smoke deferred: **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`**. |
-| `RESPONSIVE-CORE-P0-MOZFER-SMOKE-1` | manual smoke | Responsive implement | User-only (Mozfer) | Deferred by Team Lead; not PASS until executed. |
+| `RESPONSIVE-CORE-P0-IMPLEMENT-1` | implementation | Responsive audit | GPT-5.6 Luna Medium | Source complete (`RESPONSIVE_CORE_P0_IMPLEMENTED`); automated **107/107** and Mozfer manual smoke accepted. |
+| `RESPONSIVE-CORE-P0-MOZFER-SMOKE-1` | manual smoke | Responsive implement | User-only (Mozfer) | Complete — Mozfer manual smoke accepted. |
 | `SERVICE-DETAIL-WORKSPACE-DESIGN-1` | design | Decision lock | GPT-5.6 Terra Medium | Service workspace structure using existing patterns. |
 | `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` | design | Responsive implement source complete (smoke may still be pending) | GPT-5.6 Sol High | **Complete** — design locked in `docs/approved-billing-scope-management-design.md`. |
-| `ABS-MGMT-UI-READ-ENRICH-1` | implementation | ABS management design complete | GPT-5.6 Luna Medium | **Current active task** — Service card read enrichment only. |
+| `ABS-MGMT-UI-READ-ENRICH-1` | implementation | ABS management design complete | GPT-5.6 Luna Medium | Complete — Service card read enrichment. |
 | `ABS-MGMT-UI-DRAFT-CREATE-1` | implementation | Read enrich | GPT-5.6 Luna Medium | Create-draft CTA (existing server action). |
 | `ABS-MGMT-UI-DRAFT-EDIT-1` | implementation | Draft create | GPT-5.6 Terra Medium | Draft item edit + discard UI. |
 | `ABS-MGMT-UI-REVIEW-APPROVE-1` | implementation | Draft edit | GPT-5.6 Terra Medium | Line-safety review + approve UI. |
-| `ABS-MGMT-VOID-ACTION-1` | implementation | **Blocked** — `ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING` | GPT-5.6 Sol High | Void action + UI — **not implementation-ready**. |
-| `ABS-MGMT-SUPERSEDE-ACTION-1` | implementation | **Blocked** — same financial-behavior flag | GPT-5.6 Sol High | Supersede action + UI — **not implementation-ready**. |
+| `ABS-MGMT-VOID-ACTION-1` | implementation | Formal feature activation, fresh RPC/migration/DEV/DEMO verification, and bounded plan | GPT-5.6 Sol High | Preferred next candidate — Void action + UI; not yet active. |
+| `ABS-MGMT-SUPERSEDE-ACTION-1` | implementation | Formal feature activation, fresh RPC/migration/DEV/DEMO verification, and bounded plan | GPT-5.6 Sol High | Preferred next candidate — Supersede action + UI; not yet active. |
 | `INVOICE-PAYMENT-CORRECTION-LIFECYCLE-DESIGN-1` | design | Decision lock | GPT-5.6 Sol High | Approved correction/reversal policy and acceptance matrix. |
 | `FINANCIAL-LIFECYCLE-SCHEMA-RLS-AUDIT-1` | audit | Financial design | GPT-5.6 Sol High; Sol Extra High only if Sol High cannot resolve a material issue | Evidence-backed schema, RLS, grant, snapshot, and migration gaps. |
 | `I18N-RUNTIME-IMPLEMENT-1` | implementation | I18N design | GPT-5.6 Terra High | Approved runtime locale and RTL behavior implemented and validated. |
@@ -202,11 +202,11 @@ Financial implementation is an umbrella milestone only. It must be decomposed af
 
 The direct client-delivery path is:
 
-`Feature 005 closed -> responsive audit/implement (smoke pending) -> ABS management design (complete) -> ABS management UI slices (read enrich active) -> Financial lifecycle design/audit -> bounded financial implementation -> production hardening -> UAT -> handoff`
+`Feature 005 closed -> responsive acceptance -> ABS management design (complete) -> ABS management UI through Review/Approve (complete) -> ABS Void/Supersede candidate planning -> bounded financial implementation -> production hardening -> UAT -> handoff`
 
-**Current locked step (Team Lead):** `ABS-MGMT-UI-READ-ENRICH-1` is the **only** active product task. ABS management design is complete (`docs/approved-billing-scope-management-design.md`). Responsive core source is implemented (`RESPONSIVE_CORE_P0_IMPLEMENTED`) with durable flag **`RESPONSIVE_CORE_P0_MANUAL_SMOKE_PENDING`** (Mozfer smoke deferred; not manual PASS — do not reopen/complete via ABS work). Void/supersede remain blocked on **`ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`**. Do not promote financial implementation, void/supersede, Supplier redesign, or Reports Center as the active task.
+**Current locked step:** None. Feature 008, the latest Quotation/Invoice UX batch, and ABS management UI through Review/Approve are delivered. ABS Void/Supersede is the preferred next candidate, but remains inactive pending formal feature activation, fresh current-state verification, and bounded planning. Responsive core manual smoke is accepted. Do not promote Reports Center, Clerk invitation/webhook smoke, or production hardening as complete; those remain sequenced work and readiness gates.
 
-**Responsive core (implemented scope, smoke pending):** quotation/service form stacking, logical filter icons, related-quotations header wrap, invoice search width; table-local scroll preserved; Supplier mobile detail deferred to full redesign.
+**Responsive core (implemented and accepted scope):** quotation/service form stacking, logical filter icons, related-quotations header wrap, invoice search width; table-local scroll preserved; Supplier mobile detail deferred to full redesign.
 
 Reports Center is P1 and does not join the V1 acceptance critical path. Professional Supplier Booking redesign is outside V1 acceptance scope. Supplier payments, supplier invoices, automated costing, margin, and P&L are post-V1.
 
