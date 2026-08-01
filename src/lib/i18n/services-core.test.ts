@@ -33,6 +33,10 @@ const EDIT_PAGE = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/edit/page.t
 const NEW_PAGE = join(REPO_ROOT, "src/app/(dashboard)/services/new/page.tsx");
 const SERVICE_FORM = join(REPO_ROOT, "src/app/(dashboard)/services/new/ServiceForm.tsx");
 const BILLING = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/BillingPanel.tsx");
+const BILLING_WORKSPACE = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/services/[id]/billing/ServiceBillingWorkspaceClient.tsx",
+);
 const ABS_CARD = join(
   REPO_ROOT,
   "src/app/(dashboard)/services/[id]/ApprovedBillingScopesCard.tsx",
@@ -128,6 +132,17 @@ test("4-7. Canonical Service status display labels; codes stable; Cancelled non-
     /const LINEAR_STATUSES = \[[\s\S]*?"Cancelled"[\s\S]*?\] as const/,
   );
   assert.match(timeline, /status === "Cancelled"/);
+
+  const billingWorkspace = readFileSync(BILLING_WORKSPACE, "utf8");
+  assert.match(billingWorkspace, /getServiceStatusLabel/);
+  assert.match(
+    billingWorkspace,
+    /getServiceStatusLabel\(locale, service\.status\)/,
+  );
+  assert.doesNotMatch(
+    billingWorkspace,
+    /dictionary\.detail\.labels\.status\}: \{service\.status\}/,
+  );
 });
 
 test("8. New Service form labels and validation contracts remain localized", () => {
@@ -315,9 +330,10 @@ test("26-28. Operational subflow files and PDF/VAT surfaces remain untouched by 
   assert.match(readFileSync(ALLOCATIONS, "utf8"), /SupplierAllocations|estimatedUnitCost/i);
   assert.match(readFileSync(BOOKINGS, "utf8"), /SupplierBookings|booking/i);
 
-  // Core detail still composes them but this slice must not rewrite their internals.
+  // Service Detail composes its read-only surfaces; billing actions belong to the dedicated Billing Workspace.
   const detail = readFileSync(SERVICE_DETAIL, "utf8");
-  assert.match(detail, /BillingPanel/);
+  const billingWorkspace = readFileSync(BILLING_WORKSPACE, "utf8");
+  assert.match(billingWorkspace, /BillingPanel/);
   assert.match(detail, /ApprovedBillingScopesCard/);
   assert.match(detail, /SupplierAllocationsPanel/);
   assert.match(detail, /SupplierBookingsPanel/);

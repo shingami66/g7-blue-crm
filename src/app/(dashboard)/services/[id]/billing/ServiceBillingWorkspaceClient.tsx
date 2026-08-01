@@ -9,6 +9,7 @@ import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import type { Locale } from "@/lib/i18n/locales";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { formatSarAmount } from "@/lib/i18n/formatting";
+import { getServiceStatusLabel } from "@/lib/i18n/dictionaries/services";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PendingLink from "@/components/ui/PendingLink";
 import { UiDateRangeText, UiDateText } from "@/components/i18n/UiDateText";
@@ -98,7 +99,7 @@ export default function ServiceBillingWorkspaceClient({
                 {isolateBidiText(service.serviceNumber)}
               </span>
               <StatusBadge variant={STATUS_VARIANT_MAP[service.status]}>
-                {dictionary.detail.labels.status}: {service.status}
+                {dictionary.detail.labels.status}: {getServiceStatusLabel(locale, service.status)}
               </StatusBadge>
             </div>
             <div className="w-fit max-w-full text-start">
