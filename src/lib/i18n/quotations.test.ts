@@ -56,6 +56,8 @@ test("2. List headings, filters, result count, and row actions localize", () => 
   assert.equal(ar.list.title, "عروض الأسعار");
   assert.equal(en.list.table.quotationNumber, "Quotation Number");
   assert.equal(ar.list.table.quotationNumber, "رقم عرض السعر");
+  assert.equal(en.list.table.printPdf, "Print / PDF");
+  assert.equal(ar.list.table.printPdf, "طباعة / PDF");
   assert.equal(en.list.allStatuses, "All Statuses");
   assert.equal(ar.list.allStatuses, "كل الحالات");
   assert.match(en.list.showingRange, /\{start\}.*\{end\}.*\{count\}/);
@@ -66,6 +68,15 @@ test("2. List headings, filters, result count, and row actions localize", () => 
   assert.match(read(LIST_CLIENT), /dictionary\.list\.title/);
   assert.match(read(LIST_CLIENT), /statusFilter/);
   assert.match(read(LIST_CLIENT), /PaginationFooter/);
+});
+
+test("Quotation list print action opens the authoritative PDF without row navigation", () => {
+  const source = read(LIST_CLIENT);
+
+  assert.match(source, /Printer/);
+  assert.match(source, /dictionary\.list\.table\.printPdf/);
+  assert.match(source, /window\.open\(`\/quotations\/\$\{q\.id\}\/pdf`, "_blank", "noopener,noreferrer"\)/);
+  assert.match(source, /<td className="px-4 py-4" onClick=\{\(e\) => e\.stopPropagation\(\)\}>/);
 });
 
 test("3-6. Canonical status labels; no accepted/superseded; codes stable", () => {

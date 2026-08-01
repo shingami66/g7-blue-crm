@@ -6,7 +6,7 @@ import FilterBar from "@/components/ui/FilterBar";
 import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
-import { Plus, Filter, Eye, Trash2, Edit, AlertCircle } from "lucide-react";
+import { Plus, Filter, Eye, Trash2, Edit, AlertCircle, Printer } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -181,6 +181,7 @@ export default function QuotationsClient({
                 dictionary.list.table.issueDate,
                 dictionary.list.table.amountSar,
                 dictionary.list.table.status,
+                dictionary.list.table.printPdf,
                 dictionary.list.table.actions,
               ]}
             >
@@ -217,6 +218,18 @@ export default function QuotationsClient({
                     <StatusBadge variant={q.status as StatusBadgeVariant}>
                       {getQuotationStatusLabel(dictionary.locale, q.status)}
                     </StatusBadge>
+                  </td>
+                  <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={() => window.open(`/quotations/${q.id}/pdf`, "_blank", "noopener,noreferrer")}
+                      aria-label={`${dictionary.list.table.printPdf} ${q.quotationNumber}`}
+                      title={`${dictionary.list.table.printPdf} ${q.quotationNumber}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-[12px] font-semibold text-on-surface transition-colors hover:border-primary/40 hover:bg-surface-container hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    >
+                      <Printer size={14} />
+                      {dictionary.list.table.printPdf}
+                    </button>
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex gap-2">

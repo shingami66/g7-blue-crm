@@ -40,10 +40,12 @@ export interface QuotationsDictionary {
       title: string;
       description: string;
       searchPlaceholder: string;
-      chooseService: string;
+      service: string;
       customer: string;
       eventDate: string;
       location: string;
+      select: string;
+      resultsCount: string;
       noEligibleServices: string;
       noSearchResults: string;
       close: string;
@@ -55,6 +57,7 @@ export interface QuotationsDictionary {
       issueDate: string;
       amountSar: string;
       status: string;
+      printPdf: string;
       actions: string;
     };
     actionTitles: {
@@ -248,10 +251,12 @@ const quotationsDictionaryEn: QuotationsDictionary = {
       title: "Select an eligible Service",
       description: "Choose a Service to continue to the existing quotation form.",
       searchPlaceholder: "Search Services, customers, event details, or locations",
-      chooseService: "Choose Service",
+      service: "Service",
       customer: "Customer",
       eventDate: "Service date",
       location: "Location",
+      select: "Select",
+      resultsCount: "Showing {count} eligible Services",
       noEligibleServices: "No eligible Services are available for quotation creation.",
       noSearchResults: "No eligible Services match your search.",
       close: "Close Service selector",
@@ -263,6 +268,7 @@ const quotationsDictionaryEn: QuotationsDictionary = {
       issueDate: "Issue Date",
       amountSar: "Amount (SAR)",
       status: "Status",
+      printPdf: "Print / PDF",
       actions: "Actions",
     },
     actionTitles: {
@@ -462,10 +468,12 @@ const quotationsDictionaryAr: QuotationsDictionary = {
       title: "اختر خدمة مؤهلة",
       description: "اختر خدمة للمتابعة إلى نموذج عرض السعر الحالي.",
       searchPlaceholder: "ابحث في الخدمات والعملاء وتفاصيل الفعالية أو المواقع",
-      chooseService: "اختر الخدمة",
+      service: "الخدمة",
       customer: "العميل",
       eventDate: "تاريخ الخدمة",
       location: "الموقع",
+      select: "اختيار",
+      resultsCount: "عرض {count} من الخدمات المؤهلة",
       noEligibleServices: "لا توجد خدمات مؤهلة متاحة لإنشاء عرض سعر.",
       noSearchResults: "لا توجد خدمات مؤهلة مطابقة لبحثك.",
       close: "إغلاق محدد الخدمة",
@@ -477,6 +485,7 @@ const quotationsDictionaryAr: QuotationsDictionary = {
       issueDate: "تاريخ الإصدار",
       amountSar: "القيمة (SAR)",
       status: "الحالة",
+      printPdf: "طباعة / PDF",
       actions: "الإجراءات",
     },
     actionTitles: {

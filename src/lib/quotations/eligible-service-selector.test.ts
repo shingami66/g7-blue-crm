@@ -64,7 +64,7 @@ test("selector navigates only through the existing encoded Service-scoped route"
   assert.doesNotMatch(selector, /\b(price|total|subtotal|grandTotal|vat|discount)\b|rpc\(/i);
 });
 
-test("selector protects dialog accessibility, local search, pagination reset, and responsive stored text", () => {
+test("selector protects dialog accessibility, local search, pagination reset, and responsive table rows", () => {
   const source = read(SELECTOR);
 
   assert.match(source, /role="dialog"/);
@@ -77,7 +77,27 @@ test("selector protects dialog accessibility, local search, pagination reset, an
   assert.match(source, /setCurrentPage\(1\)/);
   assert.match(source, /PaginationFooter/);
   assert.match(source, /dir="auto"/);
-  assert.match(source, /sm:flex-row/);
+  assert.match(source, /grid-cols-12/);
+  assert.match(source, /md:hidden/);
+  assert.match(source, /const DESKTOP_COLUMN_ORDER =/);
+  assert.match(source, /en:\s*\{[\s\S]*service: "order-1"[\s\S]*select: "order-6"/);
+  assert.match(source, /ar:\s*\{[\s\S]*service: "order-6"[\s\S]*select: "order-1"/);
+  assert.match(source, /<div dir="ltr" className="hidden grid-cols-12/);
+  assert.match(source, /<div dir="ltr" className="hidden min-h-\[58px\]/);
+  assert.match(source, /const selectAlignment = dictionary\.locale === "ar"/);
+  assert.match(source, /desktopColumnOrder\.service/);
+  assert.match(source, /desktopColumnOrder\.select/);
+  assert.match(source, /dir="auto" className="inline-block max-w-full/);
+  assert.match(source, /dir="ltr" className="mb-0\.5 block truncate/);
+  assert.match(source, /dir="ltr" className="block truncate text-xs/);
+  assert.match(source, /col-span-2 \$\{desktopColumnOrder\.select\} min-w-\[6\.5rem\]/);
+  assert.match(source, /min-w-\[5rem\].*whitespace-nowrap/);
+  assert.match(source, /dictionary\.list\.selector\.resultsCount/);
+  assert.match(source, /dictionary\.list\.selector\.select/);
+  assert.match(source, /dictionary\.form\.quotationEventLabel/);
+  assert.match(source, /service\.eventName/);
+  assert.doesNotMatch(source, /dictionary\.list\.selector\.chooseService/);
+  assert.match(source, /<div>\s*<span className="font-medium text-on-surface-variant">/);
   assert.match(source, /focus\(\)/);
 });
 
@@ -89,10 +109,12 @@ test("English and Arabic selector dictionary keys remain aligned", () => {
     "title",
     "description",
     "searchPlaceholder",
-    "chooseService",
+    "service",
     "customer",
     "eventDate",
     "location",
+    "select",
+    "resultsCount",
     "noEligibleServices",
     "noSearchResults",
     "close",
@@ -104,4 +126,7 @@ test("English and Arabic selector dictionary keys remain aligned", () => {
     assert.match(english, pattern, `English selector key ${key} must exist`);
     assert.match(arabic, pattern, `Arabic selector key ${key} must exist`);
   }
+
+  assert.match(english, /select: "Select"/);
+  assert.match(arabic, /select: "اختيار"/);
 });
