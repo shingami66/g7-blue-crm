@@ -110,7 +110,7 @@ export default function CreateInvoiceChooser({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
-        className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl sm:max-h-[calc(100dvh-2rem)]"
+        className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl sm:max-h-[calc(100dvh-2rem)]"
       >
         <div className="flex items-center justify-between gap-3 border-b border-outline-variant px-4 py-3 sm:px-6 shrink-0">
           <div className="min-w-0 text-start">

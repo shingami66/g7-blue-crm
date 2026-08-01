@@ -132,6 +132,22 @@ test("chooser remains two-step, accessible, and navigation-only", () => {
   );
 });
 
+test("Invoice chooser keeps locale-aware desktop alignment and a fixed Select action", () => {
+  assert.match(chooserSource, /max-w-5xl/);
+  assert.match(selectorSource, /const DESKTOP_COLUMN_ORDER =/);
+  assert.match(selectorSource, />Service \/ الخدمة<\/div>/);
+  assert.match(selectorSource, /en:\s*\{[\s\S]*service: "order-1"[\s\S]*select: "order-6"/);
+  assert.match(selectorSource, /ar:\s*\{[\s\S]*service: "order-6"[\s\S]*select: "order-1"/);
+  assert.match(selectorSource, /<div dir="ltr" className="hidden grid-cols-12/);
+  assert.match(selectorSource, /<div dir="ltr" className="hidden min-h-\[58px\]/);
+  assert.match(selectorSource, /dir="auto" className="inline-block max-w-full/);
+  assert.match(selectorSource, /dir="ltr" className="mb-0\.5 block truncate/);
+  assert.match(selectorSource, /dir="ltr" className="block truncate text-xs/);
+  assert.match(selectorSource, /col-span-2 \$\{desktopColumnOrder\.select\} min-w-\[6\.5rem\]/);
+  assert.match(selectorSource, /min-w-\[5rem\].*whitespace-nowrap/);
+  assert.match(selectorSource, /const selectAlignment = dictionary\.locale === "ar"/);
+});
+
 const workspaceClientSource = readFileSync(
   new URL(
     "../../app/(dashboard)/services/[id]/billing/ServiceBillingWorkspaceClient.tsx",
