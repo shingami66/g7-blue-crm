@@ -4,19 +4,24 @@
 
 **Created**: 2026-07-30
 
-**Status**: Implemented (Runtime Committed Locally, Docs Syncing)
+**Status**: Delivered to origin/main
 
 **Input**: User-approved product design for a global `Create Invoice` CTA that first asks the user to choose `Create Deposit Invoice` or `Create Final Invoice`, then opens a type-specific eligible-Service selector and navigates to the dedicated Service Billing Workspace at `/services/{encoded-service-id}/billing?intent=deposit` or `/services/{encoded-service-id}/billing?intent=final`. Legacy deep links using `/services/{encoded-service-id}?invoiceAction=deposit|final` are supported exclusively as backward-compatible redirects to the dedicated Billing Workspace.
 
-## Runtime Commit Evidence
+## Delivery Evidence & Commit Sequence
 
-The 16 runtime, dictionary, query, and test implementation files for Feature 008 are committed locally on `main` across three controlled commits:
+Feature 008 was fully delivered through commit `e9414227b9825cc301906c5052e2700f1f110e96`, which represents the final Feature 008 delivery commit and the Feature 008 delivered-through commit. Immediately after the controlled Feature 008 push under token `G7-FEATURE-008-CONTROLLED-PUSH-1-PASS`, local `main` and `origin/main` were verified synchronized at this delivery synchronization point, divergence was verified at `0 0`, and the working tree was clean.
+
+Delivered commit sequence:
 
 1. `67dea92fd9dafeccaf71efc20512bb12fec65159`: `feat(invoices): add eligible service selection`
 2. `0e4380311015cdf9a211daa14a76a5b62624013b`: `feat(invoices): add global invoice chooser`
 3. `2197c36ce4d37111e63d4a8b71b42dd7cc29c8f5`: `feat(services): add billing workspace`
+4. `e9414227b9825cc301906c5052e2700f1f110e96`: `docs(feature-008): record billing workspace delivery`
 
-Local `main` is 3 commits ahead of `origin/main` (divergence `0 3`). Review token `G7-FEATURE-008-POST-SYNC-FINAL-REVIEW-1-PASS` and visual smoke evidence `FEATURE-008-MANUAL-VISUAL-SMOKE-PASS` are recorded. The final documentation commit and remote push remain separate pending gates.
+Review token `G7-FEATURE-008-POST-SYNC-FINAL-REVIEW-1-PASS` and visual smoke evidence `FEATURE-008-MANUAL-VISUAL-SMOKE-PASS` are fully recorded. Feature 008 has no remaining product or runtime delivery gates.
+
+This document update is an administrative closeout evidence recording. It does not change Feature 008 runtime scope and does not reopen implementation, review, or delivery gates. A later administrative documentation commit may advance `main` beyond `e9414227b9825cc301906c5052e2700f1f110e96`, but does not alter the Feature 008 delivered-through commit.
 
 ## User Scenarios & Testing *(mandatory)*
 

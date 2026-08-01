@@ -50,11 +50,11 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 
 - `.specify/feature.json` selects `specs/008-invoices-eligible-service-chooser`.
 - Feature 007 is completed, committed, pushed, and historical.
-- Feature 008 runtime implementation, Service Billing Workspace adoption (`/services/[id]/billing?intent=deposit|final`), automated validation (26/26 selector tests, 13/13 invoice tests, 9/9 unit tests, tsc, lint, build), independent review (`G7-FEATURE-008-POST-SYNC-FINAL-REVIEW-1-PASS`), Mozfer manual visual smoke (`FEATURE-008-MANUAL-VISUAL-SMOKE-PASS`), and 3-commit local runtime commit sequence (`67dea92`, `0e43803`, `2197c36`; divergence `0 3`) are complete.
+- Feature 008 implementation, Service Billing Workspace adoption (`/services/[id]/billing?intent=deposit|final`), automated validation (26/26 selector tests, 13/13 invoice tests, 9/9 unit tests, tsc, lint, build), independent review (`G7-FEATURE-008-POST-SYNC-FINAL-REVIEW-1-PASS`), Mozfer manual visual smoke (`FEATURE-008-MANUAL-VISUAL-SMOKE-PASS`), 3-commit runtime commit sequence (`67dea92`, `0e43803`, `2197c36`), documentation commit (`e9414227b9825cc301906c5052e2700f1f110e96`), and remote push are complete. Feature 008 was delivered through commit `e9414227b9825cc301906c5052e2700f1f110e96` as the final Feature 008 delivery commit. After the controlled Feature 008 push under token `G7-FEATURE-008-CONTROLLED-PUSH-1-PASS`, local `main` and `origin/main` were verified synchronized at this delivery synchronization point, divergence at that verification point was verified at `0 0`, and the working tree was clean.
+- This closeout is an administrative documentation update only, does not change Feature 008 runtime scope, and does not reopen delivery gates. A later administrative documentation commit may advance `main` beyond `e9414227b9825cc301906c5052e2700f1f110e96`, but does not alter the Feature 008 delivered-through commit.
 - The chooser remains navigation-only and does not create a standalone Invoice, submit financial payloads, or introduce a second mutation authority.
 - Legacy deep links (`/services/[id]?invoiceAction=...`) issue a backward-compatible HTTP 307 redirect to the new Billing Workspace routes.
-- Documentation synchronization is complete across all planning and project docs.
-- Remaining delivery steps: final documentation commit and controlled push.
+- Feature 008 has no remaining implementation or delivery gates.
 - Server-side search/cursor pagination and event-date eligibility redesign remain deferred unless Service-volume evidence or a separately approved design requires them.
 
 ### Completed Spec Kit Feature — 006 Invoice PDF Customer Cleanup

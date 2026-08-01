@@ -49,8 +49,9 @@
 - [x] Independent implementation review is complete (`G7-FEATURE-008-POST-SYNC-FINAL-REVIEW-1-PASS`).
 - [x] Mozfer browser/manual smoke is complete (`FEATURE-008-MANUAL-VISUAL-SMOKE-PASS`).
 - [x] Runtime commit sequence is complete locally (`67dea92`, `0e43803`, `2197c36`; 0 untracked runtime files; attribution `shingami66`).
-- [ ] Final documentation commit is complete.
-- [ ] Controlled push / remote synchronization is complete.
+- [x] Final Feature 008 delivery commit is complete (`e9414227b9825cc301906c5052e2700f1f110e96`).
+- [x] Controlled push and delivery synchronization were verified under token `G7-FEATURE-008-CONTROLLED-PUSH-1-PASS`, with divergence verified at `0 0` and clean working tree at the `e9414227b9825cc301906c5052e2700f1f110e96` delivered-through commit.
+- [x] Bounded administrative closeout documentation update does not modify Feature 008 runtime scope or reopen delivery gates.
 
 ## Checklist Result
 

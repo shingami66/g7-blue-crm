@@ -1,7 +1,7 @@
 # Implementation Plan: Invoices Eligible-Service Chooser
 
 **Feature**: `008-invoices-eligible-service-chooser`  
-**Status**: Implemented (Runtime Committed Locally, Docs Syncing)
+**Status**: Delivered to origin/main
 
 ## Source-Truth And Authority Checks
 
@@ -47,9 +47,13 @@ Desktop uses a bounded centered dialog for the chooser. Mobile uses a scrollable
 - `canCreateDeposit`
 - `canCreateFinal`
 
-## Actual Feature 008 File Manifest & Local Commit Sequence
+## Actual Feature 008 File Manifest & Pushed Commit Sequence
 
-Committed runtime paths (16 files across 3 local commits):
+Feature 008 was fully delivered through commit `e9414227b9825cc301906c5052e2700f1f110e96` as the Feature 008 delivered-through commit and the final Feature 008 delivery commit. After the controlled Feature 008 push under token `G7-FEATURE-008-CONTROLLED-PUSH-1-PASS`, local `main` and `origin/main` were verified synchronized at this delivery synchronization point, divergence at that verification point was verified at `0 0`, and the working tree was clean.
+
+This document update is an administrative closeout evidence recording, does not change Feature 008 runtime scope, and does not reopen implementation, review, or delivery gates. A later administrative documentation commit may advance `main` beyond `e9414227b9825cc301906c5052e2700f1f110e96`, but does not alter the Feature 008 delivered-through commit.
+
+Delivered commit sequence:
 
 1. Commit `67dea92fd9dafeccaf71efc20512bb12fec65159` (`feat(invoices): add eligible service selection`):
    - `src/lib/services/queries.ts`
@@ -70,8 +74,13 @@ Committed runtime paths (16 files across 3 local commits):
    - `src/app/(dashboard)/services/[id]/billing/ServiceCostMarginSection.tsx`
    - `src/app/(dashboard)/services/[id]/billing/page.tsx`
    - `src/lib/i18n/dictionaries/services.ts`
-
-Local `main` is 3 commits ahead of `origin/main` (divergence `0 3`). The final documentation commit and remote push remain separate pending gates.
+4. Commit `e9414227b9825cc301906c5052e2700f1f110e96` (`docs(feature-008): record billing workspace delivery`):
+   - `docs/project-roadmap.md`
+   - `docs/project-status.md`
+   - `specs/008-invoices-eligible-service-chooser/checklists/requirements.md`
+   - `specs/008-invoices-eligible-service-chooser/plan.md`
+   - `specs/008-invoices-eligible-service-chooser/spec.md`
+   - `specs/008-invoices-eligible-service-chooser/tasks.md`
 
 ## Validation And Evidence
 
@@ -84,5 +93,5 @@ Implementation validation evidence:
 - `pnpm test` **9/9 PASS**
 - `pnpm build` **PASS** (all routes including `/services/[id]/billing` compiled statically/dynamically)
 - `git diff --check` **PASS** (0 whitespace errors)
-- independent runtime and post-sync reviews **PASS** (`G7-FEATURE-008-POST-SYNC-FINAL-REVIEW-1-PASS`)
+- independent runtime, post-sync, and final commits reviews **PASS** (`G7-FEATURE-008-POST-SYNC-FINAL-REVIEW-1-PASS`)
 - Mozfer manual visual smoke **PASS** (`FEATURE-008-MANUAL-VISUAL-SMOKE-PASS`)

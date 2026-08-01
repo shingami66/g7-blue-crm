@@ -1,7 +1,7 @@
 # Tasks: Invoices Eligible-Service Chooser
 
 **Feature**: `008-invoices-eligible-service-chooser`  
-**Status**: Implemented (Runtime Committed Locally, Docs Syncing)
+**Status**: Delivered
 
 ## Phase 0 — Planning And Approval
 
@@ -81,12 +81,17 @@
 - [x] Receive explicit approved manifest and commit subjects.
 - [x] Create exact three local runtime commits: `67dea92`, `0e43803`, `2197c36`.
 - [x] Verify commit manifests, attribution (`shingami66`), and divergence (`0 3`).
-- [ ] Final Feature 008 documentation commit pending.
+- [x] Create final Feature 008 delivery commit (`e9414227b9825cc301906c5052e2700f1f110e96`).
 
 ## Phase 9 — Controlled Push
 
 **Mode**: `PUSH_ONLY`
 
-- [ ] Receive explicit outgoing-commit approval.
-- [ ] Verify the exact outgoing commit set.
-- [ ] Push without force and verify post-push repository state.
+- [x] Receive explicit outgoing-commit approval.
+- [x] Verify the exact outgoing commit set.
+- [x] Push without force to `origin/main` delivering commits through `e9414227b9825cc301906c5052e2700f1f110e96` under token `G7-FEATURE-008-CONTROLLED-PUSH-1-PASS`.
+- [x] Verify post-push remote synchronization was verified at commit `e9414227b9825cc301906c5052e2700f1f110e96`, divergence at that point was verified at `0 0`, and working tree was clean.
+
+## Phase 10 — Administrative Closeout
+
+- [x] Update documentation with durable closeout wording recording the historical post-push verification. This is an administrative update only, does not change the Feature 008 runtime scope, and does not reopen delivery gates. A later administrative documentation commit may advance `main` beyond `e9414227b9825cc301906c5052e2700f1f110e96`, but does not alter the Feature 008 delivered-through commit.
