@@ -37,11 +37,11 @@
 ## 5. Supplier And Costing Deferrals
 - **Supplier rate-card management/automation:** Rate-card management edit/delete/restore and overlap enforcement, as well as rate-card automation for quotations, remain deferred.
 - **Broader Supplier Booking routes and workflows:** Standalone/broader Supplier Booking routes, UI, customer-facing documents, portal, edit/delete/restore, and expanded statuses remain deferred. Narrow internal Service-scoped V1 is implemented.
-- **Supplier invoices/payments:** Supplier invoices, payables, outbound payments, accounting workflows, and supplier payment approval workflow remain deferred.
-- **Company Expenses:** Company overhead expenses remain a separate future program and must not be conflated with Service/Event direct costs.
-- **Direct Event costing:** Direct Service/Event expenses, committed/actual/paid/outstanding costs, and expected/actual Event Margin remain deferred to a separately designed costing program.
+- **Supplier invoices/payments:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. Supplier invoices, payables, outbound payments, accounting workflows, and supplier payment approval workflow are not implemented or immediately active.
+- **Company Expenses:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. Company overhead remains separate from Service/Event direct costs.
+- **Direct Event costing:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. Direct Service/Event expenses, committed/actual/paid/outstanding costs, and expected/actual Event Margin are not implemented or immediately active.
 - **Actual-cost posting:** Posting of actual supplier costs remains deferred.
-- **Profit/margin reporting:** Supplier costing, margin, and P&L reports remain deferred.
+- **Profit/margin reporting:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. Supplier costing, margin, and P&L reports are not implemented or immediately active.
 - **Customer-facing supplier cost exposure prohibition:** Any customer-facing exposure of supplier costs (documents, PDFs, portal) is strictly prohibited. Accountant, Sales, Operations, and Viewer do not have supplier cost access by default.
 
 ## 6. Security, Production, And Operations Deferrals
@@ -69,7 +69,7 @@
 - **Logo upload where still deferred:** Company Logo upload remains deferred.
 
 ## 8. UX, Reporting, And Product Expansion Deferrals
-- **Reports Center:** A dedicated Reports Center remains deferred.
+- **Reports Center:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. A dedicated Reports Center is not implemented or immediately active.
 - **Customer full report:** Full customer profile reports remain deferred.
 - **Module-specific reports:** Module-specific reports remain deferred.
 - **Attachments:** General attachments (storage, permissions, file limits) for quotations, invoices, and customer records remain deferred.
@@ -79,7 +79,7 @@
 - **Event taxonomy:** Formalizing event taxonomy (e.g., specific event types) remains deferred.
 - **Global search and optional polish:** Global search and module polish (e.g., search/filter parity, user-friendly error copy) remain deferred.
 - **Service Hub:** Richer hub behavior (notes/activity/attachments and controlled status transition actions) beyond the minimal profile foundation remains deferred.
-- **Advanced Dashboard:** Future reporting and advanced analytics on the dashboard remain deferred. Implemented live summary/list milestones are complete.
+- **Advanced Dashboard:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. Implemented live summary/list milestones are complete; advanced reporting is not immediately active.
 
 ## 9. Data And Technical Debt
 - **Legacy Project cleanup:** Reviewing project types/mock data, project permissions, `projects`/`project_tasks` legacy schema, customer `projects_count`, and supplier PRJ mock references remains deferred.

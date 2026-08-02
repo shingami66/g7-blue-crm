@@ -44,6 +44,28 @@ These decisions are locked for G7 BLUE CRM planning and must stay aligned across
 - No Tax Invoice, VAT 15%, VAT number, ZATCA XML, QR, or FATOORA behavior while `vat_mode = not_registered`.
 - Financial records must use void/cancel/reversal workflows rather than hard deletion. Use soft delete for business records where applicable.
 
+## 1.1 Event ERP Expansion Program — Future Controlled Program
+
+The Event ERP expansion is an approved strategic direction, not an active implementation feature. Current delivery continues in parallel, and no implementation sequence is final until field evidence is incorporated.
+
+Required pre-implementation gates:
+
+1. Product rebaseline.
+2. Field discovery.
+3. Domain map approval.
+4. Accounting blueprint review by a qualified accountant.
+5. Permission matrix approval.
+6. Information architecture and reusable design-system approval.
+7. Explicit phased implementation approval for one bounded feature.
+
+The canonical expansion documents are:
+
+- docs/product/event-erp-future-expansion.md
+- docs/product/event-erp-decision-register.md
+- docs/product/event-erp-discovery-questions.md
+
+Feature 009 remains inactive. Future accounting, procurement, expenses, supplier finance, costing, margin, VAT/ZATCA, AI, multi-company, and multi-tenant work remains discovery or deferred work until the gates above pass.
+
 ## 2. Current Priority
 
 ### Implemented Spec Kit Feature — 008 Invoices Eligible-Service Chooser & Service Billing Workspace

@@ -31,6 +31,17 @@
 - **Snapshot Rule:** Generated customer-facing documents must snapshot company details, financial values, VAT mode, VAT rate, document labels, logo path, and bank/payment details at issue time. Historical documents must not change if Company Settings change later.
 - **CR Status:** CR number is optional/unconfirmed.
 - **Official Email:** Must be stored as a plain email string without markdown.
+
+## 1.2 Event ERP Expansion Rebaseline
+
+- The Event ERP expansion is an approved strategic direction, not an active implementation feature.
+- Current V1 delivery work continues; the expansion is a separate product-rebaseline and field-discovery stream.
+- No accounting, procurement, multi-tenant, multi-company, VAT, ZATCA, or AI implementation was activated by this documentation task.
+- Feature 009 remains inactive.
+- Service remains the operational context and mutation authority; current quotation, Approved Billing Scope, invoice, payment, auditability, no-hard-delete, responsive, Feature 007, and Feature 008 rules remain preserved.
+- ABS Void/Supersede remains a preferred existing candidate pending formal feature activation and bounded planning; it was not silently replaced or activated by this rebaseline.
+- Canonical expansion documents: docs/product/event-erp-future-expansion.md, docs/product/event-erp-decision-register.md, and docs/product/event-erp-discovery-questions.md.
+
 ## 2. Working Rules
 - **Workflow:** Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge
 - **Security:** No `.env.local` exposure; never committed to Git.
