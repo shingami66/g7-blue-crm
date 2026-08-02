@@ -98,6 +98,32 @@ Do not modify these files unless the task explicitly uses `GUARD_EDIT_ONLY` mode
 * `.agents/skills/g7-crm-agent-control/SKILL.md`
 * any file under `.agents/skills/*`
 
+## Protected Context Hook Boundary
+
+`AGENTS.md` and other protected agent-context or governance files must not be modified by an automatic lifecycle hook. `speckit-agent-context-update` is a write-capable operation, even when it is reached through a Spec Kit phase.
+
+Context updates require a separate explicitly approved protected-file task that names the exact protected files and uses `GUARD_EDIT_ONLY` or the repository's existing exact protected-guard mode. Specification, clarification, planning, checklist, task generation, analysis, or implementation approval does not include context-update authority.
+
+Automatic hook execution for protected context must remain disabled. Context update, review, correction, commit, and push remain separate tasks. Any unexpected protected-file mutation returns `TASK RESULT: HOLD`.
+
+## Wrapper-First Domain Routing
+
+### G7 Design Wrapper
+
+For G7 work involving UI design, UX, accessibility, RTL/LTR, responsive behavior, visual assets, Impeccable, Stitch, browser-based design evidence, or image generation for product assets, route through `.agents/skills/g7-erp-design-guard/SKILL.md` before any generic design capability.
+
+Generic design capabilities are subordinate and do not authorize business, financial, security, schema, API, permission-policy, workflow, implementation, or Git changes. Exact implementation authorization remains separate.
+
+Return `TASK RESULT: HOLD` when Impeccable is requested without the design guard, G7 visual asset generation lacks explicit authorization, design tooling attempts to invent product or permission behavior, or a proposal silently becomes implementation.
+
+### G7 Spec Kit Planning Wrapper
+
+For G7 Spec Kit planning, route through `.agents/skills/g7-speckit-plan-guard/SKILL.md` before `speckit-plan`. `speckit-plan` does not independently authorize G7 planning.
+
+Planning does not authorize task generation, implementation, protected-context updates, staging, commit, or push. Preserve the distinct lifecycle responsibilities of `speckit-specify`, `speckit-clarify`, `speckit-plan`, `speckit-checklist`, `speckit-tasks`, `speckit-analyze`, `speckit-implement`, `speckit-agent-context-update`, `speckit-taskstoissues`, `speckit-constitution`, and `speckit-converge`.
+
+Return `TASK RESULT: HOLD` when the plan wrapper is unavailable, a lifecycle phase is used outside its declared scope, multiple write phases create ambiguous ownership, or planning is treated as implementation or Git approval.
+
 ## Universal Rules
 
 1. Evidence over claims. No PASS without raw reproducible evidence.

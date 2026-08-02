@@ -54,7 +54,8 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - Runtime implementation slices must pass `pnpm lint`, `pnpm exec tsc --noEmit`, and `pnpm build` before commit readiness.
 - `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
 - `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
-- `speckit.agent-context.update` is the repo-installed Spec Kit command for refreshing the managed `AGENTS.md` Spec Kit block; `.specify/extensions.yml` wires it as the optional auto-executed hook after `specify` and `plan`.
+- `speckit.agent-context.update` is the repo-installed Spec Kit command for refreshing the managed `AGENTS.md` Spec Kit block; the `after_specify` and `after_plan` entries in `.specify/extensions.yml` remain individually disabled, so no lifecycle hook may auto-write protected context.
+- **Protected context hooks:** Spec Kit hooks must not automatically modify `AGENTS.md` or other protected governance/agent-context files. Any context update requires a separate `GUARD_EDIT_ONLY` task naming the exact protected files; specification or planning approval does not grant context-update authority. Detailed execution rules remain in `.agents/skills/g7-crm-agent-control/SKILL.md`.
 - Verify Supabase connectivity at `GET /api/health/db` while the local app is running.
 - The local Supabase health-check workflow assumes `.env.local` already provides `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`; never read, print, or edit those secrets during ordinary tasks.
 - `graphify query "<question>"` is the approved manual Graphify command for scoped codebase discovery; do not run Graphify install, hook, or Codex integration commands without explicit approval.
@@ -76,7 +77,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
   10. Expected final repository state.
   11. Worktree/branch lifecycle and cleanup plan when applicable.
 - **Stage Separation:** Implementation, review, commit, and push are separate tasks. No "low-risk combined mode" exception is allowed. Sequential stages may occur in the same conversation only as separate prompts after Mozfer reviews and explicitly approves the next stage.
-- **Worktree Governance:** Active development runs under the authorized Git worktree `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5`. The old local checkout `D:/G7/g7-crm` is forbidden, historical, and must remain untouched. Silent worktree creation, path switching, and manual folder merging are strictly prohibited. Reconciliation of `D:/G7/g7-crm` is a separate, future task pending explicit approval. Canonical documentation of this governance resides in `docs/repository-worktree-governance.md`.
+- **Worktree Governance:** The task-supplied authorized repository/worktree must be verified before execution. `docs/repository-worktree-governance.md` owns checkout identity, lifecycle, forbidden historical paths, temporary-worktree status, and reconciliation. Never treat a previously used temporary worktree as permanent authority. Silent worktree creation, path switching, and manual folder merging are strictly prohibited. If the task-supplied path conflicts with repository governance, return HOLD.
 - Follow `Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge`.
 - After merges that change delivered behavior, phase status, or decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` as applicable.
 - Before committing docs, run a documentation staleness audit: identify what changed in code, what changed outside code, what moved from pending to complete, any stale wording that must be corrected, what remains truly pending, and the next locked priority.
@@ -236,6 +237,12 @@ Do not rely on UI-only checks for security. Do not stage or commit until blockin
 - `.agents/skills/g7-crm-precommit-gate/SKILL.md`
   Use before staging, committing, pushing, opening PRs, or merging.
 
+- `.agents/skills/g7-erp-design-guard/SKILL.md`
+  Use before G7 work involving UI design, UX, accessibility, RTL/LTR, responsive behavior, visual assets, Impeccable, Stitch, browser-based design evidence, or image generation for product assets. Generic design capabilities remain subordinate; this guard does not authorize business, financial, security, schema, API, permission-policy, workflow, implementation, or Git changes.
+
+- `.agents/skills/g7-speckit-plan-guard/SKILL.md`
+  Use before G7 Spec Kit planning. `speckit-plan` does not independently authorize G7 planning, and planning does not authorize task generation, implementation, context updates, staging, commit, or push.
+
 <!-- SPECKIT START -->
 When using Spec Kit in this repository, the following rules constrain all Spec Kit specs, plans, tasks, analyses, and implementations:
 
@@ -254,9 +261,6 @@ When using Spec Kit in this repository, the following rules constrain all Spec K
 For additional Spec Kit context, read the current plan, but apply the rules above first.
 <!-- SPECKIT END -->
 
-## Cursor Audit Priority Gates & Blockers
-Before starting Supplier Bookings Domain/actions/UI/RBAC, verify P0 Cursor audit gates:
-1. Supplier audit columns are text and schema is synced. CLOSED.
-2. Allocation cancel/delete/restore active-booking guard is implemented and verified. CLOSED.
+## Current Priority Ownership
 
-After P0 gates, the next safe slice is `SUPPLIER-BOOKINGS-UI-1A-SMOKE-VERIFY` for manual/internal smoke verification of the closed Service Detail Supplier Booking UI only.
+Current priorities and candidate slices are owned by `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md`. `AGENTS.md` must not freeze a mutable next-task priority. No candidate becomes active without a separate owner-approved task.
