@@ -123,9 +123,6 @@ export default async function ServiceDetailPage({
     ? await getQuotationsByServiceId(service.id)
     : null;
   const billingState = await getServiceBillingState(service.id);
-  const statusTransitionState = canUpdateServiceStatus
-    ? await getServiceStatusTransitionState(createAdminClient(), service.id, service.status, locale)
-    : null;
 
   const supplierAllocationsResult = canReadSupplierAllocations
     ? await getSupplierAllocationsByServiceId(service.id, { includeDeleted: showDeleted })
