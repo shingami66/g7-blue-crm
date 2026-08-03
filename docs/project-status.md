@@ -39,7 +39,7 @@
 - No accounting, procurement, multi-tenant, multi-company, VAT, ZATCA, or AI implementation was activated by this documentation task.
 - Feature 009 remains inactive.
 - Service remains the operational context and mutation authority; current quotation, Approved Billing Scope, invoice, payment, auditability, no-hard-delete, responsive, Feature 007, and Feature 008 rules remain preserved.
-- ABS Void/Supersede remains a preferred existing candidate pending formal feature activation and bounded planning; it was not silently replaced or activated by this rebaseline.
+- ABS Void is delivered as a bounded internal-control capability; Supersede remains excluded and deferred as a separate revision workflow. Feature 009 remains inactive and no new feature was activated by this rebaseline.
 - Canonical expansion documents: docs/product/event-erp-future-expansion.md, docs/product/event-erp-decision-register.md, and docs/product/event-erp-discovery-questions.md.
 
 ## 2. Working Rules
@@ -51,6 +51,10 @@
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
 
 ## 2.1 Current Product Position
+- **Latest delivered V1 financial and Service lifecycle milestone:** The six-commit sequence `4016cf7`, `db7bee8`, `dca4a77`, `907b54a`, `d978557`, and `cf4d4ae` is complete and pushed. It covers quotation approval with automatic internal ABS activation, ABS Void, explicit Service lifecycle actions, compact Service-page workflow, Billing Summary, evidence-based Activity History, Deposit settlement audit, and Completed Final billing.
+- **Current delivered lifecycle behavior:** Migrations `20260803090000_quotation_approval_internal_abs_activation.sql` through `20260803130000_deposit_service_audit_and_completed_billing_fix.sql` provide the forward-only quotation, ABS, Service lifecycle, cancellation, deposit-audit, and Completed billing contracts. DEV/DEMO application and verification are owner-confirmed for this milestone; production apply/readiness is not claimed.
+- **Delivered validation evidence:** The milestone reported 290/290 focused tests, lint with two existing PDF `<img>` warnings and no lint errors, TypeScript, and build passing. Manual smoke confirmed the bounded Service/Deposit/Final lifecycle and duplicate/remaining-ceiling guards; this documentation task does not repeat browser or database verification.
+- **Next-work boundary:** No implementation feature is currently active or selected. Owner selection is required before another V1 slice; Supersede, richer financial correction, Change Orders, and accounting expansion remain separately deferred.
 - **Feature 007 Quotations eligible-Service selector:** Fully implemented, reviewed, remediated, browser-accepted, committed, and pushed. The global Quotations entry opens the eligible-Service selector and deep-links only to `/quotations/new?serviceId=<selected-service-id>`. Independent review found one focus-return accessibility issue, it was remediated, and focused revalidation passed.
 - **Feature 007 authority boundary:** The selector remains Service-scoped and read/navigation-only. It does not create a Quotation, accept an independent customer, submit financial values, duplicate `createQuotation` or `create_quotation_with_items`, or introduce a second mutation authority. The active packet is now the completed Feature 007 documentation/implementation record at `specs/007-quotations-eligible-service-selector`.
 - **Feature 008 invoices eligible-Service chooser & Service Billing Workspace:** Fully implemented, validated, independently reviewed, owner-accepted, committed, and pushed. Feature 008 was delivered through commit `e9414227b9825cc301906c5052e2700f1f110e96` as the final Feature 008 delivery commit. After the controlled Feature 008 push under token `G7-FEATURE-008-CONTROLLED-PUSH-1-PASS`, local `main` and `origin/main` were verified synchronized at this delivery synchronization point, divergence at that verification point was verified at `0 0`, and the working tree was clean. The global Invoices page exposes one `Create Invoice` CTA, presents a Deposit vs Final chooser, opens a type-specific eligible-Service selector, and deep-links to the dedicated Service Billing Workspace (`/services/[id]/billing?intent=deposit|final`). Legacy deep links (`/services/[id]?invoiceAction=...`) issue a backward-compatible HTTP 307 redirect.
@@ -92,14 +96,13 @@
   8. application financial lifecycle stack (money, exposure, lifecycle, RBAC, authority modes, ABS history alignment, Deposit/Final actions, Service billing UI, Quotation display-only authority) **implemented, tested, DEV/DEMO browser-accepted (PASS WITH WARN), and pushed** through `45cdfb73`
   9. atomic Invoice create RPC migration **pushed** (`5ad23f25`) and **installed + verified in DEV/DEMO** (metadata, grants, dry-checks; no real Invoice created)
   10. application Invoice create integration **complete and pushed** (`a83c1d28`) — Deposit/Final route through `create_invoice_atomic`; focused invoice action tests **46/46** PASS; DEV/DEMO Admin runtime smoke **PASS** (Deposit `INV-2026-0032`, Final `INV-2026-0033`)
-- **Preferred next candidate:** ABS Void/Supersede application actions and UI, pending formal feature activation and bounded planning. Optional later work remains `ABS-MGMT-HISTORY-LIST-1` and Manager/Accountant browser smoke.
-- **Source-truth (ABS):** Create Draft, draft edit/discard, and Review/Approve UI are source implemented and manually accepted; Void/Supersede application actions and UI are not implemented. The repository contains the reviewed Void/Supersede migration/RPC definitions, and prior DEV/DEMO mutation evidence is documented as synthetic only; the current database state, migration application state, grants, and RPC definitions require fresh verification before implementation. Scope status enum is `draft | approved | voided` only — **`superseded` is not a DB status** (use `superseded_at` / relationship).
-- **Financial lifecycle policy:** **`ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`** remains the completed policy decision. The documented backend/RPC evidence supports the policy, but does not replace fresh current-state verification or authorize app implementation. Void stops future billing and requires zero Invoice exposure and zero payment history; historical authority is retained after Void; successor activation is atomic and uses Service-lifetime applicable invoice exposure; equality with current exposure is allowed.
+- **Delivered ABS state:** Quotation approval now creates/activates the internal authority snapshot; the normal Service page presents Billing Summary rather than a manual ABS workflow. The nested technical scope surface retains evidence and the delivered Void action. Supersede application/UI remains absent and deferred. Scope status remains `draft | approved | voided`; **`superseded` is not a DB status** (use `superseded_at` / relationship).
+- **Financial lifecycle policy:** **`ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`** remains the governing decision. Delivered Void stops future billing, requires zero applicable Invoice exposure and zero payment history, retains historical authority evidence, and does not mutate invoices/payments; successor activation and broader financial correction remain separate future work.
 - **Browser/manual smoke rule:** Practical browser/manual smoke remains user-controlled by default. It may be delegated to an agent only through explicit bounded user authorization. The completed financial lifecycle browser acceptance was executed in DEV/DEMO under such explicit authorization (verdict `ABS_MGMT_FINANCIAL_LIFECYCLE_GROK_BROWSER_ACCEPTANCE_CLOSED_WITH_WARN`).
 - **Durable flags:**
   - Responsive P0 manual smoke: **closed** — see Responsive core P0 below (**PASS by Mozfer manual browser evidence**). No responsive-smoke blocker remains.
 - **Historical / superseded V1 critical-path sequence:**
-  > Retained as an earlier planning record. This sequence is not current execution authority and does not override active Feature 006. The listed ABS history/read polish, Void UI, successor UI, and other follow-up items remain separately deferred unless approved through a future bounded task.
+  > Retained as an earlier planning record. This sequence is not current execution authority. Its then-deferred Void UI item is superseded by the later delivered milestone; successor UI and other follow-up items remain separate future work.
   - Original recorded sequence: prior UI slices complete/pushed -> financial lifecycle design docs -> design commit -> migration/RPC preflight -> SQL/migration review -> separate DEV/DEMO apply and read-only verification -> actions/tests -> successful lifecycle mutation smoke (**complete**, DEV/DEMO synthetic) -> application financial lifecycle stack (**pushed** through `45cdfb73`) -> atomic Invoice create contract + migration push + DEV/DEMO apply verification (**complete** through `5ad23f25`) -> application integration of create through RPC (**complete** at `a83c1d28`) -> Task 20 DEV/DEMO Admin runtime smoke (**PASS**) -> history/read polish -> Void UI -> successor UI -> optional role browser smoke.
 - **Preserved locks:** Customer Profile -> Service -> Quotation -> Invoice -> Payment; Service as operational core; no standalone top-nav ABS module; current active-scope ceiling behavior remains factual; future fallback is allowed only before approved ABS authority has ever existed; existing invoices/payments are never rewritten; DEV/DEMO wording; no VAT/ZATCA/FATOORA or production-readiness claim.
 
@@ -243,8 +246,8 @@
 ### Approved Billing Scope Management Design (docs lock)
 - [x] Design task `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` completed for product/implementation slicing (`APPROVED_BILLING_SCOPE_MANAGEMENT_DESIGN_COMPLETE`).
 - [x] Canonical design document: `docs/approved-billing-scope-management-design.md` (capability matrix READY/PARTIAL/MISSING/DEFERRED; Service-scoped entry; card state matrix; status model; permissions; stable errors; financial invariants; bilingual/responsive requirements; slice order).
-- [x] Source-truth corrections locked: void/supersede **not** implemented as actions; schemas ≠ working actions; `superseded` not a DB status; UI read-oriented for non-shipped write CTAs; discard + item-edit RPC exceptions recorded.
-- [x] Financial lifecycle decision **`ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`** is now locked. Migration/RPC implementation and successful mutation smoke are complete in DEV/DEMO (synthetic); void/successor user-facing UI remains unshipped and is not gated by an unresolved product question.
+- [x] Source-truth corrections locked: `superseded` is not a DB status; schemas and runtime actions remain distinct; draft/discard/review/approve are preserved on technical scope surfaces, while normal quotation approval now activates internal ABS and the delivered Void action remains secondary/technical.
+- [x] Financial lifecycle decision **`ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`** is now locked. Migration/RPC implementation, application contract, delivered Void surface, and successful mutation smoke are complete in DEV/DEMO (synthetic); successor/supersede UI remains unshipped and separately deferred.
 - [x] Read-enrich slice later completed (see `ABS-MGMT-UI-READ-ENRICH-1` milestone above).
 - [x] Docs-only sync: `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-DOCS-SYNC-1` (no implementation, SQL, stage, commit, or push in that task).
 
@@ -288,7 +291,7 @@
 - [x] Browser/manual smoke remained outside agent authority and is not claimed.
 - [x] Installed catalog gates (DEV/DEMO review-time): functions **14/14**; unexpected overloads **0**; triggers **3/3**; constraints **29/29**; indexes **14/14**; RLS **11/11**; privilege matrix **176/176**; missing, duplicate, and failed catalog counts **0**.
 - [x] Locked decisions preserved: Service-lifetime exposure; Void only at zero Invoice exposure and zero payment history; historical authority retained after Void; atomic successor/supersession; equality with current exposure allowed; service-role-only financial mutations; Admin/Manager lifecycle authority; Accountant lifecycle read-only; browser has no direct financial mutation authority; no VAT/ZATCA/FATOORA/QR/XML/notification expansion.
-- [x] This milestone does **not** make Approved Billing Scope or broader invoicing production-ready. Production apply remains unauthorized. Void/successor user-facing UI remains unshipped.
+- [x] This milestone does **not** make Approved Billing Scope or broader invoicing production-ready. Production apply remains unauthorized. ABS Void is delivered on the secondary technical surface; Supersede UI remains unshipped and deferred.
 
 ### Feature 005 Runtime Arabic/English UX (formally closed)
 - [x] Authenticated Arabic/English UX implemented for shell + modules: Dashboard, Customers, Services (core + operational subflows), Quotations (non-PDF), Invoices (non-PDF), Payments, Suppliers, **Settings**, and **Admin Users**.
@@ -420,7 +423,7 @@
   - snapshot excludes `عمال` and `ضيافة`
 - [x] Temporary item-decision dev harness was removed after smoke.
 - [x] Full-scope snapshot WARN from commit `c66975d` is now closed.
-- [x] No full user-facing Approved Billing Scope **management** UI existed at full-scope smoke close (read-only card/detail only). **Later progress:** all management slices through Review/Approve are implemented, accepted, committed, and pushed; lifecycle migration/RPC and successful mutation smoke are complete in DEV/DEMO; void/successor user-facing UI remains unshipped.
+- [x] No full user-facing Approved Billing Scope **management** UI existed at full-scope smoke close (read-only card/detail only). **Later progress:** normal quotation approval/internal ABS activation, the delivered Void action, and the Service lifecycle milestone are implemented, accepted, committed, and pushed; Supersede UI remains unshipped and deferred.
 
 ### Approved Billing Scope Foundation
 - [x] Migration draft `supabase/migrations/20260708090000_approved_billing_scope_foundation.sql` was committed and pushed as `8d2aefa feat(billing): draft approved billing scope foundation`.
@@ -454,7 +457,7 @@
   - Successfully invoked `discardApprovedBillingScopeDraft` server action.
   - Verified atomic database deletion of both the scope header and its items.
 - [x] Temporary DEV harness removed, restoring clean working tree.
-- [x] **Historical note at draft-discard close:** remaining work then included review/approve/void/supersede actions, UI, invoice integration, and production apply. **Current truth:** review/approve and invoice integration exist and are pushed; lifecycle migration/RPC is installed in DEV/DEMO and successful mutation smoke is complete (synthetic); void/successor user-facing UI remains unshipped. Production DB apply remains unauthorized.
+- [x] **Historical note at draft-discard close:** remaining work then included review/approve/void/supersede actions, UI, invoice integration, and production apply. **Current truth:** quotation approval/internal ABS activation, review/approve, invoice integration, and ABS Void exist and are pushed; lifecycle migration/RPC is installed in DEV/DEMO and successful mutation smoke is complete (synthetic); Supersede UI remains unshipped. Production DB apply remains unauthorized.
 
 ### Approved Billing Scope Draft Item Edit
 - [x] Migration draft `supabase/migrations/20260708120000_approved_billing_scope_item_edit_function.sql` was committed and pushed as `3af430a feat(billing): add atomic draft item edit`.
@@ -485,7 +488,7 @@
 ### Approved Billing Scope Migration Draft Placeholder
 - [x] Backlog check for `APPROVED-BILLING-SCOPE-MIGRATION-DRAFT-1` completed.
 - [x] Result: reclassified as completed/no-op. No concrete database migration is required after the live schema audit.
-- [x] **Historical note:** draft creation is app-layer; discard and item-edit RPCs are narrow service-role exceptions. **Current truth:** line-safety review/approval and UI are pushed; lifecycle migration/RPC is installed and successful mutation smoke is complete in DEV/DEMO (synthetic); void/successor user-facing UI remains unshipped; design remains `ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`.
+- [x] **Historical note:** draft creation is app-layer; discard and item-edit RPCs are narrow service-role exceptions. **Current truth:** quotation approval/internal ABS activation, line-safety review/approval, invoice integration, and ABS Void are pushed; lifecycle migration/RPC is installed and successful mutation smoke is complete in DEV/DEMO (synthetic); Supersede UI remains unshipped; design remains `ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`.
 
 ### Approved Billing Scope RBAC/RLS Review
 - [x] Read-only security review for Approved Billing Scope (`APPROVED-BILLING-SCOPE-RBAC-RLS-REVIEW-1`) completed.
@@ -1126,12 +1129,13 @@
 - CS-A was committed on `main` as `8dc380f feat: implement Company Settings CS-A`.
 
 ### [x] ERP-1 - Services DB Foundation
+> Historical foundation record; the current explicit Service lifecycle state is documented in Sections 1–2.1 above.
 - ERP-1 Services migration was manually applied in Supabase SQL Editor and verified.
 - `services` now exists as the new operational unit linked to `customers(id)`.
 - Service numbering is supported through `generate_document_number('service')` with `SVC-YYYY-0001`.
 - Existing prefixes are preserved: `QT`, `INV`, `PAY`, `PRJ`, and `SVC`.
 - `schema.sql` now reflects the verified post-ERP-1 DB state.
-- Services app UI/routes/server actions now support live service list/create/detail/edit, with status transitions still deferred.
+- At the time of this foundation record, Services app UI/routes/server actions supported list/create/detail/edit; later explicit lifecycle actions are documented above.
 - Quotations are now service-scoped through `quotations.service_id`; invoices and payments are not changed yet.
 - Invoices and payments are not changed yet.
 - Legacy `projects` remain for now.
@@ -1606,7 +1610,10 @@ Operational Invoice Module is not complete yet.
   - final amount subtracts active prior deposit invoice totals
   - payments ignored in invoice amount calculation
 
-**Currently pending:**
+**Historical pre-delivery record:** The following pending list records the earlier invoice milestone state; the current delivered lifecycle state is documented in Sections 1–2.1 above.
+- Void/Cancel/Credit Note lifecycle was pending at that time.
+
+**Currently pending in that historical record:**
 - Void/Cancel/Credit Note lifecycle is pending.
 - Environment / staging / production documentation is pending.
 - UAT / smoke test checklist is pending.
@@ -1637,7 +1644,7 @@ Operational Invoice Module is not complete yet.
 - No Payment was implemented.
 - No Issue Workflow changes were included.
 - No Global Invoice Wizard was implemented.
-- No Void/Cancel/Credit Note was implemented.
+- No invoice Void/Cancel/Credit Note was implemented in that historical invoice slice; ABS Void and Service cancellation are delivered in the later V1 milestone above.
 - No ZATCA/FATOORA/QR/XML was implemented.
 
 **Payment MVP Completed:**

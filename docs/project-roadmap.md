@@ -68,6 +68,14 @@ Feature 009 remains inactive. Future accounting, procurement, expenses, supplier
 
 ## 2. Current Priority
 
+### Delivered V1 Financial and Service Lifecycle Milestone — `cf4d4aec7b3d2db1953141f2a1bfa435ccbafe70`
+
+- The six-commit delivery sequence `4016cf7`, `db7bee8`, `dca4a77`, `907b54a`, `d978557`, and `cf4d4ae` is complete and pushed.
+- Delivered scope: quotation approval atomically activates internal ABS; ABS Void is permissioned and exposure/payment-gated; Service lifecycle uses explicit guarded actions; the normal Service page uses compact status/action presentation, Billing Summary, and collapsed evidence-based Activity History; Deposit settlement is audited; Completed Services may create a remaining Final Invoice; Cancelled Services cannot create Deposit or Final invoices.
+- Migrations `20260803090000` through `20260803130000` are the forward-only source contracts for this milestone. DEV/DEMO apply/verification is owner-confirmed; production apply/readiness is not claimed.
+- Reported validation passed: 290/290 focused tests, lint with two existing PDF `<img>` warnings and no lint errors, TypeScript, and build. This docs synchronization does not rerun runtime, browser, or database validation.
+- No next active V1 feature is selected. Owner selection is required before new implementation; Supersede, Change Orders, richer financial correction, and accounting expansion remain deferred.
+
 ### Implemented Spec Kit Feature — 008 Invoices Eligible-Service Chooser & Service Billing Workspace
 
 - `.specify/feature.json` selects `specs/008-invoices-eligible-service-chooser`.
@@ -91,7 +99,7 @@ Feature 009 remains inactive. Future accounting, procurement, expenses, supplier
 - Accepted short examples `INV-2026-0021` Deposit and `INV-2026-0022` Final fit one A4 page with truthful item pricing and type-specific summaries. Long-fixture smoke remains outside the supplied evidence.
 - Commit and push are complete; no production-readiness, VAT-readiness, ZATCA-readiness, backup-readiness, or accounting-finality claim is made.
 - Quotation PDF customer cleanup is completed and pushed at `09bbe3b08aae64c1ec8c6e2e36e0d740e8ff02ae`.
-- Product sequence is now governed by Feature 007 and Feature 008 delivery plus the latest Quotation/Invoice UX batch: the Quotations eligible-Service selector, Invoices eligible-Service chooser, Service Billing Workspace, and related navigation-only entry points are complete. No standalone Quotation creation, standalone Invoice creation, or second mutation authority is approved.
+- Product sequence is now governed by the delivered quotation/internal-ABS and Service lifecycle milestone together with Feature 007, Feature 008, and the latest Quotation/Invoice UX batch. No standalone Quotation creation, standalone Invoice creation, or second mutation authority is approved.
 - Company Expenses, direct Event costing, Procurement/RFQ/PO, Vendor Bills/Supplier AP, Supplier Credits/Payments, and Event Margin remain later separately designed programs.
 - Graphify remains stale; force remediation remains deferred.
 - No production-readiness, VAT-readiness, ZATCA-readiness, backup-readiness, or accounting-finality claim is made.
@@ -128,14 +136,14 @@ Current product state:
 - **Supplier Operations V1 closeout:** **complete** — internal Allocations and Supplier Bookings implemented under server gates; cancel/restore checks and booking concurrency limits verified.
 - **Hardened Payment Recording & Table Pagination:** **complete** — atomic `record_invoice_payment` RPC applied/verified in DEV/DEMO; 12 commits pushed up to `ded8daa`; 78 payment tests passed; pagination layout scroll-reset stabilized; manual smoke verification (fully paid INV-2026-0022 with 4,200.00 SAR) passed.
 - **Feature 006 closeout:** `006-invoice-pdf-customer-cleanup` implementation, independent review, owner acceptance, commit, push, and supplied short-example Print Preview acceptance are complete.
-- **No implementation task is active:** Feature 007, Feature 008, and the latest Quotation/Invoice UX batch are delivered. ABS Void/Supersede is the preferred next product candidate pending formal feature activation and bounded planning. Feature 009 remains inactive.
+- **No implementation task is active:** Feature 007, Feature 008, the latest Quotation/Invoice UX batch, quotation/internal-ABS activation, ABS Void, and the Service lifecycle milestone are delivered. No next feature is selected; Feature 009 remains inactive and owner selection is required.
 - **Workspace Location and Governance Rules:**
   - Active authorized checkout: `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5` (only authorized path for active execution).
   - Historical checkout (forbidden): `D:/G7/g7-crm` (must remain untouched).
   - Silent worktree switching, path changes, and manual copying/merging of folders between checkouts are strictly banned.
   - Reconciliation of the historical checkout is a separate, future task pending explicit approval.
-- **Next safe product/engineering direction:** formally activate and plan the ABS Void/Supersede candidate only after re-verifying the current RPC, migration, grants, and DEV/DEMO state. Reports Center remains P1 and is not the current active direction. Clerk invitation/webhook smoke remains deferred until production/UAT readiness.
-- **Deferred / optional (not complete):** Manager and Accountant browser smoke sessions; Deposit client maximum using remaining rather than full ceiling; legacy Quotation database ceiling hardening; lifecycle atomicity hardening; full seven-state DB enforcement; ABS history consistency hardening; broad ABS numeric normalization; future production/database hardening; future VAT or compliance work. Do **not** mark production rollout, VAT readiness, ZATCA readiness, or accounting finality complete.
+- **Next safe product/engineering direction:** none is selected. Reports Center remains P1 but is not active; Supersede remains a separate deferred revision workflow. Clerk invitation/webhook smoke remains deferred until production/UAT readiness.
+- **Deferred / optional (not complete):** Manager and Accountant browser smoke sessions; Deposit client maximum using remaining rather than full ceiling; legacy Quotation database ceiling hardening; broad ABS numeric normalization; invoice/payment correction and accounting treatment; future production/database hardening; future VAT or compliance work. Do **not** mark production rollout, VAT readiness, ZATCA readiness, or accounting finality complete.
 - **ABS management delivery state:**
   1. `ABS-MGMT-UI-READ-ENRICH-1` **complete**
   2. `ABS-MGMT-UI-DRAFT-CREATE-1` **complete** (source implemented; PASS by Mozfer manual browser evidence; pushed on main in `47d9a4f14f019e837224e6db6cababdab12a7610` and `7054cf34654266ca033c58c62f9dca6d94092967`)
@@ -150,7 +158,7 @@ Current product state:
   11. governance and payments documentation sync/push **completed** (historical sequence item; not the current active task)
   12. repository reconciliation planning is pending owner approval (no reconciliation or checkout switch has occurred)
   - Optional later: `ABS-MGMT-HISTORY-LIST-1`
-- **ABS source-truth:** all UI slices through Review/Approve are implemented and pushed; Void/Supersede app actions/UI remain missing. The repository contains the lifecycle migration/RPC source and documented synthetic DEV/DEMO evidence, but the current database state, migration application state, grants, and RPC definitions require fresh verification before implementation. Status enum is `draft|approved|voided` only; Superseded is timestamp/link-derived. Current runtime fallback and the locked post-authority fail-closed policy remain distinct and must not be conflated.
+- **ABS source-truth:** quotation approval now activates the internal authority snapshot; the normal Service page uses Billing Summary; the delivered Void app action and secondary technical-surface UI enforce structured reason/note, permission, lifecycle, zero-exposure, and zero-payment gates. Supersede app/UI remains missing and deferred. Status enum is `draft|approved|voided` only; Superseded is timestamp/link-derived. Current runtime fallback and the locked post-authority fail-closed policy remain distinct and must not be conflated.
 - **Browser/manual smoke rule:** Practical browser/manual smoke remains user-controlled by default and may be delegated to an agent only through explicit bounded user authorization. The financial lifecycle browser acceptance was executed in DEV/DEMO under such authorization.
 - **Responsive core P0 (complete; Mozfer smoke PASS):**
   - Audit + implement source: `RESPONSIVE_CORE_P0_IMPLEMENTED` (quotation/service stacking, logical filter icons, related-quotations header, invoice search width; table-local scroll preserved).
@@ -164,7 +172,7 @@ Current product state:
 - Residual open: final Mozfer commercial Arabic terminology approval for UAT (separate from T032 visual smoke PASS).
 - Professional Supplier Booking redesign remains outside V1 acceptance scope and is **not** active.
 - Reports Center remains P1 and is **not** active on the V1 critical path.
-- Do not promote Supplier Booking redesign, Void/successor UI, Reports Center, VAT/ZATCA, or production apply as the active task while Feature 006 is open.
+- Do not promote Supersede UI, Supplier Booking redesign, Reports Center, VAT/ZATCA, or production apply as the active task without explicit owner selection and a bounded plan.
 - Related backlog note: `RESPONSIVE-LIST-PAGE-HORIZONTAL-OVERFLOW-1` remains historical P1 backlog wording.
 
 Completed:
@@ -191,9 +199,9 @@ Completed:
 - `PUBLIC-HEALTH-ROUTE-HARDEN-1` (PASS WITH WARN: audited public health and webhook routes, verified response sanitization and next 16 proxy convention).
 
 Backlog / later priority:
-- Successful lifecycle mutation smoke and independent review are **complete** (DEV/DEMO synthetic). Application financial lifecycle stack is **pushed** through `45cdfb73` and DEV/DEMO browser-accepted with **PASS WITH WARN**. Feature 006 Invoice PDF customer cleanup is the current next implementation slice under separate approval.
-- Remaining ABS product path: history/read polish → Void UI → successor UI → optional Manager/Accountant browser smoke. Production apply remains unauthorized. DEV/DEMO acceptance does not make ABS or broader invoicing production-ready.
-- Optional/deferred financial hardening: Deposit client max = remaining; legacy Quotation DB ceiling branch; lifecycle atomicity; full seven-state DB triggers; ABS history consistency; broad ABS numeric normalization.
+- Successful lifecycle mutation smoke and independent review are **complete** (DEV/DEMO synthetic). Application financial lifecycle stack is **pushed** through `45cdfb73` and DEV/DEMO browser-accepted with **PASS WITH WARN**. This historical entry predates the delivered `cf4d4aec` quotation/internal-ABS and Service lifecycle milestone; no current next implementation slice is selected.
+- Remaining ABS product path: optional richer ABS history → deferred Supersede UI. Production apply remains unauthorized. DEV/DEMO acceptance does not make ABS or broader invoicing production-ready.
+- Optional/deferred financial hardening: Deposit client max = remaining; legacy Quotation DB ceiling branch; invoice/payment correction and accounting treatment; broad ABS numeric normalization.
 - `ABS-MGMT-HISTORY-LIST-1` (optional later)
 - `APPROVED-BILLING-SCOPE-SERVER-CEILING-BLOCK-SMOKE-1` (Optional follow-up to perform server-side direct adversarial smoke testing bypassing UI validation).
 - `SUPPLIER-BOOKINGS-LOADING-UX-VERIFY` (Follow-up validation of supplier booking creation/cancellation pending and transition states under throttled networks).
@@ -719,7 +727,7 @@ Checklist:
 - [ ] Produce implementation plan only; do not implement in ERP-0 unless explicitly approved.
 
 ### Phase ERP-1 - Services
-Status: DB foundation and app list/create/detail/edit foundation implemented; controlled status transitions remain deferred
+Status: Historical DB foundation and app list/create/detail/edit milestone; later explicit guarded status transitions are documented in the current priority section above.
 
 Checklist:
 - [x] Add `services` table as the DB foundation for the operational unit linked to Customer Profile.

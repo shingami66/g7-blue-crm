@@ -14,6 +14,9 @@
 - **Payments:** Payments are separate from invoices. Multiple payments against one invoice do not create multiple invoices. Payments affect collected/uncollected balance, not invoiced/uninvoiced balance.
 - **Financial Controls:** Client-submitted financial totals must never be trusted; they are calculated server-side. Prevent overpayment unless explicitly approved.
 - **Snapshot Rules:** Every invoice created must persist full historical snapshot fields at issue time. Historical documents must not change meaning when language/settings change.
+- **Quotation approval / internal ABS:** Eligible quotation approval is the automatic activation boundary for the internal Approved Billing Scope; the immutable commercial snapshot, billable ceiling, invoice linkage, and audit history remain internal controls rather than a second user workflow. Non-zero discounts remain unsupported by the current approval contract.
+- **Service lifecycle:** Explicit guarded actions govern `Deposit Paid -> In Progress`, `In Progress -> Completed`, and reasoned cancellation from `Inquiry`, `Quoted`, or `Approved`; ordinary Service edit does not provide arbitrary status selection.
+- **Service evidence and billing:** Billing Summary, collapsed evidence-based Activity History, Deposit settlement audit, and Completed Final billing are delivered; Cancelled Services cannot create Deposit or Final invoices.
 
 ## 3. Financial And Billing Deferrals
 - **Invoice voiding and controlled adjustment:** Unpaid invoices may be voided by Admin with a reason and audit record. Paid or partially paid invoices require a controlled adjustment/reversal and replacement path (D03/D04). Remaining implementation (schema, permissions, replacement mechanics, accounting treatment) is deferred.
@@ -24,14 +27,14 @@
 - **Rounding/currency hardening:** Currency and rounding standardization across the application remains deferred.
 - **Payment evidence/attachments:** Attaching evidence to payments remains deferred.
 - **Global Quotation entry selector:** Implemented in Feature 007 (`007-quotations-eligible-service-selector`). The bounded selector delegates only to the existing Service-scoped creation authority and does not create a standalone Quotation.
-- **Global Invoice chooser:** Is now the next separately planned item. It may later deep-link to Service Billing, but must not create a standalone Invoice, duplicate financial calculations, or introduce a second mutation authority.
+- **Global Invoice chooser:** Implemented as a navigation-only chooser into Service Billing. Further selector-scale or eligibility redesign remains deferred unless evidence or a separately approved design requires it.
 - **Selector scale and eligibility redesign:** Server-side search/cursor pagination and any event-date eligibility redesign remain deferred unless Service-volume evidence or a separately approved design requires them.
 - **Multi-stage invoices beyond Deposit/Final:** Additional staged/progress invoice behavior remains deferred until final settlement design or ZATCA-grade settlement requires it.
 
 ## 4. Approved Billing Scope Deferrals
-- **Void UI:** The UI and application actions for voiding an Approved Billing Scope remain deferred. The backend RPCs are installed in DEV/DEMO.
+- **ABS Void:** The application action and secondary technical-surface UI are delivered. They require `approvedBillingScopes:void`, a structured reason code and non-empty note, an eligible active scope, zero applicable invoice exposure, and zero payment history; they never mutate invoices or payments. Production rollout remains deferred.
 - **Successor/supersede UI:** The UI for superseding an Approved Billing Scope remains deferred.
-- **Optional richer history:** Richer history tracking for Approved Billing Scopes remains deferred.
+- **Optional richer ABS history:** A richer dedicated Approved Billing Scope history experience remains deferred; the delivered Service Activity History exposes evidence-based Service lifecycle and deposit-settlement events.
 - **Remaining production enforcement:** Production rollout of the ABS financial lifecycle remains deferred.
 
 ## 5. Supplier And Costing Deferrals
@@ -49,7 +52,7 @@
 - **Deployment:** Production deployment remains deferred.
 - **Backups:** Database backups configuration remains deferred.
 - **Monitoring:** Application and database monitoring remains deferred.
-- **Logging:** Audit logs UI and detailed action logging remain deferred.
+- **Logging:** Broader audit-log UI and detailed action logging beyond the delivered Service Activity History remain deferred.
 - **Incident ownership:** Incident ownership and operational support remain deferred.
 - **Clerk live invitation/webhook smoke:** Real Clerk invitation/webhook smoke testing remains pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and approved.
 - **Session timeout:** Idle session timeout and inactivity auto-logout remain deferred.
@@ -78,7 +81,7 @@
 - **Leads/inquiries:** Management of leads and inquiries remains deferred.
 - **Event taxonomy:** Formalizing event taxonomy (e.g., specific event types) remains deferred.
 - **Global search and optional polish:** Global search and module polish (e.g., search/filter parity, user-friendly error copy) remain deferred.
-- **Service Hub:** Richer hub behavior (notes/activity/attachments and controlled status transition actions) beyond the minimal profile foundation remains deferred.
+- **Service Hub:** Richer hub behavior (notes, attachments, and expansion beyond the delivered Activity History and explicit lifecycle actions) remains deferred.
 - **Advanced Dashboard:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. Implemented live summary/list milestones are complete; advanced reporting is not immediately active.
 
 ## 9. Data And Technical Debt

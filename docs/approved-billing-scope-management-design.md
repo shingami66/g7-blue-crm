@@ -4,11 +4,11 @@
 
 **Docs sync:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-DOCS-SYNC-1`
 
-**Status:** Management and V1 void/supersede financial-lifecycle design locked (actions not implemented)
+**Status:** Management and V1 financial-lifecycle design locked; quotation/internal-ABS activation and ABS Void are delivered, while Supersede remains excluded and deferred.
 
 **Related runtime lock:** `docs/approved-billing-scope-runtime-decisions.md`
 
-This document is the **current** product/technical management design for Service-scoped Approved Billing Scope (ABS) UI and write workflow. It is grounded in repository source as of HEAD `d8b654f2c89622837b75531aa44d79a66e024ad8`. Historical ABS milestones may predate this file; prefer this document for current behavior, locked future behavior, and slice order.
+This document is the product/technical management design for Service-scoped Approved Billing Scope (ABS) UI and write workflow. Its current delivered implementation status is synchronized to HEAD `cf4d4aec7b3d2db1953141f2a1bfa435ccbafe70`; earlier design-lock and pre-delivery statements are historical where superseded by the status below.
 
 ---
 
@@ -30,8 +30,8 @@ This document is the **current** product/technical management design for Service
 | Display remaining billable | Service card (gated) | `getServiceBillingState` remaining | active scope or QT fallback | `invoices:read` | **READY** (read UI; uses server contract) |
 | Source quotation snapshot | Stored on create | create path | source_* columns | — | **READY** |
 | Prevent invoices above ceiling | Invoice create + DB trigger | invoice actions | FK + triggers | invoices:write | **READY** |
-| Legacy service without active scope | Invoice/billing fallback | quotation grand total | `approved_billing_scope_id` null | — | **READY** |
-| Void approved scope | **None** | **No action** (schema only) | `voided_*` columns and trigger capability | void | **DESIGN LOCKED; IMPLEMENTATION MISSING** |
+| Legacy service without active scope | Invoice/billing fallback only when ABS authority has never existed | quotation grand total | `approved_billing_scope_id` null | — | **READY (fail-closed history gate)** |
+| Void approved scope | Secondary technical scope detail | `voidApprovedBillingScope` | `voided_*` columns and lifecycle RPC | void | **READY (delivered; not a normal user workflow)** |
 | Create successor draft | **None** | **No action** | existing version/snapshot columns can hold a clone | create + supersede | **DESIGN LOCKED; IMPLEMENTATION MISSING** |
 | Atomically activate successor | **None** | **No action** | `superseded_*`, active unique index, existing invoice guards require revision | approve + supersede | **DESIGN LOCKED; IMPLEMENTATION MISSING** |
 
@@ -54,12 +54,20 @@ This document is the **current** product/technical management design for Service
 
 | Incorrect current implication | Correct current truth |
 |------------------------------|------------------------|
-| Void/supersede “actions implemented” | **Schemas + permission keys + columns exist; no `voidApprovedBillingScope` / `supersedeApprovedBillingScope` action functions** |
+| Void/supersede “actions implemented” | **ABS Void action and technical-surface UI are delivered; Supersede action/UI remain absent and deferred** |
 | “No custom Postgres RPC for V1” without exception | **Exceptions exist:** draft discard RPC and draft item edit RPC (narrow service_role helpers) |
 | Status = `superseded` | **Not** a DB status; use timestamps for display “Superseded” |
-| ABS fully managed in CRM UI | **Read-enrichment + Create Draft + Draft Edit/Discard + Review/Approve are implemented and pushed**; void/supersede UI is not implemented |
+| ABS fully managed in CRM UI | **Quotation approval now activates internal ABS; Billing Summary is the normal user surface; technical ABS evidence and Void are secondary; Supersede UI is not implemented** |
 
 Historical milestone notes elsewhere may still mention planned void/supersede; treat those as historical unless labeled current.
+
+### Current delivered implementation status (`cf4d4aec`)
+
+- Normal user workflow is `Quotation Draft -> send/review -> customer approval -> automatic internal ABS activation -> Billing Summary -> Deposit or Final Invoice`; there is no second normal-user ABS approval workflow.
+- The quotation approval RPC atomically updates eligible Service/quotation state, creates the immutable approved commercial snapshot, copies snapshot items, and records audit evidence; non-zero discounts remain rejected by the existing contract.
+- ABS remains the internal billing-control layer for immutable commercial snapshots, billable ceilings, invoice linkage, lifetime exposure, and fail-closed history. The normal Service page does not expose Create Scope, line-safety review, second approval, or Void as a technical workflow.
+- ABS Void is delivered through the application contract and nested technical scope surface. It requires `approvedBillingScopes:void`, structured reason code/note, an active eligible scope, zero applicable invoice exposure, and zero payment history; it never changes invoices or payments. Supersede remains excluded.
+- Explicit Service lifecycle actions, Billing Summary, collapsed Service Activity History, Deposit settlement audit, and Completed Final billing are delivered through migrations `20260803110000`–`20260803130000`. DEV/DEMO apply/verification is owner-confirmed; production apply/readiness is not claimed.
 
 ### Read-enrichment slice status (`ABS-MGMT-UI-READ-ENRICH-1`)
 
@@ -114,9 +122,9 @@ Historical milestone notes elsewhere may still mention planned void/supersede; t
 
 ### Entry point
 
-- **Service Detail only** — extend `ApprovedBillingScopesCard` (already gated by `approvedBillingScopes:read`).
-- **No** standalone top-nav ABS module.
-- Nested detail remains: `/services/[serviceId]/approved-billing-scopes/[scopeId]`.
+- **Normal user entry:** quotation approval is the activation boundary; Service Detail presents Billing Summary and Deposit/Final invoice actions.
+- **Technical evidence entry:** `ApprovedBillingScopesCard` and `/services/[serviceId]/approved-billing-scopes/[scopeId]` remain permission-gated secondary surfaces for internal authority evidence and lifecycle detail.
+- **No** standalone top-nav ABS module and no second normal-user ABS approval workflow.
 
 ### Summary card state matrix
 
@@ -131,12 +139,10 @@ Historical milestone notes elsewhere may still mention planned void/supersede; t
 
 ### Detail / edit / review / approve / history
 
-1. **Detail (exists):** metadata, items table, totals, linked invoices (`invoices:read`).
-2. **Draft edit:** per-item decision/qty/price/reason via `editApprovedBillingScopeItem`; non-optimistic; financial edit → `pending_review`.
-3. **Discard:** confirm → `discardApprovedBillingScopeDraft` (draft only).
-4. **Line safety review:** Admin/Manager → `reviewApprovedBillingScopeLineSafety` (`safe`/`unsafe` + reasons).
-5. **Approve:** confirm → `approveApprovedBillingScope`; fails if active exists (`scope_active_conflict`); no silent supersede.
-6. **History (missing UI):** list all scopes for service by version; optional slice later.
+1. **Technical detail (exists):** metadata, items table, totals, linked invoices (`invoices:read`), Void evidence, and lifecycle audit evidence.
+2. **Legacy/technical draft surfaces:** draft edit, discard, line-safety review, and ordinary approval remain permission-gated implementation surfaces for preserved internal history; they are not required in the normal quotation-approval workflow.
+3. **Normal approval:** quotation approval creates/activates the internal ABS atomically; it does not require a second user approval.
+4. **History:** Service Activity History is the normal evidence surface; richer dedicated ABS history remains deferred.
 
 ---
 
@@ -158,7 +164,7 @@ Stable error codes (dictionary-map only):
 ## 4. Financial invariants
 
 1. Active scope `acceptedGrandTotal` is the invoice ceiling when present.
-2. Current runtime uses approved-quotation fallback whenever no active scope exists. Locked future runtime permits that fallback only before the Service has ever established approved ABS authority; a post-void or historical authority gap fails closed.
+2. Current runtime uses approved-quotation fallback only before the Service has ever established ABS authority; a post-void or historical authority gap fails closed.
 3. Existing invoices are never rewritten by scope edits/approve/void/supersede.
 4. Draft edits never mutate issued invoice snapshots.
 5. One active scope per service (DB partial unique + approve guard).
@@ -171,20 +177,20 @@ Stable error codes (dictionary-map only):
 
 **`ABS_VOID_SUPERSEDE_SERVICE_LIFETIME_CEILING_LOCKED`**
 
-This decision replaces and resolves `ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`. It is a product and technical design lock only; no void/supersede action, UI, RPC, trigger revision, or migration is implemented by this document.
+This decision replaces and resolves `ABS_VOID_SUPERSEDE_FINANCIAL_BEHAVIOR_PENDING`. It remains the governing product and technical lock; the later delivered implementation is recorded above, while Supersede and broader accounting correction remain outside this slice.
 
 #### Current factual baseline
 
 | Layer | Current truth |
 |---|---|
 | Schema capability | Scope status is `draft | approved | voided`; active means approved with null `voided_at` and `superseded_at`; `scope_version`, `superseded_at`, `superseded_by_scope_id`, `voided_at`, `voided_by`, `void_reason`, `approved_at`, `approved_by`, `created_by`, and `updated_by` exist. The partial unique index protects one active scope per Service. |
-| Existing working behavior | Draft create/edit/discard, line-safety review, ordinary approval, active-scope reads, invoice linkage, and active-scope ceiling enforcement work. Invoice creation falls back to the approved quotation when no active scope exists. Invoice exposure currently uses non-deleted invoices whose status is not `cancelled`/`voided` and whose `voided_at` is null. |
-| Missing behavior | No void action, successor-draft action, supersede activation action, or lifecycle UI exists. Current fallback does not distinguish never-had-ABS from historical-ABS-with-no-active-scope. Existing supersede trigger checks are not a complete atomic activation workflow. App audit is not written by current ABS actions. |
-| Planned behavior | Three permission-gated server actions call service-role-only transactional RPCs for void, successor-draft creation, and successor activation. Revised invoice trigger/app logic enforces the historical-authority fallback gate and service-lifetime ceiling. |
+| Existing working behavior | Quotation approval/internal ABS activation, active-scope reads, invoice linkage, active-scope ceiling enforcement, ABS Void, explicit Service lifecycle actions, Billing Summary, and Service Activity History work. Invoice creation uses the active ABS or the proven legacy quotation path and fails closed for historical ABS authority without an active scope. |
+| Missing behavior | Supersede successor-draft/activation action and UI, controlled invoice/payment correction, Change Orders, and accounting treatment remain outside this delivered slice. |
+| Planned behavior | Future Supersede and accounting work must use new separately reviewed transactional contracts; it must not rewrite approved snapshots, invoices, payments, or audit history. |
 
 Existing invoice links are `invoices.approved_billing_scope_id -> approved_billing_scopes` with a same-Service composite FK. Existing invoices may also have a null scope link from the approved-quotation fallback era. Neither form is rewritten during void or supersede.
 
-Current invoice/payment lifecycle limits are narrower than the planned ABS controls: invoice actions create a draft and issue it as `sent`; payment recording accepts only `sent`/`partial`, creates a `confirmed` payment, prevents overpayment, and updates the invoice to `partial`/`paid`. No invoice void/cancel/delete action or payment refund/reversal/delete action exists. TypeScript includes invoice `voided`, but the current DB status check does not. The current ABS trigger blocks void when applicable invoices are linked to that scope, not the broader Service-wide/payment-history policy locked below.
+Current invoice/payment lifecycle limits remain narrower than accounting-finality: invoice actions create a draft and issue it as `sent`; payment recording accepts only `sent`/`partial`, creates a `confirmed` payment, prevents overpayment, and updates the invoice to `partial`/`paid`. No invoice void/cancel/delete action or payment refund/reversal/delete action exists. TypeScript includes invoice `voided`, but the current DB status check does not. Delivered ABS Void enforces the broader Service-wide invoice-exposure and payment-history block described below.
 
 #### Critical risks and locked controls
 
@@ -293,7 +299,7 @@ Example: old ceiling SAR 10,000, applicable lifetime invoices SAR 6,000, success
 | Superseded old scope plus active successor | Active successor is authority. |
 | Historical approved/voided/superseded records but no active scope | Billing blocked as an authority gap; fallback must not resume. |
 
-The invoice action and DB trigger must distinguish **never established ABS authority** from **established authority with no active scope**. The existing fallback behavior is working legacy behavior, not the locked post-void behavior.
+The invoice action and DB-backed billing state distinguish **never established ABS authority** from **established authority with no active scope**. The delivered fallback gate is allowed only in the former case; post-void and historical authority gaps remain blocked.
 
 #### Backend boundary and migration requirement
 
@@ -333,12 +339,11 @@ This intentionally differs from draft-create's blanket terminal gate: a Cancelle
 
 Each successor-create, successor-discard, void, and supersede event must expose user-visible history while preserving Accountant masking of internal notes/reasons. Atomic audit details include actor, role, database timestamp, reason code, note, Service ID, source/old scope ID, successor scope ID when present, source quotation ID, old/new ceilings, applicable invoice count and amount, payment-record count, and outcome. Existing `audit_logs.action = status_change` and JSON `details` can hold this without inventing an implemented action; future SQL review must verify the exact contract.
 
-#### Future UI state model
+#### UI state model
 
-- Keep **Void** and **Create successor draft / Approve and supersede** as separate actions.
-- Active card shows ceiling, Service-lifetime invoiced amount, remaining billable, and successor-draft indicator.
-- Void confirmation states that future billing will stop and quotation fallback will not resume; show invoice/payment exposure and the exact blocked reason.
-- Successor flow shows old ceiling, proposed ceiling, lifetime invoiced, minimum allowed ceiling, projected remaining, source version, and immutable historical-invoice warning.
+- Normal Service UX shows Billing Summary, explicit next lifecycle action, and collapsed evidence-based Activity History; it does not present ABS technical terminology as a manual workflow.
+- The secondary technical scope surface may show Void evidence and confirmation. Void confirmation states that future billing will stop and quotation fallback will not resume; show invoice/payment exposure and the exact blocked reason.
+- Supersede remains a future separate workflow. If activated later, it must show old ceiling, proposed ceiling, lifetime invoiced, minimum allowed ceiling, projected remaining, source version, and immutable historical-invoice warning.
 - Blocked states use stable localized messages, not raw SQL. Money/IDs remain LTR-isolated with Western digits and SAR formatting.
 - English and Arabic dictionaries must cover action names, confirmations, reason codes, exposure warnings, zero-remaining state, and every stable error. Accountant history masks reason/note text.
 
@@ -371,20 +376,13 @@ Invoice creation reuses the existing sanitized `billing_scope_inactive` result f
 | Ceiling exposure | Current scope link only | Allows old invoices to be ignored | Service-lifetime applicable invoices |
 | Superseded representation | New DB status | Conflicts with locked enum/model | Approved status plus superseded timestamp/link |
 
-#### Ordered implementation decomposition
+#### Delivery and remaining work
 
-1. `ABS-MGMT-FINANCIAL-LIFECYCLE-MIGRATION-PREFLIGHT-1`: inspect current live/schema function bodies, grants, constraints, data-shape assumptions, and audit-log compatibility; propose SQL only.
-2. Review the migration/RPC SQL for successor clone, void, atomic activation, invoice fallback/ceiling trigger revisions, grants, idempotency, and rollback behavior.
-3. Create a new forward-only migration after SQL approval; do not edit applied migrations.
-4. Apply and verify in DEV/DEMO only through a separately authorized task.
-5. Implement server actions, schemas, stable errors, and executable tests; permission before service-role client.
-6. Implement permission-gated read/history exposure and Service-lifetime financial display.
-7. Implement Void UI and bilingual blocked-state/confirmation copy.
-8. Implement successor draft and atomic Approve-and-supersede UI.
-9. Run Mozfer manual browser smoke for roles, EN/AR, races/retries, zero/equal/below ceiling, fallback block, and immutable history.
-10. Synchronize docs, then use separate controlled commit and push tasks.
-
-**Next active task after this design is committed:** `ABS-MGMT-FINANCIAL-LIFECYCLE-MIGRATION-PREFLIGHT-1`.
+1. Quotation approval/internal ABS activation, Service lifecycle migrations, Deposit audit, Completed billing, application contracts, focused tests, and DEV/DEMO verification are complete through `cf4d4aec`.
+2. ABS Void application action and secondary technical-surface UI are complete with structured reason/note, permission, exposure/payment, audit, and idempotency safeguards.
+3. The normal Service workflow is internalized through Billing Summary, explicit lifecycle actions, and collapsed Activity History; no additional ABS manual workflow is required.
+4. Supersede successor draft/activation, Change Orders after exposure, invoice/payment correction, and accounting integration remain separately deferred and require new owner-approved bounded tasks.
+5. No next active task is selected; owner selection is required before implementation resumes.
 
 ---
 
@@ -407,17 +405,17 @@ Invoice creation reuses the existing sanitized `billing_scope_inactive` result f
 3. **`ABS-MGMT-UI-DRAFT-EDIT-1`** — draft item edit + discard. **complete; pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`**
 4. **`ABS-MGMT-UI-REVIEW-APPROVE-1`** — line-safety review + approve. **complete and pushed in `d8b654f2c89622837b75531aa44d79a66e024ad8`**
 
-### Design gate complete; implementation still requires migration preflight
+### Delivery state and remaining work
 
-5. **`ABS-MGMT-FINANCIAL-LIFECYCLE-MIGRATION-PREFLIGHT-1`** — inspect and propose the required RPC/trigger migration (**next active task after design commit**)
-6. **`ABS-MGMT-VOID-ACTION-1`** — implement only after reviewed migration/RPC apply and verification
-7. **`ABS-MGMT-SUPERSEDE-ACTION-1`** — implement successor draft + activation only after reviewed migration/RPC apply and verification
+5. **Quotation approval/internal ABS activation, Service lifecycle, Deposit audit, and Completed billing** — complete and pushed through `cf4d4aec`.
+6. **ABS Void application/UI contract** — complete on the secondary technical scope surface; production rollout remains unclaimed.
+7. **`ABS-MGMT-SUPERSEDE-ACTION-1`** — remains excluded and deferred; no successor draft/activation implementation is authorized by this synchronization.
 
 ### Optional later
 
 - **`ABS-MGMT-HISTORY-LIST-1`** — full history list UI
 
-**Current active task (exactly one):** `ABS-MGMT-FINANCIAL-LIFECYCLE-DESIGN-COMMIT-1`
+**Current active task:** none selected. Owner selection is required before implementation resumes.
 
 ---
 
