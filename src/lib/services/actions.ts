@@ -1,19 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
-import { createServiceSchema, updateServiceSchema, updateServiceStatusSchema } from "./schemas";
-import { validateServiceStatusTransition } from "./status-transitions";
-import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import { createServiceSchema, updateServiceSchema } from "./schemas";
 import type {
   CreatedServiceResult,
   CreateServiceInput,
   UpdateServiceInput,
 } from "./types";
 import { getServiceById } from "./queries";
-import type { ServiceStatus } from "@/types/service";
 
 export type ActionResult<T = void> = {
   success: boolean;
@@ -32,6 +30,12 @@ export type ServiceActionErrorCode =
   | "STATUS_CONFLICT"
   | "NO_FIELDS"
   | "TRANSITION_BLOCKED"
+  | "SERVICE_NOT_FOUND"
+  | "SERVICE_STATUS_TRANSITION_INELIGIBLE"
+  | "SERVICE_FINANCIAL_EXECUTION_BLOCKED"
+  | "SERVICE_FINANCIAL_CANCELLATION_BLOCKED"
+  | "SERVICE_CANCELLATION_REASON_REQUIRED"
+  | "SERVICE_TRANSITION_FAILED"
   | "GENERIC_FAILURE";
 
 function firstValidationError(parsed: { error: { issues: { message: string }[] } }) {
@@ -348,82 +352,134 @@ export async function softDeleteService(id: string): Promise<ActionResult> {
   }
 }
 
-export async function updateServiceStatusAction(
-  id: string,
-  input: unknown
-): Promise<ActionResult<{ id: string }>> {
+type ServiceLifecycleRpcName =
+  | "start_service_execution"
+  | "complete_service"
+  | "cancel_service";
+
+const serviceLifecycleIdSchema = z.string().uuid();
+const serviceLifecycleStatusSchema = z.enum([
+  "Inquiry", "Quoted", "Approved", "Deposit Paid", "In Progress", "Completed", "Cancelled",
+]);
+const serviceLifecycleErrorSchema = z.enum([
+  "service_actor_invalid", "service_not_found", "service_status_transition_ineligible",
+  "service_deposit_invoice_missing", "service_deposit_invoice_ambiguous", "service_deposit_invoice_invalid",
+  "service_deposit_invoice_not_paid", "service_deposit_payment_missing", "service_deposit_payment_inconsistent",
+  "service_cancellation_reason_required", "service_cancellation_reason_too_long", "service_invoice_history_exists",
+  "service_payment_history_exists", "service_billing_authority_unresolved",
+  "service_transition_failed",
+]).nullable();
+const serviceLifecycleRpcRowSchema = z.object({
+  error_code: serviceLifecycleErrorSchema,
+  service_id: serviceLifecycleIdSchema.nullable(),
+  service_status: serviceLifecycleStatusSchema.nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+const serviceLifecycleRpcResponseSchema = z.array(serviceLifecycleRpcRowSchema).length(1);
+
+function mapServiceLifecycleRpcError(errorCode: string | null): ServiceActionErrorCode {
+  switch (errorCode) {
+    case "service_actor_invalid":
+      return "INVALID_INPUT";
+    case "service_not_found":
+      return "SERVICE_NOT_FOUND";
+    case "service_status_transition_ineligible":
+      return "SERVICE_STATUS_TRANSITION_INELIGIBLE";
+    case "service_deposit_invoice_missing":
+    case "service_deposit_invoice_ambiguous":
+    case "service_deposit_invoice_invalid":
+    case "service_deposit_invoice_not_paid":
+    case "service_deposit_payment_missing":
+    case "service_deposit_payment_inconsistent":
+      return "SERVICE_FINANCIAL_EXECUTION_BLOCKED";
+    case "service_cancellation_reason_too_long":
+    case "service_invoice_history_exists":
+    case "service_payment_history_exists":
+    case "service_billing_authority_unresolved":
+      return "SERVICE_FINANCIAL_CANCELLATION_BLOCKED";
+    case "service_cancellation_reason_required":
+      return "SERVICE_CANCELLATION_REASON_REQUIRED";
+    case "service_transition_failed":
+    default:
+      return "SERVICE_TRANSITION_FAILED";
+  }
+}
+
+async function executeServiceLifecycleRpc(
+  serviceId: string,
+  rpcName: ServiceLifecycleRpcName,
+  input: Record<string, string>,
+): Promise<ActionResult<{ id: string; status?: string; idempotent?: boolean }>> {
   try {
     const user = await requirePermission("services:update_status");
-
-    const parsed = updateServiceStatusSchema.safeParse(input);
-
-    if (!parsed.success) {
-      return { success: false, code: "INVALID_INPUT", error: firstValidationError(parsed) };
-    }
-
     const supabase = createAdminClient();
-    const { data: currentService, error: serviceError } = await supabase
-      .from("services")
-      .select("id, status")
-      .eq("id", id)
-      .is("deleted_at", null)
-      .maybeSingle();
-
-    if (serviceError) {
-      console.error("[updateServiceStatusAction] Service lookup error:", serviceError.message);
-      return { success: false, code: "GENERIC_FAILURE", error: "Failed to update service status. Please try again." };
-    }
-
-    if (!currentService) {
-      return { success: false, code: "NOT_FOUND", error: "Service not found." };
-    }
-
-    const validationResult = await validateServiceStatusTransition(
-      supabase,
-      id,
-      currentService.status as ServiceStatus,
-      parsed.data.status,
-      parsed.data.cancellation_reason,
-      await getCurrentSessionEffectiveLocale(),
-    );
-
-    if (!validationResult.success) {
-      return { success: false, code: "TRANSITION_BLOCKED", error: validationResult.error };
-    }
-
-    const updates: Record<string, unknown> = {
-      status: parsed.data.status,
-      updated_by: user.clerk_user_id,
-    };
-
-    if (parsed.data.status === "Cancelled") {
-      updates.cancellation_reason = parsed.data.cancellation_reason;
-    }
-
-    const { error } = await supabase
-      .from("services")
-      .update(updates)
-      .eq("id", id)
-      .eq("status", currentService.status)
-      .is("deleted_at", null)
-      .select("id")
-      .single();
+    const { data, error } = await supabase.rpc(rpcName, {
+      p_service_id: serviceId,
+      ...input,
+      p_actor_id: user.clerk_user_id,
+      p_actor_role: user.role,
+    });
 
     if (error) {
-      if (error.code === "PGRST116") {
-        return { success: false, code: "NOT_FOUND", error: "Service not found." };
-      }
-      console.error("[updateServiceStatusAction] Supabase error:", error.message);
-      return { success: false, code: "GENERIC_FAILURE", error: "Failed to update service status. Please try again." };
+      console.error(`[${rpcName}] RPC error:`, error.message);
+      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Service action could not be completed." };
+    }
+
+    const parsedResponse = serviceLifecycleRpcResponseSchema.safeParse(data);
+    if (!parsedResponse.success) {
+      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Service action could not be completed." };
+    }
+    const [row] = parsedResponse.data;
+    if (row.error_code !== null) {
+      return {
+        success: false,
+        code: mapServiceLifecycleRpcError(row.error_code),
+        error: "The Service action is not available in its current state.",
+      };
+    }
+    if (row.service_id !== serviceId || !row.service_status) {
+      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Service action could not be completed." };
     }
 
     revalidatePath("/services");
-    revalidatePath(`/services/${id}`);
-    return { success: true, data: { id } };
+    revalidatePath(`/services/${serviceId}`);
+    return {
+      success: true,
+      data: { id: serviceId, status: row.service_status, idempotent: row.idempotent_replay },
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
-    console.error("[updateServiceStatusAction] Unexpected error:", err instanceof Error ? err.message : "Unknown");
-    return { success: false, code: "GENERIC_FAILURE", error: "An unexpected error occurred." };
+    console.error(`[${rpcName}] Unexpected error:`, err instanceof Error ? err.message : "Unknown");
+    return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Service action could not be completed." };
   }
+}
+
+export async function startServiceExecution(serviceId: string) {
+  if (!serviceLifecycleIdSchema.safeParse(serviceId).success) {
+    return { success: false as const, code: "INVALID_INPUT" as const, error: "Invalid Service." };
+  }
+  return executeServiceLifecycleRpc(serviceId, "start_service_execution", {});
+}
+
+export async function completeService(serviceId: string) {
+  if (!serviceLifecycleIdSchema.safeParse(serviceId).success) {
+    return { success: false as const, code: "INVALID_INPUT" as const, error: "Invalid Service." };
+  }
+  return executeServiceLifecycleRpc(serviceId, "complete_service", {});
+}
+
+export async function cancelService(serviceId: string, reason: unknown) {
+  if (!serviceLifecycleIdSchema.safeParse(serviceId).success) {
+    return { success: false as const, code: "INVALID_INPUT" as const, error: "Invalid Service." };
+  }
+  const parsed = z.string().trim().min(1).max(1000).safeParse(reason);
+  if (!parsed.success) {
+    return {
+      success: false as const,
+      code: "INVALID_INPUT" as const,
+      error: "A cancellation reason is required.",
+    };
+  }
+  return executeServiceLifecycleRpc(serviceId, "cancel_service", { p_reason: parsed.data });
 }

@@ -4,10 +4,8 @@ import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { INVOICE_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { getQuotationsByServiceId } from "@/lib/quotations/queries";
 import { getServiceBillingState } from "@/lib/invoices";
-import { getServiceStatusTransitionState } from "@/lib/services/status-transitions";
 import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PendingLink from "@/components/ui/PendingLink";
@@ -25,10 +23,9 @@ import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { CalendarDays, Edit, FileText, MapPin, UserRound } from "lucide-react";
 import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import Link from "next/link";
-import ServiceStatusTimeline from "./ServiceStatusTimeline";
 import RelatedQuotationsCard from "./RelatedQuotationsCard";
 import ServiceBillingSummaryCard from "./ServiceBillingSummaryCard";
-import ServiceStatusControl from "./ServiceStatusControl";
+import ServiceLifecycleActions from "./ServiceLifecycleActions";
 import SupplierAllocationsPanel from "./SupplierAllocationsPanel";
 import { getSupplierAllocationsByServiceId } from "@/lib/supplier-allocations/queries";
 import { getSupplierBookingsByServiceId } from "@/lib/supplier-bookings/queries";
@@ -216,17 +213,10 @@ export default async function ServiceDetailPage({
         </div>
       </div>
 
-      <ServiceStatusTimeline
-        status={service.status}
-        cancellationReason={service.cancellationReason}
-        dictionary={dictionary}
-      />
-
-      {canUpdateServiceStatus && statusTransitionState && (
-        <ServiceStatusControl
+      {canUpdateServiceStatus && (
+        <ServiceLifecycleActions
           serviceId={service.id}
-          currentStatus={service.status}
-          transitionState={statusTransitionState}
+          status={service.status}
           dictionary={dictionary}
         />
       )}

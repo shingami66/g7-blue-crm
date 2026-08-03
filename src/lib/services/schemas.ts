@@ -113,8 +113,3 @@ export const updateServiceSchema = serviceBaseSchema
     validateEventDateRange(input, context, false);
     validateCancellationReason(input, context);
   });
-
-export const updateServiceStatusSchema = z.object({
-  status: serviceStatusSchema,
-  cancellation_reason: nullableTrimmedString.optional(),
-});

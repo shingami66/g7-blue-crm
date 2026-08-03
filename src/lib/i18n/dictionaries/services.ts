@@ -31,6 +31,10 @@ export interface ServicesDictionary {
     statusConflict: string;
     noFields: string;
     transitionBlocked: string;
+    executionFinancial: string;
+    completionFinancial: string;
+    cancellationFinancial: string;
+    cancellationReason: string;
     generic: string;
   };
   list: {
@@ -274,6 +278,15 @@ export interface ServicesDictionary {
     saving: string;
     failedToUpdate: string;
     updatedSuccessfully: string;
+    startExecution: string;
+    completeService: string;
+    cancelService: string;
+    cancellationReasonLabel: string;
+    cancellationReasonPlaceholder: string;
+    actionUnavailable: string;
+    cancellationConfirm: string;
+    confirmCancel: string;
+    keepService: string;
   };
   serviceStatusTimeline: {
     title: string;
@@ -830,9 +843,6 @@ export interface ServicesDictionary {
       multipleApprovedQuotations: string;
       depositPaymentRequired: string;
       depositPaymentBeforeWork: string;
-      unpaidInvoices: string;
-      approvedQuotationRequiredForCompleted: string;
-      remainingInvoiceRequired: string;
       financeCancellationRequired: string;
       unavailable: string;
       unableToVerifyQuotationEvidence: string;
@@ -876,6 +886,10 @@ const servicesDictionaryEn: ServicesDictionary = {
     statusConflict: "This service cannot be edited in its current status.",
     noFields: "Enter at least one change before saving.",
     transitionBlocked: "This Service status change is not currently allowed.",
+    executionFinancial: "Execution can start only after one valid, fully settled deposit invoice is confirmed.",
+    completionFinancial: "The Service can be completed only while it is In Progress.",
+    cancellationFinancial: "Cancellation is blocked while invoice, payment, or active billing-authority history exists.",
+    cancellationReason: "Enter a cancellation reason before continuing.",
     generic: "We couldn't complete the service action. Please try again.",
   },
   list: {
@@ -1336,6 +1350,15 @@ const servicesDictionaryEn: ServicesDictionary = {
     saving: "Saving...",
     failedToUpdate: "Failed to update status",
     updatedSuccessfully: "Status updated successfully!",
+    startExecution: "Start Execution",
+    completeService: "Complete Service",
+    cancelService: "Cancel Service",
+    cancellationReasonLabel: "Reason for cancellation",
+    cancellationReasonPlaceholder: "Add the reason for cancelling this service.",
+    actionUnavailable: "The next action is not currently available.",
+    cancellationConfirm: "This will cancel the Service. Cancellation cannot proceed when financial history or active billing authority exists.",
+    confirmCancel: "Confirm cancellation",
+    keepService: "Keep Service",
   },
   serviceStatusTimeline: {
     title: "Status Timeline",
@@ -2002,7 +2025,7 @@ const servicesDictionaryEn: ServicesDictionary = {
       },
       Completed: {
         label: "Mark Completed",
-        description: "Delivery is complete and active invoices are paid.",
+        description: "Operations confirms delivery is complete.",
       },
       Cancelled: {
         label: "Cancel Service",
@@ -2015,9 +2038,6 @@ const servicesDictionaryEn: ServicesDictionary = {
       multipleApprovedQuotations: "Multiple approved quotations were found. Resolve the quotation state before changing Service status.",
       depositPaymentRequired: "The active Deposit Invoice must be fully paid before moving this Service to Deposit Paid.",
       depositPaymentBeforeWork: "The active Deposit Invoice must be fully paid before work starts.",
-      unpaidInvoices: "This Service still has unpaid active invoices. Complete payment before marking it Completed.",
-      approvedQuotationRequiredForCompleted: "An approved quotation is required before marking this Service Completed.",
-      remainingInvoiceRequired: "Create the remaining invoice before marking this Service Completed.",
       financeCancellationRequired: "This Service has financial records. Cancellation needs a finance cancellation workflow first.",
       unavailable: "This status transition is not available.",
       unableToVerifyQuotationEvidence: "Unable to verify Service quotation evidence. Please try again.",
@@ -2262,6 +2282,10 @@ const servicesDictionaryAr: ServicesDictionary = {
     statusConflict: "لا يمكن تعديل هذه الخدمة في حالتها الحالية.",
     noFields: "أدخل تغييرًا واحدًا على الأقل قبل الحفظ.",
     transitionBlocked: "تغيير حالة هذه الخدمة غير مسموح به حاليًا.",
+    executionFinancial: "لا يمكن بدء التنفيذ إلا بعد تأكيد فاتورة عربون واحدة صالحة ومسـددة بالكامل.",
+    completionFinancial: "يمكن إكمال الخدمة فقط عندما تكون حالتها قيد التنفيذ.",
+    cancellationFinancial: "الإلغاء محظور عند وجود سجل فواتير أو مدفوعات أو صلاحية فوترة نشطة.",
+    cancellationReason: "أدخل سبب الإلغاء قبل المتابعة.",
     generic: "تعذر إكمال إجراء الخدمة. يرجى المحاولة مرة أخرى.",
   },
   list: {
@@ -2718,6 +2742,15 @@ const servicesDictionaryAr: ServicesDictionary = {
     saving: "جارٍ الحفظ...",
     failedToUpdate: "تعذر تحديث الحالة",
     updatedSuccessfully: "تم تحديث الحالة بنجاح!",
+    startExecution: "بدء التنفيذ",
+    completeService: "إكمال الخدمة",
+    cancelService: "إلغاء الخدمة",
+    cancellationReasonLabel: "سبب الإلغاء",
+    cancellationReasonPlaceholder: "أضف سبب إلغاء هذه الخدمة.",
+    actionUnavailable: "الإجراء التالي غير متاح حاليًا.",
+    cancellationConfirm: "سيتم إلغاء الخدمة. لا يمكن الإلغاء عند وجود سجل مالي أو صلاحية فوترة نشطة.",
+    confirmCancel: "تأكيد الإلغاء",
+    keepService: "الاحتفاظ بالخدمة",
   },
   serviceStatusTimeline: {
     title: "مسار حالة الخدمة",
@@ -3377,7 +3410,7 @@ const servicesDictionaryAr: ServicesDictionary = {
       },
       Completed: {
         label: "تحديد كمكتمل",
-        description: "تم إنجاز التسليم وسداد الفواتير النشطة.",
+        description: "يؤكد فريق العمليات اكتمال التسليم.",
       },
       Cancelled: {
         label: "إلغاء الخدمة",
@@ -3390,9 +3423,6 @@ const servicesDictionaryAr: ServicesDictionary = {
       multipleApprovedQuotations: "تم العثور على أكثر من عرض سعر معتمد. عالج حالة عروض السعر قبل تغيير حالة الخدمة.",
       depositPaymentRequired: "يجب سداد فاتورة العربون النشطة بالكامل قبل نقل حالة الخدمة إلى «العربون مدفوع».",
       depositPaymentBeforeWork: "يجب سداد فاتورة العربون النشطة بالكامل قبل بدء العمل.",
-      unpaidInvoices: "لا تزال لهذه الخدمة فواتير نشطة غير مسددة. أكمل السداد قبل تحديدها كمكتملة.",
-      approvedQuotationRequiredForCompleted: "يتطلب تحديد هذه الخدمة كمكتملة وجود عرض سعر معتمد.",
-      remainingInvoiceRequired: "أنشئ الفاتورة المتبقية قبل تحديد هذه الخدمة كمكتملة.",
       financeCancellationRequired: "تحتوي هذه الخدمة على سجلات مالية. يتطلب الإلغاء مسار إلغاء مالي أولًا.",
       unavailable: "هذا الانتقال في حالة الخدمة غير متاح.",
       unableToVerifyQuotationEvidence: "تعذر التحقق من بيانات عروض السعر الخاصة بالخدمة. يرجى المحاولة مرة أخرى.",

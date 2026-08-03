@@ -221,12 +221,25 @@ test("cancellation still fails closed when financial records exist", async () =>
   assert.equal(result.success, false);
 });
 
-test("Completed evidence rules still block unpaid active invoices", async () => {
-  const { result } = await validate("In Progress", "Completed", {
-    quotations: [quotation()],
+test("Completed is an operational transition and ignores invoice or quotation evidence", async () => {
+  const { fake, result } = await validate("In Progress", "Completed", {
+    quotations: [],
     invoices: [deposit(10, { status: "partial" })],
   });
-  assert.equal(result.success, false);
+  assert.deepEqual(result, { success: true });
+  assert.deepEqual(fake.queriedTables, []);
+});
+
+test("In Progress exposes Complete without financial preflight", async () => {
+  const fake = createFakeSupabase({ invoices: [deposit(5)] });
+  const state = await getServiceStatusTransitionState(
+    fake.client as never,
+    SERVICE_ID,
+    "In Progress",
+    "en",
+  );
+  assert.equal(state.actions.find((action) => action.status === "Completed")?.blockedReason, null);
+  assert.deepEqual(fake.queriedTables, []);
 });
 
 test("transition state exposes the full-settlement blocked reason", async () => {

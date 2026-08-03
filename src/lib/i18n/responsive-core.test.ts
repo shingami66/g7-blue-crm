@@ -21,7 +21,7 @@ const SUPPLIERS = "src/app/(dashboard)/suppliers/SuppliersClient.tsx";
 const DATA_TABLE = "src/components/ui/DataTable.tsx";
 const DASHBOARD_LAYOUT = "src/app/(dashboard)/layout.tsx";
 const SERVICE_DETAIL = "src/app/(dashboard)/services/[id]/page.tsx";
-const SERVICE_STATUS_CONTROL = "src/app/(dashboard)/services/[id]/ServiceStatusControl.tsx";
+const SERVICE_LIFECYCLE_ACTIONS = "src/app/(dashboard)/services/[id]/ServiceLifecycleActions.tsx";
 const SUPPLIER_ALLOCATIONS = "src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx";
 const BILLING = "src/app/(dashboard)/services/[id]/BillingPanel.tsx";
 
@@ -107,18 +107,15 @@ test("dashboard shell constrains flex main column so wide tables do not expand b
   assert.doesNotMatch(layout, /overflow-x-hidden/);
 });
 
-test("service detail root and status blocked-actions wrap without body overflow contracts", () => {
+test("service detail root and lifecycle actions keep bounded responsive controls", () => {
   const detail = read(SERVICE_DETAIL);
   assert.match(detail, /flex w-full min-w-0 max-w-full flex-col/);
   assert.match(detail, /flex min-w-0 items-start gap-4/);
 
-  const status = read(SERVICE_STATUS_CONTROL);
-  assert.match(status, /blockedActions/);
-  assert.match(status, /break-words/);
-  assert.match(status, /min-w-0/);
-  assert.doesNotMatch(status, /whitespace-nowrap[\s\S]{0,80}blockedReason|blockedReason[\s\S]{0,80}whitespace-nowrap/);
-  // No write-ABS or financial rewrite in this smoke fix surface
-  assert.doesNotMatch(status, /createApprovedBillingScopeDraft|voidApproved|supersedeApproved/);
+  const actions = read(SERVICE_LIFECYCLE_ACTIONS);
+  assert.match(actions, /flex flex-wrap gap-2/);
+  assert.match(actions, /min-h-11/);
+  assert.doesNotMatch(actions, /createApprovedBillingScopeDraft|voidApproved|supersedeApproved/);
 });
 
 test("supplier allocations header stacks/wraps on narrow widths", () => {

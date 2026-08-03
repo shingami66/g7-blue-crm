@@ -161,30 +161,8 @@ function getPreconditionBlockReason(
       return hasFullySettledActiveDeposit(evidence)
         ? null
         : copy.depositPaymentBeforeWork;
-    case "Completed": {
-      const unpaidInvoice = evidence.activeInvoices.find(
-        (invoice) => Number(invoice.balance_due ?? 0) > 0
-      );
-
-      if (unpaidInvoice) {
-        return copy.unpaidInvoices;
-      }
-
-      if (evidence.approvedQuotationCount !== 1 || evidence.approvedQuotationTotal === null) {
-        return copy.approvedQuotationRequiredForCompleted;
-      }
-
-      const activeInvoiceTotal = evidence.activeInvoices.reduce(
-        (sum, invoice) => sum + Number(invoice.grand_total ?? 0),
-        0
-      );
-
-      if (evidence.approvedQuotationTotal - activeInvoiceTotal > 0.01) {
-        return copy.remainingInvoiceRequired;
-      }
-
+    case "Completed":
       return null;
-    }
     case "Cancelled":
       return evidence.nonDeletedInvoiceCount === 0
         ? null
@@ -241,6 +219,10 @@ export async function getServiceStatusTransitionState(
     return buildTransitionState(currentStatus, null, null, locale);
   }
 
+  if (currentStatus === "In Progress") {
+    return buildTransitionState(currentStatus, null, null, locale);
+  }
+
   const evidenceResult = await loadTransitionEvidence(supabase, serviceId, locale);
 
   if (!evidenceResult.success) {
@@ -286,6 +268,10 @@ export async function validateServiceStatusTransition(
 
   if (requestedStatus === "Cancelled" && !cancellationReason?.trim()) {
     return { success: false, error: getTransitionDictionary(locale).blockedReasons.cancellationReasonRequired };
+  }
+
+  if (currentStatus === "In Progress" && requestedStatus === "Completed") {
+    return { success: true };
   }
 
   const evidenceResult = await loadTransitionEvidence(supabase, serviceId, locale);
