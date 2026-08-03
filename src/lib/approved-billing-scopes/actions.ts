@@ -15,6 +15,7 @@ import {
   editApprovedBillingScopeItemSchema,
   reviewApprovedBillingScopeLineSafetySchema,
   approveApprovedBillingScopeSchema,
+  voidApprovedBillingScopeSchema,
 } from "./schemas";
 import { getApprovedBillingScopeById } from "./queries";
 import type {
@@ -1121,6 +1122,190 @@ export async function approveApprovedBillingScope(
 
     console.error(
       "[approveApprovedBillingScope] Unexpected error:",
+      err instanceof Error ? err.message : "Unknown"
+    );
+    return errorResult("scope_unexpected_error");
+  }
+}
+
+export type VoidApprovedBillingScopeResult =
+  ApprovedBillingScopeActionResult;
+
+type VoidApprovedBillingScopeRpcRow = {
+  error_code: string | null;
+  scope_id: string | null;
+  service_id: string | null;
+  scope_version: number | null;
+  applicable_invoice_count: number | string;
+  lifetime_invoice_total: number | string;
+  payment_history_count: number | string;
+  voided_at: string | null;
+  voided: boolean;
+};
+
+const VOID_RPC_RESULT_KEYS = [
+  "error_code",
+  "scope_id",
+  "service_id",
+  "scope_version",
+  "applicable_invoice_count",
+  "lifetime_invoice_total",
+  "payment_history_count",
+  "voided_at",
+  "voided",
+] as const;
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value);
+}
+
+function isNonNegativeInteger(value: unknown): value is number | string {
+  if (typeof value === "number") {
+    return Number.isSafeInteger(value) && value >= 0;
+  }
+
+  return (
+    typeof value === "string" &&
+    /^\d+$/.test(value) &&
+    Number.isSafeInteger(Number(value))
+  );
+}
+
+function isNonNegativeNumeric(value: unknown): value is number | string {
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value >= 0;
+  }
+
+  if (typeof value !== "string" || value.trim().length === 0) {
+    return false;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0;
+}
+
+function isVoidApprovedBillingScopeRpcRow(
+  value: unknown
+): value is VoidApprovedBillingScopeRpcRow {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const row = value as Record<string, unknown>;
+  const keys = Object.keys(row);
+
+  if (
+    keys.length !== VOID_RPC_RESULT_KEYS.length ||
+    VOID_RPC_RESULT_KEYS.some(
+      (key) => !Object.prototype.hasOwnProperty.call(row, key)
+    )
+  ) {
+    return false;
+  }
+
+  return (
+    (row.error_code === null || typeof row.error_code === "string") &&
+    (row.scope_id === null || isUuid(row.scope_id)) &&
+    (row.service_id === null || isUuid(row.service_id)) &&
+    (row.scope_version === null ||
+      (typeof row.scope_version === "number" &&
+        Number.isSafeInteger(row.scope_version) &&
+        row.scope_version > 0)) &&
+    isNonNegativeInteger(row.applicable_invoice_count) &&
+    isNonNegativeNumeric(row.lifetime_invoice_total) &&
+    isNonNegativeInteger(row.payment_history_count) &&
+    (row.voided_at === null ||
+      (typeof row.voided_at === "string" &&
+        !Number.isNaN(Date.parse(row.voided_at)))) &&
+    typeof row.voided === "boolean"
+  );
+}
+
+function isVoidApprovedBillingScopeRpcSuccess(
+  row: VoidApprovedBillingScopeRpcRow,
+  scopeId: string
+): boolean {
+  return (
+    row.error_code === null &&
+    row.scope_id === scopeId &&
+    row.service_id !== null &&
+    row.scope_version !== null &&
+    row.voided_at !== null &&
+    row.voided === true
+  );
+}
+
+export async function voidApprovedBillingScope(
+  input: unknown
+): Promise<VoidApprovedBillingScopeResult> {
+  try {
+    const parsed = voidApprovedBillingScopeSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return errorResult("scope_unexpected_error");
+    }
+
+    const user = await requirePermission(APPROVED_BILLING_SCOPE_PERMISSIONS.void);
+    const { scopeId, reasonCode, reasonNote } = parsed.data;
+    const supabase = createAdminClient();
+    const { data: voidResults, error: voidError } = await supabase.rpc(
+      "void_approved_billing_scope",
+      {
+        p_scope_id: scopeId,
+        p_reason_code: reasonCode,
+        p_reason_note: reasonNote,
+        p_actor_id: user.clerk_user_id,
+        p_actor_role: user.role,
+      }
+    );
+
+    if (voidError) {
+      console.error(
+        "[voidApprovedBillingScope] Atomic void RPC error:",
+        voidError.message
+      );
+      return errorResult("scope_unexpected_error");
+    }
+
+    if (
+      !Array.isArray(voidResults) ||
+      voidResults.length !== 1 ||
+      !isVoidApprovedBillingScopeRpcRow(voidResults[0])
+    ) {
+      console.error(
+        "[voidApprovedBillingScope] Atomic void RPC returned an invalid result for scope:",
+        scopeId
+      );
+      return errorResult("scope_unexpected_error");
+    }
+
+    const voidResult = voidResults[0];
+
+    if (typeof voidResult.error_code === "string") {
+      return isApprovedBillingScopeErrorCode(voidResult.error_code)
+        ? errorResult(voidResult.error_code)
+        : errorResult("scope_unexpected_error");
+    }
+
+    if (!isVoidApprovedBillingScopeRpcSuccess(voidResult, scopeId)) {
+      console.error(
+        "[voidApprovedBillingScope] Atomic void RPC returned an invalid success payload for scope:",
+        scopeId
+      );
+      return errorResult("scope_unexpected_error");
+    }
+
+    return { success: true };
+  } catch (err) {
+    if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
+      return errorResult("scope_permission_denied");
+    }
+
+    console.error(
+      "[voidApprovedBillingScope] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
     return errorResult("scope_unexpected_error");

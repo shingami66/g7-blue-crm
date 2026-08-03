@@ -56,6 +56,14 @@ const ABS_SCOPE_APPROVAL = join(
   REPO_ROOT,
   "src/app/(dashboard)/services/[id]/approved-billing-scopes/[scopeId]/ApproveApprovedBillingScopeAction.tsx",
 );
+const ABS_SCOPE_VOID = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/services/[id]/approved-billing-scopes/[scopeId]/VoidApprovedBillingScopeAction.tsx",
+);
+const ABS_LIFECYCLE_AUDIT = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/services/[id]/approved-billing-scopes/[scopeId]/AbsLifecycleAuditTable.tsx",
+);
 const ALLOCATIONS = join(
   REPO_ROOT,
   "src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx",
@@ -116,6 +124,8 @@ const OPERATIONAL_UI_FILES = [
   ABS_DRAFT_DISCARD,
   ABS_LINE_SAFETY_REVIEW,
   ABS_SCOPE_APPROVAL,
+  ABS_SCOPE_VOID,
+  ABS_LIFECYCLE_AUDIT,
   ALLOCATIONS,
   BOOKINGS,
   BOOKING_ACTIONS,
@@ -695,6 +705,58 @@ test("8d. ABS review and approval controls are localized, permission-gated, and 
   assert.match(detail, /ReviewApprovedBillingScopeLineSafetyAction/);
   assert.match(detail, /ApproveApprovedBillingScopeAction/);
   assert.match(detail, /isDraft && \(canReviewDraft \|\| canApproveDraft \|\| canDiscardDraft\)/);
+});
+
+test("8e. ABS Void is localized, permission-aware, terminal, and audit-presented", () => {
+  const en = getServicesDictionary("en");
+  const ar = getServicesDictionary("ar");
+  const voidCopy = en.approvedBillingScopes.detail.voidScope;
+  const voidCopyAr = ar.approvedBillingScopes.detail.voidScope;
+
+  assert.equal(voidCopy.reasonCodeLabels.service_cancelled, "Service cancelled");
+  assert.equal(voidCopyAr.reasonCodeLabels.service_cancelled, "تم إلغاء الخدمة");
+  assert.equal(voidCopy.reasonCodeLabels.customer_withdrew_scope, "Customer withdrew scope");
+  assert.equal(voidCopyAr.reasonCodeLabels.approved_in_error, "تم الاعتماد بالخطأ");
+  assert.equal(voidCopy.reasonCodeLabels.other, "Other");
+  assert.equal(voidCopyAr.reasonCodeLabels.other, "أخرى");
+  assert.equal(Object.keys(voidCopy.reasonCodeLabels).length, 4);
+  assert.equal(voidCopy.noteCounter, "{count}/1000");
+  assert.ok(voidCopy.warning.length > 0);
+  assert.ok(voidCopyAr.warning.length > 0);
+  assert.ok(voidCopy.errors.scope_void_financial_exposure.length > 0);
+  assert.ok(voidCopyAr.errors.scope_already_voided.length > 0);
+  assert.ok(voidCopy.errors.scope_already_superseded.length > 0);
+  assert.ok(voidCopyAr.errors.scope_not_approved.length > 0);
+
+  const action = read(ABS_SCOPE_VOID);
+  assert.match(action, /voidApprovedBillingScope/);
+  assert.match(action, /reasonCode/);
+  assert.match(action, /reasonNote: normalizedNote/);
+  assert.match(action, /maxLength=\{1000\}/);
+  assert.match(action, /useTransition/);
+  assert.match(action, /disabled=\{isPending\}/);
+  assert.match(action, /router\.refresh/);
+  assert.match(action, /variant="danger"/);
+  assert.match(action, /role="dialog"/);
+  assert.match(action, /aria-modal="true"/);
+  assert.doesNotMatch(action, /supersede/i);
+  assert.doesNotMatch(action, /error\.message/);
+
+  const detail = read(ABS_DETAIL);
+  assert.match(detail, /checkPermission\("approvedBillingScopes:void"\)/);
+  assert.match(detail, /VoidApprovedBillingScopeAction/);
+  assert.match(detail, /effectiveStatus === "active"/);
+  assert.match(detail, /isTerminalServiceStatus\(service\.status\)/);
+  assert.match(detail, /scope\.voidedAt/);
+  assert.match(detail, /scope\.voidReason/);
+  assert.doesNotMatch(detail, /SupersedeApprovedBillingScopeAction/);
+
+  const audit = read(ABS_LIFECYCLE_AUDIT);
+  assert.match(audit, /eventTypeLabels\[event\.eventType\]/);
+  assert.match(audit, /event\.actor\.kind === "identified"/);
+  assert.match(audit, /event\.reasonNote/);
+  assert.match(audit, /reasonCodeLabels/);
+  assert.doesNotMatch(audit, /details\.message|error\.message|service_role/i);
 });
 
 test("9-11. ABS permissions and masking: accountant read-only; viewer/sales blocked", () => {

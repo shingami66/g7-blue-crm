@@ -43,6 +43,16 @@ export const APPROVED_BILLING_SCOPE_REASON_CODES = [
 export type ApprovedBillingScopeReasonCode =
   (typeof APPROVED_BILLING_SCOPE_REASON_CODES)[number];
 
+export const APPROVED_BILLING_SCOPE_VOID_REASON_CODES = [
+  "service_cancelled",
+  "customer_withdrew_scope",
+  "approved_in_error",
+  "other",
+] as const;
+
+export type ApprovedBillingScopeVoidReasonCode =
+  (typeof APPROVED_BILLING_SCOPE_VOID_REASON_CODES)[number];
+
 export interface ApprovedBillingScopeRow {
   id: string;
   service_id: string;

@@ -309,6 +309,7 @@ const {
   editApprovedBillingScopeItem,
   reviewApprovedBillingScopeLineSafety,
   approveApprovedBillingScope,
+  voidApprovedBillingScope,
 } = await import("./actions.ts");
 
 test("ABS write actions use authoritative money and never coerce malformed values to zero", () => {
@@ -1003,6 +1004,149 @@ for (const [label, data, error] of [
     const response = await approveApprovedBillingScope({ scopeId: SCOPE_ID });
 
     assert.deepEqual(response, { success: false, error: "scope_unexpected_error" });
+    assert.equal(scenario.rpcCalls.length, 1);
+    assertNoApprovalTableMutation(scenario);
+  });
+}
+
+function voidRpcRow(overrides: Record<string, unknown> = {}) {
+  return {
+    error_code: null,
+    scope_id: SCOPE_ID,
+    service_id: SOURCE_SERVICE_ID,
+    scope_version: 1,
+    applicable_invoice_count: 0,
+    lifetime_invoice_total: 0,
+    payment_history_count: 0,
+    voided_at: "2026-07-14T00:00:00.000Z",
+    voided: true,
+    ...overrides,
+  };
+}
+
+function voidScenario(
+  data: unknown = [voidRpcRow()],
+  error: { message: string } | null = null,
+  options: Parameters<typeof startScenario>[2] = {},
+) {
+  return startScenario({ status: "Approved", deleted_at: null }, false, {
+    ...options,
+    rpcResponses: {
+      ...(options.rpcResponses ?? {}),
+      void_approved_billing_scope: { data, error },
+    },
+  });
+}
+
+const validVoidInput = {
+  scopeId: SCOPE_ID,
+  reasonCode: "service_cancelled",
+  reasonNote: "  Service was cancelled by the customer.  ",
+};
+
+for (const [label, input] of [
+  ["an invalid UUID", { ...validVoidInput, scopeId: "not-a-uuid" }],
+  ["an invalid reason code", { ...validVoidInput, reasonCode: "not-allowed" }],
+  ["a blank reason note", { ...validVoidInput, reasonNote: "   " }],
+  ["an overlong reason note", { ...validVoidInput, reasonNote: "x".repeat(1001) }],
+] as const) {
+  test(`voidApprovedBillingScope rejects ${label} before privileged execution`, async () => {
+    const scenario = voidScenario();
+
+    const response = await voidApprovedBillingScope(input);
+
+    assert.deepEqual(response, { success: false, error: "scope_unexpected_error" });
+    assert.deepEqual(scenario.permissionCalls, []);
+    assert.equal(scenario.clientCalls, 0);
+    assert.deepEqual(scenario.rpcCalls, []);
+    assertNoApprovalTableMutation(scenario);
+  });
+}
+
+test("voidApprovedBillingScope checks the dedicated permission before creating its write client", async () => {
+  const scenario = startScenario({ status: "Approved", deleted_at: null }, true);
+
+  const response = await voidApprovedBillingScope(validVoidInput);
+
+  assert.deepEqual(response, { success: false, error: "scope_permission_denied" });
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:void"]);
+  assert.equal(scenario.clientCalls, 0);
+  assert.deepEqual(scenario.rpcCalls, []);
+  assertNoApprovalTableMutation(scenario);
+});
+
+test("voidApprovedBillingScope sends the exact RPC contract with server-derived actor context", async () => {
+  const scenario = voidScenario();
+
+  const response = await voidApprovedBillingScope(validVoidInput);
+
+  assert.deepEqual(response, { success: true });
+  assert.deepEqual(scenario.permissionCalls, ["approvedBillingScopes:void"]);
+  assert.equal(scenario.clientCalls, 1);
+  assert.deepEqual(scenario.rpcCalls, [{
+    name: "void_approved_billing_scope",
+    args: {
+      p_scope_id: SCOPE_ID,
+      p_reason_code: "service_cancelled",
+      p_reason_note: "Service was cancelled by the customer.",
+      p_actor_id: "test-user",
+      p_actor_role: "manager",
+    },
+  }]);
+  assertNoApprovalTableMutation(scenario);
+});
+
+test("voidApprovedBillingScope rejects browser-supplied actor authority fields", async () => {
+  const scenario = voidScenario();
+
+  const response = await voidApprovedBillingScope({
+    ...validVoidInput,
+    actorId: "browser-user",
+    actorRole: "admin",
+  });
+
+  assert.deepEqual(response, { success: false, error: "scope_unexpected_error" });
+  assert.deepEqual(scenario.permissionCalls, []);
+  assert.equal(scenario.clientCalls, 0);
+  assert.deepEqual(scenario.rpcCalls, []);
+  assertNoApprovalTableMutation(scenario);
+});
+
+for (const errorCode of [
+  "scope_already_voided",
+  "scope_already_superseded",
+  "scope_void_financial_exposure",
+  "scope_not_approved",
+] as const) {
+  test(`voidApprovedBillingScope preserves canonical RPC error ${errorCode}`, async () => {
+    const scenario = voidScenario([voidRpcRow({ error_code: errorCode, voided: false })]);
+
+    const response = await voidApprovedBillingScope(validVoidInput);
+
+    assert.deepEqual(response, { success: false, error: errorCode });
+    assert.equal(scenario.rpcCalls.length, 1);
+    assertNoApprovalTableMutation(scenario);
+  });
+}
+
+for (const [label, data, error] of [
+  ["a transport error", null, { message: "secret database details" }],
+  ["null data", null, null],
+  ["an empty result", [], null],
+  ["multiple result rows", [voidRpcRow(), voidRpcRow()], null],
+  ["an unknown business error", [voidRpcRow({ error_code: "scope_not_active_typo", voided: false })], null],
+  ["a malformed scope version", [voidRpcRow({ scope_version: "1" })], null],
+  ["a malformed invoice count", [voidRpcRow({ applicable_invoice_count: -1 })], null],
+  ["a malformed success flag", [voidRpcRow({ voided: false })], null],
+  ["a mismatched scope id", [voidRpcRow({ scope_id: ITEM_ID })], null],
+] as const) {
+  test(`voidApprovedBillingScope rejects ${label} without leaking database details`, async () => {
+    const scenario = voidScenario(data, error);
+
+    const response = await voidApprovedBillingScope(validVoidInput);
+
+    assert.deepEqual(response, { success: false, error: "scope_unexpected_error" });
+    assert.doesNotMatch(JSON.stringify(response), /secret database details/);
     assert.equal(scenario.rpcCalls.length, 1);
     assertNoApprovalTableMutation(scenario);
   });

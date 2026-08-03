@@ -235,6 +235,8 @@ export interface ServicesDictionary {
         acceptedGrandTotal: string;
         createdAt: string;
         approvedAt: string;
+        voidedAt: string;
+        voidReason: string;
         description: string;
         category: string;
         decision: string;
@@ -257,6 +259,8 @@ export interface ServicesDictionary {
       discardDraft: AbsDraftDiscardDictionary;
       reviewLineSafety: AbsLineSafetyReviewDictionary;
       approveScope: AbsScopeApprovalDictionary;
+      voidScope: AbsScopeVoidDictionary;
+      lifecycleAudit: AbsLifecycleAuditDictionary;
     };
   };
   serviceStatusControl: {
@@ -1104,6 +1108,8 @@ const servicesDictionaryEn: ServicesDictionary = {
         acceptedGrandTotal: "Accepted grand total",
         createdAt: "Created",
         approvedAt: "Approved",
+        voidedAt: "Voided",
+        voidReason: "Void note",
         description: "Description",
         category: "Category",
         decision: "Decision",
@@ -1254,10 +1260,73 @@ const servicesDictionaryEn: ServicesDictionary = {
           scope_unexpected_error: "Could not approve the billing scope. Please try again.",
         },
       },
+      voidScope: {
+        trigger: "Void scope",
+        title: "Void approved billing scope?",
+        body: "This permanently closes the approved scope and removes it as the active billing authority.",
+        warning: "This action is irreversible. Existing invoices, payments, balances, documents, and snapshots will not be changed.",
+        reasonCode: "Reason",
+        reasonCodePlaceholder: "Select a reason",
+        reasonNote: "Required note",
+        reasonNoteHelp: "Explain why this approved scope is being voided.",
+        noteCounter: "{count}/1000",
+        cancel: "Cancel",
+        confirm: "Void scope",
+        voiding: "Voiding scope…",
+        blockedNotApproved: "Only an approved scope can be voided.",
+        blockedNotActive: "Only the active approved scope can be voided.",
+        blockedSuperseded: "This scope has already been superseded.",
+        blockedServiceLifecycle: "The Service lifecycle does not allow this scope to be voided.",
+        blockedVoided: "This scope is already voided and is terminal.",
+        success: "Billing scope voided.",
+        reasonCodeLabels: {
+          service_cancelled: "Service cancelled",
+          customer_withdrew_scope: "Customer withdrew scope",
+          approved_in_error: "Approved in error",
+          other: "Other",
+        },
+        validation: {
+          reasonRequired: "Select a reason before confirming.",
+          noteRequired: "A non-empty reason note is required.",
+          noteTooLong: "The reason note must be 1000 characters or fewer.",
+        },
+        errors: {
+          scope_not_found: "This billing scope is no longer available.",
+          scope_already_voided: "This billing scope is already voided.",
+          scope_already_superseded: "This billing scope has already been superseded.",
+          scope_void_financial_exposure: "This scope cannot be voided while invoices or payment history exist.",
+          scope_not_approved: "Only an approved billing scope can be voided.",
+          scope_terminal_voided: "A voided billing scope is terminal.",
+          scope_permission_denied: "You do not have permission to void this billing scope.",
+          scope_unexpected_error: "Could not void the billing scope. Please try again.",
+        },
+      },
+      lifecycleAudit: {
+        title: "Lifecycle history",
+        empty: "No lifecycle history is available for this Service.",
+        unavailable: "Lifecycle history is temporarily unavailable.",
+        showingLatestBounded: "Showing the latest {limit} lifecycle events only.",
+        actorRecorded: "Actor recorded",
+        noReason: "No reason recorded",
+        columns: {
+          event: "Event",
+          version: "Version",
+          timestamp: "Date",
+          actor: "Actor",
+          reason: "Reason and note",
+        },
+        eventTypeLabels: {
+          approved_billing_scope_line_safety_reviewed: "Line safety reviewed",
+          approved_billing_scope_approved: "Scope approved",
+          approved_billing_scope_voided: "Scope voided",
+          approved_billing_scope_successor_created: "Successor scope created",
+          approved_billing_scope_superseded: "Scope superseded",
+        },
+      },
     },
   },
   serviceStatusControl: {
-    title: "Status Actions",
+    title: "Next Action",
     currentStatus: "Current status",
     terminalMessage: "This Service is in a terminal status. No further status actions are available.",
     noActions: "No status action is currently available.",
@@ -2101,6 +2170,70 @@ type AbsScopeApprovalDictionary = {
   };
 };
 
+type AbsScopeVoidDictionary = {
+  trigger: string;
+  title: string;
+  body: string;
+  warning: string;
+  reasonCode: string;
+  reasonCodePlaceholder: string;
+  reasonNote: string;
+  reasonNoteHelp: string;
+  noteCounter: string;
+  cancel: string;
+  confirm: string;
+  voiding: string;
+  blockedNotApproved: string;
+  blockedNotActive: string;
+  blockedSuperseded: string;
+  blockedServiceLifecycle: string;
+  blockedVoided: string;
+  success: string;
+  reasonCodeLabels: Record<
+    "service_cancelled" | "customer_withdrew_scope" | "approved_in_error" | "other",
+    string
+  >;
+  validation: {
+    reasonRequired: string;
+    noteRequired: string;
+    noteTooLong: string;
+  };
+  errors: {
+    scope_not_found: string;
+    scope_already_voided: string;
+    scope_already_superseded: string;
+    scope_void_financial_exposure: string;
+    scope_not_approved: string;
+    scope_terminal_voided: string;
+    scope_permission_denied: string;
+    scope_unexpected_error: string;
+  };
+};
+
+type AbsLifecycleAuditDictionary = {
+  title: string;
+  empty: string;
+  unavailable: string;
+  showingLatestBounded: string;
+  actorRecorded: string;
+  noReason: string;
+  columns: {
+    event: string;
+    version: string;
+    timestamp: string;
+    actor: string;
+    reason: string;
+  };
+  eventTypeLabels: Record<
+    | "approved_billing_scope_line_safety_reviewed"
+    | "approved_billing_scope_approved"
+    | "approved_billing_scope_voided"
+    | "approved_billing_scope_successor_created"
+    | "approved_billing_scope_superseded",
+    string
+  >;
+};
+
 const servicesDictionaryAr: ServicesDictionary = {
   locale: "ar",
   states: {
@@ -2360,6 +2493,8 @@ const servicesDictionaryAr: ServicesDictionary = {
         acceptedGrandTotal: "الإجمالي المقبول",
         createdAt: "تاريخ الإنشاء",
         approvedAt: "تاريخ الاعتماد",
+        voidedAt: "تاريخ الإلغاء النهائي",
+        voidReason: "ملاحظة الإلغاء النهائي",
         description: "الوصف",
         category: "الفئة",
         decision: "القرار",
@@ -2507,10 +2642,73 @@ const servicesDictionaryAr: ServicesDictionary = {
           scope_unexpected_error: "تعذر اعتماد نطاق الفوترة. يرجى المحاولة مرة أخرى.",
         },
       },
+      voidScope: {
+        trigger: "إلغاء النطاق نهائيًا",
+        title: "إلغاء نطاق الفوترة المعتمد نهائيًا؟",
+        body: "سيغلق هذا الإجراء النطاق نهائيًا ويزيله من سلطة الفوترة النشطة.",
+        warning: "هذا الإجراء لا يمكن التراجع عنه. لن يتم تغيير الفواتير أو المدفوعات أو الأرصدة أو المستندات أو اللقطات الحالية.",
+        reasonCode: "السبب",
+        reasonCodePlaceholder: "اختر سببًا",
+        reasonNote: "ملاحظة مطلوبة",
+        reasonNoteHelp: "اشرح سبب إلغاء نطاق الفوترة المعتمد نهائيًا.",
+        noteCounter: "{count}/1000",
+        cancel: "إلغاء",
+        confirm: "إلغاء النطاق نهائيًا",
+        voiding: "جارٍ إلغاء النطاق نهائيًا…",
+        blockedNotApproved: "لا يمكن إلغاء نطاق غير معتمد نهائيًا.",
+        blockedNotActive: "لا يمكن إلغاء النطاق المعتمد النشط فقط.",
+        blockedSuperseded: "تم استبدال هذا النطاق بالفعل.",
+        blockedServiceLifecycle: "دورة حياة الخدمة الحالية لا تسمح بإلغاء هذا النطاق نهائيًا.",
+        blockedVoided: "تم إلغاء هذا النطاق نهائيًا، وهو في حالة نهائية.",
+        success: "تم إلغاء نطاق الفوترة نهائيًا.",
+        reasonCodeLabels: {
+          service_cancelled: "تم إلغاء الخدمة",
+          customer_withdrew_scope: "سحب العميل النطاق",
+          approved_in_error: "تم الاعتماد بالخطأ",
+          other: "أخرى",
+        },
+        validation: {
+          reasonRequired: "اختر سببًا قبل التأكيد.",
+          noteRequired: "ملاحظة السبب مطلوبة ولا يمكن أن تكون فارغة.",
+          noteTooLong: "يجب ألا تتجاوز ملاحظة السبب 1000 حرف.",
+        },
+        errors: {
+          scope_not_found: "لم يعد نطاق الفوترة هذا متاحًا.",
+          scope_already_voided: "تم إلغاء نطاق الفوترة هذا نهائيًا بالفعل.",
+          scope_already_superseded: "تم استبدال نطاق الفوترة هذا بالفعل.",
+          scope_void_financial_exposure: "لا يمكن إلغاء هذا النطاق نهائيًا مع وجود فواتير أو سجل مدفوعات.",
+          scope_not_approved: "لا يمكن إلغاء نطاق الفوترة نهائيًا إلا إذا كان معتمدًا.",
+          scope_terminal_voided: "نطاق الفوترة الملغى نهائيًا في حالة نهائية.",
+          scope_permission_denied: "ليست لديك صلاحية إلغاء نطاق الفوترة هذا نهائيًا.",
+          scope_unexpected_error: "تعذر إلغاء نطاق الفوترة نهائيًا. يرجى المحاولة مرة أخرى.",
+        },
+      },
+      lifecycleAudit: {
+        title: "سجل دورة الحياة",
+        empty: "لا يوجد سجل لدورة حياة هذه الخدمة.",
+        unavailable: "سجل دورة الحياة غير متاح مؤقتًا.",
+        showingLatestBounded: "يُعرض أحدث {limit} أحداث لدورة الحياة فقط.",
+        actorRecorded: "تم تسجيل المنفذ",
+        noReason: "لم يتم تسجيل سبب",
+        columns: {
+          event: "الحدث",
+          version: "الإصدار",
+          timestamp: "التاريخ",
+          actor: "المنفذ",
+          reason: "السبب والملاحظة",
+        },
+        eventTypeLabels: {
+          approved_billing_scope_line_safety_reviewed: "تمت مراجعة سلامة البنود",
+          approved_billing_scope_approved: "تم اعتماد النطاق",
+          approved_billing_scope_voided: "تم إلغاء النطاق نهائيًا",
+          approved_billing_scope_successor_created: "تم إنشاء نطاق لاحق",
+          approved_billing_scope_superseded: "تم استبدال النطاق",
+        },
+      },
     },
   },
   serviceStatusControl: {
-    title: "إجراءات الحالة",
+    title: "الإجراء التالي",
     currentStatus: "الحالة الحالية",
     terminalMessage: "هذه الخدمة في حالة نهائية. لا توجد إجراءات حالة إضافية متاحة.",
     noActions: "لا يوجد إجراء حالة متاح حاليًا.",

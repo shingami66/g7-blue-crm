@@ -16,6 +16,10 @@ export const APPROVED_BILLING_SCOPE_ERROR_CODES = [
   "scope_reason_required",
   "scope_unsafe_note_required",
   "scope_terminal_voided",
+  "scope_already_voided",
+  "scope_already_superseded",
+  "scope_void_financial_exposure",
+  "scope_not_approved",
   "scope_supersede_target_required",
   "scope_supersede_service_mismatch",
   "scope_concurrency_conflict",
@@ -62,6 +66,11 @@ export const APPROVED_BILLING_SCOPE_ERROR_MESSAGES: Record<
     "A reviewer note is required when marking line safety as unsafe.",
   scope_terminal_voided:
     "Voided billing scopes are terminal and cannot be changed.",
+  scope_already_voided: "Approved billing scope is already voided.",
+  scope_already_superseded: "Approved billing scope has already been superseded.",
+  scope_void_financial_exposure:
+    "The billing scope cannot be voided while invoices or payment history exist.",
+  scope_not_approved: "Only an approved billing scope can be voided.",
   scope_supersede_target_required:
     "A supersede target billing scope is required for this action.",
   scope_supersede_service_mismatch:

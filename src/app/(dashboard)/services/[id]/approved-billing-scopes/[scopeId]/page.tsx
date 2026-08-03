@@ -8,17 +8,20 @@ import PendingLink from "@/components/ui/PendingLink";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { getApprovedBillingScopeByIdResult } from "@/lib/approved-billing-scopes/queries";
+import { listApprovedBillingScopeLifecycleAuditEventsForServiceResult } from "@/lib/approved-billing-scopes/audit-queries";
+import { deriveAbsEffectiveDisplayStatus } from "@/lib/approved-billing-scopes/mappers";
 import type {
+  AbsLifecycleAuditListData,
   ApprovedBillingScopeDetail,
   ApprovedBillingScopeItemDecision,
   ApprovedBillingScopeLineSafetyStatus,
-  ApprovedBillingScopeStatus,
 } from "@/lib/approved-billing-scopes/types";
 import { getInvoicesByApprovedBillingScopeId } from "@/lib/invoices/queries";
 import type { Invoice } from "@/types/invoice";
 import { getServiceById } from "@/lib/services/queries";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import { isTerminalServiceStatus } from "@/lib/services/status-transitions";
 import { UiDateText } from "@/components/i18n/UiDateText";
 import type { Locale } from "@/lib/i18n/locales";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
@@ -27,14 +30,20 @@ import { ApprovedBillingScopeDraftItemEditor } from "./ApprovedBillingScopeDraft
 import { DiscardApprovedBillingScopeDraftAction } from "./DiscardApprovedBillingScopeDraftAction";
 import { ReviewApprovedBillingScopeLineSafetyAction } from "./ReviewApprovedBillingScopeLineSafetyAction";
 import { ApproveApprovedBillingScopeAction } from "./ApproveApprovedBillingScopeAction";
+import { VoidApprovedBillingScopeAction } from "./VoidApprovedBillingScopeAction";
+import AbsLifecycleAuditTable from "./AbsLifecycleAuditTable";
 
 export const dynamic = "force-dynamic";
 
 type StatusVariant = ComponentProps<typeof StatusBadge>["variant"];
 
-const scopeStatusVariants: Record<ApprovedBillingScopeStatus, StatusVariant> = {
+const effectiveStatusVariants: Record<
+  ReturnType<typeof deriveAbsEffectiveDisplayStatus>,
+  StatusVariant
+> = {
   draft: "draft",
-  approved: "approved",
+  active: "approved",
+  superseded: "inactive",
   voided: "cancelled",
 };
 
@@ -82,15 +91,38 @@ export default async function ApprovedBillingScopeDetailPage({
   if (!service || scope.serviceId !== service.id) notFound();
 
   const isDraft = scope.status === "draft";
-  const [canUpdateDraftItems, canReviewDraft, canApproveDraft, canDiscardDraft, canReadInvoices] = await Promise.all([
+  const [canUpdateDraftItems, canReviewDraft, canApproveDraft, canDiscardDraft, canVoidScope, canReadInvoices] = await Promise.all([
     isDraft ? checkPermission("approvedBillingScopes:update") : false,
     isDraft ? checkPermission("approvedBillingScopes:review") : false,
     isDraft ? checkPermission("approvedBillingScopes:approve") : false,
     isDraft ? checkPermission("approvedBillingScopes:discard") : false,
+    checkPermission("approvedBillingScopes:void"),
     checkPermission("invoices:read"),
   ]);
-  const invoiceResult = canReadInvoices
-    ? await getInvoicesByApprovedBillingScopeId(scope.id)
+  const [invoiceResult, auditResult] = await Promise.all([
+    canReadInvoices
+      ? getInvoicesByApprovedBillingScopeId(scope.id)
+      : Promise.resolve(null),
+    listApprovedBillingScopeLifecycleAuditEventsForServiceResult(service.id),
+  ]);
+  const audit: AbsLifecycleAuditListData | null =
+    auditResult.status === "success" ? auditResult.data : null;
+  const auditUnavailable = auditResult.status !== "success";
+  const effectiveStatus = deriveAbsEffectiveDisplayStatus(scope);
+  const voidEligible =
+    canVoidScope &&
+    effectiveStatus === "active" &&
+    !isTerminalServiceStatus(service.status);
+  const voidBlockedReason = canVoidScope
+    ? effectiveStatus === "voided"
+      ? detailDictionary.voidScope.blockedVoided
+      : effectiveStatus === "superseded"
+        ? detailDictionary.voidScope.blockedSuperseded
+        : effectiveStatus !== "active"
+          ? detailDictionary.voidScope.blockedNotApproved
+          : isTerminalServiceStatus(service.status)
+            ? detailDictionary.voidScope.blockedServiceLifecycle
+            : null
     : null;
 
   return (
@@ -114,9 +146,9 @@ export default async function ApprovedBillingScopeDetailPage({
             </h1>
           </div>
         </div>
-        {isDraft && (canReviewDraft || canApproveDraft || canDiscardDraft) ? (
+        {((isDraft && (canReviewDraft || canApproveDraft || canDiscardDraft)) || canVoidScope) ? (
           <div className="flex flex-wrap items-center gap-2">
-            {canReviewDraft ? (
+            {isDraft && canReviewDraft ? (
               <ReviewApprovedBillingScopeLineSafetyAction
                 scopeId={scope.id}
                 lineSafetyStatus={scope.lineSafetyStatus}
@@ -125,7 +157,7 @@ export default async function ApprovedBillingScopeDetailPage({
                 reasonCodeLabels={detailDictionary.editItem.reasonCodeLabels}
               />
             ) : null}
-            {canApproveDraft ? (
+            {isDraft && canApproveDraft ? (
               <ApproveApprovedBillingScopeAction
                 scopeId={scope.id}
                 sourceQuotationId={scope.sourceQuotationId}
@@ -138,12 +170,22 @@ export default async function ApprovedBillingScopeDetailPage({
                 lineSafetyLabels={dictionary.approvedBillingScopes.lineSafetyLabels}
               />
             ) : null}
-            {canDiscardDraft ? (
+            {isDraft && canDiscardDraft ? (
               <DiscardApprovedBillingScopeDraftAction
                 scopeId={scope.id}
                 serviceId={service.id}
                 dictionary={detailDictionary.discardDraft}
               />
+            ) : null}
+            {voidEligible ? (
+              <VoidApprovedBillingScopeAction
+                scopeId={scope.id}
+                dictionary={detailDictionary.voidScope}
+              />
+            ) : voidBlockedReason ? (
+              <p className="text-[13px] text-on-surface-variant" role="status">
+                {voidBlockedReason}
+              </p>
             ) : null}
           </div>
         ) : null}
@@ -153,7 +195,7 @@ export default async function ApprovedBillingScopeDetailPage({
         <SectionHeader title={detailDictionary.sectionSummary} />
         <dl className="grid grid-cols-1 gap-5 p-6 sm:grid-cols-2 lg:grid-cols-3">
           <Field label={detailDictionary.labels.status}>
-            <StatusBadge variant={scopeStatusVariants[scope.status]}>
+            <StatusBadge variant={effectiveStatusVariants[effectiveStatus]}>
               {scopeStatusLabel(scope, dictionary)}
             </StatusBadge>
           </Field>
@@ -167,6 +209,12 @@ export default async function ApprovedBillingScopeDetailPage({
           <Field label={detailDictionary.labels.createdAt} value={formatDate(locale, scope.createdAt)} />
           {scope.approvedAt && (
             <Field label={detailDictionary.labels.approvedAt} value={formatDate(locale, scope.approvedAt)} />
+          )}
+          {scope.voidedAt && (
+            <Field label={detailDictionary.labels.voidedAt} value={formatDate(locale, scope.voidedAt)} />
+          )}
+          {scope.voidReason && (
+            <Field label={detailDictionary.labels.voidReason} value={isolateBidiText(scope.voidReason)} dir="auto" />
           )}
         </dl>
       </section>
@@ -242,6 +290,13 @@ export default async function ApprovedBillingScopeDetailPage({
           )}
         </section>
       )}
+
+      <AbsLifecycleAuditTable
+        locale={locale}
+        dictionary={dictionary.approvedBillingScopes}
+        audit={audit}
+        unavailable={auditUnavailable}
+      />
     </div>
   );
 }
@@ -302,7 +357,10 @@ function InvoiceRow({
 }
 
 function scopeStatusLabel(scope: ApprovedBillingScopeDetail, dictionary: ReturnType<typeof getServicesDictionary>) {
-  return scope.isActiveApprovedScope ? dictionary.approvedBillingScopes.active : dictionary.approvedBillingScopes.statusLabels[scope.status];
+  const effectiveStatus = deriveAbsEffectiveDisplayStatus(scope);
+  return effectiveStatus === "active"
+    ? dictionary.approvedBillingScopes.active
+    : dictionary.approvedBillingScopes.effectiveStatusLabels[effectiveStatus];
 }
 
 function formatNumber(locale: Locale, value: number) {

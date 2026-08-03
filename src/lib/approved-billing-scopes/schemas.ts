@@ -3,6 +3,7 @@ import {
   APPROVED_BILLING_SCOPE_ITEM_DECISIONS,
   APPROVED_BILLING_SCOPE_LINE_SAFETY_STATUSES,
   APPROVED_BILLING_SCOPE_REASON_CODES,
+  APPROVED_BILLING_SCOPE_VOID_REASON_CODES,
 } from "./types";
 
 const boundedTrimmedString = (label: string, max = 1000) =>
@@ -40,6 +41,10 @@ export const approvedBillingScopeLineSafetyStatusSchema = z.enum(
 
 export const approvedBillingScopeReasonCodeSchema = z.enum(
   APPROVED_BILLING_SCOPE_REASON_CODES
+);
+
+export const approvedBillingScopeVoidReasonCodeSchema = z.enum(
+  APPROVED_BILLING_SCOPE_VOID_REASON_CODES
 );
 
 export const createApprovedBillingScopeDraftSchema = z.object({
@@ -154,7 +159,8 @@ export const approveApprovedBillingScopeSchema = z
 export const voidApprovedBillingScopeSchema = z
   .object({
     scopeId: approvedBillingScopeIdSchema,
-    voidReason: boundedTrimmedString("Void reason"),
+    reasonCode: approvedBillingScopeVoidReasonCodeSchema,
+    reasonNote: boundedTrimmedString("Void reason note"),
   })
   .strict();
 
