@@ -6,6 +6,7 @@ import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
 import { getQuotationsByServiceId } from "@/lib/quotations/queries";
 import { getServiceBillingState } from "@/lib/invoices";
+import { listServiceActivity } from "@/lib/services/activity-queries";
 import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PendingLink from "@/components/ui/PendingLink";
@@ -26,14 +27,16 @@ import Link from "next/link";
 import RelatedQuotationsCard from "./RelatedQuotationsCard";
 import ServiceBillingSummaryCard from "./ServiceBillingSummaryCard";
 import ServiceLifecycleActions from "./ServiceLifecycleActions";
+import ServiceActivityHistory from "./ServiceActivityHistory";
 import SupplierAllocationsPanel from "./SupplierAllocationsPanel";
 import { getSupplierAllocationsByServiceId } from "@/lib/supplier-allocations/queries";
 import { getSupplierBookingsByServiceId } from "@/lib/supplier-bookings/queries";
 import type { Service } from "@/types/service";
 import SupplierBookingsPanel from "./SupplierBookingsPanel";
-import ApprovedBillingScopesCard from "./ApprovedBillingScopesCard";
 
 export const dynamic = "force-dynamic";
+
+// ApprovedBillingScopesCard remains available only on the nested technical evidence surface.
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -106,11 +109,15 @@ export default async function ServiceDetailPage({
   const canReadSupplierBookings = await checkPermission("supplier_bookings:read");
   const canWriteSupplierBookings = await checkPermission("supplier_bookings:write");
   const canCancelSupplierBookings = await checkPermission("supplier_bookings:cancel");
+  // Technical ABS permissions remain enforced for the nested evidence route;
+  // the normal Service page intentionally does not render that workflow.
   const canReadApprovedBillingScopes = await checkPermission("approvedBillingScopes:read");
-  const canCreateApprovedBillingScopeDraft = await checkPermission(
+  const canCreateDraft = await checkPermission(
     "approvedBillingScopes:create",
   );
-  const canReadInvoices = await checkPermission(INVOICE_PERMISSIONS.read);
+  void canReadApprovedBillingScopes;
+  void canCreateDraft;
+  await checkPermission(INVOICE_PERMISSIONS.read);
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
   const today = new Date().toISOString().split("T")[0];
@@ -123,6 +130,7 @@ export default async function ServiceDetailPage({
     ? await getQuotationsByServiceId(service.id)
     : null;
   const billingState = await getServiceBillingState(service.id);
+  const activity = await listServiceActivity(service.id);
 
   const supplierAllocationsResult = canReadSupplierAllocations
     ? await getSupplierAllocationsByServiceId(service.id, { includeDeleted: showDeleted })
@@ -300,23 +308,6 @@ export default async function ServiceDetailPage({
         dictionary={dictionary}
         disabledReason={quotationDisabledReason}
       />
-      {canReadApprovedBillingScopes && (
-        <ApprovedBillingScopesCard
-          serviceId={service.id}
-          dictionary={dictionary}
-          billingState={billingState}
-          serviceStatus={service.status}
-          canReadInvoices={canReadInvoices}
-          canReadQuotations={canReadQuotations}
-          canCreateDraft={canCreateApprovedBillingScopeDraft}
-          quotationNumbersById={Object.fromEntries(
-            (relatedQuotations ?? []).map((quotation) => [
-              quotation.id,
-              quotation.quotationNumber,
-            ]),
-          )}
-        />
-      )}
       {canReadSupplierAllocations && supplierAllocationsResult && supplierAllocations && (
         <SupplierAllocationsPanel
           allocations={supplierAllocations}
@@ -345,6 +336,12 @@ export default async function ServiceDetailPage({
       <ServiceBillingSummaryCard
         serviceId={service.id}
         billingState={billingState}
+        dictionary={dictionary}
+      />
+      <ServiceActivityHistory
+        events={activity.events}
+        available={activity.success}
+        locale={locale}
         dictionary={dictionary}
       />
     </div>

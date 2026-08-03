@@ -97,6 +97,14 @@ const ALLOC_RESTORE_PAGE = join(
   "src/app/(dashboard)/services/[id]/allocations/[allocationId]/restore/page.tsx",
 );
 const SERVICE_DETAIL = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/page.tsx");
+const SERVICE_ACTIVITY = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/services/[id]/ServiceActivityHistory.tsx",
+);
+const SERVICE_LIFECYCLE_ACTIONS = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/services/[id]/ServiceLifecycleActions.tsx",
+);
 const INVOICE_ACTIONS = join(REPO_ROOT, "src/lib/invoices/actions.ts");
 const INVOICE_BILLING_STATE = join(REPO_ROOT, "src/lib/invoices/billing-state.ts");
 const INVOICE_SCHEMAS = join(REPO_ROOT, "src/lib/invoices/schemas.ts");
@@ -134,6 +142,8 @@ const OPERATIONAL_UI_FILES = [
   ALLOC_CANCEL_PAGE,
   ALLOC_DELETE_PAGE,
   ALLOC_RESTORE_PAGE,
+  SERVICE_ACTIVITY,
+  SERVICE_LIFECYCLE_ACTIONS,
 ];
 
 function listNestedKeys(value: unknown, prefix = ""): string[] {
@@ -171,6 +181,14 @@ test("1. Operational services dictionary English/Arabic shapes stay aligned", ()
   assert.deepEqual(
     listNestedKeys(en.supplierBookings).sort(),
     listNestedKeys(ar.supplierBookings).sort(),
+  );
+  assert.deepEqual(
+    listNestedKeys(en.serviceActivity).sort(),
+    listNestedKeys(ar.serviceActivity).sort(),
+  );
+  assert.deepEqual(
+    listNestedKeys(en.serviceStatusControl).sort(),
+    listNestedKeys(ar.serviceStatusControl).sort(),
   );
 });
 
@@ -288,6 +306,29 @@ test("3. Deposit and final invoice action copy resolves in both locales", () => 
   assert.equal("fallbackWithCode" in ar.billing.finalAction.errors, false);
   assert.ok(en.billing.depositAction.errors.fallback.length > 0);
   assert.ok(ar.billing.finalAction.errors.fallback.length > 0);
+});
+
+test("3d. Service activity and cancellation feedback resolve safely in both locales", () => {
+  const en = getServicesDictionary("en");
+  const ar = getServicesDictionary("ar");
+
+  assert.equal(en.serviceActivity.depositPaymentConfirmed, "Deposit payment confirmed");
+  assert.equal(ar.serviceActivity.depositPaymentConfirmed, "تم تأكيد سداد الدفعة المقدمة");
+  assert.equal(en.serviceActivity.systemActor, "System");
+  assert.equal(ar.serviceActivity.systemActor, "النظام");
+  assert.equal(en.serviceActivity.unknownActor, "Unknown user");
+  assert.equal(ar.serviceActivity.unknownActor, "مستخدم غير معروف");
+  assert.ok(en.serviceStatusControl.cancellationConfirm.length > 0);
+  assert.ok(ar.serviceStatusControl.cancellationConfirm.length > 0);
+
+  const activity = read(SERVICE_ACTIVITY);
+  const lifecycle = read(SERVICE_LIFECYCLE_ACTIONS);
+  assert.match(activity, /serviceActivity\.depositPaymentConfirmed/);
+  assert.match(activity, /serviceActivity\.systemActor/);
+  assert.doesNotMatch(activity, /event\.userId|details\s*\./);
+  assert.match(lifecycle, /serviceStatusControl\.cancellationConfirm/);
+  assert.match(lifecycle, /serviceStatusControl\.confirmCancel/);
+  assert.match(lifecycle, /serviceStatusControl\.keepService/);
 });
 
 test("3c. Deposit client max and validation use remaining authority, not ceiling", () => {

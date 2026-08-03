@@ -7,6 +7,7 @@ import type { ServiceBillingState } from "@/lib/invoices/types";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { resolveInvoiceControlVisibility } from "@/lib/invoices/control-visibility";
 import { getServiceInvoiceLifecycleDecision } from "@/lib/invoices/service-invoice-lifecycle";
+import { formatSarAmount } from "@/lib/i18n/formatting";
 import type { ServiceStatus } from "@/types/service";
 import { CreateDepositInvoiceAction } from "./CreateDepositInvoiceAction";
 import { CreateFinalInvoiceAction } from "./CreateFinalInvoiceAction";
@@ -27,6 +28,7 @@ export default function BillingPanel({
   invoiceActionIntent?: InvoiceActionIntent;
 }) {
   const billingDictionary = dictionary.billing;
+  const ceiling = billingState.billingCeiling;
   const [activeHighlight, setActiveHighlight] = useState<InvoiceActionIntent | null>(
     invoiceActionIntent ?? null,
   );
@@ -127,9 +129,20 @@ export default function BillingPanel({
     <section
       ref={billingSectionRef}
       id="billing"
+      aria-label={billingDictionary.cards.billingCeiling}
+      data-billing-ceiling={
+        ceiling == null
+          ? undefined
+          : formatSarAmount(dictionary.locale, ceiling)
+      }
+      data-prior-invoiced-label={billingDictionary.cards.priorInvoiced}
+      data-exposure-unavailable-label={billingDictionary.cards.exposureUnavailable}
+      data-remaining-unavailable-label={billingDictionary.cards.remainingUnavailable}
+      data-amount-unavailable-label={billingDictionary.cards.amountUnavailable}
+      data-remaining-label={billingDictionary.cards.remaining}
       className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden"
     >
-      <div className="px-5 py-3.5 border-b border-surface-variant bg-surface-bright flex items-center justify-between">
+      <div className="px-5 py-3.5 border-b border-surface-variant bg-surface-bright flex min-w-0 flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold text-primary text-base sm:text-lg">{panelTitle}</h3>
       </div>
 

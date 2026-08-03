@@ -217,8 +217,8 @@ test("Invoice chooser dictionaries cover distinct English and Arabic Deposit and
   assert.match(servicesDictSource, /costMarginTitle: "التكلفة والهامش التقديري"/);
   assert.match(servicesDictSource, /estimatedGrossMargin: "Estimated Gross Margin"/);
   assert.match(servicesDictSource, /estimatedGrossMargin: "هامش الربح الإجمالي التقديري"/);
-  assert.match(servicesDictSource, /priorInvoiced: "Invoiced to date"/);
-  assert.match(servicesDictSource, /priorInvoiced: "المفوتر حتى الآن"/);
+  assert.match(servicesDictSource, /priorInvoiced: "Service-lifetime invoiced exposure"/);
+  assert.match(servicesDictSource, /priorInvoiced: "التعرض المفوتر طوال عمر الخدمة"/);
   assert.match(servicesDictSource, /amountSummary: "The final invoice amount is calculated automatically from the remaining billable amount."/);
   assert.match(servicesDictSource, /amountSummary: "يُحتسب مبلغ الفاتورة النهائية تلقائياً من المبلغ المتبقي القابل للفوترة."/);
 });

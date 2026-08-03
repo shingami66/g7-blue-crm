@@ -133,7 +133,7 @@ test("billing calculation money rows wrap labels without forcing page width", ()
   assert.match(source, /flex min-w-0 flex-wrap items-center justify-between gap-2/);
   assert.match(source, /billingDictionary\.cards\.priorInvoiced/);
   assert.match(source, /billingDictionary\.cards\.remaining/);
-  assert.match(source, /dir="ltr"/);
+  assert.doesNotMatch(source, /dir="ltr"/);
 });
 
 test("invoice search uses mobile-safe width contract", () => {

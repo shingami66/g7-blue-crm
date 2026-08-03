@@ -288,6 +288,25 @@ export interface ServicesDictionary {
     confirmCancel: string;
     keepService: string;
   };
+  serviceActivity: {
+    title: string;
+    hint: string;
+    empty: string;
+    unavailable: string;
+    statusChanged: string;
+    depositPaymentConfirmed: string;
+    updated: string;
+    actor: string;
+    from: string;
+    to: string;
+    reason: string;
+    invoice: string;
+    payment: string;
+    amount: string;
+    systemActor: string;
+    userActor: string;
+    unknownActor: string;
+  };
   serviceStatusTimeline: {
     title: string;
     currentPhaseLabel: string;
@@ -1360,6 +1379,25 @@ const servicesDictionaryEn: ServicesDictionary = {
     confirmCancel: "Confirm cancellation",
     keepService: "Keep Service",
   },
+  serviceActivity: {
+    title: "Activity History",
+    hint: "Recorded service events only; no inferred timeline is shown.",
+    empty: "No recorded service activity yet.",
+    unavailable: "Activity history is currently unavailable.",
+    statusChanged: "Service status changed",
+    depositPaymentConfirmed: "Deposit payment confirmed",
+    updated: "Activity updated",
+    actor: "By",
+    from: "From",
+    to: "To",
+    reason: "Reason",
+    invoice: "Invoice",
+    payment: "Payment",
+    amount: "Amount",
+    systemActor: "System",
+    userActor: "User",
+    unknownActor: "Unknown user",
+  },
   serviceStatusTimeline: {
     title: "Status Timeline",
     currentPhaseLabel: "Current Phase",
@@ -1894,7 +1932,7 @@ const servicesDictionaryEn: ServicesDictionary = {
       noApprovedQuotationYet: "No approved quotation yet",
       noActiveDepositInvoice: "Deposit invoice has not been created yet.",
       noActiveFinalInvoice: "Final invoice has not been created yet.",
-      priorInvoiced: "Invoiced to date",
+      priorInvoiced: "Service-lifetime invoiced exposure",
       remaining: "Remaining billable",
       amountUnavailable: "Amount unavailable",
       exposureUnavailable: "Exposure unavailable",
@@ -2752,6 +2790,25 @@ const servicesDictionaryAr: ServicesDictionary = {
     confirmCancel: "تأكيد الإلغاء",
     keepService: "الاحتفاظ بالخدمة",
   },
+  serviceActivity: {
+    title: "سجل النشاط",
+    hint: "الأحداث المسجلة للخدمة فقط؛ لا يتم عرض مسار زمني مستنتج.",
+    empty: "لا يوجد نشاط مسجل للخدمة حتى الآن.",
+    unavailable: "سجل النشاط غير متاح حاليًا.",
+    statusChanged: "تم تغيير حالة الخدمة",
+    depositPaymentConfirmed: "تم تأكيد سداد الدفعة المقدمة",
+    updated: "تم تحديث النشاط",
+    actor: "بواسطة",
+    from: "من",
+    to: "إلى",
+    reason: "السبب",
+    invoice: "الفاتورة",
+    payment: "الدفعة",
+    amount: "المبلغ",
+    systemActor: "النظام",
+    userActor: "مستخدم",
+    unknownActor: "مستخدم غير معروف",
+  },
   serviceStatusTimeline: {
     title: "مسار حالة الخدمة",
     currentPhaseLabel: "المرحلة الحالية",
@@ -3279,7 +3336,7 @@ const servicesDictionaryAr: ServicesDictionary = {
       noApprovedQuotationYet: "لا يوجد عرض سعر معتمد حتى الآن",
       noActiveDepositInvoice: "لم يتم إنشاء فاتورة دفعة مقدمة بعد.",
       noActiveFinalInvoice: "لم يتم إنشاء الفاتورة النهائية بعد.",
-      priorInvoiced: "المفوتر حتى الآن",
+      priorInvoiced: "التعرض المفوتر طوال عمر الخدمة",
       remaining: "المتبقي للفوترة",
       amountUnavailable: "المبلغ غير متاح",
       exposureUnavailable: "التعرض غير متاح",
