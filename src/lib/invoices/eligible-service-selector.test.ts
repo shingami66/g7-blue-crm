@@ -307,7 +307,7 @@ for (const lifecycleCase of [
   { status: "Approved", deposit: true, final: true },
   { status: "Deposit Paid", deposit: false, final: true },
   { status: "In Progress", deposit: false, final: true },
-  { status: "Completed", deposit: false, final: false },
+  { status: "Completed", deposit: false, final: true },
   { status: "Cancelled", deposit: false, final: false },
 ] as const) {
   test(`chooser projection applies the shared lifecycle matrix for ${lifecycleCase.status}`, () => {

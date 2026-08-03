@@ -27,7 +27,7 @@ const SERVICE_INVOICE_LIFECYCLE_MATRIX: Record<
   Approved: { deposit: true, final: true },
   "Deposit Paid": { deposit: false, final: true },
   "In Progress": { deposit: false, final: true },
-  Completed: { deposit: false, final: false },
+  Completed: { deposit: false, final: true },
   Cancelled: { deposit: false, final: false },
 };
 

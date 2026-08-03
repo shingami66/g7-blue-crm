@@ -221,6 +221,22 @@ test("active ABS computes remaining from authoritative ceiling and exposure", as
   assert.equal(state.remainingUninvoicedAmount, 20);
 });
 
+test("completed-service smoke values preserve SAR 50 of Final Invoice authority", async () => {
+  startScenario({
+    approved_billing_scopes: { data: [approvedScope(100)], error: null },
+    invoices: { data: [invoice(50, "deposit")], error: null },
+  });
+
+  const state = await getServiceBillingState("service-1");
+
+  assert.equal(state.authorityMode, "active_abs");
+  assert.equal(state.billingCeiling, 100);
+  assert.equal(state.activePriorInvoiceTotal, 50);
+  assert.equal(state.remainingUninvoicedAmount, 50);
+  assert.equal(state.canCreateDepositInvoice, false);
+  assert.equal(state.canCreateFinalInvoice, true);
+});
+
 test("active ABS equality preserves authoritative zero remaining", async () => {
   startScenario({
     approved_billing_scopes: { data: [approvedScope(40)], error: null },

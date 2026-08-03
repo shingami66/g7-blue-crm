@@ -144,7 +144,7 @@ for (const lifecycleCase of [
   { status: "Approved", deposit: true, final: true, actions: true },
   { status: "Deposit Paid", deposit: false, final: true, actions: true },
   { status: "In Progress", deposit: false, final: true, actions: true },
-  { status: "Completed", deposit: false, final: false, actions: false },
+  { status: "Completed", deposit: false, final: true, actions: true },
   { status: "Cancelled", deposit: false, final: false, actions: false },
 ] as const) {
   test(`Invoice controls apply the shared lifecycle matrix for ${lifecycleCase.status}`, () => {
