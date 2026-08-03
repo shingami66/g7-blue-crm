@@ -6,6 +6,10 @@ import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { consumeRateLimit } from "@/lib/security/rate-limit";
 import { getServiceById } from "@/lib/services/queries";
+import {
+  executeQuotationApprovalActivation,
+  type QuotationApprovalActivationData,
+} from "./approval-contract";
 import { createQuotationSchema, updateQuotationSchema } from "./schemas";
 import type { QuotationRpcResult } from "./types";
 
@@ -248,7 +252,9 @@ export async function softDeleteQuotation(id: string): Promise<ActionResult> {
   }
 }
 
-export async function approveQuotation(id: string): Promise<ActionResult> {
+export async function approveQuotation(
+  id: string,
+): Promise<ActionResult<QuotationApprovalActivationData>> {
   try {
     const user = await requirePermission("quotations:approve");
 
@@ -258,59 +264,22 @@ export async function approveQuotation(id: string): Promise<ActionResult> {
 
     const supabase = createAdminClient();
 
-    // Check status before approving
-    const { data: qData, error: fetchError } = await supabase
-      .from("quotations")
-      .select("status, service_id")
-      .eq("id", id)
-      .eq("is_deleted", false)
-      .single();
+    const result = await executeQuotationApprovalActivation({
+      quotationId: id,
+      actor: {
+        clerk_user_id: user.clerk_user_id,
+        role: user.role,
+      },
+      invoke: async (params) =>
+        await supabase.rpc("approve_quotation_and_activate_internal_abs", params),
+    });
 
-    if (fetchError || !qData) {
-      return { success: false, error: "Quotation not found or already deleted." };
-    }
-
-    if (qData.status !== "draft" && qData.status !== "sent") {
-      return { success: false, error: `Cannot approve a quotation that is ${qData.status}.` };
-    }
-
-    // Explicitly check for existing approved quotation to return clean error message
-    const { count, error: countError } = await supabase
-      .from("quotations")
-      .select("id", { count: "exact", head: true })
-      .eq("service_id", qData.service_id)
-      .eq("status", "approved")
-      .eq("is_deleted", false);
-
-    if (countError) {
-      return { success: false, error: "Failed to verify existing approved quotations." };
-    }
-
-    if (count && count > 0) {
-      return { success: false, error: "An approved quotation already exists for this service." };
-    }
-
-    const { error } = await supabase
-      .from("quotations")
-      .update({
-        status: "approved",
-        updated_by: user.clerk_user_id,
-      })
-      .eq("id", id)
-      .eq("is_deleted", false);
-
-    if (error) {
-      console.error("[approveQuotation] Supabase error:", error.message);
-      if (error.message.includes("unique_approved_quotation_per_service") || error.code === "23505") {
-        return { success: false, error: "An approved quotation already exists for this service." };
-      }
-      return { success: false, error: "Failed to approve quotation. Please try again." };
-    }
+    if (!result.success) return result;
 
     revalidatePath("/quotations");
     revalidatePath(`/quotations/${id}`);
-    revalidatePath(`/services/${qData.service_id}`);
-    return { success: true };
+    revalidatePath(`/services/${result.data.service_id}`);
+    return result;
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
