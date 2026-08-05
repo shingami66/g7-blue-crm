@@ -243,16 +243,21 @@ test("Settings IsoDateField uses YYYY-MM-DD contract without mm/dd/yyyy", () => 
   assert.match(settings, /type="text"/);
 });
 
-test("Supplier directory preserves readable mobile cards and identity", () => {
+test("Supplier directory preserves one readable responsive row surface and identity", () => {
   const suppliers = read("src/app/(dashboard)/suppliers/SuppliersClient.tsx");
 
-  // The current directory uses mobile cards and a separate desktop table.
-  assert.match(suppliers, /grid grid-cols-1 gap-3 p-1 lg:hidden/);
-  assert.match(suppliers, /flex min-w-0 items-center gap-3/);
+  // The current directory uses one semantic table that stacks its rows on narrow screens.
+  assert.match(suppliers, /block w-full min-w-0[\s\S]*lg:table/);
+  assert.match(suppliers, /flex min-w-0 items-start gap-3/);
   assert.match(suppliers, /shrink-0/);
   assert.match(suppliers, /supplier\.name/);
   assert.match(suppliers, /break-words/);
-  assert.match(suppliers, /dir="auto">\{supplier\.name\}/);
+  assert.match(suppliers, /dir="auto">\{supplierName\}/);
+  assert.match(suppliers, /dictionary\.detail\.city/);
+  assert.match(suppliers, /dictionary\.detail\.coverageArea/);
+  assert.match(suppliers, /dictionary\.detail\.country/);
+  assert.match(suppliers, /data-supplier-result-count="single"/);
+  assert.doesNotMatch(suppliers, /columns\.rating|Rating/);
   assert.doesNotMatch(suppliers, /name\.slice|name\.substring|ellipsis/i);
 });
 

@@ -156,3 +156,24 @@ test("Supplier directory pagination is server-ranged and query-safe", () => {
   assert.match(client, /updateFilters\(\{ status \}, true\)/);
   assert.match(client, /updateFilters\(\{ category \}, true\)/);
 });
+
+test("Supplier Directory presentation keeps one natural-height, bidi-safe result surface", () => {
+  const client = source(LIST_CLIENT);
+
+  assert.equal((client.match(/suppliers\.map/g) ?? []).length, 1);
+  assert.equal((client.match(/<PaginationFooter/g) ?? []).length, 1);
+  assert.match(client, /data-supplier-directory="workspace"/);
+  assert.match(client, /data-supplier-result-count="single"/);
+  assert.match(client, /dictionary\.list\.showingZero/);
+  assert.match(client, /overflow-x-auto overflow-y-visible/);
+  assert.match(client, /dictionary\.detail\.city/);
+  assert.match(client, /dictionary\.detail\.coverageArea/);
+  assert.match(client, /dictionary\.detail\.country/);
+  assert.match(client, /isolateBidiText\(supplier\.phone\)/);
+  assert.match(client, /aria-label=\{viewLabel\}/);
+  assert.doesNotMatch(client, /columns\.rating|Rating/);
+  assert.doesNotMatch(client, /h-full|min-h-0|flex-1/);
+  assert.match(client, /canManageDeleted/);
+  assert.match(client, /canCreateSuppliers/);
+  assert.match(client, /showDeleted/);
+});

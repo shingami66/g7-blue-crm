@@ -163,13 +163,18 @@ test("accepted table-local overflow wrappers remain present", () => {
   assert.doesNotMatch(read(SERVICE_DETAIL), /overflow-x-hidden/);
 });
 
-test("supplier detail and service supplier panels provide responsive mobile surfaces", () => {
+test("supplier directory keeps one responsive row surface and service supplier panels provide mobile surfaces", () => {
   const supplierDetail = read(SUPPLIERS);
-  assert.match(supplierDetail, /grid grid-cols-1 gap-3 p-1 lg:hidden/);
-  assert.match(supplierDetail, /hidden [^\"]*lg:block/);
+  assert.match(supplierDetail, /block w-full min-w-0[\s\S]*lg:table/);
+  assert.match(supplierDetail, /hidden lg:table-header-group/);
   assert.match(supplierDetail, /suppliers\.map/);
   assert.match(supplierDetail, /dictionary\.list\.viewSupplier/);
   assert.match(supplierDetail, /break-words/);
+  assert.match(supplierDetail, /dictionary\.detail\.city/);
+  assert.match(supplierDetail, /dictionary\.detail\.coverageArea/);
+  assert.match(supplierDetail, /dictionary\.detail\.country/);
+  assert.match(supplierDetail, /data-supplier-result-count="single"/);
+  assert.doesNotMatch(supplierDetail, /columns\.rating|Rating/);
 
   const allocations = read(SUPPLIER_ALLOCATIONS);
   assert.match(allocations, /grid grid-cols-1 gap-3 p-4 lg:hidden/);
