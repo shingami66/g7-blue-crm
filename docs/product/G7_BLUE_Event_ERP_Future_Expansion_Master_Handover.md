@@ -2,8 +2,8 @@
 ## Master Product Handover, Decision Register, Discovery Brief, and Rebaseline Report
 
 **Original report date:** 2 August 2026  
-**Latest decision sync:** 4 August 2026  
-**Revision:** 0.3  
+**Latest decision sync:** 5 August 2026
+**Revision:** 0.11
 **Owner:** Mozfer Mohamed Elhadi  
 **Product:** G7 BLUE CRM / Future Event ERP  
 **Document status:** Sole authoritative expansion reference, product decision register, and daily handover continuity record  
@@ -23,12 +23,12 @@
 | Current operating company | G7 BLUE, a Saudi events and production company |
 | Current system shape | Internal Service-centered CRM with commercial workflow, suppliers foundation, users, and RBAC |
 | Future product direction | A specialist Event ERP for event companies, initially proven inside G7 BLUE and later offered to other companies |
-| Current implementation status | Current V1 work continues in the isolated Goal worktree. The next owner-approved wave combines current-product UX remediation with the first bounded expansion slice, Supplier Rate Card Management V1. |
+| Current implementation status | Current V1 work continues in the canonical `main` checkout under the owner-authorized Goal 2B/2C current-product refinement, including the bounded Supplier Directory presentation repair, the Dashboard independent-column flow correction after the Revision 0.8 presentation rejection, and the final Dashboard density/width polish. Supplier Rate Card Management V1 remains a separately governed bounded expansion boundary. |
 | Original report repository baseline | `cdd888b4cbc495a69be0a2cccb1f1ba5a3aae48d`, aligned with `origin/main` when the 2 August report was prepared |
-| Current dated delivery baseline | Source `main` is verified at `a87ad6ddac5ec67f27284de3d1207f40d6bd232a`; current uncommitted Goal work is isolated on `goal/v1-product-advancement-wave-20260804`. See Section 28B for the latest dated owner sync. |
-| Feature activation | Supplier Rate Card Management V1 is implemented in the isolated Goal worktree as the first bounded expansion slice. Owner manual acceptance, controlled commit, merge, and push remain pending. No other expansion module is activated. |
-| Latest owner decision sync | 4 August 2026: sole-reference authority, local-search product direction, Customer 360 relationship context, Supplier list cleanup, and Supplier Rate Card Management V1 activation boundary. |
-| Current controlled-delivery snapshot | The isolated Goal branch contains the uncommitted current-product remediation and Supplier Rate Card Management V1 implementation. Automated suite reports 822/822 across 64 files; lint, route typegen, standalone TypeScript, and production build pass. Owner browser/visual acceptance remains pending. |
+| Current dated delivery baseline | Source `main` began at `5429e7642bd3d763809e0de453cc131f2c90921c` after Goal 2A; the owner-accepted Goal 2B/2C local closeout is recorded in the canonical `D:\G7\g7-crm` checkout. See Section 28K for the latest acceptance sync. |
+| Feature activation | Supplier Rate Card Management V1 remains the first separately governed bounded expansion slice. Goal 2B/2C adds no new expansion activation; its approved local commit closeout does not imply merge, push, or OCR. |
+| Latest owner decision sync | 5 August 2026: sole-reference authority, local-search product direction, Customer 360 relationship context, Supplier list cleanup, Goal 2B/2C current-product refinement, the locked Business Year scope/date semantics correction, the Customers explicit-submit search correction, the dedicated Supplier Directory presentation repair, the Dashboard product correction, the bounded Dashboard independent-column flow repair, and the final Dashboard density/width polish. |
+| Current controlled-delivery snapshot | Canonical `main` contains the owner-accepted Goal 2B/2C refinement plus the approved Business Year, Customers, Supplier Directory, and Dashboard corrections. The full suite is 883/883 across 74 files; focused Dashboard contracts pass 28/28; route typegen, standalone TypeScript, production build, and `git diff --check` pass; lint has 0 errors and two pre-existing PDF `<img>` warnings. Reports and Customer 360 remain explicitly owner-pending. |
 | Field evidence still required | Riyadh event-industry workflow interview, event-industry accountant review, and later tax/compliance review |
 
 ### Source basis
@@ -44,8 +44,14 @@ This report consolidates:
 - Owner decisions from the 3 August 2026 discussion on internal billing authority, quotation approval, discount tracking, invoice correction, post-invoice customer changes, users, permissions, invitations, suspension, archival, and activity history.
 - The dated agent verification reports for `QUOTATION-APPROVAL-AUTO-ACTIVATE-INTERNAL-ABS-1` and its bounded total-mapping correction. These reports are evidence snapshots only and do not themselves authorize migration application.
 - Owner decisions from 4 August 2026 on the sole expansion-reference rule, local module search, Customer 360 context, Supplier directory presentation, and the bounded Supplier Rate Card Management V1 activation.
+- The 5 August 2026 owner-authorized Goal 2B/2C implementation task for workspace continuity, temporal Business Year context, server-side list refinement, responsive/bidi surfaces, dashboard composition, Customer 360 navigation, and Reports alignment.
+- The 5 August 2026 owner-authorized Customers correction task for deliberate direct general search with URL-backed submitted state and preserved module-local navigation.
+- The 5 August 2026 owner-authorized Supplier correction task for a dedicated desktop-first Directory presentation repair that preserves Supplier data, search, permissions, Rate Cards, and all financial/operational behavior.
+- The 5 August 2026 owner-authorized Dashboard correction task for a dedicated desktop-first information hierarchy and role-ready presentation repair that preserves existing metrics, permissions, data truth, and global Dashboard scope.
+- The 5 August 2026 owner-authorized Dashboard independent-column flow correction task replacing the manually rejected Revision 0.8 row-coupled composition with stacked independent 5/12 and 7/12 columns while preserving the accepted data, permission, scope, and responsive contracts.
+- The 5 August 2026 owner-authorized final Dashboard density and width polish task retaining Revision 0.9's independent-column architecture while correcting only the Dashboard frame width, obsolete Priority Work heading, and bounded Attention Needed preview.
 
-### 4 August 2026 revision summary
+### 5 August 2026 revision summary
 
 This revision records the following current truth:
 
@@ -57,6 +63,17 @@ This revision records the following current truth:
 - Rate Card Delete/Restore, automatic pricing, procurement RFQ, supplier quotations, quote comparison, Purchase Orders, Vendor Bills, Supplier Payments, actual costing, and margin remain outside this bounded slice.
 - Supplier Allocations and Service-scoped Supplier Bookings already belong to the current product baseline; the next wave may improve their responsive and interaction quality without reclassifying them as new expansion modules.
 - Mozfer owns manual browser testing and final visual acceptance. Agent automation may prepare evidence but must not claim owner acceptance.
+- Current Goal 2B/2C delivery is current-product remediation, not a new Event ERP expansion activation: shared workspace foundations, Business Year context, server-side list search/pagination, responsive/bidi presentation, permission-safe dashboard composition, Customer 360 context, and Reports date semantics remain inside the existing Service-centered product boundary.
+- Business Year is a Riyadh-calendar year filter shown only on Services, Quotations, Invoices, Payments, and applicable Reports list surfaces. Dashboard, Customers, Suppliers, Users, Settings, and detail/create/edit/PDF/preview routes remain outside the selector and do not consume year context.
+- Services use inclusive scheduled-interval overlap (`service_start <= year_end` and `effective_service_end >= year_start`), where an existing start-only Service remains a single-date record; Quotations use authoritative quotation date, Invoices use `issued_at`, and Payments use payment date.
+- The current list contract is one localized search/clear interaction, explicit pending feedback, server-side filtering, exact count, deterministic range pagination, and no duplicate Reset Filters action.
+- Customers direct general search is deliberately submitted by Search or Enter only. Typing remains draft state and never changes the URL, results, pagination, or pending state; submitted search is sanitized centrally, stored in the existing `search` query parameter, restores through Back/Forward/bookmarks/detail return, and deliberately clears to page 1 while preserving compatible filters and page size. Customers has no Search Mode selector and no Reset Filters action; Suppliers and the other shared module-search contracts remain unchanged.
+- Supplier Directory presentation is repaired as current-product remediation: natural content height, one responsive row surface, one result count, attached row actions, clear supplier identity, separate City/Coverage Area/Country fields, bidi-safe structured values, and no user-facing Rating field. The repair does not add an expansion module or alter Supplier data, permissions, Rate Card behavior, search semantics, schema, SQL, or financial/operational rules.
+- Supplier Directory owner acceptance is recorded: English desktop, Arabic RTL desktop, natural height, single count, pagination placement, bidi/row actions, and the protected presentation boundary are accepted; stored location data quality is deferred and no Supplier data-model change is authorized.
+- Dashboard is repaired as current-product remediation: compact permission-aware header Quick Actions, a three-column desktop KPI grid, explicit Attention Needed before Operations Focus, and one unified Recent Activity card containing Recent Quotations and Recent Payments. Dashboard remains unscoped by Business Year; payments are not alerts; no new metric, module, role, permission code, schema, or final role dashboard is implemented. Dashboard owner acceptance is recorded in Section 28K; final role-specific compositions remain deferred.
+- The Revision 0.8 Dashboard row composition was manually rejected because shared grid rows coupled natural heights and Recent Activity was too compressed. The bounded 04B correction uses one Dashboard-only independent-column workspace: a 5/12 left column and 7/12 right column, with vertical flow inside each column and readable vertically stacked quotation/payment activity. No new metric, module, role, permission code, schema, or Business Year scope is introduced.
+- Revision 0.9 materially improved the Dashboard architecture, but owner review found three final presentation defects: the content frame remained too narrow for the approved desktop target, the obsolete Priority Work heading remained above only the left column, and Attention Needed exposed an unbounded preview. Revision 0.10 corrects only those three defects: a Dashboard-only centered `max-w-[1240px]` frame, removal of the obsolete heading and unused labels, and a maximum-five Attention preview with localized View all linking to the ordinary authorized Invoices workspace when more rows exist. Data calculations, ordering, permissions, Business Year scope, independent columns, and vertical Recent Activity remain unchanged.
+- Customers direct general search and the bounded Business Year behavior are owner-accepted as recorded in Section 28K. Reports and Customer 360 are technically validated but remain pending owner product/visual acceptance.
 
 ---
 
@@ -2515,6 +2532,360 @@ OWNER MANUAL TEST: PENDING
 
 ---
 
+### 28D. Current-Delivery Sync — 5 August 2026
+
+This dated block records the current canonical delivery state and must not be confused with a new Event ERP expansion activation.
+
+#### 28D.1 Controlled repository state
+
+| Item | Verified position |
+|---|---|
+| Task | `G7-GOAL-2B-AND-2C-UNIFIED-WORKSPACE-TEMPORAL-REFINEMENT` |
+| Mode | `IMPLEMENT_NO_STAGE` |
+| Repository | `D:\G7\g7-crm` |
+| Branch | `main` |
+| Goal start HEAD | `5429e7642bd3d763809e0de453cc131f2c90921c` |
+| Index | Empty; no staging authorized |
+| Protected dirty files | `build-watch-20260716.log`, `build-watch-20260718.log`, `build-watch-20260722.log`, `build-watch-20260724.log` |
+| Forbidden operations | No branch/worktree creation, fetch, pull, push, SQL, migration, schema, dependency, environment, secret, staging, commit, reset, restore, clean, or stash work |
+
+#### 28D.2 Bounded current-product delivery
+
+The authorized Goal refines existing product foundations only:
+
+- Shared workspace continuity and localized Business Year context using the Riyadh calendar, with dated predicates on Services, Quotations, Invoices, Payments, Dashboard, and Reports.
+- Server-side, permission-gated search and exact-count pagination for Customers, Suppliers, Services, Quotations, Invoices, and Payments; list result counts remain understandable on desktop and mobile.
+- One clear search interaction per list, no duplicate Reset Filters action, localized pending feedback, and preserved filter/year/return context.
+- Supplier cards and tables expose City, Coverage Area, Country, and Phone separately; natural content height and ordinary document-flow pagination replace artificial list-height pinning; Rating remains absent.
+- Dashboard widgets use typed permission/sensitivity/scope metadata; financial activity sits in a lower recent-activity workspace rather than the Attention card.
+- Customer 360 has one Services workspace, related Quotation/Invoice/Payment context with business identifiers, safe return navigation, and activity links without sentinel or unsupported destinations.
+- Reports use issue/event/payment dates and invoice `issued_at` for the selected Business Year while retaining the existing optional date-range controls.
+
+No new ERP domain, migration, RPC, schema, tax, procurement, supplier-payables, or accounting activation is authorized by this sync. Supplier Rate Card Management V1 remains governed by the previously recorded bounded expansion decision and is not broadened here.
+
+#### 28D.3 Verification and acceptance boundary
+
+The Goal leaves all implementation changes unstaged and uncommitted. Automated verification is required before handoff and must report exact commands and outcomes. Mozfer owns browser, English/Arabic, RTL, mobile, responsive, and visual acceptance; those checks remain pending until performed by the owner. No automated result may be represented as owner acceptance.
+
+#### 28D.4 Exact next bounded action
+
+Adversarial source review and repository validation are complete; hand Mozfer the unstaged diff with the exact owner manual acceptance matrix. Keep commit, merge, push, and any expansion activation as separate subsequent controlled tasks.
+
+---
+
+### 28E. Business Year Domain-Semantics Correction — 5 August 2026
+
+This dated block supersedes only the Revision 0.4 Business Year scope and date-filter wording. It does not reopen the existing product, financial, permission, supplier, Customer 360, layout, or expansion decisions recorded elsewhere in this master.
+
+#### 28E.1 Controlled repository state
+
+| Item | Verified position |
+|---|---|
+| Task | `G7-CORRECTION-01-BUSINESS-YEAR-DOMAIN-SEMANTICS` |
+| Mode | `IMPLEMENT_NO_STAGE` |
+| Repository | `D:\G7\g7-crm` |
+| Branch | `main` |
+| Starting HEAD | `5429e7642bd3d763809e0de453cc131f2c90921c` |
+| Index | Empty; implementation remains unstaged and uncommitted |
+| Protected files | `build-watch-20260716.log`, `build-watch-20260718.log`, `build-watch-20260722.log`, `build-watch-20260724.log` |
+
+#### 28E.2 Locked Business Year decision
+
+- The selector is visible beside Locale only on the exact temporal list routes `/services`, `/quotations`, `/invoices`, `/payments`, and the applicable `/reports` workspace. It is hidden on `/dashboard`, Customers, Suppliers, Users, Settings, and all detail, create, edit, PDF, and preview routes.
+- The selected year persists between temporal modules through the non-sensitive server-readable `g7_business_year` cookie. Temporal list entrypoints resolve the cookie only when the URL has no explicit year. Dashboard and master-data pages do not use the preference for their data predicates.
+- Changing year resets pagination, removes incompatible date controls, preserves compatible search/mode/status filters, and removes empty query parameters. Invalid years fail closed to the current Riyadh year.
+- Current Gregorian year is always available; historical options remain bounded and data-derived from existing dated records. Riyadh calendar boundaries govern the current-year resolution.
+- Services use inclusive interval overlap: `event_start_date <= YYYY-12-31` and `effective_event_end_date >= YYYY-01-01`. A start-only Service uses its start as its effective end because the current Service detail/form behavior already treats it as a single scheduled date. Missing starts are excluded; reversed invalid intervals do not match. Cancelled Services remain discoverable because year filtering does not remove their status.
+- Quotations use the authoritative `date` column, Invoices use authoritative `issued_at` semantics without inventing a `created_at` fallback for undated drafts, and Payments use the authoritative `date` column.
+- Reports retain Business Year only for temporal Services, Quotations, Invoices, and Payments sections. Customer and Supplier master-data totals remain unscoped; supplier allocation/booking report operations do not receive the Business Year predicate. Existing optional explicit date controls remain intact.
+- Dashboard visual composition and presentation are unchanged; only its Business Year predicates, metadata, and year-bearing links are removed. Customer search, Supplier presentation, Customer 360 presentation, responsive layouts, financial lifecycle rules, permissions, schema, SQL, dependencies, and environment configuration remain unchanged.
+
+#### 28E.3 Verification boundary
+
+Focused contract tests cover exact selector routes, cookie persistence wiring, pagination/filter reset behavior, Dashboard exclusion, Service overlap edge cases, missing-date handling, cancelled discovery, authoritative temporal columns, report scope, and preserved navigation/security contracts. Full tests, lint, route typegen, TypeScript, production build, and `git diff --check` remain required before handoff.
+
+Mozfer owns browser, English/Arabic, RTL, mobile, responsive, workflow, and visual acceptance. No automated result is owner acceptance.
+
+#### 28E.4 Exact next bounded action
+
+Keep implementation unstaged and uncommitted, hand off the validated diff, and continue to the locked next product correction: Customers explicit-submit search behavior.
+
+---
+
+### 28F. Customers Explicit-Submit Search Correction — 5 August 2026
+
+This dated block records the approved current-product Customers search correction. It supersedes only the Customers live-search interaction wording in the current-delivery sync; it preserves the Revision 0.5 Business Year decision in Section 28E and does not activate a new expansion domain.
+
+#### 28F.1 Controlled repository state
+
+| Item | Verified position |
+|---|---|
+| Task | `G7-CORRECTION-02-CUSTOMERS-EXPLICIT-SUBMIT-SEARCH` |
+| Mode | `IMPLEMENT_NO_STAGE` |
+| Repository | `D:\G7\g7-crm` |
+| Branch | `main` |
+| Starting HEAD | `5429e7642bd3d763809e0de453cc131f2c90921c` |
+| Index | Empty; implementation remains unstaged and uncommitted |
+| Protected files | `build-watch-20260716.log`, `build-watch-20260718.log`, `build-watch-20260722.log`, `build-watch-20260724.log` |
+| Forbidden operations | No branch/worktree creation, fetch, pull, push, SQL, migration, schema, dependency, environment, secret, staging, commit, reset, restore, clean, or stash work |
+
+#### 28F.2 Locked Customers search decision
+
+- Customers uses direct general server search with no Search Mode selector. The existing authoritative predicate searches `customer_number`, `company`, `contact`, `phone`, and `email`; count and row queries use the same predicate, exact count, deterministic `customer_number` ordering, and bounded page range.
+- The input draft is separate from the submitted `search` URL query. Typing, Backspace, and empty draft changes never navigate, search, replace rows, reset pagination, show pending feedback, start a route transition, or debounce. Search Button and Enter submit only; Enter during IME composition is ignored until composition ends.
+- Submission uses the central sanitizer, preserves Arabic/English identifiers, phone, email, and punctuation, writes the canonical existing query parameter, resets page to 1, preserves compatible status/city/page-size context, and removes an empty query. A deliberate clear immediately returns to the unfiltered first page while retaining compatible non-search context.
+- Back/Forward, bookmarked URLs, and Customer detail return navigation restore the submitted server result and draft without effect loops, hydration mismatch, or overwriting an actively typed draft during unrelated rerenders. Customers remains unscoped by Business Year.
+- Search pending feedback is localized and only follows an actual submitted search transition. No global lightning/overlay is introduced, and no duplicate Reset Filters action is added.
+- Suppliers, Services, Quotations, Invoices, Payments, Dashboard presentation, Business Year semantics, Customer 360 presentation, responsive layouts, permissions, financial lifecycle rules, schema, SQL, migrations, seeds, dependencies, and environment configuration remain unchanged by this correction.
+
+#### 28F.3 Verification and acceptance boundary
+
+Focused Customers, query/count, sanitizer, remote-list, workspace, localization, loading, and cross-module contract tests pass at 52/52. The full repository suite passes at 882/882 across 74 files; route typegen, standalone TypeScript, and production build pass; lint has 0 errors and the two pre-existing PDF `<img>` warnings; `git diff --check` has no whitespace errors and only the repository's CRLF warnings. Automated checks prove implementation contracts only. Mozfer owns browser, English/Arabic, RTL, mobile, responsive, workflow, and visual acceptance; owner acceptance remains pending.
+
+#### 28F.4 Exact next bounded action
+
+Keep all implementation changes unstaged, uncommitted, and unpushed; hand Mozfer the validated Customers correction with the explicit-submit manual acceptance matrix. The next locked product action is the Supplier dedicated product repair.
+
+---
+
+### 28G. Supplier Directory Desktop Product Repair - 5 August 2026
+
+This dated block records the approved current-product Supplier Directory presentation repair. It is a bounded UI/product correction, not a new Event ERP expansion module, and it preserves the Revision 0.5 Business Year decision, the Revision 0.6 Customers decision, and the existing Supplier domain behavior.
+
+#### 28G.1 Controlled repository state
+
+| Item | Verified position |
+|---|---|
+| Task | `G7-CORRECTION-03-SUPPLIER-DIRECTORY-PRODUCT-REPAIR` |
+| Mode | `IMPLEMENT_NO_STAGE` |
+| Repository | `D:\G7\g7-crm` |
+| Branch | `main` |
+| Starting HEAD | `5429e7642bd3d763809e0de453cc131f2c90921c` |
+| Index | Empty; implementation remains unstaged and uncommitted |
+| Protected files | `build-watch-20260716.log`, `build-watch-20260718.log`, `build-watch-20260722.log`, `build-watch-20260724.log` |
+| Forbidden operations | No branch/worktree creation, fetch, pull, push, SQL, migration, schema, dependency, environment, secret, staging, commit, reset, restore, clean, or stash work |
+
+#### 28G.2 Locked Supplier Directory presentation decision
+
+- The Supplier workspace uses natural content height. It does not use `h-full`, `min-h-0`, or `flex-1` to stretch the directory into an empty viewport-sized panel, and pagination follows the data without a bottom-anchored gap.
+- The directory has one responsive semantic row surface: a stable native table at desktop widths and the same row data stacked into a readable narrow-width record surface. The data is not rendered twice as separate card and table datasets.
+- The result count appears once. Bounded pagination owns the non-empty range count; the zero-result state uses one localized zero-count footer because the shared bounded footer intentionally hides itself for an empty total. No toolbar summary or duplicate Reset Filters action is added.
+- Supplier identity remains primary: supplier name, supplier number, preferred status, status, phone, and an attached localized eye action remain visible without exposing Rating. The supplier number and phone remain structured LTR/bidi-isolated values.
+- City, Coverage Area, and Country are separate labeled fields in the desktop table and the narrow stacked row surface. Stored text is not rewritten; only empty display values receive the existing presentation placeholder.
+- Current/deleted switching, create visibility, status/category filters, direct general search, server-side count/range behavior, Supplier read/write/delete permissions, sensitive-field redaction, Supplier Allocations, Supplier Bookings, Rate Card behavior, and financial confidentiality remain unchanged.
+- Dashboard, Customers, Business Year, Services, Quotations, Invoices, Payments, Reports, Customer 360, database schema, migrations, SQL, seeds, dependencies, environment configuration, and permission semantics remain outside this correction.
+
+#### 28G.3 Verification and acceptance boundary
+
+The implementation is supported by focused Supplier presentation, responsive, query/count, permission, Rate Card, search/filter, localization, bidi, loading, Customers, and Business Year contract tests. The focused Supplier/responsive/visual checks pass; the full repository suite passes at 883/883 across 74 files; route typegen, standalone TypeScript, and production build pass; lint has 0 errors and two pre-existing PDF `<img>` warnings; `git diff --check` has no whitespace errors and only the repository's CRLF warnings. Automated checks prove engineering contracts only. Mozfer owns browser, English/Arabic, RTL, mobile, responsive, workflow, and visual acceptance; owner acceptance remains pending.
+
+#### 28G.4 Exact next bounded action
+
+Keep all implementation changes unstaged, uncommitted, and unpushed; hand Mozfer the repaired Supplier Directory with the dedicated 30-item manual acceptance package. The next locked product action after Supplier owner acceptance is the Dashboard dedicated redesign.
+
+---
+
+### 28H. Dashboard Product Redesign and Supplier Acceptance Sync - 5 August 2026
+
+This dated block records the owner-approved current-product Dashboard correction and the subsequent Supplier presentation acceptance decision. It preserves all historical evidence in Sections 28G and earlier; it does not activate a new Event ERP domain or final role-specific Dashboard product.
+
+#### 28H.1 Controlled repository state
+
+| Item | Verified position |
+|---|---|
+| Task | `G7-CORRECTION-04-DASHBOARD-PRODUCT-REDESIGN` |
+| Mode | `IMPLEMENT_NO_STAGE` |
+| Repository | `D:\G7\g7-crm` |
+| Branch | `main` |
+| Starting HEAD | `5429e7642bd3d763809e0de453cc131f2c90921c` |
+| Index | Empty; implementation remains unstaged and uncommitted |
+| Protected files | `build-watch-20260716.log`, `build-watch-20260718.log`, `build-watch-20260722.log`, `build-watch-20260724.log` |
+| Forbidden operations | No branch/worktree creation, fetch, pull, push, SQL, migration, schema, dependency, environment, secret, staging, commit, reset, restore, clean, or stash work |
+
+#### 28H.2 Locked Dashboard correction decision
+
+- Dashboard is a professional desktop-first ERP command workspace for 1280/1366/1440/1600 widths. The page header contains the title/subtitle and compact permission-aware Quick Actions; the existing New Customer, New Quotation, New Invoice, and New Service destinations and write-permission checks remain unchanged, with at most one primary action.
+- Business Snapshot contains the existing six KPI values in a three-column desktop grid and no Quick Actions card. Existing calculations and formatter behavior remain authoritative; monetary values and business identifiers use semantic LTR presentation without stored bidi controls.
+- Priority Work is an explicit section with Attention Needed before Operations Focus and an approximately 5/7 desktop split. Attention contains the current outstanding-invoice logic only; Operations contains upcoming services and ready/in-progress counts.
+- Operational Snapshot keeps Workflow and Recent Activity in one row. Recent Activity is one unified card with Recent Quotations and Recent Payments side-by-side at wide desktop widths and stacked at narrower widths. Recent Payments is recent activity, not an alert, and no orphan Recent Payments card remains.
+- Cards use natural content height and ordinary document flow. No spacer card, decorative empty region, large fixed minimum height, absolute primary content, duplicate quotation list, tabs, new chart, trend, metric, or module is introduced.
+- Existing server-authoritative permission gates and typed widget metadata remain the role-ready foundation. Unauthorized financial data is not fetched or serialized, Quick Action permission semantics remain unchanged, and no new role or permission code is added. Final role-specific Dashboards remain open/deferred.
+- Dashboard remains unscoped by Business Year: no selector, year filter, or year URL propagation is introduced. Customers, Suppliers, Users, Settings, Reports, Customer 360, Rate Cards, financial lifecycle, schema, SQL, migrations, seeds, dependencies, and environment configuration remain outside this correction.
+- English/Arabic dictionary parity, natural RTL mirroring, LTR amounts/IDs, independent unavailable/empty states, semantic headings, keyboard focus, loading-state behavior, and reduced-motion-compatible existing transitions remain required. Mozfer owns final Dashboard browser, visual, Arabic, RTL, and responsive acceptance.
+
+#### 28H.3 Supplier presentation acceptance recorded
+
+- Mozfer accepted the Supplier presentation boundary: English desktop, Arabic RTL desktop, natural height, a single result count, pagination placement, bidi-safe values, and attached row actions.
+- Stored Supplier location data quality is deferred. No Supplier data-model change is authorized or implied.
+- Supplier source, tests, behavior, permissions, search, Rate Cards, financial confidentiality, and the accepted presentation remain protected during the Dashboard correction.
+
+#### 28H.4 Verification and acceptance boundary
+
+Focused Dashboard and regression contracts pass 28/28 in the current focused run and cover the approved hierarchy, six-KPI truth, compact Quick Actions, priority ordering and split, unified activity subsections, payment classification, duplicate/orphan removal, permission metadata and safe loading, localization, LTR values, Business Year exclusion, and protected cross-module boundaries. The full repository suite passes 883/883 across 74 files; route typegen, standalone TypeScript, production build, and `git diff --check` pass; lint has 0 errors and two pre-existing PDF `<img>` warnings. Automated validation proves engineering contracts only. Runtime screenshot capture was not available in the controlled run, so no visual or owner acceptance is claimed for the Dashboard.
+
+#### 28H.5 Exact next bounded action
+
+Keep all implementation changes unstaged, uncommitted, and unpushed; hand Mozfer the repaired Dashboard with the manual review matrix. The next step is Mozfer Dashboard manual review. Final role Dashboards remain a later separately authorized product decision.
+
+---
+
+### 28I. Dashboard Independent-Column Flow Repair - 5 August 2026
+
+This dated block records the bounded correction after Mozfer rejected the Revision 0.8 Dashboard presentation. It supersedes only the Dashboard composition and layout architecture in Section 28H; the approved Dashboard data, permission, Business Year, localization, Supplier, Customers, financial, and product-scope decisions remain unchanged.
+
+#### 28I.1 Controlled repository state
+
+| Item | Verified position |
+|---|---|
+| Task | `G7-CORRECTION-04B-DASHBOARD-INDEPENDENT-COLUMN-FLOW-REPAIR` |
+| Mode | `IMPLEMENT_NO_STAGE` |
+| Repository | `D:\G7\g7-crm` |
+| Branch | `main` |
+| Starting HEAD | `5429e7642bd3d763809e0de453cc131f2c90921c` |
+| Index | Empty; implementation remains unstaged and uncommitted |
+| Protected files | `build-watch-20260716.log`, `build-watch-20260718.log`, `build-watch-20260722.log`, `build-watch-20260724.log` |
+| Forbidden operations | No branch/worktree creation, fetch, pull, push, SQL, migration, schema, dependency, environment, secret, staging, commit, reset, restore, clean, or stash work |
+
+#### 28I.2 Locked independent-column architecture
+
+- Header and Business Snapshot remain as accepted in Section 28H: compact permission-aware actions, six existing KPI values, and a three-column desktop KPI grid.
+- After Business Snapshot, one Dashboard-only `dashboard-main-columns` container provides an independent approximately 5/12 left column and 7/12 right column. The columns are separate vertical flows with natural height; no shared row couples the next section to the tallest sibling card.
+- The left column contains Priority Work with Attention Needed followed by Service Workflow. The right column contains Operations Focus followed by Recent Activity. Desktop ordering keeps Attention Needed before Operations Focus; mobile collapses to one column without page-level horizontal overflow.
+- Recent Activity remains one unified card but its Recent Quotations and Recent Payments subsections stack vertically for readable customer names, amounts, statuses, payment identifiers, and mixed-direction content. Recent Payments remains activity, not an alert.
+- The rejected row-coupled `Priority Work` and `Operational Snapshot` grid wrappers, their associated visual deserts, and the narrow horizontal Recent Activity split are removed. No fixed height, spacer, duplicate quotation list, new metric, chart, tab, module, role, permission code, or Business Year scope is introduced.
+
+#### 28I.3 Protected boundaries
+
+- Server-authoritative permission loading, typed Dashboard widget metadata, existing calculations, LTR amount/identifier presentation, EN/AR dictionary parity, loading states, reduced-motion-compatible existing transitions, Customers explicit-submit search, Supplier acceptance, Business Year semantics, Reports, Customer 360, Rate Cards, financial lifecycle, schema, SQL, migrations, seeds, dependencies, and environment configuration remain unchanged.
+- Mozfer owns browser, visual, Arabic, RTL, mobile, workflow, and final product acceptance. The 04B implementation is not owner-accepted merely because automated contracts pass.
+
+#### 28I.4 Verification and acceptance boundary
+
+Focused Dashboard and regression contracts pass 28/28, including independent-column markers, left/right 5/12 and 7/12 flow, removal of the row-coupled Operational Snapshot wrapper, vertical Recent Activity subsections, permission/data-truth contracts, localization, Business Year exclusion, and protected Customers/Supplier boundaries. The full repository suite passes 883/883 across 74 files; route typegen, standalone TypeScript, production build, and `git diff --check` pass; lint has 0 errors and two pre-existing PDF `<img>` warnings. Automated validation proves engineering contracts only. No new runtime screenshot or owner acceptance is claimed for 04B.
+
+#### 28I.5 Exact next bounded action
+
+Keep all changes unstaged, uncommitted, and unpushed; hand Mozfer the independent-column Dashboard for manual review of 1280/1366/1440/1600, 1024, 768, and 402 widths, English/Arabic/RTL, natural column flow, and Recent Activity readability.
+
+---
+
+### 28J. Dashboard Final Density and Width Polish - 5 August 2026
+
+This dated block records the bounded final presentation correction after Mozfer accepted the Revision 0.9 independent-column direction but identified three remaining Dashboard defects. It retains the Revision 0.9 architecture and changes only the Dashboard frame width, obsolete heading, and Attention preview density.
+
+#### 28J.1 Controlled repository state
+
+| Item | Verified position |
+|---|---|
+| Task | `G7-CORRECTION-04C-DASHBOARD-FINAL-DENSITY-AND-WIDTH-POLISH` |
+| Mode | `IMPLEMENT_NO_STAGE` |
+| Repository | `D:\G7\g7-crm` |
+| Branch | `main` |
+| Starting HEAD | `5429e7642bd3d763809e0de453cc131f2c90921c` |
+| Index | Empty; implementation remains unstaged and uncommitted |
+| Protected files | `build-watch-20260716.log`, `build-watch-20260718.log`, `build-watch-20260722.log`, `build-watch-20260724.log` |
+| Forbidden operations | No branch/worktree creation, fetch, pull, push, SQL, migration, schema, dependency, environment, secret, staging, commit, reset, restore, clean, or stash work |
+
+#### 28J.2 Locked final density correction
+
+- Revision 0.9's accepted header, six-KPI 3x2 desktop grid, independent 5/12 and 7/12 columns, left/right section order, vertical Recent Activity, permission semantics, calculations, and Dashboard-wide Business Year exclusion remain unchanged.
+- The shared Dashboard layout still provides the global `max-w-[1440px]` main frame with `md:p-6`; its source-derived inner maximum is 1392px. A Dashboard-only centered `data-dashboard-content-frame` now caps usable content at `max-w-[1240px]`, keeping the header, KPIs, and main columns aligned without changing global/list workspace widths or other modules.
+- The obsolete visible `Priority Work` heading and its unused English/Arabic dictionary keys are removed. Business Snapshot and the Attention Needed, Service Workflow, Operations Focus, and Recent Activity card headings remain.
+- Attention Needed retains the authoritative `balance_due > 0` calculation and existing invoice ordering, shows at most five rows, and displays the localized existing `View all` label only when more authorized actionable rows exist. The link uses the ordinary `/invoices` workspace because no single safe outstanding filter contract exists; no new query parameter, pagination, scrolling, or calculation is introduced.
+- Supplier acceptance remains recorded and Supplier data cleanup remains deferred. Customers search, Business Year behavior, loading foundations, Services, Quotations, Invoices, Payments, Reports, Customer 360, Rate Cards, financial lifecycle, schema, SQL, migrations, dependencies, and environment configuration remain protected.
+
+#### 28J.3 Verification and acceptance boundary
+
+Focused Dashboard contracts pass 28/28 and cover the Dashboard-only 1240px frame, unchanged global 1440px main frame, removal of the obsolete heading and dictionary keys, maximum-five Attention preview, conditional localized View all behavior, accepted independent-column markers, vertical Recent Activity, permission/data-truth contracts, localization, and Business Year exclusion. Protected-module and foundation regressions pass 89/89; the full repository suite passes 883/883 across 74 files; route typegen, standalone TypeScript, production build, and `git diff --check` pass; lint has 0 errors and the same two pre-existing PDF `<img>` warnings. Automated validation proves engineering contracts only; Dashboard owner acceptance remains pending.
+
+#### 28J.4 Exact next bounded action
+
+Keep all changes unstaged, uncommitted, and unpushed; hand Mozfer the final Dashboard for manual English/Arabic desktop review at 1366/1440/1600 widths, confirmation that Priority Work is absent, five-row Attention density and View all behavior, independent columns, vertical Recent Activity, no Dashboard year selector, and Supplier/Customers regression review.
+
+---
+
+### 28K. Owner Acceptance and Local Goal 2B/2C Closeout — 5 August 2026
+
+This dated block is the current acceptance record for Goal 2B/2C. It supersedes earlier pending wording for these owner decisions while preserving the historical evidence in Sections 28D through 28J.
+
+#### 28K.1 Dashboard owner acceptance
+
+Accepted by Mozfer:
+
+- English desktop.
+- Arabic RTL desktop.
+- Dashboard-only wider frame.
+- Six KPI cards.
+- Compact Quick Actions.
+- Independent left and right column flow.
+- Attention Needed followed by Service Workflow.
+- Operations Focus followed by Recent Activity.
+- Recent Quotations followed vertically by Recent Payments.
+- Maximum five Attention rows.
+- Localized View all when more actionable invoices exist.
+- Obsolete Priority Work heading removed.
+- Dashboard remains outside Business Year scope.
+
+#### 28K.2 Supplier Directory owner acceptance
+
+Accepted by Mozfer:
+
+- English desktop.
+- Arabic RTL desktop.
+- Natural content height.
+- Stable table structure.
+- Single result count.
+- Pagination below content.
+- Bidi-safe identifiers and actions.
+- Separate City, Coverage, and Country presentation.
+- Rating hidden.
+
+Deferred:
+
+- Existing supplier City/Country stored-data cleanup.
+- Future City/Country master-data controls.
+
+#### 28K.3 Customers search owner acceptance
+
+Accepted by Mozfer:
+
+- Direct general search.
+- Draft typing does not submit.
+- Search button submits.
+- Enter submits.
+- IME composition is protected.
+- Submitted query is represented in the URL.
+- Browser Back and Forward synchronize correctly.
+- Deliberate clear behavior.
+
+#### 28K.4 Business Year owner acceptance
+
+Accepted by Mozfer:
+
+- Visible only on temporal list workspaces.
+- Hidden on Dashboard, Customers, Suppliers, Users, and Settings.
+- Hidden on detail, create, and edit routes.
+- Persists across supported temporal workspaces.
+- Services use inclusive date-range overlap.
+- Start-only Services preserve the existing single-date domain behavior.
+- Quotations use authoritative quotation date.
+- Invoices use `issued_at` with the existing safe draft fallback.
+- Payments use payment date.
+- Dashboard remains unscoped.
+
+#### 28K.5 Explicit pending acceptance
+
+- Reports implementation: technically validated, owner product/visual acceptance pending.
+- Customer 360 implementation: technically validated, owner product/visual acceptance pending.
+- Responsive/mobile is not part of the current owner acceptance gate unless a severe regression is identified.
+- Final role-specific Dashboard compositions are deferred.
+
+#### 28K.6 Closeout boundary
+
+Goal 2B/2C remains current-product remediation, not a new Event ERP expansion activation. The approved local commit series is separate from merge, push, and Open Code Review. No remote write or OCR execution is authorized by this acceptance record.
+
+---
+
 ## 29. Parallel Workstream Continuity
 
 The expansion discussion must not stop current work.
@@ -2750,10 +3121,10 @@ No document should be photographed or copied without consent.
 
 ## 35. Immediate Next Steps
 
-1. Use revision 0.3 of this file as the sole authoritative expansion reference; do not create a competing master handover.
-2. Run the next controlled Goal in the existing Goal worktree for the approved current-product remediation and Supplier Rate Card Management V1 boundary recorded in Section 28B.
-3. Keep all changes unstaged and uncommitted until Mozfer performs manual browser and visual acceptance.
-4. After owner acceptance, use controlled commit slicing, fast-forward merge to `main`, validation, push, and temporary Goal-worktree cleanup.
+1. Use revision 0.11 of this file as the sole authoritative expansion reference; do not create a competing master handover.
+2. Treat the owner-accepted Goal 2B/2C implementation as a local committed baseline after the separate closeout task; no remote write or OCR is implied.
+3. Keep Reports and Customer 360 owner product/visual acceptance pending; do not begin redesign.
+4. After Mozfer reviews the local commit closeout, use a separately authorized `PUSH_ONLY` task if remote delivery is desired; Open Code Review requires separate authorization.
 5. Update this file immediately when Rate Card Management V1 changes from approved to implemented, accepted, merged, or pushed.
 6. Preserve the Arabic interview-question document for Wednesday.
 7. Conduct the Wednesday interview and record answers as evidence, separating universal rules from “depends on supplier/event” behavior.
