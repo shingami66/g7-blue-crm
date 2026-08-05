@@ -1,0 +1,412 @@
+{
+  "rules": [
+    {
+      "path": "**/*.test.ts",
+      "rule": "Tests quality wave: inspect behavioral assertions, authorization and negative cases, race/retry/failure coverage, disabled or skipped tests, brittle snapshots, implementation-only assertions, and differences between test and production behavior. Report evidence only; do not edit files.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "**/*.test.tsx",
+      "rule": "Tests quality wave: inspect behavioral assertions, authorization and negative cases, race/retry/failure coverage, disabled or skipped tests, brittle snapshots, implementation-only assertions, and differences between test and production behavior. Report evidence only; do not edit files.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "**/*.test.js",
+      "rule": "Tests quality wave: inspect behavioral assertions, authorization and negative cases, race/retry/failure coverage, disabled or skipped tests, brittle snapshots, implementation-only assertions, and differences between test and production behavior. Report evidence only; do not edit files.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "**/*.test.mjs",
+      "rule": "Tests quality wave: inspect behavioral assertions, authorization and negative cases, race/retry/failure coverage, disabled or skipped tests, brittle snapshots, implementation-only assertions, and differences between test and production behavior. Report evidence only; do not edit files.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/auth/**",
+      "rule": "Authentication and authorization: inspect server authentication, session expiry, suspended or revoked access, effective-role permission enforcement, direct URL access, IDOR, client-only protection, trust boundaries, sensitive-data exposure, and future tenant-isolation hazards. Report file/line evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/admin/**",
+      "rule": "Authentication and authorization: inspect privileged admin boundaries, direct URL access, IDOR, effective permissions, role changes, sensitive-data exposure, and safe denial behavior. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/security/**",
+      "rule": "Security boundary: inspect permission checks, trust boundaries, rate limits, session state, sensitive-data exposure, bypasses, and future tenant-isolation hazards. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/supabase/**",
+      "rule": "Server data boundary: inspect Clerk-to-app-user binding, server-only admin access, scoped queries, permission assumptions, RLS alignment, error disclosure, and secret safety. Report evidence only; do not execute SQL.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/settings/**",
+      "rule": "Settings authorization: inspect privileged mutations, VAT/company-data validation, role enforcement, tenant-safety assumptions, auditability, and safe defaults. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/api/webhooks/**",
+      "rule": "Webhook trust boundary: inspect authenticity/signature checks, replay and idempotency behavior, payload validation, duplicate delivery, partial failure, and safe error handling. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/admin/**",
+      "rule": "Admin route boundary: inspect server-side authentication, effective permissions, direct URL access, IDOR, sensitive-data exposure, and safe denial UX. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/settings/**",
+      "rule": "Settings route boundary: inspect authentication, privileged permission checks, VAT/company-data validation, direct URL access, and sensitive-data exposure. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/login/**",
+      "rule": "Sign-in flow: inspect session establishment, redirect safety, stale or revoked access, error disclosure, and client/server trust boundaries. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/sign-in/**",
+      "rule": "Sign-in flow: inspect session establishment, redirect safety, stale or revoked access, error disclosure, and client/server trust boundaries. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/sign-up/**",
+      "rule": "Sign-up flow: inspect account provisioning, authorization assumptions, session establishment, redirect safety, duplicate identity handling, and sensitive-data exposure. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/unauthorized/**",
+      "rule": "Authorization denial surface: inspect safe failure behavior, data minimization, redirect/navigation integrity, and absence of permission leakage. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/proxy.ts",
+      "rule": "Request boundary: inspect route matching, authentication enforcement, redirect safety, bypass resistance, and client-only protection gaps. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "supabase/**",
+      "rule": "Financial/RLS/RPC boundary: inspect policies, grants, SECURITY DEFINER functions, tenant scope, authoritative server calculations, transaction boundaries, concurrency, idempotency, audit history, and safe handling of financial data. Report evidence only; never execute SQL or apply migrations.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/approved-billing-scopes/**",
+      "rule": "Financial lifecycle: inspect approved quotation and Service prerequisites, immutable billing authority, lifecycle transitions, void/supersede boundaries, invoice/payment exposure, concurrency, audit history, and illegal mutation risks. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/invoices/**",
+      "rule": "Invoices and money: inspect deposit/final eligibility, duplicate creation, authoritative totals, subtotal/discount/VAT/paid/remaining amounts, decimal and minor-unit handling, issued-record immutability, VAT restrictions, retry behavior, audit history, and financial data exposure. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/payments/**",
+      "rule": "Payments and money: inspect duplicate submission, request idempotency, transaction boundaries, partial failures, concurrent requests, overpayment protection, authoritative amounts, retry-after-success behavior, audit history, and financial data exposure. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/approved-billing-scopes/**",
+      "rule": "Approved Billing Scope UI: inspect Service-first authority, approval/void lifecycle, permission boundaries, immutable evidence, invoice/payment guards, duplicate actions, and safe financial feedback. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/invoices/**",
+      "rule": "Invoice UI: inspect approved quotation and Service prerequisites, deposit/final eligibility, duplicate-submit protection, server-authoritative totals, issued-record mutation guards, VAT labels/restrictions, PDF exposure, and safe retry/error behavior. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/payments/**",
+      "rule": "Payment UI: inspect permission-gated mutation, idempotency and double-submit protection, amount validation, overpayment prevention, stale-record handling, audit feedback, and sensitive-data exposure. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/types/audit.*",
+      "rule": "Financial audit contract: inspect event meaning, immutable history, actor/action data, lifecycle coverage, and compatibility with server-authoritative financial operations. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/types/invoice.*",
+      "rule": "Invoice contract: inspect nullable money, VAT modes, status/type invariants, snapshot fields, issued-record immutability, and compatibility with authoritative calculations. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/types/payment.*",
+      "rule": "Payment contract: inspect amount/date/method semantics, idempotency identifiers, invoice linkage, overpayment rules, and audit compatibility. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/quotations/**",
+      "rule": "Services and quotations: inspect Service-scoped lifecycle, approval and revision behavior, customer linkage, service-scope integrity, concurrent approvals, date and cross-year semantics, stale/cancelled state, duplicate actions, and financial authority. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/quotations/**",
+      "rule": "Quotation UI: inspect Service-scoped eligibility, approval permissions, revision/editability boundaries, customer linkage, concurrent or duplicate actions, date semantics, localized errors, and PDF/printing exposure. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/types/quotation.*",
+      "rule": "Quotation contract: inspect Service linkage, approval/revision state, customer derivation, dates, financial snapshot compatibility, and lifecycle invariants. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/services/**",
+      "rule": "Service lifecycle: inspect Service/Booking authority, transition guards, approval prerequisites, cancellation and stale state, concurrent actions, duplicate mutations, date semantics, cross-year behavior, customer linkage, and downstream billing integrity. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/services/**/Supplier*",
+      "rule": "Supplier operations in Service surfaces: inspect Service-scoped ownership, Supplier allocation/booking permissions, rate validity, mutation concurrency, historical references, cost exposure, and safe recovery. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/services/**/allocations/**",
+      "rule": "Supplier allocations in Service surfaces: inspect ownership, rate-card validity, quantity and cost integrity, concurrent writes, active-booking locks, delete/restore safety, and auditability. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/services/**",
+      "rule": "Service UI: inspect lifecycle transitions, approval and cancellation authority, date semantics, stale state, duplicate actions, customer linkage, billing prerequisites, and safe feedback. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/types/service.*",
+      "rule": "Service contract: inspect lifecycle state, date interval semantics, customer linkage, supplier-operation boundaries, and compatibility with quotation and billing authority. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/suppliers/**",
+      "rule": "Suppliers and Rate Cards: inspect rate validity, overlap detection, concurrent writes, activation/deactivation, historical references, permission-aware cost access, supplier data exposure, and safe future procurement integration. Do not treat deferred City/Country cleanup as a defect unless it creates integrity or security risk. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/supplier-allocations/**",
+      "rule": "Supplier allocations: inspect Service scope, rate-card validity, quantity/unit-cost integrity, concurrency, active-booking locks, lifecycle transitions, permission checks, and auditability. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/supplier-bookings/**",
+      "rule": "Supplier bookings: inspect Service scope, supplier lifecycle, date/quantity integrity, concurrent writes, ownership, failure recovery, and auditability. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/suppliers/**",
+      "rule": "Supplier UI: inspect permission-aware Directory and Rate Card presentation, cost exposure, rate validity, overlap handling, activation/deactivation, historical references, bidi-safe identifiers, and safe future procurement boundaries. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/types/supplier.*",
+      "rule": "Supplier contract: inspect Rate Card validity, overlap and activation semantics, historical integrity, permissions, and safe compatibility with Supplier Operations. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/reports/**",
+      "rule": "Reports and cost visibility: inspect permission-aware cost access, whether data is fetched before being hidden, aggregation correctness, count/row predicate consistency, filter and Business Year semantics, export readiness, and accidental financial leakage. Reports remain owner-unaccepted. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/reports/**",
+      "rule": "Reports UI: inspect permission-aware sections, hidden-data delivery, aggregation/filter/count consistency, Business Year semantics, export behavior, loading/error/partial states, and financial leakage. Reports remain owner-unaccepted. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/customer-360/**",
+      "rule": "Customer 360: inspect authorization, human-readable context, duplicate sections, UUID exposure, sentinel dates, navigation integrity, query bounds, and cross-domain leakage. Customer 360 remains owner-unaccepted. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/customers/*/*",
+      "rule": "Customer 360 UI: inspect customer-scoped authorization, human-readable context, duplicate sections, raw UUIDs, sentinel dates, navigation integrity, bounded loading, and cross-domain data exposure. Customer 360 remains owner-unaccepted. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/business-year*",
+      "rule": "Business Year and temporal behavior: inspect Riyadh calendar boundaries, cookie/URL consistency, normalization, inclusive Service interval overlap, start-only Services, quotation dates, invoice issued_at and safe draft fallback, payment dates, timezone/year-boundary hazards, Dashboard exclusion, and non-temporal module exclusion. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/components/i18n/BusinessYearSelector.tsx",
+      "rule": "Business Year UI: inspect selector state, cookie/URL synchronization, Riyadh semantics, year-boundary behavior, and the explicit exclusion of Dashboard from year filtering. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/i18n/**",
+      "rule": "Localization, RTL, and bidi: inspect Arabic/English parity, locale resolution, directionality, bidi-control sanitization, LTR isolation for identifiers/money/dates, interpolation safety, and localized loading/error/empty/forbidden states. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/search/**",
+      "rule": "Search and pagination: inspect explicit-submit contracts, draft versus submitted state, Back/Forward synchronization, IME composition, URL state, Unicode whitespace, bidi sanitization, bounded server-side filtering, stable ordering, count/row consistency, and Arabic/English parity. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/pagination*",
+      "rule": "Pagination: inspect bounds, stable ordering, count/row consistency, URL synchronization, retained rows, duplicate prevention, and responsive/RTL controls. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/record-navigation/**",
+      "rule": "Record navigation: inspect contextual navigation, permission preservation, focus behavior, route integrity, loading feedback, and RTL-safe back/forward semantics. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/components/i18n/**",
+      "rule": "Localized UI: inspect locale switching, Arabic/English parity, RTL layout, bidi-safe structured values, focus, and accessible localized state feedback. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/components/layout/**",
+      "rule": "Layout and navigation: inspect permission-preserving routes, focus, responsive behavior, RTL/mobile layout, pending feedback, and safe navigation. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/components/records/**",
+      "rule": "Record navigation UI: inspect contextual route integrity, focus return, permission boundaries, pending state, and accessible RTL behavior. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/components/ui/**",
+      "rule": "Shared UI: inspect accessible icon semantics, focus visibility, keyboard behavior, pending/error/empty states, retained rows, duplicate prevention, responsive layout, and EN/AR/RTL safety. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/globals.css",
+      "rule": "Global UI styling: inspect accessibility, focus visibility, responsive behavior, print/PDF styles, RTL correctness, hydration-sensitive styling, and layout regressions. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/customers/**",
+      "rule": "Customer list and profile entry UI: inspect explicit-submit search, URL state, pagination, stable ordering, localized states, permission-preserving navigation, and human-readable business context. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "**/*queries.ts",
+      "rule": "Database queries and performance: inspect N+1 behavior, unbounded reads, unnecessary select-all payloads, repeated counts, missing pagination, unstable ordering, deep offsets, index-defeating filters, repeated request queries, unauthorized hidden-widget queries, transaction/locking risks, and safe concurrency. Report evidence only; do not prescribe migrations automatically.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "**/queries.ts",
+      "rule": "Database queries and performance: inspect N+1 behavior, unbounded reads, unnecessary select-all payloads, repeated counts, missing pagination, unstable ordering, deep offsets, index-defeating filters, repeated request queries, unauthorized hidden-widget queries, transaction/locking risks, and safe concurrency. Report evidence only; do not prescribe migrations automatically.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/data/**",
+      "rule": "Data access and scalability: inspect bounded reads, payload size, filtering, ordering, repeated requests, authorization before fetching hidden data, failure semantics, and likely query-cost risks. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/api/health/**",
+      "rule": "Production reliability: inspect health-check dependency behavior, timeouts, network interruption, missing environment values, error categorization, and graceful degradation. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/error.tsx",
+      "rule": "Production reliability: inspect error boundaries, user-safe failure states, diagnostic usefulness, retry behavior, and errors incorrectly converted into empty states. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/(dashboard)/error.tsx",
+      "rule": "Production reliability: inspect dashboard error boundaries, stale-session and missing-record behavior, retry/degradation UX, and safe diagnostic handling. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/lib/env.ts",
+      "rule": "Production configuration: inspect missing environment values, runtime-only failures, secret handling, deployment transitions, and safe startup/error behavior. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "**/*audit*.ts",
+      "rule": "Observability and supportability: inspect structured audit events, correlation/action context, sensitive information in logs, actionable failure categorization, silent failures, and diagnosability of financial operations. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "**/*log*.ts",
+      "rule": "Observability and supportability: inspect structured logging, sensitive information, correlation identifiers, actionable categories, silent failure, and slow-query/dependency-failure visibility. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/app/**",
+      "rule": "Next.js runtime and rendering: inspect Server/Client Component boundaries, avoidable hydration, oversized client payloads, request waterfalls, bundle-heavy imports, repeated server requests, cache/revalidation assumptions, dynamic rendering, route transitions, loading boundaries, and hydration mismatch. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "src/components/**",
+      "rule": "Runtime UI performance and reliability: inspect excessive Client Components, hydration cost, large props/payloads, repeated requests, interaction failure, accessible states, and responsive/RTL regressions. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "docs/**",
+      "rule": "Documentation and readiness sweep: inspect whether documented product authority, owner-acceptance status, deferred boundaries, build/deployment claims, and the canonical Expansion Master reference agree with repository evidence. Report contradictions only; do not rewrite docs during baseline review.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "Dockerfile",
+      "rule": "Production readiness: inspect deployment configuration, runtime dependencies, signal/shutdown behavior, environment requirements, and reproducibility. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "docker-compose.yml",
+      "rule": "Local/deployment readiness: inspect service dependencies, health behavior, environment boundaries, and divergence from production assumptions. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "next.config.ts",
+      "rule": "Next.js production configuration: inspect rendering, asset, image, cache, and deployment assumptions for reliability and performance risks. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "package.json",
+      "rule": "Build and deployment readiness: inspect scripts, dependency/runtime compatibility, missing gates, and production-only failure risks. Report evidence only; do not edit dependencies.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "test-all.mjs",
+      "rule": "Quality gate orchestration: inspect test discovery, false confidence, missing type/build/lint gates, skipped suites, and failure reporting. Report evidence only.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "**/*",
+      "rule": "General source rule: inspect correctness, security, data integrity, production readiness, performance, reliability, error handling, backwards compatibility, maintainability, and accidental exposure of customer or financial data. Ignore purely stylistic preferences unless they create a real usability, accessibility, correctness, or operational defect. Report evidence only; do not auto-fix.",
+      "merge_system_rule": true
+    }
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    ".next/**",
+    "coverage/**",
+    "dist/**",
+    "build/**",
+    "**/generated/**",
+    "**/*.generated.*",
+    ".opencodereview/**",
+    "build-watch-*.log",
+    "**/build-watch-*.log",
+    ".env",
+    ".env.*",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "skills-lock.json",
+    "public/**",
+    "**/*.png",
+    "**/*.jpg",
+    "**/*.jpeg",
+    "**/*.gif",
+    "**/*.ico",
+    "**/*.pdf",
+    "**/*.tmp",
+    "**/*.bak",
+    "**/*.bundle",
+    ".grok/**",
+    ".codex/**",
+    "recovery/**",
+    "rescue/**",
+    "bundles/**",
+    ".gitignore",
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".agents/**",
+    ".specify/**",
+    "specs/**"
+  ]
+}
