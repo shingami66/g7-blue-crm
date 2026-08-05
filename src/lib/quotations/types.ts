@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { sanitizeSearchTerm } from "@/lib/search/sanitize";
+import {
+  normalizeListPage,
+  normalizeListPageSize,
+  type ListPageSize,
+} from "../pagination.ts";
 import {
   createQuotationSchema,
   updateQuotationSchema,
@@ -6,6 +12,55 @@ import {
 } from "./schemas";
 
 export type QuotationStatus = "draft" | "sent" | "approved" | "rejected" | "expired";
+
+export const QUOTATION_LIST_PAGE_SIZE = 10;
+export type QuotationSearchMode = "quotationNumber" | "customer" | "service";
+
+export interface QuotationListQuery {
+  page?: number;
+  pageSize?: ListPageSize;
+  searchMode?: QuotationSearchMode;
+  search?: string;
+  status?: QuotationStatus;
+  month?: string;
+}
+
+export interface QuotationListPagination {
+  page: number;
+  pageSize: ListPageSize;
+  total: number;
+  totalPages: number;
+}
+
+export interface QuotationsListResult {
+  quotations: QuotationListItem[];
+  pagination: QuotationListPagination;
+  error?: "quotations_load_failed";
+}
+
+export function normalizeQuotationListPage(value: unknown): number {
+  return normalizeListPage(value);
+}
+
+export function normalizeQuotationListPageSize(value: unknown): ListPageSize {
+  return normalizeListPageSize(value);
+}
+
+export function normalizeQuotationSearchMode(value: unknown): QuotationSearchMode | undefined {
+  return value === "quotationNumber" || value === "customer" || value === "service"
+    ? value
+    : undefined;
+}
+
+export function normalizeQuotationListSearch(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const search = sanitizeSearchTerm(value);
+  return search || undefined;
+}
+
+export function normalizeQuotationMonth(value: unknown): string | undefined {
+  return typeof value === "string" && /^\d{4}-\d{2}$/.test(value) ? value : undefined;
+}
 
 /** Raw row shape returned by Supabase for the `quotations` table. */
 export interface QuotationRow {

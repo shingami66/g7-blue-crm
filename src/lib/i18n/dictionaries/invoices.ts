@@ -52,6 +52,10 @@ export interface InvoicesDictionary {
       paid: string;
       overdue: string;
       searchPlaceholder: string;
+      searchModeLabel: string;
+      resetFilters: string;
+      searchModes: { invoiceNumber: string; customer: string };
+      searchPlaceholders: { invoiceNumber: string; customer: string };
     };
     summary: {
       showingZero: string;
@@ -290,6 +294,10 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       paid: "Paid",
       overdue: "Overdue",
       searchPlaceholder: "Search by invoice number or customer",
+      searchModeLabel: "Search invoices by",
+      resetFilters: "Reset filters",
+      searchModes: { invoiceNumber: "Invoice Number", customer: "Customer" },
+      searchPlaceholders: { invoiceNumber: "Search invoice number", customer: "Search customer name" },
     },
     summary: {
       showingZero: "Showing 0 invoices",
@@ -536,6 +544,10 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       paid: "مدفوعة",
       overdue: "متأخرة",
       searchPlaceholder: "ابحث برقم الفاتورة أو اسم العميل",
+      searchModeLabel: "البحث في الفواتير حسب",
+      resetFilters: "إعادة ضبط الفلاتر",
+      searchModes: { invoiceNumber: "رقم الفاتورة", customer: "العميل" },
+      searchPlaceholders: { invoiceNumber: "ابحث عن رقم الفاتورة", customer: "ابحث عن اسم العميل" },
     },
     summary: {
       showingZero: "عرض 0 فواتير",

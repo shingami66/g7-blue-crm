@@ -30,7 +30,24 @@ export interface QuotationsDictionary {
     title: string;
     subtitle: string;
     selectService: string;
+    searchPlaceholder: string;
+    searchModeLabel: string;
+    resetFilters: string;
+    searchModes: {
+      quotationNumber: string;
+      customer: string;
+      service: string;
+    };
+    searchPlaceholders: {
+      quotationNumber: string;
+      customer: string;
+      service: string;
+    };
     allStatuses: string;
+    dateFilter: {
+      label: string;
+      anyMonth: string;
+    };
     showingZero: string;
     showingRange: string;
     noQuotations: string;
@@ -241,7 +258,17 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     title: "Quotations",
     subtitle: "Manage client proposals, event estimates, and approvals.",
     selectService: "Select Service",
+    searchPlaceholder: "Search quotation, service, customer, or event",
+    searchModeLabel: "Search quotations by",
+    resetFilters: "Reset filters",
+    searchModes: { quotationNumber: "Quotation Number", customer: "Customer", service: "Service" },
+    searchPlaceholders: {
+      quotationNumber: "Search quotation number",
+      customer: "Search customer name",
+      service: "Search Service number or title",
+    },
     allStatuses: "All Statuses",
+    dateFilter: { label: "Issue date", anyMonth: "Any issue month" },
     showingZero: "Showing 0 of 0 quotations",
     showingRange: "Showing {start}-{end} of {count} quotations",
     noQuotations: "No quotations found.",
@@ -458,7 +485,17 @@ const quotationsDictionaryAr: QuotationsDictionary = {
     title: "عروض الأسعار",
     subtitle: "إدارة عروض العملاء وتقديرات الفعاليات وحالات الاعتماد.",
     selectService: "اختر خدمة",
+    searchPlaceholder: "ابحث عن عرض السعر أو الخدمة أو العميل أو الفعالية",
+    searchModeLabel: "البحث في عروض الأسعار حسب",
+    resetFilters: "إعادة ضبط الفلاتر",
+    searchModes: { quotationNumber: "رقم عرض السعر", customer: "العميل", service: "الخدمة" },
+    searchPlaceholders: {
+      quotationNumber: "ابحث عن رقم عرض السعر",
+      customer: "ابحث عن اسم العميل",
+      service: "ابحث عن رقم الخدمة أو عنوانها",
+    },
     allStatuses: "كل الحالات",
+    dateFilter: { label: "تاريخ الإصدار", anyMonth: "كل أشهر الإصدار" },
     showingZero: "عرض 0 من 0 من عروض الأسعار",
     showingRange: "عرض {start}-{end} من {count} من عروض الأسعار",
     noQuotations: "لم يتم العثور على عروض أسعار",

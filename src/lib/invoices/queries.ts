@@ -1,12 +1,21 @@
 import "server-only";
 
 import { requirePermission } from "@/lib/auth/permissions";
+import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { APPROVED_BILLING_SCOPE_PERMISSIONS } from "@/lib/approved-billing-scopes/permissions";
 import type { ApprovedBillingScopeReadResult } from "@/lib/approved-billing-scopes/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { InvoiceRow } from "./types";
 import { mapRowToInvoice } from "./mappers";
 import type { Invoice } from "@/types/invoice";
+import { buildIlikeOrFilter } from "@/lib/search/server";
+import {
+  normalizeInvoiceListPageSize,
+  normalizeInvoiceListSearch,
+  normalizeInvoiceSearchMode,
+  type InvoiceListQuery,
+  type InvoicesListResult,
+} from "./types";
 
 export async function getInvoicesByApprovedBillingScopeId(
   approvedBillingScopeId: string
@@ -47,6 +56,7 @@ export async function getInvoicesByApprovedBillingScopeId(
 }
 
 export async function getInvoiceById(id: string): Promise<Invoice | null> {
+  await requirePermission("invoices:read");
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("invoices")
@@ -66,6 +76,7 @@ export async function getInvoiceById(id: string): Promise<Invoice | null> {
 }
 
 export async function getInvoicesByServiceId(serviceId: string): Promise<Invoice[]> {
+  await requirePermission("invoices:read");
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("invoices")
@@ -83,6 +94,7 @@ export async function getInvoicesByServiceId(serviceId: string): Promise<Invoice
 }
 
 export async function getInvoicesByQuotationId(quotationId: string): Promise<Invoice[]> {
+  await requirePermission("invoices:read");
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("invoices")
@@ -100,10 +112,11 @@ export async function getInvoicesByQuotationId(quotationId: string): Promise<Inv
 }
 
 export async function getInvoices(): Promise<Invoice[]> {
+  await requirePermission("invoices:read");
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("invoices")
-    .select("*")
+    .select("*, customers(company,contact), services(service_number,service_title)")
     .eq("is_deleted", false)
     .order("invoice_number", { ascending: true });
 
@@ -113,4 +126,77 @@ export async function getInvoices(): Promise<Invoice[]> {
   }
 
   return (data as InvoiceRow[]).map(mapRowToInvoice);
+}
+
+function invoiceSearchColumns(mode: InvoiceListQuery["searchMode"]): string[] {
+  return mode === "customer" ? ["company", "contact"] : ["invoice_number"];
+}
+
+function invoiceSearchRelation(mode: InvoiceListQuery["searchMode"]): string | undefined {
+  return mode === "customer" ? "customers" : undefined;
+}
+
+export async function getInvoicesList(
+  options: InvoiceListQuery = {},
+): Promise<InvoicesListResult> {
+  await requirePermission("invoices:read");
+
+  const pageSize = normalizeInvoiceListPageSize(options.pageSize);
+  const search = normalizeInvoiceListSearch(options.search);
+  const searchMode = search ? normalizeInvoiceSearchMode(options.searchMode) : undefined;
+  const searchFilter = searchMode
+    ? buildIlikeOrFilter(invoiceSearchColumns(searchMode), search)
+    : undefined;
+  const searchRelation = searchFilter && searchMode ? invoiceSearchRelation(searchMode) : undefined;
+
+  try {
+    const supabase = createAdminClient();
+    let countQuery = supabase
+      .from("invoices")
+      .select(searchRelation ? "id, customers!inner(id)" : "id", { count: "exact", head: true })
+      .eq("is_deleted", false);
+    let dataQuery = supabase
+      .from("invoices")
+      .select(searchRelation ? "*, customers!inner(company,contact), services(service_number,service_title)" : "*, customers(company,contact), services(service_number,service_title)")
+      .eq("is_deleted", false);
+
+    if (options.status && options.status !== "all") {
+      countQuery = countQuery.eq("status", options.status);
+      dataQuery = dataQuery.eq("status", options.status);
+    }
+    if (searchFilter) {
+      countQuery = countQuery.or(searchFilter, searchRelation ? { referencedTable: searchRelation } : undefined);
+      dataQuery = dataQuery.or(searchFilter, searchRelation ? { referencedTable: searchRelation } : undefined);
+    }
+
+    const { count, error: countError } = await countQuery;
+    if (countError) {
+      console.error("[getInvoicesList] Count error:", countError.message);
+      return { invoices: [], pagination: { page: 1, pageSize, total: 0, totalPages: 1 }, error: "invoices_load_failed" };
+    }
+
+    const total = count ?? 0;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(Math.max(options.page ?? 1, 1), totalPages);
+    const rangeStart = (page - 1) * pageSize;
+    const { data, error } = await dataQuery
+      .order("invoice_number", { ascending: true })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(rangeStart, rangeStart + pageSize - 1);
+
+    if (error) {
+      console.error("[getInvoicesList] Data error:", error.message);
+      return { invoices: [], pagination: { page: 1, pageSize, total: 0, totalPages: 1 }, error: "invoices_load_failed" };
+    }
+
+    return {
+      invoices: (data ?? []).map((row) => mapRowToInvoice(row as InvoiceRow)),
+      pagination: { page, pageSize, total, totalPages },
+    };
+  } catch (err) {
+    if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
+    console.error("[getInvoicesList] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { invoices: [], pagination: { page: 1, pageSize, total: 0, totalPages: 1 }, error: "invoices_load_failed" };
+  }
 }

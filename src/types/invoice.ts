@@ -48,6 +48,8 @@ export interface Invoice {
   // Kept for backward compatibility with existing static UI
   customerId?: string;
   customer?: string;
+  serviceNumber?: string;
+  serviceTitle?: string;
   relatedQuote?: string;
   relatedQuoteNumber?: string;
   date?: string;

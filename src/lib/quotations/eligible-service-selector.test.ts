@@ -46,7 +46,7 @@ test("eligible Service query is guarded, lifecycle-bounded, mapped, and determin
 test("Quotations page gates selector data on both permissions without changing list authority", () => {
   const source = read(QUOTATIONS_PAGE);
 
-  assert.match(source, /getQuotations\(\)/);
+  assert.match(source, /getQuotationsList\(/);
   assert.match(source, /checkPermission\("quotations:write"\)/);
   assert.match(source, /checkPermission\("services:read"\)/);
   assert.match(source, /const canSelectService = canWrite && canReadServices/);

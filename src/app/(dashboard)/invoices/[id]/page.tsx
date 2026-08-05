@@ -24,6 +24,9 @@ import { getServiceById } from "@/lib/services/queries";
 import type { QuotationItem } from "@/lib/quotations/types";
 import { IssueInvoiceAction } from "../IssueInvoiceAction";
 import { RecordPaymentAction } from "./RecordPaymentAction";
+import RecordNavigation from "@/components/records/RecordNavigation";
+import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
+import { getInvoiceRecordNavigation, safeRecordReturnTo } from "@/lib/record-navigation/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -140,10 +143,14 @@ function readLineItems(snapshotQuotation: Record<string, unknown> | null) {
 
 export default async function InvoiceDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnTo?: string }>;
 }) {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
+  const returnTo = safeRecordReturnTo(resolvedSearchParams.returnTo, "/invoices");
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getInvoicesDictionary(locale);
 
@@ -173,6 +180,9 @@ export default async function InvoiceDetailPage({
   if (!invoice) {
     notFound();
   }
+
+  const recordNavigation = await getInvoiceRecordNavigation(id, invoice.invoice_number);
+  const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
   const canIssueInvoice = invoice.status === "draft"
     ? await checkPermission(INVOICE_PERMISSIONS.write)
@@ -238,7 +248,7 @@ export default async function InvoiceDetailPage({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-start gap-4">
           <PendingLink
-            href="/invoices"
+            href={returnTo}
             className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors"
             aria-label={dictionary.detail.actions.backToInvoices}
             title={dictionary.detail.actions.backToInvoices}
@@ -263,7 +273,8 @@ export default async function InvoiceDetailPage({
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <RecordNavigation basePath="/invoices" recordType={dictionary.detail.labels.invoiceNumber} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} />
           <Link
             href={`/invoices/${invoice.id}/pdf`}
             target="_blank"

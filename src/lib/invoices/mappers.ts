@@ -3,8 +3,14 @@ import type { InvoiceRow } from "./types";
 import type { VatMode } from "@/types/settings";
 
 export function mapRowToInvoice(row: InvoiceRow): Invoice {
-  let customerName = "Unknown Customer";
+  const relationRow = row as InvoiceRow & {
+  services?: { service_number?: string | null; service_title?: string | null } | null;
+    customers?: { company?: string | null; contact?: string | null } | null;
+  };
+  let customerName = relationRow.customers?.company ?? "Unknown Customer";
   let customerId = "";
+
+  if (row.customer_id) customerId = row.customer_id;
 
   if (row.snapshot_buyer && typeof row.snapshot_buyer === 'object') {
     const buyer = row.snapshot_buyer as Record<string, unknown>;
@@ -65,6 +71,8 @@ export function mapRowToInvoice(row: InvoiceRow): Invoice {
 
     // Legacy UI fields mapping
     customer: customerName,
+    serviceNumber: relationRow.services?.service_number ?? undefined,
+    serviceTitle: relationRow.services?.service_title ?? undefined,
     customerId: customerId,
     relatedQuote: row.approved_quotation_id,
     relatedQuoteNumber: relatedQuoteNumber,

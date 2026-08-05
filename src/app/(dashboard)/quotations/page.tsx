@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getQuotations } from "@/lib/quotations/queries";
+import { getQuotationsList } from "@/lib/quotations/queries";
 import {
   getEligibleServicesForQuotation,
   type EligibleQuotationService,
@@ -12,7 +12,16 @@ import {
   type QuotationsDictionary,
 } from "@/lib/i18n/dictionaries/quotations";
 import QuotationsClient from "./QuotationsClient";
-import type { QuotationListItem } from "@/lib/quotations/types";
+import {
+  normalizeQuotationListPage,
+  normalizeQuotationListPageSize,
+  normalizeQuotationListSearch,
+  normalizeQuotationMonth,
+  normalizeQuotationSearchMode,
+  type QuotationListQuery,
+  type QuotationListItem,
+  type QuotationStatus,
+} from "@/lib/quotations/types";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +29,9 @@ type QuotationsPageState =
   | {
       status: "ready";
       quotations: QuotationListItem[];
+      pagination: Awaited<ReturnType<typeof getQuotationsList>>["pagination"];
+      query: QuotationListQuery;
+      loadError?: "quotations_load_failed";
       canWrite: boolean;
       canSelectService: boolean;
       eligibleServices: EligibleQuotationService[];
@@ -28,13 +40,28 @@ type QuotationsPageState =
   | { status: "forbidden" }
   | { status: "error" };
 
-export default async function QuotationsPage() {
+type QuotationSearchParams = {
+  page?: string;
+  pageSize?: string;
+  search?: string;
+  searchMode?: string;
+  status?: string;
+  month?: string;
+};
+
+export default async function QuotationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<QuotationSearchParams>;
+}) {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getQuotationsDictionary(locale);
+  const params = await searchParams;
+  const query = quotationListQuery(params);
   let pageState: QuotationsPageState;
 
   try {
-    const quotations = await getQuotations();
+    const result = await getQuotationsList(query);
     const [canWrite, canReadServices] = await Promise.all([
       checkPermission("quotations:write"),
       checkPermission("services:read"),
@@ -45,7 +72,10 @@ export default async function QuotationsPage() {
       : [];
     pageState = {
       status: "ready",
-      quotations,
+      quotations: result.quotations,
+      pagination: result.pagination,
+      query,
+      loadError: result.error,
       canWrite,
       canSelectService,
       eligibleServices,
@@ -92,10 +122,32 @@ export default async function QuotationsPage() {
   return (
     <QuotationsClient
       quotations={pageState.quotations}
+      pagination={pageState.pagination}
+      query={query}
+      loadError={pageState.loadError}
       canWrite={pageState.canWrite}
       canSelectService={pageState.canSelectService}
       eligibleServices={pageState.eligibleServices}
       dictionary={pageState.dictionary}
     />
   );
+}
+
+function quotationListQuery(params: QuotationSearchParams): QuotationListQuery {
+  const searchMode = normalizeQuotationSearchMode(params.searchMode);
+  const search = searchMode ? normalizeQuotationListSearch(params.search) : undefined;
+  return {
+    page: normalizeQuotationListPage(params.page),
+    pageSize: normalizeQuotationListPageSize(params.pageSize),
+    search,
+    searchMode: search ? searchMode : undefined,
+    status: quotationStatus(params.status),
+    month: normalizeQuotationMonth(params.month),
+  };
+}
+
+function quotationStatus(value: string | undefined): QuotationStatus | undefined {
+  return value === "draft" || value === "sent" || value === "approved" || value === "rejected"
+    ? value
+    : undefined;
 }

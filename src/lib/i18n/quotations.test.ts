@@ -66,7 +66,9 @@ test("2. List headings, filters, result count, and row actions localize", () => 
   assert.equal(ar.list.actionTitles.editQuotation, "تعديل عرض السعر");
   assert.equal(ar.list.actionTitles.deleteQuotation, "حذف عرض السعر");
   assert.match(read(LIST_CLIENT), /dictionary\.list\.title/);
-  assert.match(read(LIST_CLIENT), /statusFilter/);
+  assert.match(read(LIST_CLIENT), /ModuleSearchControl/);
+  assert.match(read(LIST_CLIENT), /searchModes/);
+  assert.match(read(LIST_CLIENT), /resetFilters/);
   assert.match(read(LIST_CLIENT), /PaginationFooter/);
 });
 
@@ -75,8 +77,11 @@ test("Quotation list print action opens the authoritative PDF without row naviga
 
   assert.match(source, /Printer/);
   assert.match(source, /dictionary\.list\.table\.printPdf/);
-  assert.match(source, /window\.open\(`\/quotations\/\$\{q\.id\}\/pdf`, "_blank", "noopener,noreferrer"\)/);
-  assert.match(source, /<td className="px-4 py-4" onClick=\{\(e\) => e\.stopPropagation\(\)\}>/);
+  assert.match(source, /window\.open\(`\/quotations\/\$\{quotation\.id\}\/pdf`, "_blank", "noopener,noreferrer"\)/);
+  assert.match(source, /aria-label=\{`\$\{dictionary\.list\.actionTitles\.viewDetails\}/);
+  assert.match(source, /onClick=\{\(\) => push\(/);
+  assert.match(source, /returnTo=/);
+  assert.doesNotMatch(source, /<tr[^>]+onClick=/);
 });
 
 test("3-6. Canonical status labels; no accepted/superseded; codes stable", () => {
@@ -171,7 +176,7 @@ test("13-16. Approval separate from write; Sales lacks approve; approved locked;
   assert.match(read(DETAIL), /checkPermission\("quotations:approve"\)/);
   assert.match(read(APPROVAL), /approveQuotation|rejectQuotation/);
   assert.match(read(APPROVAL), /status === "approved" \|\| status === "rejected"/);
-  assert.match(read(LIST_CLIENT), /q\.status === "approved"/);
+  assert.match(read(LIST_CLIENT), /quotation\.status === "approved"/);
   assert.match(read(LIST_CLIENT), /onlyDraftEditable|approvedCannotDelete/);
   assert.match(read(LIST_CLIENT), /status === "draft"/);
 });
@@ -198,7 +203,7 @@ test("18-20. Server total authority; no client-trusted totals; number generation
 test("21-23. Shared formatters, Western digits, bidi isolation", () => {
   assert.match(read(LIST_CLIENT), /formatSarAmount/);
   assert.match(read(LIST_CLIENT), /UiDateText|formatUiDate/);
-  assert.match(read(LIST_CLIENT), /isolateBidiText\(q\.quotationNumber\)/);
+  assert.match(read(LIST_CLIENT), /isolateBidiText\(quotation\.quotationNumber\)/);
   assert.match(read(FORM), /formatSarAmount/);
   assert.match(read(FORM), /isolateBidiText\(service\.serviceNumber\)/);
   assert.match(read(DETAIL), /formatSarAmount|UiDateText|formatUiDate|formatUiNumber/);
@@ -214,7 +219,7 @@ test("21-23. Shared formatters, Western digits, bidi isolation", () => {
 });
 
 test("24. Stored customer/Service/event/item text is not translated", () => {
-  assert.match(read(LIST_CLIENT), /q\.customer\?\.company|q\.event/);
+  assert.match(read(LIST_CLIENT), /quotation\.customer\?\.company|quotation\.event/);
   assert.match(read(FORM), /service\.serviceTitle|service\.customer/);
   assert.match(read(DETAIL), /item\.description|quotation\.event/);
   assert.match(read(LIST_CLIENT), /dir="auto"/);
@@ -288,7 +293,7 @@ test("31. No hardcoded English shells on source-proven Quotations Arabic UI surf
 
 test("Locale authority and soft-delete guards remain", () => {
   assert.match(read(LIST_CLIENT), /softDeleteQuotation/);
-  assert.match(read(LIST_CLIENT), /q\.status === "approved"/);
+  assert.match(read(LIST_CLIENT), /quotation\.status === "approved"/);
   assert.match(read(LIST_PAGE), /checkPermission\("quotations:write"\)|canWrite/);
   assert.match(read(NEW_PAGE), /requirePermission\("quotations:write"\)/);
 });

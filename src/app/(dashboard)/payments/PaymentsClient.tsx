@@ -7,6 +7,7 @@ import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
 import KpiCard from "@/components/ui/KpiCard";
 import PaginationFooter from "@/components/ui/PaginationFooter";
+import ModuleSearchInput from "@/components/ui/ModuleSearchInput";
 import type { PaymentListItem, PaymentStatus, PaymentsListResult } from "@/lib/payments/types";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import {
@@ -16,6 +17,7 @@ import {
 } from "@/lib/i18n/dictionaries/payments";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import { UiDateText } from "@/components/i18n/UiDateText";
+import { matchesLocalSearch } from "@/lib/search/local";
 
 type PaymentsClientProps = {
   payments: PaymentListItem[];
@@ -51,6 +53,7 @@ function buildPaymentStats(payments: PaymentListItem[]) {
 
 export default function PaymentsClient({ payments, error, dictionary }: PaymentsClientProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const handlePageChange = (page: number) => {
@@ -65,8 +68,17 @@ export default function PaymentsClient({ payments, error, dictionary }: Payments
 
   const locale = dictionary.locale;
   const stats = buildPaymentStats(payments);
-  const totalPages = Math.max(1, Math.ceil(payments.length / itemsPerPage));
-  const paginatedPayments = payments.slice(
+  const filteredPayments = payments.filter((payment) =>
+    matchesLocalSearch(searchTerm, [
+      payment.paymentNumber,
+      payment.invoiceNumber,
+      payment.reference,
+      payment.customerName,
+      payment.serviceLabel,
+    ]),
+  );
+  const totalPages = Math.max(1, Math.ceil(filteredPayments.length / itemsPerPage));
+  const paginatedPayments = filteredPayments.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -101,6 +113,18 @@ export default function PaymentsClient({ payments, error, dictionary }: Payments
           {dictionary.states.inlineError}
         </div>
       )}
+
+      <div className="mb-4 w-full max-w-sm">
+        <ModuleSearchInput
+          value={searchTerm}
+          onChange={(value) => {
+            setSearchTerm(value);
+            setCurrentPage(1);
+          }}
+          placeholder={dictionary.searchPlaceholder}
+          ariaLabel={dictionary.searchPlaceholder}
+        />
+      </div>
 
       <div className="flex-1 flex flex-col min-h-0">
         <div className="flex-1 overflow-auto min-h-0 overflow-y-auto overflow-x-hidden">
@@ -156,12 +180,14 @@ export default function PaymentsClient({ payments, error, dictionary }: Payments
                   </td>
                 </tr>
               ))}
-              {payments.length === 0 && (
+              {filteredPayments.length === 0 && (
                 <tr>
                   <td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">
                     {error
                       ? dictionary.states.paymentDataUnavailable
-                      : dictionary.table.empty}
+                      : payments.length === 0
+                        ? dictionary.table.empty
+                        : dictionary.states.noFilteredPayments}
                   </td>
                 </tr>
               )}

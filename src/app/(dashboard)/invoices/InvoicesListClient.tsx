@@ -3,14 +3,11 @@
 import PageHeader from "@/components/ui/PageHeader";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import StatusBadge from "@/components/ui/StatusBadge";
-import {
-  Download,
-  Filter,
-  Eye,
-  Printer,
-  Plus,
-  Search,
-} from "lucide-react";
+import ModuleSearchControl from "@/components/ui/ModuleSearchControl";
+import DenseTableIconAction from "@/components/ui/DenseTableIconAction";
+import { ListInlineError } from "@/components/ui/ListPendingState";
+import { useListNavigation } from "@/components/ui/useListNavigation";
+import { Download, Filter, Eye, Printer, Plus } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
 import { isolateBidiText } from "@/lib/i18n/bidi";
@@ -22,13 +19,14 @@ import {
 } from "@/lib/i18n/dictionaries/invoices";
 import { formatSarAmount } from "@/lib/i18n/formatting";
 import { UiDateText } from "@/components/i18n/UiDateText";
+import { getCommonDictionary, getSharedUiStates } from "@/lib/i18n/dictionaries/common";
+import { LIST_PAGE_SIZES, type ListPageSize } from "@/lib/pagination";
 import PendingLink from "@/components/ui/PendingLink";
-import type {
-  EligibleInvoiceService,
-  InvoiceChooserLoadStatus,
-} from "@/lib/invoices/eligible-service-selector";
+import type { InvoiceListPagination, InvoiceListQuery, InvoiceSearchMode } from "@/lib/invoices/types";
+import type { EligibleInvoiceService, InvoiceChooserLoadStatus } from "@/lib/invoices/eligible-service-selector";
 import CreateInvoiceChooser from "./CreateInvoiceChooser";
 import { loadEligibleInvoiceServicesAction } from "./actions";
+import { sanitizeSearchTerm } from "@/lib/search/sanitize";
 
 const invoiceStatusBadgeVariant = {
   draft: "draft",
@@ -38,61 +36,61 @@ const invoiceStatusBadgeVariant = {
   overdue: "overdue",
   cancelled: "rejected",
   voided: "rejected",
-} as const satisfies Record<
-  InvoiceStatus,
-  "draft" | "sent" | "approved" | "pending" | "overdue" | "rejected"
->;
+} as const satisfies Record<InvoiceStatus, "draft" | "sent" | "approved" | "pending" | "overdue" | "rejected">;
 
 interface InvoicesListClientProps {
   initialInvoices: Invoice[];
+  pagination: InvoiceListPagination;
+  query: InvoiceListQuery;
+  loadError?: "invoices_load_failed";
   canCreateInvoiceChooser: boolean;
   dictionary: InvoicesDictionary;
 }
 
-const formatCopy = (template: string, values: Record<string, string | number>) =>
-  template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
+const formatCopy = (template: string, values: Record<string, string | number>) => template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
+
+function invoiceListHref(query: InvoiceListQuery, page = 1) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (query.pageSize && query.pageSize !== LIST_PAGE_SIZES[0]) params.set("pageSize", String(query.pageSize));
+  const search = sanitizeSearchTerm(query.search ?? "");
+  if (query.searchMode && search) {
+    params.set("searchMode", query.searchMode);
+    params.set("search", search);
+  }
+  if (query.status) params.set("status", query.status);
+  const encoded = params.toString();
+  return encoded ? `/invoices?${encoded}` : "/invoices";
+}
 
 export default function InvoicesListClient({
   initialInvoices,
+  pagination,
+  query,
+  loadError,
   canCreateInvoiceChooser,
   dictionary,
 }: InvoicesListClientProps) {
   const locale = dictionary.locale;
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const stateKey = `${query.searchMode ?? ""}|${query.search ?? ""}|${query.status ?? ""}|${pagination.page}|${pagination.pageSize}|${loadError ?? ""}`;
+  const { isPending, isSearchPending, navigate, refresh } = useListNavigation(stateKey);
+  const common = getCommonDictionary(locale);
+  const sharedStates = getSharedUiStates(locale);
   const [isInvoiceChooserOpen, setIsInvoiceChooserOpen] = useState(false);
-  const [eligibleServices, setEligibleServices] = useState<
-    EligibleInvoiceService[]
-  >([]);
-  const [eligibleServicesLoadStatus, setEligibleServicesLoadStatus] =
-    useState<InvoiceChooserLoadStatus>("loading");
+  const [eligibleServices, setEligibleServices] = useState<EligibleInvoiceService[]>([]);
+  const [eligibleServicesLoadStatus, setEligibleServicesLoadStatus] = useState<InvoiceChooserLoadStatus>("loading");
   const createInvoiceTriggerRef = useRef<HTMLButtonElement>(null);
   const chooserLoadRequestRef = useRef(0);
-  const itemsPerPage = 10;
-  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const activeMode = query.searchMode;
+  const searchModes = [
+    { value: "invoiceNumber", label: dictionary.list.filters.searchModes.invoiceNumber, placeholder: dictionary.list.filters.searchPlaceholders.invoiceNumber },
+    { value: "customer", label: dictionary.list.filters.searchModes.customer, placeholder: dictionary.list.filters.searchPlaceholders.customer },
+  ] as const;
 
-  const filteredInvoices = initialInvoices.filter((invoice) => {
-    const matchesStatus =
-      statusFilter === "all"
-        ? true
-        : invoice.status === statusFilter;
+  function updateQuery(next: Partial<InvoiceListQuery>, kind: "navigation" | "search" = "navigation") {
+    navigate(invoiceListHref({ ...query, ...next }, 1), "replace", kind);
+  }
 
-    const matchesSearch =
-      normalizedSearch === ""
-        ? true
-        : [invoice.invoice_number, invoice.customer]
-            .filter((value): value is string => Boolean(value))
-            .some((value) => value.toLowerCase().includes(normalizedSearch));
-
-    return matchesStatus && matchesSearch;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredInvoices.length / itemsPerPage));
-  const page = Math.min(currentPage, totalPages);
-  const startIndex = (page - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, filteredInvoices.length);
-  const paginatedInvoices = filteredInvoices.slice(startIndex, startIndex + itemsPerPage);
   const closeInvoiceChooser = useCallback(() => {
     chooserLoadRequestRef.current += 1;
     setIsInvoiceChooserOpen(false);
@@ -117,62 +115,43 @@ export default function InvoicesListClient({
     }
   }
 
+  const visibleStart = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1;
+  const visibleEnd = Math.min(visibleStart + initialInvoices.length - 1, pagination.total);
+  const returnTo = invoiceListHref(query, pagination.page);
+
   return (
-    <div className="flex flex-col h-full">
-      <PageHeader
-        title={dictionary.list.title}
-        subtitle={dictionary.list.subtitle}
-      >
+    <div className="flex h-full flex-col">
+      <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
         {canCreateInvoiceChooser && (
-          <button
-            ref={createInvoiceTriggerRef}
-            type="button"
-            onClick={() => void openInvoiceChooser()}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold leading-[20px] text-on-primary transition-colors hover:bg-primary-container"
-          >
-            <Plus size={18} aria-hidden="true" />
-            {dictionary.list.invoiceChooser.createInvoice}
+          <button ref={createInvoiceTriggerRef} type="button" onClick={() => void openInvoiceChooser()} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold text-on-primary transition-colors hover:bg-primary-container">
+            <Plus size={18} aria-hidden="true" />{dictionary.list.invoiceChooser.createInvoice}
           </button>
         )}
-        <button className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-low px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors">
-          <Download size={18} />
-          {dictionary.list.export}
-        </button>
-        <div className="flex items-center text-[13px] text-on-surface-variant max-w-[240px] text-right leading-tight hidden sm:block">
-          {dictionary.list.creationHint}
-        </div>
+        <button type="button" className="flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-[14px] font-semibold leading-[20px] text-on-surface transition-colors hover:bg-surface-container-low"><Download size={18} />{dictionary.list.export}</button>
+        <div className="hidden max-w-[240px] text-right text-[13px] leading-tight text-on-surface-variant sm:block">{dictionary.list.creationHint}</div>
       </PageHeader>
 
-      <div className="flex flex-1 gap-6 min-h-0">
-        <div
-          className="flex-1 flex flex-col bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden"
-        >
-          <div className="p-4 border-b border-surface-variant flex flex-wrap gap-3 items-center bg-surface-bright">
-            <div className="relative w-full min-w-0 flex-1 max-w-sm sm:min-w-[220px]">
-              <Search
-                size={14}
-                className="absolute start-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
-              />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(event) => {
-                  setSearchQuery(event.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder={dictionary.list.filters.searchPlaceholder}
-                className="w-full min-w-0 bg-surface border border-outline-variant rounded-lg ps-9 pe-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div className="relative">
-              <select
-                value={statusFilter}
-                onChange={(event) => {
-                  setStatusFilter(event.target.value);
-                  setCurrentPage(1);
-                }}
-                className="appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
-              >
+      <div className="flex min-h-0 flex-1 gap-6">
+        <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-busy={isPending || undefined}>
+          <div className="flex flex-wrap items-center gap-3 border-b border-surface-variant bg-surface-bright p-4">
+            <ModuleSearchControl
+              mode={activeMode}
+              modes={searchModes}
+              query={query.search ?? ""}
+              modeLabel={dictionary.list.filters.searchModeLabel}
+              resetLabel={dictionary.list.filters.resetFilters}
+              submitLabel={common.labels.search}
+              pendingLabel={common.states.searching}
+              clearLabel={common.actions.clear}
+              isPending={isPending}
+              isSearchPending={isSearchPending}
+              selectModeLabel={common.labels.select}
+              disabledPlaceholder={common.labels.searchTypeFirst}
+              onSubmit={(mode, search) => updateQuery({ searchMode: mode as InvoiceSearchMode, search: search || undefined }, "search")}
+              onReset={() => navigate("/invoices")}
+            />
+            <div className="relative shrink-0">
+              <select value={query.status ?? "all"} disabled={isPending} onChange={(event) => updateQuery({ status: event.target.value === "all" ? undefined : event.target.value })} aria-label={dictionary.list.filters.allStatuses} className="appearance-none rounded-lg border border-outline-variant bg-surface py-2 ps-3 pe-8 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60">
                 <option value="all">{dictionary.list.filters.allStatuses}</option>
                 <option value="paid">{dictionary.list.filters.paid}</option>
                 <option value="overdue">{dictionary.list.filters.overdue}</option>
@@ -182,146 +161,48 @@ export default function InvoicesListClient({
                 <option value="cancelled">{dictionary.statuses.cancelled}</option>
                 <option value="voided">{dictionary.statuses.voided}</option>
               </select>
-              <Filter
-                size={14}
-                className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
-              />
+              <Filter size={14} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
             </div>
-            <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
-              {filteredInvoices.length === 0
-                ? dictionary.list.summary.showingZero
-                : formatCopy(dictionary.list.summary.showingRange, {
-                    start: startIndex + 1,
-                    end: endIndex,
-                    count: filteredInvoices.length,
-                  })}
+            <div className="ms-auto shrink-0 text-[14px] leading-[20px] text-on-surface-variant">
+              {pagination.total === 0 ? dictionary.list.summary.showingZero : formatCopy(dictionary.list.summary.showingRange, { start: visibleStart, end: visibleEnd, count: pagination.total })}
             </div>
           </div>
-
-          <div className="flex-1 overflow-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-surface-container-low border-b border-surface-variant">
-                  <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    {dictionary.list.table.invoice}
-                  </th>
-                  <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    {dictionary.list.table.type}
-                  </th>
-                  <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    {dictionary.list.table.document}
-                  </th>
-                  <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    {dictionary.list.table.customer}
-                  </th>
-                  <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    {dictionary.list.table.issueDate}
-                  </th>
-                  <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-right">
-                    {dictionary.list.table.amountSar}
-                  </th>
-                  <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    {dictionary.list.table.status}
-                  </th>
-                  <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    {dictionary.list.table.preview}
-                  </th>
-                  <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
-                    {dictionary.list.table.printPdf}
-                  </th>
-                </tr>
-              </thead>
+          <div className="relative min-h-0 flex-1 overflow-auto">
+            {loadError ? <ListInlineError message={dictionary.states.invoicesLoadError} retryLabel={sharedStates.retry.tryAgain} onRetry={refresh} pending={isPending} /> : <table className="w-full min-w-[1060px] border-collapse text-start">
+              <thead><tr className="border-b border-surface-variant bg-surface-container-low">
+                {[dictionary.list.table.invoice, dictionary.list.table.type, dictionary.list.table.document, dictionary.list.table.customer, dictionary.list.table.issueDate, dictionary.list.table.amountSar, dictionary.list.table.status, dictionary.list.table.preview, dictionary.list.table.printPdf].map((header, index) => <th key={header} className={`px-4 py-3 text-[12px] font-semibold uppercase text-on-surface-variant ${index === 8 ? "w-[72px] text-center" : ""}`}>{header}</th>)}
+              </tr></thead>
               <tbody className="divide-y divide-surface-variant text-[14px]">
-                {paginatedInvoices.map((inv) => (
-                  <tr
-                    key={inv.id}
-                    className="hover:bg-surface-container-low/50 transition-colors"
-                  >
-                    <td className="px-4 py-4 font-mono font-semibold text-primary">
-                      <span dir="ltr" className="inline-block whitespace-nowrap">
-                        {isolateBidiText(inv.invoice_number || inv.id)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-on-surface">
-                      {inv.invoice_type
-                        ? getInvoiceTypeLabel(locale, inv.invoice_type)
-                        : "—"}
-                    </td>
-                    <td className="px-4 py-4 text-on-surface">
-                      <span dir="auto">
-                        {getInvoiceDocumentLabelDisplay(locale, inv.document_label)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 font-medium text-on-surface">
-                      <span dir="auto">{inv.customer}</span>
-                    </td>
-                    <td className="px-4 py-4 text-on-surface-variant">
-                      <UiDateText locale={locale} value={inv.issued_at ?? inv.created_at} />
-                    </td>
-                    <td className="px-4 py-4 font-semibold text-on-surface text-right tabular-nums">
-                      <span dir="ltr" className="inline-block whitespace-nowrap">
-                        {formatSarAmount(locale, inv.grand_total)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <StatusBadge variant={invoiceStatusBadgeVariant[inv.status]}>
-                        {getInvoiceStatusLabel(dictionary.locale, inv.status)}
-                      </StatusBadge>
-                    </td>
-                    <td className="px-4 py-4">
-                      <PendingLink
-                        href={`/invoices/${inv.id}`}
-                        aria-label={`${dictionary.list.table.preview} ${inv.invoice_number || inv.id}`}
-                        title={`${dictionary.list.table.preview} ${inv.invoice_number || inv.id}`}
-                        className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed"
-                      >
-                        <Eye size={17} />
-                      </PendingLink>
-                    </td>
-                    <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => window.open(`/invoices/${inv.id}/pdf`, "_blank", "noopener,noreferrer")}
-                        aria-label={`${dictionary.list.table.printPdf} ${inv.invoice_number || inv.id}`}
-                        title={`${dictionary.list.table.printPdf} ${inv.invoice_number || inv.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-[12px] font-semibold text-on-surface transition-colors hover:border-primary/40 hover:bg-surface-container hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
-                      >
-                        <Printer size={14} />
-                        {dictionary.list.table.printPdf}
-                      </button>
-                    </td>
+                {initialInvoices.map((invoice) => (
+                  <tr key={invoice.id} className="transition-colors hover:bg-surface-container-low/50">
+                    <td className="px-4 py-4 font-mono font-semibold text-primary"><span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(invoice.invoice_number || invoice.id)}</span></td>
+                    <td className="px-4 py-4 text-on-surface">{invoice.invoice_type ? getInvoiceTypeLabel(locale, invoice.invoice_type) : "—"}</td>
+                    <td className="px-4 py-4 text-on-surface"><span dir="auto">{getInvoiceDocumentLabelDisplay(locale, invoice.document_label)}</span></td>
+                    <td className="px-4 py-4 font-medium text-on-surface"><span dir="auto">{invoice.customer}</span></td>
+                    <td className="px-4 py-4 text-on-surface-variant"><UiDateText locale={locale} value={invoice.issued_at ?? invoice.created_at} /></td>
+                    <td className="px-4 py-4 text-right font-semibold text-on-surface tabular-nums"><span dir="ltr" className="inline-block whitespace-nowrap">{formatSarAmount(locale, invoice.grand_total)}</span></td>
+                    <td className="px-4 py-4"><StatusBadge variant={invoiceStatusBadgeVariant[invoice.status]}>{getInvoiceStatusLabel(dictionary.locale, invoice.status)}</StatusBadge></td>
+                    <td className="px-4 py-4"><PendingLink href={`/invoices/${invoice.id}?returnTo=${encodeURIComponent(returnTo)}`} aria-label={`${dictionary.list.table.preview} ${invoice.invoice_number || invoice.id}`} title={`${dictionary.list.table.preview} ${invoice.invoice_number || invoice.id}`} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40"><Eye size={17} /></PendingLink></td>
+                    <td className="w-[72px] px-4 py-4 text-center"><div className="grid place-items-center"><DenseTableIconAction label={dictionary.list.table.printPdf} onClick={() => window.open(`/invoices/${invoice.id}/pdf`, "_blank", "noopener,noreferrer")}><Printer size={16} aria-hidden="true" /></DenseTableIconAction></div></td>
                   </tr>
                 ))}
-                {filteredInvoices.length === 0 && (
-                  <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">
-                      {initialInvoices.length === 0
-                        ? dictionary.list.table.noInvoices
-                        : dictionary.list.table.noFilteredInvoices}
-                    </td>
-                  </tr>
-                )}
+                {!loadError && initialInvoices.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">{pagination.total === 0 && !query.search && !query.status ? dictionary.list.table.noInvoices : dictionary.list.table.noFilteredInvoices}</td></tr>}
               </tbody>
-            </table>
+            </table>}
           </div>
-          {filteredInvoices.length > itemsPerPage && (
-            <PaginationFooter
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          )}
+          <PaginationFooter
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            pageSize={pagination.pageSize}
+            paginationMode="bounded"
+            isPending={isPending}
+            onPageChange={(page) => navigate(invoiceListHref(query, page), "push")}
+            onPageSizeChange={(pageSize: ListPageSize) => updateQuery({ pageSize })}
+          />
         </div>
       </div>
-      {isInvoiceChooserOpen && (
-        <CreateInvoiceChooser
-          services={eligibleServices}
-          loadStatus={eligibleServicesLoadStatus}
-          dictionary={dictionary}
-          triggerRef={createInvoiceTriggerRef}
-          onClose={closeInvoiceChooser}
-        />
-      )}
+      {isInvoiceChooserOpen && <CreateInvoiceChooser services={eligibleServices} loadStatus={eligibleServicesLoadStatus} dictionary={dictionary} triggerRef={createInvoiceTriggerRef} onClose={closeInvoiceChooser} />}
     </div>
   );
 }

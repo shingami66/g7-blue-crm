@@ -7,7 +7,14 @@ import {
   getInvoicesDictionary,
   type InvoicesDictionary,
 } from "@/lib/i18n/dictionaries/invoices";
-import { getInvoices } from "@/lib/invoices/queries";
+import { getInvoicesList } from "@/lib/invoices/queries";
+import {
+  normalizeInvoiceListPage,
+  normalizeInvoiceListPageSize,
+  normalizeInvoiceListSearch,
+  normalizeInvoiceSearchMode,
+  type InvoiceListQuery,
+} from "@/lib/invoices/types";
 import InvoicesListClient from "./InvoicesListClient";
 
 export const dynamic = "force-dynamic";
@@ -15,29 +22,48 @@ export const dynamic = "force-dynamic";
 type InvoicesPageState =
   | {
       status: "ready";
-      invoices: Awaited<ReturnType<typeof getInvoices>>;
+      invoices: Awaited<ReturnType<typeof getInvoicesList>>["invoices"];
+      pagination: Awaited<ReturnType<typeof getInvoicesList>>["pagination"];
+      query: InvoiceListQuery;
+      loadError?: "invoices_load_failed";
       canCreateInvoiceChooser: boolean;
       dictionary: InvoicesDictionary;
     }
   | { status: "forbidden" }
   | { status: "error" };
 
-export default async function InvoicesPage() {
+type InvoiceSearchParams = {
+  page?: string;
+  pageSize?: string;
+  search?: string;
+  searchMode?: string;
+  status?: string;
+};
+
+export default async function InvoicesPage({
+  searchParams,
+}: {
+  searchParams: Promise<InvoiceSearchParams>;
+}) {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getInvoicesDictionary(locale);
+  const query = invoiceListQuery(await searchParams);
   let pageState: InvoicesPageState;
 
   try {
     await requirePermission("invoices:read");
-    const [invoices, canWriteInvoices, canReadServices] = await Promise.all([
-      getInvoices(),
+    const [result, canWriteInvoices, canReadServices] = await Promise.all([
+      getInvoicesList(query),
       checkPermission(INVOICE_PERMISSIONS.write),
       checkPermission("services:read"),
     ]);
     const canCreateInvoiceChooser = canWriteInvoices && canReadServices;
     pageState = {
       status: "ready",
-      invoices,
+      invoices: result.invoices,
+      pagination: result.pagination,
+      query,
+      loadError: result.error,
       canCreateInvoiceChooser,
       dictionary,
     };
@@ -78,8 +104,23 @@ export default async function InvoicesPage() {
   return (
     <InvoicesListClient
       initialInvoices={pageState.invoices}
+      pagination={pageState.pagination}
+      query={pageState.query}
+      loadError={pageState.loadError}
       canCreateInvoiceChooser={pageState.canCreateInvoiceChooser}
       dictionary={pageState.dictionary}
     />
   );
+}
+
+function invoiceListQuery(params: InvoiceSearchParams): InvoiceListQuery {
+  const searchMode = normalizeInvoiceSearchMode(params.searchMode);
+  const search = searchMode ? normalizeInvoiceListSearch(params.search) : undefined;
+  return {
+    page: normalizeInvoiceListPage(params.page),
+    pageSize: normalizeInvoiceListPageSize(params.pageSize),
+    search,
+    searchMode: search ? searchMode : undefined,
+    status: params.status && params.status !== "all" ? params.status : undefined,
+  };
 }

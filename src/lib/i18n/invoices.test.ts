@@ -83,7 +83,9 @@ test("2. List headings, filters, result count, and row actions localize", () => 
   assert.match(en.list.summary.showingRange, /\{start\}.*\{end\}.*\{count\}/);
   assert.match(read(LIST_CLIENT), /dictionary\.list\.title/);
   assert.match(read(LIST_CLIENT), /PaginationFooter/);
-  assert.match(read(LIST_CLIENT), /statusFilter/);
+  assert.match(read(LIST_CLIENT), /ModuleSearchControl/);
+  assert.match(read(LIST_CLIENT), /searchModeLabel/);
+  assert.match(read(LIST_CLIENT), /resetFilters/);
 });
 
 test("3-6. Type/status labels; codes stable; no new types; filter set preserved", () => {
@@ -151,7 +153,8 @@ test("12-14. Service/quotation references; ABS not rewritten; no invoice-to-invo
 });
 
 test("15-16. PDF controls are UI-only; PDF body excluded", () => {
-  assert.match(read(LIST_CLIENT), /\/invoices\/\$\{inv\.id\}\/pdf/);
+  assert.match(read(LIST_CLIENT), /\/invoices\/\$\{invoice\.id\}\?returnTo=/);
+  assert.match(read(LIST_CLIENT), /window\.open\(`\/invoices\/\$\{invoice\.id\}\/pdf`/);
   assert.match(read(DETAIL), /\/invoices\/\$\{invoice\.id\}\/pdf/);
   assert.match(read(DETAIL), /printPdf|Print/);
   // PDF route not localized by this task
@@ -187,7 +190,7 @@ test("21-24. Formatters, Western digits, bidi, stored data", () => {
   assert.doesNotMatch(formatUiNumber("ar", 3), ARABIC_INDIC);
   assert.doesNotMatch(formatUiDate("ar", "2026-07-10"), ARABIC_INDIC);
 
-  assert.match(read(LIST_CLIENT), /inv\.customer/);
+  assert.match(read(LIST_CLIENT), /invoice\.customer/);
   assert.match(read(DETAIL), /dir="auto"/);
   assert.doesNotMatch(read(DETAIL), /translateStored|localizeCustomer/);
 });

@@ -1,4 +1,52 @@
-import type { InvoiceType, JsonValue } from "@/types/invoice";
+import type { Invoice, InvoiceType, JsonValue } from "@/types/invoice";
+import { sanitizeSearchTerm } from "@/lib/search/sanitize";
+import {
+  normalizeListPage,
+  normalizeListPageSize,
+  type ListPageSize,
+} from "../pagination.ts";
+
+export const INVOICE_LIST_PAGE_SIZE = 10;
+export type InvoiceSearchMode = "invoiceNumber" | "customer";
+
+export interface InvoiceListQuery {
+  page?: number;
+  pageSize?: ListPageSize;
+  searchMode?: InvoiceSearchMode;
+  search?: string;
+  status?: string;
+}
+
+export interface InvoiceListPagination {
+  page: number;
+  pageSize: ListPageSize;
+  total: number;
+  totalPages: number;
+}
+
+export interface InvoicesListResult {
+  invoices: Invoice[];
+  pagination: InvoiceListPagination;
+  error?: "invoices_load_failed";
+}
+
+export function normalizeInvoiceListPage(value: unknown): number {
+  return normalizeListPage(value);
+}
+
+export function normalizeInvoiceListPageSize(value: unknown): ListPageSize {
+  return normalizeListPageSize(value);
+}
+
+export function normalizeInvoiceSearchMode(value: unknown): InvoiceSearchMode | undefined {
+  return value === "invoiceNumber" || value === "customer" ? value : undefined;
+}
+
+export function normalizeInvoiceListSearch(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const search = sanitizeSearchTerm(value);
+  return search || undefined;
+}
 
 export interface CreateInvoiceInput {
   quotationId: string;
@@ -32,6 +80,7 @@ export interface InvoiceRow {
   invoice_number: string;
   approved_quotation_id: string;
   approved_billing_scope_id: string | null;
+  customer_id: string;
   invoice_type: string;
   service_id: string;
   status: string;

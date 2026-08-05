@@ -17,7 +17,7 @@ const PAYMENT_MODAL = join(REPO_ROOT, "src/app/(dashboard)/invoices/RecordPaymen
 const QUERIES = join(REPO_ROOT, "src/lib/payments/queries.ts");
 const ACTIONS = join(REPO_ROOT, "src/lib/payments/actions.ts");
 const SCHEMAS = join(REPO_ROOT, "src/lib/payments/schemas.ts");
-const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/permissions.ts");
+const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/role-permissions.ts");
 const INVOICE_DETAIL = join(REPO_ROOT, "src/app/(dashboard)/invoices/[id]/page.tsx");
 const BILLING = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/BillingPanel.tsx");
 

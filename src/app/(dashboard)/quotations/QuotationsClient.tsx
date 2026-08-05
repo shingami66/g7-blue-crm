@@ -1,13 +1,17 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Plus, Filter, Eye, Trash2, Edit, AlertCircle, Printer } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import DataTable from "@/components/ui/DataTable";
+import ModuleSearchControl from "@/components/ui/ModuleSearchControl";
+import DenseTableIconAction from "@/components/ui/DenseTableIconAction";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
-import { Plus, Filter, Eye, Trash2, Edit, AlertCircle, Printer } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ListInlineError } from "@/components/ui/ListPendingState";
+import { useListNavigation } from "@/components/ui/useListNavigation";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isolateBidiText } from "@/lib/i18n/bidi";
@@ -18,13 +22,24 @@ import {
 } from "@/lib/i18n/dictionaries/quotations";
 import { formatSarAmount } from "@/lib/i18n/formatting";
 import { UiDateText } from "@/components/i18n/UiDateText";
-import type { QuotationListItem } from "@/lib/quotations/types";
+import type {
+  QuotationListItem,
+  QuotationListQuery,
+  QuotationListPagination,
+  QuotationSearchMode,
+} from "@/lib/quotations/types";
 import type { EligibleQuotationService } from "@/lib/services/queries";
 import { softDeleteQuotation } from "@/lib/quotations/actions";
+import { getCommonDictionary, getSharedUiStates } from "@/lib/i18n/dictionaries/common";
+import { LIST_PAGE_SIZES, type ListPageSize } from "@/lib/pagination";
 import EligibleServiceSelector from "./EligibleServiceSelector";
+import { sanitizeSearchTerm } from "@/lib/search/sanitize";
 
 interface QuotationsClientProps {
   quotations: QuotationListItem[];
+  pagination: QuotationListPagination;
+  query: QuotationListQuery;
+  loadError?: "quotations_load_failed";
   canWrite: boolean;
   canSelectService: boolean;
   eligibleServices: EligibleQuotationService[];
@@ -37,8 +52,26 @@ function formatCopy(template: string, values: Record<string, string | number>) {
   return template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
 }
 
+function quotationListHref(query: QuotationListQuery, page = 1) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (query.pageSize && query.pageSize !== LIST_PAGE_SIZES[0]) params.set("pageSize", String(query.pageSize));
+  const search = sanitizeSearchTerm(query.search ?? "");
+  if (query.searchMode && search) {
+    params.set("searchMode", query.searchMode);
+    params.set("search", search);
+  }
+  if (query.status) params.set("status", query.status);
+  if (query.month) params.set("month", query.month);
+  const encoded = params.toString();
+  return encoded ? `/quotations?${encoded}` : "/quotations";
+}
+
 export default function QuotationsClient({
   quotations,
+  pagination,
+  query,
+  loadError,
   canWrite,
   canSelectService,
   eligibleServices,
@@ -49,61 +82,57 @@ export default function QuotationsClient({
   const dictionary = dictionaryProp ?? getQuotationsDictionary(locale);
   const { push } = useGlobalNavigationPending();
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [monthFilter, setMonthFilter] = useState("");
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const selectorTriggerRef = useRef<HTMLButtonElement>(null);
-  const itemsPerPage = 10;
+  const activeMode = query.searchMode;
+  const stateKey = `${activeMode ?? ""}|${query.search ?? ""}|${query.status ?? ""}|${query.month ?? ""}|${pagination.page}|${pagination.pageSize}|${loadError ?? ""}`;
+  const { isPending, isSearchPending, navigate, refresh } = useListNavigation(stateKey);
+  const common = getCommonDictionary(dictionary.locale);
+  const sharedStates = getSharedUiStates(dictionary.locale);
 
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value);
-    setCurrentPage(1);
-  };
+  const searchModes = [
+    {
+      value: "quotationNumber",
+      label: dictionary.list.searchModes.quotationNumber,
+      placeholder: dictionary.list.searchPlaceholders.quotationNumber,
+    },
+    {
+      value: "customer",
+      label: dictionary.list.searchModes.customer,
+      placeholder: dictionary.list.searchPlaceholders.customer,
+    },
+    {
+      value: "service",
+      label: dictionary.list.searchModes.service,
+      placeholder: dictionary.list.searchPlaceholders.service,
+    },
+  ] as const;
 
-  const handleMonthFilterChange = (value: string) => {
-    setMonthFilter(value);
-    setCurrentPage(1);
-  };
+  function updateQuery(next: Partial<QuotationListQuery>, kind: "navigation" | "search" = "navigation") {
+    navigate(quotationListHref({ ...query, ...next }, 1), "replace", kind);
+  }
 
-  const filteredQuotations = quotations.filter((quotation) => {
-    const matchesStatus =
-      statusFilter === "all" ? true : quotation.status === statusFilter;
-    const matchesMonth =
-      monthFilter === "" ? true : String(quotation.date).startsWith(monthFilter);
+  function resetFilters() {
+    navigate("/quotations");
+  }
 
-    return matchesStatus && matchesMonth;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredQuotations.length / itemsPerPage));
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, filteredQuotations.length);
-  const paginatedQuotations = filteredQuotations.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
-
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
+  async function handleDelete(event: React.MouseEvent, id: string) {
+    event.stopPropagation();
     setError(null);
-
-    const confirmed = window.confirm(dictionary.list.deleteConfirm);
-    if (!confirmed) return;
+    if (!window.confirm(dictionary.list.deleteConfirm)) return;
 
     const result = await softDeleteQuotation(id);
-    if (!result.success) {
-      setError(dictionary.list.deleteFailed);
-    } else {
-      router.refresh();
-    }
-  };
+    if (!result.success) setError(dictionary.list.deleteFailed);
+    else router.refresh();
+  }
+
+  const visibleStart = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1;
+  const visibleEnd = Math.min(visibleStart + quotations.length - 1, pagination.total);
+  const returnTo = quotationListHref(query, pagination.page);
 
   return (
-    <div className="flex flex-col h-full">
-      <PageHeader
-        title={dictionary.list.title}
-        subtitle={dictionary.list.subtitle}
-      >
+    <div className="flex h-full flex-col">
+      <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
         {canSelectService && (
           <button
             ref={selectorTriggerRef}
@@ -111,7 +140,7 @@ export default function QuotationsClient({
             onClick={() => setIsSelectorOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={isSelectorOpen}
-            className="flex items-center gap-2 bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg text-[14px] leading-[20px] font-semibold transition-colors"
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold leading-[20px] text-on-primary transition-colors hover:bg-primary-container"
           >
             <Plus size={18} />
             {dictionary.list.selectService}
@@ -119,13 +148,31 @@ export default function QuotationsClient({
         )}
       </PageHeader>
 
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-busy={isPending || undefined}>
         <FilterBar>
-          <div className="relative">
+          <ModuleSearchControl
+            mode={activeMode}
+            modes={searchModes}
+            query={query.search ?? ""}
+            modeLabel={dictionary.list.searchModeLabel}
+            resetLabel={dictionary.list.resetFilters}
+            submitLabel={common.labels.search}
+            pendingLabel={common.states.searching}
+            clearLabel={common.actions.clear}
+            isPending={isPending}
+            isSearchPending={isSearchPending}
+            selectModeLabel={common.labels.select}
+            disabledPlaceholder={common.labels.searchTypeFirst}
+            onSubmit={(mode, search) => updateQuery({ searchMode: mode as QuotationSearchMode, search: search || undefined }, "search")}
+            onReset={resetFilters}
+          />
+          <div className="relative shrink-0">
             <select
-              value={statusFilter}
-              onChange={(e) => handleStatusFilterChange(e.target.value)}
-              className="appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
+              value={query.status ?? "all"}
+              disabled={isPending}
+              onChange={(event) => updateQuery({ status: event.target.value === "all" ? undefined : event.target.value as QuotationListQuery["status"] })}
+              aria-label={dictionary.list.allStatuses}
+              className="appearance-none rounded-lg border border-outline-variant bg-surface py-2 ps-3 pe-8 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <option value="all">{dictionary.list.allStatuses}</option>
               <option value="draft">{dictionary.statuses.draft}</option>
@@ -133,163 +180,67 @@ export default function QuotationsClient({
               <option value="approved">{dictionary.statuses.approved}</option>
               <option value="rejected">{dictionary.statuses.rejected}</option>
             </select>
-            <Filter
-              size={14}
-              className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
-            />
+            <Filter size={14} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
           </div>
-          <div className="relative">
+          <div className="relative shrink-0">
+            <label className="sr-only" htmlFor="quotation-month-filter">{dictionary.list.dateFilter.label}</label>
             <input
+              id="quotation-month-filter"
               type="month"
-              value={monthFilter}
-              onChange={(e) => handleMonthFilterChange(e.target.value)}
-              className="appearance-none bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
+              value={query.month ?? ""}
+              disabled={isPending}
+              onChange={(event) => updateQuery({ month: event.target.value || undefined })}
+              aria-label={dictionary.list.dateFilter.label}
+              className={`rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${query.month ? "" : "text-transparent"}`}
             />
+            {!query.month && <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 flex items-center pe-6 text-[14px] text-on-surface-variant">{dictionary.list.dateFilter.anyMonth}</span>}
           </div>
-          <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
-            {filteredQuotations.length === 0
+          <div className="ms-auto shrink-0 text-[14px] leading-[20px] text-on-surface-variant">
+            {pagination.total === 0
               ? dictionary.list.showingZero
-              : formatCopy(dictionary.list.showingRange, {
-                  start: startIndex + 1,
-                  end: endIndex,
-                  count: filteredQuotations.length,
-                })}
+              : formatCopy(dictionary.list.showingRange, { start: visibleStart, end: visibleEnd, count: pagination.total })}
           </div>
         </FilterBar>
-
         {error && (
-          <div className="mx-4 mt-4 flex items-center gap-2 p-3 bg-error-container text-on-error-container rounded-lg text-[14px]">
+          <div className="mx-4 mt-4 flex items-center gap-2 rounded-lg bg-error-container p-3 text-[14px] text-on-error-container" role="alert">
             <AlertCircle size={18} />
             {error}
           </div>
         )}
 
-        <div className="flex-1 overflow-auto">
-          {filteredQuotations.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-on-surface-variant">
-              <p>
-                {quotations.length === 0
-                  ? dictionary.list.noQuotations
-                  : dictionary.list.noFilteredQuotations}
-              </p>
+        <div className="relative min-h-0 flex-1 overflow-auto">
+          {loadError ? (
+            <ListInlineError message={dictionary.states.quotationsLoadError} retryLabel={sharedStates.retry.tryAgain} onRetry={refresh} pending={isPending} />
+          ) : quotations.length === 0 ? (
+            <div className="flex min-h-[14rem] flex-col items-center justify-center text-on-surface-variant">
+              <p>{pagination.total === 0 && !query.search && !query.status && !query.month ? dictionary.list.noQuotations : dictionary.list.noFilteredQuotations}</p>
             </div>
           ) : (
-            <DataTable
-              columns={[
-                dictionary.list.table.quotationNumber,
-                dictionary.list.table.clientEvent,
-                dictionary.list.table.issueDate,
-                dictionary.list.table.amountSar,
-                dictionary.list.table.status,
-                dictionary.list.table.printPdf,
-                dictionary.list.table.actions,
-              ]}
-            >
-              {paginatedQuotations.map((q) => (
-                <tr
-                  key={q.id}
-                  className="hover:bg-surface-container-low/50 transition-colors cursor-pointer"
-                  onClick={() => push(`/quotations/${q.id}`)}
-                >
+            <DataTable centeredColumns={[5]} columns={[dictionary.list.table.quotationNumber, dictionary.list.table.clientEvent, dictionary.list.table.issueDate, dictionary.list.table.amountSar, dictionary.list.table.status, dictionary.list.table.printPdf, dictionary.list.table.actions]}>
+              {quotations.map((quotation) => (
+                <tr key={quotation.id} className="transition-colors hover:bg-surface-container-low/50">
                   <td className="px-4 py-4 font-mono font-semibold text-primary">
-                    <span dir="ltr" className="inline-block whitespace-nowrap">
-                      {isolateBidiText(q.quotationNumber)}
-                    </span>
+                    <span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(quotation.quotationNumber)}</span>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="font-semibold text-on-surface">
-                      <span dir="auto">
-                        {q.customer?.company || dictionary.list.unknownCompany}
-                      </span>
-                    </div>
-                    <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
-                      <span dir="auto">{q.event}</span>
-                    </div>
+                    <div className="font-semibold text-on-surface"><span dir="auto">{quotation.customer?.company || dictionary.list.unknownCompany}</span></div>
+                    <div className="mt-1 text-[12px] leading-[16px] text-on-surface-variant"><span dir="auto">{quotation.event}</span></div>
                   </td>
-                  <td className="px-4 py-4 text-on-surface-variant">
-                    <UiDateText locale={dictionary.locale} value={q.date} />
-                  </td>
-                  <td className="px-4 py-4 font-semibold text-on-surface tabular-nums">
-                    <span dir="ltr" className="inline-block whitespace-nowrap">
-                      {formatSarAmount(dictionary.locale, q.grandTotal)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <StatusBadge variant={q.status as StatusBadgeVariant}>
-                      {getQuotationStatusLabel(dictionary.locale, q.status)}
-                    </StatusBadge>
-                  </td>
-                  <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
-                      onClick={() => window.open(`/quotations/${q.id}/pdf`, "_blank", "noopener,noreferrer")}
-                      aria-label={`${dictionary.list.table.printPdf} ${q.quotationNumber}`}
-                      title={`${dictionary.list.table.printPdf} ${q.quotationNumber}`}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-[12px] font-semibold text-on-surface transition-colors hover:border-primary/40 hover:bg-surface-container hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
-                    >
-                      <Printer size={14} />
-                      {dictionary.list.table.printPdf}
-                    </button>
-                  </td>
+                  <td className="px-4 py-4 text-on-surface-variant"><UiDateText locale={dictionary.locale} value={quotation.date} /></td>
+                  <td className="px-4 py-4 font-semibold text-on-surface tabular-nums"><span dir="ltr" className="inline-block whitespace-nowrap">{formatSarAmount(dictionary.locale, quotation.grandTotal)}</span></td>
+                  <td className="px-4 py-4"><StatusBadge variant={quotation.status as StatusBadgeVariant}>{getQuotationStatusLabel(dictionary.locale, quotation.status)}</StatusBadge></td>
+                  <td className="w-[72px] px-4 py-4 text-center"><div className="grid place-items-center"><DenseTableIconAction label={dictionary.list.table.printPdf} onClick={() => window.open(`/quotations/${quotation.id}/pdf`, "_blank", "noopener,noreferrer")}><Printer size={16} aria-hidden="true" /></DenseTableIconAction></div></td>
                   <td className="px-4 py-4">
                     <div className="flex gap-2">
-                      <button
-                        className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed"
-                        aria-label={`${dictionary.list.actionTitles.viewDetails} ${q.quotationNumber}`}
-                        title={dictionary.list.actionTitles.viewDetails}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          push(`/quotations/${q.id}`);
-                        }}
-                      >
-                        <Eye size={17} />
-                      </button>
-                      
+                      <button type="button" className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40" aria-label={`${dictionary.list.actionTitles.viewDetails} ${quotation.quotationNumber}`} title={dictionary.list.actionTitles.viewDetails} onClick={() => push(`/quotations/${quotation.id}?returnTo=${encodeURIComponent(returnTo)}`)}><Eye size={17} /></button>
                       {canWrite && (
                         <>
-                          {q.status === "draft" ? (
-                            <button
-                              className="text-primary hover:text-primary-container p-1 rounded transition-colors"
-                              title={dictionary.list.actionTitles.editQuotation}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                push(`/quotations/${q.id}/edit`);
-                              }}
-                            >
-                              <Edit size={18} />
-                            </button>
+                          {quotation.status === "draft" ? (
+                            <button type="button" className="rounded p-1 text-primary transition-colors hover:text-primary-container focus:outline-none focus:ring-2 focus:ring-primary/40" title={dictionary.list.actionTitles.editQuotation} aria-label={`${dictionary.list.actionTitles.editQuotation} ${quotation.quotationNumber}`} onClick={() => push(`/quotations/${quotation.id}/edit`)}><Edit size={18} /></button>
                           ) : (
-                            <button
-                              className="text-on-surface-variant opacity-50 p-1 rounded cursor-not-allowed"
-                              title={dictionary.list.actionTitles.onlyDraftEditable}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Edit size={18} />
-                            </button>
+                            <button type="button" disabled className="cursor-not-allowed rounded p-1 text-on-surface-variant opacity-50" title={dictionary.list.actionTitles.onlyDraftEditable} aria-label={dictionary.list.actionTitles.onlyDraftEditable}><Edit size={18} /></button>
                           )}
-
-                          <button
-                            className={`p-1 rounded transition-colors ${
-                              q.status === "approved"
-                                ? "text-on-surface-variant opacity-50 cursor-not-allowed"
-                                : "text-on-surface-variant hover:text-error hover:bg-error-container"
-                            }`}
-                            title={
-                              q.status === "approved"
-                                ? dictionary.list.actionTitles.approvedCannotDelete
-                                : dictionary.list.actionTitles.deleteQuotation
-                            }
-                            onClick={(e) => {
-                              if (q.status !== "approved") {
-                                handleDelete(e, q.id);
-                              } else {
-                                e.stopPropagation();
-                              }
-                            }}
-                            disabled={q.status === "approved"}
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          <button type="button" disabled={quotation.status === "approved"} className={`rounded p-1 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 ${quotation.status === "approved" ? "cursor-not-allowed text-on-surface-variant opacity-50" : "text-on-surface-variant hover:bg-error-container hover:text-error"}`} title={quotation.status === "approved" ? dictionary.list.actionTitles.approvedCannotDelete : dictionary.list.actionTitles.deleteQuotation} aria-label={`${dictionary.list.actionTitles.deleteQuotation} ${quotation.quotationNumber}`} onClick={(event) => { if (quotation.status !== "approved") void handleDelete(event, quotation.id); }}>{<Trash2 size={18} />}</button>
                         </>
                       )}
                     </div>
@@ -300,25 +251,20 @@ export default function QuotationsClient({
           )}
         </div>
 
-        {/* Pagination Footer */}
-        {filteredQuotations.length > itemsPerPage && (
-          <PaginationFooter
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            className="border-t-0"
-          />
-        )}
+        <PaginationFooter
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          pageSize={pagination.pageSize}
+          paginationMode="bounded"
+          isPending={isPending}
+          onPageChange={(page) => navigate(quotationListHref(query, page), "push")}
+          onPageSizeChange={(pageSize: ListPageSize) => updateQuery({ pageSize })}
+          className="border-t-0"
+        />
       </div>
 
-      {canSelectService && isSelectorOpen && (
-        <EligibleServiceSelector
-          services={eligibleServices}
-          dictionary={dictionary}
-          triggerRef={selectorTriggerRef}
-          onClose={() => setIsSelectorOpen(false)}
-        />
-      )}
+      {canSelectService && isSelectorOpen && <EligibleServiceSelector services={eligibleServices} dictionary={dictionary} triggerRef={selectorTriggerRef} onClose={() => setIsSelectorOpen(false)} />}
     </div>
   );
 }

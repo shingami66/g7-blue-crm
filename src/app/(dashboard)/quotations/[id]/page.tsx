@@ -18,15 +18,22 @@ import { getServiceById } from "@/lib/services/queries";
 import { getServiceBillingState } from "@/lib/invoices";
 import { buildQuotationBillingAuthority } from "@/lib/quotations/billing-authority";
 import QuotationBillingAuthorityCard from "./QuotationBillingAuthorityCard";
+import RecordNavigation from "@/components/records/RecordNavigation";
+import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
+import { getQuotationRecordNavigation, safeRecordReturnTo } from "@/lib/record-navigation/queries";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
 export default async function QuotationDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnTo?: string }>;
 }) {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
+  const returnTo = safeRecordReturnTo(resolvedSearchParams.returnTo, "/quotations");
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getQuotationsDictionary(locale);
 
@@ -78,6 +85,9 @@ export default async function QuotationDetailPage({
     notFound();
   }
 
+  const recordNavigation = await getQuotationRecordNavigation(id, quotation.quotationNumber);
+  const recordNavigationDictionary = getRecordNavigationDictionary(locale);
+
   const [canApprove, linkedService] = await Promise.all([
     checkPermission("quotations:approve"),
     getServiceById(quotation.serviceId),
@@ -108,7 +118,7 @@ export default async function QuotationDetailPage({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <PendingLink
-            href="/quotations"
+            href={returnTo}
             className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
           >
             <LocaleBackIcon size={18} />
@@ -124,7 +134,8 @@ export default async function QuotationDetailPage({
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <RecordNavigation basePath="/quotations" recordType={dictionary.list.title} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} />
           {canApprove && (quotation.status === "draft" || quotation.status === "sent") && (
             <QuotationApprovalActions quotationId={quotation.id} status={quotation.status} dictionary={dictionary.approval} />
           )}

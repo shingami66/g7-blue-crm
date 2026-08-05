@@ -6,6 +6,7 @@ export interface PaymentsDictionary {
   locale: Locale;
   title: string;
   subtitle: string;
+  searchPlaceholder: string;
   stats: {
     confirmedCollected: string;
     paymentRecords: string;
@@ -31,6 +32,7 @@ export interface PaymentsDictionary {
     accessDeniedMessage: string;
     inlineError: string;
     paymentDataUnavailable: string;
+    noFilteredPayments: string;
   };
 }
 
@@ -38,6 +40,7 @@ const paymentsDictionaryEn: PaymentsDictionary = {
   locale: "en",
   title: "Payments",
   subtitle: "Track recorded payments linked to invoices and services.",
+  searchPlaceholder: "Search payment, invoice, reference, customer, or service",
   stats: {
     confirmedCollected: "Confirmed Collected",
     paymentRecords: "Payment Records",
@@ -73,6 +76,7 @@ const paymentsDictionaryEn: PaymentsDictionary = {
     accessDeniedMessage: "You don't have permission to view the payments module.",
     inlineError: "Payments could not be loaded right now.",
     paymentDataUnavailable: "Payment data unavailable",
+    noFilteredPayments: "No payments match the search.",
   },
 };
 
@@ -80,6 +84,7 @@ const paymentsDictionaryAr: PaymentsDictionary = {
   locale: "ar",
   title: "المدفوعات",
   subtitle: "متابعة المدفوعات المسجلة المرتبطة بالفواتير والخدمات.",
+  searchPlaceholder: "ابحث عن الدفعة أو الفاتورة أو المرجع أو العميل أو الخدمة",
   stats: {
     confirmedCollected: "المبالغ المحصلة المؤكدة",
     paymentRecords: "سجلات المدفوعات",
@@ -115,6 +120,7 @@ const paymentsDictionaryAr: PaymentsDictionary = {
     accessDeniedMessage: "ليس لديك صلاحية لعرض وحدة المدفوعات.",
     inlineError: "تعذر تحميل المدفوعات في الوقت الحالي.",
     paymentDataUnavailable: "بيانات المدفوعات غير متاحة",
+    noFilteredPayments: "لا توجد مدفوعات مطابقة للبحث.",
   },
 };
 
