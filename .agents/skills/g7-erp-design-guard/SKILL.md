@@ -36,7 +36,10 @@ Product rules come from canonical product documentation. Security and permission
 
 ## Required Modes
 
-Every task must declare exactly one of these modes:
+Every design task governed by this guard must declare exactly one of these
+design modes. This taxonomy does not replace the repository execution mode
+from `g7-crm-agent-control`; protected-file, implementation, commit, and push
+tasks must still use that guard's canonical execution mode.
 
 1. **AUDIT**
 2. **PROPOSAL**
@@ -210,6 +213,114 @@ Return `HOLD` when:
 - required repository guards or the Design Contract are unavailable;
 - creating or using the requested capability requires an unapproved registry or existing-guard change.
 
+## Bounded Product-Design Gates
+
+The following gates are mandatory for bounded design implementation tasks and
+must be recorded in the task evidence. They are enforceable design controls,
+not optional recommendations.
+
+### Feature Utility Gate
+
+Before introducing a new navigation, discovery, aggregation, dashboard, or
+cross-module surface, record the real user task, user role, information sought,
+the existing contextual path, its step count, the proposed step savings,
+whether the user normally knows the destination module, duplication with an
+existing detail workspace, and whether the maintenance, query, permission,
+and UI cost is justified. Do not implement a feature merely because it is
+common elsewhere, technically possible, supported by existing data, or
+sophisticated. When the destination is known, prefer module-local search,
+contextual navigation, related-record links, and scoped filters.
+
+### Dead-Surface and Dead-Column Gate
+
+Do not display a column, KPI, badge, panel, or filter when no current workflow
+creates meaningful data for it, all rows are placeholders, it exists only for
+a hypothetical future feature, or the user cannot understand or act on it.
+Future database fields may remain hidden until their workflow exists.
+
+### Relationship Context and Duplication Gates
+
+Related records must expose human-readable business context such as the
+quotation number, Service number, Service title, and useful customer name;
+UUIDs, technical IDs, isolated document numbers, and unrelated-page hops must
+not be required to infer a relationship. Do not show the same related-record
+collection in multiple sections unless each serves a distinct user task. When
+a new workspace supersedes an older table, remove the obsolete duplicate only
+when the active task explicitly authorizes that change, while preserving
+authoritative links, permissions, and empty/error behavior.
+
+### Sentinel-Date Gate
+
+Never render database sentinel, artificial maximum, minimum, or fallback dates
+as real business dates, including `9999-12-31` and `0001-01-01`. Render the
+authoritative business timestamp, a localized unknown/not-set state, or no
+date. A Service event date must not substitute for an activity timestamp.
+
+### Native-Control Collision Gate
+
+Custom icons, buttons, prefixes, and suffixes must not overlap browser search
+clear, password reveal, date-picker, autofill, or validation controls. A custom
+clear action must avoid the conflicting native affordance, reserve inline
+spacing, support LTR and RTL, have an accessible name, and be checked in the
+target browser rendering.
+
+### Mixed-Direction Business-Text Gate
+
+Do not concatenate mixed Arabic and English location fields into one
+uncontrolled bidi string. Render semantic fields independently, such as city,
+coverage area, and country, with appropriate direction handling. Isolate
+business identifiers and monetary values from surrounding text.
+
+### Dashboard Priority and Balance Gates
+
+Decision- and action-requiring content must precede passive history and
+education. The default hierarchy is critical KPI and quick actions, Attention
+Needed, Operations Focus, live workflow state, recent history, and passive
+reference. Paired operational panels must use compact independent heights,
+bounded lists, View All links when relevant, explicit empty states, balanced
+columns, no oversized fixed or minimum heights, and an explicit mobile
+stacking order; do not create large empty voids to equalize unrelated panels.
+This is a review rubric, not acceptance or activation of Dashboard Priority
+Work or any dashboard redesign.
+
+### State, Motion, and Loading Gate
+
+Evaluate each affected state × surface across ready, loading, empty, error,
+and unauthorized states, including desktop/mobile and EN/AR/RTL behavior.
+Fast search, filter, pagination, and page-size interactions remain
+silent-first: retain existing rows and controls, avoid blocking overlays and
+decorative global lightning/progress rails, and show localized inline or
+pending feedback only when needed. Destination-shaped loading or skeleton
+surfaces and motion require explicit owner authorization for the target
+surface, respect reduced-motion preferences, and never imply product
+activation or owner acceptance.
+
+### Owner-Acceptance Gate
+
+Automated rendering, DOM checks, and screenshots are preparation evidence only.
+Every result must separate automated implementation verification, manual owner
+testing, and final owner visual acceptance. Mozfer alone owns manual browser,
+visual, RTL/mobile, and workflow acceptance; an agent must never label owner
+acceptance as passed.
+
+### Expansion-Reference Gate
+
+When a design task activates or changes an expansion decision, consult the
+single canonical Expansion Master and preserve its historical decision context.
+Update that document only when the active task explicitly authorizes the
+canonical-document edit. This guard does not promote deferred scope, authorize
+implementation, or permit a competing expansion reference or reliance on an
+older deferred statement.
+
+### Required Design-Gate Record
+
+For every bounded design implementation, record: user task; alternative
+existing path; utility decision; information hierarchy; permissions; desktop,
+mobile, and responsive behavior; RTL/LTR; state × surface loading and motion
+decision; empty, loading, error, and unauthorized states; relationship context;
+duplication check; native-control collision check; sentinel-value check; and
+owner manual acceptance status.
+
 ## G7 ERP Constraints
 
 - G7 uses the established deep-navy and restrained-gold identity; do not introduce a separate module identity, decorative gradient system, glassmorphism, excessive effects, or oversized decorative cards.
@@ -256,4 +367,9 @@ Preserve the following repository state and direction:
 
 ## Output Rule
 
-Every task ends with a truthful `PASS`, `WARN`, or `HOLD` result, evidence, unknowns, non-mutation or exact-change confirmation, and exactly one bounded next action. Never claim browser smoke, production readiness, security compliance, financial correctness, or owner approval without evidence.
+Every task ends with a truthful substantive result of `PASS`, `PASS WITH WARN`,
+`PARTIAL`, or `HOLD`, evidence, unknowns, non-mutation or exact-change
+confirmation, and exactly one bounded next action. The outer task-result token
+and execution-mode rules remain governed by `g7-crm-agent-control`. Never claim
+browser smoke, production readiness, security compliance, financial
+correctness, or owner approval without evidence.
