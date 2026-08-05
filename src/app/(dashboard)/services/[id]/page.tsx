@@ -33,6 +33,9 @@ import { getSupplierAllocationsByServiceId } from "@/lib/supplier-allocations/qu
 import { getSupplierBookingsByServiceId } from "@/lib/supplier-bookings/queries";
 import type { Service } from "@/types/service";
 import SupplierBookingsPanel from "./SupplierBookingsPanel";
+import RecordNavigation from "@/components/records/RecordNavigation";
+import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
+import { getServiceRecordNavigation, safeRecordReturnTo } from "@/lib/record-navigation/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +65,7 @@ export default async function ServiceDetailPage({
   const sharedStates = getSharedUiStates(locale);
   const { id } = await params;
   const resolvedSearchParams = await searchParams;
+  const returnTo = safeRecordReturnTo(resolvedSearchParams.returnTo, "/services");
   const showDeleted = resolvedSearchParams?.showDeleted === "true";
   const requestedInvoiceAction = resolvedSearchParams?.invoiceAction;
   if (requestedInvoiceAction === "deposit" || requestedInvoiceAction === "final") {
@@ -97,6 +101,9 @@ export default async function ServiceDetailPage({
   if (!service) {
     notFound();
   }
+
+  const recordNavigation = await getServiceRecordNavigation(id, service.serviceNumber);
+  const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
   const canCreateQuotation = await checkPermission("quotations:write");
   const canEditService = await checkPermission("services:write");
@@ -148,7 +155,7 @@ export default async function ServiceDetailPage({
     <div className="flex w-full min-w-0 max-w-full flex-col gap-6 pb-12">
       <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 items-start gap-4">
-          <BackToServicesLink label={dictionary.detail.backToServices} />
+          <BackToServicesLink label={dictionary.detail.backToServices} returnTo={returnTo} />
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-3">
               <h2 dir="ltr" className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight">
@@ -187,6 +194,7 @@ export default async function ServiceDetailPage({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <RecordNavigation basePath="/services" recordType={dictionary.list.title} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} />
           {canCreateQuotation && canModifyService && (
             quotationDisabledReason ? (
               <span
@@ -348,10 +356,10 @@ export default async function ServiceDetailPage({
   );
 }
 
-function BackToServicesLink({ label }: { label: string }) {
+function BackToServicesLink({ label, returnTo }: { label: string; returnTo: string }) {
   return (
     <PendingLink
-      href="/services"
+      href={returnTo}
       className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
       aria-label={label}
     >

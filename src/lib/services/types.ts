@@ -1,9 +1,60 @@
 import type { z } from "zod";
-import type { ServiceStatus } from "@/types/service";
+import type { Service, ServiceStatus } from "@/types/service";
 import type { createServiceSchema, updateServiceSchema } from "./schemas";
+import { sanitizeSearchTerm } from "@/lib/search/sanitize";
+import {
+  normalizeListPage,
+  normalizeListPageSize,
+  type ListPageSize,
+} from "../pagination.ts";
 
 export { SERVICE_STATUSES } from "@/types/service";
-export type { Service, ServiceCustomerSummary, ServiceStatus } from "@/types/service";
+export type { ServiceCustomerSummary } from "@/types/service";
+export type { ServiceStatus } from "@/types/service";
+
+export const SERVICE_LIST_PAGE_SIZE = 10;
+export type ServiceSearchMode = "serviceNumber" | "serviceName" | "customer";
+
+export interface ServiceListQuery {
+  page?: number;
+  pageSize?: ListPageSize;
+  searchMode?: ServiceSearchMode;
+  search?: string;
+  status?: ServiceStatus;
+}
+
+export interface ServiceListPagination {
+  page: number;
+  pageSize: ListPageSize;
+  total: number;
+  totalPages: number;
+}
+
+export interface ServicesListResult {
+  services: Service[];
+  pagination: ServiceListPagination;
+  error?: "services_load_failed";
+}
+
+export function normalizeServiceListPage(value: unknown): number {
+  return normalizeListPage(value);
+}
+
+export function normalizeServiceListPageSize(value: unknown): ListPageSize {
+  return normalizeListPageSize(value);
+}
+
+export function normalizeServiceSearchMode(value: unknown): ServiceSearchMode | undefined {
+  return value === "serviceNumber" || value === "serviceName" || value === "customer"
+    ? value
+    : undefined;
+}
+
+export function normalizeServiceListSearch(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const search = sanitizeSearchTerm(value);
+  return search || undefined;
+}
 
 export interface ServiceRow {
   id: string;

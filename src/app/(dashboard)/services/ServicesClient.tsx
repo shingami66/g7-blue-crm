@@ -1,31 +1,36 @@
 "use client";
 
-import { useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import Button from "@/components/ui/Button";
 import PendingLink from "@/components/ui/PendingLink";
+import ModuleSearchControl from "@/components/ui/ModuleSearchControl";
+import { ListInlineError } from "@/components/ui/ListPendingState";
+import { useListNavigation } from "@/components/ui/useListNavigation";
 import { Eye, Filter, Plus } from "lucide-react";
 import { getServiceStatusLabel, type ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { formatSarAmount } from "@/lib/i18n/formatting";
 import { UiDateText } from "@/components/i18n/UiDateText";
+import { getCommonDictionary, getSharedUiStates } from "@/lib/i18n/dictionaries/common";
+import { LIST_PAGE_SIZES, type ListPageSize } from "@/lib/pagination";
 import type { Service } from "@/types/service";
+import type { ServiceListPagination, ServiceListQuery, ServiceSearchMode } from "@/lib/services/types";
+import { sanitizeSearchTerm } from "@/lib/search/sanitize";
 
 const STATUS_VARIANT_MAP: Record<string, string> = {
-  "Inquiry": "inquiry",
-  "Quoted": "quoted",
-  "Approved": "approved",
+  Inquiry: "inquiry",
+  Quoted: "quoted",
+  Approved: "approved",
   "Deposit Paid": "deposit-paid",
   "In Progress": "in-progress",
-  "Completed": "completed",
-  "Cancelled": "cancelled",
+  Completed: "completed",
+  Cancelled: "cancelled",
 };
 
-const TABLE_HEADER_BASE =
-  "px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase";
+const TABLE_HEADER_BASE = "px-4 py-3 text-[12px] font-semibold uppercase text-on-surface-variant";
 const TABLE_CELL_BASE = "px-4 py-4 align-top";
 const COLUMN_LAYOUT = {
   serviceNumber: "w-[16%] min-w-[160px] text-start",
@@ -37,65 +42,85 @@ const COLUMN_LAYOUT = {
   view: "w-[6%] min-w-[110px] text-center",
 } as const;
 
-interface ServicesClientProps {
-  services: Service[];
-  canWrite: boolean;
-  dictionary: ServicesDictionary;
+function serviceListHref(query: ServiceListQuery, page = 1) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (query.pageSize && query.pageSize !== LIST_PAGE_SIZES[0]) params.set("pageSize", String(query.pageSize));
+  const search = sanitizeSearchTerm(query.search ?? "");
+  if (query.searchMode && search) {
+    params.set("searchMode", query.searchMode);
+    params.set("search", search);
+  }
+  if (query.status) params.set("status", query.status);
+  const encoded = params.toString();
+  return encoded ? `/services?${encoded}` : "/services";
 }
 
-export default function ServicesClient({ services, canWrite, dictionary }: ServicesClientProps) {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+export default function ServicesClient({
+  services,
+  pagination,
+  query,
+  loadError,
+  canWrite,
+  dictionary,
+}: {
+  services: Service[];
+  pagination: ServiceListPagination;
+  query: ServiceListQuery;
+  loadError?: "services_load_failed";
+  canWrite: boolean;
+  dictionary: ServicesDictionary;
+}) {
+  const activeMode = query.searchMode;
+  const stateKey = `${activeMode ?? ""}|${query.search ?? ""}|${query.status ?? ""}|${pagination.page}|${pagination.pageSize}|${loadError ?? ""}`;
+  const { isPending, isSearchPending, navigate, refresh } = useListNavigation(stateKey);
+  const common = getCommonDictionary(dictionary.locale);
+  const sharedStates = getSharedUiStates(dictionary.locale);
+  const returnTo = serviceListHref(query, pagination.page);
+  const searchModes = [
+    { value: "serviceNumber", label: dictionary.list.searchModes.serviceNumber, placeholder: dictionary.list.searchPlaceholders.serviceNumber },
+    { value: "serviceName", label: dictionary.list.searchModes.serviceName, placeholder: dictionary.list.searchPlaceholders.serviceName },
+    { value: "customer", label: dictionary.list.searchModes.customer, placeholder: dictionary.list.searchPlaceholders.customer },
+  ] as const;
 
-  const filtered = services.filter((s) => {
-    if (statusFilter !== "all" && s.status !== statusFilter) return false;
-    return true;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, filtered.length);
-  const paginatedServices = filtered.slice(startIndex, startIndex + itemsPerPage);
+  function updateQuery(next: Partial<ServiceListQuery>, kind: "navigation" | "search" = "navigation") {
+    navigate(serviceListHref({ ...query, ...next }, 1), "replace", kind);
+  }
 
   function formatServicesSummary() {
-    if (filtered.length === 0) {
-      return dictionary.list.showingZero;
-    }
-
+    if (pagination.total === 0) return dictionary.list.showingZero;
     return dictionary.list.showingRange
-      .replace("{start}", isolateBidiText(String(startIndex + 1)))
-      .replace("{end}", isolateBidiText(String(endIndex)))
-      .replace("{total}", isolateBidiText(String(filtered.length)));
+      .replace("{start}", isolateBidiText(String((pagination.page - 1) * pagination.pageSize + 1)))
+      .replace("{end}", isolateBidiText(String((pagination.page - 1) * pagination.pageSize + services.length)))
+      .replace("{total}", isolateBidiText(String(pagination.total)));
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <PageHeader
-        title={dictionary.list.title}
-        subtitle={dictionary.list.subtitle}
-      >
-        {canWrite && (
-          <Button asChild>
-            <PendingLink href="/services/new">
-              <Plus size={18} />
-              {dictionary.list.newService}
-            </PendingLink>
-          </Button>
-        )}
+    <div className="flex h-full flex-col">
+      <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
+        {canWrite && <Button asChild><PendingLink href="/services/new"><Plus size={18} />{dictionary.list.newService}</PendingLink></Button>}
       </PageHeader>
 
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-busy={isPending || undefined}>
         <FilterBar>
-          <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
-            >
+          <ModuleSearchControl
+            mode={activeMode}
+            modes={searchModes}
+            query={query.search ?? ""}
+            modeLabel={dictionary.list.searchModeLabel}
+            resetLabel={dictionary.list.resetFilters}
+            submitLabel={common.labels.search}
+            pendingLabel={common.states.searching}
+            clearLabel={common.actions.clear}
+            isPending={isPending}
+            isSearchPending={isSearchPending}
+            selectModeLabel={common.labels.select}
+            disabledPlaceholder={common.labels.searchTypeFirst}
+            onSubmit={(mode, search) => updateQuery({ searchMode: mode as ServiceSearchMode, search: search || undefined }, "search")}
+            onReset={() => navigate("/services")}
+          />
+          <div className="relative shrink-0">
+            <select value={query.status ?? "all"} disabled={isPending} onChange={(event) => updateQuery({ status: event.target.value === "all" ? undefined : event.target.value as ServiceListQuery["status"] })} aria-label={dictionary.list.allStatuses} className="appearance-none rounded-lg border border-outline-variant bg-surface py-2 ps-3 pe-8 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60">
               <option value="all">{dictionary.list.allStatuses}</option>
               <option value="Inquiry">{dictionary.serviceStatuses.Inquiry}</option>
               <option value="Quoted">{dictionary.serviceStatuses.Quoted}</option>
@@ -105,107 +130,37 @@ export default function ServicesClient({ services, canWrite, dictionary }: Servi
               <option value="Completed">{dictionary.serviceStatuses.Completed}</option>
               <option value="Cancelled">{dictionary.serviceStatuses.Cancelled}</option>
             </select>
-            <Filter
-              size={14}
-              className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
-            />
+            <Filter size={14} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
           </div>
-          <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
-            {formatServicesSummary()}
-          </div>
+          <div className="ms-auto shrink-0 text-[14px] leading-[20px] text-on-surface-variant">{formatServicesSummary()}</div>
         </FilterBar>
-
-        <div className="flex-1 overflow-auto">
-          {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 bg-surface-container-lowest border border-surface-variant rounded-b-xl">
-              <p className="text-on-surface-variant text-[14px] leading-[20px]">
-                {services.length === 0
-                  ? canWrite
-                    ? dictionary.states.noServices
-                    : dictionary.states.noServicesFound
-                  : dictionary.states.noFilteredServices}
-              </p>
-            </div>
+        <div className="relative min-h-0 flex-1 overflow-auto">
+          {loadError ? (
+            <ListInlineError message={dictionary.states.servicesLoadError} retryLabel={sharedStates.retry.tryAgain} onRetry={refresh} pending={isPending} />
+          ) : services.length === 0 ? (
+            <div className="flex min-h-[14rem] flex-col items-center justify-center rounded-b-xl border border-surface-variant bg-surface-container-lowest"><p className="text-[14px] text-on-surface-variant">{pagination.total === 0 && !query.search && !query.status ? (canWrite ? dictionary.states.noServices : dictionary.states.noServicesFound) : dictionary.states.noFilteredServices}</p></div>
           ) : (
-            <div className="overflow-x-auto w-full border border-surface-variant rounded-b-xl bg-surface-container-lowest">
+            <div className="w-full overflow-x-auto rounded-b-xl border border-surface-variant bg-surface-container-lowest">
               <table className="w-full min-w-[1120px] table-fixed border-collapse text-start">
-                <thead>
-                  <tr className="bg-surface-container-low border-b border-surface-variant">
-                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.serviceNumber}`}>
-                      {dictionary.list.table.serviceNumber}
-                    </th>
-                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.serviceTitle}`}>
-                      {dictionary.list.table.serviceTitle}
-                    </th>
-                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.customer}`}>
-                      {dictionary.list.table.customer}
-                    </th>
-                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.eventDate}`}>
-                      {dictionary.list.table.eventDate}
-                    </th>
-                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.status}`}>
-                      {dictionary.list.table.status}
-                    </th>
-                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.budget}`}>
-                      {dictionary.list.table.budget}
-                    </th>
-                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.view}`}>
-                      {dictionary.list.actions.view}
-                    </th>
-                  </tr>
-                </thead>
+                <thead><tr className="border-b border-surface-variant bg-surface-container-low">
+                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.serviceNumber}`}>{dictionary.list.table.serviceNumber}</th>
+                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.serviceTitle}`}>{dictionary.list.table.serviceTitle}</th>
+                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.customer}`}>{dictionary.list.table.customer}</th>
+                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.eventDate}`}>{dictionary.list.table.eventDate}</th>
+                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.status}`}>{dictionary.list.table.status}</th>
+                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.budget}`}>{dictionary.list.table.budget}</th>
+                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.view}`}>{dictionary.list.actions.view}</th>
+                </tr></thead>
                 <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
-                  {paginatedServices.map((service) => (
-                    <tr key={service.id} className="hover:bg-surface-container-low/50 transition-colors">
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.serviceNumber} font-mono font-semibold text-primary`}>
-                        <span dir="ltr" className="inline-block whitespace-nowrap">
-                          {isolateBidiText(service.serviceNumber)}
-                        </span>
-                      </td>
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.serviceTitle}`}>
-                        <div className="font-semibold text-on-surface">
-                          <span dir="auto">{service.serviceTitle}</span>
-                        </div>
-                        <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
-                          <span dir="auto">{service.eventName || "—"}</span>
-                        </div>
-                      </td>
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.customer} text-on-surface-variant`}>
-                        <span dir="auto">{service.customer?.company || "—"}</span>
-                      </td>
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.eventDate} text-on-surface-variant`}>
-                        {service.eventStartDate ? (
-                          <UiDateText locale={dictionary.locale} value={service.eventStartDate} />
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.status}`}>
-                        <div className="flex justify-center">
-                          <StatusBadge variant={(STATUS_VARIANT_MAP[service.status] ?? "pending") as React.ComponentProps<typeof StatusBadge>["variant"]}>
-                            {getServiceStatusLabel(dictionary.locale, service.status)}
-                          </StatusBadge>
-                        </div>
-                      </td>
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.budget} font-semibold text-on-surface tabular-nums`}>
-                        <span dir="ltr" className="inline-block whitespace-nowrap">
-                          {service.estimatedBudget != null
-                            ? formatSarAmount(dictionary.locale, Number(service.estimatedBudget))
-                            : "—"}
-                        </span>
-                      </td>
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}>
-                        <div className="flex justify-center">
-                          <PendingLink
-                            href={`/services/${service.id}`}
-                            aria-label={`${dictionary.list.actions.view} ${service.serviceNumber}`}
-                            title={`${dictionary.list.actions.view} ${service.serviceNumber}`}
-                            className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed"
-                          >
-                            <Eye size={17} />
-                          </PendingLink>
-                        </div>
-                      </td>
+                  {services.map((service) => (
+                    <tr key={service.id} className="transition-colors hover:bg-surface-container-low/50">
+                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.serviceNumber} font-mono font-semibold text-primary`}><span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(service.serviceNumber)}</span></td>
+                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.serviceTitle}`}><div className="font-semibold text-on-surface"><span dir="auto">{service.serviceTitle}</span></div><div className="mt-1 text-[12px] leading-[16px] text-on-surface-variant"><span dir="auto">{service.eventName || "—"}</span></div></td>
+                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.customer} text-on-surface-variant`}><span dir="auto">{service.customer?.company || "—"}</span></td>
+                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.eventDate} text-on-surface-variant`}>{service.eventStartDate ? <UiDateText locale={dictionary.locale} value={service.eventStartDate} /> : "—"}</td>
+                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.status}`}><div className="flex justify-center"><StatusBadge variant={(STATUS_VARIANT_MAP[service.status] ?? "pending") as React.ComponentProps<typeof StatusBadge>["variant"]}>{getServiceStatusLabel(dictionary.locale, service.status)}</StatusBadge></div></td>
+                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.budget} font-semibold text-on-surface tabular-nums`}><span dir="ltr" className="inline-block whitespace-nowrap">{service.estimatedBudget != null ? formatSarAmount(dictionary.locale, Number(service.estimatedBudget)) : "—"}</span></td>
+                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}><div className="flex justify-center"><PendingLink href={`/services/${service.id}?returnTo=${encodeURIComponent(returnTo)}`} aria-label={`${dictionary.list.actions.view} ${service.serviceNumber}`} title={`${dictionary.list.actions.view} ${service.serviceNumber}`} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40"><Eye size={17} /></PendingLink></div></td>
                     </tr>
                   ))}
                 </tbody>
@@ -213,14 +168,16 @@ export default function ServicesClient({ services, canWrite, dictionary }: Servi
             </div>
           )}
         </div>
-
-        {filtered.length > itemsPerPage && (
-          <PaginationFooter
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        )}
+        <PaginationFooter
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          pageSize={pagination.pageSize}
+          paginationMode="bounded"
+          isPending={isPending}
+          onPageChange={(page) => navigate(serviceListHref(query, page), "push")}
+          onPageSizeChange={(pageSize: ListPageSize) => updateQuery({ pageSize })}
+        />
       </div>
     </div>
   );

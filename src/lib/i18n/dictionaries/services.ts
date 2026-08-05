@@ -40,6 +40,11 @@ export interface ServicesDictionary {
   list: {
     title: string;
     subtitle: string;
+    searchPlaceholder: string;
+    searchModeLabel: string;
+    resetFilters: string;
+    searchModes: { serviceNumber: string; serviceName: string; customer: string };
+    searchPlaceholders: { serviceNumber: string; serviceName: string; customer: string };
     newService: string;
     allStatuses: string;
     showingZero: string;
@@ -914,6 +919,11 @@ const servicesDictionaryEn: ServicesDictionary = {
   list: {
     title: "Services",
     subtitle: "Manage client services, event bookings, and operational workflow.",
+    searchPlaceholder: "Search service number, title, customer, or status",
+    searchModeLabel: "Search Services by",
+    resetFilters: "Reset filters",
+    searchModes: { serviceNumber: "Service Number", serviceName: "Service Name", customer: "Customer" },
+    searchPlaceholders: { serviceNumber: "Search Service number", serviceName: "Search Service name or title", customer: "Search customer name" },
     newService: "New Service",
     allStatuses: "All Statuses",
     showingZero: "Showing 0 of 0 services",
@@ -2329,6 +2339,11 @@ const servicesDictionaryAr: ServicesDictionary = {
   list: {
     title: "الخدمات",
     subtitle: "إدارة خدمات العملاء وحجوزات الفعاليات وسير العمل التشغيلي.",
+    searchPlaceholder: "ابحث برقم الخدمة أو العنوان أو العميل أو الحالة",
+    searchModeLabel: "البحث في الخدمات حسب",
+    resetFilters: "إعادة ضبط الفلاتر",
+    searchModes: { serviceNumber: "رقم الخدمة", serviceName: "اسم الخدمة", customer: "العميل" },
+    searchPlaceholders: { serviceNumber: "ابحث عن رقم الخدمة", serviceName: "ابحث عن اسم الخدمة أو عنوانها", customer: "ابحث عن اسم العميل" },
     newService: "خدمة جديدة",
     allStatuses: "جميع الحالات",
     showingZero: "عرض 0 من 0 خدمة",

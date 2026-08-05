@@ -281,7 +281,7 @@ test("21. services:read and services:write enforcement remain on pages", () => {
   const detail = readFileSync(SERVICE_DETAIL, "utf8");
   const edit = readFileSync(EDIT_PAGE, "utf8");
   const create = readFileSync(NEW_PAGE, "utf8");
-  assert.match(list, /getServices\(/);
+  assert.match(list, /getServicesList\(/);
   assert.match(list, /services:write/);
   assert.match(detail, /requirePermission\("services:read"\)/);
   assert.match(edit, /requirePermission\("services:write"\)/);
@@ -296,9 +296,10 @@ test("22-23. Create/update contracts and list pagination behavior remain", () =>
   const client = readFileSync(SERVICES_CLIENT, "utf8");
   assert.match(form, /createService/);
   assert.match(edit, /updateService/);
-  assert.match(client, /itemsPerPage = 10/);
+  assert.match(client, /pagination\.pageSize/);
   assert.match(client, /PaginationFooter/);
-  assert.match(client, /statusFilter/);
+  assert.match(client, /ModuleSearchControl/);
+  assert.match(client, /searchModes/);
 });
 
 test("24. No raw internal errors introduced on Services core surfaces", () => {

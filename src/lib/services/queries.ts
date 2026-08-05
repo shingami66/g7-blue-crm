@@ -15,6 +15,14 @@ import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { mapRowToService } from "./mappers";
 import type { Service } from "@/types/service";
 import type { ServiceRowWithCustomer } from "./types";
+import { buildIlikeOrFilter } from "@/lib/search/server";
+import {
+  normalizeServiceListPageSize,
+  normalizeServiceListSearch,
+  normalizeServiceSearchMode,
+  type ServiceListQuery,
+  type ServicesListResult,
+} from "./types";
 
 const SERVICE_SELECT = "*, customers(company, contact, customer_number)";
 
@@ -136,6 +144,80 @@ export async function getServices(): Promise<Service[]> {
   await requirePermission("services:read");
   const result = await readActiveServices("getServices");
   return result.services;
+}
+
+function serviceSearchColumns(mode: ServiceListQuery["searchMode"]): string[] {
+  if (mode === "serviceName") return ["service_title"];
+  if (mode === "customer") return ["company", "contact"];
+  return ["service_number"];
+}
+
+function serviceSearchRelation(mode: ServiceListQuery["searchMode"]): string | undefined {
+  return mode === "customer" ? "customers" : undefined;
+}
+
+export async function getServicesList(
+  options: ServiceListQuery = {},
+): Promise<ServicesListResult> {
+  await requirePermission("services:read");
+
+  const pageSize = normalizeServiceListPageSize(options.pageSize);
+  const search = normalizeServiceListSearch(options.search);
+  const searchMode = search ? normalizeServiceSearchMode(options.searchMode) : undefined;
+  const searchFilter = searchMode
+    ? buildIlikeOrFilter(serviceSearchColumns(searchMode), search)
+    : undefined;
+  const searchRelation = searchFilter && searchMode ? serviceSearchRelation(searchMode) : undefined;
+
+  try {
+    const supabase = createAdminClient();
+    let countQuery = supabase
+      .from("services")
+      .select(searchRelation ? "id, customers!inner(id)" : "id", { count: "exact", head: true })
+      .is("deleted_at", null);
+    let dataQuery = supabase
+      .from("services")
+      .select(searchRelation ? "*, customers!inner(company, contact, customer_number)" : SERVICE_SELECT)
+      .is("deleted_at", null);
+
+    if (options.status) {
+      countQuery = countQuery.eq("status", options.status);
+      dataQuery = dataQuery.eq("status", options.status);
+    }
+    if (searchFilter) {
+      countQuery = countQuery.or(searchFilter, searchRelation ? { referencedTable: searchRelation } : undefined);
+      dataQuery = dataQuery.or(searchFilter, searchRelation ? { referencedTable: searchRelation } : undefined);
+    }
+
+    const { count, error: countError } = await countQuery;
+    if (countError) {
+      console.error("[getServicesList] Count error:", countError.message);
+      return { services: [], pagination: { page: 1, pageSize, total: 0, totalPages: 1 }, error: "services_load_failed" };
+    }
+
+    const total = count ?? 0;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(Math.max(options.page ?? 1, 1), totalPages);
+    const rangeStart = (page - 1) * pageSize;
+    const { data, error } = await dataQuery
+      .order("service_number", { ascending: true })
+      .order("id", { ascending: true })
+      .range(rangeStart, rangeStart + pageSize - 1);
+
+    if (error) {
+      console.error("[getServicesList] Data error:", error.message);
+      return { services: [], pagination: { page: 1, pageSize, total: 0, totalPages: 1 }, error: "services_load_failed" };
+    }
+
+    return {
+      services: (data ?? []).map((row) => mapRowToService(row as ServiceRowWithCustomer)),
+      pagination: { page, pageSize, total, totalPages },
+    };
+  } catch (err) {
+    if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
+    console.error("[getServicesList] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { services: [], pagination: { page: 1, pageSize, total: 0, totalPages: 1 }, error: "services_load_failed" };
+  }
 }
 
 export async function getEligibleServicesForQuotation(): Promise<EligibleQuotationService[]> {

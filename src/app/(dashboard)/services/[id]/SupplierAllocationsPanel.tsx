@@ -129,7 +129,25 @@ export default function SupplierAllocationsPanel({
           {panelDictionary.empty}
         </div>
       ) : (
-        <DataTable columns={columns}>
+        <>
+          <div className="grid grid-cols-1 gap-3 p-4 lg:hidden">
+            {allocations.map((allocation) => (
+              <MobileAllocationCard
+                key={allocation.id}
+                allocation={allocation}
+                canReadCost={canReadCost}
+                canWrite={canWrite}
+                canCancel={canCancel}
+                isServiceEditable={isServiceEditable}
+                activeBooking={activeBookingIds.has(allocation.id)}
+                serviceId={serviceId}
+                locale={dictionary.locale}
+                dictionary={panelDictionary}
+              />
+            ))}
+          </div>
+          <div className="hidden lg:block">
+          <DataTable columns={columns}>
           {allocations.map((a) => (
             <tr key={a.id} className={a.isDeleted ? "opacity-60 bg-surface-container-lowest grayscale-[0.5]" : ""}>
               <td className="px-4 py-3 align-top">
@@ -240,8 +258,15 @@ export default function SupplierAllocationsPanel({
               </td>
             </tr>
           ))}
-        </DataTable>
+          </DataTable>
+          </div>
+        </>
       )}
     </section>
   );
+}
+
+function MobileAllocationCard({ allocation, canReadCost, canWrite, canCancel, isServiceEditable, activeBooking, serviceId, locale, dictionary }: { allocation: SupplierAllocation; canReadCost: boolean; canWrite?: boolean; canCancel?: boolean; isServiceEditable: boolean; activeBooking: boolean; serviceId?: string; locale: Locale; dictionary: ServicesDictionary["supplierAllocations"] }) {
+  const editable = !allocation.isDeleted && allocation.status !== "cancelled" && isServiceEditable && !activeBooking;
+  return <article className="rounded-lg border border-outline-variant bg-surface p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-semibold text-on-surface" dir="auto">{isolateBidiText(allocation.supplierName || allocation.supplierId)}</p><p className="mt-1 text-[12px] text-on-surface-variant" dir="auto">{isolateBidiText(allocation.itemName)}</p></div><StatusBadge variant={allocation.isDeleted ? "cancelled" : STATUS_VARIANT_MAP[allocation.status] || "draft"}>{allocation.isDeleted ? dictionary.statusLabels.deleted : dictionary.statusLabels[allocation.status] || allocation.status}</StatusBadge></div><dl className="mt-3 grid grid-cols-2 gap-3 text-[12px]"><div><dt className="text-on-surface-variant">{dictionary.columns.category}</dt><dd className="mt-1 text-on-surface" dir="auto">{isolateBidiText(allocation.category)}</dd></div><div><dt className="text-on-surface-variant">{dictionary.columns.qty}</dt><dd className="mt-1 text-on-surface tabular-nums" dir="ltr">{formatUiNumber(locale, allocation.quantity)} {allocation.unit}</dd></div>{canReadCost && <div><dt className="text-on-surface-variant">{dictionary.columns.totalCost}</dt><dd className="mt-1 font-semibold text-on-surface tabular-nums" dir="ltr">{allocation.estimatedTotalCost === null ? "—" : formatAllocationMoney(locale, allocation.estimatedTotalCost, allocation.currency)}</dd></div>}</dl>{editable && <div className="mt-4 flex flex-wrap gap-3 border-t border-outline-variant pt-3">{canWrite && <SupplierAllocationStatusActions allocationId={allocation.id} status={allocation.status} dictionary={dictionary.statusActions} />}{canWrite && canReadCost && <PendingLink href={`/services/${serviceId}/allocations/${allocation.id}/edit`} className="text-[13px] font-semibold text-primary hover:underline">{dictionary.actions.edit}</PendingLink>}{canCancel && <PendingLink href={`/services/${serviceId}/allocations/${allocation.id}/cancel`} className="text-[13px] font-semibold text-error hover:underline">{dictionary.actions.cancel}</PendingLink>}{canWrite && <PendingLink href={`/services/${serviceId}/allocations/${allocation.id}/delete`} className="text-[13px] font-semibold text-error hover:underline">{dictionary.actions.delete}</PendingLink>}</div>}{allocation.isDeleted && canWrite && allocation.costSource === "manual_estimate" && isServiceEditable && <div className="mt-4 border-t border-outline-variant pt-3"><PendingLink href={`/services/${serviceId}/allocations/${allocation.id}/restore`} className="text-[13px] font-semibold text-primary hover:underline">{dictionary.actions.restore}</PendingLink></div>}{activeBooking && <p className="mt-3 text-[12px] text-on-surface-variant">{dictionary.activeBookingLock}</p>}</article>;
 }

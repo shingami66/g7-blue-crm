@@ -99,8 +99,22 @@ export default function SupplierBookingsPanel({
           ) : null}
         </div>
       ) : (
-        <DataTable columns={bookingColumns}>
-          {bookings.map((booking) => (
+        <>
+          <div className="grid grid-cols-1 gap-3 p-4 lg:hidden">
+            {bookings.map((booking) => (
+              <MobileBookingCard
+                key={booking.id}
+                booking={booking}
+                canCancel={canCancel}
+                hasCostColumns={hasCostColumns}
+                locale={dictionary.locale}
+                dictionary={panelDictionary}
+              />
+            ))}
+          </div>
+          <div className="hidden lg:block">
+            <DataTable columns={bookingColumns}>
+              {bookings.map((booking) => (
             <tr key={booking.id} className={booking.status === "cancelled" ? "opacity-70" : ""}>
               <td dir="ltr" className="px-4 py-3 align-top font-mono font-semibold text-primary">
                 {isolateBidiText(booking.bookingNumber)}
@@ -154,8 +168,10 @@ export default function SupplierBookingsPanel({
                 )}
               </td>
             </tr>
-          ))}
-        </DataTable>
+              ))}
+            </DataTable>
+          </div>
+        </>
       )}
 
       {!loadError && selectedAllocations.length > 0 && (
@@ -256,5 +272,77 @@ function BookingInternalDetails({
         booking.status !== "cancelled" &&
         detailsDictionary.empty}
     </div>
+  );
+}
+
+function MobileBookingCard({
+  booking,
+  canCancel,
+  hasCostColumns,
+  locale,
+  dictionary,
+}: {
+  booking: SupplierBooking;
+  canCancel?: boolean;
+  hasCostColumns: boolean;
+  locale: Locale;
+  dictionary: ServicesDictionary["supplierBookings"];
+}) {
+  return (
+    <article className="rounded-lg border border-outline-variant bg-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p dir="ltr" className="font-mono font-semibold text-primary">
+            {isolateBidiText(booking.bookingNumber)}
+          </p>
+          <p className="mt-1 font-medium text-on-surface" dir="auto">
+            {isolateBidiText(booking.supplierName || booking.supplierId)}
+          </p>
+          <p className="mt-1 text-[12px] text-on-surface-variant" dir="auto">
+            {isolateBidiText(booking.itemName)} · {isolateBidiText(booking.category)}
+          </p>
+        </div>
+        <StatusBadge variant={STATUS_VARIANT_MAP[booking.status]}>
+          {dictionary.statusLabels[booking.status]}
+        </StatusBadge>
+      </div>
+      <dl className="mt-3 grid grid-cols-2 gap-3 text-[12px]">
+        <div>
+          <dt className="text-on-surface-variant">{dictionary.columns.qty}</dt>
+          <dd className="mt-1 text-on-surface tabular-nums" dir="ltr">
+            {formatUiNumber(locale, booking.quantity)} {booking.unit}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-on-surface-variant">{dictionary.columns.created}</dt>
+          <dd className="mt-1 text-on-surface">
+            <UiDateTimeText locale={locale} value={booking.createdAt} />
+          </dd>
+        </div>
+        {hasCostColumns && (
+          <div>
+            <dt className="text-on-surface-variant">{dictionary.columns.totalCost}</dt>
+            <dd className="mt-1 font-semibold text-on-surface tabular-nums" dir="ltr">
+              {formatBookingMoney(locale, booking.estimatedTotalCost, booking.currency)}
+            </dd>
+          </div>
+        )}
+      </dl>
+      <div className="mt-3 border-t border-outline-variant pt-3 text-[12px] text-on-surface-variant">
+        <BookingInternalDetails
+          booking={booking}
+          dictionary={dictionary.details}
+          locale={locale}
+        />
+      </div>
+      {canCancel && booking.status === "draft" && (
+        <div className="mt-3 border-t border-outline-variant pt-3">
+          <SupplierBookingActions
+            bookingId={booking.id}
+            dictionary={dictionary.cancelAction}
+          />
+        </div>
+      )}
+    </article>
   );
 }
