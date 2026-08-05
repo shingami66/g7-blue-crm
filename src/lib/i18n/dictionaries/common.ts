@@ -57,6 +57,10 @@ export interface SharedUiStatesDictionary {
 }
 
 export interface CommonDictionary {
+  businessYear: {
+    label: string;
+    shortLabel: string;
+  };
   actions: {
     back: string;
     cancel: string;
@@ -219,6 +223,10 @@ const sharedUiStatesDictionaryAr: SharedUiStatesDictionary = {
 };
 
 export const commonDictionaryEn: CommonDictionary = {
+  businessYear: {
+    label: "Business Year",
+    shortLabel: "Year",
+  },
   actions: {
     back: "Back",
     cancel: "Cancel",
@@ -248,6 +256,10 @@ export const commonDictionaryEn: CommonDictionary = {
 };
 
 export const commonDictionaryAr: CommonDictionary = {
+  businessYear: {
+    label: "السنة التشغيلية",
+    shortLabel: "السنة",
+  },
   actions: {
     back: "رجوع",
     cancel: "إلغاء",

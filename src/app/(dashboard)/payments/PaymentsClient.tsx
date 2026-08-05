@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, type ComponentProps } from "react";
+import { useRef, useEffect, type ComponentProps } from "react";
 import { Banknote, CheckCircle2, Clock } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import DataTable from "@/components/ui/DataTable";
@@ -8,7 +8,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import KpiCard from "@/components/ui/KpiCard";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import ModuleSearchInput from "@/components/ui/ModuleSearchInput";
-import type { PaymentListItem, PaymentStatus, PaymentsListResult } from "@/lib/payments/types";
+import type { PaymentListItem, PaymentStatus, PaymentsListQuery, PaymentsListResult, PaymentsListPagination } from "@/lib/payments/types";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import {
   getPaymentMethodLabel,
@@ -17,17 +17,21 @@ import {
 } from "@/lib/i18n/dictionaries/payments";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import { UiDateText } from "@/components/i18n/UiDateText";
-import { matchesLocalSearch } from "@/lib/search/local";
+import { useListNavigation } from "@/components/ui/useListNavigation";
+import { cleanBusinessYearParam, getCurrentBusinessYear } from "@/lib/business-year";
+import { LIST_PAGE_SIZES } from "@/lib/pagination";
+import { sanitizeSearchTerm } from "@/lib/search/sanitize";
+import { getCommonDictionary } from "@/lib/i18n/dictionaries/common";
 
 type PaymentsClientProps = {
   payments: PaymentListItem[];
+  pagination: PaymentsListPagination;
+  query: PaymentsListQuery;
   error?: PaymentsListResult["error"];
   dictionary: PaymentsDictionary;
 };
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
-
-const itemsPerPage = 10;
 
 const getPaymentStatusBadgeVariant = (
   status: PaymentStatus,
@@ -51,38 +55,32 @@ function buildPaymentStats(payments: PaymentListItem[]) {
   };
 }
 
-export default function PaymentsClient({ payments, error, dictionary }: PaymentsClientProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
+function paymentListHref(query: PaymentsListQuery, page = 1) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  const year = cleanBusinessYearParam(query.year ?? getCurrentBusinessYear());
+  if (year) params.set("year", year);
+  if (query.pageSize && query.pageSize !== LIST_PAGE_SIZES[0]) params.set("pageSize", String(query.pageSize));
+  const search = sanitizeSearchTerm(query.search ?? "");
+  if (search) params.set("search", search);
+  const encoded = params.toString();
+  return encoded ? `/payments?${encoded}` : "/payments";
+}
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+export default function PaymentsClient({ payments, pagination, query, error, dictionary }: PaymentsClientProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const stateKey = `${query.search ?? ""}|${pagination.page}|${pagination.pageSize}|${error ?? ""}`;
+  const { isPending, isSearchPending, navigate } = useListNavigation(stateKey);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollLeft = 0;
     }
-  }, [currentPage]);
+  }, [pagination.page]);
 
   const locale = dictionary.locale;
+  const common = getCommonDictionary(locale);
   const stats = buildPaymentStats(payments);
-  const filteredPayments = payments.filter((payment) =>
-    matchesLocalSearch(searchTerm, [
-      payment.paymentNumber,
-      payment.invoiceNumber,
-      payment.reference,
-      payment.customerName,
-      payment.serviceLabel,
-    ]),
-  );
-  const totalPages = Math.max(1, Math.ceil(filteredPayments.length / itemsPerPage));
-  const paginatedPayments = filteredPayments.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
   return (
     <div className="flex flex-col h-full">
       <PageHeader
@@ -116,14 +114,13 @@ export default function PaymentsClient({ payments, error, dictionary }: Payments
 
       <div className="mb-4 w-full max-w-sm">
         <ModuleSearchInput
-          value={searchTerm}
-          onChange={(value) => {
-            setSearchTerm(value);
-            setCurrentPage(1);
-          }}
+          value={query.search ?? ""}
+          onChange={(value) => navigate(paymentListHref({ ...query, search: value || undefined }, 1), "replace", "search")}
           placeholder={dictionary.searchPlaceholder}
           ariaLabel={dictionary.searchPlaceholder}
+          disabled={isPending}
         />
+        {isSearchPending && <span className="mt-1 block text-[12px] text-on-surface-variant">{common.states.searching}</span>}
       </div>
 
       <div className="flex-1 flex flex-col min-h-0">
@@ -143,7 +140,7 @@ export default function PaymentsClient({ payments, error, dictionary }: Payments
                 dictionary.table.status,
               ]}
             >
-              {paginatedPayments.map((payment) => (
+              {payments.map((payment) => (
                 <tr key={payment.id} className="hover:bg-surface-container-low/50 transition-colors">
                   <td className="px-4 py-4 font-mono font-semibold text-primary whitespace-nowrap">
                     <span dir="ltr">{isolateBidiText(payment.paymentNumber)}</span>
@@ -180,14 +177,14 @@ export default function PaymentsClient({ payments, error, dictionary }: Payments
                   </td>
                 </tr>
               ))}
-              {filteredPayments.length === 0 && (
+              {payments.length === 0 && (
                 <tr>
                   <td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">
                     {error
                       ? dictionary.states.paymentDataUnavailable
-                      : payments.length === 0
-                        ? dictionary.table.empty
-                        : dictionary.states.noFilteredPayments}
+                      : query.search
+                        ? dictionary.states.noFilteredPayments
+                        : dictionary.table.empty}
                   </td>
                 </tr>
               )}
@@ -196,14 +193,17 @@ export default function PaymentsClient({ payments, error, dictionary }: Payments
           </div>
         </div>
 
-        {payments.length > itemsPerPage && (
-          <PaginationFooter
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            className="border-t-0"
-          />
-        )}
+        <PaginationFooter
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          pageSize={pagination.pageSize}
+          paginationMode="bounded"
+          isPending={isPending}
+          onPageChange={(page) => navigate(paymentListHref(query, page), "push")}
+          onPageSizeChange={(pageSize) => navigate(paymentListHref({ ...query, pageSize }, 1), "replace")}
+          className="border-t-0"
+        />
       </div>
     </div>
   );

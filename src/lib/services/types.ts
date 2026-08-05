@@ -2,6 +2,7 @@ import type { z } from "zod";
 import type { Service, ServiceStatus } from "@/types/service";
 import type { createServiceSchema, updateServiceSchema } from "./schemas";
 import { sanitizeSearchTerm } from "@/lib/search/sanitize";
+import type { BusinessYear } from "@/lib/business-year";
 import {
   normalizeListPage,
   normalizeListPageSize,
@@ -16,6 +17,7 @@ export const SERVICE_LIST_PAGE_SIZE = 10;
 export type ServiceSearchMode = "serviceNumber" | "serviceName" | "customer";
 
 export interface ServiceListQuery {
+  year?: BusinessYear;
   page?: number;
   pageSize?: ListPageSize;
   searchMode?: ServiceSearchMode;

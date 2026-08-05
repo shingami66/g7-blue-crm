@@ -9,6 +9,7 @@ import type { InvoiceRow } from "./types";
 import { mapRowToInvoice } from "./mappers";
 import type { Invoice } from "@/types/invoice";
 import { buildIlikeOrFilter } from "@/lib/search/server";
+import { getBusinessYearBounds } from "@/lib/business-year";
 import {
   normalizeInvoiceListPageSize,
   normalizeInvoiceListSearch,
@@ -111,14 +112,18 @@ export async function getInvoicesByQuotationId(quotationId: string): Promise<Inv
   return (data as InvoiceRow[]).map(mapRowToInvoice);
 }
 
-export async function getInvoices(): Promise<Invoice[]> {
+export async function getInvoices(options: { year?: number } = {}): Promise<Invoice[]> {
   await requirePermission("invoices:read");
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("invoices")
     .select("*, customers(company,contact), services(service_number,service_title)")
-    .eq("is_deleted", false)
-    .order("invoice_number", { ascending: true });
+    .eq("is_deleted", false);
+  if (options.year) {
+    const bounds = getBusinessYearBounds(options.year);
+    query = query.not("issued_at", "is", null).gte("issued_at", `${bounds.start}T00:00:00.000Z`).lt("issued_at", `${bounds.end}T00:00:00.000Z`);
+  }
+  const { data, error } = await query.order("invoice_number", { ascending: true });
 
   if (error) {
     console.error("[getInvoices] Supabase error:", error.message);
@@ -163,6 +168,11 @@ export async function getInvoicesList(
     if (options.status && options.status !== "all") {
       countQuery = countQuery.eq("status", options.status);
       dataQuery = dataQuery.eq("status", options.status);
+    }
+    if (options.year) {
+      const yearBounds = getBusinessYearBounds(options.year);
+      countQuery = countQuery.not("issued_at", "is", null).gte("issued_at", `${yearBounds.start}T00:00:00.000Z`).lt("issued_at", `${yearBounds.end}T00:00:00.000Z`);
+      dataQuery = dataQuery.not("issued_at", "is", null).gte("issued_at", `${yearBounds.start}T00:00:00.000Z`).lt("issued_at", `${yearBounds.end}T00:00:00.000Z`);
     }
     if (searchFilter) {
       countQuery = countQuery.or(searchFilter, searchRelation ? { referencedTable: searchRelation } : undefined);

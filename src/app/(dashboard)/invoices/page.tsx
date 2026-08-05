@@ -16,6 +16,9 @@ import {
   type InvoiceListQuery,
 } from "@/lib/invoices/types";
 import InvoicesListClient from "./InvoicesListClient";
+import { parseBusinessYear } from "@/lib/business-year";
+import type { BusinessYear } from "@/lib/business-year";
+import { getBusinessYearPreference } from "@/lib/business-year-preference";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +36,7 @@ type InvoicesPageState =
   | { status: "error" };
 
 type InvoiceSearchParams = {
+  year?: string;
   page?: string;
   pageSize?: string;
   search?: string;
@@ -45,9 +49,13 @@ export default async function InvoicesPage({
 }: {
   searchParams: Promise<InvoiceSearchParams>;
 }) {
-  const locale = await getCurrentSessionEffectiveLocale();
+  const [locale, preferredYear, params] = await Promise.all([
+    getCurrentSessionEffectiveLocale(),
+    getBusinessYearPreference(),
+    searchParams,
+  ]);
   const dictionary = getInvoicesDictionary(locale);
-  const query = invoiceListQuery(await searchParams);
+  const query = invoiceListQuery(params, preferredYear);
   let pageState: InvoicesPageState;
 
   try {
@@ -113,10 +121,11 @@ export default async function InvoicesPage({
   );
 }
 
-function invoiceListQuery(params: InvoiceSearchParams): InvoiceListQuery {
+function invoiceListQuery(params: InvoiceSearchParams, preferredYear: BusinessYear): InvoiceListQuery {
   const searchMode = normalizeInvoiceSearchMode(params.searchMode);
   const search = searchMode ? normalizeInvoiceListSearch(params.search) : undefined;
   return {
+    year: parseBusinessYear(params.year ?? String(preferredYear)),
     page: normalizeInvoiceListPage(params.page),
     pageSize: normalizeInvoiceListPageSize(params.pageSize),
     search,

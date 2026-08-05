@@ -10,6 +10,7 @@ import {
   updateQuotationSchema,
   quotationItemInputSchema,
 } from "./schemas";
+import type { BusinessYear } from "@/lib/business-year";
 
 export type QuotationStatus = "draft" | "sent" | "approved" | "rejected" | "expired";
 
@@ -17,6 +18,7 @@ export const QUOTATION_LIST_PAGE_SIZE = 10;
 export type QuotationSearchMode = "quotationNumber" | "customer" | "service";
 
 export interface QuotationListQuery {
+  year?: BusinessYear;
   page?: number;
   pageSize?: ListPageSize;
   searchMode?: QuotationSearchMode;

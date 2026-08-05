@@ -1,5 +1,6 @@
 import type { Invoice, InvoiceType, JsonValue } from "@/types/invoice";
 import { sanitizeSearchTerm } from "@/lib/search/sanitize";
+import type { BusinessYear } from "@/lib/business-year";
 import {
   normalizeListPage,
   normalizeListPageSize,
@@ -10,6 +11,7 @@ export const INVOICE_LIST_PAGE_SIZE = 10;
 export type InvoiceSearchMode = "invoiceNumber" | "customer";
 
 export interface InvoiceListQuery {
+  year?: BusinessYear;
   page?: number;
   pageSize?: ListPageSize;
   searchMode?: InvoiceSearchMode;

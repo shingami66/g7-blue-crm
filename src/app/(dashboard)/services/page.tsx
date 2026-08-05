@@ -7,6 +7,9 @@ import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import ServicesClient from "./ServicesClient";
+import { parseBusinessYear } from "@/lib/business-year";
+import type { BusinessYear } from "@/lib/business-year";
+import { getBusinessYearPreference } from "@/lib/business-year-preference";
 import {
   normalizeServiceListPage,
   normalizeServiceListPageSize,
@@ -19,6 +22,7 @@ import {
 export const dynamic = "force-dynamic";
 
 type ServiceSearchParams = {
+  year?: string;
   page?: string;
   pageSize?: string;
   search?: string;
@@ -31,10 +35,14 @@ export default async function ServicesPage({
 }: {
   searchParams: Promise<ServiceSearchParams>;
 }) {
-  const locale = await getCurrentSessionEffectiveLocale();
+  const [locale, preferredYear, params] = await Promise.all([
+    getCurrentSessionEffectiveLocale(),
+    getBusinessYearPreference(),
+    searchParams,
+  ]);
   const dictionary = getServicesDictionary(locale);
   const sharedStates = getSharedUiStates(locale);
-  const query = serviceListQuery(await searchParams);
+  const query = serviceListQuery(params, preferredYear);
   let services;
   let canWrite;
   let result: Awaited<ReturnType<typeof getServicesList>>;
@@ -69,10 +77,11 @@ export default async function ServicesPage({
   return <ServicesClient services={services} pagination={result.pagination} query={query} loadError={result.error} canWrite={canWrite} dictionary={dictionary} />;
 }
 
-function serviceListQuery(params: ServiceSearchParams): ServiceListQuery {
+function serviceListQuery(params: ServiceSearchParams, preferredYear: BusinessYear): ServiceListQuery {
   const searchMode = normalizeServiceSearchMode(params.searchMode);
   const search = searchMode ? normalizeServiceListSearch(params.search) : undefined;
   return {
+    year: parseBusinessYear(params.year ?? String(preferredYear)),
     page: normalizeServiceListPage(params.page),
     pageSize: normalizeServiceListPageSize(params.pageSize),
     search,

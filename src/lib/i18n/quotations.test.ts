@@ -68,7 +68,7 @@ test("2. List headings, filters, result count, and row actions localize", () => 
   assert.match(read(LIST_CLIENT), /dictionary\.list\.title/);
   assert.match(read(LIST_CLIENT), /ModuleSearchControl/);
   assert.match(read(LIST_CLIENT), /searchModes/);
-  assert.match(read(LIST_CLIENT), /resetFilters/);
+  assert.doesNotMatch(read(LIST_CLIENT), /resetFilters|resetLabel|onReset/);
   assert.match(read(LIST_CLIENT), /PaginationFooter/);
 });
 

@@ -14,19 +14,25 @@ import {
   type QuotationsListResult,
 } from "./types";
 import { buildIlikeOrFilter } from "@/lib/search/server";
+import { getBusinessYearBounds } from "@/lib/business-year";
 
 const QUOTATION_SELECT = "*, customers(company, contact), services(service_number, service_title, status, event_name)";
 const QUOTATION_DETAIL_SELECT = `${QUOTATION_SELECT}, quotation_items(*)`;
 
-export async function getQuotations(): Promise<QuotationListItem[]> {
+export async function getQuotations(options: { year?: number } = {}): Promise<QuotationListItem[]> {
   await requirePermission("quotations:read");
 
   try {
     const supabase = createAdminClient();
-    const { data, error } = await supabase
+    let query = supabase
       .from("quotations")
       .select(QUOTATION_SELECT)
-      .eq("is_deleted", false)
+      .eq("is_deleted", false);
+    if (options.year) {
+      const bounds = getBusinessYearBounds(options.year);
+      query = query.gte("date", bounds.start).lt("date", bounds.end);
+    }
+    const { data, error } = await query
       .order("quotation_number", { ascending: true })
       .order("created_at", { ascending: true })
       .order("id", { ascending: true });
@@ -110,6 +116,11 @@ export async function getQuotationsList(
     if (bounds) {
       countQuery = countQuery.gte("date", bounds.start).lt("date", bounds.end);
       dataQuery = dataQuery.gte("date", bounds.start).lt("date", bounds.end);
+    }
+    if (options.year) {
+      const yearBounds = getBusinessYearBounds(options.year);
+      countQuery = countQuery.gte("date", yearBounds.start).lt("date", yearBounds.end);
+      dataQuery = dataQuery.gte("date", yearBounds.start).lt("date", yearBounds.end);
     }
     if (searchFilter) {
       countQuery = countQuery.or(searchFilter, searchRelation ? { referencedTable: searchRelation } : undefined);

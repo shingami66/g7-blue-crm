@@ -8,6 +8,8 @@ import Topbar from "@/components/layout/Topbar";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { getDirection } from "@/lib/i18n";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import { getBusinessYearOptions } from "@/lib/business-year-options";
+import { getBusinessYearPreference } from "@/lib/business-year-preference";
 
 export default async function DashboardLayout({
   children,
@@ -20,9 +22,11 @@ export default async function DashboardLayout({
     redirect("/unauthorized");
   }
 
-  const [isAdmin, locale] = await Promise.all([
+  const [isAdmin, locale, businessYearOptions, businessYearPreference] = await Promise.all([
     checkPermission("users:manage"),
     getCurrentSessionEffectiveLocale(),
+    getBusinessYearOptions(),
+    getBusinessYearPreference(),
   ]);
   const shellDirection = getDirection(locale);
 
@@ -41,7 +45,7 @@ export default async function DashboardLayout({
           }`}
         >
           <div className="dashboard-topbar">
-            <Topbar />
+            <Topbar businessYearOptions={businessYearOptions} businessYearPreference={businessYearPreference} />
           </div>
           <main className="dashboard-main mx-auto w-full min-w-0 max-w-[1440px] flex-1 p-4 md:p-6">
             {children}

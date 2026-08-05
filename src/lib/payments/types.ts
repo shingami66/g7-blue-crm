@@ -21,6 +21,41 @@ export type PaymentMethod = "bank_transfer" | "cash" | "cheque" | "online";
 
 export type PaymentStatus = "pending" | "confirmed" | "failed" | "refunded";
 
+export interface PaymentsListQuery {
+  year?: number;
+  page?: number;
+  pageSize?: ListPageSize;
+  search?: string;
+  status?: PaymentStatus;
+}
+
+export interface PaymentsListPagination {
+  page: number;
+  pageSize: ListPageSize;
+  total: number;
+  totalPages: number;
+}
+
+export function normalizePaymentsListPage(value: unknown): number {
+  return normalizeListPage(value);
+}
+
+export function normalizePaymentsListPageSize(value: unknown): ListPageSize {
+  return normalizeListPageSize(value);
+}
+
+export function normalizePaymentsListSearch(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const search = sanitizeSearchTerm(value);
+  return search || undefined;
+}
+
+export function normalizePaymentStatus(value: unknown): PaymentStatus | undefined {
+  return value === "pending" || value === "confirmed" || value === "failed" || value === "refunded"
+    ? value
+    : undefined;
+}
+
 export interface PaymentListRow {
   id: string;
   payment_number: string;
@@ -66,5 +101,12 @@ export interface PaymentListItem {
 
 export interface PaymentsListResult {
   payments: PaymentListItem[];
+  pagination: PaymentsListPagination;
   error?: "payments_load_failed";
 }
+import { sanitizeSearchTerm } from "@/lib/search/sanitize";
+import {
+  normalizeListPage,
+  normalizeListPageSize,
+  type ListPageSize,
+} from "@/lib/pagination";

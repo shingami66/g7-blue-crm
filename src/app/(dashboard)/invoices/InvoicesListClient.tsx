@@ -27,6 +27,7 @@ import type { EligibleInvoiceService, InvoiceChooserLoadStatus } from "@/lib/inv
 import CreateInvoiceChooser from "./CreateInvoiceChooser";
 import { loadEligibleInvoiceServicesAction } from "./actions";
 import { sanitizeSearchTerm } from "@/lib/search/sanitize";
+import { cleanBusinessYearParam, getCurrentBusinessYear } from "@/lib/business-year";
 
 const invoiceStatusBadgeVariant = {
   draft: "draft",
@@ -52,6 +53,8 @@ const formatCopy = (template: string, values: Record<string, string | number>) =
 function invoiceListHref(query: InvoiceListQuery, page = 1) {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
+  const year = cleanBusinessYearParam(query.year ?? getCurrentBusinessYear());
+  if (year) params.set("year", year);
   if (query.pageSize && query.pageSize !== LIST_PAGE_SIZES[0]) params.set("pageSize", String(query.pageSize));
   const search = sanitizeSearchTerm(query.search ?? "");
   if (query.searchMode && search) {
@@ -139,7 +142,6 @@ export default function InvoicesListClient({
               modes={searchModes}
               query={query.search ?? ""}
               modeLabel={dictionary.list.filters.searchModeLabel}
-              resetLabel={dictionary.list.filters.resetFilters}
               submitLabel={common.labels.search}
               pendingLabel={common.states.searching}
               clearLabel={common.actions.clear}
@@ -148,7 +150,7 @@ export default function InvoicesListClient({
               selectModeLabel={common.labels.select}
               disabledPlaceholder={common.labels.searchTypeFirst}
               onSubmit={(mode, search) => updateQuery({ searchMode: mode as InvoiceSearchMode, search: search || undefined }, "search")}
-              onReset={() => navigate("/invoices")}
+              onModeChange={(mode) => { if (!mode) updateQuery({ searchMode: undefined, search: undefined }); }}
             />
             <div className="relative shrink-0">
               <select value={query.status ?? "all"} disabled={isPending} onChange={(event) => updateQuery({ status: event.target.value === "all" ? undefined : event.target.value })} aria-label={dictionary.list.filters.allStatuses} className="appearance-none rounded-lg border border-outline-variant bg-surface py-2 ps-3 pe-8 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60">

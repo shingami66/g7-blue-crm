@@ -16,6 +16,7 @@ import { mapRowToService } from "./mappers";
 import type { Service } from "@/types/service";
 import type { ServiceRowWithCustomer } from "./types";
 import { buildIlikeOrFilter } from "@/lib/search/server";
+import { getServiceBusinessYearFilter } from "@/lib/business-year";
 import {
   normalizeServiceListPageSize,
   normalizeServiceListSearch,
@@ -108,14 +109,18 @@ export async function getEligibleServicesForInvoiceChooser(): Promise<
 
 async function readActiveServices(
   caller: string,
+  year?: number,
 ): Promise<ServicesReadResult> {
   try {
     const supabase = createAdminClient();
-    const { data: serviceRows, error } = await supabase
+    let query = supabase
       .from("services")
       .select(SERVICE_SELECT)
-      .is("deleted_at", null)
-      .order("service_number", { ascending: true });
+      .is("deleted_at", null);
+    if (year) {
+      query = query.or(getServiceBusinessYearFilter(year));
+    }
+    const { data: serviceRows, error } = await query.order("service_number", { ascending: true });
 
     if (error) {
       console.error(`[${caller}] Supabase error:`, error.message);
@@ -140,9 +145,9 @@ async function readActiveServices(
   }
 }
 
-export async function getServices(): Promise<Service[]> {
+export async function getServices(options: { year?: number } = {}): Promise<Service[]> {
   await requirePermission("services:read");
-  const result = await readActiveServices("getServices");
+  const result = await readActiveServices("getServices", options.year);
   return result.services;
 }
 
@@ -184,7 +189,18 @@ export async function getServicesList(
       countQuery = countQuery.eq("status", options.status);
       dataQuery = dataQuery.eq("status", options.status);
     }
-    if (searchFilter) {
+    if (options.year && searchFilter && !searchRelation) {
+      const combinedFilter = `and(or(${getServiceBusinessYearFilter(options.year)}),or(${searchFilter}))`;
+      countQuery = countQuery.or(combinedFilter);
+      dataQuery = dataQuery.or(combinedFilter);
+    } else {
+      if (options.year) {
+        const yearFilter = getServiceBusinessYearFilter(options.year);
+        countQuery = countQuery.or(yearFilter);
+        dataQuery = dataQuery.or(yearFilter);
+      }
+    }
+    if (searchFilter && (!options.year || Boolean(searchRelation))) {
       countQuery = countQuery.or(searchFilter, searchRelation ? { referencedTable: searchRelation } : undefined);
       dataQuery = dataQuery.or(searchFilter, searchRelation ? { referencedTable: searchRelation } : undefined);
     }

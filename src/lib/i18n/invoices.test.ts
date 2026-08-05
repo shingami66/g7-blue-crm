@@ -85,7 +85,7 @@ test("2. List headings, filters, result count, and row actions localize", () => 
   assert.match(read(LIST_CLIENT), /PaginationFooter/);
   assert.match(read(LIST_CLIENT), /ModuleSearchControl/);
   assert.match(read(LIST_CLIENT), /searchModeLabel/);
-  assert.match(read(LIST_CLIENT), /resetFilters/);
+  assert.doesNotMatch(read(LIST_CLIENT), /resetFilters|resetLabel|onReset/);
 });
 
 test("3-6. Type/status labels; codes stable; no new types; filter set preserved", () => {

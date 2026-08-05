@@ -59,7 +59,7 @@ test("2. List headings, KPIs, empty state, and columns localize", () => {
   assert.equal(ar.states.paymentDataUnavailable, "بيانات المدفوعات غير متاحة");
   assert.match(read(LIST_CLIENT), /dictionary\.title/);
   assert.match(read(LIST_CLIENT), /KpiCard/);
-  assert.match(read(LIST_CLIENT), /itemsPerPage = 10/);
+  assert.match(read(LIST_CLIENT), /LIST_PAGE_SIZES/);
   assert.match(read(LIST_CLIENT), /PaginationFooter/);
 });
 
@@ -119,7 +119,7 @@ test("14-16. Sort/pagination/KPI contracts match baseline", () => {
   assert.match(read(QUERIES), /payment_number[\s\S]*ascending:\s*true|order\("payment_number"/);
   assert.match(read(QUERIES), /order\("date"/);
   assert.match(read(QUERIES), /order\("created_at"/);
-  assert.match(read(LIST_CLIENT), /itemsPerPage = 10/);
+  assert.match(read(LIST_CLIENT), /LIST_PAGE_SIZES/);
   assert.match(read(LIST_CLIENT), /status === "confirmed"/);
   assert.match(read(LIST_CLIENT), /status === "pending"/);
   // KPI math remains client presentation over full dataset

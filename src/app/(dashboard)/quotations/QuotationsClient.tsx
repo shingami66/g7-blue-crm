@@ -34,6 +34,7 @@ import { getCommonDictionary, getSharedUiStates } from "@/lib/i18n/dictionaries/
 import { LIST_PAGE_SIZES, type ListPageSize } from "@/lib/pagination";
 import EligibleServiceSelector from "./EligibleServiceSelector";
 import { sanitizeSearchTerm } from "@/lib/search/sanitize";
+import { cleanBusinessYearParam, getCurrentBusinessYear } from "@/lib/business-year";
 
 interface QuotationsClientProps {
   quotations: QuotationListItem[];
@@ -55,6 +56,8 @@ function formatCopy(template: string, values: Record<string, string | number>) {
 function quotationListHref(query: QuotationListQuery, page = 1) {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
+  const year = cleanBusinessYearParam(query.year ?? getCurrentBusinessYear());
+  if (year) params.set("year", year);
   if (query.pageSize && query.pageSize !== LIST_PAGE_SIZES[0]) params.set("pageSize", String(query.pageSize));
   const search = sanitizeSearchTerm(query.search ?? "");
   if (query.searchMode && search) {
@@ -112,10 +115,6 @@ export default function QuotationsClient({
     navigate(quotationListHref({ ...query, ...next }, 1), "replace", kind);
   }
 
-  function resetFilters() {
-    navigate("/quotations");
-  }
-
   async function handleDelete(event: React.MouseEvent, id: string) {
     event.stopPropagation();
     setError(null);
@@ -155,7 +154,6 @@ export default function QuotationsClient({
             modes={searchModes}
             query={query.search ?? ""}
             modeLabel={dictionary.list.searchModeLabel}
-            resetLabel={dictionary.list.resetFilters}
             submitLabel={common.labels.search}
             pendingLabel={common.states.searching}
             clearLabel={common.actions.clear}
@@ -164,7 +162,7 @@ export default function QuotationsClient({
             selectModeLabel={common.labels.select}
             disabledPlaceholder={common.labels.searchTypeFirst}
             onSubmit={(mode, search) => updateQuery({ searchMode: mode as QuotationSearchMode, search: search || undefined }, "search")}
-            onReset={resetFilters}
+            onModeChange={(mode) => { if (!mode) updateQuery({ searchMode: undefined, search: undefined }); }}
           />
           <div className="relative shrink-0">
             <select

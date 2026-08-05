@@ -12,6 +12,9 @@ import {
   type QuotationsDictionary,
 } from "@/lib/i18n/dictionaries/quotations";
 import QuotationsClient from "./QuotationsClient";
+import { parseBusinessYear } from "@/lib/business-year";
+import type { BusinessYear } from "@/lib/business-year";
+import { getBusinessYearPreference } from "@/lib/business-year-preference";
 import {
   normalizeQuotationListPage,
   normalizeQuotationListPageSize,
@@ -41,6 +44,7 @@ type QuotationsPageState =
   | { status: "error" };
 
 type QuotationSearchParams = {
+  year?: string;
   page?: string;
   pageSize?: string;
   search?: string;
@@ -54,10 +58,13 @@ export default async function QuotationsPage({
 }: {
   searchParams: Promise<QuotationSearchParams>;
 }) {
-  const locale = await getCurrentSessionEffectiveLocale();
+  const [locale, preferredYear, params] = await Promise.all([
+    getCurrentSessionEffectiveLocale(),
+    getBusinessYearPreference(),
+    searchParams,
+  ]);
   const dictionary = getQuotationsDictionary(locale);
-  const params = await searchParams;
-  const query = quotationListQuery(params);
+  const query = quotationListQuery(params, preferredYear);
   let pageState: QuotationsPageState;
 
   try {
@@ -133,10 +140,11 @@ export default async function QuotationsPage({
   );
 }
 
-function quotationListQuery(params: QuotationSearchParams): QuotationListQuery {
+function quotationListQuery(params: QuotationSearchParams, preferredYear: BusinessYear): QuotationListQuery {
   const searchMode = normalizeQuotationSearchMode(params.searchMode);
   const search = searchMode ? normalizeQuotationListSearch(params.search) : undefined;
   return {
+    year: parseBusinessYear(params.year ?? String(preferredYear)),
     page: normalizeQuotationListPage(params.page),
     pageSize: normalizeQuotationListPageSize(params.pageSize),
     search,

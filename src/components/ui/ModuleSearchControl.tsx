@@ -18,7 +18,7 @@ interface ModuleSearchControlProps {
   modeLabel: string;
   selectModeLabel?: string;
   disabledPlaceholder?: string;
-  resetLabel: string;
+  resetLabel?: string;
   submitLabel?: string;
   pendingLabel?: string;
   clearLabel?: string;
@@ -28,7 +28,7 @@ interface ModuleSearchControlProps {
   onSubmit?: (mode: string, query: string) => void;
   onModeChange?: (mode: string) => void;
   onQueryChange?: (query: string) => void;
-  onReset: () => void;
+  onReset?: () => void;
   className?: string;
 }
 
@@ -138,21 +138,23 @@ export default function ModuleSearchControl({
         <Search size={14} aria-hidden="true" />
         <span className={isSearchPending ? "" : "hidden sm:inline"}>{actionLabel}</span>
       </button>
-      <button
-        type="button"
-        onClick={() => {
-          setDraftMode("");
-          setDraftQuery("");
-          onReset();
-        }}
-        disabled={isPending}
-        aria-label={resetLabel}
-        title={resetLabel}
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] font-semibold text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
-      >
-        <RotateCcw size={14} aria-hidden="true" />
-        <span className="hidden sm:inline">{resetLabel}</span>
-      </button>
+      {resetLabel && onReset ? (
+        <button
+          type="button"
+          onClick={() => {
+            setDraftMode("");
+            setDraftQuery("");
+            onReset();
+          }}
+          disabled={isPending}
+          aria-label={resetLabel}
+          title={resetLabel}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] font-semibold text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
+        >
+          <RotateCcw size={14} aria-hidden="true" />
+          <span className="hidden sm:inline">{resetLabel}</span>
+        </button>
+      ) : null}
     </form>
   );
 }
