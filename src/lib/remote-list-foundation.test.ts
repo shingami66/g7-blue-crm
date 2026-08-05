@@ -144,27 +144,25 @@ test("bounded pagination preserves semantic labels while disabling duplicate nav
   assert.match(pagination, /disabled=\{isPending \|\| currentPage/);
 });
 
-test("remote lists use the shared reset wording while input clear remains separate", () => {
-  const expected = {
-    en: "Reset filters",
-    ar: "إعادة ضبط الفلاتر",
-  };
-  const dictionaries = [
-    "src/lib/i18n/dictionaries/services.ts",
-    "src/lib/i18n/dictionaries/invoices.ts",
-    "src/lib/i18n/dictionaries/quotations.ts",
-    "src/lib/i18n/dictionaries/suppliers.ts",
-  ];
-
-  for (const relativePath of dictionaries) {
-    const source = read(relativePath);
-    assert.match(source, new RegExp(`resetFilters: "${expected.en}"`));
-    assert.match(source, new RegExp(`resetFilters: "${expected.ar}"`));
-  }
-
+test("remote list pages omit a duplicate reset action while input clear remains separate", () => {
   const control = read("src/components/ui/ModuleSearchControl.tsx");
   assert.match(control, /clearLabel=\{clearLabel\}/);
   assert.match(control, /aria-label=\{resetLabel\}/);
+  for (const relativePath of LIST_CLIENTS) {
+    assert.doesNotMatch(read(relativePath), /resetLabel|onReset/);
+  }
+});
+
+test("Customers opt into direct general search without changing shared module search contracts", () => {
+  const customers = read("src/app/(dashboard)/customers/CustomersClient.tsx");
+  assert.match(customers, /<form[\s\S]*type="submit"/);
+  assert.match(customers, /draftSearch/);
+  assert.doesNotMatch(customers, /ModuleSearchControl|searchMode|Search Mode/);
+  assert.doesNotMatch(customers, /onChange=\{\(value\) => navigate/);
+
+  for (const relativePath of LIST_CLIENTS) {
+    assert.match(read(relativePath), /ModuleSearchControl/);
+  }
 });
 
 test("quotation date filtering has a localized empty state instead of a cryptic month placeholder", () => {
@@ -182,7 +180,12 @@ test("quotation date filtering has a localized empty state instead of a cryptic 
 test("remote-list surfaces keep toolbar, rows, and URL-backed pagination together", () => {
   for (const relativePath of LIST_CLIENTS) {
     const source = read(relativePath);
-    assert.match(source, /relative flex [^\"]*flex-1/);
+    if (relativePath.endsWith("SuppliersClient.tsx")) {
+      assert.match(source, /relative flex min-w-0 flex-col/);
+      assert.doesNotMatch(source, /h-full|min-h-0|flex-1/);
+    } else {
+      assert.match(source, /relative flex [^\"]*flex-1/);
+    }
     assert.match(source, /rounded-xl border border-surface-variant/);
     assert.match(source, /<FilterBar>|border-b border-surface-variant/);
     assert.match(source, /paginationMode="bounded"/);

@@ -74,7 +74,7 @@ test("quotation, invoice, and Service list changes reset pagination and preserve
     const source = read(relativePath);
     assert.match(source, /navigate\([^\n]+,?\s*1\)/);
     assert.match(source, /\.\.\.query/);
-    assert.match(source, /onReset/);
+    assert.doesNotMatch(source, /onReset|resetLabel/);
     assert.doesNotMatch(source, /matchesLocalSearch/);
   }
 });
@@ -103,7 +103,7 @@ test("Supplier directory keeps phone, location fallback, mobile cards, and no Ra
   assert.match(queries, /phone/);
   assert.match(mapper, /phone:/);
   assert.match(client, /supplier\.phone/);
-  assert.match(client, /supplier\.city \|\| supplier\.country/);
+  assert.match(client, /locationFields|dictionary\.detail\.city/);
   assert.match(client, /lg:hidden/);
   assert.doesNotMatch(client, /columns\.rating|Rating/);
 });
@@ -157,7 +157,8 @@ test("record navigation is integrated on customer, Service, quotation, invoice, 
 test("Dashboard layout marks the requested operational hierarchy and avoids equal-height stretching", () => {
   const page = read("src/app/(dashboard)/dashboard/page.tsx");
 
-  assert.match(page, /data-dashboard-section="priority-work"/);
+  assert.match(page, /data-dashboard-content-frame="true" className="mx-auto w-full max-w-\[1240px\]"/);
+  assert.doesNotMatch(page, /data-dashboard-section="priority-work"|dashboard-priority-work|Priority Work/);
   assert.match(page, /data-dashboard-section="workflow"/);
   assert.match(page, /data-dashboard-section="quotations"/);
   assert.match(page, /items-start/);
