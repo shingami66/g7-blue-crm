@@ -7,6 +7,48 @@
 
 export type { Customer, CustomerStatus, CustomerType } from "@/types/customer";
 
+import { sanitizeSearchTerm } from "@/lib/search/sanitize";
+import { normalizeListPage, normalizeListPageSize, type ListPageSize } from "@/lib/pagination";
+
+export interface CustomerListQuery {
+  page?: number;
+  pageSize?: ListPageSize;
+  search?: string;
+  status?: "active" | "inactive" | "lead";
+  city?: string;
+}
+
+export interface CustomerListPagination {
+  page: number;
+  pageSize: ListPageSize;
+  total: number;
+  totalPages: number;
+}
+
+export interface CustomersListResult {
+  customers: import("@/types/customer").Customer[];
+  pagination: CustomerListPagination;
+  error?: "customers_load_failed";
+}
+
+export function normalizeCustomerListPage(value: unknown): number {
+  return normalizeListPage(value);
+}
+
+export function normalizeCustomerListPageSize(value: unknown): ListPageSize {
+  return normalizeListPageSize(value);
+}
+
+export function normalizeCustomerListSearch(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const search = sanitizeSearchTerm(value);
+  return search || undefined;
+}
+
+export function normalizeCustomerStatus(value: unknown): CustomerListQuery["status"] {
+  return value === "active" || value === "inactive" || value === "lead" ? value : undefined;
+}
+
 /** Raw row shape returned by Supabase for the `customers` table. */
 export interface CustomerRow {
   id: string;

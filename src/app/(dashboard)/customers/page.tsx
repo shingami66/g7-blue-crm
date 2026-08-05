@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
-import { getCustomers } from "@/lib/customers/queries";
+import { getCustomerCities, getCustomersList } from "@/lib/customers/queries";
 import { checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
@@ -8,22 +8,36 @@ import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 import { getCustomersDictionary } from "@/lib/i18n/dictionaries/customers";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import CustomersClient from "./CustomersClient";
+import {
+  normalizeCustomerListPage,
+  normalizeCustomerListPageSize,
+  normalizeCustomerListSearch,
+  normalizeCustomerStatus,
+  type CustomerListQuery,
+} from "@/lib/customers/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function CustomersPage() {
+type CustomerSearchParams = { page?: string; pageSize?: string; search?: string; status?: string; city?: string };
+
+export default async function CustomersPage({ searchParams }: { searchParams: Promise<CustomerSearchParams> }) {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getCustomersDictionary(locale);
   const sharedStates = getSharedUiStates(locale);
-  let customers: Awaited<ReturnType<typeof getCustomers>>;
+  const query = customerListQuery(await searchParams);
+  let result: Awaited<ReturnType<typeof getCustomersList>>;
+  let cities: string[] = [];
   let canWrite = false;
   let canExport = false;
   let generatedBy = dictionary.list.report.chrome.systemGenerated;
 
   try {
-    customers = await getCustomers();
-    canWrite = await checkPermission("customers:write");
-    canExport = await checkPermission("customers:export");
+    [result, cities, canWrite, canExport] = await Promise.all([
+      getCustomersList(query),
+      getCustomerCities(),
+      checkPermission("customers:write"),
+      checkPermission("customers:export"),
+    ]);
     const clerkUser = await currentUser();
     if (clerkUser) {
       const email = clerkUser.emailAddresses[0]?.emailAddress;
@@ -62,11 +76,25 @@ export default async function CustomersPage() {
 
   return (
     <CustomersClient
-      customers={customers}
+      customers={result.customers}
+      loadError={result.error}
+      pagination={result.pagination}
+      query={query}
+      cities={cities}
       canWrite={canWrite}
       canExport={canExport}
       generatedBy={generatedBy}
       dictionary={dictionary}
     />
   );
+}
+
+function customerListQuery(params: CustomerSearchParams): CustomerListQuery {
+  return {
+    page: normalizeCustomerListPage(params.page),
+    pageSize: normalizeCustomerListPageSize(params.pageSize),
+    search: normalizeCustomerListSearch(params.search),
+    status: normalizeCustomerStatus(params.status),
+    city: params.city?.trim().slice(0, 80) || undefined,
+  };
 }

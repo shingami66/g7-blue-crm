@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/ui/PageHeader";
 import FilterBar from "@/components/ui/FilterBar";
@@ -8,8 +8,8 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import Button from "@/components/ui/Button";
 import PendingLink from "@/components/ui/PendingLink";
-import ModuleSearchInput from "@/components/ui/ModuleSearchInput";
-import { Eye, Plus, Filter, Download, X } from "lucide-react";
+import { ListInlineError } from "@/components/ui/ListPendingState";
+import { Eye, Plus, Filter, Download, Search, X } from "lucide-react";
 import { createCustomer } from "@/lib/customers/actions";
 import {
   formatCustomersSummaryCopy,
@@ -19,9 +19,13 @@ import {
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import type { Customer } from "@/types/customer";
-import { matchesLocalSearch } from "@/lib/search/local";
 import { CustomerCoreFields, CustomerOfficialBillingFields } from "./CustomerFormFields";
 import { generateExcelReport } from "@/lib/reports/exportExcel";
+import { useListNavigation } from "@/components/ui/useListNavigation";
+import { LIST_PAGE_SIZES, type ListPageSize } from "@/lib/pagination";
+import { normalizeCustomerListSearch, type CustomerListPagination, type CustomerListQuery } from "@/lib/customers/types";
+import { getCommonDictionary, getSharedUiStates } from "@/lib/i18n/dictionaries/common";
+import { sanitizeSearchTerm } from "@/lib/search/sanitize";
 
 const TABLE_HEADER_BASE =
   "px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase";
@@ -38,12 +42,20 @@ const COLUMN_LAYOUT = {
 
 export default function CustomersClient({
   customers,
+  pagination,
+  query,
+  cities,
+  loadError,
   canWrite,
   canExport,
   generatedBy,
   dictionary,
 }: {
   customers: Customer[];
+  pagination: CustomerListPagination;
+  query: CustomerListQuery;
+  cities: string[];
+  loadError?: "customers_load_failed";
   canWrite: boolean;
   canExport?: boolean;
   generatedBy?: string;
@@ -53,40 +65,75 @@ export default function CustomersClient({
   const [showAddModal, setShowAddModal] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [cityFilter, setCityFilter] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const submittedSearch = query.search ?? "";
+  const [draftSearch, setDraftSearch] = useState(submittedSearch);
+  const lastSubmittedSearch = useRef(submittedSearch);
+  const searchComposing = useRef(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const stateKey = `${submittedSearch}|${query.status ?? ""}|${query.city ?? ""}|${pagination.page}|${pagination.pageSize}`;
+  const { isPending: isListPending, isSearchPending, navigate } = useListNavigation(stateKey);
+  const common = getCommonDictionary(dictionary.locale);
+  const sharedStates = getSharedUiStates(dictionary.locale);
+  const statusFilter = query.status ?? "all";
+  const cityFilter = query.city ?? "all";
+  const visibleStart = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1;
+  const visibleEnd = Math.min(visibleStart + customers.length - 1, pagination.total);
+  const hasFilters = Boolean(query.search || query.status || query.city);
+  const returnTo = customerListHref({}, pagination.page);
 
-  const cities = Array.from(new Set(customers.map((customer) => customer.city))).sort();
+  useEffect(() => {
+    if (lastSubmittedSearch.current === submittedSearch) return;
+    lastSubmittedSearch.current = submittedSearch;
+    setDraftSearch(submittedSearch);
+  }, [submittedSearch]);
 
-  const filteredCustomers = customers.filter((customer) => {
-    if (statusFilter !== "all" && customer.status !== statusFilter) return false;
-    if (cityFilter !== "all" && customer.city !== cityFilter) return false;
-    if (!matchesLocalSearch(searchTerm, [customer.customerNumber, customer.company, customer.contact, customer.phone, customer.email])) return false;
-    return true;
-  });
+  function customerListHref(next: Partial<CustomerListQuery>, page = 1) {
+    const params = new URLSearchParams();
+    if (page > 1) params.set("page", String(page));
+    const pageSize = next.pageSize ?? query.pageSize ?? LIST_PAGE_SIZES[0];
+    if (pageSize !== LIST_PAGE_SIZES[0]) params.set("pageSize", String(pageSize));
+    const search = normalizeCustomerListSearch(next.search ?? query.search);
+    if (search) params.set("search", search);
+    const status = next.status !== undefined ? next.status : query.status;
+    if (status && String(status) !== "all") params.set("status", status);
+    const city = next.city !== undefined ? next.city : query.city;
+    if (city && city !== "all") params.set("city", city);
+    const encoded = params.toString();
+    return encoded ? `/customers?${encoded}` : "/customers";
+  }
 
-  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / itemsPerPage));
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, filteredCustomers.length);
-  const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
+  function submitSearch(rawSearch = draftSearch) {
+    const search = sanitizeSearchTerm(rawSearch);
+    lastSubmittedSearch.current = search;
+    setDraftSearch(search);
+    navigate(customerListHref({ search }, 1), "replace", "search");
+  }
+
+  function clearSearch() {
+    lastSubmittedSearch.current = "";
+    setDraftSearch("");
+    if (!submittedSearch) {
+      searchInputRef.current?.focus();
+      return;
+    }
+    navigate(customerListHref({ search: "" }, 1), "replace", "search");
+    searchInputRef.current?.focus();
+  }
 
   async function exportCustomers() {
-    if (!canExport || filteredCustomers.length === 0) return;
+    if (!canExport || customers.length === 0) return;
 
     const date = new Date();
     const dateStr = date.toISOString().split("T")[0];
 
     const activeFilters = [];
-    if (statusFilter !== "all") {
+    if (query.status) {
       activeFilters.push(
-        `${dictionary.list.report.statusFilter}: ${getCustomerStatusLabel(dictionary.locale, statusFilter as Customer["status"])}`
+        `${dictionary.list.report.statusFilter}: ${getCustomerStatusLabel(dictionary.locale, query.status)}`
       );
     }
-    if (cityFilter !== "all") {
-      activeFilters.push(`${dictionary.list.report.cityFilter}: ${cityFilter}`);
+    if (query.city) {
+      activeFilters.push(`${dictionary.list.report.cityFilter}: ${query.city}`);
     }
 
     await generateExcelReport<Customer>({
@@ -100,7 +147,7 @@ export default function CustomersClient({
         generatedBy:
           generatedBy || dictionary.list.report.chrome.systemGenerated,
         filters: activeFilters,
-        totalRecords: filteredCustomers.length,
+        totalRecords: customers.length,
         sheetName: dictionary.list.report.chrome.defaultSheetName,
         fileName: `g7-blue-customers-${dateStr}.xlsx`,
       },
@@ -116,7 +163,7 @@ export default function CustomersClient({
         { header: dictionary.list.report.columns.quotationsCount, key: "quotationsCount", width: 15, format: "number" },
         { header: dictionary.list.report.columns.totalQuotedAmount, key: "totalQuotedAmount", width: 25, format: "currency" },
       ],
-      rows: filteredCustomers,
+      rows: customers,
     });
   }
 
@@ -135,13 +182,13 @@ export default function CustomersClient({
   }
 
   function formatCustomersSummary() {
-    if (filteredCustomers.length === 0) {
+    if (pagination.total === 0) {
       return dictionary.list.customersSummaryZero;
     }
 
     return formatCustomersSummaryCopy(dictionary.list.customersSummary, {
-      range: isolateBidiText(`${startIndex + 1}-${endIndex}`),
-      total: isolateBidiText(String(filteredCustomers.length)),
+      range: isolateBidiText(`${visibleStart}-${visibleEnd}`),
+      total: isolateBidiText(String(pagination.total)),
     });
   }
 
@@ -151,7 +198,7 @@ export default function CustomersClient({
         {canExport && (
           <Button
             onClick={exportCustomers}
-            disabled={customers.length === 0}
+            disabled={customers.length === 0 || isListPending}
             variant="outline"
           >
             <Download size={18} />
@@ -174,23 +221,75 @@ export default function CustomersClient({
       <div className="flex flex-1 min-h-0">
         <div className="flex-1 flex flex-col">
           <FilterBar>
-            <ModuleSearchInput
-              value={searchTerm}
-              onChange={(value) => {
-                setSearchTerm(value);
-                setCurrentPage(1);
+            <form
+              className="flex w-full max-w-sm min-w-0 flex-1 items-center gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!searchComposing.current) submitSearch();
               }}
-              placeholder={dictionary.list.searchPlaceholder}
-              ariaLabel={dictionary.list.searchPlaceholder}
-              className="w-full max-w-sm sm:min-w-[240px] sm:flex-1"
-            />
+              aria-busy={isSearchPending || undefined}
+            >
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  size={16}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
+                />
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  value={draftSearch}
+                  onChange={(event) => setDraftSearch(event.target.value)}
+                  onCompositionStart={() => {
+                    searchComposing.current = true;
+                  }}
+                  onCompositionEnd={() => {
+                    searchComposing.current = false;
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape" && draftSearch.length > 0) {
+                      event.preventDefault();
+                      clearSearch();
+                    }
+                    if (event.key === "Enter" && (searchComposing.current || event.nativeEvent.isComposing)) {
+                      event.preventDefault();
+                    }
+                  }}
+                  placeholder={dictionary.list.searchPlaceholder}
+                  aria-label={dictionary.list.searchPlaceholder}
+                  disabled={isListPending}
+                  className="w-full min-w-0 rounded-lg border border-outline-variant bg-surface py-2 ps-9 pe-10 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+                />
+                {draftSearch.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={clearSearch}
+                    disabled={isListPending}
+                    aria-label={`${common.actions.clear}: ${dictionary.list.searchPlaceholder}`}
+                    className="absolute end-2 top-1/2 inline-flex -translate-y-1/2 rounded p-1 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  >
+                    <X size={15} aria-hidden="true" />
+                  </button>
+                ) : null}
+              </div>
+              <button
+                type="submit"
+                disabled={isListPending}
+                aria-busy={isSearchPending || undefined}
+                aria-label={isSearchPending ? common.states.searching : common.labels.search}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[13px] font-semibold text-on-primary transition-colors hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Search size={14} aria-hidden="true" />
+                <span className={isSearchPending ? "" : "hidden sm:inline"}>
+                  {isSearchPending ? common.states.searching : common.labels.search}
+                </span>
+              </button>
+            </form>
             <div className="relative">
               <select
                 value={statusFilter}
-                onChange={(event) => {
-                  setStatusFilter(event.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(event) => navigate(customerListHref({ status: event.target.value as CustomerListQuery["status"] }), "replace")}
+                disabled={isListPending}
                 className="appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
               >
                 <option value="all">{dictionary.list.allStatuses}</option>
@@ -206,10 +305,8 @@ export default function CustomersClient({
             <div className="relative">
               <select
                 value={cityFilter}
-                onChange={(event) => {
-                  setCityFilter(event.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(event) => navigate(customerListHref({ city: event.target.value }), "replace")}
+                disabled={isListPending}
                 className="appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
               >
                 <option value="all">{dictionary.list.allCities}</option>
@@ -227,13 +324,18 @@ export default function CustomersClient({
             <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
               {formatCustomersSummary()}
             </div>
+            {isSearchPending && <span className="text-[12px] text-on-surface-variant">{common.states.searching}</span>}
           </FilterBar>
 
-          <div className="flex-1 overflow-auto">
-            {filteredCustomers.length === 0 ? (
+        <div className="flex-1 overflow-auto" aria-busy={isListPending || undefined}>
+            {loadError ? (
+              <div className="border border-surface-variant rounded-b-xl bg-surface-container-lowest p-4">
+                <ListInlineError message={dictionary.states.customersLoadError} retryLabel={sharedStates.retry.tryAgain} onRetry={() => router.refresh()} pending={isListPending} />
+              </div>
+            ) : customers.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 bg-surface-container-lowest border border-surface-variant rounded-b-xl">
                 <p className="text-on-surface-variant text-[14px] leading-[20px]">
-                  {customers.length === 0
+                  {!hasFilters
                     ? dictionary.states.noCustomers
                     : dictionary.states.noFilteredCustomers}
                 </p>
@@ -267,7 +369,7 @@ export default function CustomersClient({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
-                    {paginatedCustomers.map((customer) => (
+                    {customers.map((customer) => (
                       <tr key={customer.id} className="hover:bg-surface-container-low/50 transition-colors">
                         <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.company}`}>
                           <div className="font-semibold text-primary">
@@ -312,7 +414,7 @@ export default function CustomersClient({
                         <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}>
                           <div className="flex justify-center">
                             <PendingLink
-                              href={`/customers/${customer.id}?returnTo=%2Fcustomers`}
+                              href={`/customers/${customer.id}?returnTo=${encodeURIComponent(returnTo)}`}
                               aria-label={`${dictionary.list.actions.view} ${customer.customerNumber}`}
                               title={`${dictionary.list.actions.view} ${customer.customerNumber}`}
                               className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed"
@@ -329,13 +431,16 @@ export default function CustomersClient({
             )}
           </div>
 
-          {filteredCustomers.length > itemsPerPage && (
-            <PaginationFooter
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          )}
+          <PaginationFooter
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            pageSize={pagination.pageSize}
+            paginationMode="bounded"
+            isPending={isListPending}
+            onPageChange={(page) => navigate(customerListHref({}, page), "push")}
+            onPageSizeChange={(pageSize: ListPageSize) => navigate(customerListHref({ pageSize }, 1), "replace")}
+          />
         </div>
       </div>
 

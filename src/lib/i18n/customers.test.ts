@@ -9,6 +9,7 @@ import {
   getCustomersDictionary,
 } from "./dictionaries/customers.ts";
 import { formatSarAmount, formatUiDate, formatUiNumber } from "./formatting.ts";
+import { sanitizeSearchTerm } from "../search/sanitize.ts";
 
 const REPO_ROOT = join(import.meta.dirname, "../../..");
 const CUSTOMERS_PAGE = join(REPO_ROOT, "src/app/(dashboard)/customers/page.tsx");
@@ -276,7 +277,7 @@ test("18. Access-denied UI is localized while server permission enforcement is u
   assert.equal(shared.accessDenied.title, "تم رفض الوصول");
   const page = readFileSync(CUSTOMERS_PAGE, "utf8");
   const profile = readFileSync(CUSTOMER_PROFILE, "utf8");
-  assert.match(page, /getCustomers\(/);
+  assert.match(page, /getCustomersList\(/);
   assert.match(page, /checkPermission\("customers:write"\)/);
   assert.match(page, /checkPermission\("customers:export"\)/);
   assert.match(page, /SharedAuthenticatedStatePanel/);
@@ -295,7 +296,8 @@ test("19. Viewer/export permission behavior is unchanged", () => {
   assert.match(page, /customers:export/);
   assert.match(client, /canExport/);
   assert.match(client, /exportCustomers/);
-  assert.match(client, /if \(!canExport \|\| filteredCustomers\.length === 0\) return/);
+  assert.match(client, /if \(!canExport \|\| customers\.length === 0\) return/);
+  assert.doesNotMatch(client, /filteredCustomers/);
 });
 
 test("20. Customers Excel export passes locale + chrome; permissions and brands preserved", () => {
@@ -371,4 +373,50 @@ test("24. KpiCard blast-radius is documented as safe for existing numeric consum
   // Payments passes preformatted numeric strings into KpiCard, not dictionary prose as value.
   assert.match(payments, /formatSarAmount|formatUiNumber|formatCurrency|toString\(/);
   assert.doesNotMatch(payments, /value=\{dictionary\./);
+});
+
+test("25. Customers use direct general search with draft input and explicit submission only", () => {
+  const client = readFileSync(CUSTOMERS_CLIENT, "utf8");
+  assert.match(client, /const \[draftSearch, setDraftSearch\] = useState\(submittedSearch\)/);
+  assert.match(client, /<form[\s\S]*onSubmit=\{\(event\) =>/);
+  assert.match(client, /type="submit"/);
+  assert.match(client, /onChange=\{\(event\) => setDraftSearch\(event\.target\.value\)\}/);
+  assert.doesNotMatch(client, /onChange=\{\(value\) => navigate/);
+  assert.doesNotMatch(client, /ModuleSearchControl|searchMode|resetLabel|onReset/);
+});
+
+test("26. Customers submit sanitized searches, preserve Arabic text, and protect IME Enter", () => {
+  const client = readFileSync(CUSTOMERS_CLIENT, "utf8");
+  assert.match(client, /const search = sanitizeSearchTerm\(rawSearch\)/);
+  assert.match(client, /event\.nativeEvent\.isComposing/);
+  assert.match(client, /onCompositionStart/);
+  assert.match(client, /onCompositionEnd/);
+  assert.equal(sanitizeSearchTerm(" \u2068عميل عربي\u2069 "), "عميل عربي");
+  assert.equal(sanitizeSearchTerm("INV-2026\/001, عميل"), "INV-2026\/001, عميل");
+});
+
+test("27. Customers draft synchronization follows authoritative URL changes and retains return context", () => {
+  const client = readFileSync(CUSTOMERS_CLIENT, "utf8");
+  assert.match(client, /const lastSubmittedSearch = useRef\(submittedSearch\)/);
+  assert.match(client, /if \(lastSubmittedSearch\.current === submittedSearch\) return/);
+  assert.match(client, /setDraftSearch\(submittedSearch\)/);
+  assert.match(client, /navigate\(customerListHref\(\{ search \}, 1\), "replace", "search"\)/);
+  assert.match(client, /const returnTo = customerListHref\(\{\}, pagination\.page\)/);
+  assert.match(client, /encodeURIComponent\(returnTo\)/);
+});
+
+test("28. Customers clear deliberately returns to the unfiltered first page without a reset-filters control", () => {
+  const client = readFileSync(CUSTOMERS_CLIENT, "utf8");
+  assert.match(client, /function clearSearch\(\)/);
+  assert.match(client, /navigate\(customerListHref\(\{ search: "" \}, 1\), "replace", "search"\)/);
+  assert.match(client, /aria-label=\{`\$\{common\.actions\.clear\}/);
+  assert.doesNotMatch(client, /Reset Filters|resetLabel|onReset/);
+});
+
+test("29. Customers show localized pending feedback only for an explicitly submitted search", () => {
+  const client = readFileSync(CUSTOMERS_CLIENT, "utf8");
+  assert.match(client, /const \{ isPending: isListPending, isSearchPending, navigate \}/);
+  assert.match(client, /aria-busy=\{isSearchPending \|\| undefined\}/);
+  assert.match(client, /\{isSearchPending && <span[^>]*>\{common\.states\.searching\}<\/span>\}/);
+  assert.doesNotMatch(client, /isListPending && <span[^>]*>\{common\.states\.searching\}/);
 });
