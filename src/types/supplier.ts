@@ -7,8 +7,10 @@ export interface SupplierDirectoryItem {
   supplierNumber: string | null;
   name: string;
   supplierType: SupplierType | null;
+  phone: string | null;
   category: string | null;
   city: string | null;
+  coverageArea: string | null;
   country: string | null;
   isPreferred: boolean;
   rating: number;

@@ -4,6 +4,12 @@ import type {
   SupplierType,
   SupplierVatRegistrationStatus,
 } from "@/types/supplier";
+import { sanitizeSearchTerm } from "../search/sanitize.ts";
+import {
+  normalizeListPage,
+  normalizeListPageSize,
+  type ListPageSize,
+} from "../pagination.ts";
 
 export type {
   Supplier,
@@ -17,10 +23,12 @@ export interface SupplierDirectoryRow {
   id: string;
   supplier_number: string | null;
   supplier_type: SupplierType | null;
+  phone: string | null;
   category: string | null;
   display_name: string | null;
   name: string;
   city: string | null;
+  coverage_area?: string | null;
   country: string | null;
   rating: number | string | null;
   status: SupplierStatus;
@@ -32,7 +40,7 @@ export interface SupplierDetailRow extends SupplierDirectoryRow {
   legal_name?: string | null;
   contact_name?: string | null;
   contact?: string | null;
-  phone?: string | null;
+  phone: string | null;
   whatsapp_phone?: string | null;
   email?: string | null;
   coverage_area?: string | null;
@@ -55,6 +63,7 @@ export const SUPPLIER_PAGE_SIZE = 10;
 export interface SupplierListQuery {
   includeDeleted?: boolean;
   page?: number;
+  pageSize?: ListPageSize;
   search?: string;
   status?: SupplierStatus;
   category?: string;
@@ -62,7 +71,7 @@ export interface SupplierListQuery {
 
 export interface SupplierListPagination {
   page: number;
-  pageSize: typeof SUPPLIER_PAGE_SIZE;
+  pageSize: ListPageSize;
   total: number;
   totalPages: number;
 }
@@ -79,17 +88,17 @@ export interface SupplierOption {
 }
 
 export function normalizeSupplierListPage(value: unknown): number {
-  if (typeof value !== "string" || !/^[1-9]\d*$/.test(value)) return 1;
+  return normalizeListPage(value);
+}
 
-  const page = Number(value);
-  return Number.isSafeInteger(page) ? page : 1;
+export function normalizeSupplierListPageSize(value: unknown): ListPageSize {
+  return normalizeListPageSize(value);
 }
 
 export function normalizeSupplierListSearch(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
 
-  const search = value
-    .trim()
+  const search = sanitizeSearchTerm(value)
     .replace(/[^\p{L}\p{N}\s-]/gu, "")
     .slice(0, 100);
   return search || undefined;

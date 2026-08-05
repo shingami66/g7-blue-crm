@@ -46,6 +46,7 @@ export interface SuppliersDictionary {
     subtitle: string;
     newSupplier: string;
     searchPlaceholder: string;
+    resetFilters: string;
     allStatuses: string;
     allCategories: string;
     showingZero: string;
@@ -58,7 +59,6 @@ export interface SuppliersDictionary {
       category: string;
       type: string;
       location: string;
-      rating: string;
       status: string;
       actions: string;
     };
@@ -190,6 +190,25 @@ export interface SuppliersDictionary {
     loading: string;
     loadFailed: string;
     empty: string;
+    create: string;
+    edit: string;
+    save: string;
+    cancel: string;
+    activate: string;
+    deactivate: string;
+    category: string;
+    itemName: string;
+    unit: string;
+    currency: string;
+    baseCost: string;
+    status: string;
+    notes: string;
+    overlap: string;
+    validation: string;
+    actionFailed: string;
+    saved: string;
+    activated: string;
+    deactivated: string;
     perUnit: string;
     validFrom: string;
     validTo: string;
@@ -226,6 +245,7 @@ const suppliersDictionaryEn: SuppliersDictionary = {
     subtitle: "Manage the supplier directory and operational supplier records.",
     newSupplier: "New Supplier",
     searchPlaceholder: "Search suppliers...",
+    resetFilters: "Reset filters",
     allStatuses: "All Statuses",
     allCategories: "All Categories",
     showingZero: "Showing 0 suppliers",
@@ -233,7 +253,7 @@ const suppliersDictionaryEn: SuppliersDictionary = {
     showDeleted: "Show deleted",
     showCurrent: "Show current",
     viewSupplier: "View supplier",
-    columns: { supplier: "Supplier", category: "Category", type: "Type", location: "Location", rating: "Rating", status: "Status", actions: "Actions" },
+    columns: { supplier: "Supplier", category: "Category", type: "Type", location: "Location", status: "Status", actions: "Actions" },
   },
   detail: {
     title: "Supplier Details",
@@ -297,7 +317,7 @@ const suppliersDictionaryEn: SuppliersDictionary = {
   deleteRestore: {
     delete: "Delete", restore: "Restore", deleteTitle: "Delete Supplier", restoreTitle: "Restore Supplier", deleteBody: "Delete {name} from the active supplier directory? Historical records are retained.", restoreBody: "Restore {name} to the supplier directory? Non-blacklisted suppliers return as inactive.", cancel: "Cancel", confirmDelete: "Delete Supplier", confirmRestore: "Restore Supplier", deleting: "Deleting...", restoring: "Restoring...", deleteFailed: "Failed to delete supplier", restoreFailed: "Failed to restore supplier",
   },
-  rateCards: { loading: "Loading rate cards...", loadFailed: "Failed to load rate cards. Please try again.", empty: "No rate cards recorded for this supplier.", perUnit: "per {unit}", validFrom: "Valid From", validTo: "Valid To", current: "Current", active: "Active", inactive: "Inactive" },
+  rateCards: { loading: "Loading rate cards...", loadFailed: "Failed to load rate cards. Please try again.", empty: "No rate cards recorded for this supplier.", create: "Add rate card", edit: "Edit", save: "Save rate card", cancel: "Cancel", activate: "Activate", deactivate: "Deactivate", category: "Category", itemName: "Item", unit: "Unit", currency: "Currency", baseCost: "Base cost", status: "Status", notes: "Notes", overlap: "An active rate card already covers {itemName} ({unit}) from {validFrom} to {validTo}.", validation: "Please check the rate card fields.", actionFailed: "The rate card could not be saved. Please try again.", saved: "Rate card saved.", activated: "Rate card activated.", deactivated: "Rate card deactivated.", perUnit: "per {unit}", validFrom: "Valid From", validTo: "Valid To", current: "Open-ended", active: "Active", inactive: "Inactive" },
   statuses: { active: "Active", on_hold: "On Hold", blacklisted: "Blacklisted", inactive: "Inactive" },
   types: { company: "Company", individual: "Individual" },
   vatRegistration: { unknown: "Unknown", not_registered: "Not Registered", registered: "VAT Registered" },
@@ -327,6 +347,7 @@ const suppliersDictionaryAr: SuppliersDictionary = {
     subtitle: "إدارة دليل الموردين وبياناتهم التشغيلية.",
     newSupplier: "مورد جديد",
     searchPlaceholder: "ابحث عن الموردين...",
+    resetFilters: "إعادة ضبط الفلاتر",
     allStatuses: "كل الحالات",
     allCategories: "كل الفئات",
     showingZero: "عرض 0 موردين",
@@ -334,7 +355,7 @@ const suppliersDictionaryAr: SuppliersDictionary = {
     showDeleted: "عرض المحذوفين",
     showCurrent: "عرض الحاليين",
     viewSupplier: "عرض المورد",
-    columns: { supplier: "المورد", category: "الفئة", type: "النوع", location: "الموقع", rating: "التقييم", status: "الحالة", actions: "إجراءات" },
+    columns: { supplier: "المورد", category: "الفئة", type: "النوع", location: "الموقع", status: "الحالة", actions: "إجراءات" },
   },
   detail: {
     title: "تفاصيل المورد", subtitle: "سجل دليل المورد", backToSuppliers: "العودة إلى الموردين", edit: "تعديل", contactInformation: "معلومات التواصل", directoryDetails: "تفاصيل الدليل", address: "العنوان ونطاق التغطية", taxIdentity: "الهوية الضريبية", internalDetails: "بيانات داخلية", bankDetails: "البيانات البنكية", rateCards: "بطاقات الأسعار الداخلية", status: "الحالة", supplierType: "نوع المورد", category: "الفئة", preferred: "مفضل", legalName: "الاسم القانوني", contactName: "جهة الاتصال الرئيسية", phone: "الهاتف", whatsappPhone: "هاتف واتساب", email: "البريد الإلكتروني", city: "المدينة", country: "الدولة", coverageArea: "منطقة التغطية", crNumber: "رقم السجل التجاري", vatRegistration: "تسجيل ضريبة القيمة المضافة", vatNumber: "الرقم الضريبي", paymentTerms: "شروط الدفع", notes: "ملاحظات داخلية", bankName: "اسم البنك", bankAccountName: "اسم صاحب الحساب", iban: "الآيبان", blacklistDetails: "تفاصيل القائمة السوداء", blacklistReason: "السبب", blacklistedOn: "تمت الإضافة إلى القائمة السوداء في {date}", noBankDetails: "لا توجد بيانات بنكية مسجلة.", yes: "نعم", no: "لا", deleted: "مورد محذوف",
@@ -352,7 +373,7 @@ const suppliersDictionaryAr: SuppliersDictionary = {
   deleteRestore: {
     delete: "حذف", restore: "استعادة", deleteTitle: "حذف المورد", restoreTitle: "استعادة المورد", deleteBody: "هل تريد حذف {name} من دليل الموردين الحالي؟ ستبقى السجلات التاريخية محفوظة.", restoreBody: "هل تريد استعادة {name} إلى دليل الموردين؟ سيعود المورد غير المدرج بالقائمة السوداء بحالة غير نشط.", cancel: "إلغاء", confirmDelete: "حذف المورد", confirmRestore: "استعادة المورد", deleting: "جارٍ الحذف...", restoring: "جارٍ الاستعادة...", deleteFailed: "تعذر حذف المورد", restoreFailed: "تعذر استعادة المورد",
   },
-  rateCards: { loading: "جارٍ تحميل بطاقات الأسعار...", loadFailed: "تعذر تحميل بطاقات الأسعار. يرجى المحاولة مرة أخرى.", empty: "لا توجد بطاقات أسعار مسجلة لهذا المورد.", perUnit: "لكل {unit}", validFrom: "ساري من", validTo: "ساري حتى", current: "حالي", active: "نشط", inactive: "غير نشط" },
+  rateCards: { loading: "جارٍ تحميل بطاقات الأسعار...", loadFailed: "تعذر تحميل بطاقات الأسعار. يرجى المحاولة مرة أخرى.", empty: "لا توجد بطاقات أسعار مسجلة لهذا المورد.", create: "إضافة بطاقة سعر", edit: "تعديل", save: "حفظ بطاقة السعر", cancel: "إلغاء", activate: "تفعيل", deactivate: "إلغاء التفعيل", category: "الفئة", itemName: "العنصر", unit: "الوحدة", currency: "العملة", baseCost: "التكلفة الأساسية", status: "الحالة", notes: "ملاحظات", overlap: "توجد بطاقة سعر نشطة تغطي {itemName} ({unit}) من {validFrom} إلى {validTo}.", validation: "يرجى التحقق من حقول بطاقة السعر.", actionFailed: "تعذر حفظ بطاقة السعر. يرجى المحاولة مرة أخرى.", saved: "تم حفظ بطاقة السعر.", activated: "تم تفعيل بطاقة السعر.", deactivated: "تم إلغاء تفعيل بطاقة السعر.", perUnit: "لكل {unit}", validFrom: "ساري من", validTo: "ساري حتى", current: "مفتوحة النهاية", active: "نشط", inactive: "غير نشط" },
   statuses: { active: "نشط", on_hold: "موقوف مؤقتًا", blacklisted: "قائمة سوداء", inactive: "غير نشط" },
   types: { company: "شركة", individual: "فرد" },
   vatRegistration: { unknown: "غير معروف", not_registered: "غير مسجل", registered: "مسجل في ضريبة القيمة المضافة" },

@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { mapRowToSupplier, mapRowToSupplierDirectoryItem } from "./mappers";
 import {
   SUPPLIER_PAGE_SIZE,
+  normalizeSupplierListPageSize,
   type Supplier,
   type SupplierListQuery,
   type SupplierOption,
@@ -17,10 +18,12 @@ const SUPPLIER_DIRECTORY_SELECT = `
   id,
   supplier_number,
   supplier_type,
+  phone,
   category,
   display_name,
   name,
   city,
+  coverage_area,
   country,
   rating,
   status,
@@ -36,6 +39,7 @@ const SUPPLIER_DETAIL_SELECT = `
   display_name,
   name,
   city,
+  coverage_area,
   country,
   rating,
   status,
@@ -85,7 +89,7 @@ function detailSelect(canViewSensitive: boolean, canReadBank: boolean) {
 }
 
 function supplierSearchFilter(search: string) {
-  return ["display_name", "name", "supplier_number", "category", "city", "country"]
+  return ["display_name", "legal_name", "name", "supplier_number", "category", "contact_name", "contact", "phone", "city", "coverage_area", "country"]
     .map((column) => `${column}.ilike.*${search}*`)
     .join(",");
 }
@@ -141,10 +145,11 @@ export async function getSuppliersList(
       return { ...emptySupplierListResult(), error: "suppliers_load_failed" };
     }
 
+    const pageSize = normalizeSupplierListPageSize(options.pageSize);
     const total = count ?? 0;
-    const totalPages = Math.max(1, Math.ceil(total / SUPPLIER_PAGE_SIZE));
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const page = Math.min(Math.max(options.page ?? 1, 1), totalPages);
-    const rangeStart = (page - 1) * SUPPLIER_PAGE_SIZE;
+    const rangeStart = (page - 1) * pageSize;
 
     let dataRequest = supabase
       .from("suppliers")
@@ -161,7 +166,7 @@ export async function getSuppliersList(
 
     const { data, error } = await dataRequest.range(
       rangeStart,
-      rangeStart + SUPPLIER_PAGE_SIZE - 1,
+      rangeStart + pageSize - 1,
     );
 
     if (error) {
@@ -172,7 +177,7 @@ export async function getSuppliersList(
     const suppliers = Array.isArray(data) ? data.map(mapRowToSupplierDirectoryItem) : [];
     return {
       suppliers,
-      pagination: { page, pageSize: SUPPLIER_PAGE_SIZE, total, totalPages },
+      pagination: { page, pageSize, total, totalPages },
     };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;

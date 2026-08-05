@@ -4,7 +4,12 @@ import { join } from "node:path";
 import test from "node:test";
 import { mapRowToSupplier, mapRowToSupplierDirectoryItem } from "./mappers.ts";
 import { createSupplierSchema, updateSupplierSchema } from "./schemas.ts";
-import { normalizeSupplierListPage, normalizeSupplierListSearch, SUPPLIER_PAGE_SIZE } from "./types.ts";
+import {
+  normalizeSupplierListPage,
+  normalizeSupplierListPageSize,
+  normalizeSupplierListSearch,
+  SUPPLIER_PAGE_SIZE,
+} from "./types.ts";
 
 const REPO_ROOT = join(import.meta.dirname, "../../..");
 const ACTIONS = join(REPO_ROOT, "src/lib/suppliers/actions.ts");
@@ -80,7 +85,7 @@ test("Supplier mapper keeps the list DTO sanitized and redacts bank data", () =>
     iban: "SA0000000000000000000000",
   };
   const directory = mapRowToSupplierDirectoryItem(row);
-  assert.deepEqual(Object.keys(directory).sort(), ["category", "city", "country", "id", "isDeleted", "isPreferred", "name", "rating", "status", "supplierNumber", "supplierType"].sort());
+  assert.deepEqual(Object.keys(directory).sort(), ["category", "city", "coverageArea", "country", "id", "isDeleted", "isPreferred", "name", "phone", "rating", "status", "supplierNumber", "supplierType"].sort());
 
   const redacted = mapRowToSupplier(row, { canViewSensitive: false, canReadBank: false });
   assert.equal(redacted.vatNumber, null);
@@ -128,11 +133,26 @@ test("Supplier directory pagination is server-ranged and query-safe", () => {
   assert.equal(normalizeSupplierListPage("3"), 3);
   assert.equal(normalizeSupplierListSearch("  Supplier-01!  "), "Supplier-01");
   assert.equal(normalizeSupplierListSearch("!!!"), undefined);
+  for (const { pageSize, ranges } of [
+    { pageSize: 10, ranges: [[1, 0, 9], [2, 10, 19], [3, 20, 29]] },
+    { pageSize: 20, ranges: [[1, 0, 19], [2, 20, 39], [3, 40, 59]] },
+    { pageSize: 50, ranges: [[1, 0, 49], [2, 50, 99], [3, 100, 149]] },
+  ]) {
+    assert.equal(normalizeSupplierListPageSize(String(pageSize)), pageSize);
+    for (const [page, expectedStart, expectedEnd] of ranges) {
+      const rangeStart = (page - 1) * pageSize;
+      assert.equal(rangeStart, expectedStart);
+      assert.equal(rangeStart + pageSize - 1, expectedEnd);
+    }
+  }
   assert.match(queries, /select\("id", \{ count: "exact", head: true \}\)/);
   assert.match(queries, /dataRequest\.range\(/);
+  assert.match(queries, /const pageSize = normalizeSupplierListPageSize\(options\.pageSize\)/);
+  assert.match(queries, /const rangeStart = \(page - 1\) \* pageSize;/);
+  assert.match(queries, /rangeStart,\s*rangeStart \+ pageSize - 1/);
   assert.match(queries, /Math\.min\(Math\.max\(options\.page \?\? 1, 1\), totalPages\)/);
-  assert.match(client, /router\.push\(supplierListHref\(\{ \.\.\.filters, page \}, showDeleted\)\)/);
-  assert.match(client, /updateFilters\(\{ search: event\.target\.value \}, true\)/);
+  assert.match(client, /navigate\(supplierListHref\(\{ \.\.\.filters, page \}, showDeleted\), "push"\)/);
+  assert.match(client, /onSubmit=\{\(_, nextSearch\) => updateFilters\(\{ search: nextSearch \}, true\)\}/);
   assert.match(client, /updateFilters\(\{ status \}, true\)/);
   assert.match(client, /updateFilters\(\{ category \}, true\)/);
 });

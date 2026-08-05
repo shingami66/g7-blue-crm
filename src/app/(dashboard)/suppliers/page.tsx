@@ -4,7 +4,7 @@ import { checkPermission } from "@/lib/auth/permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getSuppliersDictionary } from "@/lib/i18n/dictionaries/suppliers";
 import { getSuppliersList } from "@/lib/suppliers/queries";
-import { normalizeSupplierListPage, normalizeSupplierListSearch, type SupplierListQuery } from "@/lib/suppliers/types";
+import { normalizeSupplierListPage, normalizeSupplierListPageSize, normalizeSupplierListSearch, type SupplierListQuery } from "@/lib/suppliers/types";
 import type { SupplierStatus } from "@/types/supplier";
 import SuppliersClient from "./SuppliersClient";
 
@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
 type SupplierSearchParams = {
   showDeleted?: string;
   page?: string;
+  pageSize?: string;
   search?: string;
   status?: string;
   category?: string;
@@ -35,6 +36,7 @@ function supplierListQuery(params: SupplierSearchParams): SupplierListQuery {
   return {
     includeDeleted: params.showDeleted === "true",
     page: normalizeSupplierListPage(params.page),
+    pageSize: normalizeSupplierListPageSize(params.pageSize),
     search: normalizeSupplierListSearch(params.search),
     status: supplierStatus(params.status),
     category: params.category?.trim().slice(0, 80) || undefined,

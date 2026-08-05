@@ -30,9 +30,16 @@ export interface SupplierRateCardRow {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  is_deleted?: boolean;
 }
 
 export type SupplierRateCardsListResult = {
   rateCards: SupplierRateCard[];
   error?: string;
+};
+
+export type SupplierRateCardActionResult = {
+  success: boolean;
+  error?: "validation_failed" | "not_found" | "overlap" | "write_failed" | "unauthorized" | "forbidden";
+  conflict?: { itemName: string; category: string | null; unit: string; currency: string; validFrom: string; validTo: string | null };
 };

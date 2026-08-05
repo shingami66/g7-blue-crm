@@ -45,7 +45,7 @@ test("Supplier labels and V1 status values stay localized", () => {
 test("Supplier list uses safe route navigation rather than a local detail panel", () => {
   const list = read(LIST_CLIENT);
   assert.match(read(LIST_PAGE), /getSuppliersList\(query\)/);
-  assert.match(list, /`\/suppliers\/\$\{supplier\.id\}`/);
+  assert.match(list, /supplierDetailHref\(supplier\.id, showDeleted, returnTo\)/);
   assert.doesNotMatch(list, /SupplierBlacklistActions|SupplierRateCardsList|blacklistedReason|vatNumber|crNumber|bankName|notes/);
   assert.doesNotMatch(list, /supplier\.id\s*\?\?/);
 });
@@ -66,17 +66,17 @@ test("Supplier detail, forms, and delete UI remain dictionary-driven", () => {
 
 test("Dashboard directory detail links use the localized Supplier eye-control contract", () => {
   const expected = [
-    [CUSTOMERS_LIST, /href=\{`\/customers\/\$\{customer\.id\}`\}/, /dictionary\.list\.actions\.view/],
-    [SERVICES_LIST, /href=\{`\/services\/\$\{service\.id\}`\}/, /dictionary\.list\.actions\.view/],
-    [QUOTATIONS_LIST, /push\(`\/quotations\/\$\{q\.id\}`\)/, /dictionary\.list\.actionTitles\.viewDetails/],
-    [INVOICES_LIST, /href=\{`\/invoices\/\$\{inv\.id\}`\}/, /dictionary\.list\.table\.preview/],
+    [CUSTOMERS_LIST, /href=\{`\/customers\/\$\{customer\.id\}\?returnTo=/, /dictionary\.list\.actions\.view/],
+    [SERVICES_LIST, /href=\{`\/services\/\$\{service\.id\}\?returnTo=/, /dictionary\.list\.actions\.view/],
+    [QUOTATIONS_LIST, /push\(.*quotation\.id.*returnTo=/, /dictionary\.list\.actionTitles\.viewDetails/],
+    [INVOICES_LIST, /href=\{`\/invoices\/\$\{invoice\.id\}\?returnTo=/, /dictionary\.list\.table\.preview/],
   ] as const;
 
   for (const [file, destination, label] of expected) {
     const source = read(file);
     assert.match(source, destination);
     assert.match(source, label);
-    assert.match(source, /className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed"/);
+    assert.match(source, /className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed/);
     assert.match(source, /<Eye size=\{17\} \/>/);
   }
 });
