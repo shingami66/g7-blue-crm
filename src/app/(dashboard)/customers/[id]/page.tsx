@@ -197,6 +197,7 @@ export default async function CustomerProfilePage({
         data={workspace.data}
         locale={locale}
         dictionary={customer360Dictionary}
+        returnTo={returnTo}
       />
 
     </div>

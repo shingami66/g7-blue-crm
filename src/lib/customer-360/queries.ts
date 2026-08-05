@@ -12,6 +12,13 @@ function numberValue(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function safeCustomerDate(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  if (!normalized || /^(?:9999|0000)[-/]/.test(normalized)) return null;
+  return normalized;
+}
+
 function section<T>(status: Customer360Section<T>["status"], items: T[] = []): Customer360Section<T> {
   return { status, items };
 }
@@ -77,9 +84,9 @@ async function readServices(customerId: string): Promise<Customer360Service[]> {
     serviceNumber: String(row.service_number),
     serviceTitle: String(row.service_title),
     eventName: (row.event_name as string | null) ?? null,
-    eventStartDate: (row.event_start_date as string | null) ?? null,
-    eventEndDate: (row.event_end_date as string | null) ?? null,
-    createdAt: String(row.created_at ?? ""),
+    eventStartDate: safeCustomerDate(row.event_start_date),
+    eventEndDate: safeCustomerDate(row.event_end_date),
+    createdAt: safeCustomerDate(row.created_at) ?? "",
     estimatedBudget: row.estimated_budget === null ? null : numberValue(row.estimated_budget),
     status: row.status as Customer360Service["status"],
   }));
@@ -106,7 +113,7 @@ async function readQuotations(customerId: string): Promise<Customer360Quotation[
       serviceNumber: service?.service_number ? String(service.service_number) : null,
       serviceTitle: service?.service_title ? String(service.service_title) : null,
       event: String(row.event),
-      date: String(row.date),
+      date: safeCustomerDate(row.date) ?? "",
       grandTotal: numberValue(row.grand_total),
       status: row.status as Customer360Quotation["status"],
     };
@@ -138,7 +145,7 @@ async function readInvoices(customerId: string): Promise<Customer360Invoice[]> {
       grandTotal: numberValue(row.grand_total),
       amountPaid: numberValue(row.amount_paid),
       balanceDue: numberValue(row.balance_due),
-      date: String(row.issued_at ?? row.created_at),
+      date: safeCustomerDate(row.issued_at) ?? safeCustomerDate(row.created_at) ?? "",
     };
   });
 }
@@ -159,7 +166,7 @@ async function readPayments(customerId: string): Promise<Customer360Payment[]> {
     id: String(row.id),
     paymentNumber: String(row.payment_number),
     invoiceId: String(row.invoice_id),
-    date: String(row.date),
+    date: safeCustomerDate(row.date) ?? "",
     amount: numberValue(row.amount),
     method: row.method as Customer360Payment["method"],
     reference: (row.reference as string | null) ?? null,
@@ -206,7 +213,7 @@ function buildFinancialActivity(invoices: Customer360Invoice[], payments: Custom
     subject: payment.reference ?? payment.method,
     status: payment.status,
     amount: payment.amount,
-    href: `/payments?payment=${encodeURIComponent(payment.id)}`,
+    href: `/invoices/${payment.invoiceId}`,
   }));
 
   return [...invoiceActivity, ...paymentActivity]
