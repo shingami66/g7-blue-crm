@@ -9,6 +9,7 @@ import {
   Receipt,
   Package,
   CreditCard,
+  BarChart3,
   Settings,
   Menu,
   X,
@@ -31,6 +32,7 @@ const navItems = [
   { labelKey: "invoices", href: "/invoices", icon: Receipt },
   { labelKey: "suppliers", href: "/suppliers", icon: Package },
   { labelKey: "payments", href: "/payments", icon: CreditCard },
+  { labelKey: "reports", href: "/reports", icon: BarChart3 },
 ] as const;
 
 const bottomItems = [

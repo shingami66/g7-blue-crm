@@ -3,7 +3,6 @@ export interface NavigationDictionary {
     notifications: string;
     openMenu: string;
     profile: string;
-    search: string;
     signOut: string;
     signIn: string;
     signingOut: string;
@@ -20,6 +19,7 @@ export interface NavigationDictionary {
     invoices: string;
     payments: string;
     quotations: string;
+    reports: string;
     services: string;
     settings: string;
     suppliers: string;
@@ -32,7 +32,6 @@ export const navigationDictionaryEn: NavigationDictionary = {
     notifications: "Notifications",
     openMenu: "Open account menu",
     profile: "Profile",
-    search: "Search...",
     signOut: "Sign out",
     signIn: "Sign in",
     signingOut: "Signing out...",
@@ -49,6 +48,7 @@ export const navigationDictionaryEn: NavigationDictionary = {
     invoices: "Invoices",
     payments: "Payments",
     quotations: "Quotations",
+    reports: "Reports",
     services: "Services",
     settings: "Settings",
     suppliers: "Suppliers",
@@ -61,7 +61,6 @@ export const navigationDictionaryAr: NavigationDictionary = {
     notifications: "الإشعارات",
     openMenu: "فتح قائمة الحساب",
     profile: "الملف الشخصي",
-    search: "بحث...",
     signOut: "تسجيل الخروج",
     signIn: "تسجيل الدخول",
     signingOut: "جارٍ تسجيل الخروج...",
@@ -78,6 +77,7 @@ export const navigationDictionaryAr: NavigationDictionary = {
     invoices: "الفواتير",
     payments: "المدفوعات",
     quotations: "عروض الأسعار",
+    reports: "التقارير",
     services: "الخدمات",
     settings: "الإعدادات",
     suppliers: "الموردون",

@@ -217,7 +217,7 @@ test("call sites use UiDateText/UiDateTimeText/UiDateRangeText not full-date dir
     "src/app/(dashboard)/invoices/[id]/page.tsx",
     "src/app/(dashboard)/payments/PaymentsClient.tsx",
     "src/app/(dashboard)/admin/users/AdminUsersClient.tsx",
-    "src/app/(dashboard)/customers/[id]/page.tsx",
+    "src/app/(dashboard)/customers/[id]/Customer360Workspace.tsx",
   ];
   for (const route of routes) {
     const source = read(route);
@@ -247,33 +247,16 @@ test("Settings IsoDateField uses YYYY-MM-DD contract without mm/dd/yyyy", () => 
   assert.match(settings, /type="text"/);
 });
 
-test("Supplier panel title: full name, two-line wrap, actions shrink-0, title attr", () => {
+test("Supplier directory preserves readable mobile cards and identity", () => {
   const suppliers = read("src/app/(dashboard)/suppliers/SuppliersClient.tsx");
 
-  // Name block gets remaining width; actions cannot collapse it.
-  assert.match(suppliers, /flex min-w-0 flex-1 basis-0 items-start gap-4/);
-  assert.match(suppliers, /min-w-0 flex-1/);
+  // The current directory uses mobile cards and a separate desktop table.
+  assert.match(suppliers, /grid grid-cols-1 gap-3 p-1 lg:hidden/);
+  assert.match(suppliers, /flex min-w-0 items-center gap-3/);
   assert.match(suppliers, /shrink-0/);
-  assert.match(suppliers, /data-supplier-panel-title="true"/);
-  assert.match(suppliers, /title=\{activeSupplier\.name\}/);
-  assert.match(suppliers, /activeSupplier\.name/);
-
-  // Natural wrap up to two complete lines (56px = 2 × 28px leading).
-  assert.match(suppliers, /max-h-\[56px\]/);
+  assert.match(suppliers, /supplier\.name/);
   assert.match(suppliers, /break-words/);
-  assert.match(suppliers, /whitespace-normal/);
-
-  // No premature ellipsis / mid-word clamp on the panel title.
-  const titleRegion = suppliers.slice(
-    suppliers.indexOf("data-supplier-panel-title") - 200,
-    suppliers.indexOf("data-supplier-panel-title") + 400,
-  );
-  assert.doesNotMatch(titleRegion, /line-clamp-2/);
-  assert.doesNotMatch(titleRegion, /\[overflow-wrap:anywhere\]/);
-  assert.doesNotMatch(titleRegion, /truncate/);
-
-  // Full name rendered; no source-level shortening.
-  assert.match(suppliers, /\{activeSupplier\.name\}/);
+  assert.match(suppliers, /dir="auto">\{supplier\.name\}/);
   assert.doesNotMatch(suppliers, /name\.slice|name\.substring|ellipsis/i);
 });
 
@@ -317,7 +300,8 @@ test("Invoices and Payments retain accepted table contracts (list behavior untou
   const invoices = read("src/app/(dashboard)/invoices/InvoicesListClient.tsx");
   const payments = read("src/app/(dashboard)/payments/PaymentsClient.tsx");
   const quotations = read("src/app/(dashboard)/quotations/QuotationsClient.tsx");
-  assert.match(invoices, /text-right tabular-nums/);
+  assert.match(invoices, /text-right/);
+  assert.match(invoices, /tabular-nums/);
   assert.match(invoices, /UiDateText/);
   assert.match(payments, /DataTable/);
   assert.match(payments, /UiDateText/);

@@ -288,3 +288,17 @@ test("Dashboard dictionary export remains the single module copy source", () => 
   assert.match(dictionarySource, /dashboardDictionaryEn/);
   assert.match(dictionarySource, /dashboardDictionaryAr/);
 });
+
+test("Dashboard visual hierarchy orders Priority Work, workflow, then compact quotations", () => {
+  const page = readFileSync(DASHBOARD_PAGE, "utf8");
+  assert.match(page, /data-dashboard-section="priority-work"/);
+  assert.match(page, /data-dashboard-section="workflow"/);
+  assert.match(page, /data-dashboard-section="quotations"/);
+  assert.match(page, /items-start/);
+  assert.match(page, /self-start/);
+  assert.match(page, /advancementDictionary\.attentionTitle/);
+  assert.match(page, /advancementDictionary\.operationsTitle/);
+  assert.match(page, /dictionary\.workflow\.title/);
+  assert.match(page, /dictionary\.quotations\.title/);
+  assert.match(page, /slice\(0,\s*4\)/);
+});
