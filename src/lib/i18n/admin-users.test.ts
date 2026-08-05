@@ -17,7 +17,7 @@ const CLIENT = join(REPO_ROOT, "src/app/(dashboard)/admin/users/AdminUsersClient
 const SIDEBAR = join(REPO_ROOT, "src/components/layout/Sidebar.tsx");
 const ACTIONS = join(REPO_ROOT, "src/lib/admin/users/actions.ts");
 const SCHEMAS = join(REPO_ROOT, "src/lib/admin/users/schemas.ts");
-const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/permissions.ts");
+const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/role-permissions.ts");
 
 function listNestedKeys(value: unknown, prefix = ""): string[] {
   if (!value || typeof value !== "object" || Array.isArray(value)) {

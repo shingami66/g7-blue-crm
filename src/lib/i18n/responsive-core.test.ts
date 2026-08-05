@@ -18,11 +18,14 @@ const CUSTOMERS = "src/app/(dashboard)/customers/CustomersClient.tsx";
 const SERVICES = "src/app/(dashboard)/services/ServicesClient.tsx";
 const QUOTATIONS = "src/app/(dashboard)/quotations/QuotationsClient.tsx";
 const SUPPLIERS = "src/app/(dashboard)/suppliers/SuppliersClient.tsx";
+const MODULE_SEARCH = "src/components/ui/ModuleSearchInput.tsx";
+const MODULE_SEARCH_CONTROL = "src/components/ui/ModuleSearchControl.tsx";
 const DATA_TABLE = "src/components/ui/DataTable.tsx";
 const DASHBOARD_LAYOUT = "src/app/(dashboard)/layout.tsx";
 const SERVICE_DETAIL = "src/app/(dashboard)/services/[id]/page.tsx";
 const SERVICE_LIFECYCLE_ACTIONS = "src/app/(dashboard)/services/[id]/ServiceLifecycleActions.tsx";
 const SUPPLIER_ALLOCATIONS = "src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx";
+const SUPPLIER_BOOKINGS = "src/app/(dashboard)/services/[id]/SupplierBookingsPanel.tsx";
 const BILLING = "src/app/(dashboard)/services/[id]/BillingPanel.tsx";
 
 test("quotation line-item grid stacks below md and keeps desktop 12-column contract", () => {
@@ -78,14 +81,13 @@ test("filter and search icons use logical inline positioning", () => {
     }
   }
 
-  const invoices = read(INVOICES);
-  assert.match(invoices, /absolute start-3/);
-  assert.match(invoices, /ps-9/);
-  assert.match(invoices, /absolute end-3/);
-
-  const suppliers = read(SUPPLIERS);
-  assert.match(suppliers, /absolute start-3/);
-  assert.match(suppliers, /ps-9/);
+  const moduleSearch = read(MODULE_SEARCH);
+  assert.match(moduleSearch, /absolute start-3/);
+  assert.match(moduleSearch, /ps-9/);
+  assert.match(moduleSearch, /absolute end-2/);
+  assert.match(moduleSearch, /pe-10/);
+  assert.match(read(INVOICES), /ModuleSearchControl/);
+  assert.match(read(SUPPLIERS), /ModuleSearchControl/);
 });
 
 test("related quotations header stacks on mobile; table-local overflow preserved", () => {
@@ -138,8 +140,9 @@ test("billing calculation money rows wrap labels without forcing page width", ()
 
 test("invoice search uses mobile-safe width contract", () => {
   const source = read(INVOICES);
-  assert.match(source, /w-full min-w-0 flex-1 max-w-sm sm:min-w-\[220px\]/);
-  assert.doesNotMatch(source, /relative min-w-\[220px\] flex-1 max-w-sm/);
+  assert.match(source, /ModuleSearchControl/);
+  assert.match(read(MODULE_SEARCH_CONTROL), /w-full min-w-\[12rem\] sm:flex-1/);
+  assert.match(source, /flex flex-wrap items-center gap-3/);
   assert.match(source, /dictionary\.list\.export/);
   // Invoice list uses a plain table inside overflow-auto (filter/table behavior preserved)
   assert.match(source, /overflow-auto/);
@@ -160,13 +163,21 @@ test("accepted table-local overflow wrappers remain present", () => {
   assert.doesNotMatch(read(SERVICE_DETAIL), /overflow-x-hidden/);
 });
 
-test("supplier mobile detail fallback was not added; panel remains desktop-only", () => {
-  const source = read(SUPPLIERS);
-  assert.match(source, /hidden lg:flex/);
-  assert.doesNotMatch(source, /mobile-detail|MobileDetail|SupplierMobile|md:hidden[\s\S]{0,80}activeSupplier/);
-  // No temporary mobile-only drawer for supplier detail (desktop panel stays lg+ only)
-  assert.doesNotMatch(source, /lg:hidden[\s\S]{0,120}activeSupplier|activeSupplier[\s\S]{0,120}lg:hidden/);
-  // Selection still sets selectedSupplierId for desktop panel
-  assert.match(source, /setSelectedSupplierId/);
-  assert.match(source, /data-supplier-panel-title/);
+test("supplier detail and service supplier panels provide responsive mobile surfaces", () => {
+  const supplierDetail = read(SUPPLIERS);
+  assert.match(supplierDetail, /grid grid-cols-1 gap-3 p-1 lg:hidden/);
+  assert.match(supplierDetail, /hidden [^\"]*lg:block/);
+  assert.match(supplierDetail, /suppliers\.map/);
+  assert.match(supplierDetail, /dictionary\.list\.viewSupplier/);
+  assert.match(supplierDetail, /break-words/);
+
+  const allocations = read(SUPPLIER_ALLOCATIONS);
+  assert.match(allocations, /grid grid-cols-1 gap-3 p-4 lg:hidden/);
+  assert.match(allocations, /hidden lg:block/);
+  assert.match(allocations, /MobileAllocationCard/);
+
+  const bookings = read(SUPPLIER_BOOKINGS);
+  assert.match(bookings, /grid grid-cols-1 gap-3 p-4 lg:hidden/);
+  assert.match(bookings, /hidden lg:block/);
+  assert.match(bookings, /MobileBookingCard/);
 });

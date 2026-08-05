@@ -13,7 +13,7 @@ const PAGE = join(REPO_ROOT, "src/app/(dashboard)/settings/page.tsx");
 const FORM = join(REPO_ROOT, "src/app/(dashboard)/settings/SettingsForm.tsx");
 const ACTIONS = join(REPO_ROOT, "src/lib/settings/actions.ts");
 const SCHEMAS = join(REPO_ROOT, "src/lib/settings/schemas.ts");
-const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/permissions.ts");
+const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/role-permissions.ts");
 
 function listNestedKeys(value: unknown, prefix = ""): string[] {
   if (!value || typeof value !== "object" || Array.isArray(value)) {

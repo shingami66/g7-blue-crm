@@ -1,10 +1,18 @@
 import type { Locale } from "../locales.ts";
 
 export interface PaginationDictionary {
+  first: string;
+  last: string;
   previous: string;
   next: string;
+  firstPage: string;
+  lastPage: string;
   previousPage: string;
   nextPage: string;
+  pageSize: string;
+  pageSizeLabel: string;
+  showingZero: string;
+  showingRange: string;
   /** Template with `{number}` placeholder; Western digits supplied by formatter. */
   page: string;
   goToPage: string;
@@ -46,6 +54,7 @@ export interface CommonDictionary {
   actions: {
     back: string;
     cancel: string;
+    clear: string;
     close: string;
     create: string;
     edit: string;
@@ -54,12 +63,16 @@ export interface CommonDictionary {
   labels: {
     notes: string;
     search: string;
+    select: string;
+    searchTypeFirst: string;
     status: string;
     total: string;
   };
   states: {
     empty: string;
     loading: string;
+    searching: string;
+    updatingResults: string;
     unavailable: string;
   };
   /** Route-level and shared authenticated feedback surfaces. */
@@ -104,20 +117,36 @@ export const localeSelectorDictionaryAr: LocaleSelectorDictionary = {
 };
 
 const paginationDictionaryEn: PaginationDictionary = {
+  first: "First",
+  last: "Last",
   previous: "Previous",
   next: "Next",
+  firstPage: "First page",
+  lastPage: "Last page",
   previousPage: "Previous page",
   nextPage: "Next page",
+  pageSize: "Rows",
+  pageSizeLabel: "Rows per page",
+  showingZero: "Showing 0 of 0",
+  showingRange: "Showing {start}-{end} of {total}",
   page: "Page {number}",
   goToPage: "Go to page {number}",
   currentPage: "Current page, page {number}",
 };
 
 const paginationDictionaryAr: PaginationDictionary = {
+  first: "الأولى",
+  last: "الأخيرة",
   previous: "السابق",
   next: "التالي",
+  firstPage: "الصفحة الأولى",
+  lastPage: "الصفحة الأخيرة",
   previousPage: "الصفحة السابقة",
   nextPage: "الصفحة التالية",
+  pageSize: "الصفوف",
+  pageSizeLabel: "عدد الصفوف في الصفحة",
+  showingZero: "عرض 0 من 0",
+  showingRange: "عرض {start}-{end} من {total}",
   page: "الصفحة {number}",
   goToPage: "الانتقال إلى الصفحة {number}",
   currentPage: "الصفحة الحالية، الصفحة {number}",
@@ -179,6 +208,7 @@ export const commonDictionaryEn: CommonDictionary = {
   actions: {
     back: "Back",
     cancel: "Cancel",
+    clear: "Clear",
     close: "Close",
     create: "Create",
     edit: "Edit",
@@ -187,12 +217,16 @@ export const commonDictionaryEn: CommonDictionary = {
   labels: {
     notes: "Notes",
     search: "Search",
+    select: "Select",
+    searchTypeFirst: "Select a search type first",
     status: "Status",
     total: "Total",
   },
   states: {
     empty: "No results",
     loading: "Loading",
+    searching: "Searching…",
+    updatingResults: "Updating results…",
     unavailable: "Unavailable",
   },
   shared: sharedUiStatesDictionaryEn,
@@ -203,6 +237,7 @@ export const commonDictionaryAr: CommonDictionary = {
   actions: {
     back: "رجوع",
     cancel: "إلغاء",
+    clear: "مسح",
     close: "إغلاق",
     create: "إنشاء",
     edit: "تعديل",
@@ -211,12 +246,16 @@ export const commonDictionaryAr: CommonDictionary = {
   labels: {
     notes: "ملاحظات",
     search: "بحث",
+    select: "اختر",
+    searchTypeFirst: "اختر نوع البحث أولاً",
     status: "الحالة",
     total: "الإجمالي",
   },
   states: {
     empty: "لا توجد نتائج",
     loading: "جارٍ التحميل",
+    searching: "جاري البحث…",
+    updatingResults: "جاري تحديث النتائج…",
     unavailable: "غير متاح",
   },
   shared: sharedUiStatesDictionaryAr,

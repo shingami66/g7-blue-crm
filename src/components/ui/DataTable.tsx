@@ -25,16 +25,18 @@ function mergeStyle(
 
 export default function DataTable({
   columns,
+  centeredColumns = [],
   children,
 }: {
   columns: string[];
+  centeredColumns?: readonly number[];
   children: ReactNode;
 }) {
   const hasActionColumn =
     columns.length > 0 &&
     columns[columns.length - 1].toLowerCase().includes("action");
 
-  const rows = hasActionColumn
+  const rows = hasActionColumn || centeredColumns.length > 0
     ? Children.map(children, (row) => {
         if (!isValidElement<TableChildProps>(row)) {
           return row;
@@ -49,13 +51,15 @@ export default function DataTable({
 
         const lastIndex = rowChildren.length - 1;
         const nextChildren = rowChildren.map((cell, index) => {
-          if (index !== lastIndex || !isValidElement<TableChildProps>(cell)) {
+          const isActionCell = hasActionColumn && index === lastIndex;
+          const isCenteredCell = centeredColumns.includes(index) && !isActionCell;
+          if ((!isCenteredCell && !isActionCell) || !isValidElement<TableChildProps>(cell)) {
             return cell;
           }
 
           const cellElement = cell as ReactElement<TableChildProps>;
           const nextStyle = mergeStyle(cellElement.props.style, {
-            textAlign: "end",
+            textAlign: isActionCell ? "end" : "center",
           });
           let nextCellChildren = cellElement.props.children;
 
@@ -66,12 +70,9 @@ export default function DataTable({
                 ? childElement.props.className
                 : "";
 
-            if (
-              currentClassName.split(" ").includes("flex") &&
-              !currentClassName.includes("justify-")
-            ) {
+            if (currentClassName.split(" ").includes("flex") && !currentClassName.includes("justify-")) {
               nextCellChildren = cloneElement(childElement, {
-                className: `${currentClassName} justify-end`,
+                className: `${currentClassName} ${isActionCell ? "justify-end" : "justify-center"}`,
               });
             }
           }
@@ -91,10 +92,12 @@ export default function DataTable({
             {columns.map((col, i) => (
               <th
                 key={i}
-                className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase px-4 py-3"
+                className={`text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase px-4 py-3 ${centeredColumns.includes(i) && !(hasActionColumn && i === columns.length - 1) ? "text-center" : ""}`}
                 style={
                   hasActionColumn && i === columns.length - 1
                     ? { textAlign: "end" }
+                    : centeredColumns.includes(i)
+                      ? { textAlign: "center" }
                     : undefined
                 }
               >
