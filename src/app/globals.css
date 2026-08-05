@@ -88,6 +88,44 @@ body {
   color: var(--color-on-surface);
 }
 
+/* === Workspace loading foundation === */
+.g7-workspace-loading {
+  min-height: 24rem;
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+  transition-delay: 180ms;
+}
+
+.g7-workspace-loading__reveal {
+  contain: layout;
+}
+
+.g7-workspace-loading[data-revealed="true"] {
+  opacity: 1;
+}
+
+.g7-skeleton {
+  background-color: var(--color-surface-container);
+  background-image: linear-gradient(
+    100deg,
+    var(--color-surface-container) 20%,
+    var(--color-surface-container-high) 45%,
+    var(--color-surface-container) 70%
+  );
+  background-size: 200% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g7-workspace-loading {
+    opacity: 1;
+    transition: none;
+  }
+
+  .g7-skeleton {
+    background-image: none;
+  }
+}
+
 .no-number-spinner {
   appearance: textfield;
   -moz-appearance: textfield;

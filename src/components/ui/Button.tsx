@@ -3,7 +3,6 @@
 import {
   Children,
   cloneElement,
-  useEffect,
   isValidElement,
   type MouseEvent,
   type ButtonHTMLAttributes,
@@ -11,7 +10,6 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { useGlobalPending } from "@/components/ui/GlobalPendingProvider";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 type ButtonSize = "sm" | "md" | "lg" | "icon";
@@ -63,7 +61,6 @@ export default function Button({
   variant = "primary",
   ...props
 }: ButtonProps) {
-  const { hidePending, showPending } = useGlobalPending();
   const isDisabled = disabled || loading;
   const buttonContent = children;
 
@@ -74,17 +71,8 @@ export default function Button({
     className
   );
 
-  useEffect(() => {
-    if (!loading) {
-      return;
-    }
-
-    const pendingId = showPending(loadingLabel);
-
-    return () => {
-      hidePending(pendingId);
-    };
-  }, [hidePending, loading, loadingLabel, showPending]);
+  // Kept for call-site compatibility; loading remains local to this control.
+  void loadingLabel;
 
   if (asChild) {
     const child = Children.only(children);

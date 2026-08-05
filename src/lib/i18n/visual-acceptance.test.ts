@@ -32,26 +32,22 @@ const JULY_11 = new Date(2026, 6, 11);
 const JULY_16 = new Date(2026, 6, 16);
 
 // ────────────────────────────────────────
-// Locale selector / global pending bolt
+// Locale selector / localized pending status
 // ────────────────────────────────────────
 
-test("locale selector uses global pending bolt, not local spinner copy", () => {
+test("locale selector uses localized status copy, not a global visual loader", () => {
   const selector = read("src/components/i18n/LocaleSelector.tsx");
-  assert.match(selector, /useGlobalPending/);
-  assert.match(selector, /showPending/);
-  assert.match(selector, /hidePending/);
+  assert.doesNotMatch(selector, /GlobalPendingProvider|useGlobalPending|showPending|hidePending/);
   assert.doesNotMatch(selector, /Loader2/);
-  assert.doesNotMatch(selector, /copy\.updating/);
+  assert.match(selector, /copy\.updating/);
   assert.doesNotMatch(selector, /animate-spin/);
   assert.doesNotMatch(selector, /<Spinner/);
 });
 
-test("locale pending lifecycle: showPending before update; clear after locale observed", () => {
+test("locale pending lifecycle: status remains through refresh and clears after locale observed", () => {
   const selector = read("src/components/i18n/LocaleSelector.tsx");
 
-  // showPending runs before the preference action / refresh.
-  assert.match(selector, /const pendingId = showPending\(/);
-  assert.match(selector, /pendingIdRef\.current = pendingId/);
+  assert.doesNotMatch(selector, /showPending|pendingIdRef/);
   assert.match(selector, /applyCurrentUserLocalePreference/);
 
   // Duplicate submissions blocked.

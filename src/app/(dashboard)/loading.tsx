@@ -1,14 +1,9 @@
-import CenterPendingBolt from "@/components/ui/CenterPendingBolt";
-import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
+import WorkspaceLoadingFrame from "@/components/ui/WorkspaceLoadingFrame";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 
-/**
- * Authenticated dashboard route loading state.
- * Visual pending bolt is unchanged; only the screen-reader label is localized.
- */
+/** Authenticated dashboard route loading state with a destination-shaped skeleton. */
 export default async function DashboardLoading() {
   const locale = await getCurrentSessionEffectiveLocale();
-  const label = getSharedUiStates(locale).loading.label;
 
-  return <CenterPendingBolt label={label} />;
+  return <WorkspaceLoadingFrame locale={locale} />;
 }

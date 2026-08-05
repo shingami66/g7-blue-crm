@@ -115,7 +115,7 @@ const SERVICE_STATUS_TRANSITIONS = join(
   "src/lib/services/status-transitions.ts",
 );
 const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/role-permissions.ts");
-const PENDING = join(REPO_ROOT, "src/components/ui/GlobalPendingProvider.tsx");
+const PENDING = join(REPO_ROOT, "src/components/ui/WorkspaceSkeleton.tsx");
 const QUOTATIONS_PAGE = join(REPO_ROOT, "src/app/(dashboard)/quotations/page.tsx");
 const INVOICES_PAGE = join(REPO_ROOT, "src/app/(dashboard)/invoices/page.tsx");
 const PAYMENTS_PAGE = join(REPO_ROOT, "src/app/(dashboard)/payments/page.tsx");
@@ -971,11 +971,12 @@ test("20. Stored supplier/item/reason/note/Service text is not translated", () =
 // ---------------------------------------------------------------------------
 // 21-23. Pending, empty/denied/unavailable, no raw errors
 // ---------------------------------------------------------------------------
-test("21. Pending bolt visual and navigation contracts remain in GlobalPendingProvider", () => {
+test("21. Workspace loading keeps route shape without a global bolt overlay", () => {
   const pending = read(PENDING);
-  assert.match(pending, /CenterPendingBolt/);
-  assert.match(pending, /showPending/);
-  assert.doesNotMatch(pending, /backdrop-blur|fixed inset-0 bg-black\/50/);
+  assert.match(pending, /role="status"/);
+  assert.match(pending, /aria-hidden="true"/);
+  assert.match(pending, /g7-workspace-loading__reveal/);
+  assert.doesNotMatch(pending, /CenterPendingBolt|backdrop-blur|fixed inset-0 bg-black\/50/);
   // Operational UI does not introduce a full-page spinner overlay
   assert.doesNotMatch(read(BILLING), /full-page|blocking-overlay|spinner-replacement/i);
 });

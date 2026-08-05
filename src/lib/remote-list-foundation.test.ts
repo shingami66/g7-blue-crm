@@ -76,13 +76,17 @@ test("search control is form-submit driven and keeps draft input out of router s
 test("subsequent list transitions keep rows visible without a list-local rail", () => {
   const pending = read("src/components/ui/ListPendingState.tsx");
   const navigation = read("src/components/ui/useListNavigation.ts");
-  const global = read("src/components/ui/GlobalPendingProvider.tsx");
+  const layout = read("src/app/(dashboard)/layout.tsx");
+  const workspace = read("src/components/ui/WorkspaceSkeleton.tsx");
   assert.match(pending, /ListInlineError/);
   assert.doesNotMatch(pending, /ListPendingState/);
   assert.doesNotMatch(pending, /h-\[3px\]|bg-primary|setTimeout/);
   assert.match(navigation, /startTransition/);
   assert.match(navigation, /router\.refresh/);
-  assert.match(global, /CenterPendingBolt/);
+  assert.doesNotMatch(layout, /GlobalPendingProvider|CenterPendingBolt/);
+  assert.match(workspace, /g7-workspace-loading__reveal/);
+  assert.match(workspace, /aria-hidden="true"/);
+  assert.doesNotMatch(workspace, /CenterPendingBolt|progressbar|lightning/i);
 
   for (const relativePath of LIST_CLIENTS) {
     const source = read(relativePath);

@@ -12,10 +12,12 @@ import { DEFAULT_LOCALE, getLocale, type Locale } from "./locales.ts";
 const REPO_ROOT = join(import.meta.dirname, "../../..");
 
 const EDITED_SHARED_STATE_SURFACES = [
+  "src/app/loading.tsx",
   "src/app/(dashboard)/loading.tsx",
   "src/app/(dashboard)/error.tsx",
   "src/app/(dashboard)/not-found.tsx",
-  "src/components/ui/GlobalPendingProvider.tsx",
+  "src/components/ui/WorkspaceLoadingFrame.tsx",
+  "src/components/ui/WorkspaceSkeleton.tsx",
   "src/components/ui/SharedAuthenticatedStatePanel.tsx",
 ] as const;
 
@@ -49,6 +51,10 @@ test("English and Arabic shared-state dictionaries resolve approved copy", () =>
 
   assert.equal(english.loading.label, "Loading");
   assert.equal(arabic.loading.label, "جارٍ التحميل");
+  assert.equal(english.loading.workspace, "Loading workspace…");
+  assert.equal(arabic.loading.workspace, "جاري تحميل مساحة العمل…");
+  assert.equal(english.bootstrap.preparingWorkspace, "Preparing your workspace…");
+  assert.equal(arabic.bootstrap.preparingWorkspace, "جاري تجهيز مساحة العمل…");
 
   assert.equal(english.accessDenied.title, "Access denied");
   assert.equal(english.accessDenied.message, "You do not have permission to view this page.");
@@ -125,20 +131,22 @@ test("error-boundary retry contract only invokes the provided reset callback", (
   assert.equal(safe.message.includes("error.message"), false);
 });
 
-test("global pending bolt accessibility label localizes without changing visual contract markers", () => {
-  // Visual contract remains bolt-only (no visible sentence). SR label is localized copy.
-  const enLabel = getSharedUiStates("en").loading.label;
-  const arLabel = getSharedUiStates("ar").loading.label;
-  assert.equal(enLabel, "Loading");
-  assert.equal(arLabel, "جارٍ التحميل");
-
-  const boltSource = readFileSync(
-    join(REPO_ROOT, "src/components/ui/CenterPendingBolt.tsx"),
+test("workspace loading is localized, delayed, assistive-safe, and bolt-free", () => {
+  const skeletonSource = readFileSync(
+    join(REPO_ROOT, "src/components/ui/WorkspaceSkeleton.tsx"),
     "utf8",
   );
-  assert.match(boltSource, /center-pending-bolt/);
-  assert.match(boltSource, /sr-only/);
-  assert.doesNotMatch(boltSource, /backdrop|spinner/i);
+  const css = readFileSync(join(REPO_ROOT, "src/app/globals.css"), "utf8");
+
+  assert.match(skeletonSource, /role="status"/);
+  assert.match(skeletonSource, /aria-busy="true"/);
+  assert.match(skeletonSource, /aria-hidden="true"/);
+  assert.match(skeletonSource, /g7-workspace-loading__reveal/);
+  assert.doesNotMatch(skeletonSource, /CenterPendingBolt|lightning|progressbar/i);
+  assert.match(css, /g7-workspace-loading__reveal/);
+  assert.match(css, /180ms/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  assert.match(css, /background-image: none/);
 });
 
 test("edited shared authenticated surfaces avoid hardcoded English state copy", () => {

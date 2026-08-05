@@ -27,6 +27,12 @@ export interface SharedUiStatesDictionary {
   loading: {
     /** Screen-reader / status label for shared pending indicators. */
     label: string;
+    /** Accessible label for the route-shaped workspace skeleton. */
+    workspace: string;
+  };
+  bootstrap: {
+    /** Minimal copy used before the authenticated shell is available. */
+    preparingWorkspace: string;
   };
   accessDenied: {
     title: string;
@@ -155,6 +161,10 @@ const paginationDictionaryAr: PaginationDictionary = {
 const sharedUiStatesDictionaryEn: SharedUiStatesDictionary = {
   loading: {
     label: "Loading",
+    workspace: "Loading workspace…",
+  },
+  bootstrap: {
+    preparingWorkspace: "Preparing your workspace…",
   },
   accessDenied: {
     title: "Access denied",
@@ -181,6 +191,10 @@ const sharedUiStatesDictionaryEn: SharedUiStatesDictionary = {
 const sharedUiStatesDictionaryAr: SharedUiStatesDictionary = {
   loading: {
     label: "جارٍ التحميل",
+    workspace: "جاري تحميل مساحة العمل…",
+  },
+  bootstrap: {
+    preparingWorkspace: "جاري تجهيز مساحة العمل…",
   },
   accessDenied: {
     title: "تم رفض الوصول",
