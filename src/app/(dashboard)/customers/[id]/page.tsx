@@ -1,57 +1,60 @@
 import { notFound, redirect } from "next/navigation";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import PendingLink from "@/components/ui/PendingLink";
 import StatusBadge from "@/components/ui/StatusBadge";
-import DataTable from "@/components/ui/DataTable";
-import { checkPermission, requirePermission } from "@/lib/auth/permissions";
+import { checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
-import { getCustomerById } from "@/lib/customers/queries";
-import { getServicesByCustomerId } from "@/lib/services/queries";
+import { getCustomer360 } from "@/lib/customer-360/queries";
+import Customer360Workspace from "./Customer360Workspace";
 import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
 import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 import {
-  getCustomerServiceStatusLabel,
   getCustomerStatusLabel,
   getCustomersDictionary,
   type CustomersDictionary,
 } from "@/lib/i18n/dictionaries/customers";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
-import { UiDateRangeText, UiDateText } from "@/components/i18n/UiDateText";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
-import type { Locale } from "@/lib/i18n/locales";
 import type { Customer } from "@/types/customer";
-import type { Service } from "@/types/service";
 import CustomerProfileActions from "./CustomerProfileActions";
+import { getCustomer360Dictionary } from "@/lib/i18n/dictionaries/customer-360";
+import RecordNavigation from "@/components/records/RecordNavigation";
+import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
+import { getCustomerRecordNavigation, safeRecordReturnTo } from "@/lib/record-navigation/queries";
 
 export const dynamic = "force-dynamic";
 
-const SERVICE_STATUS_VARIANT_MAP = {
-  Inquiry: "inquiry",
-  Quoted: "quoted",
-  Approved: "approved",
-  "Deposit Paid": "deposit-paid",
-  "In Progress": "in-progress",
-  Completed: "completed",
-  Cancelled: "cancelled",
-} as const satisfies Record<Service["status"], ComponentProps<typeof StatusBadge>["variant"]>;
-
 export default async function CustomerProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnTo?: string }>;
 }) {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getCustomersDictionary(locale);
   const sharedStates = getSharedUiStates(locale);
-  const { id } = await params;
-  let customer: Customer | null = null;
+  const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const returnTo = safeRecordReturnTo(resolvedSearchParams.returnTo, "/customers");
+  let workspace: Awaited<ReturnType<typeof getCustomer360>>;
   let canWrite = false;
 
   try {
-    await requirePermission("customers:read");
-    customer = await getCustomerById(id);
+    workspace = await getCustomer360(id);
+    if (workspace.status === "not_found") {
+      notFound();
+    }
+    if (workspace.status === "error") {
+      return renderLoadError(
+        new Error(workspace.error),
+        dictionary.states.customerForbidden,
+        dictionary.states.customerLoadError,
+        sharedStates.accessDenied.title,
+        sharedStates.genericError.title,
+      );
+    }
     canWrite = await checkPermission("customers:write");
   } catch (error) {
     return renderLoadError(
@@ -63,18 +66,22 @@ export default async function CustomerProfilePage({
     );
   }
 
-  if (!customer) {
+  if (workspace.status !== "ready") {
     notFound();
   }
 
-  let services: Service[] = [];
-
-  try {
-    await requirePermission("services:read");
-    services = await getServicesByCustomerId(customer.id);
-  } catch (error) {
+  if (workspace.data.services.status === "forbidden") {
     return renderLoadError(
-      error,
+      new Error("services_forbidden"),
+      dictionary.states.customerServicesForbidden,
+      dictionary.states.relatedServicesLoadError,
+      sharedStates.accessDenied.title,
+      sharedStates.genericError.title,
+    );
+  }
+  if (workspace.data.services.status === "error") {
+    return renderLoadError(
+      new Error("services_load_failed"),
       dictionary.states.customerServicesForbidden,
       dictionary.states.relatedServicesLoadError,
       sharedStates.accessDenied.title,
@@ -82,12 +89,17 @@ export default async function CustomerProfilePage({
     );
   }
 
+  const { customer } = workspace.data;
+  const customer360Dictionary = getCustomer360Dictionary(locale);
+  const recordNavigation = await getCustomerRecordNavigation(id, customer.customerNumber);
+  const recordNavigationDictionary = getRecordNavigationDictionary(locale);
+
   return (
     <div className="flex flex-col gap-6 pb-12">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
           <PendingLink
-            href="/customers"
+            href={returnTo}
             className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
             aria-label={dictionary.profile.backToCustomers}
           >
@@ -107,7 +119,10 @@ export default async function CustomerProfilePage({
             </p>
           </div>
         </div>
-        <CustomerProfileActions customer={customer} canWrite={canWrite} dictionary={dictionary} />
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <RecordNavigation basePath="/customers" recordType={dictionary.profile.customerNumber} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} />
+          <CustomerProfileActions customer={customer} canWrite={canWrite} dictionary={dictionary} />
+        </div>
       </div>
 
       <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
@@ -178,84 +193,15 @@ export default async function CustomerProfilePage({
 
       <OfficialBillingDetails customer={customer} dictionary={dictionary} />
 
-      <section>
-        <div className="flex flex-col gap-1 mb-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h3 className="font-semibold text-primary">{dictionary.profile.relatedServices}</h3>
-            <p className="text-[14px] leading-[20px] text-on-surface-variant">
-              {dictionary.profile.relatedServicesSubtitle}
-            </p>
-          </div>
-          <div className="text-[14px] leading-[20px] text-on-surface-variant">
-            {dictionary.profile.totalServices}:{" "}
-            <span dir="ltr" className="tabular-nums">
-              {formatUiNumber(locale, services.length)}
-            </span>
-          </div>
-        </div>
+      <Customer360Workspace
+        data={workspace.data}
+        locale={locale}
+        dictionary={customer360Dictionary}
+      />
 
-        {services.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 bg-surface-container-lowest border border-surface-variant rounded-xl">
-            <p className="text-on-surface-variant text-[14px] leading-[20px]">
-              {dictionary.states.noRelatedServices}
-            </p>
-          </div>
-        ) : (
-          <DataTable
-            columns={[
-              dictionary.profile.serviceTable.serviceNumber,
-              dictionary.profile.serviceTable.serviceTitle,
-              dictionary.profile.serviceTable.eventDate,
-              dictionary.profile.serviceTable.status,
-              dictionary.profile.serviceTable.budget,
-            ]}
-          >
-            {services.map((service) => (
-              <tr
-                key={service.id}
-                className="hover:bg-surface-container-low/50 transition-colors"
-              >
-                <td dir="ltr" className="px-4 py-4 font-mono font-semibold">
-                  <PendingLink
-                    href={`/services/${service.id}`}
-                    className="text-primary hover:underline"
-                  >
-                    {formatNullable(service.serviceNumber)}
-                  </PendingLink>
-                </td>
-                <td className="px-4 py-4">
-                  <PendingLink
-                    href={`/services/${service.id}`}
-                    className="font-semibold text-on-surface hover:text-primary hover:underline"
-                  >
-                    <span dir="auto">{formatNullable(service.serviceTitle)}</span>
-                  </PendingLink>
-                  <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
-                    <span dir="auto">{formatNullable(service.eventName)}</span>
-                  </div>
-                </td>
-                <td dir="ltr" className="px-4 py-4 text-on-surface-variant tabular-nums">
-                  {formatEventDate(locale, service)}
-                </td>
-                <td className="px-4 py-4">
-                  <StatusBadge variant={SERVICE_STATUS_VARIANT_MAP[service.status]}>
-                    {getCustomerServiceStatusLabel(locale, service.status)}
-                  </StatusBadge>
-                </td>
-                <td dir="ltr" className="px-4 py-4 font-semibold text-on-surface tabular-nums">
-                  {service.estimatedBudget != null
-                    ? formatSarAmount(locale, Number(service.estimatedBudget))
-                    : "—"}
-                </td>
-              </tr>
-            ))}
-          </DataTable>
-        )}
-      </section>
     </div>
   );
 }
-
 function DetailItem({
   label,
   children,
@@ -414,26 +360,4 @@ function formatNationalAddress(customer: Customer) {
   ].filter(Boolean);
 
   return parts.length > 0 ? <span dir="auto">{parts.join(", ")}</span> : "—";
-}
-
-function formatEventDate(locale: Locale, service: Service): ReactNode {
-  if (service.eventStartDate && service.eventEndDate) {
-    return (
-      <UiDateRangeText
-        locale={locale}
-        start={service.eventStartDate}
-        end={service.eventEndDate}
-      />
-    );
-  }
-
-  if (service.eventStartDate) {
-    return <UiDateText locale={locale} value={service.eventStartDate} />;
-  }
-
-  if (service.eventEndDate) {
-    return <UiDateText locale={locale} value={service.eventEndDate} />;
-  }
-
-  return "—";
 }

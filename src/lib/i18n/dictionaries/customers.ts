@@ -33,6 +33,7 @@ export interface CustomersDictionary {
     customersSummaryZero: string;
     /** Template with `{range}` and `{total}` placeholders (Western digits supplied at call site). */
     customersSummary: string;
+    searchPlaceholder: string;
     allStatuses: string;
     allCities: string;
     actions: {
@@ -192,6 +193,7 @@ const customersDictionaryEn: CustomersDictionary = {
     creatingCustomer: "Creating...",
     customersSummaryZero: "Showing 0 of 0 customers",
     customersSummary: "Showing {range} of {total} customers",
+    searchPlaceholder: "Search customer number, name, contact, phone, or email",
     allStatuses: "All Statuses",
     allCities: "All Cities",
     actions: {
@@ -365,6 +367,7 @@ const customersDictionaryAr: CustomersDictionary = {
     creatingCustomer: "جارٍ إنشاء العميل...",
     customersSummaryZero: "عرض 0 من 0 عميل",
     customersSummary: "عرض {range} من إجمالي {total} عميل",
+    searchPlaceholder: "ابحث برقم العميل أو الاسم أو جهة الاتصال أو الهاتف أو البريد الإلكتروني",
     allStatuses: "جميع الحالات",
     allCities: "كل المدن",
     actions: {

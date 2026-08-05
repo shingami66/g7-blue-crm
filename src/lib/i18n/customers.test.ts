@@ -20,6 +20,14 @@ const CUSTOMER_PROFILE = join(
   REPO_ROOT,
   "src/app/(dashboard)/customers/[id]/page.tsx",
 );
+const CUSTOMER_360_WORKSPACE = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/customers/[id]/Customer360Workspace.tsx",
+);
+const CUSTOMER_360_QUERIES = join(
+  REPO_ROOT,
+  "src/lib/customer-360/queries.ts",
+);
 const PROFILE_ACTIONS = join(
   REPO_ROOT,
   "src/app/(dashboard)/customers/[id]/CustomerProfileActions.tsx",
@@ -196,12 +204,15 @@ test("10. Related Services headings and empty state are localized", () => {
 test("11-12. Customer/Service numbers and LTR-safe values remain direction-safe", () => {
   const client = readFileSync(CUSTOMERS_CLIENT, "utf8");
   const profile = readFileSync(CUSTOMER_PROFILE, "utf8");
+  const workspace = readFileSync(CUSTOMER_360_WORKSPACE, "utf8");
   assert.match(client, /dir="ltr"/);
   assert.match(client, /customer\.customerNumber/);
   assert.match(profile, /dir="ltr"/);
-  assert.match(profile, /service\.serviceNumber/);
   assert.match(profile, /customer\.vatNumber|vatNumber/);
   assert.match(profile, /commercialRegistrationNumber|crNumber|vatNumber|postal/i);
+  assert.match(profile, /Customer360Workspace/);
+  assert.match(workspace, /service\.serviceNumber/);
+  assert.match(workspace, /dir="ltr"/);
 });
 
 test("13. SAR and counts use shared formatters with Western digits", () => {
@@ -222,9 +233,9 @@ test("14. Dates use approved locale formatters with Arabic month names where pre
   const arabicDate = formatUiDate("ar", "2026-07-10");
   assert.match(arabicDate, ARABIC_MONTH);
   assert.doesNotMatch(arabicDate, ARABIC_INDIC);
-  const profile = readFileSync(CUSTOMER_PROFILE, "utf8");
-  assert.match(profile, /UiDateText|UiDateRangeText|formatUiDate/);
-  assert.match(profile, /formatEventDate\(locale,/);
+  const workspace = readFileSync(CUSTOMER_360_WORKSPACE, "utf8");
+  assert.match(workspace, /UiDateText|UiDateRangeText/);
+  assert.match(workspace, /locale=\{locale\}/);
 });
 
 test("15. Stored names, addresses, notes, and city data are not translated", () => {
@@ -270,7 +281,11 @@ test("18. Access-denied UI is localized while server permission enforcement is u
   assert.match(page, /checkPermission\("customers:export"\)/);
   assert.match(page, /SharedAuthenticatedStatePanel/);
   assert.match(page, /sharedStates\.accessDenied\.title/);
-  assert.match(profile, /requirePermission\("customers:read"\)/);
+  assert.match(profile, /getCustomer360/);
+  assert.match(
+    readFileSync(CUSTOMER_360_QUERIES, "utf8"),
+    /requirePermission\("customers:read"\)/,
+  );
   assert.match(profile, /SharedAuthenticatedStatePanel/);
 });
 

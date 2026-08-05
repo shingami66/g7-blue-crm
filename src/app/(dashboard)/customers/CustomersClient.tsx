@@ -8,6 +8,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import Button from "@/components/ui/Button";
 import PendingLink from "@/components/ui/PendingLink";
+import ModuleSearchInput from "@/components/ui/ModuleSearchInput";
 import { Eye, Plus, Filter, Download, X } from "lucide-react";
 import { createCustomer } from "@/lib/customers/actions";
 import {
@@ -18,6 +19,7 @@ import {
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import type { Customer } from "@/types/customer";
+import { matchesLocalSearch } from "@/lib/search/local";
 import { CustomerCoreFields, CustomerOfficialBillingFields } from "./CustomerFormFields";
 import { generateExcelReport } from "@/lib/reports/exportExcel";
 
@@ -53,6 +55,7 @@ export default function CustomersClient({
   const [isPending, startTransition] = useTransition();
   const [statusFilter, setStatusFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -61,6 +64,7 @@ export default function CustomersClient({
   const filteredCustomers = customers.filter((customer) => {
     if (statusFilter !== "all" && customer.status !== statusFilter) return false;
     if (cityFilter !== "all" && customer.city !== cityFilter) return false;
+    if (!matchesLocalSearch(searchTerm, [customer.customerNumber, customer.company, customer.contact, customer.phone, customer.email])) return false;
     return true;
   });
 
@@ -170,6 +174,16 @@ export default function CustomersClient({
       <div className="flex flex-1 min-h-0">
         <div className="flex-1 flex flex-col">
           <FilterBar>
+            <ModuleSearchInput
+              value={searchTerm}
+              onChange={(value) => {
+                setSearchTerm(value);
+                setCurrentPage(1);
+              }}
+              placeholder={dictionary.list.searchPlaceholder}
+              ariaLabel={dictionary.list.searchPlaceholder}
+              className="w-full max-w-sm sm:min-w-[240px] sm:flex-1"
+            />
             <div className="relative">
               <select
                 value={statusFilter}
@@ -298,7 +312,7 @@ export default function CustomersClient({
                         <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}>
                           <div className="flex justify-center">
                             <PendingLink
-                              href={`/customers/${customer.id}`}
+                              href={`/customers/${customer.id}?returnTo=%2Fcustomers`}
                               aria-label={`${dictionary.list.actions.view} ${customer.customerNumber}`}
                               title={`${dictionary.list.actions.view} ${customer.customerNumber}`}
                               className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed"
