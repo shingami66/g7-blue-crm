@@ -12,6 +12,7 @@ const DASHBOARD_PAGE = join(
   "src/app/(dashboard)/dashboard/page.tsx",
 );
 const KPI_CARD = join(REPO_ROOT, "src/components/ui/KpiCard.tsx");
+const DASHBOARD_LAYOUT = join(REPO_ROOT, "src/app/(dashboard)/layout.tsx");
 const DASHBOARD_DICTIONARY = join(
   REPO_ROOT,
   "src/lib/i18n/dictionaries/dashboard.ts",
@@ -65,6 +66,12 @@ test("2. Required Dashboard headings and KPI labels resolve in both locales", ()
   assert.equal(arabic.metrics.totalCollected, "إجمالي المحصل");
   assert.equal(english.metrics.pendingBalance, "Pending Balance");
   assert.equal(arabic.metrics.pendingBalance, "الرصيد المستحق");
+  assert.equal(english.sections.recentActivity, "Recent Activity");
+  assert.equal(arabic.sections.recentActivity, "النشاط الأخير");
+  assert.equal(english.sections.recentPayments, "Recent Payments");
+  assert.equal(arabic.sections.recentPayments, "أحدث المدفوعات");
+  assert.equal(english.quotations.viewAll, "View all");
+  assert.equal(arabic.quotations.viewAll, "عرض الكل");
   assert.doesNotMatch(JSON.stringify(arabic.metrics), /إيرادات|revenue/i);
 });
 
@@ -242,10 +249,18 @@ test("12. Dashboard query, permission, formula, and data-source contracts remain
   assert.match(page, /getQuotations/);
   assert.match(page, /getInvoices/);
   assert.match(page, /getServices/);
-  assert.match(page, /loadIfAllowed\("customers:read"/);
-  assert.match(page, /loadIfAllowed\("quotations:read"/);
-  assert.match(page, /loadIfAllowed\("invoices:read"/);
-  assert.match(page, /loadIfAllowed\("services:read"/);
+  assert.match(page, /customers: \{[\s\S]*?id: "customers-kpi"[\s\S]*?readPermission: "customers:read"/);
+  assert.match(page, /quotations: \{[\s\S]*?id: "quotations-kpi-and-list"[\s\S]*?readPermission: "quotations:read"/);
+  assert.match(page, /invoices: \{[\s\S]*?id: "invoices-kpi-and-attention"[\s\S]*?readPermission: "invoices:read"/);
+  assert.match(page, /services: \{[\s\S]*?id: "services-kpi-and-workflow"[\s\S]*?readPermission: "services:read"/);
+  assert.match(page, /payments: \{[\s\S]*?id: "payments-kpi-and-activity"[\s\S]*?readPermission: "payments:read"/);
+  assert.match(page, /displayPriority: 10[\s\S]*?destination: "\/customers"[\s\S]*?yearScoped: false/);
+  assert.match(page, /sensitivity: "financial"[\s\S]*?emptyState: "unavailableForRole"[\s\S]*?destination: "\/invoices"/);
+  assert.match(page, /loadIfAllowed\(DASHBOARD_WIDGETS\.customers\.readPermission/);
+  assert.match(page, /loadIfAllowed\(DASHBOARD_WIDGETS\.quotations\.readPermission/);
+  assert.match(page, /loadIfAllowed\(DASHBOARD_WIDGETS\.invoices\.readPermission/);
+  assert.match(page, /loadIfAllowed\(DASHBOARD_WIDGETS\.services\.readPermission/);
+  assert.match(page, /loadIfAllowed\(DASHBOARD_WIDGETS\.payments\.readPermission/);
   assert.match(page, /checkPermission\(permission\)/);
   assert.match(page, /requirePermission\("dashboard:read"\)/);
   assert.match(page, /amount_paid/);
@@ -289,16 +304,60 @@ test("Dashboard dictionary export remains the single module copy source", () => 
   assert.match(dictionarySource, /dashboardDictionaryAr/);
 });
 
-test("Dashboard visual hierarchy orders Priority Work, workflow, then compact quotations", () => {
+test("Dashboard final density uses a bounded frame, no obsolete heading, and a bounded Attention preview", () => {
   const page = readFileSync(DASHBOARD_PAGE, "utf8");
-  assert.match(page, /data-dashboard-section="priority-work"/);
+  const layout = readFileSync(DASHBOARD_LAYOUT, "utf8");
+  const quotationSections = page.match(/data-dashboard-section="quotations"/g) ?? [];
+  const quotationMaps = page.match(/recentQuotations\.map/g) ?? [];
+  const dashboardColumns = page.match(/data-dashboard-column="(?:left|right)"/g) ?? [];
+  const quotationSectionStart = page.indexOf('data-dashboard-section="quotations"');
+  const paymentsSectionStart = page.indexOf('data-dashboard-section="payments"');
+
+  assert.match(page, /<PageHeader title=\{dictionary\.header\.title\}/);
+  assert.match(page, /data-dashboard-section="quick-actions"/);
+  assert.doesNotMatch(page, /dictionary\.actions\.title/);
+  assert.match(page, /data-dashboard-content-frame="true" className="mx-auto w-full max-w-\[1240px\]"/);
+  assert.match(layout, /<main className="dashboard-main mx-auto w-full min-w-0 max-w-\[1440px\] flex-1 p-4 md:p-6">/);
+  assert.match(page, /canCreateCustomer && <Link href="\/customers"/);
+  assert.match(page, /canCreateQuotation && <Link href="\/quotations"/);
+  assert.match(page, /canCreateInvoice && <Link href="\/invoices"/);
+  assert.match(page, /canCreateService && <Link href="\/services\/new"/);
+  assert.match(page, /data-dashboard-section="business-snapshot"/);
+  assert.match(page, /grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3/);
+  assert.match(page, /data-dashboard-main-columns="true"/);
+  assert.equal(dashboardColumns.length, 2);
+  assert.match(page, /data-dashboard-column="left" className="min-w-0 space-y-6 lg:col-span-5"/);
+  assert.match(page, /data-dashboard-column="right" className="min-w-0 space-y-6 lg:col-span-7"/);
   assert.match(page, /data-dashboard-section="workflow"/);
+  assert.match(page, /data-dashboard-section="operations-focus"/);
+  assert.match(page, /data-dashboard-section="recent-activity"/);
   assert.match(page, /data-dashboard-section="quotations"/);
+  assert.match(page, /data-dashboard-section="payments"/);
   assert.match(page, /items-start/);
   assert.match(page, /self-start/);
+  assert.doesNotMatch(page, /data-dashboard-section="priority-work"|dashboard-priority-work|dictionary\.sections\.priorityWork/);
+  assert.doesNotMatch(page, /Priority Work|أعمال ذات أولوية/);
+  assert.match(page, /const outstandingAttentionInvoices = invoices\.filter\(\(invoice\) => Number\(invoice\.balance_due\) > 0\);/);
+  assert.match(page, /const attentionInvoices = outstandingAttentionInvoices\.slice\(0, 5\);/);
+  assert.match(page, /const hasMoreAttentionInvoices = outstandingAttentionInvoices\.length > attentionInvoices\.length;/);
+  assert.match(page, /action=\{hasMoreAttentionInvoices \? <Link href="\/invoices"/);
+  assert.match(page, /dictionary\.quotations\.viewAll/);
   assert.match(page, /advancementDictionary\.attentionTitle/);
   assert.match(page, /advancementDictionary\.operationsTitle/);
   assert.match(page, /dictionary\.workflow\.title/);
-  assert.match(page, /dictionary\.quotations\.title/);
+  assert.match(page, /dictionary\.sections\.recentQuotations/);
+  assert.match(page, /dictionary\.sections\.recentPayments/);
+  assert.match(page, /<div className="mt-4 space-y-6">/);
+  assert.match(page, /<DashboardAmount locale=\{locale\} value=\{totalCollected\}/);
+  assert.match(page, /whitespace-nowrap/);
+  assert.match(page, /dir="ltr"/);
+  assert.doesNotMatch(page, /DashboardFocusCard title=\{advancementDictionary\.recentPayments\}/);
+  assert.doesNotMatch(page, /data-dashboard-section="operational-snapshot"/);
+  assert.doesNotMatch(page, /dictionary\.sections\.operationalSnapshot/);
+  assert.doesNotMatch(page, /xl:grid-cols-2/);
+  assert.doesNotMatch(page, /BusinessYearSelector|searchParams|business_year|year=/i);
+  assert.equal(quotationSections.length, 1);
+  assert.equal(quotationMaps.length, 1);
+  assert.ok(quotationSectionStart > 0 && paymentsSectionStart > quotationSectionStart);
   assert.match(page, /slice\(0,\s*4\)/);
 });

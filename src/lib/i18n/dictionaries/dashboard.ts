@@ -34,6 +34,12 @@ export interface DashboardDictionary {
     newInvoice: string;
     newService: string;
   };
+  sections: {
+    businessSnapshot: string;
+    recentActivity: string;
+    recentQuotations: string;
+    recentPayments: string;
+  };
   quotations: {
     title: string;
     viewAll: string;
@@ -85,6 +91,12 @@ const dashboardDictionaryEn: DashboardDictionary = {
     newQuotation: "New Quotation",
     newInvoice: "New Invoice",
     newService: "New Service",
+  },
+  sections: {
+    businessSnapshot: "Business Snapshot",
+    recentActivity: "Recent Activity",
+    recentQuotations: "Recent Quotations",
+    recentPayments: "Recent Payments",
   },
   quotations: {
     title: "Recent Quotations",
@@ -151,6 +163,12 @@ const dashboardDictionaryAr: DashboardDictionary = {
     newQuotation: "عرض سعر جديد",
     newInvoice: "فاتورة جديدة",
     newService: "خدمة جديدة",
+  },
+  sections: {
+    businessSnapshot: "ملخص الأعمال",
+    recentActivity: "النشاط الأخير",
+    recentQuotations: "أحدث عروض الأسعار",
+    recentPayments: "أحدث المدفوعات",
   },
   quotations: {
     title: "أحدث عروض الأسعار",

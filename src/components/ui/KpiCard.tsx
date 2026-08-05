@@ -1,4 +1,5 @@
 import { type LucideIcon, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import type { ReactNode } from "react";
 
 type TrendDirection = "up" | "down" | "flat" | "warning";
 
@@ -14,7 +15,7 @@ export default function KpiCard({
   icon: Icon,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   trend?: TrendDirection;
   trendLabel?: string;
   icon: LucideIcon;
