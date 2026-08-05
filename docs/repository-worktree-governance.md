@@ -1,50 +1,45 @@
 # Repository Worktree Governance and Approval Gates
 
-This document defines the authoritative rules for managing Git worktrees, local checkout paths, and implementation gates for the G7 BLUE CRM repository.
+This document defines the authoritative rules for managing Git worktrees, local checkout paths, recovery assets, and implementation gates for the G7 BLUE CRM repository.
 
-## 1. Local Checkout and Worktree Situation
+## 1. Canonical Development Path
 
-### Historical Origin
-The original stable local checkout of the G7 CRM repository was located at:
-`D:/G7/g7-crm`
+### Canonical Path
 
-### Current Operational Fact
-To isolate development, an isolated Git worktree was created at:
-`C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5`
+The sole normal active development repository is:
+`D:\G7\g7-crm`
 
-The latest development and integration work has been carried out inside this worktree. All completed features and bug fixes have been committed and pushed to the GitHub repository's `main` branch from this path.
+The normal canonical branch is:
+`main`
 
-**Current Active/Authorized Checkout:**
-- `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5` (This remains the only authorized local workspace path for active execution).
+All normal future implementation, review, testing, commit, and push tasks must start from `D:\G7\g7-crm` unless Mozfer explicitly authorizes a recovery, forensic, or temporary-repository operation elsewhere.
 
-**Forbidden Old Checkout:**
-- `D:/G7/g7-crm` (This checkout is historical and must remain untouched. No command execution, staging, commits, pulls, resets, or edits are permitted inside this directory during active tasks).
+### Transition Context
 
-### Source-of-Truth Rule
-- GitHub `origin/main` is the shared repository source of truth for committed work.
-- Only one authorized active checkout may exist at a time.
-- Every task must verify its path in preflight and postflight logs.
-- No silent worktree creation.
-- No silent checkout switching.
-- No manual folder copying or merging between paths.
-- Temporary worktrees require explicit: purpose, owner, branch, creation approval, exit plan, reconciliation plan, and retirement plan.
+The owner-approved return to the canonical repository has been verified separately. Any recorded branch, HEAD, or `origin/main` alignment is transition evidence only. Future tasks must verify the current repository state and must not rely on a permanently frozen commit SHA.
+
+### Temporary Recovery Worktrees
+
+The following Grok checkouts are temporary recovery assets, not active development paths:
+
+- `C:\Users\Mozfer\.grok\worktrees\g7-g7-crm\2026-08-04-v1-product-advancement-wave`
+- `C:\Users\Mozfer\.grok\worktrees\g7-g7-crm\2026-07-13-360132e5`
+
+They are read-only except for a specifically owner-authorized recovery or cleanup task. They must not receive new product implementation, normal review, testing, commit, or push work. They may be removed only after canonical local `main` is verified, remote `origin/main` is verified, recovery branches and the Git bundle are preserved, and no unique work remains.
+
+### Historical and Rescue State
+
+The rescue branch, integration branch, imported goal-return refs, Git bundle, and any explicitly retained forensic artifacts are intentionally preserved until separately approved. Historical standalone checkout state and recovery evidence are not normal development authority.
+
+## 2. Source of Truth and Worktree Creation
+
+- GitHub `origin/main` is the shared source of truth for committed work, while `D:\G7\g7-crm` on `main` is the canonical local development path.
+- Every task must verify its exact repository path, branch, HEAD, divergence, working-tree status, staged paths, and untracked paths during preflight.
+- Agents must not create branches or worktrees automatically.
+- A branch or worktree may be created only when the active task explicitly authorizes its exact name, exact source commit, exact purpose, and cleanup or retention plan.
+- No silent worktree creation, checkout switching, manual folder copying, or manual folder merging is permitted.
 - Temporary worktrees cannot become permanent by accident.
-- No task prompt may override these rules.
-
----
-
-## 2. Future Reconciliation Sequence
-
-Reconciliation of the old checkout is a separate, future task and is not executed. When authorized, the reconciliation sequence must proceed as follows:
-
-1. **Read-Only Audit**: Conduct a read-only audit of the old checkout `D:/G7/g7-crm`. Check branch, HEAD, origin/main, working-tree changes, untracked files, unique commits, remotes, and worktree registration.
-2. **Decision Gate**: If the old checkout contains unique commits or local changes, stop and request Mozfer’s decision.
-3. **Synchronize**: If the old checkout is clean and has no unique local work, it may be fast-forwarded from `origin/main` under explicit approval.
-4. **Compare & Verify**: Compare canonical docs and relevant source code between paths. Run bounded validation tests from the synchronized permanent checkout.
-5. **Approval & Handoff**: Mozfer must approve the final switch. Only after successful verification may `D:/G7/g7-crm` be redesignated as the primary stable checkout.
-6. **Retirement**: The temporary Grok worktree may only be retired through a separate approved, Git-aware cleanup task.
-
-**CRITICAL RULE:** Never copy or manually merge folders between the two paths.
+- A current commit SHA may be recorded as evidence for a transition, but must not become a permanent path or branch gate.
 
 ---
 
@@ -65,9 +60,40 @@ Before executing any non-trivial task (which includes code edits, dependency cha
 11. **Worktree/branch lifecycle and cleanup plan** when applicable.
 
 **Approval Rules:**
+
 - No edit or modifying command may start until Mozfer explicitly approves the plan.
 - Silence or an earlier broad request does not constitute permission to modify files outside the approved scope.
 - Path changes, worktree creation, database work, commits, pushes, dependency changes, migrations, and financial mutations require explicit approval.
 - Implementation, review, commit, push, Graphify refresh, reconciliation, and retirement are separate owner-approved tasks.
 - No agent may silently create a worktree, silently switch checkouts, continue work in an unexpected path, or treat a temporary worktree as permanent without an approved decision.
 - Task prompts cannot weaken or override these repository governance rules.
+
+## 4. One-Time Cleanup Authorization Boundary
+
+An explicitly owner-authorized cleanup task may, and only may:
+
+1. Verify the canonical `D:\G7\g7-crm` repository, its local `main`, and remote `origin/main`.
+2. Normalize only proven non-semantic residue in a specifically named temporary worktree.
+3. Remove specifically named clean linked worktrees through normal, non-force Git worktree removal.
+4. Preserve branches, refs, imported goal-return refs, bundles, logs, and forensic evidence unless deletion is separately authorized.
+
+This is a bounded transition rule, not general cleanup authority. It does not authorize deleting a directory, branch, ref, bundle, log, commit, or recovery asset; changing `D:\G7\g7-crm`; using `git reset`, `git clean`, or force operations; or cleaning an unnamed path. Cleanup itself remains a separate task from this governance reconciliation.
+
+## 5. Execution, Acceptance, and Safety Boundaries
+
+- Canonical execution modes remain those defined by `.agents/skills/g7-crm-agent-control/SKILL.md`; exactly one mode must be declared per task.
+- Implementation, review, staging, commit, and push remain separate authorizations. `COMMIT_ONLY` never authorizes push, and `PUSH_ONLY` never authorizes edits or a new commit.
+- Mozfer retains exclusive manual/browser, visual, Arabic/RTL, mobile, and workflow acceptance authority. Automated checks must not be reported as owner acceptance.
+- No force push, hard reset, or clean operation is permitted for recovery work.
+- No SQL, migrations, dependency changes, production changes, Supabase action, or secrets/environment-file access is authorized by this document.
+- The Expansion Master at `docs/product/G7_BLUE_Event_ERP_Future_Expansion_Master_Handover.md` remains the sole expansion-reference authority. This reconciliation activates no deferred product feature and does not replace product, ERP, security, migration, or Agent Control authority.
+- Reports must use the repository verdict contract: `PASS`, `PASS WITH WARN`, `PARTIAL`, or `HOLD`, with claims supported by reproducible evidence.
+
+## 6. Durable Policy and Reconciliation Rules
+
+- Normal product work belongs in the canonical repository; exceptional recovery work must name its exact temporary context and purpose.
+- Governance must describe durable path, ownership, authorization, and cleanup rules rather than freezing a transient branch name or commit SHA.
+- Recovery evidence is preserved until the owner separately approves its disposition.
+- Any future change to canonical path, branch, worktree ownership, or cleanup authority requires a new explicit governance task and owner approval.
+
+**CRITICAL RULE:** Never copy or manually merge folders between repositories or worktrees.
