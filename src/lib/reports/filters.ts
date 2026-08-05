@@ -1,5 +1,6 @@
 import { parseUiDateInput } from "../i18n/formatting.ts";
 import type { ReportFilters } from "./types";
+import { parseBusinessYear } from "../business-year.ts";
 
 export type ReportFilterError = "reversed";
 
@@ -7,11 +8,14 @@ export function isReportDate(value: unknown): value is string {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && parseUiDateInput(value) !== null;
 }
 
-export function resolveReportFilters(searchParams: { from?: string; to?: string }): { filters: ReportFilters; error?: ReportFilterError } {
+export function resolveReportFilters(searchParams: { year?: string; from?: string; to?: string }): { filters: ReportFilters; error?: ReportFilterError } {
+  const year = parseBusinessYear(searchParams.year);
   const from = isReportDate(searchParams.from) ? searchParams.from : undefined;
   const to = isReportDate(searchParams.to) ? searchParams.to : undefined;
-  if (from && to && from > to) return { filters: { from, to }, error: "reversed" };
-  return { filters: { from, to } };
+  const filters: ReportFilters = { from, to };
+  if (year) filters.year = year;
+  if (from && to && from > to) return { filters, error: "reversed" };
+  return { filters };
 }
 
 export function getQuickReportRange(days: number, now = new Date()): ReportFilters {

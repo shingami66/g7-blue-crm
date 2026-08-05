@@ -10,17 +10,29 @@ import { formatSarAmount, formatUiDateRange, formatUiNumber } from "@/lib/i18n/f
 import { getReportsDictionary } from "@/lib/i18n/dictionaries/reports";
 import { getServicesDictionary, getServiceStatusLabel } from "@/lib/i18n/dictionaries/services";
 import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
+import { getCommonDictionary } from "@/lib/i18n/dictionaries/common";
 import { getReportsCenterData } from "@/lib/reports/queries";
 import { getQuickReportRange, resolveReportFilters } from "@/lib/reports/filters";
+import { cleanBusinessYearParam, getCurrentBusinessYear } from "@/lib/business-year";
+import { getBusinessYearPreference } from "@/lib/business-year-preference";
+import type { ReportFilters } from "@/lib/reports/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReportsPage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string }> }) {
-  const locale = await getCurrentSessionEffectiveLocale();
+export default async function ReportsPage({ searchParams }: { searchParams: Promise<{ year?: string; from?: string; to?: string }> }) {
+  const [locale, preferredYear, params] = await Promise.all([
+    getCurrentSessionEffectiveLocale(),
+    getBusinessYearPreference(),
+    searchParams,
+  ]);
   const dictionary = getReportsDictionary(locale);
   const sharedStates = getSharedUiStates(locale);
+  const common = getCommonDictionary(locale);
   const serviceDictionary = getServicesDictionary(locale);
-  const parsed = resolveReportFilters(await searchParams);
+  const parsed = resolveReportFilters({
+    ...params,
+    year: params.year ?? String(preferredYear),
+  });
 
   try {
     await requirePermission("dashboard:read");
@@ -30,7 +42,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
     return <SharedAuthenticatedStatePanel title={sharedStates.genericError.title} message={dictionary.states.error} role="alert" />;
   }
 
-  const period = parsed.filters.from || parsed.filters.to ? formatUiDateRange(locale, parsed.filters.from, parsed.filters.to) : dictionary.filters.allTime;
+  const period = parsed.filters.from || parsed.filters.to
+    ? formatUiDateRange(locale, parsed.filters.from, parsed.filters.to)
+    : `${common.businessYear.label}: ${parsed.filters.year}`;
   const filterForm = <ReportFiltersForm filters={parsed.filters} dictionary={dictionary} />;
   if (parsed.error) {
     return <div className="space-y-6 pb-12"><ReportHeader dictionary={dictionary} period={period} /><div role="alert" className="rounded-lg border border-error/40 bg-error/10 px-4 py-3 text-[14px] text-error">{dictionary.filters.invalidRange}</div>{filterForm}</div>;
@@ -45,11 +59,14 @@ function ReportHeader({ dictionary, period }: { dictionary: ReturnType<typeof ge
   return <div><h1 className="text-[28px] font-semibold leading-[36px] text-primary">{dictionary.title}</h1><p className="mt-2 text-[14px] text-on-surface-variant">{dictionary.subtitle}</p><p className="mt-3 inline-flex flex-wrap items-center gap-2 rounded-lg bg-surface-container-low px-3 py-2 text-[13px] text-on-surface-variant"><span className="font-semibold text-primary">{dictionary.filters.period}:</span><span dir="ltr">{period}</span></p></div>;
 }
 
-function ReportFiltersForm({ filters, dictionary }: { filters: { from?: string; to?: string }; dictionary: ReturnType<typeof getReportsDictionary> }) {
+function ReportFiltersForm({ filters, dictionary }: { filters: ReportFilters; dictionary: ReturnType<typeof getReportsDictionary> }) {
   const last30 = getQuickReportRange(30);
   const last90 = getQuickReportRange(90);
-  const query = (range: { from?: string; to?: string }) => `/reports?from=${range.from}&to=${range.to}`;
-  return <form className="flex flex-wrap items-end gap-3 rounded-xl border border-surface-variant bg-surface-container-lowest p-4" method="get"><label className="flex min-w-[150px] flex-1 flex-col gap-1 text-[12px] font-semibold text-on-surface-variant"><span>{dictionary.filters.from}</span><input name="from" type="date" defaultValue={filters.from ?? ""} className="border border-outline-variant bg-surface px-3 py-2 text-[14px] text-on-surface" /></label><label className="flex min-w-[150px] flex-1 flex-col gap-1 text-[12px] font-semibold text-on-surface-variant"><span>{dictionary.filters.to}</span><input name="to" type="date" defaultValue={filters.to ?? ""} className="border border-outline-variant bg-surface px-3 py-2 text-[14px] text-on-surface" /></label><button type="submit" className="rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold text-on-primary">{dictionary.filters.apply}</button><PendingLink href={query(last30)} className="rounded-lg border border-outline-variant px-4 py-2 text-[14px] font-semibold text-primary">{dictionary.filters.last30}</PendingLink><PendingLink href={query(last90)} className="rounded-lg border border-outline-variant px-4 py-2 text-[14px] font-semibold text-primary">{dictionary.filters.last90}</PendingLink><PendingLink href="/reports" className="px-2 py-2 text-[14px] font-semibold text-on-surface-variant hover:text-primary">{dictionary.filters.clear}</PendingLink></form>;
+  const year = cleanBusinessYearParam(filters.year ?? getCurrentBusinessYear());
+  const yearQuery = year ? `&year=${encodeURIComponent(year)}` : "";
+  const query = (range: { from?: string; to?: string }) => `/reports?from=${range.from}&to=${range.to}${yearQuery}`;
+  const clearHref = year ? `/reports?year=${encodeURIComponent(year)}` : "/reports";
+  return <form className="flex flex-wrap items-end gap-3 rounded-xl border border-surface-variant bg-surface-container-lowest p-4" method="get">{year && <input type="hidden" name="year" value={year} />}<label className="flex min-w-[150px] flex-1 flex-col gap-1 text-[12px] font-semibold text-on-surface-variant"><span>{dictionary.filters.from}</span><input name="from" type="date" defaultValue={filters.from ?? ""} className="border border-outline-variant bg-surface px-3 py-2 text-[14px] text-on-surface" /></label><label className="flex min-w-[150px] flex-1 flex-col gap-1 text-[12px] font-semibold text-on-surface-variant"><span>{dictionary.filters.to}</span><input name="to" type="date" defaultValue={filters.to ?? ""} className="border border-outline-variant bg-surface px-3 py-2 text-[14px] text-on-surface" /></label><button type="submit" className="rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold text-on-primary">{dictionary.filters.apply}</button><PendingLink href={query(last30)} className="rounded-lg border border-outline-variant px-4 py-2 text-[14px] font-semibold text-primary">{dictionary.filters.last30}</PendingLink><PendingLink href={query(last90)} className="rounded-lg border border-outline-variant px-4 py-2 text-[14px] font-semibold text-primary">{dictionary.filters.last90}</PendingLink><PendingLink href={clearHref} className="px-2 py-2 text-[14px] font-semibold text-on-surface-variant hover:text-primary">{dictionary.filters.clear}</PendingLink></form>;
 }
 
 function BillingReport({ report, dictionary, locale }: { report: Awaited<ReturnType<typeof getReportsCenterData>>["salesBilling"]; dictionary: ReturnType<typeof getReportsDictionary>; locale: "en" | "ar" }) {

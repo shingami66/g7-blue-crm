@@ -2,6 +2,7 @@ import type { InvoiceStatus, InvoiceType } from "@/types/invoice";
 import type { PaymentStatus } from "@/lib/payments/types";
 import type { QuotationStatus } from "@/lib/quotations/types";
 import type { ServiceStatus } from "@/types/service";
+import type { BusinessYear } from "@/lib/business-year";
 
 export type ReportsSectionStatus = "ready" | "forbidden" | "error";
 
@@ -10,7 +11,7 @@ export type ReportsSection<T> = {
   data: T;
 };
 
-export type ReportFilters = { from?: string; to?: string };
+export type ReportFilters = { year?: BusinessYear; from?: string; to?: string };
 
 export type ReportQuotation = {
   id: string;
