@@ -40,7 +40,30 @@
 - Feature 009 remains inactive.
 - Service remains the operational context and mutation authority; current quotation, Approved Billing Scope, invoice, payment, auditability, no-hard-delete, responsive, Feature 007, and Feature 008 rules remain preserved.
 - ABS Void is delivered as a bounded internal-control capability; Supersede remains excluded and deferred as a separate revision workflow. Feature 009 remains inactive and no new feature was activated by this rebaseline.
-- Canonical expansion documents: docs/product/event-erp-future-expansion.md, docs/product/event-erp-decision-register.md, and docs/product/event-erp-discovery-questions.md.
+- **Sole strategic expansion reference:** `docs/product/G7_BLUE_Event_ERP_Future_Expansion_Master_Handover.md`. Earlier expansion documents remain historical evidence only.
+
+## 1.3 Current Review and Remediation Checkpoint
+
+- **Current phase:** `PRE-G1 REMEDIATION / TRACKING SYNC`.
+- **Review campaign:** OCR discovery Waves 0-9, cross-wave consolidation, and the Final Remediation Master Plan are complete. Detailed evidence remains in the external read-only `baseline-90adf8f` campaign package and is not repository-controlled.
+- **Current confirmed findings:** 49 total — 0 Critical, 5 High, 39 Medium, and 5 Low. Three future SaaS/migration concerns and zero architectural blockers remain separate from the current-finding total.
+- **Remediation program:** 12 Goals, G1 through G12. No remediation implementation Goal has started.
+- **Owner-approved G1 rules:** approved quotation mutability, active Approved Billing Scope invoice snapshot authority, and durable `invoice.created` / `invoice.issued` audit events. G1 implementation and source/SQL/test changes are not started.
+- **M-01 disposition:** the external candidate is `IMPLEMENTED_AND_VALIDATED_NOT_ADOPTED`; consolidated disposition is `ADAPT`. It was not accessed or applied in this tracking task.
+- **Working-tree checkpoint:** G0/G0.5/G0.6 documentation changes are currently unstaged; product implementation has not begun in this sequence.
+- **Next action:** Mozfer reviews the combined G0/G0.5/G0.6 documentation diff; after explicit approval, create one docs-only commit on a clean baseline, then begin G1 with its required skill preflight, tests, database review, Open Code Review, and owner acceptance.
+
+## 1.4 Delivered Product / Workspace Baseline Before Remediation
+
+- **DELIVERED + OWNER-ACCEPTED — Goal 2A loading/motion foundation:** Motion and destination-shaped workspace loading were delivered in `5429e7642bd3d763809e0de453cc131f2c90921c`; fast operations remain silent and the lightning/bolt loading motif is not part of the current contract.
+- **DELIVERED + OWNER-ACCEPTED — Goal 2B/2C workspace/list baseline:** Business Year context, bounded list foundations, explicit-submit customer search, Supplier Directory presentation, Dashboard workspace hierarchy, and the related acceptance contract are represented by the verified sequence `f20b240dcc6e1197167aec802c57b59201df0333`, `820b01f79a19d871b86c120e3c2f78b474596f4b`, `c2b699d8dac8ccbc64e5f511aff4931401cd099b`, `195b4c62d0e1f599513e338095fe71ff7a15777f`, `c9f12cf13299cb79e2a76b4127e58a16851b3548`, and `8e54b80d4ec7376e4d6cd77d044ee5654e3bd5b3`.
+- **DELIVERED / CURRENT REMEDIATION OPEN — Business Year and list contracts:** Business Year is bounded to temporal list routes with server-readable preference/cookie and year parameters; Dashboard, Customers, Suppliers, Users, and Settings remain outside its scope. Services use overlap semantics, Quotations use quotation date, Payments use payment date, and the approved invoice-date contract remains subject to current `W5-DATE-001` remediation.
+- **DELIVERED + OWNER-ACCEPTED — Module-local search and list direction:** Search starts from `Select / اختر`, uses explicit submit where approved, fails closed for invalid URL modes, and preserves meaningful punctuation after bidi/edge-whitespace sanitization. Global search is intentionally not a missing current feature.
+- **DELIVERED + OWNER-ACCEPTED — Customer and Supplier Directory foundations:** Explicit-submit customer search and Supplier Directory presentation are delivered; Supplier location is shown as separate bidi-safe City, Coverage Area, and Country values, and Rating remains hidden.
+- **IMPLEMENTED / OWNER ACCEPTANCE PENDING / CURRENT G9 REMEDIATION OPEN — Supplier Rate Card V1:** The bounded capability is present on canonical `main` through commit `9115d3e` for create/edit/activate/deactivate, validity, and overlap behavior; its precision, category, overlap, and supplier-lifecycle corrections remain open under G9.
+- **DELIVERED + OWNER-ACCEPTED — Dashboard:** The current command workspace/hierarchy is delivered and intentionally not Business-Year scoped. Broader role-specific management, finance, and operations dashboards remain future expansion; current bounded-read work remains G3/G4 remediation where applicable.
+- **DELIVERED / ACCEPTANCE PENDING — Reports and Customer 360:** Both surfaces/read models exist. Reports owner product/visual acceptance remains pending with current G3/G4 findings open; Customer 360 owner product/visual acceptance remains pending with current G3 completeness/reporting findings open. Neither surface is a missing future feature.
+- **FUTURE / DEFERRED:** Accounting/journal/periods, expenses/cash control, procurement/RFQ/PO, supplier AP, actual cost/margin, Event Operations expansion, broader dashboards, multi-company/SaaS activation, ZATCA, and future localization/currency/country/compliance remain separately deferred.
 
 ## 2. Working Rules
 - **Workflow:** Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge
@@ -49,6 +72,7 @@
 - **Database:** No migrations without strict review; PostgreSQL RPC is the absolute source of truth for financial totals.
 - **Data Access:** Supabase Admin client runs server-side only; all write Server Actions enforce `requirePermission`; no raw Supabase errors exposed to UI.
 - **Docs:** After merged phases, manual database/Supabase apply or verification, smoke tests that change completion status, or Team Lead decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when applicable. Before committing docs, run the documentation staleness audit in `docs/project-roadmap.md`.
+- **Tracking hierarchy:** `project-status.md` records delivered state and active phase; `project-roadmap.md` records execution order, Goals, gates, and future direction; `deferred-decisions.md` records unresolved, partial, or intentionally deferred decisions only; the Expansion Master remains the sole Event ERP/SaaS strategy reference; the external OCR archive remains frozen detailed evidence.
 
 ## 2.1 Current Product Position
 - **Latest delivered V1 financial and Service lifecycle milestone:** The six-commit sequence `4016cf7`, `db7bee8`, `dca4a77`, `907b54a`, `d978557`, and `cf4d4ae` is complete and pushed. It covers quotation approval with automatic internal ABS activation, ABS Void, explicit Service lifecycle actions, compact Service-page workflow, Billing Summary, evidence-based Activity History, Deposit settlement audit, and Completed Final billing.
@@ -70,10 +94,11 @@
 - **Graphify:** the index remains stale. Force remediation/refresh is deferred and Graphify is not implementation proof.
 - **Readiness boundary:** no production-readiness, VAT-readiness, ZATCA-readiness, backup-readiness, or accounting-finality claim is made.
 - **Workspace Location and Governance Rules:**
-  - Active authorized checkout: `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5` (this is the only authorized path for active execution).
-  - Historical checkout (forbidden): `D:/G7/g7-crm` (must remain untouched; no command execution or editing).
-  - Silent worktree switching, path changes, and manual copying/merging of folders between checkouts are strictly banned.
-  - Reconciliation of the historical checkout is a separate, future task pending explicit approval.
+  - Sole canonical active checkout: `D:/G7/g7-crm`; future implementation tasks operate here unless Mozfer explicitly authorizes a different checkout.
+  - Canonical branch: `main`; frozen discovery baseline: `90adf8faa33c4af1c0049b53817f5f95896a761f` (expected HEAD and `origin/main` for this governance sync).
+  - Retired historical checkout (do not access, inspect, modify, compare, clean, or reuse): `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5`.
+  - No new worktrees or branches are authorized by this decision; silent path switching and manual copying or merging remain prohibited.
+  - Existing recovery/candidate assets remain protected and untouched; the four build-watch logs remain protected untracked files.
 - **Supplier Operations V1:** internal Service Detail Allocations and Supplier Bookings are implemented for Admin/Manager under server permission gates. The slice validates `NUMERIC(10,3)` quantity and `NUMERIC(14,2)` unit cost, distinguishes load failure from genuine empty state, applies Supplier lifecycle checks to Booking creation and Allocation restore, locks Allocation mutations while an active Booking exists, and uses conditional affected-row checks for Allocation and Booking mutations. Rate-card allocation creation enforces active date validity and rate-card allocations cannot be deleted or restored.
 - **Validation/runtime evidence:** 59 focused tests plus lint, Next type generation, TypeScript, and production build passed for the closeout. Codex browser automation could not render the G7 login DOM despite a healthy local Next.js server; this is an automation-tool blocker, not an observed application failure. Mozfer approved milestone closeout without further browser smoke. DEV/DEMO and production-readiness claims remain separate.
 - **Atomic Invoice create (DEV/DEMO code path closed):** migration `supabase/migrations/20260717180000_atomic_invoice_create.sql` pushed as `5ad23f25`, **manually applied + verified in DEV/DEMO** (Mozfer evidence), and **application integrated** in `a83c1d28` — Deposit and Final creation route only through `public.create_invoice_atomic` via service-role `createAdminClient` (no multi-query create write; no silent fallback).

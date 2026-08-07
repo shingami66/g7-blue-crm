@@ -59,7 +59,7 @@ This revision records the following current truth:
 - Global cross-module Search is rejected for the current product because users normally know the business area they need. Module-local search and contextual record links are the approved direction.
 - Customer 360 must identify the related Service for Quotations and Invoices using business numbers and titles, provide a dedicated Services view, remove duplicated related-Service presentation, and never expose sentinel dates such as year 9999.
 - Supplier directory Location must present City, Coverage Area, and Country as separate bidi-safe information rather than one mixed-language string. The Rating column is hidden until a real supplier-performance workflow exists.
-- Supplier Rate Card Management V1 is promoted from future/deferred management work into the first owner-approved bounded expansion slice. The approved scope is Create, Edit, Activate/Deactivate, valid-from/valid-to handling, and safe application-layer overlap validation. The Goal worktree implementation is complete for automated review, but not owner-accepted or delivered.
+- Supplier Rate Card Management V1 remains the first owner-approved bounded expansion slice. It is implemented and present on canonical `main` through commit `9115d3e` (committed/pushed); owner acceptance remains pending; current correctness/remediation work is tracked under G9. The bounded scope is Create, Edit, Activate/Deactivate, valid-from/valid-to handling, and current overlap behavior subject to G9 correction. This does not activate broader procurement, supplier accounting, Actual Cost, or Margin scope.
 - Rate Card Delete/Restore, automatic pricing, procurement RFQ, supplier quotations, quote comparison, Purchase Orders, Vendor Bills, Supplier Payments, actual costing, and margin remain outside this bounded slice.
 - Supplier Allocations and Service-scoped Supplier Bookings already belong to the current product baseline; the next wave may improve their responsive and interaction quality without reclassifying them as new expansion modules.
 - Mozfer owns manual browser testing and final visual acceptance. Agent automation may prepare evidence but must not claim owner acceptance.
@@ -2914,9 +2914,9 @@ Continue:
 - Information architecture.
 - Design system.
 - Roadmap rebaseline.
-- Supplier Rate Card Management V1 through a separate controlled owner-authorized task.
+- Rate Card V1 implementation is committed through `9115d3e`; owner acceptance and G9 remediation remain separate controlled follow-up tasks.
 
-Expansion implementation still requires a separate controlled owner-authorized task. This report makes Supplier Rate Card Management V1 eligible for that task; it does not authorize any other expansion module.
+Rate Card V1 implementation is committed through `9115d3e`; owner acceptance remains pending and G9 remediation remains open. This report does not authorize any other expansion module.
 
 ---
 
@@ -3125,7 +3125,7 @@ No document should be photographed or copied without consent.
 2. Treat the owner-accepted Goal 2B/2C implementation as a local committed baseline after the separate closeout task; no remote write or OCR is implied.
 3. Keep Reports and Customer 360 owner product/visual acceptance pending; do not begin redesign.
 4. After Mozfer reviews the local commit closeout, use a separately authorized `PUSH_ONLY` task if remote delivery is desired; Open Code Review requires separate authorization.
-5. Update this file immediately when Rate Card Management V1 changes from approved to implemented, accepted, merged, or pushed.
+5. Update this file immediately if Rate Card Management V1 owner acceptance or G9 remediation status changes.
 6. Preserve the Arabic interview-question document for Wednesday.
 7. Conduct the Wednesday interview and record answers as evidence, separating universal rules from “depends on supplier/event” behavior.
 8. Collect anonymised sample documents where allowed.
@@ -3400,7 +3400,7 @@ Preserve four categories:
 3. Recommended proposals that are not approved facts.
 4. Open questions awaiting field, accounting, tax, HR, or technical evidence.
 
-The current system continues normal controlled delivery in parallel. Do not stop current work. Supplier Rate Card Management V1 is the only currently approved bounded expansion slice, and it still requires a separate controlled owner-authorized implementation task.
+The current system continues normal controlled delivery in parallel. Do not stop current work. Supplier Rate Card Management V1 is the only currently approved bounded expansion slice; implementation is committed through `9115d3e`, owner acceptance remains pending, and G9 remediation remains open.
 
 The near-term product is an internal G7 BLUE system. The long-term product direction is a specialist Event ERP SaaS for event companies. Multi-company and ZATCA are future activations, but new architecture must not block them.
 

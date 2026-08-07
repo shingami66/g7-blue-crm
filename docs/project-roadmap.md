@@ -58,13 +58,123 @@ Required pre-implementation gates:
 6. Information architecture and reusable design-system approval.
 7. Explicit phased implementation approval for one bounded feature.
 
-The canonical expansion documents are:
-
-- docs/product/event-erp-future-expansion.md
-- docs/product/event-erp-decision-register.md
-- docs/product/event-erp-discovery-questions.md
+The sole strategic expansion reference is `docs/product/G7_BLUE_Event_ERP_Future_Expansion_Master_Handover.md`. Earlier expansion documents remain historical evidence only.
 
 Feature 009 remains inactive. Future accounting, procurement, expenses, supplier finance, costing, margin, VAT/ZATCA, AI, multi-company, and multi-tenant work remains discovery or deferred work until the gates above pass.
+
+## 1.2 Current Review and Remediation Roadmap
+
+### Completed foundations / review
+
+- OCR discovery Waves 0-9 are complete.
+- Cross-Wave Consolidation and the Final Remediation Master Plan are complete.
+- The external read-only `baseline-90adf8f` campaign package remains the detailed evidence authority; it is not repository-controlled.
+- No remediation implementation Goal has started. Current product state remains single-company and Service-centered, with staged Event ERP expansion and later optional multi-company/SaaS expansion.
+- Current confirmed findings: 49 — 0 Critical, 5 High, 39 Medium, and 5 Low. Future SaaS/migration concerns are tracked separately: 3. Architectural blockers: 0.
+
+### Current checkpoint
+
+- **Phase:** `PRE-G1 REMEDIATION / TRACKING SYNC`.
+- **G0 authority:** `D:/G7/g7-crm` on `main` remains the sole canonical checkout at the frozen baseline recorded in this document's governance/current-authority section; the retired Grok worktree is not current authority.
+- **G0/G0.5/G0.6 state:** the three tracking documents contain intentional unstaged documentation changes; no product implementation, SQL, migration, test, or configuration change has begun in this sequence.
+- **Owner-approved G1 rules:** approved quotation mutability, active Approved Billing Scope invoice snapshot authority, and durable `invoice.created` / `invoice.issued` audit events; G1 implementation and source/SQL/test changes remain not started.
+- **Next controlled Goal:** G1 becomes the next product implementation Goal after Mozfer reviews the combined G0/G0.5/G0.6 documentation diff and explicitly approves the docs-only commit boundary.
+- **M-01:** external candidate status is `IMPLEMENTED_AND_VALIDATED_NOT_ADOPTED`; consolidated disposition is `ADAPT`; it remains separate and was not accessed or applied here.
+
+### Completed product foundations before current remediation
+
+| Classification | Current delivered truth | Evidence |
+|---|---|---|
+| DELIVERED + OWNER-ACCEPTED | Goal 2A loading/motion foundation; fast operations remain silent and destination-shaped loading is the current contract. | `5429e7642bd3d763809e0de453cc131f2c90921c` |
+| DELIVERED + OWNER-ACCEPTED | Goal 2B/2C Business Year/list foundations, explicit-submit customer search, Supplier Directory presentation, Dashboard workspace hierarchy, and acceptance boundary. | `f20b240dcc6e1197167aec802c57b59201df0333`, `820b01f79a19d871b86c120e3c2f78b474596f4b`, `c2b699d8dac8ccbc64e5f511aff4931401cd099b`, `195b4c62d0e1f599513e338095fe71ff7a15777f`, `c9f12cf13299cb79e2a76b4127e58a16851b3548`, `8e54b80d4ec7376e4d6cd77d044ee5654e3bd5b3` |
+| DELIVERED / CURRENT REMEDIATION OPEN | Business Year is bounded to temporal list routes; invoice-date semantics remain subject to `W5-DATE-001`. Module-local search/list/filter foundations are current product behavior, while G3/G4/G10 findings remain remediation. | `f20b240dcc6e1197167aec802c57b59201df0333`, `c1041b7db9b5b6d04c4fbb715a1f5275fb2204cc` |
+| IMPLEMENTED / OWNER ACCEPTANCE PENDING / CURRENT G9 REMEDIATION OPEN | Supplier Rate Card V1 is present on canonical `main` through commit `9115d3e` for create/edit/activate/deactivate, validity, and overlap behavior; G9 precision/category/atomicity/lifecycle corrections remain open. | `9115d3e02a07ad4deefe1218dfeac644f32e106c` |
+| DELIVERED / ACCEPTANCE PENDING | Reports and Customer 360 surfaces/read models exist; owner product/visual acceptance and current G3/G4 correctness/completeness findings remain open. | `2cee122e0223450820f7f89f977f986388fdbea8`, `943716f15e70218a7ce4034d47296f88b1bde61b` |
+| FUTURE / DEFERRED | Broader accounting, procurement, Event Operations, advanced dashboards, multi-company/SaaS, ZATCA, and future localization/currency/compliance remain outside current remediation. | Expansion Master and current campaign plan |
+
+### Active remediation program
+
+| Goal | Findings / bounded purpose |
+|---|---|
+| G1 Financial lifecycle authority and snapshots | W2-LIFE-001, W2-FIN-002, W2-AUD-005 |
+| G2 Money and payment precision | W2-PAY-003 |
+| G3 Reporting truth and period semantics | M-03, M-06, W2-XWAVE-004, W3-REPORT-002, W5-DATE-001, W6-REPORT-001/002/003 |
+| G4 Bounded read paths and scale | M-02, M-04, W3-PERF-005, W3-QUERY-001, W3-SCALE-003/004 |
+| G5 Admin security and desired-state mutations | W1-AUTH-001, W1-SEC-002, W4-RETRY-001 |
+| G6 Payload and log minimization | M-01, W1-SEC-004/005 |
+| G7 Failure boundaries, health and webhook operations | M-05, W1-SEC-003, W4-BOUNDARY-001, W4-CONFIG-001, W4-OBS-001 |
+| G8 Family-specific create replay | W4-REC-002 |
+| G9 Supplier and Rate Card authority | W6-RATE-001/002/003, W6-SUP-001 |
+| G10 Search, accessibility and interaction | W5-SEARCH-001/002, W5-A11Y-001/002/003, W5-UI-001, W5-URL-001 |
+| G11 Verification and release program | W7-TEST-001/002, W7-MIG-001, W7-RELEASE-001, W7-CONTROL-001 |
+| G12 Typed boundary, ABS architecture and cleanup | W8-ARCH-001/002, W8-LEGACY-001 |
+
+G11 is a planning bucket, not one mixed commit: focused behavioral tests, DEV/DEMO PostgreSQL/RPC verification, release gates, and OCR/control-plane documentation must remain separate. G12 likewise separates generated Supabase typing, bounded ABS refactoring, and exact orphaned static-data cleanup.
+
+### Dependency order
+
+**Primary serial path:** owner/product/accounting decisions -> G1 financial lifecycle authority -> G2 money precision -> G3 reporting truth and period semantics -> G9 Supplier/Rate Card authority -> G8 family-specific replay safety -> G11 verification/release -> G12 architecture/cleanup.
+
+**Parallelizable after required decisions and a clean baseline:** G5 Admin security, G6 payload/log minimization, G7 reliability boundaries, G10 search/accessibility, and G4 measurement/scale evidence. Parallelizable does not mean immediately started.
+
+Every Goal still requires bounded task approval, expected repository state, relevant skill preflight, implementation, targeted tests, full regression where applicable, Open Code Review after implementation, and Mozfer review before commit/push.
+
+### Documentation Definition of Done
+
+Every future implementation/remediation Goal remains administratively open until all applicable items are reflected in the tracking documents:
+
+1. Product/source implementation is complete.
+2. Targeted validation is complete.
+3. Required full regression is complete.
+4. Open Code Review or an approved equivalent is complete.
+5. Mozfer manual acceptance is recorded where required.
+6. State changes are reconciled in `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` when a decision changes state.
+7. Mozfer reviews the final documentation diff.
+8. Commit and push occur only under separate approval.
+
+### Tracking source-of-truth hierarchy
+
+1. `docs/project-status.md` — current delivered state and active phase.
+2. `docs/project-roadmap.md` — execution order, current Goals, gates, and future direction.
+3. `docs/deferred-decisions.md` — unresolved, partial, or intentionally deferred decisions only.
+4. `docs/product/G7_BLUE_Event_ERP_Future_Expansion_Master_Handover.md` — sole strategic Event ERP/SaaS expansion reference.
+5. External OCR campaign archive — detailed frozen discovery evidence and current finding ledger.
+
+### Current remediation waiting on decisions / evidence
+
+- **Owner decision first:** G1/G2 lifecycle, money precision, and financial correction contracts.
+- **Accountant/product decision first:** G3 invoice status, Business Year fallback, report dimensions, supplier dates/cost denominator, and completion with outstanding finance.
+- **Measurement first:** G4 performance, query, scale, and index decisions.
+- **DEV/DEMO database evidence first:** G1, G2, G5, G8, G9, and G11 SQL/RPC/concurrency or migration verification.
+- **Mozfer browser acceptance first:** G10 EN/AR/RTL/mobile/search/accessibility behavior; applicable G3/G9 report and supplier surfaces.
+- **Later cleanup:** G6 M-01 adaptation, G12 generated typing, bounded ABS refactor, and exact orphaned static-data removal.
+- **Current gates:** Security, financial integrity, Reports/Customer 360 authority, Supplier/Rate Card, Search/Accessibility, Database/Migration, Performance/Scale, Release, and Mozfer owner acceptance remain blocked or pending their listed Goals and evidence. Production sign-off is not complete.
+
+### Deferred product / Event ERP / SaaS expansion
+
+This is separate from current defect remediation and remains deferred until separately approved: broader financial safety beyond G1-G3; accounting/journal/periods; full user lifecycle; expenses/cash control; procurement/RFQ/PO; supplier accounting/payables; actual cost/margin/profitability; event cost ledger/close; Event Brief, venues, permits, labour, incidents, and operations timeline; broader dashboards; multi-company activation; SaaS onboarding/billing/quotas/platform administration; ZATCA; and future localization/currency/country/compliance expansion.
+
+Rate Card V1 remains a bounded supplier capability and must not be relabeled as full procurement. The Expansion Master remains the detailed future-expansion authority.
+
+### Future SaaS concerns — separate from current findings
+
+- `W9-SAAS-001`: preserve settings and numbering seams now; design company-aware ownership before second-company activation.
+- `W9-SAAS-002`: preserve permission call sites; design membership and company context before multi-company authorization.
+- `W9-MIG-001`: preserve immutable identifiers, snapshots, audit history, and rollback requirements before ownership migration.
+
+These 3 concerns are future activation gates, not current defects. No tenant rollout, tenant columns, SaaS billing, or multi-company UI is authorized.
+
+### Release and acceptance gates
+
+- Security: blocked/WARN pending G5-G7, redacted logs, health-exposure, and RLS/grant evidence.
+- Financial integrity: blocked pending G1-G3, accountant decisions, and snapshot/status/precision tests.
+- Reports/Customer 360: blocked pending G3 and complete aggregate/date/dimension/status contracts.
+- Supplier/Rate Card: blocked pending G3/G9 decisions and atomic database evidence.
+- Search/Accessibility: blocked pending G10 and Mozfer EN/AR/RTL/mobile/browser acceptance.
+- Database/Migration: blocked pending approved DEV/DEMO PostgreSQL/RPC verification.
+- Performance/Scale: blocked pending E1-E6 measurements and bounded corrections.
+- Release: blocked pending G11; Mozfer owner acceptance remains pending by domain.
+- Future SaaS activation: deferred pending ownership, membership, migration, export, isolation, quota, and compliance approval.
 
 ## 2. Current Priority
 
@@ -138,10 +248,11 @@ Current product state:
 - **Feature 006 closeout:** `006-invoice-pdf-customer-cleanup` implementation, independent review, owner acceptance, commit, push, and supplied short-example Print Preview acceptance are complete.
 - **No implementation task is active:** Feature 007, Feature 008, the latest Quotation/Invoice UX batch, quotation/internal-ABS activation, ABS Void, and the Service lifecycle milestone are delivered. No next feature is selected; Feature 009 remains inactive and owner selection is required.
 - **Workspace Location and Governance Rules:**
-  - Active authorized checkout: `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5` (only authorized path for active execution).
-  - Historical checkout (forbidden): `D:/G7/g7-crm` (must remain untouched).
-  - Silent worktree switching, path changes, and manual copying/merging of folders between checkouts are strictly banned.
-  - Reconciliation of the historical checkout is a separate, future task pending explicit approval.
+  - Sole canonical active checkout: `D:/G7/g7-crm`; future implementation tasks operate here unless Mozfer explicitly authorizes a different checkout.
+  - Canonical branch: `main`; frozen discovery baseline: `90adf8faa33c4af1c0049b53817f5f95896a761f` (expected HEAD and `origin/main` for this governance sync).
+  - Retired historical checkout (do not access, inspect, modify, compare, clean, or reuse): `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5`.
+  - No new worktrees or branches are authorized by this decision; silent path switching and manual copying or merging remain prohibited.
+  - Existing recovery/candidate assets remain protected and untouched; the four build-watch logs remain protected untracked files.
 - **Next safe product/engineering direction:** none is selected. Reports Center remains P1 but is not active; Supersede remains a separate deferred revision workflow. Clerk invitation/webhook smoke remains deferred until production/UAT readiness.
 - **Deferred / optional (not complete):** Manager and Accountant browser smoke sessions; Deposit client maximum using remaining rather than full ceiling; legacy Quotation database ceiling hardening; broad ABS numeric normalization; invoice/payment correction and accounting treatment; future production/database hardening; future VAT or compliance work. Do **not** mark production rollout, VAT readiness, ZATCA readiness, or accounting finality complete.
 - **ABS management delivery state:**
@@ -1159,7 +1270,7 @@ SUPPLIERS-LIVE-READ-FOUNDATION-1
 - Permission gate uses `suppliers:read`; this slice does not use `suppliers:write`.
 - Verification passed: lint passed with only existing PDF `<img>` warnings; `pnpm exec tsc --noEmit` passed; no bank/IBAN fields were selected, mapped, typed for UI, or rendered.
 - No create/edit/delete/restore behavior, SQL/schema/migration changes, or supplier finance/future modules were introduced.
-- Historical read-only-slice deferrals were supplier create/edit/delete/restore CRUD and supplier write actions/server actions; those are superseded by `G7-SUPPLIERS-V1-DIRECTORY-AND-LIST-UX`. Supplier rate-card runtime workflows, broader Supplier Bookings, supplier invoices/payments, Supplier Booking PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
+- Historical read-only-slice deferrals were supplier create/edit/delete/restore CRUD and supplier write actions/server actions; those are superseded by `G7-SUPPLIERS-V1-DIRECTORY-AND-LIST-UX`. At that milestone, supplier rate-card runtime workflows were deferred; the later bounded Rate Card V1 capability is recorded in this document's current delivered baseline as present, while broader Supplier Bookings, supplier invoices/payments, Supplier Booking PDF/WhatsApp/email, supplier portal, supplier costing/margin/P&L reports, and payment approval workflow remain deferred.
 
 SUPPLIERS-CREATE-FORM-1
 - Status: Completed and pushed.
