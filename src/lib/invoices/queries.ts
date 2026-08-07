@@ -171,8 +171,8 @@ export async function getInvoicesList(
     }
     if (options.year) {
       const yearBounds = getBusinessYearBounds(options.year);
-      countQuery = countQuery.not("issued_at", "is", null).gte("issued_at", `${yearBounds.start}T00:00:00.000Z`).lt("issued_at", `${yearBounds.end}T00:00:00.000Z`);
-      dataQuery = dataQuery.not("issued_at", "is", null).gte("issued_at", `${yearBounds.start}T00:00:00.000Z`).lt("issued_at", `${yearBounds.end}T00:00:00.000Z`);
+      countQuery = countQuery.gte("date", yearBounds.start).lt("date", yearBounds.end);
+      dataQuery = dataQuery.gte("date", yearBounds.start).lt("date", yearBounds.end);
     }
     if (searchFilter) {
       countQuery = countQuery.or(searchFilter, searchRelation ? { referencedTable: searchRelation } : undefined);

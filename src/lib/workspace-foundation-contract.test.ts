@@ -29,7 +29,7 @@ test("Business Year predicates are paired across count and rows for dated lists"
   const datedQueries = [
     ["src/lib/services/queries.ts", "getServiceBusinessYearFilter"],
     ["src/lib/quotations/queries.ts", "date"],
-    ["src/lib/invoices/queries.ts", "issued_at"],
+    ["src/lib/invoices/queries.ts", "date"],
     ["src/lib/payments/queries.ts", "date"],
   ] as const;
   for (const [file, column] of datedQueries) {
@@ -40,6 +40,15 @@ test("Business Year predicates are paired across count and rows for dated lists"
   }
   assert.doesNotMatch(read("src/lib/customers/queries.ts"), /getBusinessYearBounds|yearBounds/);
   assert.doesNotMatch(read("src/lib/suppliers/queries.ts"), /getBusinessYearBounds|yearBounds/);
+
+  const invoices = read("src/lib/invoices/queries.ts");
+  const invoiceListScope = invoices.slice(
+    invoices.indexOf("if (options.status && options.status !== \"all\")"),
+    invoices.indexOf("if (searchFilter)")
+  );
+  assert.match(invoiceListScope, /countQuery = countQuery\.eq\("status", options\.status\)[\s\S]*dataQuery = dataQuery\.eq\("status", options\.status\)/);
+  assert.match(invoiceListScope, /countQuery = countQuery\.gte\("date", yearBounds\.start\)[\s\S]*dataQuery = dataQuery\.gte\("date", yearBounds\.start\)/);
+  assert.doesNotMatch(invoiceListScope, /issued_at/);
 });
 
 test("Business Year scope is limited to temporal list routes and persists through the server-readable preference", () => {
@@ -83,7 +92,7 @@ test("Business Year preserves authoritative temporal fields and keeps supplier r
   const payments = read("src/lib/payments/queries.ts");
   const reports = read("src/lib/reports/queries.ts");
   assert.match(quotations, /getBusinessYearBounds[\s\S]*\.gte\("date"/);
-  assert.match(invoices, /getBusinessYearBounds[\s\S]*\.gte\("issued_at"/);
+  assert.match(invoices, /getBusinessYearBounds[\s\S]*\.gte\("date"/);
   assert.doesNotMatch(invoices.slice(invoices.indexOf("if (options.year)"), invoices.indexOf("if (searchFilter)")), /created_at/);
   assert.match(payments, /getBusinessYearBounds[\s\S]*\.gte\("date"/);
   assert.match(reports, /serviceDateFilter/);

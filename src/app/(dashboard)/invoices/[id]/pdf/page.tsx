@@ -303,6 +303,10 @@ export default async function InvoicePdfPage({
     invoice.invoice_type === "final"
       ? readRecordNumber(finalInvoiceSettlement, "approved_quotation_total") ?? fullQuotationTotal
       : fullQuotationTotal;
+  const approvedBillingScopeTotal =
+    invoice.invoice_type === "deposit" && snapshotClassification === "active_scope"
+      ? readRecordNumber(snapshotQuotationRecord, "approvedBillingScopeAcceptedGrandTotal")
+      : null;
   const previousInvoicesTotal =
     invoice.invoice_type === "final"
       ? readRecordNumber(finalInvoiceSettlement, "service_lifetime_exposure") ??
@@ -574,6 +578,14 @@ export default async function InvoicePdfPage({
                 {summaryLabel}
               </h3>
               <div className="space-y-2 break-inside-avoid">
+                {approvedBillingScopeTotal !== null && (
+                  <div className="flex justify-between items-center text-[14px]">
+                    <span className="text-on-surface-variant">Approved Billing Scope Total</span>
+                    <span className="text-on-surface">
+                      {formatAmountWithCurrency(approvedBillingScopeTotal)}
+                    </span>
+                  </div>
+                )}
                 {approvedQuotationTotal !== null && (
                   <div className="flex justify-between items-center text-[14px]">
                     <span className="text-on-surface-variant">Approved Quotation Total</span>

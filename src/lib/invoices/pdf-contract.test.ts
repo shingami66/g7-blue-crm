@@ -2061,6 +2061,8 @@ test("Invoice customer PDF presents only positively classified snapshot itemizat
   assert.match(source, /snapshotClassification === "active_scope"\s*\?\s*"Approved Service Scope"/);
   assert.match(source, /snapshotClassification === "full_quotation"\s*\?\s*readRecordNumber\(snapshotQuotationRecord, "grand_total"\)/);
   assert.match(source, /readRecordNumber\(finalInvoiceSettlement, "approved_quotation_total"\) \?\? fullQuotationTotal/);
+  assert.match(source, /const approvedBillingScopeTotal\s*=\s*[\s\S]*?invoice\.invoice_type === "deposit"[\s\S]*?snapshotClassification === "active_scope"[\s\S]*?approvedBillingScopeAcceptedGrandTotal/);
+  assert.match(source, /approvedBillingScopeTotal !== null/);
   assert.match(source, /readRecordNumber\(finalInvoiceSettlement, "service_lifetime_exposure"\) \?\?[\s\S]*?readRecordNumber\(finalInvoiceSettlement, "active_prior_invoice_total"\)/);
   assert.doesNotMatch(source, /getQuotationById|from\("quotations"\)|createAdminClient/);
   assertSingleInvoiceFinancialSummary(source, INVOICE_PDF);
@@ -2069,6 +2071,8 @@ test("Invoice customer PDF presents only positively classified snapshot itemizat
   assert.match(source, /"Deposit Amount"/);
   assert.match(source, /"Final Amount Due"/);
   assert.match(template, /Approved Quotation Total/);
+  assert.match(template, /Approved Billing Scope Total/);
+  assert.match(template, /formatAmountWithCurrency\(approvedBillingScopeTotal\)/);
   assert.match(template, /Previous Invoices \/ Deposits/);
   assert.match(template, /formatAmountWithCurrency\(invoice\.subtotal\)/);
   assert.match(template, /formatAmountWithCurrency\(invoice\.grand_total\)/);

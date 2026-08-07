@@ -23,12 +23,20 @@ const CREATE_INVOICE_ATOMIC_ROW_KEYS = [
   "invoice_id",
   "invoice_number",
 ] as const;
+const ISSUE_INVOICE_ATOMIC_RPC = "issue_invoice_atomic";
+const ISSUE_INVOICE_ATOMIC_ROW_KEYS = [
+  "error_code",
+  "invoice_id",
+  "invoice_number",
+] as const;
 
 type CreateInvoiceAtomicRpcRow = {
   error_code: string | null;
   invoice_id: string | null;
   invoice_number: string | null;
 };
+
+type IssueInvoiceAtomicRpcRow = CreateInvoiceAtomicRpcRow;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -87,6 +95,43 @@ function parseCreateInvoiceAtomicRpcData(
   }
 
   return isCreateInvoiceAtomicRpcRow(data) ? data : null;
+}
+
+function isIssueInvoiceAtomicRpcRow(
+  value: unknown,
+): value is IssueInvoiceAtomicRpcRow {
+  if (
+    !isPlainObject(value) ||
+    !hasOwnDataProperties(value, ISSUE_INVOICE_ATOMIC_ROW_KEYS)
+  ) {
+    return false;
+  }
+
+  const errorCode = value.error_code;
+  const invoiceId = value.invoice_id;
+  const invoiceNumber = value.invoice_number;
+
+  return (
+    (errorCode === null ||
+      (typeof errorCode === "string" && errorCode.trim().length > 0)) &&
+    (invoiceId === null ||
+      (typeof invoiceId === "string" && invoiceId.trim().length > 0)) &&
+    (invoiceNumber === null ||
+      (typeof invoiceNumber === "string" && invoiceNumber.trim().length > 0))
+  );
+}
+
+function parseIssueInvoiceAtomicRpcData(
+  data: unknown,
+): IssueInvoiceAtomicRpcRow | null {
+  if (Array.isArray(data)) {
+    if (data.length !== 1) {
+      return null;
+    }
+    return isIssueInvoiceAtomicRpcRow(data[0]) ? data[0] : null;
+  }
+
+  return isIssueInvoiceAtomicRpcRow(data) ? data : null;
 }
 
 export async function createInvoiceAction(
@@ -295,43 +340,44 @@ export async function issueInvoiceAction(
     }
 
     const supabase = createAdminClient();
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      ISSUE_INVOICE_ATOMIC_RPC,
+      {
+        p_invoice_id: invoiceId,
+        p_actor_clerk_user_id: user.clerk_user_id,
+      },
+    );
 
-    const { data: invoice, error: fetchError } = await supabase
-      .from("invoices")
-      .select("id, status, is_deleted")
-      .eq("id", invoiceId)
-      .maybeSingle();
-
-    if (fetchError || !invoice) {
-      return { success: false, error: "invoice_not_found" };
+    if (rpcError) {
+      console.error(
+        "[issueInvoiceAction] Atomic issue RPC transport error:",
+        rpcError.message,
+      );
+      return { success: false, error: "invoice_issue_failed" };
     }
 
-    if (invoice.is_deleted) {
-      return { success: false, error: "invoice_not_found" };
+    const rpcRow = parseIssueInvoiceAtomicRpcData(rpcData);
+    if (!rpcRow) {
+      console.error(
+        "[issueInvoiceAction] Atomic issue RPC returned an invalid row shape",
+      );
+      return { success: false, error: "invoice_issue_failed" };
     }
 
-    if (invoice.status !== "draft") {
-      return { success: false, error: "invoice_not_draft" };
+    if (rpcRow.error_code !== null) {
+      return { success: false, error: rpcRow.error_code };
     }
 
-    const { data: updatedInvoice, error: updateError } = await supabase
-      .from("invoices")
-      .update({
-        status: "sent",
-        issued_at: new Date().toISOString(),
-      })
-      .eq("id", invoiceId)
-      .eq("status", "draft")
-      .select("id")
-      .maybeSingle();
-
-    if (updateError) {
-      console.error("[issueInvoiceAction] Invoice update failed:", updateError);
-      return { success: false, error: "invoice_update_failed" };
-    }
-
-    if (!updatedInvoice) {
-      return { success: false, error: "invoice_not_draft" };
+    if (
+      rpcRow.invoice_id === null ||
+      rpcRow.invoice_number === null ||
+      rpcRow.invoice_id.trim().length === 0 ||
+      rpcRow.invoice_number.trim().length === 0
+    ) {
+      console.error(
+        "[issueInvoiceAction] Atomic issue RPC returned success without invoice identity",
+      );
+      return { success: false, error: "invoice_issue_failed" };
     }
 
     return { success: true };

@@ -202,9 +202,17 @@ export default async function InvoiceDetailPage({
     readString(snapshotQuotation?.quotation_number);
   const lineItems = readLineItems(snapshotQuotation);
   const finalInvoiceSettlement = asRecord(snapshotQuotation?.final_invoice_settlement);
+  const approvedBillingScopeTotal = readFiniteNumber(
+    snapshotQuotation?.approvedBillingScopeAcceptedGrandTotal,
+  );
   const approvedQuotationTotal =
-    readFiniteNumber(snapshotQuotation?.grand_total) ??
-    readFiniteNumber(finalInvoiceSettlement?.approved_quotation_total);
+    readFiniteNumber(finalInvoiceSettlement?.approved_quotation_total) ??
+    readFiniteNumber(snapshotQuotation?.grand_total);
+  const settlementTotal = approvedBillingScopeTotal ?? approvedQuotationTotal;
+  const settlementTotalLabel =
+    approvedBillingScopeTotal !== null
+      ? dictionary.detail.labels.approvedBillingScopeTotal
+      : dictionary.detail.labels.approvedQuotationTotal;
   const previousInvoicesTotal = readFiniteNumber(finalInvoiceSettlement?.active_prior_invoice_total);
   const customerName =
     readString(buyer?.name) ??
@@ -544,10 +552,10 @@ export default async function InvoiceDetailPage({
             </div>
             <div className="p-6 space-y-4">
               <Field label={dictionary.detail.labels.paymentStatus} value={paymentStatus} dir="auto" />
-              {approvedQuotationTotal !== null && (
+              {settlementTotal !== null && (
                 <Field
-                  label={dictionary.detail.labels.approvedQuotationTotal}
-                  value={formatAmount(locale, approvedQuotationTotal)}
+                  label={settlementTotalLabel}
+                  value={formatAmount(locale, settlementTotal)}
                   dir="ltr"
                 />
               )}

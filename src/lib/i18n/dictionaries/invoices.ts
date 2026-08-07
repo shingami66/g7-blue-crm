@@ -171,6 +171,7 @@ export interface InvoicesDictionary {
       amountPaid: string;
       balanceDue: string;
       approvedQuotationTotal: string;
+      approvedBillingScopeTotal: string;
       previousInvoices: string;
       paymentStatus: string;
     };
@@ -413,6 +414,7 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       amountPaid: "Amount Paid",
       balanceDue: "Balance Due",
       approvedQuotationTotal: "Approved Quotation Total",
+      approvedBillingScopeTotal: "Approved Billing Scope Total",
       previousInvoices: "Previous Invoices / Deposits",
       paymentStatus: "Payment Status",
     },
@@ -663,6 +665,7 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       amountPaid: "المبلغ المسدد",
       balanceDue: "الرصيد المستحق",
       approvedQuotationTotal: "إجمالي عرض السعر المعتمد",
+      approvedBillingScopeTotal: "إجمالي نطاق الفوترة المعتمد",
       previousInvoices: "الفواتير / الدفعات السابقة",
       paymentStatus: "حالة السداد",
     },

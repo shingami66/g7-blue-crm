@@ -72,6 +72,11 @@ type AtomicRpcArgs = {
   p_due_date: string;
 };
 
+type IssueRpcArgs = {
+  p_invoice_id: string;
+  p_actor_clerk_user_id: string;
+};
+
 type ActionScenario = {
   role: unknown;
   denyPermission: boolean;
@@ -84,6 +89,10 @@ type ActionScenario = {
   atomicRpcArgs: AtomicRpcArgs[];
   atomicRpcData: unknown;
   atomicRpcError: RpcTransportError;
+  issueRpcCalls: number;
+  issueRpcArgs: IssueRpcArgs[];
+  issueRpcData: unknown;
+  issueRpcError: RpcTransportError;
   snapshotCalls: number;
   snapshotPayloads: Array<Record<string, unknown>>;
   operations: string[];
@@ -189,6 +198,17 @@ function createFakeSupabase() {
         );
       }
 
+      if (name === "issue_invoice_atomic") {
+        scenario.issueRpcCalls += 1;
+        if (args) {
+          scenario.issueRpcArgs.push(args as IssueRpcArgs);
+        }
+        return {
+          data: scenario.issueRpcData,
+          error: scenario.issueRpcError,
+        };
+      }
+
       if (name !== "create_invoice_atomic") {
         throw new Error(`Unexpected RPC: ${name}`);
       }
@@ -214,6 +234,8 @@ function startScenario(
       | "role"
       | "atomicRpcData"
       | "atomicRpcError"
+      | "issueRpcData"
+      | "issueRpcError"
       | "issueInvoice"
       | "issueUpdateResult"
       | "issueUpdateError"
@@ -243,6 +265,20 @@ function startScenario(
         ],
     atomicRpcError: Object.prototype.hasOwnProperty.call(options, "atomicRpcError")
       ? (options.atomicRpcError ?? null)
+      : null,
+    issueRpcCalls: 0,
+    issueRpcArgs: [],
+    issueRpcData: Object.prototype.hasOwnProperty.call(options, "issueRpcData")
+      ? options.issueRpcData
+      : [
+          {
+            error_code: null,
+            invoice_id: INSERTED_INVOICE_ID,
+            invoice_number: INVOICE_NUMBER,
+          } satisfies AtomicRpcRow,
+        ],
+    issueRpcError: Object.prototype.hasOwnProperty.call(options, "issueRpcError")
+      ? (options.issueRpcError ?? null)
       : null,
     snapshotCalls: 0,
     snapshotPayloads: [],
@@ -736,6 +772,54 @@ test("issueInvoiceAction issues a draft invoice", async () => {
   const result = await issueInvoiceAction(INSERTED_INVOICE_ID);
 
   assert.deepEqual(result, { success: true });
-  assert.equal(scenario.invoiceTableCalls >= 1, true);
+  assert.equal(scenario.issueRpcCalls, 1);
+  assert.deepEqual(scenario.issueRpcArgs, [
+    {
+      p_invoice_id: INSERTED_INVOICE_ID,
+      p_actor_clerk_user_id: ACTOR_CLERK_USER_ID,
+    },
+  ]);
+  assert.equal(scenario.invoiceTableCalls, 0);
   assert.equal(scenario.atomicRpcCalls, 0);
+});
+
+for (const errorCode of [
+  "invoice_not_found",
+  "invoice_not_draft",
+  "invoice_issue_concurrency_conflict",
+] as const) {
+  test(`issueInvoiceAction surfaces atomic RPC error_code ${errorCode}`, async () => {
+    const scenario = startScenario({
+      issueRpcData: [
+        {
+          error_code: errorCode,
+          invoice_id: null,
+          invoice_number: null,
+        },
+      ],
+    });
+
+    const result = await issueInvoiceAction(INSERTED_INVOICE_ID);
+
+    assert.deepEqual(result, { success: false, error: errorCode });
+    assert.equal(scenario.issueRpcCalls, 1);
+    assert.equal(scenario.invoiceTableCalls, 0);
+  });
+}
+
+test("issueInvoiceAction fails closed on malformed atomic RPC success data", async () => {
+  const scenario = startScenario({
+    issueRpcData: [
+      {
+        error_code: null,
+        invoice_id: null,
+        invoice_number: null,
+      },
+    ],
+  });
+
+  const result = await issueInvoiceAction(INSERTED_INVOICE_ID);
+
+  assert.deepEqual(result, { success: false, error: "invoice_issue_failed" });
+  assert.equal(scenario.issueRpcCalls, 1);
 });

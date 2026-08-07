@@ -69,17 +69,62 @@ Feature 009 remains inactive. Future accounting, procurement, expenses, supplier
 - OCR discovery Waves 0-9 are complete.
 - Cross-Wave Consolidation and the Final Remediation Master Plan are complete.
 - The external read-only `baseline-90adf8f` campaign package remains the detailed evidence authority; it is not repository-controlled.
-- No remediation implementation Goal has started. Current product state remains single-company and Service-centered, with staged Event ERP expansion and later optional multi-company/SaaS expansion.
+- G1 financial lifecycle authority and invoice snapshot remediation is complete in the current unstaged working tree. All four canonical G1 migrations are applied and reconciled on DEV/DEMO; G2 through G12 remain not started. Current product state remains single-company and Service-centered, with staged Event ERP expansion and later optional multi-company/SaaS expansion.
 - Current confirmed findings: 49 — 0 Critical, 5 High, 39 Medium, and 5 Low. Future SaaS/migration concerns are tracked separately: 3. Architectural blockers: 0.
 
 ### Current checkpoint
 
-- **Phase:** `PRE-G1 REMEDIATION / TRACKING SYNC`.
+- **Phase:** `G1 COMPLETE / CONTROLLED COMMIT REVIEW`.
 - **G0 authority:** `D:/G7/g7-crm` on `main` remains the sole canonical checkout at the frozen baseline recorded in this document's governance/current-authority section; the retired Grok worktree is not current authority.
-- **G0/G0.5/G0.6 state:** the three tracking documents contain intentional unstaged documentation changes; no product implementation, SQL, migration, test, or configuration change has begun in this sequence.
-- **Owner-approved G1 rules:** approved quotation mutability, active Approved Billing Scope invoice snapshot authority, and durable `invoice.created` / `invoice.issued` audit events; G1 implementation and source/SQL/test changes remain not started.
-- **Next controlled Goal:** G1 becomes the next product implementation Goal after Mozfer reviews the combined G0/G0.5/G0.6 documentation diff and explicitly approves the docs-only commit boundary.
+- **G1 state:** approved quotation mutability, active Approved Billing Scope invoice snapshot authority, durable `invoice.created` / `invoice.issued` audit events, invoice-list Draft/Sent/Paid visibility, invoice-detail authority semantics, Final Invoice scope preservation, and Deposit Invoice scope preservation are implemented and accepted. Full validation is `PASS WITH WARN` only because two pre-existing PDF `<img>` lint warnings remain; the stale invoice-list contract now asserts invoice `date` semantics. DEV/DEMO database verification and browser acceptance are `PASS`.
+- **Canonical G1 migrations:** `20260807090000_g1_financial_lifecycle_authority`, `20260807133000_g1_invoice_snapshot_insert_correction`, `20260807150000_g1_final_invoice_scope_snapshot_correction`, and `20260807183359_g1_deposit_invoice_scope_snapshot_correction` are applied on DEV/DEMO. Generated version `20260807185325` is absent; no production-readiness claim is made.
+- **Working-tree and governance state:** G1 source, focused tests, canonical migration files, stale-contract correction, and tracking-document changes remain unstaged. No G1 commit has been created in this task; controlled commit review is the next owner gate.
+- **Next controlled gate:** The mandatory Post-G1 Cleanup / Stabilization Gate must close before G2 begins. G2 remains the next remediation Goal and remains `Payment Precision`; the G1 -> G2 -> ... -> G12 backbone is unchanged.
 - **M-01:** external candidate status is `IMPLEMENTED_AND_VALIDATED_NOT_ADOPTED`; consolidated disposition is `ADAPT`; it remains separate and was not accessed or applied here.
+
+### POST-G1 CLEANUP / STABILIZATION GATE
+
+**G2 MUST NOT START UNTIL THIS GATE IS CLOSED.**
+
+This is an inter-goal closure and stabilization gate, not a replacement or renumbering of G2. It preserves the remediation backbone `G1 -> G2 -> ... -> G12`.
+
+#### A. Cleanup & Rebaseline
+
+- Reconcile canonical repository, local, and origin state.
+- Install and reconcile Expansion Master Rev 0.12.
+- Classify `D:\G7` material carefully as Keep / Archive / Delete.
+- Preserve evidence; do not destroy recovery or historical records.
+
+#### B. DEV/DEMO Data Hygiene
+
+- Inventory smoke, test, and legacy demo records.
+- Preserve required regression and financial evidence before cleanup.
+- Identify inconsistent lifecycle records.
+- Clean, archive, or delete intentionally, leaving understandable controlled DEV/DEMO data.
+
+#### C. Pre-G2 UX Stabilization
+
+- Navigation pending UX and immediate mutation/action states such as `Creating...`, `Approving...`, `Issuing...`, `Recording...`, and `Searching...`.
+- Duplicate-submit prevention.
+- Print/PDF actions must not reuse the initial `Preparing your workspace...` boot experience; document previews require document-specific pending behavior.
+- Reduce the visual prominence of destructive Cancel Service actions while preserving deliberate confirmation.
+- Complete RTL and mixed Arabic-English data alignment polish.
+
+#### D. Customer Document System
+
+- Preserve the Quotation, Deposit Invoice, and Final Invoice document tracks and the Arabic/English strategy: English-only, Arabic-only, bilingual AR+EN, or per-document language remain explicit options.
+- UI locale must not silently rewrite historical document language; document-language behavior must preserve snapshot/history integrity.
+- Preserve multi-page Quote/Invoice behavior, repeated compact headers/table headings, one document number across pages, and totals/settlement on the final page where appropriate.
+- Preserve customer-facing short descriptions versus internal operational details, PDF spacing/hierarchy polish, and semantically appropriate `Approved Service Scope Total` terminology.
+
+#### E. Quotation Commercial Model Impact Check
+
+- Preserve Commercial Groups, Package pricing, Itemized pricing, mixed Package + Itemized pricing, customer-facing descriptions, and internal details remaining internal.
+- **Tracked status:** `IMPACT CHECK REQUIRED / IMPLEMENTATION NOT AUTHORIZED`.
+- Determine whether this direction is presentation/document-only and safe for a pre-G2 stabilization slice, or a deeper schema, quotation, ABS, or financial-authority change that must be scheduled deliberately without reopening G1 invariants.
+- No quotation commercial redesign or schema/financial implementation is authorized by this closeout.
+
+After this gate closes, G2 (Payment Precision) may begin.
 
 ### Completed product foundations before current remediation
 

@@ -188,7 +188,10 @@ export async function updateQuotation(id: string, input: unknown): Promise<Actio
 
     if (error) {
       console.error("[updateQuotation] Supabase error:", error.message);
-      if (error.message.includes("Cannot edit quotation with status")) {
+      if (
+        error.message.includes("Cannot edit quotation with status") ||
+        error.message.includes("approved_quotation_immutable")
+      ) {
         return { success: false, error: "Only draft quotations can be edited." };
       }
       return { success: false, error: "Failed to update quotation. Please try again." };
@@ -227,7 +230,7 @@ export async function softDeleteQuotation(id: string): Promise<ActionResult> {
       return { success: false, error: "Cannot delete an approved quotation." };
     }
 
-    const { error } = await supabase
+    const { data: deletedQuotation, error } = await supabase
       .from("quotations")
       .update({
         is_deleted: true,
@@ -235,11 +238,20 @@ export async function softDeleteQuotation(id: string): Promise<ActionResult> {
         updated_by: user.clerk_user_id,
       })
       .eq("id", id)
-      .eq("is_deleted", false);
+      .eq("is_deleted", false)
+      .select("id")
+      .maybeSingle();
 
     if (error) {
       console.error("[softDeleteQuotation] Supabase error:", error.message);
+      if (error.message.includes("approved_quotation_immutable")) {
+        return { success: false, error: "Cannot delete an approved quotation." };
+      }
       return { success: false, error: "Failed to delete quotation. Please try again." };
+    }
+
+    if (!deletedQuotation) {
+      return { success: false, error: "Quotation was not deleted. Please try again." };
     }
 
     revalidatePath("/quotations");
@@ -314,18 +326,27 @@ export async function rejectQuotation(id: string): Promise<ActionResult> {
       return { success: false, error: `Cannot reject a quotation that is ${qData.status}.` };
     }
 
-    const { error } = await supabase
+    const { data: rejectedQuotation, error } = await supabase
       .from("quotations")
       .update({
         status: "rejected",
         updated_by: user.clerk_user_id,
       })
       .eq("id", id)
-      .eq("is_deleted", false);
+      .eq("is_deleted", false)
+      .select("id")
+      .maybeSingle();
 
     if (error) {
       console.error("[rejectQuotation] Supabase error:", error.message);
+      if (error.message.includes("approved_quotation_immutable")) {
+        return { success: false, error: "Cannot reject an approved quotation." };
+      }
       return { success: false, error: "Failed to reject quotation. Please try again." };
+    }
+
+    if (!rejectedQuotation) {
+      return { success: false, error: "Quotation was not rejected. Please try again." };
     }
 
     revalidatePath("/quotations");

@@ -44,14 +44,16 @@
 
 ## 1.3 Current Review and Remediation Checkpoint
 
-- **Current phase:** `PRE-G1 REMEDIATION / TRACKING SYNC`.
+- **Current phase:** `G1 COMPLETE / CONTROLLED COMMIT REVIEW`.
 - **Review campaign:** OCR discovery Waves 0-9, cross-wave consolidation, and the Final Remediation Master Plan are complete. Detailed evidence remains in the external read-only `baseline-90adf8f` campaign package and is not repository-controlled.
 - **Current confirmed findings:** 49 total — 0 Critical, 5 High, 39 Medium, and 5 Low. Three future SaaS/migration concerns and zero architectural blockers remain separate from the current-finding total.
-- **Remediation program:** 12 Goals, G1 through G12. No remediation implementation Goal has started.
-- **Owner-approved G1 rules:** approved quotation mutability, active Approved Billing Scope invoice snapshot authority, and durable `invoice.created` / `invoice.issued` audit events. G1 implementation and source/SQL/test changes are not started.
+- **Remediation program:** 12 Goals, G1 through G12. G1 implementation is complete in the current unstaged working tree; G2 through G12 remain not started.
+- **Owner-approved G1 rules:** approved quotation mutability, active Approved Billing Scope invoice snapshot authority, and durable `invoice.created` / `invoice.issued` audit events. G1 is complete with 3/3 findings corrected: W2-LIFE-001, W2-FIN-002, and W2-AUD-005. Full validation is `PASS WITH WARN` because lint retains two pre-existing PDF `<img>` warnings; final delegated reviews confirmed 0 remaining in-scope findings.
+- **G1 closeout:** DEV/DEMO database verification is `PASS`; browser acceptance is `PASS`; canonical migration history is reconciled with `20260807090000`, `20260807133000`, `20260807150000`, and `20260807183359` applied, while generated version `20260807185325` is absent. The invoice-list stale contract now records invoice `date` semantics, and historical invoices `INV-2026-0039` and `INV-2026-0040` were intentionally not rewritten.
 - **M-01 disposition:** the external candidate is `IMPLEMENTED_AND_VALIDATED_NOT_ADOPTED`; consolidated disposition is `ADAPT`. It was not accessed or applied in this tracking task.
-- **Working-tree checkpoint:** G0/G0.5/G0.6 documentation changes are currently unstaged; product implementation has not begun in this sequence.
-- **Next action:** Mozfer reviews the combined G0/G0.5/G0.6 documentation diff; after explicit approval, create one docs-only commit on a clean baseline, then begin G1 with its required skill preflight, tests, database review, Open Code Review, and owner acceptance.
+- **Working-tree checkpoint:** G1 source, focused tests, four canonical migration files, the stale-contract correction, and tracking-document changes are unstaged. No G1 changes are staged or committed; no new database write occurs in this documentation closeout.
+- **POST-G1 mandatory gate:** `POST-G1 CLEANUP / STABILIZATION GATE` — **G2 MUST NOT START UNTIL THIS GATE IS CLOSED.** The gate covers Cleanup & Rebaseline, DEV/DEMO Data Hygiene, Pre-G2 UX Stabilization, the Customer Document System, and the explicit Quotation Commercial Model Impact Check recorded in `docs/project-roadmap.md`.
+- **Next action:** Mozfer performs controlled G1 commit review. After G1 closure, the mandatory Post-G1 gate must close before G2 (Payment Precision) may begin; the remediation backbone remains G1 -> G2 -> ... -> G12.
 
 ## 1.4 Delivered Product / Workspace Baseline Before Remediation
 

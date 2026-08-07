@@ -107,12 +107,14 @@ interface SnapshotQuotationItem {
  *   Always maps raw quotation items, totals, and metadata exactly as the
  *   original committed behavior — invoiceAmount and invoiceType have no effect.
  *
- * Active scope — partial invoice (deposit or final with prior deposits):
- *   Creates a single summary line item with the actual invoice amount.
+ * Active scope — partial invoice:
+ *   Deposits and final invoices retain the accepted/adjusted scope items. Their
+ *   settlement amount is stored separately by the authoritative create RPC.
  *
- * Active scope — full invoice (invoiceAmount === acceptedGrandTotal):
- *   Uses only accepted/adjusted scope items. Excluded and customer_supplied
- *   items are filtered out. Returns null if no billable items are found.
+ * Active scope:
+ *   Uses only accepted/adjusted scope items regardless of the deposit/final
+ *   settlement amount. Excluded and customer_supplied items are filtered out.
+ *   Returns null if no billable items are found.
  */
 export function buildQuotationSnapshot(
   quotation: QuotationDetail,
@@ -150,59 +152,34 @@ export function buildQuotationSnapshot(
   }
 
   // ── Active scope paths ────────────────────────────────────────────
+  // Invoice amount/type are settlement metadata; active ABS snapshots always
+  // retain the approved scope lines and authority totals.
+  void invoiceAmount;
+  void invoiceType;
+
   const scopeCeiling = Number(activeScope.acceptedGrandTotal || 0);
+  const billableItems = (activeScope.items || [])
+    .filter((item) => item.decision === "accepted" || item.decision === "adjusted");
 
-  // Partial scope invoice: deposit or final where amount < full ceiling
-  const isPartialScopeInvoice =
-    invoiceAmount !== undefined &&
-    invoiceAmount < scopeCeiling;
-
-  let snapshotItems: SnapshotQuotationItem[];
-  let subtotal: number;
-  let vatAmount: number;
-  let grandTotal: number;
-
-  if (isPartialScopeInvoice) {
-    // Single summary line with actual invoice amount
-    const desc = invoiceType === "deposit" ? "Deposit Payment" : "Final Settlement";
-    snapshotItems = [
-      {
-        description: desc,
-        details: `For services related to Quotation ${quotation.quotationNumber}`,
-        qty: 1,
-        unit_price: invoiceAmount,
-        vat: 0,
-        total: invoiceAmount
-      }
-    ];
-    subtotal = invoiceAmount;
-    vatAmount = 0;
-    grandTotal = invoiceAmount;
-  } else {
-    // Full scope invoice: use only accepted/adjusted items
-    const billableItems = (activeScope.items || [])
-      .filter((item) => item.decision === "accepted" || item.decision === "adjusted");
-
-    // Safety: never create a snapshot with a nonzero scope total but no billable items
-    if (billableItems.length === 0) {
-      return null;
-    }
-
-    // Map scope items. vat field = per-item VAT amount (matching legacy
-    // quotation_items.vat semantics per AGENTS.md rule).
-    snapshotItems = billableItems.map((item) => ({
-      description: item.sourceDescription,
-      details: item.sourceDetails,
-      qty: Number(item.acceptedQty || 0),
-      unit_price: Number(item.acceptedUnitPrice || 0),
-      vat: Number(item.acceptedVatAmount || 0),
-      total: Number(item.acceptedGrandTotal || 0)
-    }));
-
-    subtotal = Number(activeScope.acceptedSubtotal || 0);
-    vatAmount = Number(activeScope.acceptedVatAmount || 0);
-    grandTotal = Number(activeScope.acceptedGrandTotal || 0);
+  // Safety: never create a snapshot with a nonzero scope total but no billable items
+  if (billableItems.length === 0) {
+    return null;
   }
+
+  // Map scope items. vat field = per-item VAT amount (matching legacy
+  // quotation_items.vat semantics per AGENTS.md rule).
+  const snapshotItems: SnapshotQuotationItem[] = billableItems.map((item) => ({
+    description: item.sourceDescription,
+    details: item.sourceDetails,
+    qty: Number(item.acceptedQty || 0),
+    unit_price: Number(item.acceptedUnitPrice || 0),
+    vat: Number(item.acceptedVatAmount || 0),
+    total: Number(item.acceptedGrandTotal || 0)
+  }));
+
+  const subtotal = Number(activeScope.acceptedSubtotal || 0);
+  const vatAmount = Number(activeScope.acceptedVatAmount || 0);
+  const grandTotal = Number(activeScope.acceptedGrandTotal || 0);
 
   return {
     quotation_id: quotation.id,
