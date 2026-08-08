@@ -1,12 +1,15 @@
 # G7 BLUE Event ERP Future Expansion
+
+> Historical archive: Revision 0.11 was superseded by the sole current Expansion Master at `docs/product/G7_BLUE_Event_ERP_Future_Expansion_Master_Handover.md` on 8 August 2026. Retained for traceability only; do not treat this file as current authority.
+
 ## Master Product Handover, Decision Register, Discovery Brief, and Rebaseline Report
 
-**Original report date:** 2 August 2026  
-**Latest decision sync:** 7 August 2026
-**Revision:** 0.12
-**Owner:** Mozfer Mohamed Elhadi  
-**Product:** G7 BLUE CRM / Future Event ERP  
-**Document status:** Sole authoritative expansion reference, product decision register, and daily handover continuity record  
+**Original report date:** 2 August 2026
+**Latest decision sync:** 5 August 2026
+**Revision:** 0.11
+**Owner:** Mozfer Mohamed Elhadi
+**Product:** G7 BLUE CRM / Future Event ERP
+**Document status:** Historical superseded expansion reference, retained for traceability only
 **Implementation authority:** This report records owner-approved expansion scope and sequencing, but it does not by itself authorize code changes, schema changes, migrations, SQL application, staging, commit, merge, or push. Implementation still requires a separate controlled owner-authorized task.
 
 > **Core strategic statement:** Build the G7 BLUE house for today's company, but do not pour a roof that prevents adding floors tomorrow.
@@ -22,14 +25,13 @@
 |---|---|
 | Current operating company | G7 BLUE, a Saudi events and production company |
 | Current system shape | Internal Service-centered CRM with commercial workflow, suppliers foundation, users, and RBAC |
-| Future product direction | Two-layer strategy: first build and prove a complete single-company Event ERP inside G7 BLUE; only after real operational proof, productize the proven system as a multi-company SaaS for other event companies |
-| Current implementation status | Goal 2A/2B/2C remains delivered current-product foundation. The G1-G12 remediation program is separate from expansion activation and takes precedence where required before broad Layer 1 work. The exact active Goal, Git state, database state, validation evidence, and next action are governed by current project tracking/controller evidence rather than frozen here. |
-| Post-G1 cleanup/rebaseline checkpoint (8 August 2026) | G1 is closed and pushed. The canonical checkout is `D:\\G7\\g7-crm` on `main` at `e34ea4176044f4dc663555a8794dfa5d3042206c`, aligned with `origin/main` at `0/0` divergence. The mandatory Post-G1 gate remains active; only Cleanup & Rebaseline is closed by this task, while DEV/DEMO Data Hygiene, UX Stabilization, Customer Document System, and the Quotation Commercial Model Impact Check remain pending. G2 remains blocked, not started, and is still Payment Precision. |
+| Future product direction | A specialist Event ERP for event companies, initially proven inside G7 BLUE and later offered to other companies |
+| Current implementation status | Current V1 work continues in the canonical `main` checkout under the owner-authorized Goal 2B/2C current-product refinement, including the bounded Supplier Directory presentation repair, the Dashboard independent-column flow correction after the Revision 0.8 presentation rejection, and the final Dashboard density/width polish. Supplier Rate Card Management V1 remains a separately governed bounded expansion boundary. |
 | Original report repository baseline | `cdd888b4cbc495a69be0a2cccb1f1ba5a3aae48d`, aligned with `origin/main` when the 2 August report was prepared |
-| Current dated delivery baseline | Section 28K preserves the Goal 2B/2C historical closeout. Current Git, working-tree, remediation, test, migration, and next-action truth is owned by verified repository evidence plus the current controller handover/project tracking, not by this strategic Master. |
+| Current dated delivery baseline | Source `main` began at `5429e7642bd3d763809e0de453cc131f2c90921c` after Goal 2A; the owner-accepted Goal 2B/2C local closeout is recorded in the canonical `D:\G7\g7-crm` checkout. See Section 28K for the latest acceptance sync. |
 | Feature activation | Supplier Rate Card Management V1 remains the first separately governed bounded expansion slice. Goal 2B/2C adds no new expansion activation; its approved local commit closeout does not imply merge, push, or OCR. |
-| Latest owner decision sync | 7 August 2026: the sole-master rule remains locked; expansion is now explicitly organized into two layers inside this one file: Layer 1 is the single-company G7 BLUE Event ERP, followed by an internal proof gate; Layer 2 is later multi-company/SaaS productization for other event companies. Current-product remediation remains separate and must not be mistaken for expansion activation. |
-| Current controlled-delivery snapshot | This Master deliberately does not freeze fast-changing Git/test/database truth. Use the newest verified controller/repository evidence for current execution state. This document owns strategic expansion direction, layer boundaries, decisions, and open questions. |
+| Latest owner decision sync | 5 August 2026: sole-reference authority, local-search product direction, Customer 360 relationship context, Supplier list cleanup, Goal 2B/2C current-product refinement, the locked Business Year scope/date semantics correction, the Customers explicit-submit search correction, the dedicated Supplier Directory presentation repair, the Dashboard product correction, the bounded Dashboard independent-column flow repair, and the final Dashboard density/width polish. |
+| Current controlled-delivery snapshot | Canonical `main` contains the owner-accepted Goal 2B/2C refinement plus the approved Business Year, Customers, Supplier Directory, and Dashboard corrections. The full suite is 883/883 across 74 files; focused Dashboard contracts pass 28/28; route typegen, standalone TypeScript, production build, and `git diff --check` pass; lint has 0 errors and two pre-existing PDF `<img>` warnings. Reports and Customer 360 remain explicitly owner-pending. |
 | Field evidence still required | Riyadh event-industry workflow interview, event-industry accountant review, and later tax/compliance review |
 
 ### Source basis
@@ -51,8 +53,6 @@ This report consolidates:
 - The 5 August 2026 owner-authorized Dashboard correction task for a dedicated desktop-first information hierarchy and role-ready presentation repair that preserves existing metrics, permissions, data truth, and global Dashboard scope.
 - The 5 August 2026 owner-authorized Dashboard independent-column flow correction task replacing the manually rejected Revision 0.8 row-coupled composition with stacked independent 5/12 and 7/12 columns while preserving the accepted data, permission, scope, and responsive contracts.
 - The 5 August 2026 owner-authorized final Dashboard density and width polish task retaining Revision 0.9's independent-column architecture while correcting only the Dashboard frame width, obsolete Priority Work heading, and bounded Attention Needed preview.
-- The 7 August 2026 owner clarification that expansion is one strategic Master with two product layers: first the single-company internal G7 BLUE Event ERP, then a real-use proof gate, then later SaaS productization for other event companies.
-
 
 ### 5 August 2026 revision summary
 
@@ -80,98 +80,6 @@ This revision records the following current truth:
 
 ---
 
-### 7 August 2026 revision summary
-
-Revision 0.12 does not create a second expansion plan and does not authorize implementation. It clarifies the existing strategy so current remediation, internal ERP expansion, and later SaaS productization cannot be confused:
-
-- **Pre-expansion foundation:** current-product delivery and the G1-G12 remediation program remain governed by the current project status/roadmap and controller evidence. They are not Event ERP expansion activation.
-- **Layer 1 — Internal G7 BLUE Event ERP:** after the relevant foundation, G7 BLUE expands its own single-company system through the approved internal ERP domains such as financial safety, accounting, user lifecycle, expenses, procurement, supplier accounting, costing/profitability, event operations, dashboards, and reports.
-- **Internal proof gate:** G7 BLUE must use the system on real company work and demonstrate operational and financial usefulness before SaaS activation. Exact proof metrics and thresholds remain to be approved when enough real usage evidence exists.
-- **Layer 2 — SaaS productization:** only after internal proof does the product move into company context, multi-company isolation, membership, historical backfill/migration, subscriptions, onboarding, quotas, localization/compliance, and commercial packaging for other event companies.
-- The three Wave 9 SaaS concerns remain **future activation gates, not current defects**: settings/numbering ownership, company membership/isolation, and historical ownership/backfill migration.
-- This remains **one sole authoritative Expansion Master**. The two layers are sections inside this document, not separate competing master files.
-
----
-
-## 0A. Program Structure and Two-Layer Expansion Architecture
-
-This section is the controlling interpretation of the overall product journey. It exists to prevent current remediation from being mistaken for expansion, and to prevent future SaaS architecture from being pulled into today's single-company product too early.
-
-### 0A.1 Pre-expansion foundation — current product and remediation
-
-This work is necessary before broad Layer 1 activation, but it is **not itself the Event ERP expansion program**:
-
-- Delivered/current-product foundations such as Goal 2A and Goal 2B/2C remain part of the existing Service-centered product baseline.
-- The frozen Waves 0-9 review campaign produced the current remediation program. The authoritative execution order and exact current Goal are governed by `docs/project-status.md`, `docs/project-roadmap.md`, the controller handover, and verified repository evidence rather than being duplicated here.
-- The G1-G12 remediation program hardens financial authority, money precision, reporting truth, bounded reads, admin security, payload/log boundaries, reliability, replay behavior, supplier/Rate Card authority, search/accessibility, release evidence, and typed/architectural boundaries.
-- Phase 0 field evidence, real-document sampling, accounting/ownership review, domain mapping, permission planning, and design rebaseline may proceed as controlled discovery where authorized, but broad new ERP module activation must not bypass required remediation and owner decisions.
-- Supplier Rate Card Management V1 remains the already-approved bounded early expansion slice. Its existence does not mean that broad Layer 1 procurement, supplier accounting, actual costing, or margin has been activated.
-
-### 0A.2 Layer 1 — Internal G7 BLUE Event ERP
-
-Layer 1 serves **one operating company: G7 BLUE**. The objective is to turn the current system into the operating Event ERP that G7 BLUE itself genuinely uses.
-
-Layer 1 contains the internal business expansion domains already described in this Master, including:
-
-- financial safety and controlled commercial corrections;
-- accounting foundation;
-- user access and lifecycle;
-- company and event expenses, reimbursements, petty cash, and cash control;
-- supplier RFQ, quotation comparison, awards, Purchase Orders, receipt/acceptance, and procurement controls;
-- Vendor Bills, supplier credits, advances, payments, payables, and supplier accounting;
-- expected, committed, actual, paid, and outstanding event cost;
-- event margin, profitability, financial close, and management reporting;
-- Event Brief, venue/site visit, permits, labour, incidents, claims, and operational timelines;
-- role/permission-aware dashboards and reports.
-
-Layer 1 remains single-company unless a later owner decision explicitly promotes the Layer 2 company-context program.
-
-### 0A.3 Internal proof gate — between Layer 1 and Layer 2
-
-Layer 2 must not activate merely because Layer 1 features exist in code. The product must first be proven through real G7 BLUE use.
-
-Before SaaS activation, the owner and controller must have evidence that:
-
-- G7 BLUE is using the relevant system workflows on real operational work;
-- financial and operational records remain trustworthy under real use;
-- the important Layer 1 workflows have owner and relevant business-user acceptance;
-- reusable event-company patterns have been separated from G7-specific habits;
-- material production-blocking financial, security, data-integrity, migration, or release issues are closed or explicitly accepted;
-- the exact SaaS proof criteria, commercial model, ownership model, and migration plan have been approved.
-
-No numeric adoption threshold, number of events, revenue threshold, or time period is locked by Revision 0.12. Those proof criteria require later evidence and an explicit owner decision.
-
-### 0A.4 Layer 2 — SaaS productization for other event companies
-
-Layer 2 begins only after the internal proof gate. Its purpose is not to rebuild the ERP, but to safely productize the proven Event ERP for other event companies.
-
-Layer 2 includes, when separately approved:
-
-- company/legal-entity ownership context;
-- multi-company data isolation;
-- company membership, active-company context, and context-aware authorization;
-- company-aware settings and document numbering;
-- controlled backfill of existing G7 BLUE historical data into the company-aware model;
-- migration rehearsal, reconciliation, rollback, export, retention, restore, and deletion behavior;
-- company onboarding;
-- subscriptions, plan entitlements, quotas, AI/storage limits, and noisy-neighbor controls;
-- configurable country, currency, language, tax, and later compliance activation;
-- SaaS support and commercial operating model.
-
-The Wave 9 future concerns `W9-SAAS-001`, `W9-SAAS-002`, and `W9-MIG-001` become mandatory design/verification gates **before** a second company or SaaS tenant is activated. They do not justify adding tenant fields, tenant UI, or SaaS billing to the current product now.
-
-### 0A.5 Authority split
-
-| Question | Authoritative source |
-|---|---|
-| What code, migration, test, branch, or Git state exists now? | Verified repository evidence |
-| Which remediation Goal is active and what is the next controlled action? | Current controller handover + project status/roadmap + newest owner instruction |
-| What is the long-term Event ERP and SaaS direction? | This sole Expansion Master |
-| Does an idea from Mozfer automatically become implementation scope? | No. It is an owner proposal until reconciled against business value, current evidence, dependencies, long-term product impact, and then explicitly approved as a decision or task. |
-
----
-
-
 ## 1. How the Next Chat Must Use This Report
 
 The next chat must treat this report as the **sole authoritative expansion reference**, not as an implementation prompt. Earlier expansion handovers and discussion reports are historical evidence only and must not compete with this revision for current expansion scope.
@@ -180,7 +88,7 @@ It must:
 
 1. Preserve the distinction between **locked decisions**, **directional owner decisions**, **recommended proposals**, and **open questions**.
 2. Continue current product work without blocking it on the future expansion discussion.
-3. Do not activate an unapproved expansion feature. Supplier Rate Card Management V1 remains the only owner-approved bounded early expansion slice; the current G1-G12 remediation program is not expansion activation, and broader Layer 1 or any Layer 2 work requires separate authorization.
+3. Do not activate an unapproved expansion feature. As of 4 August 2026, Supplier Rate Card Management V1 is the only owner-approved bounded expansion slice; all broader expansion modules remain governed by discovery and later decisions.
 4. Avoid inventing Saudi event-industry workflows where the Wednesday interview is expected to provide real operational evidence.
 5. Avoid presenting recommendations as final owner decisions.
 6. Use plain explanations when discussing accounting, procurement, tax, or operations with Mozfer.
@@ -199,7 +107,7 @@ It must:
 
 G7 BLUE CRM is no longer viewed as a future invoicing CRM only. The owner direction has expanded into a long-term specialist **Event ERP** vision.
 
-The product should first become the internal operating and financial system for G7 BLUE through Layer 1. It should prove its usefulness in real event delivery, supplier management, company spending, accounting, profitability, and role-specific decision-making. After the internal system is stable, genuinely used, and proven valuable, Layer 2 is intended to productize the proven system as a SaaS platform for other event companies.
+The product should first become the internal operating and financial system for G7 BLUE. It should prove its usefulness in real event delivery, supplier management, company spending, accounting, profitability, and role-specific decision-making. After the internal system is stable and valuable, the product may be converted into a SaaS platform for other event companies.
 
 The future product combines:
 
@@ -346,16 +254,12 @@ G7 BLUE should learn from the grouping behavior, not copy the SMAAC visual desig
 ## 4. Strategic Product Vision
 
 ### 4.1 Near-term identity
-G7 BLUE CRM remains an internal single-company system built for G7 BLUE. The current priority is to complete the required current-product foundation/remediation and then expand the same system through **Layer 1: the internal G7 BLUE Event ERP**.
+
+G7 BLUE CRM remains an internal system built for G7 BLUE.
 
 ### 4.2 Long-term identity
 
-The long-term product direction has two explicit layers:
-
-1. **Layer 1:** build and prove a specialist Event ERP inside G7 BLUE as one operating company.
-2. **Layer 2:** after real internal proof, productize that proven Event ERP as a multi-company SaaS for other event and production companies.
-
-The long-term product therefore becomes a specialist Event ERP for event and production companies, but SaaS activation is a later productization step rather than the starting architecture of the current system.
+The long-term product becomes a specialist Event ERP for event and production companies.
 
 The differentiation from general ERP products is not that G7 BLUE will contain every business domain. The differentiation is that it will deeply understand the event-industry operating model:
 
@@ -369,19 +273,17 @@ The differentiation from general ERP products is not that G7 BLUE will contain e
 - Event-level expected and actual margin.
 - Project, operations, finance, and management dashboards.
 
-
 ### 4.3 Product development philosophy
+
 The product should be built in layers:
 
-1. Finish the required current-product foundation and remediation without treating it as expansion activation.
-2. Capture actual operating evidence and stabilize business/accounting definitions.
-3. Build **Layer 1**, the single-company internal Event ERP for G7 BLUE, in bounded modules.
-4. Use the system on real G7 BLUE work and prove operational and financial value.
-5. Separate reusable event-company rules from G7-specific habits.
-6. Approve the company-ownership, membership, migration, and commercial SaaS blueprint.
-7. Build **Layer 2** company isolation, packaging, onboarding, subscriptions/quotas, and migration controls.
-8. Offer the proven product to other event companies only after Layer 2 activation gates pass.
-
+1. Solve real internal G7 BLUE work.
+2. Capture actual operating evidence.
+3. Stabilize business definitions and accounting rules.
+4. Build reusable, configurable foundations.
+5. Prove adoption and value.
+6. Add tenant isolation and packaging.
+7. Offer the product to other event companies.
 
 ### 4.4 What must not happen
 
@@ -469,9 +371,6 @@ The team must not:
 | D47 | Supplier directory Location presents City, Coverage Area, and Country in separate bidi-safe lines. Supplier Rating is hidden until a real performance-capture and review workflow exists. |
 | D48 | Supplier Rate Card Management V1 is the first owner-approved bounded expansion slice: Create, Edit, Activate/Deactivate, valid-date management, and safe application-layer overlap validation. |
 | D49 | Rate Card Delete/Restore, automated pricing, broader procurement, supplier accounting, actual costing, and margin remain outside Rate Card Management V1 and require later explicit decisions. |
-| D50 | Expansion is organized into two product layers after the current-product foundation/remediation: Layer 1 builds and proves the single-company G7 BLUE Event ERP; Layer 2 productizes the proven system as multi-company/SaaS for other event companies. |
-| D51 | Layer 2 must not activate merely because ERP features exist. G7 BLUE must first have real operational use and proof, and the company-context, membership/isolation, historical ownership/backfill, numbering, migration/rollback, and commercial productization gates must be approved and tested. Exact proof thresholds remain a later owner decision. |
-| D52 | The two-layer model is an internal organization of this sole Expansion Master. It does not authorize a second or competing expansion master file. |
 
 ### 6.2 Directional owner decisions
 
@@ -480,8 +379,8 @@ These directions are confirmed, while implementation detail remains open.
 | ID | Confirmed direction | Detail still open |
 |---|---|---|
 | O01 | The product becomes a specialist Event ERP, not only a CRM. | Exact module release order and release boundaries. |
-| O02 | Layer 1 serves and proves the system inside G7 BLUE first; Layer 2 is intended to productize the proven system as SaaS for other event companies. | SaaS packaging, billing, tenant onboarding, support model, and exact internal-proof criteria. |
-| O03 | Multi-company is a Layer 2 activation concern and is not implemented now; Layer 1 architecture must preserve bounded seams without prematurely exposing tenant complexity. | Company/legal-entity ownership strategy, shared directories, branch model, membership context, and migration path. |
+| O02 | It serves G7 BLUE first and may serve other event companies later. | SaaS packaging, billing, tenant onboarding, and support model. |
+| O03 | Multi-company is not implemented now, but new architecture must not block it. | Tenant ownership strategy, shared directories, branch model, and migration path. |
 | O04 | The product will progressively become a complete accounting system. | Accounting-engine sequence, accountant review, and release acceptance criteria. |
 | O05 | VAT and ZATCA remain inactive now, but future integration readiness is required. | Registration timing, tax policy, XML/QR integration, and compliance testing. |
 | O06 | Company Expenses are core near-term scope, not a distant optional feature. | Categories, recurring expenses, thresholds, and budgets. |
@@ -782,9 +681,7 @@ Global pages may show all Purchase Orders, all Vendor Bills, all expenses, or al
 
 ---
 
-## 10. Layer 2 — Future Multi-Company and SaaS Readiness
-This entire section belongs to **Layer 2 productization**. It is a readiness and activation-gate section, not authorization to add tenant complexity during current remediation or Layer 1 internal ERP delivery.
-
+## 10. Future Multi-Company and SaaS Readiness
 
 ### 10.1 Current product mode
 
@@ -792,7 +689,7 @@ The product is currently single-company and should remain operationally simple f
 
 ### 10.2 Future product mode
 
-After Layer 1 has been proven inside G7 BLUE and the internal proof gate has passed, Layer 2 is intended to support multiple independent event companies. Each company would have its own:
+The product may later support multiple independent event companies. Each company would have its own:
 
 - Users and roles.
 - Customers.
@@ -807,27 +704,16 @@ After Layer 1 has been proven inside G7 BLUE and the internal proof gate has pas
 - Reports.
 
 ### 10.3 Readiness requirements now
-Layer 1 should preserve a small number of **seams**, not pre-build multi-company. Current single-company settings, numbering, RBAC, and data ownership remain acceptable for G7 BLUE while only one company exists.
 
-Preserve now:
+Without exposing multi-company UI now, future modules should avoid:
 
-- Settings access behind server-side functions rather than scattering direct assumptions.
-- Document numbering behind controlled RPC/service boundaries.
-- Existing permission call sites so company context can later be introduced behind them.
-- Immutable issued-document snapshots and durable audit/history identifiers.
-- Service-centered domain boundaries and dedicated workspaces rather than one universal table.
-
-Do **not** add tenant/company columns to every table, tenant UI, company switching, SaaS billing, or cross-company RLS merely for future readiness. Those belong to Layer 2 after the ownership and membership model is approved.
-
-Before a second company is activated, Layer 2 must explicitly solve:
-
-- company/legal-entity ownership and first-company backfill;
-- company-aware settings and numbering;
-- membership and active-company authorization context;
-- server/RPC/RLS company scoping;
-- historical audit ownership, export, retention, deletion, restore, and rollback;
-- subscription/plan/quota and commercial operating rules.
-
+- Hard-coded G7-specific assumptions in reusable business logic.
+- Global financial sequences shared across future companies.
+- Global categories that cannot later be company-specific.
+- User roles tied to named individuals.
+- Financial records with ambiguous ownership.
+- Cross-company supplier balances.
+- Shared document storage without isolation boundaries.
 
 ### 10.4 Later SaaS questions
 
@@ -983,8 +869,8 @@ Period Close is the controlled process of completing a month or year:
 
 ### 12.11 Financial statements
 
-**Profit and Loss:** Revenue, direct cost, overhead, and profit for a period.  
-**Balance Sheet:** Assets, liabilities, and owner equity at a date.  
+**Profit and Loss:** Revenue, direct cost, overhead, and profit for a period.
+**Balance Sheet:** Assets, liabilities, and owner equity at a date.
 **Cash Flow:** How cash entered and left the business.
 
 ### 12.12 Managerial event profitability versus statutory accounting
@@ -1250,13 +1136,13 @@ Crew meals and transport caused by the event are Direct Event Expenses. They may
 
 ### 15.1 Terminology
 
-**RFQ - Request for Quotation:** G7 BLUE asks one or more suppliers to provide price and terms for a defined requirement.  
-**Supplier Quotation:** The supplier's commercial offer.  
-**Award:** The recorded decision selecting a supplier quotation.  
-**Purchase Order:** G7 BLUE's approved formal order to the supplier.  
-**Supplier Booking:** Operational reservation of supplier capacity or date.  
-**Service Receipt:** Evidence that the requested service or equipment was delivered and accepted.  
-**Vendor Bill:** The supplier's financial invoice to G7 BLUE.  
+**RFQ - Request for Quotation:** G7 BLUE asks one or more suppliers to provide price and terms for a defined requirement.
+**Supplier Quotation:** The supplier's commercial offer.
+**Award:** The recorded decision selecting a supplier quotation.
+**Purchase Order:** G7 BLUE's approved formal order to the supplier.
+**Supplier Booking:** Operational reservation of supplier capacity or date.
+**Service Receipt:** Evidence that the requested service or equipment was delivered and accepted.
+**Vendor Bill:** The supplier's financial invoice to G7 BLUE.
 **Supplier Payment:** Money paid to the supplier.
 
 ### 15.2 Proposed supplier journey
@@ -1427,7 +1313,7 @@ A future Scan and Fill action may:
 
 ### 16.3 Local OCR versus cloud document AI
 
-**Local or open-source OCR:** Low variable cost, useful for basic text, numbers, and fixed fields; weaker with mixed Arabic/English tables and commercial meaning.  
+**Local or open-source OCR:** Low variable cost, useful for basic text, numbers, and fixed fields; weaker with mixed Arabic/English tables and commercial meaning.
 **Cloud document intelligence:** Better structured extraction and table understanding; introduces usage cost, privacy, integration, and vendor dependence.
 
 ### 16.4 Recommended adoption model
@@ -2237,20 +2123,9 @@ Stitch output is a design proposal and still requires product approval and imple
 
 <!--PAGEBREAK-->
 
-## 28. Two-Layer Expansion Roadmap and Pre-Expansion Foundation
+## 28. Working Phased Roadmap Hypothesis
 
-This sequence remains a working roadmap hypothesis. Revision 0.12 adds an explicit layer map so phases cannot be mistaken for SaaS activation. The current remediation program itself remains governed by the current project roadmap/status rather than duplicated here.
-**Important numbering rule:** the remediation program `G1-G12` and the expansion roadmap `Phase 0-8` are separate systems. `G1` is not `Phase 1`, `G2` is not `Phase 2`, and completion of a remediation Goal does not automatically activate an expansion Phase.
-
-
-| Roadmap zone | Meaning | Company scope | Activation meaning |
-|---|---|---|---|
-| Pre-expansion foundation | Current-product remediation plus Phase 0 evidence/blueprints | G7 BLUE | Not broad expansion activation |
-| Phase 0A | Already-approved bounded Rate Card V1 slice | G7 BLUE | Early bounded exception only |
-| Layer 1 | Phases 1-8: internal Event ERP expansion | G7 BLUE only | Build and prove the operating ERP |
-| Internal proof gate | Real-use, business, financial, acceptance, and readiness evidence | G7 BLUE | Must pass before Layer 2 |
-| Layer 2 | Future platform/SaaS productization | Multiple event companies | Multi-company/SaaS activation |
-
+This sequence is recommended for discussion and is not yet the final approved roadmap.
 
 ### Phase 0 - Product Rebaseline and Field Evidence
 
@@ -2280,12 +2155,9 @@ This phase is owner-approved and may proceed through a separate controlled task 
 - Exclude Delete/Restore, automated pricing, RFQ, Purchase Orders, supplier finance, actual cost, and margin.
 - Require Mozfer manual browser acceptance before commit slicing and merge.
 
-Status: **IMPLEMENTED / COMMITTED on canonical `main` through `9115d3e`; OWNER ACCEPTANCE PENDING; G9 REMEDIATION OPEN.** No broader procurement, supplier accounting, Actual Cost, or Margin activation is implied.
+Status: **implemented in the isolated Goal worktree; owner manual acceptance, controlled commit, merge, and push remain pending.**
 
-### Layer 1 — Internal G7 BLUE Event ERP
-Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not require multi-company, SaaS billing, or tenant UI.
-
-#### Phase 1 - Financial Safety
+### Phase 1 - Financial Safety
 
 - Immutable issued-customer-document rules.
 - Customer invoice correction.
@@ -2299,7 +2171,7 @@ Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not r
 - Audit rules.
 - Backup and recovery policy.
 
-#### Phase 2 - Accounting Foundation
+### Phase 2 - Accounting Foundation
 
 - Chart of Accounts.
 - Journal engine.
@@ -2309,7 +2181,7 @@ Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not r
 - Audit trail.
 - Net commercial revenue bridge into event profitability.
 
-#### Phase 2A - User Access and Lifecycle Foundation
+### Phase 2A - User Access and Lifecycle Foundation
 
 - Role templates.
 - Per-user grants and denials.
@@ -2318,7 +2190,7 @@ Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not r
 - Activity reporting foundations.
 - Optional separate-preparer/approver company policy.
 
-#### Phase 3 - Expenses and Cash Control
+### Phase 3 - Expenses and Cash Control
 
 - Company Expenses.
 - Direct Event Expenses.
@@ -2327,7 +2199,7 @@ Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not r
 - Petty Cash.
 - Approval workflow.
 
-#### Phase 4 - Procurement
+### Phase 4 - Procurement
 
 - RFQ.
 - Supplier Quotations.
@@ -2338,7 +2210,7 @@ Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not r
 - Service Receipt.
 - Committed Cost.
 
-#### Phase 5 - Supplier Accounting
+### Phase 5 - Supplier Accounting
 
 - Vendor Bills.
 - Supplier Credits.
@@ -2349,7 +2221,7 @@ Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not r
 - Due and overdue alerts.
 - Purchase Order and bill matching.
 
-#### Phase 6 - Event Costing and Profitability
+### Phase 6 - Event Costing and Profitability
 
 - Event Cost Ledger.
 - Expected Cost.
@@ -2360,7 +2232,7 @@ Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not r
 - Variance.
 - Event financial close.
 
-#### Phase 7 - Event Operations
+### Phase 7 - Event Operations
 
 - Event Brief.
 - Venue options.
@@ -2370,7 +2242,7 @@ Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not r
 - Crew and labour.
 - Incidents and claims.
 
-#### Phase 8 - Dashboards and Reports
+### Phase 8 - Dashboards and Reports
 
 - Management dashboard.
 - Finance dashboard.
@@ -2380,28 +2252,16 @@ Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not r
 - Reports Center.
 - Financial statements and exports.
 
-### Internal Proof Gate — required before Layer 2
+### Future Platform Activation
 
-Layer 1 completion is not defined only by code presence. Before activating Layer 2, G7 BLUE must have sufficient real-use evidence to approve productization. The final proof checklist and numeric thresholds remain open, but the gate must cover at minimum operational adoption, financial/data trust, owner/business-user acceptance, reusable-versus-G7-specific workflow separation, release readiness, and an approved company/migration/commercial blueprint.
-
-### Layer 2 — Future Platform / SaaS Productization
-
-Only after the internal proof gate and separate owner authorization:
-
-- Company/legal-entity ownership context.
-- Multi-company or multi-tenant isolation.
-- Membership and active-company authorization context.
-- Company-aware settings and document numbering.
-- Historical G7 BLUE backfill/migration with reconciliation and rollback evidence.
-- Subscription plans and entitlements.
+- Multi-company or multi-tenant SaaS.
+- Subscription plans.
 - Company onboarding.
-- Per-company or per-plan quotas, storage, AI usage limits, and noisy-neighbor controls.
-- Configurable localisation, currency, country, and tax policy.
-- ZATCA integration only through a separately approved compliance project.
+- ZATCA integration.
+- Configurable localisation.
 - Supplier marketplace or shared discovery, if later approved.
 
 ---
-
 
 ## 28A. Dated Current-Delivery Sync — 3 August 2026
 
@@ -3029,33 +2889,6 @@ Goal 2B/2C remains current-product remediation, not a new Event ERP expansion ac
 
 ---
 
-## 28L. Two-Layer Expansion Architecture Sync — 7 August 2026
-
-This dated sync records Mozfer's owner clarification and controller reconciliation after the remediation campaign and G1 work had already begun.
-
-### 28L.1 Owner clarification
-
-The expansion program has two intended product layers:
-
-1. **Layer 1:** expand the single-company G7 BLUE system into the complete internal Event ERP described by this Master, then use it on real G7 BLUE work.
-2. **Layer 2:** only after the system proves useful and reliable inside G7 BLUE, productize it as SaaS for other event companies.
-
-### 28L.2 Controller interpretation
-
-- Current Goal 2A/2B/2C delivery and G1-G12 remediation remain current-product foundation, not Layer 1 activation by themselves.
-- Phase 0 evidence/blueprints prepare Layer 1 and may overlap controlled discovery where authorized.
-- Phases 1-8 are Layer 1 internal ERP expansion for G7 BLUE.
-- A real-use internal proof gate separates Layer 1 from Layer 2.
-- The Wave 9 future concerns `W9-SAAS-001`, `W9-SAAS-002`, and `W9-MIG-001` are mandatory Layer 2 pre-activation gates, not reasons to implement multi-company now.
-- D43 remains in force: this file stays the sole Expansion Master. Revision 0.12 organizes it internally rather than splitting it into competing master files.
-
-### 28L.3 Implementation boundary
-
-This architecture sync is a product/document decision only. It does not authorize code, schema, migration application, staging, commit, merge, push, G2, or any new expansion module while the current remediation controller has not separately authorized that action.
-
----
-
-
 ## 29. Parallel Workstream Continuity
 
 The expansion discussion must not stop current work.
@@ -3072,8 +2905,6 @@ Continue approved tasks such as:
 - Controlled repository work under existing governance.
 
 ### Stream B - Expansion Discovery and Explicitly Approved Bounded Delivery
-This stream may prepare Layer 1 evidence/design and preserve Layer 2 seams, but it must not activate broad Layer 1 modules or Layer 2 SaaS without separate authorization.
-
 
 Continue:
 
@@ -3279,7 +3110,7 @@ No document should be photographed or copied without consent.
 | Building from assumptions | Wrong workflows and rework | Use Wednesday interview and real documents before locking workflows. |
 | Trying to build the entire ERP at once | Long delay before value | Phase the product and launch bounded modules. |
 | Accounting added after operational tables | Duplicate financial truth | Approve accounting blueprint before major financial modules. |
-| Hard-coded single-company behavior | Difficult Layer 2 migration if assumptions spread everywhere | Preserve bounded settings, numbering, authorization, snapshot, and Service-centered seams now; add explicit company ownership during approved Layer 2 design rather than prematurely adding tenant fields everywhere. |
+| Hard-coded single-company behavior | Difficult SaaS migration | Require company ownership and configurable settings in new architecture. |
 | Premature multi-company UI | Unnecessary current complexity | Keep readiness internal; activate later. |
 | Premature VAT/ZATCA claims | Compliance and trust risk | Keep tax inactive until approved compliance project. |
 | AI extraction errors | Wrong amounts and approvals | Preserve source, display confidence, require human confirmation. |
@@ -3291,22 +3122,22 @@ No document should be photographed or copied without consent.
 
 ---
 
-## 35. Expansion-Side Next Steps and Evidence Queue
-These items govern expansion discovery/planning only. Current implementation/remediation execution order is controlled by the latest controller handover, `docs/project-status.md`, `docs/project-roadmap.md`, and verified repository evidence. Do not use this section to bypass an active remediation Goal.
+## 35. Immediate Next Steps
 
-1. Use Revision 0.12 of this file as the sole authoritative expansion reference; do not create a competing master handover.
-2. Keep the current G1-G12 remediation program separate from Layer 1 activation. Finish the required current-product safety/reliability gates before allowing broad new ERP scope to overtake them.
-3. Keep Supplier Rate Card Management V1 classified as the bounded early expansion slice: implemented/committed, owner acceptance pending, G9 remediation open; do not treat it as activation of procurement, supplier accounting, Actual Cost, or Margin.
-4. Complete or refresh Phase 0 evidence before locking major Layer 1 workflows: event-industry interviews, real-document sampling where permitted, Domain Map, Sidebar Map, permission blueprint, and design baseline.
-5. Review and approve the accounting and ownership blueprint with qualified event-company accounting input before major financial Layer 1 modules are locked.
-6. Reconcile open commercial rules such as quotation revisions, discounts, Change Orders, credits, refunds, customer credit, revenue recognition, event close/reopen, supplier cost authority, and approval boundaries before their dependent modules are implemented.
-7. Define the **Internal Proof Gate** criteria from real G7 BLUE usage before Layer 2 planning becomes executable. Do not invent numeric proof thresholds prematurely.
-8. Before activating a second company or SaaS tenant, explicitly resolve and verify `W9-SAAS-001`, `W9-SAAS-002`, and `W9-MIG-001`, including ownership, membership/isolation, numbering, historical backfill, audit attribution, export/retention/deletion, migration rehearsal, reconciliation, and rollback.
-9. Any owner proposal that changes the expansion direction must be assessed for business value, dependencies, current-product impact, and long-term product consequences before it becomes a locked decision or implementation task.
-10. Any item promoted from deferred/open to approved scope must update this Master before or alongside the separately authorized implementation task.
+1. Use revision 0.11 of this file as the sole authoritative expansion reference; do not create a competing master handover.
+2. Treat the owner-accepted Goal 2B/2C implementation as a local committed baseline after the separate closeout task; no remote write or OCR is implied.
+3. Keep Reports and Customer 360 owner product/visual acceptance pending; do not begin redesign.
+4. After Mozfer reviews the local commit closeout, use a separately authorized `PUSH_ONLY` task if remote delivery is desired; Open Code Review requires separate authorization.
+5. Update this file immediately if Rate Card Management V1 owner acceptance or G9 remediation status changes.
+6. Preserve the Arabic interview-question document for Wednesday.
+7. Conduct the Wednesday interview and record answers as evidence, separating universal rules from “depends on supplier/event” behavior.
+8. Collect anonymised sample documents where allowed.
+9. Continue the Domain Map, Sidebar Map, permission model, design-system, and roadmap rebaseline.
+10. Review the accounting blueprint and customer commercial-change lifecycle with a qualified accountant familiar with event-company transactions.
+11. Record the accountant's answers on discounts, invoice issue, Change Orders, credits, refunds, customer credit, revenue recognition, event close, and reopen rules.
+12. Select the expansion feature after Rate Card Management V1 only after this slice is accepted and the relevant broader evidence is reconciled.
 
 ---
-
 
 # Appendix A - Accounting and Procurement Glossary
 

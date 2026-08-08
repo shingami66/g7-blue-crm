@@ -1,8 +1,10 @@
 # G7 BLUE Event ERP Future Expansion
 
+> Historical archive: this 2 August 2026 strategic expansion summary was superseded by the sole current Expansion Master at `docs/product/G7_BLUE_Event_ERP_Future_Expansion_Master_Handover.md` on 8 August 2026. Retained for traceability only; do not treat this file as current authority.
+
 ## 1. Document Status
 
-- Status: Canonical strategic expansion and product-rebaseline document.
+- Status: Historical superseded strategic expansion and product-rebaseline record.
 - Recorded: 2 August 2026.
 - Owner: Mozfer Mohamed Elhadi.
 - Evidence basis: the G7 BLUE Event ERP Future Expansion Master Handover dated 2 August 2026, current repository documentation, and verified current repository state.
