@@ -74,12 +74,12 @@ Feature 009 remains inactive. Future accounting, procurement, expenses, supplier
 
 ### Current checkpoint
 
-- **Phase:** `POST-G1 CLEANUP / STABILIZATION GATE — CLEANUP & REBASELINE COMPLETE`.
+- **Phase:** `POST-G1 CLEANUP / STABILIZATION GATE — DEV/DEMO DATA HYGIENE CLOSED`.
 - **G0 authority:** `D:/G7/g7-crm` on `main` remains the sole canonical checkout at the frozen baseline recorded in this document's governance/current-authority section; the retired Grok worktree is not current authority.
 - **G1 state:** approved quotation mutability, active Approved Billing Scope invoice snapshot authority, durable `invoice.created` / `invoice.issued` audit events, invoice-list Draft/Sent/Paid visibility, invoice-detail authority semantics, Final Invoice scope preservation, and Deposit Invoice scope preservation are implemented and accepted. Full validation is `PASS WITH WARN` only because two pre-existing PDF `<img>` lint warnings remain; the stale invoice-list contract now asserts invoice `date` semantics. DEV/DEMO database verification and browser acceptance are `PASS`.
 - **Canonical G1 migrations:** `20260807090000_g1_financial_lifecycle_authority`, `20260807133000_g1_invoice_snapshot_insert_correction`, `20260807150000_g1_final_invoice_scope_snapshot_correction`, and `20260807183359_g1_deposit_invoice_scope_snapshot_correction` are applied on DEV/DEMO. Generated version `20260807185325` is absent; no production-readiness claim is made.
-- **Working-tree and governance state:** Canonical `main` and `origin/main` are synchronized at `e34ea4176044f4dc663555a8794dfa5d3042206c` with an empty index and no tracked working-tree changes before this docs-only task; only the four protected build-watch logs are untracked. No application source, tests, SQL, migrations, database state, financial behavior, RBAC, or dependencies changed.
-- **Next controlled gate:** Cleanup & Rebaseline is complete. DEV/DEMO Data Hygiene, Pre-G2 UX Stabilization, the Customer Document System, and the Quotation Commercial Model Impact Check remain open; G2 remains blocked, not started, and is still `Payment Precision`; the G1 -> G2 -> ... -> G12 backbone is unchanged.
+- **Pre-commit governance checkpoint:** Before this controlled closure commit, canonical `main` and `origin/main` were synchronized at `5320788af1a9369691d2904305dc2f4a79194bc3` with an empty index. The four protected build-watch logs remain untracked and untouched; this commit records the three authorized Task 2 documentation surfaces. Task 2 changed only DEV/DEMO records and these documentation surfaces; no application source, tests, SQL, migrations, schema, financial behavior, RBAC, or dependencies changed.
+- **Next controlled gate:** Cleanup & Rebaseline and DEV/DEMO Data Hygiene are closed: the authorized mock/test reset, curated database seed, database integrity reconciliation, and authenticated read-only Customers, Services, Quotations, and Invoices smoke passed. `UX / LOADING STABILIZATION` is next; the Customer Document System and Quotation Commercial Model Impact Check remain open. G2 remains blocked, not started, and is still `Payment Precision`; the G1 -> G2 -> ... -> G12 backbone is unchanged.
 - **M-01:** external candidate status is `IMPLEMENTED_AND_VALIDATED_NOT_ADOPTED`; consolidated disposition is `ADAPT`; it remains separate and was not accessed or applied here.
 
 ### POST-G1 CLEANUP / STABILIZATION GATE
@@ -96,12 +96,18 @@ This is an inter-goal closure and stabilization gate, not a replacement or renum
 - [x] Preserve evidence; do not destroy recovery or historical records.
 - [x] Record the bounded cleanup in `docs/governance/post-g1-cleanup-rebaseline-2026-08-08.md`.
 
-#### B. DEV/DEMO Data Hygiene
+#### B. DEV/DEMO Data Hygiene — CLOSED (8 August 2026)
 
-- Inventory smoke, test, and legacy demo records.
-- Preserve required regression and financial evidence before cleanup.
-- Identify inconsistent lifecycle records.
-- Clean, archive, or delete intentionally, leaving understandable controlled DEV/DEMO data.
+- [x] Inventory smoke, test, and legacy demo records before deletion.
+- [x] Preserve required regression, financial, lifecycle, ABS, snapshot, and audit evidence in repository tests, migrations, documentation, and Git history.
+- [x] Remove the authorized legacy/mock DEV/DEMO business dataset through the completed atomic reset.
+- [x] Seed exactly 10 synthetic active Customers, 10 synthetic active Suppliers, and 10 quote-ready `Inquiry` Services directly through the DEV/DEMO database.
+- [x] Reconcile final counts, one-to-one Service/Customer relationships, referential integrity, clean numbering, preserved system state, and canonical migration history.
+- [x] Complete authenticated seeded-baseline Customers, Services, Quotations, and Invoices browser/runtime smoke and close Data Hygiene.
+
+The former G1 and legacy fixtures were removed as mock/test data. The curated baseline intentionally contains no quotation, ABS, invoice, payment, supplier booking, allocation, project, task, or audit rows; the owner will manually test the Service -> Quotation -> Approval -> ABS -> Deposit Invoice -> Final Invoice -> Payments workflow from these seeded master records. Full evidence is recorded in `docs/governance/post-g1-data-hygiene-2026-08-08.md`.
+
+Authenticated seeded-baseline smoke used an existing DEV/DEMO Chrome session. Dashboard showed 10 Customers, 10 Services, and zero Quotations/Invoices; Customers, Services, and Suppliers displayed the curated records, representative Arabic/English details opened, and Quotations/Invoices remained empty. No create, approve, issue, pay, cancel, or other application mutation action was performed; the only data mutation was the authorized database seed.
 
 #### C. Pre-G2 UX Stabilization
 
