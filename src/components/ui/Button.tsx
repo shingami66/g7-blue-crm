@@ -10,6 +10,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import { LoaderCircle } from "lucide-react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 type ButtonSize = "sm" | "md" | "lg" | "icon";
@@ -62,7 +63,7 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading;
-  const buttonContent = children;
+  const buttonContent = loading && loadingLabel ? loadingLabel : children;
 
   const classes = cx(
     baseClassName,
@@ -70,9 +71,6 @@ export default function Button({
     sizeClassNames[size],
     className
   );
-
-  // Kept for call-site compatibility; loading remains local to this control.
-  void loadingLabel;
 
   if (asChild) {
     const child = Children.only(children);
@@ -114,7 +112,13 @@ export default function Button({
       disabled={isDisabled}
       type={type}
     >
-      {buttonContent}
+      {loading && (
+        <LoaderCircle
+          aria-hidden="true"
+          className="size-4 shrink-0 motion-safe:animate-spin"
+        />
+      )}
+      <span aria-live={loading ? "polite" : undefined}>{buttonContent}</span>
     </button>
   );
 }

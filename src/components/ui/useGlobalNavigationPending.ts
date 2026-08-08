@@ -1,8 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-} from "react";
+import { useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 type NavigationPendingOptions = {
@@ -24,8 +22,11 @@ function isSameRoute(href: string) {
 
 export function useGlobalNavigationPending() {
   const router = useRouter();
-  // Route-level loading.tsx owns slow navigation feedback. Keep this helper's
-  // public shape for older callers without introducing a global visual state.
+  const [isPending, startTransition] = useTransition();
+
+  // Keep the legacy lifecycle methods for older callers. Navigation itself is
+  // now wrapped in a real React transition so callers can disable duplicate
+  // route actions while the destination is resolving.
   const startPending = useCallback((options: NavigationPendingOptions = {}) => {
     void options;
   }, []);
@@ -38,22 +39,23 @@ export function useGlobalNavigationPending() {
       }
 
       void options;
-      router.push(href);
+      startTransition(() => router.push(href));
     },
-    [router]
+    [router, startTransition]
   );
 
   const back = useCallback(
     (options?: NavigationPendingOptions) => {
       void options;
-      router.back();
+      startTransition(() => router.back());
     },
-    [router]
+    [router, startTransition]
   );
 
   return {
     back,
     finishPending,
+    isPending,
     push,
     startPending,
   };

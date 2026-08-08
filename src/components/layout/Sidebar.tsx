@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -18,6 +17,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import PendingLink from "@/components/ui/PendingLink";
 import {
   navigationDictionaryAr,
   navigationDictionaryEn,
@@ -76,9 +76,10 @@ export default function Sidebar({
           const active = isActive(item.href);
           const Icon = item.icon;
           return (
-            <Link
+            <PendingLink
               key={item.href}
               href={item.href}
+              pendingLabel={dictionary.modules[item.labelKey]}
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${
                 active
@@ -88,7 +89,7 @@ export default function Sidebar({
             >
               <Icon size={20} className={active ? "opacity-100" : "opacity-70"} />
               <span>{dictionary.modules[item.labelKey]}</span>
-            </Link>
+            </PendingLink>
           );
         })}
       </div>
@@ -99,8 +100,9 @@ export default function Sidebar({
           <div className="px-4 py-2">
             <span className="text-[10px] uppercase tracking-wider font-bold text-white/50">{dictionary.admin}</span>
           </div>
-          <Link
+          <PendingLink
             href="/admin/users"
+            pendingLabel={dictionary.modules.users}
             onClick={() => setMobileOpen(false)}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${
               isActive("/admin/users")
@@ -110,7 +112,7 @@ export default function Sidebar({
           >
             <ShieldAlert size={20} className={isActive("/admin/users") ? "opacity-100" : "opacity-70"} />
             <span>{dictionary.modules.users}</span>
-          </Link>
+          </PendingLink>
         </div>
       )}
 
@@ -120,9 +122,10 @@ export default function Sidebar({
           const active = isActive(item.href);
           const Icon = item.icon;
           return (
-            <Link
+            <PendingLink
               key={item.href}
               href={item.href}
+              pendingLabel={dictionary.modules[item.labelKey]}
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${
                 active
@@ -132,7 +135,7 @@ export default function Sidebar({
             >
               <Icon size={20} className={active ? "opacity-100" : "opacity-70"} />
               <span>{dictionary.modules[item.labelKey]}</span>
-            </Link>
+            </PendingLink>
           );
         })}
       </div>

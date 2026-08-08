@@ -16,12 +16,14 @@ export default function QuotationApprovalActions({ quotationId, status, dictiona
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isPending = isApproving || isRejecting;
 
   if (status === "approved" || status === "rejected") {
     return null;
   }
 
   const handleApprove = async () => {
+    if (isPending) return;
     setIsApproving(true);
     setError(null);
     try {
@@ -37,6 +39,7 @@ export default function QuotationApprovalActions({ quotationId, status, dictiona
   };
 
   const handleReject = async () => {
+    if (isPending) return;
     setIsRejecting(true);
     setError(null);
     try {
@@ -56,7 +59,9 @@ export default function QuotationApprovalActions({ quotationId, status, dictiona
       <div className="flex items-center gap-3">
         <Button
           onClick={handleApprove}
+          disabled={isPending && !isApproving}
           loading={isApproving}
+          loadingLabel={dictionary.approve}
           variant="primary"
         >
           {!isApproving && <CheckCircle size={18} />}
@@ -64,14 +69,16 @@ export default function QuotationApprovalActions({ quotationId, status, dictiona
         </Button>
         <Button
           onClick={handleReject}
+          disabled={isPending && !isRejecting}
           loading={isRejecting}
+          loadingLabel={dictionary.reject}
           variant="danger"
         >
           {!isRejecting && <XCircle size={18} />}
           {dictionary.reject}
         </Button>
       </div>
-      {error && <p className="text-error text-[13px] font-medium">{error}</p>}
+      {error && <p className="text-error text-[13px] font-medium" role="alert">{error}</p>}
     </div>
   );
 }

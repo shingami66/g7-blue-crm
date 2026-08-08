@@ -109,13 +109,16 @@ The former G1 and legacy fixtures were removed as mock/test data. The curated ba
 
 Authenticated seeded-baseline smoke used an existing DEV/DEMO Chrome session. Dashboard showed 10 Customers, 10 Services, and zero Quotations/Invoices; Customers, Services, and Suppliers displayed the curated records, representative Arabic/English details opened, and Quotations/Invoices remained empty. No create, approve, issue, pay, cancel, or other application mutation action was performed; the only data mutation was the authorized database seed.
 
-#### C. Pre-G2 UX Stabilization
+#### C. Pre-G2 UX Stabilization — IMPLEMENTATION COMPLETE / CONTROLLER REVIEW (8 August 2026)
 
-- Navigation pending UX and immediate mutation/action states such as `Creating...`, `Approving...`, `Issuing...`, `Recording...`, and `Searching...`.
-- Duplicate-submit prevention.
-- Print/PDF actions must not reuse the initial `Preparing your workspace...` boot experience; document previews require document-specific pending behavior.
-- Reduce the visual prominence of destructive Cancel Service actions while preserving deliberate confirmation.
-- Complete RTL and mixed Arabic-English data alignment polish.
+- [x] Navigation pending UX and immediate mutation/action states such as `Creating...`, `Approving...`, `Issuing...`, `Recording...`, and `Searching...`.
+- [x] Duplicate-submit prevention.
+- [x] Print/PDF actions do not reuse the initial `Preparing your workspace...` boot experience; document previews have document-specific pending behavior.
+- [x] Reduce the visual prominence of destructive Cancel Service actions while preserving deliberate confirmation.
+- [x] Complete the bounded RTL and mixed Arabic-English data alignment polish.
+- [x] Validate focused contracts, full tests, TypeScript, Next type generation, lint, production build, OCR rule/preview/delegation checks, and authenticated read-only DEV/DEMO browser surfaces.
+- [ ] Controller closure remains pending; no commit, push, database operation, document redesign, quotation commercial-model work, or G2 work is authorized by this task.
+- [ ] `DEFERRED ACCEPTANCE CHECK — NOT AN IMPLEMENTATION BLOCKER`: when the first manually-created quotation and invoice exist under Customer Document System, verify preview/print has no workspace boot screen, contextual slow-only feedback, no fast flash, duplicate prevention, pending cleanup after preview/print, and relevant EN/AR UI behavior.
 
 #### D. Customer Document System
 

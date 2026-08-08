@@ -20,6 +20,7 @@ export function IssueInvoiceAction({ invoiceId, dictionary }: IssueInvoiceAction
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const handleSubmit = () => {
+    if (isPending) return;
     setError(null);
     setSuccessMsg(null);
 
@@ -46,13 +47,13 @@ export function IssueInvoiceAction({ invoiceId, dictionary }: IssueInvoiceAction
       </p>
       
       {error && (
-        <div className="text-[13px] text-red-600 bg-red-50 p-2 rounded border border-red-100">
+        <div className="text-[13px] text-red-600 bg-red-50 p-2 rounded border border-red-100" role="alert" aria-live="assertive">
           {error}
         </div>
       )}
       
       {successMsg && (
-        <div className="text-[13px] text-green-700 bg-green-50 p-2 rounded border border-green-100">
+        <div className="text-[13px] text-green-700 bg-green-50 p-2 rounded border border-green-100" role="status" aria-live="polite">
           {successMsg}
         </div>
       )}
@@ -62,6 +63,7 @@ export function IssueInvoiceAction({ invoiceId, dictionary }: IssueInvoiceAction
           onClick={handleSubmit}
           className="w-full"
           loading={isPending}
+          loadingLabel={dictionary.submitting}
           variant="primary"
         >
           {isPending ? dictionary.submitting : dictionary.submit}
