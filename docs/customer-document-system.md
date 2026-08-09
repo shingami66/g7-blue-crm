@@ -1,6 +1,6 @@
 # Customer Document System — POST-G1 Task 4
 
-Status: `ARCHITECTURE CORRECTED / CONTROLLER REVIEW` (9 August 2026)
+Status: `ARCHITECTURE CORRECTION CLOSED / PUSHED` (9 August 2026)
 
 ## Canonical document contract
 
@@ -22,9 +22,10 @@ Status: `ARCHITECTURE CORRECTED / CONTROLLER REVIEW` (9 August 2026)
 ## Content capability and handoff
 
 - Required capability: customer-facing business content must ultimately support stored English and Arabic forms, while internal details remain operational/internal and never print.
-- Schema placement is intentionally deferred specifically one workstream to the **Quotation Commercial Model Impact Check**. That workstream must decide whether bilingual names/descriptions belong to Commercial Group, Package, Item, or more than one level before permanent fields or snapshot propagation are implemented.
-- The Commercial Model Impact Check must also resolve customer visibility, approved-snapshot placement, Package/Itemized printing, missing-language handling, and legacy single-description readability.
+- The Quotation Commercial Model Impact Check is complete with disposition `PARTIAL — FIELD EVIDENCE REQUIRED BEFORE DESIGN LOCK`.
+- Current quotations remain flat. Commercial Group, Package, Item, and Included Component semantics are field-validation-dependent hypotheses awaiting Zainab evidence; exact AR/EN field and approved-snapshot placement is not yet locked.
 - Future AI translation is document-only: generate a draft, require staff review/edit and explicit save/approval, then render approved stored text. It is not implemented here and must never silently alter approved or sent documents.
+- Tender, Technical Proposal, Financial Proposal, and BOQ documents remain future expansion scope governed solely by the Expansion Master; this document does not define or activate them.
 
 ## Financial and compliance boundary
 
@@ -34,6 +35,7 @@ Status: `ARCHITECTURE CORRECTED / CONTROLLER REVIEW` (9 August 2026)
 
 ## Review and acceptance state
 
-- The corrected implementation remains unstaged and uncommitted for controller review.
-- The previous unapplied `document_locale` migration draft is removed from this Task 4 diff; no migration is applied and no database write is authorized.
-- Automated focused/full validation and delegated review are engineering evidence only. Real quotation/deposit/final document creation, browser, English/Arabic, RTL, responsive/mobile, visual, print, and workflow acceptance remain pending.
+- The corrected architecture was reviewed, committed, and pushed at `93d3f132b3ff756f4c49904da8622e40babdaa18`.
+- The rejected `document_locale` migration is absent and was never applied; no document-language schema authority exists.
+- Automated validation and bounded review closed with no remaining findings. Real quotation/deposit/final browser, EN/AR, RTL, responsive/mobile, visual, print, and workflow acceptance remains a separate owner-acceptance dependency.
+- This document does not authorize commercial-model, Tender, database, or G2 implementation. G2 remains blocked by the full Post-G1 gate.

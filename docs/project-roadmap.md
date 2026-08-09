@@ -62,6 +62,8 @@ The sole strategic expansion reference is `docs/product/G7_BLUE_Event_ERP_Future
 
 Feature 009 remains inactive. Future accounting, procurement, expenses, supplier finance, costing, margin, VAT/ZATCA, AI, multi-company, and multi-tenant work remains discovery or deferred work until the gates above pass.
 
+Tender / Bid Management is a future deferred expansion module. Discovery begins now, while detailed Tender, Technical Proposal, Financial Proposal/BOQ, submission, and AI-assistance authority remains solely in the Expansion Master.
+
 ## 1.2 Current Review and Remediation Roadmap
 
 ### Completed foundations / review
@@ -74,12 +76,13 @@ Feature 009 remains inactive. Future accounting, procurement, expenses, supplier
 
 ### Current checkpoint
 
-- **Phase:** `POST-G1 CLEANUP / STABILIZATION GATE — DEV/DEMO DATA HYGIENE CLOSED`.
-- **G0 authority:** `D:/G7/g7-crm` on `main` remains the sole canonical checkout at the frozen baseline recorded in this document's governance/current-authority section; the retired Grok worktree is not current authority.
+- **Phase:** `POST-G1 CLEANUP / STABILIZATION GATE — COMMERCIAL FIELD-EVIDENCE GATE`.
+- **G0 authority:** `D:/G7/g7-crm` on `main` remains the sole canonical checkout. Current documentation-rebaseline baseline is `93d3f132b3ff756f4c49904da8622e40babdaa18`, aligned with `origin/main`.
 - **G1 state:** approved quotation mutability, active Approved Billing Scope invoice snapshot authority, durable `invoice.created` / `invoice.issued` audit events, invoice-list Draft/Sent/Paid visibility, invoice-detail authority semantics, Final Invoice scope preservation, and Deposit Invoice scope preservation are implemented and accepted. Full validation is `PASS WITH WARN` only because two pre-existing PDF `<img>` lint warnings remain; the stale invoice-list contract now asserts invoice `date` semantics. DEV/DEMO database verification and browser acceptance are `PASS`.
 - **Canonical G1 migrations:** `20260807090000_g1_financial_lifecycle_authority`, `20260807133000_g1_invoice_snapshot_insert_correction`, `20260807150000_g1_final_invoice_scope_snapshot_correction`, and `20260807183359_g1_deposit_invoice_scope_snapshot_correction` are applied on DEV/DEMO. Generated version `20260807185325` is absent; no production-readiness claim is made.
-- **Pre-commit governance checkpoint:** Before this controlled closure commit, canonical `main` and `origin/main` were synchronized at `5320788af1a9369691d2904305dc2f4a79194bc3` with an empty index. The four protected build-watch logs remain untracked and untouched; this commit records the three authorized Task 2 documentation surfaces. Task 2 changed only DEV/DEMO records and these documentation surfaces; no application source, tests, SQL, migrations, schema, financial behavior, RBAC, or dependencies changed.
-- **Next controlled gate:** Cleanup & Rebaseline and DEV/DEMO Data Hygiene are closed: the authorized mock/test reset, curated database seed, database integrity reconciliation, and authenticated read-only Customers, Services, Quotations, and Invoices smoke passed. `UX / LOADING STABILIZATION` is next; the Customer Document System and Quotation Commercial Model Impact Check remain open. G2 remains blocked, not started, and is still `Payment Precision`; the G1 -> G2 -> ... -> G12 backbone is unchanged.
+- **Closed Post-G1 work:** Cleanup & Rebaseline, DEV/DEMO Data Hygiene, UX/Loading Stabilization, and Customer Document Architecture Correction are closed. The document correction is pushed at `93d3f132b3ff756f4c49904da8622e40babdaa18`.
+- **Quotation Commercial Model Impact Check:** read-only analysis is complete with disposition `PARTIAL — FIELD EVIDENCE REQUIRED BEFORE DESIGN LOCK`. No schema, migration, or implementation was performed.
+- **Next controlled gate:** obtain Zainab field evidence from real quotation/package/item workflows and documents, then return the commercial hierarchy and bilingual field placement for controller decision. G2 remains blocked, not started, and is still `Payment Precision`; the G1 -> G2 -> ... -> G12 backbone is unchanged.
 - **M-01:** external candidate status is `IMPLEMENTED_AND_VALIDATED_NOT_ADOPTED`; consolidated disposition is `ADAPT`; it remains separate and was not accessed or applied here.
 
 ### POST-G1 CLEANUP / STABILIZATION GATE
@@ -109,7 +112,7 @@ The former G1 and legacy fixtures were removed as mock/test data. The curated ba
 
 Authenticated seeded-baseline smoke used an existing DEV/DEMO Chrome session. Dashboard showed 10 Customers, 10 Services, and zero Quotations/Invoices; Customers, Services, and Suppliers displayed the curated records, representative Arabic/English details opened, and Quotations/Invoices remained empty. No create, approve, issue, pay, cancel, or other application mutation action was performed; the only data mutation was the authorized database seed.
 
-#### C. Pre-G2 UX Stabilization — IMPLEMENTATION COMPLETE / CONTROLLER REVIEW (8 August 2026)
+#### C. Pre-G2 UX Stabilization — CLOSED (8 August 2026)
 
 - [x] Navigation pending UX and immediate mutation/action states such as `Creating...`, `Approving...`, `Issuing...`, `Recording...`, and `Searching...`.
 - [x] Duplicate-submit prevention.
@@ -119,29 +122,29 @@ Authenticated seeded-baseline smoke used an existing DEV/DEMO Chrome session. Da
 - [x] Verify Customer, Service, Supplier, and relevant Invoice/Quotation detail navigation uses the existing thresholded PendingLink/shared-transition architecture, with contextual EN/AR feedback on slow paths and no fast-path flash; the shared detail pager now applies an immediate same-tab First/Previous/Next/Last guard with settled cleanup.
 - [x] Complete the bounded RTL and mixed Arabic-English data alignment polish.
 - [x] Validate focused contracts, full tests, TypeScript, Next type generation, lint, production build, OCR rule/preview/delegation checks, and authenticated read-only DEV/DEMO browser surfaces.
-- [ ] Controller closure remains pending; no commit, push, database operation, document redesign, quotation commercial-model work, or G2 work is authorized by this task.
+- [x] Controller closure completed; the stabilized UX is committed/pushed through `651c07a4292304134d93bcb69aadcc5bf2114bce` and remains part of the closed Post-G1 foundation.
 - [ ] `DEFERRED ACCEPTANCE CHECK — NOT AN IMPLEMENTATION BLOCKER`: when the first manually-created quotation and invoice exist under Customer Document System, verify preview/print has no workspace boot screen, contextual slow-only feedback, no fast flash, duplicate prevention, pending cleanup after preview/print, and relevant EN/AR UI behavior.
 
-#### D. Customer Document System
+#### D. Customer Document Architecture Correction — CLOSED (9 August 2026)
 
-- **Tracked status:** `ARCHITECTURE CORRECTED / CONTROLLER REVIEW` (9 August 2026).
+- **Pushed baseline:** `93d3f132b3ff756f4c49904da8622e40babdaa18`.
 - One quotation/invoice remains one canonical business document; Arabic and English are selectable human-readable representations of that same record, never separate records, revisions, or financial authorities.
 - Preview/print language is transient presentation state (`?lang=ar|en`) and is independent of employee UI locale; it cannot mutate document data, snapshots, numbering, or invoice creation.
 - Preserve multi-page Quote/Invoice behavior, repeated compact headers/table headings, one document number across pages, and totals/settlement on the final page where appropriate.
 - Preserve customer-facing short descriptions versus internal operational details, PDF spacing/hierarchy polish, and semantically appropriate `Approved Service Scope Total` terminology.
-- Current implementation covers transient AR/EN preview/print selection, localized customer-safe PDF projections, direction-aware print CSS, snapshot seller terms, and preserved G1-safe quotation/deposit/final semantics. The previous unapplied `document_locale` migration draft is removed from this Task 4 diff; no schema/database change is required for print-language selection.
-- Customer-facing bilingual content is a required capability whose schema placement is deferred specifically to the immediately-next Quotation Commercial Model Impact Check. Real quotation/deposit/final documents, EN/AR/RTL/mobile visual review, and multi-page print/PDF acceptance remain pending; Customer Document System is not fully closed.
+- Current behavior covers transient AR/EN preview/print selection, localized customer-safe PDF projections, direction-aware print CSS, snapshot seller terms, and preserved G1-safe quotation/deposit/final semantics. The rejected `document_locale` migration is absent and was never applied; no schema/database authority is required for print-language selection.
+- Real quotation/deposit/final EN/AR/RTL/mobile/visual/print acceptance remains a separate owner-acceptance dependency and does not reopen the corrected architecture.
 
-#### E. Quotation Commercial Model Impact Check
+#### E. Quotation Commercial Model Field-Evidence Gate
 
-- Preserve Commercial Groups, Package pricing, Itemized pricing, mixed Package + Itemized pricing, customer-facing descriptions, and internal details remaining internal.
-- **Tracked status:** `IMPACT CHECK REQUIRED / IMPLEMENTATION NOT AUTHORIZED`.
-- **Required bilingual-content decision:** evaluate `customer_name_en`, `customer_name_ar`, `customer_description_en`, `customer_description_ar`, and `internal_details` at each surviving Commercial Group / Package / Item level before permanent schema or snapshot implementation.
-- Determine whether this direction is presentation/document-only and safe for a pre-G2 stabilization slice, or a deeper schema, quotation, ABS, or financial-authority change that must be scheduled deliberately without reopening G1 invariants.
-- No quotation commercial redesign or schema/financial implementation is authorized by this closeout.
-- Immediate sequence: controller review → resolve Group/Package/Item commercial model → resolve AR/EN customer-facing field placement → implement safe bilingual content/snapshot propagation → real final document acceptance → close Post-G1 gate → only then G2.
+- **Tracked status:** `IMPACT CHECK COMPLETE — PARTIAL / FIELD EVIDENCE REQUIRED BEFORE DESIGN LOCK`.
+- Current quotations remain flat and do not natively represent Commercial Groups, Packages, Included Components, or parent-child commercial hierarchy.
+- Group, Package, Item, and Included Component semantics remain a field-validation-dependent product hypothesis, not a final schema.
+- Zainab field discovery must use real G7 quotation practices and past documents to validate itemized pricing, packages, inclusions, mixed pricing, grouping, discounts, approvals, supplier commitments, and post-approval change behavior.
+- Customer-facing AR/EN content remains required, but exact field and approved-snapshot placement waits for the surviving commercial hierarchy.
+- No commercial-model schema, migration, implementation, Tender implementation, or G2 work is authorized.
 
-After this gate closes, G2 (Payment Precision) may begin.
+After field evidence and controller design lock, prepare a separate implementation plan. G2 remains blocked until the full Post-G1 gate closes.
 
 ### Completed product foundations before current remediation
 

@@ -2,8 +2,8 @@
 ## Master Product Handover, Decision Register, Discovery Brief, and Rebaseline Report
 
 **Original report date:** 2 August 2026  
-**Latest decision sync:** 7 August 2026
-**Revision:** 0.12
+**Latest decision sync:** 9 August 2026
+**Revision:** 0.13
 **Owner:** Mozfer Mohamed Elhadi  
 **Product:** G7 BLUE CRM / Future Event ERP  
 **Document status:** Sole authoritative expansion reference, product decision register, and daily handover continuity record  
@@ -24,13 +24,13 @@
 | Current system shape | Internal Service-centered CRM with commercial workflow, suppliers foundation, users, and RBAC |
 | Future product direction | Two-layer strategy: first build and prove a complete single-company Event ERP inside G7 BLUE; only after real operational proof, productize the proven system as a multi-company SaaS for other event companies |
 | Current implementation status | Goal 2A/2B/2C remains delivered current-product foundation. The G1-G12 remediation program is separate from expansion activation and takes precedence where required before broad Layer 1 work. The exact active Goal, Git state, database state, validation evidence, and next action are governed by current project tracking/controller evidence rather than frozen here. |
-| Post-G1 cleanup/rebaseline checkpoint (8 August 2026) | G1 is closed and pushed. The canonical checkout is `D:\\G7\\g7-crm` on `main` at `e34ea4176044f4dc663555a8794dfa5d3042206c`, aligned with `origin/main` at `0/0` divergence. The mandatory Post-G1 gate remains active; only Cleanup & Rebaseline is closed by this task, while DEV/DEMO Data Hygiene, UX Stabilization, Customer Document System, and the Quotation Commercial Model Impact Check remain pending. G2 remains blocked, not started, and is still Payment Precision. |
+| Post-G1 gate checkpoint (9 August 2026) | G1 Financial Lifecycle Authority, Cleanup & Rebaseline, DEV/DEMO Data Hygiene, UX/Loading Stabilization, and the Customer Document Architecture Correction are closed. The document correction is pushed at `93d3f132b3ff756f4c49904da8622e40babdaa18`. The Quotation Commercial Model Impact Check is complete as read-only analysis with a `PARTIAL` disposition: permanent hierarchy and bilingual-field design remains gated on Zainab field evidence. No commercial schema, migration, or implementation was performed. G2 remains blocked, not started, and is still Payment Precision. |
 | Original report repository baseline | `cdd888b4cbc495a69be0a2cccb1f1ba5a3aae48d`, aligned with `origin/main` when the 2 August report was prepared |
 | Current dated delivery baseline | Section 28K preserves the Goal 2B/2C historical closeout. Current Git, working-tree, remediation, test, migration, and next-action truth is owned by verified repository evidence plus the current controller handover/project tracking, not by this strategic Master. |
 | Feature activation | Supplier Rate Card Management V1 remains the first separately governed bounded expansion slice. Goal 2B/2C adds no new expansion activation; its approved local commit closeout does not imply merge, push, or OCR. |
-| Latest owner decision sync | 7 August 2026: the sole-master rule remains locked; expansion is now explicitly organized into two layers inside this one file: Layer 1 is the single-company G7 BLUE Event ERP, followed by an internal proof gate; Layer 2 is later multi-company/SaaS productization for other event companies. Current-product remediation remains separate and must not be mistaken for expansion activation. |
+| Latest owner decision sync | 9 August 2026: the sole-master and two-layer rules remain locked. Quotation hierarchy is a field-validation-dependent commercial hypothesis, not a final schema. Tender/Bid Management is a future expansion module: discovery begins now, implementation is deferred, and Tender remains distinct from Direct Quotation while future Financial Proposal/BOQ may reuse central commercial and financial truth. |
 | Current controlled-delivery snapshot | This Master deliberately does not freeze fast-changing Git/test/database truth. Use the newest verified controller/repository evidence for current execution state. This document owns strategic expansion direction, layer boundaries, decisions, and open questions. |
-| Field evidence still required | Riyadh event-industry workflow interview, event-industry accountant review, and later tax/compliance review |
+| Field evidence still required | Zainab commercial/tender workflow evidence and anonymised real documents where permitted, wider Riyadh event-industry workflow evidence, event-industry accountant review, and later tax/compliance review |
 
 ### Source basis
 
@@ -52,6 +52,7 @@ This report consolidates:
 - The 5 August 2026 owner-authorized Dashboard independent-column flow correction task replacing the manually rejected Revision 0.8 row-coupled composition with stacked independent 5/12 and 7/12 columns while preserving the accepted data, permission, scope, and responsive contracts.
 - The 5 August 2026 owner-authorized final Dashboard density and width polish task retaining Revision 0.9's independent-column architecture while correcting only the Dashboard frame width, obsolete Priority Work heading, and bounded Attention Needed preview.
 - The 7 August 2026 owner clarification that expansion is one strategic Master with two product layers: first the single-company internal G7 BLUE Event ERP, then a real-use proof gate, then later SaaS productization for other event companies.
+- The 9 August 2026 Post-G1 source-of-truth rebaseline: Customer Document Architecture Correction closed/pushed at `93d3f132`; Quotation Commercial Model Impact Check completed `PARTIAL` with Zainab field evidence required; Tender/Bid Management recorded as discover-now/build-later expansion with future in-system Technical Proposal, Financial Proposal/BOQ, and human-approved AI assistance.
 
 
 ### 5 August 2026 revision summary
@@ -91,6 +92,18 @@ Revision 0.12 does not create a second expansion plan and does not authorize imp
 - The three Wave 9 SaaS concerns remain **future activation gates, not current defects**: settings/numbering ownership, company membership/isolation, and historical ownership/backfill migration.
 - This remains **one sole authoritative Expansion Master**. The two layers are sections inside this document, not separate competing master files.
 
+### 9 August 2026 revision summary
+
+Revision 0.13 preserves the sole-master and two-layer architecture while recording the newest Post-G1 product decisions:
+
+- G1, Cleanup & Rebaseline, DEV/DEMO Data Hygiene, UX/Loading Stabilization, and the Customer Document Architecture Correction are closed. The document correction is pushed at `93d3f132`; no permanent document-language authority exists.
+- The Quotation Commercial Model Impact Check is complete as read-only analysis with a `PARTIAL` disposition. Commercial Group, Package, Item, and Included Component remain a leading product hypothesis whose permanent schema and bilingual field placement require Zainab field evidence.
+- Tender/Bid Management is a future expansion module. Discovery begins now through real workflow and document evidence; implementation is deferred.
+- Tender is not a larger Direct Quotation. It owns opportunity review, RFP/kurrasah requirements, bid/no-bid, Technical Proposal, Financial Proposal/BOQ, compliance, approvals, submission, award/loss, and post-award handoff.
+- Future Technical Proposal preparation should be supported in-system. Future Financial Proposal/BOQ must reuse central commercial, costing, accounting, and profitability truth where appropriate rather than creating a separate financial universe.
+- Future AI may assist requirement extraction, compliance matrices, missing-requirement detection, and proposal drafting only through `AI Draft -> Human Review -> Explicit Approval -> Official Proposal`.
+- No quotation hierarchy, bilingual commercial schema, Tender module, BOQ, accounting, AI feature, G2 work, migration, or database change is authorized by this documentation sync.
+
 ---
 
 ## 0A. Program Structure and Two-Layer Expansion Architecture
@@ -122,6 +135,7 @@ Layer 1 contains the internal business expansion domains already described in th
 - expected, committed, actual, paid, and outstanding event cost;
 - event margin, profitability, financial close, and management reporting;
 - Event Brief, venue/site visit, permits, labour, incidents, claims, and operational timelines;
+- future Tender/Bid Management from opportunity and tender-booklet review through submission, award/loss, contract, and post-award Event/Service handoff;
 - role/permission-aware dashboards and reports.
 
 Layer 1 remains single-company unless a later owner decision explicitly promotes the Layer 2 company-context program.
@@ -472,6 +486,13 @@ The team must not:
 | D50 | Expansion is organized into two product layers after the current-product foundation/remediation: Layer 1 builds and proves the single-company G7 BLUE Event ERP; Layer 2 productizes the proven system as multi-company/SaaS for other event companies. |
 | D51 | Layer 2 must not activate merely because ERP features exist. G7 BLUE must first have real operational use and proof, and the company-context, membership/isolation, historical ownership/backfill, numbering, migration/rollback, and commercial productization gates must be approved and tested. Exact proof thresholds remain a later owner decision. |
 | D52 | The two-layer model is an internal organization of this sole Expansion Master. It does not authorize a second or competing expansion master file. |
+| D53 | The current quotation hierarchy remains a field-validation-dependent product hypothesis: Commercial Group is non-priced organization, Package is a priced authority line, Item is independently priced, and Included Component is contractual package scope without independent customer price. This is not a final schema. |
+| D54 | Customer-facing commercial content must ultimately support stored Arabic and English forms, while exact field placement waits for the surviving field-validated hierarchy. Internal details never print, and contractual output never silently translates. |
+| D55 | Tender/Bid Management is a future expansion module. Discovery begins now through field evidence; implementation remains deferred and requires a separate controlled activation. |
+| D56 | Tender and Direct Quotation are related but distinct workflows. Tender must not be forced into the current Quotation entity, although future shared commercial primitives may be reused deliberately. |
+| D57 | The future Tender module should support in-system Technical Proposal preparation, authoring, and assembly using approved reusable company content and proposal-specific evidence. |
+| D58 | Future Tender Financial Proposal/BOQ pricing must reuse central commercial, costing, accounting, and profitability truth where appropriate and must not become an independent financial universe. |
+| D59 | Future AI tender assistance is draft-only. AI output requires human review and explicit approval before it becomes contractual submission content. |
 
 ### 6.3 DOCUMENT REPRESENTATION LANGUAGE INVARIANT
 
@@ -483,7 +504,7 @@ This is a durable product architecture decision for the Customer Document System
 4. Employee UI locale and customer-document output language are independent concerns.
 5. Financial, business, and compliance snapshots remain language-neutral canonical authority.
 6. Customer-facing content ultimately supports stored English and Arabic forms; internal details remain non-customer-facing.
-7. The schema location for bilingual commercial content is decided by the Quotation Commercial Model Impact Check at Commercial Group / Package / Item level.
+7. The Quotation Commercial Model Impact Check is complete with a `PARTIAL` disposition. Exact bilingual field placement across Commercial Group / Package / Item / Included Component waits for Zainab field evidence and final hierarchy lock.
 8. Future AI translation may produce only a staff-reviewed draft before explicit contractual use.
 9. Future ZATCA or government/compliance representation is separate from the human Arabic/English PDF language.
 10. Human-language selection is presentation state and must never mutate approved financial data.
@@ -559,6 +580,8 @@ The discussion has not yet decided:
 - The default state of the separate-preparer/approver policy.
 - Final permission-override precedence and cache/session refresh behavior.
 - Invitation expiry, resend limits, work-email restrictions, scheduled reactivation, and enterprise SSO timing.
+- Final quotation hierarchy, package-inclusion behavior, customer-facing grouping, commercial approval behavior, and bilingual field placement pending Zainab field evidence.
+- Tender opportunity intake, kurrasah analysis, bid/no-bid ownership, proposal workflow, BOQ conventions, internal approvals, submission controls, and post-award handoff pending real tender evidence.
 
 ---
 
@@ -571,6 +594,12 @@ The discussion has not yet decided:
 - Inquiries.
 - Services.
 - Customer Quotations.
+- Future Tender / Bid Management.
+- Tender opportunities, RFPs, tender booklets / kurrasah, and requirements.
+- Bid / No-Bid decisions.
+- Technical Proposals and supporting documents.
+- Financial Proposals / BOQs and compliance matrices.
+- Tender internal approvals, submission packages, submissions, award/loss, and contracts.
 - Quotation families and immutable revisions.
 - Quotation-level commercial discounts and approved net value.
 - Internal Approved Billing Scope or billing authority.
@@ -689,6 +718,7 @@ CRM & Sales
   Customers
   Services
   Quotations
+  Tenders & Bids (future / deferred)
   Customer Invoices
   Customer Payments
 
@@ -2278,6 +2308,8 @@ This sequence remains a working roadmap hypothesis. Revision 0.12 adds an explic
 - Prepare flexible role-template and per-user permission matrix.
 - Prepare user invitation, suspension, archival, deletion, and activity-audit blueprint.
 - Prepare customer commercial-change blueprint covering discounts, quotation revisions, Change Orders, credit notes, refunds, and customer credit.
+- Collect Zainab field evidence for itemized pricing, package pricing and inclusions, mixed package/item pricing, customer-facing grouping, detail level, discounts, approvals, supplier commitments, and post-approval change behavior before locking quotation hierarchy.
+- Begin Tender/Bid discovery through real opportunity, kurrasah, Technical Proposal, Financial Proposal/BOQ, compliance, approval, submission, award/loss, and post-award handoff evidence; do not implement the module in Phase 0.
 - Prepare accounting blueprint.
 - Prepare design-system baseline.
 - Reconcile canonical roadmap and deferred decisions.
@@ -3070,6 +3102,106 @@ This architecture sync is a product/document decision only. It does not authoriz
 
 ---
 
+## 28M. Post-G1 Commercial and Tender Source-of-Truth Sync — 9 August 2026
+
+### 28M.1 Current Post-G1 state
+
+- G1 Financial Lifecycle Authority is closed.
+- Cleanup & Rebaseline, DEV/DEMO Data Hygiene, and UX/Loading Stabilization are closed.
+- Customer Document Architecture Correction is closed and pushed at `93d3f132b3ff756f4c49904da8622e40babdaa18`.
+- One quotation or invoice remains one canonical business document with selectable Arabic and English representations; no permanent `document_locale` authority exists.
+- The Quotation Commercial Model Impact Check is complete as read-only analysis with a `PARTIAL` disposition. No schema, migration, implementation, or financial-authority change was performed.
+- G2 remains blocked until the full Post-G1 field-evidence gate is closed.
+
+### 28M.2 Field-validation-dependent commercial model hypothesis
+
+The leading hypothesis is one flexible quotation builder that can support itemized, grouped-itemized, package, and mixed package-plus-item quotations:
+
+- **Commercial Group:** organizational/customer-facing section with no independent financial authority.
+- **Package:** priced commercial authority line that may contain included scope.
+- **Item:** independently priced commercial line.
+- **Included Component:** contractual/package scope without independent customer price.
+
+This is a product hypothesis, not a final table design. Zainab field discovery must establish actual G7/event-company practice through real examples and documents before permanent hierarchy, discount, approval, snapshot, or bilingual-field placement is locked.
+
+### 28M.3 Tender/Bid Management future module
+
+Tender/Bid Management is a future expansion module. Discovery begins now; implementation is deferred. The target business chain is:
+
+```text
+Opportunity / Tender
+-> RFP / Tender Booklet / Kurrasah
+-> Requirements
+-> Bid / No-Bid
+-> Technical Proposal
+-> Financial Proposal / BOQ
+-> Compliance / Requirements Matrix
+-> Supporting Documents
+-> Internal Approvals
+-> Submission Package
+-> Submission
+-> Award / Loss
+-> Contract
+-> Event / Project
+-> Execution
+-> Invoice / Payment / Accounting
+```
+
+Tender must remain distinct from the Direct Customer flow:
+
+```text
+Inquiry -> Event Brief -> Quotation -> Approval -> Deposit -> Event Execution -> Final Invoice -> Payment
+```
+
+Future Financial Proposal may reuse shared commercial primitives, but Tender must not be forced into the current Quotation entity.
+
+### 28M.4 Future Technical Proposal authoring
+
+The long-term target is in-system preparation, authoring, and assembly of Technical Proposals. Candidate sections include scope understanding, event concept, methodology, execution plan, timeline, team/responsibilities, technical specifications, logistics/installation, safety/crowd/risk planning, quality control, previous experience, requirement compliance, visuals, and supporting attachments. Trusted company profile, project history, team, service/equipment scope, standard methods, and approved reusable content may be reused only through controlled source and approval rules.
+
+### 28M.5 Future Financial Proposal and BOQ authority
+
+Financial Proposal/BOQ must not become a separate financial universe. The future direction is:
+
+```text
+Supplier Cost
++ Internal Cost
++ Risk / Overhead logic
++ Margin
+-> Selling Price
+-> Quotation / Financial Proposal / BOQ
+-> Contract
+-> Invoice
+-> Payment
+-> Accounting
+-> Project Profitability
+```
+
+This records a design principle only. Supplier costing, BOQ, accounting, and profitability implementation remain separately deferred and require field/accountant validation.
+
+### 28M.6 Future AI tender assistance
+
+Future AI may assist tender-document requirement extraction, deadline/eligibility detection, compliance-matrix drafting, missing-requirement detection, proposal-draft assistance, and approved reusable-content suggestions. AI content is untrusted draft assistance and follows:
+
+```text
+AI Draft -> Human Review -> Explicit Approval -> Official Proposal
+```
+
+AI must not autonomously create contractual submission content, approve a bid, change financial authority, write to the database, or submit a proposal.
+
+### 28M.7 Implementation timing
+
+- **Current core:** Quotation Commercial Model.
+- **Discover now / implement after field validation:** quotation hierarchy and bilingual commercial-content schema.
+- **Discover now / build later:** Tender/Bid Management.
+- **Later specialist validation:** accounting expansion with an event-company accountant.
+- **Later:** multi-company SaaS after the internal proof gates.
+- **Blocked:** G2 until the full Post-G1 gate closes.
+
+No feature, schema, migration, database, AI, Tender, accounting, or G2 implementation is authorized by Section 28M.
+
+---
+
 
 ## 29. Parallel Workstream Continuity
 
@@ -3188,6 +3320,17 @@ Rate Card V1 implementation is committed through `9115d3e`; owner acceptance rem
 - Whether separate preparer/approver is disabled by default for all new companies.
 - Future Google Workspace, Microsoft, or SAML SSO timing.
 
+### 30.7 Quotation commercial model and Tender evidence
+
+- Real frequency and shape of itemized, package, mixed, and grouped quotations.
+- Whether package components are contractual/customer-visible and how quantities are shown.
+- Discount and commercial-approval behavior across quotation/package/item levels.
+- Supplier cost and commitment evidence used before customer selling price is approved.
+- Change behavior after client approval.
+- Tender opportunity sources, including Etimad, direct invitation, and other channels.
+- Who reviews the kurrasah, decides bid/no-bid, authors Technical Proposal, prepares Financial Proposal/BOQ, and approves submission.
+- Requirement, compliance, clarification/addenda, version, supporting-document, deadline, submission, award/loss, and post-award handoff practice.
+
 ---
 
 ## 31. Wednesday Industry Interview Plan
@@ -3237,6 +3380,15 @@ Mozfer is highly curious and may speak quickly when excited about a system. To p
 - Spend approximately 70% of the meeting listening and 30% explaining.
 - Do not try to cover all 144 questions if time is limited.
 
+### 31.5 Zainab commercial and Tender evidence track
+
+Use real past events and anonymised documents where permitted rather than asking only theoretical questions. Establish:
+
+- itemized, package, package-inclusion, mixed-price, grouping, detail-level, discount, approval, supplier-commitment, and post-client-approval change practice;
+- Tender opportunity origin, document receipt/review, kurrasah analysis, bid/no-bid, Technical Proposal, Financial Proposal/BOQ, supplier-cost collection, internal approvals, supporting documents, clarifications/addenda, version management, submission, award/loss, and Contract/Event handoff;
+- which steps vary by customer, tender authority, event type, value, and delivery risk;
+- which documents prove each decision and which roles create, review, approve, submit, and own the post-award handoff.
+
 ---
 
 ## 32. Minimum Value Required from the Interview
@@ -3260,6 +3412,10 @@ The interview should ideally produce:
 15. Role ownership: who requests, compares, approves, receives, reviews, pays, and closes.
 16. A list of real documents used.
 17. Permission to obtain anonymised samples where possible.
+18. One real itemized quotation and one package or mixed quotation example where available.
+19. One real tender journey from opportunity receipt to award/loss or submission outcome.
+20. The Technical Proposal, Financial Proposal/BOQ, compliance, approval, and submission ownership map.
+21. The repeated tender problems that the future module must solve.
 
 ---
 
@@ -3268,6 +3424,14 @@ The interview should ideally produce:
 Only with clear permission and removal of confidential data:
 
 - Event Brief.
+- Customer itemized quotation.
+- Customer package or mixed quotation.
+- Tender notice or invitation.
+- Tender booklet / RFP / kurrasah.
+- Technical Proposal.
+- Financial Proposal / BOQ.
+- Compliance or requirements matrix.
+- Tender submission checklist or package index.
 - Venue quotation.
 - Supplier quotation.
 - Quote comparison sheet.
@@ -3292,6 +3456,9 @@ No document should be photographed or copied without consent.
 | Risk | Product impact | Control |
 |---|---|---|
 | Building from assumptions | Wrong workflows and rework | Use Wednesday interview and real documents before locking workflows. |
+| Locking quotation hierarchy before field evidence | Wrong package, inclusion, discount, approval, or bilingual-content authority | Treat Group/Package/Item/Included Component as a hypothesis until Zainab evidence and controller design lock. |
+| Forcing Tender into current Quotation | Tender requirements, compliance, approvals, versions, and submission controls become distorted | Preserve Tender as a future independent workflow while deliberately reusing approved commercial primitives. |
+| AI draft becomes contractual content | Unreviewed or injected content could enter an official submission | Require human review and explicit approval before official proposal use; no autonomous submission or financial authority. |
 | Trying to build the entire ERP at once | Long delay before value | Phase the product and launch bounded modules. |
 | Accounting added after operational tables | Duplicate financial truth | Approve accounting blueprint before major financial modules. |
 | Hard-coded single-company behavior | Difficult Layer 2 migration if assumptions spread everywhere | Preserve bounded settings, numbering, authorization, snapshot, and Service-centered seams now; add explicit company ownership during approved Layer 2 design rather than prematurely adding tenant fields everywhere. |
@@ -3309,7 +3476,7 @@ No document should be photographed or copied without consent.
 ## 35. Expansion-Side Next Steps and Evidence Queue
 These items govern expansion discovery/planning only. Current implementation/remediation execution order is controlled by the latest controller handover, `docs/project-status.md`, `docs/project-roadmap.md`, and verified repository evidence. Do not use this section to bypass an active remediation Goal.
 
-1. Use Revision 0.12 of this file as the sole authoritative expansion reference; do not create a competing master handover.
+1. Use Revision 0.13 of this file as the sole authoritative expansion reference; do not create a competing master handover.
 2. Keep the current G1-G12 remediation program separate from Layer 1 activation. Finish the required current-product safety/reliability gates before allowing broad new ERP scope to overtake them.
 3. Keep Supplier Rate Card Management V1 classified as the bounded early expansion slice: implemented/committed, owner acceptance pending, G9 remediation open; do not treat it as activation of procurement, supplier accounting, Actual Cost, or Margin.
 4. Complete or refresh Phase 0 evidence before locking major Layer 1 workflows: event-industry interviews, real-document sampling where permitted, Domain Map, Sidebar Map, permission blueprint, and design baseline.
@@ -3319,6 +3486,8 @@ These items govern expansion discovery/planning only. Current implementation/rem
 8. Before activating a second company or SaaS tenant, explicitly resolve and verify `W9-SAAS-001`, `W9-SAAS-002`, and `W9-MIG-001`, including ownership, membership/isolation, numbering, historical backfill, audit attribution, export/retention/deletion, migration rehearsal, reconciliation, and rollback.
 9. Any owner proposal that changes the expansion direction must be assessed for business value, dependencies, current-product impact, and long-term product consequences before it becomes a locked decision or implementation task.
 10. Any item promoted from deferred/open to approved scope must update this Master before or alongside the separately authorized implementation task.
+11. Complete Zainab quotation-commercial field discovery before locking Group/Package/Item/Included Component hierarchy or bilingual schema placement.
+12. Begin Tender/Bid discovery now through real workflows and anonymised documents where permitted, but do not implement Tender, Technical Proposal, Financial Proposal/BOQ, AI assistance, or submission workflow without a separate approved blueprint and task.
 
 ---
 
@@ -3587,15 +3756,15 @@ Preserve four categories:
 3. Recommended proposals that are not approved facts.
 4. Open questions awaiting field, accounting, tax, HR, or technical evidence.
 
-The current system continues normal controlled delivery in parallel. Do not stop current work. Supplier Rate Card Management V1 is the only currently approved bounded expansion slice; implementation is committed through `9115d3e`, owner acceptance remains pending, and G9 remediation remains open.
+The current system continues normal controlled delivery in parallel. Do not stop current work. G1 and the closed Post-G1 foundation are preserved; Customer Document Architecture Correction is pushed at `93d3f132`; the Quotation Commercial Model is field-evidence-gated; G2 remains blocked. Supplier Rate Card Management V1 is the only currently approved bounded expansion slice; implementation is committed through `9115d3e`, owner acceptance remains pending, and G9 remediation remains open.
 
 The near-term product is an internal G7 BLUE system. The long-term product direction is a specialist Event ERP SaaS for event companies. Multi-company and ZATCA are future activations, but new architecture must not block them.
 
-The next discovery dependencies are the Wednesday interview with an experienced Riyadh event Project Manager and a focused review with an accountant familiar with event-company transactions. After those reviews, update the Decision Register, Domain Map, Sidebar Map, customer commercial-change blueprint, accounting blueprint, user lifecycle and permission matrix, and phased roadmap.
+The next discovery dependencies are Zainab field evidence on real quotation/package/item and Tender practice, the wider Riyadh event-workflow interview, and a focused review with an accountant familiar with event-company transactions. After those reviews, update the Decision Register, Domain Map, customer commercial model, Tender Blueprint, accounting blueprint, user lifecycle and permission matrix, and phased roadmap.
 
 Always explain accounting and procurement terms in plain language. Do not present assumptions as Saudi event-industry facts. Ask Mozfer one bounded product decision at a time.
 
-Locked owner decisions through 4 August include:
+Locked owner decisions through 9 August include:
 - ABS becomes an internal automatic billing authority after authorized quotation approval.
 - Discounts must remain traceable through quotations, invoices, event profit, and company reporting.
 - Issued invoices are immutable; later increases, reductions, credits, refunds, and customer balances use linked records.
@@ -3610,8 +3779,12 @@ Locked owner decisions through 4 August include:
 - Supplier Rate Card Management V1 is the first approved bounded expansion slice: Create, Edit, Activate/Deactivate, valid dates, and application-layer overlap validation.
 - Rate Card Delete/Restore and broader procurement/accounting modules remain outside that slice.
 - Mozfer owns manual browser and visual acceptance.
+- One quotation or invoice is one canonical document with transient Arabic/English representations and no permanent `document_locale` authority.
+- Commercial Group / Package / Item / Included Component is a field-validation-dependent hypothesis, not a final schema; Zainab evidence is required before design lock.
+- Tender/Bid Management is a future expansion module: discover now, build later, and keep it distinct from Direct Quotation.
+- Future Technical Proposal authoring is in-system; Financial Proposal/BOQ reuses central commercial and financial truth; AI assistance remains draft-only until human review and explicit approval.
 
-Check the newest dated Current-Delivery Sync before proposing implementation.
+Check Section 28M and the newest dated Current-Delivery Sync before proposing implementation.
 ```
 
 ---
