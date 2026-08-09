@@ -135,7 +135,7 @@ export default async function QuotationDetailPage({
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-3">
-          <RecordNavigation basePath="/quotations" recordType={dictionary.list.title} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} />
+          <RecordNavigation basePath="/quotations" recordType={dictionary.list.title} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} pendingLabel={dictionary.list.navigationPending} />
           {canApprove && (quotation.status === "draft" || quotation.status === "sent") && (
             <QuotationApprovalActions quotationId={quotation.id} status={quotation.status} dictionary={dictionary.approval} />
           )}

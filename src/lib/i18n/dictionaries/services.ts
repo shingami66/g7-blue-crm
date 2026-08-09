@@ -51,6 +51,7 @@ export interface ServicesDictionary {
     showingRange: string;
     actions: {
       view: string;
+      opening: string;
     };
     table: {
       serviceNumber: string;
@@ -274,6 +275,8 @@ export interface ServicesDictionary {
   };
   serviceStatusControl: {
     title: string;
+    dangerZoneTitle: string;
+    dangerZoneHint: string;
     currentStatus: string;
     terminalMessage: string;
     noActions: string;
@@ -930,6 +933,7 @@ const servicesDictionaryEn: ServicesDictionary = {
     showingRange: "Showing {start}-{end} of {total} services",
     actions: {
       view: "View",
+      opening: "Opening service…",
     },
     table: {
       serviceNumber: "Service Number",
@@ -1370,6 +1374,8 @@ const servicesDictionaryEn: ServicesDictionary = {
   },
   serviceStatusControl: {
     title: "Next Action",
+    dangerZoneTitle: "Danger Zone",
+    dangerZoneHint: "Exceptional actions that can stop this Service.",
     currentStatus: "Current status",
     terminalMessage: "This Service is in a terminal status. No further status actions are available.",
     noActions: "No status action is currently available.",
@@ -2350,6 +2356,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     showingRange: "عرض {start}-{end} من إجمالي {total} خدمة",
     actions: {
       view: "عرض",
+      opening: "جارٍ فتح الخدمة…",
     },
     table: {
       serviceNumber: "رقم الخدمة",
@@ -2786,6 +2793,8 @@ const servicesDictionaryAr: ServicesDictionary = {
   },
   serviceStatusControl: {
     title: "الإجراء التالي",
+    dangerZoneTitle: "منطقة الإجراءات الخطرة",
+    dangerZoneHint: "إجراءات استثنائية قد توقف هذه الخدمة.",
     currentStatus: "الحالة الحالية",
     terminalMessage: "هذه الخدمة في حالة نهائية. لا توجد إجراءات حالة إضافية متاحة.",
     noActions: "لا يوجد إجراء حالة متاح حاليًا.",

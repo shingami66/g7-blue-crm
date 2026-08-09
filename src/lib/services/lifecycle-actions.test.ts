@@ -414,7 +414,7 @@ test("Activity History uses a full divider instead of a directional side stripe"
 });
 
 test("cancellation uses progressive disclosure and preserves backend authority", () => {
-  const component = read("app/(dashboard)/services/[id]/ServiceLifecycleActions.tsx");
+  const component = read("app/(dashboard)/services/[id]/ServiceCancellationActions.tsx");
 
   assert.match(component, /const \[isCancellationOpen, setIsCancellationOpen\] = useState\(false\)/);
   assert.match(component, /!isCancellationOpen \? \(/);

@@ -105,6 +105,10 @@ const SERVICE_LIFECYCLE_ACTIONS = join(
   REPO_ROOT,
   "src/app/(dashboard)/services/[id]/ServiceLifecycleActions.tsx",
 );
+const SERVICE_CANCELLATION_ACTIONS = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/services/[id]/ServiceCancellationActions.tsx",
+);
 const INVOICE_ACTIONS = join(REPO_ROOT, "src/lib/invoices/actions.ts");
 const INVOICE_BILLING_STATE = join(REPO_ROOT, "src/lib/invoices/billing-state.ts");
 const INVOICE_SCHEMAS = join(REPO_ROOT, "src/lib/invoices/schemas.ts");
@@ -322,7 +326,7 @@ test("3d. Service activity and cancellation feedback resolve safely in both loca
   assert.ok(ar.serviceStatusControl.cancellationConfirm.length > 0);
 
   const activity = read(SERVICE_ACTIVITY);
-  const lifecycle = read(SERVICE_LIFECYCLE_ACTIONS);
+  const lifecycle = read(SERVICE_CANCELLATION_ACTIONS);
   assert.match(activity, /serviceActivity\.depositPaymentConfirmed/);
   assert.match(activity, /serviceActivity\.systemActor/);
   assert.doesNotMatch(activity, /event\.userId|details\s*\./);

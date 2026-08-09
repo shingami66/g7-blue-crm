@@ -15,6 +15,7 @@ export interface InvoicesDictionary {
     subtitle: string;
     export: string;
     creationHint: string;
+    navigationPending: string;
     invoiceChooser: {
       createInvoice: string;
       title: string;
@@ -258,6 +259,7 @@ const invoicesDictionaryEn: InvoicesDictionary = {
     subtitle: "Manage billing documents and payment tracking.",
     export: "Export",
     creationHint: "Invoices are created from approved quotations or service billing actions.",
+    navigationPending: "Opening invoice…",
     invoiceChooser: {
       createInvoice: "Create Invoice",
       title: "Create Invoice",
@@ -509,6 +511,7 @@ const invoicesDictionaryAr: InvoicesDictionary = {
     subtitle: "إدارة مستندات الفوترة ومتابعة السداد.",
     export: "تصدير",
     creationHint: "يتم إنشاء الفواتير من عروض السعر المعتمدة أو من إجراءات فوترة الخدمة.",
+    navigationPending: "جارٍ فتح الفاتورة…",
     invoiceChooser: {
       createInvoice: "إنشاء فاتورة",
       title: "إنشاء فاتورة",

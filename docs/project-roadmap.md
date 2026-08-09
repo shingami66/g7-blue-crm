@@ -115,6 +115,8 @@ Authenticated seeded-baseline smoke used an existing DEV/DEMO Chrome session. Da
 - [x] Duplicate-submit prevention.
 - [x] Print/PDF actions do not reuse the initial `Preparing your workspace...` boot experience; document previews have document-specific pending behavior.
 - [x] Reduce the visual prominence of destructive Cancel Service actions while preserving deliberate confirmation.
+- [x] Complete the owner-acceptance correction: keep Cancel Service out of Next Action in a separate localized Danger Zone, with the existing cancellation authority and disclosure behavior preserved.
+- [x] Verify Customer, Service, Supplier, and relevant Invoice/Quotation detail navigation uses the existing thresholded PendingLink/shared-transition architecture, with contextual EN/AR feedback on slow paths and no fast-path flash; the shared detail pager now applies an immediate same-tab First/Previous/Next/Last guard with settled cleanup.
 - [x] Complete the bounded RTL and mixed Arabic-English data alignment polish.
 - [x] Validate focused contracts, full tests, TypeScript, Next type generation, lint, production build, OCR rule/preview/delegation checks, and authenticated read-only DEV/DEMO browser surfaces.
 - [ ] Controller closure remains pending; no commit, push, database operation, document redesign, quotation commercial-model work, or G2 work is authorized by this task.

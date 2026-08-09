@@ -302,6 +302,7 @@ export default function SuppliersClient({
                     <td className="flex items-center justify-end pt-3 lg:table-cell lg:px-4 lg:py-4 lg:align-top">
                       <PendingLink
                         href={supplierDetailHref(supplier.id, showDeleted, returnTo)}
+                        pendingLabel={dictionary.list.openingSupplier}
                         className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-transparent text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1 focus-visible:ring-offset-surface"
                         aria-label={viewLabel}
                         title={viewLabel}

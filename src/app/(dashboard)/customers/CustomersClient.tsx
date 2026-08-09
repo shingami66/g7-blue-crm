@@ -415,6 +415,7 @@ export default function CustomersClient({
                           <div className="flex justify-center">
                             <PendingLink
                               href={`/customers/${customer.id}?returnTo=${encodeURIComponent(returnTo)}`}
+                              pendingLabel={dictionary.list.actions.opening}
                               aria-label={`${dictionary.list.actions.view} ${customer.customerNumber}`}
                               title={`${dictionary.list.actions.view} ${customer.customerNumber}`}
                               className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed"

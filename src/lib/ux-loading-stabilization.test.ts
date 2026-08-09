@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
+import { createRecordNavigationGuard } from "../components/records/record-navigation-guard.ts";
 
 const ROOT = join(import.meta.dirname, "../..");
 const read = (path: string) => readFileSync(join(ROOT, path), "utf8");
@@ -63,6 +64,7 @@ test("mutation guards preserve immediate labels and prevent duplicate commands",
   const issue = read("src/app/(dashboard)/invoices/IssueInvoiceAction.tsx");
   const quotations = read("src/app/(dashboard)/quotations/QuotationsClient.tsx");
   const service = read("src/app/(dashboard)/services/[id]/ServiceLifecycleActions.tsx");
+  const cancellation = read("src/app/(dashboard)/services/[id]/ServiceCancellationActions.tsx");
 
   assert.match(approval, /if \(isPending\) return/);
   assert.match(approval, /disabled=\{isPending && !isApproving\}/);
@@ -77,8 +79,55 @@ test("mutation guards preserve immediate labels and prevent duplicate commands",
   assert.match(quotations, /if \(!preview\)/);
   assert.match(quotations, /clearTimeout\(documentTimerRef\.current\)/);
   assert.match(service, /if \(isPending\) return/);
-  assert.match(service, /aria-describedby="service-cancellation-warning"/);
-  assert.match(service, /loadingLabel=\{dictionary\.serviceStatusControl\.saving\}/);
+  assert.doesNotMatch(service, /cancelService|service-cancellation-disclosure/);
+  assert.match(cancellation, /dangerZoneTitle/);
+  assert.match(cancellation, /service-cancellation-disclosure/);
+  assert.match(cancellation, /cancelService/);
+  assert.match(cancellation, /aria-describedby="service-cancellation-warning"/);
+  assert.match(cancellation, /loadingLabel=\{dictionary\.serviceStatusControl\.saving\}/);
+});
+
+test("record detail links expose contextual thresholded navigation feedback", () => {
+  const customers = read("src/app/(dashboard)/customers/CustomersClient.tsx");
+  const services = read("src/app/(dashboard)/services/ServicesClient.tsx");
+  const suppliers = read("src/app/(dashboard)/suppliers/SuppliersClient.tsx");
+  const invoices = read("src/app/(dashboard)/invoices/InvoicesListClient.tsx");
+  const quotations = read("src/app/(dashboard)/quotations/QuotationsClient.tsx");
+  const serviceDetail = read("src/app/(dashboard)/services/[id]/page.tsx");
+  const recordNavigation = read("src/components/records/RecordNavigation.tsx");
+
+  assert.match(customers, /<PendingLink[\s\S]*pendingLabel=\{dictionary\.list\.actions\.opening\}/);
+  assert.match(services, /<PendingLink[\s\S]*pendingLabel=\{dictionary\.list\.actions\.opening\}/);
+  assert.match(suppliers, /<PendingLink[\s\S]*pendingLabel=\{dictionary\.list\.openingSupplier\}/);
+  assert.match(invoices, /<PendingLink[\s\S]*pendingLabel=\{dictionary\.list\.navigationPending\}/);
+  assert.match(quotations, /useGlobalNavigationPending/);
+  assert.match(quotations, /isNavigationPending/);
+  assert.match(quotations, /push\(`\/quotations\/\$\{quotation\.id\}/);
+  assert.match(serviceDetail, /ServiceCancellationActions/);
+  assert.match(serviceDetail, /ServiceBillingSummaryCard[\s\S]*ServiceCancellationActions/);
+  assert.match(recordNavigation, /useGlobalNavigationPending/);
+  assert.match(recordNavigation, /isModifiedNavigationEvent/);
+  assert.match(recordNavigation, /aria-busy=\{isGuarded \|\| undefined\}/);
+  assert.match(recordNavigation, /setTimeout\(\(\) => setShowPending\(true\), 150\)/);
+});
+
+test("detail pager guard blocks immediate competing navigation and unlocks after settlement", () => {
+  const guard = createRecordNavigationGuard();
+  let dispatches = 0;
+  const dispatch = () => {
+    if (guard.acquire()) dispatches += 1;
+  };
+
+  dispatch();
+  dispatch();
+  dispatch();
+  assert.equal(dispatches, 1);
+  assert.equal(guard.isLocked(), true);
+
+  guard.release();
+  dispatch();
+  assert.equal(dispatches, 2);
+  assert.equal(guard.isLocked(), true);
 });
 
 test("G7 bidi surfaces retain natural-language auto direction and structured LTR values", () => {

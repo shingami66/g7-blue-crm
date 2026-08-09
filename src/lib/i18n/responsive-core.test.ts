@@ -23,7 +23,7 @@ const MODULE_SEARCH_CONTROL = "src/components/ui/ModuleSearchControl.tsx";
 const DATA_TABLE = "src/components/ui/DataTable.tsx";
 const DASHBOARD_LAYOUT = "src/app/(dashboard)/layout.tsx";
 const SERVICE_DETAIL = "src/app/(dashboard)/services/[id]/page.tsx";
-const SERVICE_LIFECYCLE_ACTIONS = "src/app/(dashboard)/services/[id]/ServiceLifecycleActions.tsx";
+const SERVICE_CANCELLATION_ACTIONS = "src/app/(dashboard)/services/[id]/ServiceCancellationActions.tsx";
 const SUPPLIER_ALLOCATIONS = "src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx";
 const SUPPLIER_BOOKINGS = "src/app/(dashboard)/services/[id]/SupplierBookingsPanel.tsx";
 const BILLING = "src/app/(dashboard)/services/[id]/BillingPanel.tsx";
@@ -114,7 +114,7 @@ test("service detail root and lifecycle actions keep bounded responsive controls
   assert.match(detail, /flex w-full min-w-0 max-w-full flex-col/);
   assert.match(detail, /flex min-w-0 items-start gap-4/);
 
-  const actions = read(SERVICE_LIFECYCLE_ACTIONS);
+  const actions = read(SERVICE_CANCELLATION_ACTIONS);
   assert.match(actions, /flex flex-wrap gap-2/);
   assert.match(actions, /min-h-11/);
   assert.doesNotMatch(actions, /createApprovedBillingScopeDraft|voidApproved|supersedeApproved/);

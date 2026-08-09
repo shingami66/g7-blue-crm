@@ -282,7 +282,7 @@ export default async function InvoiceDetailPage({
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-3">
-          <RecordNavigation basePath="/invoices" recordType={dictionary.detail.labels.invoiceNumber} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} />
+          <RecordNavigation basePath="/invoices" recordType={dictionary.detail.labels.invoiceNumber} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} pendingLabel={dictionary.list.navigationPending} />
           <Link
             href={`/invoices/${invoice.id}/pdf`}
             target="_blank"

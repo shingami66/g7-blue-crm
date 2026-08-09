@@ -53,6 +53,7 @@ export interface QuotationsDictionary {
     noQuotations: string;
     noFilteredQuotations: string;
     unknownCompany: string;
+    navigationPending: string;
     selector: {
       title: string;
       description: string;
@@ -274,6 +275,7 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     noQuotations: "No quotations found.",
     noFilteredQuotations: "No quotations match the current filters.",
     unknownCompany: "Unknown Company",
+    navigationPending: "Opening quotation…",
     selector: {
       title: "Select an eligible Service",
       description: "Choose a Service to continue to the existing quotation form.",
@@ -501,6 +503,7 @@ const quotationsDictionaryAr: QuotationsDictionary = {
     noQuotations: "لم يتم العثور على عروض أسعار",
     noFilteredQuotations: "لا توجد عروض أسعار مطابقة للفلاتر الحالية",
     unknownCompany: "جهة غير معروفة",
+    navigationPending: "جارٍ فتح عرض السعر…",
     selector: {
       title: "اختر خدمة مؤهلة",
       description: "اختر خدمة للمتابعة إلى نموذج عرض السعر الحالي.",

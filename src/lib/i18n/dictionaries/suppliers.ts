@@ -54,6 +54,7 @@ export interface SuppliersDictionary {
     showDeleted: string;
     showCurrent: string;
     viewSupplier: string;
+    openingSupplier: string;
     columns: {
       supplier: string;
       category: string;
@@ -253,6 +254,7 @@ const suppliersDictionaryEn: SuppliersDictionary = {
     showDeleted: "Show deleted",
     showCurrent: "Show current",
     viewSupplier: "View supplier",
+    openingSupplier: "Opening supplier…",
     columns: { supplier: "Supplier", category: "Category", type: "Type", location: "Location", status: "Status", actions: "Actions" },
   },
   detail: {
@@ -355,6 +357,7 @@ const suppliersDictionaryAr: SuppliersDictionary = {
     showDeleted: "عرض المحذوفين",
     showCurrent: "عرض الحاليين",
     viewSupplier: "عرض المورد",
+    openingSupplier: "جارٍ فتح المورد…",
     columns: { supplier: "المورد", category: "الفئة", type: "النوع", location: "الموقع", status: "الحالة", actions: "إجراءات" },
   },
   detail: {

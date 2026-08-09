@@ -38,6 +38,7 @@ export interface CustomersDictionary {
     allCities: string;
     actions: {
       view: string;
+      opening: string;
     };
     table: {
       company: string;
@@ -198,6 +199,7 @@ const customersDictionaryEn: CustomersDictionary = {
     allCities: "All Cities",
     actions: {
       view: "View",
+      opening: "Opening customer…",
     },
     table: {
       company: "Company",
@@ -372,6 +374,7 @@ const customersDictionaryAr: CustomersDictionary = {
     allCities: "كل المدن",
     actions: {
       view: "عرض",
+      opening: "جارٍ فتح العميل…",
     },
     table: {
       company: "الشركة",

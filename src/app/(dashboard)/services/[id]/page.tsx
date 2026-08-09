@@ -27,6 +27,7 @@ import Link from "next/link";
 import RelatedQuotationsCard from "./RelatedQuotationsCard";
 import ServiceBillingSummaryCard from "./ServiceBillingSummaryCard";
 import ServiceLifecycleActions from "./ServiceLifecycleActions";
+import ServiceCancellationActions from "./ServiceCancellationActions";
 import ServiceActivityHistory from "./ServiceActivityHistory";
 import SupplierAllocationsPanel from "./SupplierAllocationsPanel";
 import { getSupplierAllocationsByServiceId } from "@/lib/supplier-allocations/queries";
@@ -172,6 +173,7 @@ export default async function ServiceDetailPage({
               <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-[14px] leading-[20px] text-on-surface-variant">
                 <PendingLink
                   href={`/customers/${service.customerId}`}
+                  pendingLabel={dictionary.list.actions.opening}
                   className="inline-flex items-center gap-2 text-primary hover:underline"
                   dir="auto"
                 >
@@ -194,7 +196,7 @@ export default async function ServiceDetailPage({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <RecordNavigation basePath="/services" recordType={dictionary.list.title} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} />
+          <RecordNavigation basePath="/services" recordType={dictionary.list.title} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} pendingLabel={dictionary.list.actions.opening} />
           {canCreateQuotation && canModifyService && (
             quotationDisabledReason ? (
               <span
@@ -264,6 +266,7 @@ export default async function ServiceDetailPage({
             <DetailItem label={dictionary.detail.labels.customer}>
               <PendingLink
                 href={`/customers/${service.customerId}`}
+                pendingLabel={dictionary.list.actions.opening}
                 className="text-primary hover:underline"
                 dir="auto"
               >
@@ -346,6 +349,13 @@ export default async function ServiceDetailPage({
         billingState={billingState}
         dictionary={dictionary}
       />
+      {canUpdateServiceStatus && (
+        <ServiceCancellationActions
+          serviceId={service.id}
+          status={service.status}
+          dictionary={dictionary}
+        />
+      )}
       <ServiceActivityHistory
         events={activity.events}
         available={activity.success}

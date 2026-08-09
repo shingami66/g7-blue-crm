@@ -120,7 +120,7 @@ export default async function CustomerProfilePage({
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-3">
-          <RecordNavigation basePath="/customers" recordType={dictionary.profile.customerNumber} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} />
+          <RecordNavigation basePath="/customers" recordType={dictionary.profile.customerNumber} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} pendingLabel={dictionary.list.actions.opening} />
           <CustomerProfileActions customer={customer} canWrite={canWrite} dictionary={dictionary} />
         </div>
       </div>

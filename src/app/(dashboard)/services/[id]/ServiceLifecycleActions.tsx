@@ -1,10 +1,9 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ServiceStatus } from "@/types/service";
 import {
-  cancelService,
   completeService,
   startServiceExecution,
 } from "@/lib/services/actions";
@@ -23,16 +22,12 @@ type Props = {
 
 export default function ServiceLifecycleActions({ serviceId, status, dictionary }: Props) {
   const [isPending, startTransition] = useTransition();
-  const [reason, setReason] = useState("");
-  const [isCancellationOpen, setIsCancellationOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const cancelTriggerRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
 
   const isStart = status === "Deposit Paid";
   const isComplete = status === "In Progress";
-  const isCancellable = status === "Inquiry" || status === "Quoted" || status === "Approved";
 
   const runAction = (action: () => Promise<{ success: boolean; code?: string }>) => {
     if (isPending) return;
@@ -44,21 +39,13 @@ export default function ServiceLifecycleActions({ serviceId, status, dictionary 
         setError(getServiceStatusErrorMessage(result.code, dictionary));
         return;
       }
-      setReason("");
-      setIsCancellationOpen(false);
+
       setSuccess(true);
       router.refresh();
     });
   };
 
-  const closeCancellation = () => {
-    setIsCancellationOpen(false);
-    setReason("");
-    setError(null);
-    window.requestAnimationFrame(() => cancelTriggerRef.current?.focus());
-  };
-
-  if (!isStart && !isComplete && !isCancellable) return null;
+  if (!isStart && !isComplete) return null;
 
   return (
     <section
@@ -72,97 +59,21 @@ export default function ServiceLifecycleActions({ serviceId, status, dictionary 
         </p>
       </div>
       <div className="space-y-4 p-5">
-        {(isStart || isComplete) && (
-          <Button
-            type="button"
-            onClick={() => runAction(isStart
-              ? () => startServiceExecution(serviceId)
-              : () => completeService(serviceId))}
-            disabled={isPending}
-            loading={isPending}
-            loadingLabel={dictionary.serviceStatusControl.saving}
-            variant="primary"
-            className="min-h-11 rounded-lg bg-primary px-5 text-[14px] font-semibold text-on-primary transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isStart
-              ? dictionary.serviceStatusControl.startExecution
-              : dictionary.serviceStatusControl.completeService}
-          </Button>
-        )}
-
-        {isCancellable && (
-          <div className="space-y-3 border-t border-surface-variant pt-4">
-            {!isCancellationOpen ? (
-              <button
-                ref={cancelTriggerRef}
-                type="button"
-                aria-expanded="false"
-                aria-controls="service-cancellation-disclosure"
-                onClick={() => {
-                  setError(null);
-                  setSuccess(false);
-                  setIsCancellationOpen(true);
-                }}
-                disabled={isPending}
-                className="min-h-11 rounded-lg border border-error bg-surface px-5 text-[14px] font-semibold text-error transition-colors hover:bg-error-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {dictionary.serviceStatusControl.cancelService}
-              </button>
-            ) : (
-              <form
-                id="service-cancellation-disclosure"
-                aria-describedby="service-cancellation-warning"
-                className="max-w-2xl rounded-lg border border-error/40 bg-error-container p-4"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  runAction(() => cancelService(serviceId, reason));
-                }}
-              >
-                <p id="service-cancellation-warning" className="text-[13px] text-on-error-container">
-                  {dictionary.serviceStatusControl.cancellationConfirm}
-                </p>
-                <label
-                  htmlFor="service-cancellation-reason"
-                  className="mt-3 block text-[13px] font-semibold text-on-error-container"
-                >
-                  {dictionary.serviceStatusControl.cancellationReasonLabel}
-                </label>
-                <textarea
-                  id="service-cancellation-reason"
-                  autoFocus
-                  value={reason}
-                  onChange={(event) => setReason(event.target.value)}
-                  maxLength={1000}
-                  disabled={isPending}
-                  rows={3}
-                  placeholder={dictionary.serviceStatusControl.cancellationReasonPlaceholder}
-                  className="mt-2 w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] text-on-surface focus:border-error focus:outline-none focus:ring-1 focus:ring-error disabled:opacity-50"
-                />
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button
-                    type="submit"
-                    disabled={isPending || reason.trim().length === 0}
-                    loading={isPending}
-                    loadingLabel={dictionary.serviceStatusControl.saving}
-                    variant="danger"
-                    className="min-h-11 rounded-lg px-4 text-[14px] focus-visible:ring-error"
-                  >
-                    {dictionary.serviceStatusControl.confirmCancel}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={closeCancellation}
-                    disabled={isPending}
-                    variant="outline"
-                    className="min-h-11 rounded-lg px-4 text-[14px] focus-visible:ring-primary"
-                  >
-                    {dictionary.serviceStatusControl.keepService}
-                  </Button>
-                </div>
-              </form>
-            )}
-          </div>
-        )}
+        <Button
+          type="button"
+          onClick={() => runAction(isStart
+            ? () => startServiceExecution(serviceId)
+            : () => completeService(serviceId))}
+          disabled={isPending}
+          loading={isPending}
+          loadingLabel={dictionary.serviceStatusControl.saving}
+          variant="primary"
+          className="min-h-11 rounded-lg bg-primary px-5 text-[14px] font-semibold text-on-primary transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isStart
+            ? dictionary.serviceStatusControl.startExecution
+            : dictionary.serviceStatusControl.completeService}
+        </Button>
 
         {error && <p className="text-[13px] text-error" role="alert" aria-live="assertive">{error}</p>}
         {success && (
