@@ -4,7 +4,9 @@ import type { ApprovedBillingScopeDetail } from "@/lib/approved-billing-scopes/t
 import type { InvoiceSnapshotData } from "./types";
 import type { JsonValue } from "@/types/invoice";
 
-export function buildSellerSnapshot(settings: CompanySettingsRow): QuotationSnapshotSeller {
+export function buildSellerSnapshot(
+  settings: CompanySettingsRow,
+): QuotationSnapshotSeller {
   return {
     snapshotVersion: 1,
     snapshotSource: "invoice_creation",
@@ -211,7 +213,9 @@ export function buildBankDetailsSnapshot(settings: CompanySettingsRow): JsonValu
   };
 }
 
-export function buildDocumentRulesSnapshot(settings: CompanySettingsRow): JsonValue {
+export function buildDocumentRulesSnapshot(
+  settings: CompanySettingsRow,
+): JsonValue {
   const isNotRegistered = settings.vat_mode === "not_registered";
 
   return {
@@ -237,7 +241,7 @@ export function buildInvoiceSnapshotData(
   quotation: QuotationDetail,
   activeScope?: ApprovedBillingScopeDetail | null,
   invoiceAmount?: number,
-  invoiceType?: string
+  invoiceType?: string,
 ): (InvoiceSnapshotData & { vat_mode: string; vat_rate: number; document_label: string }) | null {
   const isNotRegistered = settings.vat_mode === "not_registered";
   const documentLabel = isNotRegistered ? "Commercial Invoice" : "Tax Invoice";

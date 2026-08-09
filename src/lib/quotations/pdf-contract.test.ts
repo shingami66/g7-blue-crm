@@ -32,8 +32,6 @@ test("Quotation customer PDF removes internal-only presentation", () => {
   const template = getQuotationTemplate(source);
 
   for (const removed of [
-    "Terms & Conditions",
-    "seller.terms",
     "Prepared By",
     "System Generated",
     "item.details",
@@ -52,18 +50,20 @@ test("Quotation customer PDF removes internal-only presentation", () => {
   assert.match(template, /item\.description/);
   assert.match(template, /item\.category/);
   assert.match(template, /formatQuantity\(item\.qty\)/);
-  assert.match(template, /formatMoney\(item\.unitPrice\)/);
-  assert.match(template, /Not applied/);
-  assert.match(template, /formatMoney\(item\.total\)/);
-  assert.match(template, /formatMoney\(quotation\.subtotal\)/);
-  assert.match(template, /formatMoney\(quotation\.discount\)/);
-  assert.match(template, /formatMoney\(quotation\.grandTotal\)/);
-  assert.match(template, /Client Approval/);
-  assert.match(template, /Signature & Date/);
-  assert.match(template, /Official Stamp/);
+  assert.match(template, /formatAmountWithCurrency\(item\.unitPrice\)/);
+  assert.match(template, /dictionary\.common\.notApplied/);
+  assert.match(template, /formatAmountWithCurrency\(item\.total\)/);
+  assert.match(template, /formatAmountWithCurrency\(quotation\.subtotal\)/);
+  assert.match(template, /formatAmountWithCurrency\(quotation\.discount\)/);
+  assert.match(template, /formatAmountWithCurrency\(quotation\.grandTotal\)/);
+  assert.match(template, /dictionary\.common\.clientApproval/);
+  assert.match(template, /dictionary\.common\.signatureDate/);
+  assert.match(template, /dictionary\.common\.officialStamp/);
   assert.match(template, /seller\.bank\.bankName/);
   assert.match(template, /seller\.bank\.accountName/);
   assert.match(template, /seller\.bank\.iban/);
+  assert.match(template, /seller\.terms/);
+  assert.match(template, /dictionary\.quotation\.termsAndConditions/);
   assert.match(template, /quotation\.quotationNumber/);
   assert.match(template, /quotation\.date/);
   assert.match(template, /quotation\.validUntil/);
@@ -87,7 +87,12 @@ test("Quotation print contract preserves A4 and natural pagination", () => {
   );
   assert.ok(keepTogetherRule, "major Quotation blocks must retain a scoped keep-together rule");
   assert.doesNotMatch(keepTogetherRule, /quotation-print-footer/);
-  assert.doesNotMatch(keepTogetherRule, /quotation-print-terms/);
+  assert.match(keepTogetherRule, /quotation-print-terms/);
   assert.doesNotMatch(read(QUOTATION_PDF), /@\/app\/\(dashboard\)\/invoices|@\/lib\/invoices/);
-  assert.doesNotMatch(read(QUOTATION_PDF), /getLocale|useLocale|document_locale|documentLocale|dir="rtl"/);
+  assert.doesNotMatch(read(QUOTATION_PDF), /getLocale|useLocale/);
+  assert.match(read(QUOTATION_PDF), /getDocumentDictionary/);
+  assert.match(read(QUOTATION_PDF), /searchParams/);
+  assert.match(read(QUOTATION_PDF), /resolveDocumentLocale\(resolvedSearchParams\)/);
+  assert.doesNotMatch(read(QUOTATION_PDF), /quotation\.documentLocale|document_locale|readDocumentLocaleFromSnapshot/);
+  assert.match(read(QUOTATION_PDF), /dir=\{documentDirection\}/);
 });

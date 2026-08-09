@@ -85,6 +85,8 @@ export interface InvoiceRow {
   customer_id: string;
   invoice_type: string;
   service_id: string;
+  date: string;
+  due_date: string;
   status: string;
   subtotal: number;
   discount_amount: number;

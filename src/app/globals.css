@@ -169,6 +169,42 @@ body {
   margin: 0;
 }
 
+/* Customer-document direction is a snapshot choice, not the authenticated
+   user's current UI locale. Keep structured identifiers and amounts in their
+   explicit LTR boundaries while allowing customer prose to remain dir=auto. */
+.document-ltr,
+.document-rtl {
+  unicode-bidi: isolate;
+}
+
+.document-bidi-number {
+  direction: ltr;
+  unicode-bidi: isolate;
+  white-space: nowrap;
+}
+
+.document-ltr .quotation-print-document {
+  direction: ltr;
+}
+
+.document-ltr .invoice-print-document {
+  direction: ltr;
+}
+
+.document-rtl .quotation-print-document {
+  direction: rtl;
+}
+
+.document-rtl .invoice-print-document {
+  direction: rtl;
+}
+
+.quotation-print-document,
+.invoice-print-document {
+  widows: 3;
+  orphans: 3;
+}
+
 @media print {
   html,
   body {
@@ -220,6 +256,7 @@ body {
   .quotation-print-document header,
   .quotation-print-meta,
   .quotation-print-summary,
+  .quotation-print-terms,
   .quotation-print-signatures {
     break-inside: avoid;
     page-break-inside: avoid;
@@ -323,6 +360,22 @@ body {
     font-size: 9pt !important;
     line-height: 1.2 !important;
     padding: 4mm !important;
+  }
+
+  .document-ltr .quotation-print-document {
+    direction: ltr !important;
+  }
+
+  .document-ltr .invoice-print-document {
+    direction: ltr !important;
+  }
+
+  .document-rtl .quotation-print-document {
+    direction: rtl !important;
+  }
+
+  .document-rtl .invoice-print-document {
+    direction: rtl !important;
   }
 
   .invoice-print-document header {

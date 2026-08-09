@@ -47,6 +47,8 @@ export function mapRowToInvoice(row: InvoiceRow): Invoice {
     approved_billing_scope_id: row.approved_billing_scope_id,
     invoice_type: row.invoice_type as InvoiceType,
     service_id: row.service_id,
+    documentDate: row.date,
+    documentDueDate: row.due_date,
     status: row.status as InvoiceStatus,
     subtotal: row.subtotal,
     discount_amount: row.discount_amount,

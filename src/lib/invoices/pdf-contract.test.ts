@@ -358,6 +358,24 @@ type LocalSymbols = {
   names: Set<string>;
 };
 
+const SAFE_RENDERED_STRING_HELPERS = new Set([
+  "formatDocumentAmount",
+  "formatDocumentDate",
+  "formatDocumentQuantity",
+]);
+
+const DOCUMENT_DICTIONARY_RENDERED_TEXT: Record<string, string> = {
+  approvedQuotationTotal: "Approved Quotation Total",
+  approvedBillingScopeTotal: "Approved Billing Scope Total",
+  previousInvoices: "Previous Invoices / Deposits",
+  depositAmount: "Deposit Amount",
+  finalAmountDue: "Final Amount Due",
+  totalAmount: "Total Amount",
+  taxVat: "Tax/VAT",
+  amountPaid: "Amount Paid",
+  balanceDue: "Balance Due",
+};
+
 const SYNTHETIC_TYPE_DECLARATIONS = `
 declare namespace JSX {
   interface Element {}
@@ -970,6 +988,9 @@ function renderedStaticTexts(
     if (node.expression.text === "createElement") {
       return inspectCreateElement(node);
     }
+    if (SAFE_RENDERED_STRING_HELPERS.has(node.expression.text)) {
+      return [];
+    }
     return resolveLocalCallable(node.expression.text, context, resolvingBindings, node.expression);
   }
 
@@ -1025,6 +1046,12 @@ function renderedStaticTexts(
   }
 
   if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+    if (ts.isPropertyAccessExpression(node)) {
+      const renderedText = DOCUMENT_DICTIONARY_RENDERED_TEXT[node.name.text];
+      if (renderedText) {
+        return [renderedText];
+      }
+    }
     const type = typeAt(node, context);
     if (hasUnresolvedType(type)) {
       return fail(`Invoice summary detector encountered unresolved rendered member output: ${node.getText(context.source)}`);
@@ -1974,25 +2001,25 @@ test("Invoice customer PDF retains snapshot-backed financial and document presen
     "invoice.invoice_type",
     "summaryLabel",
     "invoiceAmountLabel",
-    "DRAFT PREVIEW",
+    "dictionary.common.draftPreview",
     "relatedQuoteNumber",
-    "seller.legalNameEn",
+    "sellerName",
     "buyer.name",
     "formatQuantityOrUnavailable(item.qty)",
     "formatItemAmountWithCurrency(item.unitPrice)",
     "formatItemAmountWithCurrency(item.total)",
-    'invoice.vat_mode === "not_registered" ? "Not applied"',
+    'invoice.vat_mode === "not_registered" ? dictionary.common.notApplied',
     "formatAmountWithCurrency(invoice.subtotal)",
     "formatAmountWithCurrency(invoice.grand_total)",
     "formatAmountWithCurrency(invoice.amount_paid)",
     "formatAmountWithCurrency(invoice.balance_due)",
-    "Approved Quotation Total",
-    "Previous Invoices / Deposits",
+    "dictionary.invoice.approvedQuotationTotal",
+    "dictionary.invoice.previousInvoices",
     "bankDetails?.bankName",
     "bankDetails?.accountName",
     "bankDetails?.accountNo",
     "bankDetails?.iban",
-    "Official Stamp",
+    "dictionary.common.officialStamp",
   ]) {
     assert.ok(template.includes(retained), `Invoice PDF must retain ${retained}`);
   }
@@ -2007,8 +2034,8 @@ test("Invoice customer PDF retains snapshot-backed financial and document presen
   }
 
   assert.match(source, /invoice\.invoice_type === "deposit"/);
-  assert.match(source, /"Deposit Summary"/);
-  assert.match(source, /"Final Settlement Summary"/);
+  assert.match(source, /dictionary\.invoice\.depositSummary/);
+  assert.match(source, /dictionary\.invoice\.finalSummary/);
 });
 
 test("Invoice customer PDF presents only positively classified snapshot itemization", () => {
@@ -2024,7 +2051,7 @@ test("Invoice customer PDF presents only positively classified snapshot itemizat
   assert.match(source, /total:\s*readFiniteNumber\(item\.total\)/);
   assert.match(
     source,
-    /formatItemAmountWithCurrency[\s\S]*?val === null \|\| val === undefined \? "Not available" : formatAmountWithCurrency\(val\)/,
+    /formatItemAmountWithCurrency[\s\S]*?val === null \|\| val === undefined \? dictionary\.common\.notAvailable : formatAmountWithCurrency\(val\)/,
     "only absent money values may render as unavailable; numeric zero remains valid",
   );
   assert.doesNotMatch(source, /formatMoney\(item\.(?:unitPrice|total)\)/);
@@ -2050,15 +2077,23 @@ test("Invoice customer PDF presents only positively classified snapshot itemizat
   assert.doesNotMatch(source, /invoice\.relatedQuote(?!Number)/);
   assert.doesNotMatch(source, /approved_quotation_id/);
 
-  for (const heading of ["Approved Quotation Items", "Approved Service Scope"]) {
+  for (const heading of [
+    "dictionary.invoice.approvedQuotationItems",
+    "dictionary.invoice.approvedServiceScope",
+  ]) {
     assert.ok(source.includes(heading), `Invoice PDF must retain ${heading}`);
   }
-  for (const heading of ["Description", "Qty", "Unit Price", "Line Total"]) {
+  for (const heading of [
+    "dictionary.invoice.description",
+    "dictionary.quotation.qty",
+    "dictionary.quotation.unitPrice",
+    "dictionary.invoice.lineTotal",
+  ]) {
     assert.ok(template.includes(heading), `Invoice item table must retain ${heading}`);
   }
   assert.doesNotMatch(template, /item\.vat/);
   assert.match(source, /snapshotClassification === "full_quotation" \|\| snapshotClassification === "active_scope"/);
-  assert.match(source, /snapshotClassification === "active_scope"\s*\?\s*"Approved Service Scope"/);
+  assert.match(source, /snapshotClassification === "active_scope"\s*\?\s*dictionary\.invoice\.approvedServiceScope/);
   assert.match(source, /snapshotClassification === "full_quotation"\s*\?\s*readRecordNumber\(snapshotQuotationRecord, "grand_total"\)/);
   assert.match(source, /readRecordNumber\(finalInvoiceSettlement, "approved_quotation_total"\) \?\? fullQuotationTotal/);
   assert.match(source, /const approvedBillingScopeTotal\s*=\s*[\s\S]*?invoice\.invoice_type === "deposit"[\s\S]*?snapshotClassification === "active_scope"[\s\S]*?approvedBillingScopeAcceptedGrandTotal/);
@@ -2066,14 +2101,14 @@ test("Invoice customer PDF presents only positively classified snapshot itemizat
   assert.match(source, /readRecordNumber\(finalInvoiceSettlement, "service_lifetime_exposure"\) \?\?[\s\S]*?readRecordNumber\(finalInvoiceSettlement, "active_prior_invoice_total"\)/);
   assert.doesNotMatch(source, /getQuotationById|from\("quotations"\)|createAdminClient/);
   assertSingleInvoiceFinancialSummary(source, INVOICE_PDF);
-  assert.match(source, /"Deposit Summary"/);
-  assert.match(source, /"Final Settlement Summary"/);
-  assert.match(source, /"Deposit Amount"/);
-  assert.match(source, /"Final Amount Due"/);
-  assert.match(template, /Approved Quotation Total/);
-  assert.match(template, /Approved Billing Scope Total/);
+  assert.match(source, /dictionary\.invoice\.depositSummary/);
+  assert.match(source, /dictionary\.invoice\.finalSummary/);
+  assert.match(source, /dictionary\.invoice\.depositAmount/);
+  assert.match(source, /dictionary\.invoice\.finalAmountDue/);
+  assert.match(template, /dictionary\.invoice\.approvedQuotationTotal/);
+  assert.match(template, /dictionary\.invoice\.approvedBillingScopeTotal/);
   assert.match(template, /formatAmountWithCurrency\(approvedBillingScopeTotal\)/);
-  assert.match(template, /Previous Invoices \/ Deposits/);
+  assert.match(template, /dictionary\.invoice\.previousInvoices/);
   assert.match(template, /formatAmountWithCurrency\(invoice\.subtotal\)/);
   assert.match(template, /formatAmountWithCurrency\(invoice\.grand_total\)/);
 

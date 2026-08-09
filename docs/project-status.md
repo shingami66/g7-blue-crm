@@ -52,11 +52,12 @@
 - **G1 closeout:** DEV/DEMO database verification is `PASS`; browser acceptance is `PASS`; canonical migration history is reconciled with `20260807090000`, `20260807133000`, `20260807150000`, and `20260807183359` applied, while generated version `20260807185325` is absent. The invoice-list stale contract now records invoice `date` semantics; the former G1 invoice fixtures were later confirmed as mock/test data and removed by the corrected DEV/DEMO reset.
 - **M-01 disposition:** the external candidate is `IMPLEMENTED_AND_VALIDATED_NOT_ADOPTED`; consolidated disposition is `ADAPT`. It was not accessed or applied in this tracking task.
 - **Pre-commit checkpoint:** Before this controlled closure commit, the canonical `main` checkout was at `5320788af1a9369691d2904305dc2f4a79194bc3`, aligned with `origin/main` at `0/0`, with an empty index. The four protected build-watch logs remain untracked and untouched; the three Task 2B documentation surfaces are the authorized contents of this closure commit. DEV/DEMO data changed only through the completed mock/test reset and the curated database seed recorded below; no application source, tests, SQL, migrations, schema, financial behavior, RBAC, or dependencies changed.
-- **POST-G1 mandatory gate:** `POST-G1 CLEANUP / STABILIZATION GATE` — **G2 MUST NOT START UNTIL THIS GATE IS CLOSED.** Cleanup & Rebaseline is complete; DEV/DEMO Data Hygiene is `CLOSED` after authenticated read-only Customers, Services, Quotations, and Invoices smoke. Pre-G2 UX Stabilization, the Customer Document System, and the explicit Quotation Commercial Model Impact Check remain pending in `docs/project-roadmap.md`.
-- **Next action:** `UX / LOADING STABILIZATION` is the next required task. It is not started by this closure. G2 (Payment Precision) remains blocked and the remediation backbone remains G1 -> G2 -> ... -> G12.
+- **POST-G1 mandatory gate:** `POST-G1 CLEANUP / STABILIZATION GATE` — **G2 MUST NOT START UNTIL THIS GATE IS CLOSED.** Cleanup & Rebaseline is complete; DEV/DEMO Data Hygiene is `CLOSED` after authenticated read-only Customers, Services, Quotations, and Invoices smoke. Pre-G2 UX Stabilization and the Customer Document System are implemented in the current unstaged worktree and remain pending controller closure; the explicit Quotation Commercial Model Impact Check remains pending in `docs/project-roadmap.md`.
+- **Next action:** Controller review of the current UX stabilization and Customer Document System implementation, followed by the explicit Quotation Commercial Model Impact Check. G2 (Payment Precision) remains blocked and the remediation backbone remains G1 -> G2 -> ... -> G12.
 - **POST-G1 Task 3 — UX / Loading Stabilization (8 August 2026):** The bounded implementation is complete in the current unstaged worktree: shared navigation and mutation pending feedback, duplicate-submit guards, document-specific Print/PDF pending behavior, deliberate Service Cancel disclosure, and Arabic/English mixed-direction alignment were added without database, schema, seed, financial-model, or document-content changes. Focused contracts passed 9/9, the full suite passed 909/909, TypeScript, Next type generation, lint, production build, and diff checks passed; lint retains only the two pre-existing PDF `<img>` warnings. OCR version/rules/preview/delegation checks passed without provider LLM review, and the existing authenticated Chrome session read-only pass observed the curated 10-customer/10-service/10-supplier baseline, zero quotations/invoices, settled detail routes, and EN/LTR plus AR/RTL dashboard states. UX is `IMPLEMENTED / PENDING CONTROLLER CLOSURE`; no commit or push was created.
 - **POST-G1 Task 3 real-document disposition:** `DEFERRED ACCEPTANCE CHECK — NOT AN IMPLEMENTATION BLOCKER` because the clean DEV/DEMO baseline contains zero quotations and invoices. Bind the check to Customer Document System / the owner's first manually-created quotation and invoice: verify preview/print does not show the workspace boot screen, uses contextual pending feedback only when perceptibly slow, does not flash when fast, prevents duplicate action, clears after preview/print, and preserves relevant EN/AR UI behavior.
 - **POST-G1 Task 3 owner-acceptance correction (8 August 2026):** The current unstaged correction moves Cancel Service out of Next Action into a separate localized Danger Zone while preserving the existing cancellation authority, guards, confirmation, pending, error, success, focus-return, and audit/business semantics. Customer, Service, Supplier, Invoice, and Quotation detail navigation now expose contextual i18n pending labels through the existing thresholded PendingLink/shared-transition path; the shared First/Previous/Next/Last pager applies an immediate same-tab duplicate-navigation guard, thresholded feedback, and settled cleanup. Authenticated read-only browser acceptance confirmed one-step normal-speed concurrent pager navigation, throttled multi-click pager navigation with contextual feedback and unlock after settlement, cancellation disclosure without mutation, and the Danger Zone in EN/LTR and AR/RTL. Focused contracts passed 7/7; the full suite passed 911/911; TypeScript, lint, production build, and diff checks passed. No commit or push was created, and real-document browser acceptance remains deferred.
+- **POST-G1 Task 4 — Customer Document System (9 August 2026):** The architecture is corrected in the current unstaged worktree from persisted per-document language ownership to one canonical quotation/invoice with selectable Arabic/English representations. Preview/print language is transient presentation state and independent of UI locale; AR/EN dictionaries, RTL/LTR, bidi-safe identifiers, customer-safe snapshots, seller snapshot terms, G1 financial semantics, and multi-page print behavior remain preserved. The previous unapplied `document_locale` migration draft is removed from this Task 4 diff and no schema/database change is applied. Real document browser/English/Arabic/RTL/mobile/visual/print acceptance remains pending; customer-facing bilingual field placement is deferred specifically to the Quotation Commercial Model Impact Check. Customer Document System is not fully closed and no commit or push was created.
 - **POST-G1 Task 2B evidence (8 August 2026):** After the completed mock/test reset, the authorized DEV/DEMO project `dpddrqjzqohexixgdqiq` received a deliberate database-seeded baseline: exactly 10 synthetic active customers, 10 synthetic active suppliers, and 10 synthetic `Inquiry` services mapped one-to-one to the customers. Customer numbers are `CUST-2026-0001` through `CUST-2026-0010`; Service numbers are `SVC-2026-0001` through `SVC-2026-0010`. Quotations, ABS rows/items, invoices, payments, supplier rate cards/bookings/allocations, projects/tasks, and audit logs remain at zero. `app_users=2`, `company_settings=1`, numbering implementation, schema/security state, and migration history were preserved; next customer/service numbers are `...0011`, while quotation/invoice/payment/SBK next numbers remain `...0001`. Authenticated seeded-baseline browser smoke passed across Dashboard, Customers, Services, Quotations, Invoices, and Suppliers; see `docs/governance/post-g1-data-hygiene-2026-08-08.md`.
 
 ## 1.4 Delivered Product / Workspace Baseline Before Remediation
@@ -720,7 +721,7 @@
 ### [x] I18N-P0-DECISIONS-LOCK-1
 - [x] Docs/spec-only P0 decision lock completed with no runtime code changes.
 - [x] Team Lead verdict recorded as APPROVED WITH CHANGES, and the approved changes were incorporated into the decision lock.
-- [x] Historical P0 wording selected single-language documents with explicit `document_locale`; the current owner direction supersedes that exclusivity for future documents. One authoritative Quotation or Invoice may later render in Arabic or English, a stored locale may only be a default, and side-by-side bilingual layout remains a separate decision. Permanent Western digits with explicit `numberingSystem: 'latn'` and the split status glossary remain preserved.
+- [x] Historical P0 wording selected single-language documents with explicit `document_locale`; the current owner direction supersedes that authority. POST-G1 Task 4 now uses one canonical Quotation or Invoice with transient Arabic/English representation selection. Permanent Western digits with explicit `numberingSystem: 'latn'` and the split status glossary remain preserved.
 - [x] Next step is Foundation-1 prompt drafting plus senior review, not runtime implementation.
 
 ### [x] I18N-RTL-FOUNDATION-1
@@ -729,7 +730,7 @@
 - [x] English-only typed dictionary skeletons were added for common, navigation, statuses, document types, and RBAC-sensitive namespaces; final Arabic wording remains unapproved.
 - [x] SQL draft planning for `app_users.locale` and `company_settings.default_locale` is recorded in `specs/004-i18n-rtl-foundation/sql-draft.md` and remains not applied / not a migration.
 - [x] Shared UI logical-direction refactor remains deferred to the later `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1`, `I18N-RTL-SHELL-1A`, and `I18N-RTL-SHELL-1B` planning sequence.
-- [x] Document/PDF language implementation, `document_locale` schema/runtime wiring, and Customer `preferred_language` remain deferred.
+- [x] Historical foundation scope deferred document/PDF implementation; POST-G1 Task 4 now provides transient AR/EN document representations. Permanent bilingual customer-content placement and Customer `preferred_language` remain deferred.
 - [x] No fake VAT, ZATCA, FATOORA, QR, XML, clearance, or cleared-status behavior was introduced.
 
 ### [x] I18N-RTL-SHARED-OVERLAYS-INVENTORY-1
@@ -774,7 +775,7 @@
 - [x] Recommended next task: `I18N-RTL-MODULE-TEXT-INVENTORY-1`.
 - [x] Arabic copy review is required before module runtime translation work begins.
 - [x] Recommended rollout order after inventory/copy review: Customers, Services, Quotations list/detail non-PDF surfaces, Invoices list non-PDF surfaces, Payments, Suppliers, then Settings/Admin later.
-- [x] Document/PDF language, `document_locale`, and Customer `preferred_language` remain deferred.
+- [x] Historical rollout scope deferred document/PDF language; POST-G1 Task 4 now provides transient AR/EN document representations. Permanent bilingual customer-content placement and Customer `preferred_language` remain deferred.
 - [x] VAT/ZATCA/FATOORA/QR/XML/clearance claims remain forbidden.
 - [x] Supplier/internal cost labels remain RBAC-sensitive.
 - [x] Service remains the locked operational core; Booking terminology still needs careful copy review.
@@ -931,7 +932,7 @@
 - [x] Recommended first runtime module after Arabic copy review remains Customers, then Services, then Quotations non-PDF.
 - [x] Services has the densest workflow/supplier-cost vocabulary and must stay carefully reviewed.
 - [x] Quotations/Invoices/PDF/document language remain separate; PDF/document language remains deferred.
-- [x] `document_locale` and Customer `preferred_language` remain deferred.
+- [x] This historical Services slice did not touch document output; POST-G1 Task 4 now owns transient AR/EN document representations, while permanent bilingual customer-content placement and Customer `preferred_language` remain deferred.
 - [x] VAT/ZATCA/FATOORA/QR/XML/clearance claims remain forbidden.
 - [x] Supplier/internal cost labels remain RBAC-sensitive.
 - [x] Service is the locked operational core; Booking is secondary terminology and still needs care.
@@ -1394,7 +1395,7 @@
 - `I18N-RTL-SHARED-OVERLAYS-INVENTORY-1` is now the required readonly prerequisite before shell RTL implementation.
 - `I18N-RTL-SHELL-1A` and `I18N-RTL-SHELL-1B` replace the previous single Shell-1 idea.
 - `src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx` remains explicitly forbidden for Shell-1A and Shell-1B because `Cancelled` is a non-linear terminal state.
-- Document/PDF language implementation, `document_locale`, and Customer `preferred_language` remain deferred to later reviewed tasks.
+- This historical i18n priority list deferred document/PDF language implementation and `document_locale`; POST-G1 Task 4 now records the corrected one-canonical-document/transient-representation status above. Permanent bilingual customer-content placement and Customer `preferred_language` remain deferred.
 - P1 decisions to confirm next: whether Booking remains a secondary Service label, Arabic rollout order by role, reuse of existing Company Settings Arabic/English company name fields, and whether Hijri calendar support stays deferred.
 
 ### Historical Immediate Next Priorities
@@ -1402,7 +1403,7 @@
 - `P2`: `I18N-RTL-SHELL-1A` for the shell/navigation logical-direction refactor across the approved shell files only.
 - `P3`: `I18N-RTL-SHELL-1B` for the shared list/data-component logical-direction refactor.
 - `P4`: `INVOICE-LIST-ACTIONS-POLISH-1` for view/print icon polish, list action review, and pagination/page-size/go-to-page review.
-- `P5`: `DOCUMENT-LANGUAGE-SNAPSHOT-1` for the later reviewed `document_locale` / snapshot-safe document language task.
+- `P5`: `DOCUMENT-LANGUAGE-SNAPSHOT-1` is historical and superseded by POST-G1 Task 4's transient representation architecture; permanent bilingual customer-content placement remains owned by the Quotation Commercial Model Impact Check.
 - `P6`: `GLOBAL-PENDING-SUPPLIER-ALLOCATION-FORMS-1` for the medium-risk pending UX migration on supplier allocation create/edit/delete forms.
 
 ### ✅ HUMAN-REFERENCE-DISPLAY-1

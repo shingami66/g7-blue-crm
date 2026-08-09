@@ -124,17 +124,22 @@ Authenticated seeded-baseline smoke used an existing DEV/DEMO Chrome session. Da
 
 #### D. Customer Document System
 
-- Preserve the Quotation, Deposit Invoice, and Final Invoice document tracks and the Arabic/English strategy: English-only, Arabic-only, bilingual AR+EN, or per-document language remain explicit options.
-- UI locale must not silently rewrite historical document language; document-language behavior must preserve snapshot/history integrity.
+- **Tracked status:** `ARCHITECTURE CORRECTED / CONTROLLER REVIEW` (9 August 2026).
+- One quotation/invoice remains one canonical business document; Arabic and English are selectable human-readable representations of that same record, never separate records, revisions, or financial authorities.
+- Preview/print language is transient presentation state (`?lang=ar|en`) and is independent of employee UI locale; it cannot mutate document data, snapshots, numbering, or invoice creation.
 - Preserve multi-page Quote/Invoice behavior, repeated compact headers/table headings, one document number across pages, and totals/settlement on the final page where appropriate.
 - Preserve customer-facing short descriptions versus internal operational details, PDF spacing/hierarchy polish, and semantically appropriate `Approved Service Scope Total` terminology.
+- Current implementation covers transient AR/EN preview/print selection, localized customer-safe PDF projections, direction-aware print CSS, snapshot seller terms, and preserved G1-safe quotation/deposit/final semantics. The previous unapplied `document_locale` migration draft is removed from this Task 4 diff; no schema/database change is required for print-language selection.
+- Customer-facing bilingual content is a required capability whose schema placement is deferred specifically to the immediately-next Quotation Commercial Model Impact Check. Real quotation/deposit/final documents, EN/AR/RTL/mobile visual review, and multi-page print/PDF acceptance remain pending; Customer Document System is not fully closed.
 
 #### E. Quotation Commercial Model Impact Check
 
 - Preserve Commercial Groups, Package pricing, Itemized pricing, mixed Package + Itemized pricing, customer-facing descriptions, and internal details remaining internal.
 - **Tracked status:** `IMPACT CHECK REQUIRED / IMPLEMENTATION NOT AUTHORIZED`.
+- **Required bilingual-content decision:** evaluate `customer_name_en`, `customer_name_ar`, `customer_description_en`, `customer_description_ar`, and `internal_details` at each surviving Commercial Group / Package / Item level before permanent schema or snapshot implementation.
 - Determine whether this direction is presentation/document-only and safe for a pre-G2 stabilization slice, or a deeper schema, quotation, ABS, or financial-authority change that must be scheduled deliberately without reopening G1 invariants.
 - No quotation commercial redesign or schema/financial implementation is authorized by this closeout.
+- Immediate sequence: controller review → resolve Group/Package/Item commercial model → resolve AR/EN customer-facing field placement → implement safe bilingual content/snapshot propagation → real final document acceptance → close Post-G1 gate → only then G2.
 
 After this gate closes, G2 (Payment Precision) may begin.
 
@@ -824,7 +829,7 @@ Historical Immediate Next Priorities:
    - Recommended first runtime module candidate after planning/copy review: Customers.
    - Service remains the locked operational core; Booking terminology still needs care.
    - Supplier/internal cost labels remain RBAC-sensitive during translation work.
-   - Document/PDF language, `document_locale`, and Customer `preferred_language` remain deferred.
+   - Historical rollout wording deferred document/PDF language; POST-G1 Task 4 now provides transient AR/EN document representations. Permanent bilingual customer-content placement and Customer `preferred_language` remain deferred.
 1. `P4` - `INVOICE-LIST-ACTIONS-POLISH-1`: view/print icon polish, list action review, and pagination/page-size/go-to-page review.
 1. `P8` - `DOCUMENT-FORM-LAYOUT-POLISH-1`: invoice/quotation form sections, line items, and totals panel polish.
 
@@ -2287,7 +2292,7 @@ Must verify:
 4. `ARABIC-COPY-REVIEW-1`
    - Final Arabic terminology remains unapproved.
 5. `DOCUMENT-LANGUAGE-SNAPSHOT-1`
-   - `document_locale` schema/runtime work remains deferred and must stay separate from Foundation-1.
+   - Historical priority superseded by the POST-G1 Customer Document System track above; the current implementation remains separate from Foundation-1 and uses transient representation language without a migration.
 6. `INVOICE-LIST-ACTIONS-POLISH-1`
    - View/Print icons, list action polish, pagination/page-size/go-to-page review.
 ## Quotations 1A Docs Sync

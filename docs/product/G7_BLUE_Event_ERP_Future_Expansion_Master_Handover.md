@@ -473,6 +473,21 @@ The team must not:
 | D51 | Layer 2 must not activate merely because ERP features exist. G7 BLUE must first have real operational use and proof, and the company-context, membership/isolation, historical ownership/backfill, numbering, migration/rollback, and commercial productization gates must be approved and tested. Exact proof thresholds remain a later owner decision. |
 | D52 | The two-layer model is an internal organization of this sole Expansion Master. It does not authorize a second or competing expansion master file. |
 
+### 6.3 DOCUMENT REPRESENTATION LANGUAGE INVARIANT
+
+This is a durable product architecture decision for the Customer Document System and all future financial/compliance expansion:
+
+1. Business document identity is language-neutral.
+2. One quotation or invoice may be rendered in Arabic or English.
+3. Output language never creates another financial document, revision, number, or settlement authority.
+4. Employee UI locale and customer-document output language are independent concerns.
+5. Financial, business, and compliance snapshots remain language-neutral canonical authority.
+6. Customer-facing content ultimately supports stored English and Arabic forms; internal details remain non-customer-facing.
+7. The schema location for bilingual commercial content is decided by the Quotation Commercial Model Impact Check at Commercial Group / Package / Item level.
+8. Future AI translation may produce only a staff-reviewed draft before explicit contractual use.
+9. Future ZATCA or government/compliance representation is separate from the human Arabic/English PDF language.
+10. Human-language selection is presentation state and must never mutate approved financial data.
+
 ### 6.2 Directional owner decisions
 
 These directions are confirmed, while implementation detail remains open.

@@ -157,9 +157,9 @@ test("15-16. PDF controls are UI-only; PDF body excluded", () => {
   assert.match(read(LIST_CLIENT), /window\.open\(`\/invoices\/\$\{invoice\.id\}\/pdf`/);
   assert.match(read(DETAIL), /\/invoices\/\$\{invoice\.id\}\/pdf/);
   assert.match(read(DETAIL), /printPdf|Print/);
-  // PDF route not localized by this task
-  assert.match(read(PDF), /Commercial Invoice|toLocaleString/);
-  assert.doesNotMatch(read(PDF), /getInvoicesDictionary|useLocale/);
+  // Customer PDF uses transient requested print language, not the invoices-list UI dictionary.
+  assert.match(read(PDF), /getDocumentDictionary|formatDocumentDate|formatDocumentAmount/);
+  assert.doesNotMatch(read(PDF), /getInvoicesDictionary|useLocale|getLocale/);
 });
 
 test("17-20. Issue action and no financial mutation changes; payment modal deferred", () => {
