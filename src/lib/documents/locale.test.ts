@@ -81,6 +81,31 @@ test("presentation formatting changes only labels, direction, and display format
   assert.match(formatDocumentDate("2026-08-09", "en"), /2026/);
 });
 
+test("customer-safe scope labels and structured identifiers preserve canonical values", () => {
+  const english = getDocumentDictionary("en");
+  const arabic = getDocumentDictionary("ar");
+
+  assert.equal(english.invoice.approvedBillingScopeTotal, "Approved Service Scope Total");
+  assert.equal(arabic.invoice.approvedBillingScopeTotal, "إجمالي نطاق الخدمة المعتمد");
+  assert.doesNotMatch(english.invoice.approvedBillingScopeTotal, /Approved Billing Scope/);
+  assert.doesNotMatch(arabic.invoice.approvedBillingScopeTotal, /نطاق الفوترة/);
+
+  const quotationSource = read(QUOTATION_PDF);
+  const invoiceSource = read(INVOICE_PDF);
+  const sellerIdentifierBoundary = /<span dir="ltr" className="document-bidi-number">\{seller\.entityUnifiedNumber\}<\/span>/;
+  const sellerTinBoundary = /<span dir="ltr" className="document-bidi-number">\{seller\.tin\}<\/span>/;
+
+  for (const source of [quotationSource, invoiceSource]) {
+    assert.match(source, sellerIdentifierBoundary);
+    assert.match(source, sellerTinBoundary);
+  }
+
+  assert.match(
+    quotationSource,
+    /<span dir="ltr" className="document-bidi-number">\{seller\.bank\.iban\}<\/span>/,
+  );
+});
+
 test("quotation and invoice PDFs select language transiently and never read persisted language authority", () => {
   for (const source of [read(QUOTATION_PDF), read(INVOICE_PDF)]) {
     assert.match(source, /searchParams/);

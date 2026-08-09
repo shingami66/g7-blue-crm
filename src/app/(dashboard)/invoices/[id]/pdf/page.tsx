@@ -459,12 +459,14 @@ export default async function InvoicePdfPage({
               <div className="mt-2 text-[12px]">
                 {seller.entityUnifiedNumber && (
                   <p>
-                    <span className="font-semibold text-on-surface">{dictionary.common.entityUnifiedNo}</span> {seller.entityUnifiedNumber}
+                    <span className="font-semibold text-on-surface">{dictionary.common.entityUnifiedNo}</span>{" "}
+                    <span dir="ltr" className="document-bidi-number">{seller.entityUnifiedNumber}</span>
                   </p>
                 )}
                 {seller.tin && (
                   <p>
-                    <span className="font-semibold text-on-surface">{dictionary.common.tin}</span> {seller.tin}
+                    <span className="font-semibold text-on-surface">{dictionary.common.tin}</span>{" "}
+                    <span dir="ltr" className="document-bidi-number">{seller.tin}</span>
                   </p>
                 )}
                 <p>

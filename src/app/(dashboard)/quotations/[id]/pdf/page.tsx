@@ -121,12 +121,14 @@ export default async function QuotationPdfPage({
             <div className="mt-2 text-[12px]">
               {seller.entityUnifiedNumber && (
                 <p>
-                  <span className="font-semibold text-on-surface">{dictionary.common.entityUnifiedNo}</span> {seller.entityUnifiedNumber}
+                  <span className="font-semibold text-on-surface">{dictionary.common.entityUnifiedNo}</span>{" "}
+                  <span dir="ltr" className="document-bidi-number">{seller.entityUnifiedNumber}</span>
                 </p>
               )}
               {seller.tin && (
                 <p>
-                  <span className="font-semibold text-on-surface">{dictionary.common.tin}</span> {seller.tin}
+                  <span className="font-semibold text-on-surface">{dictionary.common.tin}</span>{" "}
+                  <span dir="ltr" className="document-bidi-number">{seller.tin}</span>
                 </p>
               )}
               <p>
@@ -326,7 +328,8 @@ export default async function QuotationPdfPage({
               <span className="font-semibold text-on-surface">{dictionary.common.accountName}</span> {seller.bank.accountName}
             </p>
             <p>
-              <span className="font-semibold text-on-surface">{dictionary.common.iban}</span> {seller.bank.iban}
+              <span className="font-semibold text-on-surface">{dictionary.common.iban}</span>{" "}
+              <span dir="ltr" className="document-bidi-number">{seller.bank.iban}</span>
             </p>
           </div>
         </footer>
