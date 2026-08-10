@@ -7,7 +7,7 @@ description: Use before or after G7 BLUE CRM work involving Company Settings, Se
 
 Use this repo-local guard before planning, implementing, or reviewing G7 BLUE CRM work that can affect ERP/business logic, financial documents, VAT/ZATCA behavior, RBAC, backend data flow, or the G7 BLUE design system. This is not a generic coding-style skill.
 
-Always follow `AGENTS.md` first. Do not touch `.env.local`, expose secrets, use `git add .`, stage, commit, apply SQL, apply migrations automatically, edit already-applied migrations, or mix unrelated cleanup into feature phases.
+Always follow `AGENTS.md` first. Do not touch `.env.local`, expose secrets, use `git add .`, stage, commit, or apply SQL/migrations outside an explicitly owner-approved `SUPABASE_APPLY_ONLY` task. Under that mode, only the exact reviewed migration and already-approved bounded DEV/DEMO verification operations are allowed; do not edit already-applied migrations or mix unrelated cleanup into feature phases.
 
 ## Project Identity
 

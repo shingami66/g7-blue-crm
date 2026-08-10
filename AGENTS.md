@@ -163,13 +163,15 @@ Task prompts should include only task-specific scope, exceptions, expected state
 
 Database changes must follow:
 
-Inspect -> proposed SQL text -> review -> migration file -> review -> manual Supabase apply -> verification -> commit/push/PR/merge.
+Inspect -> proposed SQL text -> review -> migration file -> review -> explicit owner-approved `SUPABASE_APPLY_ONLY` DEV/DEMO apply -> verification -> commit/push/PR/merge.
 
 Never skip review gates for SQL, migrations, RLS, RPC, triggers, grants/revokes, or schema changes.
 
 - Keep reviewed migration SQL in `supabase/migrations/`.
 - Treat `supabase/schema.sql` as a schema reference file; do not assume it is the apply path for production changes.
-- Until an approved CLI workflow is introduced, manual SQL apply and admin-user seeding remain Supabase SQL Editor tasks after review and explicit approval.
+- Migration application must use the exact owner-approved `SUPABASE_APPLY_ONLY` workflow against an explicitly identified non-production target; production requires separate explicit authorization. Manual SQL Editor execution remains the fallback until an approved migration-aware agent/CLI workflow is available; do not force manual execution when approved tooling can safely apply the exact reviewed migration.
+- One explicit Mozfer owner approval covers the bounded DEV/DEMO sequence from preflight through final verification, including explicitly scoped verification fixtures and cleanup; no extra approval is needed between predictable in-scope steps, but material unexpected or out-of-scope conditions require HOLD and a new approval to continue.
+- Admin-user seeding remains a manual Supabase SQL Editor task after review and explicit approval.
 
 ## Quotation / RPC Lessons
 

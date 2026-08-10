@@ -12,11 +12,12 @@ Use this skill for any SQL, migration, RLS policy, RPC function, trigger, grant/
 - Inspect first.
 - Propose SQL text before creating a migration file.
 - Review proposed SQL before file creation.
-- Review migration files before manual apply.
-- Never execute SQL automatically.
-- Never use Supabase MCP `execute_sql`.
-- Never use Supabase MCP `apply_migration`.
-- Never apply migrations automatically.
+- Review migration files before any apply.
+- Outside `SUPABASE_APPLY_ONLY`, never execute SQL, apply migrations, or mutate a database.
+- Under an explicitly owner-approved `SUPABASE_APPLY_ONLY` task, an agent may use the repository-approved migration-aware Supabase mechanism for the exact reviewed migration and bounded verification scope.
+- For a correctly bounded DEV/DEMO task, one explicit Mozfer owner approval covers preflight -> exact reviewed migration apply -> post-apply verification -> explicitly scoped verification fixture creation/use -> explicitly scoped fixture cleanup -> final verification; no additional approval is required between predictable in-scope steps. HOLD, and require a new approval to continue, for a material unexpected condition or work outside the approved scope.
+- Do not use arbitrary SQL, broad pending-migration application, resets, or unrelated migration-history repair; any history repair requires observed drift and explicit task scope.
+- `SUPABASE_APPLY_ONLY` never authorizes Production, project switching, or unapproved destructive cleanup.
 - Never edit already-applied migrations.
 - Create new timestamped migrations only after review.
 - Preserve function signatures unless explicitly approved.
