@@ -212,6 +212,65 @@ UPDATE without narrow WHERE
 
 When in doubt, return HOLD.
 
+## Subagent Capacity and Independent Review Lifecycle
+
+This section governs independent review without changing the task-mode, owner-approval, one-writer, or Git/SQL boundaries elsewhere in this protocol.
+
+### A. Roles and authority
+
+* **Main**: owns orchestration, synthesis, evidence, and the final report; it is not a substitute reviewer.
+* **Worker**: performs bounded task work or investigation assigned by the main.
+* **Reviewer**: independently inspects the exact completed diff and reports findings only.
+* **Re-reviewer**: performs one bounded post-fix inspection of the exact final diff and reports findings only.
+* **Writer**: is the sole agent authorized to modify the assigned change scope. The main may be the writer only when the task explicitly authorizes it.
+
+### B. Worker budget
+
+* The project default is a maximum of four concurrent workers. This is a task-value budget, not a Codex session maximum.
+* Use zero workers for small deterministic work, one to two for narrow parallel investigation, and two to four only when independent work materially improves coverage or speed.
+* More than four workers requires explicit owner approval. Preserve capacity for an independent reviewer and, when required, one bounded re-reviewer.
+
+### C. One-writer rule
+
+* Exactly one writer may modify a given change scope. Workers are read-only unless the task explicitly makes one worker the sole writer for a separate, non-overlapping scope.
+* Reviewers and re-reviewers never write, fix, stage, commit, push, or apply database changes. Findings return to the writer for a separately authorized correction step.
+
+### D. Worker-close lifecycle
+
+The main must follow: `main -> spawn workers -> collect results -> synthesize -> explicitly close completed workers -> verify review capacity -> proceed to review`. Do not leave completed workers open while attempting a mandatory review.
+
+### E. Mandatory lifecycle
+
+For material source, test, SQL/migration, security, financial, or material governance work where the routed guard requires review, use this lifecycle:
+
+`PLAN/AUTHORIZATION -> IMPLEMENT -> VALIDATE -> CLOSE WORKERS -> OPEN CODE REVIEW DELEGATION -> reviewer findings only -> CLOSE REVIEWER -> writer fixes -> validate -> ONE bounded re-review -> CLOSE re-reviewer -> controller review -> COMMIT_ONLY -> PUSH_ONLY`.
+
+SQL remains separate: `controller review -> separately authorized DB apply -> independent DB verification`. A migration file, code review, commit, or push never authorizes database application.
+
+### F. Open Code Review delegation contract
+
+Use `OPEN CODE REVIEW DELEGATION MODE ONLY` for the delegated reviewer. The reviewer receives the exact scoped diff, is read-only, reports finding counts and findings only, and does not stage, commit, push, or apply anything. Do not use provider OCR, external endpoints, external models, external tokens, or `ocr llm test` for this delegation.
+
+### G. Self-review boundary
+
+Self-review may improve the writer's work, but self-review does not substitute for the independent review required by the applicable guard. Reports must state the actual review mechanism used; they must not relabel self-review as delegated review.
+
+### H. Thread-limit failure
+
+If dispatch fails with a capacity error such as `agent thread limit reached`, independent review is incomplete. Report the exact error, do not claim PASS or a completed review, do not substitute self-review, and do not commit, push, or apply database changes. Close completed threads, make at most the task-authorized retry, then return `TASK RESULT: HOLD`; the report body may describe the lifecycle as partial, incomplete, review pending, or controller decision required. Do not repeat retries.
+
+### I. Capacity reservation
+
+Keep active workers at or below four, close workers before dispatching the reviewer, close the reviewer before writer fixes and any re-review, and use no more than one re-reviewer. Do not create unnecessary concurrent threads.
+
+### J. When agents are warranted
+
+Agents are not mandatory for every task. Use them only when independent coverage is meaningful, the work saves time, and the authority boundary remains unambiguous. Small deterministic work may use zero workers, subject to any separately required independent review gate.
+
+### K. Required reporting
+
+Report the workers attempted, dispatched, collected, and closed; the actual review mechanism; reviewer success or failure; severity counts and findings; fixes and validation; re-review status; capacity state; and whether the lifecycle actually completed. Never claim a lifecycle step that did not occur.
+
 ## Strict Gates
 
 ### Plan Lock Gate

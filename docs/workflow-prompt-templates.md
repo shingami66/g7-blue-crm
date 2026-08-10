@@ -30,6 +30,46 @@ Use this checklist by reference in future prompts instead of pasting every rule 
 - Return `TASK RESULT: HOLD` on suspicious state, unexpected files, missing prerequisites, failed checks, or scope conflict.
 - Treat git state and command output as authority over prior reports.
 
+## Subagent Budget and Mandatory Review Template
+
+Use this block when a task benefits from workers or requires independent review:
+
+```text
+Subagent budget:
+- Maximum four concurrent workers unless the owner explicitly approves more.
+- Use fewer when workers provide no material benefit; preserve reviewer capacity.
+- Close completed worker threads before dispatching a reviewer.
+
+Authority:
+- Exactly one writer may modify the change scope.
+- Reviewer and re-reviewer are read-only and report findings only.
+
+Lifecycle when independent review is required:
+PLAN/AUTHORIZATION -> IMPLEMENT -> VALIDATE -> CLOSE WORKERS -> OPEN CODE REVIEW DELEGATION -> CLOSE REVIEWER -> WRITER FIXES -> VALIDATE -> ONE BOUNDED RE-REVIEW -> CLOSE RE-REVIEWER -> CONTROLLER -> COMMIT_ONLY -> PUSH_ONLY.
+
+Failure handling:
+- A review-capacity/thread-limit failure is incomplete review, not a pass.
+- Do not substitute self-review, claim pass, commit, push, or apply the database.
+- Report the exact error; stop after the task-authorized retry or request controller direction.
+```
+
+### Compact `MODE: REVIEW_ONLY` Template
+
+```text
+# TASK-ID
+MODE: REVIEW_ONLY
+
+Scope: Review exactly [paths/diff range].
+Rules: Read-only. Report BLOCKER/HIGH/MEDIUM/LOW counts and findings only.
+Forbidden: Fixes, staging, commit, push, and database apply.
+Review mechanism: OPEN CODE REVIEW DELEGATION MODE ONLY when delegated review is required.
+Final report:
+- TASK RESULT: PASS; REVIEW DISPOSITION: CLEAN.
+- TASK RESULT: PASS WITH WARN; REVIEW DISPOSITION: FINDINGS REMAIN.
+- TASK RESULT: HOLD; REVIEW DISPOSITION: INCOMPLETE with the exact capacity/error reason.
+- Use TASK RESULT: FAIL only where its canonical failure semantics apply.
+```
+
 ## Prompt Tiers
 
 ### Read-Only Status/Check

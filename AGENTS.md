@@ -96,6 +96,14 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - For Service status workflow changes, manually smoke test the guarded explicit actions on `/services/[id]`: Start Execution (`Deposit Paid` -> `In Progress`), Complete Service (`In Progress` -> `Completed`), and guarded Cancel (`Inquiry`/`Quoted`/`Approved` -> `Cancelled`). Ordinary Service edit must not expose arbitrary status selection; Completed may still permit a remaining Final Invoice.
 - For Payments module UI/read changes, manually smoke test `/payments` against live records and confirm the page still reflects `payments:read`-guarded data rather than mock rows.
 
+## Subagent Capacity and Mandatory Review
+
+- Preserve review capacity: do not fill the full Codex session worker capacity. The project default is a maximum of four concurrent workers, not a session-configuration value; use fewer or zero for small tasks.
+- Close completed worker threads before any mandatory independent review. Material source, test, SQL/migration, security, financial, and material governance changes must receive the applicable independent review gate.
+- Self-review does not substitute for an independent review. If worker/thread capacity prevents the review, the review is incomplete: do not claim PASS, commit, push, or apply database changes.
+- Use exactly one writer for a change scope. Reviewers and re-reviewers are read-only; findings return to the writer.
+- The authoritative lifecycle, delegation boundary, capacity-failure handling, and evidence contract are in `.agents/skills/g7-crm-agent-control/SKILL.md`.
+
 ## Graphify-First Navigation
 
 - Before broad file reads, check `docs/graphify-usage-guide.md` and current `graphify-out/` outputs or `graphify query` to identify candidate files.
