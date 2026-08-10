@@ -2,11 +2,11 @@
 ## Master Product Handover, Decision Register, Discovery Brief, and Rebaseline Report
 
 **Original report date:** 2 August 2026  
-**Latest decision sync:** 9 August 2026
-**Revision:** 0.13
+**Latest decision sync:** 10 August 2026
+**Revision:** 0.14
 **Owner:** Mozfer Mohamed Elhadi  
 **Product:** G7 BLUE CRM / Future Event ERP  
-**Document status:** Sole authoritative expansion reference, product decision register, and daily handover continuity record  
+**Document status:** Sole authoritative expansion reference, product decision register, strategic continuity record, and historical evidence ledger
 **Implementation authority:** This report records owner-approved expansion scope and sequencing, but it does not by itself authorize code changes, schema changes, migrations, SQL application, staging, commit, merge, or push. Implementation still requires a separate controlled owner-authorized task.
 
 > **Core strategic statement:** Build the G7 BLUE house for today's company, but do not pour a roof that prevents adding floors tomorrow.
@@ -24,13 +24,13 @@
 | Current system shape | Internal Service-centered CRM with commercial workflow, suppliers foundation, users, and RBAC |
 | Future product direction | Two-layer strategy: first build and prove a complete single-company Event ERP inside G7 BLUE; only after real operational proof, productize the proven system as a multi-company SaaS for other event companies |
 | Current implementation status | Goal 2A/2B/2C remains delivered current-product foundation. The G1-G12 remediation program is separate from expansion activation and takes precedence where required before broad Layer 1 work. The exact active Goal, Git state, database state, validation evidence, and next action are governed by current project tracking/controller evidence rather than frozen here. |
-| Post-G1 gate checkpoint (9 August 2026) | G1 Financial Lifecycle Authority, Cleanup & Rebaseline, DEV/DEMO Data Hygiene, UX/Loading Stabilization, and the Customer Document Architecture Correction are closed. The document correction is pushed at `93d3f132b3ff756f4c49904da8622e40babdaa18`. The Quotation Commercial Model Impact Check is complete as read-only analysis with a `PARTIAL` disposition: permanent hierarchy and bilingual-field design remains gated on Zainab field evidence. No commercial schema, migration, or implementation was performed. G2 remains blocked, not started, and is still Payment Precision. |
+| Historical Post-G1 checkpoint (9 August 2026) | At that dated checkpoint, G1 Financial Lifecycle Authority, Cleanup & Rebaseline, DEV/DEMO Data Hygiene, UX/Loading Stabilization, and the Customer Document Architecture Correction were closed; the document correction was pushed at `93d3f132b3ff756f4c49904da8622e40babdaa18`; the Quotation Commercial Model Impact Check was `PARTIAL`; and G2 was still blocked. **Historical evidence only:** this row must never be used to infer the current active Goal, Git state, database state, or remediation status. |
 | Original report repository baseline | `cdd888b4cbc495a69be0a2cccb1f1ba5a3aae48d`, aligned with `origin/main` when the 2 August report was prepared |
 | Current dated delivery baseline | Section 28K preserves the Goal 2B/2C historical closeout. Current Git, working-tree, remediation, test, migration, and next-action truth is owned by verified repository evidence plus the current controller handover/project tracking, not by this strategic Master. |
-| Feature activation | Supplier Rate Card Management V1 remains the first separately governed bounded expansion slice. Goal 2B/2C adds no new expansion activation; its approved local commit closeout does not imply merge, push, or OCR. |
-| Latest owner decision sync | 9 August 2026: the sole-master and two-layer rules remain locked. Quotation hierarchy is a field-validation-dependent commercial hypothesis, not a final schema. Tender/Bid Management is a future expansion module: discovery begins now, implementation is deferred, and Tender remains distinct from Direct Quotation while future Financial Proposal/BOQ may reuse central commercial and financial truth. |
+| Feature activation | Supplier Rate Card Management V1 remains the first separately governed bounded expansion slice. Its strategic scope remains bounded; current implementation, owner-acceptance, remediation, merge, and push status must be taken from the newest verified controller/repository evidence rather than inferred from historical snapshots in this Master. |
+| Latest owner decision sync | 10 August 2026: the sole-master and two-layer rules remain locked. Reporting truth is strengthened: Draft/non-issued/cancelled/voided customer invoices do not contribute to live billed financial totals; financial invoice periodization uses authoritative `issued_at`, not `created_at`; and customer activity reporting must follow transaction relationships rather than customer-master creation date. Customer payment/credit-control semantics, historical outstanding, Tender guarantees, commercial authorization evidence, and owned-resource scope are added as explicit discovery/design concerns without activating implementation. |
 | Current controlled-delivery snapshot | This Master deliberately does not freeze fast-changing Git/test/database truth. Use the newest verified controller/repository evidence for current execution state. This document owns strategic expansion direction, layer boundaries, decisions, and open questions. |
-| Field evidence still required | Zainab commercial/tender workflow evidence and anonymised real documents where permitted, wider Riyadh event-industry workflow evidence, event-industry accountant review, and later tax/compliance review |
+| Field evidence still required | Zainab commercial/tender workflow evidence and anonymised real documents where permitted; wider Riyadh event-industry workflow evidence; customer billing/payment-term and credit-control practice; Tender guarantee/security practice where applicable; owned-versus-rented resource evidence; event-industry accountant review; and later tax/compliance review |
 
 ### Source basis
 
@@ -53,6 +53,7 @@ This report consolidates:
 - The 5 August 2026 owner-authorized final Dashboard density and width polish task retaining Revision 0.9's independent-column architecture while correcting only the Dashboard frame width, obsolete Priority Work heading, and bounded Attention Needed preview.
 - The 7 August 2026 owner clarification that expansion is one strategic Master with two product layers: first the single-company internal G7 BLUE Event ERP, then a real-use proof gate, then later SaaS productization for other event companies.
 - The 9 August 2026 Post-G1 source-of-truth rebaseline: Customer Document Architecture Correction closed/pushed at `93d3f132`; Quotation Commercial Model Impact Check completed `PARTIAL` with Zainab field evidence required; Tender/Bid Management recorded as discover-now/build-later expansion with future in-system Technical Proposal, Financial Proposal/BOQ, and human-approved AI assistance.
+- The 10 August 2026 controller review of Reporting Truth and expansion readiness, including owner-confirmed invoice-status, invoice-period, and customer-activity semantics plus research-informed proposals for cash collection, historical receivables, customer payment terms/credit control, commercial authorization evidence, Tender guarantees, and owned-resource boundaries.
 
 
 ### 5 August 2026 revision summary
@@ -103,6 +104,20 @@ Revision 0.13 preserves the sole-master and two-layer architecture while recordi
 - Future Technical Proposal preparation should be supported in-system. Future Financial Proposal/BOQ must reuse central commercial, costing, accounting, and profitability truth where appropriate rather than creating a separate financial universe.
 - Future AI may assist requirement extraction, compliance matrices, missing-requirement detection, and proposal drafting only through `AI Draft -> Human Review -> Explicit Approval -> Official Proposal`.
 - No quotation hierarchy, bilingual commercial schema, Tender module, BOQ, accounting, AI feature, G2 work, migration, or database change is authorized by this documentation sync.
+
+### 10 August 2026 revision summary
+
+Revision 0.14 is a **master-integrity and future-financial-readiness revision**. It does not authorize code, schema, migrations, database changes, or a new expansion module.
+
+- Fast-changing delivery state is explicitly separated from strategic product truth. Dated Sections 28A-28M remain historical evidence and must not be used as current Goal/Git/database authority.
+- The stale Rate Card V1 status contradiction is removed: its strategic scope remains bounded, while current implementation/acceptance/remediation state belongs to verified controller/repository evidence.
+- Three owner-confirmed Reporting Truth decisions are locked: non-issued or invalidated invoices do not inflate billed totals; invoice financial periodization uses `issued_at`; and customer activity is driven by transaction relationships, not by when the customer master record was created.
+- The existing architecture already distinguishes Invoiced, Collected, Outstanding Receivable, credits, refunds, customer credit balance, and future Revenue Recognition. Revision 0.14 makes that separation explicit for reports.
+- **Controller recommendation, not yet an owner-locked accounting rule:** `Collected Cash` should be derived from valid Customer Payment records whose business payment date falls inside the selected period; historical `Outstanding as of period end` should be distinguished from today's current outstanding balance; plain `Revenue` should remain reserved for an accountant-approved recognition basis.
+- Customer-side receivables are expanded as a discovery/design domain: billing schedule, payment terms, due dates, instalments, collection status, credit exposure/limit, overdue controls, and authorized override behavior must remain distinct from Customer Credit Balance.
+- Customer commercial authorization evidence is added as an explicit discovery concern so Direct Quotation, contracts, customer POs, award letters, and Tender handoff can prove what authorized work or billing without forcing one document type on every customer.
+- Tender discovery is expanded to include bid/performance guarantees, validity, expiry, release/forfeiture, fees, and related security evidence **where applicable**; no percentage or mandatory rule is assumed without the relevant tender evidence.
+- Owned equipment/resource management is added as an explicit boundary decision. The product must not grow a warehouse/asset-management subsystem unless real G7 BLUE ownership and scheduling evidence justifies it.
 
 ---
 
@@ -316,7 +331,7 @@ It does not yet provide the full workflow for:
 
 ### 3.4A Approved bounded supplier expansion — Rate Card Management V1
 
-The existing supplier-rate-card foundation is real, but the accepted current baseline is read-only visibility plus use in rate-card-driven Allocation creation. Full Rate Card management has not yet been implemented or accepted.
+The existing supplier-rate-card foundation is real. Rate Card Management V1 was later implemented/committed as the bounded early expansion slice; owner acceptance and any remediation status are tracked by current controller/repository evidence. This subsection preserves the approved product boundary rather than freezing fast-changing delivery state.
 
 The owner-approved first bounded expansion slice is:
 
@@ -337,7 +352,7 @@ Not included in this slice:
 - Supplier invoices, payments, payables, actual costing, or margin.
 - A production-concurrency claim for application-layer overlap checks.
 
-Status as of 4 August 2026: **owner-approved for controlled implementation; not yet implemented, manually accepted, committed, merged, or pushed.**
+Historical status note: on 4 August 2026 this slice was only owner-approved for controlled implementation. That delivery-state sentence is superseded by later verified evidence and must not be treated as current status.
 
 ### 3.5 Current UI observations
 
@@ -493,8 +508,11 @@ The team must not:
 | D57 | The future Tender module should support in-system Technical Proposal preparation, authoring, and assembly using approved reusable company content and proposal-specific evidence. |
 | D58 | Future Tender Financial Proposal/BOQ pricing must reuse central commercial, costing, accounting, and profitability truth where appropriate and must not become an independent financial universe. |
 | D59 | Future AI tender assistance is draft-only. AI output requires human review and explicit approval before it becomes contractual submission content. |
+| D60 | Customer invoices contribute to live billed/invoiced financial reporting only after they cross the authoritative issue boundary. Draft and other non-issued states do not count; cancelled or voided documents do not remain live billed authority, and later financial effects must flow through the approved correction/credit lifecycle rather than silent history rewriting. |
+| D61 | Customer invoice financial periodization uses the authoritative invoice issue date (`issued_at`), not the record creation timestamp (`created_at`). Creation time remains operational/audit metadata rather than a fallback financial date. |
+| D62 | Customer master creation date is used for acquisition/new-customer metrics only. Customer financial and activity reporting resolves identity from the related transactions and periodizes by the relevant transaction date, so an older customer remains visible whenever they have activity in the selected period. |
 
-### 6.3 DOCUMENT REPRESENTATION LANGUAGE INVARIANT
+### 6.2 Document Representation Language Invariant
 
 This is a durable product architecture decision for the Customer Document System and all future financial/compliance expansion:
 
@@ -509,7 +527,7 @@ This is a durable product architecture decision for the Customer Document System
 9. Future ZATCA or government/compliance representation is separate from the human Arabic/English PDF language.
 10. Human-language selection is presentation state and must never mutate approved financial data.
 
-### 6.2 Directional owner decisions
+### 6.3 Directional owner decisions
 
 These directions are confirmed, while implementation detail remains open.
 
@@ -535,7 +553,7 @@ These directions are confirmed, while implementation detail remains open.
 | O18 | User access will combine role templates with per-user overrides and lifecycle controls. | Exact permission-precedence rules, session refresh/revocation, invitation expiry, and enterprise SSO timing. |
 | O19 | The operating workflow will be reviewed with the experienced Project Manager and an accountant familiar with event-company transactions before the accounting blueprint is locked. | Meeting date, sample documents, final policy sign-off, and release acceptance criteria. |
 
-### 6.3 Recommended proposals, not yet locked
+### 6.4 Recommended proposals, not yet locked
 
 The following are working recommendations only:
 
@@ -553,8 +571,15 @@ The following are working recommendations only:
 - Use proportional discount allocation across deposit and final invoices so that the sum of invoice discounts reconciles to the approved quotation discount; exact rounding remains open.
 - Preserve one quotation family row in the main list and expose prior revisions through a read-only history.
 - Keep customer-facing wording simple: Submit for Approval, Approve, Reject, Additional Invoice, Credit Adjustment, Refund, and Customer Credit; keep technical ABS terminology internal.
+- **Controller recommendation pending explicit owner lock:** define `Collected Cash` from valid Customer Payment records whose business payment date falls inside the selected period; never derive period cash collection from the current `invoice.amount_paid` value of invoices selected by issue period.
+- Distinguish **Current Outstanding Receivable** from **Outstanding Receivable as of a historical period end**. The first answers what customers owe now; the second reconstructs what they owed at a chosen cutoff from issued invoices, credits, refunds/adjustments, and payments effective by that date.
+- Reserve the plain `Revenue` label for an accountant-approved recognition basis. Until that policy is locked, management views should prefer explicit labels such as Invoiced/Billed, Collected Cash, Outstanding Receivable, and Net Approved Commercial Value.
+- Define customer billing schedule, payment terms, due dates, instalments, collection status, credit exposure/limit, overdue policy, and authorized override behavior as a future receivables/credit-control domain. Do not confuse this with Customer Credit Balance, which is value owed back to the customer or retained for future settlement.
+- Treat customer commercial authorization evidence as a reusable evidence concept: signed quotation, customer PO, contract, award letter, tender award, email/WhatsApp approval, or another approved proof may authorize work or billing according to policy; do not force one evidence type on every customer before field validation.
+- Expand Tender/Bid discovery to include bid/performance guarantees, tender fees, validity, expiry, extension, release/forfeiture, and responsible owner where applicable. Do not assume a universal percentage or mandatory guarantee outside the governing tender evidence.
+- Keep owned equipment/resource management evidence-gated. Do not build inventory, warehouse, serial/asset, maintenance, check-out/in, or vehicle-scheduling scope unless G7 BLUE's real owned-resource model justifies it.
 
-### 6.4 Explicit non-decisions
+### 6.5 Explicit non-decisions
 
 The discussion has not yet decided:
 
@@ -582,6 +607,12 @@ The discussion has not yet decided:
 - Invitation expiry, resend limits, work-email restrictions, scheduled reactivation, and enterprise SSO timing.
 - Final quotation hierarchy, package-inclusion behavior, customer-facing grouping, commercial approval behavior, and bilingual field placement pending Zainab field evidence.
 - Tender opportunity intake, kurrasah analysis, bid/no-bid ownership, proposal workflow, BOQ conventions, internal approvals, submission controls, and post-award handoff pending real tender evidence.
+- Final `Collected Cash` period contract and handling of reversed/refunded customer payments pending explicit owner lock and accountant review where accounting semantics are affected.
+- Exact definition and presentation of Current Outstanding versus historical Outstanding-as-of-period-end, including cutoff treatment for credits, refunds, reversals, and late postings.
+- Customer payment-term templates, due-date rules, instalment behavior, credit limits, overdue thresholds, collection holds, and override authority.
+- Which customer evidence is required to authorize work and/or billing in each path: approved quotation evidence, customer PO, contract, award letter, Tender award, or another accepted proof.
+- Tender/bid guarantee and security rules, including when required, amount source, validity/expiry, extension, release/forfeiture, fees, responsible role, and accounting treatment.
+- Whether G7 BLUE owns enough equipment, vehicles, or reusable resources to justify a dedicated owned-resource/asset-operations module; exact scope remains evidence-dependent.
 
 ---
 
@@ -605,6 +636,8 @@ The discussion has not yet decided:
 - Internal Approved Billing Scope or billing authority.
 - Customer Invoices.
 - Customer Payments.
+- Customer billing schedules, payment terms, due dates, instalments, collection status, and future credit-control rules.
+- Customer commercial authorization evidence such as approved quotation evidence, customer PO, contract, award letter, or Tender award where applicable.
 - Commercial Change Orders or amendments.
 - Customer credit notes, refunds, customer credit balances, and corrections.
 
@@ -619,6 +652,7 @@ The discussion has not yet decided:
 - Permits and documents.
 - Crew and daily labour.
 - Equipment and resource bookings.
+- Owned-equipment/resource operations only if field evidence later proves a real G7 BLUE need; supplier-rented resources remain distinct.
 - Incident management.
 - Operational handover and event close.
 
@@ -661,6 +695,7 @@ The discussion has not yet decided:
 - Supplier Payments.
 - Supplier advances and refundable deposits.
 - Accounts Receivable.
+- Customer ageing, due/overdue status, collection controls, and credit exposure when separately approved.
 - Accounts Payable.
 - Bank and Cash.
 - Bank Reconciliation.
@@ -1063,6 +1098,60 @@ It must then separately show:
 - Revenue-recognition basis, once approved by the accountant.
 
 This managerial commercial view does not by itself decide statutory revenue recognition.
+
+### 12.13A Reporting Truth Contract
+
+Reporting must preserve separate business truths rather than forcing one number to answer several questions.
+
+**Owner-locked current reporting rules:**
+
+1. **Billed / Invoiced:** a customer invoice may contribute only after the authoritative issue boundary. Draft/non-issued documents do not count; cancelled or voided documents do not remain live billed authority.
+2. **Invoice financial period:** use authoritative `issued_at`. Do not silently fall back to `created_at` for financial totals.
+3. **Customer acquisition versus activity:** `customer.created_at` answers when the customer master was created. It must not hide an older customer's invoices, payments, balances, or other period activity. Customer identity is resolved through the transaction relationship.
+4. **Riyadh calendar semantics:** current Business Year semantics remain based on the approved Riyadh calendar boundary for the surfaces that consume Business Year.
+
+**Existing architectural separations that must remain true:**
+
+- Customer Invoice and Customer Payment are separate records.
+- Amount invoiced, Amount collected, Outstanding Receivable, Customer Credits, Refunds, Customer Credit Balance, and future Revenue Recognition are separate concepts.
+- Profit is not cash, and customer cash received is not automatically recognized revenue.
+
+**Controller recommendation pending explicit owner lock:**
+
+- **Collected Cash for a selected period** should equal valid customer-payment amounts whose business payment date falls inside that period. A later payment against an older invoice belongs to the cash-collection period in which the payment occurred; `invoice.amount_paid` remains useful as a current settlement summary but must not be used as the period-cash source when invoices are selected by issue date.
+- **Current Outstanding Receivable** means the balance customers owe now.
+- **Outstanding Receivable as of period end** means the balance customers owed at a historical cutoff, reconstructed from issued billing authority plus credits/adjustments and settlements effective by that cutoff. It must not simply reuse today's balance.
+- **Due / Overdue** should be derived from approved payment-term and due-date semantics rather than invoice creation time.
+- The unqualified label **Revenue** should remain reserved for the accountant-approved revenue-recognition policy. Before that lock, use explicit managerial labels such as Invoiced/Billed, Collected Cash, Outstanding Receivable, and Net Approved Commercial Value.
+
+### 12.13B Customer Billing, Payment Terms, and Credit-Control Boundary
+
+The future customer receivables model should distinguish five concepts:
+
+1. **Billing schedule / invoice milestones:** when G7 BLUE is allowed or expected to issue invoices, for example deposit, progress/partial, or final billing.
+2. **Payment terms:** when an issued invoice becomes due, for example immediate payment, a fixed due date, or approved credit days.
+3. **Settlement / payment:** the actual money received, including partial and final payments, recorded independently from the invoice.
+4. **Customer credit policy:** the maximum approved receivable exposure, overdue tolerance, collection hold, or authorized override that controls whether further work, approval, or billing may proceed.
+5. **Customer Credit Balance:** value owed back to the customer or intentionally retained for approved future settlement after an overpayment, reduction, or credit. This is **not** the same as giving the customer payment terms or a credit limit.
+
+Future design may include payment-term templates, invoice due dates, instalments, ageing buckets, collection status, credit limits, overdue thresholds, warning/hold behavior, and authorized overrides. Exact policy is open and must be validated with G7 BLUE practice and an event-company accountant before broad financial automation.
+
+The system must not infer revenue from a credit sale or from cash timing. A customer may owe G7 BLUE money while the event is profitable, and G7 BLUE may hold customer cash before the corresponding revenue is earned.
+
+### 12.13C Customer Commercial Authorization Evidence
+
+The system should preserve evidence of the event that authorized work or billing without forcing one universal document type on every customer.
+
+Possible evidence, subject to field validation and policy, includes:
+
+- approved quotation confirmation;
+- signed quotation or acceptance document;
+- customer Purchase Order / reference;
+- customer contract;
+- award letter or Tender award;
+- approved email, WhatsApp, phone, in-person, or other recorded confirmation already permitted by the commercial policy.
+
+The evidence record should identify source/type, reference, date, attachment or link where available, actor who recorded it, and the Service/Quotation/Tender it authorizes. Exact mandatory evidence by customer type, value, Tender path, and risk remains open.
 
 ### 12.14 Discount lifecycle
 
@@ -2157,10 +2246,12 @@ A future Reports Center may group reports by domain.
 
 ### 26.1 Management
 
-- Revenue.
-- Invoiced.
-- Collected.
-- Outstanding customer balance.
+- Revenue, only after an accountant-approved recognition basis exists.
+- Invoiced / Billed.
+- Collected Cash.
+- Current Outstanding Receivable.
+- Historical Outstanding Receivable as of period end when supported.
+- Due and Overdue Receivable / Customer Ageing.
 - Company Expenses.
 - Direct Event Cost.
 - Expected and Actual Margin.
@@ -2218,6 +2309,19 @@ A future Reports Center may group reports by domain.
 - Bank reconciliation.
 
 Reports must use the same underlying financial truth as operational pages and dashboards.
+
+### 26.6 Reporting truth and time semantics
+
+The Reports Center must make the basis of every metric visible enough that management can understand what the number means.
+
+- **Invoiced / Billed** answers what customer invoices crossed the issue boundary in the selected period.
+- **Collected Cash** is recommended to answer what valid customer payments occurred in the selected period by business payment date; this exact contract remains pending explicit owner lock.
+- **Current Outstanding Receivable** answers what customers owe now.
+- **Outstanding as of period end** answers what customers owed at a historical cutoff and requires an as-of calculation rather than today's balance.
+- **New Customers** may use customer-master creation date; customer sales/payment/balance rankings must use transaction activity and must not exclude older customers merely because they were created before the selected period.
+- **Revenue** is not a synonym for invoice total or cash received. Its final recognition basis remains accountant-dependent.
+- Period boundaries use the approved Riyadh calendar semantics where Business Year applies.
+- Permission restrictions must never be rendered as fake zero financial values. If a metric is unavailable because the user lacks authority, the UI must present an unavailable/hidden state rather than implying a true zero.
 
 ---
 
@@ -2308,6 +2412,7 @@ This sequence remains a working roadmap hypothesis. Revision 0.12 adds an explic
 - Prepare flexible role-template and per-user permission matrix.
 - Prepare user invitation, suspension, archival, deletion, and activity-audit blueprint.
 - Prepare customer commercial-change blueprint covering discounts, quotation revisions, Change Orders, credit notes, refunds, and customer credit.
+- Prepare Reporting Truth and customer receivables blueprint covering billed/invoiced, collected cash, current versus historical outstanding, payment terms, due dates, ageing, credit-control boundaries, and customer commercial authorization evidence.
 - Collect Zainab field evidence for itemized pricing, package pricing and inclusions, mixed package/item pricing, customer-facing grouping, detail level, discounts, approvals, supplier commitments, and post-approval change behavior before locking quotation hierarchy.
 - Begin Tender/Bid discovery through real opportunity, kurrasah, Technical Proposal, Financial Proposal/BOQ, compliance, approval, submission, award/loss, and post-award handoff evidence; do not implement the module in Phase 0.
 - Prepare accounting blueprint.
@@ -2353,6 +2458,7 @@ Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not r
 - Accounting periods.
 - Bank and Cash foundation.
 - Core receivable and payable postings.
+- Customer due-date, ageing, and receivable-balance foundation aligned with approved payment-term semantics.
 - Audit trail.
 - Net commercial revenue bridge into event profitability.
 
@@ -2425,6 +2531,7 @@ Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not r
 - Sales dashboard.
 - Personal dashboards.
 - Reports Center.
+- Cash collection, ageing, and historical outstanding reporting using one shared financial truth.
 - Financial statements and exports.
 
 ### Internal Proof Gate — required before Layer 2
@@ -2449,6 +2556,12 @@ Only after the internal proof gate and separate owner authorization:
 
 ---
 
+
+### Historical delivery evidence boundary — Sections 28A through 28M
+
+Sections 28A-28M preserve dated controller and delivery evidence for lineage. **They are historical snapshots, not current execution authority.** Any statement inside them about an active Goal, blocked/unblocked state, HEAD, worktree, test count, migration status, or implementation state is true only for its dated checkpoint unless separately reconfirmed by newer verified repository/controller evidence.
+
+Agents must never select a stale sentence from these sections to override the top-level strategic decision register or the newest controller/repository truth.
 
 ## 28A. Dated Current-Delivery Sync — 3 August 2026
 
@@ -3111,7 +3224,7 @@ This architecture sync is a product/document decision only. It does not authoriz
 - Customer Document Architecture Correction is closed and pushed at `93d3f132b3ff756f4c49904da8622e40babdaa18`.
 - One quotation or invoice remains one canonical business document with selectable Arabic and English representations; no permanent `document_locale` authority exists.
 - The Quotation Commercial Model Impact Check is complete as read-only analysis with a `PARTIAL` disposition. No schema, migration, implementation, or financial-authority change was performed.
-- G2 remains blocked until the full Post-G1 field-evidence gate is closed.
+- **Historical 9 August state only:** at this checkpoint G2 remained blocked until the then-current Post-G1 field-evidence gate. This must not be used to infer G2 or later Goal status after 9 August.
 
 ### 28M.2 Field-validation-dependent commercial model hypothesis
 
@@ -3196,7 +3309,7 @@ AI must not autonomously create contractual submission content, approve a bid, c
 - **Discover now / build later:** Tender/Bid Management.
 - **Later specialist validation:** accounting expansion with an event-company accountant.
 - **Later:** multi-company SaaS after the internal proof gates.
-- **Blocked:** G2 until the full Post-G1 gate closes.
+- **Historical 9 August note:** G2 was blocked at this checkpoint; later Goal status belongs to newer controller/repository evidence.
 
 No feature, schema, migration, database, AI, Tender, accounting, or G2 implementation is authorized by Section 28M.
 
@@ -3268,6 +3381,7 @@ Rate Card V1 implementation is committed through `9115d3e`; owner acceptance rem
 - Crew and labour sourcing.
 - Setup and teardown controls.
 - Common incidents and failure points.
+- Whether G7 BLUE owns enough reusable equipment, vehicles, or other resources to require internal availability, reservation, check-out/in, maintenance, damage, or asset-history workflows; otherwise keep the operating model supplier-heavy.
 
 ### 30.3 Expenses and finance
 
@@ -3281,6 +3395,9 @@ Rate Card V1 implementation is committed through `9115d3e`; owner acceptance rem
 - Event financial-close rule.
 - Late supplier invoice handling.
 - Bank-reconciliation method.
+- Final `Collected Cash` period definition, including reversal/refund treatment.
+- Current Outstanding versus historical Outstanding-as-of-period-end calculation and presentation.
+- Customer payment-term templates, due-date rules, ageing buckets, credit limits/exposure, overdue thresholds, holds, and override authority.
 
 ### 30.4 Product and platform
 
@@ -3305,6 +3422,8 @@ Rate Card V1 implementation is committed through `9115d3e`; owner acceptance rem
 - Credit-note and refund workflow.
 - Customer credit-balance policy and expiry.
 - Treatment of partially delivered or cancelled events.
+- Customer commercial authorization evidence by path and risk: approved quotation evidence, customer PO/reference, contract, award letter, Tender award, or other accepted proof.
+- Whether payment terms/credit policy is set at customer, quotation/contract, invoice, or a controlled combination with immutable invoice snapshots.
 - Revenue recognition and event-close/reopen policy.
 - Required Saudi accounting terminology before VAT activation.
 
@@ -3330,6 +3449,7 @@ Rate Card V1 implementation is committed through `9115d3e`; owner acceptance rem
 - Tender opportunity sources, including Etimad, direct invitation, and other channels.
 - Who reviews the kurrasah, decides bid/no-bid, authors Technical Proposal, prepares Financial Proposal/BOQ, and approves submission.
 - Requirement, compliance, clarification/addenda, version, supporting-document, deadline, submission, award/loss, and post-award handoff practice.
+- Bid/performance guarantee or other security requirements where applicable: trigger, amount source, issuing party, validity/expiry, extension, release/forfeiture, fees, responsible owner, and post-award handoff/accounting treatment.
 
 ---
 
@@ -3387,7 +3507,11 @@ Use real past events and anonymised documents where permitted rather than asking
 - itemized, package, package-inclusion, mixed-price, grouping, detail-level, discount, approval, supplier-commitment, and post-client-approval change practice;
 - Tender opportunity origin, document receipt/review, kurrasah analysis, bid/no-bid, Technical Proposal, Financial Proposal/BOQ, supplier-cost collection, internal approvals, supporting documents, clarifications/addenda, version management, submission, award/loss, and Contract/Event handoff;
 - which steps vary by customer, tender authority, event type, value, and delivery risk;
-- which documents prove each decision and which roles create, review, approve, submit, and own the post-award handoff.
+- which documents prove each decision and which roles create, review, approve, submit, and own the post-award handoff;
+- where applicable, how bid/performance guarantees or other Tender securities are requested, approved, issued, extended, released, forfeited, and accounted for;
+- what customer PO, contract, award letter, or other evidence actually authorizes G7 BLUE to start work or issue billing;
+- how customer payment terms, credit days/limits, late payment, partial payment, and collection escalation work in real event-company practice;
+- whether G7 BLUE owns enough equipment/resources to justify internal asset/resource scheduling or remains primarily supplier-rental driven.
 
 ---
 
@@ -3416,6 +3540,10 @@ The interview should ideally produce:
 19. One real tender journey from opportunity receipt to award/loss or submission outcome.
 20. The Technical Proposal, Financial Proposal/BOQ, compliance, approval, and submission ownership map.
 21. The repeated tender problems that the future module must solve.
+22. Real customer billing/payment terms, due-date, partial-payment, overdue, credit-limit/exposure, and collection-escalation practice.
+23. The evidence that authorizes work and billing for direct customers versus Tender/contract customers.
+24. Tender guarantee/security practice where applicable, including validity, extension, release/forfeiture, and fees.
+25. A clear owned-versus-rented equipment/resource picture so the product does not invent an unnecessary inventory/asset subsystem.
 
 ---
 
@@ -3432,6 +3560,10 @@ Only with clear permission and removal of confidential data:
 - Financial Proposal / BOQ.
 - Compliance or requirements matrix.
 - Tender submission checklist or package index.
+- Bid/performance guarantee or security request/record where applicable.
+- Customer Purchase Order, contract, award letter, or other commercial authorization evidence where permitted.
+- Customer statement, ageing report, payment-term example, or collection follow-up example where permitted.
+- Owned equipment/resource list or scheduling sheet only if G7 BLUE actually manages owned resources.
 - Venue quotation.
 - Supplier quotation.
 - Quote comparison sheet.
@@ -3469,6 +3601,11 @@ No document should be photographed or copied without consent.
 | Role leakage | Sensitive cost and margin exposure | Permission-safe queries, server checks, RLS, and masked fields. |
 | Uncontrolled financial edits | Audit and accounting failure | Lifecycle corrections, immutable history, and period close. |
 | Different profit formulas across pages | Management confusion | One cost and accounting source of truth. |
+| Mixing invoice, payment, receivable, and revenue time semantics | Historical reports change meaning after later payments; management sees false cash or revenue | Keep Billed, Collected Cash, Outstanding, and Revenue Recognition separate and define each period basis explicitly. |
+| Undefined customer payment terms and credit control | Ageing, overdue, collections, and future credit decisions become inconsistent | Define due-date/payment-term/credit policy before automating customer credit or collection holds. |
+| Missing customer authorization evidence | Work or billing may proceed without durable proof of the customer's commercial commitment | Preserve a flexible evidence concept and validate required proof by customer/Tender path and risk. |
+| Tender guarantees omitted from the future domain | Bid security, expiry, fees, release, or forfeiture can fall outside operational and financial control | Discover guarantee/security practice where applicable before locking Tender workflow or accounting. |
+| Premature owned-resource/inventory module | Large complexity with little value if G7 BLUE remains supplier-heavy | Decide owned-versus-rented resource boundary from real asset and scheduling evidence before building warehouse/asset operations. |
 | Building UI before design system | Repeated redesign loops | Create ERP design contract and templates first. |
 
 ---
@@ -3476,7 +3613,7 @@ No document should be photographed or copied without consent.
 ## 35. Expansion-Side Next Steps and Evidence Queue
 These items govern expansion discovery/planning only. Current implementation/remediation execution order is controlled by the latest controller handover, `docs/project-status.md`, `docs/project-roadmap.md`, and verified repository evidence. Do not use this section to bypass an active remediation Goal.
 
-1. Use Revision 0.13 of this file as the sole authoritative expansion reference; do not create a competing master handover.
+1. Use Revision 0.14 of this file as the sole authoritative expansion reference; do not create a competing master handover.
 2. Keep the current G1-G12 remediation program separate from Layer 1 activation. Finish the required current-product safety/reliability gates before allowing broad new ERP scope to overtake them.
 3. Keep Supplier Rate Card Management V1 classified as the bounded early expansion slice: implemented/committed, owner acceptance pending, G9 remediation open; do not treat it as activation of procurement, supplier accounting, Actual Cost, or Margin.
 4. Complete or refresh Phase 0 evidence before locking major Layer 1 workflows: event-industry interviews, real-document sampling where permitted, Domain Map, Sidebar Map, permission blueprint, and design baseline.
@@ -3488,6 +3625,10 @@ These items govern expansion discovery/planning only. Current implementation/rem
 10. Any item promoted from deferred/open to approved scope must update this Master before or alongside the separately authorized implementation task.
 11. Complete Zainab quotation-commercial field discovery before locking Group/Package/Item/Included Component hierarchy or bilingual schema placement.
 12. Begin Tender/Bid discovery now through real workflows and anonymised documents where permitted, but do not implement Tender, Technical Proposal, Financial Proposal/BOQ, AI assistance, or submission workflow without a separate approved blueprint and task.
+13. Carry the Reporting Truth Contract into current reporting remediation: preserve the locked invoice-status, invoice-period, and customer-activity semantics; obtain explicit owner lock before promoting the recommended Collected Cash and historical-outstanding contracts where still open.
+14. Add customer billing/payment terms, due dates, receivable ageing, credit-control/exposure, and commercial authorization evidence to Phase 0 field/accountant discovery before building broad Accounts Receivable automation.
+15. Expand Tender discovery to guarantees/securities where applicable, but do not assume universal percentages, forms, or mandatory behavior without governing tender evidence.
+16. Resolve the owned-versus-rented resource boundary before adding inventory, warehouse, asset, maintenance, or vehicle-scheduling scope.
 
 ---
 
@@ -3498,6 +3639,7 @@ These items govern expansion discovery/planning only. Current implementation/rem
 |---|---|
 | Accounts Payable | Money G7 BLUE owes suppliers or other payees. |
 | Accounts Receivable | Money customers owe G7 BLUE. |
+| Billing Schedule | The approved timing or milestones that determine when customer invoices may be issued; separate from when an issued invoice becomes due. |
 | Actual Cost | Accepted cost supported by bills, direct expenses, labour, or adjustments. |
 | Advance | Money paid before final invoice settlement. |
 | Balance Sheet | What the company owns, owes, and the owner's remaining interest at a date. |
@@ -3507,13 +3649,16 @@ These items govern expansion discovery/planning only. Current implementation/rem
 | Committed Cost | Amount formally agreed through an approved PO, contract, or equivalent. |
 | Change Order | An approved commercial change that adds, removes, or changes scope after the original quotation was approved. |
 | Credit Note | A document reducing a previously billed amount. |
-| Customer Credit Balance | Value owed to a customer and retained for an approved future settlement instead of an immediate refund. |
+| Customer Credit Balance | Value owed to a customer and retained for an approved future settlement instead of an immediate refund; not the same as allowing the customer to pay later. |
+| Customer Credit Limit / Exposure | A future credit-control boundary describing how much receivable risk the company permits for a customer before warning, hold, or authorized override. Exact policy remains open. |
+| Customer Commercial Authorization Evidence | Recorded proof that the customer authorized work or billing, such as approved quotation evidence, customer PO, contract, award letter, Tender award, or another approved source. |
 | Commercial Discount | An approved reduction from the gross customer price that reduces net commercial revenue. |
 | Direct Event Expense | A real expense caused by one Service. |
 | Double-entry | Accounting where every entry has equal debit and credit totals. |
 | Estimated Cost | Expected cost before formal commitment. |
 | Event Margin | Event revenue less direct event cost. |
 | General Ledger | Transactions grouped by accounting account. |
+| Invoice Due Date | The date an issued customer invoice becomes payable according to the approved payment terms. |
 | Gross Profit | Total event revenue less total direct event cost. |
 | Incident Report | Evidence and workflow record for an operational incident. |
 | Internal Billing Authority | The hidden approved commercial snapshot that controls what may be invoiced for a Service. |
@@ -3521,6 +3666,7 @@ These items govern expansion discovery/planning only. Current implementation/rem
 | Net Profit | Gross Profit less company overhead and other expenses. |
 | Outstanding Cost | Accepted cost not yet paid. |
 | Paid Cost | Amount already settled. |
+| Payment Terms | The agreed rule that determines when and how an issued invoice is due, such as immediate, fixed date, approved credit days, or instalments. |
 | Petty Cash | Controlled cash for small and urgent expenses. |
 | Profit and Loss | Revenue, expenses, and profit over a period. |
 | Quotation Revision | An immutable version inside one quotation family, used to preserve prior approved commercial history. |
@@ -3531,6 +3677,7 @@ These items govern expansion discovery/planning only. Current implementation/rem
 | Service Receipt | Evidence that supplier work or equipment was delivered and accepted. |
 | Supplier Booking | Operational reservation of supplier capacity or date. |
 | Supplier Quotation | Supplier's offered scope, price, and terms. |
+| Tender Guarantee / Security | A bid, performance, or other security required by a specific Tender or contract where applicable; exact type, amount, validity, release, and accounting treatment come from governing evidence. |
 | Trial Balance | Account-balance report used to verify debit/credit equality. |
 | Vendor Bill | Supplier invoice sent to G7 BLUE. |
 
@@ -3741,6 +3888,28 @@ These items govern expansion discovery/planning only. Current implementation/rem
 160. Which user actions must remain visible after the employee leaves?
 161. What anonymised examples of credit notes, refunds, change approvals, discount approvals, or close reports can be reviewed?
 
+## B15. Customer receivables, payment terms, credit, and authorization evidence
+
+162. For a normal event customer, when are invoices usually issued: deposit, milestones, before event, after event, or another schedule?
+163. After an invoice is issued, when is payment normally due? Are there common immediate, 15-day, 30-day, 60-day, or customer-specific terms?
+164. Are partial payments or instalments common, and how are they followed up?
+165. Does G7 BLUE or similar event companies give some customers an approved credit limit or maximum outstanding exposure?
+166. What happens when a customer is overdue: warning only, collection follow-up, stop new work, stop new invoices, management override, or another rule?
+167. Who may approve an exception for an overdue or over-limit customer?
+168. What evidence proves that a direct customer authorized G7 BLUE to start work or bill: approved quotation, signed quotation, customer PO, contract, email/WhatsApp approval, or something else?
+169. Does the required authorization evidence change for government, enterprise, agency, or repeat-credit customers?
+170. When management asks how much customers owed at the end of a past month, how is that historical balance currently reconstructed or reported?
+
+## B16. Tender guarantees and owned-resource boundary
+
+171. In the Tenders you handle, when are bid, performance, or other guarantees/securities required, and what document states the requirement?
+172. Who arranges, approves, records, extends, releases, or follows up those guarantees?
+173. How are guarantee expiry, fees, release, or forfeiture tracked today?
+174. Does the guarantee remain linked to the Tender, Contract, Service/Event, finance records, or several of them?
+175. Which equipment or vehicles does G7 BLUE normally own versus rent from suppliers?
+176. Do owned resources currently create real scheduling conflicts, check-out/check-in work, maintenance, damage, serial tracking, or availability problems?
+177. If owned-resource management is not a repeated pain point, should the ERP deliberately remain supplier-heavy instead of adding inventory/warehouse complexity?
+
 <!--PAGEBREAK-->
 
 # Appendix C - Next Chat Bootstrap
@@ -3756,7 +3925,7 @@ Preserve four categories:
 3. Recommended proposals that are not approved facts.
 4. Open questions awaiting field, accounting, tax, HR, or technical evidence.
 
-The current system continues normal controlled delivery in parallel. Do not stop current work. G1 and the closed Post-G1 foundation are preserved; Customer Document Architecture Correction is pushed at `93d3f132`; the Quotation Commercial Model is field-evidence-gated; G2 remains blocked. Supplier Rate Card Management V1 is the only currently approved bounded expansion slice; implementation is committed through `9115d3e`, owner acceptance remains pending, and G9 remediation remains open.
+The current system continues normal controlled delivery in parallel. Do not stop current work. **Do not infer the active Goal, Git state, database state, test state, or remediation status from dated Sections 28A-28M.** Resolve current execution truth from the newest verified controller handover, project tracking, and repository evidence. Supplier Rate Card Management V1 remains the first bounded expansion slice; its strategic scope is recorded here while current delivery/acceptance/remediation state is verified elsewhere.
 
 The near-term product is an internal G7 BLUE system. The long-term product direction is a specialist Event ERP SaaS for event companies. Multi-company and ZATCA are future activations, but new architecture must not block them.
 
@@ -3764,7 +3933,7 @@ The next discovery dependencies are Zainab field evidence on real quotation/pack
 
 Always explain accounting and procurement terms in plain language. Do not present assumptions as Saudi event-industry facts. Ask Mozfer one bounded product decision at a time.
 
-Locked owner decisions through 9 August include:
+Locked owner decisions through 10 August include:
 - ABS becomes an internal automatic billing authority after authorized quotation approval.
 - Discounts must remain traceable through quotations, invoices, event profit, and company reporting.
 - Issued invoices are immutable; later increases, reductions, credits, refunds, and customer balances use linked records.
@@ -3783,8 +3952,11 @@ Locked owner decisions through 9 August include:
 - Commercial Group / Package / Item / Included Component is a field-validation-dependent hypothesis, not a final schema; Zainab evidence is required before design lock.
 - Tender/Bid Management is a future expansion module: discover now, build later, and keep it distinct from Direct Quotation.
 - Future Technical Proposal authoring is in-system; Financial Proposal/BOQ reuses central commercial and financial truth; AI assistance remains draft-only until human review and explicit approval.
+- Draft/non-issued/cancelled/voided customer invoices do not contribute to live billed financial totals; issued invoice periodization uses authoritative `issued_at`, not `created_at`.
+- Customer acquisition metrics may use customer creation date, but customer financial/activity reporting follows transaction relationships and relevant transaction dates so older customers remain visible when active.
+- `Collected Cash` by payment date, historical Outstanding-as-of, customer payment terms/credit control, commercial authorization evidence, Tender guarantees, and owned-resource scope are documented as recommendations/open design concerns where not explicitly owner-locked.
 
-Check Section 28M and the newest dated Current-Delivery Sync before proposing implementation.
+Check the top-level Decision Register and the newest verified controller/repository evidence before proposing implementation. Treat Sections 28A-28M as historical evidence only.
 ```
 
 ---
@@ -3841,6 +4013,8 @@ Daily handover rules:
 7. Do not create a parallel expansion master file; append dated evidence and decisions to this file.
 8. When an owner decision promotes or removes expansion scope, update this file before or alongside the controlled implementation task.
 9. Do not mark an approved expansion slice as implemented until code state, tests, owner manual acceptance, merge, and push status are stated separately and truthfully.
+10. Dated delivery sync sections are historical evidence only. Never let an old Goal/Git/database sentence override newer verified controller/repository truth.
+11. Keep reporting terms explicit: billed/invoiced, collected cash, receivable, customer credit, refund, and revenue recognition must not collapse into one ambiguous metric.
 
 ---
 
