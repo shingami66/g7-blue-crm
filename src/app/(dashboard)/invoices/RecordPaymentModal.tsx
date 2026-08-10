@@ -9,6 +9,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import type { InvoicesDictionary } from "@/lib/i18n/dictionaries/invoices";
 import { formatSarAmount } from "@/lib/i18n/formatting";
+import { parseExactPositiveSarAmountText } from "@/lib/payments/amount";
 
 interface RecordPaymentModalProps {
   invoiceId: string;
@@ -54,9 +55,9 @@ export function RecordPaymentModal({
     setError(null);
     setSuccessMsg(null);
 
-    const numericAmount = parseFloat(amount);
-    if (isNaN(numericAmount) || numericAmount <= 0) {
-      setError(dictionary.validation.positiveAmount);
+    const numericAmount = parseExactPositiveSarAmountText(amount);
+    if (numericAmount === null) {
+      setError(dictionary.errors.invalid_payment_amount);
       return;
     }
 
@@ -86,7 +87,7 @@ export function RecordPaymentModal({
       return await recordPaymentAction({
         invoiceId,
         requestId: reqId,
-        amount: numericAmount,
+        amount,
         date,
         method,
         reference: reference.trim() || undefined,

@@ -1,3 +1,5 @@
+import { isExactPositiveSarAmount } from "./amount.ts";
+
 export type PaymentIntent = {
   invoiceId: string;
   amount: number;
@@ -52,6 +54,10 @@ export class PaymentSubmissionController {
     intent: PaymentIntent,
     execute: (reqId: string) => Promise<RecordPaymentResult>
   ): { accepted: boolean; requestId?: string; inFlightPromise?: Promise<RecordPaymentResult> } {
+    if (!isExactPositiveSarAmount(intent.amount)) {
+      return { accepted: false };
+    }
+
     if (this.isSubmitting) {
       return { accepted: false };
     }
@@ -138,6 +144,7 @@ export class PaymentSubmissionController {
 
 const SAFE_ERROR_CODES = new Set([
   "invalid_payment_input",
+  "invalid_payment_amount",
   "invoice_not_found",
   "invoice_not_payable",
   "payment_exceeds_balance",

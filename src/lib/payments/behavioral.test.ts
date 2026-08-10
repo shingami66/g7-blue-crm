@@ -122,6 +122,12 @@ test("Payment Behavioral and Registry Tests", async (t) => {
     assert.equal(result.error, "payment_exceeds_balance");
   });
 
+  await t.test("10a. invalid payment precision maps safely", () => {
+    const result = mapPaymentRpcResult({ error_code: "invalid_payment_amount" }, null);
+    assert.equal(result.success, false);
+    assert.equal(result.error, "invalid_payment_amount");
+  });
+
   await t.test("11. Same controller immediate duplicate invokes action once", async () => {
     const controller = new PaymentSubmissionController(() => "static-uuid-1");
     let mutationCount = 0;
@@ -137,6 +143,25 @@ test("Payment Behavioral and Registry Tests", async (t) => {
     assert.equal(r1.accepted, true);
     assert.equal(r2.accepted, false);
     assert.equal(mutationCount, 1);
+  });
+
+  await t.test("11a. Invalid precision is rejected before key derivation or execution", () => {
+    let executionCount = 0;
+    let uuidCount = 0;
+    const controller = new PaymentSubmissionController(() => {
+      uuidCount++;
+      return "invalid-precision-uuid";
+    });
+
+    const result = controller.begin({ ...mockIntent, amount: 9.995 }, async () => {
+      executionCount++;
+      return { success: true };
+    });
+
+    assert.equal(result.accepted, false);
+    assert.equal(result.requestId, undefined);
+    assert.equal(executionCount, 0);
+    assert.equal(uuidCount, 0);
   });
 
   await t.test("12. Controller A begins an unresolved submission", () => {

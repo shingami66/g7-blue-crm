@@ -6,6 +6,7 @@ import { join } from "node:path";
 const ACTIONS_PATH = join(process.cwd(), "src/lib/payments/actions.ts");
 const MODAL_PATH = join(process.cwd(), "src/app/(dashboard)/invoices/RecordPaymentModal.tsx");
 const CONTROLLER_PATH = join(process.cwd(), "src/lib/payments/submission-controller.ts");
+const AMOUNT_PATH = join(process.cwd(), "src/lib/payments/amount.ts");
 const INVOICE_DETAIL_PATH = join(process.cwd(), "src/app/(dashboard)/invoices/[id]/page.tsx");
 const RECORD_ACTION_PATH = join(process.cwd(), "src/app/(dashboard)/invoices/[id]/RecordPaymentAction.tsx");
 const PAYMENTS_CLIENT_PATH = join(process.cwd(), "src/app/(dashboard)/payments/PaymentsClient.tsx");
@@ -20,6 +21,32 @@ test("Action structurally calls record_invoice_payment with seven named argument
   assert.match(actionsContent, /p_reference:/);
   assert.match(actionsContent, /p_user_id:/);
   assert.match(actionsContent, /p_request_id:\s*input\.requestId/);
+});
+
+test("Payment precision is enforced before client submission and server RPC", () => {
+  const amountContent = readFileSync(AMOUNT_PATH, "utf-8");
+  const modalContent = readFileSync(MODAL_PATH, "utf-8");
+  const controllerContent = readFileSync(CONTROLLER_PATH, "utf-8");
+  const actionsContent = readFileSync(ACTIONS_PATH, "utf-8");
+
+  assert.match(amountContent, /Number\.isFinite\(value\)/);
+  assert.match(amountContent, /value\s*>\s*0/);
+  assert.match(amountContent, /\{1,2\}/);
+  assert.match(modalContent, /parseExactPositiveSarAmountText\(amount\)/);
+  assert.ok(
+    modalContent.indexOf("parseExactPositiveSarAmountText(amount)") <
+      modalContent.indexOf("controllerRef.current.begin"),
+  );
+  assert.match(modalContent, /requestId:\s*reqId,\s*amount,\s*date,/);
+  assert.match(controllerContent, /isExactPositiveSarAmount\(intent\.amount\)/);
+  assert.ok(
+    controllerContent.indexOf("isExactPositiveSarAmount(intent.amount)") <
+      controllerContent.indexOf("getNormalizedIntentString(intent)"),
+  );
+  assert.ok(
+    actionsContent.indexOf("recordPaymentSchema.safeParse(input)") <
+      actionsContent.indexOf('supabase.rpc("record_invoice_payment"'),
+  );
 });
 
 test("Legacy six-argument call shape is absent", () => {
