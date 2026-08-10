@@ -29,6 +29,40 @@ const ISSUE_INVOICE_ATOMIC_ROW_KEYS = [
   "invoice_id",
   "invoice_number",
 ] as const;
+const CREATE_INVOICE_ATOMIC_ERROR_CODES = [
+  "invalid_invoice_input",
+  "vat_registered_invoice_not_implemented_in_this_slice",
+  "deposit_amount_required",
+  "invalid_deposit_amount",
+  "deposit_amount_exceeds_remaining",
+  "service_lifecycle_unavailable",
+  "invoice_customer_unavailable",
+  "service_not_eligible_for_deposit",
+  "service_not_eligible_for_final",
+  "quotation_not_found",
+  "quotation_not_approved",
+  "quotation_service_mismatch",
+  "deposit_invoice_already_exists",
+  "final_invoice_already_exists",
+  "billing_scope_authority_unavailable",
+  "billing_scope_inactive",
+  "invoice_exposure_unavailable",
+  "prior_invoices_exceed_billing_scope_ceiling",
+  "prior_invoices_exceed_quotation_total",
+  "invoice_amount_exceeds_ceiling",
+  "billing_scope_service_mismatch",
+  "invoice_grand_total_invalid",
+  "invoice_number_unavailable",
+  "invoice_insert_failed",
+  "invoice_creation_failed",
+  "invoice_snapshot_authority_unavailable",
+] as const;
+const ISSUE_INVOICE_ATOMIC_ERROR_CODES = [
+  "invoice_not_found",
+  "invoice_not_draft",
+  "invoice_issue_concurrency_conflict",
+  "invoice_issue_failed",
+] as const;
 
 type CreateInvoiceAtomicRpcRow = {
   error_code: string | null;
@@ -37,6 +71,18 @@ type CreateInvoiceAtomicRpcRow = {
 };
 
 type IssueInvoiceAtomicRpcRow = CreateInvoiceAtomicRpcRow;
+
+function isCreateInvoiceAtomicErrorCode(
+  value: string,
+): value is (typeof CREATE_INVOICE_ATOMIC_ERROR_CODES)[number] {
+  return CREATE_INVOICE_ATOMIC_ERROR_CODES.some((code) => code === value);
+}
+
+function isIssueInvoiceAtomicErrorCode(
+  value: string,
+): value is (typeof ISSUE_INVOICE_ATOMIC_ERROR_CODES)[number] {
+  return ISSUE_INVOICE_ATOMIC_ERROR_CODES.some((code) => code === value);
+}
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -284,7 +330,12 @@ export async function createInvoiceAction(
     }
 
     if (rpcRow.error_code !== null) {
-      return { success: false, error: rpcRow.error_code };
+      return {
+        success: false,
+        error: isCreateInvoiceAtomicErrorCode(rpcRow.error_code)
+          ? rpcRow.error_code
+          : "invoice_creation_failed",
+      };
     }
 
     if (
@@ -365,7 +416,12 @@ export async function issueInvoiceAction(
     }
 
     if (rpcRow.error_code !== null) {
-      return { success: false, error: rpcRow.error_code };
+      return {
+        success: false,
+        error: isIssueInvoiceAtomicErrorCode(rpcRow.error_code)
+          ? rpcRow.error_code
+          : "invoice_issue_failed",
+      };
     }
 
     if (

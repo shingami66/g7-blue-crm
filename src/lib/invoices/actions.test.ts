@@ -563,45 +563,35 @@ test("createInvoiceAction returns RPC invoice identity without a second create w
   );
 });
 
-test("createInvoiceAction maps RPC error_code without insert or numbering writes", async () => {
-  const scenario = startScenario({
-    atomicRpcData: [
-      {
-        error_code: "deposit_amount_exceeds_remaining",
-        invoice_id: null,
-        invoice_number: null,
-      },
-    ],
-  });
-
-  const result = await createInvoiceAction(validInput());
-
-  assert.deepEqual(result, {
-    success: false,
-    error: "deposit_amount_exceeds_remaining",
-  });
-  assert.equal(scenario.atomicRpcCalls, 1);
-  assertNoDirectCreateWrite(scenario);
-});
-
 for (const errorCode of [
   "invalid_invoice_input",
-  "quotation_not_approved",
-  "quotation_service_mismatch",
+  "vat_registered_invoice_not_implemented_in_this_slice",
+  "deposit_amount_required",
+  "invalid_deposit_amount",
+  "deposit_amount_exceeds_remaining",
+  "service_lifecycle_unavailable",
+  "invoice_customer_unavailable",
   "service_not_eligible_for_deposit",
   "service_not_eligible_for_final",
-  "billing_scope_inactive",
+  "quotation_not_found",
+  "quotation_not_approved",
+  "quotation_service_mismatch",
   "billing_scope_authority_unavailable",
+  "billing_scope_inactive",
   "invoice_exposure_unavailable",
   "deposit_invoice_already_exists",
   "final_invoice_already_exists",
   "prior_invoices_exceed_billing_scope_ceiling",
   "prior_invoices_exceed_quotation_total",
+  "invoice_amount_exceeds_ceiling",
+  "billing_scope_service_mismatch",
+  "invoice_grand_total_invalid",
   "invoice_number_unavailable",
-  "invoice_customer_unavailable",
   "invoice_insert_failed",
+  "invoice_creation_failed",
+  "invoice_snapshot_authority_unavailable",
 ] as const) {
-  test(`createInvoiceAction surfaces RPC error_code ${errorCode}`, async () => {
+  test(`createInvoiceAction preserves authoritative RPC error_code ${errorCode}`, async () => {
     const scenario = startScenario({
       atomicRpcData: [
         {
@@ -622,6 +612,36 @@ for (const errorCode of [
     );
 
     assert.deepEqual(result, { success: false, error: errorCode });
+    assert.equal(scenario.atomicRpcCalls, 1);
+    assertNoDirectCreateWrite(scenario);
+  });
+}
+
+for (const errorCode of [
+  "SOME_UNKNOWN_CODE",
+  " deposit_amount_exceeds_remaining",
+  "deposit_amount_exceeds_remaining ",
+  '{"error":"internal"}',
+  "",
+  "   ",
+] as const) {
+  test(`createInvoiceAction fails closed on untrusted RPC error_code ${JSON.stringify(errorCode)}`, async () => {
+    const scenario = startScenario({
+      atomicRpcData: [
+        {
+          error_code: errorCode,
+          invoice_id: null,
+          invoice_number: null,
+        },
+      ],
+    });
+
+    const result = await createInvoiceAction(validInput());
+
+    assert.deepEqual(result, {
+      success: false,
+      error: "invoice_creation_failed",
+    });
     assert.equal(scenario.atomicRpcCalls, 1);
     assertNoDirectCreateWrite(scenario);
   });
@@ -787,8 +807,9 @@ for (const errorCode of [
   "invoice_not_found",
   "invoice_not_draft",
   "invoice_issue_concurrency_conflict",
+  "invoice_issue_failed",
 ] as const) {
-  test(`issueInvoiceAction surfaces atomic RPC error_code ${errorCode}`, async () => {
+  test(`issueInvoiceAction preserves authoritative RPC error_code ${errorCode}`, async () => {
     const scenario = startScenario({
       issueRpcData: [
         {
@@ -806,6 +827,54 @@ for (const errorCode of [
     assert.equal(scenario.invoiceTableCalls, 0);
   });
 }
+
+for (const errorCode of [
+  "SOME_UNKNOWN_CODE",
+  " invoice_not_found",
+  "invoice_not_found ",
+  '{"error":"internal"}',
+  "",
+  "   ",
+] as const) {
+  test(`issueInvoiceAction fails closed on untrusted RPC error_code ${JSON.stringify(errorCode)}`, async () => {
+    const scenario = startScenario({
+      issueRpcData: [
+        {
+          error_code: errorCode,
+          invoice_id: null,
+          invoice_number: null,
+        },
+      ],
+    });
+
+    const result = await issueInvoiceAction(INSERTED_INVOICE_ID);
+
+    assert.deepEqual(result, { success: false, error: "invoice_issue_failed" });
+    assert.equal(scenario.issueRpcCalls, 1);
+    assert.equal(scenario.invoiceTableCalls, 0);
+  });
+}
+
+test("issueInvoiceAction maps RPC transport failure without raw database leakage", async () => {
+  const scenario = startScenario({
+    issueRpcData: null,
+    issueRpcError: {
+      message: 'relation "invoices" does not exist DETAIL: stack trace',
+    },
+  });
+
+  const result = await issueInvoiceAction(INSERTED_INVOICE_ID);
+
+  assert.deepEqual(result, { success: false, error: "invoice_issue_failed" });
+  assert.equal(scenario.issueRpcCalls, 1);
+  assert.equal(scenario.invoiceTableCalls, 0);
+  assert.notEqual(
+    "error" in result && typeof result.error === "string"
+      ? result.error.includes("relation")
+      : false,
+    true,
+  );
+});
 
 test("issueInvoiceAction fails closed on malformed atomic RPC success data", async () => {
   const scenario = startScenario({
