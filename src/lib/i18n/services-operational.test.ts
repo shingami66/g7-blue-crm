@@ -12,6 +12,7 @@ import {
   getApprovedBillingScopeErrorMessage,
 } from "../approved-billing-scopes/errors.ts";
 import {
+  getCreateApprovedBillingScopeDraftErrorMessage,
   getServiceStatusLabel,
   getServicesDictionary,
 } from "./dictionaries/services.ts";
@@ -35,6 +36,10 @@ const FINAL = join(
 const ABS_CARD = join(
   REPO_ROOT,
   "src/app/(dashboard)/services/[id]/ApprovedBillingScopesCard.tsx",
+);
+const ABS_DRAFT_CREATE_ACTION = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/services/[id]/CreateApprovedBillingScopeDraftAction.tsx",
 );
 const ABS_DETAIL = join(
   REPO_ROOT,
@@ -572,30 +577,99 @@ test("8. ABS internal status and decision codes remain unchanged", () => {
 test("8b. ABS draft-create action client contracts and EN/AR copy", () => {
   const en = getServicesDictionary("en");
   const ar = getServicesDictionary("ar");
+  const knownCreateErrorCodes = [
+    "scope_unexpected_error",
+    "scope_not_found",
+    "scope_source_not_approved",
+    "scope_source_deleted",
+    "scope_source_service_mismatch",
+    "scope_service_lifecycle_ineligible",
+    "scope_discount_not_supported",
+    "scope_no_items",
+    "scope_duplicate_draft",
+    "scope_concurrency_conflict",
+    "scope_permission_denied",
+  ];
+  const enCreateErrors = en.approvedBillingScopes.createDraft.errors;
+  const arCreateErrors = ar.approvedBillingScopes.createDraft.errors;
+  const enErrors = enCreateErrors as Record<string, string>;
+  const arErrors = arCreateErrors as Record<string, string>;
+
   assert.equal(en.approvedBillingScopes.createDraft.action, "Create draft");
   assert.equal(ar.approvedBillingScopes.createDraft.action, "إنشاء مسودة");
-  assert.ok(en.approvedBillingScopes.createDraft.errors.scope_duplicate_draft.length > 0);
-  assert.ok(ar.approvedBillingScopes.createDraft.errors.scope_permission_denied.length > 0);
-  assert.ok(
-    en.approvedBillingScopes.createDraft.errors.scope_service_lifecycle_ineligible.length > 0,
+  assert.deepEqual(
+    Object.keys(enErrors).filter((key) => key !== "fallback").sort(),
+    knownCreateErrorCodes.slice().sort(),
   );
-  assert.ok(
-    ar.approvedBillingScopes.createDraft.errors.scope_service_lifecycle_ineligible.length > 0,
+  assert.deepEqual(
+    Object.keys(arErrors).filter((key) => key !== "fallback").sort(),
+    knownCreateErrorCodes.slice().sort(),
   );
+  for (const code of knownCreateErrorCodes) {
+    assert.ok(enErrors[code].length > 0);
+    assert.ok(arErrors[code].length > 0);
+    assert.equal(
+      getCreateApprovedBillingScopeDraftErrorMessage(enCreateErrors, code),
+      enErrors[code],
+    );
+    assert.equal(
+      getCreateApprovedBillingScopeDraftErrorMessage(arCreateErrors, code),
+      arErrors[code],
+    );
+  }
+  assert.ok(enErrors.fallback.length > 0);
+  assert.ok(arErrors.fallback.length > 0);
   assert.deepEqual(
     listNestedKeys(en.approvedBillingScopes.createDraft).sort(),
     listNestedKeys(ar.approvedBillingScopes.createDraft).sort(),
   );
 
-  const createAction = read(
-    join(REPO_ROOT, "src/app/(dashboard)/services/[id]/CreateApprovedBillingScopeDraftAction.tsx"),
-  );
+  const createAction = read(ABS_DRAFT_CREATE_ACTION);
   assert.match(createAction, /createApprovedBillingScopeDraft/);
   assert.match(createAction, /sourceQuotationId/);
   assert.match(createAction, /useTransition|isPending/);
   assert.match(createAction, /disabled=\{isPending\}/);
   assert.match(createAction, /scope_duplicate_draft/);
   assert.match(createAction, /router\.refresh|router\.push/);
+  assert.match(createAction, /getCreateApprovedBillingScopeDraftErrorMessage\(dictionary\.errors, code\)/);
+  assert.doesNotMatch(createAction, /fallbackWithCode|\.replace\("\{code\}"/);
+  assert.doesNotMatch(createAction, /console\.(?:log|warn|error)|logger\./);
+  for (const unsafeValue of [
+    "SOME_UNKNOWN_CODE",
+    '{"error":"internal"}',
+    " scope_not_found ",
+  ]) {
+    assert.equal(
+      getCreateApprovedBillingScopeDraftErrorMessage(enCreateErrors, unsafeValue),
+      enErrors.fallback,
+    );
+    assert.equal(
+      getCreateApprovedBillingScopeDraftErrorMessage(arCreateErrors, unsafeValue),
+      arErrors.fallback,
+    );
+  }
+  for (const blankValue of ["", "   "]) {
+    assert.equal(
+      getCreateApprovedBillingScopeDraftErrorMessage(enCreateErrors, blankValue),
+      enErrors.fallback,
+    );
+    assert.equal(
+      getCreateApprovedBillingScopeDraftErrorMessage(arCreateErrors, blankValue),
+      arErrors.fallback,
+    );
+  }
+  for (const malformedValue of [null, undefined, {}, []]) {
+    assert.equal(
+      getCreateApprovedBillingScopeDraftErrorMessage(enCreateErrors, malformedValue),
+      enErrors.fallback,
+    );
+    assert.equal(
+      getCreateApprovedBillingScopeDraftErrorMessage(arCreateErrors, malformedValue),
+      arErrors.fallback,
+    );
+  }
+  assert.equal(enErrors.fallback.includes("{code}"), false);
+  assert.equal(arErrors.fallback.includes("{code}"), false);
   assert.doesNotMatch(createAction, /acceptedGrandTotal|requestedAmount|scopeVersion/);
   assert.doesNotMatch(createAction, /voidApproved|supersedeApproved|discardApproved|approveApproved/);
 

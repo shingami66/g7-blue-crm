@@ -197,7 +197,6 @@ export interface ServicesDictionary {
         scope_concurrency_conflict: string;
         scope_unexpected_error: string;
         fallback: string;
-        fallbackWithCode: string;
       };
     };
     labels: {
@@ -885,6 +884,16 @@ export interface ServicesDictionary {
   quotationStatuses: Record<QuotationStatus, string>;
 }
 
+export function getCreateApprovedBillingScopeDraftErrorMessage(
+  errors: ServicesDictionary["approvedBillingScopes"]["createDraft"]["errors"],
+  code: unknown,
+): string {
+  if (typeof code !== "string") return errors.fallback;
+  const known = errors as Record<string, string>;
+  if (Object.hasOwn(known, code)) return known[code];
+  return errors.fallback;
+}
+
 const servicesDictionaryEn: ServicesDictionary = {
   locale: "en",
   states: {
@@ -1094,7 +1103,6 @@ const servicesDictionaryEn: ServicesDictionary = {
         scope_unexpected_error:
           "An unexpected error occurred while creating the draft. Please try again.",
         fallback: "Could not create the draft. Please try again.",
-        fallbackWithCode: "Could not create the draft ({code}).",
       },
     },
     labels: {
@@ -2516,7 +2524,6 @@ const servicesDictionaryAr: ServicesDictionary = {
         scope_unexpected_error:
           "حدث خطأ غير متوقع أثناء إنشاء المسودة. يرجى المحاولة مرة أخرى.",
         fallback: "تعذر إنشاء المسودة. يرجى المحاولة مرة أخرى.",
-        fallbackWithCode: "تعذر إنشاء المسودة ({code}).",
       },
     },
     labels: {

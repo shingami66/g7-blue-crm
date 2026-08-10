@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import PendingLink from "@/components/ui/PendingLink";
 import { isolateBidiText } from "@/lib/i18n/bidi";
-import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import {
+  getCreateApprovedBillingScopeDraftErrorMessage,
+  type ServicesDictionary,
+} from "@/lib/i18n/dictionaries/services";
 import { createApprovedBillingScopeDraft } from "@/lib/approved-billing-scopes/actions";
-import type { ApprovedBillingScopeErrorCode } from "@/lib/approved-billing-scopes/errors";
 
 type CreateDraftDictionary = ServicesDictionary["approvedBillingScopes"]["createDraft"];
 
@@ -41,13 +43,6 @@ export default function CreateApprovedBillingScopeDraftAction({
     ? `/services/${serviceId}/approved-billing-scopes/${resolvedDraftId}`
     : null;
 
-  const mapError = (code: string | undefined): string => {
-    if (!code) return dictionary.errors.fallback;
-    const known = dictionary.errors as Record<string, string>;
-    if (known[code]) return known[code];
-    return dictionary.errors.fallbackWithCode.replace("{code}", code);
-  };
-
   const handleCreate = () => {
     if (isPending) return;
     setError(null);
@@ -74,8 +69,10 @@ export default function CreateApprovedBillingScopeDraftAction({
         return;
       }
 
-      const code = result.error as ApprovedBillingScopeErrorCode | undefined;
-      setError(mapError(code));
+      const code: unknown = result.error;
+      setError(
+        getCreateApprovedBillingScopeDraftErrorMessage(dictionary.errors, code),
+      );
 
       if (code === "scope_duplicate_draft" && existingDraftScopeId) {
         setResolvedDraftId(existingDraftScopeId);
