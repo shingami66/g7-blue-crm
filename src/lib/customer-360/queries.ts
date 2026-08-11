@@ -120,20 +120,42 @@ async function readQuotations(customerId: string): Promise<Customer360Quotation[
   });
 }
 
-async function readInvoices(customerId: string): Promise<Customer360Invoice[]> {
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("invoices")
-    .select("id, invoice_number, service_id, invoice_type, status, grand_total, amount_paid, balance_due, issued_at, created_at, services(service_number,service_title)")
-    .eq("customer_id", customerId)
-    .eq("is_deleted", false)
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(50);
-  if (error) throw error;
+export const CUSTOMER_360_PAGE_SIZE = 500;
 
-  return (data ?? []).map((row) => {
+export async function fetchAllCustomer360Pages<T>(
+  buildQuery: () => { range: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }> },
+  pageSize = CUSTOMER_360_PAGE_SIZE,
+): Promise<T[]> {
+  const allRows: T[] = [];
+  let from = 0;
+  while (true) {
+    const to = from + pageSize - 1;
+    const { data, error } = await buildQuery().range(from, to);
+    if (error) throw error;
+    const rows = (data ?? []) as T[];
+    if (rows.length === 0) {
+      break;
+    }
+    allRows.push(...rows);
+    from += rows.length;
+  }
+  return allRows;
+}
+
+async function readInvoices(customerId: string): Promise<Customer360Invoice[]> {
+  const data = await fetchAllCustomer360Pages<Record<string, unknown>>(() => {
+    return createAdminClient()
+      .from("invoices")
+      .select("id, invoice_number, service_id, invoice_type, status, grand_total, amount_paid, balance_due, issued_at, created_at, services(service_number,service_title)")
+      .eq("customer_id", customerId)
+      .eq("is_deleted", false)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false });
+  });
+
+  return data.map((row) => {
     const service = Array.isArray(row.services) ? row.services[0] : row.services;
+    const issuedAt = safeCustomerDate(row.issued_at);
     return {
       id: String(row.id),
       invoiceNumber: String(row.invoice_number),
@@ -145,7 +167,8 @@ async function readInvoices(customerId: string): Promise<Customer360Invoice[]> {
       grandTotal: numberValue(row.grand_total),
       amountPaid: numberValue(row.amount_paid),
       balanceDue: numberValue(row.balance_due),
-      date: safeCustomerDate(row.issued_at) ?? safeCustomerDate(row.created_at) ?? "",
+      date: issuedAt ?? safeCustomerDate(row.created_at) ?? "",
+      issuedAt,
     };
   });
 }
@@ -233,7 +256,7 @@ export async function getCustomer360(id: string): Promise<Customer360Result> {
     readPermissionSection("invoices:read", () => readInvoices(id)),
     readPermissionSection("payments:read", () => readPayments(id)),
   ]);
-  const invoiceItems = invoices.items;
+  const invoiceItems = invoices.status === "ready" ? invoices.items : null;
   const serviceItems = services.items;
   const today = new Date().toISOString().slice(0, 10);
 
@@ -248,7 +271,7 @@ export async function getCustomer360(id: string): Promise<Customer360Result> {
       summary: calculateCustomer360FinancialSummary(invoiceItems),
       upcomingServices: serviceItems.filter((service) => service.eventStartDate !== null && service.eventStartDate >= today).slice(0, 6),
       recentOperationalActivity: buildOperationalActivity(serviceItems),
-      recentFinancialActivity: buildFinancialActivity(invoiceItems, payments.items),
+      recentFinancialActivity: buildFinancialActivity(invoices.items, payments.items),
     },
   };
 }

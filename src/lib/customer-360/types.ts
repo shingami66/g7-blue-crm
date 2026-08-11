@@ -47,6 +47,7 @@ export type Customer360Invoice = {
   amountPaid: number;
   balanceDue: number;
   date: string;
+  issuedAt: string | null;
 };
 
 export type Customer360Payment = {
@@ -73,9 +74,9 @@ export type Customer360Activity = {
 };
 
 export type Customer360FinancialSummary = {
-  totalInvoiced: number;
-  totalCollected: number;
-  outstandingBalance: number;
+  totalInvoiced: number | null;
+  totalCollected: number | null;
+  outstandingBalance: number | null;
 };
 
 export type Customer360Data = {
