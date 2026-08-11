@@ -32,7 +32,8 @@ export type ReportInvoice = {
   grandTotal: number;
   amountPaid: number;
   balanceDue: number;
-  createdAt: string;
+  issuedAt: string;
+  createdAt?: string;
 };
 
 export type ReportService = {
@@ -72,14 +73,14 @@ export type ReportsCenterData = {
   salesBilling: ReportsSection<{
     quotations: ReportQuotation[];
     invoices: ReportInvoice[];
-    quotationCount: number;
-    quotationValue: number;
-    approvedQuotationValue: number;
-    invoicedValue: number;
-    collectedValue: number;
-    outstandingValue: number;
-    depositInvoiceCount: number;
-    finalInvoiceCount: number;
+    quotationCount: number | null;
+    quotationValue: number | null;
+    approvedQuotationValue: number | null;
+    invoicedValue: number | null;
+    collectedValue: number | null;
+    outstandingValue: number | null;
+    depositInvoiceCount: number | null;
+    finalInvoiceCount: number | null;
   }>;
   serviceOperations: ReportsSection<{
     services: ReportService[];
@@ -92,7 +93,9 @@ export type ReportsCenterData = {
   }>;
   customerOverview: ReportsSection<{
     customers: ReportCustomer[];
-    activeCustomers: number;
+    activeCustomers: number | null;
+    outstandingCustomersCount: number | null;
+    highestInvoicedCustomersCount: number | null;
     outstandingCustomers: ReportCustomerRanking[];
     highestInvoicedCustomers: ReportCustomerRanking[];
     recentPayments: ReportPayment[];

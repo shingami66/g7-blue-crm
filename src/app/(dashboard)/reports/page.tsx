@@ -51,7 +51,15 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   }
 
   const report = await getReportsCenterData(parsed.filters);
-  const partial = [report.salesBilling, report.serviceOperations, report.customerOverview, report.supplierOperations].some((section) => section.status !== "ready");
+  const partial =
+    [report.salesBilling, report.serviceOperations, report.customerOverview, report.supplierOperations].some(
+      (section) => section.status !== "ready",
+    ) ||
+    report.salesBilling.data.quotationCount === null ||
+    report.salesBilling.data.invoicedValue === null ||
+    report.customerOverview.data.activeCustomers === null ||
+    report.customerOverview.data.outstandingCustomersCount === null ||
+    report.supplierOperations.data.internalEstimatedCost === null;
   return <div className="space-y-6 pb-12"><ReportHeader dictionary={dictionary} period={period} />{filterForm}{partial && <div className="rounded-lg border border-tertiary-fixed bg-tertiary-fixed/40 px-4 py-3 text-[14px] text-on-surface" role="status">{dictionary.states.partial}</div>}<BillingReport report={report.salesBilling} dictionary={dictionary} locale={locale} /><OperationsReport report={report.serviceOperations} dictionary={dictionary} serviceDictionary={serviceDictionary} locale={locale} /><CustomerReport report={report.customerOverview} dictionary={dictionary} locale={locale} /><SupplierReport report={report.supplierOperations} dictionary={dictionary} locale={locale} /></div>;
 }
 
@@ -71,7 +79,16 @@ function ReportFiltersForm({ filters, dictionary }: { filters: ReportFilters; di
 
 function BillingReport({ report, dictionary, locale }: { report: Awaited<ReturnType<typeof getReportsCenterData>>["salesBilling"]; dictionary: ReturnType<typeof getReportsDictionary>; locale: "en" | "ar" }) {
   if (report.status !== "ready") return <ReportSection title={dictionary.sections.salesBilling} status={report.status} unavailable={dictionary.states.forbidden} error={dictionary.states.error} />;
-  const metrics = [[dictionary.metrics.quotationCount, formatUiNumber(locale, report.data.quotationCount)], [dictionary.metrics.quotationValue, formatSarAmount(locale, report.data.quotationValue)], [dictionary.metrics.approvedValue, formatSarAmount(locale, report.data.approvedQuotationValue)], [dictionary.metrics.invoiced, formatSarAmount(locale, report.data.invoicedValue)], [dictionary.metrics.collected, formatSarAmount(locale, report.data.collectedValue)], [dictionary.metrics.outstanding, formatSarAmount(locale, report.data.outstandingValue)], [dictionary.metrics.deposit, formatUiNumber(locale, report.data.depositInvoiceCount)], [dictionary.metrics.final, formatUiNumber(locale, report.data.finalInvoiceCount)]];
+  const metrics: Array<[string, string]> = [
+    [dictionary.metrics.quotationCount, report.data.quotationCount === null ? "—" : formatUiNumber(locale, report.data.quotationCount)],
+    [dictionary.metrics.quotationValue, report.data.quotationValue === null ? "—" : formatSarAmount(locale, report.data.quotationValue)],
+    [dictionary.metrics.approvedValue, report.data.approvedQuotationValue === null ? "—" : formatSarAmount(locale, report.data.approvedQuotationValue)],
+    [dictionary.metrics.invoiced, report.data.invoicedValue === null ? "—" : formatSarAmount(locale, report.data.invoicedValue)],
+    [dictionary.metrics.collected, report.data.collectedValue === null ? "—" : formatSarAmount(locale, report.data.collectedValue)],
+    [dictionary.metrics.outstanding, report.data.outstandingValue === null ? "—" : formatSarAmount(locale, report.data.outstandingValue)],
+    [dictionary.metrics.deposit, report.data.depositInvoiceCount === null ? "—" : formatUiNumber(locale, report.data.depositInvoiceCount)],
+    [dictionary.metrics.final, report.data.finalInvoiceCount === null ? "—" : formatUiNumber(locale, report.data.finalInvoiceCount)],
+  ];
   return <ReportSection title={dictionary.sections.salesBilling} status={report.status} unavailable={dictionary.states.forbidden} error={dictionary.states.error}><div className="grid grid-cols-2 gap-3 md:grid-cols-4">{metrics.map(([label, value]) => <Metric key={label} label={label} value={value} />)}</div></ReportSection>;
 }
 
@@ -82,7 +99,7 @@ function OperationsReport({ report, dictionary, serviceDictionary, locale }: { r
 
 function CustomerReport({ report, dictionary, locale }: { report: Awaited<ReturnType<typeof getReportsCenterData>>["customerOverview"]; dictionary: ReturnType<typeof getReportsDictionary>; locale: "en" | "ar" }) {
   if (report.status !== "ready") return <ReportSection title={dictionary.sections.customers} status={report.status} unavailable={dictionary.states.forbidden} error={dictionary.states.error} />;
-  return <ReportSection title={dictionary.sections.customers} status={report.status} unavailable={dictionary.states.forbidden} error={dictionary.states.error}><div className="grid grid-cols-1 gap-3 md:grid-cols-3"><Metric label={dictionary.metrics.activeCustomers} value={formatUiNumber(locale, report.data.activeCustomers)} /><Metric label={dictionary.metrics.outstandingCustomers} value={formatUiNumber(locale, report.data.outstandingCustomers.length)} /><Metric label={dictionary.metrics.highestInvoicedCustomers} value={formatUiNumber(locale, report.data.highestInvoicedCustomers.length)} /></div><div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2"><CustomerRanking title={dictionary.metrics.outstandingCustomers} rows={report.data.outstandingCustomers} dictionary={dictionary} locale={locale} /><CustomerRanking title={dictionary.metrics.highestInvoicedCustomers} rows={report.data.highestInvoicedCustomers} dictionary={dictionary} locale={locale} /></div></ReportSection>;
+  return <ReportSection title={dictionary.sections.customers} status={report.status} unavailable={dictionary.states.forbidden} error={dictionary.states.error}><div className="grid grid-cols-1 gap-3 md:grid-cols-3"><Metric label={dictionary.metrics.activeCustomers} value={report.data.activeCustomers === null ? "—" : formatUiNumber(locale, report.data.activeCustomers)} /><Metric label={dictionary.metrics.outstandingCustomers} value={report.data.outstandingCustomersCount === null ? "—" : formatUiNumber(locale, report.data.outstandingCustomersCount)} /><Metric label={dictionary.metrics.highestInvoicedCustomers} value={report.data.highestInvoicedCustomersCount === null ? "—" : formatUiNumber(locale, report.data.highestInvoicedCustomersCount)} /></div><div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2"><CustomerRanking title={dictionary.metrics.outstandingCustomers} rows={report.data.outstandingCustomers} dictionary={dictionary} locale={locale} /><CustomerRanking title={dictionary.metrics.highestInvoicedCustomers} rows={report.data.highestInvoicedCustomers} dictionary={dictionary} locale={locale} /></div></ReportSection>;
 }
 
 function CustomerRanking({ title, rows, dictionary, locale }: { title: string; rows: Array<{ customerId: string; customerNumber: string | null; company: string | null; amount: number }>; dictionary: ReturnType<typeof getReportsDictionary>; locale: "en" | "ar" }) {
