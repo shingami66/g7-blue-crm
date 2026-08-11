@@ -17,13 +17,15 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
-import { getCustomers } from "@/lib/customers/queries";
-import { getQuotations } from "@/lib/quotations/queries";
-import { getInvoices } from "@/lib/invoices/queries";
-import { getServices } from "@/lib/services/queries";
-import { getPaymentsList } from "@/lib/payments/queries";
+import {
+  getDashboardCustomersData,
+  getDashboardQuotationsData,
+  getDashboardInvoicesData,
+  getDashboardServicesData,
+  getDashboardPaymentsData,
+  type DashboardRecentQuotation,
+} from "@/lib/dashboard/queries";
 import PendingLink from "@/components/ui/PendingLink";
-import type { QuotationListItem } from "@/lib/quotations/types";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import {
@@ -141,13 +143,7 @@ async function loadIfAllowed<T>(
   }
 }
 
-function getRecentQuotations(quotations: QuotationListItem[]) {
-  return [...quotations]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 4);
-}
-
-function recentQuotationPrimaryLabel(quotation: QuotationListItem): {
+function recentQuotationPrimaryLabel(quotation: DashboardRecentQuotation): {
   text: string;
   dir: "auto" | "ltr";
 } {
@@ -158,11 +154,6 @@ function recentQuotationPrimaryLabel(quotation: QuotationListItem): {
     return { text: quotation.event, dir: "auto" };
   }
   return { text: quotation.quotationNumber, dir: "ltr" };
-}
-
-function upcomingServices(services: Awaited<ReturnType<typeof getServices>>) {
-  const today = new Date().toISOString().slice(0, 10);
-  return services.filter((service) => service.eventStartDate !== null && service.eventStartDate >= today).sort((left, right) => (left.eventStartDate ?? "").localeCompare(right.eventStartDate ?? "") || left.serviceNumber.localeCompare(right.serviceNumber)).slice(0, 6);
 }
 
 const WORKFLOW_STAGES = ["Inquiry", "Quoted", "Approved", "Deposit Paid"] as const;
@@ -200,11 +191,11 @@ export default async function DashboardPage() {
 
   const [customersState, quotationsState, invoicesState, servicesState, paymentsState] =
     await Promise.all([
-      loadIfAllowed(DASHBOARD_WIDGETS.customers.readPermission, getCustomers),
-      loadIfAllowed(DASHBOARD_WIDGETS.quotations.readPermission, getQuotations),
-      loadIfAllowed(DASHBOARD_WIDGETS.invoices.readPermission, getInvoices),
-      loadIfAllowed(DASHBOARD_WIDGETS.services.readPermission, getServices),
-      loadIfAllowed(DASHBOARD_WIDGETS.payments.readPermission, getPaymentsList),
+      loadIfAllowed(DASHBOARD_WIDGETS.customers.readPermission, getDashboardCustomersData),
+      loadIfAllowed(DASHBOARD_WIDGETS.quotations.readPermission, getDashboardQuotationsData),
+      loadIfAllowed(DASHBOARD_WIDGETS.invoices.readPermission, getDashboardInvoicesData),
+      loadIfAllowed(DASHBOARD_WIDGETS.services.readPermission, getDashboardServicesData),
+      loadIfAllowed(DASHBOARD_WIDGETS.payments.readPermission, getDashboardPaymentsData),
     ]);
   const [canCreateCustomer, canCreateQuotation, canCreateInvoice, canCreateService] = await Promise.all([
     checkPermission("customers:write"),
@@ -213,30 +204,22 @@ export default async function DashboardPage() {
     checkPermission("services:write"),
   ]);
 
-  const invoices = invoicesState.status === "ready" ? invoicesState.data : [];
-  const openInvoiceCount = invoices.filter(
-    (invoice) => Number(invoice.balance_due) > 0,
-  ).length;
-  const totalCollected = invoices.reduce(
-    (sum, invoice) => sum + Number(invoice.amount_paid || 0),
-    0,
-  );
-  const pendingBalance = invoices.reduce(
-    (sum, invoice) => sum + Math.max(Number(invoice.balance_due || 0), 0),
-    0,
-  );
-  const recentQuotations =
-    quotationsState.status === "ready"
-      ? getRecentQuotations(quotationsState.data)
-      : [];
-  const liveServices = servicesState.status === "ready" ? servicesState.data : [];
-  const upcoming = upcomingServices(liveServices);
-  const readyToStart = liveServices.filter((service) => service.status === "Deposit Paid");
-  const inProgress = liveServices.filter((service) => service.status === "In Progress");
+  const invoicesData = invoicesState.status === "ready" ? invoicesState.data : null;
+  const openInvoiceCount = invoicesData?.openInvoiceCount ?? 0;
+  const totalCollected = invoicesData?.totalCollected ?? null;
+  const pendingBalance = invoicesData?.pendingBalance ?? null;
+  const attentionInvoices = invoicesData?.attentionInvoices ?? [];
+  const hasMoreAttentionInvoices = invoicesData?.hasMoreAttentionInvoices ?? false;
+
+  const quotationsData = quotationsState.status === "ready" ? quotationsState.data : null;
+  const recentQuotations = quotationsData?.recentQuotations ?? [];
+
+  const servicesData = servicesState.status === "ready" ? servicesState.data : null;
+  const upcoming = servicesData?.upcomingServices ?? [];
+  const readyToStartCount = servicesData?.readyToStartCount ?? 0;
+  const inProgressCount = servicesData?.inProgressCount ?? 0;
+
   const recentPayments = paymentsState.status === "ready" ? paymentsState.data.payments.slice(0, 5) : [];
-  const outstandingAttentionInvoices = invoices.filter((invoice) => Number(invoice.balance_due) > 0);
-  const attentionInvoices = outstandingAttentionInvoices.slice(0, 5);
-  const hasMoreAttentionInvoices = outstandingAttentionInvoices.length > attentionInvoices.length;
 
   return (
     <div data-dashboard-workspace="command" data-dashboard-content-frame="true" className="mx-auto w-full max-w-[1240px]">
@@ -270,7 +253,7 @@ export default async function DashboardPage() {
             label={dictionary.metrics.totalCustomers}
             value={
               customersState.status === "ready"
-                ? formatDashboardCount(locale, customersState.data.length)
+                ? formatDashboardCount(locale, customersState.data.totalCount)
                 : dictionary.states.unavailable
             }
             trend="flat"
@@ -285,7 +268,7 @@ export default async function DashboardPage() {
             label={dictionary.metrics.totalQuotations}
             value={
               quotationsState.status === "ready"
-                ? formatDashboardCount(locale, quotationsState.data.length)
+                ? formatDashboardCount(locale, quotationsState.data.totalCount)
                 : dictionary.states.unavailable
             }
             trend="flat"
@@ -315,7 +298,7 @@ export default async function DashboardPage() {
             label={dictionary.metrics.services}
             value={
               servicesState.status === "ready"
-                ? formatDashboardCount(locale, servicesState.data.length)
+                ? formatDashboardCount(locale, servicesState.data.totalCount)
                 : dictionary.states.unavailable
             }
             trend="flat"
@@ -329,13 +312,13 @@ export default async function DashboardPage() {
           <KpiCard
             label={dictionary.metrics.totalCollected}
             value={
-              invoicesState.status === "ready"
+              invoicesState.status === "ready" && totalCollected !== null
                 ? <DashboardAmount locale={locale} value={totalCollected} />
                 : dictionary.states.unavailable
             }
             trend="flat"
             trendLabel={
-              invoicesState.status === "ready"
+              invoicesState.status === "ready" && totalCollected !== null
                 ? dictionary.metrics.collectedOnRecordedInvoices
                 : dictionary.states.unavailableForRole
             }
@@ -344,13 +327,13 @@ export default async function DashboardPage() {
           <KpiCard
             label={dictionary.metrics.pendingBalance}
             value={
-              invoicesState.status === "ready"
+              invoicesState.status === "ready" && pendingBalance !== null
                 ? <DashboardAmount locale={locale} value={pendingBalance} />
                 : dictionary.states.unavailable
             }
             trend="flat"
             trendLabel={
-              invoicesState.status === "ready"
+              invoicesState.status === "ready" && pendingBalance !== null
                 ? dictionary.metrics.fromCurrentInvoices
                 : dictionary.states.unavailableForRole
             }
@@ -380,7 +363,7 @@ export default async function DashboardPage() {
                 </div>
                 <Link href="/services" className="shrink-0 text-[12px] font-semibold leading-[16px] tracking-[0.05em] text-primary hover:underline">{dictionary.workflow.viewServices}</Link>
               </div>
-              {servicesState.status === "ready" ? <div className="mt-4 grid grid-cols-2 gap-3">{WORKFLOW_STAGES.map((stage) => <PendingLink key={stage} href={`/services?status=${encodeURIComponent(stage)}`} className="rounded-lg border border-outline-variant p-3 hover:bg-surface-container-low"><span className="block text-[12px] text-on-surface-variant">{dictionary.workflow.rows[stage].label}</span><span className="mt-1 block text-[22px] font-semibold text-primary tabular-nums" dir="ltr">{formatDashboardCount(locale, liveServices.filter((service) => service.status === stage).length)}</span></PendingLink>)}</div> : <p className="mt-4 text-[14px] text-on-surface-variant">{dictionary.states.unavailableForRole}</p>}
+              {servicesState.status === "ready" ? <div className="mt-4 grid grid-cols-2 gap-3">{WORKFLOW_STAGES.map((stage) => <PendingLink key={stage} href={`/services?status=${encodeURIComponent(stage)}`} className="rounded-lg border border-outline-variant p-3 hover:bg-surface-container-low"><span className="block text-[12px] text-on-surface-variant">{dictionary.workflow.rows[stage].label}</span><span className="mt-1 block text-[22px] font-semibold text-primary tabular-nums" dir="ltr">{formatDashboardCount(locale, servicesData?.workflowCounts[stage] ?? 0)}</span></PendingLink>)}</div> : <p className="mt-4 text-[14px] text-on-surface-variant">{dictionary.states.unavailableForRole}</p>}
             </section>
           </div>
 
@@ -388,7 +371,7 @@ export default async function DashboardPage() {
             <section data-dashboard-section="operations-focus" aria-labelledby="dashboard-operations-focus">
               <DashboardFocusCard headingId="dashboard-operations-focus" title={advancementDictionary.operationsTitle} status={servicesState.status} unavailable={dictionary.states.unavailableForRole}>
                 <FocusGroup title={advancementDictionary.upcoming} empty={advancementDictionary.noUpcoming}>{upcoming.map((service) => <PendingLink key={service.id} href={`/services/${service.id}`} className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><span className="min-w-0 truncate text-[13px] text-on-surface" dir="auto">{service.serviceTitle}</span><span className="shrink-0 whitespace-nowrap text-[12px] text-primary" dir="ltr">{service.serviceNumber}</span></PendingLink>)}</FocusGroup>
-                <div className="grid grid-cols-2 gap-3"><MetricPill label={advancementDictionary.readyToStart} value={formatDashboardCount(locale, readyToStart.length)} /><MetricPill label={advancementDictionary.inProgress} value={formatDashboardCount(locale, inProgress.length)} /></div>
+                <div className="grid grid-cols-2 gap-3"><MetricPill label={advancementDictionary.readyToStart} value={formatDashboardCount(locale, readyToStartCount)} /><MetricPill label={advancementDictionary.inProgress} value={formatDashboardCount(locale, inProgressCount)} /></div>
               </DashboardFocusCard>
             </section>
 

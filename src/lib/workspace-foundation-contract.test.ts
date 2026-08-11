@@ -80,10 +80,10 @@ test("Dashboard remains global and does not consume or propagate Business Year",
   assert.doesNotMatch(dashboard, /parseBusinessYear|cleanBusinessYearParam|yearQuery|selectedYear/);
   assert.match(dashboard, /scope: "global"/);
   assert.match(dashboard, /yearScoped: false/);
-  assert.match(dashboard, /getQuotations\)/);
-  assert.match(dashboard, /getInvoices\)/);
-  assert.match(dashboard, /getServices\)/);
-  assert.match(dashboard, /getPaymentsList\)/);
+  assert.match(dashboard, /getDashboardQuotationsData/);
+  assert.match(dashboard, /getDashboardInvoicesData/);
+  assert.match(dashboard, /getDashboardServicesData/);
+  assert.match(dashboard, /getDashboardPaymentsData/);
 });
 
 test("Business Year preserves authoritative temporal fields and keeps supplier reports unscoped", () => {

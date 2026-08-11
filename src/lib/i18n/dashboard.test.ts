@@ -174,7 +174,6 @@ test("6. SAR amounts use the shared formatter and retain Western digits", () => 
 test("7. Arabic date formatter remains available with Arabic months and Western digits (Dashboard has no date columns)", () => {
   const page = readFileSync(DASHBOARD_PAGE, "utf8");
   // Source-proven: current Dashboard UI does not render date/time values.
-  // (createdAt is used only for server-side recent-sort ordering, not display.)
   assert.doesNotMatch(page, /formatUiDate|formatUiDateTime|toLocaleDateString/);
 
   // Shared contract remains intact for any future Dashboard date surface.
@@ -245,10 +244,10 @@ test("11. No remaining source-proven hardcoded English UI literals in Dashboard-
 test("12. Dashboard query, permission, formula, and data-source contracts remain intact", () => {
   const page = readFileSync(DASHBOARD_PAGE, "utf8");
 
-  assert.match(page, /getCustomers/);
-  assert.match(page, /getQuotations/);
-  assert.match(page, /getInvoices/);
-  assert.match(page, /getServices/);
+  assert.match(page, /getDashboardCustomersData/);
+  assert.match(page, /getDashboardQuotationsData/);
+  assert.match(page, /getDashboardInvoicesData/);
+  assert.match(page, /getDashboardServicesData/);
   assert.match(page, /customers: \{[\s\S]*?id: "customers-kpi"[\s\S]*?readPermission: "customers:read"/);
   assert.match(page, /quotations: \{[\s\S]*?id: "quotations-kpi-and-list"[\s\S]*?readPermission: "quotations:read"/);
   assert.match(page, /invoices: \{[\s\S]*?id: "invoices-kpi-and-attention"[\s\S]*?readPermission: "invoices:read"/);
@@ -263,10 +262,9 @@ test("12. Dashboard query, permission, formula, and data-source contracts remain
   assert.match(page, /loadIfAllowed\(DASHBOARD_WIDGETS\.payments\.readPermission/);
   assert.match(page, /checkPermission\(permission\)/);
   assert.match(page, /requirePermission\("dashboard:read"\)/);
-  assert.match(page, /amount_paid/);
-  assert.match(page, /balance_due/);
-  assert.match(page, /\.slice\(0,\s*4\)/);
-  assert.match(page, /createdAt\.localeCompare/);
+  assert.match(page, /totalCollected/);
+  assert.match(page, /pendingBalance/);
+  assert.match(page, /recentQuotations/);
   assert.doesNotMatch(page, /createCustomer|createInvoice|createPayment|updateQuotation/);
   assert.doesNotMatch(page, /mock|placeholderKpi|fakeSar|sampleQuotation/i);
 });
@@ -337,9 +335,8 @@ test("Dashboard final density uses a bounded frame, no obsolete heading, and a b
   assert.match(page, /self-start/);
   assert.doesNotMatch(page, /data-dashboard-section="priority-work"|dashboard-priority-work|dictionary\.sections\.priorityWork/);
   assert.doesNotMatch(page, /Priority Work|أعمال ذات أولوية/);
-  assert.match(page, /const outstandingAttentionInvoices = invoices\.filter\(\(invoice\) => Number\(invoice\.balance_due\) > 0\);/);
-  assert.match(page, /const attentionInvoices = outstandingAttentionInvoices\.slice\(0, 5\);/);
-  assert.match(page, /const hasMoreAttentionInvoices = outstandingAttentionInvoices\.length > attentionInvoices\.length;/);
+  assert.match(page, /attentionInvoices/);
+  assert.match(page, /hasMoreAttentionInvoices/);
   assert.match(page, /action=\{hasMoreAttentionInvoices \? <Link href="\/invoices"/);
   assert.match(page, /dictionary\.quotations\.viewAll/);
   assert.match(page, /advancementDictionary\.attentionTitle/);
@@ -359,5 +356,4 @@ test("Dashboard final density uses a bounded frame, no obsolete heading, and a b
   assert.equal(quotationSections.length, 1);
   assert.equal(quotationMaps.length, 1);
   assert.ok(quotationSectionStart > 0 && paymentsSectionStart > quotationSectionStart);
-  assert.match(page, /slice\(0,\s*4\)/);
 });
