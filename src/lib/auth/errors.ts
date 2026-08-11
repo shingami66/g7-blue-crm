@@ -11,3 +11,10 @@ export class ForbiddenError extends Error {
     this.name = "ForbiddenError";
   }
 }
+
+export class AuthDependencyError extends Error {
+  constructor(message = "Authentication or user data service is unavailable") {
+    super(message);
+    this.name = "AuthDependencyError";
+  }
+}

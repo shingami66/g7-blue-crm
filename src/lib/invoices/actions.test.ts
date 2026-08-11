@@ -46,6 +46,7 @@ const ACTOR_CLERK_USER_ID = "test-user";
 
 class TestUnauthorizedError extends Error {}
 class TestForbiddenError extends Error {}
+class TestAuthDependencyError extends Error {}
 
 type RpcTransportError = { message: string } | null;
 
@@ -333,6 +334,7 @@ mock.module("@/lib/auth/errors", {
   namedExports: {
     UnauthorizedError: TestUnauthorizedError,
     ForbiddenError: TestForbiddenError,
+    AuthDependencyError: TestAuthDependencyError,
   },
 });
 const { INVOICE_PERMISSIONS, hasPermissionForRole } = await import(
@@ -891,4 +893,63 @@ test("issueInvoiceAction fails closed on malformed atomic RPC success data", asy
 
   assert.deepEqual(result, { success: false, error: "invoice_issue_failed" });
   assert.equal(scenario.issueRpcCalls, 1);
+});
+
+test("createInvoiceAction logs operational correlation and sanitizes raw errors on RPC failure", async () => {
+  startScenario({
+    atomicRpcData: null,
+    atomicRpcError: {
+      message: 'FATAL: database "g7_crm" connection failed with internal password secret',
+    },
+  });
+
+  const loggedErrors: string[] = [];
+  const originalConsoleError = console.error;
+  console.error = (...args: unknown[]) => {
+    loggedErrors.push(args.map((a) => String(a)).join(" "));
+  };
+
+  try {
+    const result = await createInvoiceAction(validInput());
+    assert.deepEqual(result, { success: false, error: "invoice_creation_failed" });
+    assert.equal(loggedErrors.length, 1);
+    // Stable operational format: [createInvoiceAction] [<uuid>] Atomic create RPC transport error: database_transport_error
+    assert.match(
+      loggedErrors[0],
+      /^\[createInvoiceAction\] \[[0-9a-f-]+\] Atomic create RPC transport error: database_transport_error$/,
+    );
+    // Must NOT contain sensitive database error text or passwords
+    assert.equal(loggedErrors[0].includes("password"), false);
+    assert.equal(loggedErrors[0].includes("g7_crm"), false);
+  } finally {
+    console.error = originalConsoleError;
+  }
+});
+
+test("issueInvoiceAction logs operational correlation and sanitizes raw errors on RPC failure", async () => {
+  startScenario({
+    issueRpcData: null,
+    issueRpcError: {
+      message: 'FATAL: database query timeout with sensitive internal trace',
+    },
+  });
+
+  const loggedErrors: string[] = [];
+  const originalConsoleError = console.error;
+  console.error = (...args: unknown[]) => {
+    loggedErrors.push(args.map((a) => String(a)).join(" "));
+  };
+
+  try {
+    const result = await issueInvoiceAction(INSERTED_INVOICE_ID);
+    assert.deepEqual(result, { success: false, error: "invoice_issue_failed" });
+    assert.equal(loggedErrors.length, 1);
+    assert.match(
+      loggedErrors[0],
+      /^\[issueInvoiceAction\] \[[0-9a-f-]+\] Atomic issue RPC transport error: database_transport_error$/,
+    );
+    assert.equal(loggedErrors[0].includes("sensitive"), false);
+  } finally {
+    console.error = originalConsoleError;
+  }
 });

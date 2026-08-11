@@ -2,7 +2,7 @@
 
 import { requirePermission } from "@/lib/auth/permissions";
 import { INVOICE_PERMISSIONS } from "@/lib/auth/role-permissions";
-import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
+import { UnauthorizedError, ForbiddenError, AuthDependencyError } from "@/lib/auth/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { consumeRateLimit } from "@/lib/security/rate-limit";
 import { createInvoiceSchema } from "./schemas";
@@ -183,6 +183,7 @@ function parseIssueInvoiceAtomicRpcData(
 export async function createInvoiceAction(
   input: unknown,
 ): Promise<CreateInvoiceResult> {
+  const correlationId = crypto.randomUUID();
   try {
     const user = await requirePermission(INVOICE_PERMISSIONS.write);
 
@@ -282,10 +283,9 @@ export async function createInvoiceAction(
       ) {
         return { success: false, error: "invoice_snapshot_unavailable" };
       }
-    } catch (err) {
+    } catch {
       console.error(
-        "[createInvoiceAction] Snapshot error:",
-        err instanceof Error ? err.message : "Unknown",
+        `[createInvoiceAction] [${correlationId}] Snapshot build error: snapshot_generation_failed`,
       );
       return { success: false, error: "invoice_snapshot_unavailable" };
     }
@@ -315,8 +315,7 @@ export async function createInvoiceAction(
 
     if (rpcError) {
       console.error(
-        "[createInvoiceAction] Atomic create RPC transport error:",
-        rpcError.message,
+        `[createInvoiceAction] [${correlationId}] Atomic create RPC transport error: database_transport_error`,
       );
       return { success: false, error: "invoice_creation_failed" };
     }
@@ -324,7 +323,7 @@ export async function createInvoiceAction(
     const rpcRow = parseCreateInvoiceAtomicRpcData(rpcData);
     if (!rpcRow) {
       console.error(
-        "[createInvoiceAction] Atomic create RPC returned an invalid row shape",
+        `[createInvoiceAction] [${correlationId}] Atomic create RPC returned invalid row shape: malformed_rpc_payload`,
       );
       return { success: false, error: "invoice_creation_failed" };
     }
@@ -345,7 +344,7 @@ export async function createInvoiceAction(
       rpcRow.invoice_number.trim().length === 0
     ) {
       console.error(
-        "[createInvoiceAction] Atomic create RPC returned success without invoice identity",
+        `[createInvoiceAction] [${correlationId}] Atomic create RPC returned success without invoice identity: missing_identity`,
       );
       return { success: false, error: "invoice_creation_failed" };
     }
@@ -362,9 +361,14 @@ export async function createInvoiceAction(
     if (err instanceof ForbiddenError) {
       return { success: false, error: "Forbidden" };
     }
+    if (err instanceof AuthDependencyError) {
+      console.error(
+        `[createInvoiceAction] [${correlationId}] Auth dependency failure: auth_unavailable`,
+      );
+      return { success: false, error: "An unexpected error occurred." };
+    }
     console.error(
-      "[createInvoiceAction] Unexpected error:",
-      err instanceof Error ? err.message : "Unknown",
+      `[createInvoiceAction] [${correlationId}] Unexpected error: internal_error`,
     );
     return { success: false, error: "An unexpected error occurred." };
   }
@@ -373,6 +377,7 @@ export async function createInvoiceAction(
 export async function issueInvoiceAction(
   invoiceId: string,
 ): Promise<IssueInvoiceResult> {
+  const correlationId = crypto.randomUUID();
   try {
     const user = await requirePermission(INVOICE_PERMISSIONS.write);
 
@@ -401,8 +406,7 @@ export async function issueInvoiceAction(
 
     if (rpcError) {
       console.error(
-        "[issueInvoiceAction] Atomic issue RPC transport error:",
-        rpcError.message,
+        `[issueInvoiceAction] [${correlationId}] Atomic issue RPC transport error: database_transport_error`,
       );
       return { success: false, error: "invoice_issue_failed" };
     }
@@ -410,7 +414,7 @@ export async function issueInvoiceAction(
     const rpcRow = parseIssueInvoiceAtomicRpcData(rpcData);
     if (!rpcRow) {
       console.error(
-        "[issueInvoiceAction] Atomic issue RPC returned an invalid row shape",
+        `[issueInvoiceAction] [${correlationId}] Atomic issue RPC returned invalid row shape: malformed_rpc_payload`,
       );
       return { success: false, error: "invoice_issue_failed" };
     }
@@ -431,7 +435,7 @@ export async function issueInvoiceAction(
       rpcRow.invoice_number.trim().length === 0
     ) {
       console.error(
-        "[issueInvoiceAction] Atomic issue RPC returned success without invoice identity",
+        `[issueInvoiceAction] [${correlationId}] Atomic issue RPC returned success without invoice identity: missing_identity`,
       );
       return { success: false, error: "invoice_issue_failed" };
     }
@@ -444,9 +448,14 @@ export async function issueInvoiceAction(
     if (err instanceof ForbiddenError) {
       return { success: false, error: "Forbidden" };
     }
+    if (err instanceof AuthDependencyError) {
+      console.error(
+        `[issueInvoiceAction] [${correlationId}] Auth dependency failure: auth_unavailable`,
+      );
+      return { success: false, error: "An unexpected error occurred." };
+    }
     console.error(
-      "[issueInvoiceAction] Unexpected error:",
-      err instanceof Error ? err.message : "Unknown",
+      `[issueInvoiceAction] [${correlationId}] Unexpected error: internal_error`,
     );
     return { success: false, error: "An unexpected error occurred." };
   }

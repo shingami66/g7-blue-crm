@@ -5,9 +5,25 @@ import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizePersistedLocale, type Locale } from "@/lib/i18n/locales";
 import { hasPermissionForRole } from "./role-permissions";
-import { UnauthorizedError, ForbiddenError } from "./errors";
+import { UnauthorizedError, ForbiddenError, AuthDependencyError } from "./errors";
 
 export { ROLE_PERMISSIONS } from "./role-permissions";
+export { UnauthorizedError, ForbiddenError, AuthDependencyError } from "./errors";
+
+const NO_ROW_ERROR_CODE = "PGRST116";
+
+function isNextControlFlowError(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const digest = (err as { digest?: unknown }).digest;
+  if (typeof digest === "string") {
+    return (
+      digest === "DYNAMIC_SERVER_USAGE" ||
+      digest.startsWith("NEXT_") ||
+      digest.startsWith("BAILOUT_")
+    );
+  }
+  return false;
+}
 
 // ---------------------------------------------------------------------------
 // HELPERS
@@ -15,10 +31,22 @@ export { ROLE_PERMISSIONS } from "./role-permissions";
 
 /**
  * Retrieves the current app user from Supabase using Clerk's userId.
- * Returns null if the user is not found or if an error occurs.
+ * Returns null if the user is not authenticated or not found in app_users.
+ * Throws AuthDependencyError if an auth or database dependency failure occurs.
  */
 export const getCurrentAppUser = cache(async () => {
-  const { userId } = await auth();
+  let userId: string | null = null;
+  try {
+    const session = await auth();
+    userId = session?.userId ?? null;
+  } catch (err) {
+    if (isNextControlFlowError(err)) {
+      throw err;
+    }
+    console.error("[getCurrentAppUser] Auth provider dependency error");
+    throw new AuthDependencyError("Authentication provider dependency failure");
+  }
+
   if (!userId) return null;
 
   try {
@@ -30,14 +58,20 @@ export const getCurrentAppUser = cache(async () => {
       .single();
 
     if (error) {
-      console.error("[getCurrentAppUser] Database error fetching user");
-      return null;
+      if (error.code === NO_ROW_ERROR_CODE) {
+        return null;
+      }
+      console.error("[getCurrentAppUser] Database dependency error");
+      throw new AuthDependencyError("Database query failed while fetching user");
     }
 
     return data;
-  } catch {
-    console.error("[getCurrentAppUser] Unexpected error");
-    return null;
+  } catch (err) {
+    if (err instanceof AuthDependencyError || isNextControlFlowError(err)) {
+      throw err;
+    }
+    console.error("[getCurrentAppUser] Unexpected dependency error");
+    throw new AuthDependencyError("Unexpected database failure");
   }
 });
 

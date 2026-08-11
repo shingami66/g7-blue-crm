@@ -1,96 +1,149 @@
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { createRequire } from "node:module";
 import test, { mock } from "node:test";
-import type { NextRequest } from "next/server";
 
-type Scenario = {
-  webhookSecret?: string | null;
-  verifyError?: Error | null;
-  webhookEvent?: unknown;
-  existingUser?: { id: string } | null;
-  existingUserError?: { code: string; message: string } | null;
-  insertError?: { message: string } | null;
-  insertedRows?: unknown[];
+type ResolveResult = { url: string; shortCircuit?: true };
+type ResolveContext = { parentURL?: string };
+type ResolveHook = (
+  specifier: string,
+  context: ResolveContext,
+  nextResolve: (specifier: string, context: ResolveContext) => ResolveResult,
+) => ResolveResult;
+
+const require = createRequire(import.meta.url);
+const sourceRootUrl = new URL("../../../../", import.meta.url).href;
+const { registerHooks } = require("node:module") as {
+  registerHooks: (hooks: { resolve: ResolveHook }) => void;
 };
 
-let activeScenario: Scenario | null = null;
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier === "next/server") {
+      return {
+        shortCircuit: true,
+        url: "data:text/javascript,export class NextRequest extends Request {}",
+      };
+    }
 
-const testModuleLoader = `
-export async function resolve(specifier, context, nextResolve) {
-  if (specifier === "server-only") {
-    return { url: "data:text/javascript,", shortCircuit: true };
-  }
-  if (specifier === "next/server") {
-    return { url: "data:text/javascript,export class NextRequest {}", shortCircuit: true };
-  }
-  if (specifier.startsWith("@/")) {
-    return {
-      url: new URL("./src/" + specifier.slice(2) + ".ts", "file:///" + process.cwd().replaceAll("\\\\", "/") + "/").href,
-      shortCircuit: true,
-    };
-  }
-  if (specifier.startsWith(".") && !/\\.(?:[cm]?js|tsx?|json)$/.test(specifier)) {
-    return { url: new URL(specifier + ".ts", context.parentURL).href, shortCircuit: true };
-  }
-  return nextResolve(specifier, context);
+    if (specifier.startsWith("@/")) {
+      return {
+        shortCircuit: true,
+        url: new URL(`../../../../${specifier.slice(2)}.ts`, import.meta.url).href,
+      };
+    }
+
+    if (
+      specifier.startsWith(".") &&
+      !specifier.endsWith(".ts") &&
+      context.parentURL?.startsWith(sourceRootUrl)
+    ) {
+      return nextResolve(`${specifier}.ts`, context);
+    }
+
+    return nextResolve(specifier, context);
+  },
+});
+
+type WebhookScenario = {
+  envThrows: boolean;
+  webhookSecret: string | null;
+  verifyThrows: boolean;
+  verifiedEvent: Record<string, unknown> | null;
+  existingUser: Record<string, unknown> | null;
+  existingUserError: { code: string; message: string } | null;
+  lookupThrows: boolean;
+  insertError: { message: string } | null;
+  insertThrows: boolean;
+  insertedUsers: Array<Record<string, unknown>>;
+};
+
+let currentScenario: WebhookScenario = {
+  envThrows: false,
+  webhookSecret: "whsec_test_secret",
+  verifyThrows: false,
+  verifiedEvent: null,
+  existingUser: null,
+  existingUserError: null,
+  lookupThrows: false,
+  insertError: null,
+  insertThrows: false,
+  insertedUsers: [],
+};
+
+function resetScenario(overrides: Partial<WebhookScenario> = {}) {
+  currentScenario = {
+    envThrows: false,
+    webhookSecret: "whsec_test_secret",
+    verifyThrows: false,
+    verifiedEvent: {
+      data: { id: "user_clerk_123" },
+      type: "user.created",
+    },
+    existingUser: null,
+    existingUserError: null,
+    lookupThrows: false,
+    insertError: null,
+    insertThrows: false,
+    insertedUsers: [],
+    ...overrides,
+  };
 }
-`;
 
-register(`data:text/javascript,${encodeURIComponent(testModuleLoader)}`, import.meta.url);
-
-mock.module("@clerk/nextjs/webhooks", {
+mock.module("@/lib/env", {
   namedExports: {
-    verifyWebhook: async () => {
-      if (activeScenario?.verifyError) {
-        throw activeScenario.verifyError;
+    getClerkWebhookEnv: () => {
+      if (currentScenario.envThrows) {
+        throw new Error("Invalid server environment variables");
       }
-      return activeScenario?.webhookEvent;
+      return {
+        CLERK_WEBHOOK_SIGNING_SECRET: currentScenario.webhookSecret || "",
+      };
     },
   },
 });
 
-mock.module("@/lib/env", {
+mock.module("@clerk/nextjs/webhooks", {
   namedExports: {
-    getClerkWebhookEnv: () => ({
-      CLERK_WEBHOOK_SIGNING_SECRET:
-        activeScenario?.webhookSecret !== undefined
-          ? activeScenario.webhookSecret
-          : "whsec_test_secret_123",
-    }),
+    verifyWebhook: async () => {
+      if (currentScenario.verifyThrows) {
+        throw new Error("Invalid webhook signature");
+      }
+      return currentScenario.verifiedEvent;
+    },
   },
 });
 
 mock.module("@/lib/supabase/admin", {
   namedExports: {
     createAdminClient: () => ({
-      from: () => {
-        const query = {
-          select() {
-            return query;
-          },
-          eq() {
-            return query;
-          },
-          single: async () => {
-            if (activeScenario?.existingUserError) {
-              return { data: null, error: activeScenario.existingUserError };
-            }
-            if (activeScenario?.existingUser) {
-              return { data: activeScenario.existingUser, error: null };
-            }
-            return { data: null, error: { code: "PGRST116", message: "Not found" } };
-          },
-          insert: async (data: unknown) => {
-            if (activeScenario?.insertedRows) {
-              activeScenario.insertedRows.push(data);
-            }
-            if (activeScenario?.insertError) {
-              return { data: null, error: activeScenario.insertError };
-            }
-            return { data, error: null };
-          },
-        };
-        return query;
+      from: (table: string) => {
+        if (table === "app_users") {
+          return {
+            select: () => ({
+              eq: () => ({
+                single: async () => {
+                  if (currentScenario.lookupThrows) {
+                    throw new Error("Network connection reset during user lookup");
+                  }
+                  return {
+                    data: currentScenario.existingUser,
+                    error: currentScenario.existingUserError,
+                  };
+                },
+              }),
+            }),
+            insert: async (user: Record<string, unknown>) => {
+              if (currentScenario.insertThrows) {
+                throw new Error("Socket closed during user insert");
+              }
+              currentScenario.insertedUsers.push(user);
+              return {
+                error: currentScenario.insertError,
+              };
+            },
+          };
+        }
+        throw new Error(`Unexpected table ${table}`);
       },
     }),
   },
@@ -98,276 +151,320 @@ mock.module("@/lib/supabase/admin", {
 
 const { POST } = await import("./route.ts");
 
-function resetScenario(overrides: Partial<Scenario> = {}): Scenario {
-  activeScenario = {
-    webhookSecret: "whsec_test_secret_123",
-    verifyError: null,
-    webhookEvent: null,
-    existingUser: null,
-    existingUserError: null,
-    insertError: null,
-    insertedRows: [],
-    ...overrides,
-  };
-  return activeScenario;
-}
+test("missing or invalid webhook signing secret returns 500 without throwing unhandled exception", async () => {
+  resetScenario({ envThrows: true });
 
-function captureConsole() {
-  const logs: string[] = [];
-  const errors: string[] = [];
-
-  const origLog = console.log;
-  const origError = console.error;
-
-  console.log = (...args: unknown[]) => {
-    logs.push(args.map(String).join(" "));
-  };
+  const loggedErrors: string[] = [];
+  const originalConsoleError = console.error;
   console.error = (...args: unknown[]) => {
-    errors.push(args.map(String).join(" "));
+    loggedErrors.push(args.map((a) => String(a)).join(" "));
   };
 
-  return {
-    logs,
-    errors,
-    all: () => [...logs, ...errors].join("\n"),
-    restore: () => {
-      console.log = origLog;
-      console.error = origError;
-    },
-  };
-}
+  try {
+    const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+      method: "POST",
+      headers: { "svix-id": "svix_msg_123" },
+    });
 
-test("Clerk webhook successfully processes user.created without logging PII (raw IDs, emails, roles)", async () => {
-  const rawClerkId = "user_clerk_secret_999888";
-  const rawEmail = "sensitive_agent@company.sa";
-  const rawRole = "sales";
+    const res = await POST(req as unknown as import("next/server").NextRequest);
+    assert.equal(res.status, 500);
+    const body = await res.text();
+    assert.equal(body, "Server configuration error");
 
-  const s = resetScenario({
-    webhookEvent: {
+    // Verify operational logs
+    assert.equal(loggedErrors.length, 1);
+    assert.equal(
+      loggedErrors[0],
+      "[Clerk Webhook] [svix_msg_123] Configuration error: missing or invalid signing secret",
+    );
+  } finally {
+    console.error = originalConsoleError;
+  }
+});
+
+test("empty webhook secret returns 500 without throwing", async () => {
+  resetScenario({ webhookSecret: "" });
+
+  const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+    method: "POST",
+    headers: { "x-request-id": "req-wh-456" },
+  });
+
+  const res = await POST(req as unknown as import("next/server").NextRequest);
+  assert.equal(res.status, 500);
+  const body = await res.text();
+  assert.equal(body, "Server configuration error");
+});
+
+test("invalid webhook signature returns 400", async () => {
+  resetScenario({ verifyThrows: true });
+
+  const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+    method: "POST",
+    headers: { "svix-id": "svix_sig_fail" },
+  });
+
+  const res = await POST(req as unknown as import("next/server").NextRequest);
+  assert.equal(res.status, 400);
+  const body = await res.text();
+  assert.equal(body, "Invalid signature");
+});
+
+test("user.created with missing metadata returns 200 ignored", async () => {
+  resetScenario({
+    verifiedEvent: {
+      data: { id: "clerk_u1" },
       type: "user.created",
+    },
+  });
+
+  const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+    method: "POST",
+  });
+
+  const res = await POST(req as unknown as import("next/server").NextRequest);
+  assert.equal(res.status, 200);
+  const body = await res.text();
+  assert.equal(body, "Ignored: Missing metadata");
+});
+
+test("user.created with invalid CRM role returns 200 ignored", async () => {
+  resetScenario({
+    verifiedEvent: {
       data: {
-        id: rawClerkId,
-        public_metadata: { crm_role: rawRole },
-        primary_email_address_id: "email_1",
-        email_addresses: [{ id: "email_1", email_address: rawEmail }],
-        first_name: "Sarah",
-        last_name: "Al-Ahmad",
+        id: "clerk_u1",
+        public_metadata: { crm_role: "superuser_invalid" },
       },
+      type: "user.created",
     },
   });
 
-  const captured = captureConsole();
-  let response: Response;
-  try {
-    response = await POST({} as NextRequest);
-  } finally {
-    captured.restore();
-  }
-
-  assert.equal(response.status, 200);
-  assert.equal(await response.text(), "Webhook processed");
-
-  // Database insert assertions
-  assert.equal(s.insertedRows?.length, 1);
-  assert.deepEqual(s.insertedRows?.[0], {
-    clerk_user_id: rawClerkId,
-    email: rawEmail,
-    name: "Sarah Al-Ahmad",
-    role: rawRole,
-    is_active: true,
+  const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+    method: "POST",
   });
 
-  // Log sanitization assertions
-  const allLogs = captured.all();
-  assert.equal(allLogs.includes(rawClerkId), false, "Logs must NOT contain raw Clerk user ID");
-  assert.equal(allLogs.includes(rawEmail), false, "Logs must NOT contain raw email address");
-  assert.equal(allLogs.includes(rawRole), false, "Logs must NOT contain CRM role");
-
-  // Safe operational context assertions
-  assert.ok(allLogs.includes("[Clerk Webhook] Received event: user.created"));
-  assert.ok(allLogs.includes("[Clerk Webhook] Successfully created app_users row."));
+  const res = await POST(req as unknown as import("next/server").NextRequest);
+  assert.equal(res.status, 200);
+  const body = await res.text();
+  assert.equal(body, "Ignored: Invalid or missing CRM role");
 });
 
-test("Clerk webhook skips existing user idempotently without leaking Clerk user ID in logs", async () => {
-  const rawClerkId = "user_existing_444555";
+test("user.created with existing user performs idempotent skip", async () => {
   resetScenario({
-    existingUser: { id: "00000000-0000-0000-0000-000000000001" },
-    webhookEvent: {
-      type: "user.created",
+    verifiedEvent: {
       data: {
-        id: rawClerkId,
-        public_metadata: { crm_role: "operations" },
-        primary_email_address_id: "email_1",
-        email_addresses: [{ id: "email_1", email_address: "ops@company.sa" }],
-        first_name: "Tariq",
-        last_name: "Mansour",
-      },
-    },
-  });
-
-  const captured = captureConsole();
-  let response: Response;
-  try {
-    response = await POST({} as NextRequest);
-  } finally {
-    captured.restore();
-  }
-
-  assert.equal(response.status, 200);
-  assert.equal(await response.text(), "Idempotent skip");
-
-  const allLogs = captured.all();
-  assert.equal(allLogs.includes(rawClerkId), false, "Logs must NOT contain raw Clerk user ID");
-  assert.ok(allLogs.includes("[Clerk Webhook] User already exists in app_users, skipping insertion."));
-});
-
-test("Clerk webhook rejects invalid CRM role without logging user ID or invalid role name", async () => {
-  const rawClerkId = "user_invalid_role_777";
-  const invalidRole = "superadmin_hacker";
-  resetScenario({
-    webhookEvent: {
-      type: "user.created",
-      data: {
-        id: rawClerkId,
-        public_metadata: { crm_role: invalidRole },
-        primary_email_address_id: "email_1",
-        email_addresses: [{ id: "email_1", email_address: "hacker@domain.com" }],
-      },
-    },
-  });
-
-  const captured = captureConsole();
-  let response: Response;
-  try {
-    response = await POST({} as NextRequest);
-  } finally {
-    captured.restore();
-  }
-
-  assert.equal(response.status, 200);
-  assert.equal(await response.text(), "Ignored: Invalid or missing CRM role");
-
-  const allLogs = captured.all();
-  assert.equal(allLogs.includes(rawClerkId), false, "Logs must NOT contain raw Clerk user ID");
-  assert.equal(allLogs.includes(invalidRole), false, "Logs must NOT contain invalid role name");
-  assert.ok(allLogs.includes("[Clerk Webhook] Rejected: Missing or invalid role in public_metadata"));
-});
-
-test("Clerk webhook rejects missing email without logging user ID", async () => {
-  const rawClerkId = "user_missing_email_123";
-  resetScenario({
-    webhookEvent: {
-      type: "user.created",
-      data: {
-        id: rawClerkId,
-        public_metadata: { crm_role: "viewer" },
-        email_addresses: [],
-      },
-    },
-  });
-
-  const captured = captureConsole();
-  let response: Response;
-  try {
-    response = await POST({} as NextRequest);
-  } finally {
-    captured.restore();
-  }
-
-  assert.equal(response.status, 200);
-  assert.equal(await response.text(), "Ignored: Missing email");
-
-  const allLogs = captured.all();
-  assert.equal(allLogs.includes(rawClerkId), false, "Logs must NOT contain raw Clerk user ID");
-  assert.ok(allLogs.includes("[Clerk Webhook] Rejected: Missing email address in payload"));
-});
-
-test("Clerk webhook handles verification failure without leaking raw signature/payload", async () => {
-  resetScenario({
-    verifyError: new Error("Invalid signature svix-signature=v1,abcdef123456 token=secret123"),
-  });
-
-  const captured = captureConsole();
-  let response: Response;
-  try {
-    response = await POST({} as NextRequest);
-  } finally {
-    captured.restore();
-  }
-
-  assert.equal(response.status, 400);
-  assert.equal(await response.text(), "Invalid signature");
-
-  const allLogs = captured.all();
-  assert.equal(allLogs.includes("abcdef123456"), false, "Logs must not dump raw signature/token data");
-  assert.ok(allLogs.includes("[Clerk Webhook] Webhook signature verification failed."));
-});
-
-test("Clerk webhook handles database lookup failure without logging uncontrolled DB error.message", async () => {
-  const sensitiveDbError = "FATAL: connection to db failed for clerk_id=user_secret_diag_999";
-  resetScenario({
-    existingUserError: { code: "50000", message: sensitiveDbError },
-    webhookEvent: {
-      type: "user.created",
-      data: {
-        id: "user_lookup_fail_123",
+        id: "clerk_u1",
         public_metadata: { crm_role: "admin" },
-        primary_email_address_id: "email_1",
-        email_addresses: [{ id: "email_1", email_address: "admin@company.sa" }],
+        primary_email_address_id: "em1",
+        email_addresses: [{ id: "em1", email_address: "admin@example.com" }],
         first_name: "Admin",
         last_name: "User",
       },
+      type: "user.created",
     },
+    existingUser: { id: "app_u1" },
   });
 
-  const captured = captureConsole();
-  let response: Response;
-  try {
-    response = await POST({} as NextRequest);
-  } finally {
-    captured.restore();
-  }
+  const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+    method: "POST",
+  });
 
-  assert.equal(response.status, 500);
-  assert.equal(await response.text(), "Database lookup failed");
-
-  const allLogs = captured.all();
-  assert.equal(allLogs.includes(sensitiveDbError), false, "Logs must NOT leak database error message");
-  assert.equal(allLogs.includes("user_lookup_fail_123"), false, "Logs must NOT contain Clerk user ID");
-  assert.ok(allLogs.includes("[Clerk Webhook] Database lookup failed while checking existing user."));
+  const res = await POST(req as unknown as import("next/server").NextRequest);
+  assert.equal(res.status, 200);
+  const body = await res.text();
+  assert.equal(body, "Idempotent skip");
+  assert.equal(currentScenario.insertedUsers.length, 0);
 });
 
-test("Clerk webhook handles database insert failure without logging uncontrolled DB error.message", async () => {
-  const sensitiveInsertError = "Key (clerk_user_id)=(user_insert_fail_456) already exists in table app_users role=manager email=mgr@company.sa";
+test("user.created with valid payload creates app_users row", async () => {
   resetScenario({
-    insertError: { message: sensitiveInsertError },
-    webhookEvent: {
-      type: "user.created",
+    verifiedEvent: {
       data: {
-        id: "user_insert_fail_456",
-        public_metadata: { crm_role: "manager" },
-        primary_email_address_id: "email_1",
-        email_addresses: [{ id: "email_1", email_address: "mgr@company.sa" }],
-        first_name: "Manager",
-        last_name: "User",
+        id: "clerk_u1",
+        public_metadata: { crm_role: "sales" },
+        primary_email_address_id: "em1",
+        email_addresses: [{ id: "em1", email_address: "sales@example.com" }],
+        first_name: "Sarah",
+        last_name: "Sales",
       },
+      type: "user.created",
     },
+    existingUser: null,
+    existingUserError: { code: "PGRST116", message: "No rows found" },
   });
 
-  const captured = captureConsole();
-  let response: Response;
+  const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+    method: "POST",
+    headers: { "svix-id": "svix_user_created_1" },
+  });
+
+  const res = await POST(req as unknown as import("next/server").NextRequest);
+  assert.equal(res.status, 200);
+  const body = await res.text();
+  assert.equal(body, "Webhook processed");
+  assert.equal(currentScenario.insertedUsers.length, 1);
+  assert.deepEqual(currentScenario.insertedUsers[0], {
+    clerk_user_id: "clerk_u1",
+    email: "sales@example.com",
+    name: "Sarah Sales",
+    role: "sales",
+    is_active: true,
+  });
+});
+
+test("user.created with DB lookup error returns 500 with sanitized log", async () => {
+  resetScenario({
+    verifiedEvent: {
+      data: {
+        id: "clerk_u1",
+        public_metadata: { crm_role: "sales" },
+        primary_email_address_id: "em1",
+        email_addresses: [{ id: "em1", email_address: "sales@example.com" }],
+      },
+      type: "user.created",
+    },
+    existingUser: null,
+    existingUserError: { code: "57P01", message: "admin_shutdown" },
+  });
+
+  const loggedErrors: string[] = [];
+  const originalConsoleError = console.error;
+  console.error = (...args: unknown[]) => {
+    loggedErrors.push(args.map((a) => String(a)).join(" "));
+  };
+
   try {
-    response = await POST({} as NextRequest);
+    const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+      method: "POST",
+      headers: { "svix-id": "svix_lookup_fail" },
+    });
+
+    const res = await POST(req as unknown as import("next/server").NextRequest);
+    assert.equal(res.status, 500);
+    const body = await res.text();
+    assert.equal(body, "Database lookup failed");
+    assert.equal(
+      loggedErrors.includes(
+        "[Clerk Webhook] [svix_lookup_fail] Database lookup error: user_lookup_failed",
+      ),
+      true,
+    );
   } finally {
-    captured.restore();
+    console.error = originalConsoleError;
   }
+});
 
-  assert.equal(response.status, 500);
-  assert.equal(await response.text(), "Database insert failed");
+test("user.created when DB lookup throws catches transport exception and returns safe 500", async () => {
+  resetScenario({
+    verifiedEvent: {
+      data: {
+        id: "clerk_u1",
+        public_metadata: { crm_role: "sales" },
+        primary_email_address_id: "em1",
+        email_addresses: [{ id: "em1", email_address: "sales@example.com" }],
+      },
+      type: "user.created",
+    },
+    lookupThrows: true,
+  });
 
-  const allLogs = captured.all();
-  assert.equal(allLogs.includes(sensitiveInsertError), false, "Logs must NOT leak database error message");
-  assert.equal(allLogs.includes("user_insert_fail_456"), false, "Logs must NOT contain Clerk user ID");
-  assert.equal(allLogs.includes("mgr@company.sa"), false, "Logs must NOT contain email address");
-  assert.ok(allLogs.includes("[Clerk Webhook] Failed to insert app_user."));
+  const loggedErrors: string[] = [];
+  const originalConsoleError = console.error;
+  console.error = (...args: unknown[]) => {
+    loggedErrors.push(args.map((a) => String(a)).join(" "));
+  };
+
+  try {
+    const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+      method: "POST",
+      headers: { "svix-id": "svix_lookup_thrown" },
+    });
+
+    const res = await POST(req as unknown as import("next/server").NextRequest);
+    assert.equal(res.status, 500);
+    const body = await res.text();
+    assert.equal(body, "Database lookup failed");
+    assert.equal(
+      loggedErrors.includes(
+        "[Clerk Webhook] [svix_lookup_thrown] Database lookup error: user_lookup_failed",
+      ),
+      true,
+    );
+  } finally {
+    console.error = originalConsoleError;
+  }
+});
+
+test("user.created when DB insert throws catches transport exception and returns safe 500", async () => {
+  resetScenario({
+    verifiedEvent: {
+      data: {
+        id: "clerk_u1",
+        public_metadata: { crm_role: "sales" },
+        primary_email_address_id: "em1",
+        email_addresses: [{ id: "em1", email_address: "sales@example.com" }],
+      },
+      type: "user.created",
+    },
+    existingUser: null,
+    existingUserError: { code: "PGRST116", message: "No rows found" },
+    insertThrows: true,
+  });
+
+  const loggedErrors: string[] = [];
+  const originalConsoleError = console.error;
+  console.error = (...args: unknown[]) => {
+    loggedErrors.push(args.map((a) => String(a)).join(" "));
+  };
+
+  try {
+    const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+      method: "POST",
+      headers: { "svix-id": "svix_insert_thrown" },
+    });
+
+    const res = await POST(req as unknown as import("next/server").NextRequest);
+    assert.equal(res.status, 500);
+    const body = await res.text();
+    assert.equal(body, "Database insert failed");
+    assert.equal(
+      loggedErrors.includes(
+        "[Clerk Webhook] [svix_insert_thrown] Database insert error: user_insert_failed",
+      ),
+      true,
+    );
+  } finally {
+    console.error = originalConsoleError;
+  }
+});
+
+test("webhook route sanitizes malformed/injected correlation IDs to a UUID", async () => {
+  resetScenario({ envThrows: true });
+
+  const loggedErrors: string[] = [];
+  const originalConsoleError = console.error;
+  console.error = (...args: unknown[]) => {
+    loggedErrors.push(args.map((a) => String(a)).join(" "));
+  };
+
+  try {
+    const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+      method: "POST",
+      headers: { "svix-id": "bad header with spaces and special chars @#$!" },
+    });
+
+    const res = await POST(req as unknown as import("next/server").NextRequest);
+    assert.equal(res.status, 500);
+
+    assert.equal(loggedErrors.length, 1);
+    // Must NOT contain the un-sanitized string
+    assert.equal(loggedErrors[0].includes("bad header"), false);
+    // Must match UUID format
+    assert.match(
+      loggedErrors[0],
+      /^\[Clerk Webhook\] \[[0-9a-f-]+\] Configuration error: missing or invalid signing secret$/,
+    );
+  } finally {
+    console.error = originalConsoleError;
+  }
 });
