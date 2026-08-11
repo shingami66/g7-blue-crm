@@ -13,7 +13,7 @@ import {
 import {
   inviteUser,
   updateUserRole,
-  toggleUserActive,
+  setUserActive,
   revokeInvitation,
 } from "@/lib/admin/users/actions";
 import { CRM_ROLES } from "@/lib/admin/users/schemas";
@@ -89,10 +89,10 @@ export function AdminUsersClient({
     setIsInviting(false);
   };
 
-  const handleToggleActive = async (userId: string) => {
+  const handleToggleActive = async (userId: string, currentActive: boolean) => {
     setActionLoadingId(userId);
     setActionError("");
-    const result = await toggleUserActive({ userId });
+    const result = await setUserActive({ userId, isActive: !currentActive });
     if (result.success) {
       router.refresh();
     } else {
@@ -349,7 +349,7 @@ export function AdminUsersClient({
                       <td className="px-6 py-4 text-right">
                         <button
                           type="button"
-                          onClick={() => handleToggleActive(user.id)}
+                          onClick={() => handleToggleActive(user.id, user.is_active)}
                           disabled={
                             actionLoadingId === user.id || currentUserId === user.id
                           }

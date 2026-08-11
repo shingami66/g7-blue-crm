@@ -8,7 +8,7 @@ import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import {
   inviteUserSchema,
   updateUserRoleSchema,
-  toggleUserActiveSchema,
+  setUserActiveSchema,
   CRM_ROLES,
 } from "./schemas";
 
@@ -18,25 +18,8 @@ export type ActionResult<T = void> = {
   data?: T;
 };
 
-const NO_ROW_ERROR_CODE = "PGRST116";
+// Invariant: At least one active admin must remain (enforced atomically via update_app_user_role / set_app_user_active RPCs; legacy hasOtherActiveAdmin retired).
 const LAST_ACTIVE_ADMIN_ERROR = "At least one active admin must remain.";
-
-async function hasOtherActiveAdmin(excludedUserId: string): Promise<ActionResult<boolean>> {
-  const supabase = createAdminClient();
-  const { count, error } = await supabase
-    .from("app_users")
-    .select("id", { count: "exact", head: true })
-    .eq("role", "admin")
-    .eq("is_active", true)
-    .neq("id", excludedUserId);
-
-  if (error) {
-    console.error("[hasOtherActiveAdmin] Supabase error:", error.message);
-    return { success: false, error: "Failed to verify admin access safety. Please try again." };
-  }
-
-  return { success: true, data: (count ?? 0) > 0 };
-}
 
 /**
  * Invites a new user via Clerk Invitations API.
@@ -89,6 +72,7 @@ export async function inviteUser(input: unknown): Promise<ActionResult> {
 /**
  * Updates the role of an existing app_users row.
  * Validates role against the CRM whitelist.
+ * Atomically enforces that at least one active admin remains and logs an audit event.
  */
 export async function updateUserRole(input: unknown): Promise<ActionResult> {
   try {
@@ -111,41 +95,38 @@ export async function updateUserRole(input: unknown): Promise<ActionResult> {
     }
 
     const supabase = createAdminClient();
-    const { data: targetUser, error: fetchError } = await supabase
-      .from("app_users")
-      .select("id, role, is_active")
-      .eq("id", userId)
-      .single();
-
-    if (fetchError?.code === NO_ROW_ERROR_CODE) {
-      return { success: false, error: "User not found." };
-    }
-
-    if (fetchError) {
-      console.error("[updateUserRole] Supabase error:", fetchError.message);
-      return { success: false, error: "Failed to load user. Please try again." };
-    }
-
-    if (!targetUser) {
-      return { success: false, error: "User not found." };
-    }
-
-    if (targetUser.role === "admin" && targetUser.is_active && role !== "admin") {
-      const activeAdminCheck = await hasOtherActiveAdmin(userId);
-      if (!activeAdminCheck.success) return { success: false, error: activeAdminCheck.error };
-      if (!activeAdminCheck.data) {
-        return { success: false, error: LAST_ACTIVE_ADMIN_ERROR };
-      }
-    }
-
-    const { error } = await supabase
-      .from("app_users")
-      .update({ role, updated_at: new Date().toISOString() })
-      .eq("id", userId);
+    const { data, error } = await supabase.rpc("update_app_user_role", {
+      p_user_id: userId,
+      p_role: role,
+      p_actor_id: currentUser.clerk_user_id,
+      p_actor_role: currentUser.role,
+    });
 
     if (error) {
-      console.error("[updateUserRole] Supabase error:", error.message);
+      console.error("[updateUserRole] RPC error:", error.message);
       return { success: false, error: "Failed to update role. Please try again." };
+    }
+
+    const resultRow = Array.isArray(data) ? data[0] : data;
+    if (!resultRow) {
+      return { success: false, error: "Failed to update role. Please try again." };
+    }
+
+    if (resultRow.error_code) {
+      switch (resultRow.error_code) {
+        case "user_not_found":
+          return { success: false, error: "User not found." };
+        case "cannot_change_own_role":
+          return { success: false, error: "You cannot change your own role." };
+        case "last_active_admin":
+          return { success: false, error: LAST_ACTIVE_ADMIN_ERROR };
+        case "invalid_role":
+          return { success: false, error: "Invalid role selected." };
+        case "invalid_actor":
+        case "invalid_input":
+        default:
+          return { success: false, error: "Failed to update role. Please try again." };
+      }
     }
 
     revalidatePath("/admin/users");
@@ -159,66 +140,59 @@ export async function updateUserRole(input: unknown): Promise<ActionResult> {
 }
 
 /**
- * Toggles the is_active status of an existing app_users row.
+ * Sets the is_active status of an existing app_users row to a desired state.
  * Blocks self-deactivation to prevent lockout.
+ * Idempotent: repeated calls with the same desired state succeed safely.
+ * Atomically enforces that at least one active admin remains and logs an audit event.
  */
-export async function toggleUserActive(input: unknown): Promise<ActionResult> {
+export async function setUserActive(input: unknown): Promise<ActionResult> {
   try {
     const currentUser = await requirePermission("users:manage");
-    const parsed = toggleUserActiveSchema.safeParse(input);
+    const parsed = setUserActiveSchema.safeParse(input);
 
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message ?? "Validation failed";
       return { success: false, error: firstError };
     }
 
-    const { userId } = parsed.data;
+    const { userId, isActive } = parsed.data;
 
     // Block self-deactivation
-    if (userId === currentUser.id) {
+    if (userId === currentUser.id && !isActive) {
       return { success: false, error: "You cannot deactivate your own account." };
     }
 
     const supabase = createAdminClient();
-
-    // Fetch target user's current state
-    const { data: targetUser, error: fetchError } = await supabase
-      .from("app_users")
-      .select("id, role, is_active")
-      .eq("id", userId)
-      .single();
-
-    if (fetchError?.code === NO_ROW_ERROR_CODE) {
-      return { success: false, error: "User not found." };
-    }
-
-    if (fetchError) {
-      console.error("[toggleUserActive] Supabase error:", fetchError.message);
-      return { success: false, error: "Failed to load user. Please try again." };
-    }
-
-    if (!targetUser) {
-      return { success: false, error: "User not found." };
-    }
-
-    const newActiveStatus = !targetUser.is_active;
-
-    if (targetUser.role === "admin" && targetUser.is_active && !newActiveStatus) {
-      const activeAdminCheck = await hasOtherActiveAdmin(userId);
-      if (!activeAdminCheck.success) return { success: false, error: activeAdminCheck.error };
-      if (!activeAdminCheck.data) {
-        return { success: false, error: LAST_ACTIVE_ADMIN_ERROR };
-      }
-    }
-
-    const { error } = await supabase
-      .from("app_users")
-      .update({ is_active: newActiveStatus, updated_at: new Date().toISOString() })
-      .eq("id", userId);
+    const { data, error } = await supabase.rpc("set_app_user_active", {
+      p_user_id: userId,
+      p_is_active: isActive,
+      p_actor_id: currentUser.clerk_user_id,
+      p_actor_role: currentUser.role,
+    });
 
     if (error) {
-      console.error("[toggleUserActive] Supabase error:", error.message);
+      console.error("[setUserActive] RPC error:", error.message);
       return { success: false, error: "Failed to update user status. Please try again." };
+    }
+
+    const resultRow = Array.isArray(data) ? data[0] : data;
+    if (!resultRow) {
+      return { success: false, error: "Failed to update user status. Please try again." };
+    }
+
+    if (resultRow.error_code) {
+      switch (resultRow.error_code) {
+        case "user_not_found":
+          return { success: false, error: "User not found." };
+        case "cannot_deactivate_own_account":
+          return { success: false, error: "You cannot deactivate your own account." };
+        case "last_active_admin":
+          return { success: false, error: LAST_ACTIVE_ADMIN_ERROR };
+        case "invalid_actor":
+        case "invalid_input":
+        default:
+          return { success: false, error: "Failed to update user status. Please try again." };
+      }
     }
 
     revalidatePath("/admin/users");
@@ -226,10 +200,11 @@ export async function toggleUserActive(input: unknown): Promise<ActionResult> {
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
-    console.error("[toggleUserActive] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    console.error("[setUserActive] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { success: false, error: "An unexpected error occurred." };
   }
 }
+
 
 /**
  * Revokes a pending Clerk invitation by invitation ID.

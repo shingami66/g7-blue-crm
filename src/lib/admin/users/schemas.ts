@@ -31,6 +31,7 @@ export const updateUserRoleSchema = z.object({
   role: crmRoleSchema,
 }).strict();
 
-export const toggleUserActiveSchema = z.object({
+export const setUserActiveSchema = z.object({
   userId: z.string().uuid("Invalid user ID"),
+  isActive: z.boolean(),
 }).strict();
