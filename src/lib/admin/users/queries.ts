@@ -6,7 +6,6 @@ import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 
 export interface AppUserRow {
   id: string;
-  clerk_user_id: string;
   email: string;
   name: string;
   role: string;
@@ -30,7 +29,7 @@ export async function getAppUsers(): Promise<AppUsersQueryResult> {
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("app_users")
-      .select("id, clerk_user_id, email, name, role, is_active, created_at, updated_at")
+      .select("id, email, name, role, is_active, created_at, updated_at")
       .order("created_at", { ascending: true });
 
     if (error) {

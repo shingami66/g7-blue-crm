@@ -22,22 +22,22 @@ export async function POST(req: NextRequest) {
     evt = await verifyWebhook(req, {
       signingSecret: webhookSecret,
     });
-  } catch (err) {
-    console.error("[Clerk Webhook] Error verifying webhook:", err);
+  } catch {
+    console.error("[Clerk Webhook] Webhook signature verification failed.");
     return new Response("Invalid signature", { status: 400 });
   }
 
   const { id } = evt.data;
   const eventType = evt.type;
 
-  console.log(`[Clerk Webhook] Received event ${eventType} for user ${id}`);
+  console.log(`[Clerk Webhook] Received event: ${eventType}`);
 
   if (eventType === "user.created") {
     const data = (evt as UserWebhookEvent).data;
 
     if (!("public_metadata" in data)) {
       console.error(
-        `[Clerk Webhook] Rejected: Missing public_metadata for user ${id}`
+        "[Clerk Webhook] Rejected: Missing public_metadata"
       );
       return new Response("Ignored: Missing metadata", { status: 200 });
     }
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       !CRM_ROLES.includes(intendedRole as (typeof CRM_ROLES)[number])
     ) {
       console.error(
-        `[Clerk Webhook] Rejected: Missing, invalid, or unrecognized role in public_metadata for user ${id}. Intended role: ${intendedRole}`
+        "[Clerk Webhook] Rejected: Missing or invalid role in public_metadata"
       );
       return new Response("Ignored: Invalid or missing CRM role", {
         status: 200,
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
     if (!email) {
       console.error(
-        `[Clerk Webhook] Rejected: No email address found for user ${id}`
+        "[Clerk Webhook] Rejected: Missing email address in payload"
       );
       return new Response("Ignored: Missing email", { status: 200 });
     }
@@ -84,15 +84,14 @@ export async function POST(req: NextRequest) {
 
     if (existingUserError && existingUserError.code !== NO_ROW_ERROR_CODE) {
       console.error(
-        `[Clerk Webhook] Failed to check existing app_user for ${id}:`,
-        existingUserError.message
+        "[Clerk Webhook] Database lookup failed while checking existing user."
       );
       return new Response("Database lookup failed", { status: 500 });
     }
 
     if (existingUser) {
       console.log(
-        `[Clerk Webhook] User ${id} already exists in app_users, skipping insertion.`
+        "[Clerk Webhook] User already exists in app_users, skipping insertion."
       );
       return new Response("Idempotent skip", { status: 200 });
     }
@@ -107,14 +106,13 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error(
-        `[Clerk Webhook] Failed to insert app_user for ${id}:`,
-        error.message
+        "[Clerk Webhook] Failed to insert app_user."
       );
       return new Response("Database insert failed", { status: 500 });
     }
 
     console.log(
-      `[Clerk Webhook] Successfully created app_users row for ${email} with role ${intendedRole}`
+      "[Clerk Webhook] Successfully created app_users row."
     );
   }
 

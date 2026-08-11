@@ -20,6 +20,12 @@ import {
 } from "./types";
 import type { ListPageSize } from "@/lib/pagination";
 
+const CUSTOMER_LIST_COLUMNS =
+  "id, customer_number, company, contact, phone, email, city, status, customer_type, legal_name, commercial_registration_number, vat_number, national_address_building_number, national_address_street, national_address_district, national_address_city, national_address_postal_code, national_address_additional_number, national_address_country, billing_email, finance_contact_name, finance_contact_phone, payment_terms, po_required, created_at, updated_at";
+
+const CUSTOMER_METRICS_COLUMNS =
+  "customer_id, services_count, quotations_count, approved_quotations_count, draft_quotations_count, total_quoted_amount";
+
 /**
  * Fetches all non-deleted customers, ordered by most-recently created first.
  * Returns an empty array on error (logged server-side only).
@@ -32,7 +38,7 @@ export async function getCustomers(): Promise<Customer[]> {
 
     const { data, error } = await supabase
       .from("customers")
-      .select("*")
+      .select(CUSTOMER_LIST_COLUMNS)
       .eq("is_deleted", false)
       .order("customer_number", { ascending: true });
 
@@ -43,7 +49,7 @@ export async function getCustomers(): Promise<Customer[]> {
 
     const { data: metricsData, error: metricsError } = await supabase
       .from("customer_report_metrics")
-      .select("*");
+      .select(CUSTOMER_METRICS_COLUMNS);
 
     if (metricsError) {
       console.error("[getCustomers] Error fetching metrics:", metricsError.message);
@@ -75,7 +81,7 @@ export async function getCustomersList(options: CustomerListQuery = {}): Promise
   try {
     const supabase = createAdminClient();
     let countQuery = supabase.from("customers").select("id", { count: "exact", head: true }).eq("is_deleted", false);
-    let dataQuery = supabase.from("customers").select("*").eq("is_deleted", false);
+    let dataQuery = supabase.from("customers").select(CUSTOMER_LIST_COLUMNS).eq("is_deleted", false);
     if (options.status) {
       countQuery = countQuery.eq("status", options.status);
       dataQuery = dataQuery.eq("status", options.status);
@@ -110,7 +116,7 @@ export async function getCustomersList(options: CustomerListQuery = {}): Promise
     const rows = (data ?? []) as CustomerRow[];
     const ids = rows.map((row) => row.id);
     const { data: metricsData, error: metricsError } = ids.length > 0
-      ? await supabase.from("customer_report_metrics").select("*").in("customer_id", ids)
+      ? await supabase.from("customer_report_metrics").select(CUSTOMER_METRICS_COLUMNS).in("customer_id", ids)
       : { data: [], error: null };
     if (metricsError) console.error("[getCustomersList] Metrics error:", metricsError.message);
     const metricsMap = new Map<string, CustomerMetricsRow>();

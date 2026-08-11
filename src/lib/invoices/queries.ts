@@ -112,12 +112,15 @@ export async function getInvoicesByQuotationId(quotationId: string): Promise<Inv
   return (data as InvoiceRow[]).map(mapRowToInvoice);
 }
 
+const INVOICE_LIST_COLUMNS =
+  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, discount_amount, vat_rate, vat_amount, grand_total, amount_paid, balance_due, currency, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at";
+
 export async function getInvoices(options: { year?: number } = {}): Promise<Invoice[]> {
   await requirePermission("invoices:read");
   const supabase = createAdminClient();
   let query = supabase
     .from("invoices")
-    .select("*, customers(company,contact), services(service_number,service_title)")
+    .select(`${INVOICE_LIST_COLUMNS}, customers(company,contact), services(service_number,service_title)`)
     .eq("is_deleted", false);
   if (options.year) {
     const bounds = getBusinessYearBounds(options.year);
@@ -130,7 +133,7 @@ export async function getInvoices(options: { year?: number } = {}): Promise<Invo
     return [];
   }
 
-  return (data as InvoiceRow[]).map(mapRowToInvoice);
+  return (data as unknown as InvoiceRow[]).map(mapRowToInvoice);
 }
 
 function invoiceSearchColumns(mode: InvoiceListQuery["searchMode"]): string[] {
@@ -162,7 +165,11 @@ export async function getInvoicesList(
       .eq("is_deleted", false);
     let dataQuery = supabase
       .from("invoices")
-      .select(searchRelation ? "*, customers!inner(company,contact), services(service_number,service_title)" : "*, customers(company,contact), services(service_number,service_title)")
+      .select(
+        searchRelation
+          ? `${INVOICE_LIST_COLUMNS}, customers!inner(company,contact), services(service_number,service_title)`
+          : `${INVOICE_LIST_COLUMNS}, customers(company,contact), services(service_number,service_title)`,
+      )
       .eq("is_deleted", false);
 
     if (options.status && options.status !== "all") {
@@ -201,7 +208,7 @@ export async function getInvoicesList(
     }
 
     return {
-      invoices: (data ?? []).map((row) => mapRowToInvoice(row as InvoiceRow)),
+      invoices: (data ?? []).map((row) => mapRowToInvoice(row as unknown as InvoiceRow)),
       pagination: { page, pageSize, total, totalPages },
     };
   } catch (err) {
