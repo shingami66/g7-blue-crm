@@ -71,23 +71,25 @@ Tender / Bid Management is a future deferred expansion module. Discovery begins 
 - OCR discovery Waves 0-9 are complete.
 - Cross-Wave Consolidation and the Final Remediation Master Plan are complete.
 - The external read-only `baseline-90adf8f` campaign package remains the detailed evidence authority; it is not repository-controlled.
-- G1 financial lifecycle authority and invoice snapshot remediation is closed and pushed at `e34ea4176044f4dc663555a8794dfa5d3042206c`. All four canonical G1 migrations are applied and reconciled on DEV/DEMO; G2 through G12 remain not started. Current product state remains single-company and Service-centered, with staged Event ERP expansion and later optional multi-company/SaaS expansion.
+- G1 financial lifecycle authority and invoice snapshot remediation is closed and pushed at `e34ea4176044f4dc663555a8794dfa5d3042206c`. All four canonical G1 migrations are applied and reconciled on DEV/DEMO.
+- G2 Money and payment precision is closed and pushed at `db68492`. The `7b0bb0b5adeb047e6905f5091071a445b1f91faa` documentation rebaseline is the remote baseline on `origin/main`.
+- G3 Reporting truth and period semantics implementation remediation is progressed: slices G3-A1 (Reports Center Reporting Truth, local checkpoint `6bdc87b222488bcf4be04b4fb19ccac3574c67d7`) and G3-B1 (Customer 360 Financial Truth & Parity, local checkpoint `cbc39f0`) are completed and verified clean locally.
 - Current confirmed findings: 49 — 0 Critical, 5 High, 39 Medium, and 5 Low. Future SaaS/migration concerns are tracked separately: 3. Architectural blockers: 0.
 
-### Current checkpoint
+### Current checkpoint (11 August 2026)
 
-- **Phase:** `POST-G1 CLEANUP / STABILIZATION GATE — COMMERCIAL FIELD-EVIDENCE GATE`.
-- **G0 authority:** `D:/G7/g7-crm` on `main` remains the sole canonical checkout. Current documentation-rebaseline baseline is `93d3f132b3ff756f4c49904da8622e40babdaa18`, aligned with `origin/main`.
-- **G1 state:** approved quotation mutability, active Approved Billing Scope invoice snapshot authority, durable `invoice.created` / `invoice.issued` audit events, invoice-list Draft/Sent/Paid visibility, invoice-detail authority semantics, Final Invoice scope preservation, and Deposit Invoice scope preservation are implemented and accepted. Full validation is `PASS WITH WARN` only because two pre-existing PDF `<img>` lint warnings remain; the stale invoice-list contract now asserts invoice `date` semantics. DEV/DEMO database verification and browser acceptance are `PASS`.
-- **Canonical G1 migrations:** `20260807090000_g1_financial_lifecycle_authority`, `20260807133000_g1_invoice_snapshot_insert_correction`, `20260807150000_g1_final_invoice_scope_snapshot_correction`, and `20260807183359_g1_deposit_invoice_scope_snapshot_correction` are applied on DEV/DEMO. Generated version `20260807185325` is absent; no production-readiness claim is made.
+- **Phase:** `G3 CLOSEOUT / G4 NEXT GATE — BOUNDED READ PATHS AND SCALE`.
+- **G0 authority / Repository baseline:** `D:/G7/g7-crm` on branch `main`. Remote baseline `origin/main` is `7b0bb0b5adeb047e6905f5091071a445b1f91faa`. Current local campaign is two commits ahead of origin (`6bdc87b` G3-A1 and `cbc39f0` G3-B1). No push authority is claimed for this local campaign.
+- **G2 state:** G2 Money and payment precision (`W2-PAY-003`) is closed and pushed.
+- **G3 implemented slices:**
+  - **G3-A1 (Reports Center Reporting Truth — local checkpoint `6bdc87b`):** Authoritative `issued_at` invoice periodization without `created_at` fallback; live Billed/Invoiced reporting excludes draft, cancelled, and voided invoices; customer overview resolves older transacting customers without filtering by customer `created_at`; report period boundaries follow Asia/Riyadh time zone (+03:00) with exclusive next-day boundaries for timestamp columns; permission-unavailable metrics render as null/unavailable (`"—"`) without fake zeros; bounded 500-row reads replaced by deterministic exhaustive pagination advancing by actual received row counts until an empty page; corrected top-N ranking and customer counts.
+  - **G3-B1 (Customer 360 Financial Truth and Parity — local checkpoint `cbc39f0`):** Aligned Customer 360 financial summary totals (`totalInvoiced`, `totalCollected`, `outstandingBalance`) with G3-A1 live issued invoice truth (`issued_at` non-null, status NOT draft/cancelled/voided, `is_deleted = false`); permission-unavailable financial metrics evaluate to `null` and render as `"—"`; removed silent 50-row query truncation via exhaustive multi-page pagination (`fetchAllCustomer360Pages`) with deterministic ordering and unique ID tie-breaking; historical invoices table continues to list all customer invoices with badges for audit context.
+- **Verification and Code Review:** Full workspace test suite passes **978/978 across 85 files** (focused Reports Center 24/24, focused Customer 360 9/9), TypeScript `tsc --noEmit` exits 0 clean, ESLint exits 0 with only the two inherited PDF `<img>` warnings, `git diff --check` clean with 0 whitespace issues, and Open Code Review is **CLEAN** after remediation.
+- **Owner Acceptance status:** Owner visual/manual acceptance remains pending where existing governance requires it; no claim of owner acceptance or production readiness is made.
+- **Deferred G3 Scope / Accounting Policy:** Remaining recommendation and accounting slices are deferred without inventing decisions: selected-period Collected Cash, historical Outstanding-as-of-period-end cutoff, Revenue Recognition, payment terms/credit control, supplier cost/margin, and other deferred accounting policy.
+- **Next Controlled Campaign Gate:** `G4: Bounded read paths and scale` (mapped to `M-02`, `M-04`, `W3-PERF-005`, `W3-QUERY-001`, `W3-SCALE-003/004`). G4 requires measurement-first evidence and Gemini discovery before implementation.
 - **Closed Post-G1 work:** Cleanup & Rebaseline, DEV/DEMO Data Hygiene, UX/Loading Stabilization, and Customer Document Architecture Correction are closed. The document correction is pushed at `93d3f132b3ff756f4c49904da8622e40babdaa18`.
-- **Quotation Commercial Model Impact Check:** read-only analysis is complete with disposition `PARTIAL — FIELD EVIDENCE REQUIRED BEFORE DESIGN LOCK`. No schema, migration, or implementation was performed.
-- **Next controlled gate:** obtain Zainab field evidence from real quotation/package/item workflows and documents, then return the commercial hierarchy and bilingual field placement for controller decision. G2 remains blocked, not started, and is still `Payment Precision`; the G1 -> G2 -> ... -> G12 backbone is unchanged.
 - **M-01:** external candidate status is `IMPLEMENTED_AND_VALIDATED_NOT_ADOPTED`; consolidated disposition is `ADAPT`; it remains separate and was not accessed or applied here.
-
-### POST-G1 CLEANUP / STABILIZATION GATE
-
-**G2 MUST NOT START UNTIL THIS GATE IS CLOSED.**
 
 This is an inter-goal closure and stabilization gate, not a replacement or renumbering of G2. It preserves the remediation backbone `G1 -> G2 -> ... -> G12`.
 
