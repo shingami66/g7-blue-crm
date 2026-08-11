@@ -30,7 +30,8 @@ export function applyApplicableServiceInvoiceExposurePredicate(
     .eq("service_id", serviceId)
     .not("is_deleted", "is", true)
     .is("voided_at", null)
-    .not("status", "in", '("voided","cancelled")');
+    .not("issued_at", "is", null)
+    .not("status", "in", '("draft","voided","cancelled")');
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

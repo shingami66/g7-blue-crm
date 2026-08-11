@@ -54,9 +54,15 @@ test("shared exposure helper builds the nullable-soft-delete Service predicate",
     { method: "is", column: "voided_at", value: null },
     {
       method: "not",
+      column: "issued_at",
+      operator: "is",
+      value: null,
+    },
+    {
+      method: "not",
       column: "status",
       operator: "in",
-      value: '("voided","cancelled")',
+      value: '("draft","voided","cancelled")',
     },
   ]);
   assert.equal(

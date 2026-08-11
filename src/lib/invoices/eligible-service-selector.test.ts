@@ -60,12 +60,11 @@ const dictionarySource = readFileSync(
 test("eligible Service query derives Deposit and Final capabilities from existing authority helpers", () => {
   assert.match(serviceQueriesSource, /requirePermission\(INVOICE_PERMISSIONS\.write\)/);
   assert.match(serviceQueriesSource, /requirePermission\("services:read"\)/);
-  assert.match(serviceQueriesSource, /getServiceBillingState\(service\.id\)/);
-  assert.match(serviceQueriesSource, /getEligibleInvoiceServiceFromState/);
   assert.match(
     serviceQueriesSource,
-    /const billingState = await getServiceBillingState\(service\.id\)/,
+    /getBatchServiceBillingStates\(candidateServiceIds\)/,
   );
+  assert.match(serviceQueriesSource, /getEligibleInvoiceServiceFromState/);
   assert.match(
     serviceQueriesSource,
     /getEligibleInvoiceServiceFromState\(\s*service,\s*billingState,\s*true/,
@@ -462,7 +461,7 @@ for (const authorityMode of [
   });
 }
 
-test("voided, cancelled, and deleted invoices stay excluded from active exposure", () => {
+test("voided, cancelled, draft, deleted, and unissued invoices stay excluded from active exposure", () => {
   const filters: Array<[string, string, unknown, unknown?]> = [];
   const query = {
     eq(column: string, value: unknown) {
@@ -487,7 +486,8 @@ test("voided, cancelled, and deleted invoices stay excluded from active exposure
     ["eq", "service_id", "service-1"],
     ["not", "is_deleted", "is", true],
     ["is", "voided_at", null],
-    ["not", "status", "in", '("voided","cancelled")'],
+    ["not", "issued_at", "is", null],
+    ["not", "status", "in", '("draft","voided","cancelled")'],
   ]);
 });
 

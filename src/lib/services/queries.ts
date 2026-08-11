@@ -3,7 +3,10 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/permissions";
 import { INVOICE_PERMISSIONS } from "@/lib/auth/role-permissions";
-import { getServiceBillingState } from "@/lib/invoices/billing-state";
+import {
+  createDefaultBillingState,
+  getBatchServiceBillingStates,
+} from "@/lib/invoices/billing-state";
 import {
   getEligibleInvoiceServiceFromState,
   resolveInvoiceChooserLoadStatus,
@@ -79,19 +82,27 @@ export async function getEligibleServicesForInvoiceChooser(): Promise<
     return { status: "error", services: [] };
   }
 
-  const eligibilityStates = await Promise.all(
-    servicesResult.services.map(async (service) => {
-      const billingState = await getServiceBillingState(service.id);
-      return {
+  const candidateServices = servicesResult.services;
+  if (candidateServices.length === 0) {
+    return { status: "ready", services: [] };
+  }
+
+  const candidateServiceIds = candidateServices.map((service) => service.id);
+  const billingStateMap = await getBatchServiceBillingStates(candidateServiceIds);
+
+  const eligibilityStates = candidateServices.map((service) => {
+    const billingState =
+      billingStateMap.get(service.id) ??
+      createDefaultBillingState(service.id);
+    return {
+      billingState,
+      service: getEligibleInvoiceServiceFromState(
+        service,
         billingState,
-        service: getEligibleInvoiceServiceFromState(
-          service,
-          billingState,
-          true,
-        ),
-      };
-    }),
-  );
+        true,
+      ),
+    };
+  });
 
   return {
     status: resolveInvoiceChooserLoadStatus(
@@ -113,24 +124,48 @@ async function readActiveServices(
 ): Promise<ServicesReadResult> {
   try {
     const supabase = createAdminClient();
-    let query = supabase
-      .from("services")
-      .select(SERVICE_SELECT)
-      .is("deleted_at", null);
-    if (year) {
-      query = query.or(getServiceBusinessYearFilter(year));
-    }
-    const { data: serviceRows, error } = await query.order("service_number", { ascending: true });
+    const allServices: ServiceRowWithCustomer[] = [];
+    const PAGE_SIZE = 500;
+    let offset = 0;
 
-    if (error) {
-      console.error(`[${caller}] Supabase error:`, error.message);
-      return { status: "error", services: [] };
+    while (true) {
+      let query = supabase
+        .from("services")
+        .select(SERVICE_SELECT)
+        .is("deleted_at", null);
+
+      if (year) {
+        query = query.or(getServiceBusinessYearFilter(year));
+      }
+
+      const { data: serviceRows, error } = await query
+        .order("service_number", { ascending: true })
+        .order("id", { ascending: true })
+        .range(offset, offset + PAGE_SIZE - 1);
+
+      if (error || !Array.isArray(serviceRows)) {
+        console.error(
+          `[${caller}] Supabase error:`,
+          error?.message ?? "Invalid services data payload",
+        );
+        return { status: "error", services: [] };
+      }
+
+      if (serviceRows.length === 0) {
+        break;
+      }
+
+      for (const row of serviceRows) {
+        allServices.push(row as ServiceRowWithCustomer);
+      }
+
+      offset += serviceRows.length;
     }
 
     return {
       status: "ready",
-      services: (serviceRows ?? []).map((serviceRow) =>
-        mapRowToService(serviceRow as ServiceRowWithCustomer),
+      services: allServices.map((serviceRow) =>
+        mapRowToService(serviceRow),
       ),
     };
   } catch (err) {
