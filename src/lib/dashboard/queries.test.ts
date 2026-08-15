@@ -248,11 +248,11 @@ test("getDashboardQuotationsData uses head count, bounded limit(4), and propagat
     permissions: { "quotations:read": true },
     tableData: {
       quotations: [
-        { id: "q-1", quotation_number: "QT-2026-0001", grand_total: 1000, status: "draft", created_at: "2026-08-01T10:00:00Z", is_deleted: false, customers: { company: "Company A" }, event_name: "Event A" },
-        { id: "q-2", quotation_number: "QT-2026-0002", grand_total: 2000, status: "approved", created_at: "2026-08-02T10:00:00Z", is_deleted: false, customers: { company: "Company B" }, event_name: "Event B" },
-        { id: "q-3", quotation_number: "QT-2026-0003", grand_total: 3000, status: "sent", created_at: "2026-08-03T10:00:00Z", is_deleted: false, customers: { company: "Company C" }, event_name: "Event C" },
-        { id: "q-4", quotation_number: "QT-2026-0004", grand_total: 4000, status: "approved", created_at: "2026-08-04T10:00:00Z", is_deleted: false, customers: { company: "Company D" }, event_name: "Event D" },
-        { id: "q-5", quotation_number: "QT-2026-0005", grand_total: 5000, status: "approved", created_at: "2026-08-05T10:00:00Z", is_deleted: false, customers: { company: "Company E" }, event_name: "Event E" },
+        { id: "q-1", quotation_number: "QT-2026-0001", grand_total: 1000, status: "draft", created_at: "2026-08-01T10:00:00Z", is_deleted: false, customers: { company: "Company A" }, services: { event_name: "Event A" } },
+        { id: "q-2", quotation_number: "QT-2026-0002", grand_total: 2000, status: "approved", created_at: "2026-08-02T10:00:00Z", is_deleted: false, customers: { company: "Company B" }, services: { event_name: "Event B" } },
+        { id: "q-3", quotation_number: "QT-2026-0003", grand_total: 3000, status: "sent", created_at: "2026-08-03T10:00:00Z", is_deleted: false, customers: { company: "Company C" }, services: null },
+        { id: "q-4", quotation_number: "QT-2026-0004", grand_total: 4000, status: "approved", created_at: "2026-08-04T10:00:00Z", is_deleted: false, customers: { company: "Company D" }, services: { event_name: "Event D" } },
+        { id: "q-5", quotation_number: "QT-2026-0005", grand_total: 5000, status: "approved", created_at: "2026-08-05T10:00:00Z", is_deleted: false, customers: { company: "Company E" }, services: { event_name: "Event E" } },
       ],
     },
   };
@@ -262,6 +262,10 @@ test("getDashboardQuotationsData uses head count, bounded limit(4), and propagat
   assert.equal(result.recentQuotations.length, 4);
   assert.equal(result.recentQuotations[0].quotationNumber, "QT-2026-0005");
   assert.equal(result.recentQuotations[0].customer?.company, "Company E");
+  assert.equal(result.recentQuotations[0].event, "Event E");
+  assert.equal(result.recentQuotations[1].event, "Event D");
+  assert.equal(result.recentQuotations[2].event, null);
+  assert.equal(result.recentQuotations[3].event, "Event B");
 
   const recentCall = activeScenario.calls.find((c) => c.limitCount !== undefined);
   assert.ok(recentCall);

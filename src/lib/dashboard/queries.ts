@@ -81,7 +81,7 @@ export async function getDashboardQuotationsData(): Promise<DashboardQuotationsD
       .eq("is_deleted", false),
     supabase
       .from("quotations")
-      .select("id, quotation_number, grand_total, status, created_at, event_name, customers(company)")
+      .select("id, quotation_number, grand_total, status, created_at, services(service_number, service_title, status, event_name), customers(company)")
       .eq("is_deleted", false)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
@@ -102,7 +102,12 @@ export async function getDashboardQuotationsData(): Promise<DashboardQuotationsD
     grand_total: number | string | null;
     status: string;
     created_at: string;
-    event_name: string | null;
+    services: {
+      service_number: string | null;
+      service_title: string | null;
+      status: string | null;
+      event_name: string | null;
+    } | null;
     customers: { company: string | null } | null;
   }>;
   const recentQuotations: DashboardRecentQuotation[] = rawQuotations.map((row) => ({
@@ -112,7 +117,7 @@ export async function getDashboardQuotationsData(): Promise<DashboardQuotationsD
     status: row.status as QuotationStatus,
     createdAt: row.created_at,
     customer: row.customers ? { company: row.customers.company } : null,
-    event: row.event_name,
+    event: row.services?.event_name ?? null,
   }));
 
   return { totalCount, recentQuotations };
