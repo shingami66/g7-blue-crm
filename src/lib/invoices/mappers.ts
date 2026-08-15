@@ -2,6 +2,22 @@ import type { Invoice, InvoiceStatus, InvoiceType } from "@/types/invoice";
 import type { InvoiceRow } from "./types";
 import type { VatMode } from "@/types/settings";
 
+function readFiniteNumber(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string" || value.trim() === "") return 0;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function readSnapshotDiscount(snapshotQuotation: InvoiceRow["snapshot_quotation"]): number {
+  if (!snapshotQuotation || typeof snapshotQuotation !== "object" || Array.isArray(snapshotQuotation)) {
+    return 0;
+  }
+
+  return readFiniteNumber((snapshotQuotation as Record<string, unknown>).discount);
+}
+
 export function mapRowToInvoice(row: InvoiceRow): Invoice {
   const relationRow = row as InvoiceRow & {
   services?: { service_number?: string | null; service_title?: string | null } | null;
@@ -51,7 +67,7 @@ export function mapRowToInvoice(row: InvoiceRow): Invoice {
     documentDueDate: row.due_date,
     status: row.status as InvoiceStatus,
     subtotal: row.subtotal,
-    discount_amount: row.discount_amount,
+    discount_amount: readSnapshotDiscount(row.snapshot_quotation),
     vat_rate: row.vat_rate,
     vat_amount: row.vat_amount,
     grand_total: row.grand_total,

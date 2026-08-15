@@ -89,7 +89,6 @@ export interface InvoiceRow {
   due_date: string;
   status: string;
   subtotal: number;
-  discount_amount: number;
   vat_rate: number;
   vat_amount: number;
   grand_total: number;

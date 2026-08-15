@@ -59,7 +59,6 @@ mock.module("@/lib/auth/permissions", {
     requirePermission: async () => undefined,
   },
 });
-
 function scenario(): Scenario {
   if (!activeScenario) throw new Error("scenario not configured");
   return activeScenario;
@@ -145,6 +144,51 @@ function listQueries(scenarioState: Scenario): QueryCall[] {
   return scenarioState.calls;
 }
 
+const OMIT_SNAPSHOT = Symbol("omit snapshot_quotation");
+
+function makeInvoiceRow(snapshotQuotation: unknown = OMIT_SNAPSHOT): Record<string, unknown> {
+  const row: Record<string, unknown> = {
+    id: "inv-derived",
+    invoice_number: "INV-DERIVED",
+    approved_quotation_id: "quot-derived",
+    approved_billing_scope_id: null,
+    customer_id: "cust-derived",
+    invoice_type: "final",
+    service_id: "serv-derived",
+    date: "2026-08-03",
+    due_date: "2026-08-17",
+    status: "paid",
+    subtotal: 1000,
+    vat_rate: 0.15,
+    vat_amount: 150,
+    grand_total: 1150,
+    amount_paid: 1150,
+    balance_due: 0,
+    currency: "SAR",
+    document_label: "Final Invoice",
+    vat_mode: "standard",
+    snapshot_seller: null,
+    snapshot_buyer: null,
+    snapshot_bank_details: null,
+    snapshot_document_rules: null,
+    issued_at: "2026-08-03T10:00:00Z",
+    voided_at: null,
+    void_reason: null,
+    created_at: "2026-08-03T10:00:00Z",
+    updated_at: "2026-08-03T10:00:00Z",
+    is_deleted: false,
+    deleted_at: null,
+    customers: { company: "Derived Customer", contact: "Derived Contact" },
+    services: { service_number: "SRV-DERIVED", service_title: "Derived Event" },
+  };
+
+  if (snapshotQuotation !== OMIT_SNAPSHOT) {
+    row.snapshot_quotation = snapshotQuotation;
+  }
+
+  return row;
+}
+
 test("All Statuses uses invoice date for Business Year and keeps count aligned with rows", async () => {
   const scenarioState = resetScenario({
     countResponse: { data: null, error: null, count: 33 },
@@ -191,10 +235,10 @@ test("Explicit status filtering remains paired with the same Business Year datas
 });
 
 const EXPECTED_INVOICE_LIST_PROJECTION =
-  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, discount_amount, vat_rate, vat_amount, grand_total, amount_paid, balance_due, currency, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at, customers(company,contact), services(service_number,service_title)";
+  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, vat_rate, vat_amount, grand_total, amount_paid, balance_due, currency, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at, customers(company,contact), services(service_number,service_title)";
 
 const EXPECTED_INVOICE_INNER_SEARCH_PROJECTION =
-  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, discount_amount, vat_rate, vat_amount, grand_total, amount_paid, balance_due, currency, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at, customers!inner(company,contact), services(service_number,service_title)";
+  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, vat_rate, vat_amount, grand_total, amount_paid, balance_due, currency, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at, customers!inner(company,contact), services(service_number,service_title)";
 
 test("getInvoicesList uses exact explicit projection and maps full row shape preserving all fields", async () => {
   const sampleRow = {
@@ -209,7 +253,6 @@ test("getInvoicesList uses exact explicit projection and maps full row shape pre
     due_date: "2026-08-15",
     status: "issued",
     subtotal: 10000,
-    discount_amount: 500,
     vat_rate: 0.15,
     vat_amount: 1425,
     grand_total: 10925,
@@ -220,7 +263,7 @@ test("getInvoicesList uses exact explicit projection and maps full row shape pre
     vat_mode: "standard",
     snapshot_seller: null,
     snapshot_buyer: null,
-    snapshot_quotation: null,
+    snapshot_quotation: { discount: 500 },
     snapshot_bank_details: null,
     snapshot_document_rules: null,
     issued_at: "2026-08-01T10:00:00Z",
@@ -268,7 +311,7 @@ test("getInvoicesList uses exact explicit projection and maps full row shape pre
     vat_mode: "standard",
     snapshot_seller: null,
     snapshot_buyer: null,
-    snapshot_quotation: null,
+    snapshot_quotation: { discount: 500 },
     snapshot_bank_details: null,
     snapshot_document_rules: null,
     issued_at: "2026-08-01T10:00:00Z",
@@ -316,7 +359,6 @@ test("getInvoices uses exact explicit projection and does not request wildcard (
     due_date: "2026-08-16",
     status: "paid",
     subtotal: 20000,
-    discount_amount: 0,
     vat_rate: 0.15,
     vat_amount: 3000,
     grand_total: 23000,
@@ -327,7 +369,7 @@ test("getInvoices uses exact explicit projection and does not request wildcard (
     vat_mode: "standard",
     snapshot_seller: null,
     snapshot_buyer: null,
-    snapshot_quotation: null,
+    snapshot_quotation: { discount: null },
     snapshot_bank_details: null,
     snapshot_document_rules: null,
     issued_at: "2026-08-02T10:00:00Z",
@@ -375,7 +417,7 @@ test("getInvoices uses exact explicit projection and does not request wildcard (
     vat_mode: "standard",
     snapshot_seller: null,
     snapshot_buyer: null,
-    snapshot_quotation: null,
+    snapshot_quotation: { discount: null },
     snapshot_bank_details: null,
     snapshot_document_rules: null,
     issued_at: "2026-08-02T10:00:00Z",
@@ -395,4 +437,46 @@ test("getInvoices uses exact explicit projection and does not request wildcard (
     items: [],
   };
   assert.deepEqual(invoices[0], expectedMappedYearInvoice);
+});
+
+test("invoice discount mapping derives safely from absent, null, and invalid snapshot values", async () => {
+  const scenarioState = resetScenario({
+    dataResponse: {
+      data: [
+        makeInvoiceRow(),
+        makeInvoiceRow({ discount: null }),
+        makeInvoiceRow({ discount: "not-a-number" }),
+      ],
+      error: null,
+    },
+  });
+
+  const invoices = await getInvoices();
+
+  assert.equal(scenarioState.calls[0].columns?.includes("discount_amount"), false);
+  assert.deepEqual(invoices.map((invoice) => invoice.discount_amount), [0, 0, 0]);
+});
+
+test("invoice discount mapping handles blank string, Infinity, NaN, and valid finite numeric string", async () => {
+  const scenarioState = resetScenario({
+    dataResponse: {
+      data: [
+        makeInvoiceRow({ discount: "" }),
+        makeInvoiceRow({ discount: "   " }),
+        makeInvoiceRow({ discount: Infinity }),
+        makeInvoiceRow({ discount: -Infinity }),
+        makeInvoiceRow({ discount: NaN }),
+        makeInvoiceRow({ discount: "250.75" }),
+      ],
+      error: null,
+    },
+  });
+
+  const invoices = await getInvoices();
+
+  assert.equal(scenarioState.calls[0].columns?.includes("discount_amount"), false);
+  assert.deepEqual(
+    invoices.map((invoice) => invoice.discount_amount),
+    [0, 0, 0, 0, 0, 250.75],
+  );
 });
