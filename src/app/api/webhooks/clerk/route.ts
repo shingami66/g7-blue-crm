@@ -142,6 +142,19 @@ export async function POST(req: NextRequest) {
       });
 
       if (error) {
+        const { data: concurrentUser, error: recheckError } = await supabase
+          .from("app_users")
+          .select("id")
+          .eq("clerk_user_id", id)
+          .single();
+
+        if (!recheckError && concurrentUser) {
+          console.log(
+            `[Clerk Webhook] [${correlationId}] User already exists, skipping insertion`
+          );
+          return new Response("Idempotent skip", { status: 200 });
+        }
+
         console.error(
           `[Clerk Webhook] [${correlationId}] Database insert error: user_insert_failed`
         );

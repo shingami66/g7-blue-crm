@@ -55,6 +55,10 @@ type WebhookScenario = {
   insertError: { message: string } | null;
   insertThrows: boolean;
   insertedUsers: Array<Record<string, unknown>>;
+  lookupResponses?: Array<{
+    data: Record<string, unknown> | null;
+    error: { code: string; message: string } | null;
+  }>;
 };
 
 let currentScenario: WebhookScenario = {
@@ -124,6 +128,12 @@ mock.module("@/lib/supabase/admin", {
                 single: async () => {
                   if (currentScenario.lookupThrows) {
                     throw new Error("Network connection reset during user lookup");
+                  }
+                  if (
+                    currentScenario.lookupResponses &&
+                    currentScenario.lookupResponses.length > 0
+                  ) {
+                    return currentScenario.lookupResponses.shift()!;
                   }
                   return {
                     data: currentScenario.existingUser,
@@ -395,6 +405,76 @@ test("user.created when DB lookup throws catches transport exception and returns
   }
 });
 
+test("user.created with DB insert error returns 500 with sanitized log", async () => {
+  const sensitiveDbErrorMessage =
+    "duplicate key value violates unique constraint app_users_clerk_user_id_key";
+  const sensitiveEmail = "sales-insert-fail@example.com";
+  const sensitiveName = "Insert Fail User";
+
+  resetScenario({
+    verifiedEvent: {
+      data: {
+        id: "clerk_u1",
+        public_metadata: { crm_role: "sales" },
+        primary_email_address_id: "em1",
+        email_addresses: [{ id: "em1", email_address: sensitiveEmail }],
+        first_name: "Insert Fail",
+        last_name: "User",
+      },
+      type: "user.created",
+    },
+    existingUser: null,
+    existingUserError: { code: "PGRST116", message: "No rows found" },
+    insertError: { message: sensitiveDbErrorMessage },
+  });
+
+  const loggedErrors: string[] = [];
+  const loggedInfo: string[] = [];
+  const originalConsoleError = console.error;
+  const originalConsoleLog = console.log;
+  console.error = (...args: unknown[]) => {
+    loggedErrors.push(args.map((a) => String(a)).join(" "));
+  };
+  console.log = (...args: unknown[]) => {
+    loggedInfo.push(args.map((a) => String(a)).join(" "));
+  };
+
+  try {
+    const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+      method: "POST",
+      headers: { "svix-id": "svix_insert_fail" },
+    });
+
+    const res = await POST(req as unknown as import("next/server").NextRequest);
+    assert.equal(res.status, 500);
+    const body = await res.text();
+    assert.equal(body, "Database insert failed");
+
+    // Verify operational error log contains safe correlation context
+    assert.equal(loggedErrors.length, 1);
+    assert.equal(
+      loggedErrors[0],
+      "[Clerk Webhook] [svix_insert_fail] Database insert error: user_insert_failed",
+    );
+
+    // Verify error details and sensitive payload values are not exposed in logs
+    assert.equal(loggedErrors[0].includes(sensitiveDbErrorMessage), false);
+    assert.equal(loggedErrors[0].includes(sensitiveEmail), false);
+    assert.equal(loggedErrors[0].includes(sensitiveName), false);
+
+    // Verify no successful insertion was recorded
+    assert.equal(
+      loggedInfo.some((msg) =>
+        msg.includes("Successfully created app_users row"),
+      ),
+      false,
+    );
+  } finally {
+    console.error = originalConsoleError;
+    console.log = originalConsoleLog;
+  }
+});
+
 test("user.created when DB insert throws catches transport exception and returns safe 500", async () => {
   resetScenario({
     verifiedEvent: {
@@ -435,6 +515,69 @@ test("user.created when DB insert throws catches transport exception and returns
     );
   } finally {
     console.error = originalConsoleError;
+  }
+});
+
+test("user.created concurrent duplicate race recovers and returns idempotent skip", async () => {
+  const sensitiveDbErrorMessage =
+    "duplicate key value violates unique constraint app_users_clerk_user_id_key";
+
+  resetScenario({
+    verifiedEvent: {
+      data: {
+        id: "clerk_concurrent_u1",
+        public_metadata: { crm_role: "operations" },
+        primary_email_address_id: "em1",
+        email_addresses: [{ id: "em1", email_address: "ops@example.com" }],
+        first_name: "Ops",
+        last_name: "User",
+      },
+      type: "user.created",
+    },
+    lookupResponses: [
+      { data: null, error: { code: "PGRST116", message: "No rows found" } },
+      { data: { id: "app_u_concurrent_1" }, error: null },
+    ],
+    insertError: { message: sensitiveDbErrorMessage },
+  });
+
+  const loggedErrors: string[] = [];
+  const loggedInfo: string[] = [];
+  const originalConsoleError = console.error;
+  const originalConsoleLog = console.log;
+  console.error = (...args: unknown[]) => {
+    loggedErrors.push(args.map((a) => String(a)).join(" "));
+  };
+  console.log = (...args: unknown[]) => {
+    loggedInfo.push(args.map((a) => String(a)).join(" "));
+  };
+
+  try {
+    const req = new Request("http://localhost:3000/api/webhooks/clerk", {
+      method: "POST",
+      headers: { "svix-id": "svix_concurrent_1" },
+    });
+
+    const res = await POST(req as unknown as import("next/server").NextRequest);
+    assert.equal(res.status, 200);
+    const body = await res.text();
+    assert.equal(body, "Idempotent skip");
+
+    // Verify informational log records idempotent skip
+    assert.equal(
+      loggedInfo.some((msg) =>
+        msg.includes(
+          "[Clerk Webhook] [svix_concurrent_1] User already exists, skipping insertion",
+        ),
+      ),
+      true,
+    );
+
+    // Verify no error was logged for recovered duplicate
+    assert.equal(loggedErrors.length, 0);
+  } finally {
+    console.error = originalConsoleError;
+    console.log = originalConsoleLog;
   }
 });
 
