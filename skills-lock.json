@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "agy-delegate": {
+      "source": "amElnagdy/delegate-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agy-delegate/SKILL.md",
+      "computedHash": "d47de62f8df151556f87bbd3e721899417d9c46ed4eb88f5a1c14976450d29f5"
+    },
     "clean-code-guard": {
       "source": "amElnagdy/guard-skills",
       "sourceType": "github",
