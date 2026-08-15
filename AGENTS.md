@@ -6,23 +6,35 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # G7 BLUE CRM — Agent Project Guidance
 
-## STRICT GATES AND GOVERNANCE PRECEDENCE
+## G7 Delegated Writer Execution
+
+For bounded G7 application work, Luna may use `$agy-delegate` as the single Writer when the Owner's request calls for delegation. The normal lifecycle is:
+
+Owner request
+→ Luna Controller
+→ one Gemini Writer through `$agy-delegate`
+→ Gemini EDIT-ONLY
+→ Luna validation
+→ separate native Codex Reviewer using Alibaba OCR delegation rules when review is warranted
+→ same Writer repair for confirmed in-scope findings
+→ Luna revalidation and bounded rereview.
+
+The Writer never stages, commits, pushes, applies SQL, deploys, or changes production. Luna owns commands and validation. Do not use `--dangerously-skip-permissions`, expose authentication material, or substitute an unapproved implementer. The model is selected by the task or current AGY configuration; this standing file does not freeze a model version.
+
+## GOVERNANCE PRECEDENCE AND SAFETY
 
 1. `AGENTS.md`
-   Top-level repository authority and mandatory skill routing.
+   Top-level repository authority, product rules, and relevant skill routing.
 2. `.agents/skills/g7-crm-agent-control/SKILL.md`
-   Execution modes, plan lock, Git separation, HOLD behavior, evidence, and report truthfulness.
+   Bounded scope, Git/database/deployment safety, evidence, and report truthfulness.
 3. Routed domain guard skills
    Such as ERP, security, documentation, tests, migrations, and precommit gates.
 4. `docs/repository-worktree-governance.md`
-   Checkout ownership, worktree lifecycle, and reconciliation rules.
+   Supporting checkout and worktree guidance when those operations are in scope.
 5. Task prompt
    Defines task-specific scope only.
 
-A task prompt must never weaken, bypass, rename, or override a higher-level guard. Only a separately owner-approved GUARD_EDIT_ONLY task may change guard behavior.
-
-Every task MUST read this file and `g7-crm-agent-control`. Failure to provide skill-read evidence causes HOLD.
-Exactly one mode from the canonical list in Agent Control must be declared per task.
+A task prompt must not weaken the preserved product, security, database, Git, or deployment safeguards. A clear bounded Owner instruction authorizes ordinary in-scope work; task-specific instructions may add tighter restrictions. Execution-mode labels remain available for specialized operations but are not required for ordinary bounded work.
 
 ## Project Identity
 
@@ -51,34 +63,23 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - `pnpm exec tsc --noEmit` is the documented typecheck verification command for runtime implementation slices.
 - `git diff --check` is the documented whitespace/conflict-marker verification command before commit readiness for implementation or docs sync work.
 - Controlled commit verification also uses `git diff --name-only`, `git diff --stat`, `git diff --cached --name-only`, `git diff --cached --stat`, `git show --check --stat HEAD`, and `git show --name-only --oneline --stat HEAD` as documented in `docs/workflow-prompt-templates.md`.
-- Runtime implementation slices must pass `pnpm lint`, `pnpm exec tsc --noEmit`, and `pnpm build` before commit readiness.
+- Runtime validation is proportional to risk: run the affected focused tests, typecheck, lint, and diff checks; add a full build or manual smoke only when the touched behavior warrants it or the task requests it.
 - `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
 - `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
 - `speckit.agent-context.update` is the repo-installed Spec Kit command for refreshing the managed `AGENTS.md` Spec Kit block; the `after_specify` and `after_plan` entries in `.specify/extensions.yml` remain individually disabled, so no lifecycle hook may auto-write protected context.
-- **Protected context hooks:** Spec Kit hooks must not automatically modify `AGENTS.md` or other protected governance/agent-context files. Any context update requires a separate `GUARD_EDIT_ONLY` task naming the exact protected files; specification or planning approval does not grant context-update authority. Detailed execution rules remain in `.agents/skills/g7-crm-agent-control/SKILL.md`.
+- **Protected context hooks:** Spec Kit hooks must not automatically modify `AGENTS.md` or other protected governance/agent-context files. Context updates must name their exact files and purpose; specification or planning approval does not silently authorize unrelated context changes. Detailed execution rules remain in `.agents/skills/g7-crm-agent-control/SKILL.md`.
 - Verify Supabase connectivity at `GET /api/health/db` while the local app is running.
 - The local Supabase health-check workflow assumes `.env.local` already provides `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`; never read, print, or edit those secrets during ordinary tasks.
-- `graphify query "<question>"` is the approved manual Graphify command for scoped codebase discovery; do not run Graphify install, hook, or Codex integration commands without explicit approval.
+- `graphify query "<question>"` is an optional navigation aid; source, tests, diffs, and validation remain authoritative.
 - Read-only status checks should use `git status --short --untracked-files=all`, `git status -sb`, and `git log -3 --oneline`.
 - Documentation-only changes do not require app build, migrations, or database commands.
 
 ## Working Workflow
 
-- **Durable Plan-and-Owner-Approval Gate:** Before executing any non-trivial task (which includes code edits, dependency changes, database migrations, commits, or pushes), the agent MUST present a bounded implementation plan to the user. No edit or modifying command may start until Mozfer explicitly approves the plan. Silence or an earlier broad request does not constitute permission to modify files or widen scope. The plan must contain:
-  1. Task ID and purpose.
-  2. Authorized repository path and branch.
-  3. Verified starting HEAD and working-tree state.
-  4. Exact files or systems in scope.
-  5. Explicit exclusions.
-  6. Expected behavior and acceptance criteria.
-  7. Database/data/security impact (migrations, schemas, RLS, Clerk).
-  8. Validation plan.
-  9. Commit and push plan.
-  10. Expected final repository state.
-  11. Worktree/branch lifecycle and cleanup plan when applicable.
-- **Stage Separation:** Implementation, review, commit, and push are separate tasks. No "low-risk combined mode" exception is allowed. Sequential stages may occur in the same conversation only as separate prompts after Mozfer reviews and explicitly approves the next stage.
-- **Worktree Governance:** The task-supplied authorized repository/worktree must be verified before execution. `docs/repository-worktree-governance.md` owns checkout identity, lifecycle, forbidden historical paths, temporary-worktree status, and reconciliation. Never treat a previously used temporary worktree as permanent authority. Silent worktree creation, path switching, and manual folder merging are strictly prohibited. If the task-supplied path conflicts with repository governance, return HOLD.
-- Follow `Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge`.
+- **Bounded authorization:** A clear Owner request controls the named repository, files, systems, exclusions, and actions. Do not widen scope by inference.
+- Luna keeps one Writer per mutation slice and allows an in-scope review/repair loop to remain in the same Owner-authorized task.
+- Verify the task-supplied repository and preserve unrelated dirty state. Do not silently switch checkouts, clean files, or merge worktrees.
+- Use proportional validation: affected focused tests, typecheck, lint, and diff checks; add a build or manual smoke only when risk or the task requires it.
 - After merges that change delivered behavior, phase status, or decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` as applicable.
 - Before committing docs, run a documentation staleness audit: identify what changed in code, what changed outside code, what moved from pending to complete, any stale wording that must be corrected, what remains truly pending, and the next locked priority.
 - Before staging or commit work, confirm the intended branch.
@@ -88,29 +89,19 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - After staging, run `git diff --cached --stat` and `git diff --cached --check`.
 - For controlled push-only tasks, verify the exact outgoing commit with `git log -1 --oneline` and `git log origin/main..HEAD --oneline` before and after `git push origin main`.
 - Do not force push. Open PRs only when requested.
-- For Services or Quotations UI work, manually smoke test the live ERP path `Customer Profile -> Service -> Quotation`, including `/customers/[id]`, `/services`, `/services/new`, `/services/[id]`, `/services/[id]/edit`, and `/quotations/new?serviceId=<service-id>`.
-- For Service billing, supplier allocation, or Supplier Booking UI work, manually smoke test `/services/[id]`, deposit/final invoice actions in the Billing panel, `/services/[id]/allocations/new`, `/services/[id]/allocations/[allocationId]/edit`, allocation `/cancel`, `/delete`, `/restore`, `?showDeleted=true` when delete/restore behavior changes, and the Service Detail Supplier Bookings panel create/cancel flow from selected allocations.
-- For Approved Billing Scope UI/read changes, manually smoke test the Service Detail card states on `/services/[id]` and the nested read-only route `/services/[serviceId]/approved-billing-scopes/[scopeId]` when populated-card navigation or scope detail rendering changes.
+- Manual smoke is human-owned unless the task explicitly authorizes it; when authorized, cover only the affected route and preserve the locked Service-centered workflow.
 - Approved Billing Scope is an internal billing-control layer: normal Service UX uses Billing Summary; quotation approval activates it automatically; the nested route is technical evidence. Do not expose Create Scope, line-safety review, second approval, or Void as a normal Service workflow.
-- For invoice create/detail/PDF or billing-ceiling changes, manually smoke test `/services/[id]` deposit/final invoice actions, `/invoices`, `/invoices/[id]`, `/invoices/[id]/pdf`, and issue/payment actions when the touched slice can affect them.
-- For Service status workflow changes, manually smoke test the guarded explicit actions on `/services/[id]`: Start Execution (`Deposit Paid` -> `In Progress`), Complete Service (`In Progress` -> `Completed`), and guarded Cancel (`Inquiry`/`Quoted`/`Approved` -> `Cancelled`). Ordinary Service edit must not expose arbitrary status selection; Completed may still permit a remaining Final Invoice.
-- For Payments module UI/read changes, manually smoke test `/payments` against live records and confirm the page still reflects `payments:read`-guarded data rather than mock rows.
+- The locked Service workflow and explicit lifecycle actions remain authoritative for billing, invoice, status, and payment changes; validate only the affected slice unless the task explicitly authorizes broader smoke.
 
-## Subagent Capacity and Mandatory Review
+## Independent Review
 
-- Preserve review capacity: do not fill the full Codex session worker capacity. The project default is a maximum of four concurrent workers, not a session-configuration value; use fewer or zero for small tasks.
-- Close completed worker threads before any mandatory independent review. Material source, test, SQL/migration, security, financial, and material governance changes must receive the applicable independent review gate.
-- Self-review does not substitute for an independent review. If worker/thread capacity prevents the review, the review is incomplete: do not claim PASS, commit, push, or apply database changes.
-- Use exactly one writer for a change scope. Reviewers and re-reviewers are read-only; findings return to the writer.
-- The authoritative lifecycle, delegation boundary, capacity-failure handling, and evidence contract are in `.agents/skills/g7-crm-agent-control/SKILL.md`.
+- Use separate read-only/findings-only review when material behavioral, security, financial, or governance risk warrants it.
+- Preserve one Writer per mutation slice and close review workers before any repair or commit stage.
+- If review capacity is unavailable, report the review as incomplete; do not relabel self-review as independent review.
 
-## Graphify-First Navigation
+## Navigation
 
-- Before broad file reads, check `docs/graphify-usage-guide.md` and current `graphify-out/` outputs or `graphify query` to identify candidate files.
-- Treat Graphify as navigation only, never as source of truth.
-- Verify conclusions by reading actual source, docs, migrations/schema, diffs, tests, build output, smoke evidence, or database verification as appropriate.
-- If `graphify-out/` is stale or missing, use targeted `rg` or request a separate approved Graphify refresh task.
-- Do not rely on ignored `graphify-out/` artifacts as proof.
+- Graphify is optional navigation evidence. Verify conclusions from actual source, diffs, tests, and validation output.
 
 ## Reporting Discipline
 
@@ -215,54 +206,49 @@ For CS-A, keep `/settings` limited to the live singleton `company_settings` reco
 
 ## Local Skills
 
-Local guard skills are mandatory when their domain applies. They must follow and reinforce these project rules. Task prompts cannot weaken these repository guards.
+Use local guard skills when their domain materially applies to the actual task. They reinforce these project rules; do not invoke unrelated guards merely because a broad keyword appears.
 
 The Spec Kit agent-context extension manages only the `<!-- SPECKIT START -->` to `<!-- SPECKIT END -->` block in this file. Do not manually rewrite that managed block during ordinary tasks unless the task explicitly targets Spec Kit context maintenance.
 
 ## Guard Skill Routing
 
-For G7 BLUE CRM feature planning or implementation involving Company Settings, Services, Customers, Quotations, Invoices, Payments, VAT/ZATCA, RBAC, backend data flow, ERP logic, or core UI patterns, invoke `$g7-crm-erp-guard` before coding.
+Choose guards from the actual change and risk, not from a ceremonial keyword checklist:
 
-For work involving auth, permissions, Clerk, Supabase RLS, SQL migrations, RPCs, Server Actions, secrets, webhooks, invoices, payments, deployment, production readiness, or AI/LLM features, invoke `$g7-security-hardening-guard`.
+- Use `$g7-crm-erp-guard` for material ERP, financial, or product-workflow behavior.
+- Use `$g7-security-hardening-guard` for actual auth, permissions, secrets, RLS, webhook, or security risk.
+- Use `$clean-code-guard`, `$docs-guard`, `$test-guard`, and `$g7-crm-precommit-gate` when their substantive review improves the relevant implementation, documentation, tests, or Git stage.
+- Use `$g7-crm-migration-review` for actual SQL, migration, RPC, RLS, grant, trigger, or schema work.
+- Use `$g7-erp-design-guard` for material UI, UX, accessibility, RTL/LTR, or visual work, and `$g7-speckit-plan-guard` for Spec Kit planning.
 
-Before commit:
-
-- Use `$clean-code-guard` on production code changes.
-- Use `$docs-guard` on documentation changes.
-- Use `$test-guard` on test changes.
-
-Do not rely on UI-only checks for security. Do not stage or commit until blocking guard findings are resolved or explicitly approved.
+Guard routing does not itself authorize implementation, staging, commit, push, database action, deployment, or production change. Do not rely on UI-only checks for security.
 
 - `.agents/skills/g7-crm-erp-guard/SKILL.md`
-  Before planning or implementing G7 BLUE CRM features involving Company Settings, Services, Customers, Quotations, Invoices, Payments, VAT/ZATCA, RBAC, financial logic, backend data flow, or core UI patterns, invoke `$g7-crm-erp-guard` in discussion mode first. Do not implement until the plan is approved.
+  Consult for material G7 ERP, financial, or product-workflow changes.
 
 - `.agents/skills/g7-security-hardening-guard/SKILL.md`
-  Use before or after G7 BLUE CRM work involving security, Clerk auth, RBAC, Supabase RLS, SQL migrations, RPCs, Server Actions, APIs, webhooks, secrets, invoices, payments, Company Settings, deployment, production readiness, or AI/LLM features.
-
-- `.agents/skills/g7-crm-safe-engineer/SKILL.md`
-  Use for plans, prompts, implementation reports, RBAC, security, financial logic, server/client boundaries, and product-flow safety.
+  Consult for actual security, auth, permissions, secrets, RLS, webhook, or protected-data risk.
 
 - `.agents/skills/g7-crm-migration-review/SKILL.md`
-  Use for SQL, migrations, RLS, RPC, functions, triggers, grants/revokes, schema changes, and financial database logic.
+  Consult for actual SQL, migration, RLS, RPC, function, trigger, grant, schema, or financial database work.
 
 - `.agents/skills/g7-crm-precommit-gate/SKILL.md`
-  Use before staging, committing, pushing, opening PRs, or merging.
+  Consult when an authorized staging, commit, push, PR, or merge stage is actually in scope.
 
 - `.agents/skills/g7-erp-design-guard/SKILL.md`
-  Use before G7 work involving UI design, UX, accessibility, RTL/LTR, responsive behavior, visual assets, Impeccable, Stitch, browser-based design evidence, or image generation for product assets. Generic design capabilities remain subordinate; this guard does not authorize business, financial, security, schema, API, permission-policy, workflow, implementation, or Git changes.
+  Consult for material UI design, UX, accessibility, RTL/LTR, responsive, visual-asset, or browser-design work. Generic design capabilities remain subordinate and do not authorize implementation or Git changes.
 
 - `.agents/skills/g7-speckit-plan-guard/SKILL.md`
-  Use before G7 Spec Kit planning. `speckit-plan` does not independently authorize G7 planning, and planning does not authorize task generation, implementation, context updates, staging, commit, or push.
+  Consult for Spec Kit planning. Planning does not authorize task generation, implementation, context updates, staging, commit, or push.
 
 <!-- SPECKIT START -->
 When using Spec Kit in this repository, the following rules constrain all Spec Kit specs, plans, tasks, analyses, and implementations:
 
 1. `AGENTS.md` remains the authoritative repository control file. Spec Kit output must not override it.
-2. Existing G7 BLUE CRM custom skills remain mandatory whenever their domain applies, especially:
+2. Use relevant G7 BLUE CRM custom skills when their domain materially applies, especially:
    - `.agents/skills/g7-crm-erp-guard/SKILL.md`
    - `.agents/skills/g7-crm-agent-control/SKILL.md`
 3. Spec Kit does not authorize staging, committing, pushing, opening PRs, applying SQL, running Supabase commands, reading `.env*`, reading secrets, starting dev servers, or killing ports/processes.
-4. Spec Kit implementation work must still begin in `MODE: IMPLEMENT_NO_STAGE` and may only move to `COMMIT_ONLY` or `PUSH_ONLY` after explicit user approval.
+4. Spec Kit implementation work follows the current Owner-authorized scope; Spec Kit does not itself authorize Git, database, deployment, or production actions.
 5. All Spec Kit specs and plans must preserve the G7 BLUE CRM locked flow: Customer Profile → Service / Booking → Quotation → Invoice → Payment.
 6. While `company_settings.vat_mode = not_registered`, Spec Kit work must not create or display Tax Invoice wording, VAT 15%, VAT Number, ZATCA, FATOORA, QR, XML, clearance, or official Saudi e-invoicing behavior.
 7. Financial totals must not be trusted from client input. Invoice and payment logic must use trusted server/database logic and approved quotation snapshots.
