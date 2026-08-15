@@ -8,7 +8,7 @@ description: >-
   through agy while staying the reviewer. DO NOT USE for tasks small enough to do inline, or when the
   user wants the code written directly without delegating.
 license: MIT
-compatibility: Requires the `agy` CLI installed and authenticated, Node 18+, and git. The orchestrating agent must be able to run shell commands and read files. The G7 relay supports native Windows and POSIX shells.
+compatibility: Requires the `agy` CLI installed and authenticated, Node.js, and git. The orchestrator must be able to run shell commands and read files. Shell examples assume bash/zsh (macOS/Linux, or Git Bash/WSL on Windows).
 metadata:
   version: 0.4.2
 ---
@@ -29,8 +29,8 @@ Code; treat other orchestrators as designed-for, not yet proven.
 - The task is small enough to just do inline - delegation overhead is not worth it.
 - The `agy` CLI is not installed or not authenticated. Install it from Antigravity's CLI docs and run
   the first-launch setup.
-- You want to write the code yourself, or you only need a review without edits. This relay does not
-  expose a proven CLI-enforced read-only mode yet.
+- You want to write the code yourself, or you only need Antigravity's opinion on code you wrote (a
+  `--read-only` dispatch covers review without edits, but a plain review may not need delegation at all).
 
 ## Prerequisites (check once)
 
@@ -56,8 +56,9 @@ Run these five steps per task. Steps 1, 4, and 5 are your judgment; 2 and 3 are 
 
 Antigravity sees only the text you send plus what it can inspect in the workspace - no chat history, no
 shared context. Everything the task needs goes in the brief: the goal, the current state, what to
-change, what to leave untouched, the project's **actual** gate commands, and a report contract. Tell
-Antigravity it will **not** commit (you will). Keep one task per brief. Full guidance and a template:
+change, what to leave untouched, and a report contract. For an edit-only Writer, explicitly reserve
+shell commands, tests, lint, typecheck, and builds for the orchestrator. Tell Antigravity it will
+**not** commit (you will). Keep one task per brief. Full guidance and a template:
 [references/writing-the-brief.md](references/writing-the-brief.md).
 
 ### 2. Dispatch
@@ -69,8 +70,8 @@ below is this skill's installed directory - the folder containing this `SKILL.md
 ```bash
 node "<skill-dir>/scripts/relay.mjs" --brief brief.txt --cd /path/to/repo
 # choose a model label:                 add --model "<label from agy models>"
-# pass reasoning effort explicitly:     add --effort high
-# exclude exact protected paths:        repeat --exclude-path <repo-relative-path>
+# reasoning effort (low, medium, high): add --effort high
+# read-only (plan mode — no edits):     add --read-only
 # enable Antigravity terminal sandbox:  add --sandbox
 # resume the most recent conversation:  add --resume-last  (delta brief only)
 # see all options:                      node .../relay.mjs --help
@@ -78,9 +79,6 @@ node "<skill-dir>/scripts/relay.mjs" --brief brief.txt --cd /path/to/repo
 
 The helper starts a fresh Antigravity project by default and passes `--add-dir <repo>` (the `--cd`
 path, absolute) so `agy` has an explicit workspace. It does **not** pass `--dangerously-skip-permissions` by default.
-`--effort` is passed exactly to `agy`; it accepts only `low`, `medium`, or `high` and has no fallback.
-Repeat `--exclude-path` for exact repo-relative paths that must not enter Git status, diff, hash, or
-`touchedFiles` handling. Exclusions do not change `.gitignore` or Git metadata.
 Mechanics, flags, and the `result.json` shape: [references/dispatch-and-poll.md](references/dispatch-and-poll.md).
 
 ### 3. Wait for completion
@@ -101,7 +99,8 @@ the `finalMessage` field in `result.json` (also printed in full on stdout betwee
 Antigravity's `result.json` includes its own final message and any gate claims. **Re-verify, don't
 accept:**
 
-- **Re-run the project's gates yourself** (the test/lint/build commands from step 1).
+- **Run the project's gates yourself** after the edit-only Writer returns; do not delegate validation
+  commands to Antigravity.
 - **Read the diff** against the brief: did Antigravity do what was asked, nothing more and nothing less?
   `touchedFiles` in the result is your starting point.
 - **Run the relevant guard skills** on the diff if you have them installed.
@@ -121,13 +120,17 @@ diff holds:
 
 Antigravity owns its own permission policy. The relay does not bypass it by default. Use
 `--dangerously-skip-permissions` only when the human explicitly accepts that Antigravity may
-auto-approve tool permission requests. Use `--sandbox` when you want Antigravity's terminal sandbox
-enabled for the run. Antigravity's own help says `--dangerously-skip-permissions` auto-approves all
-tool permission requests without prompting, including a request to act outside the sandbox. Do not
-treat `--sandbox` as an enforced boundary when the flags are combined; treat the run as full access.
+auto-approve tool permission requests. `--read-only` runs `agy` in plan mode (`--mode plan`),
+removing write and edit paths, and is mutually exclusive with `--dangerously-skip-permissions`.
+Use `--sandbox` when you want Antigravity's terminal sandbox enabled for the run.
+Antigravity's own help says `--dangerously-skip-permissions` auto-approves all tool permission
+requests without prompting, including a request to act outside the sandbox. Do not treat
+`--sandbox` as an enforced boundary when the flags are combined; treat the run as full access.
 If headless `--print` auto-denies a write, the relay reports `status: "failed"` and exits non-zero.
-Settings allow-rules are not documented here as a fix because they have not been demonstrated to
-apply to this headless path. Do not add the bypass flag without explicit human approval.
+The relay fingerprints the working tree before and after a `--read-only` run to report
+`readOnlyViolation` in `result.json`. Settings allow-rules are not documented here as a fix
+because they have not been demonstrated to apply to this headless path. Do not add the bypass
+flag without explicit human approval.
 
 ## Authorization model
 
@@ -141,7 +144,7 @@ going beyond the brief, ask - don't expand the mandate yourself). The full treat
 ## References
 
 - [references/writing-the-brief.md](references/writing-the-brief.md) - how to write a brief Antigravity
-  can execute blind: structure, XML blocks, the report contract, and real gate commands.
+  can execute blind: structure, XML blocks, the edit-only boundary, and the report contract.
 - [references/dispatch-and-poll.md](references/dispatch-and-poll.md) - `relay.mjs` flags, the
   `result.json` contract, backgrounding per orchestrator, and recovery when a run misbehaves.
 - [references/review-and-land.md](references/review-and-land.md) - the review checklist, the commit
