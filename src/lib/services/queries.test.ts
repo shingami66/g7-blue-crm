@@ -414,6 +414,182 @@ test("getEligibleServicesForInvoiceChooser handles backend page ceiling and shor
   assert.equal(activeScenario.calls.length, 16);
 });
 
+test("getEligibleServicesForInvoiceChooser paginates active services at exact 500-row boundary with terminal empty page", async () => {
+  const services = Array.from({ length: 500 }, (_, i) => {
+    const num = i + 1;
+    return {
+      id: `svc-${num}`,
+      service_number: `SVC-2026-${String(num).padStart(4, "0")}`,
+      service_title: `Service ${num}`,
+      status: "Approved",
+      deleted_at: null,
+      customers: { company: `Company ${num}`, contact: `Contact ${num}`, customer_number: `CUS-${num}` },
+    };
+  });
+
+  const approvedBillingScopes = [
+    {
+      id: "abs-1",
+      service_id: "svc-1",
+      status: "approved",
+      accepted_grand_total: 10000,
+      source_quotation_id: "q-1",
+      superseded_at: null,
+      voided_at: null,
+    },
+    {
+      id: "abs-500",
+      service_id: "svc-500",
+      status: "approved",
+      accepted_grand_total: 50000,
+      source_quotation_id: "q-500",
+      superseded_at: null,
+      voided_at: null,
+    },
+  ];
+
+  const quotations = [
+    {
+      id: "q-1",
+      service_id: "svc-1",
+      quotation_number: "QT-001",
+      status: "approved",
+      grand_total: 10000,
+      is_deleted: false,
+      created_at: "2026-08-01T10:00:00Z",
+    },
+    {
+      id: "q-500",
+      service_id: "svc-500",
+      quotation_number: "QT-500",
+      status: "approved",
+      grand_total: 50000,
+      is_deleted: false,
+      created_at: "2026-08-01T10:00:00Z",
+    },
+  ];
+
+  activeScenario = {
+    calls: [],
+    permissions: { "invoices:write": true, "services:read": true },
+    tableData: {
+      services,
+      approved_billing_scopes: approvedBillingScopes,
+      quotations,
+      invoices: [],
+    },
+  };
+
+  const result = await getEligibleServicesForInvoiceChooser();
+  assert.equal(result.status, "ready");
+  assert.equal(result.services.length, 2);
+  assert.equal(result.services[0].serviceId, "svc-1");
+  assert.equal(result.services[1].serviceId, "svc-500");
+
+  const serviceCalls = activeScenario.calls.filter((c) => c.table === "services");
+  assert.equal(serviceCalls.length, 2);
+  assert.deepEqual(serviceCalls[0].rangeLimits, [0, 499]);
+  assert.deepEqual(serviceCalls[1].rangeLimits, [500, 999]);
+});
+
+test("getEligibleServicesForInvoiceChooser continues pagination across 501-row boundary with continuation page and terminal empty page", async () => {
+  const services = Array.from({ length: 501 }, (_, i) => {
+    const num = i + 1;
+    return {
+      id: `svc-${num}`,
+      service_number: `SVC-2026-${String(num).padStart(4, "0")}`,
+      service_title: `Service ${num}`,
+      status: "Approved",
+      deleted_at: null,
+      customers: { company: `Company ${num}`, contact: `Contact ${num}`, customer_number: `CUS-${num}` },
+    };
+  });
+
+  const approvedBillingScopes = [
+    {
+      id: "abs-1",
+      service_id: "svc-1",
+      status: "approved",
+      accepted_grand_total: 10000,
+      source_quotation_id: "q-1",
+      superseded_at: null,
+      voided_at: null,
+    },
+    {
+      id: "abs-500",
+      service_id: "svc-500",
+      status: "approved",
+      accepted_grand_total: 50000,
+      source_quotation_id: "q-500",
+      superseded_at: null,
+      voided_at: null,
+    },
+    {
+      id: "abs-501",
+      service_id: "svc-501",
+      status: "approved",
+      accepted_grand_total: 50100,
+      source_quotation_id: "q-501",
+      superseded_at: null,
+      voided_at: null,
+    },
+  ];
+
+  const quotations = [
+    {
+      id: "q-1",
+      service_id: "svc-1",
+      quotation_number: "QT-001",
+      status: "approved",
+      grand_total: 10000,
+      is_deleted: false,
+      created_at: "2026-08-01T10:00:00Z",
+    },
+    {
+      id: "q-500",
+      service_id: "svc-500",
+      quotation_number: "QT-500",
+      status: "approved",
+      grand_total: 50000,
+      is_deleted: false,
+      created_at: "2026-08-01T10:00:00Z",
+    },
+    {
+      id: "q-501",
+      service_id: "svc-501",
+      quotation_number: "QT-501",
+      status: "approved",
+      grand_total: 50100,
+      is_deleted: false,
+      created_at: "2026-08-01T10:00:00Z",
+    },
+  ];
+
+  activeScenario = {
+    calls: [],
+    permissions: { "invoices:write": true, "services:read": true },
+    tableData: {
+      services,
+      approved_billing_scopes: approvedBillingScopes,
+      quotations,
+      invoices: [],
+    },
+  };
+
+  const result = await getEligibleServicesForInvoiceChooser();
+  assert.equal(result.status, "ready");
+  assert.equal(result.services.length, 3);
+  assert.equal(result.services[0].serviceId, "svc-1");
+  assert.equal(result.services[1].serviceId, "svc-500");
+  assert.equal(result.services[2].serviceId, "svc-501");
+
+  const serviceCalls = activeScenario.calls.filter((c) => c.table === "services");
+  assert.equal(serviceCalls.length, 3);
+  assert.deepEqual(serviceCalls[0].rangeLimits, [0, 499]);
+  assert.deepEqual(serviceCalls[1].rangeLimits, [500, 999]);
+  assert.deepEqual(serviceCalls[2].rangeLimits, [501, 1000]);
+});
+
 test("getEligibleServicesForQuotation filters by status Inquiry/Quoted and excludes deleted services", async () => {
   const services = [
     { id: "s-1", service_number: "SVC-001", service_title: "Inquiry Service", status: "Inquiry", deleted_at: null, customers: { company: "Co A" } },
