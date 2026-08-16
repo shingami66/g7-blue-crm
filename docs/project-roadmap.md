@@ -73,7 +73,8 @@ Tender / Bid Management is a future deferred expansion module. Discovery begins 
 - The external read-only `baseline-90adf8f` campaign package remains the detailed evidence authority; it is not repository-controlled.
 - G1 financial lifecycle authority and invoice snapshot remediation is closed and pushed at `e34ea4176044f4dc663555a8794dfa5d3042206c`. All four canonical G1 migrations are applied and reconciled on DEV/DEMO.
 - G2 Money and payment precision implementation and its canonical migration are present; the migration is applied on DEV/DEMO and the implementation commit is pushed at `db68492`. This rebaseline does not independently re-assert Owner acceptance or full G2 closeout.
-- G3 Reporting truth and period semantics implementation remediation is represented by checkpoints `6bdc87b222488bcf4be04b4fb19ccac3574c67d7` and `cbc39f0`, later published in the accumulated `main` history without inferring full Goal closure or Owner acceptance.
+- G3 Reporting Truth / Period Semantics engineering remediation is **CLOSED** and published at `3143f3eddbeb8dfd8d347e7e79c88e04b712bfdb` (`fix(g3): align customer 360 recent financial activity`). Reports focused validation passed 24/24; Customer 360 focused validation passed 13/13; TypeScript, ESLint, and `git diff --check` passed; independent review was CLEAN (0 BLOCKING, 0 MATERIAL, 0 MINOR). Owner visual/manual/product acceptance remains pending separately.
+- G9 Supplier / Rate Card authority is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED**; do not reopen it.
 - Current confirmed findings: 49 — 0 Critical, 5 High, 39 Medium, and 5 Low. Future SaaS/migration concerns are tracked separately: 3. Architectural blockers: 0.
 
 ### Historical checkpoint (11 August 2026)
@@ -95,11 +96,11 @@ This is an inter-goal closure and stabilization gate, not a replacement or renum
 
 ### Current Published Checkpoint (16 August 2026)
 
-- **Verified repository:** `D:/G7/g7-crm`, branch `main`, local HEAD and `origin/main` are both `5f0d64d9732883b120cfe1b3cebb9fbd16abc0f8`; divergence is `0 ahead / 0 behind`. The index is clean; unrelated worktree changes remain dirty and preserved.
-- **Published remediation sequence:** The synchronized 20-commit history publishes the recorded G3 reporting-truth, G4 bounded-read/scale, G5 admin-hardening, G6 sensitive-payload/log, G7 failure-boundary, webhook-idempotency, invoice-snapshot, governance, agent/tooling, and application accessibility/authorization checkpoints. Published implementation checkpoints do not by themselves prove Goal closure, Owner acceptance, or production readiness.
-- **Application repair checkpoint:** `17b6732f5ed78cf3e391feee89dd5514898153a8` (`fix(app): close accessibility and authorization review gaps`) passed 29/29 focused tests, TypeScript, and independent validation; ESLint had 0 errors with 2 inherited PDF warnings; Reviewer findings were `0 BLOCKING / 0 MATERIAL / 1 MINOR`, limited to Sidebar interaction-test depth. The checkpoint is `PASS WITH WARN`, not a production-readiness claim.
-- **Workflow checkpoint:** `5f0d64d9732883b120cfe1b3cebb9fbd16abc0f8` (`chore(governance): adopt resilient Gemini repair workflow`) passed with `0 BLOCKING / 0 MATERIAL / 0 MINOR`. The project-local workflow now records Gemini's authorized bounded edit/validate/repair loop, separate Luna/Codex validation, findings-only review, and session-resilient logical Writer continuity.
-- **Current Goal boundary:** G3-G7 published checkpoints are synchronized; G8-G12 are not marked complete or active. No single next remediation Goal is proven by the current documents, so the next action requires controlled Owner selection/reconciliation from the remaining roadmap. No database apply, deployment, production readiness, or Owner acceptance is inferred from Git publication.
+- **Verified repository:** `D:/G7/g7-crm`, branch `main`, local HEAD and `origin/main` are both `3143f3eddbeb8dfd8d347e7e79c88e04b712bfdb`; divergence is `0 ahead / 0 behind`. The index is clean before this run.
+- **Published G3 closure checkpoint:** `3143f3eddbeb8dfd8d347e7e79c88e04b712bfdb` (`fix(g3): align customer 360 recent financial activity`). G3 Reporting Truth / Period Semantics engineering remediation is **CLOSED**. Reports focused validation passed 24/24; Customer 360 focused validation passed 13/13; TypeScript, ESLint (0 errors, 2 inherited PDF `<img>` warnings), and `git diff --check` passed; independent review was **CLEAN** with 0 BLOCKING, 0 MATERIAL, 0 MINOR.
+- **Acceptance & Scope Boundary:** These engineering and publication results do not constitute Mozfer Owner visual/manual/product acceptance; that acceptance remains explicitly **PENDING SEPARATELY**. Kept deferred and not-open-as-engineering-defect: selected-period Collected Cash semantics, historical Outstanding-as-of-period-end, Revenue Recognition, payment terms/credit control, supplier cost/margin, and broader accounting reporting. Broader Reports and richer Customer 360 product enhancements remain deferred product scope.
+- **Remediation program status:** G9 Supplier / Rate Card is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED**; do not reopen it.
+- **Current Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved. Because G3 and G9 are complete, `G8: Family-specific create replay` is the next serial gate only; G8 is **NOT active** and requires separate Owner authorization. G11 remains downstream of G8. No database apply, deployment, production readiness, or Owner acceptance is inferred from Git publication.
 
 ### Historical G7-RB1 Rebaseline (13 August 2026)
 
@@ -175,9 +176,9 @@ After field evidence and controller design lock, prepare a separate implementati
 |---|---|---|
 | DELIVERED + OWNER-ACCEPTED | Goal 2A loading/motion foundation; fast operations remain silent and destination-shaped loading is the current contract. | `5429e7642bd3d763809e0de453cc131f2c90921c` |
 | DELIVERED + OWNER-ACCEPTED | Goal 2B/2C Business Year/list foundations, explicit-submit customer search, Supplier Directory presentation, Dashboard workspace hierarchy, and acceptance boundary. | `f20b240dcc6e1197167aec802c57b59201df0333`, `820b01f79a19d871b86c120e3c2f78b474596f4b`, `c2b699d8dac8ccbc64e5f511aff4931401cd099b`, `195b4c62d0e1f599513e338095fe71ff7a15777f`, `c9f12cf13299cb79e2a76b4127e58a16851b3548`, `8e54b80d4ec7376e4d6cd77d044ee5654e3bd5b3` |
-| DELIVERED / CURRENT REMEDIATION OPEN | Business Year is bounded to temporal list routes; invoice-date semantics remain subject to `W5-DATE-001`. Module-local search/list/filter foundations are current product behavior, while G3/G4/G10 findings remain remediation. | `f20b240dcc6e1197167aec802c57b59201df0333`, `c1041b7db9b5b6d04c4fbb715a1f5275fb2204cc` |
-| IMPLEMENTED / OWNER ACCEPTANCE PENDING / CURRENT G9 REMEDIATION OPEN | Supplier Rate Card V1 is present on canonical `main` through commit `9115d3e` for create/edit/activate/deactivate, validity, and overlap behavior; G9 precision/category/atomicity/lifecycle corrections remain open. | `9115d3e02a07ad4deefe1218dfeac644f32e106c` |
-| DELIVERED / ACCEPTANCE PENDING | Reports and Customer 360 surfaces/read models exist; owner product/visual acceptance and current G3/G4 correctness/completeness findings remain open. | `2cee122e0223450820f7f89f977f986388fdbea8`, `943716f15e70218a7ce4034d47296f88b1bde61b` |
+| DELIVERED / ACCEPTANCE PENDING | Business Year is bounded to temporal list routes; invoice-date periodization follows authoritative issued date under G3. Module-local search/list/filter foundations are current product behavior, while G10 search/accessibility findings remain remediation. | `f20b240dcc6e1197167aec802c57b59201df0333`, `c1041b7db9b5b6d04c4fbb715a1f5275fb2204cc` |
+| COMPLETE / PUBLISHED / DEV-DEMO VERIFIED / OWNER ACCEPTANCE PENDING | Supplier Rate Card V1 authority is COMPLETE, PUBLISHED, and DEV-DEMO VERIFIED under G9 (do not reopen it); Owner visual/manual acceptance remains pending separately. | `9115d3e02a07ad4deefe1218dfeac644f32e106c` |
+| DELIVERED / ACCEPTANCE PENDING | Reports and Customer 360 surfaces/read models exist; G3 Reporting Truth / Period Semantics engineering remediation is CLOSED (Reports focused validation 24/24, Customer 360 focused validation 13/13); Owner product/visual acceptance remains pending separately; broader Reports and richer Customer 360 enhancements remain deferred product scope. | `2cee122e0223450820f7f89f977f986388fdbea8`, `943716f15e70218a7ce4034d47296f88b1bde61b` |
 | FUTURE / DEFERRED | Broader accounting, procurement, Event Operations, advanced dashboards, multi-company/SaaS, ZATCA, and future localization/currency/compliance remain outside current remediation. | Expansion Master and current campaign plan |
 
 ### Active remediation program
@@ -202,6 +203,8 @@ G11 is a planning bucket, not one mixed commit: focused behavioral tests, DEV/DE
 ### Dependency order
 
 **Primary serial path:** owner/product/accounting decisions -> G1 financial lifecycle authority -> G2 money precision -> G3 reporting truth and period semantics -> G9 Supplier/Rate Card authority -> G8 family-specific replay safety -> G11 verification/release -> G12 architecture/cleanup.
+
+Because G3 and G9 are complete, G8 is the next serial gate only; G8 is NOT active and requires separate Owner authorization. G11 remains downstream of G8.
 
 **Parallelizable after required decisions and a clean baseline:** G5 Admin security, G6 payload/log minimization, G7 reliability boundaries, G10 search/accessibility, and G4 measurement/scale evidence. Parallelizable does not mean immediately started.
 
@@ -230,13 +233,13 @@ Every future implementation/remediation Goal remains administratively open until
 
 ### Current remediation waiting on decisions / evidence
 
-- **Owner decision first:** G1/G2 lifecycle, money precision, and financial correction contracts.
-- **Accountant/product decision first:** G3 invoice status, Business Year fallback, report dimensions, supplier dates/cost denominator, and completion with outstanding finance.
+- **Owner decision first:** G1/G2 lifecycle, money precision, and financial correction contracts; G8 activation.
+- **Accountant/product decision first:** Broader accounting reporting, Revenue Recognition, payment terms/credit control, supplier cost/margin, and completion with outstanding finance (deferred product scope, not open engineering defect).
 - **Measurement first:** G4 performance, query, scale, and index decisions.
-- **DEV/DEMO database evidence first:** G1, G2, G5, G8, G9, and G11 SQL/RPC/concurrency or migration verification.
-- **Mozfer browser acceptance first:** G10 EN/AR/RTL/mobile/search/accessibility behavior; applicable G3/G9 report and supplier surfaces.
+- **DEV/DEMO database evidence first:** G1, G2, G5, G8, G9, and G11 SQL/RPC/concurrency or migration verification (G9 DEV/DEMO verified).
+- **Mozfer browser acceptance first:** G10 EN/AR/RTL/mobile/search/accessibility behavior; Owner visual/manual acceptance for G3 Reports/Customer 360 and G9 Supplier surfaces (pending separately).
 - **Later cleanup:** G6 M-01 adaptation, G12 generated typing, bounded ABS refactor, and exact orphaned static-data removal.
-- **Current gates:** Security, financial integrity, Reports/Customer 360 authority, Supplier/Rate Card, Search/Accessibility, Database/Migration, Performance/Scale, Release, and Mozfer owner acceptance remain blocked or pending their listed Goals and evidence. Production sign-off is not complete.
+- **Current gates:** G8 is the next serial gate (inactive, requires Owner authorization); Security, financial integrity, Reports/Customer 360 authority, Supplier/Rate Card, Search/Accessibility, Database/Migration, Performance/Scale, Release, and Mozfer owner acceptance remain blocked or pending their listed Goals and evidence. Production sign-off is not complete.
 
 ### Deferred product / Event ERP / SaaS expansion
 
@@ -255,13 +258,13 @@ These 3 concerns are future activation gates, not current defects. No tenant rol
 ### Release and acceptance gates
 
 - Security: blocked/WARN pending G5-G7, redacted logs, health-exposure, and RLS/grant evidence.
-- Financial integrity: blocked pending G1-G3, accountant decisions, and snapshot/status/precision tests.
-- Reports/Customer 360: blocked pending G3 and complete aggregate/date/dimension/status contracts.
-- Supplier/Rate Card: blocked pending G3/G9 decisions and atomic database evidence.
+- Financial integrity: blocked pending G1-G2 closeout, accountant decisions, and snapshot/status/precision tests.
+- Reports/Customer 360: G3 engineering remediation closed (Reports 24/24, Customer 360 13/13); Owner product/visual acceptance remains pending separately.
+- Supplier/Rate Card: G9 is complete, published, and DEV-DEMO verified; Owner acceptance remains pending separately.
 - Search/Accessibility: blocked pending G10 and Mozfer EN/AR/RTL/mobile/browser acceptance.
 - Database/Migration: blocked pending approved DEV/DEMO PostgreSQL/RPC verification.
 - Performance/Scale: blocked pending E1-E6 measurements and bounded corrections.
-- Release: blocked pending G11; Mozfer owner acceptance remains pending by domain.
+- Release: blocked pending G8, G11; Mozfer owner acceptance remains pending by domain.
 - Future SaaS activation: deferred pending ownership, membership, migration, export, isolation, quota, and compliance approval.
 
 ## 2. Current Priority

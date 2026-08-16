@@ -38,7 +38,7 @@
 - **Remaining production enforcement:** Production rollout of the ABS financial lifecycle remains deferred.
 
 ## 5. Supplier And Costing Deferrals
-- **Supplier Rate Card V1 and broader procurement:** Rate Card V1 is implemented and present on canonical `main` through commit `9115d3e`; owner acceptance remains pending; current correctness/remediation is G9 open. The bounded V1 scope covers create, edit, activate/deactivate, valid-from/valid-to, and current overlap behavior subject to G9 correction. Delete/restore, automatic supplier pricing, broader procurement, supplier accounting, Actual Cost, and Margin remain deferred.
+- **Supplier Rate Card V1 and broader procurement:** Supplier Rate Card V1 authority is COMPLETE, PUBLISHED, and DEV-DEMO VERIFIED under G9 (do not reopen it); Owner visual/manual acceptance remains pending separately. The bounded V1 scope covers create, edit, activate/deactivate, valid-from/valid-to, and overlap behavior. Delete/restore, automatic supplier pricing, broader procurement, supplier accounting, Actual Cost, and Margin remain deferred.
 - **Broader Supplier Booking routes and workflows:** Standalone/broader Supplier Booking routes, UI, customer-facing documents, portal, edit/delete/restore, and expanded statuses remain deferred. Narrow internal Service-scoped V1 is implemented.
 - **Supplier invoices/payments:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. Supplier invoices, payables, outbound payments, accounting workflows, and supplier payment approval workflow are not implemented or immediately active.
 - **Company Expenses:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. Company overhead remains separate from Service/Event direct costs.
@@ -71,16 +71,16 @@
 - **Logo upload where still deferred:** Company Logo upload remains deferred.
 
 ## 8. UX, Reporting, And Product Expansion Deferrals
-- **Reports and broader reporting:** The Reports surface/read model exists, but owner product/visual acceptance and current correctness, completeness, time, cost, and scale findings remain open remediation. A separate authoritative management/accounting Reports Center remains deferred.
-- **Customer 360 and richer customer reporting:** The Customer 360 surface/read model exists, but owner product/visual acceptance and current completeness/reporting findings remain open remediation. A separate full customer profile report remains deferred.
+- **Reports and broader reporting:** The Reports surface/read model exists; G3 Reporting Truth / Period Semantics engineering remediation is CLOSED (focused validation 24/24 passed). Owner product/visual acceptance remains pending separately. Kept deferred and not-open-as-engineering-defect: selected-period Collected Cash semantics, historical Outstanding-as-of-period-end cutoff, Revenue Recognition, payment terms/credit control, supplier cost/margin, and broader accounting reporting. Broader Reports product enhancements and a separate authoritative management/accounting Reports Center remain deferred product scope.
+- **Customer 360 and richer customer reporting:** The Customer 360 surface/read model exists; G3 engineering remediation is CLOSED (focused validation 13/13 passed). Owner product/visual acceptance remains pending separately. Richer customer reporting and a separate full customer profile report remain deferred product scope.
 - **Module-specific reports:** Module-specific reports remain deferred.
 - **Attachments:** General attachments (storage, permissions, file limits) for quotations, invoices, and customer records remain deferred.
 - **Notifications/WhatsApp/email:** Email, WhatsApp, and internal notifications remain deferred.
 - **Customer activity timeline:** A unified customer activity timeline remains deferred.
-- **Leads/inquiries:** Management of leads and inquiries remains deferred.
+- **Leads/inquiries:** Management of leads and inquiries remain deferred.
 - **Event taxonomy:** Formalizing event taxonomy (e.g., specific event types) remains deferred.
 - **Search/filter expansion:** Module-local search and major list/filter foundations exist; W5 search/accessibility defects are current G10 remediation. Global search remains intentionally absent/deferred, while unrelated future polish remains deferred.
-- **Business Year expansion beyond bounded list semantics:** The approved bounded Business Year foundation exists for temporal list routes; `W5-DATE-001` and related report/date semantics are current G3 remediation. Broader calendar/fiscal expansion remains deferred.
+- **Business Year expansion beyond bounded list semantics:** The approved bounded Business Year foundation exists for temporal list routes; G3 period semantics engineering remediation is CLOSED. Broader calendar/fiscal expansion remains deferred.
 - **Service Hub:** Richer hub behavior (notes, attachments, and expansion beyond the delivered Activity History and explicit lifecycle actions) remains deferred.
 - **Advanced Dashboard expansion:** The current Dashboard workspace/hierarchy is delivered and owner-accepted, and remains intentionally outside Business Year scope; current bounded-read work remains remediation. Broader role-specific management, finance, and operations dashboards remain deferred.
 
