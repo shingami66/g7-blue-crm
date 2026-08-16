@@ -5,7 +5,7 @@ import { mapRowToCustomer, type CustomerMetricsRow } from "@/lib/customers/mappe
 import type { CustomerRow } from "@/lib/customers/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Customer360Activity, Customer360Invoice, Customer360Payment, Customer360Quotation, Customer360Result, Customer360Section, Customer360Service } from "./types";
-import { calculateCustomer360FinancialSummary } from "./summary";
+import { calculateCustomer360FinancialSummary, isLiveCustomerInvoice } from "./summary";
 
 function numberValue(value: unknown): number {
   const parsed = Number(value);
@@ -216,7 +216,8 @@ function buildOperationalActivity(services: Customer360Service[]): Customer360Ac
 }
 
 function buildFinancialActivity(invoices: Customer360Invoice[], payments: Customer360Payment[]): Customer360Activity[] {
-  const invoiceActivity = invoices.map((invoice) => ({
+  const liveInvoices = invoices.filter(isLiveCustomerInvoice);
+  const invoiceActivity = liveInvoices.map((invoice) => ({
     id: `invoice-${invoice.id}`,
     date: invoice.date,
     kind: "financial" as const,
