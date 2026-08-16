@@ -72,26 +72,47 @@ Tender / Bid Management is a future deferred expansion module. Discovery begins 
 - Cross-Wave Consolidation and the Final Remediation Master Plan are complete.
 - The external read-only `baseline-90adf8f` campaign package remains the detailed evidence authority; it is not repository-controlled.
 - G1 financial lifecycle authority and invoice snapshot remediation is closed and pushed at `e34ea4176044f4dc663555a8794dfa5d3042206c`. All four canonical G1 migrations are applied and reconciled on DEV/DEMO.
-- G2 Money and payment precision is closed and pushed at `db68492`. The `7b0bb0b5adeb047e6905f5091071a445b1f91faa` documentation rebaseline is the remote baseline on `origin/main`.
-- G3 Reporting truth and period semantics implementation remediation is progressed: slices G3-A1 (Reports Center Reporting Truth, local checkpoint `6bdc87b222488bcf4be04b4fb19ccac3574c67d7`) and G3-B1 (Customer 360 Financial Truth & Parity, local checkpoint `cbc39f0`) are completed and verified clean locally.
+- G2 Money and payment precision implementation and its canonical migration are present; the migration is applied on DEV/DEMO and the implementation commit is pushed at `db68492`. This rebaseline does not independently re-assert Owner acceptance or full G2 closeout.
+- G3 Reporting truth and period semantics implementation remediation is represented by checkpoints `6bdc87b222488bcf4be04b4fb19ccac3574c67d7` and `cbc39f0`, later published in the accumulated `main` history without inferring full Goal closure or Owner acceptance.
 - Current confirmed findings: 49 — 0 Critical, 5 High, 39 Medium, and 5 Low. Future SaaS/migration concerns are tracked separately: 3. Architectural blockers: 0.
 
-### Current checkpoint (11 August 2026)
+### Historical checkpoint (11 August 2026)
 
-- **Phase:** `G3 CLOSEOUT / G4 NEXT GATE — BOUNDED READ PATHS AND SCALE`.
-- **G0 authority / Repository baseline:** `D:/G7/g7-crm` on branch `main`. Remote baseline `origin/main` is `7b0bb0b5adeb047e6905f5091071a445b1f91faa`. Current local campaign is two commits ahead of origin (`6bdc87b` G3-A1 and `cbc39f0` G3-B1). No push authority is claimed for this local campaign.
-- **G2 state:** G2 Money and payment precision (`W2-PAY-003`) is closed and pushed.
+- **Historical phase:** `G3 CLOSEOUT / G4 NEXT GATE — BOUNDED READ PATHS AND SCALE`. The current repository position is recorded in the G7-RB1 rebaseline below.
+- **G0 authority / Repository baseline at this checkpoint:** `D:/G7/g7-crm` on branch `main`, with `origin/main` at `7b0bb0b5adeb047e6905f5091071a445b1f91faa` and the then-recorded local campaign two commits ahead. The current verified divergence and dirty-work boundary are recorded below; no push authority is claimed.
+- **G2 state at this checkpoint:** G2 payment-precision implementation and its canonical migration are present and applied on DEV/DEMO; this rebaseline does not independently re-assert Owner acceptance or full closeout.
 - **G3 implemented slices:**
   - **G3-A1 (Reports Center Reporting Truth — local checkpoint `6bdc87b`):** Authoritative `issued_at` invoice periodization without `created_at` fallback; live Billed/Invoiced reporting excludes draft, cancelled, and voided invoices; customer overview resolves older transacting customers without filtering by customer `created_at`; report period boundaries follow Asia/Riyadh time zone (+03:00) with exclusive next-day boundaries for timestamp columns; permission-unavailable metrics render as null/unavailable (`"—"`) without fake zeros; bounded 500-row reads replaced by deterministic exhaustive pagination advancing by actual received row counts until an empty page; corrected top-N ranking and customer counts.
   - **G3-B1 (Customer 360 Financial Truth and Parity — local checkpoint `cbc39f0`):** Aligned Customer 360 financial summary totals (`totalInvoiced`, `totalCollected`, `outstandingBalance`) with G3-A1 live issued invoice truth (`issued_at` non-null, status NOT draft/cancelled/voided, `is_deleted = false`); permission-unavailable financial metrics evaluate to `null` and render as `"—"`; removed silent 50-row query truncation via exhaustive multi-page pagination (`fetchAllCustomer360Pages`) with deterministic ordering and unique ID tie-breaking; historical invoices table continues to list all customer invoices with badges for audit context.
 - **Verification and Code Review:** Full workspace test suite passes **978/978 across 85 files** (focused Reports Center 24/24, focused Customer 360 9/9), TypeScript `tsc --noEmit` exits 0 clean, ESLint exits 0 with only the two inherited PDF `<img>` warnings, `git diff --check` clean with 0 whitespace issues, and Open Code Review is **CLEAN** after remediation.
 - **Owner Acceptance status:** Owner visual/manual acceptance remains pending where existing governance requires it; no claim of owner acceptance or production readiness is made.
 - **Deferred G3 Scope / Accounting Policy:** Remaining recommendation and accounting slices are deferred without inventing decisions: selected-period Collected Cash, historical Outstanding-as-of-period-end cutoff, Revenue Recognition, payment terms/credit control, supplier cost/margin, and other deferred accounting policy.
-- **Next Controlled Campaign Gate:** `G4: Bounded read paths and scale` (mapped to `M-02`, `M-04`, `W3-PERF-005`, `W3-QUERY-001`, `W3-SCALE-003/004`). G4 requires measurement-first evidence and Gemini discovery before implementation.
+- **Historical next controlled gate:** `G4: Bounded read paths and scale` (mapped to `M-02`, `M-04`, `W3-PERF-005`, `W3-QUERY-001`, `W3-SCALE-003/004`). The current next controlled action is recorded in the G7-RB1 rebaseline below.
 - **Closed Post-G1 work:** Cleanup & Rebaseline, DEV/DEMO Data Hygiene, UX/Loading Stabilization, and Customer Document Architecture Correction are closed. The document correction is pushed at `93d3f132b3ff756f4c49904da8622e40babdaa18`.
 - **M-01:** external candidate status is `IMPLEMENTED_AND_VALIDATED_NOT_ADOPTED`; consolidated disposition is `ADAPT`; it remains separate and was not accessed or applied here.
 
 This is an inter-goal closure and stabilization gate, not a replacement or renumbering of G2. It preserves the remediation backbone `G1 -> G2 -> ... -> G12`.
+
+### Current Published Checkpoint (16 August 2026)
+
+- **Verified repository:** `D:/G7/g7-crm`, branch `main`, local HEAD and `origin/main` are both `5f0d64d9732883b120cfe1b3cebb9fbd16abc0f8`; divergence is `0 ahead / 0 behind`. The index is clean; unrelated worktree changes remain dirty and preserved.
+- **Published remediation sequence:** The synchronized 20-commit history publishes the recorded G3 reporting-truth, G4 bounded-read/scale, G5 admin-hardening, G6 sensitive-payload/log, G7 failure-boundary, webhook-idempotency, invoice-snapshot, governance, agent/tooling, and application accessibility/authorization checkpoints. Published implementation checkpoints do not by themselves prove Goal closure, Owner acceptance, or production readiness.
+- **Application repair checkpoint:** `17b6732f5ed78cf3e391feee89dd5514898153a8` (`fix(app): close accessibility and authorization review gaps`) passed 29/29 focused tests, TypeScript, and independent validation; ESLint had 0 errors with 2 inherited PDF warnings; Reviewer findings were `0 BLOCKING / 0 MATERIAL / 1 MINOR`, limited to Sidebar interaction-test depth. The checkpoint is `PASS WITH WARN`, not a production-readiness claim.
+- **Workflow checkpoint:** `5f0d64d9732883b120cfe1b3cebb9fbd16abc0f8` (`chore(governance): adopt resilient Gemini repair workflow`) passed with `0 BLOCKING / 0 MATERIAL / 0 MINOR`. The project-local workflow now records Gemini's authorized bounded edit/validate/repair loop, separate Luna/Codex validation, findings-only review, and session-resilient logical Writer continuity.
+- **Current Goal boundary:** G3-G7 published checkpoints are synchronized; G8-G12 are not marked complete or active. No single next remediation Goal is proven by the current documents, so the next action requires controlled Owner selection/reconciliation from the remaining roadmap. No database apply, deployment, production readiness, or Owner acceptance is inferred from Git publication.
+
+### Historical G7-RB1 Rebaseline (13 August 2026)
+
+- **Verified repository:** `D:/G7/g7-crm`, branch `main`, local HEAD `6564fa2a75d46269466c82c0a5f94246e0997031`, tracking `origin/main` at `7b0bb0b5adeb047e6905f5091071a445b1f91faa`, divergence `10 ahead / 0 behind`. The index is clean; the worktree is dirty.
+- **Local-only work:** The current local sequence includes G3 reporting (`6bdc87b`, `cbc39f0`), G4 read-path work (`15af20b`, `e13e5d2`), G5 admin mutation work (`185905c`), G6 payload/log minimization (`6b355b2`), G7 failure-boundary work (`6564fa2`), governance/agent changes (`11d4ef6`, `bfd4a21`), and the G3 documentation checkpoint (`c507244`). These commits are local-only and unpushed; commit subjects do not independently prove validation, Owner acceptance, or production readiness.
+- **Dirty-work boundary:** Four protected inherited source paths remain modified and are excluded from this documentation task. Other local modifications and untracked test work remain preserved. Protected build-watch artifacts remain unenumerated and uninspected.
+- **Verified DEV/DEMO aggregate state:** `customers=10`, `services=10`, `quotations=1`, `approved_billing_scopes=1`, `invoices=2`, `payments=0`, `suppliers=10`, `audit_logs=5`. Non-sensitive lifecycle classification: one approved quotation, one approved billing scope, one approved Service, nine Inquiry Services, one draft Deposit Invoice, and one draft Final Invoice. Applied migration history includes `20260810090430_g2_payment_precision_reject`.
+- **Current schema facts:** `quotations.event` exists; `quotations.event_name` does not exist; `services.event_name` exists; `invoices.discount_amount` does not exist. No database mutation was performed by this task.
+- **G7-RUNTIME-001:** Dashboard failure `column quotations.event_name does not exist`. Classification: `APPLICATION_QUERY_SCHEMA_CONTRACT_MISMATCH`; control-layer failure class: `VALIDATION_FAILURE`. Recorded only; no repair decision is made.
+- **G7-RUNTIME-002:** Invoice failure `column invoices.discount_amount does not exist`. Classification: `APPLICATION_QUERY_SCHEMA_CONTRACT_MISMATCH`; control-layer failure class: `VALIDATION_FAILURE`. The repair direction remains unresolved.
+- **Delivery truth:** G2 implementation and migration application are evidenced, but Owner acceptance/full closeout is not inferred here. G3-G7 remain local-only/unpushed current engineering work and are not labeled pushed, merged, fully validated, Owner-accepted, or production-ready.
+- **Current blockers:** Runtime contract mismatches, dirty/protected local work, unpushed commits, pending Owner/manual acceptance, and missing current repair authorization. The Expansion Master remains strategic/domain context only.
+- **Exact next controlled action:** Compile one separate bounded repair Task Contract for the first Owner-selected runtime contract defect; do not select or implement the repair automatically.
 
 #### A. Cleanup & Rebaseline — COMPLETE (8 August 2026)
 
@@ -110,9 +131,9 @@ This is an inter-goal closure and stabilization gate, not a replacement or renum
 - [x] Reconcile final counts, one-to-one Service/Customer relationships, referential integrity, clean numbering, preserved system state, and canonical migration history.
 - [x] Complete authenticated seeded-baseline Customers, Services, Quotations, and Invoices browser/runtime smoke and close Data Hygiene.
 
-The former G1 and legacy fixtures were removed as mock/test data. The curated baseline intentionally contains no quotation, ABS, invoice, payment, supplier booking, allocation, project, task, or audit rows; the owner will manually test the Service -> Quotation -> Approval -> ABS -> Deposit Invoice -> Final Invoice -> Payments workflow from these seeded master records. Full evidence is recorded in `docs/governance/post-g1-data-hygiene-2026-08-08.md`.
+The former G1 and legacy fixtures were removed as mock/test data. This is historical seeded-baseline evidence; its former zero-quotation/zero-invoice state is superseded by the current aggregate DEV/DEMO state in the G7-RB1 rebaseline above. Full historical evidence is recorded in `docs/governance/post-g1-data-hygiene-2026-08-08.md`.
 
-Authenticated seeded-baseline smoke used an existing DEV/DEMO Chrome session. Dashboard showed 10 Customers, 10 Services, and zero Quotations/Invoices; Customers, Services, and Suppliers displayed the curated records, representative Arabic/English details opened, and Quotations/Invoices remained empty. No create, approve, issue, pay, cancel, or other application mutation action was performed; the only data mutation was the authorized database seed.
+Authenticated seeded-baseline smoke used an existing DEV/DEMO Chrome session. At that historical checkpoint, Dashboard showed 10 Customers, 10 Services, and zero Quotations/Invoices. The current aggregate state is recorded above; no historical smoke claim is promoted to current runtime evidence by this documentation update.
 
 #### C. Pre-G2 UX Stabilization — CLOSED (8 August 2026)
 
