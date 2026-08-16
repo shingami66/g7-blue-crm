@@ -14,10 +14,18 @@ type QueryCall = {
   limitCount?: number;
 };
 
+type MockUser = {
+  id?: string;
+  clerk_user_id: string;
+  role: string;
+  is_active: boolean;
+  locale?: string;
+};
+
 type Scenario = {
   calls: QueryCall[];
   tableData: Record<string, unknown[]>;
-  permissions: Record<string, boolean>;
+  currentUser?: MockUser | null;
   maxRowsPerResponse?: number;
 };
 
@@ -50,13 +58,12 @@ function scenario(): Scenario {
   return activeScenario;
 }
 
-mock.module("@/lib/auth/permissions", {
+mock.module("@clerk/nextjs/server", {
   namedExports: {
-    checkPermission: async (permission: string) => {
-      const perms = scenario().permissions;
-      return perms[permission] ?? true;
+    auth: async () => {
+      const user = scenario().currentUser;
+      return user ? { userId: user.clerk_user_id } : { userId: null };
     },
-    requirePermission: async () => undefined,
   },
 });
 
@@ -167,6 +174,14 @@ function createMockQueryBuilder(table: string) {
       const filtered = applyFilterLogic(source, call.filters);
       return Promise.resolve({ data: filtered[0] ?? null, error: null });
     },
+    single() {
+      const source = scenario().tableData[table] ?? [];
+      const filtered = applyFilterLogic(source, call.filters);
+      if (filtered.length === 0) {
+        return Promise.resolve({ data: null, error: { code: "PGRST116", message: "Row not found" } });
+      }
+      return Promise.resolve({ data: filtered[0], error: null });
+    },
     then(
       onfulfilled?: ((value: { data: unknown[]; error: null }) => unknown) | null,
       onrejected?: ((reason: unknown) => unknown) | null,
@@ -192,13 +207,35 @@ mock.module("@/lib/supabase/admin", {
 });
 
 const { getCustomer360, fetchAllCustomer360Pages } = await import("./queries.ts");
+const { UnauthorizedError, ForbiddenError } = await import("../auth/errors.ts");
+
+const defaultAdminUser: MockUser = {
+  id: "u-admin",
+  clerk_user_id: "user-admin",
+  role: "admin",
+  is_active: true,
+  locale: "en",
+};
 
 function resetScenario(overrides: Partial<Scenario> = {}): Scenario {
+  const currentUser = overrides.currentUser !== undefined ? overrides.currentUser : defaultAdminUser;
+  const initialTableData = { ...(overrides.tableData ?? {}) };
+  if (currentUser && !initialTableData.app_users) {
+    initialTableData.app_users = [
+      {
+        id: currentUser.id ?? "u-1",
+        clerk_user_id: currentUser.clerk_user_id,
+        role: currentUser.role,
+        is_active: currentUser.is_active,
+        locale: currentUser.locale ?? "en",
+      },
+    ];
+  }
   activeScenario = {
     calls: [],
-    tableData: {},
-    permissions: {},
-    ...overrides,
+    tableData: initialTableData,
+    currentUser,
+    maxRowsPerResponse: overrides.maxRowsPerResponse,
   };
   return activeScenario;
 }
@@ -246,12 +283,10 @@ test("1. fetchAllCustomer360Pages exhausts all 450 records under 200-row respons
 
 test("2. getCustomer360 returns null financial summary metrics when invoices permission is forbidden", async () => {
   resetScenario({
-    permissions: {
-      "customers:read": true,
-      "services:read": true,
-      "quotations:read": true,
-      "invoices:read": false,
-      "payments:read": true,
+    currentUser: {
+      clerk_user_id: "user-operations",
+      role: "operations",
+      is_active: true,
     },
     tableData: {
       customers: [
@@ -324,13 +359,6 @@ test("3. getCustomer360 computes truthful live financial summary from all custom
   ];
 
   resetScenario({
-    permissions: {
-      "customers:read": true,
-      "services:read": true,
-      "quotations:read": true,
-      "invoices:read": true,
-      "payments:read": true,
-    },
     tableData: {
       customers: [
         { id: "c-1", customer_number: "CUST-001", company: "Alpha", status: "active", is_deleted: false },
@@ -388,4 +416,317 @@ test("4. Query mock enforces limit() alongside range() so a reintroduced .limit(
 
   // Exactly 50 rows returned because .limit(50) restricts the query
   assert.equal(result.length, 50);
+});
+
+test("5. getCustomer360 recentFinancialActivity excludes newer non-live invoices and preserves live invoice activity and deterministic ordering", async () => {
+  resetScenario({
+    tableData: {
+      customers: [
+        { id: "c-1", customer_number: "CUST-001", company: "Alpha Corp", status: "active", is_deleted: false },
+      ],
+      invoices: [
+        // Newer draft invoice (must be excluded from recentFinancialActivity despite newer created_at)
+        {
+          id: "inv-draft-new",
+          customer_id: "c-1",
+          invoice_number: "INV-DRAFT-01",
+          invoice_type: "deposit",
+          status: "draft",
+          grand_total: 9999,
+          amount_paid: 0,
+          balance_due: 9999,
+          issued_at: null,
+          created_at: "2026-08-10T12:00:00+03:00",
+          is_deleted: false,
+        },
+        // Newer cancelled invoice (must be excluded)
+        {
+          id: "inv-cancelled-new",
+          customer_id: "c-1",
+          invoice_number: "INV-CANCEL-01",
+          invoice_type: "final",
+          status: "cancelled",
+          grand_total: 5000,
+          amount_paid: 0,
+          balance_due: 5000,
+          issued_at: "2026-08-09T12:00:00+03:00",
+          created_at: "2026-08-09T12:00:00+03:00",
+          is_deleted: false,
+        },
+        // Newer voided invoice (must be excluded)
+        {
+          id: "inv-voided-new",
+          customer_id: "c-1",
+          invoice_number: "INV-VOID-01",
+          invoice_type: "final",
+          status: "voided",
+          grand_total: 4000,
+          amount_paid: 0,
+          balance_due: 4000,
+          issued_at: "2026-08-08T12:00:00+03:00",
+          created_at: "2026-08-08T12:00:00+03:00",
+          is_deleted: false,
+        },
+        // Non-issued invoice with created_at (must not become financial activity)
+        {
+          id: "inv-unissued-new",
+          customer_id: "c-1",
+          invoice_number: "INV-UNISSUED-01",
+          invoice_type: "deposit",
+          status: "paid",
+          grand_total: 3000,
+          amount_paid: 3000,
+          balance_due: 0,
+          issued_at: null,
+          created_at: "2026-08-07T12:00:00+03:00",
+          is_deleted: false,
+        },
+        // Eligible live invoice 1 (must be included)
+        {
+          id: "inv-live-1",
+          customer_id: "c-1",
+          invoice_number: "INV-LIVE-01",
+          invoice_type: "deposit",
+          status: "paid",
+          grand_total: 2000,
+          amount_paid: 2000,
+          balance_due: 0,
+          issued_at: "2026-08-05T10:00:00+03:00",
+          created_at: "2026-08-05T10:00:00+03:00",
+          is_deleted: false,
+        },
+        // Eligible live invoice 2 (must be included)
+        {
+          id: "inv-live-2",
+          customer_id: "c-1",
+          invoice_number: "INV-LIVE-02",
+          invoice_type: "final",
+          status: "partial",
+          grand_total: 1000,
+          amount_paid: 400,
+          balance_due: 600,
+          issued_at: "2026-08-01T10:00:00+03:00",
+          created_at: "2026-08-01T10:00:00+03:00",
+          is_deleted: false,
+        },
+      ],
+      payments: [
+        // Payment occurring between live invoice 1 and live invoice 2
+        {
+          id: "pay-1",
+          customer_id: "c-1",
+          payment_number: "PAY-001",
+          invoice_id: "inv-live-1",
+          date: "2026-08-03",
+          amount: 2000,
+          method: "bank_transfer",
+          reference: "REF-100",
+          status: "completed",
+          is_deleted: false,
+        },
+      ],
+      services: [],
+      quotations: [],
+    },
+  });
+
+  const result = await getCustomer360("c-1");
+
+  assert.equal(result.status, "ready");
+  if (result.status === "ready") {
+    // 1. Audit/history invoices list still contains all 6 non-deleted records
+    assert.equal(result.data.invoices.items.length, 6);
+
+    // 2. recentFinancialActivity contains only the 2 live invoices + 1 payment = exactly 3 items
+    assert.equal(result.data.recentFinancialActivity.length, 3);
+
+    // 3. Excluded non-live invoices are not present in financial activity
+    const activityIdentifiers = result.data.recentFinancialActivity.map((a) => a.identifier);
+    assert.equal(activityIdentifiers.includes("INV-DRAFT-01"), false);
+    assert.equal(activityIdentifiers.includes("INV-CANCEL-01"), false);
+    assert.equal(activityIdentifiers.includes("INV-VOID-01"), false);
+    assert.equal(activityIdentifiers.includes("INV-UNISSUED-01"), false);
+
+    // 4. Eligible live items remain included in deterministic descending date order
+    assert.deepEqual(result.data.recentFinancialActivity, [
+      {
+        id: "invoice-inv-live-1",
+        date: "2026-08-05T10:00:00+03:00",
+        kind: "financial",
+        eventType: "invoice",
+        identifier: "INV-LIVE-01",
+        subject: "deposit",
+        status: "paid",
+        amount: 2000,
+        href: "/invoices/inv-live-1",
+      },
+      {
+        id: "payment-pay-1",
+        date: "2026-08-03",
+        kind: "financial",
+        eventType: "payment",
+        identifier: "PAY-001",
+        subject: "REF-100",
+        status: "completed",
+        amount: 2000,
+        href: "/invoices/inv-live-1",
+      },
+      {
+        id: "invoice-inv-live-2",
+        date: "2026-08-01T10:00:00+03:00",
+        kind: "financial",
+        eventType: "invoice",
+        identifier: "INV-LIVE-02",
+        subject: "final",
+        status: "partial",
+        amount: 1000,
+        href: "/invoices/inv-live-2",
+      },
+    ]);
+  }
+});
+
+test("6. getCustomer360 rejects with UnauthorizedError when caller is unauthenticated", async () => {
+  resetScenario({
+    currentUser: null,
+    tableData: {
+      customers: [
+        { id: "c-1", customer_number: "CUST-001", company: "Alpha", status: "active", is_deleted: false },
+      ],
+    },
+  });
+
+  await assert.rejects(
+    () => getCustomer360("c-1"),
+    (err: unknown) => err instanceof UnauthorizedError || (err instanceof Error && err.name === "UnauthorizedError"),
+  );
+});
+
+test("7. getCustomer360 rejects with ForbiddenError when caller account is inactive", async () => {
+  resetScenario({
+    currentUser: {
+      clerk_user_id: "user-inactive",
+      role: "admin",
+      is_active: false,
+    },
+    tableData: {
+      customers: [
+        { id: "c-1", customer_number: "CUST-001", company: "Alpha", status: "active", is_deleted: false },
+      ],
+    },
+  });
+
+  await assert.rejects(
+    () => getCustomer360("c-1"),
+    (err: unknown) => err instanceof ForbiddenError || (err instanceof Error && err.name === "ForbiddenError"),
+  );
+});
+
+test("8. getCustomer360 rejects with ForbiddenError when caller role lacks customers:read permission", async () => {
+  resetScenario({
+    currentUser: {
+      clerk_user_id: "user-no-read",
+      role: "unauthorized_role",
+      is_active: true,
+    },
+    tableData: {
+      customers: [
+        { id: "c-1", customer_number: "CUST-001", company: "Alpha", status: "active", is_deleted: false },
+      ],
+    },
+  });
+
+  await assert.rejects(
+    () => getCustomer360("c-1"),
+    (err: unknown) => err instanceof ForbiddenError || (err instanceof Error && err.name === "ForbiddenError"),
+  );
+});
+
+test("9. getCustomer360 executes real role-based section gating across services, quotations, invoices, and payments", async () => {
+  resetScenario({
+    currentUser: {
+      clerk_user_id: "user-operations",
+      role: "operations",
+      is_active: true,
+    },
+    tableData: {
+      customers: [
+        { id: "c-1", customer_number: "CUST-001", company: "Alpha Corp", status: "active", is_deleted: false },
+      ],
+      services: [
+        {
+          id: "srv-1",
+          customer_id: "c-1",
+          service_number: "SRV-001",
+          service_title: "Event Ops",
+          event_name: "Annual Gala",
+          status: "in_progress",
+          created_at: "2026-08-01",
+        },
+      ],
+      quotations: [
+        {
+          id: "qt-1",
+          customer_id: "c-1",
+          quotation_number: "QT-001",
+          service_id: "srv-1",
+          event: "Annual Gala",
+          date: "2026-08-01",
+          grand_total: 15000,
+          status: "approved",
+          is_deleted: false,
+        },
+      ],
+      invoices: [
+        {
+          id: "inv-1",
+          customer_id: "c-1",
+          invoice_number: "INV-001",
+          grand_total: 15000,
+          amount_paid: 15000,
+          balance_due: 0,
+          status: "paid",
+          issued_at: "2026-08-01",
+          is_deleted: false,
+        },
+      ],
+      payments: [
+        {
+          id: "pay-1",
+          customer_id: "c-1",
+          payment_number: "PAY-001",
+          invoice_id: "inv-1",
+          amount: 15000,
+          status: "completed",
+          is_deleted: false,
+        },
+      ],
+    },
+  });
+
+  const result = await getCustomer360("c-1");
+
+  assert.equal(result.status, "ready");
+  if (result.status === "ready") {
+    // operations role has customers:read, services:read, quotations:read
+    assert.equal(result.data.services.status, "ready");
+    assert.equal(result.data.services.items.length, 1);
+    assert.equal(result.data.quotations.status, "ready");
+    assert.equal(result.data.quotations.items.length, 1);
+
+    // operations role does NOT have invoices:read or payments:read
+    assert.equal(result.data.invoices.status, "forbidden");
+    assert.deepEqual(result.data.invoices.items, []);
+    assert.equal(result.data.payments.status, "forbidden");
+    assert.deepEqual(result.data.payments.items, []);
+
+    // Summary evaluates to null when invoice visibility is forbidden
+    assert.equal(result.data.summary.totalInvoiced, null);
+    assert.equal(result.data.summary.totalCollected, null);
+    assert.equal(result.data.summary.outstandingBalance, null);
+
+    // Operational activity is populated, but financial activity is empty
+    assert.equal(result.data.recentOperationalActivity.length, 1);
+    assert.deepEqual(result.data.recentFinancialActivity, []);
+  }
 });

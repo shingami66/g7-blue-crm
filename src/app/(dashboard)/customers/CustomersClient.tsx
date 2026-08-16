@@ -286,7 +286,11 @@ export default function CustomersClient({
               </button>
             </form>
             <div className="relative">
+              <label htmlFor="customer-status-filter" className="sr-only">
+                {dictionary.list.report.statusFilter}
+              </label>
               <select
+                id="customer-status-filter"
                 value={statusFilter}
                 onChange={(event) => navigate(customerListHref({ status: event.target.value as CustomerListQuery["status"] }), "replace")}
                 disabled={isListPending}
@@ -299,11 +303,16 @@ export default function CustomersClient({
               </select>
               <Filter
                 size={14}
+                aria-hidden="true"
                 className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
               />
             </div>
             <div className="relative">
+              <label htmlFor="customer-city-filter" className="sr-only">
+                {dictionary.list.report.cityFilter}
+              </label>
               <select
+                id="customer-city-filter"
                 value={cityFilter}
                 onChange={(event) => navigate(customerListHref({ city: event.target.value }), "replace")}
                 disabled={isListPending}
@@ -318,6 +327,7 @@ export default function CustomersClient({
               </select>
               <Filter
                 size={14}
+                aria-hidden="true"
                 className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
               />
             </div>

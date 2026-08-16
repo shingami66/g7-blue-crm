@@ -15,7 +15,7 @@ import {
   BriefcaseBusiness,
   ShieldAlert,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import PendingLink from "@/components/ui/PendingLink";
 import {
@@ -51,7 +51,27 @@ export default function Sidebar({
     locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn;
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const wasOpenRef = useRef(false);
   const isRtl = shellDirection === "rtl";
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMobileOpen(false);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (wasOpenRef.current && !mobileOpen) {
+      triggerRef.current?.focus();
+    }
+    wasOpenRef.current = mobileOpen;
+  }, [mobileOpen]);
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -146,12 +166,17 @@ export default function Sidebar({
     <>
       {/* Mobile hamburger button */}
       <button
+        ref={triggerRef}
+        type="button"
+        aria-expanded={mobileOpen}
+        aria-controls="mobile-sidebar-nav"
+        aria-label={mobileOpen ? dictionary.menu.close : dictionary.menu.open}
         className={`fixed top-4 z-[60] rounded-lg bg-primary p-2 text-white md:hidden ${
           isRtl ? "right-4" : "left-4"
         }`}
         onClick={() => setMobileOpen(!mobileOpen)}
       >
-        {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+        {mobileOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
       </button>
 
       {/* Mobile overlay */}
@@ -159,15 +184,20 @@ export default function Sidebar({
         <div
           className="md:hidden fixed inset-0 bg-black/50 z-40"
           onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
         />
       )}
 
       {/* Sidebar */}
       <nav
+        id="mobile-sidebar-nav"
+        aria-label={dictionary.menu.mainNavigation}
         className={`fixed top-0 z-50 flex h-full w-[260px] flex-col bg-primary px-4 py-6 transition-transform duration-300 ${
           isRtl ? "right-0" : "left-0"
         } ${
-          mobileOpen ? "translate-x-0" : isRtl ? "translate-x-full" : "-translate-x-full"
+          mobileOpen
+            ? "visible translate-x-0"
+            : `invisible md:visible ${isRtl ? "translate-x-full" : "-translate-x-full"}`
         } md:translate-x-0`}
         dir={shellDirection}
       >
