@@ -20,8 +20,8 @@ An Owner request names the repository, scope, allowed files, systems, exclusions
 ### Gemini Writer
 
 - When delegation is required, one Writer is selected through `$agy-delegate` with the task-specified model.
-- The Writer is edit-only and may touch only the explicitly allowed files.
-- The Writer does not run tests, lint, TypeScript, Git, shell commands, database commands, or deployment actions.
+- The Writer may touch only the explicitly allowed files and, when the task authorizes it, owns a bounded local loop: inspect, edit, run focused tests/TypeScript/lint or other relevant local validation, diagnose ordinary failures, repair, and repeat until locally green.
+- Writer-owned local validation does not replace Luna/Codex independent validation or the separate Reviewer.
 
 ### Independent Reviewer
 
@@ -33,11 +33,23 @@ An Owner request names the repository, scope, allowed files, systems, exclusions
 
 1. Confirm the Owner's named repository, exact scope, exclusions, and starting state.
 2. Inspect the actual relevant files and current diff without widening to unrelated dirty work.
-3. Delegate one bounded edit-only Writer when the task calls for delegated implementation.
-4. Luna inspects the actual delta and runs affected focused tests plus proportional typecheck, lint, and diff validation.
+3. Delegate one bounded Writer when the task calls for delegated implementation; the Writer completes its authorized inner edit/validate/diagnose/repair loop and reports locally green work.
+4. Luna/Codex independently inspects the actual delta and reruns affected focused tests plus proportional typecheck, lint, and diff validation.
 5. Run separate read-only findings-only review when the task or risk warrants independent review. For OCR-assisted review, resolve rules for the exact files only through Alibaba's delegation mode; do not configure an external OCR model/provider.
-6. If BLOCKING or MATERIAL findings remain inside the authorized scope, route only those findings back to the same Writer. Luna validates the repair and the Reviewer rereviews it in the same Owner-authorized task.
+6. If BLOCKING or MATERIAL findings remain inside the authorized scope, route only those findings back to the logical Writer lane. Prefer the healthy conversation; otherwise use a fresh bounded session with a Recovery Capsule. Luna validates the repair and the Reviewer rereviews it in the same Owner-authorized task.
 7. Close with the requested evidence, severity counts, remaining warnings, and verdict. Git, database, deployment, and production stages remain separate unless separately authorized.
+
+## Session-resilient Writer continuity
+
+The logical Writer identity is Gemini; correctness does not depend on a provider conversation ID. Prefer resuming the same conversation while healthy because it preserves context efficiently. If continuation fails with a classified authentication, session-expiry, transport, wrapper, or comparable environment failure:
+
+1. Classify the failure before model escalation.
+2. Preserve successful repository work and avoid repeating completed discovery.
+3. Ensure no previous mutating Writer remains active when process state can be checked.
+4. Start one fresh bounded Gemini session in the same logical Writer lane with a Recovery Capsule containing current scope, repository state, remaining diagnostics, passing validation, relevant files/contracts, and protected boundaries.
+5. Continue the repair without running two mutating Writers concurrently.
+
+Provider-session continuity is optimization state, not correctness authority.
 
 ## Scope and preservation
 
@@ -69,10 +81,15 @@ An Owner request names the repository, scope, allowed files, systems, exclusions
 
 ## Failure and escalation
 
-- Classify a failure from repository/tool evidence before changing course. Do not silently substitute a model, Writer, environment, repository, or target system.
-- A normal bounded repair loop may continue within the same task when the finding is inside scope and the same Writer can edit the named files.
+- Classify a failure from repository/tool evidence before changing course or escalating a model/provider. Do not silently substitute a model, Writer, environment, repository, or target system.
+- A normal bounded repair loop may continue within the same task when the finding is inside scope and the logical Writer lane can edit the named files. A provider conversation may be replaced through the session-resilient process above.
+- OAuth/login prompts, permission denials, timeouts, provider transport failures, expired conversations, and wrapper failures are not MODEL_CAPABILITY_FAILURE without evidence.
 - Return HOLD only for a genuine blocker: scope conflict, protected or unexpected mutation, failed required validation, missing evidence, protected-data exposure, unauthorized external mutation, unavailable required review, or a classified execution failure.
 - Lack of an optional label, optional navigation artifact, or historical proof step is not by itself a blocker.
+
+## Permission bypass boundary
+
+`--dangerously-skip-permissions` is not a project default. It may be used only when the Owner explicitly authorizes it for the affected bounded task and must never become a permanent workflow setting.
 
 ## Final report
 

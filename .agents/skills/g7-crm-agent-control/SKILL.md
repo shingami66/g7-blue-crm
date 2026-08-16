@@ -21,12 +21,19 @@ Luna is the Controller. A clear, bounded Owner request authorizes ordinary in-sc
 ## Controller, Writer, and Reviewer
 
 - Luna owns orchestration, validation, evidence, and the final verdict.
-- A delegated Gemini Writer is edit-only and may modify only the exact allowed files. The Writer must not run tests, lint, TypeScript, Git, shell commands, database commands, or deployment actions.
-- If a Writer is used, keep one Writer per mutation slice. The Writer may be resumed for in-scope repairs; do not start a second Writer for the same slice.
+- A delegated Gemini Writer may modify only the exact allowed files and, when the task authorizes it, owns a bounded local inner loop: inspect, edit, run focused tests/TypeScript/lint or other relevant local validation, diagnose ordinary failures, repair, and repeat until locally green. The Writer is not the independent validator or final reviewer.
+- Keep one logical Writer lane per mutation slice. Prefer the same provider conversation for context, but a same logical Writer does not require the same conversation ID. If continuation fails with a classified authentication, session, transport, or comparable environment failure, preserve successful work, avoid repeated discovery, ensure no prior mutating Writer remains active when checkable, and start one fresh bounded session with a Recovery Capsule. Never run two mutating Writers concurrently.
 - Use a separate native Codex Reviewer in read-only, findings-only mode when the task or risk warrants independent review. The Reviewer never edits, stages, commits, pushes, applies SQL, or deploys.
 - For OCR-assisted review, resolve rules in Alibaba Open Code Review delegation mode for the exact files under review. Do not configure an external OCR LLM provider or model.
-- If review returns BLOCKING or MATERIAL findings within scope, send only those findings to the same Writer, then Luna validates and the Reviewer rereviews. Ordinary bounded repair loops remain in the same Owner-authorized task.
+- If review returns BLOCKING or MATERIAL findings within scope, send only those findings to the logical Writer lane, using the healthy conversation when available or a fresh Recovery Capsule when required; then Luna validates and the Reviewer rereviews. Ordinary bounded repair loops remain in the same Owner-authorized task.
 - If required independent review capacity is unavailable, report review incomplete; do not relabel self-review as independent review.
+
+## Writer inner loop and failure classification
+
+- Writer-owned local validation is task-scoped and does not authorize Git staging/commit/push, branch mutation, deployment, production mutation, database or migration work, secrets/authentication changes, protected-file changes, or unrelated scope expansion.
+- A Recovery Capsule carries the current task scope, repository state, exact remaining diagnostics, already-passing validation, relevant files/contracts, and protected boundaries. Do not discard successful edits when a provider session fails.
+- Classify OAuth/login prompts, permission denials, timeouts, provider transport failures, expired conversations, and wrapper failures as environment/session failures unless evidence proves a model-capability issue. Classification precedes model escalation.
+- `--dangerously-skip-permissions` is never a permanent default. It may be used only when explicitly authorized by the Owner for the affected bounded task.
 
 ## Scope and evidence
 

@@ -13,13 +13,13 @@ For bounded G7 application work, Luna may use `$agy-delegate` as the single Writ
 Owner request
 → Luna Controller
 → one Gemini Writer through `$agy-delegate`
-→ Gemini EDIT-ONLY
-→ Luna validation
+→ Gemini bounded inner loop: inspect → edit → task-authorized focused validation → diagnose → repair → repeat until locally green → report
+→ Luna/Codex independent validation
 → separate native Codex Reviewer using Alibaba OCR delegation rules when review is warranted
-→ same Writer repair for confirmed in-scope findings
+→ logical Writer-lane repair for confirmed in-scope findings
 → Luna revalidation and bounded rereview.
 
-The Writer never stages, commits, pushes, applies SQL, deploys, or changes production. Luna owns commands and validation. Do not use `--dangerously-skip-permissions`, expose authentication material, or substitute an unapproved implementer. The model is selected by the task or current AGY configuration; this standing file does not freeze a model version.
+The Writer may run only task-authorized local focused tests, TypeScript, lint, or related validation inside the named slice; it is not the independent validator or final reviewer. The Writer never stages, commits, pushes, applies SQL, deploys, or changes production. Luna owns independent validation, evidence, and the final verdict. A same logical Writer does not require the same provider conversation: prefer resumption, but after a classified authentication, session, transport, or comparable environment failure, preserve work, avoid repeated discovery, ensure no prior mutating Writer remains active when checkable, and start one fresh bounded session with a Recovery Capsule. Never run two mutating Writers concurrently. Do not make `--dangerously-skip-permissions` a default; it requires explicit Owner authorization for the affected task only. Never expose authentication material or substitute an unapproved implementer. The model is selected by the task or current AGY configuration; this standing file does not freeze a model version.
 
 ## GOVERNANCE PRECEDENCE AND SAFETY
 
@@ -77,7 +77,8 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 ## Working Workflow
 
 - **Bounded authorization:** A clear Owner request controls the named repository, files, systems, exclusions, and actions. Do not widen scope by inference.
-- Luna keeps one Writer per mutation slice and allows an in-scope review/repair loop to remain in the same Owner-authorized task.
+- Luna keeps one logical Writer lane per mutation slice and allows an in-scope inner validation/repair loop to remain in the same Owner-authorized task; a provider conversation may be replaced only through classified session-resilient recovery.
+- Classify OAuth/login prompts, permission denials, timeouts, provider transport failures, expired conversations, and wrapper failures before model escalation; do not label them model-capability failures without evidence.
 - Verify the task-supplied repository and preserve unrelated dirty state. Do not silently switch checkouts, clean files, or merge worktrees.
 - Use proportional validation: affected focused tests, typecheck, lint, and diff checks; add a build or manual smoke only when risk or the task requires it.
 - After merges that change delivered behavior, phase status, or decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` as applicable.
