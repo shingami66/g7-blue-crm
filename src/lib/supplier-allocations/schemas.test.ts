@@ -87,16 +87,15 @@ test("Allocation mutations use expected-state predicates and stable stale handli
 
 test("Allocation lifecycle and rate-card restrictions are enforced server-side", () => {
   const actions = source(ACTIONS);
-  assert.match(actions, /rateCard\.valid_from > today/);
-  assert.match(actions, /rateCard\.valid_to && rateCard\.valid_to < today/);
+  assert.match(actions, /rateCard\.valid_from > usageStart/);
+  assert.match(actions, /rateCard\.valid_to && rateCard\.valid_to < usageEnd/);
   assert.match(actions, /Rate-card allocations cannot be deleted\./);
   assert.match(actions, /Rate-card allocations cannot be restored\./);
   assert.match(actions, /supplier\.status !== "active"/);
   assert.match(actions, /supplier\.is_blacklisted/);
 
   const rateCards = source(RATE_CARDS);
-  assert.match(rateCards, /row\.valid_from <= today/);
-  assert.match(rateCards, /!row\.valid_to \|\| row\.valid_to >= today/);
+  assert.match(rateCards, /isRateCardApplicableForUsagePeriod/);
 });
 
 test("Allocation panels distinguish load failure and lock active bookings", () => {

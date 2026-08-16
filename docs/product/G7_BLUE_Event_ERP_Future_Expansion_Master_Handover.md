@@ -331,28 +331,26 @@ It does not yet provide the full workflow for:
 
 ### 3.4A Approved bounded supplier expansion — Rate Card Management V1
 
-The existing supplier-rate-card foundation is real. Rate Card Management V1 was later implemented/committed as the bounded early expansion slice; owner acceptance and any remediation status are tracked by current controller/repository evidence. This subsection preserves the approved product boundary rather than freezing fast-changing delivery state.
+The existing supplier-rate-card foundation is real. Rate Card Management V1 was later implemented/committed as the bounded early expansion slice; owner acceptance and remediation status are tracked by current controller/repository evidence. This subsection preserves the approved product boundary rather than freezing fast-changing delivery state.
 
-The owner-approved first bounded expansion slice is:
-
-- Create a Supplier Rate Card from the authorized Supplier workspace.
-- Edit a Rate Card while preserving permission and historical-integrity rules.
-- Activate or deactivate a Rate Card through an explicit lifecycle action.
-- Manage `valid_from` and optional `valid_to` with safe date validation.
-- Reject invalid overlapping active periods for the same Supplier, item, and unit through a clearly documented application-layer check in this slice.
-- Keep Supplier costing restricted to authorized internal roles.
-- Keep Rate Cards out of customer-facing Quotations, Invoices, PDFs, portals, and general customer workspaces.
+Owner-approved A+ contract:
+- Rate Cards are internal estimating and reference pricing defaults only, never Supplier Quotes, POs, accounting commitments, Vendor Bills, Actual Cost, or customer-facing pricing authorities.
+- Existing `unit` is preserved as Quantity Unit (e.g. person, camera, item, meter).
+- Separate `pricing_basis` is added additively (e.g. per_day, per_event, per_shift, flat_rate, per_unit).
+- `base_cost` is the monetary rate for `quantity-unit x pricing-basis`.
+- Inclusive `valid_from` and `valid_to` with nullable open-ended `valid_to`.
+- Rate Card applicability uses authoritative Service/Event usage dates, not today. Single-date Services require coverage; multi-date Services require one unambiguous Rate Card covering the full period; boundary-crossing periods fail safely without auto-splitting.
+- Concurrency-safe active-overlap exclusion constraint at PostgreSQL/database layer (`chk_supplier_rate_cards_active_no_overlap` on active non-deleted rows) and application layer.
+- Future accepted Quote/PO/contract owns the committed snapshot; later Rate Card edits must not rewrite historical snapshots.
+- Rate Cards remain strictly internal: restricted by `supplier_costing:read`/`supplier_costing:write` and kept out of customer-facing Quotations, Invoices, PDFs, portals, and general customer workspaces.
 
 Not included in this slice:
-
+- Universal days x daily pricing, duration engines, overtime/weekend multipliers.
 - Rate Card hard delete, soft delete, or restore.
 - Automatic quotation pricing.
 - Automatic allocation creation.
 - Procurement RFQ, Supplier Quotations, comparisons, awards, or Purchase Orders.
 - Supplier invoices, payments, payables, actual costing, or margin.
-- A production-concurrency claim for application-layer overlap checks.
-
-Historical status note: on 4 August 2026 this slice was only owner-approved for controlled implementation. That delivery-state sentence is superseded by later verified evidence and must not be treated as current status.
 
 ### 3.5 Current UI observations
 
@@ -496,8 +494,8 @@ The team must not:
 | D45 | The current product uses module-local search and contextual navigation rather than a permanent global cross-module search surface. Global search may return only if later workflow evidence proves a real task benefit. |
 | D46 | Customer 360 must show human-readable Service context for related Quotations and Invoices, provide one authoritative Services view, avoid duplicate related-record sections, and never expose raw UUIDs or sentinel dates. |
 | D47 | Supplier directory Location presents City, Coverage Area, and Country in separate bidi-safe lines. Supplier Rating is hidden until a real performance-capture and review workflow exists. |
-| D48 | Supplier Rate Card Management V1 is the first owner-approved bounded expansion slice: Create, Edit, Activate/Deactivate, valid-date management, and safe application-layer overlap validation. |
-| D49 | Rate Card Delete/Restore, automated pricing, broader procurement, supplier accounting, actual costing, and margin remain outside Rate Card Management V1 and require later explicit decisions. |
+| D48 | Supplier Rate Card Management V1 follows the owner-approved A+ contract: internal estimating/reference pricing only (never Quote/PO/Bill/Actual Cost/customer pricing authority), Quantity Unit + separate pricing_basis, base_cost for quantity x pricing-basis, inclusive valid dates, authoritative Service usage period applicability, concurrency-safe active-overlap constraint, and snapshot immutability. |
+| D49 | Rate Card Delete/Restore, automated pricing, universal days x daily engines, overtime multipliers, broader procurement, supplier accounting, actual costing, and margin remain outside Rate Card Management V1 and require later explicit decisions. |
 | D50 | Expansion is organized into two product layers after the current-product foundation/remediation: Layer 1 builds and proves the single-company G7 BLUE Event ERP; Layer 2 productizes the proven system as multi-company/SaaS for other event companies. |
 | D51 | Layer 2 must not activate merely because ERP features exist. G7 BLUE must first have real operational use and proof, and the company-context, membership/isolation, historical ownership/backfill, numbering, migration/rollback, and commercial productization gates must be approved and tested. Exact proof thresholds remain a later owner decision. |
 | D52 | The two-layer model is an internal organization of this sole Expansion Master. It does not authorize a second or competing expansion master file. |
@@ -2421,18 +2419,19 @@ This sequence remains a working roadmap hypothesis. Revision 0.12 adds an explic
 
 ### Phase 0A - Approved Bounded Expansion Slice: Supplier Rate Card Management V1
 
-This phase is owner-approved and may proceed through a separate controlled task without activating broader procurement or accounting scope.
+This phase follows the owner-approved A+ contract and proceeds through controlled tasks without activating broader procurement or accounting scope:
 
-- Create Rate Card.
-- Edit Rate Card.
+- Create Rate Card with quantity Unit + separate `pricing_basis`.
+- Edit Rate Card while preserving permission and snapshot immutability.
 - Activate and deactivate Rate Card.
-- Validate effective date ranges.
-- Add safe application-layer overlap validation for the same Supplier, item, and unit.
-- Preserve internal costing permissions and customer-facing isolation.
-- Exclude Delete/Restore, automated pricing, RFQ, Purchase Orders, supplier finance, actual cost, and margin.
+- Validate effective date ranges (inclusive `valid_from`/`valid_to`, nullable open-ended `valid_to`).
+- Applicability using authoritative Service/Event usage dates (single-date and multi-date full period coverage, safe failure on boundary-crossing periods without auto-splitting).
+- Concurrency-safe active-overlap constraint (`chk_supplier_rate_cards_active_no_overlap`) and application-layer overlap checking.
+- Preserve internal costing permissions (`supplier_costing:read`/`supplier_costing:write`) and customer-facing isolation.
+- Exclude Delete/Restore, automated quotation pricing, universal days x daily pricing engines, overtime multipliers, RFQ, Purchase Orders, supplier finance, actual cost, and margin.
 - Require Mozfer manual browser acceptance before commit slicing and merge.
 
-Status: **IMPLEMENTED / COMMITTED on canonical `main` through `9115d3e`; OWNER ACCEPTANCE PENDING; G9 REMEDIATION OPEN.** No broader procurement, supplier accounting, Actual Cost, or Margin activation is implied.
+Status: **IMPLEMENTED / COMMITTED on canonical `main` through `9115d3e`; G9 A+ ENHANCEMENT IMPLEMENTED; OWNER ACCEPTANCE PENDING.** No broader procurement, supplier accounting, Actual Cost, or Margin activation is implied.
 
 ### Layer 1 — Internal G7 BLUE Event ERP
 Phases 1-8 below are the internal ERP expansion layer for G7 BLUE. They do not require multi-company, SaaS billing, or tenant UI.

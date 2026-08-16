@@ -196,7 +196,7 @@ export async function createSupplierAllocation(
     // Cross-table check 1: Service check
     const { data: service, error: serviceError } = await supabase
       .from("services")
-      .select("status")
+      .select("status, event_start_date, event_end_date")
       .eq("id", parsed.data.serviceId)
       .is("deleted_at", null)
       .single();
@@ -267,12 +267,26 @@ export async function createSupplierAllocation(
         return { success: false, error: "Invalid rate card cost or currency." };
       }
 
-      const today = new Date().toISOString().split("T")[0];
-      if (!rateCard.valid_from || rateCard.valid_from > today) {
-        return { success: false, error: "Rate card is not currently valid." };
+      if (!service.event_start_date) {
+        return { success: false, error: "Rate card is not currently valid for the service usage period." };
       }
-      if (rateCard.valid_to && rateCard.valid_to < today) {
-        return { success: false, error: "Rate card is expired." };
+
+      const usagePeriod = {
+        startDate: service.event_start_date,
+        endDate: service.event_end_date,
+      };
+      const usageStart = usagePeriod.startDate;
+      const usageEnd = usagePeriod.endDate || usageStart;
+
+      if (usageEnd < usageStart) {
+        return { success: false, error: "Rate card is not currently valid for the service usage period." };
+      }
+
+      if (!rateCard.valid_from || rateCard.valid_from > usageStart) {
+        return { success: false, error: "Rate card is not currently valid for the service usage period." };
+      }
+      if (rateCard.valid_to && rateCard.valid_to < usageEnd) {
+        return { success: false, error: "Rate card is expired for the service usage period." };
       }
 
       const rateCardSnapshot = {
@@ -280,6 +294,7 @@ export async function createSupplierAllocation(
         supplierId: rateCard.supplier_id,
         itemName: rateCard.item_name,
         unit: rateCard.unit,
+        pricingBasis: rateCard.pricing_basis ?? null,
         currency: rateCard.currency,
         baseCost: rateCard.base_cost,
         validFrom: rateCard.valid_from,

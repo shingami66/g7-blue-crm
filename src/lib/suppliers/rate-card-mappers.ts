@@ -7,6 +7,7 @@ export function mapRowToSupplierRateCard(row: SupplierRateCardRow): SupplierRate
     category: row.category,
     itemName: row.item_name,
     unit: row.unit,
+    pricingBasis: row.pricing_basis ?? null,
     currency: row.currency,
     baseCost: Number(row.base_cost),
     validFrom: row.valid_from,

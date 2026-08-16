@@ -17,6 +17,7 @@ const rateCardFields = {
   category: optionalTextValue(80),
   itemName: textValue(160),
   unit: textValue(80),
+  pricingBasis: optionalTextValue(80),
   currency: z.literal("SAR"),
   baseCost: costValue,
   validFrom: dateValue,

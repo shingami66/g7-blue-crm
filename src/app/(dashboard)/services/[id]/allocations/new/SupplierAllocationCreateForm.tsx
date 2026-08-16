@@ -108,7 +108,7 @@ export default function SupplierAllocationCreateForm({
     setRateCards([]);
     clearRateCardSelection();
     try {
-      const res = await getActiveSupplierRateCardsForAllocation(supplierId);
+      const res = await getActiveSupplierRateCardsForAllocation(supplierId, serviceId);
       setRateCards(res.rateCards || []);
     } catch (err) {
       console.error("Failed to load rate cards", err);
@@ -283,7 +283,7 @@ export default function SupplierAllocationCreateForm({
               {rateCards.map((r) => (
                 <option key={r.id} value={r.id}>
                   {isolateBidiText(
-                    `${r.itemName} (${r.category}) - ${r.baseCost} SAR / ${r.unit}`
+                    `${r.itemName} (${r.category || "—"}) - ${r.baseCost} SAR / ${r.unit}${r.pricingBasis ? ` (${r.pricingBasis})` : ""}`
                   )}
                 </option>
               ))}

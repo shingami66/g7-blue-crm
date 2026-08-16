@@ -13,6 +13,7 @@ export type SupplierAllocationRateCardSnapshot = {
   supplierId: string;
   itemName: string;
   unit: string;
+  pricingBasis?: string | null;
   currency: "SAR";
   baseCost: number;
   validFrom: string | null;

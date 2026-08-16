@@ -5,9 +5,9 @@ import { requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { mapRowToSupplierRateCard } from "./rate-card-mappers";
-import { findRateCardOverlap, type RateCardOverlapCandidate } from "./rate-card-overlap";
+import { isRateCardApplicableForUsagePeriod, findRateCardOverlap, type RateCardOverlapCandidate } from "./rate-card-overlap";
 import { supplierRateCardCreateSchema, supplierRateCardIdSchema, supplierRateCardUpdateSchema } from "./rate-card-schemas";
-import type { SupplierRateCardActionResult, SupplierRateCardsListResult, SupplierRateCardRow } from "./rate-card-types";
+import type { ServiceUsagePeriod, SupplierRateCardActionResult, SupplierRateCardsListResult, SupplierRateCardRow } from "./rate-card-types";
 
 const RATE_CARD_SELECT = `
   id,
@@ -15,6 +15,7 @@ const RATE_CARD_SELECT = `
   category,
   item_name,
   unit,
+  pricing_basis,
   currency,
   base_cost,
   valid_from,
@@ -70,11 +71,34 @@ export async function getSupplierRateCards(supplierId: string): Promise<Supplier
   }
 }
 
-export async function getActiveSupplierRateCardsForAllocation(supplierId: string): Promise<SupplierRateCardsListResult> {
+export async function getActiveSupplierRateCardsForAllocation(
+  supplierId: string,
+  usagePeriodOrServiceId?: ServiceUsagePeriod | string | null
+): Promise<SupplierRateCardsListResult> {
   await requirePermission("supplier_costing:read");
 
   try {
     const supabase = createAdminClient();
+
+    let usagePeriod: ServiceUsagePeriod | null = null;
+
+    if (typeof usagePeriodOrServiceId === "string" && usagePeriodOrServiceId.trim() !== "") {
+      const { data: service } = await supabase
+        .from("services")
+        .select("event_start_date, event_end_date")
+        .eq("id", usagePeriodOrServiceId.trim())
+        .is("deleted_at", null)
+        .maybeSingle();
+
+      if (service) {
+        usagePeriod = {
+          startDate: service.event_start_date,
+          endDate: service.event_end_date,
+        };
+      }
+    } else if (usagePeriodOrServiceId && typeof usagePeriodOrServiceId === "object") {
+      usagePeriod = usagePeriodOrServiceId;
+    }
 
     const { data, error } = await supabase
       .from("supplier_rate_cards")
@@ -90,11 +114,12 @@ export async function getActiveSupplierRateCardsForAllocation(supplierId: string
 
     const rows = (data ?? []) as unknown as SupplierRateCardRow[];
     
-    // Allocation options must be currently effective, not merely unexpired.
-    const today = new Date().toISOString().split("T")[0];
-    const currentRows = rows.filter(
-      (row) =>
-        row.valid_from <= today && (!row.valid_to || row.valid_to >= today),
+    // Filter rate cards by authoritative Service/Event usage period
+    const currentRows = rows.filter((row) =>
+      isRateCardApplicableForUsagePeriod(
+        { validFrom: row.valid_from, validTo: row.valid_to, status: row.status, isDeleted: row.is_deleted },
+        usagePeriod
+      )
     );
 
     const sorted = currentRows.map(mapRowToSupplierRateCard).sort((a, b) => {
@@ -158,12 +183,12 @@ async function supplierExists(supplierId: string) {
   return !error && Boolean(data);
 }
 
-function overlapCandidate(input: { supplierId: string; category: string | null; itemName: string; unit: string; currency: string; validFrom: string; validTo?: string | null; status?: "active" | "inactive" }, id?: string): RateCardOverlapCandidate {
-  return { ...input, id, validTo: input.validTo ?? null };
+function overlapCandidate(input: { supplierId: string; category: string | null; itemName: string; unit: string; pricingBasis?: string | null; currency: string; validFrom: string; validTo?: string | null; status?: "active" | "inactive" }, id?: string): RateCardOverlapCandidate {
+  return { ...input, id, pricingBasis: input.pricingBasis ?? null, validTo: input.validTo ?? null };
 }
 
 function conflictCandidate(row: StoredRateCard): RateCardOverlapCandidate {
-  return { id: row.id, supplierId: row.supplier_id, category: row.category, itemName: row.item_name, unit: row.unit, currency: row.currency, validFrom: row.valid_from, validTo: row.valid_to, status: row.status, isDeleted: row.is_deleted };
+  return { id: row.id, supplierId: row.supplier_id, category: row.category, itemName: row.item_name, unit: row.unit, pricingBasis: row.pricing_basis ?? null, currency: row.currency, validFrom: row.valid_from, validTo: row.valid_to, status: row.status, isDeleted: row.is_deleted };
 }
 
 async function findConflict(candidate: RateCardOverlapCandidate) {
@@ -184,7 +209,7 @@ export async function createSupplierRateCard(input: unknown): Promise<SupplierRa
     if (!parsed.success) return { success: false, error: "validation_failed" };
     if (!(await supplierExists(parsed.data.supplierId))) return { success: false, error: "not_found" };
 
-    const candidate = overlapCandidate({ ...parsed.data, category: parsed.data.category ?? null, validTo: parsed.data.validTo ?? null }, undefined);
+    const candidate = overlapCandidate({ ...parsed.data, category: parsed.data.category ?? null, pricingBasis: parsed.data.pricingBasis ?? null, validTo: parsed.data.validTo ?? null }, undefined);
     if (parsed.data.status === "active") {
       const result = await findConflict(candidate);
       if (result.error) return { success: false, error: result.error };
@@ -197,6 +222,7 @@ export async function createSupplierRateCard(input: unknown): Promise<SupplierRa
       category: parsed.data.category,
       item_name: parsed.data.itemName,
       unit: parsed.data.unit,
+      pricing_basis: parsed.data.pricingBasis ?? null,
       currency: parsed.data.currency,
       base_cost: parsed.data.baseCost,
       valid_from: parsed.data.validFrom,
@@ -228,7 +254,7 @@ export async function updateSupplierRateCard(input: unknown): Promise<SupplierRa
     const existing = await readRateCard(parsed.data.id);
     if (existing.error || !existing.row) return { success: false, error: "not_found" };
 
-    const candidate = overlapCandidate({ ...parsed.data, category: parsed.data.category ?? null, validTo: parsed.data.validTo ?? null }, parsed.data.id);
+    const candidate = overlapCandidate({ ...parsed.data, category: parsed.data.category ?? null, pricingBasis: parsed.data.pricingBasis ?? null, validTo: parsed.data.validTo ?? null }, parsed.data.id);
     if (existing.row.status === "active") {
       const result = await findConflict(candidate);
       if (result.error) return { success: false, error: result.error };
@@ -240,6 +266,7 @@ export async function updateSupplierRateCard(input: unknown): Promise<SupplierRa
       category: parsed.data.category,
       item_name: parsed.data.itemName,
       unit: parsed.data.unit,
+      pricing_basis: parsed.data.pricingBasis ?? null,
       currency: parsed.data.currency,
       base_cost: parsed.data.baseCost,
       valid_from: parsed.data.validFrom,
@@ -269,7 +296,7 @@ async function setRateCardStatus(idInput: unknown, status: "active" | "inactive"
     const existing = await readRateCard(parsed.data.id);
     if (existing.error || !existing.row) return { success: false, error: "not_found" };
     if (status === "active") {
-      const result = await findConflict({ id: existing.row.id, supplierId: existing.row.supplier_id, category: existing.row.category, itemName: existing.row.item_name, unit: existing.row.unit, currency: existing.row.currency, validFrom: existing.row.valid_from, validTo: existing.row.valid_to, status });
+      const result = await findConflict({ id: existing.row.id, supplierId: existing.row.supplier_id, category: existing.row.category, itemName: existing.row.item_name, unit: existing.row.unit, pricingBasis: existing.row.pricing_basis ?? null, currency: existing.row.currency, validFrom: existing.row.valid_from, validTo: existing.row.valid_to, status });
       if (result.error) return { success: false, error: result.error };
       if (result.conflict) return { success: false, error: "overlap", conflict: result.conflict };
     }

@@ -6,6 +6,7 @@ export interface SupplierRateCard {
   category: string | null;
   itemName: string;
   unit: string;
+  pricingBasis: string | null;
   currency: string;
   baseCost: number;
   validFrom: string;
@@ -22,6 +23,7 @@ export interface SupplierRateCardRow {
   category: string | null;
   item_name: string;
   unit: string;
+  pricing_basis?: string | null;
   currency: string;
   base_cost: number;
   valid_from: string;
@@ -33,6 +35,11 @@ export interface SupplierRateCardRow {
   is_deleted?: boolean;
 }
 
+export type ServiceUsagePeriod = {
+  startDate?: string | null;
+  endDate?: string | null;
+};
+
 export type SupplierRateCardsListResult = {
   rateCards: SupplierRateCard[];
   error?: string;
@@ -41,5 +48,5 @@ export type SupplierRateCardsListResult = {
 export type SupplierRateCardActionResult = {
   success: boolean;
   error?: "validation_failed" | "not_found" | "overlap" | "write_failed" | "unauthorized" | "forbidden";
-  conflict?: { itemName: string; category: string | null; unit: string; currency: string; validFrom: string; validTo: string | null };
+  conflict?: { itemName: string; category: string | null; unit: string; pricingBasis?: string | null; currency: string; validFrom: string; validTo: string | null };
 };

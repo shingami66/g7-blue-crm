@@ -43,6 +43,7 @@ export const supplierAllocationRateCardSnapshotSchema = z.object({
   supplierId: z.string().min(1),
   itemName: z.string().min(1),
   unit: z.string().min(1),
+  pricingBasis: z.string().nullable().optional(),
   currency: z.literal("SAR"),
   baseCost: supplierAllocationUnitCostSchema,
   validFrom: z.string().nullable(),
