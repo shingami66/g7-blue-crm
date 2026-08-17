@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createCustomerSchema, updateCustomerSchema } from "./schemas";
+import {
+  createCustomerSchema,
+  updateCustomerSchema,
+  type CreateCustomerRawInput,
+} from "./schemas";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 
@@ -10,7 +14,13 @@ import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 export type ActionResult = {
   success: boolean;
   error?: string;
+  customerId?: string;
+  customerNumber?: string;
+  isReplayed?: boolean;
 };
+
+export type CreateCustomerResult = ActionResult;
+export type CreateCustomerActionInput = CreateCustomerRawInput;
 
 const COMPANY_ONLY_CUSTOMER_FIELDS = [
   "legal_name",
@@ -94,21 +104,38 @@ function readPoRequired(
 // ---------------------------------------------------------------------------
 // CREATE
 // ---------------------------------------------------------------------------
-export async function createCustomer(formData: FormData): Promise<ActionResult> {
+export async function createCustomer(
+  input: FormData | unknown
+): Promise<ActionResult> {
   try {
     const user = await requirePermission("customers:write");
 
-    const raw = {
-      company: formData.get("company"),
-      contact: formData.get("contact"),
-      phone: formData.get("phone"),
-      email: formData.get("email"),
-      city: formData.get("city"),
-      status: formData.get("status") || "lead",
-      projects_count: 0,
-      revenue: 0,
-      ...readOfficialBillingFields(formData),
-    };
+    const raw =
+      typeof FormData !== "undefined" && input instanceof FormData
+        ? {
+            company: input.get("company"),
+            contact: input.get("contact"),
+            phone: input.get("phone"),
+            email: input.get("email"),
+            city: input.get("city"),
+            status: input.get("status") || "lead",
+            projects_count: 0,
+            revenue: 0,
+            mutation_key: input.get("mutation_key") || undefined,
+            ...readOfficialBillingFields(input),
+          }
+        : {
+            ...(typeof input === "object" && input !== null ? (input as Record<string, unknown>) : {}),
+            projects_count: 0,
+            revenue: 0,
+          };
+
+    if (raw && typeof raw === "object" && "customer_type" in raw && raw.customer_type === "individual") {
+      for (const field of COMPANY_ONLY_CUSTOMER_FIELDS) {
+        (raw as Record<string, unknown>)[field] = null;
+      }
+      (raw as Record<string, unknown>).po_required = false;
+    }
 
     const parsed = createCustomerSchema.safeParse(raw);
     if (!parsed.success) {
@@ -118,31 +145,71 @@ export async function createCustomer(formData: FormData): Promise<ActionResult> 
 
     const supabase = createAdminClient();
 
-    const { data: customerNumber, error: numberError } = await supabase.rpc(
-      "generate_document_number",
-      { doc_type: "customer" }
-    );
-
-    if (numberError || !customerNumber) {
-      console.error("[createCustomer] Failed to generate customer number:", numberError?.message);
-      return { success: false, error: "Failed to generate customer number. Please try again." };
-    }
-
-    const payload = {
-      ...parsed.data,
-      customer_number: customerNumber,
-      created_by: user.clerk_user_id,
-      updated_by: user.clerk_user_id,
-    };
-    const { error } = await supabase.from("customers").insert(payload);
+    const { data, error } = await supabase.rpc("create_customer_atomic", {
+      p_company: parsed.data.company,
+      p_contact: parsed.data.contact,
+      p_phone: parsed.data.phone,
+      p_email: parsed.data.email,
+      p_city: parsed.data.city,
+      p_status: parsed.data.status,
+      p_customer_type: parsed.data.customer_type ?? null,
+      p_legal_name: parsed.data.legal_name ?? null,
+      p_commercial_registration_number: parsed.data.commercial_registration_number ?? null,
+      p_vat_number: parsed.data.vat_number ?? null,
+      p_national_address_building_number: parsed.data.national_address_building_number ?? null,
+      p_national_address_street: parsed.data.national_address_street ?? null,
+      p_national_address_district: parsed.data.national_address_district ?? null,
+      p_national_address_city: parsed.data.national_address_city ?? null,
+      p_national_address_postal_code: parsed.data.national_address_postal_code ?? null,
+      p_national_address_additional_number: parsed.data.national_address_additional_number ?? null,
+      p_national_address_country: parsed.data.national_address_country ?? null,
+      p_billing_email: parsed.data.billing_email ?? null,
+      p_finance_contact_name: parsed.data.finance_contact_name ?? null,
+      p_finance_contact_phone: parsed.data.finance_contact_phone ?? null,
+      p_payment_terms: parsed.data.payment_terms ?? null,
+      p_po_required: parsed.data.po_required ?? false,
+      p_created_by: user.clerk_user_id,
+      p_mutation_key: parsed.data.mutation_key,
+    });
 
     if (error) {
       console.error("[createCustomer] Supabase error:", error.message);
       return { success: false, error: "Failed to create customer. Please try again." };
     }
 
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) {
+      console.error("[createCustomer] Empty RPC result");
+      return { success: false, error: "Failed to create customer. Please try again." };
+    }
+
+    if (row.error_code) {
+      if (row.error_code === "mutation_key_conflict") {
+        return {
+          success: false,
+          error: "A customer creation request with this mutation key already exists with different details.",
+        };
+      }
+      if (row.error_code === "invalid_customer_input") {
+        return { success: false, error: "Invalid customer input." };
+      }
+      if (row.error_code === "number_generation_failed") {
+        return { success: false, error: "Failed to generate customer number. Please try again." };
+      }
+      return { success: false, error: "Failed to create customer. Please try again." };
+    }
+
+    if (!row.customer_id) {
+      return { success: false, error: "Failed to create customer. Please try again." };
+    }
+
     revalidatePath("/customers");
-    return { success: true };
+    return {
+      success: true,
+      customerId: row.customer_id,
+      customerNumber: row.customer_number,
+      isReplayed: Boolean(row.is_replayed),
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };

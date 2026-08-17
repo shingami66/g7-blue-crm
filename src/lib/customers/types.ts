@@ -67,6 +67,7 @@ export interface CustomerRow {
   deleted_at: string | null;
   created_by: string | null;
   updated_by: string | null;
+  mutation_key: string | null;
   customer_type: "individual" | "company" | null;
   legal_name: string | null;
   commercial_registration_number: string | null;

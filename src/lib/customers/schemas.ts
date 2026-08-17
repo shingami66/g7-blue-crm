@@ -57,10 +57,16 @@ export const createCustomerSchema = z.object({
   status: z.enum(["active", "inactive", "lead"]).default("lead"),
   projects_count: z.coerce.number().int().nonnegative().default(0),
   revenue: z.coerce.number().nonnegative().default(0),
+  mutation_key: z.preprocess((value) => {
+    if (value === null || value === undefined) return "";
+    if (typeof value !== "string") return value;
+    return value.trim();
+  }, z.string().min(1, "Mutation key is required")),
   ...customerOfficialBillingFields,
 });
 
 export type CreateCustomerInput = z.infer<typeof createCustomerSchema>;
+export type CreateCustomerRawInput = z.input<typeof createCustomerSchema>;
 
 /** Schema for updating an existing customer (all fields optional). */
 export const updateCustomerSchema = z.object({

@@ -40,6 +40,17 @@ const COLUMN_LAYOUT = {
   view: "w-[10%] min-w-[110px] text-center",
 } as const;
 
+function generateMutationKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 export default function CustomersClient({
   customers,
   pagination,
@@ -63,6 +74,7 @@ export default function CustomersClient({
 }) {
   const router = useRouter();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [mutationKey, setMutationKey] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const submittedSearch = query.search ?? "";
@@ -80,6 +92,18 @@ export default function CustomersClient({
   const visibleEnd = Math.min(visibleStart + customers.length - 1, pagination.total);
   const hasFilters = Boolean(query.search || query.status || query.city);
   const returnTo = customerListHref({}, pagination.page);
+
+  function openAddModal() {
+    setActionError(null);
+    setMutationKey(generateMutationKey());
+    setShowAddModal(true);
+  }
+
+  function closeAddModal() {
+    setShowAddModal(false);
+    setMutationKey("");
+    setActionError(null);
+  }
 
   useEffect(() => {
     if (lastSubmittedSearch.current === submittedSearch) return;
@@ -170,10 +194,13 @@ export default function CustomersClient({
   async function createCustomerFromForm(formData: FormData) {
     setActionError(null);
     startTransition(async () => {
+      if (!formData.get("mutation_key") && mutationKey) {
+        formData.set("mutation_key", mutationKey);
+      }
       const result = await createCustomer(formData);
 
       if (result.success) {
-        setShowAddModal(false);
+        closeAddModal();
         router.refresh();
       } else {
         setActionError(getLocalizedActionError(result.error, dictionary));
@@ -206,12 +233,7 @@ export default function CustomersClient({
           </Button>
         )}
         {canWrite && (
-          <Button
-            onClick={() => {
-              setActionError(null);
-              setShowAddModal(true);
-            }}
-          >
+          <Button onClick={openAddModal}>
             <Plus size={18} />
             {dictionary.list.addCustomer}
           </Button>
@@ -463,7 +485,7 @@ export default function CustomersClient({
                 {dictionary.list.addCustomer}
               </h3>
               <Button
-                onClick={() => setShowAddModal(false)}
+                onClick={closeAddModal}
                 aria-label={dictionary.actions.closeAddCustomer}
                 size="icon"
                 variant="ghost"
@@ -479,13 +501,14 @@ export default function CustomersClient({
             )}
 
             <form action={createCustomerFromForm} className="space-y-4">
+              <input type="hidden" name="mutation_key" value={mutationKey} />
               <CustomerCoreFields customer={null} dictionary={dictionary} />
               <CustomerOfficialBillingFields customer={null} dictionary={dictionary} />
 
               <div className="flex justify-end gap-3 pt-2">
                 <Button
                   variant="outline"
-                  onClick={() => setShowAddModal(false)}
+                  onClick={closeAddModal}
                 >
                   {dictionary.actions.cancel}
                 </Button>

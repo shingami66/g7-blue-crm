@@ -372,3 +372,21 @@ test("Customers dictionary contains filter labels for both English and Arabic", 
   assert.equal(typeof en.list.report.cityFilter, "string");
   assert.equal(typeof ar.list.report.cityFilter, "string");
 });
+
+test("CustomersClient source includes hidden mutation_key input for G8 replay safety", async () => {
+  const { readFileSync } = await import("node:fs");
+  const clientSource = readFileSync(
+    new URL("./CustomersClient.tsx", import.meta.url),
+    "utf8"
+  );
+  assert.match(
+    clientSource,
+    /<input[^>]*name="mutation_key"/,
+    "CustomersClient modal must include hidden mutation_key input"
+  );
+  assert.match(
+    clientSource,
+    /generateMutationKey/,
+    "CustomersClient must generate caller mutation key on modal open"
+  );
+});
