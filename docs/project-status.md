@@ -58,13 +58,28 @@
 - **Closed Post-G1 foundations:** Cleanup & Rebaseline, DEV/DEMO Data Hygiene, UX/Loading Stabilization, and Customer Document Architecture Correction are closed and pushed.
 - **POST-G1 Task 2B evidence (8 August 2026 — historical, superseded current baseline):** After the completed mock/test reset, the authorized DEV/DEMO project received a deliberate database-seeded baseline of 10 synthetic active customers, 10 synthetic active suppliers, and 10 synthetic `Inquiry` services. The former zero-quotation/zero-invoice state is historical; current aggregate DEV/DEMO state is recorded in the G7-RB1 rebaseline below.
 
-## 1.3A Current Published Checkpoint (16 August 2026)
+## 1.3A Historical Checkpoint — Published G3 Closeout (16 August 2026)
 
 - **Verified repository:** `D:/G7/g7-crm`, branch `main`, local HEAD and `origin/main` are both `3143f3eddbeb8dfd8d347e7e79c88e04b712bfdb`; divergence is `0 ahead / 0 behind`. The index is clean before this run.
 - **Published G3 closure checkpoint:** `3143f3eddbeb8dfd8d347e7e79c88e04b712bfdb` (`fix(g3): align customer 360 recent financial activity`). G3 Reporting Truth / Period Semantics engineering remediation is **CLOSED**. Reports focused validation passed 24/24; Customer 360 focused validation passed 13/13; TypeScript, ESLint (0 errors, 2 inherited PDF `<img>` warnings), and `git diff --check` passed; independent review was **CLEAN** with 0 BLOCKING, 0 MATERIAL, 0 MINOR.
 - **Acceptance & Scope Boundary:** These engineering and publication results do not constitute Mozfer Owner visual/manual/product acceptance; that acceptance remains explicitly **PENDING SEPARATELY**. Kept deferred and not-open-as-engineering-defect: selected-period Collected Cash semantics, historical Outstanding-as-of-period-end, Revenue Recognition, payment terms/credit control, supplier cost/margin, and broader accounting reporting. Broader Reports and richer Customer 360 product enhancements remain deferred product scope.
-- **Remediation program status:** G9 Supplier / Rate Card is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED**; do not reopen it.
-- **Current Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved. Because G3 and G9 are complete, `G8: Family-specific create replay` is the next serial gate only; G8 is **NOT active** and requires separate Owner authorization. G11 remains downstream of G8. No database apply, deployment, production readiness, or Owner acceptance is inferred from Git publication.
+- **Remediation program status at this checkpoint:** G9 Supplier / Rate Card is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED**; do not reopen it.
+- **Historical Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` was preserved.
+
+## 1.3A.1 Current Published Checkpoint — G8 Replay Safety Through Invoice (17 August 2026)
+
+- **Verified repository:** `D:/G7/g7-crm`, branch `main`, local HEAD and `origin/main` are both `04c89df83d5cea45722dbb0e4c3c23df91cc7232`; divergence is `0 ahead / 0 behind`.
+- **G8 Family-specific Create Replay Safety Delivery Progress:** G8 is **IN PROGRESS** with 4 of 5 families published under the locked serial execution order `Customer -> Service -> Quotation -> Invoice -> Payment`:
+  1. **Customer Create Replay Safety:** `be96beaebbcfe17432ee0515eef68d4cb6cb19ac` (`feat(g8): add customer create replay safety`) — **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (Controller outcome: `PASS WITH WARN`).
+  2. **Service Create Replay Safety:** `ea61563163fcc73f1a2fdfed1c650807cf8eb77d` (`feat(g8): add service create replay safety`) — **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (Controller outcome: `PASS`).
+  3. **Quotation Create Replay Safety:** `61fd5059e5c735466318d44be7487e71be64708f` (`feat(g8): add quotation create replay safety`) — **COMPLETE / PUBLISHED / FINAL DEV-DEMO STATE RECONCILED** (Controller outcome: `PASS WITH WARN`).
+  4. **Invoice Create Replay Safety:** `04c89df83d5cea45722dbb0e4c3c23df91cc7232` (`feat(g8): add invoice create replay safety`) — **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (Controller outcome: `PASS WITH WARN`).
+  5. **Payment Create Replay Safety:** **NOT YET IMPLEMENTED UNDER G8** (sole remaining G8 family; next controlled action requiring separate bounded Owner authorization).
+- **Remediation program status:**
+  - G3 Reporting Truth / Period Semantics: **CLOSED / PUBLISHED**.
+  - G9 Supplier / Rate Card: **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (do not reopen it).
+  - G8 Family-specific Create Replay: **IN PROGRESS** (4 of 5 families published).
+- **Current Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved. G11 remains downstream of G8. Payment Create Replay Safety is the next remaining G8 family and requires a separate bounded Owner authorization before implementation. No production readiness, database apply to production, deployment, or Owner acceptance is inferred from Git publication. No Event ERP expansion is activated.
 
 ## 1.3B Historical G7-RB1 Rebaseline (13 August 2026)
 
@@ -131,7 +146,7 @@
 - **One active Deposit per Service (DEV/DEMO applied):** `supabase/migrations/20260722120000_enforce_one_active_deposit_per_service.sql` was manually applied and verified on 2026-07-23 in project `dpddrqjzqohexixgdqiq`. The Service-wide active Deposit unique index, hardened Atomic Invoice RPC, Final guard, role execution boundary, and zero-duplicate aggregate were verified; production was not accessed. Repository migration history was not repaired or marked, and this does not claim recorded history for version `20260722120000`.
 - **Financial lifecycle / atomic create milestone count:** **20** meaningful commits from baseline `a32be762` to HEAD `a83c1d28` (includes Wave A financial lifecycle stack, atomic contract/migration/DEV apply docs, and Task 20 app integration).
 - **Financial lifecycle application source wave:** **pushed** to `origin/main` through `45cdfb73` (ten source/test commits). Atomic Invoice RPC + app integration are pushed through `a83c1d28` and installed in DEV/DEMO only.
-- **Active implementation state:** No implementation task is active. Feature 008 and the latest Quotation/Invoice UX batch are delivered; Feature 009 remains inactive.
+- **Active implementation state:** G8 Family-specific Create Replay Safety is **IN PROGRESS** with 4 of 5 families published (Customer, Service, Quotation, Invoice complete; Payment remaining pending separate bounded Owner authorization). Feature 008 and earlier UX batches are delivered; Feature 009 and future Event ERP expansion remain inactive.
 - **Design complete:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
 - **ABS read-enrichment complete (source + accepted):** `ABS-MGMT-UI-READ-ENRICH-1` — Service Detail read-only ABS summary card enriched and pushed on main.
 - **ABS draft-edit/discard complete (source + accepted):** `ABS-MGMT-UI-DRAFT-EDIT-1` — draft item edit/discard UI implemented, automated validation passed, PASS by Mozfer manual browser evidence recorded, and pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`.

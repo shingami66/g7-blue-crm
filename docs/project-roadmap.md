@@ -75,6 +75,7 @@ Tender / Bid Management is a future deferred expansion module. Discovery begins 
 - G2 Money and payment precision implementation and its canonical migration are present; the migration is applied on DEV/DEMO and the implementation commit is pushed at `db68492`. This rebaseline does not independently re-assert Owner acceptance or full G2 closeout.
 - G3 Reporting Truth / Period Semantics engineering remediation is **CLOSED** and published at `3143f3eddbeb8dfd8d347e7e79c88e04b712bfdb` (`fix(g3): align customer 360 recent financial activity`). Reports focused validation passed 24/24; Customer 360 focused validation passed 13/13; TypeScript, ESLint, and `git diff --check` passed; independent review was CLEAN (0 BLOCKING, 0 MATERIAL, 0 MINOR). Owner visual/manual/product acceptance remains pending separately.
 - G9 Supplier / Rate Card authority is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED**; do not reopen it.
+- G8 Family-specific Create Replay Safety is **IN PROGRESS** with 4 of 5 families published (Customer: `be96bea`, Service: `ea61563`, Quotation: `61fd505`, Invoice: `04c89df`); Payment remains the sole un-implemented G8 family pending separate bounded Owner authorization.
 - Current confirmed findings: 49 — 0 Critical, 5 High, 39 Medium, and 5 Low. Future SaaS/migration concerns are tracked separately: 3. Architectural blockers: 0.
 
 ### Historical checkpoint (11 August 2026)
@@ -94,13 +95,25 @@ Tender / Bid Management is a future deferred expansion module. Discovery begins 
 
 This is an inter-goal closure and stabilization gate, not a replacement or renumbering of G2. It preserves the remediation backbone `G1 -> G2 -> ... -> G12`.
 
-### Current Published Checkpoint (16 August 2026)
+### Historical Checkpoint — Published G3 Closeout (16 August 2026)
 
 - **Verified repository:** `D:/G7/g7-crm`, branch `main`, local HEAD and `origin/main` are both `3143f3eddbeb8dfd8d347e7e79c88e04b712bfdb`; divergence is `0 ahead / 0 behind`. The index is clean before this run.
 - **Published G3 closure checkpoint:** `3143f3eddbeb8dfd8d347e7e79c88e04b712bfdb` (`fix(g3): align customer 360 recent financial activity`). G3 Reporting Truth / Period Semantics engineering remediation is **CLOSED**. Reports focused validation passed 24/24; Customer 360 focused validation passed 13/13; TypeScript, ESLint (0 errors, 2 inherited PDF `<img>` warnings), and `git diff --check` passed; independent review was **CLEAN** with 0 BLOCKING, 0 MATERIAL, 0 MINOR.
 - **Acceptance & Scope Boundary:** These engineering and publication results do not constitute Mozfer Owner visual/manual/product acceptance; that acceptance remains explicitly **PENDING SEPARATELY**. Kept deferred and not-open-as-engineering-defect: selected-period Collected Cash semantics, historical Outstanding-as-of-period-end, Revenue Recognition, payment terms/credit control, supplier cost/margin, and broader accounting reporting. Broader Reports and richer Customer 360 product enhancements remain deferred product scope.
-- **Remediation program status:** G9 Supplier / Rate Card is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED**; do not reopen it.
-- **Current Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved. Because G3 and G9 are complete, `G8: Family-specific create replay` is the next serial gate only; G8 is **NOT active** and requires separate Owner authorization. G11 remains downstream of G8. No database apply, deployment, production readiness, or Owner acceptance is inferred from Git publication.
+- **Remediation program status at this checkpoint:** G9 Supplier / Rate Card is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED**; do not reopen it.
+- **Historical Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` was preserved.
+
+### Current Published Checkpoint — G8 Replay Safety Through Invoice (17 August 2026)
+
+- **Verified repository:** `D:/G7/g7-crm`, branch `main`, local HEAD and `origin/main` are both `04c89df83d5cea45722dbb0e4c3c23df91cc7232`; divergence is `0 ahead / 0 behind`.
+- **G8 Replay Safety Delivery Progress:** 4 of 5 families published under locked serial order `Customer -> Service -> Quotation -> Invoice -> Payment`:
+  - **Customer Create Replay Safety:** `be96beaebbcfe17432ee0515eef68d4cb6cb19ac` (`feat(g8): add customer create replay safety`) — **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (Controller outcome: `PASS WITH WARN`).
+  - **Service Create Replay Safety:** `ea61563163fcc73f1a2fdfed1c650807cf8eb77d` (`feat(g8): add service create replay safety`) — **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (Controller outcome: `PASS`).
+  - **Quotation Create Replay Safety:** `61fd5059e5c735466318d44be7487e71be64708f` (`feat(g8): add quotation create replay safety`) — **COMPLETE / PUBLISHED / FINAL DEV-DEMO STATE RECONCILED** (Controller outcome: `PASS WITH WARN`).
+  - **Invoice Create Replay Safety:** `04c89df83d5cea45722dbb0e4c3c23df91cc7232` (`feat(g8): add invoice create replay safety`) — **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (Controller outcome: `PASS WITH WARN`).
+  - **Payment Create Replay Safety:** **NOT YET IMPLEMENTED UNDER G8** (next remaining slice; requires separate bounded Owner authorization).
+- **Remediation program status:** G3 is CLOSED; G9 is COMPLETE / PUBLISHED / DEV-DEMO VERIFIED; G8 is IN PROGRESS (4/5 complete).
+- **Current Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved. G11 remains downstream of G8. Payment Create Replay Safety is the next controlled action and requires a separate bounded Owner authorization. No production readiness, database apply to production, or Owner acceptance is inferred.
 
 ### Historical G7-RB1 Rebaseline (13 August 2026)
 
@@ -192,7 +205,7 @@ After field evidence and controller design lock, prepare a separate implementati
 | G5 Admin security and desired-state mutations | W1-AUTH-001, W1-SEC-002, W4-RETRY-001 |
 | G6 Payload and log minimization | M-01, W1-SEC-004/005 |
 | G7 Failure boundaries, health and webhook operations | M-05, W1-SEC-003, W4-BOUNDARY-001, W4-CONFIG-001, W4-OBS-001 |
-| G8 Family-specific create replay | W4-REC-002 |
+| G8 Family-specific create replay (IN PROGRESS: 4/5 published — Customer, Service, Quotation, Invoice complete; Payment remaining) | W4-REC-002 |
 | G9 Supplier and Rate Card authority | W6-RATE-001/002/003, W6-SUP-001 |
 | G10 Search, accessibility and interaction | W5-SEARCH-001/002, W5-A11Y-001/002/003, W5-UI-001, W5-URL-001 |
 | G11 Verification and release program | W7-TEST-001/002, W7-MIG-001, W7-RELEASE-001, W7-CONTROL-001 |
@@ -204,7 +217,7 @@ G11 is a planning bucket, not one mixed commit: focused behavioral tests, DEV/DE
 
 **Primary serial path:** owner/product/accounting decisions -> G1 financial lifecycle authority -> G2 money precision -> G3 reporting truth and period semantics -> G9 Supplier/Rate Card authority -> G8 family-specific replay safety -> G11 verification/release -> G12 architecture/cleanup.
 
-Because G3 and G9 are complete, G8 is the next serial gate only; G8 is NOT active and requires separate Owner authorization. G11 remains downstream of G8.
+G8 is **IN PROGRESS** with 4 of 5 families published (Customer, Service, Quotation, Invoice complete; Payment remaining). G11 remains downstream of G8. Payment Create Replay Safety is the next controlled action and requires a separate bounded Owner authorization before implementation.
 
 **Parallelizable after required decisions and a clean baseline:** G5 Admin security, G6 payload/log minimization, G7 reliability boundaries, G10 search/accessibility, and G4 measurement/scale evidence. Parallelizable does not mean immediately started.
 
@@ -233,13 +246,13 @@ Every future implementation/remediation Goal remains administratively open until
 
 ### Current remediation waiting on decisions / evidence
 
-- **Owner decision first:** G1/G2 lifecycle, money precision, and financial correction contracts; G8 activation.
+- **Owner decision first:** G1/G2 lifecycle, money precision, and financial correction contracts; bounded Payment replay task authorization.
 - **Accountant/product decision first:** Broader accounting reporting, Revenue Recognition, payment terms/credit control, supplier cost/margin, and completion with outstanding finance (deferred product scope, not open engineering defect).
 - **Measurement first:** G4 performance, query, scale, and index decisions.
-- **DEV/DEMO database evidence first:** G1, G2, G5, G8, G9, and G11 SQL/RPC/concurrency or migration verification (G9 DEV/DEMO verified).
+- **DEV/DEMO database evidence first:** G1, G2, G5, G8 (Customer, Service, Quotation, Invoice DEV/DEMO verified; Payment pending), G9, and G11 SQL/RPC/concurrency or migration verification (G9 DEV/DEMO verified).
 - **Mozfer browser acceptance first:** G10 EN/AR/RTL/mobile/search/accessibility behavior; Owner visual/manual acceptance for G3 Reports/Customer 360 and G9 Supplier surfaces (pending separately).
 - **Later cleanup:** G6 M-01 adaptation, G12 generated typing, bounded ABS refactor, and exact orphaned static-data removal.
-- **Current gates:** G8 is the next serial gate (inactive, requires Owner authorization); Security, financial integrity, Reports/Customer 360 authority, Supplier/Rate Card, Search/Accessibility, Database/Migration, Performance/Scale, Release, and Mozfer owner acceptance remain blocked or pending their listed Goals and evidence. Production sign-off is not complete.
+- **Current gates:** G8 is IN PROGRESS (Payment create replay is the remaining slice, requires separate bounded Owner authorization); Security, financial integrity, Reports/Customer 360 authority, Supplier/Rate Card, Search/Accessibility, Database/Migration, Performance/Scale, Release, and Mozfer owner acceptance remain blocked or pending their listed Goals and evidence. Production sign-off is not complete.
 
 ### Deferred product / Event ERP / SaaS expansion
 
@@ -264,7 +277,7 @@ These 3 concerns are future activation gates, not current defects. No tenant rol
 - Search/Accessibility: blocked pending G10 and Mozfer EN/AR/RTL/mobile/browser acceptance.
 - Database/Migration: blocked pending approved DEV/DEMO PostgreSQL/RPC verification.
 - Performance/Scale: blocked pending E1-E6 measurements and bounded corrections.
-- Release: blocked pending G8, G11; Mozfer owner acceptance remains pending by domain.
+- Release: blocked pending G8 (Payment remaining), G11; Mozfer owner acceptance remains pending by domain.
 - Future SaaS activation: deferred pending ownership, membership, migration, export, isolation, quota, and compliance approval.
 
 ## 2. Current Priority
