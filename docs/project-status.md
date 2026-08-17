@@ -66,7 +66,7 @@
 - **Remediation program status at this checkpoint:** G9 Supplier / Rate Card is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED**; do not reopen it.
 - **Historical Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` was preserved.
 
-## 1.3A.1 Current Published Checkpoint — G8 Replay Safety Complete (17 August 2026)
+## 1.3A.1 Historical Checkpoint — G8 Replay Safety Complete (17 August 2026)
 
 - **Verified repository:** `D:/G7/g7-crm`, branch `main`, local HEAD and `origin/main` baseline before this documentation commit: `0b950abb83595a00c13f2e62ac64ff28f8febd41`; divergence is `0 ahead / 0 behind`.
 - **G8 Family-specific Create Replay Safety Delivery Progress:** G8 is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** across all 5 of 5 families under the locked serial execution order `Customer -> Service -> Quotation -> Invoice -> Payment`:
@@ -79,7 +79,31 @@
   - G3 Reporting Truth / Period Semantics: **CLOSED / PUBLISHED**.
   - G9 Supplier / Rate Card: **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (do not reopen it).
   - G8 Family-specific Create Replay: **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (5 of 5 families complete).
-- **Current Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved. G11 is the next controlled goal after G8 closeout and requires separate bounded Owner authorization before execution. No production readiness, database apply to production, deployment, or Owner acceptance is inferred from Git publication. No Event ERP expansion is activated.
+- **Goal boundary:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved.
+
+## 1.3A.2 Current Published Checkpoint — G11 Verification Program Complete (17 August 2026)
+
+- **Verified repository:** `D:/G7/g7-crm`, branch `main`, published baseline: `31f49e231d89885daf5f67a0ea7ae4c7b15f7453` (`fix(g11): repair canonical verification blockers`), divergence is `0 ahead / 0 behind`.
+- **G11 Verification and Release Program Status:** **COMPLETE / VERIFICATION PROGRAM COMPLETE**
+  - **G11-A Canonical Automated Verification:** Executed against an isolated Git-archive snapshot of commit `31f49e231d89885daf5f67a0ea7ae4c7b15f7453` without worktree contamination; **99 committed test files, 1158 / 1158 tests PASS**, TypeScript `tsc --noEmit` PASS (0 diagnostics), ESLint PASS (0 errors, 2 inherited non-blocking PDF `<img>` warnings), Next.js production build PASS (38/38 routes generated).
+  - **G11-B DEV/DEMO Database Metadata Reconciliation:** Reconciled on project `dpddrqjzqohexixgdqiq`; all **50 of 50 migrations** confirmed present in `supabase_migrations.schema_migrations`; authoritative Payment (`record_invoice_payment` 7-arg), Atomic Invoice (`create_invoice_atomic` 15-arg), Quotation, Customer, Service, Admin, and Supplier/Rate Card metadata reconciled; obsolete overloads revoked from application execution; critical replay/idempotency and deposit unique constraints active in catalog.
+  - **G11-C Release Gate Classification & Boundary Audit:**
+    - **G11 Verification Program:** `COMPLETE`
+    - **DEV/DEMO Release Qualification:** `BLOCKED` by external unresolved Goals G4, G5, G6, G7, G10.
+    - **Production Release Readiness:** `BLOCKED` by external engineering Goals, pending Mozfer Owner visual/manual acceptance, and production operational hardening.
+    - **Production Deployment:** `UNAUTHORIZED`.
+- **External Release Dependencies (Not closed by G11):**
+  - `G4`: Bounded read paths, query scale, and E1-E6 performance measurements.
+  - `G5`: Admin security and desired-state mutation closure.
+  - `G6`: Payload and log minimization.
+  - `G7`: Failure boundaries, health, and webhook operations.
+  - `G10`: Search, accessibility, RTL edge cases, and keyboard interaction.
+- **Owner Acceptance Boundary:**
+  - G2 Money & Payment Precision: `PENDING / UNKNOWN` (DEV/DEMO migration applied; full Goal closeout/acceptance not independently asserted).
+  - G3 Reports & Customer 360: `PENDING SEPARATELY` (Engineering closed 24/24 and 13/13; visual/product acceptance pending).
+  - G9 Supplier / Rate Card: `PENDING SEPARATELY` (Engineering complete and DEV/DEMO verified; Owner acceptance pending).
+- **Non-blocking Technical Warning:** Function `public.create_quotation_with_items` is configured with `search_path = public` rather than `pg_catalog, public`. Classified as `NON_BLOCKING_HARDENING_INCONSISTENCY` (safe due to exclusive `service_role` execute grant and absence of schema `public` create permissions on application roles).
+- **Current Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved. G12 (`Typed boundary, ABS architecture and cleanup`) is the next serial controlled goal and requires separate bounded Owner authorization before execution. No production readiness, database apply to production, deployment, or Owner acceptance is inferred from Git publication. No Event ERP expansion is activated.
 
 ## 1.3B Historical G7-RB1 Rebaseline (13 August 2026)
 
@@ -146,7 +170,7 @@
 - **One active Deposit per Service (DEV/DEMO applied):** `supabase/migrations/20260722120000_enforce_one_active_deposit_per_service.sql` was manually applied and verified on 2026-07-23 in project `dpddrqjzqohexixgdqiq`. The Service-wide active Deposit unique index, hardened Atomic Invoice RPC, Final guard, role execution boundary, and zero-duplicate aggregate were verified; production was not accessed. Repository migration history was not repaired or marked, and this does not claim recorded history for version `20260722120000`.
 - **Financial lifecycle / atomic create milestone count:** **20** meaningful commits from baseline `a32be762` to HEAD `a83c1d28` (includes Wave A financial lifecycle stack, atomic contract/migration/DEV apply docs, and Task 20 app integration).
 - **Financial lifecycle application source wave:** **pushed** to `origin/main` through `45cdfb73` (ten source/test commits). Atomic Invoice RPC + app integration are pushed through `a83c1d28` and installed in DEV/DEMO only.
-- **Active implementation state:** G8 Family-specific Create Replay Safety is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (5 of 5 families complete: Customer, Service, Quotation, Invoice, and Payment verified). G11 is the next controlled gate requiring separate bounded Owner authorization before execution; Feature 008 and earlier UX batches are delivered; Feature 009 and future Event ERP expansion remain inactive.
+- **Active implementation state:** G11 Verification and Release Program is **COMPLETE / VERIFICATION PROGRAM COMPLETE** (canonical automated suite 1158/1158 PASS on commit `31f49e2`, DEV/DEMO metadata 50/50 migrations reconciled; DEV/DEMO release qualification remains BLOCKED by external Goals G4/G5/G6/G7/G10; Production readiness BLOCKED; Production deployment UNAUTHORIZED). G12 (`Typed boundary, ABS architecture and cleanup`) is the next serial controlled gate requiring separate bounded Owner authorization before execution; Feature 008 and earlier UX batches are delivered; Feature 009 and future Event ERP expansion remain inactive.
 - **Design complete:** `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
 - **ABS read-enrichment complete (source + accepted):** `ABS-MGMT-UI-READ-ENRICH-1` — Service Detail read-only ABS summary card enriched and pushed on main.
 - **ABS draft-edit/discard complete (source + accepted):** `ABS-MGMT-UI-DRAFT-EDIT-1` — draft item edit/discard UI implemented, automated validation passed, PASS by Mozfer manual browser evidence recorded, and pushed on main in `df7cf1e9ef9d5302162735bcc87a8aa567385073`.

@@ -103,7 +103,7 @@ This is an inter-goal closure and stabilization gate, not a replacement or renum
 - **Remediation program status at this checkpoint:** G9 Supplier / Rate Card is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED**; do not reopen it.
 - **Historical Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` was preserved.
 
-### Current Published Checkpoint — G8 Replay Safety Complete (17 August 2026)
+### Historical Checkpoint — G8 Replay Safety Complete (17 August 2026)
 
 - **Verified repository:** `D:/G7/g7-crm`, branch `main`, local HEAD and `origin/main` baseline before this documentation commit: `0b950abb83595a00c13f2e62ac64ff28f8febd41`; divergence is `0 ahead / 0 behind`.
 - **G8 Replay Safety Delivery Progress:** 5 of 5 families complete under locked serial order `Customer -> Service -> Quotation -> Invoice -> Payment`:
@@ -113,7 +113,31 @@ This is an inter-goal closure and stabilization gate, not a replacement or renum
   - **Invoice Create Replay Safety:** `04c89df83d5cea45722dbb0e4c3c23df91cc7232` (`feat(g8): add invoice create replay safety`) — **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (Controller outcome: `PASS WITH WARN`).
   - **Payment Create Replay Safety:** **COMPLETE / EXISTING IMPLEMENTATION VERIFIED / DEV-DEMO VERIFIED / OPEN CODE VERIFIED / NO IMPLEMENTATION DELTA REQUIRED** (Existing published Payment architecture provides caller-generated UUID request identity, durable same-key/same-payload replay, same-key/different-payload conflict detection, lost-response reconciliation, concurrent same-key serialization, exact monetary precision enforcement, overpayment protection, and zero duplicate payment mutation or audit on replay. Open Code Review clean 0 BLOCKING, 0 MATERIAL, 0 MINOR; zero unreviewed material drift to HEAD; DEV/DEMO verified).
 - **Remediation program status:** G3 is CLOSED; G9 is COMPLETE / PUBLISHED / DEV-DEMO VERIFIED; G8 is COMPLETE / PUBLISHED / DEV-DEMO VERIFIED (5/5 complete).
-- **Current Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved. G11 is the next controlled goal after G8 closeout and requires separate bounded Owner authorization before execution. No production readiness, database apply to production, or Owner acceptance is inferred.
+- **Goal boundary:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved.
+
+### Current Published Checkpoint — G11 Verification Program Complete (17 August 2026)
+
+- **Verified repository:** `D:/G7/g7-crm`, branch `main`, published baseline: `31f49e231d89885daf5f67a0ea7ae4c7b15f7453` (`fix(g11): repair canonical verification blockers`), divergence is `0 ahead / 0 behind`.
+- **G11 Verification and Release Program Status:** **CLOSED / VERIFICATION PROGRAM COMPLETE**
+  - **G11-A Canonical Automated Verification:** Executed against an isolated Git-archive snapshot of commit `31f49e231d89885daf5f67a0ea7ae4c7b15f7453` without worktree contamination; **99 committed test files, 1158 / 1158 tests PASS**, TypeScript `tsc --noEmit` PASS (0 diagnostics), ESLint PASS (0 errors, 2 inherited non-blocking PDF `<img>` warnings), Next.js production build PASS (38/38 routes generated).
+  - **G11-B DEV/DEMO Database Metadata Reconciliation:** Reconciled on project `dpddrqjzqohexixgdqiq`; all **50 of 50 migrations** confirmed present in `supabase_migrations.schema_migrations`; authoritative Payment (`record_invoice_payment` 7-arg), Atomic Invoice (`create_invoice_atomic` 15-arg), Quotation, Customer, Service, Admin, and Supplier/Rate Card metadata reconciled; obsolete overloads revoked from application execution; critical replay/idempotency and deposit unique constraints active in catalog.
+  - **G11-C Release Gate Classification & Boundary Audit:**
+    - **G11 Verification Program:** `COMPLETE`
+    - **DEV/DEMO Release Qualification:** `BLOCKED` by external unresolved Goals G4, G5, G6, G7, G10.
+    - **Production Release Readiness:** `BLOCKED` by external engineering Goals, pending Mozfer Owner visual/manual acceptance, and production operational hardening.
+    - **Production Deployment:** `UNAUTHORIZED`.
+- **External Release Dependencies (Not closed by G11):**
+  - `G4`: Bounded read paths, query scale, and E1-E6 performance measurements.
+  - `G5`: Admin security and desired-state mutation closure.
+  - `G6`: Payload and log minimization.
+  - `G7`: Failure boundaries, health, and webhook operations.
+  - `G10`: Search, accessibility, RTL edge cases, and keyboard interaction.
+- **Owner Acceptance Boundary:**
+  - G2 Money & Payment Precision: `PENDING / UNKNOWN` (DEV/DEMO migration applied; full Goal closeout/acceptance not independently asserted).
+  - G3 Reports & Customer 360: `PENDING SEPARATELY` (Engineering closed 24/24 and 13/13; visual/product acceptance pending).
+  - G9 Supplier / Rate Card: `PENDING SEPARATELY` (Engineering complete and DEV/DEMO verified; Owner acceptance pending).
+- **Non-blocking Technical Warning:** Function `public.create_quotation_with_items` is configured with `search_path = public` rather than `pg_catalog, public`. Classified as `NON_BLOCKING_HARDENING_INCONSISTENCY` (safe due to exclusive `service_role` execute grant and absence of schema `public` create permissions on application roles).
+- **Current Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved. G12 (`Typed boundary, ABS architecture and cleanup`) is the next serial controlled goal after G11 closeout and requires separate bounded Owner authorization before execution. No production readiness, database apply to production, deployment, or Owner acceptance is inferred from Git publication. No Event ERP expansion is activated.
 
 ### Historical G7-RB1 Rebaseline (13 August 2026)
 
@@ -208,7 +232,7 @@ After field evidence and controller design lock, prepare a separate implementati
 | G8 Family-specific create replay (COMPLETE: 5/5 published — Customer, Service, Quotation, Invoice, Payment verified) | W4-REC-002 |
 | G9 Supplier and Rate Card authority | W6-RATE-001/002/003, W6-SUP-001 |
 | G10 Search, accessibility and interaction | W5-SEARCH-001/002, W5-A11Y-001/002/003, W5-UI-001, W5-URL-001 |
-| G11 Verification and release program | W7-TEST-001/002, W7-MIG-001, W7-RELEASE-001, W7-CONTROL-001 |
+| G11 Verification and release program (CLOSED / VERIFICATION PROGRAM COMPLETE: canonical automated suite 1158/1158 PASS, DEV/DEMO metadata 50/50 reconciled) | W7-TEST-001/002, W7-MIG-001, W7-RELEASE-001, W7-CONTROL-001 |
 | G12 Typed boundary, ABS architecture and cleanup | W8-ARCH-001/002, W8-LEGACY-001 |
 
 G11 is a planning bucket, not one mixed commit: focused behavioral tests, DEV/DEMO PostgreSQL/RPC verification, release gates, and OCR/control-plane documentation must remain separate. G12 likewise separates generated Supabase typing, bounded ABS refactoring, and exact orphaned static-data cleanup.
@@ -217,7 +241,7 @@ G11 is a planning bucket, not one mixed commit: focused behavioral tests, DEV/DE
 
 **Primary serial path:** owner/product/accounting decisions -> G1 financial lifecycle authority -> G2 money precision -> G3 reporting truth and period semantics -> G9 Supplier/Rate Card authority -> G8 family-specific replay safety -> G11 verification/release -> G12 architecture/cleanup.
 
-G8 is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (5 of 5 families complete: Customer, Service, Quotation, Invoice, Payment). G11 is the next controlled goal after G8 closeout and requires separate bounded Owner authorization before execution.
+G11 is **CLOSED / VERIFICATION PROGRAM COMPLETE** (canonical automated suite 1158/1158 PASS on commit `31f49e2`, DEV/DEMO metadata 50/50 reconciled; DEV/DEMO release qualification remains BLOCKED pending external Goals G4/G5/G6/G7/G10; Production readiness BLOCKED; Production deployment UNAUTHORIZED). G12 (`Typed boundary, ABS architecture and cleanup`) is the next serial controlled goal after G11 closeout and requires separate bounded Owner authorization before execution. External Goals G4, G5, G6, G7, and G10 remain parallel/open dependencies.
 
 **Parallelizable after required decisions and a clean baseline:** G5 Admin security, G6 payload/log minimization, G7 reliability boundaries, G10 search/accessibility, and G4 measurement/scale evidence. Parallelizable does not mean immediately started.
 
@@ -246,13 +270,13 @@ Every future implementation/remediation Goal remains administratively open until
 
 ### Current remediation waiting on decisions / evidence
 
-- **Owner decision first:** G1/G2 lifecycle, money precision, and financial correction contracts; bounded G11 verification and release task authorization.
+- **Owner decision first:** G1/G2 lifecycle, money precision, and financial correction contracts; bounded G12 architecture and cleanup task authorization.
 - **Accountant/product decision first:** Broader accounting reporting, Revenue Recognition, payment terms/credit control, supplier cost/margin, and completion with outstanding finance (deferred product scope, not open engineering defect).
 - **Measurement first:** G4 performance, query, scale, and index decisions.
-- **DEV/DEMO database evidence first:** G1, G2, G5, G8 (Customer, Service, Quotation, Invoice, Payment DEV/DEMO verified), G9, and G11 SQL/RPC/concurrency or migration verification (G9 DEV/DEMO verified).
+- **DEV/DEMO database evidence first:** G1, G2, G5, G8 (Customer, Service, Quotation, Invoice, Payment DEV/DEMO verified), G9, and G11 (DEV/DEMO metadata 50/50 reconciled).
 - **Mozfer browser acceptance first:** G10 EN/AR/RTL/mobile/search/accessibility behavior; Owner visual/manual acceptance for G3 Reports/Customer 360 and G9 Supplier surfaces (pending separately).
 - **Later cleanup:** G6 M-01 adaptation, G12 generated typing, bounded ABS refactor, and exact orphaned static-data removal.
-- **Current gates:** G8 is COMPLETE / PUBLISHED / DEV-DEMO VERIFIED (5/5 families complete); G11 is the next controlled gate; Security, financial integrity, Reports/Customer 360 authority, Supplier/Rate Card, Search/Accessibility, Database/Migration, Performance/Scale, Release, and Mozfer owner acceptance remain blocked or pending their listed Goals and evidence. Production sign-off is not complete.
+- **Current gates:** G11 is CLOSED / VERIFICATION PROGRAM COMPLETE (canonical automated suite 1158/1158 PASS on commit `31f49e2`, DEV/DEMO metadata 50/50 reconciled); G12 is the next serial controlled gate; Security, financial integrity, Reports/Customer 360 authority, Supplier/Rate Card, Search/Accessibility, Database/Migration, Performance/Scale, Release, and Mozfer owner acceptance remain blocked or pending their listed Goals and evidence. Production sign-off is not complete.
 
 ### Deferred product / Event ERP / SaaS expansion
 
@@ -277,7 +301,7 @@ These 3 concerns are future activation gates, not current defects. No tenant rol
 - Search/Accessibility: blocked pending G10 and Mozfer EN/AR/RTL/mobile/browser acceptance.
 - Database/Migration: blocked pending approved DEV/DEMO PostgreSQL/RPC verification.
 - Performance/Scale: blocked pending E1-E6 measurements and bounded corrections.
-- Release: blocked pending G11; Mozfer owner acceptance remains pending by domain.
+- Release: G11 verification program is COMPLETE; DEV/DEMO release qualification remains BLOCKED pending external Goals G4/G5/G6/G7/G10; Production release readiness remains BLOCKED pending applicable external engineering Goals, Owner visual/manual acceptance by domain, and production operational hardening; Production deployment remains UNAUTHORIZED.
 - Future SaaS activation: deferred pending ownership, membership, migration, export, isolation, quota, and compliance approval.
 
 ## 2. Current Priority
