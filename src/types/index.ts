@@ -4,7 +4,6 @@ export * from "./quotation";
 export * from "./service";
 export * from "./invoice";
 export * from "./payment";
-export * from "./project";
 export * from "./supplier";
 export * from "./settings";
 export * from "./counter";
