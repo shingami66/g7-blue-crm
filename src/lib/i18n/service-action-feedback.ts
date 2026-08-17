@@ -12,6 +12,7 @@ export function getCreateServiceErrorMessage(
       UNAUTHORIZED: dictionary.actionErrors.unauthorized,
       FORBIDDEN: dictionary.actionErrors.forbidden,
       CUSTOMER_UNAVAILABLE: dictionary.actionErrors.customerUnavailable,
+      MUTATION_KEY_CONFLICT: dictionary.actionErrors.mutationKeyConflict,
       GENERIC_FAILURE: dictionary.actionErrors.generic,
     },
     dictionary.actionErrors.generic,

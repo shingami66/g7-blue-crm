@@ -78,6 +78,7 @@ export interface ServiceRow {
   updated_at: string;
   created_by: string | null;
   updated_by: string | null;
+  mutation_key?: string | null;
 }
 
 export interface ServiceRowWithCustomer extends ServiceRow {
@@ -91,6 +92,7 @@ export interface ServiceRowWithCustomer extends ServiceRow {
 export interface CreatedServiceResult {
   id: string;
   serviceNumber: string;
+  isReplayed?: boolean;
 }
 
 export type CreateServiceInput = z.infer<typeof createServiceSchema>;

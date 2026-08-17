@@ -29,6 +29,7 @@ export interface ServicesDictionary {
     customerUnavailable: string;
     statusChangeDeferred: string;
     statusConflict: string;
+    mutationKeyConflict: string;
     noFields: string;
     transitionBlocked: string;
     executionFinancial: string;
@@ -920,6 +921,7 @@ const servicesDictionaryEn: ServicesDictionary = {
     customerUnavailable: "The selected customer is unavailable.",
     statusChangeDeferred: "Service status changes are handled through the status controls.",
     statusConflict: "This service cannot be edited in its current status.",
+    mutationKeyConflict: "A Service creation attempt with these request details already exists. Start a new Service creation attempt and try again.",
     noFields: "Enter at least one change before saving.",
     transitionBlocked: "This Service status change is not currently allowed.",
     executionFinancial: "Execution can start only after one valid, fully settled deposit invoice is confirmed.",
@@ -2342,6 +2344,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     customerUnavailable: "العميل المحدد غير متاح.",
     statusChangeDeferred: "تغييرات حالة الخدمة تتم من خلال أدوات الحالة.",
     statusConflict: "لا يمكن تعديل هذه الخدمة في حالتها الحالية.",
+    mutationKeyConflict: "توجد محاولة إنشاء خدمة مسبقة بتفاصيل مختلفة لنفس الطلب. يرجى بدء محاولة جديدة والمحاولة مرة أخرى.",
     noFields: "أدخل تغييرًا واحدًا على الأقل قبل الحفظ.",
     transitionBlocked: "تغيير حالة هذه الخدمة غير مسموح به حاليًا.",
     executionFinancial: "لا يمكن بدء التنفيذ إلا بعد تأكيد فاتورة عربون واحدة صالحة ومسـددة بالكامل.",

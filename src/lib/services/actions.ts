@@ -8,7 +8,6 @@ import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { createServiceSchema, updateServiceSchema } from "./schemas";
 import type {
   CreatedServiceResult,
-  CreateServiceInput,
   UpdateServiceInput,
 } from "./types";
 import { getServiceById } from "./queries";
@@ -28,6 +27,7 @@ export type ServiceActionErrorCode =
   | "CUSTOMER_UNAVAILABLE"
   | "STATUS_CHANGE_DEFERRED"
   | "STATUS_CONFLICT"
+  | "MUTATION_KEY_CONFLICT"
   | "NO_FIELDS"
   | "TRANSITION_BLOCKED"
   | "SERVICE_NOT_FOUND"
@@ -40,29 +40,6 @@ export type ServiceActionErrorCode =
 
 function firstValidationError(parsed: { error: { issues: { message: string }[] } }) {
   return parsed.error.issues[0]?.message ?? "Validation failed";
-}
-
-function serviceInsertPayload(
-  serviceInput: CreateServiceInput,
-  serviceNumber: string,
-  clerkUserId: string
-) {
-  return {
-    customer_id: serviceInput.customer_id,
-    service_number: serviceNumber,
-    service_title: serviceInput.service_title,
-    event_name: serviceInput.event_name ?? null,
-    event_type: serviceInput.event_type ?? null,
-    event_start_date: serviceInput.event_start_date ?? null,
-    event_end_date: serviceInput.event_end_date ?? null,
-    event_location: serviceInput.event_location ?? null,
-    description: serviceInput.description ?? null,
-    estimated_budget: serviceInput.estimated_budget ?? null,
-    status: "Inquiry",
-    cancellation_reason: serviceInput.cancellation_reason ?? null,
-    created_by: clerkUserId,
-    updated_by: clerkUserId,
-  };
 }
 
 function serviceUpdatePayload(
@@ -89,51 +66,6 @@ function serviceUpdatePayload(
 
   updates.updated_by = clerkUserId;
   return updates;
-}
-
-async function generateServiceNumber(
-  supabase: ReturnType<typeof createAdminClient>
-): Promise<ActionResult<string>> {
-  const { data: serviceNumber, error } = await supabase.rpc(
-    "generate_document_number",
-    { doc_type: "service" }
-  );
-
-  if (error) {
-    console.error("[generateServiceNumber] Supabase error:", error.message);
-    return { success: false, error: "Failed to generate service number. Please try again." };
-  }
-
-  if (typeof serviceNumber !== "string") {
-    console.error("[generateServiceNumber] Unexpected RPC response");
-    return { success: false, error: "Failed to generate service number. Please try again." };
-  }
-
-  return { success: true, data: serviceNumber };
-}
-
-async function validateActiveCustomerForService(
-  supabase: ReturnType<typeof createAdminClient>,
-  customerId: string
-): Promise<ActionResult> {
-  const { data: customerRow, error } = await supabase
-    .from("customers")
-    .select("id")
-    .eq("id", customerId)
-    .eq("status", "active")
-    .eq("is_deleted", false)
-    .maybeSingle();
-
-  if (error) {
-    console.error("[validateActiveCustomerForService] Supabase error:", error.message);
-    return { success: false, error: "Failed to validate selected customer. Please try again." };
-  }
-
-  if (!customerRow) {
-    return { success: false, error: "Selected customer is unavailable. Please choose an active customer." };
-  }
-
-  return { success: true };
 }
 
 async function validateServiceCanBeDeleted(
@@ -182,46 +114,76 @@ export async function createService(
     const parsed = createServiceSchema.safeParse(input);
 
     if (!parsed.success) {
-      return { success: false, error: firstValidationError(parsed) };
+      return { success: false, code: "INVALID_INPUT", error: firstValidationError(parsed) };
     }
 
     const supabase = createAdminClient();
-    const customerValidationResult = await validateActiveCustomerForService(
-      supabase,
-      parsed.data.customer_id
+
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      "create_service_atomic",
+      {
+        p_customer_id: parsed.data.customer_id,
+        p_service_title: parsed.data.service_title,
+        p_event_name: parsed.data.event_name ?? null,
+        p_event_type: parsed.data.event_type ?? null,
+        p_event_start_date: parsed.data.event_start_date ?? null,
+        p_event_end_date: parsed.data.event_end_date ?? null,
+        p_event_location: parsed.data.event_location ?? null,
+        p_description: parsed.data.description ?? null,
+        p_estimated_budget: parsed.data.estimated_budget ?? null,
+        p_cancellation_reason: parsed.data.cancellation_reason ?? null,
+        p_created_by: user.clerk_user_id,
+        p_mutation_key: parsed.data.mutation_key,
+      }
     );
-    if (!customerValidationResult.success) {
-      return { success: false, code: "CUSTOMER_UNAVAILABLE", error: customerValidationResult.error };
-    }
 
-    const serviceNumberResult = await generateServiceNumber(supabase);
-    if (!serviceNumberResult.success || !serviceNumberResult.data) {
-      return { success: false, code: "GENERIC_FAILURE", error: serviceNumberResult.error };
-    }
-
-    const { data: createdService, error } = await supabase
-      .from("services")
-      .insert(
-        serviceInsertPayload(
-          parsed.data,
-          serviceNumberResult.data,
-          user.clerk_user_id
-        )
-      )
-      .select("id, service_number")
-      .single();
-
-    if (error) {
-      console.error("[createService] Supabase error:", error.message);
+    if (rpcError) {
+      console.error("[createService] Supabase error:", rpcError.message);
       return { success: false, code: "GENERIC_FAILURE", error: "Failed to create service. Please try again." };
+    }
+
+    const row = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
+    if (!row) {
+      return { success: false, code: "GENERIC_FAILURE", error: "Failed to create service. Please try again." };
+    }
+
+    if (row.error_code) {
+      switch (row.error_code) {
+        case "customer_unavailable":
+          return {
+            success: false,
+            code: "CUSTOMER_UNAVAILABLE",
+            error: "Selected customer is unavailable. Please choose an active customer.",
+          };
+        case "mutation_key_conflict":
+          return {
+            success: false,
+            code: "MUTATION_KEY_CONFLICT",
+            error: "A service with this mutation key already exists with different details.",
+          };
+        case "invalid_service_input":
+          return {
+            success: false,
+            code: "INVALID_INPUT",
+            error: "Invalid service input. Please verify all required fields.",
+          };
+        case "number_generation_failed":
+        default:
+          return {
+            success: false,
+            code: "GENERIC_FAILURE",
+            error: "Failed to create service. Please try again.",
+          };
+      }
     }
 
     revalidatePath("/services");
     return {
       success: true,
       data: {
-        id: createdService.id,
-        serviceNumber: createdService.service_number,
+        id: row.service_id,
+        serviceNumber: row.service_number,
+        isReplayed: row.is_replayed ?? false,
       },
     };
   } catch (err) {

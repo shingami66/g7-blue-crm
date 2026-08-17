@@ -16,10 +16,18 @@ interface ServiceFormProps {
   dictionary: ServicesDictionary;
 }
 
+function generateMutationKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `srv_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+}
+
 export default function ServiceForm({ customers, dictionary }: ServiceFormProps) {
   const router = useRouter();
   const { back, push } = useGlobalNavigationPending();
 
+  const [mutationKey] = useState<string>(() => generateMutationKey());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,6 +82,7 @@ export default function ServiceForm({ customers, dictionary }: ServiceFormProps)
     setIsSubmitting(true);
 
     const payload = {
+      mutation_key: mutationKey,
       customer_id: customerId,
       service_title: serviceTitle.trim(),
       event_name: eventName.trim() || undefined,

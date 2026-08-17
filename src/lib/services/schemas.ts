@@ -95,6 +95,11 @@ function validateCancellationReason(
 
 export const createServiceSchema = serviceBaseSchema
   .extend({
+    mutation_key: z.preprocess((value) => {
+      if (value === null || value === undefined) return "";
+      if (typeof value !== "string") return value;
+      return value.trim();
+    }, z.string().min(1, "Mutation key is required")),
     status: z.literal("Inquiry").default("Inquiry"),
   })
   .strict()
