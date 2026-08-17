@@ -9,6 +9,7 @@ const MIGRATION_PATH = join(
 );
 
 const sql = readFileSync(MIGRATION_PATH, "utf-8")
+  .replace(/\r\n/g, "\n")
   .replace(/\/\*[\s\S]*?\*\//g, "")
   .replace(/--.*$/gm, "");
 

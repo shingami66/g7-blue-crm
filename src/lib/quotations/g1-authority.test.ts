@@ -11,7 +11,7 @@ const MIGRATION = join(
 const ACTIONS = join(REPO_ROOT, "src/lib/quotations/actions.ts");
 
 function read(path: string) {
-  return readFileSync(path, "utf8");
+  return readFileSync(path, "utf8").replace(/\r\n/g, "\n");
 }
 
 test("G1 closes edit, reject, and delete races at the approved quotation boundary", () => {

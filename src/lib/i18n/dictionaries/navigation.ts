@@ -13,6 +13,11 @@ export interface NavigationDictionary {
     subtitle: string;
   };
   admin: string;
+  menu: {
+    open: string;
+    close: string;
+    mainNavigation: string;
+  };
   modules: {
     customers: string;
     dashboard: string;
@@ -42,6 +47,11 @@ export const navigationDictionaryEn: NavigationDictionary = {
     subtitle: "Enterprise CRM",
   },
   admin: "Admin",
+  menu: {
+    open: "Open navigation menu",
+    close: "Close navigation menu",
+    mainNavigation: "Main navigation",
+  },
   modules: {
     customers: "Customers",
     dashboard: "Dashboard",
@@ -71,6 +81,11 @@ export const navigationDictionaryAr: NavigationDictionary = {
     subtitle: "نظام إدارة علاقات المؤسسات",
   },
   admin: "الإدارة",
+  menu: {
+    open: "فتح قائمة التنقل",
+    close: "إغلاق قائمة التنقل",
+    mainNavigation: "التنقل الرئيسي",
+  },
   modules: {
     customers: "العملاء",
     dashboard: "لوحة التحكم",

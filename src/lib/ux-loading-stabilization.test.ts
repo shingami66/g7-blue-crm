@@ -5,7 +5,8 @@ import test from "node:test";
 import { createRecordNavigationGuard } from "../components/records/record-navigation-guard.ts";
 
 const ROOT = join(import.meta.dirname, "../..");
-const read = (path: string) => readFileSync(join(ROOT, path), "utf8");
+const read = (path: string) =>
+  readFileSync(join(ROOT, path), "utf8").replace(/\r\n/g, "\n");
 
 test("shared buttons expose immediate, accessible pending feedback", () => {
   const source = read("src/components/ui/Button.tsx");

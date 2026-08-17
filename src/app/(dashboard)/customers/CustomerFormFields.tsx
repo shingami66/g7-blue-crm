@@ -59,17 +59,22 @@ export function CustomerCoreFields({
         required
       />
       <div>
-        <label className="block text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] mb-1">
+        <label
+          htmlFor="customer-field-status"
+          className="block text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] mb-1"
+        >
           {labels.status}
         </label>
         <select
+          id="customer-field-status"
           name="status"
           defaultValue={customer?.status ?? "lead"}
+          aria-label={labels.status}
           className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
         >
-        <option value="lead">{getCustomerStatusLabel(dictionary.locale, "lead")}</option>
-        <option value="active">{getCustomerStatusLabel(dictionary.locale, "active")}</option>
-        <option value="inactive">{getCustomerStatusLabel(dictionary.locale, "inactive")}</option>
+          <option value="lead">{getCustomerStatusLabel(dictionary.locale, "lead")}</option>
+          <option value="active">{getCustomerStatusLabel(dictionary.locale, "active")}</option>
+          <option value="inactive">{getCustomerStatusLabel(dictionary.locale, "inactive")}</option>
         </select>
       </div>
     </div>
@@ -96,15 +101,20 @@ export function CustomerOfficialBillingFields({
       </legend>
       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] mb-1">
+          <label
+            htmlFor="customer-field-customer-type"
+            className="block text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] mb-1"
+          >
             {labels.customerType}
           </label>
           <select
+            id="customer-field-customer-type"
             name="customer_type"
             value={customerType}
             onChange={(event) =>
               setCustomerType(event.target.value as CustomerTypeChoice)
             }
+            aria-label={labels.customerType}
             className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
           >
             <option value="">{labels.notSpecified}</option>
@@ -163,10 +173,14 @@ export function CustomerOfficialBillingFields({
               dir="ltr"
             />
             <div>
-              <label className="block text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] mb-1">
+              <label
+                htmlFor="customer-field-payment-terms"
+                className="block text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] mb-1"
+              >
                 {labels.paymentTerms}
               </label>
               <textarea
+                id="customer-field-payment-terms"
                 name="payment_terms"
                 defaultValue={customer?.paymentTerms ?? ""}
                 rows={3}
@@ -175,8 +189,12 @@ export function CustomerOfficialBillingFields({
                 dir="auto"
               />
             </div>
-            <label className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] leading-[20px] text-on-surface">
+            <label
+              htmlFor="customer-field-po-required"
+              className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] leading-[20px] text-on-surface cursor-pointer"
+            >
               <input
+                id="customer-field-po-required"
                 type="checkbox"
                 name="po_required"
                 defaultChecked={customer?.poRequired ?? false}
@@ -258,6 +276,7 @@ function TextInput({
   type = "text",
   required = false,
   dir,
+  id,
 }: {
   label: string;
   name: string;
@@ -266,13 +285,19 @@ function TextInput({
   type?: "email" | "text";
   required?: boolean;
   dir?: "auto" | "ltr" | "rtl";
+  id?: string;
 }) {
+  const inputId = id ?? `customer-field-${name.replace(/_/g, "-")}`;
   return (
     <div>
-      <label className="block text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] mb-1">
+      <label
+        htmlFor={inputId}
+        className="block text-[12px] leading-[16px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] mb-1"
+      >
         {label}
       </label>
       <input
+        id={inputId}
         name={name}
         type={type}
         required={required}
