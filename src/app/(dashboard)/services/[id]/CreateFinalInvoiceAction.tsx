@@ -28,6 +28,7 @@ type FinalActionDictionary = {
     unauthorized: string;
     forbidden: string;
     fallback: string;
+    mutationKeyConflict?: string;
   };
 };
 
@@ -54,6 +55,7 @@ export function CreateFinalInvoiceAction({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [mutationKey, setMutationKey] = useState(() => crypto.randomUUID());
 
   const disabled =
     !canCreate ||
@@ -70,6 +72,7 @@ export function CreateFinalInvoiceAction({
 
     startTransition(async () => {
       const result = await createInvoiceAction({
+        mutationKey,
         quotationId,
         serviceId,
         invoiceType: "final",
@@ -79,11 +82,19 @@ export function CreateFinalInvoiceAction({
         setSuccessMsg(
           dictionary.success.replace("{invoiceNumber}", isolateBidiText(result.invoiceNumber ?? "")),
         );
+        setMutationKey(crypto.randomUUID());
         router.refresh();
       } else {
-        setError(
-          presentFinalInvoiceActionError(result.error, dictionary.errors),
-        );
+        if (result.error === "MUTATION_KEY_CONFLICT") {
+          setError(
+            dictionary.errors.mutationKeyConflict ??
+              "A conflicting request with this mutation key already exists.",
+          );
+        } else {
+          setError(
+            presentFinalInvoiceActionError(result.error, dictionary.errors),
+          );
+        }
       }
     });
   };

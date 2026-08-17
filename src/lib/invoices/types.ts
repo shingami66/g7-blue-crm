@@ -51,6 +51,7 @@ export function normalizeInvoiceListSearch(value: unknown): string | undefined {
 }
 
 export interface CreateInvoiceInput {
+  mutationKey: string;
   quotationId: string;
   serviceId: string;
   invoiceType: InvoiceType;
@@ -61,6 +62,7 @@ export interface CreateInvoiceResult {
   success: boolean;
   invoiceId?: string;
   invoiceNumber?: string;
+  isReplayed?: boolean;
   error?: string;
 }
 
@@ -109,6 +111,8 @@ export interface InvoiceRow {
   updated_at: string;
   is_deleted: boolean;
   deleted_at: string | null;
+  mutation_key?: string | null;
+  mutation_payload?: JsonValue | null;
 }
 
 export type BillingInvoiceSummary = {

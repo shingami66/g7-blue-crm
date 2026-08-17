@@ -17,18 +17,28 @@ const RATE_LIMIT_ERROR = "Too many attempts. Please wait a moment and try again.
 const CREATE_INVOICE_RATE_LIMIT = { limit: 5, windowMs: 60_000 };
 const ISSUE_INVOICE_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
 
+const RECONCILE_INVOICE_CREATE_MUTATION_RPC = "reconcile_invoice_create_mutation";
+const RECONCILE_INVOICE_CREATE_ROW_KEYS = [
+  "reconciliation_status",
+  "invoice_id",
+  "invoice_number",
+] as const;
+
 const CREATE_INVOICE_ATOMIC_RPC = "create_invoice_atomic";
 const CREATE_INVOICE_ATOMIC_ROW_KEYS = [
   "error_code",
   "invoice_id",
   "invoice_number",
+  "is_replayed",
 ] as const;
+
 const ISSUE_INVOICE_ATOMIC_RPC = "issue_invoice_atomic";
 const ISSUE_INVOICE_ATOMIC_ROW_KEYS = [
   "error_code",
   "invoice_id",
   "invoice_number",
 ] as const;
+
 const CREATE_INVOICE_ATOMIC_ERROR_CODES = [
   "invalid_invoice_input",
   "vat_registered_invoice_not_implemented_in_this_slice",
@@ -56,7 +66,9 @@ const CREATE_INVOICE_ATOMIC_ERROR_CODES = [
   "invoice_insert_failed",
   "invoice_creation_failed",
   "invoice_snapshot_authority_unavailable",
+  "mutation_key_conflict",
 ] as const;
+
 const ISSUE_INVOICE_ATOMIC_ERROR_CODES = [
   "invoice_not_found",
   "invoice_not_draft",
@@ -64,13 +76,24 @@ const ISSUE_INVOICE_ATOMIC_ERROR_CODES = [
   "invoice_issue_failed",
 ] as const;
 
-type CreateInvoiceAtomicRpcRow = {
-  error_code: string | null;
+export type ReconcileInvoiceCreateRpcRow = {
+  reconciliation_status: "MATCH" | "NOT_FOUND" | "CONFLICT";
   invoice_id: string | null;
   invoice_number: string | null;
 };
 
-type IssueInvoiceAtomicRpcRow = CreateInvoiceAtomicRpcRow;
+type CreateInvoiceAtomicRpcRow = {
+  error_code: string | null;
+  invoice_id: string | null;
+  invoice_number: string | null;
+  is_replayed: boolean | null;
+};
+
+type IssueInvoiceAtomicRpcRow = {
+  error_code: string | null;
+  invoice_id: string | null;
+  invoice_number: string | null;
+};
 
 function isCreateInvoiceAtomicErrorCode(
   value: string,
@@ -103,6 +126,49 @@ function hasOwnDataProperties(
   });
 }
 
+function isReconcileInvoiceCreateRpcRow(
+  value: unknown,
+): value is ReconcileInvoiceCreateRpcRow {
+  if (
+    !isPlainObject(value) ||
+    !hasOwnDataProperties(value, RECONCILE_INVOICE_CREATE_ROW_KEYS)
+  ) {
+    return false;
+  }
+
+  const status = value.reconciliation_status;
+  const invoiceId = value.invoice_id;
+  const invoiceNumber = value.invoice_number;
+
+  if (status === "MATCH") {
+    return (
+      typeof invoiceId === "string" &&
+      invoiceId.trim().length > 0 &&
+      typeof invoiceNumber === "string" &&
+      invoiceNumber.trim().length > 0
+    );
+  }
+
+  if (status === "NOT_FOUND" || status === "CONFLICT") {
+    return invoiceId === null && invoiceNumber === null;
+  }
+
+  return false;
+}
+
+function parseReconcileInvoiceCreateRpcData(
+  data: unknown,
+): ReconcileInvoiceCreateRpcRow | null {
+  if (Array.isArray(data)) {
+    if (data.length !== 1) {
+      return null;
+    }
+    return isReconcileInvoiceCreateRpcRow(data[0]) ? data[0] : null;
+  }
+
+  return isReconcileInvoiceCreateRpcRow(data) ? data : null;
+}
+
 function isCreateInvoiceAtomicRpcRow(
   value: unknown,
 ): value is CreateInvoiceAtomicRpcRow {
@@ -116,6 +182,7 @@ function isCreateInvoiceAtomicRpcRow(
   const errorCode = value.error_code;
   const invoiceId = value.invoice_id;
   const invoiceNumber = value.invoice_number;
+  const isReplayed = value.is_replayed;
 
   const errorCodeOk =
     errorCode === null ||
@@ -126,8 +193,10 @@ function isCreateInvoiceAtomicRpcRow(
   const invoiceNumberOk =
     invoiceNumber === null ||
     (typeof invoiceNumber === "string" && invoiceNumber.trim().length > 0);
+  const isReplayedOk =
+    isReplayed === null || typeof isReplayed === "boolean";
 
-  return errorCodeOk && invoiceIdOk && invoiceNumberOk;
+  return errorCodeOk && invoiceIdOk && invoiceNumberOk && isReplayedOk;
 }
 
 function parseCreateInvoiceAtomicRpcData(
@@ -157,14 +226,17 @@ function isIssueInvoiceAtomicRpcRow(
   const invoiceId = value.invoice_id;
   const invoiceNumber = value.invoice_number;
 
-  return (
-    (errorCode === null ||
-      (typeof errorCode === "string" && errorCode.trim().length > 0)) &&
-    (invoiceId === null ||
-      (typeof invoiceId === "string" && invoiceId.trim().length > 0)) &&
-    (invoiceNumber === null ||
-      (typeof invoiceNumber === "string" && invoiceNumber.trim().length > 0))
-  );
+  const errorCodeOk =
+    errorCode === null ||
+    (typeof errorCode === "string" && errorCode.trim().length > 0);
+  const invoiceIdOk =
+    invoiceId === null ||
+    (typeof invoiceId === "string" && invoiceId.trim().length > 0);
+  const invoiceNumberOk =
+    invoiceNumber === null ||
+    (typeof invoiceNumber === "string" && invoiceNumber.trim().length > 0);
+
+  return errorCodeOk && invoiceIdOk && invoiceNumberOk;
 }
 
 function parseIssueInvoiceAtomicRpcData(
@@ -180,13 +252,44 @@ function parseIssueInvoiceAtomicRpcData(
   return isIssueInvoiceAtomicRpcRow(data) ? data : null;
 }
 
+async function reconcileInvoiceMutation(
+  supabase: ReturnType<typeof createAdminClient>,
+  mutationKey: string,
+  serviceId: string,
+  quotationId: string,
+  invoiceType: string,
+  requestedAmount?: number | null,
+): Promise<ReconcileInvoiceCreateRpcRow | null> {
+  const { data, error } = await supabase.rpc(
+    RECONCILE_INVOICE_CREATE_MUTATION_RPC,
+    {
+      p_mutation_key: mutationKey,
+      p_service_id: serviceId,
+      p_quotation_id: quotationId,
+      p_invoice_type: invoiceType,
+      p_requested_amount:
+        invoiceType === "deposit" && requestedAmount !== undefined && requestedAmount !== null
+          ? requestedAmount
+          : null,
+    },
+  );
+
+  if (error) {
+    return null;
+  }
+
+  return parseReconcileInvoiceCreateRpcData(data);
+}
+
 export async function createInvoiceAction(
   input: unknown,
 ): Promise<CreateInvoiceResult> {
   const correlationId = crypto.randomUUID();
   try {
+    // 1. Authorization check
     const user = await requirePermission(INVOICE_PERMISSIONS.write);
 
+    // 2. Rate limit check
     if (
       !consumeRateLimit(
         "createInvoiceAction",
@@ -197,14 +300,15 @@ export async function createInvoiceAction(
       return { success: false, error: RATE_LIMIT_ERROR };
     }
 
+    // 3. Schema validation
     const parsed = createInvoiceSchema.safeParse(input);
-
     if (!parsed.success) {
       return { success: false, error: "invalid_invoice_input" };
     }
 
-    const { quotationId, serviceId, invoiceType, requestedAmount } = parsed.data;
+    const { mutationKey, quotationId, serviceId, invoiceType, requestedAmount } = parsed.data;
 
+    // 4. Deterministic logical-intent validation (before reconciliation)
     if (invoiceType === "deposit") {
       if (requestedAmount === undefined || requestedAmount === null) {
         return { success: false, error: "deposit_amount_required" };
@@ -217,15 +321,86 @@ export async function createInvoiceAction(
       ) {
         return { success: false, error: "invalid_deposit_amount" };
       }
+
+      // Reject amounts with more than 2 decimal places (do not silently round invalid input)
+      const amountStr = requestedAmount.toString();
+      const decimals = amountStr.includes(".") ? amountStr.split(".")[1] : "";
+      if (decimals.length > 2 || Number(requestedAmount.toFixed(2)) !== requestedAmount) {
+        return { success: false, error: "invalid_deposit_amount" };
+      }
     }
 
-    if (invoiceType === "final" && requestedAmount !== undefined) {
+    if (invoiceType === "final" && requestedAmount !== undefined && requestedAmount !== null) {
       return { success: false, error: "invalid_invoice_input" };
     }
 
     const supabase = createAdminClient();
 
-    // Presentation reads only: RPC remains sole financial authority for create.
+    // 5. Dedicated initial reconciliation RPC
+    const initialReconciliation = await reconcileInvoiceMutation(
+      supabase,
+      mutationKey,
+      serviceId,
+      quotationId,
+      invoiceType,
+      requestedAmount,
+    );
+
+    if (!initialReconciliation) {
+      console.error(
+        `[createInvoiceAction] [${correlationId}] Initial reconciliation RPC transport or parser failure`,
+      );
+      return { success: false, error: "invoice_creation_failed" };
+    }
+
+    if (initialReconciliation.reconciliation_status === "MATCH") {
+      return {
+        success: true,
+        invoiceId: initialReconciliation.invoice_id!,
+        invoiceNumber: initialReconciliation.invoice_number!,
+        isReplayed: true,
+      };
+    }
+
+    if (initialReconciliation.reconciliation_status === "CONFLICT") {
+      return {
+        success: false,
+        error: "MUTATION_KEY_CONFLICT",
+      };
+    }
+
+    // Recovery helper for mutable pre-RPC preparation failures after initial NOT_FOUND
+    const handlePreworkFailure = async (originalError: string): Promise<CreateInvoiceResult> => {
+      const recovery = await reconcileInvoiceMutation(
+        supabase,
+        mutationKey,
+        serviceId,
+        quotationId,
+        invoiceType,
+        requestedAmount,
+      );
+
+      if (recovery) {
+        if (recovery.reconciliation_status === "MATCH") {
+          return {
+            success: true,
+            invoiceId: recovery.invoice_id!,
+            invoiceNumber: recovery.invoice_number!,
+            isReplayed: true,
+          };
+        }
+        if (recovery.reconciliation_status === "CONFLICT") {
+          return {
+            success: false,
+            error: "MUTATION_KEY_CONFLICT",
+          };
+        }
+      }
+
+      return { success: false, error: originalError };
+    };
+
+    // 6. Fresh-create preparation only reached after NOT_FOUND
     const { data: quotationRow, error: quotationError } = await supabase
       .from("quotations")
       .select(QUOTATION_DETAIL_SELECT)
@@ -234,7 +409,7 @@ export async function createInvoiceAction(
       .single();
 
     if (quotationError || !quotationRow) {
-      return { success: false, error: "quotation_not_found" };
+      return await handlePreworkFailure("quotation_not_found");
     }
 
     const quotationDetail = mapRowToQuotationDetail(
@@ -248,20 +423,15 @@ export async function createInvoiceAction(
       .maybeSingle();
 
     if (settingsError || !settings || !settings.vat_mode) {
-      return { success: false, error: "company_settings_unavailable" };
+      return await handlePreworkFailure("company_settings_unavailable");
     }
 
     if (settings.vat_mode !== "not_registered") {
-      return {
-        success: false,
-        error: "vat_registered_invoice_not_implemented_in_this_slice",
-      };
+      return await handlePreworkFailure("vat_registered_invoice_not_implemented_in_this_slice");
     }
 
     let snapshotData;
     try {
-      // Presentation snapshots only. Do not resolve ABS/exposure/amounts here —
-      // create_invoice_atomic recomputes financial authority and may enrich Final settlement.
       snapshotData = buildInvoiceSnapshotData(
         settings,
         quotationDetail,
@@ -281,17 +451,18 @@ export async function createInvoiceAction(
         typeof snapshotData.vat_rate !== "number" ||
         !snapshotData.document_label
       ) {
-        return { success: false, error: "invoice_snapshot_unavailable" };
+        return await handlePreworkFailure("invoice_snapshot_unavailable");
       }
     } catch {
       console.error(
         `[createInvoiceAction] [${correlationId}] Snapshot build error: snapshot_generation_failed`,
       );
-      return { success: false, error: "invoice_snapshot_unavailable" };
+      return await handlePreworkFailure("invoice_snapshot_unavailable");
     }
 
     const today = new Date().toISOString().slice(0, 10);
 
+    // 7. Atomic create RPC invocation with mutation key
     const { data: rpcData, error: rpcError } = await supabase.rpc(
       CREATE_INVOICE_ATOMIC_RPC,
       {
@@ -308,6 +479,7 @@ export async function createInvoiceAction(
         p_snapshot_quotation: snapshotData.snapshot_quotation,
         p_snapshot_bank_details: snapshotData.snapshot_bank_details,
         p_snapshot_document_rules: snapshotData.snapshot_document_rules,
+        p_mutation_key: mutationKey,
         p_invoice_date: today,
         p_due_date: today,
       },
@@ -317,6 +489,33 @@ export async function createInvoiceAction(
       console.error(
         `[createInvoiceAction] [${correlationId}] Atomic create RPC transport error: database_transport_error`,
       );
+      // Transport uncertainty recovery: perform one reconciliation attempt
+      const transportRecovery = await reconcileInvoiceMutation(
+        supabase,
+        mutationKey,
+        serviceId,
+        quotationId,
+        invoiceType,
+        requestedAmount,
+      );
+
+      if (transportRecovery) {
+        if (transportRecovery.reconciliation_status === "MATCH") {
+          return {
+            success: true,
+            invoiceId: transportRecovery.invoice_id!,
+            invoiceNumber: transportRecovery.invoice_number!,
+            isReplayed: true,
+          };
+        }
+        if (transportRecovery.reconciliation_status === "CONFLICT") {
+          return {
+            success: false,
+            error: "MUTATION_KEY_CONFLICT",
+          };
+        }
+      }
+
       return { success: false, error: "invoice_creation_failed" };
     }
 
@@ -329,6 +528,12 @@ export async function createInvoiceAction(
     }
 
     if (rpcRow.error_code !== null) {
+      if (rpcRow.error_code === "mutation_key_conflict") {
+        return {
+          success: false,
+          error: "MUTATION_KEY_CONFLICT",
+        };
+      }
       return {
         success: false,
         error: isCreateInvoiceAtomicErrorCode(rpcRow.error_code)
@@ -353,6 +558,7 @@ export async function createInvoiceAction(
       success: true,
       invoiceId: rpcRow.invoice_id,
       invoiceNumber: rpcRow.invoice_number,
+      isReplayed: rpcRow.is_replayed === true,
     };
   } catch (err) {
     if (err instanceof UnauthorizedError) {

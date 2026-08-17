@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { join } from "node:path";
 import test, { mock } from "node:test";
 
 type ResolveResult = { url: string; shortCircuit?: true };
@@ -37,6 +39,7 @@ registerHooks({
   },
 });
 
+const MUTATION_KEY = "00000000-0000-4000-8000-000000000009";
 const QUOTATION_ID = "00000000-0000-4000-8000-000000000001";
 const SERVICE_ID = "00000000-0000-4000-8000-000000000002";
 const CUSTOMER_ID = "00000000-0000-4000-8000-000000000003";
@@ -54,6 +57,13 @@ type AtomicRpcRow = {
   error_code: string | null;
   invoice_id: string | null;
   invoice_number: string | null;
+  is_replayed?: boolean | null;
+};
+
+type ReconcileRpcRow = {
+  reconciliation_status: "MATCH" | "NOT_FOUND" | "CONFLICT";
+  invoice_id: string | null;
+  invoice_number: string | null;
 };
 
 type AtomicRpcArgs = {
@@ -69,8 +79,17 @@ type AtomicRpcArgs = {
   p_snapshot_quotation: unknown;
   p_snapshot_bank_details: unknown;
   p_snapshot_document_rules: unknown;
+  p_mutation_key: string;
   p_invoice_date: string;
   p_due_date: string;
+};
+
+type ReconcileRpcArgs = {
+  p_mutation_key: string;
+  p_service_id: string;
+  p_quotation_id: string;
+  p_invoice_type: string;
+  p_requested_amount: number | null;
 };
 
 type IssueRpcArgs = {
@@ -86,6 +105,11 @@ type ActionScenario = {
   invoiceTableCalls: number;
   invoiceInsertAttempts: number;
   documentNumberRpcCalls: number;
+  reconcileRpcCalls: number;
+  reconcileRpcArgs: ReconcileRpcArgs[];
+  reconcileRpcData: unknown;
+  reconcileRpcError: RpcTransportError;
+  reconcileRpcResponses?: Array<{ data: unknown; error: RpcTransportError }>;
   atomicRpcCalls: number;
   atomicRpcArgs: AtomicRpcArgs[];
   atomicRpcData: unknown;
@@ -96,7 +120,12 @@ type ActionScenario = {
   issueRpcError: RpcTransportError;
   snapshotCalls: number;
   snapshotPayloads: Array<Record<string, unknown>>;
+  snapshotError?: Error | null;
   operations: string[];
+  quotationError?: Error | null;
+  quotationRow?: unknown;
+  companySettingsError?: Error | null;
+  companySettingsRow?: unknown;
   issueInvoice: { id: string; status: string; is_deleted: boolean } | null;
   issueUpdateResult: { id: string } | null;
   issueUpdateError: RpcTransportError;
@@ -145,7 +174,15 @@ function createFakeSupabase() {
         },
         async maybeSingle() {
           if (table === "company_settings") {
-            return { data: { vat_mode: "not_registered" }, error: null };
+            if (scenario.companySettingsError) {
+              return { data: null, error: scenario.companySettingsError };
+            }
+            return {
+              data: scenario.companySettingsRow !== undefined
+                ? scenario.companySettingsRow
+                : { vat_mode: "not_registered" },
+              error: null,
+            };
           }
 
           if (table === "invoices" && !isInsert && !isUpdate) {
@@ -166,12 +203,17 @@ function createFakeSupabase() {
         },
         async single() {
           if (table === "quotations") {
+            if (scenario.quotationError) {
+              return { data: null, error: scenario.quotationError };
+            }
             return {
-              data: {
-                status: "approved",
-                service_id: SERVICE_ID,
-                customer_id: CUSTOMER_ID,
-              },
+              data: scenario.quotationRow !== undefined
+                ? scenario.quotationRow
+                : {
+                    status: "approved",
+                    service_id: SERVICE_ID,
+                    customer_id: CUSTOMER_ID,
+                  },
               error: null,
             };
           }
@@ -197,6 +239,21 @@ function createFakeSupabase() {
         throw new Error(
           "createInvoiceAction must not call generate_document_number",
         );
+      }
+
+      if (name === "reconcile_invoice_create_mutation") {
+        scenario.reconcileRpcCalls += 1;
+        if (args) {
+          scenario.reconcileRpcArgs.push(args as ReconcileRpcArgs);
+        }
+        if (scenario.reconcileRpcResponses && scenario.reconcileRpcResponses.length > 0) {
+          const resp = scenario.reconcileRpcResponses.shift()!;
+          return resp;
+        }
+        return {
+          data: scenario.reconcileRpcData,
+          error: scenario.reconcileRpcError,
+        };
       }
 
       if (name === "issue_invoice_atomic") {
@@ -233,6 +290,9 @@ function startScenario(
       ActionScenario,
       | "denyPermission"
       | "role"
+      | "reconcileRpcData"
+      | "reconcileRpcError"
+      | "reconcileRpcResponses"
       | "atomicRpcData"
       | "atomicRpcError"
       | "issueRpcData"
@@ -240,6 +300,11 @@ function startScenario(
       | "issueInvoice"
       | "issueUpdateResult"
       | "issueUpdateError"
+      | "quotationError"
+      | "quotationRow"
+      | "companySettingsError"
+      | "companySettingsRow"
+      | "snapshotError"
     >
   > = {},
 ) {
@@ -253,6 +318,19 @@ function startScenario(
     invoiceTableCalls: 0,
     invoiceInsertAttempts: 0,
     documentNumberRpcCalls: 0,
+    reconcileRpcCalls: 0,
+    reconcileRpcArgs: [],
+    reconcileRpcData: Object.prototype.hasOwnProperty.call(options, "reconcileRpcData")
+      ? options.reconcileRpcData
+      : [
+          {
+            reconciliation_status: "NOT_FOUND",
+            invoice_id: null,
+            invoice_number: null,
+          } satisfies ReconcileRpcRow,
+        ],
+    reconcileRpcError: options.reconcileRpcError ?? null,
+    reconcileRpcResponses: options.reconcileRpcResponses ? [...options.reconcileRpcResponses] : undefined,
     atomicRpcCalls: 0,
     atomicRpcArgs: [],
     atomicRpcData: Object.prototype.hasOwnProperty.call(options, "atomicRpcData")
@@ -262,6 +340,7 @@ function startScenario(
             error_code: null,
             invoice_id: INSERTED_INVOICE_ID,
             invoice_number: INVOICE_NUMBER,
+            is_replayed: false,
           } satisfies AtomicRpcRow,
         ],
     atomicRpcError: Object.prototype.hasOwnProperty.call(options, "atomicRpcError")
@@ -283,7 +362,12 @@ function startScenario(
       : null,
     snapshotCalls: 0,
     snapshotPayloads: [],
+    snapshotError: options.snapshotError ?? null,
     operations: [],
+    quotationError: options.quotationError ?? null,
+    quotationRow: options.quotationRow,
+    companySettingsError: options.companySettingsError ?? null,
+    companySettingsRow: options.companySettingsRow,
     issueInvoice: Object.prototype.hasOwnProperty.call(options, "issueInvoice")
       ? (options.issueInvoice ?? null)
       : {
@@ -305,6 +389,7 @@ function startScenario(
 
 function validInput() {
   return {
+    mutationKey: MUTATION_KEY,
     quotationId: QUOTATION_ID,
     serviceId: SERVICE_ID,
     invoiceType: "deposit" as const,
@@ -314,6 +399,7 @@ function validInput() {
 
 function validFinalInput() {
   return {
+    mutationKey: MUTATION_KEY,
     quotationId: QUOTATION_ID,
     serviceId: SERVICE_ID,
     invoiceType: "final" as const,
@@ -399,6 +485,9 @@ mock.module("./snapshots.ts", {
     buildInvoiceSnapshotData: () => {
       const scenario = currentScenario();
       scenario.snapshotCalls += 1;
+      if (scenario.snapshotError) {
+        throw scenario.snapshotError;
+      }
       const snapshotPayload = {
         snapshot_seller: { source: "test" },
         snapshot_buyer: { source: "test" },
@@ -417,6 +506,10 @@ mock.module("./snapshots.ts", {
 
 const { createInvoiceAction, issueInvoiceAction } = await import("./actions.ts");
 
+// =========================================================================
+// 1. Role and Permission Tests (Baseline)
+// =========================================================================
+
 for (const role of ["admin", "manager"] as const) {
   test(`createInvoiceAction permits ${role} and uses one atomic RPC`, async () => {
     const scenario = startScenario({ role });
@@ -427,7 +520,9 @@ for (const role of ["admin", "manager"] as const) {
       success: true,
       invoiceId: INSERTED_INVOICE_ID,
       invoiceNumber: INVOICE_NUMBER,
+      isReplayed: false,
     });
+    assert.equal(scenario.reconcileRpcCalls, 1);
     assert.equal(scenario.atomicRpcCalls, 1);
     assert.equal(scenario.snapshotCalls, 1);
     assertNoDirectCreateWrite(scenario);
@@ -465,6 +560,7 @@ for (const [label, role] of [
     assert.deepEqual(scenario.operations, ["permission"]);
     assert.equal(scenario.clientCalls, 0);
     assert.equal(scenario.databaseCalls, 0);
+    assert.equal(scenario.reconcileRpcCalls, 0);
     assert.equal(scenario.atomicRpcCalls, 0);
     assert.equal(scenario.snapshotCalls, 0);
   });
@@ -492,12 +588,17 @@ test("createInvoiceAction rejects forbidden users before creating a privileged c
   assert.equal(scenario.atomicRpcCalls, 0);
 });
 
+// =========================================================================
+// 2. Deposit & Final Route Invariants (Baseline)
+// =========================================================================
+
 test("createInvoiceAction Deposit routes through create_invoice_atomic with locked args", async () => {
   const scenario = startScenario();
 
   const result = await createInvoiceAction(validInput());
 
   assert.equal(result.success, true);
+  assert.equal(scenario.reconcileRpcCalls, 1);
   assert.equal(scenario.atomicRpcCalls, 1);
   assert.equal(scenario.atomicRpcArgs.length, 1);
 
@@ -514,6 +615,7 @@ test("createInvoiceAction Deposit routes through create_invoice_atomic with lock
   assert.deepEqual(args.p_snapshot_quotation, { source: "test" });
   assert.deepEqual(args.p_snapshot_bank_details, { source: "test" });
   assert.deepEqual(args.p_snapshot_document_rules, { source: "test" });
+  assert.equal(args.p_mutation_key, MUTATION_KEY);
   assert.match(args.p_invoice_date, /^\d{4}-\d{2}-\d{2}$/);
   assert.match(args.p_due_date, /^\d{4}-\d{2}-\d{2}$/);
   assertNoDirectCreateWrite(scenario);
@@ -528,10 +630,13 @@ test("createInvoiceAction Final routes through create_invoice_atomic with null a
     success: true,
     invoiceId: INSERTED_INVOICE_ID,
     invoiceNumber: INVOICE_NUMBER,
+    isReplayed: false,
   });
+  assert.equal(scenario.reconcileRpcCalls, 1);
   assert.equal(scenario.atomicRpcCalls, 1);
   assert.equal(scenario.atomicRpcArgs[0]?.p_invoice_type, "final");
   assert.equal(scenario.atomicRpcArgs[0]?.p_requested_amount, null);
+  assert.equal(scenario.atomicRpcArgs[0]?.p_mutation_key, MUTATION_KEY);
   assertNoDirectCreateWrite(scenario);
 });
 
@@ -542,6 +647,7 @@ test("createInvoiceAction returns RPC invoice identity without a second create w
         error_code: null,
         invoice_id: "00000000-0000-4000-8000-000000000099",
         invoice_number: "INV-2026-0099",
+        is_replayed: false,
       },
     ],
   });
@@ -552,7 +658,9 @@ test("createInvoiceAction returns RPC invoice identity without a second create w
     success: true,
     invoiceId: "00000000-0000-4000-8000-000000000099",
     invoiceNumber: "INV-2026-0099",
+    isReplayed: false,
   });
+  assert.equal(scenario.reconcileRpcCalls, 1);
   assert.equal(scenario.atomicRpcCalls, 1);
   assertNoDirectCreateWrite(scenario);
   assert.ok(
@@ -564,6 +672,10 @@ test("createInvoiceAction returns RPC invoice identity without a second create w
       scenario.operations.indexOf("rpc:create_invoice_atomic"),
   );
 });
+
+// =========================================================================
+// 3. Error Code Mappings & Fail-Closed Checks (Baseline 26 + 6 codes)
+// =========================================================================
 
 for (const errorCode of [
   "invalid_invoice_input",
@@ -578,11 +690,11 @@ for (const errorCode of [
   "quotation_not_found",
   "quotation_not_approved",
   "quotation_service_mismatch",
+  "deposit_invoice_already_exists",
+  "final_invoice_already_exists",
   "billing_scope_authority_unavailable",
   "billing_scope_inactive",
   "invoice_exposure_unavailable",
-  "deposit_invoice_already_exists",
-  "final_invoice_already_exists",
   "prior_invoices_exceed_billing_scope_ceiling",
   "prior_invoices_exceed_quotation_total",
   "invoice_amount_exceeds_ceiling",
@@ -600,6 +712,7 @@ for (const errorCode of [
           error_code: errorCode,
           invoice_id: null,
           invoice_number: null,
+          is_replayed: false,
         },
       ],
     });
@@ -614,6 +727,7 @@ for (const errorCode of [
     );
 
     assert.deepEqual(result, { success: false, error: errorCode });
+    assert.equal(scenario.reconcileRpcCalls, 1);
     assert.equal(scenario.atomicRpcCalls, 1);
     assertNoDirectCreateWrite(scenario);
   });
@@ -634,6 +748,7 @@ for (const errorCode of [
           error_code: errorCode,
           invoice_id: null,
           invoice_number: null,
+          is_replayed: false,
         },
       ],
     });
@@ -644,6 +759,7 @@ for (const errorCode of [
       success: false,
       error: "invoice_creation_failed",
     });
+    assert.equal(scenario.reconcileRpcCalls, 1);
     assert.equal(scenario.atomicRpcCalls, 1);
     assertNoDirectCreateWrite(scenario);
   });
@@ -680,6 +796,7 @@ test("createInvoiceAction fails closed on malformed RPC success row", async () =
         error_code: null,
         invoice_id: null,
         invoice_number: null,
+        is_replayed: false,
       },
     ],
   });
@@ -701,11 +818,13 @@ test("createInvoiceAction fails closed on multi-row RPC payload", async () => {
         error_code: null,
         invoice_id: INSERTED_INVOICE_ID,
         invoice_number: INVOICE_NUMBER,
+        is_replayed: false,
       },
       {
         error_code: null,
         invoice_id: INSERTED_INVOICE_ID,
         invoice_number: INVOICE_NUMBER,
+        is_replayed: false,
       },
     ],
   });
@@ -732,6 +851,7 @@ test("createInvoiceAction rejects Final with client amount before RPC", async ()
     success: false,
     error: "invalid_invoice_input",
   });
+  assert.equal(scenario.reconcileRpcCalls, 0);
   assert.equal(scenario.atomicRpcCalls, 0);
   assert.equal(scenario.clientCalls, 0);
 });
@@ -740,6 +860,7 @@ test("createInvoiceAction rejects missing Deposit amount before RPC", async () =
   const scenario = startScenario();
 
   const result = await createInvoiceAction({
+    mutationKey: MUTATION_KEY,
     quotationId: QUOTATION_ID,
     serviceId: SERVICE_ID,
     invoiceType: "deposit",
@@ -749,6 +870,7 @@ test("createInvoiceAction rejects missing Deposit amount before RPC", async () =
     success: false,
     error: "deposit_amount_required",
   });
+  assert.equal(scenario.reconcileRpcCalls, 0);
   assert.equal(scenario.atomicRpcCalls, 0);
 });
 
@@ -756,6 +878,7 @@ test("createInvoiceAction rejects invalid schema input before privileged client"
   const scenario = startScenario();
 
   const result = await createInvoiceAction({
+    mutationKey: MUTATION_KEY,
     quotationId: "not-a-uuid",
     serviceId: SERVICE_ID,
     invoiceType: "deposit",
@@ -767,6 +890,7 @@ test("createInvoiceAction rejects invalid schema input before privileged client"
     error: "invalid_invoice_input",
   });
   assert.equal(scenario.clientCalls, 0);
+  assert.equal(scenario.reconcileRpcCalls, 0);
   assert.equal(scenario.atomicRpcCalls, 0);
 });
 
@@ -787,6 +911,10 @@ test("createInvoiceAction never calls authority or exposure helpers", async () =
   assert.equal(scenario.atomicRpcCalls, 1);
   assertNoDirectCreateWrite(scenario);
 });
+
+// =========================================================================
+// 4. Issue Action Invariants (Baseline)
+// =========================================================================
 
 test("issueInvoiceAction issues a draft invoice", async () => {
   const scenario = startScenario();
@@ -913,12 +1041,10 @@ test("createInvoiceAction logs operational correlation and sanitizes raw errors 
     const result = await createInvoiceAction(validInput());
     assert.deepEqual(result, { success: false, error: "invoice_creation_failed" });
     assert.equal(loggedErrors.length, 1);
-    // Stable operational format: [createInvoiceAction] [<uuid>] Atomic create RPC transport error: database_transport_error
     assert.match(
       loggedErrors[0],
       /^\[createInvoiceAction\] \[[0-9a-f-]+\] Atomic create RPC transport error: database_transport_error$/,
     );
-    // Must NOT contain sensitive database error text or passwords
     assert.equal(loggedErrors[0].includes("password"), false);
     assert.equal(loggedErrors[0].includes("g7_crm"), false);
   } finally {
@@ -952,4 +1078,452 @@ test("issueInvoiceAction logs operational correlation and sanitizes raw errors o
   } finally {
     console.error = originalConsoleError;
   }
+});
+
+// =========================================================================
+// 5. Option 1 Replay Safety, Intent Gates, and Recovery Tests (G8)
+// =========================================================================
+
+test("createInvoiceAction rejects missing mutation key before reconciliation", async () => {
+  const scenario = startScenario();
+
+  const result = await createInvoiceAction({
+    quotationId: QUOTATION_ID,
+    serviceId: SERVICE_ID,
+    invoiceType: "deposit",
+    requestedAmount: 100,
+  });
+
+  assert.deepEqual(result, {
+    success: false,
+    error: "invalid_invoice_input",
+  });
+  assert.equal(scenario.clientCalls, 0);
+  assert.equal(scenario.reconcileRpcCalls, 0);
+});
+
+test("createInvoiceAction rejects empty or whitespace mutation key before reconciliation", async () => {
+  const scenario = startScenario();
+
+  for (const emptyKey of ["", "   ", "\t"]) {
+    const result = await createInvoiceAction({
+      mutationKey: emptyKey,
+      quotationId: QUOTATION_ID,
+      serviceId: SERVICE_ID,
+      invoiceType: "deposit",
+      requestedAmount: 100,
+    });
+
+    assert.deepEqual(result, {
+      success: false,
+      error: "invalid_invoice_input",
+    });
+  }
+  assert.equal(scenario.reconcileRpcCalls, 0);
+});
+
+test("createInvoiceAction rejects non-positive or non-finite Deposit amount before reconciliation", async () => {
+  const scenario = startScenario();
+
+  for (const invalidAmount of [0, -10, NaN, Infinity, -Infinity]) {
+    const result = await createInvoiceAction({
+      mutationKey: MUTATION_KEY,
+      quotationId: QUOTATION_ID,
+      serviceId: SERVICE_ID,
+      invoiceType: "deposit",
+      requestedAmount: invalidAmount,
+    });
+
+    assert.deepEqual(result, {
+      success: false,
+      error: "invalid_invoice_input",
+    });
+  }
+  assert.equal(scenario.reconcileRpcCalls, 0);
+});
+
+test("createInvoiceAction rejects Deposit amount with more than 2 decimal places before reconciliation", async () => {
+  const scenario = startScenario();
+
+  const result = await createInvoiceAction({
+    mutationKey: MUTATION_KEY,
+    quotationId: QUOTATION_ID,
+    serviceId: SERVICE_ID,
+    invoiceType: "deposit",
+    requestedAmount: 100.555,
+  });
+
+  assert.deepEqual(result, {
+    success: false,
+    error: "invalid_deposit_amount",
+  });
+  assert.equal(scenario.reconcileRpcCalls, 0);
+});
+
+test("initial reconciliation MATCH returns original invoice immediately and bypasses prework", async () => {
+  const scenario = startScenario({
+    reconcileRpcData: [
+      {
+        reconciliation_status: "MATCH",
+        invoice_id: "00000000-0000-4000-8000-000000000077",
+        invoice_number: "INV-2026-0077",
+      } satisfies ReconcileRpcRow,
+    ],
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: true,
+    invoiceId: "00000000-0000-4000-8000-000000000077",
+    invoiceNumber: "INV-2026-0077",
+    isReplayed: true,
+  });
+  assert.equal(scenario.reconcileRpcCalls, 1);
+  assert.deepEqual(scenario.reconcileRpcArgs[0], {
+    p_mutation_key: MUTATION_KEY,
+    p_service_id: SERVICE_ID,
+    p_quotation_id: QUOTATION_ID,
+    p_invoice_type: "deposit",
+    p_requested_amount: 100,
+  });
+  assert.equal(scenario.databaseCalls, 0);
+  assert.equal(scenario.snapshotCalls, 0);
+  assert.equal(scenario.atomicRpcCalls, 0);
+  assertNoDirectCreateWrite(scenario);
+});
+
+test("initial reconciliation CONFLICT returns MUTATION_KEY_CONFLICT immediately and bypasses prework", async () => {
+  const scenario = startScenario({
+    reconcileRpcData: [
+      {
+        reconciliation_status: "CONFLICT",
+        invoice_id: null,
+        invoice_number: null,
+      } satisfies ReconcileRpcRow,
+    ],
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: false,
+    error: "MUTATION_KEY_CONFLICT",
+  });
+  assert.equal(scenario.reconcileRpcCalls, 1);
+  assert.equal(scenario.databaseCalls, 0);
+  assert.equal(scenario.snapshotCalls, 0);
+  assert.equal(scenario.atomicRpcCalls, 0);
+});
+
+test("initial reconciliation transport failure returns safe error without leak", async () => {
+  const scenario = startScenario({
+    reconcileRpcData: null,
+    reconcileRpcError: { message: "connection timeout" },
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: false,
+    error: "invoice_creation_failed",
+  });
+  assert.equal(scenario.reconcileRpcCalls, 1);
+  assert.equal(scenario.atomicRpcCalls, 0);
+});
+
+test("initial NOT_FOUND + quotation lookup failure + recovery MATCH returns success", async () => {
+  const scenario = startScenario({
+    reconcileRpcResponses: [
+      {
+        data: [{ reconciliation_status: "NOT_FOUND", invoice_id: null, invoice_number: null }],
+        error: null,
+      },
+      {
+        data: [{ reconciliation_status: "MATCH", invoice_id: INSERTED_INVOICE_ID, invoice_number: INVOICE_NUMBER }],
+        error: null,
+      },
+    ],
+    quotationError: new Error("Quotation locked/not found"),
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: true,
+    invoiceId: INSERTED_INVOICE_ID,
+    invoiceNumber: INVOICE_NUMBER,
+    isReplayed: true,
+  });
+  assert.equal(scenario.reconcileRpcCalls, 2);
+  assert.equal(scenario.atomicRpcCalls, 0);
+});
+
+test("initial NOT_FOUND + company settings failure + recovery MATCH returns success", async () => {
+  const scenario = startScenario({
+    reconcileRpcResponses: [
+      {
+        data: [{ reconciliation_status: "NOT_FOUND", invoice_id: null, invoice_number: null }],
+        error: null,
+      },
+      {
+        data: [{ reconciliation_status: "MATCH", invoice_id: INSERTED_INVOICE_ID, invoice_number: INVOICE_NUMBER }],
+        error: null,
+      },
+    ],
+    companySettingsError: new Error("Company settings unavailable"),
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: true,
+    invoiceId: INSERTED_INVOICE_ID,
+    invoiceNumber: INVOICE_NUMBER,
+    isReplayed: true,
+  });
+  assert.equal(scenario.reconcileRpcCalls, 2);
+});
+
+test("initial NOT_FOUND + snapshot build failure + recovery MATCH returns success", async () => {
+  const scenario = startScenario({
+    reconcileRpcResponses: [
+      {
+        data: [{ reconciliation_status: "NOT_FOUND", invoice_id: null, invoice_number: null }],
+        error: null,
+      },
+      {
+        data: [{ reconciliation_status: "MATCH", invoice_id: INSERTED_INVOICE_ID, invoice_number: INVOICE_NUMBER }],
+        error: null,
+      },
+    ],
+    snapshotError: new Error("Snapshot building failed"),
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: true,
+    invoiceId: INSERTED_INVOICE_ID,
+    invoiceNumber: INVOICE_NUMBER,
+    isReplayed: true,
+  });
+  assert.equal(scenario.reconcileRpcCalls, 2);
+});
+
+test("initial NOT_FOUND + prework failure + recovery NOT_FOUND returns genuine prework error", async () => {
+  const scenario = startScenario({
+    reconcileRpcResponses: [
+      {
+        data: [{ reconciliation_status: "NOT_FOUND", invoice_id: null, invoice_number: null }],
+        error: null,
+      },
+      {
+        data: [{ reconciliation_status: "NOT_FOUND", invoice_id: null, invoice_number: null }],
+        error: null,
+      },
+    ],
+    quotationError: new Error("Not found"),
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: false,
+    error: "quotation_not_found",
+  });
+  assert.equal(scenario.reconcileRpcCalls, 2);
+});
+
+test("initial NOT_FOUND + prework failure + recovery CONFLICT returns MUTATION_KEY_CONFLICT", async () => {
+  const scenario = startScenario({
+    reconcileRpcResponses: [
+      {
+        data: [{ reconciliation_status: "NOT_FOUND", invoice_id: null, invoice_number: null }],
+        error: null,
+      },
+      {
+        data: [{ reconciliation_status: "CONFLICT", invoice_id: null, invoice_number: null }],
+        error: null,
+      },
+    ],
+    quotationError: new Error("Not found"),
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: false,
+    error: "MUTATION_KEY_CONFLICT",
+  });
+  assert.equal(scenario.reconcileRpcCalls, 2);
+});
+
+test("create RPC transport failure + recovery MATCH returns success", async () => {
+  const scenario = startScenario({
+    reconcileRpcResponses: [
+      {
+        data: [{ reconciliation_status: "NOT_FOUND", invoice_id: null, invoice_number: null }],
+        error: null,
+      },
+      {
+        data: [{ reconciliation_status: "MATCH", invoice_id: INSERTED_INVOICE_ID, invoice_number: INVOICE_NUMBER }],
+        error: null,
+      },
+    ],
+    atomicRpcData: null,
+    atomicRpcError: { message: "504 Gateway Timeout" },
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: true,
+    invoiceId: INSERTED_INVOICE_ID,
+    invoiceNumber: INVOICE_NUMBER,
+    isReplayed: true,
+  });
+  assert.equal(scenario.atomicRpcCalls, 1);
+  assert.equal(scenario.reconcileRpcCalls, 2);
+});
+
+test("create RPC transport failure + recovery CONFLICT returns MUTATION_KEY_CONFLICT", async () => {
+  startScenario({
+    reconcileRpcResponses: [
+      {
+        data: [{ reconciliation_status: "NOT_FOUND", invoice_id: null, invoice_number: null }],
+        error: null,
+      },
+      {
+        data: [{ reconciliation_status: "CONFLICT", invoice_id: null, invoice_number: null }],
+        error: null,
+      },
+    ],
+    atomicRpcData: null,
+    atomicRpcError: { message: "Network error" },
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: false,
+    error: "MUTATION_KEY_CONFLICT",
+  });
+});
+
+test("create RPC transport failure + recovery NOT_FOUND returns invoice_creation_failed", async () => {
+  startScenario({
+    reconcileRpcResponses: [
+      {
+        data: [{ reconciliation_status: "NOT_FOUND", invoice_id: null, invoice_number: null }],
+        error: null,
+      },
+      {
+        data: [{ reconciliation_status: "NOT_FOUND", invoice_id: null, invoice_number: null }],
+        error: null,
+      },
+    ],
+    atomicRpcData: null,
+    atomicRpcError: { message: "Network error" },
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: false,
+    error: "invoice_creation_failed",
+  });
+});
+
+test("createInvoiceAction maps atomic RPC is_replayed: true properly", async () => {
+  startScenario({
+    atomicRpcData: [
+      {
+        error_code: null,
+        invoice_id: INSERTED_INVOICE_ID,
+        invoice_number: INVOICE_NUMBER,
+        is_replayed: true,
+      },
+    ],
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: true,
+    invoiceId: INSERTED_INVOICE_ID,
+    invoiceNumber: INVOICE_NUMBER,
+    isReplayed: true,
+  });
+});
+
+test("createInvoiceAction maps atomic RPC mutation_key_conflict error to MUTATION_KEY_CONFLICT", async () => {
+  startScenario({
+    atomicRpcData: [
+      {
+        error_code: "mutation_key_conflict",
+        invoice_id: null,
+        invoice_number: null,
+        is_replayed: false,
+      },
+    ],
+  });
+
+  const result = await createInvoiceAction(validInput());
+
+  assert.deepEqual(result, {
+    success: false,
+    error: "MUTATION_KEY_CONFLICT",
+  });
+});
+
+// =========================================================================
+// 6. Migration Source Contract Tests (Option 1 DB Invariants)
+// =========================================================================
+
+const migrationPath = join(
+  import.meta.dirname,
+  "../../../supabase/migrations/20260817140000_g8_invoice_create_replay_safety.sql",
+);
+const migrationSql = readFileSync(migrationPath, "utf8");
+
+test("migration source contract enforces forward-only transactional Option 1 rules", () => {
+  assert.match(migrationSql, /^BEGIN;/m, "Migration must be wrapped in explicit BEGIN");
+  assert.match(migrationSql, /COMMIT;\s*$/, "Migration must end with explicit COMMIT");
+
+  // Schema alterations
+  assert.match(migrationSql, /ALTER TABLE public\.invoices[\s\S]*?ADD COLUMN IF NOT EXISTS mutation_key text NULL/i);
+  assert.match(migrationSql, /ADD COLUMN IF NOT EXISTS mutation_payload jsonb NULL/i);
+  assert.match(migrationSql, /CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_mutation_key\s+ON public\.invoices\s*\(mutation_key\)\s+WHERE mutation_key IS NOT NULL;/i);
+
+  // ALL-ROWS lookup (no soft-delete or status filter)
+  assert.match(migrationSql, /SELECT i\.id, i\.invoice_number, i\.mutation_payload[\s\S]*?FROM public\.invoices i[\s\S]*?WHERE i\.mutation_key = v_mutation_key/i);
+  assert.doesNotMatch(migrationSql, /WHERE i\.mutation_key = v_mutation_key\s+AND i\.is_deleted = false/i);
+  assert.doesNotMatch(migrationSql, /WHERE i\.mutation_key = v_mutation_key\s+AND i\.status/i);
+
+  // Canonical helper
+  assert.match(migrationSql, /CREATE OR REPLACE FUNCTION public\._canonical_invoice_create_mutation/i);
+  assert.match(migrationSql, /REVOKE ALL ON FUNCTION public\._canonical_invoice_create_mutation\(uuid, uuid, text, numeric\) FROM PUBLIC, anon, authenticated;/i);
+  assert.match(migrationSql, /GRANT EXECUTE ON FUNCTION public\._canonical_invoice_create_mutation\(uuid, uuid, text, numeric\) TO service_role;/i);
+
+  // Advisory lock
+  assert.match(migrationSql, /PERFORM pg_advisory_xact_lock\(hashtext\('invoice_mutation_key:' \|\| v_mutation_key\)\);/i);
+
+  // Stale overload removal
+  assert.match(migrationSql, /DROP FUNCTION IF EXISTS public\.create_invoice_atomic\s*\([\s\S]*?uuid,\s*uuid,\s*text,\s*numeric,\s*text,\s*text,\s*text,\s*jsonb,\s*jsonb,\s*jsonb,\s*jsonb,\s*jsonb,\s*date,\s*date\s*\);/i);
+  assert.match(migrationSql, /DROP FUNCTION IF EXISTS public\.create_invoice_atomic_legacy\s*\([\s\S]*?uuid,\s*uuid,\s*text,\s*numeric,\s*text,\s*text,\s*text,\s*jsonb,\s*jsonb,\s*jsonb,\s*jsonb,\s*jsonb,\s*date,\s*date\s*\);/i);
+
+  // New signatures
+  assert.match(migrationSql, /CREATE OR REPLACE FUNCTION public\.reconcile_invoice_create_mutation\([\s\S]*?p_mutation_key text,[\s\S]*?p_service_id uuid,[\s\S]*?p_quotation_id uuid,[\s\S]*?p_invoice_type text,[\s\S]*?p_requested_amount numeric[\s\S]*?\)\s*RETURNS TABLE \(\s*reconciliation_status text,\s*invoice_id uuid,\s*invoice_number text\s*\)/i);
+  assert.match(migrationSql, /CREATE OR REPLACE FUNCTION public\.create_invoice_atomic\([\s\S]*?p_mutation_key text,[\s\S]*?p_invoice_date date DEFAULT CURRENT_DATE,[\s\S]*?p_due_date date DEFAULT CURRENT_DATE[\s\S]*?\)\s*RETURNS TABLE \(\s*error_code text,\s*invoice_id uuid,\s*invoice_number text,\s*is_replayed boolean\s*\)/i);
+  assert.match(migrationSql, /CREATE OR REPLACE FUNCTION public\.create_invoice_atomic_legacy\([\s\S]*?p_mutation_key text,[\s\S]*?p_mutation_payload jsonb,[\s\S]*?p_invoice_date date DEFAULT CURRENT_DATE,[\s\S]*?p_due_date date DEFAULT CURRENT_DATE[\s\S]*?\)/i);
+
+  // Immutability trigger checks
+  assert.match(migrationSql, /OLD\.mutation_key IS DISTINCT FROM NEW\.mutation_key/i);
+  assert.match(migrationSql, /OLD\.mutation_payload IS DISTINCT FROM NEW\.mutation_payload/i);
+
+  // Security & Grants
+  assert.match(migrationSql, /GRANT EXECUTE ON FUNCTION public\.reconcile_invoice_create_mutation[\s\S]*?TO service_role;/i);
+  assert.match(migrationSql, /GRANT EXECUTE ON FUNCTION public\.create_invoice_atomic[\s\S]*?TO service_role;/i);
+  assert.match(migrationSql, /REVOKE ALL ON FUNCTION public\.create_invoice_atomic_legacy[\s\S]*?FROM PUBLIC, anon, authenticated, service_role;/i);
 });

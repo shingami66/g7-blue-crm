@@ -38,6 +38,7 @@ type DepositActionDictionary = {
     unauthorized: string;
     forbidden: string;
     fallback: string;
+    mutationKeyConflict?: string;
   };
 };
 
@@ -116,6 +117,8 @@ export function CreateDepositInvoiceAction({
   const [amountStr, setAmountStr] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [mutationKey, setMutationKey] = useState(() => crypto.randomUUID());
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const remainingUsable = isDepositRemainingAuthorityUsable(remainingAmount);
   const clientMax = getDepositClientMax(remainingAmount);
@@ -150,8 +153,11 @@ export function CreateDepositInvoiceAction({
       return;
     }
 
+    setHasSubmitted(true);
+
     startTransition(async () => {
       const result = await createInvoiceAction({
+        mutationKey,
         quotationId,
         serviceId,
         invoiceType: "deposit",
@@ -166,11 +172,20 @@ export function CreateDepositInvoiceAction({
           ),
         );
         setAmountStr("");
+        setMutationKey(crypto.randomUUID());
+        setHasSubmitted(false);
         router.refresh();
       } else {
-        setError(
-          presentDepositInvoiceActionError(result.error, dictionary.errors),
-        );
+        if (result.error === "MUTATION_KEY_CONFLICT") {
+          setError(
+            dictionary.errors.mutationKeyConflict ??
+              "A conflicting request with this mutation key already exists.",
+          );
+        } else {
+          setError(
+            presentDepositInvoiceActionError(result.error, dictionary.errors),
+          );
+        }
       }
     });
   };
@@ -202,7 +217,13 @@ export function CreateDepositInvoiceAction({
             step="0.01"
             max={clientMax ?? undefined}
             value={amountStr}
-            onChange={(e) => setAmountStr(e.target.value)}
+            onChange={(e) => {
+              setAmountStr(e.target.value);
+              if (hasSubmitted) {
+                setMutationKey(crypto.randomUUID());
+                setHasSubmitted(false);
+              }
+            }}
             disabled={isPending}
             dir="ltr"
             className="flex-1 px-3 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface text-[14px] tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/50"

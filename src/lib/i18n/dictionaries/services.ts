@@ -838,6 +838,7 @@ export interface ServicesDictionary {
         invoiceExposureUnavailable: string;
         serviceLifecycleUnavailable: string;
         serviceNotEligibleForDeposit: string;
+        mutationKeyConflict: string;
       };
     };
     finalAction: {
@@ -859,6 +860,7 @@ export interface ServicesDictionary {
         fallback: string;
         serviceLifecycleUnavailable: string;
         serviceNotEligibleForFinal: string;
+        mutationKeyConflict: string;
       };
     };
   };
@@ -2041,6 +2043,7 @@ const servicesDictionaryEn: ServicesDictionary = {
         invoiceExposureUnavailable: "Invoice exposure is unavailable. Deposit creation is disabled.",
         serviceLifecycleUnavailable: "Service lifecycle is unavailable.",
         serviceNotEligibleForDeposit: "The current service status does not allow a new deposit invoice.",
+        mutationKeyConflict: "A conflicting request with this mutation key already exists.",
       },
     },
     finalAction: {
@@ -2062,6 +2065,7 @@ const servicesDictionaryEn: ServicesDictionary = {
         fallback: "Unable to create final invoice. Please try again.",
         serviceLifecycleUnavailable: "Service lifecycle is unavailable.",
         serviceNotEligibleForFinal: "The current service status does not allow a new final invoice.",
+        mutationKeyConflict: "A conflicting request with this mutation key already exists.",
       },
     },
   },
@@ -3453,6 +3457,7 @@ const servicesDictionaryAr: ServicesDictionary = {
         invoiceExposureUnavailable: "التعرض للفاتورة غير متاح. تم تعطيل إنشاء فاتورة الدفعة المقدمة.",
         serviceLifecycleUnavailable: "دورة حياة الخدمة غير متاحة.",
         serviceNotEligibleForDeposit: "حالة الخدمة الحالية لا تسمح بإنشاء فاتورة دفعة مقدمة جديدة.",
+        mutationKeyConflict: "يوجد طلب متعارض بهذا المفتاح مسبقاً.",
       },
     },
     finalAction: {
@@ -3474,6 +3479,7 @@ const servicesDictionaryAr: ServicesDictionary = {
         fallback: "تعذر إنشاء الفاتورة النهائية. يرجى المحاولة مرة أخرى.",
         serviceLifecycleUnavailable: "دورة حياة الخدمة غير متاحة.",
         serviceNotEligibleForFinal: "حالة الخدمة الحالية لا تسمح بإنشاء فاتورة نهائية جديدة.",
+        mutationKeyConflict: "يوجد طلب متعارض بهذا المفتاح مسبقاً.",
       },
     },
   },
