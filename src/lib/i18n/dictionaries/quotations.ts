@@ -142,6 +142,7 @@ export interface QuotationsDictionary {
       discountExceedsSubtotal: string;
       failedToUpdate: string;
       failedToCreate: string;
+      mutationKeyConflict: string;
     };
     serviceStatuses: {
       Inquiry: string;
@@ -364,6 +365,8 @@ const quotationsDictionaryEn: QuotationsDictionary = {
       discountExceedsSubtotal: "Discount cannot exceed subtotal. Reduce the discount or adjust line items.",
       failedToUpdate: "Failed to update quotation.",
       failedToCreate: "Failed to create quotation.",
+      mutationKeyConflict:
+        "A Quotation creation attempt with these request details already exists. Start a new Quotation creation attempt and try again.",
     },
     serviceStatuses: {
       Inquiry: "Inquiry",
@@ -592,6 +595,8 @@ const quotationsDictionaryAr: QuotationsDictionary = {
       discountExceedsSubtotal: "لا يمكن أن يتجاوز الخصم المجموع الفرعي. قلل قيمة الخصم أو عدل البنود.",
       failedToUpdate: "تعذر تحديث عرض السعر.",
       failedToCreate: "تعذر إنشاء عرض السعر.",
+      mutationKeyConflict:
+        "توجد محاولة إنشاء عرض سعر مسبقة بتفاصيل مختلفة لنفس الطلب. يرجى بدء محاولة جديدة والمحاولة مرة أخرى.",
     },
     serviceStatuses: {
       Inquiry: "استفسار",

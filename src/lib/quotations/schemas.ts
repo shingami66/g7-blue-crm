@@ -9,8 +9,15 @@ export const quotationItemInputSchema = z.object({
 });
 
 export const createQuotationSchema = z.object({
+  mutation_key: z.preprocess(
+    (val) => (typeof val === "string" ? val.trim() : val),
+    z.string().min(1, "Mutation key is required")
+  ),
   service_id: z.string().uuid("Service is required"),
-  event: z.string().min(1, "Event is required"),
+  event: z.preprocess(
+    (val) => (typeof val === "string" ? val.trim() : val),
+    z.string().min(1, "Event is required")
+  ),
   date: z.string().min(1, "Date is required"),
   valid_until: z.string().optional().nullable(),
   discount: z.coerce.number().nonnegative("Discount cannot be negative").default(0),

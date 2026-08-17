@@ -86,6 +86,11 @@
       "merge_system_rule": true
     },
     {
+      "path": "supabase/migrations/**",
+      "rule": "PostgreSQL/Supabase migration critical review: inspect transaction safety and rollback behavior; migration-history and historical-row compatibility; destructive DDL, table rewrites, unsafe backfills, data loss, duplicate rows, orphan risks, foreign-key integrity, unique and partial-index semantics including NULL behavior; function signature changes, overload residue, stale executable RPC bypasses, grants, revokes, RLS interaction, privilege escalation, SECURITY DEFINER ownership and fixed search_path; authoritative server calculations, exact numeric and financial semantics, generated identifiers and document-number consumption; transaction boundaries, partial failure, concurrency, advisory-lock correctness, race conditions, TOCTOU, replay and idempotency behavior; deterministic canonical payload comparison; retry-after-success and lost-response behavior; audit-history preservation; existing caller compatibility; and safe DEV/DEMO apply characteristics. Treat data loss, authorization bypass, financial corruption, duplicate durable mutation, incorrect replay reconciliation, privilege escalation, or unsafe migration application as BLOCKING or MATERIAL according to impact. Report file/line evidence only. Never execute SQL, connect to a database, apply migrations, or mutate migration history.",
+      "merge_system_rule": true
+    },
+    {
       "path": "supabase/**",
       "rule": "Financial/RLS/RPC boundary: inspect policies, grants, SECURITY DEFINER functions, tenant scope, authoritative server calculations, transaction boundaries, concurrency, idempotency, audit history, and safe handling of financial data. Report evidence only; never execute SQL or apply migrations.",
       "merge_system_rule": true

@@ -13,9 +13,22 @@ import {
 import { createQuotationSchema, updateQuotationSchema } from "./schemas";
 import type { QuotationRpcResult } from "./types";
 
+export type QuotationActionErrorCode =
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "RATE_LIMITED"
+  | "INVALID_INPUT"
+  | "SERVICE_UNAVAILABLE"
+  | "SERVICE_STATUS_INVALID"
+  | "INVALID_VALIDITY_WINDOW"
+  | "MUTATION_KEY_CONFLICT"
+  | "CREATE_FAILED"
+  | "UNKNOWN_ERROR";
+
 export type ActionResult<T = void> = {
   success: boolean;
   error?: string;
+  code?: QuotationActionErrorCode;
   data?: T;
 };
 
@@ -77,22 +90,22 @@ export async function createQuotation(input: unknown): Promise<ActionResult<Quot
     await requirePermission("services:read");
 
     if (!consumeRateLimit("createQuotation", user.clerk_user_id, CREATE_QUOTATION_RATE_LIMIT)) {
-      return { success: false, error: RATE_LIMIT_ERROR };
+      return { success: false, code: "RATE_LIMITED", error: RATE_LIMIT_ERROR };
     }
 
     const parsed = createQuotationSchema.safeParse(input);
 
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message ?? "Validation failed";
-      return { success: false, error: firstError };
+      return { success: false, code: "INVALID_INPUT", error: firstError };
     }
 
     const service = await getServiceById(parsed.data.service_id);
     if (!service) {
-      return { success: false, error: "Service not found or unavailable." };
+      return { success: false, code: "SERVICE_UNAVAILABLE", error: "Service not found or unavailable." };
     }
     if (!serviceCanReceiveQuotation(service.status)) {
-      return { success: false, error: "Quotations can only be created for Inquiry or Quoted services." };
+      return { success: false, code: "SERVICE_STATUS_INVALID", error: "Quotations can only be created for Inquiry or Quoted services." };
     }
 
     const validityError = validateQuotationValidityWindow(
@@ -101,7 +114,7 @@ export async function createQuotation(input: unknown): Promise<ActionResult<Quot
       service.eventStartDate
     );
     if (validityError) {
-      return { success: false, error: validityError };
+      return { success: false, code: "INVALID_VALIDITY_WINDOW", error: validityError };
     }
 
     const { items, ...quotationData } = parsed.data;
@@ -115,17 +128,58 @@ export async function createQuotation(input: unknown): Promise<ActionResult<Quot
 
     if (error) {
       console.error("[createQuotation] Supabase error:", error.message);
-      return { success: false, error: "Failed to create quotation. Please try again." };
+      return { success: false, code: "CREATE_FAILED", error: "Failed to create quotation. Please try again." };
+    }
+
+    const row = data?.[0];
+    if (!row) {
+      return { success: false, code: "CREATE_FAILED", error: "Failed to create quotation. Please try again." };
+    }
+
+    if (row.error_code) {
+      if (row.error_code === "mutation_key_conflict") {
+        return {
+          success: false,
+          code: "MUTATION_KEY_CONFLICT",
+          error: "A Quotation creation attempt with these request details already exists. Start a new Quotation creation attempt and try again.",
+        };
+      }
+      if (row.error_code === "service_unavailable") {
+        return { success: false, code: "SERVICE_UNAVAILABLE", error: "Service not found or unavailable." };
+      }
+      if (row.error_code === "service_status_invalid") {
+        return { success: false, code: "SERVICE_STATUS_INVALID", error: "Quotations can only be created for Inquiry or Quoted services." };
+      }
+      if (row.error_code === "invalid_input" || row.error_code === "missing_mutation_key") {
+        return { success: false, code: "INVALID_INPUT", error: "Invalid quotation input." };
+      }
+      return { success: false, code: "CREATE_FAILED", error: "Failed to create quotation. Please try again." };
+    }
+
+    if (!row.quotation_id) {
+      return { success: false, code: "CREATE_FAILED", error: "Failed to create quotation. Please try again." };
     }
 
     revalidatePath("/quotations");
     revalidatePath(`/services/${parsed.data.service_id}`);
-    return { success: true, data: data?.[0] };
+    return {
+      success: true,
+      data: {
+        quotation_id: row.quotation_id,
+        quotation_number: row.quotation_number,
+        subtotal: Number(row.subtotal),
+        discount: Number(row.discount),
+        vat_amount: Number(row.vat_amount),
+        grand_total: Number(row.grand_total),
+        is_replayed: Boolean(row.is_replayed),
+        isReplayed: Boolean(row.is_replayed),
+      },
+    };
   } catch (err) {
-    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
-    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
     console.error("[createQuotation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
-    return { success: false, error: "An unexpected error occurred." };
+    return { success: false, code: "UNKNOWN_ERROR", error: "An unexpected error occurred." };
   }
 }
 

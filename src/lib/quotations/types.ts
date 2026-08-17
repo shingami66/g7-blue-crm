@@ -83,6 +83,8 @@ export interface QuotationRow {
   updated_at: string;
   is_deleted: boolean;
   deleted_at: string | null;
+  mutation_key?: string | null;
+  mutation_payload?: unknown | null;
   created_by: string;
   updated_by: string;
   snapshot_seller: QuotationSnapshotSeller | null;
@@ -177,6 +179,8 @@ export interface QuotationRpcResult {
   discount: number;
   vat_amount: number;
   grand_total: number;
+  is_replayed?: boolean;
+  isReplayed?: boolean;
 }
 
 export type CreateQuotationItemInput = z.infer<typeof quotationItemInputSchema>;

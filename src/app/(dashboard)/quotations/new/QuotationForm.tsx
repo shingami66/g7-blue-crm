@@ -33,6 +33,13 @@ interface QuotationFormProps {
   dictionary?: QuotationsDictionary;
 }
 
+function generateMutationKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `qt_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+}
+
 export default function QuotationForm({
   service,
   initialData,
@@ -43,6 +50,7 @@ export default function QuotationForm({
   const dictionary = dictionaryProp ?? getQuotationsDictionary(locale);
   const { back } = useGlobalNavigationPending();
   const isEdit = !!initialData;
+  const [mutationKey] = useState<string>(() => generateMutationKey());
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -158,17 +166,22 @@ export default function QuotationForm({
 
     const result = isEdit && initialData
       ? await updateQuotation(initialData.id, quotationPayload)
-      : await createQuotation({ service_id: service.id, ...quotationPayload });
+      : await createQuotation({ mutation_key: mutationKey, service_id: service.id, ...quotationPayload });
 
     if (result.success) {
       router.push("/quotations");
       router.refresh();
     } else {
+      if (result.code === "MUTATION_KEY_CONFLICT") {
+        setError(dictionary.form.validation.mutationKeyConflict);
+      } else {
         setError(
-          isEdit
-            ? dictionary.form.validation.failedToUpdate
-            : dictionary.form.validation.failedToCreate
+          result.error ||
+            (isEdit
+              ? dictionary.form.validation.failedToUpdate
+              : dictionary.form.validation.failedToCreate)
         );
+      }
       setIsSubmitting(false);
     }
   };
