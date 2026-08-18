@@ -50,6 +50,8 @@ const FINAL_CODES = [
   "invoice_snapshot_unavailable",
   "service_lifecycle_unavailable",
   "service_not_eligible_for_final",
+  "prior_invoices_exceed_billing_scope_ceiling",
+  "prior_invoices_exceed_quotation_total",
   "invoice_creation_failed",
   "invoice_insert_failed",
   "Unauthorized",
@@ -126,6 +128,10 @@ test("every known Final code maps to its intended safe message", () => {
     invoice_snapshot_unavailable: messages.invoiceSnapshotUnavailable,
     service_lifecycle_unavailable: messages.serviceLifecycleUnavailable,
     service_not_eligible_for_final: messages.serviceNotEligibleForFinal,
+    prior_invoices_exceed_billing_scope_ceiling:
+      messages.priorInvoicesExceedBillingScopeCeiling,
+    prior_invoices_exceed_quotation_total:
+      messages.priorInvoicesExceedQuotationTotal,
     invoice_creation_failed: messages.invoiceCreationFailed,
     invoice_insert_failed: messages.invoiceCreationFailed,
     Unauthorized: messages.unauthorized,
@@ -301,4 +307,33 @@ test("Arabic Deposit presentation uses localized messages without raw codes", ()
   assert.equal(presented, messages.depositInvoiceAlreadyExists);
   assert.equal(presented.includes("deposit_invoice_already_exists"), false);
   assert.equal(presented.includes("عربون"), false);
+});
+
+test("Arabic Final presentation maps ceiling and existence codes distinctly without raw leaks", () => {
+  const messages = finalMessages("ar");
+
+  const absPresented = presentFinalInvoiceActionError(
+    "prior_invoices_exceed_billing_scope_ceiling",
+    messages,
+  );
+  assert.equal(absPresented, messages.priorInvoicesExceedBillingScopeCeiling);
+  assert.equal(absPresented.includes("prior_invoices_exceed_billing_scope_ceiling"), false);
+  assertNoLeakage(absPresented, "prior_invoices_exceed_billing_scope_ceiling");
+
+  const quotPresented = presentFinalInvoiceActionError(
+    "prior_invoices_exceed_quotation_total",
+    messages,
+  );
+  assert.equal(quotPresented, messages.priorInvoicesExceedQuotationTotal);
+  assert.equal(quotPresented.includes("prior_invoices_exceed_quotation_total"), false);
+  assertNoLeakage(quotPresented, "prior_invoices_exceed_quotation_total");
+
+  const existsPresented = presentFinalInvoiceActionError(
+    "final_invoice_already_exists",
+    messages,
+  );
+  assert.equal(existsPresented, messages.finalInvoiceAlreadyExists);
+  assert.notEqual(absPresented, existsPresented);
+  assert.notEqual(quotPresented, existsPresented);
+  assertNoLeakage(existsPresented, "final_invoice_already_exists");
 });

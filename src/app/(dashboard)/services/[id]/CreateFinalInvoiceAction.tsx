@@ -24,6 +24,8 @@ type FinalActionDictionary = {
     invoiceSnapshotUnavailable: string;
     serviceLifecycleUnavailable: string;
     serviceNotEligibleForFinal: string;
+    priorInvoicesExceedBillingScopeCeiling: string;
+    priorInvoicesExceedQuotationTotal: string;
     invoiceCreationFailed: string;
     unauthorized: string;
     forbidden: string;
@@ -55,7 +57,8 @@ export function CreateFinalInvoiceAction({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [mutationKey, setMutationKey] = useState(() => crypto.randomUUID());
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [mutationKey] = useState(() => crypto.randomUUID());
 
   const disabled =
     !canCreate ||
@@ -68,7 +71,7 @@ export function CreateFinalInvoiceAction({
     setError(null);
     setSuccessMsg(null);
 
-    if (disabled) return;
+    if (disabled || isCompleted) return;
 
     startTransition(async () => {
       const result = await createInvoiceAction({
@@ -79,10 +82,10 @@ export function CreateFinalInvoiceAction({
       });
 
       if (result.success) {
+        setIsCompleted(true);
         setSuccessMsg(
           dictionary.success.replace("{invoiceNumber}", isolateBidiText(result.invoiceNumber ?? "")),
         );
-        setMutationKey(crypto.randomUUID());
         router.refresh();
       } else {
         if (result.error === "MUTATION_KEY_CONFLICT") {
@@ -98,6 +101,18 @@ export function CreateFinalInvoiceAction({
       }
     });
   };
+
+  if (isCompleted) {
+    return (
+      <div className="flex flex-col gap-3 max-w-sm">
+        {successMsg && (
+          <div className="text-[13px] text-green-700 bg-green-50 p-2 rounded border border-green-100">
+            {successMsg}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (disabled) {
     return (
@@ -129,11 +144,6 @@ export function CreateFinalInvoiceAction({
       {error && (
         <div className="text-[13px] text-red-600 bg-red-50 p-2 rounded border border-red-100">
           {error}
-        </div>
-      )}
-      {successMsg && (
-        <div className="text-[13px] text-green-700 bg-green-50 p-2 rounded border border-green-100">
-          {successMsg}
         </div>
       )}
     </form>

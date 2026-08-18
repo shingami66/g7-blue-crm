@@ -35,6 +35,8 @@ export type FinalInvoiceActionErrorMessages = {
   invoiceSnapshotUnavailable: string;
   serviceLifecycleUnavailable: string;
   serviceNotEligibleForFinal: string;
+  priorInvoicesExceedBillingScopeCeiling: string;
+  priorInvoicesExceedQuotationTotal: string;
   invoiceCreationFailed: string;
   unauthorized: string;
   forbidden: string;
@@ -128,6 +130,10 @@ export function presentFinalInvoiceActionError(
       return messages.serviceLifecycleUnavailable;
     case "service_not_eligible_for_final":
       return messages.serviceNotEligibleForFinal;
+    case "prior_invoices_exceed_billing_scope_ceiling":
+      return messages.priorInvoicesExceedBillingScopeCeiling;
+    case "prior_invoices_exceed_quotation_total":
+      return messages.priorInvoicesExceedQuotationTotal;
     // Proven create-path insert failure code from createInvoiceAction.
     case "invoice_insert_failed":
     case "invoice_creation_failed":

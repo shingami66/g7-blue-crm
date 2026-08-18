@@ -860,6 +860,8 @@ export interface ServicesDictionary {
         fallback: string;
         serviceLifecycleUnavailable: string;
         serviceNotEligibleForFinal: string;
+        priorInvoicesExceedBillingScopeCeiling: string;
+        priorInvoicesExceedQuotationTotal: string;
         mutationKeyConflict: string;
       };
     };
@@ -2065,6 +2067,8 @@ const servicesDictionaryEn: ServicesDictionary = {
         fallback: "Unable to create final invoice. Please try again.",
         serviceLifecycleUnavailable: "Service lifecycle is unavailable.",
         serviceNotEligibleForFinal: "The current service status does not allow a new final invoice.",
+        priorInvoicesExceedBillingScopeCeiling: "No remaining billable amount is available under the approved billing scope.",
+        priorInvoicesExceedQuotationTotal: "No remaining billable amount is available under the approved quotation ceiling.",
         mutationKeyConflict: "A conflicting request with this mutation key already exists.",
       },
     },
@@ -3479,6 +3483,8 @@ const servicesDictionaryAr: ServicesDictionary = {
         fallback: "تعذر إنشاء الفاتورة النهائية. يرجى المحاولة مرة أخرى.",
         serviceLifecycleUnavailable: "دورة حياة الخدمة غير متاحة.",
         serviceNotEligibleForFinal: "حالة الخدمة الحالية لا تسمح بإنشاء فاتورة نهائية جديدة.",
+        priorInvoicesExceedBillingScopeCeiling: "لا يوجد مبلغ متبقٍ قابل للفوترة ضمن نطاق الفوترة المعتمد.",
+        priorInvoicesExceedQuotationTotal: "لا يوجد مبلغ متبقٍ قابل للفوترة ضمن سقف عرض السعر المعتمد.",
         mutationKeyConflict: "يوجد طلب متعارض بهذا المفتاح مسبقاً.",
       },
     },
