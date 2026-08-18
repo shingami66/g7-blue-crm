@@ -81,7 +81,7 @@
   - G8 Family-specific Create Replay: **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** (5 of 5 families complete).
 - **Goal boundary:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved.
 
-## 1.3A.2 Current Published Checkpoint — G11 Verification Program Complete (17 August 2026)
+## 1.3A.2 Historical Checkpoint — G11 Verification Program Complete (17 August 2026)
 
 - **Verified repository:** `D:/G7/g7-crm`, branch `main`, published baseline: `31f49e231d89885daf5f67a0ea7ae4c7b15f7453` (`fix(g11): repair canonical verification blockers`), divergence is `0 ahead / 0 behind`.
 - **G11 Verification and Release Program Status:** **COMPLETE / VERIFICATION PROGRAM COMPLETE**
@@ -103,7 +103,29 @@
   - G3 Reports & Customer 360: `PENDING SEPARATELY` (Engineering closed 24/24 and 13/13; visual/product acceptance pending).
   - G9 Supplier / Rate Card: `PENDING SEPARATELY` (Engineering complete and DEV/DEMO verified; Owner acceptance pending).
 - **Non-blocking Technical Warning:** Function `public.create_quotation_with_items` is configured with `search_path = public` rather than `pg_catalog, public`. Classified as `NON_BLOCKING_HARDENING_INCONSISTENCY` (safe due to exclusive `service_role` execute grant and absence of schema `public` create permissions on application roles).
-- **Current Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved. G12 (`Typed boundary, ABS architecture and cleanup`) is the next serial controlled goal and requires separate bounded Owner authorization before execution. No production readiness, database apply to production, deployment, or Owner acceptance is inferred from Git publication. No Event ERP expansion is activated.
+- **Historical Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` was preserved, with G12 designated as the next serial controlled goal at this historical checkpoint.
+
+## 1.3A.3 Current Published Checkpoint — G12 Typed Boundary, ABS Architecture and Cleanup Complete (18 August 2026)
+
+- **Verified repository:** `D:/G7/g7-crm`, branch `main`, published baseline: `2b625842fb1e9c6e065a116d666b40542b8f4f21` (`refactor(g12): remove typed-boundary escape casts`), divergence is `0 ahead / 0 behind`.
+- **G12 Program Status:** **CLOSED / PUBLISHED / CANONICALLY VERIFIED**
+  - **G12-A Supabase Typed Boundary:** `CLOSED / PUBLISHED / CANONICALLY VERIFIED`. Primary implementation published at `ba870548bd12c5eb26fc9995f1862754bdcbf20e` (`feat(g12): establish Supabase typed boundary`), final type-escape cleanup published at `2b625842fb1e9c6e065a116d666b40542b8f4f21` (`refactor(g12): remove typed-boundary escape casts`). Generated Supabase `Database` type established in `src/lib/supabase/database.types.ts`; client factories typed (`createBrowserClient<Database>`, `createServerClient<Database>`, `createSupabaseClient<Database>`); all 18 task-introduced unsafe type escapes removed (0 `as any`, 0 `as unknown as`, 0 `as never`, 0 `@ts-ignore`, 0 `@ts-expect-error`).
+  - **G12-B ABS Architecture:** `ALREADY SATISFIED`. Existing Approved Billing Scope architecture in `src/lib/approved-billing-scopes/` adheres cleanly to the typed boundary without requiring structural refactoring; no source mutation or separate commit was necessary.
+  - **G12-C1 Legacy Static Data Cleanup:** `CLOSED / PUBLISHED / CANONICALLY VERIFIED`. Published at `b0e376481bf785ce926cdf1468476411b3a4530e` (`chore(g12): remove orphaned static data`); deleted 6 orphaned static data files (`src/lib/data/customers.ts`, `src/lib/data/invoices.ts`, `src/lib/data/payments.ts`, `src/lib/data/projects.ts`, `src/lib/data/quotations.ts`, `src/lib/data/settings.ts`).
+  - **G12-C2 Orphaned Project Types Cleanup:** `CLOSED / PUBLISHED / CANONICALLY VERIFIED`. Published at `2a84c553a8fc205c0ea80fbf170bf01a5b5887fc` (`chore(g12): remove orphaned project types`); removed orphaned `src/types/project.ts` and its barrel export in `src/types/index.ts`.
+- **Canonical Verification Result:** Executed against an isolated Git-archive snapshot of commit `2b625842fb1e9c6e065a116d666b40542b8f4f21` without worktree contamination: **99 committed test files, 1158 / 1158 tests PASS**, TypeScript `tsc --noEmit` PASS (0 diagnostics), Open Code Review clean (0 BLOCKING, 0 MATERIAL, 0 MINOR).
+- **Execution Boundaries Preserved:**
+  - **Database Activity:** `NONE`.
+  - **Schema / Migration Activity:** `NONE`.
+  - **Runtime / Business Behavior Change:** `NONE`.
+  - **Event ERP Expansion:** `NONE` (expansion remains a separate future controlled program; Feature 009 remains inactive; no accounting/procurement/multi-company/VAT/ZATCA/AI implementation activated).
+  - **DEV/DEMO Release Qualification:** `BLOCKED` by external unresolved Goals G4, G5, G6, G7, G10.
+  - **Production Release Readiness:** `BLOCKED` by external engineering Goals, pending Mozfer Owner visual/manual acceptance, and production operational hardening.
+  - **Production Deployment:** `UNAUTHORIZED`.
+- **Remediation Program Status & Next Controlled Action:**
+  - The serial path `G3 -> G9 -> G8 -> G11 -> G12` is **COMPLETE THROUGH G12**.
+  - Remaining open remediation/release dependencies are **G4, G5, G6, G7, and G10**.
+  - The next controlled Goal must be selected from the authorized roadmap under a separate bounded task contract; do not activate one automatically.
 
 ## 1.3B Historical G7-RB1 Rebaseline (13 August 2026)
 

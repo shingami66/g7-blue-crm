@@ -75,7 +75,9 @@ Tender / Bid Management is a future deferred expansion module. Discovery begins 
 - G2 Money and payment precision implementation and its canonical migration are present; the migration is applied on DEV/DEMO and the implementation commit is pushed at `db68492`. This rebaseline does not independently re-assert Owner acceptance or full G2 closeout.
 - G3 Reporting Truth / Period Semantics engineering remediation is **CLOSED** and published at `3143f3eddbeb8dfd8d347e7e79c88e04b712bfdb` (`fix(g3): align customer 360 recent financial activity`). Reports focused validation passed 24/24; Customer 360 focused validation passed 13/13; TypeScript, ESLint, and `git diff --check` passed; independent review was CLEAN (0 BLOCKING, 0 MATERIAL, 0 MINOR). Owner visual/manual/product acceptance remains pending separately.
 - G9 Supplier / Rate Card authority is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED**; do not reopen it.
-- G8 Family-specific Create Replay Safety is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** across all 5 families (Customer: `be96bea`, Service: `ea61563`, Quotation: `61fd505`, Invoice: `04c89df`, and Payment: existing published implementation verified with no code delta required); G11 is the next controlled gate requiring separate bounded Owner authorization.
+- G8 Family-specific Create Replay Safety is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** across all 5 families (Customer: `be96bea`, Service: `ea61563`, Quotation: `61fd505`, Invoice: `04c89df`, and Payment: existing published implementation verified with no code delta required).
+- G11 Verification and release program is **CLOSED / VERIFICATION PROGRAM COMPLETE** (canonical automated suite 1158/1158 PASS on commit `31f49e2`, DEV/DEMO metadata 50/50 reconciled).
+- G12 Typed boundary, ABS architecture and cleanup is **CLOSED / PUBLISHED / CANONICALLY VERIFIED** (generated Supabase Database boundary established in `ba87054` and cleaned in `2b62584`, ABS architecture satisfied, orphaned static data removed in `b0e3764`, orphaned project types removed in `2a84c55`, canonical automated suite 1158/1158 PASS).
 - Current confirmed findings: 49 — 0 Critical, 5 High, 39 Medium, and 5 Low. Future SaaS/migration concerns are tracked separately: 3. Architectural blockers: 0.
 
 ### Historical checkpoint (11 August 2026)
@@ -115,7 +117,7 @@ This is an inter-goal closure and stabilization gate, not a replacement or renum
 - **Remediation program status:** G3 is CLOSED; G9 is COMPLETE / PUBLISHED / DEV-DEMO VERIFIED; G8 is COMPLETE / PUBLISHED / DEV-DEMO VERIFIED (5/5 complete).
 - **Goal boundary:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved.
 
-### Current Published Checkpoint — G11 Verification Program Complete (17 August 2026)
+### Historical Checkpoint — G11 Verification Program Complete (17 August 2026)
 
 - **Verified repository:** `D:/G7/g7-crm`, branch `main`, published baseline: `31f49e231d89885daf5f67a0ea7ae4c7b15f7453` (`fix(g11): repair canonical verification blockers`), divergence is `0 ahead / 0 behind`.
 - **G11 Verification and Release Program Status:** **CLOSED / VERIFICATION PROGRAM COMPLETE**
@@ -137,7 +139,29 @@ This is an inter-goal closure and stabilization gate, not a replacement or renum
   - G3 Reports & Customer 360: `PENDING SEPARATELY` (Engineering closed 24/24 and 13/13; visual/product acceptance pending).
   - G9 Supplier / Rate Card: `PENDING SEPARATELY` (Engineering complete and DEV/DEMO verified; Owner acceptance pending).
 - **Non-blocking Technical Warning:** Function `public.create_quotation_with_items` is configured with `search_path = public` rather than `pg_catalog, public`. Classified as `NON_BLOCKING_HARDENING_INCONSISTENCY` (safe due to exclusive `service_role` execute grant and absence of schema `public` create permissions on application roles).
-- **Current Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` is preserved. G12 (`Typed boundary, ABS architecture and cleanup`) is the next serial controlled goal after G11 closeout and requires separate bounded Owner authorization before execution. No production readiness, database apply to production, deployment, or Owner acceptance is inferred from Git publication. No Event ERP expansion is activated.
+- **Historical Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` was preserved, with G12 designated as the next serial controlled goal after G11 closeout at this historical checkpoint.
+
+### Current Published Checkpoint — G12 Typed Boundary, ABS Architecture and Cleanup Complete (18 August 2026)
+
+- **Verified repository:** `D:/G7/g7-crm`, branch `main`, published baseline: `2b625842fb1e9c6e065a116d666b40542b8f4f21` (`refactor(g12): remove typed-boundary escape casts`), divergence is `0 ahead / 0 behind`.
+- **G12 Program Status:** **CLOSED / PUBLISHED / CANONICALLY VERIFIED**
+  - **G12-A Supabase Typed Boundary:** `CLOSED / PUBLISHED / CANONICALLY VERIFIED`. Primary implementation published at `ba870548bd12c5eb26fc9995f1862754bdcbf20e` (`feat(g12): establish Supabase typed boundary`), final type-escape cleanup published at `2b625842fb1e9c6e065a116d666b40542b8f4f21` (`refactor(g12): remove typed-boundary escape casts`). Generated Supabase `Database` type established in `src/lib/supabase/database.types.ts`; client factories typed (`createBrowserClient<Database>`, `createServerClient<Database>`, `createSupabaseClient<Database>`); all 18 task-introduced unsafe type escapes removed (0 `as any`, 0 `as unknown as`, 0 `as never`, 0 `@ts-ignore`, 0 `@ts-expect-error`).
+  - **G12-B ABS Architecture:** `ALREADY SATISFIED`. Existing Approved Billing Scope architecture in `src/lib/approved-billing-scopes/` adheres cleanly to the typed boundary without requiring structural refactoring; no source mutation or separate commit was necessary.
+  - **G12-C1 Legacy Static Data Cleanup:** `CLOSED / PUBLISHED / CANONICALLY VERIFIED`. Published at `b0e376481bf785ce926cdf1468476411b3a4530e` (`chore(g12): remove orphaned static data`); deleted 6 orphaned static data files (`src/lib/data/customers.ts`, `src/lib/data/invoices.ts`, `src/lib/data/payments.ts`, `src/lib/data/projects.ts`, `src/lib/data/quotations.ts`, `src/lib/data/settings.ts`).
+  - **G12-C2 Orphaned Project Types Cleanup:** `CLOSED / PUBLISHED / CANONICALLY VERIFIED`. Published at `2a84c553a8fc205c0ea80fbf170bf01a5b5887fc` (`chore(g12): remove orphaned project types`); removed orphaned `src/types/project.ts` and its barrel export in `src/types/index.ts`.
+- **Canonical Verification Result:** Executed against an isolated Git-archive snapshot of commit `2b625842fb1e9c6e065a116d666b40542b8f4f21` without worktree contamination: **99 committed test files, 1158 / 1158 tests PASS**, TypeScript `tsc --noEmit` PASS (0 diagnostics), Open Code Review clean (0 BLOCKING, 0 MATERIAL, 0 MINOR).
+- **Execution Boundaries Preserved:**
+  - **Database Activity:** `NONE`.
+  - **Schema / Migration Activity:** `NONE`.
+  - **Runtime / Business Behavior Change:** `NONE`.
+  - **Event ERP Expansion:** `NONE` (expansion remains a separate future controlled program; Feature 009 remains inactive; no accounting/procurement/multi-company/VAT/ZATCA/AI implementation activated).
+  - **DEV/DEMO Release Qualification:** `BLOCKED` by external unresolved Goals G4, G5, G6, G7, G10.
+  - **Production Release Readiness:** `BLOCKED` by external engineering Goals, pending Mozfer Owner visual/manual acceptance, and production operational hardening.
+  - **Production Deployment:** `UNAUTHORIZED`.
+- **Remediation Program Status & Next Controlled Action:**
+  - The serial path `G3 -> G9 -> G8 -> G11 -> G12` is **COMPLETE THROUGH G12**.
+  - Remaining open remediation/release dependencies are **G4, G5, G6, G7, and G10**.
+  - The next controlled Goal must be selected from the authorized roadmap under a separate bounded task contract; do not activate one automatically.
 
 ### Historical G7-RB1 Rebaseline (13 August 2026)
 
@@ -233,15 +257,15 @@ After field evidence and controller design lock, prepare a separate implementati
 | G9 Supplier and Rate Card authority | W6-RATE-001/002/003, W6-SUP-001 |
 | G10 Search, accessibility and interaction | W5-SEARCH-001/002, W5-A11Y-001/002/003, W5-UI-001, W5-URL-001 |
 | G11 Verification and release program (CLOSED / VERIFICATION PROGRAM COMPLETE: canonical automated suite 1158/1158 PASS, DEV/DEMO metadata 50/50 reconciled) | W7-TEST-001/002, W7-MIG-001, W7-RELEASE-001, W7-CONTROL-001 |
-| G12 Typed boundary, ABS architecture and cleanup | W8-ARCH-001/002, W8-LEGACY-001 |
+| G12 Typed boundary, ABS architecture and cleanup (CLOSED / PUBLISHED / CANONICALLY VERIFIED: generated Supabase Database boundary, ABS architecture satisfied, orphaned static data & types removed, canonical automated suite 1158/1158 PASS on commit 2b62584) | W8-ARCH-001/002, W8-LEGACY-001 |
 
 G11 is a planning bucket, not one mixed commit: focused behavioral tests, DEV/DEMO PostgreSQL/RPC verification, release gates, and OCR/control-plane documentation must remain separate. G12 likewise separates generated Supabase typing, bounded ABS refactoring, and exact orphaned static-data cleanup.
 
 ### Dependency order
 
-**Primary serial path:** owner/product/accounting decisions -> G1 financial lifecycle authority -> G2 money precision -> G3 reporting truth and period semantics -> G9 Supplier/Rate Card authority -> G8 family-specific replay safety -> G11 verification/release -> G12 architecture/cleanup.
+**Primary serial path:** owner/product/accounting decisions -> G1 financial lifecycle authority -> G2 money precision -> G3 reporting truth and period semantics -> G9 Supplier/Rate Card authority -> G8 family-specific replay safety -> G11 verification/release -> G12 architecture/cleanup. This serial segment is now complete through G12.
 
-G11 is **CLOSED / VERIFICATION PROGRAM COMPLETE** (canonical automated suite 1158/1158 PASS on commit `31f49e2`, DEV/DEMO metadata 50/50 reconciled; DEV/DEMO release qualification remains BLOCKED pending external Goals G4/G5/G6/G7/G10; Production readiness BLOCKED; Production deployment UNAUTHORIZED). G12 (`Typed boundary, ABS architecture and cleanup`) is the next serial controlled goal after G11 closeout and requires separate bounded Owner authorization before execution. External Goals G4, G5, G6, G7, and G10 remain parallel/open dependencies.
+G12 is **CLOSED / PUBLISHED / CANONICALLY VERIFIED** (generated Supabase Database boundary established in commit `ba87054` and cleaned in `2b62584`, ABS architecture satisfied, orphaned static data removed in `b0e3764`, orphaned project types removed in `2a84c55`, canonical automated suite 1158/1158 PASS). DEV/DEMO release qualification remains BLOCKED pending external unresolved Goals G4/G5/G6/G7/G10; Production readiness BLOCKED; Production deployment UNAUTHORIZED. External Goals G4, G5, G6, G7, and G10 remain open dependencies, and the next controlled Goal must be selected from the authorized roadmap under a separate bounded task contract.
 
 **Parallelizable after required decisions and a clean baseline:** G5 Admin security, G6 payload/log minimization, G7 reliability boundaries, G10 search/accessibility, and G4 measurement/scale evidence. Parallelizable does not mean immediately started.
 
@@ -270,13 +294,13 @@ Every future implementation/remediation Goal remains administratively open until
 
 ### Current remediation waiting on decisions / evidence
 
-- **Owner decision first:** G1/G2 lifecycle, money precision, and financial correction contracts; bounded G12 architecture and cleanup task authorization.
+- **Owner decision first:** G1/G2 lifecycle, money precision, and financial correction contracts.
 - **Accountant/product decision first:** Broader accounting reporting, Revenue Recognition, payment terms/credit control, supplier cost/margin, and completion with outstanding finance (deferred product scope, not open engineering defect).
 - **Measurement first:** G4 performance, query, scale, and index decisions.
-- **DEV/DEMO database evidence first:** G1, G2, G5, G8 (Customer, Service, Quotation, Invoice, Payment DEV/DEMO verified), G9, and G11 (DEV/DEMO metadata 50/50 reconciled).
+- **DEV/DEMO database evidence first:** G1, G2, G5, G8 (Customer, Service, Quotation, Invoice, Payment DEV/DEMO verified), G9, G11 (DEV/DEMO metadata 50/50 reconciled), and G12 (canonical verification complete).
 - **Mozfer browser acceptance first:** G10 EN/AR/RTL/mobile/search/accessibility behavior; Owner visual/manual acceptance for G3 Reports/Customer 360 and G9 Supplier surfaces (pending separately).
-- **Later cleanup:** G6 M-01 adaptation, G12 generated typing, bounded ABS refactor, and exact orphaned static-data removal.
-- **Current gates:** G11 is CLOSED / VERIFICATION PROGRAM COMPLETE (canonical automated suite 1158/1158 PASS on commit `31f49e2`, DEV/DEMO metadata 50/50 reconciled); G12 is the next serial controlled gate; Security, financial integrity, Reports/Customer 360 authority, Supplier/Rate Card, Search/Accessibility, Database/Migration, Performance/Scale, Release, and Mozfer owner acceptance remain blocked or pending their listed Goals and evidence. Production sign-off is not complete.
+- **Later cleanup:** G6 M-01 adaptation (G12 generated typing, ABS architecture, and orphaned static-data/types removal are complete).
+- **Current gates:** G12 is CLOSED / PUBLISHED / CANONICALLY VERIFIED; Security, financial integrity, Reports/Customer 360 authority, Supplier/Rate Card, Search/Accessibility, Database/Migration, Performance/Scale, Release, and Mozfer owner acceptance remain blocked or pending their listed open Goals (G4, G5, G6, G7, G10) and evidence. Production sign-off is not complete.
 
 ### Deferred product / Event ERP / SaaS expansion
 
