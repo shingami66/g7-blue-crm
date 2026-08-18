@@ -72,12 +72,13 @@ Tender / Bid Management is a future deferred expansion module. Discovery begins 
 - Cross-Wave Consolidation and the Final Remediation Master Plan are complete.
 - The external read-only `baseline-90adf8f` campaign package remains the detailed evidence authority; it is not repository-controlled.
 - G1 financial lifecycle authority and invoice snapshot remediation is closed and pushed at `e34ea4176044f4dc663555a8794dfa5d3042206c`. All four canonical G1 migrations are applied and reconciled on DEV/DEMO.
-- G2 Money and payment precision implementation and its canonical migration are present; the migration is applied on DEV/DEMO and the implementation commit is pushed at `db68492`. This rebaseline does not independently re-assert Owner acceptance or full G2 closeout.
-- G3 Reporting Truth / Period Semantics engineering remediation is **CLOSED** and published at `3143f3eddbeb8dfd8d347e7e79c88e04b712bfdb` (`fix(g3): align customer 360 recent financial activity`). Reports focused validation passed 24/24; Customer 360 focused validation passed 13/13; TypeScript, ESLint, and `git diff --check` passed; independent review was CLEAN (0 BLOCKING, 0 MATERIAL, 0 MINOR). Owner visual/manual/product acceptance remains pending separately.
-- G9 Supplier / Rate Card authority is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED**; do not reopen it.
+- G2 Money and payment precision implementation and its canonical migration are present; the migration is applied on DEV/DEMO and the implementation commit is pushed at `db68492`. Owner policy is decided (positive SAR <= 2 decimals, sub-cent inputs rejected, intermediate precision preserved, no premature rounding, financial core preserves future ZATCA compatibility without activating VAT/ZATCA); engineering closeout remains pending verification.
+- G3 Reporting Truth / Period Semantics engineering remediation is **CLOSED**, published at `3143f3eddbeb8dfd8d347e7e79c88e04b712bfdb` (`fix(g3): align customer 360 recent financial activity`), and Owner manual/product acceptance is recorded as **PASSED** (do not reopen G3).
+- G9 Supplier / Rate Card authority is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED**, and Owner manual/product acceptance is recorded as **PASSED** (do not reopen G9).
 - G8 Family-specific Create Replay Safety is **COMPLETE / PUBLISHED / DEV-DEMO VERIFIED** across all 5 families (Customer: `be96bea`, Service: `ea61563`, Quotation: `61fd505`, Invoice: `04c89df`, and Payment: existing published implementation verified with no code delta required).
 - G11 Verification and release program is **CLOSED / VERIFICATION PROGRAM COMPLETE** (canonical automated suite 1158/1158 PASS on commit `31f49e2`, DEV/DEMO metadata 50/50 reconciled).
 - G12 Typed boundary, ABS architecture and cleanup is **CLOSED / PUBLISHED / CANONICALLY VERIFIED** (generated Supabase Database boundary established in `ba87054` and cleaned in `2b62584`, ABS architecture satisfied, orphaned static data removed in `b0e3764`, orphaned project types removed in `2a84c55`, canonical automated suite 1158/1158 PASS).
+- Owner Decisions & Manual Regression Checkpoint (`MANUAL-REGRESSION-OWNER-DECISIONS-CHECKPOINT-01`): Owner manual regression verified PASS across Customer creation, Customer 360, Service workflow, Quotation workflow, Payments, Reports, Supplier / Rate Card, Arabic, RTL, Mobile / responsive, Keyboard navigation, and Validation behavior. Owner policies approved for G2 (Money/Payment Precision), G4 (Measurement-First), G5 (Admin Security), G6 (Payload/Log Minimization), G7 (Failure/Health/Webhook Policy), and G10 (UX/A11Y Policy). Open findings tracked: G10 UI consistency findings (oversized buttons/controls) and Final Invoice post-create defect (root cause unclassified).
 - Current confirmed findings: 49 — 0 Critical, 5 High, 39 Medium, and 5 Low. Future SaaS/migration concerns are tracked separately: 3. Architectural blockers: 0.
 
 ### Historical checkpoint (11 August 2026)
@@ -141,7 +142,7 @@ This is an inter-goal closure and stabilization gate, not a replacement or renum
 - **Non-blocking Technical Warning:** Function `public.create_quotation_with_items` is configured with `search_path = public` rather than `pg_catalog, public`. Classified as `NON_BLOCKING_HARDENING_INCONSISTENCY` (safe due to exclusive `service_role` execute grant and absence of schema `public` create permissions on application roles).
 - **Historical Goal boundary & Next gate:** The serial relationship `G3 -> G9 -> G8 -> G11 -> G12` was preserved, with G12 designated as the next serial controlled goal after G11 closeout at this historical checkpoint.
 
-### Current Published Checkpoint — G12 Typed Boundary, ABS Architecture and Cleanup Complete (18 August 2026)
+### Historical Checkpoint — G12 Typed Boundary, ABS Architecture and Cleanup Complete (18 August 2026)
 
 - **Verified repository:** `D:/G7/g7-crm`, branch `main`, published baseline: `2b625842fb1e9c6e065a116d666b40542b8f4f21` (`refactor(g12): remove typed-boundary escape casts`), divergence is `0 ahead / 0 behind`.
 - **G12 Program Status:** **CLOSED / PUBLISHED / CANONICALLY VERIFIED**
@@ -162,6 +163,87 @@ This is an inter-goal closure and stabilization gate, not a replacement or renum
   - The serial path `G3 -> G9 -> G8 -> G11 -> G12` is **COMPLETE THROUGH G12**.
   - Remaining open remediation/release dependencies are **G4, G5, G6, G7, and G10**.
   - The next controlled Goal must be selected from the authorized roadmap under a separate bounded task contract; do not activate one automatically.
+
+### Current Verified Checkpoint — Manual Regression Results and Owner Decisions (18 August 2026)
+
+- **Verified repository:** `D:/G7/g7-crm`, branch `main`, published baseline: `284e50a8ea276ede06437aa1e4abefca011e51b4` (`docs(g12): record verified closeout`), divergence is `0 ahead / 0 behind`.
+- **Checkpoint Identification:** `MANUAL-REGRESSION-OWNER-DECISIONS-CHECKPOINT-01`
+- **Owner Manual Regression Results (PASSED):**
+  - Customer creation: **PASSED**
+  - Customer 360: **PASSED**
+  - Service basic workflow: **PASSED**
+  - Quotation basic workflow: **PASSED**
+  - Payments: **PASSED**
+  - Reports: **PASSED**
+  - Supplier / Rate Card: **PASSED**
+  - Arabic: **PASSED**
+  - RTL: **PASSED**
+  - Mobile / responsive behavior: **PASSED**
+  - Keyboard navigation: **PASSED**
+  - Validation behavior: **PASSED**
+- **Owner Acceptance of Closed/Published Goals:**
+  - **G3 Reporting Truth / Period Semantics:** Engineering already CLOSED / PUBLISHED. Owner manual/product acceptance is recorded as **PASSED**. Do not reopen G3.
+  - **G9 Supplier / Rate Card Authority:** Already COMPLETE / PUBLISHED / DEV-DEMO VERIFIED. Owner manual/product acceptance is recorded as **PASSED**. Do not reopen G9.
+- **Owner-Approved Engineering Decisions & Policies Recorded:**
+  - **G2 Money / Payment Precision Policy:**
+    - Final recorded SAR payment amounts remain positive monetary values with a maximum of two decimal places.
+    - Sub-cent payment inputs must be rejected, not silently rounded.
+    - Unit prices, quantities, percentages, and intermediate financial calculations may retain precision greater than two decimals where required.
+    - Intermediate financial calculations must not be rounded prematurely.
+    - Rounding must occur only at the correct monetary output boundary.
+    - Rounding differences must not be silently lost.
+    - The financial core should preserve future ZATCA compatibility.
+    - VAT, Tax Invoice, ZATCA XML, QR, clearance, reporting, or live ZATCA integration are NOT activated by this decision.
+    - **G2 Status:** `OWNER POLICY DECIDED / ENGINEERING CLOSEOUT PENDING VERIFICATION` (G2 is NOT technically closed; engineering verification pending).
+  - **G4 Bounded Read Paths and Scale Policy:**
+    - Owner approval for: **MEASUREMENT-FIRST remediation**.
+    - Meaning: measure current performance/query/scale behavior first; repair only evidence-backed issues; do not change user-facing behavior without separate Owner review.
+    - **G4 Status:** `OPEN` pending engineering verification/closure.
+  - **G5 Admin Security Policy:**
+    - Owner approval for: explicit desired-state admin mutations; retry-safe behavior; server/database-enforced authority; no UI-only security assumptions.
+    - **G5 Status:** `OPEN` pending engineering verification/closure.
+  - **G6 Payload and Log Minimization Policy:**
+    - Owner approval for: minimum necessary payloads; no secrets/tokens/credentials in logs; structured operational metadata; preservation of required financial/security audit evidence; controlled detailed debugging only when appropriate.
+    - **G6 Status:** `OPEN` pending engineering verification/closure.
+  - **G7 Failure / Health / Webhook Policy:**
+    - Owner approval for: safe and explicit failure boundaries; no false-success state; health checks expose operational status without sensitive internals; webhook source/signature verification; duplicate webhook delivery must not duplicate mutation; verification failures fail closed; useful diagnostics without secret leakage.
+    - **G7 Status:** `OPEN` pending engineering verification/closure.
+  - **G10 UX / Accessibility Policy:**
+    - Owner approval for: module-local search for V1; English and Arabic functional parity; correct RTL behavior; keyboard accessibility; responsive/mobile usability; baseline accessibility and visible focus behavior.
+    - **G10 Status:** `OPEN` pending UI consistency findings and engineering remediation.
+- **Open Manual Regression Findings & Functional Defects:**
+  - **A. UI Consistency Findings (`G10 UX CONSISTENCY REMEDIATION OPEN`):**
+    - Oversized Back buttons;
+    - Oversized Add/Create buttons;
+    - Oversized or visually heavy Report/action buttons;
+    - Oversized/cramped pagination controls;
+    - Excessive visual weight in quotation detail actions;
+    - Inconsistent action sizing across Customer, Service, Quotation, Supplier, and related create forms.
+    - Classification: `G10 UX CONSISTENCY REMEDIATION OPEN`. Do not claim the UI is fully Owner accepted while these findings remain.
+  - **B. Final Invoice Post-Create Defect (`OPEN FUNCTIONAL DEFECT — ROOT CAUSE NOT YET CLASSIFIED`):**
+    - Observed behavior: (1) Final Invoice creation appears to succeed; (2) Create Final Invoice action remains available; (3) A second click returns: *"Unable to create final invoice. Please try again."*
+    - Classification: `OPEN FUNCTIONAL DEFECT — ROOT CAUSE NOT YET CLASSIFIED`. Do not classify as G10-only. Do not classify as G8. Do not infer duplicate invoice creation.
+    - Required next engineering action: diagnose actual post-create state, invoice existence, eligibility refresh, billing-state reconciliation, duplicate protection, and error mapping.
+- **Goal State Preservation Summary:**
+  - **G1:** `CLOSED`
+  - **G2:** `OWNER POLICY DECIDED / ENGINEERING CLOSEOUT PENDING VERIFICATION` (OPEN)
+  - **G3:** `ENGINEERING CLOSED / OWNER ACCEPTED`
+  - **G4:** `OPEN` (MEASUREMENT-FIRST)
+  - **G5:** `OPEN` (ADMIN SECURITY POLICY DECIDED)
+  - **G6:** `OPEN` (PAYLOAD/LOG POLICY DECIDED)
+  - **G7:** `OPEN` (FAILURE/HEALTH/WEBHOOK POLICY DECIDED)
+  - **G8:** `COMPLETE / PUBLISHED / DEV-DEMO VERIFIED`
+  - **G9:** `COMPLETE / PUBLISHED / DEV-DEMO VERIFIED / OWNER ACCEPTED`
+  - **G10:** `OPEN` (UX/A11Y POLICY DECIDED / MANUAL UI FINDINGS & REMEDIATION OPEN)
+  - **G11:** `CLOSED / VERIFICATION PROGRAM COMPLETE`
+  - **G12:** `CLOSED / PUBLISHED / CANONICALLY VERIFIED`
+  - No global G1-G12 completion is claimed.
+- **Release and Deployment Boundaries Preserved:**
+  - **DEV/DEMO Release Qualification:** `BLOCKED` pending unresolved engineering Goals (G2, G4, G5, G6, G7, G10) and open functional defect diagnosis.
+  - **Production Release Readiness:** `BLOCKED`.
+  - **Production Deployment:** `UNAUTHORIZED`.
+  - **Event ERP Expansion:** `NOT ACTIVATED` (Feature 009 remains inactive; no accounting/procurement/multi-company/VAT/ZATCA/AI implementation activated).
+  - **Tax / VAT / ZATCA:** `NOT ACTIVATED` (no VAT 15%, Tax Invoice wording, ZATCA XML/QR/clearance).
 
 ### Historical G7-RB1 Rebaseline (13 August 2026)
 
@@ -238,24 +320,24 @@ After field evidence and controller design lock, prepare a separate implementati
 | DELIVERED + OWNER-ACCEPTED | Goal 2A loading/motion foundation; fast operations remain silent and destination-shaped loading is the current contract. | `5429e7642bd3d763809e0de453cc131f2c90921c` |
 | DELIVERED + OWNER-ACCEPTED | Goal 2B/2C Business Year/list foundations, explicit-submit customer search, Supplier Directory presentation, Dashboard workspace hierarchy, and acceptance boundary. | `f20b240dcc6e1197167aec802c57b59201df0333`, `820b01f79a19d871b86c120e3c2f78b474596f4b`, `c2b699d8dac8ccbc64e5f511aff4931401cd099b`, `195b4c62d0e1f599513e338095fe71ff7a15777f`, `c9f12cf13299cb79e2a76b4127e58a16851b3548`, `8e54b80d4ec7376e4d6cd77d044ee5654e3bd5b3` |
 | DELIVERED / ACCEPTANCE PENDING | Business Year is bounded to temporal list routes; invoice-date periodization follows authoritative issued date under G3. Module-local search/list/filter foundations are current product behavior, while G10 search/accessibility findings remain remediation. | `f20b240dcc6e1197167aec802c57b59201df0333`, `c1041b7db9b5b6d04c4fbb715a1f5275fb2204cc` |
-| COMPLETE / PUBLISHED / DEV-DEMO VERIFIED / OWNER ACCEPTANCE PENDING | Supplier Rate Card V1 authority is COMPLETE, PUBLISHED, and DEV-DEMO VERIFIED under G9 (do not reopen it); Owner visual/manual acceptance remains pending separately. | `9115d3e02a07ad4deefe1218dfeac644f32e106c` |
-| DELIVERED / ACCEPTANCE PENDING | Reports and Customer 360 surfaces/read models exist; G3 Reporting Truth / Period Semantics engineering remediation is CLOSED (Reports focused validation 24/24, Customer 360 focused validation 13/13); Owner product/visual acceptance remains pending separately; broader Reports and richer Customer 360 enhancements remain deferred product scope. | `2cee122e0223450820f7f89f977f986388fdbea8`, `943716f15e70218a7ce4034d47296f88b1bde61b` |
+| COMPLETE / PUBLISHED / DEV-DEMO VERIFIED / OWNER ACCEPTED | Supplier Rate Card V1 authority is COMPLETE, PUBLISHED, and DEV-DEMO VERIFIED under G9 (do not reopen it); Owner visual/manual acceptance is recorded as PASSED (do not reopen G9). | `9115d3e02a07ad4deefe1218dfeac644f32e106c` |
+| DELIVERED / ENGINEERING CLOSED / OWNER ACCEPTED | Reports and Customer 360 surfaces/read models exist; G3 Reporting Truth / Period Semantics engineering remediation is CLOSED (Reports focused validation 24/24, Customer 360 focused validation 13/13); Owner product/visual acceptance is recorded as PASSED (do not reopen G3); broader Reports and richer Customer 360 enhancements remain deferred product scope. | `2cee122e0223450820f7f89f977f986388fdbea8`, `943716f15e70218a7ce4034d47296f88b1bde61b` |
 | FUTURE / DEFERRED | Broader accounting, procurement, Event Operations, advanced dashboards, multi-company/SaaS, ZATCA, and future localization/currency/compliance remain outside current remediation. | Expansion Master and current campaign plan |
 
 ### Active remediation program
 
 | Goal | Findings / bounded purpose |
 |---|---|
-| G1 Financial lifecycle authority and snapshots | W2-LIFE-001, W2-FIN-002, W2-AUD-005 |
-| G2 Money and payment precision | W2-PAY-003 |
-| G3 Reporting truth and period semantics | M-03, M-06, W2-XWAVE-004, W3-REPORT-002, W5-DATE-001, W6-REPORT-001/002/003 |
-| G4 Bounded read paths and scale | M-02, M-04, W3-PERF-005, W3-QUERY-001, W3-SCALE-003/004 |
-| G5 Admin security and desired-state mutations | W1-AUTH-001, W1-SEC-002, W4-RETRY-001 |
-| G6 Payload and log minimization | M-01, W1-SEC-004/005 |
-| G7 Failure boundaries, health and webhook operations | M-05, W1-SEC-003, W4-BOUNDARY-001, W4-CONFIG-001, W4-OBS-001 |
-| G8 Family-specific create replay (COMPLETE: 5/5 published — Customer, Service, Quotation, Invoice, Payment verified) | W4-REC-002 |
-| G9 Supplier and Rate Card authority | W6-RATE-001/002/003, W6-SUP-001 |
-| G10 Search, accessibility and interaction | W5-SEARCH-001/002, W5-A11Y-001/002/003, W5-UI-001, W5-URL-001 |
+| G1 Financial lifecycle authority and snapshots (CLOSED) | W2-LIFE-001, W2-FIN-002, W2-AUD-005 |
+| G2 Money and payment precision (OWNER POLICY DECIDED / ENGINEERING CLOSEOUT PENDING VERIFICATION) | W2-PAY-003 |
+| G3 Reporting truth and period semantics (ENGINEERING CLOSED / OWNER ACCEPTED) | M-03, M-06, W2-XWAVE-004, W3-REPORT-002, W5-DATE-001, W6-REPORT-001/002/003 |
+| G4 Bounded read paths and scale (OPEN / MEASUREMENT-FIRST APPROVED) | M-02, M-04, W3-PERF-005, W3-QUERY-001, W3-SCALE-003/004 |
+| G5 Admin security and desired-state mutations (OPEN / ADMIN SECURITY POLICY DECIDED) | W1-AUTH-001, W1-SEC-002, W4-RETRY-001 |
+| G6 Payload and log minimization (OPEN / LOG MINIMIZATION POLICY DECIDED) | M-01, W1-SEC-004/005 |
+| G7 Failure boundaries, health and webhook operations (OPEN / FAILURE & WEBHOOK POLICY DECIDED) | M-05, W1-SEC-003, W4-BOUNDARY-001, W4-CONFIG-001, W4-OBS-001 |
+| G8 Family-specific create replay (COMPLETE / PUBLISHED / DEV-DEMO VERIFIED: 5/5 published — Customer, Service, Quotation, Invoice, Payment verified) | W4-REC-002 |
+| G9 Supplier and Rate Card authority (COMPLETE / PUBLISHED / DEV-DEMO VERIFIED / OWNER ACCEPTED) | W6-RATE-001/002/003, W6-SUP-001 |
+| G10 Search, accessibility and interaction (OPEN / UX & A11Y POLICY DECIDED / MANUAL UI FINDINGS & REMEDIATION OPEN) | W5-SEARCH-001/002, W5-A11Y-001/002/003, W5-UI-001, W5-URL-001 |
 | G11 Verification and release program (CLOSED / VERIFICATION PROGRAM COMPLETE: canonical automated suite 1158/1158 PASS, DEV/DEMO metadata 50/50 reconciled) | W7-TEST-001/002, W7-MIG-001, W7-RELEASE-001, W7-CONTROL-001 |
 | G12 Typed boundary, ABS architecture and cleanup (CLOSED / PUBLISHED / CANONICALLY VERIFIED: generated Supabase Database boundary, ABS architecture satisfied, orphaned static data & types removed, canonical automated suite 1158/1158 PASS on commit 2b62584) | W8-ARCH-001/002, W8-LEGACY-001 |
 
@@ -263,9 +345,9 @@ G11 is a planning bucket, not one mixed commit: focused behavioral tests, DEV/DE
 
 ### Dependency order
 
-**Primary serial path:** owner/product/accounting decisions -> G1 financial lifecycle authority -> G2 money precision -> G3 reporting truth and period semantics -> G9 Supplier/Rate Card authority -> G8 family-specific replay safety -> G11 verification/release -> G12 architecture/cleanup. This serial segment is now complete through G12.
+**Primary serial path:** owner/product/accounting decisions -> G1 financial lifecycle authority -> G2 money precision -> G3 reporting truth and period semantics -> G9 Supplier/Rate Card authority -> G8 family-specific replay safety -> G11 verification/release -> G12 architecture/cleanup. The G3 -> G9 -> G8 -> G11 -> G12 serial segment is complete through G12. G2 remains an open engineering-closeout dependency under the approved money/precision policy.
 
-G12 is **CLOSED / PUBLISHED / CANONICALLY VERIFIED** (generated Supabase Database boundary established in commit `ba87054` and cleaned in `2b62584`, ABS architecture satisfied, orphaned static data removed in `b0e3764`, orphaned project types removed in `2a84c55`, canonical automated suite 1158/1158 PASS). DEV/DEMO release qualification remains BLOCKED pending external unresolved Goals G4/G5/G6/G7/G10; Production readiness BLOCKED; Production deployment UNAUTHORIZED. External Goals G4, G5, G6, G7, and G10 remain open dependencies, and the next controlled Goal must be selected from the authorized roadmap under a separate bounded task contract.
+G12 is **CLOSED / PUBLISHED / CANONICALLY VERIFIED** (generated Supabase Database boundary established in commit `ba87054` and cleaned in `2b62584`, ABS architecture satisfied, orphaned static data removed in `b0e3764`, orphaned project types removed in `2a84c55`, canonical automated suite 1158/1158 PASS). Under checkpoint `MANUAL-REGRESSION-OWNER-DECISIONS-CHECKPOINT-01`, Owner policies are recorded for G2, G4, G5, G6, G7, and G10; Owner manual regression is verified PASS across 12 product areas; G3 and G9 are Owner accepted; G10 UI consistency findings and the unclassified Final Invoice post-create defect remain open remediation tracking items. DEV/DEMO release qualification remains BLOCKED pending external unresolved Goals G2/G4/G5/G6/G7/G10; Production readiness BLOCKED; Production deployment UNAUTHORIZED. External Goals G2, G4, G5, G6, G7, and G10 remain open engineering dependencies, and the next controlled task must be selected from the authorized roadmap under a separate bounded task contract.
 
 **Parallelizable after required decisions and a clean baseline:** G5 Admin security, G6 payload/log minimization, G7 reliability boundaries, G10 search/accessibility, and G4 measurement/scale evidence. Parallelizable does not mean immediately started.
 
@@ -294,13 +376,14 @@ Every future implementation/remediation Goal remains administratively open until
 
 ### Current remediation waiting on decisions / evidence
 
-- **Owner decision first:** G1/G2 lifecycle, money precision, and financial correction contracts.
+- **Owner decision recorded:** G2 money precision policy decided (engineering closeout pending verification); G4 measurement-first approved; G5 admin security policy decided; G6 payload/log minimization policy decided; G7 failure/health/webhook policy decided; G10 UX/accessibility policy decided.
 - **Accountant/product decision first:** Broader accounting reporting, Revenue Recognition, payment terms/credit control, supplier cost/margin, and completion with outstanding finance (deferred product scope, not open engineering defect).
-- **Measurement first:** G4 performance, query, scale, and index decisions.
-- **DEV/DEMO database evidence first:** G1, G2, G5, G8 (Customer, Service, Quotation, Invoice, Payment DEV/DEMO verified), G9, G11 (DEV/DEMO metadata 50/50 reconciled), and G12 (canonical verification complete).
-- **Mozfer browser acceptance first:** G10 EN/AR/RTL/mobile/search/accessibility behavior; Owner visual/manual acceptance for G3 Reports/Customer 360 and G9 Supplier surfaces (pending separately).
+- **Measurement first:** G4 performance, query, scale, and index measurements and evidence-backed remediation.
+- **DEV/DEMO database evidence first:** G1, G2 (verification pending), G5, G8 (Customer, Service, Quotation, Invoice, Payment DEV/DEMO verified), G9 (Owner accepted), G11 (DEV/DEMO metadata 50/50 reconciled), and G12 (canonical verification complete).
+- **Owner manual regression results:** PASS recorded across Customer creation, Customer 360, Service basic workflow, Quotation basic workflow, Payments, Reports (G3 Owner accepted), Supplier / Rate Card (G9 Owner accepted), Arabic, RTL, Mobile / responsive, Keyboard navigation, and Validation behavior.
+- **Open remediation findings:** G10 UI consistency remediation (oversized buttons, actions, pagination); Final Invoice post-create defect (root cause unclassified; requires diagnosis of post-create state, invoice existence, eligibility refresh, billing-state reconciliation, duplicate protection, and error mapping).
 - **Later cleanup:** G6 M-01 adaptation (G12 generated typing, ABS architecture, and orphaned static-data/types removal are complete).
-- **Current gates:** G12 is CLOSED / PUBLISHED / CANONICALLY VERIFIED; Security, financial integrity, Reports/Customer 360 authority, Supplier/Rate Card, Search/Accessibility, Database/Migration, Performance/Scale, Release, and Mozfer owner acceptance remain blocked or pending their listed open Goals (G4, G5, G6, G7, G10) and evidence. Production sign-off is not complete.
+- **Current gates:** G12 is CLOSED / PUBLISHED / CANONICALLY VERIFIED; G3 and G9 are OWNER ACCEPTED; Security, financial integrity, Database/Migration, Performance/Scale, Release, and remaining engineering closeouts remain blocked or pending their listed open Goals (G2, G4, G5, G6, G7, G10), open findings, and evidence. Production sign-off is not complete.
 
 ### Deferred product / Event ERP / SaaS expansion
 
@@ -318,14 +401,15 @@ These 3 concerns are future activation gates, not current defects. No tenant rol
 
 ### Release and acceptance gates
 
-- Security: blocked/WARN pending G5-G7, redacted logs, health-exposure, and RLS/grant evidence.
-- Financial integrity: blocked pending G1-G2 closeout, accountant decisions, and snapshot/status/precision tests.
-- Reports/Customer 360: G3 engineering remediation closed (Reports 24/24, Customer 360 13/13); Owner product/visual acceptance remains pending separately.
-- Supplier/Rate Card: G9 is complete, published, and DEV-DEMO verified; Owner acceptance remains pending separately.
-- Search/Accessibility: blocked pending G10 and Mozfer EN/AR/RTL/mobile/browser acceptance.
-- Database/Migration: blocked pending approved DEV/DEMO PostgreSQL/RPC verification.
-- Performance/Scale: blocked pending E1-E6 measurements and bounded corrections.
-- Release: G11 verification program is COMPLETE; DEV/DEMO release qualification remains BLOCKED pending external Goals G4/G5/G6/G7/G10; Production release readiness remains BLOCKED pending applicable external engineering Goals, Owner visual/manual acceptance by domain, and production operational hardening; Production deployment remains UNAUTHORIZED.
+- Security: blocked/WARN pending G5-G7 engineering verification, redacted logs, health-exposure, and RLS/grant evidence (policies approved).
+- Financial integrity: blocked pending G2 engineering closeout verification (Owner policy decided), accountant decisions, and snapshot/status/precision tests.
+- Reports/Customer 360: G3 engineering remediation closed (Reports 24/24, Customer 360 13/13); Owner manual/product acceptance PASSED.
+- Supplier/Rate Card: G9 complete, published, and DEV-DEMO verified; Owner manual/product acceptance PASSED.
+- Search/Accessibility: G10 UX/A11Y policy approved; blocked pending G10 UI consistency remediation and remaining engineering fixes.
+- Functional Defects: Final Invoice post-create defect open pending root-cause diagnosis and engineering repair.
+- Database/Migration: blocked pending approved DEV/DEMO PostgreSQL/RPC verification for open goals.
+- Performance/Scale: blocked pending G4 measurement-first investigation (E1-E6 measurements and bounded evidence-backed corrections).
+- Release: G11 verification program is COMPLETE; DEV/DEMO release qualification remains BLOCKED pending external Goals G2/G4/G5/G6/G7/G10 and open defect repair; Production release readiness remains BLOCKED pending applicable external engineering Goals, visual/manual consistency remediation, and production operational hardening; Production deployment remains UNAUTHORIZED.
 - Future SaaS activation: deferred pending ownership, membership, migration, export, isolation, quota, and compliance approval.
 
 ## 2. Current Priority
