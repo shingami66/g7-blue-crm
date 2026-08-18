@@ -24,7 +24,7 @@ export type RpcCaller = (params: {
   p_amount: number;
   p_date: string;
   p_method: string;
-  p_reference: string | null;
+  p_reference: string;
   p_user_id: string;
   p_request_id: string;
 }) => Promise<{ data: unknown; error: unknown }>;
@@ -49,7 +49,7 @@ export async function executeRecordPayment(
       p_amount: input.amount,
       p_date: input.date,
       p_method: input.method,
-      p_reference: input.reference || null,
+      p_reference: input.reference || "",
       p_user_id: userId,
       p_request_id: input.requestId,
     });

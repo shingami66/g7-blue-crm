@@ -55,6 +55,13 @@ export async function POST(req: NextRequest) {
   const { id } = evt.data;
   const eventType = evt.type;
 
+  if (!id) {
+    console.error(
+      `[Clerk Webhook] [${correlationId}] Verification failed: missing user id`
+    );
+    return new Response("Missing user id", { status: 400 });
+  }
+
   console.log(`[Clerk Webhook] [${correlationId}] Received event: ${eventType}`);
 
   if (eventType === "user.created") {

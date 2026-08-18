@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Database, Json } from "@/lib/supabase/database.types";
 import { mapSupplierBookingRow } from "./mappers";
 import {
   cancelSupplierBookingSchema,
@@ -65,7 +66,7 @@ function createInputHasOnlySourceAllocationId(input: unknown) {
   return inputKeys.length === 1 && inputKeys[0] === "sourceAllocationId";
 }
 
-function allocationSnapshot(allocation: SelectedAllocationRow) {
+function allocationSnapshot(allocation: SelectedAllocationRow): Json {
   return {
     sourceAllocationId: allocation.id,
     serviceId: allocation.service_id,
@@ -81,7 +82,7 @@ function allocationSnapshot(allocation: SelectedAllocationRow) {
     estimatedUnitCost: allocation.estimated_unit_cost,
     estimatedTotalCost: allocation.estimated_total_cost,
     costSource: allocation.cost_source,
-    rateCardSnapshot: allocation.rate_card_snapshot,
+    rateCardSnapshot: (allocation.rate_card_snapshot as unknown as Json) ?? null,
     scopeOfWork: allocation.scope_of_work,
     internalNotes: allocation.internal_notes,
     createdAt: allocation.created_at,
@@ -89,7 +90,10 @@ function allocationSnapshot(allocation: SelectedAllocationRow) {
   };
 }
 
-function supplierBookingInsertPayload(allocation: SelectedAllocationRow, clerkUserId: string) {
+function supplierBookingInsertPayload(
+  allocation: SelectedAllocationRow,
+  clerkUserId: string
+): Database["public"]["Tables"]["supplier_bookings"]["Insert"] {
   return {
     service_id: allocation.service_id,
     supplier_id: allocation.supplier_id,
@@ -98,9 +102,9 @@ function supplierBookingInsertPayload(allocation: SelectedAllocationRow, clerkUs
     category: allocation.category,
     item_name: allocation.item_name,
     unit: allocation.unit,
-    quantity: allocation.quantity,
+    quantity: Number(allocation.quantity),
     currency: "SAR",
-    estimated_unit_cost: allocation.estimated_unit_cost,
+    estimated_unit_cost: Number(allocation.estimated_unit_cost),
     scope_of_work: allocation.scope_of_work,
     internal_notes: allocation.internal_notes,
     allocation_snapshot: allocationSnapshot(allocation),
@@ -178,9 +182,9 @@ async function supplierAllowsSupplierBooking(
   supabase: ReturnType<typeof createAdminClient>,
   supplierId: string
 ): Promise<ActionResult> {
-  const { data: supplier, error } = await supabase
+  const { data: rawSupplier, error } = await supabase
     .from("suppliers")
-    .select("status, is_blacklisted")
+    .select("status, blacklisted_at")
     .eq("id", supplierId)
     .eq("is_deleted", false)
     .maybeSingle();
@@ -189,6 +193,13 @@ async function supplierAllowsSupplierBooking(
     console.error("[supplierAllowsSupplierBooking] Supabase error:", error.message);
     return { success: false, error: "Failed to verify Supplier status. Please try again." };
   }
+
+  const supplier = rawSupplier
+    ? {
+        ...rawSupplier,
+        is_blacklisted: rawSupplier.status === "blacklisted" || rawSupplier.blacklisted_at !== null,
+      }
+    : null;
 
   if (!supplier) {
     return { success: false, error: "Supplier is unavailable for Supplier Booking." };

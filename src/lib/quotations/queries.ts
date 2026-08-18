@@ -8,6 +8,8 @@ import {
   normalizeQuotationListSearch,
   normalizeQuotationSearchMode,
   type QuotationDetail,
+  type QuotationDetailRow,
+  type QuotationItemRow,
   type QuotationListItem,
   type QuotationListQuery,
   type QuotationRowWithRelations,
@@ -18,6 +20,42 @@ import { getBusinessYearBounds } from "@/lib/business-year";
 
 const QUOTATION_SELECT = "*, customers(company, contact), services(service_number, service_title, status, event_name)";
 const QUOTATION_DETAIL_SELECT = `${QUOTATION_SELECT}, quotation_items(*)`;
+
+export function sanitizeQuotationRow(row: Record<string, unknown>): QuotationRowWithRelations {
+  return {
+    ...(row as unknown as QuotationRowWithRelations),
+    subtotal: Number(row.subtotal) || 0,
+    discount: Number(row.discount) || 0,
+    vat_rate: Number(row.vat_rate) || 0,
+    vat_amount: Number(row.vat_amount) || 0,
+    grand_total: Number(row.grand_total) || 0,
+    created_at: typeof row.created_at === "string" ? row.created_at : "",
+    updated_at: typeof row.updated_at === "string" ? row.updated_at : "",
+    is_deleted: Boolean(row.is_deleted),
+    created_by: typeof row.created_by === "string" ? row.created_by : "",
+    updated_by: typeof row.updated_by === "string" ? row.updated_by : "",
+  };
+}
+
+export function sanitizeQuotationDetailRow(row: Record<string, unknown>): QuotationDetailRow {
+  const base = sanitizeQuotationRow(row);
+  const items = Array.isArray(row.quotation_items) ? row.quotation_items : [];
+  return {
+    ...base,
+    quotation_items: items.map((item) => {
+      const itemObj = (item && typeof item === "object" ? item : {}) as Record<string, unknown>;
+      return {
+        ...(itemObj as unknown as QuotationItemRow),
+        qty: Number(itemObj.qty) || 0,
+        unit_price: Number(itemObj.unit_price) || 0,
+        vat: Number(itemObj.vat) || 0,
+        total: Number(itemObj.total) || 0,
+        created_at: typeof itemObj.created_at === "string" ? itemObj.created_at : "",
+        updated_at: typeof itemObj.updated_at === "string" ? itemObj.updated_at : "",
+      };
+    }),
+  };
+}
 
 export async function getQuotations(options: { year?: number } = {}): Promise<QuotationListItem[]> {
   await requirePermission("quotations:read");
@@ -42,7 +80,7 @@ export async function getQuotations(options: { year?: number } = {}): Promise<Qu
       return [];
     }
 
-    return (data || []).map(mapRowToQuotationListItem);
+    return (data || []).map((row) => mapRowToQuotationListItem(sanitizeQuotationRow(row)));
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error("[getQuotations] Unexpected error:", err instanceof Error ? err.message : "Unknown");
@@ -74,16 +112,6 @@ function quotationSearchRelation(mode: QuotationListQuery["searchMode"]): string
   return undefined;
 }
 
-function quotationListSelect(searchRelation: string | undefined): string {
-  const customerSelect = searchRelation === "customers"
-    ? "customers!inner(company, contact)"
-    : "customers(company, contact)";
-  const serviceSelect = searchRelation === "services"
-    ? "services!inner(service_number, service_title, status, event_name)"
-    : "services(service_number, service_title, status, event_name)";
-  return `*, ${customerSelect}, ${serviceSelect}`;
-}
-
 export async function getQuotationsList(
   options: QuotationListQuery = {},
 ): Promise<QuotationsListResult> {
@@ -106,7 +134,13 @@ export async function getQuotationsList(
       .eq("is_deleted", false);
     let dataQuery = supabase
       .from("quotations")
-      .select(quotationListSelect(searchRelation))
+      .select(
+        searchRelation === "customers"
+          ? "*, customers!inner(company, contact), services(service_number, service_title, status, event_name)"
+          : searchRelation === "services"
+            ? "*, customers(company, contact), services!inner(service_number, service_title, status, event_name)"
+            : "*, customers(company, contact), services(service_number, service_title, status, event_name)",
+      )
       .eq("is_deleted", false);
 
     if (options.status) {
@@ -149,7 +183,7 @@ export async function getQuotationsList(
     }
 
     return {
-      quotations: (data ?? []).map((row) => mapRowToQuotationListItem(row as unknown as QuotationRowWithRelations)),
+      quotations: (data ?? []).map((row) => mapRowToQuotationListItem(sanitizeQuotationRow(row))),
       pagination: { page, pageSize, total, totalPages },
     };
   } catch (err) {
@@ -180,7 +214,7 @@ export async function getQuotationsByServiceId(
       return [];
     }
 
-    return (data || []).map(mapRowToQuotationListItem);
+    return (data || []).map((row) => mapRowToQuotationListItem(sanitizeQuotationRow(row)));
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error(
@@ -208,7 +242,7 @@ export async function getQuotationById(id: string): Promise<QuotationDetail | nu
       return null;
     }
 
-    return mapRowToQuotationDetail(data);
+    return mapRowToQuotationDetail(sanitizeQuotationDetailRow(data));
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error("[getQuotationById] Unexpected error:", err instanceof Error ? err.message : "Unknown");

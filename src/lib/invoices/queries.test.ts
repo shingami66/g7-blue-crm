@@ -235,10 +235,10 @@ test("Explicit status filtering remains paired with the same Business Year datas
 });
 
 const EXPECTED_INVOICE_LIST_PROJECTION =
-  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, vat_rate, vat_amount, grand_total, amount_paid, balance_due, currency, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at, customers(company,contact), services(service_number,service_title)";
+  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, vat_rate, vat_amount, grand_total, amount_paid, balance_due, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at, customers(company,contact), services(service_number,service_title)";
 
 const EXPECTED_INVOICE_INNER_SEARCH_PROJECTION =
-  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, vat_rate, vat_amount, grand_total, amount_paid, balance_due, currency, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at, customers!inner(company,contact), services(service_number,service_title)";
+  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, vat_rate, vat_amount, grand_total, amount_paid, balance_due, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at, customers!inner(company,contact), services(service_number,service_title)";
 
 test("getInvoicesList uses exact explicit projection and maps full row shape preserving all fields", async () => {
   const sampleRow = {

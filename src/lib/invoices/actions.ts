@@ -8,8 +8,38 @@ import { consumeRateLimit } from "@/lib/security/rate-limit";
 import { createInvoiceSchema } from "./schemas";
 import { buildInvoiceSnapshotData } from "./snapshots";
 import { mapRowToQuotationDetail } from "@/lib/quotations/mappers";
-import type { QuotationDetailRow } from "@/lib/quotations/types";
+import type { QuotationDetailRow, QuotationItemRow } from "@/lib/quotations/types";
+import type { CompanySettingsRow } from "@/lib/settings/types";
 import type { CreateInvoiceResult, IssueInvoiceResult } from "./types";
+
+function toQuotationDetailRow(row: Record<string, unknown>): QuotationDetailRow {
+  const items = Array.isArray(row.quotation_items) ? row.quotation_items : [];
+  return {
+    ...(row as unknown as QuotationDetailRow),
+    subtotal: Number(row.subtotal) || 0,
+    discount: Number(row.discount) || 0,
+    vat_rate: Number(row.vat_rate) || 0,
+    vat_amount: Number(row.vat_amount) || 0,
+    grand_total: Number(row.grand_total) || 0,
+    created_at: typeof row.created_at === "string" ? row.created_at : "",
+    updated_at: typeof row.updated_at === "string" ? row.updated_at : "",
+    is_deleted: Boolean(row.is_deleted),
+    created_by: typeof row.created_by === "string" ? row.created_by : "",
+    updated_by: typeof row.updated_by === "string" ? row.updated_by : "",
+    quotation_items: items.map((item) => {
+      const itemObj = (item && typeof item === "object" ? item : {}) as Record<string, unknown>;
+      return {
+        ...(itemObj as unknown as QuotationItemRow),
+        qty: Number(itemObj.qty) || 0,
+        unit_price: Number(itemObj.unit_price) || 0,
+        vat: Number(itemObj.vat) || 0,
+        total: Number(itemObj.total) || 0,
+        created_at: typeof itemObj.created_at === "string" ? itemObj.created_at : "",
+        updated_at: typeof itemObj.updated_at === "string" ? itemObj.updated_at : "",
+      };
+    }),
+  };
+}
 
 const QUOTATION_DETAIL_SELECT =
   "*, quotation_items(*), customers(company, contact), services(service_number, service_title, status, event_name)";
@@ -267,10 +297,9 @@ async function reconcileInvoiceMutation(
       p_service_id: serviceId,
       p_quotation_id: quotationId,
       p_invoice_type: invoiceType,
-      p_requested_amount:
-        invoiceType === "deposit" && requestedAmount !== undefined && requestedAmount !== null
-          ? requestedAmount
-          : null,
+      p_requested_amount: (invoiceType === "deposit" && requestedAmount !== undefined && requestedAmount !== null
+        ? requestedAmount
+        : null) as number,
     },
   );
 
@@ -413,7 +442,7 @@ export async function createInvoiceAction(
     }
 
     const quotationDetail = mapRowToQuotationDetail(
-      quotationRow as unknown as QuotationDetailRow,
+      toQuotationDetailRow(quotationRow as Record<string, unknown>),
     );
 
     const { data: settings, error: settingsError } = await supabase
@@ -430,10 +459,18 @@ export async function createInvoiceAction(
       return await handlePreworkFailure("vat_registered_invoice_not_implemented_in_this_slice");
     }
 
+    const companySettingsRow: CompanySettingsRow = {
+      ...settings,
+      setting_key: "default",
+      currency: "SAR",
+      vat_mode: settings.vat_mode as CompanySettingsRow["vat_mode"],
+      default_terms: settings.default_terms ?? "",
+    };
+
     let snapshotData;
     try {
       snapshotData = buildInvoiceSnapshotData(
-        settings,
+        companySettingsRow,
         quotationDetail,
         null,
         invoiceType === "deposit" ? requestedAmount : undefined,
@@ -469,8 +506,7 @@ export async function createInvoiceAction(
         p_service_id: serviceId,
         p_quotation_id: quotationId,
         p_invoice_type: invoiceType,
-        p_requested_amount:
-          invoiceType === "deposit" ? requestedAmount : null,
+        p_requested_amount: (invoiceType === "deposit" ? (requestedAmount ?? null) : null) as number,
         p_actor_clerk_user_id: user.clerk_user_id,
         p_document_label: snapshotData.document_label,
         p_vat_mode: snapshotData.vat_mode,

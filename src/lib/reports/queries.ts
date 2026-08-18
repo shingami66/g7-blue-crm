@@ -60,9 +60,9 @@ export function formatRiyadhTimestampBoundary(dateStr: string, boundary: "start"
 
 export function dateFilter<
   T extends {
-    gte: (column: string, value: string) => T;
-    lte: (column: string, value: string) => T;
-    lt: (column: string, value: string) => T;
+    gte: (column: any, value: any) => T;
+    lte: (column: any, value: any) => T;
+    lt: (column: any, value: any) => T;
   },
 >(query: T, filters: ReportFilters, column = "created_at", includeYear = true) {
   let filtered = query;
@@ -92,9 +92,9 @@ export function dateFilter<
 
 export function serviceDateFilter<
   T extends {
-    gte: (column: string, value: string) => T;
-    lte: (column: string, value: string) => T;
-    or: (filters: string) => T;
+    gte: (column: any, value: any) => T;
+    lte: (column: any, value: any) => T;
+    or: (filters: any) => T;
   },
 >(query: T, filters: ReportFilters) {
   let filtered = query;
@@ -106,8 +106,8 @@ export function serviceDateFilter<
 
 export function applyLiveInvoiceFilter<
   T extends {
-    eq: (column: string, value: unknown) => T;
-    not: (column: string, operator: string, value: unknown) => T;
+    eq: (column: any, value: any) => T;
+    not: (column: any, operator: any, value: any) => T;
   },
 >(query: T): T {
   return query

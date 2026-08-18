@@ -5,9 +5,10 @@ import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { APPROVED_BILLING_SCOPE_PERMISSIONS } from "@/lib/approved-billing-scopes/permissions";
 import type { ApprovedBillingScopeReadResult } from "@/lib/approved-billing-scopes/types";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Database } from "@/lib/supabase/database.types";
 import type { InvoiceRow } from "./types";
 import { mapRowToInvoice } from "./mappers";
-import type { Invoice } from "@/types/invoice";
+import type { Invoice, JsonValue } from "@/types/invoice";
 import { buildIlikeOrFilter } from "@/lib/search/server";
 import { getBusinessYearBounds } from "@/lib/business-year";
 import {
@@ -17,6 +18,50 @@ import {
   type InvoiceListQuery,
   type InvoicesListResult,
 } from "./types";
+
+function toInvoiceRow(row: Record<string, unknown>): InvoiceRow & {
+  customers?: { company?: string | null; contact?: string | null } | null;
+  services?: { service_number?: string | null; service_title?: string | null } | null;
+} {
+  return {
+    ...(row as unknown as InvoiceRow),
+    id: typeof row.id === "string" ? row.id : "",
+    invoice_number: typeof row.invoice_number === "string" ? row.invoice_number : "",
+    approved_quotation_id: typeof row.approved_quotation_id === "string" ? row.approved_quotation_id : "",
+    approved_billing_scope_id: typeof row.approved_billing_scope_id === "string" ? row.approved_billing_scope_id : null,
+    customer_id: typeof row.customer_id === "string" ? row.customer_id : "",
+    invoice_type: typeof row.invoice_type === "string" ? row.invoice_type : "",
+    service_id: typeof row.service_id === "string" ? row.service_id : "",
+    date: typeof row.date === "string" ? row.date : "",
+    due_date: typeof row.due_date === "string" ? row.due_date : "",
+    status: typeof row.status === "string" ? row.status : "",
+    subtotal: Number(row.subtotal) || 0,
+    vat_rate: Number(row.vat_rate) || 0,
+    vat_amount: Number(row.vat_amount) || 0,
+    grand_total: Number(row.grand_total) || 0,
+    amount_paid: Number(row.amount_paid) || 0,
+    balance_due: Number(row.balance_due) || 0,
+    currency: "SAR",
+    document_label: typeof row.document_label === "string" ? row.document_label : "Tax Invoice",
+    vat_mode: typeof row.vat_mode === "string" ? row.vat_mode : "not_registered",
+    snapshot_seller: (row.snapshot_seller as unknown as JsonValue) ?? null,
+    snapshot_buyer: (row.snapshot_buyer as unknown as JsonValue) ?? null,
+    snapshot_quotation: (row.snapshot_quotation as unknown as JsonValue) ?? null,
+    snapshot_bank_details: (row.snapshot_bank_details as unknown as JsonValue) ?? null,
+    snapshot_document_rules: (row.snapshot_document_rules as unknown as JsonValue) ?? null,
+    issued_at: typeof row.issued_at === "string" ? row.issued_at : null,
+    voided_at: typeof row.voided_at === "string" ? row.voided_at : null,
+    void_reason: typeof row.void_reason === "string" ? row.void_reason : null,
+    created_at: typeof row.created_at === "string" ? row.created_at : "",
+    updated_at: typeof row.updated_at === "string" ? row.updated_at : "",
+    is_deleted: Boolean(row.is_deleted),
+    deleted_at: typeof row.deleted_at === "string" ? row.deleted_at : null,
+    mutation_key: typeof row.mutation_key === "string" ? row.mutation_key : null,
+    mutation_payload: (row.mutation_payload as unknown as JsonValue) ?? null,
+    customers: row.customers as { company?: string | null; contact?: string | null } | null,
+    services: row.services as { service_number?: string | null; service_title?: string | null } | null,
+  };
+}
 
 export async function getInvoicesByApprovedBillingScopeId(
   approvedBillingScopeId: string
@@ -45,7 +90,7 @@ export async function getInvoicesByApprovedBillingScopeId(
 
     return {
       status: "success",
-      data: (data ?? []).map((row) => mapRowToInvoice(row as InvoiceRow)),
+      data: (data ?? []).map((row) => mapRowToInvoice(toInvoiceRow(row))),
     };
   } catch (err) {
     console.error(
@@ -73,7 +118,7 @@ export async function getInvoiceById(id: string): Promise<Invoice | null> {
     return null;
   }
 
-  return mapRowToInvoice(data as InvoiceRow);
+  return mapRowToInvoice(toInvoiceRow(data));
 }
 
 export async function getInvoicesByServiceId(serviceId: string): Promise<Invoice[]> {
@@ -91,7 +136,7 @@ export async function getInvoicesByServiceId(serviceId: string): Promise<Invoice
     return [];
   }
 
-  return (data as InvoiceRow[]).map(mapRowToInvoice);
+  return (data ?? []).map((row) => mapRowToInvoice(toInvoiceRow(row)));
 }
 
 export async function getInvoicesByQuotationId(quotationId: string): Promise<Invoice[]> {
@@ -109,11 +154,11 @@ export async function getInvoicesByQuotationId(quotationId: string): Promise<Inv
     return [];
   }
 
-  return (data as InvoiceRow[]).map(mapRowToInvoice);
+  return (data ?? []).map((row) => mapRowToInvoice(toInvoiceRow(row)));
 }
 
 const INVOICE_LIST_COLUMNS =
-  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, vat_rate, vat_amount, grand_total, amount_paid, balance_due, currency, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at";
+  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, vat_rate, vat_amount, grand_total, amount_paid, balance_due, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at";
 
 export async function getInvoices(options: { year?: number } = {}): Promise<Invoice[]> {
   await requirePermission("invoices:read");
@@ -133,7 +178,7 @@ export async function getInvoices(options: { year?: number } = {}): Promise<Invo
     return [];
   }
 
-  return (data as unknown as InvoiceRow[]).map(mapRowToInvoice);
+  return (data ?? []).map(toInvoiceRow).map(mapRowToInvoice);
 }
 
 function invoiceSearchColumns(mode: InvoiceListQuery["searchMode"]): string[] {
@@ -208,7 +253,7 @@ export async function getInvoicesList(
     }
 
     return {
-      invoices: (data ?? []).map((row) => mapRowToInvoice(row as unknown as InvoiceRow)),
+      invoices: (data ?? []).map(toInvoiceRow).map(mapRowToInvoice),
       pagination: { page, pageSize, total, totalPages },
     };
   } catch (err) {

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Database } from "@/lib/supabase/database.types";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { createServiceSchema, updateServiceSchema } from "./schemas";
@@ -45,8 +46,10 @@ function firstValidationError(parsed: { error: { issues: { message: string }[] }
 function serviceUpdatePayload(
   serviceInput: UpdateServiceInput,
   clerkUserId: string
-) {
-  const updates: Record<string, unknown> = {};
+): Database["public"]["Tables"]["services"]["Update"] {
+  const updates: Database["public"]["Tables"]["services"]["Update"] = {
+    updated_by: clerkUserId,
+  };
   const allowedFields = [
     "service_title",
     "event_name",
@@ -61,10 +64,9 @@ function serviceUpdatePayload(
 
   for (const fieldName of allowedFields) {
     const fieldValue = serviceInput[fieldName];
-    if (fieldValue !== undefined) updates[fieldName] = fieldValue;
+    if (fieldValue !== undefined) (updates as Record<string, unknown>)[fieldName] = fieldValue;
   }
 
-  updates.updated_by = clerkUserId;
   return updates;
 }
 
@@ -124,14 +126,14 @@ export async function createService(
       {
         p_customer_id: parsed.data.customer_id,
         p_service_title: parsed.data.service_title,
-        p_event_name: parsed.data.event_name ?? null,
-        p_event_type: parsed.data.event_type ?? null,
-        p_event_start_date: parsed.data.event_start_date ?? null,
-        p_event_end_date: parsed.data.event_end_date ?? null,
-        p_event_location: parsed.data.event_location ?? null,
-        p_description: parsed.data.description ?? null,
-        p_estimated_budget: parsed.data.estimated_budget ?? null,
-        p_cancellation_reason: parsed.data.cancellation_reason ?? null,
+        p_event_name: parsed.data.event_name ?? undefined,
+        p_event_type: parsed.data.event_type ?? undefined,
+        p_event_start_date: parsed.data.event_start_date ?? undefined,
+        p_event_end_date: parsed.data.event_end_date ?? undefined,
+        p_event_location: parsed.data.event_location ?? undefined,
+        p_description: parsed.data.description ?? undefined,
+        p_estimated_budget: parsed.data.estimated_budget ?? undefined,
+        p_cancellation_reason: parsed.data.cancellation_reason ?? undefined,
         p_created_by: user.clerk_user_id,
         p_mutation_key: parsed.data.mutation_key,
       }

@@ -37,7 +37,17 @@ export async function getAppUsers(): Promise<AppUsersQueryResult> {
       return { success: false, error: "Unable to load users. Please try again." };
     }
 
-    return { success: true, users: data || [] };
+    const users: AppUserRow[] = (data || []).map((u) => ({
+      id: u.id,
+      email: u.email ?? "",
+      name: u.name ?? "",
+      role: u.role,
+      is_active: Boolean(u.is_active),
+      created_at: u.created_at ?? "",
+      updated_at: u.updated_at ?? "",
+    }));
+
+    return { success: true, users };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error("[getAppUsers] Unexpected error:", err instanceof Error ? err.message : "Unknown");

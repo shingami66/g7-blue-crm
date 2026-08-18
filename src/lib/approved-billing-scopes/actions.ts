@@ -4,6 +4,7 @@ import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { requirePermission } from "@/lib/auth/permissions";
 import { parseAuthoritativeMoney } from "@/lib/invoices/money";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Json } from "@/lib/supabase/database.types";
 import type { QuotationDetailRow, QuotationItemRow } from "@/lib/quotations/types";
 import { isTerminalServiceStatus } from "@/lib/services/status-transitions";
 import type { ServiceStatus } from "@/types/service";
@@ -117,7 +118,7 @@ function sourceCurrencyFromQuotation(row: QuotationDetailRow): string {
   return DEFAULT_SOURCE_CURRENCY;
 }
 
-function buildSourcePricingContext(row: QuotationDetailRow): Record<string, unknown> {
+function buildSourcePricingContext(row: QuotationDetailRow): Json {
   return {
     quotationNumber: row.quotation_number,
     event: row.event,
@@ -754,11 +755,11 @@ export async function editApprovedBillingScopeItem(
         p_scope_id: scopeId,
         p_item_id: itemId,
         p_decision: decision,
-        p_accepted_qty: normalizedAcceptedQty,
-        p_accepted_unit_price: normalizedAcceptedUnitPrice,
-        p_reason_code: reasonCode !== undefined ? reasonCode : null,
-        p_reason_note: reasonNote !== undefined ? reasonNote : null,
-        p_display_order: displayOrder !== undefined ? displayOrder : null,
+        p_accepted_qty: (normalizedAcceptedQty !== undefined ? normalizedAcceptedQty : null) as number,
+        p_accepted_unit_price: (normalizedAcceptedUnitPrice !== undefined ? normalizedAcceptedUnitPrice : null) as number,
+        p_reason_code: (reasonCode !== undefined ? reasonCode : null) as string,
+        p_reason_note: (reasonNote !== undefined ? reasonNote : null) as string,
+        p_display_order: (displayOrder !== undefined ? displayOrder : null) as number,
       })
       .single<EditApprovedBillingScopeItemRpcRow>();
 

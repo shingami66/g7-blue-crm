@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Database } from "@/lib/supabase/database.types";
 import {
   createCustomerSchema,
   updateCustomerSchema,
@@ -152,21 +153,21 @@ export async function createCustomer(
       p_email: parsed.data.email,
       p_city: parsed.data.city,
       p_status: parsed.data.status,
-      p_customer_type: parsed.data.customer_type ?? null,
-      p_legal_name: parsed.data.legal_name ?? null,
-      p_commercial_registration_number: parsed.data.commercial_registration_number ?? null,
-      p_vat_number: parsed.data.vat_number ?? null,
-      p_national_address_building_number: parsed.data.national_address_building_number ?? null,
-      p_national_address_street: parsed.data.national_address_street ?? null,
-      p_national_address_district: parsed.data.national_address_district ?? null,
-      p_national_address_city: parsed.data.national_address_city ?? null,
-      p_national_address_postal_code: parsed.data.national_address_postal_code ?? null,
-      p_national_address_additional_number: parsed.data.national_address_additional_number ?? null,
-      p_national_address_country: parsed.data.national_address_country ?? null,
-      p_billing_email: parsed.data.billing_email ?? null,
-      p_finance_contact_name: parsed.data.finance_contact_name ?? null,
-      p_finance_contact_phone: parsed.data.finance_contact_phone ?? null,
-      p_payment_terms: parsed.data.payment_terms ?? null,
+      p_customer_type: parsed.data.customer_type ?? undefined,
+      p_legal_name: (parsed.data.legal_name !== undefined ? parsed.data.legal_name : null) as string,
+      p_commercial_registration_number: (parsed.data.commercial_registration_number !== undefined ? parsed.data.commercial_registration_number : null) as string,
+      p_vat_number: (parsed.data.vat_number !== undefined ? parsed.data.vat_number : null) as string,
+      p_national_address_building_number: (parsed.data.national_address_building_number !== undefined ? parsed.data.national_address_building_number : null) as string,
+      p_national_address_street: (parsed.data.national_address_street !== undefined ? parsed.data.national_address_street : null) as string,
+      p_national_address_district: (parsed.data.national_address_district !== undefined ? parsed.data.national_address_district : null) as string,
+      p_national_address_city: (parsed.data.national_address_city !== undefined ? parsed.data.national_address_city : null) as string,
+      p_national_address_postal_code: (parsed.data.national_address_postal_code !== undefined ? parsed.data.national_address_postal_code : null) as string,
+      p_national_address_additional_number: (parsed.data.national_address_additional_number !== undefined ? parsed.data.national_address_additional_number : null) as string,
+      p_national_address_country: (parsed.data.national_address_country !== undefined ? parsed.data.national_address_country : null) as string,
+      p_billing_email: (parsed.data.billing_email !== undefined ? parsed.data.billing_email : null) as string,
+      p_finance_contact_name: (parsed.data.finance_contact_name !== undefined ? parsed.data.finance_contact_name : null) as string,
+      p_finance_contact_phone: (parsed.data.finance_contact_phone !== undefined ? parsed.data.finance_contact_phone : null) as string,
+      p_payment_terms: (parsed.data.payment_terms !== undefined ? parsed.data.payment_terms : null) as string,
       p_po_required: parsed.data.po_required ?? false,
       p_created_by: user.clerk_user_id,
       p_mutation_key: parsed.data.mutation_key,
@@ -241,18 +242,11 @@ export async function updateCustomer(id: string, formData: FormData): Promise<Ac
       return { success: false, error: firstError };
     }
 
-    // Remove undefined keys so Supabase only updates provided fields
-    const updates: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(parsed.data)) {
-      if (value !== undefined) {
-        updates[key] = value;
-      }
-    }
-    updates.updated_by = user.clerk_user_id;
-
-    if (Object.keys(updates).length === 0) {
-      return { success: false, error: "No fields to update." };
-    }
+    // Build typed update payload with only defined fields and updated_by
+    const updates: Database["public"]["Tables"]["customers"]["Update"] = {
+      ...parsed.data,
+      updated_by: user.clerk_user_id,
+    };
 
     const supabase = createAdminClient();
     const { error } = await supabase

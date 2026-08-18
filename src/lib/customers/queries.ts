@@ -57,8 +57,16 @@ export async function getCustomers(): Promise<Customer[]> {
 
     const metricsMap = new Map<string, CustomerMetricsRow>();
     if (metricsData) {
-      metricsData.forEach((m: CustomerMetricsRow & { customer_id: string }) => {
-        metricsMap.set(m.customer_id, m as CustomerMetricsRow);
+      metricsData.forEach((m) => {
+        if (m.customer_id) {
+          metricsMap.set(m.customer_id, {
+            services_count: m.services_count ?? 0,
+            quotations_count: m.quotations_count ?? 0,
+            approved_quotations_count: m.approved_quotations_count ?? 0,
+            draft_quotations_count: m.draft_quotations_count ?? 0,
+            total_quoted_amount: m.total_quoted_amount ?? 0,
+          });
+        }
       });
     }
 
@@ -120,8 +128,16 @@ export async function getCustomersList(options: CustomerListQuery = {}): Promise
       : { data: [], error: null };
     if (metricsError) console.error("[getCustomersList] Metrics error:", metricsError.message);
     const metricsMap = new Map<string, CustomerMetricsRow>();
-    for (const metric of (metricsData ?? []) as Array<CustomerMetricsRow & { customer_id: string }>) {
-      metricsMap.set(metric.customer_id, metric);
+    for (const metric of metricsData ?? []) {
+      if (metric.customer_id) {
+        metricsMap.set(metric.customer_id, {
+          services_count: metric.services_count ?? 0,
+          quotations_count: metric.quotations_count ?? 0,
+          approved_quotations_count: metric.approved_quotations_count ?? 0,
+          draft_quotations_count: metric.draft_quotations_count ?? 0,
+          total_quoted_amount: metric.total_quoted_amount ?? 0,
+        });
+      }
     }
     return {
       customers: rows.map((row) => mapRowToCustomer(row, metricsMap.get(row.id))),
@@ -180,7 +196,17 @@ export async function getCustomerById(id: string): Promise<Customer | null> {
       console.error("[getCustomerById] Error fetching metrics:", metricsError.message);
     }
 
-    return mapRowToCustomer(data as CustomerRow, metricsData as CustomerMetricsRow | undefined);
+    const metrics: CustomerMetricsRow | undefined = metricsData
+      ? {
+          services_count: metricsData.services_count ?? 0,
+          quotations_count: metricsData.quotations_count ?? 0,
+          approved_quotations_count: metricsData.approved_quotations_count ?? 0,
+          draft_quotations_count: metricsData.draft_quotations_count ?? 0,
+          total_quoted_amount: metricsData.total_quoted_amount ?? 0,
+        }
+      : undefined;
+
+    return mapRowToCustomer(data as CustomerRow, metrics);
   } catch (err) {
     console.error("[getCustomerById] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return null;

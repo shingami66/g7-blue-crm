@@ -8,22 +8,25 @@ const MAX_YEAR_VALUES_PER_SOURCE = 5000;
 
 type DateRow = Record<string, unknown>;
 
+type YearTableSource = "services" | "quotations" | "invoices" | "payments";
+
 async function readDateValues(
   permission: string,
-  table: string,
+  table: YearTableSource,
   column: string,
   filter: "active-services" | "quotations" | "invoices" | "payments",
 ): Promise<string[]> {
   if (!(await checkPermission(permission))) return [];
-  let query = createAdminClient().from(table).select(column).limit(MAX_YEAR_VALUES_PER_SOURCE);
+  const client = createAdminClient();
+  let query = client.from(table).select(column as never).limit(MAX_YEAR_VALUES_PER_SOURCE);
   if (filter === "active-services") {
-    query = query.is("deleted_at", null).not(column, "is", null);
+    query = query.is("deleted_at" as never, null).not(column as never, "is", null);
   } else if (filter === "quotations") {
-    query = query.eq("is_deleted", false).not("date", "is", null);
+    query = query.eq("is_deleted" as never, false).not("date" as never, "is", null);
   } else if (filter === "invoices") {
-    query = query.eq("is_deleted", false).not("issued_at", "is", null);
+    query = query.eq("is_deleted" as never, false).not("issued_at" as never, "is", null);
   } else {
-    query = query.eq("is_deleted", false).not("date", "is", null);
+    query = query.eq("is_deleted" as never, false).not("date" as never, "is", null);
   }
   const { data, error } = await query;
   if (error) {
