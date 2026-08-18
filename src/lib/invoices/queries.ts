@@ -19,12 +19,32 @@ import {
   type InvoicesListResult,
 } from "./types";
 
+function toJsonValue(value: unknown): JsonValue | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map(toJsonValue);
+  }
+  if (typeof value === "object") {
+    const record: { [key: string]: JsonValue } = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      const converted = toJsonValue(v);
+      if (converted !== undefined) {
+        record[k] = converted;
+      }
+    }
+    return record;
+  }
+  return null;
+}
+
 function toInvoiceRow(row: Record<string, unknown>): InvoiceRow & {
   customers?: { company?: string | null; contact?: string | null } | null;
   services?: { service_number?: string | null; service_title?: string | null } | null;
 } {
   return {
-    ...(row as unknown as InvoiceRow),
     id: typeof row.id === "string" ? row.id : "",
     invoice_number: typeof row.invoice_number === "string" ? row.invoice_number : "",
     approved_quotation_id: typeof row.approved_quotation_id === "string" ? row.approved_quotation_id : "",
@@ -44,11 +64,11 @@ function toInvoiceRow(row: Record<string, unknown>): InvoiceRow & {
     currency: "SAR",
     document_label: typeof row.document_label === "string" ? row.document_label : "Tax Invoice",
     vat_mode: typeof row.vat_mode === "string" ? row.vat_mode : "not_registered",
-    snapshot_seller: (row.snapshot_seller as unknown as JsonValue) ?? null,
-    snapshot_buyer: (row.snapshot_buyer as unknown as JsonValue) ?? null,
-    snapshot_quotation: (row.snapshot_quotation as unknown as JsonValue) ?? null,
-    snapshot_bank_details: (row.snapshot_bank_details as unknown as JsonValue) ?? null,
-    snapshot_document_rules: (row.snapshot_document_rules as unknown as JsonValue) ?? null,
+    snapshot_seller: toJsonValue(row.snapshot_seller),
+    snapshot_buyer: toJsonValue(row.snapshot_buyer),
+    snapshot_quotation: toJsonValue(row.snapshot_quotation),
+    snapshot_bank_details: toJsonValue(row.snapshot_bank_details),
+    snapshot_document_rules: toJsonValue(row.snapshot_document_rules),
     issued_at: typeof row.issued_at === "string" ? row.issued_at : null,
     voided_at: typeof row.voided_at === "string" ? row.voided_at : null,
     void_reason: typeof row.void_reason === "string" ? row.void_reason : null,
@@ -57,9 +77,9 @@ function toInvoiceRow(row: Record<string, unknown>): InvoiceRow & {
     is_deleted: Boolean(row.is_deleted),
     deleted_at: typeof row.deleted_at === "string" ? row.deleted_at : null,
     mutation_key: typeof row.mutation_key === "string" ? row.mutation_key : null,
-    mutation_payload: (row.mutation_payload as unknown as JsonValue) ?? null,
-    customers: row.customers as { company?: string | null; contact?: string | null } | null,
-    services: row.services as { service_number?: string | null; service_title?: string | null } | null,
+    mutation_payload: toJsonValue(row.mutation_payload),
+    customers: (row.customers as { company?: string | null; contact?: string | null } | null) ?? null,
+    services: (row.services as { service_number?: string | null; service_title?: string | null } | null) ?? null,
   };
 }
 

@@ -23,17 +23,31 @@ const QUOTATION_DETAIL_SELECT = `${QUOTATION_SELECT}, quotation_items(*)`;
 
 export function sanitizeQuotationRow(row: Record<string, unknown>): QuotationRowWithRelations {
   return {
-    ...(row as unknown as QuotationRowWithRelations),
+    id: typeof row.id === "string" ? row.id : "",
+    quotation_number: typeof row.quotation_number === "string" ? row.quotation_number : "",
+    service_id: typeof row.service_id === "string" ? row.service_id : "",
+    customer_id: typeof row.customer_id === "string" ? row.customer_id : "",
+    event: typeof row.event === "string" ? row.event : "",
+    date: typeof row.date === "string" ? row.date : "",
+    valid_until: typeof row.valid_until === "string" ? row.valid_until : null,
     subtotal: Number(row.subtotal) || 0,
     discount: Number(row.discount) || 0,
     vat_rate: Number(row.vat_rate) || 0,
     vat_amount: Number(row.vat_amount) || 0,
     grand_total: Number(row.grand_total) || 0,
+    status: (typeof row.status === "string" ? row.status : "draft") as QuotationRowWithRelations["status"],
     created_at: typeof row.created_at === "string" ? row.created_at : "",
     updated_at: typeof row.updated_at === "string" ? row.updated_at : "",
     is_deleted: Boolean(row.is_deleted),
+    deleted_at: typeof row.deleted_at === "string" ? row.deleted_at : null,
+    mutation_key: typeof row.mutation_key === "string" ? row.mutation_key : null,
+    mutation_payload: row.mutation_payload ?? null,
     created_by: typeof row.created_by === "string" ? row.created_by : "",
     updated_by: typeof row.updated_by === "string" ? row.updated_by : "",
+    snapshot_seller: (row.snapshot_seller as QuotationRowWithRelations["snapshot_seller"]) ?? null,
+    snapshot_buyer: (row.snapshot_buyer as QuotationRowWithRelations["snapshot_buyer"]) ?? null,
+    customers: (row.customers as QuotationRowWithRelations["customers"]) ?? null,
+    services: (row.services as QuotationRowWithRelations["services"]) ?? null,
   };
 }
 
@@ -45,7 +59,11 @@ export function sanitizeQuotationDetailRow(row: Record<string, unknown>): Quotat
     quotation_items: items.map((item) => {
       const itemObj = (item && typeof item === "object" ? item : {}) as Record<string, unknown>;
       return {
-        ...(itemObj as unknown as QuotationItemRow),
+        id: typeof itemObj.id === "string" ? itemObj.id : "",
+        quotation_id: typeof itemObj.quotation_id === "string" ? itemObj.quotation_id : "",
+        description: typeof itemObj.description === "string" ? itemObj.description : "",
+        details: typeof itemObj.details === "string" ? itemObj.details : null,
+        category: typeof itemObj.category === "string" ? itemObj.category : "",
         qty: Number(itemObj.qty) || 0,
         unit_price: Number(itemObj.unit_price) || 0,
         vat: Number(itemObj.vat) || 0,

@@ -300,7 +300,7 @@ export async function createSupplierAllocation(
         return { success: false, error: "Rate card is expired for the service usage period." };
       }
 
-      const rateCardSnapshot = {
+      const rateCardSnapshot: Json = {
         rateCardId: rateCard.id,
         supplierId: rateCard.supplier_id,
         itemName: rateCard.item_name,
@@ -325,7 +325,7 @@ export async function createSupplierAllocation(
         currency: "SAR",
         estimated_unit_cost: rateCard.base_cost,
         cost_source: "rate_card",
-        rate_card_snapshot: rateCardSnapshot as unknown as Json,
+        rate_card_snapshot: rateCardSnapshot,
         scope_of_work: parsed.data.scopeOfWork ?? null,
         internal_notes: parsed.data.internalNotes ?? null,
         created_by: user.clerk_user_id,

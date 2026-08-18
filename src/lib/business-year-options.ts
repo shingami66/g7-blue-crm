@@ -6,45 +6,103 @@ import { deriveBusinessYearOptions, type BusinessYear } from "./business-year";
 
 const MAX_YEAR_VALUES_PER_SOURCE = 5000;
 
-type DateRow = Record<string, unknown>;
-
-type YearTableSource = "services" | "quotations" | "invoices" | "payments";
-
-async function readDateValues(
-  permission: string,
-  table: YearTableSource,
-  column: string,
-  filter: "active-services" | "quotations" | "invoices" | "payments",
-): Promise<string[]> {
+async function readServicesStartDates(permission: string): Promise<string[]> {
   if (!(await checkPermission(permission))) return [];
   const client = createAdminClient();
-  let query = client.from(table).select(column as never).limit(MAX_YEAR_VALUES_PER_SOURCE);
-  if (filter === "active-services") {
-    query = query.is("deleted_at" as never, null).not(column as never, "is", null);
-  } else if (filter === "quotations") {
-    query = query.eq("is_deleted" as never, false).not("date" as never, "is", null);
-  } else if (filter === "invoices") {
-    query = query.eq("is_deleted" as never, false).not("issued_at" as never, "is", null);
-  } else {
-    query = query.eq("is_deleted" as never, false).not("date" as never, "is", null);
-  }
-  const { data, error } = await query;
+  const { data, error } = await client
+    .from("services")
+    .select("event_start_date")
+    .is("deleted_at", null)
+    .not("event_start_date", "is", null)
+    .limit(MAX_YEAR_VALUES_PER_SOURCE);
   if (error) {
-    console.error(`[business-year] Failed to read ${table}.${column}:`, error.message);
+    console.error("[business-year] Failed to read services.event_start_date:", error.message);
     return [];
   }
-  return ((data as unknown as DateRow[] | null) ?? [])
-    .map((row) => row[column])
+  return (data ?? [])
+    .map((row) => row.event_start_date)
+    .filter((value): value is string => typeof value === "string");
+}
+
+async function readServicesEndDates(permission: string): Promise<string[]> {
+  if (!(await checkPermission(permission))) return [];
+  const client = createAdminClient();
+  const { data, error } = await client
+    .from("services")
+    .select("event_end_date")
+    .is("deleted_at", null)
+    .not("event_end_date", "is", null)
+    .limit(MAX_YEAR_VALUES_PER_SOURCE);
+  if (error) {
+    console.error("[business-year] Failed to read services.event_end_date:", error.message);
+    return [];
+  }
+  return (data ?? [])
+    .map((row) => row.event_end_date)
+    .filter((value): value is string => typeof value === "string");
+}
+
+async function readQuotationsDates(permission: string): Promise<string[]> {
+  if (!(await checkPermission(permission))) return [];
+  const client = createAdminClient();
+  const { data, error } = await client
+    .from("quotations")
+    .select("date")
+    .eq("is_deleted", false)
+    .not("date", "is", null)
+    .limit(MAX_YEAR_VALUES_PER_SOURCE);
+  if (error) {
+    console.error("[business-year] Failed to read quotations.date:", error.message);
+    return [];
+  }
+  return (data ?? [])
+    .map((row) => row.date)
+    .filter((value): value is string => typeof value === "string");
+}
+
+async function readInvoicesDates(permission: string): Promise<string[]> {
+  if (!(await checkPermission(permission))) return [];
+  const client = createAdminClient();
+  const { data, error } = await client
+    .from("invoices")
+    .select("issued_at")
+    .eq("is_deleted", false)
+    .not("issued_at", "is", null)
+    .limit(MAX_YEAR_VALUES_PER_SOURCE);
+  if (error) {
+    console.error("[business-year] Failed to read invoices.issued_at:", error.message);
+    return [];
+  }
+  return (data ?? [])
+    .map((row) => row.issued_at)
+    .filter((value): value is string => typeof value === "string");
+}
+
+async function readPaymentsDates(permission: string): Promise<string[]> {
+  if (!(await checkPermission(permission))) return [];
+  const client = createAdminClient();
+  const { data, error } = await client
+    .from("payments")
+    .select("date")
+    .eq("is_deleted", false)
+    .not("date", "is", null)
+    .limit(MAX_YEAR_VALUES_PER_SOURCE);
+  if (error) {
+    console.error("[business-year] Failed to read payments.date:", error.message);
+    return [];
+  }
+  return (data ?? [])
+    .map((row) => row.date)
     .filter((value): value is string => typeof value === "string");
 }
 
 export async function getBusinessYearOptions(): Promise<BusinessYear[]> {
   const [serviceStarts, serviceEnds, quotations, invoices, payments] = await Promise.all([
-    readDateValues("services:read", "services", "event_start_date", "active-services"),
-    readDateValues("services:read", "services", "event_end_date", "active-services"),
-    readDateValues("quotations:read", "quotations", "date", "quotations"),
-    readDateValues("invoices:read", "invoices", "issued_at", "invoices"),
-    readDateValues("payments:read", "payments", "date", "payments"),
+    readServicesStartDates("services:read"),
+    readServicesEndDates("services:read"),
+    readQuotationsDates("quotations:read"),
+    readInvoicesDates("invoices:read"),
+    readPaymentsDates("payments:read"),
   ]);
   return deriveBusinessYearOptions([
     ...serviceStarts,

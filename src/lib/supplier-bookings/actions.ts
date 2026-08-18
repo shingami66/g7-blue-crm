@@ -43,7 +43,7 @@ type SelectedAllocationRow = {
   estimated_unit_cost: number | string;
   estimated_total_cost: number | string;
   cost_source: string;
-  rate_card_snapshot: Record<string, unknown> | null;
+  rate_card_snapshot: Json;
   scope_of_work: string | null;
   internal_notes: string | null;
   created_at: string;
@@ -82,7 +82,7 @@ function allocationSnapshot(allocation: SelectedAllocationRow): Json {
     estimatedUnitCost: allocation.estimated_unit_cost,
     estimatedTotalCost: allocation.estimated_total_cost,
     costSource: allocation.cost_source,
-    rateCardSnapshot: (allocation.rate_card_snapshot as unknown as Json) ?? null,
+    rateCardSnapshot: allocation.rate_card_snapshot ?? null,
     scopeOfWork: allocation.scope_of_work,
     internalNotes: allocation.internal_notes,
     createdAt: allocation.created_at,
