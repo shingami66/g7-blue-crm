@@ -44,6 +44,11 @@ type InvoiceRow = {
   issued_at?: string | null;
 };
 
+type BillingDatasetResult<Row> = {
+  rows: Row[];
+  hasError: boolean;
+};
+
 function isActiveApprovedScope(scope: ScopeRow): boolean {
   return (
     scope.status === "approved" &&
@@ -433,77 +438,79 @@ export async function getServiceBillingState(
   try {
     const PAGE_SIZE = 500;
 
-    let scopesError = false;
-    const scopeRows: ScopeRow[] = [];
-    let offset = 0;
-    while (true) {
-      const { data, error } = await supabase
-        .from("approved_billing_scopes")
-        .select("id, status, accepted_grand_total, source_quotation_id, superseded_at, voided_at")
-        .eq("service_id", serviceId)
-        .order("id", { ascending: true })
-        .range(offset, offset + PAGE_SIZE - 1);
-      if (error || !Array.isArray(data)) { scopesError = true; break; }
-      if (data.length === 0) break;
-      for (const row of data) scopeRows.push(row as ScopeRow);
-      offset += data.length;
-    }
+    const fetchScopes = async (): Promise<BillingDatasetResult<ScopeRow>> => {
+      const rows: ScopeRow[] = [];
+      let offset = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from("approved_billing_scopes")
+          .select("id, status, accepted_grand_total, source_quotation_id, superseded_at, voided_at")
+          .eq("service_id", serviceId)
+          .order("id", { ascending: true })
+          .range(offset, offset + PAGE_SIZE - 1);
+        if (error || !Array.isArray(data)) return { rows, hasError: true };
+        if (data.length === 0) return { rows, hasError: false };
+        for (const row of data) rows.push(row as ScopeRow);
+        offset += data.length;
+      }
+    };
 
-    if (scopesError) {
-      return failBillingState(state, "billing_state_unavailable");
-    }
-
-    let quotationsError = false;
-    const quotationRows: QuotationRow[] = [];
-    offset = 0;
-    while (true) {
-      const { data, error } = await supabase
-        .from("quotations")
-        .select("id, quotation_number, status, grand_total, created_at")
-        .eq("service_id", serviceId)
-        .eq("status", "approved")
-        .eq("is_deleted", false)
-        .order("created_at", { ascending: false })
-        .order("id", { ascending: true })
-        .range(offset, offset + PAGE_SIZE - 1);
-      if (error || !Array.isArray(data)) { quotationsError = true; break; }
-      if (data.length === 0) break;
-      for (const row of data) quotationRows.push(row as QuotationRow);
-      offset += data.length;
-    }
-
-    if (quotationsError) {
-      return failBillingState(state, "billing_state_unavailable");
-    }
-
-    let invoicesError = false;
-    const invoiceRows: InvoiceRow[] = [];
-    offset = 0;
-    while (true) {
-      const query = applyApplicableServiceInvoiceExposurePredicate(
-        supabase
-          .from("invoices")
-          .select("id, invoice_number, invoice_type, status, grand_total, created_at, issued_at")
+    const fetchQuotations = async (): Promise<BillingDatasetResult<QuotationRow>> => {
+      const rows: QuotationRow[] = [];
+      let offset = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from("quotations")
+          .select("id, quotation_number, status, grand_total, created_at")
+          .eq("service_id", serviceId)
+          .eq("status", "approved")
+          .eq("is_deleted", false)
           .order("created_at", { ascending: false })
-          .order("id", { ascending: true }),
-        serviceId,
-      ) as unknown as { range: (from: number, to: number) => Promise<{ data: unknown[] | null; error: unknown }> };
-      const { data, error } = await query.range(offset, offset + PAGE_SIZE - 1);
+          .order("id", { ascending: true })
+          .range(offset, offset + PAGE_SIZE - 1);
+        if (error || !Array.isArray(data)) return { rows, hasError: true };
+        if (data.length === 0) return { rows, hasError: false };
+        for (const row of data) rows.push(row as QuotationRow);
+        offset += data.length;
+      }
+    };
 
-      if (error || !Array.isArray(data)) { invoicesError = true; break; }
-      if (data.length === 0) break;
-      for (const row of data) invoiceRows.push(row as InvoiceRow);
-      offset += data.length;
+    const fetchInvoices = async (): Promise<BillingDatasetResult<InvoiceRow>> => {
+      const rows: InvoiceRow[] = [];
+      let offset = 0;
+      while (true) {
+        const query = applyApplicableServiceInvoiceExposurePredicate(
+          supabase
+            .from("invoices")
+            .select("id, invoice_number, invoice_type, status, grand_total, created_at, issued_at")
+            .order("created_at", { ascending: false })
+            .order("id", { ascending: true }),
+          serviceId,
+        ) as unknown as { range: (from: number, to: number) => Promise<{ data: unknown[] | null; error: unknown }> };
+        const { data, error } = await query.range(offset, offset + PAGE_SIZE - 1);
+        if (error || !Array.isArray(data)) return { rows, hasError: true };
+        if (data.length === 0) return { rows, hasError: false };
+        for (const row of data) rows.push(row as InvoiceRow);
+        offset += data.length;
+      }
+    };
+
+    const [scopesResult, quotationsResult, invoicesResult] = await Promise.all([
+      fetchScopes(),
+      fetchQuotations(),
+      fetchInvoices(),
+    ]);
+
+    if (scopesResult.hasError || quotationsResult.hasError) {
+      return failBillingState(state, "billing_state_unavailable");
     }
 
     return computeServiceBillingState({
       serviceId,
-      scopes: scopeRows,
-      quotations: quotationRows,
-      invoices: invoiceRows,
-      hasScopesError: scopesError,
-      hasQuotationsError: quotationsError,
-      hasInvoicesError: invoicesError,
+      scopes: scopesResult.rows,
+      quotations: quotationsResult.rows,
+      invoices: invoicesResult.rows,
+      hasInvoicesError: invoicesResult.hasError,
     });
   } catch (error) {
     console.error(

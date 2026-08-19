@@ -27,6 +27,7 @@ type InvoiceFilter =
 
 let activeScenario: BillingScenario | null = null;
 let invoiceFilters: InvoiceFilter[] = [];
+let queryStarts: TableName[] = [];
 
 function currentScenario(): BillingScenario {
   if (!activeScenario) throw new Error("Billing scenario not initialized");
@@ -73,6 +74,7 @@ function createFakeSupabase() {
           onFulfilled?: (response: QueryResponse) => unknown,
           onRejected?: (reason: unknown) => unknown,
         ) {
+          queryStarts.push(table);
           const response = currentScenario()[table];
           let filteredResponse =
             table === "invoices" && Array.isArray(response.data)
@@ -230,6 +232,7 @@ function startScenario(
   overrides: Partial<BillingScenario> = {},
 ) {
   invoiceFilters = [];
+  queryStarts = [];
   activeScenario = {
     approved_billing_scopes: { data: [], error: null },
     quotations: { data: [quotation(100)], error: null },
@@ -621,6 +624,23 @@ test("draft and unissued invoices count while voided, cancelled, and deleted inv
   assert.equal(state.finalInvoice?.status, "approved");
   assert.equal(state.canCreateDepositInvoice, false);
   assert.equal(state.canCreateFinalInvoice, false);
+});
+
+test("independent billing datasets start before their terminating pages", async () => {
+  startScenario({
+    approved_billing_scopes: { data: [approvedScope(100)], error: null },
+    quotations: { data: [quotation(100)], error: null },
+    invoices: { data: [invoice(20)], error: null },
+  });
+
+  await getServiceBillingState("service-1");
+
+  assert.deepEqual(new Set(queryStarts.slice(0, 3)), new Set([
+    "approved_billing_scopes",
+    "quotations",
+    "invoices",
+  ]));
+  assert.equal(queryStarts.length, 6);
 });
 
 test("draft Deposit consumes exposure and blocks another Deposit", async () => {
