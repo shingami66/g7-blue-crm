@@ -5,6 +5,7 @@ import {
   sumAuthoritativeMoney,
 } from "./money.ts";
 import {
+  applyApplicableServiceInvoiceExposureFilters,
   applyApplicableServiceInvoiceExposurePredicate,
 } from "./exposure.ts";
 import type {
@@ -340,14 +341,19 @@ export async function getBatchServiceBillingStates(
       const allRows: InvoiceRow[] = [];
       let offset = 0;
       while (true) {
-        const { data, error } = await supabase
-          .from("invoices")
-          .select("id, service_id, invoice_number, invoice_type, status, grand_total, created_at, issued_at")
-          .in("service_id", uniqueIds)
-          .not("is_deleted", "is", true)
-          .is("voided_at", null)
-          .not("issued_at", "is", null)
-          .not("status", "in", '("draft","voided","cancelled")')
+        const query = applyApplicableServiceInvoiceExposureFilters(
+          supabase
+            .from("invoices")
+            .select("id, service_id, invoice_number, invoice_type, status, grand_total, created_at, issued_at")
+            .in("service_id", uniqueIds),
+        ) as unknown as {
+          order: (column: string, options: { ascending: boolean }) => {
+            order: (column: string, options: { ascending: boolean }) => {
+              range: (from: number, to: number) => Promise<{ data: unknown[] | null; error: unknown }>;
+            };
+          };
+        };
+        const { data, error } = await query
           .order("created_at", { ascending: false })
           .order("id", { ascending: true })
           .range(offset, offset + PAGE_SIZE - 1);

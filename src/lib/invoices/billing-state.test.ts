@@ -477,7 +477,7 @@ test("nullable soft-delete Invoice counts while true soft-delete is excluded", a
   assert.equal(state.remainingUninvoicedAmount, 20);
   assert.equal(state.depositInvoice?.amount, 80);
   assert.equal(state.finalInvoice, null);
-  assert.deepEqual(invoiceFilters.slice(0, 5), [
+  assert.deepEqual(invoiceFilters.slice(0, 4), [
     { method: "eq", column: "service_id", value: "service-1" },
     {
       method: "not",
@@ -488,15 +488,9 @@ test("nullable soft-delete Invoice counts while true soft-delete is excluded", a
     { method: "is", column: "voided_at", value: null },
     {
       method: "not",
-      column: "issued_at",
-      operator: "is",
-      value: null,
-    },
-    {
-      method: "not",
       column: "status",
       operator: "in",
-      value: '("draft","voided","cancelled")',
+      value: '("cancelled","voided")',
     },
   ]);
 });
@@ -563,7 +557,7 @@ test("malformed source quotation total also fails closed for active ABS", async 
   assert.equal(state.canCreateFinalInvoice, false);
 });
 
-test("live issued invoices count while draft, unissued, voided, and cancelled invoices do not count", async () => {
+test("draft and unissued invoices count while voided, cancelled, and deleted invoices do not", async () => {
   startScenario({
     approved_billing_scopes: { data: [approvedScope(100)], error: null },
     invoices: {
@@ -574,13 +568,13 @@ test("live issued invoices count while draft, unissued, voided, and cancelled in
           issued_at: "2026-07-02T00:00:00Z",
           voided_at: null,
         }),
-        // Draft invoice: status is draft -> must be filtered out
+        // Draft invoice: financially applicable, even before issue
         invoice(20, "deposit", false, 2, {
           status: "draft",
           issued_at: null,
           voided_at: null,
         }),
-        // Unissued approved invoice: issued_at is null -> must be filtered out
+        // Unissued approved invoice: financially applicable, even before issue
         invoice(15, "final", false, 3, {
           status: "approved",
           issued_at: null,
@@ -619,14 +613,115 @@ test("live issued invoices count while draft, unissued, voided, and cancelled in
 
   assert.equal(state.authorityMode, "active_abs");
   assert.equal(state.billingCeiling, 100);
-  // Only the 30 SAR issued deposit invoice should count
-  assert.equal(state.activePriorInvoiceTotal, 30);
-  assert.equal(state.remainingUninvoicedAmount, 70);
+  assert.equal(state.activePriorInvoiceTotal, 65);
+  assert.equal(state.remainingUninvoicedAmount, 35);
   assert.equal(state.depositInvoice?.amount, 30);
   assert.equal(state.depositInvoice?.status, "issued");
-  assert.equal(state.finalInvoice, null);
+  assert.equal(state.finalInvoice?.amount, 15);
+  assert.equal(state.finalInvoice?.status, "approved");
   assert.equal(state.canCreateDepositInvoice, false);
-  assert.equal(state.canCreateFinalInvoice, true);
+  assert.equal(state.canCreateFinalInvoice, false);
+});
+
+test("draft Deposit consumes exposure and blocks another Deposit", async () => {
+  startScenario({
+    approved_billing_scopes: { data: [approvedScope(100)], error: null },
+    invoices: {
+      data: [invoice(30, "deposit", false, 1, { status: "draft", issued_at: null })],
+      error: null,
+    },
+  });
+
+  const state = await getServiceBillingState("service-1");
+
+  assert.equal(state.activePriorInvoiceTotal, 30);
+  assert.equal(state.remainingUninvoicedAmount, 70);
+  assert.equal(state.depositInvoice?.status, "draft");
+  assert.equal(state.canCreateDepositInvoice, false);
+});
+
+test("draft Final consumes exposure and blocks another Final", async () => {
+  startScenario({
+    approved_billing_scopes: { data: [approvedScope(100)], error: null },
+    invoices: {
+      data: [invoice(40, "final", false, 1, { status: "draft", issued_at: null })],
+      error: null,
+    },
+  });
+
+  const state = await getServiceBillingState("service-1");
+
+  assert.equal(state.activePriorInvoiceTotal, 40);
+  assert.equal(state.remainingUninvoicedAmount, 60);
+  assert.equal(state.finalInvoice?.status, "draft");
+  assert.equal(state.canCreateFinalInvoice, false);
+});
+
+test("fully invoiced Deposit and Final leave no remaining billing authority", async () => {
+  startScenario({
+    approved_billing_scopes: { data: [approvedScope(4998.6)], error: null },
+    invoices: {
+      data: [invoice(2000, "deposit"), invoice(2998.6, "final", false, 1)],
+      error: null,
+    },
+  });
+
+  const state = await getServiceBillingState("service-1");
+
+  assert.equal(state.activePriorInvoiceTotal, 4998.6);
+  assert.equal(state.remainingUninvoicedAmount, 0);
+  assert.equal(state.canCreateDepositInvoice, false);
+  assert.equal(state.canCreateFinalInvoice, false);
+});
+
+test("Deposit and draft Final fully allocate the Service", async () => {
+  startScenario({
+    approved_billing_scopes: { data: [approvedScope(9000)], error: null },
+    invoices: {
+      data: [
+        invoice(5000, "deposit"),
+        invoice(4000, "final", false, 1, { status: "draft", issued_at: null }),
+      ],
+      error: null,
+    },
+  });
+
+  const state = await getServiceBillingState("service-1");
+
+  assert.equal(state.activePriorInvoiceTotal, 9000);
+  assert.equal(state.remainingUninvoicedAmount, 0);
+  assert.equal(state.finalInvoice?.amount, 4000);
+  assert.equal(state.canCreateFinalInvoice, false);
+});
+
+test("singular and batch reads agree for draft financial exposure", async () => {
+  startScenario({
+    approved_billing_scopes: {
+      data: [{ ...approvedScope(9000), service_id: "service-1" }],
+      error: null,
+    },
+    quotations: {
+      data: [{ ...quotation(9000), service_id: "service-1" }],
+      error: null,
+    },
+    invoices: {
+      data: [
+        invoice(5000, "deposit"),
+        invoice(4000, "final", false, 1, { status: "draft", issued_at: null }),
+      ],
+      error: null,
+    },
+  });
+
+  const singular = await getServiceBillingState("service-1");
+  const batch = (await getBatchServiceBillingStates(["service-1"])).get("service-1");
+
+  assert.ok(batch);
+  assert.equal(batch.activePriorInvoiceTotal, singular.activePriorInvoiceTotal);
+  assert.equal(batch.remainingUninvoicedAmount, singular.remainingUninvoicedAmount);
+  assert.equal(batch.canCreateDepositInvoice, singular.canCreateDepositInvoice);
+  assert.equal(batch.canCreateFinalInvoice, singular.canCreateFinalInvoice);
+  assert.equal(batch.finalInvoice?.status, singular.finalInvoice?.status);
 });
 
 test("getServiceBillingState handles multi-page and short nonterminal pages exhaustively", async () => {
@@ -739,5 +834,29 @@ test("BillingPanel preserves nullable money and never passes a zero fallback", (
   assert.doesNotMatch(
     panelSource,
     /quotationTotal=\{billingState\.billingCeiling\}/,
+  );
+  assert.match(
+    panelSource,
+    /invoiceActionIntent === "deposit" && invoiceControls\.canCreateDepositInvoice/,
+  );
+  assert.match(
+    panelSource,
+    /invoiceActionIntent === "final" && invoiceControls\.canCreateFinalInvoice/,
+  );
+  assert.doesNotMatch(
+    panelSource,
+    /invoiceActionIntent === "deposit" && lifecycleDecision\.canCreateDeposit/,
+  );
+  assert.doesNotMatch(
+    panelSource,
+    /invoiceActionIntent === "final" && lifecycleDecision\.canCreateFinal/,
+  );
+  assert.equal(
+    (panelSource.match(/invoiceControls\.canCreateDepositInvoice && \(/g) ?? []).length,
+    2,
+  );
+  assert.equal(
+    (panelSource.match(/invoiceControls\.canCreateFinalInvoice && \(/g) ?? []).length,
+    2,
   );
 });

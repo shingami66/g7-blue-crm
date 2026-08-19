@@ -22,16 +22,22 @@ export type ApplicableServiceInvoiceExposureResult =
 const EXPOSURE_RESULT_KEYS = ["data", "error"] as const;
 const EXPOSURE_ROW_KEYS = ["id", "grand_total"] as const;
 
+export function applyApplicableServiceInvoiceExposureFilters(
+  query: unknown,
+): unknown {
+  return (query as ExposureFilterQuery)
+    .not("is_deleted", "is", true)
+    .is("voided_at", null)
+    .not("status", "in", '("cancelled","voided")');
+}
+
 export function applyApplicableServiceInvoiceExposurePredicate(
   query: unknown,
   serviceId: string,
 ): unknown {
-  return (query as ExposureFilterQuery)
-    .eq("service_id", serviceId)
-    .not("is_deleted", "is", true)
-    .is("voided_at", null)
-    .not("issued_at", "is", null)
-    .not("status", "in", '("draft","voided","cancelled")');
+  return applyApplicableServiceInvoiceExposureFilters(
+    (query as ExposureFilterQuery).eq("service_id", serviceId),
+  );
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

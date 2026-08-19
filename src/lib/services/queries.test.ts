@@ -276,17 +276,14 @@ test("getEligibleServicesForInvoiceChooser runs O(1) batch queries instead of O(
   const result = await getEligibleServicesForInvoiceChooser();
   assert.equal(result.status, "ready");
 
-  // svc-1: canCreateDeposit = true, canCreateFinal = true
+  // svc-1: Draft Deposit + unissued Final fully consume its authority -> excluded
   // svc-2: canCreateDeposit = false (already has deposit), canCreateFinal = true
   // svc-3: canCreateDeposit = false, canCreateFinal = false (both deposit & final exist) -> excluded
   // svc-4..svc-10: no ABS / quotation -> excluded
-  assert.equal(result.services.length, 2);
-  assert.equal(result.services[0].serviceId, "svc-1");
-  assert.equal(result.services[0].canCreateDeposit, true);
+  assert.equal(result.services.length, 1);
+  assert.equal(result.services[0].serviceId, "svc-2");
+  assert.equal(result.services[0].canCreateDeposit, false);
   assert.equal(result.services[0].canCreateFinal, true);
-  assert.equal(result.services[1].serviceId, "svc-2");
-  assert.equal(result.services[1].canCreateDeposit, false);
-  assert.equal(result.services[1].canCreateFinal, true);
 
   // Assert query calls count: exactly 2 services reads (1 data + 1 terminal empty page) + 6 batch reads (2 per table: 1 data + 1 terminal empty page) = 8 total
   assert.equal(activeScenario.calls.length, 8);

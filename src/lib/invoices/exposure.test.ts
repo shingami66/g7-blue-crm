@@ -33,7 +33,7 @@ function recordingQuery(operations: QueryOperation[]) {
   return query;
 }
 
-test("shared exposure helper builds the nullable-soft-delete Service predicate", () => {
+test("shared exposure helper builds the authoritative nullable-soft-delete Service predicate", () => {
   const operations: QueryOperation[] = [];
   const query = recordingQuery(operations);
 
@@ -54,15 +54,9 @@ test("shared exposure helper builds the nullable-soft-delete Service predicate",
     { method: "is", column: "voided_at", value: null },
     {
       method: "not",
-      column: "issued_at",
-      operator: "is",
-      value: null,
-    },
-    {
-      method: "not",
       column: "status",
       operator: "in",
-      value: '("draft","voided","cancelled")',
+      value: '("cancelled","voided")',
     },
   ]);
   assert.equal(

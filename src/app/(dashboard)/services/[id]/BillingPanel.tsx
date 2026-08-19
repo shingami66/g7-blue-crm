@@ -175,7 +175,7 @@ export default function BillingPanel({
         {/* Primary Action Panel & Mode Switcher */}
         {invoiceControls.showInvoiceActions ? (
           <div className="flex flex-col gap-4">
-            {invoiceActionIntent === "deposit" && lifecycleDecision.canCreateDeposit ? (
+            {invoiceActionIntent === "deposit" && invoiceControls.canCreateDepositInvoice ? (
               <div className="flex flex-col gap-3">
                 <div
                   ref={depositActionRef}
@@ -195,7 +195,7 @@ export default function BillingPanel({
                   />
                 </div>
 
-                {lifecycleDecision.canCreateFinal && (
+                {invoiceControls.canCreateFinalInvoice && (
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 rounded-lg border border-outline-variant/60 bg-surface px-3.5 py-2.5 text-xs text-on-surface-variant">
                     <span className="font-medium">
                       {billingDictionary.finalAlsoAvailable}
@@ -210,7 +210,7 @@ export default function BillingPanel({
                   </div>
                 )}
               </div>
-            ) : invoiceActionIntent === "final" && lifecycleDecision.canCreateFinal ? (
+            ) : invoiceActionIntent === "final" && invoiceControls.canCreateFinalInvoice ? (
               <div className="flex flex-col gap-3">
                 <div
                   ref={finalActionRef}
@@ -229,7 +229,7 @@ export default function BillingPanel({
                   />
                 </div>
 
-                {lifecycleDecision.canCreateDeposit && (
+                {invoiceControls.canCreateDepositInvoice && (
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 rounded-lg border border-outline-variant/60 bg-surface px-3.5 py-2.5 text-xs text-on-surface-variant">
                     <span className="font-medium">
                       {billingDictionary.depositAlsoAvailable}
@@ -251,7 +251,7 @@ export default function BillingPanel({
                   {billingDictionary.selectBillingAction}
                 </span>
                 <div className="flex flex-wrap gap-3">
-                  {lifecycleDecision.canCreateDeposit && (
+                  {invoiceControls.canCreateDepositInvoice && (
                     <Link
                       href={`/services/${encodeURIComponent(billingState.serviceId)}/billing?intent=deposit`}
                       className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary-fixed/30 px-4 py-2 font-semibold text-primary hover:bg-primary hover:text-on-primary transition-colors"
@@ -259,7 +259,7 @@ export default function BillingPanel({
                       <span>{billingDictionary.status.depositInvoice}</span>
                     </Link>
                   )}
-                  {lifecycleDecision.canCreateFinal && (
+                  {invoiceControls.canCreateFinalInvoice && (
                     <Link
                       href={`/services/${encodeURIComponent(billingState.serviceId)}/billing?intent=final`}
                       className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary-fixed/30 px-4 py-2 font-semibold text-primary hover:bg-primary hover:text-on-primary transition-colors"
