@@ -4,12 +4,14 @@ import { Printer, FileEdit } from "lucide-react";
 import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import Link from "next/link";
 import PendingLink from "@/components/ui/PendingLink";
+import Button from "@/components/ui/Button";
 import { getQuotationById } from "@/lib/quotations/queries";
 import { requirePermission, checkPermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getQuotationStatusLabel, getQuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
+import { getCommonDictionary } from "@/lib/i18n/dictionaries/common";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import { UiDateText } from "@/components/i18n/UiDateText";
 import type { ComponentProps } from "react";
@@ -88,8 +90,9 @@ export default async function QuotationDetailPage({
   const recordNavigation = await getQuotationRecordNavigation(id, quotation.quotationNumber);
   const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
-  const [canApprove, linkedService] = await Promise.all([
+  const [canApprove, canWrite, linkedService] = await Promise.all([
     checkPermission("quotations:approve"),
+    checkPermission("quotations:write"),
     getServiceById(quotation.serviceId),
   ]);
   const billingState = linkedService
@@ -119,9 +122,10 @@ export default async function QuotationDetailPage({
         <div className="flex items-center gap-4">
           <PendingLink
             href={returnTo}
-            className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            aria-label={getCommonDictionary(locale).actions.back}
           >
-            <LocaleBackIcon size={18} />
+            <LocaleBackIcon size={16} />
           </PendingLink>
           <div>
             <div className="flex items-center gap-3">
@@ -136,26 +140,53 @@ export default async function QuotationDetailPage({
         </div>
         <div className="flex flex-wrap items-center justify-end gap-3">
           <RecordNavigation basePath="/quotations" recordType={dictionary.list.title} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} pendingLabel={dictionary.list.navigationPending} />
-          {canApprove && (quotation.status === "draft" || quotation.status === "sent") && (
-            <QuotationApprovalActions quotationId={quotation.id} status={quotation.status} dictionary={dictionary.approval} />
+          <div aria-hidden="true" className="hidden h-6 w-px bg-surface-variant sm:block" />
+          {(canApprove || canWrite) && (
+            <QuotationApprovalActions
+              quotationId={quotation.id}
+              status={quotation.status}
+              canApprove={canApprove}
+              canWrite={canWrite}
+              dictionary={dictionary.approval}
+              listDictionary={dictionary.list}
+            />
           )}
-          {quotation.status === "draft" && (
-            <PendingLink
-              href={`/quotations/${quotation.id}/edit`}
-              className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors"
+          {canWrite && (quotation.status === "draft" ? (
+            <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
+              <PendingLink href={`/quotations/${quotation.id}/edit`}>
+                <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                  <FileEdit size={16} />
+                  <span>{dictionary.detail.actions.edit}</span>
+                </span>
+              </PendingLink>
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 min-h-9 whitespace-nowrap"
+              disabled
+              title={dictionary.list.actionTitles.onlyDraftEditable}
+              aria-label={dictionary.list.actionTitles.onlyDraftEditable}
             >
-              <FileEdit size={18} />
-              {dictionary.detail.actions.edit}
-            </PendingLink>
-          )}
-          <Link
-            href={`/quotations/${quotation.id}/pdf`}
-            target="_blank"
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-primary text-primary hover:bg-surface-container-low rounded-lg text-[14px] font-semibold transition-colors"
-          >
-            <Printer size={18} />
-            {dictionary.detail.actions.printPdf}
-          </Link>
+              <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                <FileEdit size={16} aria-hidden="true" />
+                <span>{dictionary.detail.actions.edit}</span>
+              </span>
+            </Button>
+          ))}
+          <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
+            <Link
+              href={`/quotations/${quotation.id}/pdf`}
+              target="_blank"
+            >
+              <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                <Printer size={16} />
+                <span>{dictionary.detail.actions.printPdf}</span>
+              </span>
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -173,16 +204,16 @@ export default async function QuotationDetailPage({
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
                   {dictionary.detail.labels.client}
                 </div>
-                <div className="text-on-surface font-medium" dir="auto">
-                  {quotation.customer?.company || dictionary.detail.states.unknownCompany}
+                <div className="text-on-surface font-medium text-start">
+                  <bdi dir="auto">{quotation.customer?.company || dictionary.detail.states.unknownCompany}</bdi>
                 </div>
               </div>
               <div>
                 <div className="text-[12px] uppercase text-on-surface-variant font-semibold tracking-wider mb-1">
                   {dictionary.detail.labels.eventName}
                 </div>
-                <div className="text-on-surface font-medium" dir="auto">
-                  {quotation.event}
+                <div className="text-on-surface font-medium text-start">
+                  <bdi dir="auto">{quotation.event}</bdi>
                 </div>
               </div>
               <div>
@@ -214,22 +245,29 @@ export default async function QuotationDetailPage({
               <h3 className="font-semibold text-primary">{dictionary.detail.sections.lineItems}</h3>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className="w-full min-w-[760px] table-fixed text-start">
+                <colgroup>
+                  <col className="w-[6%]" />
+                  <col className="w-[44%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[20%]" />
+                  <col className="w-[20%]" />
+                </colgroup>
                 <thead>
                   <tr className="bg-surface-container-low border-b border-surface-variant">
-                    <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase w-12">
+                    <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-center">
                       #
                     </th>
-                    <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase">
+                    <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-start">
                       {dictionary.detail.labels.service}
                     </th>
-                    <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-center w-16">
+                    <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-center">
                       {dictionary.detail.labels.qty}
                     </th>
-                    <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-right">
+                    <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-end">
                       {dictionary.detail.labels.unitSar}
                     </th>
-                    <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-right">
+                    <th className="px-4 py-3 text-[12px] font-semibold text-on-surface-variant uppercase text-end">
                       {dictionary.detail.labels.totalSar}
                     </th>
                   </tr>
@@ -237,25 +275,25 @@ export default async function QuotationDetailPage({
                 <tbody className="divide-y divide-surface-variant text-[14px]">
                   {quotation.items.map((item, i) => (
                     <tr key={i}>
-                      <td className="px-4 py-4 text-on-surface-variant align-top" dir="ltr">
-                        {i + 1}
+                      <td className="px-4 py-4 text-center text-on-surface-variant align-top">
+                        <span dir="ltr">{i + 1}</span>
                       </td>
-                      <td className="px-4 py-4 align-top">
-                        <div className="font-semibold text-on-surface mb-1" dir="auto">
-                          {item.description}
+                      <td className="px-4 py-4 text-start align-top">
+                        <div className="font-semibold text-on-surface mb-1">
+                          <bdi dir="auto">{item.description}</bdi>
                         </div>
-                        <div className="text-[12px] text-on-surface-variant leading-relaxed" dir="auto">
-                          {item.details}
+                        <div className="text-[12px] text-on-surface-variant leading-relaxed">
+                          <bdi dir="auto">{item.details}</bdi>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-center text-on-surface align-top" dir="ltr">
-                        {formatQuantity(item.qty)}
+                      <td className="px-4 py-4 text-center text-on-surface align-top">
+                        <span dir="ltr">{formatQuantity(item.qty)}</span>
                       </td>
-                      <td className="px-4 py-4 text-right text-on-surface align-top" dir="ltr">
-                        {formatMoney(item.unitPrice)}
+                      <td className="px-4 py-4 text-end text-on-surface align-top">
+                        <span dir="ltr">{formatMoney(item.unitPrice)}</span>
                       </td>
-                      <td className="px-4 py-4 text-right font-medium text-on-surface align-top" dir="ltr">
-                        {formatMoney(item.total)}
+                      <td className="px-4 py-4 text-end font-medium text-on-surface align-top">
+                        <span dir="ltr">{formatMoney(item.total)}</span>
                       </td>
                     </tr>
                   ))}

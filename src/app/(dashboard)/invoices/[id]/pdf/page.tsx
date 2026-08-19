@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { getInvoiceById } from "@/lib/invoices/queries";
 import { requirePermission } from "@/lib/auth/permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
-import PrintButton from "./PrintButton";
 import type { QuotationSnapshotSeller, QuotationSnapshotBuyer } from "@/lib/quotations/types";
 import {
   formatDocumentAmount,
@@ -13,7 +12,8 @@ import {
   resolveDocumentLocale,
 } from "@/lib/documents/locale";
 import { getDirection } from "@/lib/i18n/direction";
-import DocumentLocaleSelect from "@/components/documents/DocumentLocaleSelect";
+import { getInvoiceStatusLabel } from "@/lib/i18n/dictionaries/invoices";
+import DocumentPreviewToolbar from "@/components/documents/DocumentPreviewToolbar";
 
 /* INVOICE_PDF_SNAPSHOT_CLASSIFIER_START */
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -51,8 +51,10 @@ function readRecordString(record: Record<string, unknown> | null, key: string): 
 
 type SnapshotInvoiceItem = {
   description: string | null;
+  detailText: string | null;
   qty: number | null;
   unitPrice: number | null;
+  vat: number | null;
   total: number | null;
 };
 
@@ -61,11 +63,14 @@ function normalizeSnapshotInvoiceItem(value: unknown): SnapshotInvoiceItem | nul
   if (!item) {
     return null;
   }
+  const detailText = readOwnRecordValue(item, "details");
 
   return {
     description: readNonBlankString(item.description),
+    detailText: typeof detailText === "string" ? detailText : null,
     qty: readFiniteNumber(item.qty),
     unitPrice: readFiniteNumber(item.unit_price) ?? readFiniteNumber(item.unitPrice),
+    vat: readFiniteNumber(item.vat),
     total: readFiniteNumber(item.total),
   };
 }
@@ -386,38 +391,20 @@ export default async function InvoicePdfPage({
       : dictionary.invoice.approvedQuotationItemsDescription;
 
   const isDraft = invoice.status === "draft";
-  const displayStatus =
-    invoice.status === "sent"
-      ? dictionary.common.issued
-      : invoice.status === "paid"
-        ? dictionary.common.paid
-        : invoice.status === "partial"
-          ? dictionary.common.partial
-          : invoice.status === "overdue"
-            ? dictionary.common.overdue
-            : invoice.status === "cancelled"
-              ? dictionary.common.cancelled
-              : invoice.status === "voided"
-                ? dictionary.common.voided
-                : invoice.status;
+  const displayStatus = getInvoiceStatusLabel(documentLocale, invoice.status);
 
   return (
     <div
       lang={documentLocale}
       dir={documentDirection}
-      className={`document-${documentDirection} bg-surface py-4 print:py-0 text-on-surface font-sans antialiased min-h-screen flex justify-center items-start`}
+      className={`document-${documentDirection} bg-surface py-4 print:py-0 text-on-surface font-sans antialiased min-h-screen flex flex-col items-center`}
     >
-      {/* Print Button & Help (Hidden on print) */}
-      <div className="fixed top-4 right-4 z-50 no-print flex flex-col items-end gap-2">
-        <DocumentLocaleSelect
-          value={documentLocale}
-          labels={dictionary.locale}
+      <div className="no-print w-full flex justify-center">
+        <DocumentPreviewToolbar
+          documentLocale={documentLocale}
+          dictionary={dictionary}
           id="invoicePrintLanguage"
         />
-        <PrintButton label={dictionary.common.print} loadingLabel={dictionary.common.preparingPrint} />
-        <div className="bg-surface-container-high text-on-surface-variant text-[12px] p-3 rounded shadow-sm max-w-xs border border-outline-variant/30 text-right">
-          {dictionary.common.printHelp}
-        </div>
       </div>
 
       {/* A4 Document Wrapper */}
@@ -451,7 +438,7 @@ export default async function InvoicePdfPage({
                 )}
               </div>
             </div>
-            <div className="text-right flex flex-col gap-1 text-[14px] text-on-surface-variant">
+            <div className="text-end flex flex-col gap-1 text-[14px] text-on-surface-variant">
               <p className="text-[12px] font-semibold text-on-surface uppercase mb-1">
                 {dictionary.common.headquarters}
               </p>
@@ -475,8 +462,16 @@ export default async function InvoicePdfPage({
                 </p>
               </div>
               <div className="mt-2 text-[12px]">
-                {seller.officialEmail && <p>{seller.officialEmail}</p>}
-                {seller.officialPhone && <p>{seller.officialPhone}</p>}
+                {seller.officialEmail && (
+                  <p>
+                    <span dir="ltr" className="document-bidi-number">{seller.officialEmail}</span>
+                  </p>
+                )}
+                {seller.officialPhone && (
+                  <p>
+                    <span dir="ltr" className="document-bidi-number">{seller.officialPhone}</span>
+                  </p>
+                )}
               </div>
             </div>
           </header>
@@ -529,7 +524,7 @@ export default async function InvoicePdfPage({
                   <span className="text-on-surface-variant">{dictionary.common.type}</span>
                   <span className="text-on-surface uppercase text-[12px] font-medium">{invoice.invoice_type === "deposit" ? dictionary.invoice.deposit : dictionary.invoice.final}</span>
                   <span className="text-on-surface-variant">{dictionary.common.issueDate}</span>
-                  <span className="text-on-surface" dir="ltr">{formatDocumentDate(invoice.issued_at || invoice.documentDate, documentLocale)}</span>
+                  <span className="text-on-surface" dir={documentDirection}>{formatDocumentDate(invoice.issued_at || invoice.documentDate, documentLocale)}</span>
                   {relatedQuoteNumber && (
                     <>
                       <span className="text-on-surface-variant">{dictionary.common.relatedQuote}</span>
@@ -559,28 +554,51 @@ export default async function InvoicePdfPage({
               <p className="text-[11px] text-on-surface-variant mb-3">
                 {itemDescription}
               </p>
-              <table className="w-full text-left border-collapse invoice-print-item-table">
+              <table className="w-full table-fixed text-start border-collapse invoice-print-item-table">
+              <colgroup>
+                <col className="w-[5%]" />
+                <col className="w-[39%]" />
+                <col className="w-[8%]" />
+                <col className="w-[17%]" />
+                <col className="w-[14%]" />
+                <col className="w-[17%]" />
+              </colgroup>
               <thead>
                 <tr className="bg-surface-container-low border-y border-outline-variant">
-                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase w-8">#</th>
-                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase">{dictionary.invoice.description}</th>
-                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase w-16 text-center">{dictionary.quotation.qty}</th>
-                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-right w-24">{dictionary.quotation.unitPrice}</th>
-                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-right w-28">{dictionary.invoice.lineTotal}</th>
+                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-center">#</th>
+                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-start">{dictionary.invoice.description}</th>
+                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-center">{dictionary.quotation.qty}</th>
+                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-end">{dictionary.quotation.unitPrice}</th>
+                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-end">{dictionary.invoice.taxVat}</th>
+                  <th className="py-2 px-2 text-[12px] font-semibold text-on-surface uppercase text-end">{dictionary.invoice.lineTotal}</th>
                 </tr>
               </thead>
               <tbody className="align-top border-b border-surface-variant text-[14px]">
                 {items.map((item, i) => (
                   <tr key={i} className="border-b border-outline-variant/50">
-                    <td className="py-2 px-2 text-on-surface-variant">{i + 1}</td>
-                    <td className="py-2 px-2">
-                      <p className="font-semibold text-on-surface" dir="auto">{item.description || dictionary.common.notAvailable}</p>
+                    <td className="py-2 px-2 text-center text-on-surface-variant">
+                      <span dir="ltr" className="document-bidi-number">{i + 1}</span>
+                    </td>
+                    <td className="py-2 px-2 text-start">
+                      <div className="font-semibold text-on-surface">
+                        <bdi dir="auto">{item.description || dictionary.common.notAvailable}</bdi>
+                      </div>
+                      {item.detailText?.trim() && (
+                        <div className="mt-1 text-[12px] leading-relaxed text-on-surface-variant">
+                          <bdi dir="auto">{item.detailText}</bdi>
+                        </div>
+                      )}
                     </td>
                     <td className="py-2 px-2 text-on-surface text-center">{formatQuantityOrUnavailable(item.qty)}</td>
-                    <td className="py-2 px-2 text-on-surface text-right">
+                    <td className="py-2 px-2 text-on-surface text-end">
                       <span dir="ltr" className="document-bidi-number">{formatItemAmountWithCurrency(item.unitPrice)}</span>
                     </td>
-                    <td className="py-2 px-2 text-on-surface text-right font-medium">
+                    <td className="py-2 px-2 text-on-surface-variant text-end text-[12px]">
+                      {invoice.vat_mode === "not_registered" ? dictionary.common.notApplied : (
+                        <span dir="ltr" className="document-bidi-number">{formatItemAmountWithCurrency(item.vat)}</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-2 text-on-surface text-end font-medium">
                       <span dir="ltr" className="document-bidi-number">{formatItemAmountWithCurrency(item.total)}</span>
                     </td>
                   </tr>
@@ -682,7 +700,7 @@ export default async function InvoicePdfPage({
 
           {/* Footer */}
           <footer className="mt-2 pt-1.5 border-t border-outline-variant/30 text-[9px] leading-tight text-on-surface-variant invoice-print-footer">
-            <p className="text-right">
+            <p className="text-end">
               <span className="font-semibold text-on-surface">{dictionary.common.officialStamp}</span> {sellerName}
             </p>
           </footer>

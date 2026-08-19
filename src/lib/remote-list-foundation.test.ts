@@ -130,11 +130,15 @@ test("dense table Print / PDF actions stay icon-only and accessible", () => {
     assert.match(source, /DenseTableIconAction/);
     assert.match(source, /label=\{dictionary\.list\.table\.printPdf\}/);
     assert.match(source, /<Printer size=\{16\} aria-hidden="true" \/>/);
-    assert.match(source, /w-\[72px\]/);
+    assert.match(source, /table-fixed/);
     assert.match(source, /text-center/);
     assert.doesNotMatch(source, /items-center gap-1\.5 rounded-full border/);
     assert.doesNotMatch(source, /<Printer[\s\S]*>\{dictionary\.list\.table\.printPdf\}/);
   }
+
+  const quotations = read(LIST_CLIENTS[2]);
+  assert.match(quotations, /<col className="w-\[7%\]" \/>\s*<col className="w-\[9%\]" \/>/);
+  assert.match(quotations, /dictionary\.list\.table\.view[\s\S]*dictionary\.list\.table\.printPdf/);
 });
 
 test("bounded pagination preserves semantic labels while disabling duplicate navigation", () => {

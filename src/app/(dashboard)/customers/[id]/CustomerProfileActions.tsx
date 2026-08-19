@@ -46,17 +46,20 @@ export default function CustomerProfileActions({
 
   return (
     <>
-      <button
+      <Button
         type="button"
         onClick={() => {
           setActionError(null);
           setShowEditModal(true);
         }}
-        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-[14px] leading-[20px] font-semibold text-on-primary transition-colors hover:bg-primary-container"
+        size="sm"
+        className="h-9 min-h-9 whitespace-nowrap"
       >
-        <Pencil size={18} />
-        {dictionary.actions.editProfile}
-      </button>
+        <span className="inline-flex items-center gap-2">
+          <Pencil size={16} aria-hidden="true" />
+          {dictionary.actions.editProfile}
+        </span>
+      </Button>
 
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -86,16 +89,18 @@ export default function CustomerProfileActions({
               <CustomerOfficialBillingFields customer={customer} dictionary={dictionary} />
 
               <div className="flex justify-end gap-3 pt-2">
-                <button
+                <Button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-low rounded-lg text-[14px] font-semibold transition-colors"
+                  variant="outline"
+                  size="sm"
                 >
                   {dictionary.actions.cancel}
-                </button>
+                </Button>
                 <Button
                   type="submit"
                   loading={isPending}
+                  size="sm"
                 >
                   {dictionary.actions.saveChanges}
                 </Button>

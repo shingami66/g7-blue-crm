@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Filter, Eye, Trash2, Edit, AlertCircle, Printer, LoaderCircle } from "lucide-react";
+import { Plus, Filter, Eye, Printer, LoaderCircle } from "lucide-react";
+import Button from "@/components/ui/Button";
 import PageHeader from "@/components/ui/PageHeader";
-import FilterBar from "@/components/ui/FilterBar";
-import DataTable from "@/components/ui/DataTable";
 import ModuleSearchControl from "@/components/ui/ModuleSearchControl";
 import DenseTableIconAction from "@/components/ui/DenseTableIconAction";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -29,7 +27,6 @@ import type {
   QuotationSearchMode,
 } from "@/lib/quotations/types";
 import type { EligibleQuotationService } from "@/lib/services/queries";
-import { softDeleteQuotation } from "@/lib/quotations/actions";
 import { getCommonDictionary, getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 import { LIST_PAGE_SIZES, type ListPageSize } from "@/lib/pagination";
 import EligibleServiceSelector from "./EligibleServiceSelector";
@@ -48,10 +45,6 @@ interface QuotationsClientProps {
 }
 
 type StatusBadgeVariant = React.ComponentProps<typeof StatusBadge>["variant"];
-
-function formatCopy(template: string, values: Record<string, string | number>) {
-  return template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
-}
 
 function quotationListHref(query: QuotationListQuery, page = 1) {
   const params = new URLSearchParams();
@@ -75,18 +68,14 @@ export default function QuotationsClient({
   pagination,
   query,
   loadError,
-  canWrite,
   canSelectService,
   eligibleServices,
   dictionary: dictionaryProp,
 }: QuotationsClientProps) {
-  const router = useRouter();
   const locale = useLocale();
   const dictionary = dictionaryProp ?? getQuotationsDictionary(locale);
   const { isPending: isNavigationPending, push } = useGlobalNavigationPending();
-  const [error, setError] = useState<string | null>(null);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDocumentId, setPendingDocumentId] = useState<string | null>(null);
   const selectorTriggerRef = useRef<HTMLButtonElement>(null);
   const documentTimerRef = useRef<number | null>(null);
@@ -124,22 +113,6 @@ export default function QuotationsClient({
     navigate(quotationListHref({ ...query, ...next }, 1), "replace", kind);
   }
 
-  async function handleDelete(event: React.MouseEvent, id: string) {
-    event.stopPropagation();
-    if (deletingId) return;
-    setError(null);
-    if (!window.confirm(dictionary.list.deleteConfirm)) return;
-
-    setDeletingId(id);
-    try {
-      const result = await softDeleteQuotation(id);
-      if (!result.success) setError(dictionary.list.deleteFailed);
-      else router.refresh();
-    } finally {
-      setDeletingId(null);
-    }
-  }
-
   function openQuotationPdf(quotation: Pick<QuotationListItem, "id">) {
     if (pendingDocumentId) return;
     setPendingDocumentId(quotation.id);
@@ -153,30 +126,29 @@ export default function QuotationsClient({
     }, 800);
   }
 
-  const visibleStart = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1;
-  const visibleEnd = Math.min(visibleStart + quotations.length - 1, pagination.total);
   const returnTo = quotationListHref(query, pagination.page);
 
   return (
     <div className="flex h-full flex-col">
       <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
         {canSelectService && (
-          <button
-            ref={selectorTriggerRef}
-            type="button"
-            onClick={() => setIsSelectorOpen(true)}
-            aria-haspopup="dialog"
-            aria-expanded={isSelectorOpen}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold leading-[20px] text-on-primary transition-colors hover:bg-primary-container"
-          >
-            <Plus size={18} />
-            {dictionary.list.selectService}
-          </button>
+          <Button asChild size="sm">
+            <button
+              ref={selectorTriggerRef}
+              type="button"
+              onClick={() => setIsSelectorOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={isSelectorOpen}
+            >
+              <Plus size={16} />
+              {dictionary.list.selectService}
+            </button>
+          </Button>
         )}
       </PageHeader>
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-busy={isPending || undefined}>
-        <FilterBar>
+        <div className="flex flex-wrap items-center gap-3 border-b border-surface-variant bg-surface-bright p-4">
           <ModuleSearchControl
             mode={activeMode}
             modes={searchModes}
@@ -221,60 +193,6 @@ export default function QuotationsClient({
             />
             {!query.month && <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 flex items-center pe-6 text-[14px] text-on-surface-variant">{dictionary.list.dateFilter.anyMonth}</span>}
           </div>
-          <div className="ms-auto shrink-0 text-[14px] leading-[20px] text-on-surface-variant">
-            {pagination.total === 0
-              ? dictionary.list.showingZero
-              : formatCopy(dictionary.list.showingRange, { start: visibleStart, end: visibleEnd, count: pagination.total })}
-          </div>
-        </FilterBar>
-        {error && (
-          <div className="mx-4 mt-4 flex items-center gap-2 rounded-lg bg-error-container p-3 text-[14px] text-on-error-container" role="alert">
-            <AlertCircle size={18} />
-            {error}
-          </div>
-        )}
-
-        <div className="relative min-h-0 flex-1 overflow-auto">
-          {loadError ? (
-            <ListInlineError message={dictionary.states.quotationsLoadError} retryLabel={sharedStates.retry.tryAgain} onRetry={refresh} pending={isPending} />
-          ) : quotations.length === 0 ? (
-            <div className="flex min-h-[14rem] flex-col items-center justify-center text-on-surface-variant">
-              <p>{pagination.total === 0 && !query.search && !query.status && !query.month ? dictionary.list.noQuotations : dictionary.list.noFilteredQuotations}</p>
-            </div>
-          ) : (
-            <DataTable centeredColumns={[5]} columns={[dictionary.list.table.quotationNumber, dictionary.list.table.clientEvent, dictionary.list.table.issueDate, dictionary.list.table.amountSar, dictionary.list.table.status, dictionary.list.table.printPdf, dictionary.list.table.actions]}>
-              {quotations.map((quotation) => (
-                <tr key={quotation.id} className="transition-colors hover:bg-surface-container-low/50">
-                  <td className="px-4 py-4 font-mono font-semibold text-primary">
-                    <span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(quotation.quotationNumber)}</span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="font-semibold text-on-surface"><span dir="auto">{quotation.customer?.company || dictionary.list.unknownCompany}</span></div>
-                    <div className="mt-1 text-[12px] leading-[16px] text-on-surface-variant"><span dir="auto">{quotation.event}</span></div>
-                  </td>
-                  <td className="px-4 py-4 text-on-surface-variant"><UiDateText locale={dictionary.locale} value={quotation.date} /></td>
-                  <td className="px-4 py-4 font-semibold text-on-surface tabular-nums"><span dir="ltr" className="inline-block whitespace-nowrap">{formatSarAmount(dictionary.locale, quotation.grandTotal)}</span></td>
-                  <td className="px-4 py-4"><StatusBadge variant={quotation.status as StatusBadgeVariant}>{getQuotationStatusLabel(dictionary.locale, quotation.status)}</StatusBadge></td>
-                  <td className="w-[72px] px-4 py-4 text-center"><div className="grid place-items-center"><DenseTableIconAction label={dictionary.list.table.printPdf} disabled={pendingDocumentId !== null} aria-busy={pendingDocumentId === quotation.id || undefined} onClick={() => openQuotationPdf(quotation)}>{pendingDocumentId === quotation.id ? <LoaderCircle size={16} aria-hidden="true" className="motion-safe:animate-spin" /> : <Printer size={16} aria-hidden="true" />}</DenseTableIconAction></div></td>
-                  <td className="px-4 py-4">
-                    <div className="flex gap-2">
-                      <button type="button" disabled={isNavigationPending} aria-busy={isNavigationPending || undefined} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50" aria-label={`${dictionary.list.actionTitles.viewDetails} ${quotation.quotationNumber}`} title={dictionary.list.actionTitles.viewDetails} onClick={() => push(`/quotations/${quotation.id}?returnTo=${encodeURIComponent(returnTo)}`)}><Eye size={17} /></button>
-                      {canWrite && (
-                        <>
-                          {quotation.status === "draft" ? (
-                            <button type="button" disabled={isNavigationPending} aria-busy={isNavigationPending || undefined} className="rounded p-1 text-primary transition-colors hover:text-primary-container focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50" title={dictionary.list.actionTitles.editQuotation} aria-label={`${dictionary.list.actionTitles.editQuotation} ${quotation.quotationNumber}`} onClick={() => push(`/quotations/${quotation.id}/edit`)}><Edit size={18} /></button>
-                          ) : (
-                            <button type="button" disabled className="cursor-not-allowed rounded p-1 text-on-surface-variant opacity-50" title={dictionary.list.actionTitles.onlyDraftEditable} aria-label={dictionary.list.actionTitles.onlyDraftEditable}><Edit size={18} /></button>
-                          )}
-                          <button type="button" disabled={quotation.status === "approved" || deletingId !== null} aria-busy={deletingId === quotation.id || undefined} className={`rounded p-1 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 ${quotation.status === "approved" || deletingId !== null ? "cursor-not-allowed text-on-surface-variant opacity-50" : "text-on-surface-variant hover:bg-error-container hover:text-error"}`} title={quotation.status === "approved" ? dictionary.list.actionTitles.approvedCannotDelete : dictionary.list.actionTitles.deleteQuotation} aria-label={`${dictionary.list.actionTitles.deleteQuotation} ${quotation.quotationNumber}`} onClick={(event) => { if (quotation.status !== "approved") void handleDelete(event, quotation.id); }}>{deletingId === quotation.id ? <LoaderCircle size={18} aria-hidden="true" className="motion-safe:animate-spin" /> : <Trash2 size={18} />}</button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </DataTable>
-          )}
         </div>
 
         <PaginationFooter
@@ -286,8 +204,60 @@ export default function QuotationsClient({
           isPending={isPending}
           onPageChange={(page) => navigate(quotationListHref(query, page), "push")}
           onPageSizeChange={(pageSize: ListPageSize) => updateQuery({ pageSize })}
-          className="border-t-0"
         />
+
+        <div className="relative min-h-0 flex-1 overflow-auto">
+          {loadError ? (
+            <ListInlineError message={dictionary.states.quotationsLoadError} retryLabel={sharedStates.retry.tryAgain} onRetry={refresh} pending={isPending} />
+          ) : quotations.length === 0 ? (
+            <div className="flex min-h-[14rem] flex-col items-center justify-center text-on-surface-variant">
+              <p>{pagination.total === 0 && !query.search && !query.status && !query.month ? dictionary.list.noQuotations : dictionary.list.noFilteredQuotations}</p>
+            </div>
+          ) : (
+            <div className="w-full overflow-x-auto border border-surface-variant rounded-b-xl bg-surface-container-lowest">
+              <table className="w-full min-w-[1100px] table-fixed border-collapse text-start">
+                <colgroup>
+                  <col className="w-[18%]" />
+                  <col className="w-[26%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[7%]" />
+                  <col className="w-[9%]" />
+                </colgroup>
+                <thead>
+                  <tr className="bg-surface-container-low border-b border-surface-variant">
+                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-start">{dictionary.list.table.quotationNumber}</th>
+                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-start">{dictionary.list.table.clientEvent}</th>
+                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-start">{dictionary.list.table.issueDate}</th>
+                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-end">{dictionary.list.table.amountSar}</th>
+                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-start">{dictionary.list.table.status}</th>
+                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-center">{dictionary.list.table.view}</th>
+                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-center">{dictionary.list.table.printPdf}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
+              {quotations.map((quotation) => (
+                <tr key={quotation.id} className="transition-colors hover:bg-surface-container-low/50">
+                  <td className="px-4 py-4 font-mono font-semibold text-primary">
+                    <span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(quotation.quotationNumber)}</span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="font-semibold text-on-surface"><span dir="auto">{quotation.customer?.company || dictionary.list.unknownCompany}</span></div>
+                    <div className="mt-1 text-[12px] leading-[16px] text-on-surface-variant"><span dir="auto">{quotation.event}</span></div>
+                  </td>
+                  <td className="px-4 py-4 text-on-surface-variant"><UiDateText locale={dictionary.locale} value={quotation.date} /></td>
+                  <td className="px-4 py-4 text-end font-semibold text-on-surface tabular-nums"><span dir="ltr" className="inline-block whitespace-nowrap">{formatSarAmount(dictionary.locale, quotation.grandTotal)}</span></td>
+                  <td className="px-4 py-4"><StatusBadge variant={quotation.status as StatusBadgeVariant}>{getQuotationStatusLabel(dictionary.locale, quotation.status)}</StatusBadge></td>
+                  <td className="px-4 py-4 text-center"><button type="button" disabled={isNavigationPending} aria-busy={isNavigationPending || undefined} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50" aria-label={`${dictionary.list.actionTitles.viewDetails} ${quotation.quotationNumber}`} title={dictionary.list.actionTitles.viewDetails} onClick={() => push(`/quotations/${quotation.id}?returnTo=${encodeURIComponent(returnTo)}`)}><Eye size={17} /></button></td>
+                  <td className="px-4 py-4 text-center"><div className="grid place-items-center"><DenseTableIconAction label={dictionary.list.table.printPdf} disabled={pendingDocumentId !== null} aria-busy={pendingDocumentId === quotation.id || undefined} onClick={() => openQuotationPdf(quotation)}>{pendingDocumentId === quotation.id ? <LoaderCircle size={16} aria-hidden="true" className="motion-safe:animate-spin" /> : <Printer size={16} aria-hidden="true" />}</DenseTableIconAction></div></td>
+                </tr>
+              ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {canSelectService && isSelectorOpen && <EligibleServiceSelector services={eligibleServices} dictionary={dictionary} triggerRef={selectorTriggerRef} onClose={() => setIsSelectorOpen(false)} />}

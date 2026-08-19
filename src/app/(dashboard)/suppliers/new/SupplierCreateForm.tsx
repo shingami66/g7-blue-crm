@@ -1,7 +1,8 @@
 "use client";
 
 import { type FormEvent, type ReactNode, useState } from "react";
-import { AlertCircle, ArrowLeft, Save } from "lucide-react";
+import { AlertCircle, Save } from "lucide-react";
+import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
@@ -99,8 +100,13 @@ export default function SupplierCreateForm({ dictionary }: { dictionary: Supplie
   return (
     <div className="flex w-full max-w-5xl flex-col gap-6">
       <div className="flex items-center gap-4 py-4">
-        <button type="button" onClick={() => push("/suppliers")} className="rounded-lg border border-outline-variant bg-surface p-2 text-on-surface transition-colors hover:bg-surface-container-low" aria-label={dictionary.form.backToSuppliers}>
-          <ArrowLeft size={18} />
+        <button
+          type="button"
+          onClick={() => push("/suppliers")}
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          aria-label={dictionary.form.backToSuppliers}
+        >
+          <LocaleBackIcon size={16} />
         </button>
         <div>
           <h2 className="text-[28px] font-semibold leading-[36px] text-primary">{dictionary.form.newTitle}</h2>
@@ -138,7 +144,7 @@ export default function SupplierCreateForm({ dictionary }: { dictionary: Supplie
             <Field label={dictionary.form.labels.internalNotes}><textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={4} className={inputClassName} placeholder={dictionary.form.placeholders.notes} dir="auto" /></Field>
           </section>
         </div>
-        <div className="mt-4 flex justify-end gap-3"><button type="button" onClick={() => push("/suppliers")} disabled={isSubmitting} className="rounded-lg border border-outline-variant bg-surface px-6 py-2 font-semibold text-on-surface transition-colors hover:bg-surface-container-low disabled:opacity-50">{dictionary.form.buttons.cancel}</button><Button type="submit" loading={isSubmitting}><Save size={18} />{dictionary.form.buttons.create}</Button></div>
+        <div className="mt-4 flex flex-wrap items-center justify-end gap-3"><Button type="button" onClick={() => push("/suppliers")} disabled={isSubmitting} variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">{dictionary.form.buttons.cancel}</Button><Button type="submit" loading={isSubmitting} size="sm" className="h-9 min-h-9 whitespace-nowrap"><span className="inline-flex items-center gap-2"><Save size={16} aria-hidden="true" />{dictionary.form.buttons.create}</span></Button></div>
       </form>
     </div>
   );

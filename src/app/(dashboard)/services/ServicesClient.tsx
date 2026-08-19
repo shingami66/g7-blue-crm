@@ -1,7 +1,6 @@
 "use client";
 
 import PageHeader from "@/components/ui/PageHeader";
-import FilterBar from "@/components/ui/FilterBar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import Button from "@/components/ui/Button";
@@ -90,22 +89,14 @@ export default function ServicesClient({
     navigate(serviceListHref({ ...query, ...next }, 1), "replace", kind);
   }
 
-  function formatServicesSummary() {
-    if (pagination.total === 0) return dictionary.list.showingZero;
-    return dictionary.list.showingRange
-      .replace("{start}", isolateBidiText(String((pagination.page - 1) * pagination.pageSize + 1)))
-      .replace("{end}", isolateBidiText(String((pagination.page - 1) * pagination.pageSize + services.length)))
-      .replace("{total}", isolateBidiText(String(pagination.total)));
-  }
-
   return (
     <div className="flex h-full flex-col">
       <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
-        {canWrite && <Button asChild><PendingLink href="/services/new"><Plus size={18} />{dictionary.list.newService}</PendingLink></Button>}
+        {canWrite && <Button asChild size="sm"><PendingLink href="/services/new"><Plus size={16} />{dictionary.list.newService}</PendingLink></Button>}
       </PageHeader>
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-busy={isPending || undefined}>
-        <FilterBar>
+        <div className="flex flex-wrap items-center gap-3 border-b border-surface-variant bg-surface-bright p-4">
           <ModuleSearchControl
             mode={activeMode}
             modes={searchModes}
@@ -134,8 +125,19 @@ export default function ServicesClient({
             </select>
             <Filter size={14} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
           </div>
-          <div className="ms-auto shrink-0 text-[14px] leading-[20px] text-on-surface-variant">{formatServicesSummary()}</div>
-        </FilterBar>
+        </div>
+
+        <PaginationFooter
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          pageSize={pagination.pageSize}
+          paginationMode="bounded"
+          isPending={isPending}
+          onPageChange={(page) => navigate(serviceListHref(query, page), "push")}
+          onPageSizeChange={(pageSize: ListPageSize) => updateQuery({ pageSize })}
+        />
+
         <div className="relative min-h-0 flex-1 overflow-auto">
           {loadError ? (
             <ListInlineError message={dictionary.states.servicesLoadError} retryLabel={sharedStates.retry.tryAgain} onRetry={refresh} pending={isPending} />
@@ -170,16 +172,6 @@ export default function ServicesClient({
             </div>
           )}
         </div>
-        <PaginationFooter
-          currentPage={pagination.page}
-          totalPages={pagination.totalPages}
-          total={pagination.total}
-          pageSize={pagination.pageSize}
-          paginationMode="bounded"
-          isPending={isPending}
-          onPageChange={(page) => navigate(serviceListHref(query, page), "push")}
-          onPageSizeChange={(pageSize: ListPageSize) => updateQuery({ pageSize })}
-        />
       </div>
     </div>
   );

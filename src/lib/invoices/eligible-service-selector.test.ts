@@ -461,7 +461,7 @@ for (const authorityMode of [
   });
 }
 
-test("voided, cancelled, draft, deleted, and unissued invoices stay excluded from active exposure", () => {
+test("voided, cancelled, and deleted invoices stay excluded while draft and unissued invoices count", () => {
   const filters: Array<[string, string, unknown, unknown?]> = [];
   const query = {
     eq(column: string, value: unknown) {
@@ -486,8 +486,7 @@ test("voided, cancelled, draft, deleted, and unissued invoices stay excluded fro
     ["eq", "service_id", "service-1"],
     ["not", "is_deleted", "is", true],
     ["is", "voided_at", null],
-    ["not", "issued_at", "is", null],
-    ["not", "status", "in", '("draft","voided","cancelled")'],
+    ["not", "status", "in", '("cancelled","voided")'],
   ]);
 });
 

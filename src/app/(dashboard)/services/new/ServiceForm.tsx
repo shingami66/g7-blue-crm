@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, AlertCircle } from "lucide-react";
+import { Save, AlertCircle } from "lucide-react";
+import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import type { Customer } from "@/types/customer";
 import { createService } from "@/lib/services/actions";
 import { getCreateServiceErrorMessage } from "@/lib/i18n/service-action-feedback";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getCommonDictionary } from "@/lib/i18n/dictionaries/common";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import Button from "@/components/ui/Button";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
@@ -116,9 +118,10 @@ export default function ServiceForm({ customers, dictionary }: ServiceFormProps)
         <button
           type="button"
           onClick={() => back()}
-          className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          aria-label={getCommonDictionary(dictionary.locale).actions.back}
         >
-          <ArrowLeft size={18} />
+          <LocaleBackIcon size={16} />
         </button>
         <div>
           <h2 className="text-[28px] leading-[36px] font-semibold text-primary tracking-tight">
@@ -265,19 +268,21 @@ export default function ServiceForm({ customers, dictionary }: ServiceFormProps)
         </div>
 
         <div className="flex justify-end gap-3 mt-4">
-          <button
+          <Button
             type="button"
             onClick={() => push("/services")}
-            className="px-6 py-2 bg-surface border border-outline-variant hover:bg-surface-container-low text-on-surface rounded-lg font-semibold transition-colors disabled:opacity-50"
+            variant="outline"
+            size="sm"
             disabled={isSubmitting}
           >
             {dictionary.form.buttons.cancel}
-          </button>
+          </Button>
           <Button
             type="submit"
             loading={isSubmitting}
+            size="sm"
           >
-            <Save size={18} />
+            <Save size={16} />
             {dictionary.form.buttons.create}
           </Button>
         </div>

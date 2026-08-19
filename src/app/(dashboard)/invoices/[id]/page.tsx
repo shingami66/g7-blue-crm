@@ -257,11 +257,11 @@ export default async function InvoiceDetailPage({
         <div className="flex items-start gap-4">
           <PendingLink
             href={returnTo}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             aria-label={dictionary.detail.actions.backToInvoices}
             title={dictionary.detail.actions.backToInvoices}
           >
-            <LocaleBackIcon size={18} />
+            <LocaleBackIcon size={16} />
           </PendingLink>
           <div className="space-y-2 min-w-0">
             <div className="flex flex-wrap items-center gap-3">

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/ui/PageHeader";
-import FilterBar from "@/components/ui/FilterBar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import Button from "@/components/ui/Button";
@@ -12,11 +11,9 @@ import { ListInlineError } from "@/components/ui/ListPendingState";
 import { Eye, Plus, Filter, Download, Search, X } from "lucide-react";
 import { createCustomer } from "@/lib/customers/actions";
 import {
-  formatCustomersSummaryCopy,
   getCustomerStatusLabel,
   type CustomersDictionary,
 } from "@/lib/i18n/dictionaries/customers";
-import { isolateBidiText } from "@/lib/i18n/bidi";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import type { Customer } from "@/types/customer";
 import { CustomerCoreFields, CustomerOfficialBillingFields } from "./CustomerFormFields";
@@ -88,8 +85,6 @@ export default function CustomersClient({
   const sharedStates = getSharedUiStates(dictionary.locale);
   const statusFilter = query.status ?? "all";
   const cityFilter = query.city ?? "all";
-  const visibleStart = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1;
-  const visibleEnd = Math.min(visibleStart + customers.length - 1, pagination.total);
   const hasFilters = Boolean(query.search || query.status || query.city);
   const returnTo = customerListHref({}, pagination.page);
 
@@ -208,41 +203,34 @@ export default function CustomersClient({
     });
   }
 
-  function formatCustomersSummary() {
-    if (pagination.total === 0) {
-      return dictionary.list.customersSummaryZero;
-    }
-
-    return formatCustomersSummaryCopy(dictionary.list.customersSummary, {
-      range: isolateBidiText(`${visibleStart}-${visibleEnd}`),
-      total: isolateBidiText(String(pagination.total)),
-    });
-  }
-
   return (
     <div className="flex flex-col h-full">
       <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
         {canExport && (
-          <Button
-            onClick={exportCustomers}
-            disabled={customers.length === 0 || isListPending}
-            variant="outline"
-          >
-            <Download size={18} />
-            {dictionary.list.export}
+          <Button asChild variant="outline" size="sm">
+            <button
+              type="button"
+              onClick={exportCustomers}
+              disabled={customers.length === 0 || isListPending}
+            >
+              <Download size={16} />
+              {dictionary.list.export}
+            </button>
           </Button>
         )}
         {canWrite && (
-          <Button onClick={openAddModal}>
-            <Plus size={18} />
-            {dictionary.list.addCustomer}
+          <Button asChild size="sm">
+            <button type="button" onClick={openAddModal}>
+              <Plus size={16} />
+              {dictionary.list.addCustomer}
+            </button>
           </Button>
         )}
       </PageHeader>
 
-      <div className="flex flex-1 min-h-0">
-        <div className="flex-1 flex flex-col">
-          <FilterBar>
+      <div className="flex min-h-0 flex-1 gap-6">
+        <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
+          <div className="flex flex-wrap items-center gap-3 border-b border-surface-variant bg-surface-bright p-4">
             <form
               className="flex w-full max-w-sm min-w-0 flex-1 items-center gap-2"
               onSubmit={(event) => {
@@ -353,19 +341,27 @@ export default function CustomersClient({
                 className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
               />
             </div>
-            <div className="text-[14px] leading-[20px] text-on-surface-variant ml-auto">
-              {formatCustomersSummary()}
-            </div>
             {isSearchPending && <span className="text-[12px] text-on-surface-variant">{common.states.searching}</span>}
-          </FilterBar>
+          </div>
 
-        <div className="flex-1 overflow-auto" aria-busy={isListPending || undefined}>
+          <PaginationFooter
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            pageSize={pagination.pageSize}
+            paginationMode="bounded"
+            isPending={isListPending}
+            onPageChange={(page) => navigate(customerListHref({}, page), "push")}
+            onPageSizeChange={(pageSize: ListPageSize) => navigate(customerListHref({ pageSize }, 1), "replace")}
+          />
+
+          <div className="flex-1 overflow-auto" aria-busy={isListPending || undefined}>
             {loadError ? (
-              <div className="border border-surface-variant rounded-b-xl bg-surface-container-lowest p-4">
+              <div className="p-4">
                 <ListInlineError message={dictionary.states.customersLoadError} retryLabel={sharedStates.retry.tryAgain} onRetry={() => router.refresh()} pending={isListPending} />
               </div>
             ) : customers.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 bg-surface-container-lowest border border-surface-variant rounded-b-xl">
+              <div className="flex flex-col items-center justify-center py-16">
                 <p className="text-on-surface-variant text-[14px] leading-[20px]">
                   {!hasFilters
                     ? dictionary.states.noCustomers
@@ -373,7 +369,7 @@ export default function CustomersClient({
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto w-full border border-surface-variant rounded-b-xl bg-surface-container-lowest">
+              <div className="w-full overflow-x-auto">
                 <table className="w-full min-w-[1060px] table-fixed border-collapse text-start">
                   <thead>
                     <tr className="bg-surface-container-low border-b border-surface-variant">
@@ -463,17 +459,6 @@ export default function CustomersClient({
               </div>
             )}
           </div>
-
-          <PaginationFooter
-            currentPage={pagination.page}
-            totalPages={pagination.totalPages}
-            total={pagination.total}
-            pageSize={pagination.pageSize}
-            paginationMode="bounded"
-            isPending={isListPending}
-            onPageChange={(page) => navigate(customerListHref({}, page), "push")}
-            onPageSizeChange={(pageSize: ListPageSize) => navigate(customerListHref({ pageSize }, 1), "replace")}
-          />
         </div>
       </div>
 

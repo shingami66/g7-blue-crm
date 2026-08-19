@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, Save, AlertCircle } from "lucide-react";
+import { Plus, Trash2, Save, AlertCircle } from "lucide-react";
+import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import { createQuotation, updateQuotation } from "@/lib/quotations/actions";
 import type { QuotationDetail } from "@/lib/quotations/types";
 import Button from "@/components/ui/Button";
@@ -13,6 +14,7 @@ import {
   getQuotationsDictionary,
   type QuotationsDictionary,
 } from "@/lib/i18n/dictionaries/quotations";
+import { getCommonDictionary } from "@/lib/i18n/dictionaries/common";
 import { formatSarAmount } from "@/lib/i18n/formatting";
 import { UiDateText } from "@/components/i18n/UiDateText";
 
@@ -192,9 +194,10 @@ export default function QuotationForm({
         <button
           type="button"
           onClick={() => back()}
-          className="p-2 bg-surface border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          aria-label={getCommonDictionary(dictionary.locale).actions.back}
         >
-          <ArrowLeft size={18} />
+          <LocaleBackIcon size={16} />
         </button>
         <div>
           <h2 className="text-[28px] leading-[36px] font-semibold text-primary tracking-tight">
@@ -517,13 +520,14 @@ export default function QuotationForm({
             <Button
               type="submit"
               loading={isSubmitting}
+              size="sm"
               disabled={
                 discountExceedsSubtotal ||
                 validUntilExceedsServiceStart ||
                 serviceStartedBeforeIssueDate
               }
             >
-              <Save size={18} />
+              <Save size={16} />
               {isEdit ? dictionary.form.saveChanges : dictionary.form.createQuotation}
             </Button>
           </div>

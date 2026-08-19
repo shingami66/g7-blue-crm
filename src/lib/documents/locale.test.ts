@@ -30,8 +30,10 @@ test("presentation language normalizes safely and keeps AR/EN dictionaries align
   assert.equal(resolveDocumentLocale({ lang: "en" }), "en");
   assert.equal(resolveDocumentLocale({ lang: "fr" }), "en");
   assert.equal(resolveDocumentLocale({ lang: ["ar", "en"] }), "ar");
-  assert.equal(getDocumentDictionary("ar").locale.label, "لغة الطباعة");
-  assert.equal(getDocumentDictionary("en").locale.label, "Print language");
+  assert.equal(getDocumentDictionary("ar").locale.label, "اللغة");
+  assert.equal(getDocumentDictionary("en").locale.label, "Language");
+  assert.equal(getDocumentDictionary("ar").common.print, "طباعة");
+  assert.equal(getDocumentDictionary("en").common.print, "Print");
   assert.equal(getDocumentDictionary("ar").quotation.termsAndConditions, "الشروط والأحكام");
 });
 
@@ -110,7 +112,7 @@ test("quotation and invoice PDFs select language transiently and never read pers
   for (const source of [read(QUOTATION_PDF), read(INVOICE_PDF)]) {
     assert.match(source, /searchParams/);
     assert.match(source, /resolveDocumentLocale\(resolvedSearchParams\)/);
-    assert.match(source, /DocumentLocaleSelect/);
+    assert.match(source, /DocumentPreviewToolbar/);
     assert.match(source, /getDocumentDictionary/);
     assert.match(source, /getDirection\(documentLocale\)/);
     assert.match(source, /dir="ltr" className="document-bidi-number"/);
@@ -122,8 +124,57 @@ test("quotation and invoice PDFs select language transiently and never read pers
   assert.match(selector, /searchParams\.set\("lang", nextLanguage\)/);
   assert.match(selector, /router\.replace/);
   assert.match(selector, /labels\.hint/);
+  assert.match(selector, /dir=\{selectDirection\}/);
+  assert.doesNotMatch(selector, /dir="ltr"/);
   assert.match(read(INVOICE_PDF), /getInvoiceDocumentPresentation/);
   assert.doesNotMatch(read(INVOICE_PDF), /invoice\.document_label/);
+});
+
+test("PDF preview controls avoid fixed top-bar collision and use responsive shared toolbar", () => {
+  const toolbarPath = join(REPO_ROOT, "src/components/documents/DocumentPreviewToolbar.tsx");
+  const toolbarSource = read(toolbarPath);
+
+  assert.match(toolbarSource, /DocumentLocaleSelect/);
+  assert.match(toolbarSource, /PrintButton/);
+  assert.match(toolbarSource, /printHelp/);
+  assert.match(toolbarSource, /no-print/);
+  assert.doesNotMatch(toolbarSource, /fixed top-4/);
+
+  for (const source of [read(QUOTATION_PDF), read(INVOICE_PDF)]) {
+    assert.match(source, /<DocumentPreviewToolbar/);
+    assert.doesNotMatch(source, /fixed top-4 right-4/);
+  }
+});
+
+test("dates render with document direction and are not forced into LTR boundaries", () => {
+  const quotationSource = read(QUOTATION_PDF);
+  const invoiceSource = read(INVOICE_PDF);
+
+  // Quotation issue date and valid until date use document direction
+  assert.match(quotationSource, /dir=\{documentDirection\}>\{formatDocumentDate\(quotation\.date, documentLocale\)\}/);
+  assert.match(quotationSource, /dir=\{documentDirection\}>\{formatDocumentDate\(quotation\.validUntil, documentLocale\)\}/);
+  assert.doesNotMatch(quotationSource, /dir="ltr">\{formatDocumentDate/);
+
+  // Invoice issue date uses document direction
+  assert.match(invoiceSource, /dir=\{documentDirection\}>\{formatDocumentDate\(invoice\.issued_at/);
+  assert.doesNotMatch(invoiceSource, /dir="ltr">\{formatDocumentDate/);
+});
+
+test("PDF surfaces use logical text alignment for clean RTL mirroring", () => {
+  const quotationSource = read(QUOTATION_PDF);
+  const invoiceSource = read(INVOICE_PDF);
+
+  // Headquarters blocks use text-end instead of physical text-right
+  assert.match(quotationSource, /className="text-end flex flex-col gap-1/);
+  assert.match(invoiceSource, /className="text-end flex flex-col gap-1/);
+
+  // Quotation print geometry is fixed while retaining logical table alignment.
+  assert.match(quotationSource, /<table className="w-full table-fixed text-start border-collapse">/);
+  assert.match(quotationSource, /<colgroup>[\s\S]*?hasAnyCategory[\s\S]*?<\/colgroup>/);
+  assert.match(invoiceSource, /table className="w-full table-fixed text-start border-collapse/);
+
+  // Footers use text-end for official stamp
+  assert.match(invoiceSource, /className="text-end">/);
 });
 
 test("AR and EN quotation representations consume the same canonical quotation authority", () => {

@@ -107,7 +107,7 @@ export type DocumentDictionary = {
 
 const english: DocumentDictionary = {
   locale: {
-    label: "Print language",
+    label: "Language",
     hint: "Choose Arabic or English for this preview. The saved business document does not change.",
     english: "English",
     arabic: "Arabic",
@@ -131,7 +131,7 @@ const english: DocumentDictionary = {
     companyStamp: "Company Stamp Here",
     clientApproval: "Client Approval",
     signatureDate: "Signature & Date",
-    print: "Print / Save as PDF",
+    print: "Print",
     preparingPrint: "Preparing print preview…",
     printHelp: "For best PDF output: use A4 paper, enable background graphics, and disable browser headers and footers if they appear in print preview.",
     addressNotProvided: "Address not provided",
@@ -206,7 +206,7 @@ const english: DocumentDictionary = {
 
 const arabic: DocumentDictionary = {
   locale: {
-    label: "لغة الطباعة",
+    label: "اللغة",
     hint: "اختر العربية أو الإنجليزية لهذه المعاينة. لا يتغير مستند الأعمال المحفوظ.",
     english: "الإنجليزية",
     arabic: "العربية",
@@ -230,7 +230,7 @@ const arabic: DocumentDictionary = {
     companyStamp: "ختم الشركة هنا",
     clientApproval: "اعتماد العميل",
     signatureDate: "التوقيع والتاريخ",
-    print: "طباعة / حفظ كملف PDF",
+    print: "طباعة",
     preparingPrint: "جارٍ تجهيز معاينة الطباعة…",
     printHelp: "لأفضل إخراج لملف PDF: استخدم ورق A4، فعّل رسومات الخلفية، وعطّل ترويسات وتذييلات المتصفح إذا ظهرت في معاينة الطباعة.",
     addressNotProvided: "العنوان غير مسجل",

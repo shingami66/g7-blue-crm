@@ -301,8 +301,7 @@ test("Invoices and Payments retain accepted table contracts (list behavior untou
   const invoices = read("src/app/(dashboard)/invoices/InvoicesListClient.tsx");
   const payments = read("src/app/(dashboard)/payments/PaymentsClient.tsx");
   const quotations = read("src/app/(dashboard)/quotations/QuotationsClient.tsx");
-  assert.match(invoices, /text-right/);
-  assert.match(invoices, /tabular-nums/);
+  assert.match(invoices, /text-end font-semibold text-on-surface tabular-nums/);
   assert.match(invoices, /UiDateText/);
   assert.match(payments, /DataTable/);
   assert.match(payments, /UiDateText/);

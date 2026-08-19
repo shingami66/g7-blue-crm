@@ -2,7 +2,7 @@ import "server-only";
 
 import type { ComponentProps, ReactNode } from "react";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PendingLink from "@/components/ui/PendingLink";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
@@ -131,11 +131,11 @@ export default async function ApprovedBillingScopeDetailPage({
         <div className="flex items-start gap-4">
           <PendingLink
             href={`/services/${service.id}`}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             aria-label={detailDictionary.backToService}
             title={detailDictionary.backToService}
           >
-            <ArrowLeft size={18} />
+            <LocaleBackIcon size={16} />
           </PendingLink>
           <div className="space-y-2">
             <p className="text-[13px] text-on-surface-variant" dir="auto">

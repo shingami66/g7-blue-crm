@@ -127,13 +127,13 @@ test("Payments table has exactly one local overflow-x-auto wrapper", () => {
   assert.strictEqual(overflowXMatches.length, 1, "Should have exactly one overflow-x-auto wrapper");
 });
 
-test("PaginationFooter is outside overflow-x-auto wrapper", () => {
+test("PaginationFooter remains outside and above the table overflow wrapper", () => {
   const clientContent = readFileSync(PAYMENTS_CLIENT_PATH, "utf-8");
   const scrollContainerIndex = clientContent.indexOf("overflow-x-auto");
   const paginationIndex = clientContent.indexOf("<PaginationFooter");
   assert.ok(scrollContainerIndex !== -1, "Should find overflow-x-auto wrapper");
   assert.ok(paginationIndex !== -1, "Should find PaginationFooter usage");
-  assert.ok(scrollContainerIndex < paginationIndex, "scrollRef element should appear before PaginationFooter");
+  assert.ok(paginationIndex < scrollContainerIndex, "PaginationFooter should appear before the table overflow wrapper");
 });
 
 test("The original flex-growing table/page region is preserved", () => {

@@ -1,6 +1,7 @@
 import type { Locale } from "../locales.ts";
 
 export interface PaginationDictionary {
+  paginationLabel: string;
   first: string;
   last: string;
   previous: string;
@@ -11,10 +12,12 @@ export interface PaginationDictionary {
   nextPage: string;
   pageSize: string;
   pageSizeLabel: string;
+  goTo: string;
   showingZero: string;
   showingRange: string;
   /** Template with `{number}` placeholder; Western digits supplied by formatter. */
   page: string;
+  pageOf: string;
   goToPage: string;
   currentPage: string;
 }
@@ -127,6 +130,7 @@ export const localeSelectorDictionaryAr: LocaleSelectorDictionary = {
 };
 
 const paginationDictionaryEn: PaginationDictionary = {
+  paginationLabel: "Pagination",
   first: "First",
   last: "Last",
   previous: "Previous",
@@ -135,16 +139,19 @@ const paginationDictionaryEn: PaginationDictionary = {
   lastPage: "Last page",
   previousPage: "Previous page",
   nextPage: "Next page",
-  pageSize: "Rows",
-  pageSizeLabel: "Rows per page",
+  pageSize: "Page size",
+  pageSizeLabel: "Page size",
+  goTo: "Go to",
   showingZero: "Showing 0 of 0",
-  showingRange: "Showing {start}-{end} of {total}",
+  showingRange: "Showing {start} to {end} of {total} results",
   page: "Page {number}",
+  pageOf: "Page {current} of {total}",
   goToPage: "Go to page {number}",
   currentPage: "Current page, page {number}",
 };
 
 const paginationDictionaryAr: PaginationDictionary = {
+  paginationLabel: "ترقيم الصفحات",
   first: "الأولى",
   last: "الأخيرة",
   previous: "السابق",
@@ -153,11 +160,13 @@ const paginationDictionaryAr: PaginationDictionary = {
   lastPage: "الصفحة الأخيرة",
   previousPage: "الصفحة السابقة",
   nextPage: "الصفحة التالية",
-  pageSize: "الصفوف",
-  pageSizeLabel: "عدد الصفوف في الصفحة",
+  pageSize: "حجم الصفحة",
+  pageSizeLabel: "حجم الصفحة",
+  goTo: "الانتقال إلى",
   showingZero: "عرض 0 من 0",
-  showingRange: "عرض {start}-{end} من {total}",
+  showingRange: "عرض {start} إلى {end} من {total} نتيجة",
   page: "الصفحة {number}",
+  pageOf: "الصفحة {current} من {total}",
   goToPage: "الانتقال إلى الصفحة {number}",
   currentPage: "الصفحة الحالية، الصفحة {number}",
 };

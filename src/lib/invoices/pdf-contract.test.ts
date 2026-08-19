@@ -3,11 +3,16 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 import ts from "typescript";
+import { getInvoiceStatusLabel } from "../i18n/dictionaries/invoices.ts";
 
 const REPO_ROOT = join(import.meta.dirname, "../../..");
 const INVOICE_PDF = join(
   REPO_ROOT,
   "src/app/(dashboard)/invoices/[id]/pdf/page.tsx",
+);
+const QUOTATION_PDF = join(
+  REPO_ROOT,
+  "src/app/(dashboard)/quotations/[id]/pdf/page.tsx",
 );
 const INVOICE_TYPES = join(REPO_ROOT, "src/lib/invoices/types.ts");
 const QUOTATION_TYPES = join(REPO_ROOT, "src/lib/quotations/types.ts");
@@ -362,6 +367,7 @@ const SAFE_RENDERED_STRING_HELPERS = new Set([
   "formatDocumentAmount",
   "formatDocumentDate",
   "formatDocumentQuantity",
+  "getInvoiceStatusLabel",
 ]);
 
 const DOCUMENT_DICTIONARY_RENDERED_TEXT: Record<string, string> = {
@@ -1995,6 +2001,16 @@ test("Invoice customer PDF retains snapshot-backed financial and document presen
   const source = read(INVOICE_PDF);
   const template = getInvoiceTemplate(source);
 
+  assert.equal(getInvoiceStatusLabel("en", "draft"), "Draft");
+  assert.equal(getInvoiceStatusLabel("ar", "draft"), "مسودة");
+  for (const status of ["draft", "sent", "paid", "partial", "overdue", "cancelled", "voided"] as const) {
+    assert.notEqual(getInvoiceStatusLabel("en", status), status);
+    assert.notEqual(getInvoiceStatusLabel("ar", status), status);
+  }
+  assert.match(source, /const displayStatus = getInvoiceStatusLabel\(documentLocale, invoice\.status\);/);
+  assert.match(template, /\{displayStatus\}/);
+  assert.doesNotMatch(template, />\s*\{invoice\.status\}\s*</);
+
   for (const retained of [
     "item.description",
     "invoice.invoice_number",
@@ -2007,6 +2023,7 @@ test("Invoice customer PDF retains snapshot-backed financial and document presen
     "buyer.name",
     "formatQuantityOrUnavailable(item.qty)",
     "formatItemAmountWithCurrency(item.unitPrice)",
+    "formatItemAmountWithCurrency(item.vat)",
     "formatItemAmountWithCurrency(item.total)",
     'invoice.vat_mode === "not_registered" ? dictionary.common.notApplied',
     "formatAmountWithCurrency(invoice.subtotal)",
@@ -2042,12 +2059,20 @@ test("Invoice customer PDF presents only positively classified snapshot itemizat
   const source = read(INVOICE_PDF);
   const template = getInvoiceTemplate(source);
   const css = read(GLOBAL_CSS);
+  const itemTableStart = template.indexOf('<table className="w-full table-fixed text-start border-collapse invoice-print-item-table">');
+  const itemTableEnd = template.indexOf("</table>", itemTableStart);
+  const itemTable = template.slice(itemTableStart, itemTableEnd);
 
+  assert.notEqual(itemTableStart, -1);
+  assert.ok(itemTableEnd > itemTableStart);
+
+  assert.match(source, /const detailText = readOwnRecordValue\(item, "details"\);[\s\S]*?detailText:\s*typeof detailText === "string" \? detailText : null/);
   assert.match(
     source,
     /unitPrice:\s*readFiniteNumber\(item\.unit_price\)\s*\?\?\s*readFiniteNumber\(item\.unitPrice\)/,
     "snake_case snapshot unit_price must take precedence over the legacy camelCase key",
   );
+  assert.match(source, /vat:\s*readFiniteNumber\(item\.vat\)/);
   assert.match(source, /total:\s*readFiniteNumber\(item\.total\)/);
   assert.match(
     source,
@@ -2087,11 +2112,29 @@ test("Invoice customer PDF presents only positively classified snapshot itemizat
     "dictionary.invoice.description",
     "dictionary.quotation.qty",
     "dictionary.quotation.unitPrice",
+    "dictionary.invoice.taxVat",
     "dictionary.invoice.lineTotal",
   ]) {
     assert.ok(template.includes(heading), `Invoice item table must retain ${heading}`);
   }
-  assert.doesNotMatch(template, /item\.vat/);
+  assert.equal((itemTable.match(/<th className=/g) ?? []).length, 6);
+  assert.deepEqual(itemTable.match(/<col className="w-\[\d+%\]" \/>/g), [
+    '<col className="w-[5%]" />',
+    '<col className="w-[39%]" />',
+    '<col className="w-[8%]" />',
+    '<col className="w-[17%]" />',
+    '<col className="w-[14%]" />',
+    '<col className="w-[17%]" />',
+  ]);
+  assert.doesNotMatch(itemTable, /category/i);
+  assert.match(itemTable, /<bdi dir="auto">\{item\.description \|\| dictionary\.common\.notAvailable\}<\/bdi>/);
+  assert.match(itemTable, /item\.detailText\?\.trim\(\) && \([\s\S]*?<bdi dir="auto">\{item\.detailText\}<\/bdi>/);
+  assert.doesNotMatch(itemTable, /<(?:div|p)[^>]*dir="auto"/);
+  assert.match(itemTable, /invoice\.vat_mode === "not_registered" \? dictionary\.common\.notApplied : \([\s\S]*?formatItemAmountWithCurrency\(item\.vat\)/);
+  assert.match(itemTable, /<span dir="ltr" className="document-bidi-number">\{i \+ 1\}<\/span>/);
+  assert.match(source, /formatQuantityOrUnavailable[\s\S]*?<span dir="ltr" className="document-bidi-number">\{formatQuantity\(val\)\}<\/span>/);
+  assert.match(itemTable, /formatItemAmountWithCurrency\(item\.unitPrice\)/);
+  assert.match(itemTable, /formatItemAmountWithCurrency\(item\.total\)/);
   assert.match(source, /snapshotClassification === "full_quotation" \|\| snapshotClassification === "active_scope"/);
   assert.match(source, /snapshotClassification === "active_scope"\s*\?\s*dictionary\.invoice\.approvedServiceScope/);
   assert.match(source, /snapshotClassification === "full_quotation"\s*\?\s*readRecordNumber\(snapshotQuotationRecord, "grand_total"\)/);
@@ -2100,6 +2143,7 @@ test("Invoice customer PDF presents only positively classified snapshot itemizat
   assert.match(source, /approvedBillingScopeTotal !== null/);
   assert.match(source, /readRecordNumber\(finalInvoiceSettlement, "service_lifetime_exposure"\) \?\?[\s\S]*?readRecordNumber\(finalInvoiceSettlement, "active_prior_invoice_total"\)/);
   assert.doesNotMatch(source, /getQuotationById|from\("quotations"\)|createAdminClient/);
+  assert.match(read(QUOTATION_PDF), /const hasAnyCategory = quotation\.items\.some/);
   assertSingleInvoiceFinancialSummary(source, INVOICE_PDF);
   assert.match(source, /dictionary\.invoice\.depositSummary/);
   assert.match(source, /dictionary\.invoice\.finalSummary/);

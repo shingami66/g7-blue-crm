@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import type { DocumentLocale } from "@/lib/documents/locale";
 import type { DocumentDictionary } from "@/lib/documents/locale";
+import { getDirection } from "@/lib/i18n/direction";
 
 type DocumentLocaleSelectProps = {
   value: DocumentLocale;
@@ -19,6 +20,7 @@ export default function DocumentLocaleSelect({
 }: DocumentLocaleSelectProps) {
   const router = useRouter();
   const hintId = `${id}-hint`;
+  const selectDirection = getDirection(value);
 
   const handleChange = (nextValue: string) => {
     const nextLanguage = nextValue as DocumentLocale;
@@ -28,9 +30,9 @@ export default function DocumentLocaleSelect({
   };
 
   return (
-    <div className="no-print flex flex-col gap-1.5 w-full max-w-xs">
-      <label htmlFor={id} className="text-[14px] font-semibold text-on-surface">
-        {labels.label}
+    <div className="no-print inline-flex items-center gap-2" dir={selectDirection}>
+      <label htmlFor={id} className="text-sm font-medium text-on-surface-variant shrink-0">
+        {labels.label}:
       </label>
       <select
         id={id}
@@ -38,13 +40,13 @@ export default function DocumentLocaleSelect({
         onChange={(event) => handleChange(event.target.value)}
         disabled={disabled}
         aria-describedby={hintId}
-        className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-[14px] text-on-surface focus:outline-none focus:border-primary disabled:bg-surface-container-low disabled:text-on-surface-variant disabled:cursor-not-allowed"
-        dir="ltr"
+        className="min-h-9 w-[120px] bg-surface border border-outline-variant rounded-lg px-2.5 py-1.5 text-sm font-medium text-on-surface focus:outline-none focus:border-primary disabled:bg-surface-container-low disabled:text-on-surface-variant disabled:cursor-not-allowed text-start"
+        dir={selectDirection}
       >
         <option value="en">{labels.english}</option>
         <option value="ar">{labels.arabic}</option>
       </select>
-      <p id={hintId} className="text-[12px] text-on-surface-variant leading-snug">
+      <p id={hintId} className="sr-only">
         {labels.hint}
       </p>
     </div>

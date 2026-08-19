@@ -70,11 +70,14 @@ test("mutation guards preserve immediate labels and prevent duplicate commands",
   assert.match(approval, /if \(isPending\) return/);
   assert.match(approval, /disabled=\{isPending && !isApproving\}/);
   assert.match(approval, /disabled=\{isPending && !isRejecting\}/);
+  assert.match(approval, /softDeleteQuotation/);
+  assert.match(approval, /if \(!canWrite \|\| isPending \|\| status === "approved"\) return/);
+  assert.match(approval, /deleteConfirm/);
+  assert.match(approval, /setDeleteError/);
   assert.match(issue, /if \(isPending\) return/);
   assert.match(issue, /loadingLabel=\{dictionary\.submitting\}/);
   assert.match(issue, /role="alert"/);
   assert.match(issue, /role="status"/);
-  assert.match(quotations, /deletingId/);
   assert.match(quotations, /pendingDocumentId/);
   assert.match(quotations, /documentTimerRef/);
   assert.match(quotations, /if \(!preview\)/);

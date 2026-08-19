@@ -74,7 +74,31 @@ function ReportFiltersForm({ filters, dictionary }: { filters: ReportFilters; di
   const yearQuery = year ? `&year=${encodeURIComponent(year)}` : "";
   const query = (range: { from?: string; to?: string }) => `/reports?from=${range.from}&to=${range.to}${yearQuery}`;
   const clearHref = year ? `/reports?year=${encodeURIComponent(year)}` : "/reports";
-  return <form className="flex flex-wrap items-end gap-3 rounded-xl border border-surface-variant bg-surface-container-lowest p-4" method="get">{year && <input type="hidden" name="year" value={year} />}<label className="flex min-w-[150px] flex-1 flex-col gap-1 text-[12px] font-semibold text-on-surface-variant"><span>{dictionary.filters.from}</span><input name="from" type="date" defaultValue={filters.from ?? ""} className="border border-outline-variant bg-surface px-3 py-2 text-[14px] text-on-surface" /></label><label className="flex min-w-[150px] flex-1 flex-col gap-1 text-[12px] font-semibold text-on-surface-variant"><span>{dictionary.filters.to}</span><input name="to" type="date" defaultValue={filters.to ?? ""} className="border border-outline-variant bg-surface px-3 py-2 text-[14px] text-on-surface" /></label><button type="submit" className="rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold text-on-primary">{dictionary.filters.apply}</button><PendingLink href={query(last30)} className="rounded-lg border border-outline-variant px-4 py-2 text-[14px] font-semibold text-primary">{dictionary.filters.last30}</PendingLink><PendingLink href={query(last90)} className="rounded-lg border border-outline-variant px-4 py-2 text-[14px] font-semibold text-primary">{dictionary.filters.last90}</PendingLink><PendingLink href={clearHref} className="px-2 py-2 text-[14px] font-semibold text-on-surface-variant hover:text-primary">{dictionary.filters.clear}</PendingLink></form>;
+  return (
+    <form className="flex flex-wrap items-end gap-3 rounded-xl border border-surface-variant bg-surface-container-lowest p-4" method="get">
+      {year && <input type="hidden" name="year" value={year} />}
+      <label className="flex min-w-[150px] flex-1 flex-col gap-1 text-[12px] font-semibold text-on-surface-variant">
+        <span>{dictionary.filters.from}</span>
+        <input name="from" type="date" defaultValue={filters.from ?? ""} className="h-9 rounded-lg border border-outline-variant bg-surface px-3 text-[13px] text-on-surface focus:border-primary focus:outline-none" />
+      </label>
+      <label className="flex min-w-[150px] flex-1 flex-col gap-1 text-[12px] font-semibold text-on-surface-variant">
+        <span>{dictionary.filters.to}</span>
+        <input name="to" type="date" defaultValue={filters.to ?? ""} className="h-9 rounded-lg border border-outline-variant bg-surface px-3 text-[13px] text-on-surface focus:border-primary focus:outline-none" />
+      </label>
+      <button type="submit" className="inline-flex min-h-9 items-center justify-center rounded-lg bg-primary px-3.5 py-1.5 text-[13px] font-semibold text-on-primary hover:bg-primary-container transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+        {dictionary.filters.apply}
+      </button>
+      <PendingLink href={query(last30)} className="inline-flex min-h-9 items-center justify-center rounded-lg border border-outline-variant bg-surface px-3.5 py-1.5 text-[13px] font-semibold text-primary hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+        {dictionary.filters.last30}
+      </PendingLink>
+      <PendingLink href={query(last90)} className="inline-flex min-h-9 items-center justify-center rounded-lg border border-outline-variant bg-surface px-3.5 py-1.5 text-[13px] font-semibold text-primary hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+        {dictionary.filters.last90}
+      </PendingLink>
+      <PendingLink href={clearHref} className="inline-flex min-h-9 items-center justify-center px-2.5 py-1.5 text-[13px] font-semibold text-on-surface-variant hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+        {dictionary.filters.clear}
+      </PendingLink>
+    </form>
+  );
 }
 
 function BillingReport({ report, dictionary, locale }: { report: Awaited<ReturnType<typeof getReportsCenterData>>["salesBilling"]; dictionary: ReturnType<typeof getReportsDictionary>; locale: "en" | "ar" }) {

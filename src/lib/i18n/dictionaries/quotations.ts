@@ -75,6 +75,7 @@ export interface QuotationsDictionary {
       issueDate: string;
       amountSar: string;
       status: string;
+      view: string;
       printPdf: string;
       actions: string;
     };
@@ -298,6 +299,7 @@ const quotationsDictionaryEn: QuotationsDictionary = {
       issueDate: "Issue Date",
       amountSar: "Amount (SAR)",
       status: "Status",
+      view: "View",
       printPdf: "Print / PDF",
       actions: "Actions",
     },
@@ -528,6 +530,7 @@ const quotationsDictionaryAr: QuotationsDictionary = {
       issueDate: "تاريخ الإصدار",
       amountSar: "القيمة (SAR)",
       status: "الحالة",
+      view: "عرض",
       printPdf: "طباعة / PDF",
       actions: "الإجراءات",
     },

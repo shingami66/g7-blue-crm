@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useEffect, type ComponentProps } from "react";
-import { Banknote, CheckCircle2, Clock } from "lucide-react";
+import { useRef, useEffect, useState, type ComponentProps } from "react";
+import { Banknote, CheckCircle2, Clock, Search } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import DataTable from "@/components/ui/DataTable";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -69,14 +69,39 @@ function paymentListHref(query: PaymentsListQuery, page = 1) {
 
 export default function PaymentsClient({ payments, pagination, query, error, dictionary }: PaymentsClientProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const stateKey = `${query.search ?? ""}|${pagination.page}|${pagination.pageSize}|${error ?? ""}`;
+  const submittedSearch = query.search ?? "";
+  const [draftSearch, setDraftSearch] = useState(submittedSearch);
+  const lastSubmittedSearch = useRef(submittedSearch);
+  const searchComposing = useRef(false);
+  const stateKey = `${submittedSearch}|${pagination.page}|${pagination.pageSize}|${error ?? ""}`;
   const { isPending, isSearchPending, navigate } = useListNavigation(stateKey);
+
+  useEffect(() => {
+    if (lastSubmittedSearch.current === submittedSearch) return;
+    lastSubmittedSearch.current = submittedSearch;
+    setDraftSearch(submittedSearch);
+  }, [submittedSearch]);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollLeft = 0;
     }
   }, [pagination.page]);
+
+  function submitSearch(rawSearch = draftSearch) {
+    const search = sanitizeSearchTerm(rawSearch);
+    lastSubmittedSearch.current = search;
+    setDraftSearch(search);
+    navigate(paymentListHref({ ...query, search: search || undefined }, 1), "replace", "search");
+  }
+
+  function handleClear() {
+    lastSubmittedSearch.current = "";
+    setDraftSearch("");
+    if (submittedSearch) {
+      navigate(paymentListHref({ ...query, search: undefined }, 1), "replace", "search");
+    }
+  }
 
   const locale = dictionary.locale;
   const common = getCommonDictionary(locale);
@@ -112,18 +137,52 @@ export default function PaymentsClient({ payments, pagination, query, error, dic
         </div>
       )}
 
-      <div className="mb-4 w-full max-w-sm">
-        <ModuleSearchInput
-          value={query.search ?? ""}
-          onChange={(value) => navigate(paymentListHref({ ...query, search: value || undefined }, 1), "replace", "search")}
-          placeholder={dictionary.searchPlaceholder}
-          ariaLabel={dictionary.searchPlaceholder}
-          disabled={isPending}
-        />
-        {isSearchPending && <span className="mt-1 block text-[12px] text-on-surface-variant">{common.states.searching}</span>}
-      </div>
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
+        <div className="flex flex-wrap items-center gap-3 border-b border-surface-variant bg-surface-bright p-4">
+          <form
+            className="flex w-full max-w-sm min-w-0 flex-1 items-center gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!searchComposing.current) submitSearch();
+            }}
+            aria-busy={isSearchPending || undefined}
+          >
+            <ModuleSearchInput
+              value={draftSearch}
+              onChange={(value) => setDraftSearch(value)}
+              onClear={handleClear}
+              placeholder={dictionary.searchPlaceholder}
+              ariaLabel={dictionary.searchPlaceholder}
+              clearLabel={common.actions.clear}
+              disabled={isPending}
+              className="min-w-0 flex-1"
+            />
+            <button
+              type="submit"
+              disabled={isPending}
+              aria-busy={isSearchPending || undefined}
+              aria-label={isSearchPending ? common.states.searching : common.labels.search}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[13px] font-semibold text-on-primary transition-colors hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Search size={14} aria-hidden="true" />
+              <span className={isSearchPending ? "" : "hidden sm:inline"}>
+                {isSearchPending ? common.states.searching : common.labels.search}
+              </span>
+            </button>
+          </form>
+          {isSearchPending && <span className="text-[12px] text-on-surface-variant">{common.states.searching}</span>}
+        </div>
 
-      <div className="flex-1 flex flex-col min-h-0">
+        <PaginationFooter
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          pageSize={pagination.pageSize}
+          paginationMode="bounded"
+          isPending={isPending}
+          onPageChange={(page) => navigate(paymentListHref(query, page), "push")}
+          onPageSizeChange={(pageSize) => navigate(paymentListHref({ ...query, pageSize }, 1), "replace")}
+        />
         <div className="flex-1 overflow-auto min-h-0 overflow-y-auto overflow-x-hidden">
           <div ref={scrollRef} className="w-full overflow-x-auto">
             <div className="min-w-[980px]">
@@ -193,17 +252,6 @@ export default function PaymentsClient({ payments, pagination, query, error, dic
           </div>
         </div>
 
-        <PaginationFooter
-          currentPage={pagination.page}
-          totalPages={pagination.totalPages}
-          total={pagination.total}
-          pageSize={pagination.pageSize}
-          paginationMode="bounded"
-          isPending={isPending}
-          onPageChange={(page) => navigate(paymentListHref(query, page), "push")}
-          onPageSizeChange={(pageSize) => navigate(paymentListHref({ ...query, pageSize }, 1), "replace")}
-          className="border-t-0"
-        />
       </div>
     </div>
   );

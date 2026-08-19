@@ -11,6 +11,9 @@ test("English pagination labels and accessibility templates use Western digits",
   assert.equal(copy.previous, "Previous");
   assert.equal(copy.next, "Next");
   assert.equal(copy.previousPage, "Previous page");
+  assert.equal(copy.pageSize, "Page size");
+  assert.equal(copy.goTo, "Go to");
+  assert.equal(copy.pageOf, "Page {current} of {total}");
   assert.equal(copy.nextPage, "Next page");
   assert.equal(formatPaginationCopy(copy.page, 3), "Page 3");
   assert.equal(formatPaginationCopy(copy.goToPage, 12), "Go to page 12");
@@ -26,6 +29,9 @@ test("Arabic pagination labels use canonical copy with Western digits", () => {
   assert.equal(copy.previous, "السابق");
   assert.equal(copy.next, "التالي");
   assert.equal(copy.previousPage, "الصفحة السابقة");
+  assert.equal(copy.pageSize, "حجم الصفحة");
+  assert.equal(copy.goTo, "الانتقال إلى");
+  assert.equal(copy.pageOf, "الصفحة {current} من {total}");
   assert.equal(copy.nextPage, "الصفحة التالية");
   assert.equal(formatPaginationCopy(copy.page, 3), "الصفحة 3");
   assert.equal(formatPaginationCopy(copy.goToPage, 12), "الانتقال إلى الصفحة 12");

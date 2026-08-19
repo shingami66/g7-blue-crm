@@ -10,8 +10,7 @@ import {
   resolveDocumentLocale,
 } from "@/lib/documents/locale";
 import { getDirection } from "@/lib/i18n/direction";
-import PrintButton from "./PrintButton";
-import DocumentLocaleSelect from "@/components/documents/DocumentLocaleSelect";
+import DocumentPreviewToolbar from "@/components/documents/DocumentPreviewToolbar";
 
 export default async function QuotationPdfPage({
   params,
@@ -73,23 +72,20 @@ export default async function QuotationPdfPage({
   };
   const formatAmountWithCurrency = (val: number | null | undefined) =>
     `${formatMoney(val)}${documentCurrency ? ` ${documentCurrency}` : ""}`;
+  const hasAnyCategory = quotation.items.some((item) => item.category.trim().length > 0);
 
   return (
     <div
       lang={documentLocale}
       dir={documentDirection}
-      className={`quotation-print-page document-${documentDirection} bg-surface-dim py-8 text-on-surface flex justify-center items-start min-h-screen font-sans`}
+      className={`quotation-print-page document-${documentDirection} bg-surface-dim py-8 text-on-surface flex flex-col items-center min-h-screen font-sans`}
     >
-      <div className="no-print fixed top-4 right-4 z-50 flex flex-col items-end gap-2">
-        <DocumentLocaleSelect
-          value={documentLocale}
-          labels={dictionary.locale}
+      <div className="no-print w-full flex justify-center">
+        <DocumentPreviewToolbar
+          documentLocale={documentLocale}
+          dictionary={dictionary}
           id="quotationPrintLanguage"
         />
-        <PrintButton label={dictionary.common.print} loadingLabel={dictionary.common.preparingPrint} />
-        <div className="bg-surface-container-high text-on-surface-variant text-[12px] p-3 rounded shadow-sm max-w-xs border border-outline-variant/30 text-right">
-           {dictionary.common.printHelp}
-        </div>
       </div>
 
       {/* A4 Document Canvas */}
@@ -113,7 +109,7 @@ export default async function QuotationPdfPage({
               )}
             </div>
           </div>
-          <div className="text-right flex flex-col gap-1 text-[14px] text-on-surface-variant">
+          <div className="text-end flex flex-col gap-1 text-[14px] text-on-surface-variant">
             <p className="text-[12px] font-semibold text-on-surface uppercase mb-1">
               {dictionary.common.headquarters}
             </p>
@@ -136,8 +132,16 @@ export default async function QuotationPdfPage({
               </p>
             </div>
             <div className="mt-2 text-[12px]">
-              {seller.officialEmail && <p>{seller.officialEmail}</p>}
-              {seller.officialPhone && <p>{seller.officialPhone}</p>}
+              {seller.officialEmail && (
+                <p>
+                  <span dir="ltr" className="document-bidi-number">{seller.officialEmail}</span>
+                </p>
+              )}
+              {seller.officialPhone && (
+                <p>
+                  <span dir="ltr" className="document-bidi-number">{seller.officialPhone}</span>
+                </p>
+              )}
             </div>
           </div>
         </header>
@@ -151,7 +155,7 @@ export default async function QuotationPdfPage({
 
         {/* Meta Information Grid */}
         <div className="quotation-print-meta grid grid-cols-2 gap-8 mb-10">
-          {/* Left: Quotation Details */}
+          {/* Quotation Details */}
           <div className="bg-surface p-4 rounded border border-outline-variant">
             <h3 className="text-[12px] font-semibold text-primary-container uppercase border-b border-outline-variant pb-2 mb-3">
               {dictionary.quotation.documentDetails}
@@ -160,13 +164,13 @@ export default async function QuotationPdfPage({
               <div className="text-on-surface-variant">{dictionary.quotation.quotationNumber}</div>
               <div className="font-semibold text-on-surface" dir="ltr">{quotation.quotationNumber}</div>
               <div className="text-on-surface-variant">{dictionary.common.issueDate}</div>
-              <div className="text-on-surface" dir="ltr">{formatDocumentDate(quotation.date, documentLocale)}</div>
+              <div className="text-on-surface" dir={documentDirection}>{formatDocumentDate(quotation.date, documentLocale)}</div>
               <div className="text-on-surface-variant">{dictionary.quotation.validUntil}</div>
-              <div className="text-on-surface" dir="ltr">{formatDocumentDate(quotation.validUntil, documentLocale)}</div>
+              <div className="text-on-surface" dir={documentDirection}>{formatDocumentDate(quotation.validUntil, documentLocale)}</div>
             </div>
           </div>
 
-          {/* Right: Client & Event Details */}
+          {/* Client & Event Details */}
           <div className="bg-surface p-4 rounded border border-outline-variant">
             <h3 className="text-[12px] font-semibold text-primary-container uppercase border-b border-outline-variant pb-2 mb-3">
               {dictionary.quotation.clientEvent}
@@ -188,32 +192,56 @@ export default async function QuotationPdfPage({
 
         {/* Services Table */}
         <div className="quotation-print-services mb-10 flex-grow">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full table-fixed text-start border-collapse">
+            <colgroup>
+              {hasAnyCategory ? (
+                <>
+                  <col className="w-[5%]" />
+                  <col className="w-[31%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[16%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[16%]" />
+                </>
+              ) : (
+                <>
+                  <col className="w-[5%]" />
+                  <col className="w-[39%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[17%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[17%]" />
+                </>
+              )}
+            </colgroup>
             <thead>
               <tr className="bg-surface-container-low border-y border-outline-variant">
-                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase w-8">
+                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase text-center">
                   #
                 </th>
-                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase">
+                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase text-start">
                   {dictionary.quotation.serviceDescription}
                 </th>
-                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase w-24">
-                  {dictionary.quotation.category}
-                </th>
-                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase w-16 text-center">
+                {hasAnyCategory && (
+                  <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase text-start">
+                    {dictionary.quotation.category}
+                  </th>
+                )}
+                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase text-center">
                   {dictionary.quotation.qty}
                 </th>
-                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase w-28 text-right">
+                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase text-end">
                   {dictionary.quotation.unitPrice}
                   <br />
                   <span className="text-[10px] text-on-surface-variant font-normal">
                      <span dir="ltr">{documentCurrency || dictionary.common.notAvailable}</span>
                   </span>
                 </th>
-                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase w-20 text-right">
+                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase text-end">
                   {dictionary.quotation.taxVat}
                 </th>
-                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase w-32 text-right">
+                <th className="py-3 px-2 text-[12px] font-semibold text-on-surface uppercase text-end">
                   {dictionary.quotation.total}
                   <br />
                   <span className="text-[10px] text-on-surface-variant font-normal">
@@ -225,29 +253,40 @@ export default async function QuotationPdfPage({
             <tbody className="text-[14px] text-on-surface">
               {quotation.items.map((item, i) => (
                 <tr key={i} className="border-b border-outline-variant/50">
-                  <td className="py-4 px-2 align-top text-on-surface-variant">
-                    {i + 1}
+                  <td className="py-4 px-2 align-top text-center text-on-surface-variant">
+                    <span dir="ltr" className="document-bidi-number">{i + 1}</span>
                   </td>
-                  <td className="py-4 px-2 align-top">
-                    <div className="font-semibold mb-1" dir="auto">{item.description}</div>
+                  <td className="py-4 px-2 align-top text-start">
+                    <div className="font-semibold mb-1">
+                      <bdi dir="auto">{item.description}</bdi>
+                    </div>
+                    {item.details?.trim() && (
+                      <div className="text-[12px] leading-relaxed text-on-surface-variant">
+                        <bdi dir="auto">{item.details}</bdi>
+                      </div>
+                    )}
                   </td>
-                  <td className="py-4 px-2 align-top text-[12px]">{item.category}</td>
+                  {hasAnyCategory && (
+                    <td className="py-4 px-2 align-top text-[12px] text-start">
+                      {item.category.trim() ? <bdi dir="auto">{item.category}</bdi> : "—"}
+                    </td>
+                  )}
                   <td className="py-4 px-2 align-top text-center"><span dir="ltr" className="document-bidi-number">{formatQuantity(item.qty)}</span></td>
-                  <td className="py-4 px-2 align-top text-right">
+                  <td className="py-4 px-2 align-top text-end">
                     <span dir="ltr" className="document-bidi-number">{formatAmountWithCurrency(item.unitPrice)}</span>
                   </td>
-                  <td className="py-4 px-2 align-top text-right text-[12px] text-on-surface-variant">
+                  <td className="py-4 px-2 align-top text-end text-[12px] text-on-surface-variant">
                     {/* TODO CS-B: show item.vat from the document snapshot when VAT registration is enabled. */}
                     {dictionary.common.notApplied}
                   </td>
-                  <td className="py-4 px-2 align-top text-right font-medium">
+                  <td className="py-4 px-2 align-top text-end font-medium">
                      <span dir="ltr" className="document-bidi-number">{formatAmountWithCurrency(item.total)}</span>
                   </td>
                 </tr>
               ))}
               {quotation.items.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-on-surface-variant">
+                  <td colSpan={hasAnyCategory ? 7 : 6} className="py-8 text-center text-on-surface-variant">
                     {dictionary.quotation.noLineItems}
                   </td>
                 </tr>

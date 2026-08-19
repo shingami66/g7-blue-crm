@@ -2,11 +2,11 @@
 
 import { Eye, Filter, Plus } from "lucide-react";
 import type { ReactNode } from "react";
-import FilterBar from "@/components/ui/FilterBar";
 import ModuleSearchControl from "@/components/ui/ModuleSearchControl";
 import { ListInlineError } from "@/components/ui/ListPendingState";
 import { useListNavigation } from "@/components/ui/useListNavigation";
 import PageHeader from "@/components/ui/PageHeader";
+import Button from "@/components/ui/Button";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import PendingLink from "@/components/ui/PendingLink";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -131,23 +131,23 @@ export default function SuppliersClient({
       <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
         <div className="flex flex-wrap justify-end gap-2">
           {canManageDeleted && (
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               disabled={isPending}
               onClick={() => navigate(deletedHref)}
-              className="rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] font-semibold text-on-surface transition-colors hover:bg-surface-container-low disabled:opacity-60"
             >
               {showDeleted ? dictionary.list.showCurrent : dictionary.list.showDeleted}
-            </button>
+            </Button>
           )}
           {canCreateSuppliers && !showDeleted && (
-            <PendingLink
-              href="/suppliers/new"
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold text-on-primary transition-colors hover:bg-primary-container"
-            >
-              <Plus size={16} aria-hidden="true" />
-              {dictionary.list.newSupplier}
-            </PendingLink>
+            <Button asChild size="sm">
+              <PendingLink href="/suppliers/new">
+                <Plus size={16} aria-hidden="true" />
+                {dictionary.list.newSupplier}
+              </PendingLink>
+            </Button>
           )}
         </div>
       </PageHeader>
@@ -156,7 +156,7 @@ export default function SuppliersClient({
         className="relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest"
         aria-busy={isPending || undefined}
       >
-        <FilterBar>
+        <div className="flex flex-wrap items-center gap-3 border-b border-surface-variant bg-surface-bright p-4">
           <ModuleSearchControl
             mode="supplier"
             modes={[{ value: "supplier", label: dictionary.list.searchPlaceholder, placeholder: dictionary.list.searchPlaceholder }]}
@@ -201,7 +201,20 @@ export default function SuppliersClient({
               ))}
             </>
           </SelectFilter>
-        </FilterBar>
+        </div>
+
+        {pagination.total > 0 && (
+          <PaginationFooter
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            pageSize={pagination.pageSize}
+            paginationMode="bounded"
+            isPending={isPending}
+            onPageChange={(page) => navigate(supplierListHref({ ...filters, page }, showDeleted), "push")}
+            onPageSizeChange={(pageSize: ListPageSize) => updateFilters({ pageSize }, true)}
+          />
+        )}
 
         <div className="relative overflow-x-auto overflow-y-visible">
           {loadError ? (
@@ -324,22 +337,10 @@ export default function SuppliersClient({
           </table>
         </div>
 
-        {pagination.total === 0 ? (
+        {pagination.total === 0 && (
           <div className="flex items-center border-t border-surface-variant bg-surface-container-lowest p-3 text-[13px] text-on-surface-variant" data-supplier-empty-count="true">
             {dictionary.list.showingZero}
           </div>
-        ) : (
-          <PaginationFooter
-            currentPage={pagination.page}
-            totalPages={pagination.totalPages}
-            total={pagination.total}
-            pageSize={pagination.pageSize}
-            paginationMode="bounded"
-            isPending={isPending}
-            onPageChange={(page) => navigate(supplierListHref({ ...filters, page }, showDeleted), "push")}
-            onPageSizeChange={(pageSize: ListPageSize) => updateFilters({ pageSize }, true)}
-            className="border-t-0"
-          />
         )}
       </div>
     </div>

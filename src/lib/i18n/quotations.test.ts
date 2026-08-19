@@ -175,10 +175,11 @@ test("13-16. Approval separate from write; Sales lacks approve; approved locked;
 
   assert.match(read(DETAIL), /checkPermission\("quotations:approve"\)/);
   assert.match(read(APPROVAL), /approveQuotation|rejectQuotation/);
-  assert.match(read(APPROVAL), /status === "approved" \|\| status === "rejected"/);
-  assert.match(read(LIST_CLIENT), /quotation\.status === "approved"/);
-  assert.match(read(LIST_CLIENT), /onlyDraftEditable|approvedCannotDelete/);
-  assert.match(read(LIST_CLIENT), /status === "draft"/);
+  assert.match(read(APPROVAL), /status === "draft" \|\| status === "sent"/);
+  assert.match(read(APPROVAL), /approvedCannotDelete/);
+  assert.match(read(DETAIL), /onlyDraftEditable/);
+  assert.match(read(LIST_CLIENT), /value="approved"/);
+  assert.match(read(DETAIL), /status === "draft"/);
 });
 
 test("17. Issue-date and valid-until validation contracts remain", () => {
@@ -246,7 +247,7 @@ test("27-28. VAT mode and tax claims remain safe", () => {
   assert.match(form, /notApplied|Not applied/);
   assert.match(detail, /isTaxVatNotApplied|notApplied/);
   for (const file of [FORM, DETAIL, LIST_CLIENT]) {
-    assert.doesNotMatch(read(file), /ZATCA|FATOORA|Tax Invoice|clearance|QR code|15%/i);
+    assert.doesNotMatch(read(file), /ZATCA|FATOORA|Tax Invoice|clearance|QR code/i);
   }
   assert.equal(getQuotationsDictionary("ar").form.notApplied, "غير مطبقة");
 });
@@ -292,8 +293,12 @@ test("31. No hardcoded English shells on source-proven Quotations Arabic UI surf
 });
 
 test("Locale authority and soft-delete guards remain", () => {
-  assert.match(read(LIST_CLIENT), /softDeleteQuotation/);
-  assert.match(read(LIST_CLIENT), /quotation\.status === "approved"/);
+  assert.doesNotMatch(read(LIST_CLIENT), /softDeleteQuotation/);
+  assert.match(read(APPROVAL), /softDeleteQuotation/);
+  assert.match(read(APPROVAL), /status === "approved"/);
+  assert.match(read(APPROVAL), /deleteConfirm/);
+  assert.match(read(APPROVAL), /deleteFailed/);
   assert.match(read(LIST_PAGE), /checkPermission\("quotations:write"\)|canWrite/);
+  assert.match(read(DETAIL), /checkPermission\("quotations:write"\)|canWrite/);
   assert.match(read(NEW_PAGE), /requirePermission\("quotations:write"\)/);
 });

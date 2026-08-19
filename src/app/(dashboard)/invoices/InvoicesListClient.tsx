@@ -6,6 +6,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import ModuleSearchControl from "@/components/ui/ModuleSearchControl";
 import DenseTableIconAction from "@/components/ui/DenseTableIconAction";
 import { ListInlineError } from "@/components/ui/ListPendingState";
+import Button from "@/components/ui/Button";
 import { useListNavigation } from "@/components/ui/useListNavigation";
 import { Download, Filter, Eye, Printer, Plus } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
@@ -39,6 +40,30 @@ const invoiceStatusBadgeVariant = {
   voided: "rejected",
 } as const satisfies Record<InvoiceStatus, "draft" | "sent" | "approved" | "pending" | "overdue" | "rejected">;
 
+const INVOICE_COLUMN_WIDTHS = [
+  "w-[14%]",
+  "w-[12%]",
+  "w-[14%]",
+  "w-[17%]",
+  "w-[11%]",
+  "w-[14%]",
+  "w-[8%]",
+  "w-[5%]",
+  "w-[5%]",
+] as const;
+
+const INVOICE_COLUMN_ALIGNMENTS = [
+  "text-start",
+  "text-start",
+  "text-start",
+  "text-start",
+  "text-start",
+  "text-end",
+  "text-start",
+  "text-center",
+  "text-center",
+] as const;
+
 interface InvoicesListClientProps {
   initialInvoices: Invoice[];
   pagination: InvoiceListPagination;
@@ -47,8 +72,6 @@ interface InvoicesListClientProps {
   canCreateInvoiceChooser: boolean;
   dictionary: InvoicesDictionary;
 }
-
-const formatCopy = (template: string, values: Record<string, string | number>) => template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
 
 function invoiceListHref(query: InvoiceListQuery, page = 1) {
   const params = new URLSearchParams();
@@ -118,20 +141,29 @@ export default function InvoicesListClient({
     }
   }
 
-  const visibleStart = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1;
-  const visibleEnd = Math.min(visibleStart + initialInvoices.length - 1, pagination.total);
   const returnTo = invoiceListHref(query, pagination.page);
 
   return (
     <div className="flex h-full flex-col">
       <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
         {canCreateInvoiceChooser && (
-          <button ref={createInvoiceTriggerRef} type="button" onClick={() => void openInvoiceChooser()} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[14px] font-semibold text-on-primary transition-colors hover:bg-primary-container">
-            <Plus size={18} aria-hidden="true" />{dictionary.list.invoiceChooser.createInvoice}
-          </button>
+          <Button asChild size="sm">
+            <button
+              ref={createInvoiceTriggerRef}
+              type="button"
+              onClick={() => void openInvoiceChooser()}
+            >
+              <Plus size={16} aria-hidden="true" />
+              {dictionary.list.invoiceChooser.createInvoice}
+            </button>
+          </Button>
         )}
-        <button type="button" className="flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-[14px] font-semibold leading-[20px] text-on-surface transition-colors hover:bg-surface-container-low"><Download size={18} />{dictionary.list.export}</button>
-        <div className="hidden max-w-[240px] text-right text-[13px] leading-tight text-on-surface-variant sm:block">{dictionary.list.creationHint}</div>
+        <Button asChild variant="outline" size="sm">
+          <button type="button">
+            <Download size={16} />
+            {dictionary.list.export}
+          </button>
+        </Button>
       </PageHeader>
 
       <div className="flex min-h-0 flex-1 gap-6">
@@ -165,33 +197,8 @@ export default function InvoicesListClient({
               </select>
               <Filter size={14} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
             </div>
-            <div className="ms-auto shrink-0 text-[14px] leading-[20px] text-on-surface-variant">
-              {pagination.total === 0 ? dictionary.list.summary.showingZero : formatCopy(dictionary.list.summary.showingRange, { start: visibleStart, end: visibleEnd, count: pagination.total })}
-            </div>
           </div>
-          <div className="relative min-h-0 flex-1 overflow-auto">
-            {loadError ? <ListInlineError message={dictionary.states.invoicesLoadError} retryLabel={sharedStates.retry.tryAgain} onRetry={refresh} pending={isPending} /> : <table className="w-full min-w-[1060px] border-collapse text-start">
-              <thead><tr className="border-b border-surface-variant bg-surface-container-low">
-                {[dictionary.list.table.invoice, dictionary.list.table.type, dictionary.list.table.document, dictionary.list.table.customer, dictionary.list.table.issueDate, dictionary.list.table.amountSar, dictionary.list.table.status, dictionary.list.table.preview, dictionary.list.table.printPdf].map((header, index) => <th key={header} className={`px-4 py-3 text-[12px] font-semibold uppercase text-on-surface-variant ${index === 8 ? "w-[72px] text-center" : ""}`}>{header}</th>)}
-              </tr></thead>
-              <tbody className="divide-y divide-surface-variant text-[14px]">
-                {initialInvoices.map((invoice) => (
-                  <tr key={invoice.id} className="transition-colors hover:bg-surface-container-low/50">
-                    <td className="px-4 py-4 font-mono font-semibold text-primary"><span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(invoice.invoice_number || invoice.id)}</span></td>
-                    <td className="px-4 py-4 text-on-surface">{invoice.invoice_type ? getInvoiceTypeLabel(locale, invoice.invoice_type) : "—"}</td>
-                    <td className="px-4 py-4 text-on-surface"><span dir="auto">{getInvoiceDocumentLabelDisplay(locale, invoice.document_label)}</span></td>
-                    <td className="px-4 py-4 font-medium text-on-surface"><span dir="auto">{invoice.customer}</span></td>
-                    <td className="px-4 py-4 text-on-surface-variant"><UiDateText locale={locale} value={invoice.issued_at ?? invoice.created_at} /></td>
-                    <td className="px-4 py-4 text-right font-semibold text-on-surface tabular-nums"><span dir="ltr" className="inline-block whitespace-nowrap">{formatSarAmount(locale, invoice.grand_total)}</span></td>
-                    <td className="px-4 py-4"><StatusBadge variant={invoiceStatusBadgeVariant[invoice.status]}>{getInvoiceStatusLabel(dictionary.locale, invoice.status)}</StatusBadge></td>
-                    <td className="px-4 py-4"><PendingLink href={`/invoices/${invoice.id}?returnTo=${encodeURIComponent(returnTo)}`} pendingLabel={dictionary.list.navigationPending} aria-label={`${dictionary.list.table.preview} ${invoice.invoice_number || invoice.id}`} title={`${dictionary.list.table.preview} ${invoice.invoice_number || invoice.id}`} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40"><Eye size={17} /></PendingLink></td>
-                    <td className="w-[72px] px-4 py-4 text-center"><div className="grid place-items-center"><DenseTableIconAction label={dictionary.list.table.printPdf} onClick={() => window.open(`/invoices/${invoice.id}/pdf`, "_blank", "noopener,noreferrer")}><Printer size={16} aria-hidden="true" /></DenseTableIconAction></div></td>
-                  </tr>
-                ))}
-                {!loadError && initialInvoices.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">{pagination.total === 0 && !query.search && !query.status ? dictionary.list.table.noInvoices : dictionary.list.table.noFilteredInvoices}</td></tr>}
-              </tbody>
-            </table>}
-          </div>
+
           <PaginationFooter
             currentPage={pagination.page}
             totalPages={pagination.totalPages}
@@ -202,6 +209,33 @@ export default function InvoicesListClient({
             onPageChange={(page) => navigate(invoiceListHref(query, page), "push")}
             onPageSizeChange={(pageSize: ListPageSize) => updateQuery({ pageSize })}
           />
+
+          <div className="relative min-h-0 flex-1 overflow-auto">
+            {loadError ? <ListInlineError message={dictionary.states.invoicesLoadError} retryLabel={sharedStates.retry.tryAgain} onRetry={refresh} pending={isPending} /> : <table className="w-full min-w-[1060px] table-fixed border-collapse text-start">
+              <colgroup>
+                {INVOICE_COLUMN_WIDTHS.map((width, index) => <col key={index} className={width} />)}
+              </colgroup>
+              <thead><tr className="border-b border-surface-variant bg-surface-container-low">
+                {[dictionary.list.table.invoice, dictionary.list.table.type, dictionary.list.table.document, dictionary.list.table.customer, dictionary.list.table.issueDate, dictionary.list.table.amountSar, dictionary.list.table.status, dictionary.list.table.preview, dictionary.list.table.printPdf].map((header, index) => <th key={header} className={`px-4 py-3 text-[12px] font-semibold uppercase text-on-surface-variant ${INVOICE_COLUMN_ALIGNMENTS[index]}`}>{header}</th>)}
+              </tr></thead>
+              <tbody className="divide-y divide-surface-variant text-[14px]">
+                {initialInvoices.map((invoice) => (
+                  <tr key={invoice.id} className="transition-colors hover:bg-surface-container-low/50">
+                    <td className="px-4 py-4 font-mono font-semibold text-primary"><span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(invoice.invoice_number || invoice.id)}</span></td>
+                    <td className="px-4 py-4 text-on-surface">{invoice.invoice_type ? getInvoiceTypeLabel(locale, invoice.invoice_type) : "—"}</td>
+                    <td className="px-4 py-4 text-on-surface"><span dir="auto">{getInvoiceDocumentLabelDisplay(locale, invoice.document_label)}</span></td>
+                    <td className="px-4 py-4 font-medium text-on-surface"><span dir="auto">{invoice.customer}</span></td>
+                    <td className="px-4 py-4 text-on-surface-variant"><UiDateText locale={locale} value={invoice.issued_at ?? invoice.created_at} /></td>
+                    <td className="px-4 py-4 text-end font-semibold text-on-surface tabular-nums"><span dir="ltr" className="inline-block whitespace-nowrap">{formatSarAmount(locale, invoice.grand_total)}</span></td>
+                    <td className="px-4 py-4"><StatusBadge variant={invoiceStatusBadgeVariant[invoice.status]}>{getInvoiceStatusLabel(dictionary.locale, invoice.status)}</StatusBadge></td>
+                    <td className="px-4 py-4 text-center"><PendingLink href={`/invoices/${invoice.id}?returnTo=${encodeURIComponent(returnTo)}`} pendingLabel={dictionary.list.navigationPending} aria-label={`${dictionary.list.table.preview} ${invoice.invoice_number || invoice.id}`} title={`${dictionary.list.table.preview} ${invoice.invoice_number || invoice.id}`} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40"><Eye size={17} /></PendingLink></td>
+                    <td className="px-4 py-4 text-center"><div className="grid place-items-center"><DenseTableIconAction label={dictionary.list.table.printPdf} onClick={() => window.open(`/invoices/${invoice.id}/pdf`, "_blank", "noopener,noreferrer")}><Printer size={16} aria-hidden="true" /></DenseTableIconAction></div></td>
+                  </tr>
+                ))}
+                {!loadError && initialInvoices.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">{pagination.total === 0 && !query.search && !query.status ? dictionary.list.table.noInvoices : dictionary.list.table.noFilteredInvoices}</td></tr>}
+              </tbody>
+            </table>}
+          </div>
         </div>
       </div>
       {isInvoiceChooserOpen && <CreateInvoiceChooser services={eligibleServices} loadStatus={eligibleServicesLoadStatus} dictionary={dictionary} triggerRef={createInvoiceTriggerRef} onClose={closeInvoiceChooser} />}

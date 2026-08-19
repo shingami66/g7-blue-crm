@@ -104,7 +104,7 @@ export default function RecordNavigation({
     <nav
       aria-label={`${dictionary.title}: ${recordType}`}
       aria-busy={isGuarded || undefined}
-      className="flex items-center gap-1 rounded-lg border border-outline-variant bg-surface px-1 py-1"
+      className="flex items-center gap-1 rounded-lg border border-outline-variant bg-surface px-1 py-0.5"
       dir="ltr"
       data-record-navigation-pending={showPending ? "true" : undefined}
     >
@@ -120,15 +120,13 @@ export default function RecordNavigation({
             aria-label={`${label} ${recordType}`}
             title={`${label} ${recordType}`}
             onClick={(event) => handleNavigationClick(event, hrefFor(basePath, id, returnTo))}
-            className="inline-flex min-h-9 items-center gap-1 rounded-md px-2 text-[12px] font-semibold text-primary transition-colors hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40 aria-disabled:cursor-not-allowed aria-disabled:opacity-45"
+            className="inline-flex size-8 items-center justify-center rounded-md text-primary transition-colors hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40 aria-disabled:cursor-not-allowed aria-disabled:opacity-45"
           >
-            <Icon size={15} aria-hidden="true" />
-            <span className="hidden sm:inline">{label}</span>
+            <Icon size={14} aria-hidden="true" />
           </Link>
         ) : (
-          <button key={key} type="button" disabled aria-disabled="true" aria-label={`${label} ${recordType}`} title={`${label} ${recordType}`} className="inline-flex min-h-9 items-center gap-1 rounded-md px-2 text-[12px] font-semibold text-on-surface-variant opacity-45">
-            <Icon size={15} aria-hidden="true" />
-            <span className="hidden sm:inline">{label}</span>
+          <button key={key} type="button" disabled aria-disabled="true" aria-label={`${label} ${recordType}`} title={`${label} ${recordType}`} className="inline-flex size-8 items-center justify-center rounded-md text-on-surface-variant opacity-45">
+            <Icon size={14} aria-hidden="true" />
           </button>
         )
       ))}
