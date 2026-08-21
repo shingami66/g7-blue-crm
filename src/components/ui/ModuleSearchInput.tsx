@@ -6,6 +6,7 @@ import { useRef } from "react";
 type ModuleSearchInputProps = {
   value: string;
   onChange: (value: string) => void;
+  onClear?: () => void;
   placeholder: string;
   ariaLabel?: string;
   clearLabel?: string;
@@ -16,6 +17,7 @@ type ModuleSearchInputProps = {
 export default function ModuleSearchInput({
   value,
   onChange,
+  onClear,
   placeholder,
   ariaLabel,
   clearLabel = "Clear",
@@ -26,7 +28,11 @@ export default function ModuleSearchInput({
   const hasValue = value.length > 0;
 
   function clear() {
-    onChange("");
+    if (onClear) {
+      onClear();
+    } else {
+      onChange("");
+    }
     inputRef.current?.focus();
   }
 

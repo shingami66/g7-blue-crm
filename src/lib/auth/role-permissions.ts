@@ -9,6 +9,10 @@ export const INVOICE_PERMISSIONS = {
   write: "invoices:write",
 } as const;
 
+export const SERVICE_BILLING_SUMMARY_PERMISSIONS = {
+  read: "services:read_billing_summary",
+} as const;
+
 export const ROLE_PERMISSIONS = {
   admin: [
     "*",
@@ -29,6 +33,7 @@ export const ROLE_PERMISSIONS = {
     "quotations:write",
     "quotations:approve",
     "services:read",
+    SERVICE_BILLING_SUMMARY_PERMISSIONS.read,
     "services:write",
     "services:update_status",
     INVOICE_PERMISSIONS.read,
@@ -57,6 +62,7 @@ export const ROLE_PERMISSIONS = {
     "quotations:read",
     "quotations:write",
     "services:read",
+    SERVICE_BILLING_SUMMARY_PERMISSIONS.read,
     "services:write",
     INVOICE_PERMISSIONS.read,
     "payments:read",
@@ -66,6 +72,7 @@ export const ROLE_PERMISSIONS = {
     "customers:read",
     "quotations:read",
     "services:read",
+    SERVICE_BILLING_SUMMARY_PERMISSIONS.read,
     "services:update_status",
     "projects:read",
     "projects:write",
@@ -78,6 +85,7 @@ export const ROLE_PERMISSIONS = {
     "customers:export",
     "quotations:read",
     "services:read",
+    SERVICE_BILLING_SUMMARY_PERMISSIONS.read,
     INVOICE_PERMISSIONS.read,
     "payments:read",
     "payments:write",

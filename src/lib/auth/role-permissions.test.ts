@@ -42,8 +42,31 @@ registerHooks({
 const {
   INVOICE_PERMISSIONS,
   ROLE_PERMISSIONS,
+  SERVICE_BILLING_SUMMARY_PERMISSIONS,
   hasPermissionForRole,
 } = await import("./role-permissions.ts");
+
+test("Service Billing Summary defaults are distinct from Invoice visibility", () => {
+  for (const role of ["admin", "manager", "accountant", "operations", "sales"] as const) {
+    assert.equal(
+      hasPermissionForRole(role, SERVICE_BILLING_SUMMARY_PERMISSIONS.read),
+      true,
+    );
+  }
+
+  assert.equal(
+    hasPermissionForRole("viewer", SERVICE_BILLING_SUMMARY_PERMISSIONS.read),
+    false,
+  );
+  assert.equal(
+    hasPermissionForRole("operations", INVOICE_PERMISSIONS.read),
+    false,
+  );
+  assert.equal(
+    hasPermissionForRole("viewer", INVOICE_PERMISSIONS.read),
+    true,
+  );
+});
 
 const absMutationPermissions = [
   APPROVED_BILLING_SCOPE_PERMISSIONS.create,

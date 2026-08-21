@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { join } from "node:path";
 import test, { mock } from "node:test";
 import {
@@ -7,6 +8,42 @@ import {
   sumAuthoritativeMoney,
   toAuthoritativeMoneyField,
 } from "./money.ts";
+
+type ResolveResult = { url: string; shortCircuit?: true };
+type ResolveContext = { parentURL?: string };
+
+const require = createRequire(import.meta.url);
+const sourceRootUrl = new URL("../../", import.meta.url).href;
+const { registerHooks } = require("node:module") as {
+  registerHooks: (hooks: {
+    resolve: (
+      specifier: string,
+      context: ResolveContext,
+      nextResolve: (specifier: string, context: ResolveContext) => ResolveResult,
+    ) => ResolveResult;
+  }) => void;
+};
+
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier.startsWith("@/")) {
+      return {
+        shortCircuit: true,
+        url: new URL(`../../${specifier.slice(2)}.ts`, import.meta.url).href,
+      };
+    }
+
+    if (
+      specifier.startsWith(".") &&
+      !specifier.endsWith(".ts") &&
+      context.parentURL?.startsWith(sourceRootUrl)
+    ) {
+      return nextResolve(`${specifier}.ts`, context);
+    }
+
+    return nextResolve(specifier, context);
+  },
+});
 
 type TableName = "approved_billing_scopes" | "quotations" | "invoices";
 type QueryResponse = {
@@ -28,6 +65,8 @@ type InvoiceFilter =
 let activeScenario: BillingScenario | null = null;
 let invoiceFilters: InvoiceFilter[] = [];
 let queryStarts: TableName[] = [];
+let selectedColumns: Partial<Record<TableName, string[]>> = {};
+let deniedSummaryPermission: string | null = null;
 
 function currentScenario(): BillingScenario {
   if (!activeScenario) throw new Error("Billing scenario not initialized");
@@ -39,7 +78,10 @@ function createFakeSupabase() {
     from(table: TableName) {
       let queryRange: [number, number] | null = null;
       const query = {
-        select() {
+        select(columns: string) {
+          const selected = selectedColumns[table] ?? [];
+          selected.push(columns);
+          selectedColumns[table] = selected;
           return query;
         },
         in() {
@@ -233,6 +275,8 @@ function startScenario(
 ) {
   invoiceFilters = [];
   queryStarts = [];
+  selectedColumns = {};
+  deniedSummaryPermission = null;
   activeScenario = {
     approved_billing_scopes: { data: [], error: null },
     quotations: { data: [quotation(100)], error: null },
@@ -247,9 +291,108 @@ mock.module("../supabase/admin.ts", {
     createAdminClient: () => createFakeSupabase(),
   },
 });
+mock.module("../auth/permissions.ts", {
+  namedExports: {
+    requirePermission: async (permission: string) => {
+      if (permission === deniedSummaryPermission) {
+        throw new Error(`Denied ${permission}`);
+      }
+    },
+  },
+});
 
-const { getServiceBillingState, getBatchServiceBillingStates } =
+const {
+  computeServiceBillingSummary,
+  getServiceBillingState,
+  getBatchServiceBillingStates,
+} =
   await import("./billing-state.ts");
+const { getServiceBillingSummary } = await import("./billing-summary-query.ts");
+
+test("Billing Summary requires both permissions before any financial query starts", async () => {
+  startScenario({
+    approved_billing_scopes: { data: [approvedScope(100)], error: null },
+  });
+  deniedSummaryPermission = "services:read";
+
+  await assert.rejects(() => getServiceBillingSummary("service-1"));
+  assert.deepEqual(queryStarts, []);
+
+  deniedSummaryPermission = "services:read_billing_summary";
+  await assert.rejects(() => getServiceBillingSummary("service-1"));
+  assert.deepEqual(queryStarts, []);
+});
+
+test("Billing Summary returns only aggregates while reusing the applicable exposure predicate", async () => {
+  startScenario({
+    approved_billing_scopes: { data: [approvedScope(100)], error: null },
+    invoices: {
+      data: [
+        invoice(30, "deposit", false, 1, { status: "issued" }),
+        invoice(20, "deposit", false, 2, { status: "draft", issued_at: null }),
+        invoice(15, "final", false, 3, { status: "approved", issued_at: null }),
+        invoice(25, "final", false, 4, { status: "voided" }),
+        invoice(10, "final", false, 5, { status: "cancelled" }),
+        invoice(5, "final", true, 6),
+      ],
+      error: null,
+    },
+  });
+
+  const summary = await getServiceBillingSummary("service-1");
+
+  assert.deepEqual(summary, {
+    billingCeiling: 100,
+    activePriorInvoiceTotal: 65,
+    remainingUninvoicedAmount: 35,
+  });
+  assert.deepEqual(Object.keys(summary).sort(), [
+    "activePriorInvoiceTotal",
+    "billingCeiling",
+    "remainingUninvoicedAmount",
+  ]);
+  assert.deepEqual(selectedColumns.invoices, ["grand_total", "grand_total"]);
+  assert.deepEqual(selectedColumns.quotations, ["id, grand_total", "id, grand_total"]);
+  assert.deepEqual(selectedColumns.approved_billing_scopes, [
+    "status, accepted_grand_total, source_quotation_id, superseded_at, voided_at",
+    "status, accepted_grand_total, source_quotation_id, superseded_at, voided_at",
+  ]);
+  assert.deepEqual(invoiceFilters.slice(0, 4), [
+    { method: "eq", column: "service_id", value: "service-1" },
+    { method: "not", column: "is_deleted", operator: "is", value: true },
+    { method: "is", column: "voided_at", value: null },
+    {
+      method: "not",
+      column: "status",
+      operator: "in",
+      value: '("cancelled","voided")',
+    },
+  ]);
+  assert.equal(invoiceFilters.length, 8);
+});
+
+test("Billing Summary projection matches canonical state calculations without identifiers", () => {
+  const summary = computeServiceBillingSummary({
+    serviceId: "service-1",
+    scopes: [
+      {
+        status: "approved",
+        accepted_grand_total: 100,
+        source_quotation_id: "qt-1",
+        superseded_at: null,
+        voided_at: null,
+      },
+    ],
+    quotations: [{ id: "qt-1", grand_total: 100 }],
+    invoices: [{ grand_total: 100 }],
+  });
+
+  assert.deepEqual(summary, {
+    billingCeiling: 100,
+    activePriorInvoiceTotal: 100,
+    remainingUninvoicedAmount: 0,
+  });
+});
 
 test("authoritative money parsing preserves zero and rejects unavailable values", () => {
   assert.equal(parseAuthoritativeMoney(0), 0);

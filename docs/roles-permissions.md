@@ -6,12 +6,12 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 
 | Role | Permissions |
 |---|---|
-| **admin** | All permissions across all modules via `*` (includes `invoices:read`, `invoices:write`, and relevant ABS write permissions). Canonical map: `src/lib/auth/role-permissions.ts` (re-exported through `src/lib/auth/permissions.ts`). |
-| **manager** | `customers:read/write/export`, `quotations:read/write/approve`, `services:read/write/update_status`, **`invoices:read` and `invoices:write`** (bounded application workflow for Deposit/Final creation under the same server gates as Admin), `payments:read`, `projects:read/write`, `suppliers:read/write`, Supplier Allocations permissions, Supplier Bookings (`supplier_bookings:read/read_cost/write/cancel`), Approved Billing Scope V1 (`approvedBillingScopes:read/create/update/review/approve/void/supersede/discard` via manager ABS grant set), `dashboard:read`. Detailed sections and `role-permissions.ts` / `permissions.ts` are authoritative. |
-| **sales** | `customers:read/write`, `quotations:read/write`, `services:read/write`, `invoices:read`, `payments:read`, `dashboard:read` |
-| **operations** | `customers:read`, `quotations:read`, `services:read`, `services:update_status`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
-| **accountant** | `customers:read/export`, `quotations:read`, `services:read`, **`invoices:read` only (no `invoices:write`)**, `payments:read/write`, `settings:read`, `dashboard:read`, plus ABS accountant read grants. Financial visibility without Invoice mutation authority. |
-| **viewer** | Limited read-only access: `customers:read`, `quotations:read`, `services:read`, `invoices:read`, `payments:read`, `projects:read`, `suppliers:read`, `dashboard:read`, and `settings:read`. No bulk export, Approved Billing Scope, Supplier Allocation, or Supplier Booking access; no internal supplier cost visibility; and no full bank values in Company Settings responses. |
+| **admin** | All permissions across all modules via `*` (including `services:read_billing_summary`, `invoices:read`, `invoices:write`, and relevant ABS write permissions). Canonical map: `src/lib/auth/role-permissions.ts` (re-exported through `src/lib/auth/permissions.ts`). |
+| **manager** | `customers:read/write/export`, `quotations:read/write/approve`, `services:read/write/update_status`, `services:read_billing_summary`, **`invoices:read` and `invoices:write`** (bounded application workflow for Deposit/Final creation under the same server gates as Admin), `payments:read`, `projects:read/write`, `suppliers:read/write`, Supplier Allocations permissions, Supplier Bookings (`supplier_bookings:read/read_cost/write/cancel`), Approved Billing Scope V1 (`approvedBillingScopes:read/create/update/review/approve/void/supersede/discard` via manager ABS grant set), `dashboard:read`. Detailed sections and `role-permissions.ts` / `permissions.ts` are authoritative. |
+| **sales** | `customers:read/write`, `quotations:read/write`, `services:read/write`, `services:read_billing_summary`, `invoices:read`, `payments:read`, `dashboard:read` |
+| **operations** | `customers:read`, `quotations:read`, `services:read`, `services:read_billing_summary`, `services:update_status`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
+| **accountant** | `customers:read/export`, `quotations:read`, `services:read`, `services:read_billing_summary`, **`invoices:read` only (no `invoices:write`)**, `payments:read/write`, `settings:read`, `dashboard:read`, plus ABS accountant read grants. Financial visibility without Invoice mutation authority. |
+| **viewer** | Limited read-only access: `customers:read`, `quotations:read`, `services:read`, `invoices:read`, `payments:read`, `projects:read`, `suppliers:read`, `dashboard:read`, and `settings:read`. Viewer is not granted `services:read_billing_summary`. No bulk export, Approved Billing Scope, Supplier Allocation, or Supplier Booking access; no internal supplier cost visibility; and no full bank values in Company Settings responses. |
 
 ## Company Settings CS-A
 
@@ -66,6 +66,14 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 - `services:write` is required for service create/edit/delete controls.
 - Visible Service edit controls must be hidden unless the user has `services:write`; route/action enforcement remains server-side.
 - Service status transition permissions/actions remain deferred. Do not treat `services:write` as status automation.
+
+## Service Billing Summary Permission
+
+- `services:read_billing_summary` is distinct from both `services:read` and `invoices:read`.
+- It requires `services:read` and permits only the effective billing ceiling, aggregate applicable Invoice exposure, and remaining billable amount on Service Detail.
+- It does not expose Invoice IDs, numbers, dates, individual statuses or amounts, records, documents, workspace data, mutation eligibility, quotation identity, ABS identity/provenance, or supplier cost data.
+- Admin receives it through `*`; Manager, Accountant, Operations, and Sales receive it explicitly; Viewer does not.
+- Server authorization occurs before privileged service-role financial reads. Parent Service Detail omits the section when the capability is unavailable.
 
 ## Invoice And Payment Permissions
 

@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { createRequire, register } from "node:module";
 import { pathToFileURL } from "node:url";
 import React from "react";
@@ -127,4 +129,17 @@ test("module search input renders disabled state on input and clear button", () 
   assert.ok(disabledHtml.includes("disabled"), "Input must have disabled attribute");
   assert.ok(disabledHtml.includes("<button"), "Clear button rendered");
   assert.ok(disabledHtml.includes('disabled=""') || disabledHtml.includes("disabled"), "Clear button must be disabled");
+});
+
+test("module search input keeps the minimal optional onClear compatibility seam", () => {
+  const source = readFileSync(
+    join(import.meta.dirname, "ModuleSearchInput.tsx"),
+    "utf8",
+  );
+
+  assert.match(source, /onClear\?: \(\) => void/);
+  assert.match(source, /if \(onClear\) \{\s*onClear\(\);\s*\} else \{\s*onChange\(""\);\s*\}/);
+  assert.match(source, /inputRef\.current\?\.focus\(\);/);
+  assert.match(source, /event\.key === "Escape"[\s\S]*?clear\(\);/);
+  assert.doesNotMatch(source, /onComposition(?:Start|End)|isComposing/);
 });

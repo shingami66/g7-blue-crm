@@ -11,6 +11,7 @@ import {
 import type {
   BillingInvoiceSummary,
   ServiceBillingAuthorityMode,
+  ServiceBillingSummary,
   ServiceBillingState,
 } from "./types";
 
@@ -48,6 +49,10 @@ type BillingDatasetResult<Row> = {
   rows: Row[];
   hasError: boolean;
 };
+
+type ServiceBillingSummaryScopeRow = Omit<ScopeRow, "id">;
+type ServiceBillingSummaryQuotationRow = Omit<QuotationRow, "quotation_number">;
+type ServiceBillingSummaryInvoiceRow = Pick<InvoiceRow, "grand_total">;
 
 function isActiveApprovedScope(scope: ScopeRow): boolean {
   return (
@@ -101,6 +106,21 @@ export function mapInvoiceSummary(
     invoiceType,
     status: invoice.status,
     amount: parseAuthoritativeMoney(invoice.grand_total),
+  };
+}
+
+export function projectServiceBillingSummary(
+  state: Pick<
+    ServiceBillingState,
+    | "billingCeiling"
+    | "activePriorInvoiceTotal"
+    | "remainingUninvoicedAmount"
+  >,
+): ServiceBillingSummary {
+  return {
+    billingCeiling: state.billingCeiling,
+    activePriorInvoiceTotal: state.activePriorInvoiceTotal,
+    remainingUninvoicedAmount: state.remainingUninvoicedAmount,
   };
 }
 
@@ -270,6 +290,50 @@ export function computeServiceBillingState({
   state.canCreateFinalInvoice = finalBlockers.length === 0;
 
   return state;
+}
+
+/**
+ * Reuses the canonical Billing State computation with non-identifying rows.
+ * The adapter supplies only fields needed by aggregate truth, so no document
+ * identity can enter the resulting ServiceBillingSummary DTO.
+ */
+export function computeServiceBillingSummary({
+  serviceId,
+  scopes,
+  quotations,
+  invoices,
+  hasScopesError = false,
+  hasQuotationsError = false,
+  hasInvoicesError = false,
+}: {
+  serviceId: string;
+  scopes: ServiceBillingSummaryScopeRow[];
+  quotations: ServiceBillingSummaryQuotationRow[];
+  invoices: ServiceBillingSummaryInvoiceRow[];
+  hasScopesError?: boolean;
+  hasQuotationsError?: boolean;
+  hasInvoicesError?: boolean;
+}): ServiceBillingSummary {
+  return projectServiceBillingSummary(
+    computeServiceBillingState({
+      serviceId,
+      scopes: scopes.map((scope) => ({ ...scope, id: "" })),
+      quotations: quotations.map((quotation) => ({
+        ...quotation,
+        quotation_number: "",
+      })),
+      invoices: invoices.map((invoice) => ({
+        id: "",
+        invoice_number: "",
+        invoice_type: "summary",
+        status: "summary",
+        grand_total: invoice.grand_total,
+      })),
+      hasScopesError,
+      hasQuotationsError,
+      hasInvoicesError,
+    }),
+  );
 }
 
 export async function getBatchServiceBillingStates(

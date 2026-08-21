@@ -171,3 +171,14 @@ export type ServiceBillingState = {
   canCreateFinalInvoice: boolean;
   disabledReasons: string[];
 };
+
+/**
+ * Service-scoped operational billing aggregates. This deliberately excludes
+ * Invoice, quotation, and Approved Billing Scope identities and controls.
+ */
+export type ServiceBillingSummary = Pick<
+  ServiceBillingState,
+  | "billingCeiling"
+  | "activePriorInvoiceTotal"
+  | "remainingUninvoicedAmount"
+>;
