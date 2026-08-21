@@ -219,6 +219,7 @@ Choose guards from the actual change and risk, not from a ceremonial keyword che
 - Use `$g7-security-hardening-guard` for actual auth, permissions, secrets, RLS, webhook, or security risk.
 - Use `$clean-code-guard`, `$docs-guard`, `$test-guard`, and `$g7-crm-precommit-gate` when their substantive review improves the relevant implementation, documentation, tests, or Git stage.
 - Use `$g7-crm-migration-review` for actual SQL, migration, RPC, RLS, grant, trigger, or schema work.
+- Use `$g7-postgres-query-index-guidance` only for an explicitly bounded query-shape, missing-index, partial-index, WHERE/JOIN-index, or supplied-query-plan question. It provides recommendation-only technical guidance and never replaces migration, security, ERP, or Controller authority.
 - Use `$g7-erp-design-guard` for material UI, UX, accessibility, RTL/LTR, or visual work, and `$g7-speckit-plan-guard` for Spec Kit planning.
 
 Guard routing does not itself authorize implementation, staging, commit, push, database action, deployment, or production change. Do not rely on UI-only checks for security.
@@ -231,6 +232,9 @@ Guard routing does not itself authorize implementation, staging, commit, push, d
 
 - `.agents/skills/g7-crm-migration-review/SKILL.md`
   Consult for actual SQL, migration, RLS, RPC, function, trigger, grant, schema, or financial database work.
+
+- `.agents/skills/g7-postgres-query-index-guidance/SKILL.md`
+  Consult only after the active task establishes a bounded query/index question. It may recommend query/index options from task-authorized evidence; any database change remains downstream of the existing migration and security controls.
 
 - `.agents/skills/g7-crm-precommit-gate/SKILL.md`
   Consult when an authorized staging, commit, push, PR, or merge stage is actually in scope.
