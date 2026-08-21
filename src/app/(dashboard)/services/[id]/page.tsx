@@ -1,11 +1,14 @@
 import { notFound, redirect } from "next/navigation";
 import type { ComponentProps, ReactNode } from "react";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
-import { INVOICE_PERMISSIONS } from "@/lib/auth/role-permissions";
+import {
+  INVOICE_PERMISSIONS,
+  SERVICE_BILLING_SUMMARY_PERMISSIONS,
+} from "@/lib/auth/role-permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
 import { getQuotationsByServiceId } from "@/lib/quotations/queries";
-import { getServiceBillingState } from "@/lib/invoices";
+import { getServiceBillingSummary } from "@/lib/invoices";
 import { listServiceActivity } from "@/lib/services/activity-queries";
 import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -125,7 +128,10 @@ export default async function ServiceDetailPage({
   );
   void canReadApprovedBillingScopes;
   void canCreateDraft;
-  await checkPermission(INVOICE_PERMISSIONS.read);
+  const canReadInvoices = await checkPermission(INVOICE_PERMISSIONS.read);
+  const canReadBillingSummary = await checkPermission(
+    SERVICE_BILLING_SUMMARY_PERMISSIONS.read,
+  );
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
   const today = new Date().toISOString().split("T")[0];
@@ -134,18 +140,23 @@ export default async function ServiceDetailPage({
     ? dictionary.detail.quotationDisabledReasonStarted
     : undefined;
 
-  const relatedQuotations = canReadQuotations
-    ? await getQuotationsByServiceId(service.id)
-    : null;
-  const billingState = await getServiceBillingState(service.id);
-  const activity = await listServiceActivity(service.id);
-
-  const supplierAllocationsResult = canReadSupplierAllocations
-    ? await getSupplierAllocationsByServiceId(service.id, { includeDeleted: showDeleted })
-    : null;
-  const supplierBookingsResult = canReadSupplierBookings
-    ? await getSupplierBookingsByServiceId(service.id)
-    : null;
+  const [
+    relatedQuotations,
+    billingSummary,
+    activity,
+    supplierAllocationsResult,
+    supplierBookingsResult,
+  ] = await Promise.all([
+    canReadQuotations ? getQuotationsByServiceId(service.id) : Promise.resolve(null),
+    canReadBillingSummary ? getServiceBillingSummary(service.id) : Promise.resolve(null),
+    listServiceActivity(service.id),
+    canReadSupplierAllocations
+      ? getSupplierAllocationsByServiceId(service.id, { includeDeleted: showDeleted })
+      : Promise.resolve(null),
+    canReadSupplierBookings
+      ? getSupplierBookingsByServiceId(service.id)
+      : Promise.resolve(null),
+  ]);
   const supplierAllocations = supplierAllocationsResult?.allocations ?? null;
   const supplierBookings = supplierBookingsResult?.bookings ?? null;
   const activeBookingAllocationIds = (supplierBookings ?? [])
@@ -344,11 +355,14 @@ export default async function ServiceDetailPage({
           dictionary={dictionary}
         />
       )}
-      <ServiceBillingSummaryCard
-        serviceId={service.id}
-        billingState={billingState}
-        dictionary={dictionary}
-      />
+      {billingSummary && (
+        <ServiceBillingSummaryCard
+          serviceId={service.id}
+          billingSummary={billingSummary}
+          canReadInvoices={canReadInvoices}
+          dictionary={dictionary}
+        />
+      )}
       {canUpdateServiceStatus && (
         <ServiceCancellationActions
           serviceId={service.id}
