@@ -358,7 +358,7 @@ test("3. getCustomer360 computes truthful live financial summary from all custom
     })),
   ];
 
-  resetScenario({
+  const scenarioState = resetScenario({
     tableData: {
       customers: [
         { id: "c-1", customer_number: "CUST-001", company: "Alpha", status: "active", is_deleted: false },
@@ -374,8 +374,8 @@ test("3. getCustomer360 computes truthful live financial summary from all custom
 
   assert.equal(result.status, "ready");
   if (result.status === "ready") {
-    // 80 active non-deleted invoices are in the invoices section for audit/history
-    assert.equal(result.data.invoices.items.length, 80);
+    // The initial invoice table is a bounded preview; complete facts remain separate for summary calculation.
+    assert.equal(result.data.invoices.items.length, 50);
 
     // Soft-deleted invoices are completely excluded
     assert.equal(result.data.invoices.items.some((inv) => inv.id.startsWith("inv-deleted")), false);
@@ -384,6 +384,75 @@ test("3. getCustomer360 computes truthful live financial summary from all custom
     assert.equal(result.data.summary.totalInvoiced, 6000);
     assert.equal(result.data.summary.totalCollected, 2400);
     assert.equal(result.data.summary.outstandingBalance, 3600);
+
+    const invoiceCalls = scenarioState.calls.filter((call) => call.table === "invoices");
+    const previewCall = invoiceCalls.find((call) => call.limitCount === 50);
+    assert.ok(previewCall);
+    assert.match(previewCall.selectColumns ?? "", /services\(service_number,service_title\)/);
+    assert.equal(invoiceCalls.filter((call) => call.rangeLimits !== undefined).length, 2);
+    assert.ok(invoiceCalls.filter((call) => call.rangeLimits !== undefined).every((call) => !call.selectColumns?.includes("services(")));
+  }
+});
+
+test("getCustomer360 keeps a live invoice outside the bounded preview in recentFinancialActivity", async () => {
+  const outsidePreviewInvoice = {
+    id: "inv-activity-outside-preview",
+    invoice_number: "INV-ACTIVITY-OUTSIDE-PREVIEW",
+    customer_id: "c-1",
+    invoice_type: "final",
+    status: "paid",
+    grand_total: 900,
+    amount_paid: 900,
+    balance_due: 0,
+    issued_at: "2026-09-01T10:00:00+03:00",
+    created_at: "2026-07-01T10:00:00+03:00",
+    is_deleted: false,
+  };
+  const newerPreviewInvoices = Array.from({ length: 60 }, (_, index) => ({
+    id: `inv-preview-${String(index + 1).padStart(3, "0")}`,
+    invoice_number: `INV-PREVIEW-${index + 1}`,
+    customer_id: "c-1",
+    invoice_type: "final",
+    status: "paid",
+    grand_total: 100,
+    amount_paid: 100,
+    balance_due: 0,
+    issued_at: "2026-08-01T10:00:00+03:00",
+    created_at: "2026-08-01T10:00:00+03:00",
+    is_deleted: false,
+  }));
+
+  resetScenario({
+    tableData: {
+      customers: [
+        { id: "c-1", customer_number: "CUST-001", company: "Alpha", status: "active", is_deleted: false },
+      ],
+      invoices: [...newerPreviewInvoices, outsidePreviewInvoice],
+      services: [],
+      quotations: [],
+      payments: [],
+    },
+  });
+
+  const result = await getCustomer360("c-1");
+
+  assert.equal(result.status, "ready");
+  if (result.status === "ready") {
+    assert.equal(result.data.invoices.items.some((invoice) => invoice.id === outsidePreviewInvoice.id), false);
+    assert.deepEqual(
+      result.data.recentFinancialActivity.find((activity) => activity.identifier === outsidePreviewInvoice.invoice_number),
+      {
+        id: `invoice-${outsidePreviewInvoice.id}`,
+        date: outsidePreviewInvoice.issued_at,
+        kind: "financial",
+        eventType: "invoice",
+        identifier: outsidePreviewInvoice.invoice_number,
+        subject: outsidePreviewInvoice.invoice_type,
+        status: outsidePreviewInvoice.status,
+        amount: outsidePreviewInvoice.grand_total,
+        href: `/invoices/${outsidePreviewInvoice.id}`,
+      },
+    );
   }
 });
 

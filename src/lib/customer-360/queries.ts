@@ -4,7 +4,7 @@ import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { mapRowToCustomer, type CustomerMetricsRow } from "@/lib/customers/mappers";
 import type { CustomerRow } from "@/lib/customers/types";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Customer360Activity, Customer360Invoice, Customer360Payment, Customer360Quotation, Customer360Result, Customer360Section, Customer360Service } from "./types";
+import type { Customer360Activity, Customer360Invoice, Customer360Payment, Customer360Quotation, Customer360Result, Customer360Section, Customer360SectionStatus, Customer360Service } from "./types";
 import { calculateCustomer360FinancialSummary, isLiveCustomerInvoice } from "./summary";
 
 function numberValue(value: unknown): number {
@@ -27,13 +27,21 @@ async function readPermissionSection<T>(
   permission: string,
   load: () => Promise<T[]>,
 ): Promise<Customer360Section<T>> {
-  if (!(await checkPermission(permission))) return section("forbidden");
+  const result = await readPermissionValue(permission, load);
+  return section(result.status, result.value ?? []);
+}
+
+async function readPermissionValue<T>(
+  permission: string,
+  load: () => Promise<T>,
+): Promise<{ status: Customer360SectionStatus; value: T | null }> {
+  if (!(await checkPermission(permission))) return { status: "forbidden", value: null };
 
   try {
-    return section("ready", await load());
+    return { status: "ready", value: await load() };
   } catch (error) {
     console.error(`[Customer360] Failed to load ${permission}:`, error instanceof Error ? error.message : "Unknown");
-    return section("error");
+    return { status: "error", value: null };
   }
 }
 
@@ -121,6 +129,8 @@ async function readQuotations(customerId: string): Promise<Customer360Quotation[
 }
 
 export const CUSTOMER_360_PAGE_SIZE = 500;
+const CUSTOMER_360_INVOICE_PREVIEW_LIMIT = 50;
+const CUSTOMER_360_INVOICE_FACT_COLUMNS = "id, invoice_number, invoice_type, status, grand_total, amount_paid, balance_due, issued_at, created_at";
 
 export async function fetchAllCustomer360Pages<T>(
   buildQuery: () => { range: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }> },
@@ -142,35 +152,59 @@ export async function fetchAllCustomer360Pages<T>(
   return allRows;
 }
 
-async function readInvoices(customerId: string): Promise<Customer360Invoice[]> {
+function mapInvoiceRow(row: Record<string, unknown>): Customer360Invoice {
+  const service = Array.isArray(row.services) ? row.services[0] : row.services;
+  const issuedAt = safeCustomerDate(row.issued_at);
+  return {
+    id: String(row.id),
+    invoiceNumber: String(row.invoice_number),
+    serviceId: row.service_id ? String(row.service_id) : null,
+    serviceNumber: service?.service_number ? String(service.service_number) : null,
+    serviceTitle: service?.service_title ? String(service.service_title) : null,
+    invoiceType: row.invoice_type as Customer360Invoice["invoiceType"],
+    status: row.status as Customer360Invoice["status"],
+    grandTotal: numberValue(row.grand_total),
+    amountPaid: numberValue(row.amount_paid),
+    balanceDue: numberValue(row.balance_due),
+    date: issuedAt ?? safeCustomerDate(row.created_at) ?? "",
+    issuedAt,
+  };
+}
+
+async function readInvoicePreview(customerId: string): Promise<Customer360Invoice[]> {
+  const { data, error } = await createAdminClient()
+    .from("invoices")
+    .select("id, invoice_number, service_id, invoice_type, status, grand_total, amount_paid, balance_due, issued_at, created_at, services(service_number,service_title)")
+    .eq("customer_id", customerId)
+    .eq("is_deleted", false)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(CUSTOMER_360_INVOICE_PREVIEW_LIMIT);
+  if (error) throw error;
+
+  return (data ?? []).map((row) => mapInvoiceRow(row as Record<string, unknown>));
+}
+
+async function readInvoiceFacts(customerId: string): Promise<Customer360Invoice[]> {
   const data = await fetchAllCustomer360Pages<Record<string, unknown>>(() => {
     return createAdminClient()
       .from("invoices")
-      .select("id, invoice_number, service_id, invoice_type, status, grand_total, amount_paid, balance_due, issued_at, created_at, services(service_number,service_title)")
+      .select(CUSTOMER_360_INVOICE_FACT_COLUMNS)
       .eq("customer_id", customerId)
       .eq("is_deleted", false)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false });
   });
 
-  return data.map((row) => {
-    const service = Array.isArray(row.services) ? row.services[0] : row.services;
-    const issuedAt = safeCustomerDate(row.issued_at);
-    return {
-      id: String(row.id),
-      invoiceNumber: String(row.invoice_number),
-      serviceId: row.service_id ? String(row.service_id) : null,
-      serviceNumber: service?.service_number ? String(service.service_number) : null,
-      serviceTitle: service?.service_title ? String(service.service_title) : null,
-      invoiceType: row.invoice_type as Customer360Invoice["invoiceType"],
-      status: row.status as Customer360Invoice["status"],
-      grandTotal: numberValue(row.grand_total),
-      amountPaid: numberValue(row.amount_paid),
-      balanceDue: numberValue(row.balance_due),
-      date: issuedAt ?? safeCustomerDate(row.created_at) ?? "",
-      issuedAt,
-    };
-  });
+  return data.map(mapInvoiceRow);
+}
+
+async function readInvoices(customerId: string): Promise<{ preview: Customer360Invoice[]; facts: Customer360Invoice[] }> {
+  const [preview, facts] = await Promise.all([
+    readInvoicePreview(customerId),
+    readInvoiceFacts(customerId),
+  ]);
+  return { preview, facts };
 }
 
 async function readPayments(customerId: string): Promise<Customer360Payment[]> {
@@ -251,13 +285,14 @@ export async function getCustomer360(id: string): Promise<Customer360Result> {
   if (customerResult.status === "error") return { status: "error", error: "customer_load_failed" };
   if (customerResult.status === "not_found") return customerResult;
 
-  const [services, quotations, invoices, payments] = await Promise.all([
+  const [services, quotations, invoiceReadModel, payments] = await Promise.all([
     readPermissionSection("services:read", () => readServices(id)),
     readPermissionSection("quotations:read", () => readQuotations(id)),
-    readPermissionSection("invoices:read", () => readInvoices(id)),
+    readPermissionValue("invoices:read", () => readInvoices(id)),
     readPermissionSection("payments:read", () => readPayments(id)),
   ]);
-  const invoiceItems = invoices.status === "ready" ? invoices.items : null;
+  const invoices = section(invoiceReadModel.status, invoiceReadModel.value?.preview ?? []);
+  const invoiceFacts = invoiceReadModel.status === "ready" ? invoiceReadModel.value?.facts ?? [] : null;
   const serviceItems = services.items;
   const today = new Date().toISOString().slice(0, 10);
 
@@ -269,10 +304,10 @@ export async function getCustomer360(id: string): Promise<Customer360Result> {
       quotations,
       invoices,
       payments,
-      summary: calculateCustomer360FinancialSummary(invoiceItems),
+      summary: calculateCustomer360FinancialSummary(invoiceFacts),
       upcomingServices: serviceItems.filter((service) => service.eventStartDate !== null && service.eventStartDate >= today).slice(0, 6),
       recentOperationalActivity: buildOperationalActivity(serviceItems),
-      recentFinancialActivity: buildFinancialActivity(invoices.items, payments.items),
+      recentFinancialActivity: buildFinancialActivity(invoiceFacts ?? [], payments.items),
     },
   };
 }
