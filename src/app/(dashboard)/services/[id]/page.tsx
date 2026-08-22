@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import type { ComponentProps, ReactNode } from "react";
+import { Suspense, type ComponentProps, type ReactNode } from "react";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import {
   INVOICE_PERMISSIONS,
@@ -37,7 +37,8 @@ import { getSupplierAllocationsByServiceId } from "@/lib/supplier-allocations/qu
 import { getSupplierBookingsByServiceId } from "@/lib/supplier-bookings/queries";
 import type { Service } from "@/types/service";
 import SupplierBookingsPanel from "./SupplierBookingsPanel";
-import RecordNavigation from "@/components/records/RecordNavigation";
+import RecordNavigationSlot from "@/components/records/RecordNavigationSlot";
+import { RecordNavigationPlaceholder } from "@/components/records/RecordNavigation";
 import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
 import { getServiceRecordNavigation, safeRecordReturnTo } from "@/lib/record-navigation/queries";
 
@@ -106,7 +107,6 @@ export default async function ServiceDetailPage({
     notFound();
   }
 
-  const recordNavigation = await getServiceRecordNavigation(id, service.serviceNumber);
   const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
   const canCreateQuotation = await checkPermission("quotations:write");
@@ -207,7 +207,24 @@ export default async function ServiceDetailPage({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <RecordNavigation basePath="/services" recordType={dictionary.list.title} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} pendingLabel={dictionary.list.actions.opening} />
+          <Suspense
+            fallback={
+              <RecordNavigationPlaceholder
+                recordType={dictionary.list.title}
+                dictionary={recordNavigationDictionary}
+                state="loading"
+              />
+            }
+          >
+            <RecordNavigationSlot
+              loadNavigation={() => getServiceRecordNavigation(id, service.serviceNumber)}
+              basePath="/services"
+              recordType={dictionary.list.title}
+              dictionary={recordNavigationDictionary}
+              returnTo={returnTo}
+              pendingLabel={dictionary.list.actions.opening}
+            />
+          </Suspense>
           {canCreateQuotation && canModifyService && (
             quotationDisabledReason ? (
               <span

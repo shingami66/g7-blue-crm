@@ -14,13 +14,14 @@ import { getQuotationStatusLabel, getQuotationsDictionary } from "@/lib/i18n/dic
 import { getCommonDictionary } from "@/lib/i18n/dictionaries/common";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import { UiDateText } from "@/components/i18n/UiDateText";
-import type { ComponentProps } from "react";
+import { Suspense, type ComponentProps } from "react";
 import QuotationApprovalActions from "./QuotationApprovalActions";
 import { getServiceById } from "@/lib/services/queries";
 import { getServiceBillingState } from "@/lib/invoices";
 import { buildQuotationBillingAuthority } from "@/lib/quotations/billing-authority";
 import QuotationBillingAuthorityCard from "./QuotationBillingAuthorityCard";
-import RecordNavigation from "@/components/records/RecordNavigation";
+import RecordNavigationSlot from "@/components/records/RecordNavigationSlot";
+import { RecordNavigationPlaceholder } from "@/components/records/RecordNavigation";
 import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
 import { getQuotationRecordNavigation, safeRecordReturnTo } from "@/lib/record-navigation/queries";
 
@@ -87,7 +88,6 @@ export default async function QuotationDetailPage({
     notFound();
   }
 
-  const recordNavigation = await getQuotationRecordNavigation(id, quotation.quotationNumber);
   const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
   const [canApprove, canWrite, linkedService] = await Promise.all([
@@ -139,7 +139,24 @@ export default async function QuotationDetailPage({
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-3">
-          <RecordNavigation basePath="/quotations" recordType={dictionary.list.title} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} pendingLabel={dictionary.list.navigationPending} />
+          <Suspense
+            fallback={
+              <RecordNavigationPlaceholder
+                recordType={dictionary.list.title}
+                dictionary={recordNavigationDictionary}
+                state="loading"
+              />
+            }
+          >
+            <RecordNavigationSlot
+              loadNavigation={() => getQuotationRecordNavigation(id, quotation.quotationNumber)}
+              basePath="/quotations"
+              recordType={dictionary.list.title}
+              dictionary={recordNavigationDictionary}
+              returnTo={returnTo}
+              pendingLabel={dictionary.list.navigationPending}
+            />
+          </Suspense>
           <div aria-hidden="true" className="hidden h-6 w-px bg-surface-variant sm:block" />
           {(canApprove || canWrite) && (
             <QuotationApprovalActions

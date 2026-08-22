@@ -19,6 +19,12 @@ function candidateId(data: Candidate[] | null | undefined): string | null {
   return data?.[0]?.id ?? null;
 }
 
+function throwIfNavigationError(error: unknown): void {
+  if (error) {
+    throw new Error("record_navigation_query_failed");
+  }
+}
+
 async function finishNavigation(loaders: {
   first: () => Promise<Candidate[]>;
   previous: () => Promise<Candidate[]>;
@@ -44,10 +50,10 @@ export async function getCustomerRecordNavigation(id: string, customerNumber: st
   const supabase = createAdminClient();
   const base = () => supabase.from("customers").select("id").eq("is_deleted", false);
   return finishNavigation({
-    first: async () => { const { data } = await base().order("customer_number", { ascending: true }).order("id", { ascending: true }).limit(1); return (data ?? []) as Candidate[]; },
-    last: async () => { const { data } = await base().order("customer_number", { ascending: false }).order("id", { ascending: false }).limit(1); return (data ?? []) as Candidate[]; },
-    previous: async () => { const { data } = await base().lt("customer_number", customerNumber).order("customer_number", { ascending: false }).order("id", { ascending: false }).limit(1); return (data ?? []) as Candidate[]; },
-    next: async () => { const { data } = await base().gt("customer_number", customerNumber).order("customer_number", { ascending: true }).order("id", { ascending: true }).limit(1); return (data ?? []) as Candidate[]; },
+    first: async () => { const { data, error } = await base().order("customer_number", { ascending: true }).order("id", { ascending: true }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
+    last: async () => { const { data, error } = await base().order("customer_number", { ascending: false }).order("id", { ascending: false }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
+    previous: async () => { const { data, error } = await base().lt("customer_number", customerNumber).order("customer_number", { ascending: false }).order("id", { ascending: false }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
+    next: async () => { const { data, error } = await base().gt("customer_number", customerNumber).order("customer_number", { ascending: true }).order("id", { ascending: true }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
   }).then((navigation) => ({ ...navigation, first: navigation.first === id ? null : navigation.first, last: navigation.last === id ? null : navigation.last }));
 }
 
@@ -56,10 +62,10 @@ export async function getServiceRecordNavigation(id: string, serviceNumber: stri
   const supabase = createAdminClient();
   const base = () => supabase.from("services").select("id").is("deleted_at", null);
   const navigation = await finishNavigation({
-    first: async () => { const { data } = await base().order("service_number", { ascending: true }).order("id", { ascending: true }).limit(1); return (data ?? []) as Candidate[]; },
-    last: async () => { const { data } = await base().order("service_number", { ascending: false }).order("id", { ascending: false }).limit(1); return (data ?? []) as Candidate[]; },
-    previous: async () => { const { data } = await base().lt("service_number", serviceNumber).order("service_number", { ascending: false }).order("id", { ascending: false }).limit(1); return (data ?? []) as Candidate[]; },
-    next: async () => { const { data } = await base().gt("service_number", serviceNumber).order("service_number", { ascending: true }).order("id", { ascending: true }).limit(1); return (data ?? []) as Candidate[]; },
+    first: async () => { const { data, error } = await base().order("service_number", { ascending: true }).order("id", { ascending: true }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
+    last: async () => { const { data, error } = await base().order("service_number", { ascending: false }).order("id", { ascending: false }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
+    previous: async () => { const { data, error } = await base().lt("service_number", serviceNumber).order("service_number", { ascending: false }).order("id", { ascending: false }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
+    next: async () => { const { data, error } = await base().gt("service_number", serviceNumber).order("service_number", { ascending: true }).order("id", { ascending: true }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
   });
   return { ...navigation, first: navigation.first === id ? null : navigation.first, last: navigation.last === id ? null : navigation.last };
 }
@@ -69,10 +75,10 @@ export async function getQuotationRecordNavigation(id: string, quotationNumber: 
   const supabase = createAdminClient();
   const base = () => supabase.from("quotations").select("id").eq("is_deleted", false);
   const navigation = await finishNavigation({
-    first: async () => { const { data } = await base().order("quotation_number", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }).limit(1); return (data ?? []) as Candidate[]; },
-    last: async () => { const { data } = await base().order("quotation_number", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1); return (data ?? []) as Candidate[]; },
-    previous: async () => { const { data } = await base().lt("quotation_number", quotationNumber).order("quotation_number", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1); return (data ?? []) as Candidate[]; },
-    next: async () => { const { data } = await base().gt("quotation_number", quotationNumber).order("quotation_number", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }).limit(1); return (data ?? []) as Candidate[]; },
+    first: async () => { const { data, error } = await base().order("quotation_number", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
+    last: async () => { const { data, error } = await base().order("quotation_number", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
+    previous: async () => { const { data, error } = await base().lt("quotation_number", quotationNumber).order("quotation_number", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
+    next: async () => { const { data, error } = await base().gt("quotation_number", quotationNumber).order("quotation_number", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
   });
   return { ...navigation, first: navigation.first === id ? null : navigation.first, last: navigation.last === id ? null : navigation.last };
 }
@@ -82,10 +88,10 @@ export async function getInvoiceRecordNavigation(id: string, invoiceNumber: stri
   const supabase = createAdminClient();
   const base = () => supabase.from("invoices").select("id").eq("is_deleted", false);
   const navigation = await finishNavigation({
-    first: async () => { const { data } = await base().order("invoice_number", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }).limit(1); return (data ?? []) as Candidate[]; },
-    last: async () => { const { data } = await base().order("invoice_number", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1); return (data ?? []) as Candidate[]; },
-    previous: async () => { const { data } = await base().lt("invoice_number", invoiceNumber).order("invoice_number", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1); return (data ?? []) as Candidate[]; },
-    next: async () => { const { data } = await base().gt("invoice_number", invoiceNumber).order("invoice_number", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }).limit(1); return (data ?? []) as Candidate[]; },
+    first: async () => { const { data, error } = await base().order("invoice_number", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
+    last: async () => { const { data, error } = await base().order("invoice_number", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
+    previous: async () => { const { data, error } = await base().lt("invoice_number", invoiceNumber).order("invoice_number", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
+    next: async () => { const { data, error } = await base().gt("invoice_number", invoiceNumber).order("invoice_number", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }).limit(1); throwIfNavigationError(error); return (data ?? []) as Candidate[]; },
   });
   return { ...navigation, first: navigation.first === id ? null : navigation.first, last: navigation.last === id ? null : navigation.last };
 }

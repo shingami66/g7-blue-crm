@@ -249,7 +249,7 @@ test("Quotation detail action hierarchy cleanly separates navigation and mutatio
   const actionsSource = read("src/app/(dashboard)/quotations/[id]/QuotationApprovalActions.tsx");
 
   // Visual divider separating RecordNavigation from mutations
-  assert.match(detailSource, /<RecordNavigation basePath="\/quotations"/);
+  assert.match(detailSource, /<RecordNavigationSlot[\s\S]*basePath="\/quotations"/);
   assert.match(detailSource, /<div aria-hidden="true" className="hidden h-6 w-px bg-surface-variant sm:block" \/>/);
 
   // Edit & Print actions use the compact one-line h-9/min-h-9/nowrap contract

@@ -115,6 +115,40 @@ test("record detail links expose contextual thresholded navigation feedback", ()
   assert.match(recordNavigation, /setTimeout\(\(\) => setShowPending\(true\), 150\)/);
 });
 
+test("record detail navigation is a localized secondary slot", () => {
+  const slot = read("src/components/records/RecordNavigationSlot.tsx");
+  const navigation = read("src/components/records/RecordNavigation.tsx");
+  const dictionary = read("src/lib/i18n/dictionaries/record-navigation.ts");
+  const queries = read("src/lib/record-navigation/queries.ts");
+  const routes = [
+    ["customers/[id]/page.tsx", "getCustomerRecordNavigation"],
+    ["services/[id]/page.tsx", "getServiceRecordNavigation"],
+    ["invoices/[id]/page.tsx", "getInvoiceRecordNavigation"],
+    ["quotations/[id]/page.tsx", "getQuotationRecordNavigation"],
+  ] as const;
+
+  assert.match(slot, /loadNavigation: \(\) => Promise<RecordNavigationState>/);
+  assert.match(slot, /await loadNavigation\(\)/);
+  assert.match(slot, /state="unavailable"/);
+  assert.match(navigation, /data-record-navigation-state=\{state\}/);
+  assert.match(navigation, /dictionary\.unavailable/);
+  assert.match(dictionary, /unavailable: "Record navigation unavailable"/);
+  assert.match(dictionary, /unavailable: "تعذر تحميل التنقل بين السجلات"/);
+  assert.match(queries, /const \[first, previous, next, last\] = await Promise\.all\(\[/);
+  assert.match(queries, /loaders\.first\(\)[\s\S]*loaders\.previous\(\)[\s\S]*loaders\.next\(\)[\s\S]*loaders\.last\(\)/);
+  assert.match(queries, /function throwIfNavigationError\(error: unknown\)/);
+  assert.equal((queries.match(/throwIfNavigationError\(error\)/g) ?? []).length, 16);
+
+  for (const [route, loader] of routes) {
+    const source = read(`src/app/(dashboard)/${route}`);
+    assert.match(source, /<Suspense/);
+    assert.match(source, /<RecordNavigationPlaceholder[\s\S]*state="loading"/);
+    assert.match(source, /<RecordNavigationSlot/);
+    assert.match(source, new RegExp(`loadNavigation=\\{\\(\\) => ${loader}\\(`));
+    assert.doesNotMatch(source, new RegExp(`const recordNavigation = await ${loader}`));
+  }
+});
+
 test("detail pager guard blocks immediate competing navigation and unlocks after settlement", () => {
   const guard = createRecordNavigationGuard();
   let dispatches = 0;

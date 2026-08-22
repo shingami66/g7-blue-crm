@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import type { ComponentProps, ReactNode } from "react";
+import { Suspense, type ComponentProps, type ReactNode } from "react";
 import { CalendarDays, FileText, Printer, Receipt, UserRound, Wallet } from "lucide-react";
 import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -24,7 +24,8 @@ import { getServiceById } from "@/lib/services/queries";
 import type { QuotationItem } from "@/lib/quotations/types";
 import { IssueInvoiceAction } from "../IssueInvoiceAction";
 import { RecordPaymentAction } from "./RecordPaymentAction";
-import RecordNavigation from "@/components/records/RecordNavigation";
+import RecordNavigationSlot from "@/components/records/RecordNavigationSlot";
+import { RecordNavigationPlaceholder } from "@/components/records/RecordNavigation";
 import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
 import { getInvoiceRecordNavigation, safeRecordReturnTo } from "@/lib/record-navigation/queries";
 
@@ -181,7 +182,6 @@ export default async function InvoiceDetailPage({
     notFound();
   }
 
-  const recordNavigation = await getInvoiceRecordNavigation(id, invoice.invoice_number);
   const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
   const canIssueInvoice = invoice.status === "draft"
@@ -282,7 +282,24 @@ export default async function InvoiceDetailPage({
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-3">
-          <RecordNavigation basePath="/invoices" recordType={dictionary.detail.labels.invoiceNumber} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} pendingLabel={dictionary.list.navigationPending} />
+          <Suspense
+            fallback={
+              <RecordNavigationPlaceholder
+                recordType={dictionary.detail.labels.invoiceNumber}
+                dictionary={recordNavigationDictionary}
+                state="loading"
+              />
+            }
+          >
+            <RecordNavigationSlot
+              loadNavigation={() => getInvoiceRecordNavigation(id, invoice.invoice_number)}
+              basePath="/invoices"
+              recordType={dictionary.detail.labels.invoiceNumber}
+              dictionary={recordNavigationDictionary}
+              returnTo={returnTo}
+              pendingLabel={dictionary.list.navigationPending}
+            />
+          </Suspense>
           <Link
             href={`/invoices/${invoice.id}/pdf`}
             target="_blank"

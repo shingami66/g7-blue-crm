@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import PendingLink from "@/components/ui/PendingLink";
@@ -20,7 +20,8 @@ import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import type { Customer } from "@/types/customer";
 import CustomerProfileActions from "./CustomerProfileActions";
 import { getCustomer360Dictionary } from "@/lib/i18n/dictionaries/customer-360";
-import RecordNavigation from "@/components/records/RecordNavigation";
+import RecordNavigationSlot from "@/components/records/RecordNavigationSlot";
+import { RecordNavigationPlaceholder } from "@/components/records/RecordNavigation";
 import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
 import { getCustomerRecordNavigation, safeRecordReturnTo } from "@/lib/record-navigation/queries";
 
@@ -91,7 +92,6 @@ export default async function CustomerProfilePage({
 
   const { customer } = workspace.data;
   const customer360Dictionary = getCustomer360Dictionary(locale);
-  const recordNavigation = await getCustomerRecordNavigation(id, customer.customerNumber);
   const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
   return (
@@ -120,7 +120,24 @@ export default async function CustomerProfilePage({
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-3">
-          <RecordNavigation basePath="/customers" recordType={dictionary.profile.customerNumber} navigation={recordNavigation} dictionary={recordNavigationDictionary} returnTo={returnTo} pendingLabel={dictionary.list.actions.opening} />
+          <Suspense
+            fallback={
+              <RecordNavigationPlaceholder
+                recordType={dictionary.profile.customerNumber}
+                dictionary={recordNavigationDictionary}
+                state="loading"
+              />
+            }
+          >
+            <RecordNavigationSlot
+              loadNavigation={() => getCustomerRecordNavigation(id, customer.customerNumber)}
+              basePath="/customers"
+              recordType={dictionary.profile.customerNumber}
+              dictionary={recordNavigationDictionary}
+              returnTo={returnTo}
+              pendingLabel={dictionary.list.actions.opening}
+            />
+          </Suspense>
           <CustomerProfileActions customer={customer} canWrite={canWrite} dictionary={dictionary} />
         </div>
       </div>

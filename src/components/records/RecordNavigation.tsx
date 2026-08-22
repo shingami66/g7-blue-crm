@@ -28,9 +28,61 @@ interface RecordNavigationProps {
   pendingLabel?: string;
 }
 
+export type RecordNavigationPlaceholderState = "loading" | "unavailable";
+
+interface RecordNavigationPlaceholderProps {
+  recordType: string;
+  dictionary: RecordNavigationDictionary;
+  state: RecordNavigationPlaceholderState;
+}
+
 function hrefFor(basePath: string, id: string, returnTo?: string) {
   const returnParam = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
   return `${basePath}/${id}${returnParam}`;
+}
+
+export function RecordNavigationPlaceholder({
+  recordType,
+  dictionary,
+  state,
+}: RecordNavigationPlaceholderProps) {
+  const items = [
+    { key: "first", label: dictionary.first, Icon: ChevronsLeft },
+    { key: "previous", label: dictionary.previous, Icon: ChevronLeft },
+    { key: "next", label: dictionary.next, Icon: ChevronRight },
+    { key: "last", label: dictionary.last, Icon: ChevronsRight },
+  ] as const;
+  const isLoading = state === "loading";
+
+  return (
+    <nav
+      aria-label={`${dictionary.title}: ${recordType}`}
+      aria-busy={isLoading || undefined}
+      className="flex items-center gap-1 rounded-lg border border-outline-variant bg-surface px-1 py-0.5"
+      dir="ltr"
+      data-record-navigation-state={state}
+    >
+      <span className="sr-only">{dictionary.title}</span>
+      {!isLoading && (
+        <span aria-live="polite" className="sr-only">
+          {dictionary.unavailable}
+        </span>
+      )}
+      {items.map(({ key, label, Icon }) => (
+        <button
+          key={key}
+          type="button"
+          disabled
+          aria-disabled="true"
+          aria-label={`${label} ${recordType}`}
+          title={`${label} ${recordType}`}
+          className="inline-flex size-8 items-center justify-center rounded-md text-on-surface-variant opacity-45"
+        >
+          <Icon size={14} aria-hidden="true" />
+        </button>
+      ))}
+    </nav>
+  );
 }
 
 export default function RecordNavigation({
