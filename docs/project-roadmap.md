@@ -379,6 +379,7 @@ Every future implementation/remediation Goal remains administratively open until
 - **Owner decision recorded:** G2 money precision policy decided (engineering closeout pending verification); G4 measurement-first approved; G5 admin security policy decided; G6 payload/log minimization policy decided; G7 failure/health/webhook policy decided; G10 UX/accessibility policy decided.
 - **Accountant/product decision first:** Broader accounting reporting, Revenue Recognition, payment terms/credit control, supplier cost/margin, and completion with outstanding finance (deferred product scope, not open engineering defect).
 - **Measurement first:** G4 performance, query, scale, and index measurements and evidence-backed remediation.
+- **G4 current execution state:** Safe corrected actual-interaction-to-stable-destination measurement is established. The current sufficiently measured critical-journey ranking is Customer Detail 3580 ms median, Service Detail 2995 ms, Invoice Detail 2330 ms, Supplier workflow 1890 ms, and Payments 317 ms. Service Detail's first evidence-backed independent-read concurrency repair is published; the current priority is Customer Detail latency attribution (`G7-CUSTOMER-DETAIL-ACTUAL-INTERACTION-LATENCY-ATTRIBUTION-01`). G4 remains open and iterates measure -> attribute -> repair -> verify -> rerank.
 - **DEV/DEMO database evidence first:** G1, G2 (verification pending), G5, G8 (Customer, Service, Quotation, Invoice, Payment DEV/DEMO verified), G9 (Owner accepted), G11 (DEV/DEMO metadata 50/50 reconciled), and G12 (canonical verification complete).
 - **Owner manual regression results:** PASS recorded across Customer creation, Customer 360, Service basic workflow, Quotation basic workflow, Payments, Reports (G3 Owner accepted), Supplier / Rate Card (G9 Owner accepted), Arabic, RTL, Mobile / responsive, Keyboard navigation, and Validation behavior.
 - **Open remediation findings:** G10 UI consistency remediation (oversized buttons, actions, pagination); Final Invoice post-create defect (root cause unclassified; requires diagnosis of post-create state, invoice existence, eligibility refresh, billing-state reconciliation, duplicate protection, and error mapping).
@@ -408,11 +409,19 @@ These 3 concerns are future activation gates, not current defects. No tenant rol
 - Search/Accessibility: G10 UX/A11Y policy approved; blocked pending G10 UI consistency remediation and remaining engineering fixes.
 - Functional Defects: Final Invoice post-create defect open pending root-cause diagnosis and engineering repair.
 - Database/Migration: blocked pending approved DEV/DEMO PostgreSQL/RPC verification for open goals.
-- Performance/Scale: blocked pending G4 measurement-first investigation (E1-E6 measurements and bounded evidence-backed corrections).
+- Performance/Scale: G4 is open with safe corrected measurement and an initial published Service Detail repair; remaining work proceeds by evidence-backed measure -> attribute -> repair -> verify -> rerank, beginning with Customer Detail latency attribution.
 - Release: G11 verification program is COMPLETE; DEV/DEMO release qualification remains BLOCKED pending external Goals G2/G4/G5/G6/G7/G10 and open defect repair; Production release readiness remains BLOCKED pending applicable external engineering Goals, visual/manual consistency remediation, and production operational hardening; Production deployment remains UNAUTHORIZED.
 - Future SaaS activation: deferred pending ownership, membership, migration, export, isolation, quota, and compliance approval.
 
 ## 2. Current Priority
+
+### Current Published Checkpoint and Performance Priority — `283cd5808845a846bb5c7f477a21f4eb3fc9700c`
+
+- `main`, local HEAD, and `origin/main` are synchronized at this published checkpoint (`0 ahead / 0 behind`). The baseline independently passed frozen dependency preparation, focused tests, TypeScript, targeted lint, and the production build.
+- Published closures at this checkpoint: Service Detail independent post-service reads are concurrent after their actual prerequisites; the narrow Billing Summary authority DTO remains limited to `billingCeiling`, `activePriorInvoiceTotal`, and `remainingUninvoicedAmount`; and the Payments compatibility closure contains only the required ModuleSearch `onClear` contract.
+- Current sufficiently measured critical-journey ranking: Customer Detail 3580 ms median; Service Detail 2995 ms; Invoice Detail 2330 ms; Supplier workflow 1890 ms; Payments 317 ms. This is not a claim of complete application-wide journey coverage.
+- **Current priority / exact next engineering task:** Customer Detail latency attribution — `G7-CUSTOMER-DETAIL-ACTUAL-INTERACTION-LATENCY-ATTRIBUTION-01`.
+- G4 is materially progressed but not closed: performance work continues iteratively by measure -> attribute -> repair -> verify -> rerank. Product and Event ERP deferrals remain outside this active performance track.
 
 ### Delivered V1 Financial and Service Lifecycle Milestone — `cf4d4aec7b3d2db1953141f2a1bfa435ccbafe70`
 
@@ -482,14 +491,14 @@ Current product state:
 - **Supplier Operations V1 closeout:** **complete** — internal Allocations and Supplier Bookings implemented under server gates; cancel/restore checks and booking concurrency limits verified.
 - **Hardened Payment Recording & Table Pagination:** **complete** — atomic `record_invoice_payment` RPC applied/verified in DEV/DEMO; 12 commits pushed up to `ded8daa`; 78 payment tests passed; pagination layout scroll-reset stabilized; manual smoke verification (fully paid INV-2026-0022 with 4,200.00 SAR) passed.
 - **Feature 006 closeout:** `006-invoice-pdf-customer-cleanup` implementation, independent review, owner acceptance, commit, push, and supplied short-example Print Preview acceptance are complete.
-- **No implementation task is active:** Feature 007, Feature 008, the latest Quotation/Invoice UX batch, quotation/internal-ABS activation, ABS Void, and the Service lifecycle milestone are delivered. No next feature is selected; Feature 009 remains inactive and owner selection is required.
+- **Delivered product state / current engineering priority:** Feature 007, Feature 008, the latest Quotation/Invoice UX batch, quotation/internal-ABS activation, ABS Void, and the Service lifecycle milestone are delivered. The current evidence-backed engineering priority is Customer Detail latency attribution (`G7-CUSTOMER-DETAIL-ACTUAL-INTERACTION-LATENCY-ATTRIBUTION-01`); Feature 009 remains inactive, and Supersede remains deferred.
 - **Workspace Location and Governance Rules:**
   - Sole canonical active checkout: `D:/G7/g7-crm`; future implementation tasks operate here unless Mozfer explicitly authorizes a different checkout.
-  - Canonical branch: `main`; frozen discovery baseline: `90adf8faa33c4af1c0049b53817f5f95896a761f` (expected HEAD and `origin/main` for this governance sync).
+  - Canonical branch: `main`; current published checkpoint: `283cd5808845a846bb5c7f477a21f4eb3fc9700c` (local HEAD and `origin/main`, `0 ahead / 0 behind`). The `90adf8faa33c4af1c0049b53817f5f95896a761f` frozen discovery baseline remains historical evidence only.
   - Retired historical checkout (do not access, inspect, modify, compare, clean, or reuse): `C:/Users/Mozfer/.grok/worktrees/g7-g7-crm/2026-07-13-360132e5`.
   - No new worktrees or branches are authorized by this decision; silent path switching and manual copying or merging remain prohibited.
   - Existing recovery/candidate assets remain protected and untouched; the four build-watch logs remain protected untracked files.
-- **Next safe product/engineering direction:** none is selected. Reports Center remains P1 but is not active; Supersede remains a separate deferred revision workflow. Clerk invitation/webhook smoke remains deferred until production/UAT readiness.
+- **Next safe product/engineering direction:** Customer Detail latency attribution (`G7-CUSTOMER-DETAIL-ACTUAL-INTERACTION-LATENCY-ATTRIBUTION-01`) is the active evidence-backed engineering priority. Reports Center remains P1 but is not active; Supersede remains a separate deferred revision workflow. Clerk invitation/webhook smoke remains deferred until production/UAT readiness.
 - **Deferred / optional (not complete):** Manager and Accountant browser smoke sessions; Deposit client maximum using remaining rather than full ceiling; legacy Quotation database ceiling hardening; broad ABS numeric normalization; invoice/payment correction and accounting treatment; future production/database hardening; future VAT or compliance work. Do **not** mark production rollout, VAT readiness, ZATCA readiness, or accounting finality complete.
 - **ABS management delivery state:**
   1. `ABS-MGMT-UI-READ-ENRICH-1` **complete**

@@ -35,7 +35,7 @@ No production-readiness, security-compliance, financial-correctness, VAT, Tax In
 
 - Responsive core source and Mozfer manual smoke acceptance are complete; no responsive-smoke blocker remains.
 - Invoice/payment correction, void, credit, and reversal controls remain incomplete.
-- Approved Billing Scope **management design and lifecycle policy are locked** (`docs/approved-billing-scope-management-design.md`); Draft/Create, Edit/Discard, Review/Approve, and invoice integration are delivered. **Void/Supersede application actions and UI remain missing.** Repository migration/RPC definitions and historical synthetic DEV/DEMO evidence exist, but current database state, migration application state, grants, and RPC definitions require fresh verification before implementation.
+- Approved Billing Scope **management design and lifecycle policy are locked** (`docs/approved-billing-scope-management-design.md`); Draft/Create, Edit/Discard, Review/Approve, invoice integration, and **ABS Void** are delivered. **ABS Supersede** remains a distinct deferred future candidate. Repository migration/RPC definitions and historical synthetic DEV/DEMO evidence exist, but current database state, migration application state, grants, and RPC definitions require fresh verification before future Supersede implementation.
 - Supplier Booking remains narrow and is not a professional end-to-end supplier operations module.
 - Reports Center is P1 and is not a V1 acceptance gate; the existing lightweight customer export remains a limited convenience.
 - Production RLS/grant, backup, monitoring, deployment, invitation/webhook, and UAT evidence is incomplete.
@@ -56,10 +56,10 @@ V1 does not include VAT-registration behavior, Tax Invoice behavior, ZATCA/FATOO
 
 ## 4. Current Phase and Controlled Task
 
-- Current phase: **Phase 2 - Commercial Workflow Completion** is materially advanced: Feature 005, Feature 008, the latest Quotation/Invoice UX batch, and ABS management UI through Review/Approve are delivered. No implementation task is active; the preferred next candidate is ABS Void/Supersede, pending formal feature activation and planning.
+- Current phase: **Phase 2 - Commercial Workflow Completion** is materially advanced: Feature 005, Feature 008, the latest Quotation/Invoice UX batch, and ABS management UI including Void are delivered. The current evidence-backed engineering priority is Customer Detail latency attribution; ABS Supersede remains a separate deferred future candidate.
 - Completed decision lock: `V1-DELIVERY-DECISIONS-LOCK-1` locked D01-D09 as product policy.
 - ABS management design complete: `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
-- **Current controlled task:** none.
+- **Current controlled task:** `G7-CUSTOMER-DETAIL-ACTUAL-INTERACTION-LATENCY-ATTRIBUTION-01` (Customer Detail latency attribution).
 
 ## 5. Completed Milestones
 
@@ -73,7 +73,7 @@ V1 does not include VAT-registration behavior, Tax Invoice behavior, ZATCA/FATOO
 ## 6. P0 Launch Blockers
 
 - Any newly identified responsive regression; the responsive-smoke blocker is closed.
-- Formal activation, current-state verification, planning, and implementation of the missing ABS Void/Supersede application actions and UI.
+- Formal activation, current-state verification, planning, and implementation of the deferred ABS Supersede application action and UI.
 - Invoice and payment correction implementation under the locked lifecycle policy.
 - Financial snapshot freeze, service-link enforcement, auditability, and permission/RLS review.
 - Production-readiness evidence: RLS/grants, secrets/deployment controls, backup/recovery, monitoring, rate limits, and build gate.
@@ -187,8 +187,8 @@ Financial implementation is an umbrella milestone only. It must be decomposed af
 | `ABS-MGMT-UI-DRAFT-CREATE-1` | implementation | Read enrich | GPT-5.6 Luna Medium | Create-draft CTA (existing server action). |
 | `ABS-MGMT-UI-DRAFT-EDIT-1` | implementation | Draft create | GPT-5.6 Terra Medium | Draft item edit + discard UI. |
 | `ABS-MGMT-UI-REVIEW-APPROVE-1` | implementation | Draft edit | GPT-5.6 Terra Medium | Line-safety review + approve UI. |
-| `ABS-MGMT-VOID-ACTION-1` | implementation | Formal feature activation, fresh RPC/migration/DEV/DEMO verification, and bounded plan | GPT-5.6 Sol High | Preferred next candidate — Void action + UI; not yet active. |
-| `ABS-MGMT-SUPERSEDE-ACTION-1` | implementation | Formal feature activation, fresh RPC/migration/DEV/DEMO verification, and bounded plan | GPT-5.6 Sol High | Preferred next candidate — Supersede action + UI; not yet active. |
+| `ABS-MGMT-VOID-ACTION-1` | implementation | Historical delivered slice | GPT-5.6 Sol High | Complete — Void action + UI delivered. |
+| `ABS-MGMT-SUPERSEDE-ACTION-1` | implementation | Formal feature activation, fresh RPC/migration/DEV/DEMO verification, and bounded plan | GPT-5.6 Sol High | Deferred future candidate — Supersede action + UI; not the current engineering task. |
 | `INVOICE-PAYMENT-CORRECTION-LIFECYCLE-DESIGN-1` | design | Decision lock | GPT-5.6 Sol High | Approved correction/reversal policy and acceptance matrix. |
 | `FINANCIAL-LIFECYCLE-SCHEMA-RLS-AUDIT-1` | audit | Financial design | GPT-5.6 Sol High; Sol Extra High only if Sol High cannot resolve a material issue | Evidence-backed schema, RLS, grant, snapshot, and migration gaps. |
 | `I18N-RUNTIME-IMPLEMENT-1` | implementation | I18N design | GPT-5.6 Terra High | Approved runtime locale and RTL behavior implemented and validated. |
@@ -202,9 +202,9 @@ Financial implementation is an umbrella milestone only. It must be decomposed af
 
 The direct client-delivery path is:
 
-`Feature 005 closed -> responsive acceptance -> ABS management design (complete) -> ABS management UI through Review/Approve (complete) -> ABS Void/Supersede candidate planning -> bounded financial implementation -> production hardening -> UAT -> handoff`
+`Feature 005 closed -> responsive acceptance -> ABS management design (complete) -> ABS management UI including Void (complete) -> deferred Supersede candidate planning -> bounded financial implementation -> production hardening -> UAT -> handoff`
 
-**Current locked step:** None. Feature 008, the latest Quotation/Invoice UX batch, and ABS management UI through Review/Approve are delivered. ABS Void/Supersede is the preferred next candidate, but remains inactive pending formal feature activation, fresh current-state verification, and bounded planning. Responsive core manual smoke is accepted. Do not promote Reports Center, Clerk invitation/webhook smoke, or production hardening as complete; those remain sequenced work and readiness gates.
+**Current engineering priority:** Customer Detail latency attribution (`G7-CUSTOMER-DETAIL-ACTUAL-INTERACTION-LATENCY-ATTRIBUTION-01`). Feature 008, the latest Quotation/Invoice UX batch, and ABS management UI including Void are delivered. ABS Supersede remains inactive pending formal feature activation, fresh current-state verification, and bounded planning. Responsive core manual smoke is accepted. Do not promote Reports Center, Clerk invitation/webhook smoke, or production hardening as complete; those remain sequenced work and readiness gates.
 
 **Responsive core (implemented and accepted scope):** quotation/service form stacking, logical filter icons, related-quotations header wrap, invoice search width; table-local scroll preserved; Supplier mobile detail deferred to full redesign.
 
