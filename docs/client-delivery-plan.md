@@ -56,10 +56,13 @@ V1 does not include VAT-registration behavior, Tax Invoice behavior, ZATCA/FATOO
 
 ## 4. Current Phase and Controlled Task
 
-- Current phase: **Phase 2 - Commercial Workflow Completion** is materially advanced: Feature 005, Feature 008, the latest Quotation/Invoice UX batch, and ABS management UI including Void are delivered. The current evidence-backed engineering priority is Customer Detail latency attribution; ABS Supersede remains a separate deferred future candidate.
+- Current phase: **Current-core SaaS Performance & Scale Hardening**. Phase 2 commercial delivery is materially advanced: Feature 005, Feature 008, the latest Quotation/Invoice UX batch, and ABS management UI including Void are delivered. Current delivery focus is responsiveness, navigation latency, data-access efficiency, and scale readiness before broader non-essential feature growth.
 - Completed decision lock: `V1-DELIVERY-DECISIONS-LOCK-1` locked D01-D09 as product policy.
 - ABS management design complete: `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
-- **Current controlled task:** `G7-CUSTOMER-DETAIL-ACTUAL-INTERACTION-LATENCY-ATTRIBUTION-01` (Customer Detail latency attribution).
+- **Immediate controlled work:** Close the validated unpublished Customer360 invoice-loading optimization: add the regression test proving a live invoice outside the bounded preview contributes to financial activity, complete review, and publish the slice. Its complete financial facts remain authoritative.
+- **Next shared candidate after closure:** `G7-SHARED-RECORD-NAVIGATION-CRITICAL-PATH-REMOVAL-01`; exact implementation remains evidence-led.
+- **Customer related-invoice direction:** latest 10 contextual invoices in Customer Detail, with View All to dedicated Customer-filtered invoice history. Financial summaries/activity must never be calculated from only the visible preview.
+- **Expansion gate:** broad new Product/Event ERP and non-essential major feature growth is **DEFERRED, NOT CANCELLED** pending explicit Owner reopening after current-core SaaS performance/scale hardening reaches an acceptable baseline.
 
 ## 5. Completed Milestones
 
@@ -72,6 +75,7 @@ V1 does not include VAT-registration behavior, Tax Invoice behavior, ZATCA/FATOO
 
 ## 6. P0 Launch Blockers
 
+- Current-core SaaS performance/scale hardening: known blocking server orchestration, shared record-navigation cost, limited progressive detail rendering, remote Data API request multiplication, broad/complete-history reads, large related collections, and cold-shell scans are active work, not deferred defects. The documented conclusion is **PARTLY — MATERIAL IN SPECIFIC PATHS**; PostgreSQL engine slowness is not claimed.
 - Any newly identified responsive regression; the responsive-smoke blocker is closed.
 - Formal activation, current-state verification, planning, and implementation of the deferred ABS Supersede application action and UI.
 - Invoice and payment correction implementation under the locked lifecycle policy.
@@ -200,15 +204,15 @@ Financial implementation is an umbrella milestone only. It must be decomposed af
 
 ## 12. Critical Path
 
-The direct client-delivery path is:
+The current client-delivery path is:
 
-`Feature 005 closed -> responsive acceptance -> ABS management design (complete) -> ABS management UI including Void (complete) -> deferred Supersede candidate planning -> bounded financial implementation -> production hardening -> UAT -> handoff`
+`Customer360 P0 closure -> shared record-navigation work -> detail responsiveness -> data-access/read-model work -> scale rerank/acceptance -> bounded financial implementation -> production hardening -> UAT -> handoff`
 
-**Current engineering priority:** Customer Detail latency attribution (`G7-CUSTOMER-DETAIL-ACTUAL-INTERACTION-LATENCY-ATTRIBUTION-01`). Feature 008, the latest Quotation/Invoice UX batch, and ABS management UI including Void are delivered. ABS Supersede remains inactive pending formal feature activation, fresh current-state verification, and bounded planning. Responsive core manual smoke is accepted. Do not promote Reports Center, Clerk invitation/webhook smoke, or production hardening as complete; those remain sequenced work and readiness gates.
+**Current delivery priority:** close the validated unpublished Customer360 invoice-loading slice before starting another performance implementation. Then address shared record-navigation critical path, detail-page responsiveness, data-access/read-model efficiency, and scale one bounded task at a time with measurement and validation. Feature 008, the latest Quotation/Invoice UX batch, and ABS management UI including Void remain delivered. ABS Supersede remains inactive pending formal feature activation, fresh current-state verification, and bounded planning. Do not promote Reports Center, Clerk invitation/webhook smoke, or production hardening as complete; those remain sequenced work and readiness gates.
 
 **Responsive core (implemented and accepted scope):** quotation/service form stacking, logical filter icons, related-quotations header wrap, invoice search width; table-local scroll preserved; Supplier mobile detail deferred to full redesign.
 
-Reports Center is P1 and does not join the V1 acceptance critical path. Professional Supplier Booking redesign is outside V1 acceptance scope. Supplier payments, supplier invoices, automated costing, margin, and P&L are post-V1.
+Reports Center is P1 and does not join the V1 acceptance critical path. Professional Supplier Booking redesign is outside V1 acceptance scope. Supplier payments, supplier invoices, automated costing, margin, P&L, and broader Product/Event ERP expansion remain deferred—not cancelled—until explicit Owner reopening after current-core SaaS performance/scale hardening.
 
 ## 13. Locked V1 Decisions
 

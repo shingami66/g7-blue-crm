@@ -374,21 +374,43 @@ Every future implementation/remediation Goal remains administratively open until
 4. `docs/product/G7_BLUE_Event_ERP_Future_Expansion_Master_Handover.md` — sole strategic Event ERP/SaaS expansion reference.
 5. External OCR campaign archive — detailed frozen discovery evidence and current finding ledger.
 
+### SaaS Performance & Scale Program (ACTIVE)
+
+The system-wide navigation and data-access diagnostic is complete enough to establish an active current-core SaaS quality program. This does not defer known performance/scale problems: it orders their treatment. Each implementation remains one bounded task at a time with actual-interaction measurement, focused validation, independent review, and reranking after material change.
+
+| Order | Program item | Current purpose and gate |
+|---|---|---|
+| P0 | Close current Customer360 slice | Add the >preview-boundary financial-activity regression proof, complete required review, and publish the validated bounded-preview/complete-facts optimization before starting another performance implementation. |
+| P1 | Shared record-navigation critical path | Leading next shared candidate: `G7-SHARED-RECORD-NAVIGATION-CRITICAL-PATH-REMOVAL-01` across Customer, Service, Invoice, and Quotation. The exact repair remains evidence-led. |
+| P2 | Detail-page responsiveness architecture | Define authoritative primary-content blocking conditions, distinguish independent secondary panels, and measure primary-ready separately from full completion. Use progressive delivery only where it preserves authorization, not-found semantics, and financial truth. |
+| P3 | Data-access round-trip reduction | Identify material repeated PostgREST reads, serial waves, and safe consolidation opportunities; do not assume a database redesign. |
+| P4 | Related-record UX bounding | Customer Detail target is latest 10 contextual invoices plus View All to full Customer-filtered invoice history. Apply equivalent bounding elsewhere only when UX/scale evidence supports it. Preview rows never define financial truth. |
+| P5 | Narrow read models / projections | Audit material `select("*")`, broad joins, and route projections with field-use verification and tests. |
+| P6 | Scale-safe financial read models | Evaluate authoritative aggregate/read models for Customer financial summary/activity, Service billing summary, and Quotation billing state without transferring complete history through the application. Requires semantic parity evidence. |
+| P7 | Large secondary collections | Review Service Quotations, allocations, bookings, and other high-cardinality sections for bounded preview, pagination, workspace, or read-model treatment. |
+| P8 | Shared / cold-shell work | Examine business-year discovery and other broad cold-layout work. Caching/precomputation is a possible class, not a selected solution. |
+| P9 | Data-layer attribution | Distinguish Data API/network, PostgREST, PostgreSQL execution, response transfer/serialization, and application orchestration using safe numeric evidence. |
+| P10 | SaaS performance acceptance / rerank | Re-run critical journeys, primary-ready and full-completion measures, review scale behavior, rerank remaining blockers, and continue until Owner accepts a SaaS baseline. No fixed millisecond threshold is invented here. |
+
+**Current data-access conclusion:** **PARTLY — MATERIAL IN SPECIFIC PATHS.** Remote request multiplication, sequencing, transfer volume, broad projections, complete-history reads, and blocking secondary reads are material. PostgreSQL engine slowness, missing indexes, RLS, connection exhaustion, region mismatch, or platform replacement are not established.
+
+**Evidence-gated choices:** indexes require a concrete query question and authorized query-plan evidence; infrastructure/region changes require placement/RTT evidence; broad caching requires freshness/invalidation contracts; transactional same-snapshot architecture requires a demonstrated inconsistency or explicit product contract; framework/data-platform replacement is not supported by current evidence.
+
 ### Current remediation waiting on decisions / evidence
 
 - **Owner decision recorded:** G2 money precision policy decided (engineering closeout pending verification); G4 measurement-first approved; G5 admin security policy decided; G6 payload/log minimization policy decided; G7 failure/health/webhook policy decided; G10 UX/accessibility policy decided.
 - **Accountant/product decision first:** Broader accounting reporting, Revenue Recognition, payment terms/credit control, supplier cost/margin, and completion with outstanding finance (deferred product scope, not open engineering defect).
 - **Measurement first:** G4 performance, query, scale, and index measurements and evidence-backed remediation.
-- **G4 current execution state:** Safe corrected actual-interaction-to-stable-destination measurement is established. The current sufficiently measured critical-journey ranking is Customer Detail 3580 ms median, Service Detail 2995 ms, Invoice Detail 2330 ms, Supplier workflow 1890 ms, and Payments 317 ms. Service Detail's first evidence-backed independent-read concurrency repair is published; the current priority is Customer Detail latency attribution (`G7-CUSTOMER-DETAIL-ACTUAL-INTERACTION-LATENCY-ATTRIBUTION-01`). G4 remains open and iterates measure -> attribute -> repair -> verify -> rerank.
+- **G4 current execution state:** The system-wide diagnostic is complete enough to activate the SaaS Performance & Scale Program above. The immediate work is P0 Customer360 closure: publish the validated bounded-preview/complete-facts slice only after adding its >preview-boundary financial-activity regression proof and completing review. Service Detail's published independent-read concurrency repair and the retained Service/Invoice/Supplier/Payments/J4/J6 return-later queue remain discoverable in `deferred-decisions.md`. After P0, shared record-navigation critical-path work is the leading candidate. G4 proceeds measure -> evidence-backed implementation -> verify -> rerank.
 - **DEV/DEMO database evidence first:** G1, G2 (verification pending), G5, G8 (Customer, Service, Quotation, Invoice, Payment DEV/DEMO verified), G9 (Owner accepted), G11 (DEV/DEMO metadata 50/50 reconciled), and G12 (canonical verification complete).
 - **Owner manual regression results:** PASS recorded across Customer creation, Customer 360, Service basic workflow, Quotation basic workflow, Payments, Reports (G3 Owner accepted), Supplier / Rate Card (G9 Owner accepted), Arabic, RTL, Mobile / responsive, Keyboard navigation, and Validation behavior.
 - **Open remediation findings:** G10 UI consistency remediation (oversized buttons, actions, pagination); Final Invoice post-create defect (root cause unclassified; requires diagnosis of post-create state, invoice existence, eligibility refresh, billing-state reconciliation, duplicate protection, and error mapping).
 - **Later cleanup:** G6 M-01 adaptation (G12 generated typing, ABS architecture, and orphaned static-data/types removal are complete).
 - **Current gates:** G12 is CLOSED / PUBLISHED / CANONICALLY VERIFIED; G3 and G9 are OWNER ACCEPTED; Security, financial integrity, Database/Migration, Performance/Scale, Release, and remaining engineering closeouts remain blocked or pending their listed open Goals (G2, G4, G5, G6, G7, G10), open findings, and evidence. Production sign-off is not complete.
 
-### Deferred product / Event ERP / SaaS expansion
+### Temporarily gated product / Event ERP / SaaS expansion
 
-This is separate from current defect remediation and remains deferred until separately approved: broader financial safety beyond G1-G3; accounting/journal/periods; full user lifecycle; expenses/cash control; procurement/RFQ/PO; supplier accounting/payables; actual cost/margin/profitability; event cost ledger/close; Event Brief, venues, permits, labour, incidents, and operations timeline; broader dashboards; multi-company activation; SaaS onboarding/billing/quotas/platform administration; ZATCA; and future localization/currency/country/compliance expansion.
+This is separate from current-core remediation and is **DEFERRED, NOT CANCELLED** while the active SaaS Performance & Scale Program hardens known navigation, data-access, responsiveness, and scale problems. It requires explicit Owner reopening after an acceptable current-core SaaS baseline: broader financial safety beyond G1-G3; accounting/journal/periods; full user lifecycle; expenses/cash control; procurement/RFQ/PO; supplier accounting/payables; actual cost/margin/profitability; event cost ledger/close; Event Brief, venues, permits, labour, incidents, and operations timeline; broader dashboards; multi-company activation; SaaS onboarding/billing/quotas/platform administration; ZATCA; and future localization/currency/country/compliance expansion.
 
 Rate Card V1 remains a bounded supplier capability and must not be relabeled as full procurement. The Expansion Master remains the detailed future-expansion authority.
 
@@ -415,13 +437,13 @@ These 3 concerns are future activation gates, not current defects. No tenant rol
 
 ## 2. Current Priority
 
-### Current Published Checkpoint and Performance Priority — `283cd5808845a846bb5c7f477a21f4eb3fc9700c`
+### Current SaaS Performance & Scale Checkpoint — `2bfa2fa1155813c97162a2498a98d1a0b2cd31e6`
 
-- `main`, local HEAD, and `origin/main` are synchronized at this published checkpoint (`0 ahead / 0 behind`). The baseline independently passed frozen dependency preparation, focused tests, TypeScript, targeted lint, and the production build.
+- `main`, local HEAD, and `origin/main` are synchronized at this verified baseline (`0 ahead / 0 behind`). The validated Customer360 optimization remains unpublished working state and is P0 closure, not published baseline behavior.
 - Published closures at this checkpoint: Service Detail independent post-service reads are concurrent after their actual prerequisites; the narrow Billing Summary authority DTO remains limited to `billingCeiling`, `activePriorInvoiceTotal`, and `remainingUninvoicedAmount`; and the Payments compatibility closure contains only the required ModuleSearch `onClear` contract.
-- Current sufficiently measured critical-journey ranking: Customer Detail 3580 ms median; Service Detail 2995 ms; Invoice Detail 2330 ms; Supplier workflow 1890 ms; Payments 317 ms. This is not a claim of complete application-wide journey coverage.
-- **Current priority / exact next engineering task:** Customer Detail latency attribution — `G7-CUSTOMER-DETAIL-ACTUAL-INTERACTION-LATENCY-ATTRIBUTION-01`.
-- G4 is materially progressed but not closed: performance work continues iteratively by measure -> attribute -> repair -> verify -> rerank. Product and Event ERP deferrals remain outside this active performance track.
+- **Immediate current work:** close the Customer360 invoice-loading slice by adding the >preview-boundary financial-activity regression test, completing required review, and publishing its validated bounded-preview/complete-facts implementation. Do not start a new performance implementation before this closure.
+- **Next shared candidate after P0:** `G7-SHARED-RECORD-NAVIGATION-CRITICAL-PATH-REMOVAL-01`.
+- G4 is materially progressed but not closed: active performance work follows the P0-P10 program, with measure -> bounded evidence-backed change -> validate/review -> rerank. Broad Product/Event ERP expansion is temporarily gated, not cancelled.
 
 ### Delivered V1 Financial and Service Lifecycle Milestone — `cf4d4aec7b3d2db1953141f2a1bfa435ccbafe70`
 

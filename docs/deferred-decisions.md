@@ -20,12 +20,21 @@
 - **Create Replay Safety (G8):** Family-specific create replay safety is complete and published across all five families: Customer (`be96bea`), Service (`ea61563`), Quotation (`61fd505`), Invoice (`04c89df`), and Payment (existing published architecture verified with no new code delta required). Each family implements immutable request/mutation key binding and dedicated reconciliation / conflict detection before mutable creation.
 
 ## 2.1 Performance Return-Later Queue
+- **Program classification:** The entries below are retained return-later items within the ACTIVE SaaS Performance & Scale Program. They are not a decision to defer known current-core performance/scale problems; the program sequence and immediate P0 closure are in `project-roadmap.md` and `project-status.md`.
 - **Service Detail remaining optimization:** The first orchestration bottleneck is repaired and published, but Service Detail remains second in the current sufficiently measured ranking at 2995 ms median. Reopen only if it becomes the highest current measured priority again or a shared optimization found elsewhere materially affects its remaining server path; do not pre-select Billing Summary as the next repair without fresh attribution.
 - **Invoice Detail attribution:** Current median is 2330 ms. Reopen for bounded actual-interaction latency attribution after higher-ranked Customer Detail and any newly reranked higher-priority work are completed or reprioritized.
 - **Supplier workflow attribution:** Current median is 1890 ms. Reopen for bounded Supplier latency attribution according to the evidence-based ranking after higher-priority journeys.
 - **Payments query-plan/index review:** Payments is currently 317 ms median and lower priority, although the serialized exact-count plus ordered-data-read server path remains an established bounded bottleneck. `G7-PAYMENTS-EXACT-COUNT-QUERY-PLAN-AND-INDEX-REVIEW-01` remains valid only after higher-priority journeys are addressed, reranking materially changes priority, or Payments tail/scale evidence becomes operationally important.
 - **J4 Quotation coverage:** Comparable normal-detail completion evidence is not yet established. Reopen only when a normal safe interaction path is available or quotation work itself creates a reason to remeasure.
 - **J6 Billing coverage:** Measurement remains authorization-limited. Reopen only when the active authorized test context legitimately exposes the journey; do not bypass permissions to measure it.
+
+## 2.2 Performance / Scale Evidence Gates
+- **Index changes:** Do not promise or create indexes until a concrete query/index question and appropriate authorized query-plan evidence exist. Current data-access evidence does not establish missing indexes or PostgreSQL engine slowness.
+- **Region / infrastructure changes:** Do not change placement or infrastructure because remote latency is merely plausible. Require safe placement/RTT evidence.
+- **Broad caching:** Do not cache mutable financial or authority-sensitive data without an explicit freshness/invalidation contract.
+- **Transactional same-snapshot architecture:** Concurrent preview and complete-financial-facts reads may theoretically observe different moments during a write, but no current user-visible/business inconsistency or same-snapshot product contract is established. Do not promote this to immediate architecture work without that evidence.
+- **Framework / data-platform replacement:** Replacing Next.js, Supabase, or the data platform is not justified by current evidence.
+- **Current conclusion boundary:** The active program conclusion is **PARTLY — MATERIAL IN SPECIFIC PATHS**. Data API request multiplication, sequencing, transfer, broad projections, complete-history reads, and blocking secondary work are material; PostgreSQL engine slowness itself is not established.
 
 ## 3. Financial And Billing Deferrals
 - **Invoice voiding and controlled adjustment:** Unpaid invoices may be voided by Admin with a reason and audit record. Paid or partially paid invoices require a controlled adjustment/reversal and replacement path (D03/D04). Remaining implementation (schema, permissions, replacement mechanics, accounting treatment) is deferred.
@@ -80,6 +89,7 @@
 - **Logo upload where still deferred:** Company Logo upload remains deferred.
 
 ## 8. UX, Reporting, And Product Expansion Deferrals
+- **Temporary expansion gate:** New broad Product, Event ERP, and non-essential major feature-surface expansion is **DEFERRED, NOT CANCELLED** while the active SaaS Performance & Scale Program hardens the current core. The Expansion Master remains strategic reference only and is unchanged. Expansion requires explicit Owner reopening after an acceptable current-core SaaS baseline.
 - **Reports and broader reporting:** The Reports surface/read model exists; G3 Reporting Truth / Period Semantics engineering remediation is CLOSED (focused validation 24/24 passed) and Owner product/visual acceptance is PASSED (do not reopen G3). Kept deferred and not-open-as-engineering-defect: selected-period Collected Cash semantics, historical Outstanding-as-of-period-end cutoff, Revenue Recognition, payment terms/credit control, supplier cost/margin, and broader accounting reporting. Broader Reports product enhancements and a separate authoritative management/accounting Reports Center remain deferred product scope.
 - **Customer 360 and richer customer reporting:** The Customer 360 surface/read model exists; G3 engineering remediation is CLOSED (focused validation 13/13 passed) and Owner product/visual acceptance is PASSED. Richer customer reporting and a separate full customer profile report remain deferred product scope.
 - **Module-specific reports:** Module-specific reports remain deferred.
