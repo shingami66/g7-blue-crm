@@ -60,7 +60,8 @@ V1 does not include VAT-registration behavior, Tax Invoice behavior, ZATCA/FATOO
 - Completed decision lock: `V1-DELIVERY-DECISIONS-LOCK-1` locked D01-D09 as product policy.
 - ABS management design complete: `APPROVED-BILLING-SCOPE-MANAGEMENT-DESIGN-1` → `docs/approved-billing-scope-management-design.md`.
 - **P0 completed:** Customer360 invoice-loading optimization is published at `7507207c362c641b3c62aa7b1132fb6494fe1c0a`; its >preview-boundary financial-activity regression proof, fresh exact-HEAD validation, independent review, and Owner cleanup of the temporary validation snapshot are complete. Complete financial facts remain authoritative.
-- **Current active work — P1:** `G7-SHARED-RECORD-NAVIGATION-CRITICAL-PATH-REMOVAL-01` across Customer, Service, Invoice, and Quotation; exact implementation remains evidence-led. The objective is to reduce or remove shared record-navigation work from the primary record-content critical path while preserving authorization, ordering, first/previous/next/last semantics, disabled states, return-to behavior, and normal navigation UX.
+- **P1 complete / published / verified:** `G7-SHARED-RECORD-NAVIGATION-CRITICAL-PATH-REMOVAL-01` is published in `333907264c00ce830e51cb274ee84ad88e08cdaf` across Customer, Service, Invoice, and Quotation. Primary content was successfully decoupled from record navigation while authorization, ordering, first/previous/next/last semantics, disabled states, return-to behavior, loading, and unavailable/error states remained preserved; independent review was **ACCEPT — NO FINDINGS**.
+- **Current active work — P2:** `G7-SAAS-PERFORMANCE-P2-DETAIL-PAGE-RESPONSIVENESS-ARCHITECTURE-01` determines the authoritative primary-content boundary versus independent secondary work, distinguishes **PRIMARY CONTENT READY** from **FULL ROUTE COMPLETE**, and preserves authorization, not-found, financial-truth, and business-action prerequisites.
 - **Customer related-invoice direction:** latest 10 contextual invoices in Customer Detail, with View All to dedicated Customer-filtered invoice history. This latest-10 direction is planned/documented and not yet implemented; financial summaries/activity must never be calculated from only the visible preview.
 - **Expansion gate:** broad new Product/Event ERP and non-essential major feature growth is **DEFERRED, NOT CANCELLED** pending explicit Owner reopening after current-core SaaS performance/scale hardening reaches an acceptable baseline.
 
@@ -75,7 +76,7 @@ V1 does not include VAT-registration behavior, Tax Invoice behavior, ZATCA/FATOO
 
 ## 6. P0 Launch Blockers
 
-- Current-core SaaS performance/scale hardening: known blocking server orchestration, shared record-navigation cost, limited progressive detail rendering, remote Data API request multiplication, broad/complete-history reads, large related collections, and cold-shell scans are active work, not deferred defects. The documented conclusion is **PARTLY — MATERIAL IN SPECIFIC PATHS**; PostgreSQL engine slowness is not claimed.
+- Current-core SaaS performance/scale hardening: detail-page responsiveness architecture, remaining secondary-read cost, limited progressive detail rendering, remote Data API request multiplication, broad/complete-history reads, large related collections, and cold-shell scans are active work, not deferred defects. The documented conclusion is **PARTLY — MATERIAL IN SPECIFIC PATHS**; PostgreSQL engine slowness is not claimed.
 - Any newly identified responsive regression; the responsive-smoke blocker is closed.
 - Formal activation, current-state verification, planning, and implementation of the deferred ABS Supersede application action and UI.
 - Invoice and payment correction implementation under the locked lifecycle policy.
@@ -206,9 +207,9 @@ Financial implementation is an umbrella milestone only. It must be decomposed af
 
 The current client-delivery path is:
 
-`Customer360 P0 closure (complete) -> P1 shared record-navigation work (active) -> detail responsiveness -> data-access/read-model work -> scale rerank/acceptance -> bounded financial implementation -> production hardening -> UAT -> handoff`
+`Customer360 P0 closure (complete) -> P1 shared record-navigation closeout (complete) -> P2 detail-page responsiveness architecture (active) -> data-access/read-model work -> scale rerank/acceptance -> bounded financial implementation -> production hardening -> UAT -> handoff`
 
-**Current delivery priority:** P0 Customer360 invoice-loading closeout is complete. P1 shared record-navigation critical-path work is active; then address detail-page responsiveness, data-access/read-model efficiency, and scale one bounded task at a time with measurement and validation. Feature 008, the latest Quotation/Invoice UX batch, and ABS management UI including Void remain delivered. ABS Supersede remains inactive pending formal feature activation, fresh current-state verification, and bounded planning. Do not promote Reports Center, Clerk invitation/webhook smoke, or production hardening as complete; those remain sequenced work and readiness gates.
+**Current delivery priority:** P0 Customer360 invoice-loading closeout and P1 shared record-navigation closeout are complete. P2 detail-page responsiveness architecture is active as `G7-SAAS-PERFORMANCE-P2-DETAIL-PAGE-RESPONSIVENESS-ARCHITECTURE-01`; then address data-access/read-model efficiency and scale one bounded task at a time with measurement and validation. Feature 008, the latest Quotation/Invoice UX batch, and ABS management UI including Void remain delivered. ABS Supersede remains inactive pending formal feature activation, fresh current-state verification, and bounded planning. Do not promote Reports Center, Clerk invitation/webhook smoke, or production hardening as complete; those remain sequenced work and readiness gates.
 
 **Responsive core (implemented and accepted scope):** quotation/service form stacking, logical filter icons, related-quotations header wrap, invoice search width; table-local scroll preserved; Supplier mobile detail deferred to full redesign.
 
