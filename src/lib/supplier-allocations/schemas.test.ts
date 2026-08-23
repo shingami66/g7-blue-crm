@@ -108,6 +108,12 @@ test("Allocation panels distinguish load failure and lock active bookings", () =
   assert.match(panel, /a\.costSource === "manual_estimate"/);
 });
 
+test("Service Detail can request current operational allocation rows without changing full consumers", () => {
+  const queries = source(QUERIES);
+  assert.match(queries, /options\?: \{ includeDeleted\?: boolean; onlyActive\?: boolean \}/);
+  assert.match(queries, /if \(options\?\.onlyActive\) \{\s*query = query\.neq\("status", "cancelled"\);\s*\}/);
+});
+
 test("Allocation forms expose database-aligned numeric controls", () => {
   for (const form of [source(CREATE_FORM), source(EDIT_FORM)]) {
     assert.match(form, /step="0\.001"/);

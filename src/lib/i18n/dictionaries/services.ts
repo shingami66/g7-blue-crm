@@ -340,7 +340,7 @@ export interface ServicesDictionary {
     title: string;
     tabs: {
       active: string;
-      showDeleted: string;
+      history: string;
     };
     actions: {
       newAllocation: string;
@@ -644,6 +644,10 @@ export interface ServicesDictionary {
   supplierBookings: {
     title: string;
     subtitle: string;
+    tabs: {
+      active: string;
+      history: string;
+    };
     loadError: string;
     empty: {
       noBookings: string;
@@ -1469,7 +1473,7 @@ const servicesDictionaryEn: ServicesDictionary = {
     title: "Supplier Allocations",
     tabs: {
       active: "Active",
-      showDeleted: "Show Deleted",
+      history: "All records",
     },
     actions: {
       newAllocation: "New Allocation",
@@ -1845,6 +1849,10 @@ const servicesDictionaryEn: ServicesDictionary = {
   supplierBookings: {
     title: "Supplier Bookings",
     subtitle: "Internal supplier bookings created from selected allocations.",
+    tabs: {
+      active: "Active",
+      history: "All records",
+    },
     loadError: "Supplier Bookings could not be loaded. Please try again.",
     empty: {
       noBookings: "No Supplier Bookings recorded for this service yet.",
@@ -2892,7 +2900,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     title: "تخصيصات الموردين",
     tabs: {
       active: "النشطة",
-      showDeleted: "إظهار المحذوفة",
+      history: "كل السجلات",
     },
     actions: {
       newAllocation: "تخصيص جديد",
@@ -3262,6 +3270,10 @@ const servicesDictionaryAr: ServicesDictionary = {
   supplierBookings: {
     title: "حجوزات الموردين",
     subtitle: "حجوزات الموردين الداخلية المُنشأة من التخصيصات المحددة.",
+    tabs: {
+      active: "النشطة",
+      history: "كل السجلات",
+    },
     loadError: "تعذر تحميل حجوزات الموردين. يرجى المحاولة مرة أخرى.",
     empty: {
       noBookings: "لا توجد حجوزات موردين مسجلة لهذه الخدمة حتى الآن.",

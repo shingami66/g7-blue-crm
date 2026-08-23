@@ -201,6 +201,22 @@ test("1. Operational services dictionary English/Arabic shapes stay aligned", ()
   );
 });
 
+test("1a. Supplier secondary collections default to current records with an all-records route", () => {
+  const en = getServicesDictionary("en");
+  const ar = getServicesDictionary("ar");
+  const detail = read(SERVICE_DETAIL);
+  const allocations = read(ALLOCATIONS);
+  const bookings = read(BOOKINGS);
+
+  assert.equal(en.supplierAllocations.tabs.history, "All records");
+  assert.equal(ar.supplierAllocations.tabs.history, "كل السجلات");
+  assert.equal(en.supplierBookings.tabs.history, "All records");
+  assert.equal(ar.supplierBookings.tabs.history, "كل السجلات");
+  assert.match(detail, /onlyActive: !showSupplierHistory/);
+  assert.match(allocations, /showSupplierHistory=true/);
+  assert.match(bookings, /showSupplierHistory=true/);
+});
+
 // ---------------------------------------------------------------------------
 // 2-3. Billing headings + deposit/final action copy
 // ---------------------------------------------------------------------------

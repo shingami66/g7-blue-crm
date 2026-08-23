@@ -54,6 +54,12 @@ test("Booking queries distinguish operational failure from an empty list", () =>
   assert.doesNotMatch(queries, /return \[\];/);
 });
 
+test("Service Detail can request current operational booking rows without changing full consumers", () => {
+  const queries = source(QUERIES);
+  assert.match(queries, /options\?: \{ onlyActive\?: boolean \}/);
+  assert.match(queries, /if \(options\?\.onlyActive\) \{\s*query = query\.neq\("status", "cancelled"\);\s*\}/);
+});
+
 test("Booking cancellation dialog has semantics and keyboard focus handling", () => {
   const ui = source(UI);
   assert.match(ui, /role="dialog"/);

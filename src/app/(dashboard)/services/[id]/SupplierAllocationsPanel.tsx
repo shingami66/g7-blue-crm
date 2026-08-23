@@ -31,7 +31,7 @@ type SupplierAllocationsPanelProps = {
   canCancel?: boolean;
   serviceId?: string;
   serviceStatus?: string;
-  showDeleted?: boolean;
+  showSupplierHistory?: boolean;
   dictionary: ServicesDictionary;
 };
 
@@ -53,7 +53,7 @@ export default function SupplierAllocationsPanel({
   canCancel,
   serviceId,
   serviceStatus,
-  showDeleted = false,
+  showSupplierHistory = false,
   dictionary,
 }: SupplierAllocationsPanelProps) {
   const panelDictionary = dictionary.supplierAllocations;
@@ -89,7 +89,7 @@ export default function SupplierAllocationsPanel({
               <Link
                 href={`/services/${serviceId}`}
                 className={`rounded-full px-3 py-1 transition-colors ${
-                  !showDeleted
+                  !showSupplierHistory
                     ? "bg-primary-container text-on-primary-container font-semibold"
                     : "text-on-surface-variant hover:bg-surface-variant"
                 }`}
@@ -97,14 +97,14 @@ export default function SupplierAllocationsPanel({
                 {panelDictionary.tabs.active}
               </Link>
               <Link
-                href={`/services/${serviceId}?showDeleted=true`}
+                href={`/services/${serviceId}?showSupplierHistory=true`}
                 className={`rounded-full px-3 py-1 transition-colors ${
-                  showDeleted
+                  showSupplierHistory
                     ? "bg-primary-container text-on-primary-container font-semibold"
                     : "text-on-surface-variant hover:bg-surface-variant"
                 }`}
               >
-                {panelDictionary.tabs.showDeleted}
+                {panelDictionary.tabs.history}
               </Link>
             </div>
           )}

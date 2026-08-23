@@ -72,6 +72,8 @@ export default async function ServiceDetailPage({
   const resolvedSearchParams = await searchParams;
   const returnTo = safeRecordReturnTo(resolvedSearchParams.returnTo, "/services");
   const showDeleted = resolvedSearchParams?.showDeleted === "true";
+  const showSupplierHistory =
+    resolvedSearchParams?.showSupplierHistory === "true" || showDeleted;
   const requestedInvoiceAction = resolvedSearchParams?.invoiceAction;
   if (requestedInvoiceAction === "deposit" || requestedInvoiceAction === "final") {
     redirect(`/services/${encodeURIComponent(id)}/billing?intent=${requestedInvoiceAction}`);
@@ -323,7 +325,7 @@ export default async function ServiceDetailPage({
           locale={locale}
           dictionary={dictionary}
           sharedStates={sharedStates}
-          showDeleted={showDeleted}
+          showSupplierHistory={showSupplierHistory}
           canCreateQuotation={canCreateQuotation && canModifyService}
           quotationDisabledReason={quotationDisabledReason}
         />
@@ -337,7 +339,7 @@ async function ServiceSecondarySections({
   locale,
   dictionary,
   sharedStates,
-  showDeleted,
+  showSupplierHistory,
   canCreateQuotation,
   quotationDisabledReason,
 }: {
@@ -345,7 +347,7 @@ async function ServiceSecondarySections({
   locale: Locale;
   dictionary: ServicesDictionary;
   sharedStates: ReturnType<typeof getSharedUiStates>;
-  showDeleted: boolean;
+  showSupplierHistory: boolean;
   canCreateQuotation: boolean;
   quotationDisabledReason?: string;
 }) {
@@ -400,10 +402,15 @@ async function ServiceSecondarySections({
       canReadBillingSummary ? getServiceBillingSummary(service.id) : Promise.resolve(null),
       listServiceActivity(service.id),
       canReadSupplierAllocations
-        ? getSupplierAllocationsByServiceId(service.id, { includeDeleted: showDeleted })
+        ? getSupplierAllocationsByServiceId(service.id, {
+            includeDeleted: showSupplierHistory,
+            onlyActive: !showSupplierHistory,
+          })
         : Promise.resolve(null),
       canReadSupplierBookings
-        ? getSupplierBookingsByServiceId(service.id)
+        ? getSupplierBookingsByServiceId(service.id, {
+            onlyActive: !showSupplierHistory,
+          })
         : Promise.resolve(null),
     ]);
     const relatedQuotationsResult = relatedQuotationsSettled.status === "fulfilled"
@@ -495,7 +502,7 @@ async function ServiceSecondarySections({
             canCancel={canCancelAllocations}
             serviceId={service.id}
             serviceStatus={service.status}
-            showDeleted={showDeleted}
+            showSupplierHistory={showSupplierHistory}
             dictionary={dictionary}
           />
         )}
@@ -506,7 +513,9 @@ async function ServiceSecondarySections({
             loadError={!!supplierBookingsResult.error}
             canCreate={canWriteSupplierBookings}
             canCancel={canCancelSupplierBookings}
+            serviceId={service.id}
             serviceStatus={service.status}
+            showSupplierHistory={showSupplierHistory}
             dictionary={dictionary}
           />
         )}

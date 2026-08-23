@@ -289,8 +289,8 @@ test("Arabic copy quality residuals remain product-facing", () => {
     "النطاق المعتمد للفوترة لهذه الخدمة.",
   );
   assert.equal(
-    getServicesDictionary("ar").supplierAllocations.tabs.showDeleted,
-    "إظهار المحذوفة",
+    getServicesDictionary("ar").supplierAllocations.tabs.history,
+    "كل السجلات",
   );
   assert.doesNotMatch(getServicesDictionary("ar").supplierBookings.subtitle, /SBK/);
   assert.equal(getSettingsDictionary("ar").labels.tinNumber, "الرقم المميز (TIN)");

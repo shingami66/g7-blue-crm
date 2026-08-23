@@ -8,6 +8,7 @@ import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import { UiDateTimeText } from "@/components/i18n/UiDateText";
 import type { Locale } from "@/lib/i18n/locales";
+import Link from "next/link";
 import SupplierBookingActions, {
   CreateSupplierBookingButton,
 } from "./SupplierBookingActions";
@@ -29,7 +30,9 @@ type SupplierBookingsPanelProps = {
   loadError?: boolean;
   canCreate?: boolean;
   canCancel?: boolean;
+  serviceId?: string;
   serviceStatus?: string;
+  showSupplierHistory?: boolean;
   dictionary: ServicesDictionary;
 };
 
@@ -46,7 +49,9 @@ export default function SupplierBookingsPanel({
   loadError = false,
   canCreate,
   canCancel,
+  serviceId,
   serviceStatus,
+  showSupplierHistory = false,
   dictionary,
 }: SupplierBookingsPanelProps) {
   const panelDictionary = dictionary.supplierBookings;
@@ -78,11 +83,37 @@ export default function SupplierBookingsPanel({
 
   return (
     <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden mt-6">
-      <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright">
-        <h3 className="font-semibold text-primary">{panelDictionary.title}</h3>
-        <p className="text-[13px] text-on-surface-variant mt-1">
-          {panelDictionary.subtitle}
-        </p>
+      <div className="flex min-w-0 flex-col gap-3 border-b border-surface-variant bg-surface-bright px-6 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div>
+          <h3 className="font-semibold text-primary">{panelDictionary.title}</h3>
+          <p className="mt-1 text-[13px] text-on-surface-variant">
+            {panelDictionary.subtitle}
+          </p>
+        </div>
+        {serviceId && (
+          <div className="flex min-w-0 flex-wrap items-center gap-2 text-[13px]">
+            <Link
+              href={`/services/${serviceId}`}
+              className={`rounded-full px-3 py-1 transition-colors ${
+                !showSupplierHistory
+                  ? "bg-primary-container text-on-primary-container font-semibold"
+                  : "text-on-surface-variant hover:bg-surface-variant"
+              }`}
+            >
+              {panelDictionary.tabs.active}
+            </Link>
+            <Link
+              href={`/services/${serviceId}?showSupplierHistory=true`}
+              className={`rounded-full px-3 py-1 transition-colors ${
+                showSupplierHistory
+                  ? "bg-primary-container text-on-primary-container font-semibold"
+                  : "text-on-surface-variant hover:bg-surface-variant"
+              }`}
+            >
+              {panelDictionary.tabs.history}
+            </Link>
+          </div>
+        )}
       </div>
 
       {loadError ? (

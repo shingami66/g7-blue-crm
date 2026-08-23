@@ -19,7 +19,7 @@ import type {
 
 export async function getSupplierAllocationsByServiceId(
   serviceId: string,
-  options?: { includeDeleted?: boolean }
+  options?: { includeDeleted?: boolean; onlyActive?: boolean }
 ): Promise<SupplierAllocationsListResult> {
   await requirePermission("supplier_allocations:read");
   const canReadCost = await checkPermission("supplier_allocations:read_cost");
@@ -33,6 +33,10 @@ export async function getSupplierAllocationsByServiceId(
 
     if (!options?.includeDeleted) {
       query = query.eq("is_deleted", false);
+    }
+
+    if (options?.onlyActive) {
+      query = query.neq("status", "cancelled");
     }
 
     const { data: rows, error } = await query.order("created_at", { ascending: false });

@@ -17,21 +17,25 @@ import type {
  */
 
 export async function getSupplierBookingsByServiceId(
-  serviceId: string
+  serviceId: string,
+  options?: { onlyActive?: boolean }
 ): Promise<SupplierBookingsListResult> {
   await requirePermission("supplier_bookings:read");
   const canReadCost = await checkPermission("supplier_bookings:read_cost");
 
   try {
     const supabase = createAdminClient();
-    const query = supabase
+    let query = supabase
       .from("supplier_bookings")
       .select("*, supplier:suppliers(name, display_name, legal_name, contact)")
       .eq("service_id", serviceId)
-      .eq("is_deleted", false)
-      .order("created_at", { ascending: false });
+      .eq("is_deleted", false);
 
-    const { data: rows, error } = await query;
+    if (options?.onlyActive) {
+      query = query.neq("status", "cancelled");
+    }
+
+    const { data: rows, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
       console.error("[getSupplierBookingsByServiceId] Supabase error:", error.message);
