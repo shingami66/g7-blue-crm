@@ -9,6 +9,7 @@ import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { INVOICE_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import { getCommonDictionary } from "@/lib/i18n/dictionaries/common";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import {
   getInvoiceDocumentLabelDisplay,
@@ -19,7 +20,7 @@ import {
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import type { Locale } from "@/lib/i18n/locales";
 import { UiDateRangeText, UiDateText } from "@/components/i18n/UiDateText";
-import { getInvoiceById } from "@/lib/invoices/queries";
+import { getInvoiceByIdResult } from "@/lib/invoices/queries";
 import { getServiceById } from "@/lib/services/queries";
 import type { QuotationItem } from "@/lib/quotations/types";
 import { IssueInvoiceAction } from "../IssueInvoiceAction";
@@ -92,6 +93,75 @@ function formatQuantity(locale: Locale, value: number | null | undefined) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });
+}
+
+async function InvoiceServiceEventSection({
+  serviceId,
+  locale,
+  dictionary,
+}: {
+  serviceId: string | null;
+  locale: Locale;
+  dictionary: ReturnType<typeof getInvoicesDictionary>;
+}) {
+  let service: Awaited<ReturnType<typeof getServiceById>> = null;
+  try {
+    if (serviceId && (await checkPermission("services:read"))) {
+      service = await getServiceById(serviceId);
+    }
+  } catch (error) {
+    if (error instanceof UnauthorizedError) redirect("/sign-in");
+  }
+
+  const serviceEventDates =
+    service?.eventStartDate && service?.eventEndDate ? (
+      <UiDateRangeText locale={locale} start={service.eventStartDate} end={service.eventEndDate} />
+    ) : service?.eventStartDate ? (
+      <UiDateText locale={locale} value={service.eventStartDate} />
+    ) : service?.eventEndDate ? (
+      <UiDateText locale={locale} value={service.eventEndDate} />
+    ) : null;
+  const hasServiceDetails = Boolean(
+    service?.serviceNumber ||
+      service?.serviceTitle ||
+      service?.eventName ||
+      service?.eventType ||
+      serviceEventDates ||
+      service?.eventLocation,
+  );
+
+  return (
+    <section data-p2-detail-secondary-complete="true" className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
+      <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex items-center gap-2">
+        <CalendarDays size={16} className="text-primary" />
+        <h2 className="font-semibold text-primary">{dictionary.detail.sections.serviceEvent}</h2>
+      </div>
+      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {hasServiceDetails ? (
+          <>
+            <Field label={dictionary.detail.labels.serviceNumber} value={service?.serviceNumber ? isolateBidiText(service.serviceNumber) : "—"} dir="ltr" />
+            <Field label={dictionary.detail.labels.serviceTitle} value={service?.serviceTitle || "—"} dir="auto" />
+            {service?.eventName && <Field label={dictionary.detail.labels.eventName} value={service.eventName} dir="auto" />}
+            {service?.eventType && <Field label={dictionary.detail.labels.eventType} value={service.eventType} dir="auto" />}
+            {serviceEventDates && <Field label={dictionary.detail.labels.eventDates} value={serviceEventDates} dir="ltr" />}
+            {service?.eventLocation && <Field label={dictionary.detail.labels.eventLocation} value={service.eventLocation} dir="auto" />}
+          </>
+        ) : (
+          <div className="md:col-span-2 rounded-lg border border-dashed border-outline-variant bg-surface p-4 text-[14px] text-on-surface-variant">
+            {dictionary.detail.states.serviceUnavailable}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function SecondaryLoadingPanel({ label }: { label: string }) {
+  return (
+    <div role="status" aria-label={label} className="rounded-xl border border-surface-variant bg-surface-container-lowest p-6 text-[14px] text-on-surface-variant">
+      {label}
+    </div>
+  );
 }
 
 function Field({
@@ -176,11 +246,22 @@ export default async function InvoiceDetailPage({
     throw error;
   }
 
-  const invoice = await getInvoiceById(id);
+  const invoiceResult = await getInvoiceByIdResult(id);
 
-  if (!invoice) {
+  if (invoiceResult.status === "not_found") {
     notFound();
   }
+
+  if (invoiceResult.status === "error") {
+    return (
+      <div role="alert" className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-4 text-center">
+        <h2 className="text-xl font-semibold text-on-surface">{dictionary.states.genericError}</h2>
+        <p className="text-sm text-on-surface-variant">{dictionary.states.invoicesLoadError}</p>
+      </div>
+    );
+  }
+
+  const { invoice } = invoiceResult;
 
   const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
@@ -192,8 +273,6 @@ export default async function InvoiceDetailPage({
     (invoice.balance_due ?? 0) > 0 &&
     invoice.service_id !== null &&
     (await checkPermission("payments:write"));
-  const canReadServices = invoice.service_id ? await checkPermission("services:read") : false;
-  const service = canReadServices && invoice.service_id ? await getServiceById(invoice.service_id) : null;
 
   const buyer = asRecord(invoice.snapshot_buyer);
   const snapshotQuotation = asRecord(invoice.snapshot_quotation);
@@ -230,29 +309,9 @@ export default async function InvoiceDetailPage({
     invoice.balance_due ?? 0,
     dictionary,
   );
-  const serviceEventDates =
-    service?.eventStartDate && service?.eventEndDate ? (
-      <UiDateRangeText
-        locale={locale}
-        start={service.eventStartDate}
-        end={service.eventEndDate}
-      />
-    ) : service?.eventStartDate ? (
-      <UiDateText locale={locale} value={service.eventStartDate} />
-    ) : service?.eventEndDate ? (
-      <UiDateText locale={locale} value={service.eventEndDate} />
-    ) : null;
-  const hasServiceDetails = Boolean(
-    service?.serviceNumber ||
-      service?.serviceTitle ||
-      service?.eventName ||
-      service?.eventType ||
-      serviceEventDates ||
-      service?.eventLocation,
-  );
 
   return (
-    <div className="flex flex-col gap-6 pb-12">
+    <div data-p2-detail-primary-ready="true" className="flex flex-col gap-6 pb-12">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-start gap-4">
           <PendingLink
@@ -370,34 +429,17 @@ export default async function InvoiceDetailPage({
             </div>
           </section>
 
-          <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex items-center gap-2">
-              <CalendarDays size={16} className="text-primary" />
-              <h2 className="font-semibold text-primary">{dictionary.detail.sections.serviceEvent}</h2>
-            </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {hasServiceDetails ? (
-                <>
-                  <Field
-                    label={dictionary.detail.labels.serviceNumber}
-                    value={service?.serviceNumber ? isolateBidiText(service.serviceNumber) : "—"}
-                    dir="ltr"
-                  />
-                  <Field label={dictionary.detail.labels.serviceTitle} value={service?.serviceTitle || "—"} dir="auto" />
-                  {service?.eventName && <Field label={dictionary.detail.labels.eventName} value={service.eventName} dir="auto" />}
-                  {service?.eventType && <Field label={dictionary.detail.labels.eventType} value={service.eventType} dir="auto" />}
-                  {serviceEventDates && <Field label={dictionary.detail.labels.eventDates} value={serviceEventDates} dir="ltr" />}
-                  {service?.eventLocation && (
-                    <Field label={dictionary.detail.labels.eventLocation} value={service.eventLocation} dir="auto" />
-                  )}
-                </>
-              ) : (
-                <div className="md:col-span-2 rounded-lg border border-dashed border-outline-variant bg-surface p-4 text-[14px] text-on-surface-variant">
-                  {dictionary.detail.states.serviceUnavailable}
-                </div>
-              )}
-            </div>
-          </section>
+          <Suspense
+            fallback={
+              <SecondaryLoadingPanel label={getCommonDictionary(locale).shared.loading.workspace} />
+            }
+          >
+            <InvoiceServiceEventSection
+              serviceId={invoice.service_id}
+              locale={locale}
+              dictionary={dictionary}
+            />
+          </Suspense>
 
           <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex items-center gap-2">

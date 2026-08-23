@@ -4,7 +4,7 @@ import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { mapRowToCustomer, type CustomerMetricsRow } from "@/lib/customers/mappers";
 import type { CustomerRow } from "@/lib/customers/types";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Customer360Activity, Customer360Invoice, Customer360Payment, Customer360Quotation, Customer360Result, Customer360Section, Customer360SectionStatus, Customer360Service } from "./types";
+import type { Customer360Activity, Customer360Invoice, Customer360Payment, Customer360ProfileResult, Customer360Quotation, Customer360Result, Customer360SecondaryResult, Customer360Section, Customer360SectionStatus, Customer360Service } from "./types";
 import { calculateCustomer360FinancialSummary, isLiveCustomerInvoice } from "./summary";
 
 function numberValue(value: unknown): number {
@@ -279,11 +279,16 @@ function buildFinancialActivity(invoices: Customer360Invoice[], payments: Custom
     .slice(0, 8);
 }
 
-export async function getCustomer360(id: string): Promise<Customer360Result> {
+export async function getCustomerProfile(id: string): Promise<Customer360ProfileResult> {
   await requirePermission("customers:read");
   const customerResult = await readCustomer(id);
   if (customerResult.status === "error") return { status: "error", error: "customer_load_failed" };
   if (customerResult.status === "not_found") return customerResult;
+
+  return { status: "ready", customer: customerResult.customer };
+}
+
+async function loadCustomer360Secondary(id: string): Promise<Customer360SecondaryResult["data"]> {
 
   const [services, quotations, invoiceReadModel, payments] = await Promise.all([
     readPermissionSection("services:read", () => readServices(id)),
@@ -297,17 +302,31 @@ export async function getCustomer360(id: string): Promise<Customer360Result> {
   const today = new Date().toISOString().slice(0, 10);
 
   return {
+    services,
+    quotations,
+    invoices,
+    payments,
+    summary: calculateCustomer360FinancialSummary(invoiceFacts),
+    upcomingServices: serviceItems.filter((service) => service.eventStartDate !== null && service.eventStartDate >= today).slice(0, 6),
+    recentOperationalActivity: buildOperationalActivity(serviceItems),
+    recentFinancialActivity: buildFinancialActivity(invoiceFacts ?? [], payments.items),
+  };
+}
+
+export async function getCustomer360Secondary(id: string): Promise<Customer360SecondaryResult> {
+  await requirePermission("customers:read");
+  return { status: "ready", data: await loadCustomer360Secondary(id) };
+}
+
+export async function getCustomer360(id: string): Promise<Customer360Result> {
+  const profile = await getCustomerProfile(id);
+  if (profile.status !== "ready") return profile;
+
+  return {
     status: "ready",
     data: {
-      customer: customerResult.customer,
-      services,
-      quotations,
-      invoices,
-      payments,
-      summary: calculateCustomer360FinancialSummary(invoiceFacts),
-      upcomingServices: serviceItems.filter((service) => service.eventStartDate !== null && service.eventStartDate >= today).slice(0, 6),
-      recentOperationalActivity: buildOperationalActivity(serviceItems),
-      recentFinancialActivity: buildFinancialActivity(invoiceFacts ?? [], payments.items),
+      customer: profile.customer,
+      ...(await loadCustomer360Secondary(id)),
     },
   };
 }

@@ -6,7 +6,7 @@ import PendingLink from "@/components/ui/PendingLink";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
-import { getCustomer360 } from "@/lib/customer-360/queries";
+import { getCustomer360Secondary, getCustomerProfile } from "@/lib/customer-360/queries";
 import Customer360Workspace from "./Customer360Workspace";
 import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
 import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
@@ -39,17 +39,17 @@ export default async function CustomerProfilePage({
   const sharedStates = getSharedUiStates(locale);
   const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const returnTo = safeRecordReturnTo(resolvedSearchParams.returnTo, "/customers");
-  let workspace: Awaited<ReturnType<typeof getCustomer360>>;
+  let profile: Awaited<ReturnType<typeof getCustomerProfile>>;
   let canWrite = false;
 
   try {
-    workspace = await getCustomer360(id);
-    if (workspace.status === "not_found") {
+    profile = await getCustomerProfile(id);
+    if (profile.status === "not_found") {
       notFound();
     }
-    if (workspace.status === "error") {
+    if (profile.status === "error") {
       return renderLoadError(
-        new Error(workspace.error),
+        new Error(profile.error),
         dictionary.states.customerForbidden,
         dictionary.states.customerLoadError,
         sharedStates.accessDenied.title,
@@ -67,35 +67,16 @@ export default async function CustomerProfilePage({
     );
   }
 
-  if (workspace.status !== "ready") {
+  if (profile.status !== "ready") {
     notFound();
   }
 
-  if (workspace.data.services.status === "forbidden") {
-    return renderLoadError(
-      new Error("services_forbidden"),
-      dictionary.states.customerServicesForbidden,
-      dictionary.states.relatedServicesLoadError,
-      sharedStates.accessDenied.title,
-      sharedStates.genericError.title,
-    );
-  }
-  if (workspace.data.services.status === "error") {
-    return renderLoadError(
-      new Error("services_load_failed"),
-      dictionary.states.customerServicesForbidden,
-      dictionary.states.relatedServicesLoadError,
-      sharedStates.accessDenied.title,
-      sharedStates.genericError.title,
-    );
-  }
-
-  const { customer } = workspace.data;
+  const { customer } = profile;
   const customer360Dictionary = getCustomer360Dictionary(locale);
   const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
   return (
-    <div className="flex flex-col gap-6 pb-12">
+    <div data-p2-detail-primary-ready="true" className="flex flex-col gap-6 pb-12">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
           <PendingLink
@@ -210,13 +191,68 @@ export default async function CustomerProfilePage({
 
       <OfficialBillingDetails customer={customer} dictionary={dictionary} />
 
+      <Suspense fallback={<SecondaryLoadingPanel label={sharedStates.loading.workspace} />}>
+        <Customer360SecondaryWorkspace
+          id={id}
+          customer={customer}
+          locale={locale}
+          dictionary={customer360Dictionary}
+          returnTo={returnTo}
+          sharedStates={sharedStates}
+          customersDictionary={dictionary}
+        />
+      </Suspense>
+
+    </div>
+  );
+}
+
+async function Customer360SecondaryWorkspace({
+  id,
+  customer,
+  locale,
+  dictionary,
+  returnTo,
+  sharedStates,
+  customersDictionary,
+}: {
+  id: string;
+  customer: Customer;
+  locale: Parameters<typeof getCustomer360Dictionary>[0];
+  dictionary: ReturnType<typeof getCustomer360Dictionary>;
+  returnTo: string;
+  sharedStates: ReturnType<typeof getSharedUiStates>;
+  customersDictionary: CustomersDictionary;
+}) {
+  let secondary: Awaited<ReturnType<typeof getCustomer360Secondary>>;
+  try {
+    secondary = await getCustomer360Secondary(id);
+  } catch (error) {
+    return renderLoadError(
+      error,
+      customersDictionary.states.customerServicesForbidden,
+      customersDictionary.states.relatedServicesLoadError,
+      sharedStates.accessDenied.title,
+      sharedStates.genericError.title,
+    );
+  }
+
+  return (
+    <div data-p2-detail-secondary-complete="true">
       <Customer360Workspace
-        data={workspace.data}
+        data={{ customer, ...secondary.data }}
         locale={locale}
-        dictionary={customer360Dictionary}
+        dictionary={dictionary}
         returnTo={returnTo}
       />
+    </div>
+  );
+}
 
+function SecondaryLoadingPanel({ label }: { label: string }) {
+  return (
+    <div role="status" aria-label={label} className="rounded-xl border border-surface-variant bg-surface-container-lowest p-6 text-[14px] text-on-surface-variant">
+      {label}
     </div>
   );
 }

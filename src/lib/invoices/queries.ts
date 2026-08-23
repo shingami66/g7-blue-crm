@@ -121,24 +121,43 @@ export async function getInvoicesByApprovedBillingScopeId(
   }
 }
 
-export async function getInvoiceById(id: string): Promise<Invoice | null> {
+type InvoiceDetailReadResult =
+  | { status: "ready"; invoice: Invoice }
+  | { status: "not_found" }
+  | { status: "error"; error: "invoice_load_failed" };
+
+export async function getInvoiceByIdResult(
+  id: string,
+): Promise<InvoiceDetailReadResult> {
   await requirePermission("invoices:read");
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("invoices")
-    .select("*")
-    .eq("id", id)
-    .eq("is_deleted", false)
-    .single();
 
-  if (error || !data) {
-    if (error && error.code !== "PGRST116") {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("*")
+      .eq("id", id)
+      .eq("is_deleted", false)
+      .maybeSingle();
+
+    if (error) {
       console.error("[getInvoiceById] Supabase error:", error.message);
+      return { status: "error", error: "invoice_load_failed" };
     }
-    return null;
-  }
 
-  return mapRowToInvoice(toInvoiceRow(data));
+    if (!data) return { status: "not_found" };
+
+    return { status: "ready", invoice: mapRowToInvoice(toInvoiceRow(data)) };
+  } catch (err) {
+    if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
+    console.error("[getInvoiceById] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { status: "error", error: "invoice_load_failed" };
+  }
+}
+
+export async function getInvoiceById(id: string): Promise<Invoice | null> {
+  const result = await getInvoiceByIdResult(id);
+  return result.status === "ready" ? result.invoice : null;
 }
 
 export async function getInvoicesByServiceId(serviceId: string): Promise<Invoice[]> {

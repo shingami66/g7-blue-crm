@@ -25,6 +25,7 @@ interface RelatedQuotationsCardProps {
   canCreateQuotation: boolean;
   dictionary: ServicesDictionary;
   disabledReason?: string;
+  loadError?: boolean;
 }
 
 export default function RelatedQuotationsCard({
@@ -33,6 +34,7 @@ export default function RelatedQuotationsCard({
   canCreateQuotation,
   dictionary,
   disabledReason,
+  loadError = false,
 }: RelatedQuotationsCardProps) {
   return (
     <section
@@ -47,7 +49,7 @@ export default function RelatedQuotationsCard({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 sm:gap-4 shrink-0">
-          {quotations && (
+          {quotations && !loadError && (
             <div className="text-[13px] leading-[18px] text-on-surface-variant">
               {quotations.length}{" "}
               {quotations.length === 1
@@ -80,6 +82,8 @@ export default function RelatedQuotationsCard({
       <div className="p-6">
         {quotations === null ? (
           <EmptyMessage message={dictionary.states.noPermissionToViewQuotations} />
+        ) : loadError ? (
+          <EmptyMessage message={dictionary.states.genericError} />
         ) : quotations.length === 0 ? (
           <EmptyMessage message={dictionary.states.noRelatedQuotations} />
         ) : (

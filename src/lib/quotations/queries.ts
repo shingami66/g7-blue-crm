@@ -9,7 +9,6 @@ import {
   normalizeQuotationSearchMode,
   type QuotationDetail,
   type QuotationDetailRow,
-  type QuotationItemRow,
   type QuotationListItem,
   type QuotationListQuery,
   type QuotationRowWithRelations,
@@ -211,9 +210,9 @@ export async function getQuotationsList(
   }
 }
 
-export async function getQuotationsByServiceId(
-  serviceId: string
-): Promise<QuotationListItem[]> {
+export async function getQuotationsByServiceIdResult(
+  serviceId: string,
+): Promise<{ quotations: QuotationListItem[]; error?: "quotations_load_failed" }> {
   await requirePermission("quotations:read");
 
   try {
@@ -229,21 +228,35 @@ export async function getQuotationsByServiceId(
 
     if (error) {
       console.error("[getQuotationsByServiceId] Supabase error:", error.message);
-      return [];
+      return { quotations: [], error: "quotations_load_failed" };
     }
 
-    return (data || []).map((row) => mapRowToQuotationListItem(sanitizeQuotationRow(row)));
+    return { quotations: (data || []).map((row) => mapRowToQuotationListItem(sanitizeQuotationRow(row))) };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error(
       "[getQuotationsByServiceId] Unexpected error:",
       err instanceof Error ? err.message : "Unknown"
     );
-    return [];
+    return { quotations: [], error: "quotations_load_failed" };
   }
 }
 
-export async function getQuotationById(id: string): Promise<QuotationDetail | null> {
+export async function getQuotationsByServiceId(
+  serviceId: string,
+): Promise<QuotationListItem[]> {
+  const result = await getQuotationsByServiceIdResult(serviceId);
+  return result.quotations;
+}
+
+type QuotationDetailReadResult =
+  | { status: "ready"; quotation: QuotationDetail }
+  | { status: "not_found" }
+  | { status: "error"; error: "quotation_load_failed" };
+
+export async function getQuotationByIdResult(
+  id: string,
+): Promise<QuotationDetailReadResult> {
   await requirePermission("quotations:read");
 
   try {
@@ -253,17 +266,27 @@ export async function getQuotationById(id: string): Promise<QuotationDetail | nu
       .select(QUOTATION_DETAIL_SELECT)
       .eq("id", id)
       .eq("is_deleted", false)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("[getQuotationById] Supabase error:", error.message);
-      return null;
+      return { status: "error", error: "quotation_load_failed" };
     }
 
-    return mapRowToQuotationDetail(sanitizeQuotationDetailRow(data));
+    if (!data) return { status: "not_found" };
+
+    return {
+      status: "ready",
+      quotation: mapRowToQuotationDetail(sanitizeQuotationDetailRow(data)),
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error("[getQuotationById] Unexpected error:", err instanceof Error ? err.message : "Unknown");
-    return null;
+    return { status: "error", error: "quotation_load_failed" };
   }
+}
+
+export async function getQuotationById(id: string): Promise<QuotationDetail | null> {
+  const result = await getQuotationByIdResult(id);
+  return result.status === "ready" ? result.quotation : null;
 }

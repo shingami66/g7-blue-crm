@@ -6,8 +6,8 @@ import {
   SERVICE_BILLING_SUMMARY_PERMISSIONS,
 } from "@/lib/auth/role-permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
-import { getServiceById } from "@/lib/services/queries";
-import { getQuotationsByServiceId } from "@/lib/quotations/queries";
+import { getServiceByIdResult } from "@/lib/services/queries";
+import { getQuotationsByServiceIdResult } from "@/lib/quotations/queries";
 import { getServiceBillingSummary } from "@/lib/invoices";
 import { listServiceActivity } from "@/lib/services/activity-queries";
 import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
@@ -101,37 +101,29 @@ export default async function ServiceDetailPage({
     );
   }
 
-  const service = await getServiceById(id);
+  const serviceResult = await getServiceByIdResult(id);
 
-  if (!service) {
+  if (serviceResult.status === "not_found") {
     notFound();
   }
+
+  if (serviceResult.status === "error") {
+    return (
+      <SharedAuthenticatedStatePanel
+        title={sharedStates.genericError.title}
+        message={dictionary.states.serviceDataLoadError}
+        role="alert"
+      />
+    );
+  }
+
+  const { service } = serviceResult;
 
   const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
   const canCreateQuotation = await checkPermission("quotations:write");
   const canEditService = await checkPermission("services:write");
   const canUpdateServiceStatus = await checkPermission("services:update_status");
-  const canReadQuotations = await checkPermission("quotations:read");
-  const canReadSupplierAllocations = await checkPermission("supplier_allocations:read");
-  const canReadCost = await checkPermission("supplier_allocations:read_cost");
-  const canWriteAllocations = await checkPermission("supplier_allocations:write");
-  const canCancelAllocations = await checkPermission("supplier_allocations:cancel");
-  const canReadSupplierBookings = await checkPermission("supplier_bookings:read");
-  const canWriteSupplierBookings = await checkPermission("supplier_bookings:write");
-  const canCancelSupplierBookings = await checkPermission("supplier_bookings:cancel");
-  // Technical ABS permissions remain enforced for the nested evidence route;
-  // the normal Service page intentionally does not render that workflow.
-  const canReadApprovedBillingScopes = await checkPermission("approvedBillingScopes:read");
-  const canCreateDraft = await checkPermission(
-    "approvedBillingScopes:create",
-  );
-  void canReadApprovedBillingScopes;
-  void canCreateDraft;
-  const canReadInvoices = await checkPermission(INVOICE_PERMISSIONS.read);
-  const canReadBillingSummary = await checkPermission(
-    SERVICE_BILLING_SUMMARY_PERMISSIONS.read,
-  );
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
   const today = new Date().toISOString().split("T")[0];
@@ -140,31 +132,8 @@ export default async function ServiceDetailPage({
     ? dictionary.detail.quotationDisabledReasonStarted
     : undefined;
 
-  const [
-    relatedQuotations,
-    billingSummary,
-    activity,
-    supplierAllocationsResult,
-    supplierBookingsResult,
-  ] = await Promise.all([
-    canReadQuotations ? getQuotationsByServiceId(service.id) : Promise.resolve(null),
-    canReadBillingSummary ? getServiceBillingSummary(service.id) : Promise.resolve(null),
-    listServiceActivity(service.id),
-    canReadSupplierAllocations
-      ? getSupplierAllocationsByServiceId(service.id, { includeDeleted: showDeleted })
-      : Promise.resolve(null),
-    canReadSupplierBookings
-      ? getSupplierBookingsByServiceId(service.id)
-      : Promise.resolve(null),
-  ]);
-  const supplierAllocations = supplierAllocationsResult?.allocations ?? null;
-  const supplierBookings = supplierBookingsResult?.bookings ?? null;
-  const activeBookingAllocationIds = (supplierBookings ?? [])
-    .filter((booking) => booking.status !== "cancelled")
-    .map((booking) => booking.sourceAllocationId);
-
   return (
-    <div className="flex w-full min-w-0 max-w-full flex-col gap-6 pb-12">
+    <div data-p2-detail-primary-ready="true" className="flex w-full min-w-0 max-w-full flex-col gap-6 pb-12">
       <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <BackToServicesLink label={dictionary.detail.backToServices} returnTo={returnTo} />
@@ -264,6 +233,14 @@ export default async function ServiceDetailPage({
         />
       )}
 
+      {canUpdateServiceStatus && (
+        <ServiceCancellationActions
+          serviceId={service.id}
+          status={service.status}
+          dictionary={dictionary}
+        />
+      )}
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
           <SectionHeader title={dictionary.detail.sections.serviceSchedule} />
@@ -340,59 +317,225 @@ export default async function ServiceDetailPage({
         </div>
       </section>
 
-      <RelatedQuotationsCard
-        quotations={relatedQuotations}
-        serviceId={service.id}
-        canCreateQuotation={canCreateQuotation && canModifyService}
-        dictionary={dictionary}
-        disabledReason={quotationDisabledReason}
-      />
-      {canReadSupplierAllocations && supplierAllocationsResult && supplierAllocations && (
-        <SupplierAllocationsPanel
-          allocations={supplierAllocations}
-          loadError={!!supplierAllocationsResult.error}
-          activeBookingAllocationIds={activeBookingAllocationIds}
-          canReadCost={canReadCost}
-          canWrite={canWriteAllocations}
-          canCancel={canCancelAllocations}
-          serviceId={service.id}
-          serviceStatus={service.status}
+      <Suspense fallback={<SecondaryLoadingPanel label={sharedStates.loading.workspace} />}>
+        <ServiceSecondarySections
+          service={service}
+          locale={locale}
+          dictionary={dictionary}
+          sharedStates={sharedStates}
           showDeleted={showDeleted}
-          dictionary={dictionary}
+          canCreateQuotation={canCreateQuotation && canModifyService}
+          quotationDisabledReason={quotationDisabledReason}
         />
-      )}
-      {canReadSupplierBookings && supplierBookingsResult && supplierBookings && (
-        <SupplierBookingsPanel
-          bookings={supplierBookings}
-          allocations={supplierAllocations ?? []}
-          loadError={!!supplierBookingsResult.error}
-          canCreate={canWriteSupplierBookings}
-          canCancel={canCancelSupplierBookings}
-          serviceStatus={service.status}
-          dictionary={dictionary}
-        />
-      )}
-      {billingSummary && (
-        <ServiceBillingSummaryCard
-          serviceId={service.id}
-          billingSummary={billingSummary}
-          canReadInvoices={canReadInvoices}
-          dictionary={dictionary}
-        />
-      )}
-      {canUpdateServiceStatus && (
-        <ServiceCancellationActions
-          serviceId={service.id}
-          status={service.status}
-          dictionary={dictionary}
-        />
-      )}
-      <ServiceActivityHistory
-        events={activity.events}
-        available={activity.success}
-        locale={locale}
-        dictionary={dictionary}
+      </Suspense>
+    </div>
+  );
+}
+
+async function ServiceSecondarySections({
+  service,
+  locale,
+  dictionary,
+  sharedStates,
+  showDeleted,
+  canCreateQuotation,
+  quotationDisabledReason,
+}: {
+  service: Service;
+  locale: Locale;
+  dictionary: ServicesDictionary;
+  sharedStates: ReturnType<typeof getSharedUiStates>;
+  showDeleted: boolean;
+  canCreateQuotation: boolean;
+  quotationDisabledReason?: string;
+}) {
+  let loaded: {
+    canReadQuotations: boolean;
+    canReadSupplierAllocations: boolean;
+    canReadCost: boolean;
+    canWriteAllocations: boolean;
+    canCancelAllocations: boolean;
+    canReadSupplierBookings: boolean;
+    canWriteSupplierBookings: boolean;
+    canCancelSupplierBookings: boolean;
+    canReadInvoices: boolean;
+    relatedQuotationsResult: Awaited<ReturnType<typeof getQuotationsByServiceIdResult>> | null;
+    billingSummary: Awaited<ReturnType<typeof getServiceBillingSummary>> | null;
+    activity: Awaited<ReturnType<typeof listServiceActivity>>;
+    supplierAllocationsResult: Awaited<ReturnType<typeof getSupplierAllocationsByServiceId>> | null;
+    supplierBookingsResult: Awaited<ReturnType<typeof getSupplierBookingsByServiceId>> | null;
+  };
+  try {
+    const [
+      canReadQuotations,
+      canReadSupplierAllocations,
+      canReadCost,
+      canWriteAllocations,
+      canCancelAllocations,
+      canReadSupplierBookings,
+      canWriteSupplierBookings,
+      canCancelSupplierBookings,
+      canReadInvoices,
+      canReadBillingSummary,
+    ] = await Promise.all([
+      checkPermission("quotations:read"),
+      checkPermission("supplier_allocations:read"),
+      checkPermission("supplier_allocations:read_cost"),
+      checkPermission("supplier_allocations:write"),
+      checkPermission("supplier_allocations:cancel"),
+      checkPermission("supplier_bookings:read"),
+      checkPermission("supplier_bookings:write"),
+      checkPermission("supplier_bookings:cancel"),
+      checkPermission(INVOICE_PERMISSIONS.read),
+      checkPermission(SERVICE_BILLING_SUMMARY_PERMISSIONS.read),
+    ]);
+    const [
+      relatedQuotationsSettled,
+      billingSummarySettled,
+      activitySettled,
+      supplierAllocationsSettled,
+      supplierBookingsSettled,
+    ] = await Promise.allSettled([
+      canReadQuotations ? getQuotationsByServiceIdResult(service.id) : Promise.resolve(null),
+      canReadBillingSummary ? getServiceBillingSummary(service.id) : Promise.resolve(null),
+      listServiceActivity(service.id),
+      canReadSupplierAllocations
+        ? getSupplierAllocationsByServiceId(service.id, { includeDeleted: showDeleted })
+        : Promise.resolve(null),
+      canReadSupplierBookings
+        ? getSupplierBookingsByServiceId(service.id)
+        : Promise.resolve(null),
+    ]);
+    const relatedQuotationsResult = relatedQuotationsSettled.status === "fulfilled"
+      ? relatedQuotationsSettled.value
+      : canReadQuotations
+        ? { quotations: [], error: "quotations_load_failed" as const }
+        : null;
+    const billingSummary = billingSummarySettled.status === "fulfilled"
+      ? billingSummarySettled.value
+      : null;
+    const activity = activitySettled.status === "fulfilled"
+      ? activitySettled.value
+      : { success: false, events: [] };
+    const supplierAllocationsResult = supplierAllocationsSettled.status === "fulfilled"
+      ? supplierAllocationsSettled.value
+      : canReadSupplierAllocations
+        ? { allocations: [], error: "supplier_allocations_load_failed" as const }
+        : null;
+    const supplierBookingsResult = supplierBookingsSettled.status === "fulfilled"
+      ? supplierBookingsSettled.value
+      : canReadSupplierBookings
+        ? { bookings: [], error: "supplier_bookings_load_failed" as const }
+        : null;
+    loaded = {
+      canReadQuotations,
+      canReadSupplierAllocations,
+      canReadCost,
+      canWriteAllocations,
+      canCancelAllocations,
+      canReadSupplierBookings,
+      canWriteSupplierBookings,
+      canCancelSupplierBookings,
+      canReadInvoices,
+      relatedQuotationsResult,
+      billingSummary,
+      activity,
+      supplierAllocationsResult,
+      supplierBookingsResult,
+    };
+  } catch (error) {
+    if (error instanceof UnauthorizedError) redirect("/sign-in");
+    return (
+      <SharedAuthenticatedStatePanel
+        title={sharedStates.genericError.title}
+        message={dictionary.states.serviceDataLoadError}
+        role="alert"
       />
+    );
+  }
+
+  const {
+    canReadSupplierAllocations,
+    canReadCost,
+    canWriteAllocations,
+    canCancelAllocations,
+    canReadSupplierBookings,
+    canWriteSupplierBookings,
+    canCancelSupplierBookings,
+    canReadInvoices,
+    relatedQuotationsResult,
+    billingSummary,
+    activity,
+    supplierAllocationsResult,
+    supplierBookingsResult,
+  } = loaded;
+  const supplierAllocations = supplierAllocationsResult?.allocations ?? null;
+  const supplierBookings = supplierBookingsResult?.bookings ?? null;
+  const activeBookingAllocationIds = (supplierBookings ?? [])
+    .filter((booking) => booking.status !== "cancelled")
+    .map((booking) => booking.sourceAllocationId);
+
+  return (
+      <div data-p2-detail-secondary-complete="true" className="contents">
+        <RelatedQuotationsCard
+          quotations={relatedQuotationsResult?.quotations ?? null}
+          loadError={!!relatedQuotationsResult?.error}
+          serviceId={service.id}
+          canCreateQuotation={canCreateQuotation}
+          dictionary={dictionary}
+          disabledReason={quotationDisabledReason}
+        />
+        {canReadSupplierAllocations && supplierAllocationsResult && supplierAllocations && (
+          <SupplierAllocationsPanel
+            allocations={supplierAllocations}
+            loadError={!!supplierAllocationsResult.error}
+            activeBookingAllocationIds={activeBookingAllocationIds}
+            canReadCost={canReadCost}
+            canWrite={canWriteAllocations}
+            canCancel={canCancelAllocations}
+            serviceId={service.id}
+            serviceStatus={service.status}
+            showDeleted={showDeleted}
+            dictionary={dictionary}
+          />
+        )}
+        {canReadSupplierBookings && supplierBookingsResult && supplierBookings && (
+          <SupplierBookingsPanel
+            bookings={supplierBookings}
+            allocations={supplierAllocations ?? []}
+            loadError={!!supplierBookingsResult.error}
+            canCreate={canWriteSupplierBookings}
+            canCancel={canCancelSupplierBookings}
+            serviceStatus={service.status}
+            dictionary={dictionary}
+          />
+        )}
+        {billingSummary && (
+          <ServiceBillingSummaryCard
+            serviceId={service.id}
+            billingSummary={billingSummary}
+            canReadInvoices={canReadInvoices}
+            dictionary={dictionary}
+          />
+        )}
+        <ServiceActivityHistory
+          events={activity.events}
+          available={activity.success}
+          locale={locale}
+          dictionary={dictionary}
+        />
+      </div>
+  );
+}
+
+function SecondaryLoadingPanel({ label }: { label: string }) {
+  return (
+    <div
+      role="status"
+      aria-label={label}
+      className="rounded-xl border border-surface-variant bg-surface-container-lowest p-6 text-[14px] text-on-surface-variant"
+    >
+      {label}
     </div>
   );
 }

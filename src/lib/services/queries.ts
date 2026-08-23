@@ -302,7 +302,14 @@ export async function getEligibleServicesForQuotation(): Promise<EligibleQuotati
   }
 }
 
-export async function getServiceById(id: string): Promise<Service | null> {
+type ServiceDetailReadResult =
+  | { status: "ready"; service: Service }
+  | { status: "not_found" }
+  | { status: "error"; error: "service_load_failed" };
+
+export async function getServiceByIdResult(
+  id: string,
+): Promise<ServiceDetailReadResult> {
   await requirePermission("services:read");
 
   try {
@@ -316,17 +323,25 @@ export async function getServiceById(id: string): Promise<Service | null> {
 
     if (error) {
       console.error("[getServiceById] Supabase error:", error.message);
-      return null;
+      return { status: "error", error: "service_load_failed" };
     }
 
-    return serviceRow
-      ? mapRowToService(serviceRow as ServiceRowWithCustomer)
-      : null;
+    if (!serviceRow) return { status: "not_found" };
+
+    return {
+      status: "ready",
+      service: mapRowToService(serviceRow as ServiceRowWithCustomer),
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error("[getServiceById] Unexpected error:", err instanceof Error ? err.message : "Unknown");
-    return null;
+    return { status: "error", error: "service_load_failed" };
   }
+}
+
+export async function getServiceById(id: string): Promise<Service | null> {
+  const result = await getServiceByIdResult(id);
+  return result.status === "ready" ? result.service : null;
 }
 
 export async function getServicesByCustomerId(customerId: string): Promise<Service[]> {

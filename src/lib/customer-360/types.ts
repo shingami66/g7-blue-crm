@@ -91,6 +91,18 @@ export type Customer360Data = {
   recentFinancialActivity: Customer360Activity[];
 };
 
+export type Customer360SecondaryData = Omit<Customer360Data, "customer">;
+
+export type Customer360ProfileResult =
+  | { status: "ready"; customer: Customer }
+  | { status: "not_found" }
+  | { status: "error"; error: "customer_load_failed" };
+
+export type Customer360SecondaryResult = {
+  status: "ready";
+  data: Customer360SecondaryData;
+};
+
 export type Customer360Result =
   | { status: "ready"; data: Customer360Data }
   | { status: "not_found" }

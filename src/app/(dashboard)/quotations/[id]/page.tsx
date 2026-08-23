@@ -5,8 +5,9 @@ import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import Link from "next/link";
 import PendingLink from "@/components/ui/PendingLink";
 import Button from "@/components/ui/Button";
-import { getQuotationById } from "@/lib/quotations/queries";
+import { getQuotationByIdResult } from "@/lib/quotations/queries";
 import { requirePermission, checkPermission } from "@/lib/auth/permissions";
+import { SERVICE_BILLING_SUMMARY_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { isolateBidiText } from "@/lib/i18n/bidi";
@@ -26,6 +27,50 @@ import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-na
 import { getQuotationRecordNavigation, safeRecordReturnTo } from "@/lib/record-navigation/queries";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
+
+async function QuotationBillingAuthoritySection({
+  quotationId,
+  serviceId,
+  dictionary,
+}: {
+  quotationId: string;
+  serviceId: string;
+  dictionary: ReturnType<typeof getQuotationsDictionary>;
+}) {
+  let linkedService: Awaited<ReturnType<typeof getServiceById>> = null;
+  let billingState: Awaited<ReturnType<typeof getServiceBillingState>> | null = null;
+
+  try {
+    if (await checkPermission(SERVICE_BILLING_SUMMARY_PERMISSIONS.read)) {
+      linkedService = await getServiceById(serviceId);
+      billingState = linkedService ? await getServiceBillingState(linkedService.id) : null;
+    }
+  } catch (error) {
+    if (error instanceof UnauthorizedError) redirect("/sign-in");
+    linkedService = null;
+    billingState = null;
+  }
+
+  const billingAuthority = buildQuotationBillingAuthority({
+    quotationId,
+    linkedServiceId: linkedService?.id ?? null,
+    billingState,
+  });
+
+  return (
+    <div data-p2-detail-secondary-complete="true">
+      <QuotationBillingAuthorityCard authority={billingAuthority} dictionary={dictionary} />
+    </div>
+  );
+}
+
+function QuotationSecondaryLoading({ label }: { label: string }) {
+  return (
+    <div role="status" aria-label={label} className="rounded-xl border border-surface-variant bg-surface-container-lowest p-6 text-[14px] text-on-surface-variant">
+      {label}
+    </div>
+  );
+}
 
 export default async function QuotationDetailPage({
   params,
@@ -82,27 +127,29 @@ export default async function QuotationDetailPage({
     throw error;
   }
 
-  const quotation = await getQuotationById(id);
+  const quotationResult = await getQuotationByIdResult(id);
 
-  if (!quotation) {
+  if (quotationResult.status === "not_found") {
     notFound();
   }
 
+  if (quotationResult.status === "error") {
+    return (
+      <div role="alert" className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-4 text-center">
+        <h2 className="text-[24px] font-semibold text-on-surface">{dictionary.states.genericError}</h2>
+        <p className="text-[14px] text-on-surface-variant">{dictionary.states.quotationsLoadError}</p>
+      </div>
+    );
+  }
+
+  const { quotation } = quotationResult;
+
   const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
-  const [canApprove, canWrite, linkedService] = await Promise.all([
+  const [canApprove, canWrite] = await Promise.all([
     checkPermission("quotations:approve"),
     checkPermission("quotations:write"),
-    getServiceById(quotation.serviceId),
   ]);
-  const billingState = linkedService
-    ? await getServiceBillingState(linkedService.id)
-    : null;
-  const billingAuthority = buildQuotationBillingAuthority({
-    quotationId: quotation.id,
-    linkedServiceId: linkedService?.id ?? null,
-    billingState,
-  });
 
   const formatMoney = (val: number | null | undefined) =>
     formatSarAmount(locale, val ?? 0);
@@ -116,7 +163,7 @@ export default async function QuotationDetailPage({
     template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
 
   return (
-    <div className="flex flex-col gap-6 pb-12">
+    <div data-p2-detail-primary-ready="true" className="flex flex-col gap-6 pb-12">
       {/* Top Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -381,10 +428,9 @@ export default async function QuotationDetailPage({
 
           {/* Canonical Service billing authority */}
           {quotation.status === "approved" && (
-            <QuotationBillingAuthorityCard
-              authority={billingAuthority}
-              dictionary={dictionary}
-            />
+            <Suspense fallback={<QuotationSecondaryLoading label={getCommonDictionary(locale).shared.loading.workspace} />}>
+              <QuotationBillingAuthoritySection quotationId={quotation.id} serviceId={quotation.serviceId} dictionary={dictionary} />
+            </Suspense>
           )}
         </div>
       </div>
