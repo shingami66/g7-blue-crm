@@ -395,9 +395,76 @@ test("3. getCustomer360 computes truthful live financial summary from all custom
     assert.equal(invoiceCalls.some((call) => call.limitCount === 50), false);
     assert.ok(invoiceCalls.every((call) => call.orders[0]?.column === "created_at" && call.orders[0]?.options?.ascending === false));
     assert.ok(invoiceCalls.every((call) => call.orders[1]?.column === "id" && call.orders[1]?.options?.ascending === false));
-    assert.ok(invoiceCalls.every((call) => call.selectColumns?.includes("service_id")));
-    assert.ok(invoiceCalls.every((call) => call.selectColumns?.includes("services(service_number,service_title)")));
+    assert.ok(invoiceCalls[0].selectColumns?.includes("service_id"));
+    assert.ok(invoiceCalls[0].selectColumns?.includes("services(service_number,service_title)"));
+    assert.ok(invoiceCalls.slice(1).every((call) => !call.selectColumns?.includes("service_id")));
+    assert.ok(invoiceCalls.slice(1).every((call) => !call.selectColumns?.includes("services(service_number,service_title)")));
   }
+});
+
+test("getCustomer360 streams exhaustive financial facts while retaining only the preview and recent activity contracts", async () => {
+  const laterIssuedInvoice = {
+    id: "inv-later-issued",
+    customer_id: "c-1",
+    invoice_number: "INV-LATER-ISSUED",
+    invoice_type: "final",
+    status: "paid",
+    grand_total: 900,
+    amount_paid: 900,
+    balance_due: 0,
+    issued_at: "2026-12-01T10:00:00+03:00",
+    created_at: "2026-07-01T10:00:00+03:00",
+    is_deleted: false,
+  };
+  const invoiceRows = Array.from({ length: 450 }, (_, index) => ({
+    id: `inv-stream-${String(index + 1).padStart(3, "0")}`,
+    customer_id: "c-1",
+    invoice_number: `INV-STREAM-${index + 1}`,
+    invoice_type: "final",
+    status: "paid",
+    grand_total: 100,
+    amount_paid: 40,
+    balance_due: 60,
+    issued_at: "2026-08-01T10:00:00+03:00",
+    created_at: "2026-08-01T10:00:00+03:00",
+    is_deleted: false,
+  }));
+  const scenarioState = resetScenario({
+    tableData: {
+      customers: [
+        { id: "c-1", customer_number: "CUST-001", company: "Alpha", status: "active", is_deleted: false },
+      ],
+      invoices: [...invoiceRows, laterIssuedInvoice],
+      services: [],
+      quotations: [],
+      payments: [],
+    },
+    maxRowsPerResponse: 200,
+  });
+
+  const result = await getCustomer360("c-1");
+
+  assert.equal(result.status, "ready");
+  if (result.status === "ready") {
+    assert.equal(result.data.invoices.items.length, 10);
+    assert.deepEqual(result.data.summary, {
+      totalInvoiced: 45900,
+      totalCollected: 18900,
+      outstandingBalance: 27000,
+    });
+    assert.equal(result.data.recentFinancialActivity[0]?.identifier, laterIssuedInvoice.invoice_number);
+  }
+
+  const invoiceCalls = scenarioState.calls.filter((call) => call.table === "invoices");
+  assert.equal(invoiceCalls.length, 4);
+  assert.deepEqual(invoiceCalls.map((call) => call.rangeLimits), [
+    [0, 499],
+    [200, 699],
+    [400, 899],
+    [451, 950],
+  ]);
+  assert.ok(invoiceCalls[0].selectColumns?.includes("services(service_number,service_title)"));
+  assert.ok(invoiceCalls.slice(1).every((call) => !call.selectColumns?.includes("services(service_number,service_title)")));
 });
 
 test("getCustomer360 keeps a live invoice outside the bounded preview in recentFinancialActivity", async () => {

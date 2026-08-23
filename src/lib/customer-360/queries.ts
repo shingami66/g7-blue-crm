@@ -4,8 +4,8 @@ import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { mapRowToCustomer, type CustomerMetricsRow } from "@/lib/customers/mappers";
 import type { CustomerRow } from "@/lib/customers/types";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Customer360Activity, Customer360Invoice, Customer360Payment, Customer360ProfileResult, Customer360Quotation, Customer360Result, Customer360SecondaryResult, Customer360Section, Customer360SectionStatus, Customer360Service } from "./types";
-import { calculateCustomer360FinancialSummary, isLiveCustomerInvoice } from "./summary";
+import type { Customer360Activity, Customer360FinancialSummary, Customer360Invoice, Customer360Payment, Customer360ProfileResult, Customer360Quotation, Customer360Result, Customer360SecondaryResult, Customer360Section, Customer360SectionStatus, Customer360Service } from "./types";
+import { isLiveCustomerInvoice } from "./summary";
 
 function numberValue(value: unknown): number {
   const parsed = Number(value);
@@ -127,7 +127,9 @@ async function readQuotations(customerId: string): Promise<Customer360Quotation[
 
 export const CUSTOMER_360_PAGE_SIZE = 500;
 const CUSTOMER_360_INVOICE_PREVIEW_LIMIT = 10;
-const CUSTOMER_360_INVOICE_FACT_COLUMNS = "id, invoice_number, service_id, invoice_type, status, grand_total, amount_paid, balance_due, issued_at, created_at, services(service_number,service_title)";
+const CUSTOMER_360_FINANCIAL_ACTIVITY_LIMIT = 8;
+const CUSTOMER_360_INVOICE_PREVIEW_COLUMNS = "id, invoice_number, service_id, invoice_type, status, grand_total, amount_paid, balance_due, issued_at, created_at, services(service_number,service_title)";
+const CUSTOMER_360_INVOICE_FINANCIAL_FACT_COLUMNS = "id, invoice_number, invoice_type, status, grand_total, amount_paid, balance_due, issued_at, created_at";
 
 export async function fetchAllCustomer360Pages<T>(
   buildQuery: () => { range: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }> },
@@ -168,26 +170,102 @@ function mapInvoiceRow(row: Record<string, unknown>): Customer360Invoice {
   };
 }
 
-async function readInvoiceFacts(customerId: string): Promise<Customer360Invoice[]> {
-  const data = await fetchAllCustomer360Pages<Record<string, unknown>>(() => {
-    return createAdminClient()
+function toInvoiceFinancialActivity(invoice: Customer360Invoice): Customer360Activity {
+  return {
+    id: `invoice-${invoice.id}`,
+    date: invoice.date,
+    kind: "financial",
+    eventType: "invoice",
+    identifier: invoice.invoiceNumber,
+    subject: invoice.invoiceType,
+    status: invoice.status,
+    amount: invoice.grandTotal,
+    href: `/invoices/${invoice.id}`,
+  };
+}
+
+function compareRecentFinancialActivity(left: Customer360Activity, right: Customer360Activity): number {
+  return right.date.localeCompare(left.date) || left.id.localeCompare(right.id);
+}
+
+function retainRecentFinancialActivity(
+  activities: Customer360Activity[],
+  activity: Customer360Activity,
+): void {
+  activities.push(activity);
+  activities.sort(compareRecentFinancialActivity);
+  activities.length = Math.min(activities.length, CUSTOMER_360_FINANCIAL_ACTIVITY_LIMIT);
+}
+
+function addInvoiceToFinancialSummary(
+  summary: Customer360FinancialSummary,
+  invoice: Customer360Invoice,
+): Customer360FinancialSummary {
+  if (!isLiveCustomerInvoice(invoice)) return summary;
+
+  return {
+    totalInvoiced: (summary.totalInvoiced ?? 0) + invoice.grandTotal,
+    totalCollected: (summary.totalCollected ?? 0) + invoice.amountPaid,
+    outstandingBalance: (summary.outstandingBalance ?? 0) + Math.max(invoice.balanceDue, 0),
+  };
+}
+
+function unavailableFinancialSummary(): Customer360FinancialSummary {
+  return {
+    totalInvoiced: null,
+    totalCollected: null,
+    outstandingBalance: null,
+  };
+}
+
+type Customer360InvoiceReadModel = {
+  preview: Customer360Invoice[];
+  summary: Customer360FinancialSummary;
+  invoiceActivities: Customer360Activity[];
+};
+
+async function readInvoices(customerId: string): Promise<Customer360InvoiceReadModel> {
+  const preview: Customer360Invoice[] = [];
+  const invoiceActivities: Customer360Activity[] = [];
+  let summary: Customer360FinancialSummary = {
+    totalInvoiced: 0,
+    totalCollected: 0,
+    outstandingBalance: 0,
+  };
+  let from = 0;
+
+  while (true) {
+    const includesPreviewFields = preview.length < CUSTOMER_360_INVOICE_PREVIEW_LIMIT;
+    const { data, error } = await createAdminClient()
       .from("invoices")
-      .select(CUSTOMER_360_INVOICE_FACT_COLUMNS)
+      .select(
+        includesPreviewFields
+          ? CUSTOMER_360_INVOICE_PREVIEW_COLUMNS
+          : CUSTOMER_360_INVOICE_FINANCIAL_FACT_COLUMNS,
+      )
       .eq("customer_id", customerId)
       .eq("is_deleted", false)
       .order("created_at", { ascending: false })
-      .order("id", { ascending: false });
-  });
+      .order("id", { ascending: false })
+      .range(from, from + CUSTOMER_360_PAGE_SIZE - 1);
+    if (error) throw error;
 
-  return data.map(mapInvoiceRow);
-}
+    const rows = (data ?? []) as unknown as Record<string, unknown>[];
+    if (rows.length === 0) break;
 
-async function readInvoices(customerId: string): Promise<{ preview: Customer360Invoice[]; facts: Customer360Invoice[] }> {
-  const facts = await readInvoiceFacts(customerId);
-  return {
-    preview: facts.slice(0, CUSTOMER_360_INVOICE_PREVIEW_LIMIT),
-    facts,
-  };
+    for (const row of rows) {
+      const invoice = mapInvoiceRow(row);
+      if (preview.length < CUSTOMER_360_INVOICE_PREVIEW_LIMIT) preview.push(invoice);
+      summary = addInvoiceToFinancialSummary(summary, invoice);
+      if (isLiveCustomerInvoice(invoice)) {
+        retainRecentFinancialActivity(invoiceActivities, toInvoiceFinancialActivity(invoice));
+      }
+    }
+
+    from += rows.length;
+  }
+
+  return { preview, summary, invoiceActivities };
 }
 
 async function readPayments(customerId: string): Promise<Customer360Payment[]> {
@@ -232,19 +310,7 @@ function buildOperationalActivity(services: Customer360Service[]): Customer360Ac
     .slice(0, 6);
 }
 
-function buildFinancialActivity(invoices: Customer360Invoice[], payments: Customer360Payment[]): Customer360Activity[] {
-  const liveInvoices = invoices.filter(isLiveCustomerInvoice);
-  const invoiceActivity = liveInvoices.map((invoice) => ({
-    id: `invoice-${invoice.id}`,
-    date: invoice.date,
-    kind: "financial" as const,
-    eventType: "invoice" as const,
-    identifier: invoice.invoiceNumber,
-    subject: invoice.invoiceType,
-    status: invoice.status,
-    amount: invoice.grandTotal,
-    href: `/invoices/${invoice.id}`,
-  }));
+function buildFinancialActivity(invoiceActivities: Customer360Activity[], payments: Customer360Payment[]): Customer360Activity[] {
   const paymentActivity = payments.map((payment) => ({
     id: `payment-${payment.id}`,
     date: payment.date,
@@ -257,8 +323,8 @@ function buildFinancialActivity(invoices: Customer360Invoice[], payments: Custom
     href: `/invoices/${payment.invoiceId}`,
   }));
 
-  return [...invoiceActivity, ...paymentActivity]
-    .sort((left, right) => right.date.localeCompare(left.date) || left.id.localeCompare(right.id))
+  return [...invoiceActivities, ...paymentActivity]
+    .sort(compareRecentFinancialActivity)
     .slice(0, 8);
 }
 
@@ -280,7 +346,7 @@ async function loadCustomer360Secondary(id: string): Promise<Customer360Secondar
     readPermissionSection("payments:read", () => readPayments(id)),
   ]);
   const invoices = section(invoiceReadModel.status, invoiceReadModel.value?.preview ?? []);
-  const invoiceFacts = invoiceReadModel.status === "ready" ? invoiceReadModel.value?.facts ?? [] : null;
+  const invoiceFinancialRead = invoiceReadModel.value;
   const serviceItems = services.items;
   const today = new Date().toISOString().slice(0, 10);
 
@@ -289,10 +355,10 @@ async function loadCustomer360Secondary(id: string): Promise<Customer360Secondar
     quotations,
     invoices,
     payments,
-    summary: calculateCustomer360FinancialSummary(invoiceFacts),
+    summary: invoiceFinancialRead?.summary ?? unavailableFinancialSummary(),
     upcomingServices: serviceItems.filter((service) => service.eventStartDate !== null && service.eventStartDate >= today).slice(0, 6),
     recentOperationalActivity: buildOperationalActivity(serviceItems),
-    recentFinancialActivity: buildFinancialActivity(invoiceFacts ?? [], payments.items),
+    recentFinancialActivity: buildFinancialActivity(invoiceFinancialRead?.invoiceActivities ?? [], payments.items),
   };
 }
 
