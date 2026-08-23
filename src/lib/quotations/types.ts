@@ -152,6 +152,19 @@ export interface QuotationListItem {
   snapshotBuyer?: QuotationSnapshotBuyer | null;
 }
 
+/**
+ * The Service detail's related-quotations card renders only these fields.
+ * Keep its secondary read model distinct from the richer quotations workspace list.
+ */
+export interface ServiceQuotationListItem {
+  id: string;
+  quotationNumber: string;
+  date: string;
+  validUntil: string | null;
+  grandTotal: number;
+  status: QuotationStatus;
+}
+
 export interface QuotationItem {
   id: string;
   quotationId: string;

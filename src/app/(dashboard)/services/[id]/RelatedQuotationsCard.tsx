@@ -7,7 +7,7 @@ import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { getQuotationStatusLabel } from "@/lib/i18n/dictionaries/quotations";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { formatSarAmount } from "@/lib/i18n/formatting";
-import type { QuotationListItem, QuotationStatus } from "@/lib/quotations/types";
+import type { QuotationStatus, ServiceQuotationListItem } from "@/lib/quotations/types";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -20,7 +20,7 @@ const QUOTATION_STATUS_VARIANTS: Record<QuotationStatus, StatusBadgeVariant> = {
 };
 
 interface RelatedQuotationsCardProps {
-  quotations: QuotationListItem[] | null;
+  quotations: ServiceQuotationListItem[] | null;
   serviceId: string;
   canCreateQuotation: boolean;
   dictionary: ServicesDictionary;

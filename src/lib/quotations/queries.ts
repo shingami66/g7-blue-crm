@@ -13,12 +13,25 @@ import {
   type QuotationListQuery,
   type QuotationRowWithRelations,
   type QuotationsListResult,
+  type ServiceQuotationListItem,
 } from "./types";
 import { buildIlikeOrFilter } from "@/lib/search/server";
 import { getBusinessYearBounds } from "@/lib/business-year";
 
 const QUOTATION_SELECT = "*, customers(company, contact), services(service_number, service_title, status, event_name)";
 const QUOTATION_DETAIL_SELECT = `${QUOTATION_SELECT}, quotation_items(*)`;
+const SERVICE_QUOTATION_LIST_SELECT = "id, quotation_number, date, valid_until, grand_total, status";
+
+function mapRowToServiceQuotationListItem(row: Record<string, unknown>): ServiceQuotationListItem {
+  return {
+    id: typeof row.id === "string" ? row.id : "",
+    quotationNumber: typeof row.quotation_number === "string" ? row.quotation_number : "",
+    date: typeof row.date === "string" ? row.date : "",
+    validUntil: typeof row.valid_until === "string" ? row.valid_until : null,
+    grandTotal: Number(row.grand_total) || 0,
+    status: (typeof row.status === "string" ? row.status : "draft") as ServiceQuotationListItem["status"],
+  };
+}
 
 export function sanitizeQuotationRow(row: Record<string, unknown>): QuotationRowWithRelations {
   return {
@@ -212,14 +225,14 @@ export async function getQuotationsList(
 
 export async function getQuotationsByServiceIdResult(
   serviceId: string,
-): Promise<{ quotations: QuotationListItem[]; error?: "quotations_load_failed" }> {
+): Promise<{ quotations: ServiceQuotationListItem[]; error?: "quotations_load_failed" }> {
   await requirePermission("quotations:read");
 
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("quotations")
-      .select(QUOTATION_SELECT)
+      .select(SERVICE_QUOTATION_LIST_SELECT)
       .eq("service_id", serviceId)
       .eq("is_deleted", false)
       .order("quotation_number", { ascending: false })
@@ -231,7 +244,7 @@ export async function getQuotationsByServiceIdResult(
       return { quotations: [], error: "quotations_load_failed" };
     }
 
-    return { quotations: (data || []).map((row) => mapRowToQuotationListItem(sanitizeQuotationRow(row))) };
+    return { quotations: (data || []).map(mapRowToServiceQuotationListItem) };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
     console.error(
@@ -244,7 +257,7 @@ export async function getQuotationsByServiceIdResult(
 
 export async function getQuotationsByServiceId(
   serviceId: string,
-): Promise<QuotationListItem[]> {
+): Promise<ServiceQuotationListItem[]> {
   const result = await getQuotationsByServiceIdResult(serviceId);
   return result.quotations;
 }
