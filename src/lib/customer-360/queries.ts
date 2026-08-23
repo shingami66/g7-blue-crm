@@ -80,7 +80,7 @@ async function readServices(customerId: string): Promise<Customer360Service[]> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("services")
-    .select("id, service_number, service_title, event_name, event_start_date, event_end_date, estimated_budget, status, created_at")
+    .select("id, service_number, service_title, event_start_date, status, created_at")
     .eq("customer_id", customerId)
     .is("deleted_at", null)
     .order("event_start_date", { ascending: true, nullsFirst: false })
@@ -91,11 +91,8 @@ async function readServices(customerId: string): Promise<Customer360Service[]> {
     id: String(row.id),
     serviceNumber: String(row.service_number),
     serviceTitle: String(row.service_title),
-    eventName: (row.event_name as string | null) ?? null,
     eventStartDate: safeCustomerDate(row.event_start_date),
-    eventEndDate: safeCustomerDate(row.event_end_date),
     createdAt: safeCustomerDate(row.created_at) ?? "",
-    estimatedBudget: row.estimated_budget === null ? null : numberValue(row.estimated_budget),
     status: row.status as Customer360Service["status"],
   }));
 }

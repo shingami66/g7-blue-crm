@@ -15,11 +15,8 @@ export type Customer360Service = {
   id: string;
   serviceNumber: string;
   serviceTitle: string;
-  eventName: string | null;
   eventStartDate: string | null;
-  eventEndDate: string | null;
   createdAt: string;
-  estimatedBudget: number | null;
   status: ServiceStatus;
 };
 

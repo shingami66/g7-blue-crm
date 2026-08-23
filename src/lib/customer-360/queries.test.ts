@@ -805,3 +805,58 @@ test("9. getCustomer360 executes real role-based section gating across services,
     assert.deepEqual(result.data.recentFinancialActivity, []);
   }
 });
+
+test("10. Customer360 Services projection retains card and activity facts without unused service fields", async () => {
+  const scenarioState = resetScenario({
+    tableData: {
+      customers: [
+        { id: "c-1", customer_number: "CUST-001", company: "Alpha", status: "active", is_deleted: false },
+      ],
+      services: [
+        {
+          id: "srv-1",
+          customer_id: "c-1",
+          service_number: "SRV-001",
+          service_title: "Event Ops",
+          event_start_date: "2026-09-01",
+          created_at: "2026-08-01",
+          status: "in_progress",
+          event_name: "must-not-be-projected",
+          event_end_date: "2026-09-02",
+          estimated_budget: 1000,
+        },
+      ],
+    },
+  });
+
+  const result = await getCustomer360("c-1");
+
+  assert.equal(result.status, "ready");
+  if (result.status === "ready") {
+    assert.deepEqual(result.data.services.items, [{
+      id: "srv-1",
+      serviceNumber: "SRV-001",
+      serviceTitle: "Event Ops",
+      eventStartDate: "2026-09-01",
+      createdAt: "2026-08-01",
+      status: "in_progress",
+    }]);
+    assert.equal(result.data.recentOperationalActivity[0]?.date, "2026-08-01");
+    assert.equal(result.data.recentOperationalActivity[0]?.status, "in_progress");
+  }
+
+  const serviceCalls = scenarioState.calls.filter((call) => call.table === "services");
+  assert.equal(serviceCalls.length, 1);
+  assert.equal(
+    serviceCalls[0].selectColumns,
+    "id, service_number, service_title, event_start_date, status, created_at",
+  );
+  assert.deepEqual(serviceCalls[0].filters, [
+    { op: "eq", args: ["customer_id", "c-1"] },
+    { op: "is", args: ["deleted_at", null] },
+  ]);
+  assert.deepEqual(serviceCalls[0].orders, [
+    { column: "event_start_date", options: { ascending: true, nullsFirst: false } },
+    { column: "service_number", options: { ascending: true } },
+  ]);
+});
