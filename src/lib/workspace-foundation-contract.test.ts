@@ -56,6 +56,8 @@ test("Business Year scope is limited to temporal list routes and persists throug
   const preference = read("src/lib/business-year-preference.ts");
   const options = read("src/lib/business-year-options.ts");
   const layout = read("src/app/(dashboard)/layout.tsx");
+  const selectorData = read("src/components/i18n/BusinessYearSelectorData.tsx");
+  const topbar = read("src/components/layout/Topbar.tsx");
   assert.match(selector, /YEAR_SCOPED_LIST_PATHS/);
   assert.doesNotMatch(selector, /dashboard/);
   assert.doesNotMatch(selector, /startsWith/);
@@ -63,7 +65,15 @@ test("Business Year scope is limited to temporal list routes and persists throug
   assert.match(preference, /cookies\(\)/);
   assert.match(options, /event_start_date/);
   assert.match(options, /event_end_date/);
-  assert.match(layout, /getBusinessYearPreference/);
+  assert.match(layout, /Suspense/);
+  assert.match(layout, /BusinessYearSelectorData/);
+  assert.doesNotMatch(layout, /getBusinessYearOptions|getBusinessYearPreference/);
+  assert.match(selectorData, /Promise\.all/);
+  assert.match(selectorData, /getBusinessYearOptions/);
+  assert.match(selectorData, /getBusinessYearPreference/);
+  assert.match(selectorData, /BusinessYearSelector years=\{years\} preferredYear=\{preferredYear\}/);
+  assert.match(topbar, /businessYearSelector: ReactNode/);
+  assert.match(topbar, /isSignedIn \? businessYearSelector : null/);
   for (const file of [
     "src/app/(dashboard)/services/page.tsx",
     "src/app/(dashboard)/quotations/page.tsx",
@@ -113,7 +123,7 @@ test("list pages keep one clear control and preserve Business Year in URLs", () 
     assert.doesNotMatch(source, /resetLabel|onReset/);
   }
   assert.match(read("src/components/i18n/BusinessYearSelector.tsx"), /router\.replace/);
-  assert.match(read("src/app/(dashboard)/layout.tsx"), /getBusinessYearOptions/);
+  assert.match(read("src/app/(dashboard)/layout.tsx"), /BusinessYearSelectorData/);
   const yearSelector = read("src/components/i18n/BusinessYearSelector.tsx");
   assert.match(yearSelector, /params\.delete\("page"\)/);
   assert.match(yearSelector, /params\.delete\("month"\)/);
