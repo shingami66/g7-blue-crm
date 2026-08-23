@@ -130,7 +130,7 @@ async function readQuotations(customerId: string): Promise<Customer360Quotation[
 
 export const CUSTOMER_360_PAGE_SIZE = 500;
 const CUSTOMER_360_INVOICE_PREVIEW_LIMIT = 50;
-const CUSTOMER_360_INVOICE_FACT_COLUMNS = "id, invoice_number, invoice_type, status, grand_total, amount_paid, balance_due, issued_at, created_at";
+const CUSTOMER_360_INVOICE_FACT_COLUMNS = "id, invoice_number, service_id, invoice_type, status, grand_total, amount_paid, balance_due, issued_at, created_at, services(service_number,service_title)";
 
 export async function fetchAllCustomer360Pages<T>(
   buildQuery: () => { range: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }> },
@@ -171,20 +171,6 @@ function mapInvoiceRow(row: Record<string, unknown>): Customer360Invoice {
   };
 }
 
-async function readInvoicePreview(customerId: string): Promise<Customer360Invoice[]> {
-  const { data, error } = await createAdminClient()
-    .from("invoices")
-    .select("id, invoice_number, service_id, invoice_type, status, grand_total, amount_paid, balance_due, issued_at, created_at, services(service_number,service_title)")
-    .eq("customer_id", customerId)
-    .eq("is_deleted", false)
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(CUSTOMER_360_INVOICE_PREVIEW_LIMIT);
-  if (error) throw error;
-
-  return (data ?? []).map((row) => mapInvoiceRow(row as Record<string, unknown>));
-}
-
 async function readInvoiceFacts(customerId: string): Promise<Customer360Invoice[]> {
   const data = await fetchAllCustomer360Pages<Record<string, unknown>>(() => {
     return createAdminClient()
@@ -200,11 +186,11 @@ async function readInvoiceFacts(customerId: string): Promise<Customer360Invoice[
 }
 
 async function readInvoices(customerId: string): Promise<{ preview: Customer360Invoice[]; facts: Customer360Invoice[] }> {
-  const [preview, facts] = await Promise.all([
-    readInvoicePreview(customerId),
-    readInvoiceFacts(customerId),
-  ]);
-  return { preview, facts };
+  const facts = await readInvoiceFacts(customerId);
+  return {
+    preview: facts.slice(0, CUSTOMER_360_INVOICE_PREVIEW_LIMIT),
+    facts,
+  };
 }
 
 async function readPayments(customerId: string): Promise<Customer360Payment[]> {

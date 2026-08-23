@@ -374,7 +374,7 @@ test("3. getCustomer360 computes truthful live financial summary from all custom
 
   assert.equal(result.status, "ready");
   if (result.status === "ready") {
-    // The initial invoice table is a bounded preview; complete facts remain separate for summary calculation.
+    // The invoice table remains a bounded preview of the same ordered full read used for summary calculation.
     assert.equal(result.data.invoices.items.length, 50);
 
     // Soft-deleted invoices are completely excluded
@@ -386,11 +386,11 @@ test("3. getCustomer360 computes truthful live financial summary from all custom
     assert.equal(result.data.summary.outstandingBalance, 3600);
 
     const invoiceCalls = scenarioState.calls.filter((call) => call.table === "invoices");
-    const previewCall = invoiceCalls.find((call) => call.limitCount === 50);
-    assert.ok(previewCall);
-    assert.match(previewCall.selectColumns ?? "", /services\(service_number,service_title\)/);
+    assert.equal(invoiceCalls.length, 2);
     assert.equal(invoiceCalls.filter((call) => call.rangeLimits !== undefined).length, 2);
-    assert.ok(invoiceCalls.filter((call) => call.rangeLimits !== undefined).every((call) => !call.selectColumns?.includes("services(")));
+    assert.equal(invoiceCalls.some((call) => call.limitCount === 50), false);
+    assert.ok(invoiceCalls.every((call) => call.selectColumns?.includes("service_id")));
+    assert.ok(invoiceCalls.every((call) => call.selectColumns?.includes("services(service_number,service_title)")));
   }
 });
 
