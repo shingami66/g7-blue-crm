@@ -52,6 +52,10 @@ type QueryResponse = {
 };
 type BillingScenario = Record<TableName, QueryResponse> & {
   simulatedPageCeiling?: number;
+  summaryAggregateResponses?: {
+    authority: QueryResponse;
+    exposure: QueryResponse;
+  };
 };
 type InvoiceFilter =
   | { method: "eq" | "is"; column: string; value: unknown }
@@ -75,6 +79,32 @@ function currentScenario(): BillingScenario {
 
 function createFakeSupabase() {
   return {
+    rpc(functionName: string) {
+      const responses = currentScenario().summaryAggregateResponses;
+      if (functionName === "_p6_get_service_billing_authority") {
+        return Promise.resolve(
+          responses?.authority ?? {
+            data: [{ authority_status: "legacy_quotation", billing_ceiling: 100 }],
+            error: null,
+          },
+        );
+      }
+      if (functionName === "_p6_get_service_billing_exposure") {
+        return Promise.resolve(
+          responses?.exposure ?? {
+            data: [
+              {
+                exposure_status: "ready",
+                applicable_invoice_count: 0,
+                lifetime_invoice_total: 0,
+              },
+            ],
+            error: null,
+          },
+        );
+      }
+      return Promise.resolve({ data: null, error: { message: "Unknown RPC" } });
+    },
     from(table: TableName) {
       let queryRange: [number, number] | null = null;
       const query = {
@@ -323,19 +353,23 @@ test("Billing Summary requires both permissions before any financial query start
   assert.deepEqual(queryStarts, []);
 });
 
-test("Billing Summary returns only aggregates while reusing the applicable exposure predicate", async () => {
+test("Billing Summary returns only the approved aggregate DTO from bounded reads", async () => {
   startScenario({
-    approved_billing_scopes: { data: [approvedScope(100)], error: null },
-    invoices: {
-      data: [
-        invoice(30, "deposit", false, 1, { status: "issued" }),
-        invoice(20, "deposit", false, 2, { status: "draft", issued_at: null }),
-        invoice(15, "final", false, 3, { status: "approved", issued_at: null }),
-        invoice(25, "final", false, 4, { status: "voided" }),
-        invoice(10, "final", false, 5, { status: "cancelled" }),
-        invoice(5, "final", true, 6),
-      ],
-      error: null,
+    summaryAggregateResponses: {
+      authority: {
+        data: [{ authority_status: "active_abs", billing_ceiling: 100 }],
+        error: null,
+      },
+      exposure: {
+        data: [
+          {
+            exposure_status: "ready",
+            applicable_invoice_count: 3,
+            lifetime_invoice_total: 65,
+          },
+        ],
+        error: null,
+      },
     },
   });
 
@@ -351,24 +385,8 @@ test("Billing Summary returns only aggregates while reusing the applicable expos
     "billingCeiling",
     "remainingUninvoicedAmount",
   ]);
-  assert.deepEqual(selectedColumns.invoices, ["grand_total", "grand_total"]);
-  assert.deepEqual(selectedColumns.quotations, ["id, grand_total", "id, grand_total"]);
-  assert.deepEqual(selectedColumns.approved_billing_scopes, [
-    "status, accepted_grand_total, source_quotation_id, superseded_at, voided_at",
-    "status, accepted_grand_total, source_quotation_id, superseded_at, voided_at",
-  ]);
-  assert.deepEqual(invoiceFilters.slice(0, 4), [
-    { method: "eq", column: "service_id", value: "service-1" },
-    { method: "not", column: "is_deleted", operator: "is", value: true },
-    { method: "is", column: "voided_at", value: null },
-    {
-      method: "not",
-      column: "status",
-      operator: "in",
-      value: '("cancelled","voided")',
-    },
-  ]);
-  assert.equal(invoiceFilters.length, 8);
+  assert.deepEqual(selectedColumns, {});
+  assert.deepEqual(invoiceFilters, []);
 });
 
 test("Billing Summary projection matches canonical state calculations without identifiers", () => {
