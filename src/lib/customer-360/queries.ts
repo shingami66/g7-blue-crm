@@ -129,7 +129,7 @@ async function readQuotations(customerId: string): Promise<Customer360Quotation[
 }
 
 export const CUSTOMER_360_PAGE_SIZE = 500;
-const CUSTOMER_360_INVOICE_PREVIEW_LIMIT = 50;
+const CUSTOMER_360_INVOICE_PREVIEW_LIMIT = 10;
 const CUSTOMER_360_INVOICE_FACT_COLUMNS = "id, invoice_number, service_id, invoice_type, status, grand_total, amount_paid, balance_due, issued_at, created_at, services(service_number,service_title)";
 
 export async function fetchAllCustomer360Pages<T>(

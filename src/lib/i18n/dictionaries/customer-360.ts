@@ -8,7 +8,7 @@ export interface Customer360Dictionary {
   activity: { service: string; invoice: string; payment: string; amount: string };
   columns: { quotation: string; invoice: string; payment: string; date: string; status: string; amount: string; service: string; reference: string };
   states: { forbidden: string; error: string; empty: string; noServices: string; noUpcoming: string; noActivity: string };
-  links: { view: string; viewCustomer: string };
+  links: { view: string; viewAll: string; viewCustomer: string };
 }
 
 const en: Customer360Dictionary = {
@@ -19,7 +19,7 @@ const en: Customer360Dictionary = {
   activity: { service: "Service", invoice: "Invoice", payment: "Payment", amount: "Amount" },
   columns: { quotation: "Quotation", invoice: "Invoice", payment: "Payment", date: "Date", status: "Status", amount: "Amount", service: "Service", reference: "Reference" },
   states: { forbidden: "This information is not available for your role.", error: "This information could not be loaded.", empty: "No records found.", noServices: "No services found.", noUpcoming: "No upcoming services.", noActivity: "No recent activity." },
-  links: { view: "View", viewCustomer: "View customer" },
+  links: { view: "View", viewAll: "View all", viewCustomer: "View customer" },
 };
 
 const ar: Customer360Dictionary = {
@@ -30,7 +30,7 @@ const ar: Customer360Dictionary = {
   activity: { service: "خدمة", invoice: "فاتورة", payment: "دفعة", amount: "المبلغ" },
   columns: { quotation: "عرض السعر", invoice: "الفاتورة", payment: "الدفعة", date: "التاريخ", status: "الحالة", amount: "المبلغ", service: "الخدمة", reference: "المرجع" },
   states: { forbidden: "هذه المعلومات غير متاحة لدورك.", error: "تعذر تحميل هذه المعلومات.", empty: "لا توجد سجلات.", noServices: "لا توجد خدمات.", noUpcoming: "لا توجد خدمات قادمة.", noActivity: "لا توجد نشاطات حديثة." },
-  links: { view: "عرض", viewCustomer: "عرض العميل" },
+  links: { view: "عرض", viewAll: "عرض الكل", viewCustomer: "عرض العميل" },
 };
 
 export function getCustomer360Dictionary(locale: Locale): Customer360Dictionary { return locale === "ar" ? ar : en; }

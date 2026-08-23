@@ -374,8 +374,12 @@ test("3. getCustomer360 computes truthful live financial summary from all custom
 
   assert.equal(result.status, "ready");
   if (result.status === "ready") {
-    // The invoice table remains a bounded preview of the same ordered full read used for summary calculation.
-    assert.equal(result.data.invoices.items.length, 50);
+    // The invoice table remains a latest-10 preview of the same ordered full read used for summary calculation.
+    assert.equal(result.data.invoices.items.length, 10);
+    assert.deepEqual(
+      result.data.invoices.items.map((invoice) => invoice.id),
+      Array.from({ length: 10 }, (_, index) => `inv-live-${String(60 - index).padStart(3, "0")}`),
+    );
 
     // Soft-deleted invoices are completely excluded
     assert.equal(result.data.invoices.items.some((inv) => inv.id.startsWith("inv-deleted")), false);
@@ -389,6 +393,8 @@ test("3. getCustomer360 computes truthful live financial summary from all custom
     assert.equal(invoiceCalls.length, 2);
     assert.equal(invoiceCalls.filter((call) => call.rangeLimits !== undefined).length, 2);
     assert.equal(invoiceCalls.some((call) => call.limitCount === 50), false);
+    assert.ok(invoiceCalls.every((call) => call.orders[0]?.column === "created_at" && call.orders[0]?.options?.ascending === false));
+    assert.ok(invoiceCalls.every((call) => call.orders[1]?.column === "id" && call.orders[1]?.options?.ascending === false));
     assert.ok(invoiceCalls.every((call) => call.selectColumns?.includes("service_id")));
     assert.ok(invoiceCalls.every((call) => call.selectColumns?.includes("services(service_number,service_title)")));
   }
