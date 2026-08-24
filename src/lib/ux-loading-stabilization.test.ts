@@ -125,6 +125,7 @@ test("record detail navigation is a localized secondary slot", () => {
     ["services/[id]/page.tsx", "getServiceRecordNavigation"],
     ["invoices/[id]/page.tsx", "getInvoiceRecordNavigation"],
     ["quotations/[id]/page.tsx", "getQuotationRecordNavigation"],
+    ["suppliers/[id]/page.tsx", "getSupplierRecordNavigation"],
   ] as const;
 
   assert.match(slot, /loadNavigation: \(\) => Promise<RecordNavigationState>/);
@@ -147,6 +148,17 @@ test("record detail navigation is a localized secondary slot", () => {
     assert.match(source, new RegExp(`loadNavigation=\\{\\(\\) => ${loader}\\(`));
     assert.doesNotMatch(source, new RegExp(`const recordNavigation = await ${loader}`));
   }
+});
+
+test("Supplier navigation stays secondary while retaining deleted-state and return inputs", () => {
+  const supplier = read("src/app/(dashboard)/suppliers/[id]/page.tsx");
+
+  assert.match(supplier, /const includeDeleted = showDeleted === "true";/);
+  assert.match(supplier, /safeRecordReturnTo\(resolvedSearchParams\.returnTo, isDeleted \? "\/suppliers\?showDeleted=true" : "\/suppliers"\)/);
+  assert.match(supplier, /<Suspense[\s\S]*?<RecordNavigationPlaceholder[\s\S]*?state="loading"[\s\S]*?<RecordNavigationSlot/);
+  assert.match(supplier, /loadNavigation=\{\(\) => getSupplierRecordNavigation\(id, \{ isPreferred: supplier\.isPreferred, name: supplier\.name \}, includeDeleted\)\}/);
+  assert.match(supplier, /basePath="\/suppliers"[\s\S]*?returnTo=\{returnTo\}[\s\S]*?pendingLabel=\{dictionary\.list\.openingSupplier\}/);
+  assert.doesNotMatch(supplier, /const recordNavigation = await getSupplierRecordNavigation/);
 });
 
 test("detail pager guard blocks immediate competing navigation and unlocks after settlement", () => {
