@@ -65,23 +65,30 @@ export default async function ServiceDetailPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const locale = await getCurrentSessionEffectiveLocale();
-  const dictionary = getServicesDictionary(locale);
-  const sharedStates = getSharedUiStates(locale);
-  const { id } = await params;
-  const resolvedSearchParams = await searchParams;
+  const localePromise = getCurrentSessionEffectiveLocale();
+  const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const returnTo = safeRecordReturnTo(resolvedSearchParams.returnTo, "/services");
   const showDeleted = resolvedSearchParams?.showDeleted === "true";
   const showSupplierHistory =
     resolvedSearchParams?.showSupplierHistory === "true" || showDeleted;
   const requestedInvoiceAction = resolvedSearchParams?.invoiceAction;
   if (requestedInvoiceAction === "deposit" || requestedInvoiceAction === "final") {
+    await localePromise;
     redirect(`/services/${encodeURIComponent(id)}/billing?intent=${requestedInvoiceAction}`);
   }
 
-  try {
-    await requirePermission("services:read");
-  } catch (error) {
+  const [locale, [serviceAuthResult, serviceReadResult]] = await Promise.all([
+    localePromise,
+    Promise.allSettled([
+      requirePermission("services:read"),
+      getServiceByIdResult(id),
+    ]),
+  ]);
+  const dictionary = getServicesDictionary(locale);
+  const sharedStates = getSharedUiStates(locale);
+
+  if (serviceAuthResult.status === "rejected") {
+    const error = serviceAuthResult.reason;
     if (error instanceof UnauthorizedError) {
       redirect("/sign-in");
     }
@@ -103,7 +110,11 @@ export default async function ServiceDetailPage({
     );
   }
 
-  const serviceResult = await getServiceByIdResult(id);
+  if (serviceReadResult.status === "rejected") {
+    throw serviceReadResult.reason;
+  }
+
+  const serviceResult = serviceReadResult.value;
 
   if (serviceResult.status === "not_found") {
     notFound();

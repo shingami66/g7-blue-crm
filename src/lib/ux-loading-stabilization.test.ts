@@ -191,3 +191,20 @@ test("G7 bidi surfaces retain natural-language auto direction and structured LTR
   assert.match(serviceDetail, /dir="ltr"/);
   assert.match(customerList, /dir="auto"/);
 });
+
+test("Service primary readiness overlaps locale and read gates without leaving diagnostics", () => {
+  const serviceDetail = read("src/app/(dashboard)/services/[id]/page.tsx");
+
+  assert.match(serviceDetail, /const localePromise = getCurrentSessionEffectiveLocale\(\);/);
+  assert.match(
+    serviceDetail,
+    /const \[\{ id \}, resolvedSearchParams\] = await Promise\.all\(\[params, searchParams\]\);/,
+  );
+  assert.match(
+    serviceDetail,
+    /const \[locale, \[serviceAuthResult, serviceReadResult\]\] = await Promise\.all\([\s\S]*localePromise,[\s\S]*Promise\.allSettled\(\[[\s\S]*requirePermission\("services:read"\),[\s\S]*getServiceByIdResult\(id\),/,
+  );
+  assert.match(serviceDetail, /if \(serviceAuthResult\.status === "rejected"\)/);
+  assert.match(serviceDetail, /if \(serviceReadResult\.status === "rejected"\)/);
+  assert.match(serviceDetail, /data-p2-detail-primary-ready="true" className=/);
+});
