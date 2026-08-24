@@ -27,6 +27,8 @@ type Scenario = {
   tableData: Record<string, unknown[]>;
   currentUser?: MockUser | null;
   maxRowsPerResponse?: number;
+  deferCustomerLookup?: boolean;
+  releaseCustomerLookup?: () => void;
 };
 
 let activeScenario: Scenario | null = null;
@@ -172,7 +174,13 @@ function createMockQueryBuilder(table: string) {
     maybeSingle() {
       const source = scenario().tableData[table] ?? [];
       const filtered = applyFilterLogic(source, call.filters);
-      return Promise.resolve({ data: filtered[0] ?? null, error: null });
+      const response = { data: filtered[0] ?? null, error: null };
+      if (table === "customers" && scenario().deferCustomerLookup) {
+        return new Promise((resolve) => {
+          scenario().releaseCustomerLookup = () => resolve(response);
+        });
+      }
+      return Promise.resolve(response);
     },
     single() {
       const source = scenario().tableData[table] ?? [];
@@ -206,7 +214,7 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { getCustomer360, fetchAllCustomer360Pages } = await import("./queries.ts");
+const { getCustomer360, getCustomerProfile, fetchAllCustomer360Pages } = await import("./queries.ts");
 const { UnauthorizedError, ForbiddenError } = await import("../auth/errors.ts");
 
 const defaultAdminUser: MockUser = {
@@ -236,6 +244,8 @@ function resetScenario(overrides: Partial<Scenario> = {}): Scenario {
     tableData: initialTableData,
     currentUser,
     maxRowsPerResponse: overrides.maxRowsPerResponse,
+    deferCustomerLookup: overrides.deferCustomerLookup,
+    releaseCustomerLookup: undefined,
   };
   return activeScenario;
 }
@@ -310,6 +320,37 @@ test("2. getCustomer360 returns null financial summary metrics when invoices per
     assert.equal(result.data.summary.totalCollected, null);
     assert.equal(result.data.summary.outstandingBalance, null);
   }
+});
+
+test("Customer profile starts the row and metrics reads concurrently", async () => {
+  const scenarioState = resetScenario({
+    deferCustomerLookup: true,
+    tableData: {
+      customers: [
+        { id: "c-1", customer_number: "CUST-001", company: "Alpha", status: "active", is_deleted: false },
+      ],
+      customer_report_metrics: [
+        {
+          customer_id: "c-1",
+          services_count: 3,
+          quotations_count: 4,
+          approved_quotations_count: 1,
+          draft_quotations_count: 2,
+          total_quoted_amount: 500,
+        },
+      ],
+    },
+  });
+
+  const profilePromise = getCustomerProfile("c-1");
+  await new Promise<void>((resolve) => setImmediate(resolve));
+
+  assert.equal(scenarioState.calls.filter((call) => call.table === "customers").length, 1);
+  assert.equal(scenarioState.calls.filter((call) => call.table === "customer_report_metrics").length, 1);
+
+  scenarioState.releaseCustomerLookup?.();
+  const result = await profilePromise;
+  assert.equal(result.status, "ready");
 });
 
 test("3. getCustomer360 computes truthful live financial summary from all customer invoices, excluding draft and soft-deleted records", async () => {

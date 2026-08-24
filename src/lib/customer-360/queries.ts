@@ -47,24 +47,27 @@ async function readPermissionValue<T>(
 
 async function readCustomer(id: string) {
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+  const customerRead = supabase
     .from("customers")
     .select("*")
     .eq("id", id)
     .eq("is_deleted", false)
     .maybeSingle();
+  const metricsRead = supabase
+    .from("customer_report_metrics")
+    .select("services_count, quotations_count, approved_quotations_count, draft_quotations_count, total_quoted_amount")
+    .eq("customer_id", id)
+    .maybeSingle();
+  const [{ data, error }, { data: metricsData, error: metricsError }] = await Promise.all([
+    customerRead,
+    metricsRead,
+  ]);
 
   if (error) {
     console.error("[Customer360] Customer lookup failed:", error.message);
     return { status: "error" as const };
   }
   if (!data) return { status: "not_found" as const };
-
-  const { data: metricsData, error: metricsError } = await supabase
-    .from("customer_report_metrics")
-    .select("services_count, quotations_count, approved_quotations_count, draft_quotations_count, total_quoted_amount")
-    .eq("customer_id", id)
-    .maybeSingle();
 
   if (metricsError && metricsError.code !== "PGRST116") {
     console.error("[Customer360] Customer metrics unavailable:", metricsError.message);
