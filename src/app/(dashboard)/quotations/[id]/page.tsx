@@ -79,15 +79,17 @@ export default async function QuotationDetailPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ returnTo?: string }>;
 }) {
-  const { id } = await params;
-  const resolvedSearchParams = await searchParams;
+  const localePromise = getCurrentSessionEffectiveLocale();
+  const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const returnTo = safeRecordReturnTo(resolvedSearchParams.returnTo, "/quotations");
-  const locale = await getCurrentSessionEffectiveLocale();
-  const dictionary = getQuotationsDictionary(locale);
+  const pageReadAuthorizationResult = await requirePermission("quotations:read")
+    .then(() => ({ status: "fulfilled" as const }))
+    .catch((reason: unknown) => ({ status: "rejected" as const, reason }));
 
-  try {
-    await requirePermission("quotations:read");
-  } catch (error) {
+  if (pageReadAuthorizationResult.status === "rejected") {
+    const locale = await localePromise;
+    const dictionary = getQuotationsDictionary(locale);
+    const error = pageReadAuthorizationResult.reason;
     if (error instanceof UnauthorizedError) {
       redirect("/sign-in");
     }
@@ -127,7 +129,9 @@ export default async function QuotationDetailPage({
     throw error;
   }
 
-  const quotationResult = await getQuotationByIdResult(id);
+  const quotationResultPromise = getQuotationByIdResult(id);
+  const [locale, quotationResult] = await Promise.all([localePromise, quotationResultPromise]);
+  const dictionary = getQuotationsDictionary(locale);
 
   if (quotationResult.status === "not_found") {
     notFound();

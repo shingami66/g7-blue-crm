@@ -208,3 +208,21 @@ test("Service primary readiness overlaps locale and read gates without leaving d
   assert.match(serviceDetail, /if \(serviceReadResult\.status === "rejected"\)/);
   assert.match(serviceDetail, /data-p2-detail-primary-ready="true" className=/);
 });
+
+test("Quotation primary readiness overlaps locale with the auth-enforced read", () => {
+  const quotationDetail = read("src/app/(dashboard)/quotations/[id]/page.tsx");
+  const quotationQueries = read("src/lib/quotations/queries.ts");
+
+  assert.match(quotationDetail, /const localePromise = getCurrentSessionEffectiveLocale\(\);/);
+  assert.match(quotationDetail, /const \[\{ id \}, resolvedSearchParams\] = await Promise\.all\(\[params, searchParams\]\);/);
+  assert.match(quotationDetail, /const pageReadAuthorizationResult = await requirePermission\("quotations:read"\)/);
+  assert.match(quotationDetail, /if \(pageReadAuthorizationResult\.status === "rejected"\)/);
+  assert.match(quotationDetail, /const quotationResultPromise = getQuotationByIdResult\(id\);/);
+  assert.match(quotationDetail, /const \[locale, quotationResult\] = await Promise\.all\(\[localePromise, quotationResultPromise\]\);/);
+  assert.match(quotationDetail, /if \(error instanceof UnauthorizedError\)/);
+  assert.match(quotationDetail, /if \(error instanceof ForbiddenError\)/);
+  assert.match(quotationDetail, /data-p2-detail-primary-ready="true" className=/);
+  assert.match(quotationDetail, /<Suspense/);
+  assert.match(quotationQueries, /await requirePermission\("quotations:read"\);/);
+  assert.match(quotationDetail, /quotation\.items\.map/);
+});
