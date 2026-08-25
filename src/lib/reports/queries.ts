@@ -248,10 +248,18 @@ export async function readPayments(filters: ReportFilters): Promise<ReportPaymen
   }));
 }
 
-export async function readSupplierOperations(filters: ReportFilters, canReadCost: boolean) {
+export async function readSupplierOperations(
+  filters: ReportFilters,
+  canReadAllocationCost: boolean,
+  canReadBookingCost: boolean,
+) {
   type SupplierOperationRow = { service_id: string | null; estimated_total_cost?: unknown };
-  const allocationSelect = canReadCost ? "service_id, estimated_total_cost, status, created_at" : "service_id, status, created_at";
-  const bookingSelect = canReadCost ? "service_id, status, estimated_total_cost, created_at" : "service_id, status, created_at";
+  const allocationSelect = canReadAllocationCost
+    ? "service_id, estimated_total_cost, status, created_at"
+    : "service_id, status, created_at";
+  const bookingSelect = canReadBookingCost
+    ? "service_id, status, estimated_total_cost, created_at"
+    : "service_id, status, created_at";
 
   const [allocations, bookings] = await Promise.all([
     fetchAllPages<SupplierOperationRow>(() => {
@@ -281,7 +289,13 @@ export async function readSupplierOperations(filters: ReportFilters, canReadCost
     activeAllocations: activeAllocations.length,
     activeBookings: activeBookings.length,
     pendingServiceIds,
-    internalEstimatedCost: canReadCost ? [...activeAllocations, ...activeBookings].reduce((total, row) => total + numberValue(row.estimated_total_cost), 0) : null,
+    internalEstimatedCost:
+      canReadAllocationCost || canReadBookingCost
+        ? [
+            ...(canReadAllocationCost ? activeAllocations : []),
+            ...(canReadBookingCost ? activeBookings : []),
+          ].reduce((total, row) => total + numberValue(row.estimated_total_cost), 0)
+        : null,
   };
 }
 
@@ -289,9 +303,12 @@ export async function getReportsCenterData(filters: ReportFilters = {}): Promise
   await requirePermission("dashboard:read");
   const supplierSectionPromise = (async () => {
     const supplierAllowed = (await checkPermission("supplier_allocations:read")) && (await checkPermission("supplier_bookings:read"));
-    const canReadSupplierCost = supplierAllowed && (await checkPermission("supplier_allocations:read_cost"));
+    const canReadAllocationCost = supplierAllowed && (await checkPermission("supplier_allocations:read_cost"));
+    const canReadBookingCost = supplierAllowed && (await checkPermission("supplier_bookings:read_cost"));
     const section = supplierAllowed
-      ? await readSection("supplier_allocations:read", () => readSupplierOperations(filters, canReadSupplierCost))
+      ? await readSection("supplier_allocations:read", () =>
+          readSupplierOperations(filters, canReadAllocationCost, canReadBookingCost),
+        )
       : { status: "forbidden" as const, data: { activeAllocations: 0, activeBookings: 0, pendingServiceIds: [], internalEstimatedCost: null } };
     return section;
   })();

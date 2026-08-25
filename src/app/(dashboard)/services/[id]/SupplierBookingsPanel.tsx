@@ -62,7 +62,7 @@ export default function SupplierBookingsPanel({
   );
   const activeBookingByAllocationId = new Map(
     bookings
-      .filter((booking) => booking.status !== "cancelled")
+      .filter((booking) => !booking.isDeleted && booking.status !== "cancelled")
       .map((booking) => [booking.sourceAllocationId, booking])
   );
   const canCreateForService = canCreate && serviceStatus !== "Completed" && serviceStatus !== "Cancelled";

@@ -18,7 +18,7 @@ import type {
 
 export async function getSupplierBookingsByServiceId(
   serviceId: string,
-  options?: { onlyActive?: boolean }
+  options?: { includeDeleted?: boolean; onlyActive?: boolean }
 ): Promise<SupplierBookingsListResult> {
   await requirePermission("supplier_bookings:read");
   const canReadCost = await checkPermission("supplier_bookings:read_cost");
@@ -28,8 +28,11 @@ export async function getSupplierBookingsByServiceId(
     let query = supabase
       .from("supplier_bookings")
       .select("*, supplier:suppliers(name, display_name, legal_name, contact)")
-      .eq("service_id", serviceId)
-      .eq("is_deleted", false);
+      .eq("service_id", serviceId);
+
+    if (!options?.includeDeleted) {
+      query = query.eq("is_deleted", false);
+    }
 
     if (options?.onlyActive) {
       query = query.neq("status", "cancelled");

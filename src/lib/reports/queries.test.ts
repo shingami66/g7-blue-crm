@@ -608,3 +608,71 @@ test("9. getReportsCenterData returns forbidden when all salesBilling permission
   assert.equal(data.salesBilling.data.quotationCount, null);
   assert.equal(data.salesBilling.data.invoicedValue, null);
 });
+
+test("10. supplier cost reads remain isolated for asymmetric permissions", async () => {
+  const cases = [
+    {
+      name: "allocation cost only",
+      allocationCost: true,
+      bookingCost: false,
+      expectedCost: 100,
+      allocationIncludesCost: true,
+      bookingIncludesCost: false,
+    },
+    {
+      name: "booking cost only",
+      allocationCost: false,
+      bookingCost: true,
+      expectedCost: 200,
+      allocationIncludesCost: false,
+      bookingIncludesCost: true,
+    },
+    {
+      name: "both denied",
+      allocationCost: false,
+      bookingCost: false,
+      expectedCost: null,
+      allocationIncludesCost: false,
+      bookingIncludesCost: false,
+    },
+    {
+      name: "both allowed",
+      allocationCost: true,
+      bookingCost: true,
+      expectedCost: 300,
+      allocationIncludesCost: true,
+      bookingIncludesCost: true,
+    },
+  ];
+
+  for (const testCase of cases) {
+    const scenarioState = resetScenario({
+      permissions: {
+        "dashboard:read": true,
+        "supplier_allocations:read": true,
+        "supplier_bookings:read": true,
+        "supplier_allocations:read_cost": testCase.allocationCost,
+        "supplier_bookings:read_cost": testCase.bookingCost,
+      },
+      tableData: {
+        service_supplier_allocations: [
+          { service_id: "service-1", estimated_total_cost: 100, status: "draft", created_at: "2026-01-01", is_deleted: false },
+        ],
+        supplier_bookings: [
+          { service_id: "service-1", estimated_total_cost: 200, status: "draft", created_at: "2026-01-01", is_deleted: false },
+        ],
+      },
+    });
+
+    const data = await getReportsCenterData({ year: 2026 });
+    const allocationCall = scenarioState.calls.find((call) => call.table === "service_supplier_allocations");
+    const bookingCall = scenarioState.calls.find((call) => call.table === "supplier_bookings");
+
+    assert.equal(data.supplierOperations.status, "ready", testCase.name);
+    assert.equal(data.supplierOperations.data.internalEstimatedCost, testCase.expectedCost, testCase.name);
+    assert.ok(allocationCall, testCase.name);
+    assert.ok(bookingCall, testCase.name);
+    assert.equal(allocationCall.selectColumns?.includes("estimated_total_cost"), testCase.allocationIncludesCost, testCase.name);
+    assert.equal(bookingCall.selectColumns?.includes("estimated_total_cost"), testCase.bookingIncludesCost, testCase.name);
+  }
+});

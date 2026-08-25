@@ -420,6 +420,7 @@ async function ServiceSecondarySections({
         : Promise.resolve(null),
       canReadSupplierBookings
         ? getSupplierBookingsByServiceId(service.id, {
+            includeDeleted: showSupplierHistory,
             onlyActive: !showSupplierHistory,
           })
         : Promise.resolve(null),
@@ -490,7 +491,7 @@ async function ServiceSecondarySections({
   const supplierAllocations = supplierAllocationsResult?.allocations ?? null;
   const supplierBookings = supplierBookingsResult?.bookings ?? null;
   const activeBookingAllocationIds = (supplierBookings ?? [])
-    .filter((booking) => booking.status !== "cancelled")
+    .filter((booking) => !booking.isDeleted && booking.status !== "cancelled")
     .map((booking) => booking.sourceAllocationId);
 
   return (
