@@ -1,7 +1,7 @@
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Resolve the installed repository version and read the relevant bundled guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
 # G7 BLUE CRM — Agent Project Guidance
@@ -19,7 +19,9 @@ Owner request
 → logical Writer-lane repair for confirmed in-scope findings
 → Luna revalidation and bounded rereview.
 
-The Writer may run only task-authorized local focused tests, TypeScript, lint, or related validation inside the named slice; it is not the independent validator or final reviewer. The Writer never stages, commits, pushes, applies SQL, deploys, or changes production. Luna owns independent validation, evidence, and the final verdict. A same logical Writer does not require the same provider conversation: prefer resumption, but after a classified authentication, session, transport, or comparable environment failure, preserve work, avoid repeated discovery, ensure no prior mutating Writer remains active when checkable, and start one fresh bounded session with a Recovery Capsule. Never run two mutating Writers concurrently. Do not make `--dangerously-skip-permissions` a default; it requires explicit Owner authorization for the affected task only. Never expose authentication material or substitute an unapproved implementer. The model is selected by the task or current AGY configuration; this standing file does not freeze a model version.
+The Controller owns routine discovery and compiles compact evidence capsules plus task-specific delta prompts; standing repository law remains here and in the agent-control skill rather than being repeated in every routine prompt.
+
+The Writer may inspect and modify directly affected files inside the task-authorized working boundary, including relevant tests, local types/contracts, and direct callers/consumers required to complete the task. Exact-file allowlists remain binding when the task explicitly specifies them or when governance-sensitive, database/schema/RLS/RPC/migration, security, financial-authority, protected-infrastructure, or other materially high-risk work makes a broader envelope unsafe. A directly affected local file inside the authorized boundary is not by itself a HOLD or new Owner-approval condition; stop before a protected, materially excluded, destructive, database, deployment, production, or genuinely scope-expanding mutation. The Writer may run only task-authorized local focused tests, TypeScript, lint, or related validation inside that boundary; it is not the independent validator or final reviewer. The Writer never stages, commits, pushes, applies SQL, deploys, or changes production. Luna owns independent validation, evidence, and the final verdict. A same logical Writer does not require the same provider conversation: prefer resumption, but after a classified authentication, session, transport, or comparable environment failure, preserve work, avoid repeated discovery, ensure no prior mutating Writer remains active when checkable, and start one fresh bounded session with a Recovery Capsule. Never run two mutating Writers concurrently. Do not make `--dangerously-skip-permissions` a default; it requires explicit Owner authorization for the affected task only. Never expose authentication material or substitute an unapproved implementer. The model is selected by the task or current AGY configuration; this standing file does not freeze a model version.
 
 ## GOVERNANCE PRECEDENCE AND SAFETY
 
@@ -34,7 +36,7 @@ The Writer may run only task-authorized local focused tests, TypeScript, lint, o
 5. Task prompt
    Defines task-specific scope only.
 
-A task prompt must not weaken the preserved product, security, database, Git, or deployment safeguards. A clear bounded Owner instruction authorizes ordinary in-scope work; task-specific instructions may add tighter restrictions. Execution-mode labels remain available for specialized operations but are not required for ordinary bounded work.
+A task prompt must not weaken the preserved product, security, database, Git, or deployment safeguards. A clear bounded Owner instruction authorizes ordinary in-scope work; the task boundary may be defined by the primary feature/domain/behavior, directly affected implementation, relevant tests, local types/contracts, and direct callers/consumers. Task-specific instructions may add tighter restrictions, including exact-file allowlists. Execution-mode labels remain available for specialized operations but are not required for ordinary bounded work.
 
 ## Project Identity
 
@@ -76,8 +78,9 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 
 ## Working Workflow
 
-- **Bounded authorization:** A clear Owner request controls the named repository, files, systems, exclusions, and actions. Do not widen scope by inference.
-- Luna keeps one logical Writer lane per mutation slice and allows an in-scope inner validation/repair loop to remain in the same Owner-authorized task; a provider conversation may be replaced only through classified session-resilient recovery.
+- **Bounded authorization:** A clear Owner request defines the evidence-driven working boundary: named repository, primary feature/domain/behavior, directly affected implementation, relevant tests, local types/contracts, direct callers/consumers, systems, exclusions, and actions. Ordinary bounded work may inspect or modify directly affected local files inside that boundary; exact-file allowlists remain binding when explicitly specified or required by risk. Do not widen scope by inference.
+- Luna keeps one logical Writer lane per mutation slice and allows the bounded inner loop (inspect → edit → focused validation → diagnose → repair → repeat until locally green → report) to remain in the same Owner-authorized task; a provider conversation may be replaced only through classified session-resilient recovery.
+- Ordinary failing tests, unexpected code structure, and directly affected local callers, tests, or types are implementation work inside that boundary, not automatic HOLD conditions.
 - Classify OAuth/login prompts, permission denials, timeouts, provider transport failures, expired conversations, and wrapper failures before model escalation; do not label them model-capability failures without evidence.
 - Verify the task-supplied repository and preserve unrelated dirty state. Do not silently switch checkouts, clean files, or merge worktrees.
 - Use proportional validation: affected focused tests, typecheck, lint, and diff checks; add a build or manual smoke only when risk or the task requires it.

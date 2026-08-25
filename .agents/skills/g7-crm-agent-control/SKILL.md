@@ -10,7 +10,7 @@ Luna is the Controller. A clear, bounded Owner request authorizes ordinary in-sc
 ## Standing workflow rules
 
 - Keep DEV and DEMO distinct. Do not present mock data, local-only checks, or a development server as live or production evidence.
-- Follow the task's named repository, files, systems, exclusions, and validation. Do not widen scope by inference.
+- Follow the task's named repository, evidence-driven working boundary, systems, exclusions, and validation. For ordinary LOCAL or CONNECTED work, the boundary may cover the primary feature/domain/behavior, directly affected implementation, relevant tests, local types/contracts, and direct callers/consumers; do not widen it by inference.
 - Browser or manual smoke is human-owned unless the task explicitly authorizes the agent to run it. Never claim human smoke evidence that was not provided.
 - Never read, print, modify, or expose environment files, secrets, credentials, tokens, private logs, or connection strings.
 - SQL, Supabase, migrations, RLS, RPCs, grants, triggers, schema changes, and database writes require explicit task authorization.
@@ -21,7 +21,7 @@ Luna is the Controller. A clear, bounded Owner request authorizes ordinary in-sc
 ## Controller, Writer, and Reviewer
 
 - Luna owns orchestration, validation, evidence, and the final verdict.
-- A delegated Gemini Writer may modify only the exact allowed files and, when the task authorizes it, owns a bounded local inner loop: inspect, edit, run focused tests/TypeScript/lint or other relevant local validation, diagnose ordinary failures, repair, and repeat until locally green. The Writer is not the independent validator or final reviewer.
+- A delegated Gemini Writer may inspect and modify directly affected files inside the task-authorized working boundary and owns a bounded local inner loop: inspect, edit, run focused tests/TypeScript/lint or other relevant local validation, diagnose ordinary failures, repair, and repeat until locally green. An additional directly affected local file inside that boundary is not by itself a HOLD or new Owner-approval condition. Ordinary failing tests, unexpected code structure, and directly affected local callers, tests, or types are implementation work inside that loop, not HOLD conditions by themselves. Exact-file allowlists remain binding when the task explicitly specifies them or when governance-sensitive, database/schema/RLS/RPC/migration, security, financial-authority, protected-infrastructure, or other materially high-risk work makes a broader envelope unsafe. The Writer is not the independent validator or final reviewer.
 - Keep one logical Writer lane per mutation slice. Prefer the same provider conversation for context, but a same logical Writer does not require the same conversation ID. If continuation fails with a classified authentication, session, transport, or comparable environment failure, preserve successful work, avoid repeated discovery, ensure no prior mutating Writer remains active when checkable, and start one fresh bounded session with a Recovery Capsule. Never run two mutating Writers concurrently.
 - Use a separate native Codex Reviewer in read-only, findings-only mode when the task or risk warrants independent review. The Reviewer never edits, stages, commits, pushes, applies SQL, or deploys.
 - For OCR-assisted review, resolve rules in Alibaba Open Code Review delegation mode for the exact files under review. Do not configure an external OCR LLM provider or model.
@@ -37,7 +37,8 @@ Luna is the Controller. A clear, bounded Owner request authorizes ordinary in-sc
 
 ## Scope and evidence
 
-- The task prompt supplies the active scope. A mode label may describe a specialized operation, but ordinary bounded work does not require one.
+- The Controller owns routine discovery and supplies compact evidence capsules plus the task-specific delta. A mode label may describe a specialized operation, but ordinary bounded work does not require one. Routine prompts should not repeat standing repository law unless they add a special exception, address a material risk directly, or require a high-risk gate.
+- Targeted official-source research is allowed inside an authorized engineering task when current framework, provider, API, security, compatibility, or version behavior materially affects correctness; research informs implementation but does not widen authority. For Next.js work, resolve the installed repository version and read the relevant bundled documentation before coding.
 - Guard/context files may be changed only when the task names the exact files and purpose. `GUARD_EDIT_ONLY` remains an optional compatibility label for a deliberately authorized guard-file edit, not a prerequisite for ordinary work.
 - Do not silently switch repositories, clean unrelated dirty state, or alter inherited/protected files outside the named scope.
 - Inspect actual status and diffs before and after edits. For untracked files, inspect their actual content before claiming correctness.
@@ -89,15 +90,17 @@ Operation labels are available for tasks that benefit from a sharper boundary. T
 
 ## Minimum task boundaries
 
-For implementation, review, or cleanup work, confirm the named repository and exact allowed files, inspect the starting state, make only in-scope changes, and run the validation supported by the task and risk. Stop when a requested action would widen scope, expose protected data, mutate an unauthorized system, or cross a separate Owner gate.
+For implementation, review, or cleanup work, confirm the named repository and task-authorized working boundary, inspect the starting state, make only in-scope changes, and run the validation supported by the task and risk. Stop when a requested action would cross a protected or materially excluded boundary, expose protected data, mutate an unauthorized system, or genuinely expand scope. Exact-file allowlists remain binding for explicitly file-scoped or high-risk work.
 
 ## Genuine HOLD conditions
 
 Return `TASK RESULT: HOLD` only for a real blocker such as:
 
-- scope conflict, protected-file mutation, or unexpected in-scope file change;
-- failed required validation or missing evidence for a claim;
-- unauthorized database, Git, deployment, production, or package action;
+- missing or contradictory authority, or an unresolved material Owner decision;
+- a protected-file, destructive, database, deployment, production, or genuinely scope-expanding action that is outside the applicable task/authority boundary or requires a separate unresolved authority gate;
+- required unavailable state with no safe bounded continuation;
+- failed required validation after the authorized diagnose/repair loop, or missing evidence for a claim;
+- unauthorized Git or package action;
 - attempted protected-data access or secret exposure;
 - unavailable required independent review when the task explicitly requires it;
 - an execution failure that prevents the authorized workflow from completing.
