@@ -29,16 +29,17 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
   let cities: string[] = [];
   let canWrite = false;
   let canExport = false;
+  let clerkUser: Awaited<ReturnType<typeof currentUser>> = null;
   let generatedBy = dictionary.list.report.chrome.systemGenerated;
 
   try {
-    [result, cities, canWrite, canExport] = await Promise.all([
+    [result, cities, canWrite, canExport, clerkUser] = await Promise.all([
       getCustomersList(query),
       getCustomerCities(),
       checkPermission("customers:write"),
       checkPermission("customers:export"),
+      currentUser(),
     ]);
-    const clerkUser = await currentUser();
     if (clerkUser) {
       const email = clerkUser.emailAddresses[0]?.emailAddress;
       const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ");
