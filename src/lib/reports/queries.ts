@@ -287,7 +287,17 @@ export async function readSupplierOperations(filters: ReportFilters, canReadCost
 
 export async function getReportsCenterData(filters: ReportFilters = {}): Promise<ReportsCenterData> {
   await requirePermission("dashboard:read");
-  const [quotations, invoices, services, customers, payments] = await Promise.all([
+  const supplierSectionPromise = (async () => {
+    const supplierAllowed = (await checkPermission("supplier_allocations:read")) && (await checkPermission("supplier_bookings:read"));
+    const canReadSupplierCost = supplierAllowed && (await checkPermission("supplier_allocations:read_cost"));
+    const section = supplierAllowed
+      ? await readSection("supplier_allocations:read", () => readSupplierOperations(filters, canReadSupplierCost))
+      : { status: "forbidden" as const, data: { activeAllocations: 0, activeBookings: 0, pendingServiceIds: [], internalEstimatedCost: null } };
+    return section;
+  })();
+
+  const [supplierSection, quotations, invoices, services, customers, payments] = await Promise.all([
+    supplierSectionPromise,
     readSection("quotations:read", () => readQuotations(filters)),
     readSection("invoices:read", () => readInvoices(filters)),
     readSection("services:read", () => readServices(filters)),
@@ -307,13 +317,6 @@ export async function getReportsCenterData(filters: ReportFilters = {}): Promise
     quotations: quotationRows,
     services: serviceRows,
   });
-
-  const supplierAllowed = (await checkPermission("supplier_allocations:read")) && (await checkPermission("supplier_bookings:read"));
-  const canReadSupplierCost = supplierAllowed && (await checkPermission("supplier_allocations:read_cost"));
-  const supplierSection = supplierAllowed
-    ? await readSection("supplier_allocations:read", () => readSupplierOperations(filters, canReadSupplierCost))
-    : { status: "forbidden" as const, data: { activeAllocations: 0, activeBookings: 0, pendingServiceIds: [], internalEstimatedCost: null } };
-
   const salesBillingStatus: ReportsSectionStatus =
     quotations.status === "error" && invoices.status === "error"
       ? "error"
