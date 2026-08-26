@@ -1,56 +1,24 @@
 # Clerk Authentication Foundation
 
-## Overview
-G7 BLUE CRM uses [Clerk](https://clerk.com/) for modern, secure authentication. The integration has been specifically designed to safeguard the local environment and protect against unauthorized access while preserving the original styling of the application.
+## Current contract
 
-## Environment Variables
-The following environment variables are required in `.env.local`:
+G7 BLUE CRM uses Clerk as its authentication and identity authority. Application roles and permissions are resolved separately from Clerk through the server-side `app_users` lookup; UI hiding is never authorization.
 
-```env
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
-```
+## Environment boundary
 
-**Where to get these keys:**
-1. Log into the Clerk Dashboard.
-2. Select your application instance.
-3. Navigate to **API Keys** in the sidebar.
-4. Copy the "Publishable key" and "Secret key".
+Runtime configuration is validated in `src/lib/env.ts`. Public Clerk/Supabase configuration may be used by the corresponding browser or server client; `CLERK_SECRET_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are server-only.
 
-## Security Rules
-> [!WARNING]
-> **Never commit `.env.local`** to Git. It contains sensitive secrets.
+Never commit `.env.local`, print credential values, or expose tokens, signing material, connection strings, or other protected authentication data. This document does not claim that credential-dependent Clerk runtime smoke has been performed.
 
-> [!CAUTION]
-> **Supabase Service Role Bypass:**
-> The `SUPABASE_SERVICE_ROLE_KEY` bypasses all Row Level Security (RLS) rules in the database. Because of this, it MUST stay strictly server-side.
 
-> [!IMPORTANT]
-> **Server Action Authentication:**
-> Before using the Supabase admin client within any future Next.js Server Actions or API routes, you MUST explicitly verify the user's authentication state using Clerk's `auth()` function.
+## Server-side authorization
 
-## Protected Routes
-The application uses Next.js middleware (`src/proxy.ts` due to local project routing requirements) and `@clerk/nextjs/server` to protect paths.
+- Server actions and server queries must call `requireUser`, `requirePermission`, or an equivalent server-side check before protected work.
+- Missing authentication, missing `app_users` records, inactive users, permission failures, and auth/database dependency failures remain fail-closed with safe user-facing errors and bounded diagnostics.
+- The Supabase service-role client bypasses RLS and must remain server-only.
 
-Currently, the following route patterns require authentication:
-- `/dashboard(.*)`
-- `/customers(.*)`
-- `/quotations(.*)`
-- `/invoices(.*)`
-- `/projects(.*)`
-- `/suppliers(.*)`
-- `/payments(.*)`
-- `/settings(.*)`
-- `/api(.*)` *(Except `/api/health/db` for database connectivity testing)*
+## Protected routes
 
-Unauthenticated users accessing these routes will be automatically redirected to `/sign-in`.
+`src/proxy.ts` protects dashboard, customer, quotation, invoice, project, supplier, payment, service, settings, admin, and API route patterns. The read-only `/api/health/db` endpoint and Clerk webhook route are explicit exceptions; the webhook performs its own signature verification. Unauthenticated protected-page requests are redirected to `/sign-in`, while protected API failures remain safe and fail-closed.
 
-## Legacy /login Route
-The legacy `/login` route has been preserved as a server-side redirect (`redirect("/sign-in")`). This approach was chosen to ensure any existing hardcoded links, external references, or bookmarks do not break, while consolidating the UI to a single robust authentication system via Clerk.
-
-## MCP Usage
-The Clerk MCP was consulted strictly in a read-only capacity. No resources were mutated, and no keys or tokens were logged or exposed during configuration.
+The legacy `/login` route redirects to `/sign-in` so existing links and bookmarks continue to resolve.

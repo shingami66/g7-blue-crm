@@ -1,20 +1,25 @@
 # Core Security Foundation
 
-This document explains the foundation for integrating Clerk authentication with our Supabase PostgreSQL database.
+This document records the current authentication, authorization, and audit boundary for G7 BLUE CRM.
 
-## Auth Architecture
-- We use **Clerk** for authentication, not Supabase Auth.
-- We completely bypass the Supabase Auth system (`auth.users`).
-- There is no `profiles` table. User data and roles are stored in the `app_users` table, which is keyed directly to the Clerk User ID.
+## Authentication and application identity
 
-## The `app_users` Table
-The `app_users` table maps Clerk users to the application's RBAC system.
-- `clerk_user_id`: A text column that stores the Clerk user ID (e.g. `user_2...`).
-- `role`: Defines the user's role in the application (`admin`, `manager`, `sales`, `operations`, `accountant`, `viewer`).
-- RLS is enabled on this table, but there are no broad public policies. Access to `app_users` is performed server-side only using the Supabase Admin Client.
+- Clerk is the authentication authority; the application does not use Supabase Auth or `auth.users`.
+- `app_users` maps Clerk identities to application roles: `admin`, `manager`, `sales`, `operations`, `accountant`, and `viewer`.
+- Application roles and permissions are resolved server-side. Client-side visibility is not authorization.
 
-## Audit Trails
-To maintain an audit trail without relying on Supabase `auth.users`:
-- Every major business table has `created_by` and `updated_by` text columns.
-- These columns store the Clerk `userId` directly as a string. No foreign keys are used.
-- The `audit_logs` table also records the Clerk `userId` directly in its `user_id` text column.
+## Server-side authorization and data access
+
+- Protected server actions and queries use `requireUser`, `requirePermission`, or an equivalent server-side check.
+- Missing authentication, missing or inactive `app_users` records, permission failures, and dependency failures remain fail-closed with safe user-facing errors and bounded diagnostics.
+- The Supabase service-role client is server-only and bypasses RLS; it is not a browser or client-component data-access path.
+- Do not expose or persist secrets, tokens, signing material, connection strings, or raw provider/database error details.
+
+## Audit attribution
+
+- Security-relevant mutations preserve structured audit evidence and actor attribution through the existing `created_by`, `updated_by`, and `audit_logs.user_id` fields where applicable.
+- Audit records do not authorize a caller or replace server-side permission checks.
+
+## Deployment boundary
+
+DEV/DEMO schema, RLS, and runtime verification do not certify production deployment, production operations, or production authority.

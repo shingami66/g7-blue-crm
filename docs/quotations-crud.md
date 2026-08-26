@@ -2,7 +2,9 @@
 
 ## Overview
 
-Quotations are the primary document for client proposals at G7 Blue. Each quotation contains header-level metadata (client, event, dates) and one or more line items (services, rentals, equipment).
+Quotations are Service-scoped commercial documents for client proposals. Each quotation belongs to one Service, a Service may have multiple quotations, and customer identity is derived server-side from that Service where the relationship is used.
+
+The current item model is flat: each item has a description, optional details and category, quantity, unit price, calculated line VAT amount, and calculated line net total. It does not currently define packages, groups, optional alternatives, included components, units of measure, or mixed package/item pricing as separate persisted semantics. Those concepts remain subject to the Quotation Commercial Model Field-Evidence Gate.
 
 ## Quotation Number Format
 
@@ -75,11 +77,18 @@ Quotation Detail may show a **display-only** billing-authority card (`QuotationB
 
 | Status    | Edit Items/Totals | Edit Metadata | Soft Delete |
 |-----------|-------------------|---------------|-------------|
-| draft     | ✓                 | ✓ (inc. customer) | ✓           |
+| draft     | ✓                 | ✓ (permitted quotation metadata only) | ✓           |
 | sent      | ✗                 | ✗             | ✓           |
 | approved  | ✗                 | ✗             | ✗           |
 | rejected  | ✗                 | ✗             | ✓           |
 | expired   | ✗                 | ✗             | ✓           |
+
+## Approval and billing handoff
+
+- Create and update require `quotations:write` plus the Service read boundary; approval and rejection require `quotations:approve`.
+- Approval is an atomic server-side contract that moves the quotation to `approved` and activates the internal Approved Billing Scope result when the contract succeeds. A successful approval is not a client-side status toggle.
+- Approved quotation authority feeds the Service billing / Approved Billing Scope handoff. Invoice mutation remains on the Service billing surface, and active Approved Billing Scope authority or proven legacy fallback determines the billing ceiling.
+- The approval contract and financial lifecycle preserve replay safety, safe error mapping, and post-approval restrictions; this document does not reopen those contracts.
 
 ## Database Design
 
@@ -89,7 +98,8 @@ Quotation Detail may show a **display-only** billing-authority card (`QuotationB
 |--------------------|----------------|--------------------------------------------|
 | id                 | uuid           | Primary key                                |
 | quotation_number   | text           | Unique, auto-generated (`QT-YYYY-XXXX`)   |
-| customer_id        | uuid           | FK → customers                             |
+| service_id         | uuid           | Required FK → services; quotation authority is Service-scoped |
+| customer_id        | uuid           | Related customer/reporting field; derived server-side from Service |
 | event              | text           | Event name                                 |
 | date               | date           | Issue date                                 |
 | valid_until        | date           | Expiry date                                |
@@ -146,6 +156,8 @@ The `quotations.vat_rate` column captures the exact VAT percentage used when the
 
 Current quotation VAT is zero. No VAT 15%, VAT number, Tax Invoice, ZATCA, FATOORA, QR, or XML behavior is enabled while Company Settings remains `not_registered`.
 
+The current approval-to-Approved-Billing-Scope contract rejects positive quotation discounts with `scope_discount_not_supported`; quotation discount math remains documented here, but discounted approved billing is not a current supported authority path.
+
 ### Future Registered-Mode Formula
 
 The generic percentage formula below is future registered-mode guidance only; it does not describe the current `not_registered` quotation behavior.
@@ -187,7 +199,7 @@ All quotation creation and editing is performed through PostgreSQL RPC functions
 - `p_items` is a JSON array with at least one element
 - `event` is required
 - `date` is required
-- `customer_id` is required, exists, and is not deleted
+- `service_id` is required, identifies an existing eligible Service, and supplies the related customer identity server-side
 - `qty > 0` per item
 - `unit_price >= 0` per item
 - `discount >= 0` and `discount <= subtotal`
@@ -207,7 +219,7 @@ All quotation creation and editing is performed through PostgreSQL RPC functions
 - Status must be `draft` (non-draft quotations are locked)
 
 **Behavior:**
-- Draft update may edit customer metadata
+- Draft update may edit permitted quotation metadata and items; Service linkage and derived customer identity remain server-validated.
 - If `vat_rate` is omitted, it keeps its existing value
 - Deletes all existing items for the quotation
 - Re-inserts new items using the same two-pass approach
@@ -230,6 +242,7 @@ Access is restricted to `service_role` only:
 |---------------------|--------------------------------|
 | `quotations:read`   | admin, manager, sales, operations, accountant, viewer |
 | `quotations:write`  | admin, manager, sales          |
+| `quotations:approve` | admin, manager                 |
 
 All Server Actions call `requirePermission()` from `src/lib/auth/permissions.ts` before invoking RPC.
 

@@ -17,7 +17,7 @@ Customer Profile -> Service / Booking -> Quotation -> Invoice -> Payment
 - **Explicit Service lifecycle:** Guarded service-role-only RPCs implement `Deposit Paid -> In Progress`, `In Progress -> Completed`, and reasoned, exposure-gated cancellation from `Inquiry`, `Quoted`, or `Approved`; ordinary Service edit does not expose arbitrary status selection.
 - **Internal ABS / Billing Summary:** Normal Service UX presents Billing Summary and invoice actions; Approved Billing Scope remains an internal billing-control layer. Void is available only on the secondary technical scope surface with structured reason/note, permission, lifecycle, zero-invoice-exposure, and zero-payment-history guards. Supersede remains a separate deferred workflow.
 - **Activity and completed billing:** Service Activity History records evidence-based status and deposit-settlement events, and Completed Services may create a remaining Final Invoice while Cancelled Services cannot create Deposit or Final invoices.
-- **Delivered V1 milestone:** The six-commit milestone ending at `cf4d4aec7b3d2db1953141f2a1bfa435ccbafe70` includes migrations `20260803090000` through `20260803130000`, owner-confirmed DEV/DEMO apply/verification, and reported validation of 290/290 focused tests, lint with two existing PDF `<img>` warnings, TypeScript, and build. Production apply/readiness is not claimed.
+- **Historical V1 milestone checkpoint:** The six-commit milestone ending at `cf4d4aec7b3d2db1953141f2a1bfa435ccbafe70` includes migrations `20260803090000` through `20260803130000`, owner-confirmed DEV/DEMO apply/verification, and reported validation of 290/290 focused tests, lint with two existing PDF `<img>` warnings, TypeScript, and build. Production apply/readiness is not claimed.
 - **Production Status:** Production readiness remains unclaimed. Production RLS, production deployment, backups, monitoring, logging, financial correction/reversal workflows, and VAT/ZATCA/FATOORA integration remain separate.
 
 ## Approved ERP Rules
@@ -51,6 +51,11 @@ Customer Profile -> Service / Booking -> Quotation -> Invoice -> Payment
 - [docs/project-roadmap.md](./docs/project-roadmap.md): execution order and pending priorities.
 - [docs/deferred-decisions.md](./docs/deferred-decisions.md): deferred, unresolved, and partially completed decisions.
 - [docs/database-schema.md](./docs/database-schema.md): implemented schema facts and approved target direction.
+- [docs/auth-clerk.md](./docs/auth-clerk.md): current Clerk identity, route, and server-side authorization boundary.
+- [docs/security-foundation.md](./docs/security-foundation.md): authentication, authorization, audit, and production boundary.
+- [docs/supabase-client.md](./docs/supabase-client.md): browser/server/admin client boundaries and health endpoint contract.
+- [docs/customers-crud.md](./docs/customers-crud.md): current customer list, picker, detail, and mutation contracts.
+- [docs/quotations-crud.md](./docs/quotations-crud.md): current Service-scoped quotation and billing handoff contract.
 - [docs/atomic-invoice-creation-contract.md](./docs/atomic-invoice-creation-contract.md): atomic Deposit/Final Invoice creation contract.
 - [docs/atomic-payment-recording-contract.md](./docs/atomic-payment-recording-contract.md): hardened atomic payment recording contract.
 - [docs/repository-worktree-governance.md](./docs/repository-worktree-governance.md): repository path, worktree, reconciliation, and owner-approval rules.
@@ -80,4 +85,4 @@ Documentation-only changes do not require app build, migrations, or database com
 - Do not trust client financial totals.
 - Keep Supabase admin access server-side only.
 - Use `requirePermission` for write Server Actions and respect RBAC on reads.
-- Production RLS hardening is partially in-repo; the remote Supabase apply has been verified, and only the remaining production follow-up is still required before any hosted demo with real or semi-real data.
+- DEV/DEMO verification and repository evidence do not certify production RLS, production deployment, or production readiness for real or semi-real data.

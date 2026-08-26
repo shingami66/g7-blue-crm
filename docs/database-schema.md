@@ -1,11 +1,11 @@
-# Database Schema & Supabase Setup (Local Only)
+# Database Schema & Supabase Setup
 
 ## Overview
 This document outlines the Supabase PostgreSQL database schema reference for the G7 BLUE CRM backend.
 
 `supabase/schema.sql` is a schema reference snapshot of the verified Supabase DB shape after the Core Security, Quotations RPC, Company Settings CS-A, ERP-1 Services DB foundation, and subsequent DEV/DEMO ERP work. It is not a complete migration ledger. The approved billing scope financial-lifecycle migration has connector-generated DEV/DEMO history (`20260714113857`); this does not authorize production apply or imply that every older manually applied change has migration history.
 
-**WARNING: DO NOT apply migrations through the MCP connection.** The current setup is purely local for development. Follow the manual application steps if needed on a live instance.
+**WARNING: DO NOT apply migrations through the MCP connection.** DEV/DEMO changes are applied only through reviewed migration/manual-apply procedures; production apply and readiness are separate decisions.
 
 ## Approved ERP Schema Direction
 
@@ -46,8 +46,8 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `audit_logs`: Centralized event tracking for actions (`create`, `update`, etc.).
 
 ### Financial & Workflow
-- `quotations` / `quotation_items`: Quotes with subtotal/vat/grand_total calculation foundations.
-- `invoices` / `invoice_items`: Current invoice tables referencing quotes. `invoices.type` exists as text without a CHECK constraint; ERP-3 target design must use `invoice_type = deposit | final` after reviewed schema work.
+- `quotations` / `quotation_items`: Current flat quotation tables with Service linkage and server-side subtotal/VAT/grand-total calculation foundations.
+- `invoices` / `invoice_items`: Current invoice tables use `invoice_type = deposit | final`, with approved-quotation and Service linkage represented in the current DEV/DEMO contract; production readiness is not implied.
   - **Approved Billing Scope Integration:** Added `approved_billing_scope_id` as a nullable UUID referencing `approved_billing_scopes(id, service_id)` via a composite foreign key constraint, enforcing invoice ceiling limits and validation guards via `check_invoices_before_write` trigger.
 - `payments`: Financial tracking of invoice payments. Current `payments.method` allowed values are `bank_transfer`, `cash`, `cheque`, and `online`; ERP-4 planning may later decide whether to change this to Cash / Bank Transfer / Card / Other. Contains the idempotent `request_id` (UUID, nullable, unique when not null) column to block double-submits.
 - `projects` / `project_tasks`: Existing legacy execution tracking. New ERP planning should use Service as the operational unit.
@@ -64,7 +64,13 @@ These are approved target rules for future reviewed schema changes; they do not 
 - **Invoice** is currently Service-linked: invoice creation persists `service_id` and its approved quotation basis. When an active Approved Billing Scope exists, invoice creation also persists `approved_billing_scope_id` and uses the scope accepted grand total as the billing ceiling; otherwise, the approved quotation total remains the transitional fallback.
 - **Payment** belongs to an **Invoice** and therefore connects to the Service through that invoice. The current schema does not establish a direct `payments.service_id` relationship.
 
-## Planned ERP Schema Notes
+## Current implementation and future boundaries
+
+The sections below distinguish current DEV/DEMO implementation facts from deferred design direction. Source, migrations, and durable contract documents remain the authority for exact enforcement details; this reference does not authorize production apply or new schema work.
+
+### Deferred / future boundaries
+- The Quotation Commercial Model Field-Evidence Gate remains discovery; the current quotation model is Service-scoped with flat quotation items.
+- Production database authorization/apply, richer Approved Billing Scope Supersede UI, invoice/payment correction or accounting treatment, and VAT/ZATCA/FATOORA/QR/XML/reporting behavior remain deferred or not authorized.
 
 ### Services
 - ERP-1 Services DB foundation has been manually applied and verified.
@@ -190,7 +196,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - **Table/workflow:** `service_supplier_allocations` is an internal Service-scoped planning table. V1 supports server-gated manual/rate-card create, manual edit and forward status transitions, cancel, soft delete, and restore. Delete/restore is unavailable for rate-card allocations. Active Bookings lock Allocation edit, transition, cancel, delete, and restore actions.
 - **Costing:** Manual cost is allowed (`cost_source` = `rate_card` | `manual_estimate`).
 - **Statuses:** `draft` | `planned` | `selected` | `cancelled`.
-- **Planned Fields:**
+- **Current fields:**
   - `quantity NUMERIC(10,3) NOT NULL` (decimal because events may need 0.5 day, 1.5 day, 2.5 hours, or 2.5 meters).
   - `estimated_unit_cost NUMERIC(14,2) NOT NULL`
   - `estimated_total_cost NUMERIC(14,2) GENERATED ALWAYS AS (quantity * estimated_unit_cost) STORED` (DB-generated, not client-submitted).
@@ -210,13 +216,13 @@ These are approved target rules for future reviewed schema changes; they do not 
 - Booking creation and Allocation restore require a Supplier that is active, non-deleted, and not blacklisted. These application-layer prechecks are not a transactional production-concurrency guarantee.
 - Rate-card allocation creation requires a rate card that is active, non-deleted, and valid on the creation date (`valid_from <= today` and `valid_to` unset or `>= today`).
 
-### Index Planning
+### Current indexes and future planning
 - Implemented ERP-1 service indexes: `services.customer_id`, `services.status`, `services.deleted_at`, `services.event_start_date`, `services.sales_owner_id`, and `services.created_at`.
 - Future ERP phases should plan indexes on `quotations.service_id`, `invoices.service_id`, `payments.invoice_id`, `payments.service_id` only if stored, and `audit_logs.user_id`.
 
 ## Data Integrity Constraints
 - **Current Status And Method Checks**: Database `status` and `method` fields use explicit CHECK constraints where they exist. Current `payments.method` values are `bank_transfer`, `cash`, `cheque`, and `online`. Future ERP-4 payment method labels such as Card or Other require an approved schema change before use.
-- **Invoice Type Caveat**: `invoices.type` currently has no CHECK constraint. The approved ERP-3 target is `invoice_type = deposit | final` after reviewed schema work.
+- **Invoice type:** Current DEV/DEMO schema uses `invoice_type = deposit | final`; the current check is recorded as NOT VALID. Migrations and source remain the enforcement authority, and this does not claim production readiness.
 - **Financial Safety**: To prevent invalid negative financial amounts, rigid numeric `CHECK (value >= 0)` constraints protect fields like `subtotal`, `discount`, `vat_amount`, `grand_total`, `amount`, `budget`, `revenue`, `qty`, `unit_price`, `vat`, `total`, and `default_vat_percent`. Company Settings VAT values are defaults only; quotations and invoices must keep document-level snapshots. Client-submitted totals must never be trusted.
 - **Rounding And Currency**: Future invoice/payment work must document SAR 2-decimal rounding rules. Financial rounding must be server-side/PostgreSQL-side. Currency should be snapshotted on issued documents.
 - **VAT Mode Safety**: The current implemented field is `company_settings.vat_mode`. `company_settings.vat_mode='not_registered'` requires `default_vat_percent=0`, no VAT number, and no VAT effective date. `phase2_integrated` is reserved for future FATOORA work and must not be claimed by CS-A UI.

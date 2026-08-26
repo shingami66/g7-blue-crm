@@ -1,31 +1,20 @@
 # Supabase Client Integration
 
-## Overview
-This document explains how the Supabase client is configured in the G7 BLUE CRM.
+This document records the current Supabase client boundaries for G7 BLUE CRM.
 
-## Required Environment Variables
-You must create a `.env.local` file at the root of the project with the following keys:
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-```
+## Client boundaries
 
-## Security Notes
-- **Publishable Key**: Supabase now shows a Publishable Key instead of an anon key.
-- **Never commit `.env.local`**: It contains sensitive keys and is excluded via `.gitignore`.
-- **Never expose the service role key**: The `SUPABASE_SERVICE_ROLE_KEY` bypasses all Row Level Security (RLS) rules and must only be used server-side.
-- **No Connection Strings**: Do not use database connection strings for this setup.
+- `src/lib/supabase/client.ts` creates the browser client with the public Supabase URL and publishable key.
+- `src/lib/supabase/server.ts` creates the server client through `@supabase/ssr` and request cookies.
+- `src/lib/supabase/admin.ts` is server-only and uses the service-role key for narrowly authorized server operations; it bypasses RLS.
+- `src/lib/env.ts` validates the runtime configuration. Credential values, tokens, and connection strings are not documented or logged here.
 
-## How to test `/api/health/db`
-Ensure your local dev server is running (`pnpm dev`) and your `.env.local` is correctly configured. 
-Navigate to: [http://localhost:3000/api/health/db](http://localhost:3000/api/health/db)
+## Health boundary
 
-You should see a JSON response:
-```json
-{
-  "ok": true,
-  "database": "supabase",
-  "timestamp": "..."
-}
-```
+`/api/health/db` performs a read-only `number_sequences` dependency check. It returns a small success response when the dependency is healthy and a sanitized failure response otherwise; bounded diagnostics do not expose raw provider errors, credentials, or connection details. This documentation does not claim that a credential-dependent runtime smoke or production readiness has been performed.
+
+## Operational rules
+
+- Keep the service-role client and its key strictly server-side.
+- Use the browser/server clients only within their corresponding runtime boundaries.
+- Do not commit `.env.local` or expose protected authentication material.

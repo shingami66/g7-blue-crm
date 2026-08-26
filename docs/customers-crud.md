@@ -1,150 +1,36 @@
 # Customers CRUD Documentation
 
-## Overview
+## Current contract
 
-The Customers module connects the G7 BLUE CRM `/customers` page to Supabase,
-replacing the previous static mock data with real database operations.
+The Customers module provides authenticated customer search, paginated list, detail, create, update, and soft-delete behavior. Server actions and queries are authoritative; client components receive purpose-specific DTOs rather than raw database rows.
 
-All write operations (create, update, delete) are protected by Clerk
-authentication. The Supabase admin client (service role key) is used
-server-side only.
+## Read boundaries
 
----
+- **Picker query:** `getCustomers()` returns `id`, `company`, `contact`, and `status` for customer selection.
+- **Paginated list query:** `getCustomersList()` returns `id`, `customerNumber`, `company`, `contact`, `phone`, `email`, `city`, `status`, `servicesCount`, `quotationsCount`, and `totalQuotedAmount`. Search, status filtering, pagination, and list metrics are computed on the server.
+- **Detail query:** `getCustomerById()` supplies the detail contract, including core customer data, timestamps, soft-delete/audit fields, and official billing/contact fields. Detail-only fields are not part of the list or picker DTOs.
 
-## Architecture
+The customer model includes core contact fields and, where applicable, official/commercial fields such as `customer_type`, `legal_name`, `commercial_registration_number`, `vat_number`, national-address fields, `billing_email`, finance-contact fields, `payment_terms`, and `po_required`. These fields support detail and billing workflows; their presence in the database does not imply list exposure.
 
-```
-┌──────────────────────────────────────────────┐
-│  Browser (Client Component)                  │
-│  CustomersClient.tsx                         │
-│    ├─ Table, Filters, Side Panel             │
-│    ├─ Add Customer Modal                     │
-│    ├─ Edit Customer Modal                    │
-│    └─ Delete Confirmation Modal              │
-└───────────────┬──────────────────────────────┘
-                │ Server Action (FormData)
-                ▼
-┌──────────────────────────────────────────────┐
-│  Server Actions (src/lib/customers/actions.ts)│
-│    1. auth() → verify Clerk userId           │
-│    2. Zod validation                         │
-│    3. Supabase admin client → INSERT/UPDATE  │
-│    4. revalidatePath("/customers")           │
-└───────────────┬──────────────────────────────┘
-                │
-                ▼
-┌──────────────────────────────────────────────┐
-│  Supabase (customers table)                  │
-│    Columns: id, company, contact, phone,     │
-│    email, city, status, projects_count,      │
-│    revenue, created_at, updated_at,          │
-│    is_deleted, deleted_at                    │
-└──────────────────────────────────────────────┘
-```
+## Create and update behavior
 
----
+- **Create:** `createCustomer` requires `customers:write`, validates the request with the customer schema, and calls the atomic customer RPC with a required `mutation_key`. The server derives actor/audit fields and returns a replay-safe result.
+- **Update:** `updateCustomer` requires `customers:write`, validates the partial request, and updates only permitted fields for the selected customer.
+- **Soft delete:** `softDeleteCustomer` requires `customers:write` and sets `is_deleted`, `deleted_at`, and `updated_by`; it does not hard-delete the customer.
 
-## Files Changed / Created
+All write paths return safe user-facing errors. Provider and database failures are handled server-side and do not authorize a mutation.
 
-### New Files
+## Validation and data authority
 
-| File | Purpose |
-|------|---------|
-| `src/lib/customers/types.ts` | `CustomerRow` (DB shape) + re-export of frontend `Customer` type |
-| `src/lib/customers/schemas.ts` | Zod schemas for create/update validation |
-| `src/lib/customers/mappers.ts` | Maps Supabase snake_case rows → camelCase frontend objects |
-| `src/lib/customers/queries.ts` | Server-only read queries (`getCustomers`, `getCustomerById`) |
-| `src/lib/customers/actions.ts` | Server Actions (`createCustomer`, `updateCustomer`, `softDeleteCustomer`) |
-| `src/lib/customers/index.ts` | Barrel exports |
-| `src/app/(dashboard)/customers/CustomersClient.tsx` | Interactive client component (table, modals, filters) |
-| `docs/customers-crud.md` | This documentation |
+Create validation requires the core company/contact/phone/email/city fields and a valid status (`active`, `inactive`, or `lead`). Official billing and address fields are validated when supplied. Client-supplied list metrics such as `projects_count` and `revenue` are not update authority; list metrics come from server queries.
 
-### Modified Files
+## Authorization and audit
 
-| File | Change |
-|------|--------|
-| `src/app/(dashboard)/customers/page.tsx` | Converted from `"use client"` → async Server Component; fetches from Supabase |
-| `src/components/ui/StatusBadge.tsx` | Added `"lead"` variant type and styling |
+- Protected actions call `requirePermission("customers:write")` before mutation.
+- The Supabase service-role client is server-only and is used only from server-side paths.
+- Authenticated actor attribution is written to the existing audit columns; authorization is never delegated to client visibility.
+- Missing authentication, inactive users, permission failures, and dependency failures remain fail-closed with safe errors.
 
----
+## Scope boundary
 
-## Data Flow
-
-### Read
-
-1. `page.tsx` (Server Component) calls `getCustomers()`.
-2. `queries.ts` uses the admin client to query `customers` where `is_deleted = false`.
-3. Results are mapped via `mapRowToCustomer()` (snake_case → camelCase, revenue formatting).
-4. Mapped `Customer[]` is passed as props to `CustomersClient`.
-
-### Create
-
-1. User fills form in the Add Customer modal.
-2. `FormData` is submitted to the `createCustomer` Server Action.
-3. Action calls `requirePermission("customers:write")` — throws if unauthorized/forbidden.
-4. Zod validates the input.
-5. Admin client inserts into `customers` with defaults (`projects_count: 0`, `revenue: 0`) and sets `created_by` / `updated_by`.
-6. `revalidatePath("/customers")` invalidates the cache.
-
-### Update
-
-1. User edits fields in the Edit Customer modal.
-2. `FormData` is submitted to `updateCustomer(id, formData)`.
-3. Same auth + validation flow.
-4. Only provided fields are updated (partial update).
-
-### Soft Delete
-
-1. User confirms deletion in the Delete modal.
-2. `softDeleteCustomer(id)` sets `is_deleted = true`, `deleted_at = now()`, and `updated_by`.
-3. No hard deletes ever occur.
-
----
-
-## Auth Rules
-
-- **All Server Actions** call `requirePermission("customers:write")` from `@/lib/auth/permissions` first.
-- If permission check fails, the action safely catches the Custom Error and returns `{ success: false, error: "Unauthorized" / "Forbidden" }`.
-- `created_by` / `updated_by` columns are populated securely using the authenticated user's `clerk_user_id`.
-- The Supabase admin client bypasses RLS (service role key) and is only used server-side via `import "server-only"`.
-
----
-
-## Supabase Admin Client
-
-- Defined in `src/lib/supabase/admin.ts`.
-- Protected with `import "server-only"` — cannot be imported in Client Components.
-- Uses `SUPABASE_SERVICE_ROLE_KEY` (never exposed to the browser).
-
----
-
-## Zod Validation
-
-### Create Schema
-
-| Field | Rule |
-|-------|------|
-| `company` | Required string, min 1 |
-| `contact` | Required string, min 1 |
-| `phone` | Required string, min 1 |
-| `email` | Required valid email |
-| `city` | Required string, min 1 |
-| `status` | Enum: `active`, `inactive`, `lead` (default: `lead`) |
-| `projects_count` | Non-negative integer (default: 0) |
-| `revenue` | Non-negative number (default: 0) |
-
-### Update Schema
-
-Same fields but all optional. `projects_count` and `revenue` are not updatable by the client.
-
----
-
-## Manual Test Steps
-
-1. **Sign out → /customers** should redirect to `/sign-in`.
-2. **Sign in → /customers** should load the table (or empty state if DB is empty).
-3. **Add Customer**: Click "Add Customer" → fill form → submit → customer appears in table.
-4. **Edit Customer**: Click a customer row → click "Edit Profile" → change fields → save.
-5. **Delete Customer**: Click a customer row → click trash icon → confirm → customer removed from list.
-6. **Health Check**: Visit `/api/health/db` → should return `{"ok": true}`.
-7. **Filters**: Use Status and City dropdowns to filter the table.
+This document describes the current customer contracts. It does not change database schema, production deployment status, or the separate quotation, billing, payment, and governance contracts.
