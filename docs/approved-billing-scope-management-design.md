@@ -6,9 +6,9 @@
 
 **Status:** Management and V1 financial-lifecycle design locked; quotation/internal-ABS activation and ABS Void are delivered, while Supersede remains excluded and deferred.
 
-**Related runtime lock:** `docs/approved-billing-scope-runtime-decisions.md`
+**Consolidation note:** The former runtime decision lock is consolidated into this document. Its still-current runtime, permission, financial, audit, error, and UI contracts are represented in Sections 1–7; its pre-implementation statuses and historical smoke notes are not current authority.
 
-This document is the product/technical management design for Service-scoped Approved Billing Scope (ABS) UI and write workflow. Its current delivered implementation status is synchronized to HEAD `cf4d4aec7b3d2db1953141f2a1bfa435ccbafe70`; earlier design-lock and pre-delivery statements are historical where superseded by the status below.
+This document is the product/technical management design for Service-scoped Approved Billing Scope (ABS) UI and write workflow. The source-grounded implementation status below was recorded at commit `cf4d4aec7b3d2db1953141f2a1bfa435ccbafe70`; that SHA is a historical implementation checkpoint, not the current repository HEAD. Earlier design-lock and pre-delivery statements are historical where superseded by the status below.
 
 ---
 
@@ -61,7 +61,7 @@ This document is the product/technical management design for Service-scoped Appr
 
 Historical milestone notes elsewhere may still mention planned void/supersede; treat those as historical unless labeled current.
 
-### Current delivered implementation status (`cf4d4aec`)
+### Source-grounded implementation status recorded at historical checkpoint `cf4d4aec`
 
 - Normal user workflow is `Quotation Draft -> send/review -> customer approval -> automatic internal ABS activation -> Billing Summary -> Deposit or Final Invoice`; there is no second normal-user ABS approval workflow.
 - The quotation approval RPC atomically updates eligible Service/quotation state, creates the immutable approved commercial snapshot, copies snapshot items, and records audit evidence; non-zero discounts remain rejected by the existing contract.
@@ -349,21 +349,11 @@ Each successor-create, successor-discard, void, and supersede event must expose 
 
 #### Stable errors
 
-Retain existing applicable codes: `scope_not_found`, `scope_not_draft`, `scope_not_safe`, `scope_active_conflict`, `scope_concurrency_conflict`, `scope_no_items`, `scope_no_billable_items`, `scope_reduction_invalid`, `scope_reason_required`, `scope_service_lifecycle_ineligible`, `scope_permission_denied`, `scope_supersede_service_mismatch`, and `scope_unexpected_error`.
+The implemented/source-declared ABS error contract is the exact code set in `src/lib/approved-billing-scopes/errors.ts`: `scope_not_found`, `scope_source_not_approved`, `scope_source_deleted`, `scope_discount_not_supported`, `scope_source_service_mismatch`, `scope_service_lifecycle_ineligible`, `scope_duplicate_draft`, `scope_no_items`, `scope_no_billable_items`, `scope_not_draft`, `scope_not_safe`, `scope_not_active`, `scope_active_conflict`, `scope_reduction_invalid`, `scope_reason_required`, `scope_unsafe_note_required`, `scope_terminal_voided`, `scope_already_voided`, `scope_already_superseded`, `scope_void_financial_exposure`, `scope_not_approved`, `scope_supersede_target_required`, `scope_supersede_service_mismatch`, `scope_concurrency_conflict`, `scope_permission_denied`, and `scope_unexpected_error`.
 
 For lifecycle actions, missing/blank reason code or note maps to the existing `scope_reason_required`; field-level Zod messages may remain more specific.
 
-Add only:
-
-- `scope_not_active`
-- `scope_already_voided`
-- `scope_already_superseded`
-- `scope_void_financial_exposure`
-- `scope_successor_exists`
-- `scope_successor_invalid`
-- `scope_successor_ceiling_below_invoiced`
-
-Invoice creation reuses the existing sanitized `billing_scope_inactive` result for an established-authority gap. `scope_void_invoices_exist` and `scope_not_approved` are rejected as redundant with `scope_void_financial_exposure` and `scope_not_active`.
+The future Supersede design additionally names `scope_successor_exists`, `scope_successor_invalid`, and `scope_successor_ceiling_below_invoiced`; these remain design-only and are not implemented/source-declared error codes. Invoice creation reuses the existing sanitized `billing_scope_inactive` result for an established-authority gap.
 
 #### Options rejected
 
@@ -433,7 +423,7 @@ Invoice creation reuses the existing sanitized `billing_scope_inactive` result f
 
 ## 8. Related documents
 
-- Runtime product lock: `docs/approved-billing-scope-runtime-decisions.md`
+- Former runtime decision lock: consolidated into this document; retained only in Git history.
 - Schema notes: `docs/database-schema.md`
 - Status/roadmap: `docs/project-status.md`, `docs/project-roadmap.md`
 - Deferred flags: `docs/deferred-decisions.md`
