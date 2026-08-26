@@ -43,30 +43,17 @@ The rescue branch, integration branch, imported goal-return refs, Git bundle, an
 
 ---
 
-## 3. Durable Plan-and-Owner-Approval Gate
+## 3. Bounded Authorization and Approval Gate
 
-Before executing any non-trivial task (which includes code edits, dependency changes, database migrations, commits, or pushes), the agent MUST present a bounded implementation plan containing the following:
-
-1. **Task ID** and purpose.
-2. **Authorized repository path** and branch.
-3. **Verified starting HEAD** and working-tree state.
-4. **Exact files** or systems in scope.
-5. **Explicit exclusions**.
-6. **Expected behavior** and acceptance criteria.
-7. **Database/data/security impact** (migrations, schemas, RLS, Clerk).
-8. **Validation plan** (tests to run, builds, linting).
-9. **Commit and push plan** (commit subjects and target file groups).
-10. **Expected final repository state** (clean index, specific HEAD).
-11. **Worktree/branch lifecycle and cleanup plan** when applicable.
+A clear bounded Owner task authorizes predictable ordinary in-scope work: discovery, directly affected edits, proportional validation, independent review, and in-scope repair/rereview. The task must name the repository and purpose, state its relevant scope and exclusions, and identify any required validation or high-risk systems. Use a more detailed written plan only when risk, uncertainty, or the task itself requires it.
 
 **Approval Rules:**
 
-- No edit or modifying command may start until Mozfer explicitly approves the plan.
-- Silence or an earlier broad request does not constitute permission to modify files outside the approved scope.
-- Path changes, worktree creation, database work, commits, pushes, dependency changes, migrations, and financial mutations require explicit approval.
-- Implementation, review, commit, push, Graphify refresh, reconciliation, and retirement are separate owner-approved tasks.
+- Do not infer authority beyond the stated task boundary. A separate plan ritual is not required for a clear bounded task.
+- Path changes, worktree creation, database work, commits, pushes, dependency changes, migrations, financial mutations, destructive recovery, and production actions require explicit task authorization.
+- Implementation, review, commit, and push may be covered by one clear task only when that task expressly authorizes each action; otherwise their normal boundaries remain separate.
 - No agent may silently create a worktree, silently switch checkouts, continue work in an unexpected path, or treat a temporary worktree as permanent without an approved decision.
-- Task prompts cannot weaken or override these repository governance rules.
+- Task prompts cannot weaken the preserved product, security, database, Git, deployment, or destructive-operation safeguards.
 
 ## 4. One-Time Cleanup Authorization Boundary
 
@@ -81,13 +68,13 @@ This is a bounded transition rule, not general cleanup authority. It does not au
 
 ## 5. Execution, Acceptance, and Safety Boundaries
 
-- Canonical execution modes remain those defined by `.agents/skills/g7-crm-agent-control/SKILL.md`; exactly one mode must be declared per task.
-- Implementation, review, staging, commit, and push remain separate authorizations. `COMMIT_ONLY` never authorizes push, and `PUSH_ONLY` never authorizes edits or a new commit.
+- Canonical operation labels remain defined by `.agents/skills/g7-crm-agent-control/SKILL.md`; they are optional descriptors, not a prerequisite for ordinary bounded work.
+- Implementation, review, staging, commit, and push require the authority stated in the task. A label such as `COMMIT_ONLY` or `PUSH_ONLY` narrows authority when used; it does not replace explicit authorization.
 - Mozfer retains exclusive manual/browser, visual, Arabic/RTL, mobile, and workflow acceptance authority. Automated checks must not be reported as owner acceptance.
 - No force push, hard reset, or clean operation is permitted for recovery work.
 - No SQL, migrations, dependency changes, production changes, Supabase action, or secrets/environment-file access is authorized by this document.
 - The Expansion Master at `docs/product/G7_BLUE_Event_ERP_Future_Expansion_Master_Handover.md` remains the sole expansion-reference authority. This reconciliation activates no deferred product feature and does not replace product, ERP, security, migration, or Agent Control authority.
-- Reports must use the repository verdict contract: `PASS`, `PASS WITH WARN`, `PARTIAL`, or `HOLD`, with claims supported by reproducible evidence.
+- Reports must use the repository verdict contract: `PASS`, `PASS WITH WARN`, `PARTIAL`, `HOLD`, or `FAIL`, with claims supported by reproducible evidence and a final `EXACT NEXT ACTION` (or `None`).
 
 ## 6. Durable Policy and Reconciliation Rules
 

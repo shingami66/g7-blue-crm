@@ -5,7 +5,7 @@ description: Bounded execution guidance for G7 BLUE CRM agents. Preserves scope,
 
 # G7 CRM Agent Control Protocol
 
-Luna is the Controller. A clear, bounded Owner request authorizes ordinary in-scope work. This skill preserves safety boundaries and evidence discipline; it does not replace the task's scope or require a procedural ceremony beyond what the task and risk require.
+The Controller owns the workflow. A clear, bounded Owner request authorizes ordinary in-scope work. This skill preserves safety boundaries and evidence discipline; it does not replace the task's scope or require a procedural ceremony beyond what the task and risk require.
 
 ## Standing workflow rules
 
@@ -20,10 +20,10 @@ Luna is the Controller. A clear, bounded Owner request authorizes ordinary in-sc
 
 ## Controller, Writer, and Reviewer
 
-- Luna owns the complete autonomous Writer → validation → separate Reviewer → findings → same Writer repair → revalidation → rereview loop, its evidence, and the final verdict. Do not use the Owner as an ordinary relay; return to the Owner only for a genuine decision or authority need, protected credentials/material, a gated database/deployment/destructive authority, unavailable independent-review capacity, a material finding not safely resolvable inside the boundary, or the final Task Verdict.
+- The Controller owns the complete autonomous Writer → validation → separate Reviewer → findings → same Writer repair → revalidation → rereview loop, its evidence, and the final verdict. Do not use the Owner as an ordinary relay; return to the Owner only for a genuine decision or authority need, protected credentials/material, a gated database/deployment/destructive authority, unavailable independent-review capacity, a material finding not safely resolvable inside the boundary, or the final Task Verdict.
 - A delegated Gemini Writer may inspect and modify directly affected files inside the task-authorized working boundary and owns a bounded local inner loop: inspect, edit, run focused tests/TypeScript/lint or other relevant local validation, diagnose ordinary failures, repair, and repeat until locally green. An additional directly affected local file inside that boundary is not by itself a HOLD or new Owner-approval condition. Ordinary failing tests, unexpected code structure, and directly affected local callers, tests, or types are implementation work inside that loop, not HOLD conditions by themselves. Exact-file allowlists remain binding when the task explicitly specifies them or when governance-sensitive, database/schema/RLS/RPC/migration, security, financial-authority, protected-infrastructure, or other materially high-risk work makes a broader envelope unsafe. The Writer is not the independent validator or final reviewer.
 - Keep exactly one logical mutating Writer lane per mutation slice. The same logical Writer receives review findings; prefer the same provider conversation, but start a fresh bounded conversation with a Recovery Capsule only after a classified authentication, session, transport, or comparable environment failure. Preserve successful work, avoid repeated discovery, ensure no prior mutating Writer remains active when checkable, and never run mutating Writers concurrently.
-- Use a separate native Codex Reviewer in read-only, findings-only mode when the task or risk warrants independent review. The Writer is never the independent Reviewer. The Reviewer never edits, stages, commits, pushes, deploys, applies SQL, or repairs.
+- After a mutating Writer completes implementation and validation, use a separate native Codex Reviewer in read-only, findings-only mode. The Writer is never the independent Reviewer. The Reviewer never edits, stages, commits, pushes, deploys, applies SQL, or repairs. The Controller owns the final verdict after the review or targeted rereview.
 - For OCR-assisted independent review, use delegation mode only: run `ocr delegate preview --format json`, then `ocr delegate rule --format json <reviewable-file-paths>` in bounded batches. The native Reviewer reasons over those rules, the diff, source, contracts, and tests; every selected path is marked REVIEWED or explicitly SKIPPED. Delegation mode prohibits `ocr review`, `ocr llm test`, OCR provider/model configuration, and credential requests. A missing OCR LLM endpoint is irrelevant and not a HOLD; under this mode HOLD only when deterministic delegation is unavailable or required evidence is inaccessible.
 - Classify review findings. Send in-scope BLOCKING or MATERIAL findings, plus cheap safe MINOR findings, to the same logical Writer lane; then validate and obtain a separate rereview. Rereview targets repaired files, the findings, direct contracts, and collateral, not a broad historical review without new evidence. Ordinary bounded repair loops remain in the same Owner-authorized task.
 - If required independent review capacity is unavailable, report review incomplete; do not relabel self-review as independent review.
@@ -43,12 +43,14 @@ Luna is the Controller. A clear, bounded Owner request authorizes ordinary in-sc
 - Guard/context files may be changed only when the task names the exact files and purpose. `GUARD_EDIT_ONLY` remains an optional compatibility label for a deliberately authorized guard-file edit, not a prerequisite for ordinary work.
 - Do not silently switch repositories, clean unrelated dirty state, or alter inherited/protected files outside the named scope.
 - Inspect actual status and diffs before and after edits. For untracked files, inspect their actual content before claiming correctness.
+- Do not create arbitrary persistent artifacts. Keep only authorized product or regression assets and temporary diagnostics with explicit retained engineering value; remove disposable temporary artifacts at task closeout when authorized.
 - Preserve the exact final report contract requested by the task. Where a Task Verdict applies, use exactly PASS, PASS WITH WARN, PARTIAL, HOLD, or FAIL; reports using the existing `TASK RESULT:` prefix retain the same vocabulary. PASS WITH WARN applies only when there are no BLOCKING or MATERIAL findings, validation and review are clean, and only bounded non-defect runtime unknowns (for example credential-dependent authentication) remain. PARTIAL is an explicitly scoped incomplete outcome: some authorized work remains unresolved, but no genuine HOLD or FAIL condition is present; identify the unresolved scope and do not imply full completion. WARN alone is not a verdict, and optional runtime evidence does not justify HOLD.
+- End reports with `EXACT NEXT ACTION`; write `None` when no action remains.
 - Empty command output is reported as `<empty>`. Claims must be supported by captured repository or validation evidence.
 
 ## Domain routing
 
-- Use relevant G7 skills when their domain materially applies, including ERP guard, design, Spec Kit, Supabase, document, or review guidance.
+- Use Agent Control as the base protocol. Route to relevant G7 skills only when their material domain applies, including ERP guard, design, Spec Kit, Supabase, document, or review guidance; an uninvolved optional skill never blocks the task.
 - A planning or design aid does not authorize implementation, context updates, Git actions, database actions, deployment, or production changes.
 - Keep product workflow and financial rules from `AGENTS.md` authoritative; do not invent business behavior in a tooling or governance task.
 
@@ -103,7 +105,7 @@ Return `TASK RESULT: HOLD` only for a real blocker such as:
 - failed required validation after the authorized diagnose/repair loop, or missing evidence for a claim;
 - unauthorized Git or package action;
 - attempted protected-data access or secret exposure;
-- unavailable required independent review when the task explicitly requires it;
+- unavailable required independent-review capacity;
 - an execution failure that prevents the authorized workflow from completing.
 
 Do not use HOLD merely because a routine task lacks an optional mode label, an optional navigation artifact, optional runtime evidence (including credential-dependent authentication), or a historical proof step that is not relevant to the current scope. In OCR delegation mode, a missing LLM endpoint is not a HOLD; only deterministic delegation unavailability or inaccessible required review evidence is. PARTIAL must not replace HOLD for blocked authority, unavailable required independent review, failed required validation, inaccessible required evidence, protected-data or secret issues, or execution failure.

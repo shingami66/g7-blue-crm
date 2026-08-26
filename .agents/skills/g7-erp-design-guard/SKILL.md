@@ -1,6 +1,6 @@
 ---
 name: g7-erp-design-guard
-description: Project-specific design governance guard for G7 BLUE ERP. Enforces product authority, visual identity, ERP density, accessibility, RTL/LTR, responsive behavior, permissions, financial sensitivity, evidence requirements, and strict separation between audit, proposal, implementation, review, commit, and push.
+description: Project-specific design reasoning guard for G7 BLUE ERP. Preserves product authority, visual identity, ERP density, accessibility, RTL/LTR, responsive behavior, permissions, financial sensitivity, evidence requirements, and design-tool safety; Agent Control owns execution workflow.
 ---
 
 # G7 ERP Design Guard
@@ -12,9 +12,9 @@ This guard is the project-specific context and safety wrapper for `impeccable`, 
 - **Approval date:** 2026-08-02
 - **Effective authority:** Approved G7-specific design-governance wrapper when committed to the repository `main` branch.
 
-This guard may be used to govern separately approved design tasks. AUDIT, PROPOSAL, IMPLEMENTATION, and REVIEW remain subject to their own requirements; the guard does not independently authorize a task. IMPLEMENTATION still requires explicit owner authorization, exact file scope, approved design evidence, write authority, and acceptance criteria. `impeccable` and Stitch still require the permissions defined by this guard, and Git operations remain separate tasks. The guard remains subordinate to `AGENTS.md`, canonical documentation, verified implementation, and `g7-crm-erp-guard`. Approval does not activate redesign or Event ERP implementation, and the guard cannot independently authorize `impeccable`, Stitch, browser editing, code changes, Git operations, or implementation work.
+Route this guard when visual, interaction, accessibility, RTL/LTR, responsive, permission-presentation, or design-tool concerns materially apply. It does not independently authorize a task. A clear bounded task under Agent Control may include directly affected components, styles, callers, and tests; exact-file scope is required only when the task prescribes it or material risk makes a broader boundary unsafe. `impeccable`, Stitch, browser editing, and Git actions retain their explicit task authority requirements. The guard remains subordinate to `AGENTS.md`, canonical documentation, verified implementation, and `g7-crm-erp-guard`; it does not activate redesign or Event ERP implementation.
 
-Follow `AGENTS.md`. Defer ERP safety, business rules, financial rules, workflow rules, repository safety, and mutation safety to `g7-crm-erp-guard`. This guard owns visual design, interaction design, accessibility, RTL/LTR, responsive behavior, permission presentation, design evidence, and design-tool safety only.
+Follow `AGENTS.md` and Agent Control for execution, authority, review lifecycle, HOLD semantics, publication, and reporting. Defer ERP safety, business rules, financial rules, workflow rules, and data-model truth to `g7-crm-erp-guard`. This guard owns visual design, interaction design, accessibility, RTL/LTR, responsive behavior, permission presentation, design evidence, and design-tool safety only.
 
 ## Contract and Authority
 
@@ -32,21 +32,21 @@ Use this authority hierarchy, from highest to lowest:
 8. Generic design skills such as `impeccable`.
 9. Generated design proposals.
 
-Product rules come from canonical product documentation. Security and permissions come from verified repository rules. Accounting and tax behavior cannot be invented. UI hiding is not authorization. Service authority, customer/supplier finance separation, original evidence, and current implementation reality must be preserved. Owner approval is required before implementation.
+Product rules come from canonical product documentation. Security and permissions come from verified repository rules. Accounting and tax behavior cannot be invented. UI hiding is not authorization. Service authority, customer/supplier finance separation, original evidence, and current implementation reality must be preserved. Implementation requires clear task authority within the approved product and safety boundary.
 
-## Required Modes
+## Optional Design Descriptors
 
-Every design task governed by this guard must declare exactly one of these
-design modes. This taxonomy does not replace the repository execution mode
-from `g7-crm-agent-control`; protected-file, implementation, commit, and push
-tasks must still use that guard's canonical execution mode.
+These descriptors may clarify the task, but are not required for ordinary
+bounded work and do not replace the base protocol in
+`g7-crm-agent-control`.
 
 1. **AUDIT**
 2. **PROPOSAL**
 3. **IMPLEMENTATION**
 4. **REVIEW**
 
-If the mode is unclear, return `HOLD`. Do not silently change modes during a task.
+When no descriptor is supplied, follow the explicit task scope and record any
+material design uncertainty; do not create a HOLD solely for a missing label.
 
 ### AUDIT
 
@@ -62,51 +62,21 @@ Forbidden: runtime file edits, schema/API/workflow invention, final implementati
 
 ### IMPLEMENTATION
 
-Allowed only when the explicit implementation task provides the exact route and files, approved design proposal, approved product requirements, permission context, language direction, responsive requirements, acceptance criteria, and manual-smoke ownership.
+Allowed for a clear bounded task after inspecting the applicable product requirements, permission context, language direction, responsive behavior, acceptance criteria, and manual-smoke ownership. Apply only the concerns material to the affected surface. Routes and exact-file allowlists are required only when the task specifies them or material risk makes the broader boundary unsafe.
 
 Still forbidden: broad redesign, unrelated component replacement, schema/API changes, business workflow invention, accounting or permission-policy decisions, automatic commit/push, and unapproved dependencies.
 
 ### REVIEW
 
-Allowed: review an existing proposal or implementation against this Contract, product decisions, screenshots, and acceptance criteria; return PASS/WARN/HOLD findings.
+Allowed: review an existing proposal or implementation against this Contract, product decisions, screenshots, and acceptance criteria; return findings using the repository verdict contract.
 
 Forbidden: silently fixing implementation, expanding scope, committing, or pushing.
 
-## Required Input Contract
+## Relevant Design Context
 
-Resolve or record each of these before design work:
+For a material design task, inspect the current evidence needed for the affected surface: its product authority and non-goals; established components and patterns; language/direction; responsive and accessibility needs; permissions and sensitive-data treatment; and relevant loading, empty, error, or unauthorized states. Use screenshots or browser evidence only for claims that need them. A task may provide an approved proposal, explicit design decision, or current implementation evidence; do not require a separate proposal when the bounded task already supplies sufficient authority and acceptance criteria.
 
-### Always Required
-
-- task mode;
-- target route, surface, or document;
-- output type;
-- relevant product authority;
-- non-goals;
-- mutation authorization state;
-- known evidence and unknowns.
-
-### Conditionally Required
-
-- exact allowed files for write tasks;
-- screenshots or browser evidence for visual or runtime claims;
-- user role and permission context for permission-sensitive surfaces;
-- assignment or responsibility context for role-based dashboards;
-- financial-sensitivity classification for financial surfaces;
-- Arabic/RTL requirements when Arabic or RTL is in scope;
-- desktop/tablet/mobile criteria when responsive behavior is in scope;
-- an approved proposal reference or explicit owner design decision for IMPLEMENTATION;
-- manual acceptance criteria for PROPOSAL and IMPLEMENTATION;
-- commit and push authorization only when a later Git task is explicitly requested.
-
-### Mode-Specific Input Rules
-
-- **AUDIT:** May proceed with static evidence when runtime evidence is unavailable; label unavailable runtime claims `UNKNOWN - MUST VERIFY`. Commit authorization and unrelated responsive requirements are not required.
-- **PROPOSAL:** Requires product context, target users, role/permission context where relevant, language/direction, non-goals, and review criteria.
-- **IMPLEMENTATION:** Requires exact files, an approved proposal or explicit owner design decision, permission context, responsive requirements, and acceptance criteria.
-- **REVIEW:** Requires the artifact or implementation being reviewed and its approved source or acceptance criteria.
-
-Missing context is `UNKNOWN - MUST VERIFY`. Return `HOLD` only when missing context could make the task unsafe, misleading, or cause unauthorized mutation. This does not weaken HOLD conditions for sensitive financial pages, unclear write scope, missing implementation approval, workflow invention, permission uncertainty, broad redesign, or a dirty working tree during a write task.
+Missing context is `UNKNOWN - MUST VERIFY`. Return `HOLD` only when the missing context makes the authorized task unsafe, misleading, or unable to proceed without an unauthorized mutation. Inherited unrelated dirty work is not a HOLD; it becomes one only when it overlaps the authorized scope and cannot be safely isolated. Manual owner acceptance remains human-owned and is required only when the active task requires that acceptance or claims it.
 
 ## Generic Tool Boundaries
 
@@ -129,63 +99,9 @@ Default approved uses, when the task authorizes the tool, are critique, audit, p
 
 Stitch may be used only with separate approval for pre-code exploration, layout alternatives, information hierarchy, or controlled responsive prototypes. It must not determine business workflows, permissions, security, accounting, VAT/ZATCA, schemas, APIs, routes, final components, or production code. Generated output remains a proposal until manual approval.
 
-## Design Output Contracts
+## Reporting
 
-Every AUDIT or REVIEW output includes:
-
-1. Result.
-2. Mode.
-3. Target routes.
-4. Files inspected.
-5. Evidence used.
-6. Findings by severity.
-7. Product-rule check.
-8. Permission and sensitivity check.
-9. RTL/LTR check.
-10. Responsive check.
-11. Accessibility check.
-12. Existing-component reuse check.
-13. Unknowns.
-14. Non-mutation confirmation.
-15. Exact next action.
-
-Every PROPOSAL output includes:
-
-1. Scope.
-2. Current-state evidence.
-3. Problem statement.
-4. Proposed information hierarchy.
-5. Components reused.
-6. New component needs.
-7. Desktop behavior.
-8. Tablet behavior.
-9. Mobile behavior.
-10. English behavior.
-11. Arabic/RTL behavior.
-12. Permission differences.
-13. Sensitive-data treatment.
-14. Empty/loading/error/unauthorized states.
-15. Accessibility.
-16. Non-goals.
-17. Open questions.
-18. Manual review checklist.
-19. Explicit statement that implementation is not activated.
-
-Every IMPLEMENTATION output includes:
-
-1. Approved proposal reference.
-2. Exact files changed.
-3. Product fidelity.
-4. Component reuse.
-5. Accessibility validation.
-6. RTL/LTR validation.
-7. Responsive validation.
-8. Permission and sensitivity validation.
-9. Tests run.
-10. Manual smoke required.
-11. No schema/API/workflow drift.
-12. Git status.
-13. No commit or push unless separately authorized.
+Use the task's requested report contract and Agent Control's verdict vocabulary. Report the material design evidence, applicable checks, unknowns, validation, and non-mutation or exact-change confirmation needed to support the claim; do not impose a fixed output template or mode-specific checklist on ordinary bounded work. Never claim manual owner acceptance, runtime browser evidence, production readiness, security compliance, or financial correctness without the required evidence.
 
 ## Severity
 
@@ -195,7 +111,6 @@ Use exactly these severity labels: `BLOCKER`, `MAJOR`, `MINOR`, and `NOTE`.
 
 Return `HOLD` when:
 
-- mode is unclear;
 - target files are unclear for a write task;
 - product requirements are unavailable;
 - permission context is unavailable for sensitive pages;
@@ -205,19 +120,19 @@ Return `HOLD` when:
 - a broad redesign is requested during a bounded feature;
 - the exact `impeccable` skill/version cannot be verified before invocation;
 - write authority is absent;
-- implementation is requested from an unapproved proposal;
+- implementation requires a separately approved proposal that is unavailable;
 - Stitch is requested without explicit approval;
 - runtime evidence is required but unavailable;
-- the working tree is unexpectedly dirty during a write task;
+- inherited dirty state overlaps the authorized scope and cannot be safely separated;
 - allowed file scope cannot be isolated;
-- required repository guards or the Design Contract are unavailable;
+- required task-specific design evidence or a materially applicable safety guard is unavailable;
 - creating or using the requested capability requires an unapproved registry or existing-guard change.
 
 ## Bounded Product-Design Gates
 
-The following gates are mandatory for bounded design implementation tasks and
-must be recorded in the task evidence. They are enforceable design controls,
-not optional recommendations.
+Apply the following gates when their concern materially applies to the affected
+surface. They guide evidence and judgment; record the checks needed by the
+task and risk rather than imposing a universal ceremony.
 
 ### Feature Utility Gate
 
@@ -290,18 +205,18 @@ and unauthorized states, including desktop/mobile and EN/AR/RTL behavior.
 Fast search, filter, pagination, and page-size interactions remain
 silent-first: retain existing rows and controls, avoid blocking overlays and
 decorative global lightning/progress rails, and show localized inline or
-pending feedback only when needed. Destination-shaped loading or skeleton
-surfaces and motion require explicit owner authorization for the target
-surface, respect reduced-motion preferences, and never imply product
-activation or owner acceptance.
+pending feedback only when needed. Destination-shaped loading, skeleton
+surfaces, and motion must respect reduced-motion preferences and never imply
+product activation or owner acceptance. Ordinary in-scope state work does not
+need a separate approval merely because this guard identifies the concern.
 
 ### Owner-Acceptance Gate
 
 Automated rendering, DOM checks, and screenshots are preparation evidence only.
-Every result must separate automated implementation verification, manual owner
-testing, and final owner visual acceptance. Mozfer alone owns manual browser,
-visual, RTL/mobile, and workflow acceptance; an agent must never label owner
-acceptance as passed.
+When a result addresses manual acceptance, separate automated implementation
+verification, manual owner testing, and final owner visual acceptance. Mozfer
+alone owns manual browser, visual, RTL/mobile, and workflow acceptance; an
+agent must never label owner acceptance as passed.
 
 ### Expansion-Reference Gate
 
@@ -314,12 +229,11 @@ older deferred statement.
 
 ### Required Design-Gate Record
 
-For every bounded design implementation, record: user task; alternative
-existing path; utility decision; information hierarchy; permissions; desktop,
-mobile, and responsive behavior; RTL/LTR; state × surface loading and motion
-decision; empty, loading, error, and unauthorized states; relationship context;
-duplication check; native-control collision check; sentinel-value check; and
-owner manual acceptance status.
+For a task that materially introduces a new surface, navigation, shared pattern,
+or sensitive presentation, record the relevant utility, authority, state,
+accessibility, direction, responsive, relationship, duplication, collision,
+sentinel-value, and manual-acceptance evidence. Do not require unrelated gate
+records for ordinary bounded maintenance.
 
 ## G7 ERP Constraints
 
@@ -351,7 +265,7 @@ The guard forbids automatic or implied:
 - stash;
 - rebase.
 
-Design audit, proposal, implementation, review, commit, and push are separate tasks. Implementation requires explicit exact-file authority; no task may broaden its file scope by inference. No design mode may switch branches or worktrees automatically.
+The guard does not create separate-task ceremony. Implementation, review, commit, and push require the explicit authority stated by the task; one clear bounded task may cover predictable steps when it expressly authorizes them. Directly affected design files may be inspected or changed inside that boundary; exact-file restrictions apply only when prescribed or required by material risk. No design task may switch branches or worktrees automatically.
 
 ## Current-Work Continuity
 
@@ -367,9 +281,8 @@ Preserve the following repository state and direction:
 
 ## Output Rule
 
-Every task ends with a truthful substantive result of `PASS`, `PASS WITH WARN`,
-`PARTIAL`, or `HOLD`, evidence, unknowns, non-mutation or exact-change
-confirmation, and exactly one bounded next action. The outer task-result token
-and execution-mode rules remain governed by `g7-crm-agent-control`. Never claim
+Every task ends with the literal `EXACT NEXT ACTION`; write `None` when no
+action remains. Agent Control governs the task-result vocabulary, execution
+rules, and final Task Verdict. Never claim
 browser smoke, production readiness, security compliance, financial
 correctness, or owner approval without evidence.

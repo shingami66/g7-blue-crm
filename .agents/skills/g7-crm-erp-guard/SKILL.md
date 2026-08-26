@@ -1,13 +1,13 @@
 ---
 name: g7-crm-erp-guard
-description: Use before or after G7 BLUE CRM work involving Company Settings, Services, Customers, Quotations, Invoices, Payments, VAT/ZATCA, RBAC, ERP business logic, backend data flow, financial calculations, or design system consistency.
+description: Domain-truth guidance for G7 BLUE CRM work materially involving Company Settings, Services, Customers, Quotations, Invoices, Payments, VAT/ZATCA, RBAC, ERP business logic, backend data flow, or financial calculations.
 ---
 
 # G7 CRM ERP Guard
 
-Use this repo-local guard before planning, implementing, or reviewing G7 BLUE CRM work that can affect ERP/business logic, financial documents, VAT/ZATCA behavior, RBAC, backend data flow, or the G7 BLUE design system. This is not a generic coding-style skill.
+Route this repo-local guard when ERP/business logic, financial documents, VAT/ZATCA behavior, RBAC, backend data flow, or related domain truth materially applies. This is not a generic coding-style or execution-workflow skill.
 
-Always follow `AGENTS.md` first. Do not touch `.env.local`, expose secrets, use `git add .`, stage, commit, or apply SQL/migrations outside an explicitly owner-approved `SUPABASE_APPLY_ONLY` task. Under that mode, only the exact reviewed migration and already-approved bounded DEV/DEMO verification operations are allowed; do not edit already-applied migrations or mix unrelated cleanup into feature phases.
+Always follow `AGENTS.md` and Agent Control first. Do not touch `.env.local`, expose secrets, or use broad staging. Database, schema, RLS, RPC, migration, and data mutation work require explicit task authority and the exact supported target; do not edit already-applied migrations or mix unrelated cleanup into feature phases. This guard does not own Writer/Reviewer orchestration, publication workflow, or final Task Verdict.
 
 ## Project Identity
 
@@ -20,87 +20,22 @@ Always follow `AGENTS.md` first. Do not touch `.env.local`, expose secrets, use 
 - Customer Profile is the hub.
 - Services replaced Projects; use Project only when referring to old/deprecated code or schema.
 
-## Mode Selection
+## Applying the Guard
 
-Use pre-implementation discussion mode when the user asks to plan, discuss, design, scope, or prepare a feature before coding.
+Use the active task to determine whether this guard materially applies; prompts do not need to name it. A clear bounded task authorizes ordinary in-scope inspection, implementation, diagnosis, repair, and proportional validation under Agent Control. Do not infer new product, financial, RBAC, database, or workflow authority. When a material domain uncertainty remains unresolved after relevant repository evidence is inspected, record it and seek a genuine Owner decision only when the task cannot safely continue.
 
-Use post-implementation review mode after Codex has produced code, SQL, docs, tests, UI, or a diff.
+## Relevant Context
 
-If the request is ambiguous, default to pre-implementation discussion mode and explicitly avoid implementation until the user approves coding.
-
-## Required Context Check
-
-Before making assumptions, read the relevant existing docs and code for the phase:
+Before making domain claims, inspect the relevant current docs and code for the affected phase. Use the following sources only when they materially apply:
 
 - `AGENTS.md` for non-negotiable repo rules.
 - `docs/project-roadmap.md`, `docs/project-status.md`, and `docs/deferred-decisions.md` for current phase and deferred business decisions.
 - `docs/roles-permissions.md` and `src/lib/auth/permissions.ts` for RBAC facts.
 - `docs/database-schema.md`, `docs/database-migrations.md`, `supabase/schema.sql`, and existing `supabase/migrations/` when discussing schema, RPC, RLS, or financial calculations. Do not create or apply SQL unless explicitly approved.
 - Existing domain modules under `src/lib/*`, data helpers under `src/lib/data/*`, and dashboard routes under `src/app/(dashboard)/*`.
-- Existing UI patterns in `src/components/layout/*` and `src/components/ui/*`, especially `PageHeader`, `FilterBar`, `DataTable`, `StatusBadge`, `KpiCard`, dashboard layout, detail cards, form sections, empty/loading/access-denied states, and print document layouts.
+- The Design Guard and Design Contract for visual identity, component reuse, accessibility, RTL/LTR, responsive behavior, and interaction quality; inspect existing UI patterns when the ERP task includes a presentation surface.
 
-## Mode 1: Pre-Implementation Discussion
-
-In this mode:
-
-1. Read the relevant existing project docs/code before making assumptions.
-2. Identify the correct product/ERP pattern.
-3. Identify the correct backend/data model direction.
-4. Identify existing UI/components/patterns to reuse.
-5. List business rules that must be preserved.
-6. List required permissions/RBAC implications.
-7. Explain VAT/ZATCA implications.
-8. Identify open decisions for the user.
-9. Identify risks and tradeoffs.
-10. Propose an implementation outline.
-11. Explicitly say: `Do not code yet until approved.`
-12. Avoid implementation unless the user explicitly approves.
-
-Return exactly these sections:
-
-1. Recommended Product/ERP Pattern
-2. Correct Backend/Data Model Direction
-3. Existing Components/Patterns To Reuse
-4. Business Rules That Must Be Preserved
-5. Permissions Required
-6. VAT/ZATCA Implications
-7. Open Decisions For The User
-8. Risks/Tradeoffs
-9. Proposed Implementation Outline
-10. Do Not Code Yet Until Approved
-
-## Mode 2: Post-Implementation Review
-
-In this mode:
-
-1. Review only the current diff unless the user asks for broader review.
-2. Check product workflow correctness.
-3. Check ERP/business logic correctness.
-4. Check backend/data model correctness.
-5. Check financial calculation safety.
-6. Check VAT/ZATCA safety.
-7. Check RBAC/security rules.
-8. Check design system consistency.
-9. Check loading, empty, error, and access-denied states.
-10. Check responsive behavior and accessibility basics.
-11. List required fixes before commit.
-12. List optional improvements separately.
-13. Return verdict: `Pass` or `Needs changes`.
-14. Do not stage or commit.
-
-Return exactly these sections:
-
-1. Verdict: Pass / Needs Changes
-2. Product Workflow Findings
-3. ERP/Business Logic Findings
-4. Backend/Data Model Findings
-5. Financial Calculation Findings
-6. VAT/ZATCA Findings
-7. RBAC/Security Findings
-8. Design System Findings
-9. Accessibility/Responsive Findings
-10. Required Fixes Before Commit
-11. Optional Improvements
+When planning or reviewing, report only the material domain findings, preserved rules, unknowns, and evidence needed by the task. Review scope defaults to the current task/diff unless the task authorizes broader evidence. Agent Control owns the Writer/Reviewer lifecycle, report vocabulary, staging, commit, push, and final verdict.
 
 ## Core Product Rules
 
@@ -259,17 +194,9 @@ Return exactly these sections:
 - Browser-side anon key must not expose sensitive CRM or financial data.
 - Do not add AI/LLM features without an AI security gate.
 
-## Design System Rules
+## ERP Presentation Boundary
 
-- Preserve G7 BLUE visual identity: deep navy, gold accents, clean enterprise SaaS, professional, not playful.
-- Do not introduce random colors.
-- Do not introduce random gradients.
-- Do not introduce random fonts.
-- Do not introduce unrelated visual styles.
-- Reuse existing layout and components where possible: Dashboard layout, PageHeader, FilterBar, DataTable, StatusBadge, KPI cards, detail cards, form sections, empty state, loading state, access denied state, and print document layouts.
-- Do not create one-off components if an existing pattern can be extended.
-- Include relevant loading states, empty states, validation errors, access denied states, success/failure feedback, and responsive behavior.
-- Do not redesign the whole app during a functional phase.
+The Design Guard and Design Contract own visual identity, component reuse, accessibility, RTL/LTR, responsive behavior, and interaction quality. This guard supplies the domain constraints that presentation must not violate: permission-aware treatment, customer/supplier financial separation, safe financial and operational state presentation, server-authority boundaries, and no invented workflow or product facts.
 
 ## Phase Planning Behavior
 
@@ -305,11 +232,11 @@ For invoices, recommend:
 - Do not make legal/tax claims that are not implemented in code.
 - Do not claim FATOORA/ZATCA compliance unless real integration exists.
 - Prefer safe, reviewable phases.
-- Ask for approval before coding.
+- A clear bounded task is sufficient for ordinary in-scope work; seek an Owner decision only for product invention, financial authority, RBAC expansion, database mutation, production/deployment, destructive action, or real scope expansion.
 - Always protect existing business decisions.
 
-## Mandatory Runtime Build Gate
-All runtime implementation slices must pass `pnpm run lint`, `pnpm exec tsc --noEmit`, and `pnpm build` before commit readiness. Docs-only slices do not require build unless runtime files changed.
+## Runtime Validation
+Use proportional validation for the affected ERP slice: focused tests, type/lint checks, diff checks, and a build when the task or build-affecting risk warrants it. Documentation-only changes do not require runtime validation unless the task requires it.
 
 ## Internal Supplier Allocation Cost Estimation Scope
 Internal supplier allocation cost estimation inside Service is approved for Admin/Manager internal planning only.
@@ -365,8 +292,8 @@ Supplier allocations may be created during active Service planning for internal 
 Create/update is blocked only for Services in: `Cancelled`, `Completed`.
 Supplier allocations do not create supplier commitment, issue Supplier Bookings, confirm supplier booking, or create financial commitment.
 
-## Team Lead Escalation Policy
-Escalate back to Team Lead / Project Owner only for:
+## Genuine Domain Escalation
+Seek an Owner decision only for:
 - new business workflow decisions
 - RBAC expansion to new roles
 - supplier cost exposure changes
@@ -377,8 +304,9 @@ Escalate back to Team Lead / Project Owner only for:
 - Supplier Booking scope expansion beyond the locked internal Service Detail create/cancel workflow
 - supplier invoice/payment workflows
 - costing/margin report workflows
-- security/build validation failures
-No Team Lead escalation is required for implementation that exactly follows locked decisions, docs sync matching approved decisions, create-only UI within approved boundaries, validation/commit/push after PASS, small refactors that do not change business logic, security, RBAC, database, or public/customer-facing behavior.
+- security or required-validation failures that cannot be repaired inside the authorized boundary
+
+No routine escalation is required for implementation that follows locked decisions, documentation synchronization matching approved decisions, directly affected UI within approved boundaries, proportional validation, publication expressly authorized by the task, or small refactors that do not change business logic, security, RBAC, database, or public/customer-facing behavior.
 
 ## Cursor Audit Priority Gates & Blockers
 Supplier Bookings Domain Gate:

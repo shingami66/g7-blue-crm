@@ -16,11 +16,14 @@
 - **Auth/review closure:** `8d78d53` publishes the custom Clerk sign-in and reviewed supplier-access repair; Clerk remains authority. Device Trust, MFA, email-link, and session-task runtime are credentials-dependent unknowns only. Completed independent review closure is `0 BLOCKING / 0 MATERIAL / 0 MINOR`; the transient local `AuthDependencyError` is warning-only, not a task.
 - **Boundary:** Event ERP, Tender, VAT/ZATCA, production, Generic Product, and broad accounting remain deferred. No ERP, production, or database authority is activated.
 - **NEXT PRODUCT / ENGINEERING DIRECTION — Quotation Commercial Model Field-Evidence Gate.** The next step is discovery/reconciliation of the real G7 quotation commercial model before any schema or implementation design lock. No quotation changes are implemented or authorized by this documentation closure.
+- **Governance baseline:** Agent Control is the BASE layer; materially relevant skills are routed automatically. One logical Writer mutates, an independent read-only Reviewer reviews mutating work, confirmed findings return to the same Writer for repair and targeted rereview, and the Controller reconciles and issues the final Task Verdict. HOLD is reserved for genuine blockers; inherited unrelated dirty/untracked work may remain; publication validates only the exact authorized staged slice; and documentation sync is a normal closeout reminder, not a synthetic HOLD gate. Design Guard and ERP Guard provide domain guidance, while the G7 ERP Design Contract remains the deep durable reference. Prompts remain simple, bounded, and autonomy-friendly.
 
-## 1. Workflow Rule
+## 1. Delivery Workflow Reference
+The following sequence is a planning reference when its phases are authorized by the bounded task; it does not impose ceremony on ordinary work under the current governance baseline.
+
 **Plan -> Implement -> Build -> Manual Test -> Audit -> Commit -> Push -> PR -> Merge**
 
-After every successful merge:
+After a published change that changes delivered behavior, phase status, or decisions:
 - update `docs/project-status.md`
 - update `docs/project-roadmap.md`
 - update `docs/deferred-decisions.md` when decisions are added, resolved, or deferred

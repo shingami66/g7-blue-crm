@@ -7,17 +7,14 @@ description: Gatekeeper for G7 BLUE CRM before staging, committing, pushing, ope
 
 Use this skill before staging, committing, pushing, opening PRs, or merging.
 
-## Precommit Exact Plan Checks
+## Precommit Exact-Slice Checks
 
 Before staging:
-- Verify mode is `COMMIT_ONLY`.
-- Verify working tree contains exactly the approved changed files.
-- Verify no file was modified after the approved `REVIEW_ONLY` result.
-- Verify the approved review result exists.
-- For docs, verify Docs Guard result is PASS or explicitly owner-accepted PASS WITH WARN.
-- Verify exact approved commit count.
-- Verify exact approved commit subject.
-- Verify exact approved file group.
+- Verify the task explicitly authorizes staging and committing on the intended branch.
+- Record known inherited dirty and untracked work; preserve it without requiring whole-worktree cleanliness.
+- Verify the exact approved staged file group and intended commit count.
+- Verify the prescribed subject exactly when the task supplies one; otherwise use a concise, accurate subject within the authorized scope.
+- Verify required review and validation evidence for the staged slice, proportionate to the task and risk. Do not require a ceremonial prior guard PASS when the task did not require it.
 
 After staging:
 - `git diff --cached --name-only` must match the approved file list exactly.
@@ -26,12 +23,11 @@ After staging:
 - No broad staging (`git add .` is forbidden).
 
 Before commit:
-- Commit subject must match byte-for-byte.
-- Any difference causes HOLD.
-- The agent must not choose a "clearer" or "better" subject.
+- A prescribed commit subject must match byte-for-byte. A subject that conflicts with the authorized task causes `PRECOMMIT_SUBJECT_MISMATCH`.
+- When no subject is prescribed, use a concise accurate subject and record it in the task evidence.
 
 Required HOLD reasons:
-`PRECOMMIT_PLAN_MISMATCH`
+`PRECOMMIT_AUTHORITY_MISMATCH`
 `PRECOMMIT_FILE_MISMATCH`
 `PRECOMMIT_SUBJECT_MISMATCH`
 `PRECOMMIT_REVIEW_MISSING`
@@ -48,8 +44,7 @@ Required HOLD reasons:
 ## Commit / Push / PR
 
 - Commit only after all exact plan checks are satisfied.
-- Push and PR actions are forbidden in `COMMIT_ONLY` mode.
-- Pushes require `PUSH_ONLY` mode.
+- Push and PR actions require explicit task authorization and remain distinct from an ordinary commit authorization.
 
 ## Required Final Report
 

@@ -7,7 +7,7 @@
 - **Approval date:** 2026-08-02
 - **Effective authority:** Canonical design-governance authority when committed to the repository `main` branch.
 
-This Contract governs future visual, interaction, accessibility, RTL/LTR, responsive, and presentation work. It remains subordinate to product, ERP, security, accounting, permission, workflow, repository, and verified implementation authority. This approval is governance approval, not blanket implementation approval; it does not activate runtime redesign or Event ERP implementation. Every implementation task still requires separate explicit approval, exact scope, and acceptance criteria, while current V1 development continues independently.
+This Contract governs future visual, interaction, accessibility, RTL/LTR, responsive, and presentation work. It remains subordinate to product, ERP, security, accounting, permission, workflow, repository, and verified implementation authority. This approval is governance approval, not blanket implementation approval; it does not activate runtime redesign or Event ERP implementation. Implementation requires clear bounded task authority, relevant scope, and acceptance criteria appropriate to the work; Agent Control governs execution workflow, review, publication, and final verdicts while current V1 development continues independently.
 
 ## 2. Purpose
 
@@ -515,7 +515,7 @@ Browser or screenshot evidence must identify environment, route, role, locale, d
 
 ## 128. Design Review Gates
 
-Review gates cover authority, scope, product fidelity, current evidence, component reuse, accessibility, responsive behavior, English/Arabic, RTL/LTR, permissions, financial sensitivity, states, and owner approval before implementation.
+Apply relevant review gates for authority, scope, product fidelity, current evidence, component reuse, accessibility, responsive behavior, English/Arabic, RTL/LTR, permissions, financial sensitivity, and states. Manual owner acceptance is human-owned and required only when the active task requires it or claims it.
 
 ## 129. Manual Browser Smoke Requirements
 
@@ -523,7 +523,7 @@ Manual smoke is user-owned unless explicitly delegated in a bounded task. When r
 
 ## 130. Design Acceptance Criteria
 
-Acceptance requires the checklist in Section 134, evidence for applicable claims, no invented behavior, no broad redesign, and explicit owner approval state.
+When acceptance is in scope, use the relevant portions of Section 134, evidence for applicable claims, no invented behavior, no broad redesign, and explicit owner approval state. The Contract does not impose a fixed checklist on ordinary bounded maintenance.
 
 ## 131. Exceptions and Deviation Process
 
@@ -549,4 +549,4 @@ Open items include exact template details, role/assignment widget scopes, report
 - Loading, empty, error, unauthorized, archived/read-only, voided, superseded, attachments, evidence, and original preservation states are addressed.
 - No workflow, accounting, tax, schema, API, route, fake metric, or product fact was invented.
 - No critical mobile functionality is hidden; no unapproved dependency or broad redesign is introduced.
-- Where runtime visual or interaction claims are made, manual browser smoke evidence is required with named ownership, tested language and direction, tested viewport or device class, relevant permission role, and a documented PASS, WARN, or HOLD result; purely textual governance tasks do not require browser evidence. Evidence is supplied, unknowns are labeled, and owner approval state is recorded.
+- Where runtime visual or interaction claims are made, manual browser smoke evidence is required with named ownership, tested language and direction, tested viewport or device class, relevant permission role, and a documented repository-verdict result; purely textual governance tasks do not require browser evidence. Evidence is supplied, unknowns are labeled, and owner approval state is recorded.

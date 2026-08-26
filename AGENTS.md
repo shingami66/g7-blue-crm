@@ -8,29 +8,28 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## G7 Delegated Writer Execution
 
-For bounded G7 application work, Luna may use `$agy-delegate` as the single Writer when the Owner's request calls for delegation. The normal lifecycle is:
+For bounded G7 application work, the Controller assigns one logical Writer lane. `$agy-delegate` may provide that Writer when delegation is requested. The normal lifecycle is:
 
 Owner request
-→ Luna Controller
-→ one Gemini Writer through `$agy-delegate`
-→ Gemini bounded inner loop: inspect → edit → task-authorized focused validation → diagnose → repair → repeat until locally green → report
-→ Luna/Codex independent validation
-→ separate native Codex Reviewer using Alibaba OCR delegation rules when review is warranted
+→ Controller
+→ one Writer
+→ Writer bounded inner loop: inspect → edit → task-authorized focused validation → diagnose → repair → repeat until locally green → report
+→ independent read-only Reviewer after implementation and validation
 → logical Writer-lane repair for confirmed in-scope findings
-→ Luna revalidation and bounded rereview.
+→ Controller revalidation and bounded rereview.
 
 The Controller owns routine discovery and compiles compact evidence capsules plus task-specific delta prompts; standing repository law remains here and in the agent-control skill rather than being repeated in every routine prompt.
 
-The Writer may inspect and modify directly affected files inside the task-authorized working boundary, including relevant tests, local types/contracts, and direct callers/consumers required to complete the task. Exact-file allowlists remain binding when the task explicitly specifies them or when governance-sensitive, database/schema/RLS/RPC/migration, security, financial-authority, protected-infrastructure, or other materially high-risk work makes a broader envelope unsafe. A directly affected local file inside the authorized boundary is not by itself a HOLD or new Owner-approval condition; stop before a protected, materially excluded, destructive, database, deployment, production, or genuinely scope-expanding mutation. The Writer may run only task-authorized local focused tests, TypeScript, lint, or related validation inside that boundary; it is not the independent validator or final reviewer. The Writer never stages, commits, pushes, applies SQL, deploys, or changes production. Luna owns independent validation, evidence, and the final verdict. A same logical Writer does not require the same provider conversation: prefer resumption, but after a classified authentication, session, transport, or comparable environment failure, preserve work, avoid repeated discovery, ensure no prior mutating Writer remains active when checkable, and start one fresh bounded session with a Recovery Capsule. Never run two mutating Writers concurrently. Do not make `--dangerously-skip-permissions` a default; it requires explicit Owner authorization for the affected task only. Never expose authentication material or substitute an unapproved implementer. The model is selected by the task or current AGY configuration; this standing file does not freeze a model version.
+The Writer may inspect and modify directly affected files inside the task-authorized working boundary, including relevant tests, local types/contracts, and direct callers/consumers required to complete the task. Exact-file allowlists remain binding when the task explicitly specifies them or when governance-sensitive, database/schema/RLS/RPC/migration, security, financial-authority, protected-infrastructure, or other materially high-risk work makes a broader envelope unsafe. A directly affected local file inside the authorized boundary is not by itself a HOLD or new Owner-approval condition; stop before a protected, materially excluded, destructive, database, deployment, production, or genuinely scope-expanding mutation. The Writer may run only task-authorized local focused tests, TypeScript, lint, or related validation inside that boundary; it is not the independent validator or final reviewer. The Writer never stages, commits, pushes, applies SQL, deploys, or changes production. The Controller owns independent validation, evidence, and the final verdict. A same logical Writer does not require the same provider conversation: prefer resumption, but after a classified authentication, session, transport, or comparable environment failure, preserve work, avoid repeated discovery, ensure no prior mutating Writer remains active when checkable, and start one fresh bounded session with a Recovery Capsule. Never run two mutating Writers concurrently. Do not make `--dangerously-skip-permissions` a default; it requires explicit Owner authorization for the affected task only. Never expose authentication material or substitute an unapproved implementer. The model is selected by the task or current AGY configuration; this standing file does not freeze a model version.
 
 ## GOVERNANCE PRECEDENCE AND SAFETY
 
 1. `AGENTS.md`
-   Top-level repository authority, product rules, and relevant skill routing.
+   Top-level repository authority and product rules.
 2. `.agents/skills/g7-crm-agent-control/SKILL.md`
-   Bounded scope, Git/database/deployment safety, evidence, and report truthfulness.
+   Base execution protocol for bounded scope, Git/database/deployment safety, evidence, review, and report truthfulness.
 3. Routed domain guard skills
-   Such as ERP, security, documentation, tests, migrations, and precommit gates.
+   Material-domain guidance only, such as ERP, security, documentation, tests, migrations, and precommit gates.
 4. `docs/repository-worktree-governance.md`
    Supporting checkout and worktree guidance when those operations are in scope.
 5. Task prompt
@@ -79,12 +78,13 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 ## Working Workflow
 
 - **Bounded authorization:** A clear Owner request defines the evidence-driven working boundary: named repository, primary feature/domain/behavior, directly affected implementation, relevant tests, local types/contracts, direct callers/consumers, systems, exclusions, and actions. Ordinary bounded work may inspect or modify directly affected local files inside that boundary; exact-file allowlists remain binding when explicitly specified or required by risk. Do not widen scope by inference.
-- Luna keeps one logical Writer lane per mutation slice and allows the bounded inner loop (inspect → edit → focused validation → diagnose → repair → repeat until locally green → report) to remain in the same Owner-authorized task; a provider conversation may be replaced only through classified session-resilient recovery.
+- The Controller keeps one logical Writer lane per mutation slice and allows the bounded inner loop (inspect → edit → focused validation → diagnose → repair → repeat until locally green → report) to remain in the same Owner-authorized task; a provider conversation may be replaced only through classified session-resilient recovery.
 - Ordinary failing tests, unexpected code structure, and directly affected local callers, tests, or types are implementation work inside that boundary, not automatic HOLD conditions.
 - Classify OAuth/login prompts, permission denials, timeouts, provider transport failures, expired conversations, and wrapper failures before model escalation; do not label them model-capability failures without evidence.
 - Verify the task-supplied repository and preserve unrelated dirty state. Do not silently switch checkouts, clean files, or merge worktrees.
 - Use proportional validation: affected focused tests, typecheck, lint, and diff checks; add a build or manual smoke only when risk or the task requires it.
-- After merges that change delivered behavior, phase status, or decisions, update `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md` as applicable.
+- At task closeout, determine whether delivered behavior, phase status, or decisions require synchronization of `docs/project-status.md`, `docs/project-roadmap.md`, and `docs/deferred-decisions.md`. State when they are already synchronized; this reminder is not an automatic HOLD.
+- Do not create persistent artifacts, probes, markers, or test files outside the authorized task scope. Remove temporary diagnostics when they no longer provide retained engineering value; permanent product and regression tests are not temporary artifacts.
 - Before committing docs, run a documentation staleness audit: identify what changed in code, what changed outside code, what moved from pending to complete, any stale wording that must be corrected, what remains truly pending, and the next locked priority.
 - Before staging or commit work, confirm the intended branch.
 - For docs-only sync tasks, verify with `git status --short --untracked-files=all`, `git status -sb`, `git diff --name-only`, `git diff --stat`, `git diff --check`, and targeted `rg -n` against the allowed docs.
@@ -99,9 +99,9 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 
 ## Independent Review
 
-- Use separate read-only/findings-only review when material behavioral, security, financial, or governance risk warrants it.
+- After a mutating implementation and its validation, use separate read-only/findings-only review. The Reviewer reports findings only and never repairs; confirmed in-scope findings return to the same logical Writer lane for validation and targeted rereview.
 - Preserve one Writer per mutation slice and close review workers before any repair or commit stage.
-- If review capacity is unavailable, report the review as incomplete; do not relabel self-review as independent review.
+- If required review capacity is unavailable, return `HOLD` with the review marked incomplete; do not relabel self-review as independent review.
 
 ## Navigation
 

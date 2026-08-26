@@ -25,10 +25,9 @@ These rules exist because AI agents document from memory of how APIs *usually* l
 
 ## The Rules
 
-### Mandatory Docs Guard Gate
+### Documentation accuracy gate
 
-This skill is a MANDATORY gate for any documentation-affecting task. A docs task may not proceed to COMMIT_ONLY while Docs Guard is HOLD. No docs PASS without a Docs Guard result.
-Required docs outcomes: `DOCS GUARD: PASS`, `DOCS GUARD: PASS WITH WARN`, `DOCS GUARD: HOLD`.
+Use this guard when documentation scope, claim accuracy, stale-state reconciliation, consolidation, deletion, or review risk materially benefits from it. A small bounded documentation correction does not require a separate named Docs Guard result; validation remains proportionate to the task and risk. Never turn an uninvolved or unavailable optional guard into a HOLD.
 
 1. **Verify all claims** against source or canonical repository documents.
 2. **Reject local-machine links**: `file:///`, `C:/...`, `D:/...`, and user-profile paths are forbidden.
