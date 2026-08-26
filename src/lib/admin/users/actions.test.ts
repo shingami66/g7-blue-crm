@@ -570,6 +570,11 @@ test("G5-ACTION-3: setUserActive enforces users:manage and blocks self-deactivat
 });
 
 test("G5-ACTION-4: Server actions map low-level Supabase RPC execution errors gracefully", async () => {
+  const originalConsoleError = console.error;
+  const logs: string[] = [];
+  console.error = (...args: unknown[]) => logs.push(args.join(" "));
+
+  try {
   resetScenario({
     rpcResponses: {
       update_app_user_role: { data: null, error: { message: "connection timeout" } },
@@ -595,6 +600,16 @@ test("G5-ACTION-4: Server actions map low-level Supabase RPC execution errors gr
   });
   assert.equal(activeResult.success, false);
   assert.equal(activeResult.error, "Failed to update user status. Please try again.");
+  } finally {
+    console.error = originalConsoleError;
+  }
+
+  assert.equal(logs.some((log) => log.includes("connection timeout")), false);
+  assert.equal(logs.some((log) => log.includes("database offline")), false);
+  assert.deepEqual(logs, [
+    "[updateUserRole] RPC error: user_role_mutation_failed",
+    "[setUserActive] RPC error: user_status_mutation_failed",
+  ]);
 });
 
 // ---------------------------------------------------------------------------

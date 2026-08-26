@@ -8,29 +8,41 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/permissions";
-import { mapRowToCustomer, type CustomerMetricsRow } from "./mappers";
+import {
+  mapRowToCustomer,
+  mapRowToCustomerListItem,
+  mapRowToCustomerPickerItem,
+  type CustomerMetricsRow,
+} from "./mappers";
 import type { Customer } from "@/types/customer";
 import type { CustomerRow } from "./types";
 import { buildIlikeOrFilter } from "@/lib/search/server";
 import {
   normalizeCustomerListPageSize,
   normalizeCustomerListSearch,
+  type CustomerListRow,
+  type CustomerPickerRow,
   type CustomerListQuery,
   type CustomersListResult,
 } from "./types";
 import type { ListPageSize } from "@/lib/pagination";
 
 const CUSTOMER_LIST_COLUMNS =
-  "id, customer_number, company, contact, phone, email, city, status, customer_type, legal_name, commercial_registration_number, vat_number, national_address_building_number, national_address_street, national_address_district, national_address_city, national_address_postal_code, national_address_additional_number, national_address_country, billing_email, finance_contact_name, finance_contact_phone, payment_terms, po_required, created_at, updated_at";
+  "id, customer_number, company, contact, phone, email, city, status";
 
-const CUSTOMER_METRICS_COLUMNS =
+const CUSTOMER_LIST_METRICS_COLUMNS =
+  "customer_id, services_count, quotations_count, total_quoted_amount";
+
+const CUSTOMER_DETAIL_METRICS_COLUMNS =
   "customer_id, services_count, quotations_count, approved_quotations_count, draft_quotations_count, total_quoted_amount";
+
+const CUSTOMER_PICKER_COLUMNS = "id, company, contact, status";
 
 /**
  * Fetches all non-deleted customers, ordered by most-recently created first.
  * Returns an empty array on error (logged server-side only).
  */
-export async function getCustomers(): Promise<Customer[]> {
+export async function getCustomers(): Promise<import("./types").CustomerPickerItem[]> {
   await requirePermission("customers:read");
 
   try {
@@ -38,41 +50,17 @@ export async function getCustomers(): Promise<Customer[]> {
 
     const { data, error } = await supabase
       .from("customers")
-      .select(CUSTOMER_LIST_COLUMNS)
+      .select(CUSTOMER_PICKER_COLUMNS)
       .eq("is_deleted", false)
       .order("customer_number", { ascending: true });
 
     if (error) {
-      console.error("[getCustomers] Supabase error:", error.message);
+      console.error("[getCustomers] Supabase error: customer_picker_query_failed");
       return [];
     }
-
-    const { data: metricsData, error: metricsError } = await supabase
-      .from("customer_report_metrics")
-      .select(CUSTOMER_METRICS_COLUMNS);
-
-    if (metricsError) {
-      console.error("[getCustomers] Error fetching metrics:", metricsError.message);
-    }
-
-    const metricsMap = new Map<string, CustomerMetricsRow>();
-    if (metricsData) {
-      metricsData.forEach((m) => {
-        if (m.customer_id) {
-          metricsMap.set(m.customer_id, {
-            services_count: m.services_count ?? 0,
-            quotations_count: m.quotations_count ?? 0,
-            approved_quotations_count: m.approved_quotations_count ?? 0,
-            draft_quotations_count: m.draft_quotations_count ?? 0,
-            total_quoted_amount: m.total_quoted_amount ?? 0,
-          });
-        }
-      });
-    }
-
-    return (data as CustomerRow[]).map(row => mapRowToCustomer(row, metricsMap.get(row.id)));
-  } catch (err) {
-    console.error("[getCustomers] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return (data as CustomerPickerRow[]).map(mapRowToCustomerPickerItem);
+  } catch {
+    console.error("[getCustomers] Unexpected error: customer_picker_dependency_failed");
     return [];
   }
 }
@@ -107,7 +95,7 @@ export async function getCustomersList(options: CustomerListQuery = {}): Promise
     }
     const { count, error: countError } = await countQuery;
     if (countError) {
-      console.error("[getCustomersList] Count error:", countError.message);
+      console.error("[getCustomersList] Count error: customer_list_count_failed");
       return emptyCustomersResult(pageSize);
     }
     const total = count ?? 0;
@@ -118,33 +106,31 @@ export async function getCustomersList(options: CustomerListQuery = {}): Promise
       .order("customer_number", { ascending: true })
       .range(rangeStart, rangeStart + pageSize - 1);
     if (error) {
-      console.error("[getCustomersList] Data error:", error.message);
+      console.error("[getCustomersList] Data error: customer_list_query_failed");
       return emptyCustomersResult(pageSize);
     }
-    const rows = (data ?? []) as CustomerRow[];
+    const rows = (data ?? []) as CustomerListRow[];
     const ids = rows.map((row) => row.id);
     const { data: metricsData, error: metricsError } = ids.length > 0
-      ? await supabase.from("customer_report_metrics").select(CUSTOMER_METRICS_COLUMNS).in("customer_id", ids)
+      ? await supabase.from("customer_report_metrics").select(CUSTOMER_LIST_METRICS_COLUMNS).in("customer_id", ids)
       : { data: [], error: null };
-    if (metricsError) console.error("[getCustomersList] Metrics error:", metricsError.message);
-    const metricsMap = new Map<string, CustomerMetricsRow>();
+    if (metricsError) console.error("[getCustomersList] Metrics error: customer_list_metrics_failed");
+    const metricsMap = new Map<string, Pick<CustomerMetricsRow, "services_count" | "quotations_count" | "total_quoted_amount">>();
     for (const metric of metricsData ?? []) {
       if (metric.customer_id) {
         metricsMap.set(metric.customer_id, {
           services_count: metric.services_count ?? 0,
           quotations_count: metric.quotations_count ?? 0,
-          approved_quotations_count: metric.approved_quotations_count ?? 0,
-          draft_quotations_count: metric.draft_quotations_count ?? 0,
           total_quoted_amount: metric.total_quoted_amount ?? 0,
         });
       }
     }
     return {
-      customers: rows.map((row) => mapRowToCustomer(row, metricsMap.get(row.id))),
+      customers: rows.map((row) => mapRowToCustomerListItem(row, metricsMap.get(row.id))),
       pagination: { page, pageSize, total, totalPages },
     };
-  } catch (err) {
-    console.error("[getCustomersList] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+  } catch {
+    console.error("[getCustomersList] Unexpected error: customer_list_dependency_failed");
     return emptyCustomersResult(pageSize);
   }
 }
@@ -158,7 +144,7 @@ export async function getCustomerCities(): Promise<string[]> {
     .not("city", "is", null)
     .limit(5000);
   if (error) {
-    console.error("[getCustomerCities] Supabase error:", error.message);
+    console.error("[getCustomerCities] Supabase error: customer_city_query_failed");
     return [];
   }
   return [...new Set((data ?? []).map((row) => String(row.city)).filter(Boolean))].sort();
@@ -188,7 +174,7 @@ export async function getCustomerById(id: string): Promise<Customer | null> {
 
     const { data: metricsData, error: metricsError } = await supabase
       .from("customer_report_metrics")
-      .select("*")
+      .select(CUSTOMER_DETAIL_METRICS_COLUMNS)
       .eq("customer_id", id)
       .single();
 

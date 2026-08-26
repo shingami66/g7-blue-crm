@@ -1,4 +1,4 @@
-import type { Invoice, InvoiceType, JsonValue } from "@/types/invoice";
+import type { InvoiceStatus, InvoiceType, JsonValue } from "@/types/invoice";
 import { sanitizeSearchTerm } from "@/lib/search/sanitize";
 import type { BusinessYear } from "@/lib/business-year";
 import {
@@ -26,8 +26,21 @@ export interface InvoiceListPagination {
   totalPages: number;
 }
 
+/** Fields required by the authenticated invoice list UI only. */
+export interface InvoiceListItem {
+  id: string;
+  invoice_number: string;
+  invoice_type: InvoiceType;
+  document_label: string;
+  customer: string;
+  issued_at: string | null;
+  created_at: string;
+  grand_total: number;
+  status: InvoiceStatus;
+}
+
 export interface InvoicesListResult {
-  invoices: Invoice[];
+  invoices: InvoiceListItem[];
   pagination: InvoiceListPagination;
   error?: "invoices_load_failed";
 }

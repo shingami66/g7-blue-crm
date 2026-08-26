@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, AlertCircle } from "lucide-react";
 import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
-import type { Customer } from "@/types/customer";
+import type { CustomerPickerItem } from "@/lib/customers/types";
 import { createService } from "@/lib/services/actions";
 import { getCreateServiceErrorMessage } from "@/lib/i18n/service-action-feedback";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
@@ -14,7 +14,7 @@ import Button from "@/components/ui/Button";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 
 interface ServiceFormProps {
-  customers: Customer[];
+  customers: CustomerPickerItem[];
   dictionary: ServicesDictionary;
 }
 

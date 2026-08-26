@@ -64,7 +64,7 @@ export async function inviteUser(input: unknown): Promise<ActionResult> {
       return { success: false, error: "A user with this email already exists in Clerk." };
     }
 
-    console.error("[inviteUser] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    console.error("[inviteUser] Unexpected error: invitation_dependency_failed");
     return { success: false, error: "Failed to send invitation. Please try again." };
   }
 }
@@ -103,7 +103,7 @@ export async function updateUserRole(input: unknown): Promise<ActionResult> {
     });
 
     if (error) {
-      console.error("[updateUserRole] RPC error:", error.message);
+      console.error("[updateUserRole] RPC error: user_role_mutation_failed");
       return { success: false, error: "Failed to update role. Please try again." };
     }
 
@@ -134,7 +134,7 @@ export async function updateUserRole(input: unknown): Promise<ActionResult> {
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
-    console.error("[updateUserRole] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    console.error("[updateUserRole] Unexpected error: user_role_dependency_failed");
     return { success: false, error: "An unexpected error occurred." };
   }
 }
@@ -171,7 +171,7 @@ export async function setUserActive(input: unknown): Promise<ActionResult> {
     });
 
     if (error) {
-      console.error("[setUserActive] RPC error:", error.message);
+      console.error("[setUserActive] RPC error: user_status_mutation_failed");
       return { success: false, error: "Failed to update user status. Please try again." };
     }
 
@@ -200,7 +200,7 @@ export async function setUserActive(input: unknown): Promise<ActionResult> {
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
-    console.error("[setUserActive] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    console.error("[setUserActive] Unexpected error: user_status_dependency_failed");
     return { success: false, error: "An unexpected error occurred." };
   }
 }
@@ -225,7 +225,7 @@ export async function revokeInvitation(invitationId: string): Promise<ActionResu
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
-    console.error("[revokeInvitation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    console.error("[revokeInvitation] Unexpected error: invitation_dependency_failed");
     return { success: false, error: "Failed to revoke invitation. Please try again." };
   }
 }
@@ -258,7 +258,7 @@ export async function getPendingInvitations(): Promise<ActionResult<Array<{
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
-    console.error("[getPendingInvitations] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    console.error("[getPendingInvitations] Unexpected error: invitation_list_dependency_failed");
     return { success: false, error: "Failed to fetch pending invitations." };
   }
 }

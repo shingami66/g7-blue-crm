@@ -235,12 +235,15 @@ test("Explicit status filtering remains paired with the same Business Year datas
 });
 
 const EXPECTED_INVOICE_LIST_PROJECTION =
-  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, vat_rate, vat_amount, grand_total, amount_paid, balance_due, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at, customers(company,contact), services(service_number,service_title)";
+  "id, invoice_number, invoice_type, status, document_label, grand_total, issued_at, created_at, snapshot_buyer, customers(company,contact)";
 
 const EXPECTED_INVOICE_INNER_SEARCH_PROJECTION =
-  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, vat_rate, vat_amount, grand_total, amount_paid, balance_due, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at, customers!inner(company,contact), services(service_number,service_title)";
+  "id, invoice_number, invoice_type, status, document_label, grand_total, issued_at, created_at, snapshot_buyer, customers!inner(company,contact)";
 
-test("getInvoicesList uses exact explicit projection and maps full row shape preserving all fields", async () => {
+const EXPECTED_INVOICE_READ_PROJECTION =
+  "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, vat_rate, vat_amount, grand_total, amount_paid, balance_due, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at, customers(company,contact), services(service_number,service_title)";
+
+test("getInvoicesList uses an allowlisted projection and preserves required UI fields only", async () => {
   const sampleRow = {
     id: "inv-1",
     invoice_number: "INV-2026-0001",
@@ -292,45 +295,18 @@ test("getInvoicesList uses exact explicit projection and maps full row shape pre
   const expectedMappedInvoice = {
     id: "inv-1",
     invoice_number: "INV-2026-0001",
-    approved_quotation_id: "quot-1",
-    approved_billing_scope_id: "scope-1",
     invoice_type: "deposit",
-    service_id: "serv-1",
-    documentDate: "2026-08-01",
-    documentDueDate: "2026-08-15",
-    status: "issued",
-    subtotal: 10000,
-    discount_amount: 500,
-    vat_rate: 0.15,
-    vat_amount: 1425,
-    grand_total: 10925,
-    amount_paid: 5000,
-    balance_due: 5925,
-    currency: "SAR",
     document_label: "Deposit Invoice",
-    vat_mode: "standard",
-    snapshot_seller: null,
-    snapshot_buyer: null,
-    snapshot_quotation: { discount: 500 },
-    snapshot_bank_details: null,
-    snapshot_document_rules: null,
-    issued_at: "2026-08-01T10:00:00Z",
-    voided_at: null,
-    void_reason: null,
-    created_at: "2026-08-01T10:00:00Z",
-    updated_at: "2026-08-01T10:00:00Z",
     customer: "Alpha Corp",
-    serviceNumber: "SRV-2026-0001",
-    serviceTitle: "Annual Gala",
-    customerId: "cust-1",
-    relatedQuote: "quot-1",
-    relatedQuoteNumber: undefined,
-    amount: "10,925.00",
-    date: new Date("2026-08-01T10:00:00Z").toLocaleDateString(),
-    dueDate: new Date("2026-08-01T10:00:00Z").toLocaleDateString(),
-    items: [],
+    issued_at: "2026-08-01T10:00:00Z",
+    created_at: "2026-08-01T10:00:00Z",
+    grand_total: 10925,
+    status: "issued",
   };
   assert.deepEqual(result.invoices[0], expectedMappedInvoice);
+  assert.equal("snapshot_bank_details" in result.invoices[0], false);
+  assert.equal("snapshot_quotation" in result.invoices[0], false);
+  assert.equal("approved_quotation_id" in result.invoices[0], false);
 });
 
 test("getInvoicesList with customer search uses exact inner join projection without wildcard (*)", async () => {
@@ -344,6 +320,27 @@ test("getInvoicesList with customer search uses exact inner join projection with
   assert.equal(countQuery.columns, "id, customers!inner(id)");
   assert.equal(dataQuery.columns, EXPECTED_INVOICE_INNER_SEARCH_PROJECTION);
   assert.equal(dataQuery.columns?.includes("*"), false);
+});
+
+test("getInvoicesList emits a sanitized diagnostic without the provider error message", async () => {
+  const providerMessage = "invoice provider detail must stay server-side";
+  const scenarioState = resetScenario({
+    countResponse: { data: null, error: { message: providerMessage }, count: null },
+  });
+  const originalConsoleError = console.error;
+  const logs: string[] = [];
+  console.error = (...args: unknown[]) => logs.push(args.join(" "));
+
+  try {
+    const result = await getInvoicesList();
+    assert.equal(result.error, "invoices_load_failed");
+  } finally {
+    console.error = originalConsoleError;
+  }
+
+  assert.equal(logs.some((log) => log.includes(providerMessage)), false);
+  assert.deepEqual(logs, ["[getInvoicesList] Count error: invoice_list_count_failed"]);
+  assert.equal(scenarioState.calls.length, 2);
 });
 
 test("getInvoices uses exact explicit projection and does not request wildcard (*)", async () => {
@@ -391,7 +388,7 @@ test("getInvoices uses exact explicit projection and does not request wildcard (
 
   assert.equal(scenarioState.calls.length, 1);
   const query = scenarioState.calls[0];
-  assert.equal(query.columns, EXPECTED_INVOICE_LIST_PROJECTION);
+  assert.equal(query.columns, EXPECTED_INVOICE_READ_PROJECTION);
   assert.equal(query.columns?.includes("*"), false);
 
   assert.equal(invoices.length, 1);

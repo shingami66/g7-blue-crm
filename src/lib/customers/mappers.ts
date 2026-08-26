@@ -1,5 +1,11 @@
 import type { Customer } from "@/types/customer";
-import type { CustomerRow } from "./types";
+import type {
+  CustomerListItem,
+  CustomerListRow,
+  CustomerPickerItem,
+  CustomerPickerRow,
+  CustomerRow,
+} from "./types";
 
 /**
  * Maps a Supabase `customers` row to the frontend `Customer` shape.
@@ -14,6 +20,34 @@ export interface CustomerMetricsRow {
   approved_quotations_count: number;
   draft_quotations_count: number;
   total_quoted_amount: number;
+}
+
+export function mapRowToCustomerListItem(
+  row: CustomerListRow,
+  metrics?: Pick<CustomerMetricsRow, "services_count" | "quotations_count" | "total_quoted_amount">,
+): CustomerListItem {
+  return {
+    id: row.id,
+    customerNumber: row.customer_number,
+    company: row.company,
+    contact: row.contact,
+    phone: row.phone,
+    email: row.email,
+    city: row.city,
+    status: row.status,
+    servicesCount: metrics?.services_count ?? 0,
+    quotationsCount: metrics?.quotations_count ?? 0,
+    totalQuotedAmount: metrics?.total_quoted_amount ?? 0,
+  };
+}
+
+export function mapRowToCustomerPickerItem(row: CustomerPickerRow): CustomerPickerItem {
+  return {
+    id: row.id,
+    company: row.company,
+    contact: row.contact,
+    status: row.status,
+  };
 }
 
 export function mapRowToCustomer(row: CustomerRow, metrics?: CustomerMetricsRow): Customer {

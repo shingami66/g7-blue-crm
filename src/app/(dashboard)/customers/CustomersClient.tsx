@@ -15,12 +15,11 @@ import {
   type CustomersDictionary,
 } from "@/lib/i18n/dictionaries/customers";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
-import type { Customer } from "@/types/customer";
 import { CustomerCoreFields, CustomerOfficialBillingFields } from "./CustomerFormFields";
 import { generateExcelReport } from "@/lib/reports/exportExcel";
 import { useListNavigation } from "@/components/ui/useListNavigation";
 import { LIST_PAGE_SIZES, type ListPageSize } from "@/lib/pagination";
-import { normalizeCustomerListSearch, type CustomerListPagination, type CustomerListQuery } from "@/lib/customers/types";
+import { normalizeCustomerListSearch, type CustomerListItem, type CustomerListPagination, type CustomerListQuery } from "@/lib/customers/types";
 import { getCommonDictionary, getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 import { sanitizeSearchTerm } from "@/lib/search/sanitize";
 
@@ -59,7 +58,7 @@ export default function CustomersClient({
   generatedBy,
   dictionary,
 }: {
-  customers: Customer[];
+  customers: CustomerListItem[];
   pagination: CustomerListPagination;
   query: CustomerListQuery;
   cities: string[];
@@ -155,7 +154,7 @@ export default function CustomersClient({
       activeFilters.push(`${dictionary.list.report.cityFilter}: ${query.city}`);
     }
 
-    await generateExcelReport<Customer>({
+    await generateExcelReport<CustomerListItem>({
       locale: dictionary.locale,
       chrome: dictionary.list.report.chrome,
       metadata: {

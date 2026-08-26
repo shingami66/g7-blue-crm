@@ -109,7 +109,7 @@ function resetScenario(overrides: Partial<Scenario> = {}): Scenario {
   return activeScenario;
 }
 
-const EXPECTED_ADMIN_USERS_PROJECTION = "id, email, name, role, is_active, created_at, updated_at";
+const EXPECTED_ADMIN_USERS_PROJECTION = "id, email, name, role, is_active, created_at";
 
 test("getAppUsers query projection does not request clerk_user_id or wildcard (*)", async () => {
   const sampleUsers = [
@@ -120,7 +120,8 @@ test("getAppUsers query projection does not request clerk_user_id or wildcard (*
       role: "admin",
       is_active: true,
       created_at: "2026-08-01T00:00:00Z",
-      updated_at: "2026-08-01T00:00:00Z",
+      updated_at: "2026-08-02T00:00:00Z",
+      clerk_user_id: "user_clerk_1",
     },
   ];
 
@@ -132,7 +133,15 @@ test("getAppUsers query projection does not request clerk_user_id or wildcard (*
   if (result.success) {
     assert.equal(result.users.length, 1);
     assert.equal("clerk_user_id" in result.users[0], false, "AppUserRow must not contain clerk_user_id");
-    assert.deepEqual(result.users[0], sampleUsers[0]);
+    assert.equal("updated_at" in result.users[0], false, "Admin list DTO must not contain updated_at");
+    assert.deepEqual(result.users[0], {
+      id: "u-1",
+      email: "user1@example.com",
+      name: "Admin User",
+      role: "admin",
+      is_active: true,
+      created_at: "2026-08-01T00:00:00Z",
+    });
   }
 
   assert.equal(s.calls.length, 1);
@@ -156,12 +165,23 @@ test("getAppUsers enforces users:manage permission and handles authorization err
 });
 
 test("getAppUsers handles Supabase database error gracefully", async () => {
-  resetScenario({ error: { message: "DB connection timeout" } });
+  const providerMessage = "admin provider detail must stay server-side";
+  resetScenario({ error: { message: providerMessage } });
+  const originalConsoleError = console.error;
+  const logs: string[] = [];
+  console.error = (...args: unknown[]) => logs.push(args.join(" "));
 
-  const result = await getAppUsers();
+  let result: Awaited<ReturnType<typeof getAppUsers>>;
+  try {
+    result = await getAppUsers();
+  } finally {
+    console.error = originalConsoleError;
+  }
 
   assert.equal(result.success, false);
   if (!result.success) {
     assert.equal(result.error, "Unable to load users. Please try again.");
   }
+  assert.equal(logs.some((log) => log.includes(providerMessage)), false);
+  assert.deepEqual(logs, ["[getAppUsers] Supabase error: user_list_query_failed"]);
 });

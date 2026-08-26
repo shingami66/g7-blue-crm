@@ -5,8 +5,7 @@ import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { APPROVED_BILLING_SCOPE_PERMISSIONS } from "@/lib/approved-billing-scopes/permissions";
 import type { ApprovedBillingScopeReadResult } from "@/lib/approved-billing-scopes/types";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Database } from "@/lib/supabase/database.types";
-import type { InvoiceRow } from "./types";
+import type { InvoiceListItem, InvoiceRow } from "./types";
 import { mapRowToInvoice } from "./mappers";
 import type { Invoice, JsonValue } from "@/types/invoice";
 import { buildIlikeOrFilter } from "@/lib/search/server";
@@ -80,6 +79,33 @@ function toInvoiceRow(row: Record<string, unknown>): InvoiceRow & {
     mutation_payload: toJsonValue(row.mutation_payload),
     customers: (row.customers as { company?: string | null; contact?: string | null } | null) ?? null,
     services: (row.services as { service_number?: string | null; service_title?: string | null } | null) ?? null,
+  };
+}
+
+function toInvoiceListItem(row: Record<string, unknown>): InvoiceListItem {
+  const relationCustomer = row.customers as { company?: string | null } | null | undefined;
+  let customer = relationCustomer?.company ?? "Unknown Customer";
+  const buyer = row.snapshot_buyer;
+
+  if (buyer && typeof buyer === "object" && !Array.isArray(buyer)) {
+    const buyerRecord = buyer as Record<string, unknown>;
+    if (typeof buyerRecord.name === "string" && buyerRecord.name) {
+      customer = buyerRecord.name;
+    } else if (typeof buyerRecord.legalName === "string" && buyerRecord.legalName) {
+      customer = buyerRecord.legalName;
+    }
+  }
+
+  return {
+    id: typeof row.id === "string" ? row.id : "",
+    invoice_number: typeof row.invoice_number === "string" ? row.invoice_number : "",
+    invoice_type: row.invoice_type as InvoiceListItem["invoice_type"],
+    document_label: typeof row.document_label === "string" ? row.document_label : "Tax Invoice",
+    customer,
+    issued_at: typeof row.issued_at === "string" ? row.issued_at : null,
+    created_at: typeof row.created_at === "string" ? row.created_at : "",
+    grand_total: Number(row.grand_total) || 0,
+    status: row.status as InvoiceListItem["status"],
   };
 }
 
@@ -196,15 +222,18 @@ export async function getInvoicesByQuotationId(quotationId: string): Promise<Inv
   return (data ?? []).map((row) => mapRowToInvoice(toInvoiceRow(row)));
 }
 
-const INVOICE_LIST_COLUMNS =
+const INVOICE_READ_COLUMNS =
   "id, invoice_number, approved_quotation_id, approved_billing_scope_id, customer_id, invoice_type, service_id, date, due_date, status, subtotal, vat_rate, vat_amount, grand_total, amount_paid, balance_due, document_label, vat_mode, snapshot_seller, snapshot_buyer, snapshot_quotation, snapshot_bank_details, snapshot_document_rules, issued_at, voided_at, void_reason, created_at, updated_at, is_deleted, deleted_at";
+
+const INVOICE_LIST_COLUMNS =
+  "id, invoice_number, invoice_type, status, document_label, grand_total, issued_at, created_at, snapshot_buyer";
 
 export async function getInvoices(options: { year?: number } = {}): Promise<Invoice[]> {
   await requirePermission("invoices:read");
   const supabase = createAdminClient();
   let query = supabase
     .from("invoices")
-    .select(`${INVOICE_LIST_COLUMNS}, customers(company,contact), services(service_number,service_title)`)
+    .select(`${INVOICE_READ_COLUMNS}, customers(company,contact), services(service_number,service_title)`)
     .eq("is_deleted", false);
   if (options.year) {
     const bounds = getBusinessYearBounds(options.year);
@@ -251,8 +280,8 @@ export async function getInvoicesList(
       .from("invoices")
       .select(
         searchRelation
-          ? `${INVOICE_LIST_COLUMNS}, customers!inner(company,contact), services(service_number,service_title)`
-          : `${INVOICE_LIST_COLUMNS}, customers(company,contact), services(service_number,service_title)`,
+          ? `${INVOICE_LIST_COLUMNS}, customers!inner(company,contact)`
+          : `${INVOICE_LIST_COLUMNS}, customers(company,contact)`,
       )
       .eq("is_deleted", false);
 
@@ -272,7 +301,7 @@ export async function getInvoicesList(
 
     const { count, error: countError } = await countQuery;
     if (countError) {
-      console.error("[getInvoicesList] Count error:", countError.message);
+      console.error("[getInvoicesList] Count error: invoice_list_count_failed");
       return { invoices: [], pagination: { page: 1, pageSize, total: 0, totalPages: 1 }, error: "invoices_load_failed" };
     }
 
@@ -287,17 +316,17 @@ export async function getInvoicesList(
       .range(rangeStart, rangeStart + pageSize - 1);
 
     if (error) {
-      console.error("[getInvoicesList] Data error:", error.message);
+      console.error("[getInvoicesList] Data error: invoice_list_query_failed");
       return { invoices: [], pagination: { page: 1, pageSize, total: 0, totalPages: 1 }, error: "invoices_load_failed" };
     }
 
     return {
-      invoices: (data ?? []).map(toInvoiceRow).map(mapRowToInvoice),
+      invoices: (data ?? []).map(toInvoiceListItem),
       pagination: { page, pageSize, total, totalPages },
     };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;
-    console.error("[getInvoicesList] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    console.error("[getInvoicesList] Unexpected error: invoice_list_dependency_failed");
     return { invoices: [], pagination: { page: 1, pageSize, total: 0, totalPages: 1 }, error: "invoices_load_failed" };
   }
 }

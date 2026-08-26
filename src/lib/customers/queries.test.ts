@@ -171,10 +171,12 @@ function resetScenario(overrides: Partial<Scenario> = {}): Scenario {
 }
 
 const EXPECTED_CUSTOMER_LIST_PROJECTION =
-  "id, customer_number, company, contact, phone, email, city, status, customer_type, legal_name, commercial_registration_number, vat_number, national_address_building_number, national_address_street, national_address_district, national_address_city, national_address_postal_code, national_address_additional_number, national_address_country, billing_email, finance_contact_name, finance_contact_phone, payment_terms, po_required, created_at, updated_at";
+  "id, customer_number, company, contact, phone, email, city, status";
 
 const EXPECTED_CUSTOMER_METRICS_PROJECTION =
-  "customer_id, services_count, quotations_count, approved_quotations_count, draft_quotations_count, total_quoted_amount";
+  "customer_id, services_count, quotations_count, total_quoted_amount";
+
+const EXPECTED_CUSTOMER_PICKER_PROJECTION = "id, company, contact, status";
 
 test("getCustomersList uses exact explicit projection for customers and metrics, mapping complete row shape", async () => {
   const sampleCustomer = {
@@ -233,27 +235,13 @@ test("getCustomersList uses exact explicit projection for customers and metrics,
   assert.equal(cust.email, "alice@example.com");
   assert.equal(cust.city, "Riyadh");
   assert.equal(cust.status, "active");
-  assert.equal(cust.customerType, "corporate");
-  assert.equal(cust.legalName, "Test Corp Ltd");
-  assert.equal(cust.commercialRegistrationNumber, "1010101010");
-  assert.equal(cust.vatNumber, "300000000000003");
-  assert.equal(cust.nationalAddressBuildingNumber, "1234");
-  assert.equal(cust.nationalAddressStreet, "King Fahd Rd");
-  assert.equal(cust.nationalAddressDistrict, "Olaya");
-  assert.equal(cust.nationalAddressCity, "Riyadh");
-  assert.equal(cust.nationalAddressPostalCode, "12211");
-  assert.equal(cust.nationalAddressAdditionalNumber, "5678");
-  assert.equal(cust.nationalAddressCountry, "SA");
-  assert.equal(cust.billingEmail, "billing@testcorp.com");
-  assert.equal(cust.financeContactName, "Bob Finance");
-  assert.equal(cust.financeContactPhone, "987654");
-  assert.equal(cust.paymentTerms, "net_30");
-  assert.equal(cust.poRequired, true);
   assert.equal(cust.servicesCount, 3);
   assert.equal(cust.quotationsCount, 2);
-  assert.equal(cust.approvedQuotationsCount, 1);
-  assert.equal(cust.draftQuotationsCount, 1);
   assert.equal(cust.totalQuotedAmount, 15000);
+  assert.equal("vatNumber" in cust, false);
+  assert.equal("nationalAddressStreet" in cust, false);
+  assert.equal("billingEmail" in cust, false);
+  assert.equal("financeContactName" in cust, false);
 
   // Check calls: count query, customer data query, metrics data query
   assert.equal(s.calls.length, 3);
@@ -273,7 +261,7 @@ test("getCustomersList uses exact explicit projection for customers and metrics,
   assert.equal(metricsCall.columns?.includes("*"), false);
 });
 
-test("getCustomers uses exact explicit projection for both customers and metrics without wildcard (*)", async () => {
+test("getCustomers uses an allowlisted picker projection without wildcard (*)", async () => {
   const sampleCustomer = {
     id: "cust-2",
     customer_number: "CUST-0002",
@@ -318,22 +306,37 @@ test("getCustomers uses exact explicit projection for both customers and metrics
 
   const customers = await getCustomers();
 
-  assert.equal(customers.length, 1);
-  assert.equal(customers[0].company, "Beta LLC");
-  assert.equal(customers[0].servicesCount, 5);
-  assert.equal(customers[0].totalQuotedAmount, 25000);
+  assert.deepEqual(customers, [
+    { id: "cust-2", company: "Beta LLC", contact: "Bob", status: "active" },
+  ]);
 
-  assert.equal(s.calls.length, 2);
+  assert.equal(s.calls.length, 1);
 
   const customerCall = s.calls[0];
   assert.equal(customerCall.table, "customers");
-  assert.equal(customerCall.columns, EXPECTED_CUSTOMER_LIST_PROJECTION);
+  assert.equal(customerCall.columns, EXPECTED_CUSTOMER_PICKER_PROJECTION);
   assert.equal(customerCall.columns?.includes("*"), false);
+});
 
-  const metricsCall = s.calls[1];
-  assert.equal(metricsCall.table, "customer_report_metrics");
-  assert.equal(metricsCall.columns, EXPECTED_CUSTOMER_METRICS_PROJECTION);
-  assert.equal(metricsCall.columns?.includes("*"), false);
+test("getCustomersList emits a sanitized diagnostic without the provider error message", async () => {
+  const providerMessage = "customer provider detail must stay server-side";
+  const s = resetScenario({
+    customersError: { message: providerMessage },
+  });
+  const originalConsoleError = console.error;
+  const logs: string[] = [];
+  console.error = (...args: unknown[]) => logs.push(args.join(" "));
+
+  try {
+    const result = await getCustomersList();
+    assert.equal(result.error, "customers_load_failed");
+  } finally {
+    console.error = originalConsoleError;
+  }
+
+  assert.equal(logs.some((log) => log.includes(providerMessage)), false);
+  assert.deepEqual(logs, ["[getCustomersList] Count error: customer_list_count_failed"]);
+  assert.equal(s.calls.length, 2);
 });
 
 test("getCustomerCities uses explicit city projection", async () => {

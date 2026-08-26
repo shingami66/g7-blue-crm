@@ -6,6 +6,7 @@
  */
 
 export type { Customer, CustomerStatus, CustomerType } from "@/types/customer";
+import type { CustomerStatus } from "@/types/customer";
 
 import { sanitizeSearchTerm } from "@/lib/search/sanitize";
 import { normalizeListPage, normalizeListPageSize, type ListPageSize } from "@/lib/pagination";
@@ -25,8 +26,31 @@ export interface CustomerListPagination {
   totalPages: number;
 }
 
+/** Fields required by the authenticated Customers list and export UI only. */
+export interface CustomerListItem {
+  id: string;
+  customerNumber: string;
+  company: string;
+  contact: string;
+  phone: string;
+  email: string;
+  city: string;
+  status: CustomerStatus;
+  servicesCount: number;
+  quotationsCount: number;
+  totalQuotedAmount: number;
+}
+
+/** Fields required by the authenticated Service customer picker only. */
+export interface CustomerPickerItem {
+  id: string;
+  company: string;
+  contact: string;
+  status: CustomerStatus;
+}
+
 export interface CustomersListResult {
-  customers: import("@/types/customer").Customer[];
+  customers: CustomerListItem[];
   pagination: CustomerListPagination;
   error?: "customers_load_failed";
 }
@@ -50,6 +74,24 @@ export function normalizeCustomerStatus(value: unknown): CustomerListQuery["stat
 }
 
 /** Raw row shape returned by Supabase for the `customers` table. */
+export interface CustomerListRow {
+  id: string;
+  customer_number: string;
+  company: string;
+  contact: string;
+  phone: string;
+  email: string;
+  city: string;
+  status: CustomerStatus;
+}
+
+export interface CustomerPickerRow {
+  id: string;
+  company: string;
+  contact: string;
+  status: CustomerStatus;
+}
+
 export interface CustomerRow {
   id: string;
   customer_number: string;

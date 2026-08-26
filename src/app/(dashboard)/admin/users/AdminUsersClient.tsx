@@ -17,7 +17,7 @@ import {
   revokeInvitation,
 } from "@/lib/admin/users/actions";
 import { CRM_ROLES } from "@/lib/admin/users/schemas";
-import type { AppUserRow } from "@/lib/admin/users/queries";
+import type { AdminUserListItem } from "@/lib/admin/users/queries";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import {
   formatAdminUsersCopy,
@@ -37,7 +37,7 @@ type PendingInvitation = {
 };
 
 interface AdminUsersClientProps {
-  initialUsers: AppUserRow[];
+  initialUsers: AdminUserListItem[];
   initialPendingInvitations: PendingInvitation[];
   pendingInvitationsWarning: string | null;
   currentUserId: string;

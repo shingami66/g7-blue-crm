@@ -10,7 +10,8 @@ import Button from "@/components/ui/Button";
 import { useListNavigation } from "@/components/ui/useListNavigation";
 import { Download, Filter, Eye, Printer, Plus } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
-import type { Invoice, InvoiceStatus } from "@/types/invoice";
+import type { InvoiceListItem } from "@/lib/invoices/types";
+import type { InvoiceStatus } from "@/types/invoice";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import {
   getInvoiceDocumentLabelDisplay,
@@ -65,7 +66,7 @@ const INVOICE_COLUMN_ALIGNMENTS = [
 ] as const;
 
 interface InvoicesListClientProps {
-  initialInvoices: Invoice[];
+  initialInvoices: InvoiceListItem[];
   pagination: InvoiceListPagination;
   query: InvoiceListQuery;
   loadError?: "invoices_load_failed";
