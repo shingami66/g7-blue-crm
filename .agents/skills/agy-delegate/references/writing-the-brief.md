@@ -70,9 +70,11 @@ This keeps the Writer focused on file edits and makes validation evidence the or
 
 ## Honor the repo's conventions
 
-If the project has house rules in `AGENTS.md`, `CLAUDE.md`, or a similar file, restate the load-bearing
-ones in the brief. Antigravity can inspect the workspace, but compliance is more reliable when the
-important rules are directly in front of it.
+Routine briefs should rely on discoverable repository governance in `AGENTS.md`, routed Agent Control,
+and related repository instructions rather than copying standing repository law into every brief.
+Restate only task-specific constraints, material exceptions, or load-bearing boundaries that are not
+safely discoverable or need explicit emphasis for this task. Keep the brief self-contained enough for
+Antigravity to execute the bounded task correctly.
 
 ## One task per brief
 
