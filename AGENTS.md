@@ -63,7 +63,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 - `pnpm exec next typegen` is the documented Next.js route type generation check for App Router changes that rely on generated types.
 - `pnpm exec tsc --noEmit` is the documented typecheck verification command for runtime implementation slices.
 - `git diff --check` is the documented whitespace/conflict-marker verification command before commit readiness for implementation or docs sync work.
-- Controlled commit verification also uses `git diff --name-only`, `git diff --stat`, `git diff --cached --name-only`, `git diff --cached --stat`, `git show --check --stat HEAD`, and `git show --name-only --oneline --stat HEAD` as documented in `docs/workflow-prompt-templates.md`.
+- Controlled commit verification also uses `git diff --name-only`, `git diff --stat`, `git diff --cached --name-only`, `git diff --cached --stat`, `git show --check --stat HEAD`, and `git show --name-only --oneline --stat HEAD`.
 - Runtime validation is proportional to risk: run the affected focused tests, typecheck, lint, and diff checks; add a full build or manual smoke only when the touched behavior warrants it or the task requests it.
 - `pnpm test` runs the focused Company Settings schema test at `src/lib/settings/schemas.test.ts`.
 - `docker compose up --build` builds and serves the app with `.env.local` mounted into the container.
@@ -223,6 +223,7 @@ Choose guards from the actual change and risk, not from a ceremonial keyword che
 - Use `$clean-code-guard`, `$docs-guard`, `$test-guard`, and `$g7-crm-precommit-gate` when their substantive review improves the relevant implementation, documentation, tests, or Git stage.
 - Use `$g7-crm-migration-review` for actual SQL, migration, RPC, RLS, grant, trigger, or schema work.
 - Use `$g7-postgres-query-index-guidance` only for an explicitly bounded query-shape, missing-index, partial-index, WHERE/JOIN-index, or supplied-query-plan question. It provides recommendation-only technical guidance and never replaces migration, security, ERP, or Controller authority.
+- Use `$g7-nextjs-performance-engineering` when a task materially concerns reported page or navigation slowness, a performance regression, measurable latency, payload, bundle, rendering, performance-sensitive loading, or optimization and remeasurement; do not route it for ordinary React/Next.js edits.
 - Use `$g7-erp-design-guard` for material UI, UX, accessibility, RTL/LTR, or visual work, and `$g7-speckit-plan-guard` for Spec Kit planning.
 
 Guard routing does not itself authorize implementation, staging, commit, push, database action, deployment, or production change. Do not rely on UI-only checks for security.
