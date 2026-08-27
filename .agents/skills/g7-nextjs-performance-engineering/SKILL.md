@@ -50,7 +50,7 @@ authority data merely because it is expensive.
 
 For this repository, resolve the installed Next.js version and consult the relevant
 bundled documentation under `node_modules/next/dist/docs/` before relying on
-version-sensitive behavior. The current application is Next.js 16.2.7 with the
+version-sensitive behavior. The current application is Next.js 16.3.3 with the
 App Router. This skill does not imply that a separate Framework or Supabase skill
 exists or is implemented; route future expertise only if it is separately present
 and materially relevant.
