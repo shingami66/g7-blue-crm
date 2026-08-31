@@ -1079,6 +1079,10 @@ export type Database = {
           mutation_key: string | null
           mutation_payload: Json | null
           quotation_number: string
+          quotation_family_id: string
+          revision_of_quotation_id: string | null
+          revision_number: number
+          revision_reason: string | null
           service_id: string
           snapshot_buyer: Json
           snapshot_seller: Json
@@ -1104,6 +1108,10 @@ export type Database = {
           mutation_key?: string | null
           mutation_payload?: Json | null
           quotation_number: string
+          quotation_family_id?: string
+          revision_of_quotation_id?: string | null
+          revision_number?: number
+          revision_reason?: string | null
           service_id: string
           snapshot_buyer: Json
           snapshot_seller: Json
@@ -1129,6 +1137,10 @@ export type Database = {
           mutation_key?: string | null
           mutation_payload?: Json | null
           quotation_number?: string
+          quotation_family_id?: string
+          revision_of_quotation_id?: string | null
+          revision_number?: number
+          revision_reason?: string | null
           service_id?: string
           snapshot_buyer?: Json
           snapshot_seller?: Json
@@ -1161,6 +1173,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_revision_source_family_fkey"
+            columns: ["revision_of_quotation_id", "quotation_family_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id", "quotation_family_id"]
           },
         ]
       }
@@ -2129,6 +2148,24 @@ export type Database = {
           quotation_id: string
           subtotal: number
           vat_amount: number
+        }[]
+      }
+      create_quotation_revision: {
+        Args: {
+          p_mutation_key: string
+          p_revision_reason: string
+          p_source_quotation_id: string
+          p_user_id: string
+        }
+        Returns: {
+          error_code: string | null
+          is_replayed: boolean
+          quotation_family_id: string | null
+          quotation_id: string | null
+          quotation_number: string | null
+          revision_number: number | null
+          service_id: string | null
+          source_quotation_id: string | null
         }[]
       }
       set_app_user_active: {

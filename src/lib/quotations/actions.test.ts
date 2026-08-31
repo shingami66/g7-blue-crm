@@ -163,8 +163,8 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { createQuotation, setQuotationCommercialStructure } = await import("./actions");
-const { createQuotationSchema, updateQuotationSchema } = await import("./schemas");
+const { createQuotation, createQuotationRevision, setQuotationCommercialStructure } = await import("./actions");
+const { createQuotationSchema, quotationRevisionSchema, updateQuotationSchema } = await import("./schemas");
 
 const validQuotationInput = {
   mutation_key: "mutation-qt-001",
@@ -182,6 +182,11 @@ const validQuotationInput = {
       unit_price: 1000,
     },
   ],
+};
+
+const validRevisionInput = {
+  revision_reason: "Customer requested a revised commercial scope",
+  mutation_key: "revision-qt-001",
 };
 
 test("createQuotationSchema requires mutation_key", () => {
@@ -305,11 +310,102 @@ test("updateQuotationSchema rejects unknown keys like mutation_key in strict mod
   assert.strictEqual(result.success, false);
 });
 
+test("quotationRevisionSchema requires a bounded reason and mutation key", () => {
+  assert.equal(quotationRevisionSchema.safeParse({ revision_reason: "", mutation_key: "key" }).success, false);
+  assert.equal(quotationRevisionSchema.safeParse({ revision_reason: "Reason", mutation_key: "" }).success, false);
+  const result = quotationRevisionSchema.safeParse({
+    revision_reason: "  Reason  ",
+    mutation_key: "  key-1  ",
+  });
+  assert.equal(result.success, true);
+  if (result.success) {
+    assert.equal(result.data.revision_reason, "Reason");
+    assert.equal(result.data.mutation_key, "key-1");
+  }
+});
+
 test("createQuotation rejects when unauthorized", async () => {
   resetScenario({ authError: "unauthorized" });
   const res = await createQuotation(validQuotationInput);
   assert.strictEqual(res.success, false);
   assert.strictEqual(res.code, "UNAUTHORIZED");
+});
+
+test("createQuotationRevision denies before any RPC when unauthorized", async () => {
+  resetScenario({ authError: "unauthorized" });
+  const res = await createQuotationRevision("33333333-3333-4333-8333-333333333333", validRevisionInput);
+  assert.equal(res.success, false);
+  assert.equal(res.code, "UNAUTHORIZED");
+  assert.equal(scenarioState.rpcCalls.length, 0);
+});
+
+test("createQuotationRevision rejects malformed input before any RPC", async () => {
+  resetScenario();
+  const res = await createQuotationRevision("33333333-3333-4333-8333-333333333333", {
+    revision_reason: "",
+    mutation_key: "revision-qt-001",
+  });
+  assert.equal(res.success, false);
+  assert.equal(res.code, "INVALID_INPUT");
+  assert.equal(scenarioState.rpcCalls.length, 0);
+});
+
+test("createQuotationRevision passes the existing authorization context and returns lineage evidence", async () => {
+  resetScenario({
+    rpcData: [{
+      error_code: null,
+      quotation_id: "44444444-4444-4444-8444-444444444444",
+      quotation_number: "QT-2026-0002",
+      source_quotation_id: "33333333-3333-4333-8333-333333333333",
+      quotation_family_id: "55555555-5555-4555-8555-555555555555",
+      revision_number: 2,
+      service_id: "11111111-1111-4111-8111-111111111111",
+      is_replayed: false,
+    }],
+  });
+  const sourceId = "33333333-3333-4333-8333-333333333333";
+  const res = await createQuotationRevision(sourceId, validRevisionInput);
+  assert.equal(res.success, true);
+  assert.deepEqual(scenarioState.permissionCalls, ["quotations:write", "services:read"]);
+  assert.deepEqual(scenarioState.rpcCalls, [{
+    name: "create_quotation_revision",
+    args: {
+      p_source_quotation_id: sourceId,
+      p_revision_reason: validRevisionInput.revision_reason,
+      p_mutation_key: validRevisionInput.mutation_key,
+      p_user_id: "clerk_test_user",
+    },
+  }]);
+  if (res.success) {
+    assert.deepEqual(res.data, {
+      quotation_id: "44444444-4444-4444-8444-444444444444",
+      quotation_number: "QT-2026-0002",
+      source_quotation_id: sourceId,
+      quotation_family_id: "55555555-5555-4555-8555-555555555555",
+      revision_number: 2,
+      service_id: "11111111-1111-4111-8111-111111111111",
+      is_replayed: false,
+    });
+  }
+  assert.deepEqual((globalThis as unknown as { __lastRevalidatedPaths: string[] }).__lastRevalidatedPaths, [
+    "/quotations",
+    `/quotations/${sourceId}`,
+    "/quotations/44444444-4444-4444-8444-444444444444",
+    "/services/11111111-1111-4111-8111-111111111111",
+  ]);
+});
+
+test("createQuotationRevision fails closed for approved sources and mutation conflicts", async () => {
+  resetScenario({ rpcData: [{ error_code: "quotation_revision_approved_not_allowed" }] });
+  const approved = await createQuotationRevision("33333333-3333-4333-8333-333333333333", validRevisionInput);
+  assert.equal(approved.success, false);
+  assert.equal(approved.code, "REVISION_FAILED");
+  assert.equal(approved.error, "Approved quotations cannot be revised in this workflow.");
+
+  resetScenario({ rpcData: [{ error_code: "mutation_key_conflict" }] });
+  const conflict = await createQuotationRevision("33333333-3333-4333-8333-333333333333", validRevisionInput);
+  assert.equal(conflict.success, false);
+  assert.equal(conflict.code, "MUTATION_KEY_CONFLICT");
 });
 
 test("createQuotation rejects when forbidden", async () => {

@@ -71,3 +71,15 @@ export const updateQuotationSchema = z.object({
     path: ["valid_until"],
   }
 );
+
+/**
+ * W2B creates a successor Draft only for a non-approved post-Sent quotation.
+ * The database RPC remains the authority for lifecycle and lineage checks.
+ */
+export const quotationRevisionSchema = z.object({
+  revision_reason: z.string().trim().min(1, "Revision reason is required").max(500),
+  mutation_key: z.preprocess(
+    (val) => (typeof val === "string" ? val.trim() : val),
+    z.string().min(1, "Mutation key is required").max(200),
+  ),
+}).strict();

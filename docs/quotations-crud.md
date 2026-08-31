@@ -4,7 +4,7 @@
 
 Quotations are Service-scoped commercial documents for client proposals. Each quotation belongs to one Service, a Service may have multiple quotations, and customer identity is derived server-side from that Service where the relationship is used.
 
-The current item model is flat: each item has a description, optional details and category, quantity, unit price, calculated line VAT amount, and calculated line net total. It does not currently define packages, groups, optional alternatives, included components, units of measure, or mixed package/item pricing as separate persisted semantics. Those concepts remain subject to the Quotation Commercial Model Field-Evidence Gate.
+Quotation items retain their existing description, details, category, quantity, unit price, calculated line VAT amount, and calculated line net total while W2A adds bounded commercial semantics: customer-priced Authority Lines, zero-priced Included Components, and selected Optional Add-ons with parent-line, unit, selection, and Arabic presentation metadata. Existing flat rows remain valid Authority Lines; no parallel commercial engine is introduced.
 
 ## Quotation Number Format
 
@@ -55,8 +55,9 @@ draft → sent → approved
 ### Quotation Status Integration & Revision Notes
 - The current guard remains: one approved quotation per Service.
 - Approved Billing Scope separates quotation approval from billing authority.
-- The foundation migration for Approved Billing Scope has now been applied and smoke-tested in DEV/DEMO only; production remains deferred.
-- **Quotation Revision Fallback (Option A):** No `superseded` quotation status is introduced. The quotation status enum values remain unchanged. Active Approved Billing Scope determines current billing authority, and existing approved quotations remain as historical agreement records. Any revised quotation flow must utilize the billing scope supersede/versioning model.
+- The foundation migration for Approved Billing Scope has now been applied and smoke-tested on the Owner-authorized DEV environment only; no DEMO environment currently exists and production remains deferred.
+- **W2B Quotation Revision Lineage:** No `superseded` quotation status is introduced. Draft quotations remain editable in place. A non-approved `sent`, `rejected`, or `expired` quotation is revised through the service-role-only `create_quotation_revision` RPC, which creates a new Draft in the same internal family and leaves the source unchanged. Approved sources fail closed; post-approval Change Orders remain deferred.
+- Customer-facing quotation numbering and main-list presentation remain unchanged. W2B does not supersede ABS, reapprove authority, or rewrite invoices, payments, or historical records.
 - **Current truth:** Invoice creation resolves and binds the active Approved Billing Scope when one exists. When no active scope exists, the approved quotation remains the fallback basis only when ABS history is proven empty (legacy mode). Historical ABS authority blocks Quotation fallback.
 
 ### Billing Authority Presentation (display-only)
@@ -78,10 +79,10 @@ Quotation Detail may show a **display-only** billing-authority card (`QuotationB
 | Status    | Edit Items/Totals | Edit Metadata | Soft Delete |
 |-----------|-------------------|---------------|-------------|
 | draft     | ✓                 | ✓ (permitted quotation metadata only) | ✓           |
-| sent      | ✗                 | ✗             | ✓           |
+| sent      | ✗                 | ✗             | ✗ (revise to Draft successor) |
 | approved  | ✗                 | ✗             | ✗           |
-| rejected  | ✗                 | ✗             | ✓           |
-| expired   | ✗                 | ✗             | ✓           |
+| rejected  | ✗                 | ✗             | ✗ (revise to Draft successor) |
+| expired   | ✗                 | ✗             | ✗ (revise to Draft successor) |
 
 ## Approval and billing handoff
 
@@ -113,6 +114,10 @@ Quotation Detail may show a **display-only** billing-authority card (`QuotationB
 | updated_by         | text           | Clerk user ID                              |
 | is_deleted         | boolean        | Soft delete flag                           |
 | deleted_at         | timestamptz    | Soft delete timestamp                      |
+| quotation_family_id | uuid           | Internal family key; existing rows default to a new revision-1 family |
+| revision_of_quotation_id | uuid      | Immediate prior quotation in the same family; null for the root |
+| revision_number    | integer        | Positive family revision; root defaults to `1` |
+| revision_reason    | text           | Required bounded reason on a successor Draft |
 
 ### `quotation_items` Table
 
@@ -127,6 +132,11 @@ Quotation Detail may show a **display-only** billing-authority card (`QuotationB
 | unit_price  | numeric(12,2)  | Price per unit (must be >= 0)                      |
 | vat         | numeric(12,2)  | **Calculated VAT amount** per line (NOT a rate)    |
 | total       | numeric(12,2)  | Line net total: `qty × unit_price` (before VAT)   |
+| commercial_role | text        | `authority_line`, `included_component`, or `optional_add_on` |
+| parent_authority_line_id | uuid | Same-quotation parent Authority Line for components/add-ons |
+| is_selected | boolean        | Selection state; Included Components must be selected |
+| unit        | text           | Bounded unit label                                |
+| description_ar | text        | Arabic presentation for the same commercial authority |
 
 ### Column Clarifications
 

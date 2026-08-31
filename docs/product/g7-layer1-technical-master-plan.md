@@ -9,7 +9,7 @@
 
 This is the sole Layer 1 technical implementation-planning artifact. The Expansion Master remains the sole strategic expansion source; the repository decision register and the Controller closure register own Product Truth; current repository evidence owns current mechanics. Where an older document describes a current mechanic that conflicts with the closed target Product Truth, the mechanic is preserved as migration evidence and is not promoted to target policy.
 
-> **CURRENT DELIVERY NOTE — 31 August 2026:** W1A Effective Access, Open Review routing hardening, W1C Quotation Approvals, and W1C Ready-to-Start Services are Owner-accepted and are being published under a separate implementation authority. W1B Approval Authority / SoD is **NOT REQUIRED FOR THIS WAVE** and remains deferred. The planning snapshots below that describe W1 as unopened or the protected synchronization as the next action are historical after this closeout; W2 Commercial Authority is the next wave and requires a new bounded Owner task.
+> **CURRENT DELIVERY NOTE — 31 August 2026:** W1A Effective Access, Open Review routing hardening, W1C Quotation Approvals, and W1C Ready-to-Start Services are Owner-accepted. W1B Approval Authority / SoD is **NOT REQUIRED FOR THIS WAVE** and remains deferred. W2A Commercial Authority Line Foundation and W2B Quotation Revision Lineage are now Owner-accepted through separate implementation authorities. The next bounded W2 candidate is W2C Deterministic Discount Allocation / Approval Projection preflight; it requires a new Owner task and finance review before any implementation or migration.
 
 ## 1. CONTINUITY RESULT
 
@@ -1371,7 +1371,7 @@ Day 1 success is narrow: one Writer, one findings-only Reviewer, no schema, no D
 
 ## 31. ROTATION HANDOVER / CONTINUITY STATUS
 
-**PASS WITH WARN — restart-safe.** Restart from the current W1 closeout note above and a new Owner-authorized W2 task, not from this historical W0/W1 pack or older Quotation field-evidence, Feature 009, ABS Void/Supersede, Wednesday discovery, G1–G12 remediation, or broad Event ERP deferral text. Reverify repository `HEAD`, `origin/main`, dirty paths, latest Controller state and any newer Owner instruction. Preserve unrelated dirty/untracked work and do not inspect protected build-watch logs. W1B remains closed as not required for this wave; W2 requires a new bounded Owner task.
+**PASS WITH WARN — restart-safe.** Restart from the current W2B closeout note and a new Owner-authorized W2C preflight task, not from this historical W0/W1 pack or older Quotation field-evidence, Feature 009, ABS Void/Supersede, Wednesday discovery, G1–G12 remediation, or broad Event ERP deferral text. Reverify repository `HEAD`, `origin/main`, dirty paths, latest Controller state and any newer Owner instruction. Preserve unrelated dirty/untracked work and do not inspect protected build-watch logs. W1B remains closed as not required for this wave; W2C is only a candidate until separately authorized.
 
 ## 32. W1 CLOSEOUT — 31 August 2026
 
@@ -1379,4 +1379,4 @@ Owner acceptance is complete for W1A Effective Access, Open Review routing harde
 
 W1A uses the reviewed minimum user-specific `quotations:approve` override persistence with server-side DENY-wins evaluation. W1C is derived from two real existing consumers on the Dashboard Attention surface: pending quotation approvals and Services whose existing transition evidence permits `Deposit Paid` → `In Progress`. Both remain permission-filtered, source-linked, bounded, fail-closed, and mutation-free from the Action Center.
 
-The completed W1 delta has focused validation, separate findings-only review, same-Writer repair, targeted rereview, and Owner acceptance. W2 Commercial Authority is the next wave; no additional W1C feature is inferred without new evidence and a separate Owner task.
+The completed W1 delta has focused validation, separate findings-only review, same-Writer repair, targeted rereview, and Owner acceptance. W2A and W2B are now complete with their own validation and Owner gates. The next bounded W2 candidate is W2C Deterministic Discount Allocation / Approval Projection preflight; no additional W1C feature is inferred without new evidence and a separate Owner task.

@@ -8,6 +8,7 @@ import {
 import {
   createQuotationSchema,
   updateQuotationSchema,
+  quotationRevisionSchema,
   quotationItemInputSchema,
 } from "./schemas";
 import type { BusinessYear } from "@/lib/business-year";
@@ -86,6 +87,10 @@ export interface QuotationRow {
   deleted_at: string | null;
   mutation_key?: string | null;
   mutation_payload?: unknown | null;
+  quotation_family_id?: string;
+  revision_of_quotation_id?: string | null;
+  revision_number?: number;
+  revision_reason?: string | null;
   created_by: string;
   updated_by: string;
   snapshot_seller: QuotationSnapshotSeller | null;
@@ -207,10 +212,21 @@ export interface QuotationRpcResult {
   isReplayed?: boolean;
 }
 
+export interface QuotationRevisionResult {
+  quotation_id: string;
+  quotation_number: string;
+  source_quotation_id: string;
+  quotation_family_id: string;
+  revision_number: number;
+  service_id: string;
+  is_replayed: boolean;
+}
+
 export type CreateQuotationItemInput = z.infer<typeof quotationItemInputSchema>;
 export type UpdateQuotationItemInput = z.infer<typeof quotationItemInputSchema>;
 export type CreateQuotationInput = z.infer<typeof createQuotationSchema>;
 export type UpdateQuotationInput = z.infer<typeof updateQuotationSchema>;
+export type QuotationRevisionInput = z.infer<typeof quotationRevisionSchema>;
 
 export interface QuotationSnapshotSeller {
   snapshotVersion: number;

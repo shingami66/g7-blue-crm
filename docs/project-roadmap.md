@@ -5,17 +5,31 @@
 - **W1:** `PASS` after Owner acceptance. W1A Effective Access, Open Review routing hardening, W1C Quotation Approvals, and W1C Ready-to-Start Services are complete and published in the authorized sequence.
 - **W1B:** **NOT REQUIRED FOR THIS WAVE**. Approval Authority / SoD remains deferred and unimplemented; reopen only if a real existing workflow demonstrates a durable bounded gap.
 - **Delivered boundary:** Effective Access uses the reviewed narrow `quotations:approve` override path with DENY-wins semantics. Action Center uses the existing Dashboard Attention surface for two real source-linked slices: quotation approvals and transition-ready Services. No generic workflow engine, new authority, inline mutation, or new persistence was added for W1C.
-- **Next locked priority:** W2A is complete; W2B Revision Lineage is the next separately authorized W2 slice. Do not extend W1C without evidence of a required consumer or defect.
+- **Next locked priority:** W2A and W2B are complete; W2C Deterministic Discount Allocation / Approval Projection preflight is the next separately authorized W2 action. Do not extend W1C without evidence of a required consumer or defect.
 
-## CURRENT W2A CLOSEOUT — 31 August 2026
+## W2A CLOSEOUT — 31 August 2026 (COMPLETED)
 
 - **W2A Commercial Authority Line Foundation:** `PASS`. The existing quotation and Approved Billing Scope lineage now carries customer-priced Authority Lines, zero-priced Included Components, and deterministically selected Optional Add-ons.
 - **Evidence boundary:** migration `20260831110000_w2a_commercial_authority_lines.sql` and the reviewed runtime/tests/generated types are included in this closeout; DEV apply/reconciliation and the transaction-local smoke passed. No DEV reapply, production/deployment work, or unrelated database mutation is part of publication.
-- **Next separately authorized slice:** W2B Revision Lineage. No W2B implementation is authorized by this roadmap entry.
+- **Next separately authorized slice:** W2B Revision Lineage (now completed; see current W2B closeout below).
 
-> The dated 27 August roadmap snapshot below is historical evidence; its prior next-task wording is superseded by this W1 closeout.
+## CURRENT W2B CLOSEOUT — 31 August 2026
 
-## 0. HISTORICAL RECONCILED ROADMAP — 27 August 2026 (SUPERSEDED BY CURRENT W1 CLOSEOUT ABOVE)
+- **W2B Quotation Revision Lineage:** `PASS`. Eligible non-approved post-Sent quotations now create an immutable, same-family Draft successor with monotonic revision lineage; Draft remains editable in place and Approved sources fail closed.
+- **Evidence boundary:** migration `20260831120000_w2b_quotation_revision_lineage.sql`, reviewed runtime/actions, generated types, focused tests, DEV apply/reconciliation, and the transaction-local success smoke passed. The source, W2A hierarchy, bilingual snapshots, totals, ABS, invoices, payments, approvals, and historical facts remain protected; rollback left zero residue. No DEMO or production claim is made.
+- **Scope boundary:** customer-facing numbering and main-list presentation remain unchanged. Post-approval Change Orders, ABS supersession/reapproval, invoice/payment correction, and W2C behavior remain outside this slice.
+- **Next separately authorized slice:** W2C Deterministic Discount Allocation / Approval Projection preflight. Start with the technical contract and finance review of the exact halala/remainder allocation rule; do not implement or apply it from this roadmap entry.
+
+## 0. CURRENT RECONCILED ROADMAP — 31 August 2026
+
+- **Decision closure:** all 11 Layer 1 Event ERP domains are closed at Product Truth level; Domain 11 — Dashboards & Reporting is closed without a new Owner Decision Packet. Exact classifications, conflicts and deferrals are in `docs/product/event-erp-decision-register.md` and `docs/product/g7-layer1-technical-master-plan.md`.
+- **Single delivery lane:** W0 protected truth synchronization → W1 Authority Foundation → W2 Commercial Authority → W3 Event Operations → W4 Procurement & Commitments → W5 Expenses & Cash Advances → W6 AP → W7 AR Expansion → W8 Event Costing → W9 Dashboards/Reports → W10 Accounting behind professional gates → W11 Cutover and G7 proof.
+- **Current mechanics are not target policy:** legacy deposit-gated Service transitions, supplier Booking/Allocation semantics, deposit/final-only billing, role-only permissions, global dashboard metrics, and current-period reporting are preserved as source/migration evidence. They must not silently define the target.
+- **Quality lane:** every future slice uses one logical Writer, separate findings-only Reviewer, focused validation, Mozfer manual acceptance where required, and Controller verdict. Database draft, DEV/DEMO apply, publication, deployment, production, professional activation, and Layer 2 each remain separate authority gates.
+- **No implementation activation:** this roadmap is executable planning, not authority to change code/schema/database or publish/deploy. Professional accounting, revenue, VAT/FATOORA, bank, security and accessibility gates remain as named in the technical master plan.
+- **Historical next governed action (superseded):** This prior planning snapshot pointed to approval of the protected `AGENTS.md`/guard/Design Contract synchronization manifest. The current W1 and W2 closeouts above record the delivered Open Review routing hardening and W2A/W2B slices; W2C is the sole next bounded W2 action and requires a new Owner task.
+
+## 0A. HISTORICAL RECONCILED ROADMAP — 27 August 2026 (SUPERSEDED FOR CURRENT LAYER 1 PLANNING)
 
 - **Reconciliation base before documentation publication:** Canonical `D:/G7/g7-crm` on `main`; pre-publication `HEAD` = `origin/main` = `824f017f54dab613d19096bd1ac86089c486a457`, parent `8d78d53d7aaa88365b72eda0c82d827845eb2ea0`, divergence `0/0`, index empty. The reconciliation was subsequently published in `0fee34c5cea4e26be2bb4ad9d8b115c89fac51a5`; pre-existing dirty/untracked paths are preserved and this entry is not a claim about the current repository `HEAD`.
 - **Performance program:** P9 primary-detail work is complete/published/verified for Customer, Supplier, Service, and Quotation. Invoice was measured and discarded. The bounded module-entry follow-on is complete through Reports (`ae76974bddbfbdfcd5e95b6b85acb6f9cd472cf7`, PASS WITH WARN, limited benefit) and Customers (`cb8e0767de3bb63edf8679b352969cc755176254`, PASS, verified improvement); a later Quotations module-entry candidate worsened and was discarded, while the retained Quotation primary-detail optimization remains published in `3a00d23`. The final six-journey authenticated normal-network DOM-click rerank found that no repeatable material target was established from the available browser and network-proxy evidence, so the current-core bounded G4 remediation program is **CLOSED / ENGINEERING COMPLETE**. Historic Chrome 3G-throttled browser numbers are not a normal-network baseline or proof of a 3G optimization.

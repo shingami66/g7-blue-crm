@@ -13,9 +13,10 @@ import {
 import {
   createQuotationSchema,
   quotationCommercialStructureSchema,
+  quotationRevisionSchema,
   updateQuotationSchema,
 } from "./schemas";
-import type { QuotationRpcResult } from "./types";
+import type { QuotationRevisionResult, QuotationRpcResult } from "./types";
 
 export interface QuotationCommercialStructureResult {
   quotation_id: string;
@@ -36,6 +37,7 @@ export type QuotationActionErrorCode =
   | "INVALID_VALIDITY_WINDOW"
   | "MUTATION_KEY_CONFLICT"
   | "CREATE_FAILED"
+  | "REVISION_FAILED"
   | "STRUCTURE_UPDATE_FAILED"
   | "UNKNOWN_ERROR";
 
@@ -193,6 +195,94 @@ export async function createQuotation(input: unknown): Promise<ActionResult<Quot
     if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
     console.error("[createQuotation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
+    return { success: false, code: "UNKNOWN_ERROR", error: "An unexpected error occurred." };
+  }
+}
+
+/**
+ * Start a bounded W2B successor Draft for a non-approved post-Sent
+ * quotation. The service-role RPC owns lifecycle, lineage, hierarchy-copy,
+ * and idempotency guarantees; this action only supplies the existing
+ * authorization context and presents safe outcomes to the caller.
+ */
+export async function createQuotationRevision(
+  sourceQuotationId: string,
+  input: unknown,
+): Promise<ActionResult<QuotationRevisionResult>> {
+  try {
+    const user = await requirePermission("quotations:write");
+    await requirePermission("services:read");
+
+    const parsed = quotationRevisionSchema.safeParse(input);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0]?.message ?? "Validation failed";
+      return { success: false, code: "INVALID_INPUT", error: firstError };
+    }
+
+    const supabase = createAdminClient();
+    const { data, error } = await supabase.rpc("create_quotation_revision", {
+      p_source_quotation_id: sourceQuotationId,
+      p_revision_reason: parsed.data.revision_reason,
+      p_mutation_key: parsed.data.mutation_key,
+      p_user_id: user.clerk_user_id,
+    });
+
+    if (error) {
+      console.error("[createQuotationRevision] Supabase error:", error.message);
+      return { success: false, code: "REVISION_FAILED", error: "Failed to create quotation revision. Please try again." };
+    }
+
+    const row = data?.[0];
+    if (!row) {
+      return { success: false, code: "REVISION_FAILED", error: "Failed to create quotation revision. Please try again." };
+    }
+
+    if (row.error_code) {
+      const messageByCode: Record<string, string> = {
+        quotation_not_found: "Quotation not found or already deleted.",
+        quotation_revision_approved_not_allowed: "Approved quotations cannot be revised in this workflow.",
+        quotation_revision_draft_not_required: "Draft quotations remain editable in place.",
+        quotation_revision_source_state_invalid: "This quotation is not in a revisable lifecycle state.",
+        quotation_revision_source_has_no_items: "A quotation must contain at least one item before it can be revised.",
+        quotation_revision_successor_exists: "This quotation already has a successor revision.",
+      };
+      return {
+        success: false,
+        code: row.error_code === "mutation_key_conflict" ? "MUTATION_KEY_CONFLICT" : "REVISION_FAILED",
+        error: messageByCode[row.error_code] ?? "Quotation revision could not be created.",
+      };
+    }
+
+    if (
+      !row.quotation_id ||
+      !row.quotation_number ||
+      !row.source_quotation_id ||
+      !row.quotation_family_id ||
+      !row.service_id
+    ) {
+      return { success: false, code: "REVISION_FAILED", error: "Quotation revision could not be created." };
+    }
+
+    revalidatePath("/quotations");
+    revalidatePath(`/quotations/${sourceQuotationId}`);
+    revalidatePath(`/quotations/${row.quotation_id}`);
+    revalidatePath(`/services/${row.service_id}`);
+    return {
+      success: true,
+      data: {
+        quotation_id: row.quotation_id,
+        quotation_number: row.quotation_number,
+        source_quotation_id: row.source_quotation_id,
+        quotation_family_id: row.quotation_family_id,
+        revision_number: Number(row.revision_number),
+        service_id: row.service_id,
+        is_replayed: Boolean(row.is_replayed),
+      },
+    };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
+    console.error("[createQuotationRevision] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { success: false, code: "UNKNOWN_ERROR", error: "An unexpected error occurred." };
   }
 }
@@ -386,8 +476,14 @@ export async function softDeleteQuotation(id: string): Promise<ActionResult> {
       return { success: false, error: "Quotation not found or already deleted." };
     }
 
-    if (qData.status === "approved") {
-      return { success: false, error: "Cannot delete an approved quotation." };
+    if (qData.status !== "draft") {
+      return {
+        success: false,
+        error:
+          qData.status === "approved"
+            ? "Cannot delete an approved quotation."
+            : "Only draft quotations can be deleted. Create a Draft revision instead.",
+      };
     }
 
     const { data: deletedQuotation, error } = await supabase

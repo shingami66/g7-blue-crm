@@ -46,7 +46,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `audit_logs`: Centralized event tracking for actions (`create`, `update`, etc.).
 
 ### Financial & Workflow
-- `quotations` / `quotation_items`: Current flat quotation tables with Service linkage and server-side subtotal/VAT/grand-total calculation foundations.
+- `quotations` / `quotation_items`: Service-linked quotation tables with server-side subtotal/VAT/grand-total calculation, W2A commercial hierarchy (`authority_line`, `included_component`, `optional_add_on`), and W2B internal family/revision lineage. W2B was applied and verified on the Owner-authorized DEV environment only; production is not claimed.
 - `invoices` / `invoice_items`: Current invoice tables use `invoice_type = deposit | final`, with approved-quotation and Service linkage represented in the current DEV/DEMO contract; production readiness is not implied.
   - **Approved Billing Scope Integration:** Added `approved_billing_scope_id` as a nullable UUID referencing `approved_billing_scopes(id, service_id)` via a composite foreign key constraint, enforcing invoice ceiling limits and validation guards via `check_invoices_before_write` trigger.
 - `payments`: Financial tracking of invoice payments. Current `payments.method` allowed values are `bank_transfer`, `cash`, `cheque`, and `online`; ERP-4 planning may later decide whether to change this to Cash / Bank Transfer / Card / Other. Contains the idempotent `request_id` (UUID, nullable, unique when not null) column to block double-submits.
@@ -69,7 +69,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 The sections below distinguish current DEV/DEMO implementation facts from deferred design direction. Source, migrations, and durable contract documents remain the authority for exact enforcement details; this reference does not authorize production apply or new schema work.
 
 ### Deferred / future boundaries
-- The Quotation Commercial Model Field-Evidence Gate remains discovery; the current quotation model is Service-scoped with flat quotation items.
+- W2A Authority Line hierarchy and W2B quotation-family/revision lineage are current DEV implementation. Deterministic stored discount allocation across priced Authority Lines, its exact halala/remainder rule, and the approval/ABS projection remain the next separately authorized W2C preflight; no implementation or production claim is implied.
 - Production database authorization/apply, richer Approved Billing Scope Supersede UI, invoice/payment correction or accounting treatment, and VAT/ZATCA/FATOORA/QR/XML/reporting behavior remain deferred or not authorized.
 
 ### Services
@@ -100,6 +100,9 @@ The sections below distinguish current DEV/DEMO implementation facts from deferr
 - The `unique_approved_quotation_per_service` partial unique index on `quotations(service_id)` where `status = 'approved' AND is_deleted = false` was manually applied in the database.
 - Index verification passed.
 - `supabase/schema.sql` was synced to reflect this index.
+- W2A commercial item semantics are persisted on `quotation_items`: Authority Lines own customer price; Included Components are selected and zero-priced; Optional Add-ons contribute only when selected; each component/add-on references a same-quotation Authority Line and may carry an Arabic description/unit.
+- W2B lineage is persisted on `quotations` through `quotation_family_id`, `revision_of_quotation_id`, `revision_number`, and `revision_reason`. Drafts remain editable in place; eligible non-approved `sent`, `rejected`, or `expired` sources create a Draft successor through the service-role-only revision RPC, while Approved sources fail closed and the source remains unchanged.
+- W2B customer-facing numbering, ABS history, invoices, payments, approvals, and historical quotation facts remain unchanged by revision creation. Post-approval Change Orders and ABS supersession remain deferred.
 
 ### Approved Billing Scope (Current DEV/DEMO Implementation)
 - Approved Billing Scope is implemented in DEV/DEMO as the billing-authority layer separate from quotation approval. Its foundation tables are `approved_billing_scopes` and `approved_billing_scope_items`.

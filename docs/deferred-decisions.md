@@ -4,7 +4,8 @@
 
 - **W1B Approval Authority / SoD:** explicitly **NOT REQUIRED FOR THIS WAVE** after review of the real quotation-approval consumer. It remains deferred, unimplemented, and must not be replaced with a generic approval/rules engine.
 - **W1 completion:** W1A Effective Access and the two bounded W1C Action Center consumers (Quotation Approvals and Ready-to-Start Services) are Owner-accepted. Their source workflows remain authoritative; no additional W1C feature is inferred.
-- **Next wave:** W2 Commercial Authority requires a separate Owner-authorized task. This closeout does not authorize new schema, database, production, deployment, Layer 2, or professional activation work.
+- **W2A/W2B completion:** Commercial Authority Line hierarchy and Quotation Revision Lineage are `PASS` on the Owner-authorized DEV environment only. W2B preserves source history, keeps Approved sources fail closed, and does not supersede ABS or reapprove billing authority.
+- **Next bounded W2 action:** W2C Deterministic Discount Allocation / Approval Projection preflight requires a separate Owner-authorized task and finance review of the exact halala/remainder rule. This closeout authorizes no new schema, database, production, deployment, Layer 2, or professional activation work.
 
 > The dated 27 August deferral snapshot below is historical evidence; its prior next-task wording is superseded by this W1 closeout.
 
