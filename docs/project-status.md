@@ -1,6 +1,17 @@
 # G7 BLUE CRM - Project Status
 
-## 0. CURRENT VERIFIED STATE — 27 August 2026
+## CURRENT W1 CLOSEOUT — 31 August 2026
+
+- **W1 delivery verdict:** `PASS`. Owner acceptance is complete for W1A Effective Access, Open Review routing hardening, W1C Quotation Approvals, and W1C Ready-to-Start Services. W1B Approval Authority / SoD is explicitly **NOT REQUIRED FOR THIS WAVE** and is not implemented.
+- **W1A Effective Access:** the reviewed minimum `quotations:approve` user-override persistence and server-side DENY-wins evaluation are delivered through the existing authorization path. The migration was applied and reconciled on the Owner-authorized DEV/DEMO target; no broader scopes, delegation, SoD, or generic authority engine was introduced.
+- **W1C Action Center:** the existing Dashboard Attention surface now derives bounded quotation-approval links and ready-to-start Service links from their real source workflows. Visibility is permission-filtered, dependency failures fail closed, source records remain authoritative, and no inline approval/start mutation or new workflow state is added.
+- **Review/validation:** the W1 publishable delta completed focused tests, TypeScript, ESLint, `git diff --check`, OCR delegation-only rule resolution, separate native findings-only review, same-Writer repair, and targeted rereview. No production, deployment, Layer 2, or unrelated database mutation is claimed.
+- **Current-to-target truth:** W1 delivery does not erase the remaining Layer 1 implementation gaps. W2 Commercial Authority is the next wave; W1B remains deferred until a real workflow consumer proves a bounded approval-authority/SoD gap.
+- **Exact next wave/action:** open a new Owner-authorized W2 Commercial Authority slice; do not add another W1C feature unless new evidence proves it required.
+
+> The dated 27 August status snapshot below is historical evidence; its prior next-task wording is superseded by this W1 closeout.
+
+## 0. HISTORICAL VERIFIED STATE — 27 August 2026 (SUPERSEDED BY CURRENT W1 CLOSEOUT ABOVE)
 
 - **Repository baseline:** Canonical checkout `D:/G7/g7-crm`, branch `main`; the reconciliation/pre-publication baseline was `824f017f54dab613d19096bd1ac86089c486a457` (`chore(agents): codify writer reviewer review loop`), parent `8d78d53d7aaa88365b72eda0c82d827845eb2ea0` (`fix(auth): harden sign-in and reviewed supplier access paths`). That baseline is retained for reconciliation context and is not the current repository `HEAD`; the approved G4 documentation closure was published afterward. The reviewed G6 repair is published in `f9fa193`; pre-existing dirty/untracked paths are preserved without inspection of build-watch contents, and this closure publication changes only the three project documentation files after that repair. No database, Controller state, or deployment state is changed.
 - **Delivered and independently verified:** The primary-detail performance pass is complete/published/verified for Customer, Supplier, Service, and Quotation. The Invoice candidate was measured and discarded with no retained optimization. The bounded module-entry follow-on is complete through Reports (`ae76974bddbfbdfcd5e95b6b85acb6f9cd472cf7`, PASS WITH WARN, limited user-visible benefit) and Customers (`cb8e0767de3bb63edf8679b352969cc755176254`, PASS, verified improvement); a later Quotations module-entry candidate worsened and was discarded, while the retained Quotation primary-detail optimization remains published in `3a00d23`. No retained Quotations module-entry optimization is claimed.

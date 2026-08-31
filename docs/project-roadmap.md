@@ -1,6 +1,15 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## 0. CURRENT RECONCILED ROADMAP — 27 August 2026
+## CURRENT W1 CLOSEOUT — 31 August 2026
+
+- **W1:** `PASS` after Owner acceptance. W1A Effective Access, Open Review routing hardening, W1C Quotation Approvals, and W1C Ready-to-Start Services are complete and published in the authorized sequence.
+- **W1B:** **NOT REQUIRED FOR THIS WAVE**. Approval Authority / SoD remains deferred and unimplemented; reopen only if a real existing workflow demonstrates a durable bounded gap.
+- **Delivered boundary:** Effective Access uses the reviewed narrow `quotations:approve` override path with DENY-wins semantics. Action Center uses the existing Dashboard Attention surface for two real source-linked slices: quotation approvals and transition-ready Services. No generic workflow engine, new authority, inline mutation, or new persistence was added for W1C.
+- **Next locked priority:** W2 Commercial Authority under a new bounded Owner task. Do not extend W1C without evidence of a required consumer or defect.
+
+> The dated 27 August roadmap snapshot below is historical evidence; its prior next-task wording is superseded by this W1 closeout.
+
+## 0. HISTORICAL RECONCILED ROADMAP — 27 August 2026 (SUPERSEDED BY CURRENT W1 CLOSEOUT ABOVE)
 
 - **Reconciliation base before documentation publication:** Canonical `D:/G7/g7-crm` on `main`; pre-publication `HEAD` = `origin/main` = `824f017f54dab613d19096bd1ac86089c486a457`, parent `8d78d53d7aaa88365b72eda0c82d827845eb2ea0`, divergence `0/0`, index empty. The reconciliation was subsequently published in `0fee34c5cea4e26be2bb4ad9d8b115c89fac51a5`; pre-existing dirty/untracked paths are preserved and this entry is not a claim about the current repository `HEAD`.
 - **Performance program:** P9 primary-detail work is complete/published/verified for Customer, Supplier, Service, and Quotation. Invoice was measured and discarded. The bounded module-entry follow-on is complete through Reports (`ae76974bddbfbdfcd5e95b6b85acb6f9cd472cf7`, PASS WITH WARN, limited benefit) and Customers (`cb8e0767de3bb63edf8679b352969cc755176254`, PASS, verified improvement); a later Quotations module-entry candidate worsened and was discarded, while the retained Quotation primary-detail optimization remains published in `3a00d23`. The final six-journey authenticated normal-network DOM-click rerank found that no repeatable material target was established from the available browser and network-proxy evidence, so the current-core bounded G4 remediation program is **CLOSED / ENGINEERING COMPLETE**. Historic Chrome 3G-throttled browser numbers are not a normal-network baseline or proof of a 3G optimization.

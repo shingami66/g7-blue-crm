@@ -1,6 +1,14 @@
 # G7 BLUE CRM — Deferred Decisions
 
-## CURRENT DEFERRAL BOUNDARY — 27 August 2026
+## CURRENT W1 CLOSEOUT — 31 August 2026
+
+- **W1B Approval Authority / SoD:** explicitly **NOT REQUIRED FOR THIS WAVE** after review of the real quotation-approval consumer. It remains deferred, unimplemented, and must not be replaced with a generic approval/rules engine.
+- **W1 completion:** W1A Effective Access and the two bounded W1C Action Center consumers (Quotation Approvals and Ready-to-Start Services) are Owner-accepted. Their source workflows remain authoritative; no additional W1C feature is inferred.
+- **Next wave:** W2 Commercial Authority requires a separate Owner-authorized task. This closeout does not authorize new schema, database, production, deployment, Layer 2, or professional activation work.
+
+> The dated 27 August deferral snapshot below is historical evidence; its prior next-task wording is superseded by this W1 closeout.
+
+## HISTORICAL DEFERRAL BOUNDARY — 27 August 2026 (SUPERSEDED BY CURRENT W1 CLOSEOUT ABOVE)
 
 - P9 primary-detail performance is complete/published/verified for Customer, Supplier, Service, and Quotation; the retained Quotation primary-detail optimization is published in `3a00d23`. Invoice was measured and discarded. Reports and Customers complete the bounded module-entry follow-on; a later Quotations module-entry candidate was discarded. The remaining six-journey authenticated normal-network DOM-click rerank also completed, and no repeatable material target was established from the available browser and network-proxy evidence. These completed results do not activate a new data-layer phase.
 - **G2 closure evidence:** G2 Money and Payment Precision is **CLOSED / ENGINEERING COMPLETE**. Exact positive two-decimal SAR precision, pre-mutation rejection of malformed/sub-cent/non-positive/non-finite amounts, the seven-argument RPC contract, replay/idempotency and duplicate protection, overpayment protection, deposit-transition and audit behavior, DEV/DEMO migration reconciliation, read-only RPC permission/metadata verification, and the absence of a concrete G2 engineering defect were accepted.
