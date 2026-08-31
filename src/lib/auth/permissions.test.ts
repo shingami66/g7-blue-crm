@@ -50,6 +50,10 @@ type AuthState = {
   dbResult: Record<string, unknown> | null;
   dbError: { code?: string; message?: string } | null;
   dbThrows: Error | null;
+  permissionOverrideResult: { effect: string } | null;
+  permissionOverrideError: { code?: string; message?: string } | null;
+  permissionOverrideThrows: Error | null;
+  permissionOverrideFilters: Array<{ column: string; value: unknown }>;
 };
 
 let currentAuthState: AuthState = {
@@ -58,6 +62,10 @@ let currentAuthState: AuthState = {
   dbResult: null,
   dbError: null,
   dbThrows: null,
+  permissionOverrideResult: null,
+  permissionOverrideError: null,
+  permissionOverrideThrows: null,
+  permissionOverrideFilters: [],
 };
 
 function resetAuthState(overrides: Partial<AuthState> = {}) {
@@ -67,8 +75,19 @@ function resetAuthState(overrides: Partial<AuthState> = {}) {
     dbResult: null,
     dbError: null,
     dbThrows: null,
+    permissionOverrideResult: null,
+    permissionOverrideError: null,
+    permissionOverrideThrows: null,
+    permissionOverrideFilters: [],
     ...overrides,
   };
+}
+
+function assertOverrideFilters(userId: string) {
+  assert.deepEqual(currentAuthState.permissionOverrideFilters, [
+    { column: "user_id", value: userId },
+    { column: "permission", value: "quotations:approve" },
+  ]);
 }
 
 mock.module("@clerk/nextjs/server", {
@@ -86,21 +105,52 @@ mock.module("@/lib/supabase/admin", {
   namedExports: {
     createAdminClient: () => {
       return {
-        from: () => ({
-          select: () => ({
-            eq: () => ({
-              single: async () => {
-                if (currentAuthState.dbThrows) {
-                  throw currentAuthState.dbThrows;
-                }
-                return {
-                  data: currentAuthState.dbResult,
-                  error: currentAuthState.dbError,
-                };
-              },
+        from: (table: string) => {
+          if (table === "app_user_permission_overrides") {
+            return {
+              select: () => ({
+                eq: (column: string, value: unknown) => {
+                  currentAuthState.permissionOverrideFilters.push({ column, value });
+                  return {
+                    eq: (nextColumn: string, nextValue: unknown) => {
+                      currentAuthState.permissionOverrideFilters.push({
+                        column: nextColumn,
+                        value: nextValue,
+                      });
+                      return {
+                        maybeSingle: async () => {
+                          if (currentAuthState.permissionOverrideThrows) {
+                            throw currentAuthState.permissionOverrideThrows;
+                          }
+                          return {
+                            data: currentAuthState.permissionOverrideResult,
+                            error: currentAuthState.permissionOverrideError,
+                          };
+                        },
+                      };
+                    },
+                  };
+                },
+              }),
+            };
+          }
+
+          return {
+            select: () => ({
+              eq: () => ({
+                single: async () => {
+                  if (currentAuthState.dbThrows) {
+                    throw currentAuthState.dbThrows;
+                  }
+                  return {
+                    data: currentAuthState.dbResult,
+                    error: currentAuthState.dbError,
+                  };
+                },
+              }),
             }),
-          }),
-        }),
+          };
+        },
       };
     },
   },
@@ -311,4 +361,86 @@ test("checkPermission returns false for unauthenticated or inactive users, but p
       return true;
     },
   );
+});
+
+test("quotations:approve applies user overrides with DENY-wins semantics", async () => {
+  const activeUser = {
+    id: "u1",
+    clerk_user_id: "clerk_123",
+    role: "manager",
+    is_active: true,
+  };
+
+  // A manager normally has approval authority, but an explicit deny removes it.
+  resetAuthState({
+    authResult: { userId: "clerk_123" },
+    dbResult: activeUser,
+    permissionOverrideResult: { effect: "deny" },
+  });
+  assert.equal(await checkPermission("quotations:approve"), false);
+  assertOverrideFilters("u1");
+  currentAuthState.permissionOverrideFilters = [];
+  await assert.rejects(
+    async () => {
+      await requirePermission("quotations:approve");
+    },
+    (err: unknown) => {
+      assert.ok(err instanceof ForbiddenError);
+      return true;
+    },
+  );
+  assertOverrideFilters("u1");
+
+  // DENY also wins over the admin wildcard.
+  resetAuthState({
+    authResult: { userId: "clerk_123" },
+    dbResult: { ...activeUser, role: "admin" },
+    permissionOverrideResult: { effect: "deny" },
+  });
+  assert.equal(await checkPermission("quotations:approve"), false);
+  assertOverrideFilters("u1");
+
+  // The supported allow override can grant approval to an otherwise disallowed role.
+  resetAuthState({
+    authResult: { userId: "clerk_123" },
+    dbResult: { ...activeUser, role: "viewer" },
+    permissionOverrideResult: { effect: "allow" },
+  });
+  assert.equal(await checkPermission("quotations:approve"), true);
+  assertOverrideFilters("u1");
+
+  // Without an override, role permissions remain the fallback.
+  resetAuthState({
+    authResult: { userId: "clerk_123" },
+    dbResult: activeUser,
+  });
+  assert.equal(await checkPermission("quotations:approve"), true);
+  assertOverrideFilters("u1");
+});
+
+test("quotations:approve override dependency failures remain fail-closed", async () => {
+  resetAuthState({
+    authResult: { userId: "clerk_123" },
+    dbResult: {
+      id: "u1",
+      clerk_user_id: "clerk_123",
+      role: "manager",
+      is_active: true,
+    },
+    permissionOverrideError: {
+      code: "57P01",
+      message: "connection_refused",
+    },
+  });
+
+  await assert.rejects(
+    async () => {
+      await checkPermission("quotations:approve");
+    },
+    (err: unknown) => {
+      assert.ok(err instanceof AuthDependencyError);
+      return true;
+    },
+  );
+  assertOverrideFilters("u1");
 });

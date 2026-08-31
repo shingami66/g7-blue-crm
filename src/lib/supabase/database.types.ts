@@ -50,6 +50,47 @@ export type Database = {
         }
         Relationships: []
       }
+      app_user_permission_overrides: {
+        Row: {
+          created_at: string
+          created_by: string
+          effect: string
+          id: string
+          permission: string
+          updated_at: string
+          updated_by: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          effect: string
+          id?: string
+          permission: string
+          updated_at?: string
+          updated_by: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          effect?: string
+          id?: string
+          permission?: string
+          updated_at?: string
+          updated_by?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_user_permission_overrides_user_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approved_billing_scope_items: {
         Row: {
           accepted_grand_total: number
@@ -2019,6 +2060,22 @@ export type Database = {
           reviewed: boolean
           scope_id: string
           service_id: string
+        }[]
+      }
+      set_app_user_permission_override: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_effect: string
+          p_permission: string
+          p_user_id: string
+        }
+        Returns: {
+          effect: string
+          error_code: string
+          idempotent_replay: boolean
+          permission: string
+          user_id: string
         }[]
       }
       set_app_user_active: {

@@ -11,6 +11,74 @@ export { ROLE_PERMISSIONS } from "./role-permissions";
 export { UnauthorizedError, ForbiddenError, AuthDependencyError } from "./errors";
 
 const NO_ROW_ERROR_CODE = "PGRST116";
+const QUOTATIONS_APPROVE_PERMISSION = "quotations:approve";
+
+type PermissionOverrideEffect = "allow" | "deny";
+
+async function getPermissionOverride(
+  userId: string,
+  permission: string,
+): Promise<PermissionOverrideEffect | null> {
+  if (permission !== QUOTATIONS_APPROVE_PERMISSION) {
+    return null;
+  }
+
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("app_user_permission_overrides")
+      .select("effect")
+      .eq("user_id", userId)
+      .eq("permission", permission)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[getPermissionOverride] Database dependency error");
+      throw new AuthDependencyError(
+        "Database query failed while fetching permission override",
+      );
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    if (data.effect !== "allow" && data.effect !== "deny") {
+      console.error("[getPermissionOverride] Invalid permission override value");
+      throw new AuthDependencyError("Invalid permission override value");
+    }
+
+    return data.effect;
+  } catch (err) {
+    if (err instanceof AuthDependencyError || isNextControlFlowError(err)) {
+      throw err;
+    }
+    console.error("[getPermissionOverride] Unexpected dependency error");
+    throw new AuthDependencyError("Unexpected permission override failure");
+  }
+}
+
+async function hasEffectivePermission(
+  userId: string,
+  role: unknown,
+  permission: string,
+): Promise<boolean> {
+  const roleAllows = hasPermissionForRole(role, permission);
+  const override = await getPermissionOverride(userId, permission);
+
+  // An explicit deny always wins, including over the admin wildcard.
+  if (override === "deny") {
+    return false;
+  }
+
+  // An explicit allow can grant this narrowly supported permission to a role
+  // that does not otherwise include it.
+  if (override === "allow") {
+    return true;
+  }
+
+  return roleAllows;
+}
 
 function isNextControlFlowError(err: unknown): boolean {
   if (typeof err !== "object" || err === null) return false;
@@ -118,7 +186,7 @@ export async function requireRole(role: string) {
 export async function requirePermission(permission: string) {
   const user = await requireUser();
   
-  if (!hasPermissionForRole(user.role, permission)) {
+  if (!(await hasEffectivePermission(user.id, user.role, permission))) {
     throw new ForbiddenError(`Permission '${permission}' required`);
   }
 
@@ -135,5 +203,5 @@ export async function checkPermission(permission: string): Promise<boolean> {
     return false;
   }
   
-  return hasPermissionForRole(user.role, permission);
+  return hasEffectivePermission(user.id, user.role, permission);
 }
