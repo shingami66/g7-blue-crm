@@ -5,7 +5,13 @@
 - **W1:** `PASS` after Owner acceptance. W1A Effective Access, Open Review routing hardening, W1C Quotation Approvals, and W1C Ready-to-Start Services are complete and published in the authorized sequence.
 - **W1B:** **NOT REQUIRED FOR THIS WAVE**. Approval Authority / SoD remains deferred and unimplemented; reopen only if a real existing workflow demonstrates a durable bounded gap.
 - **Delivered boundary:** Effective Access uses the reviewed narrow `quotations:approve` override path with DENY-wins semantics. Action Center uses the existing Dashboard Attention surface for two real source-linked slices: quotation approvals and transition-ready Services. No generic workflow engine, new authority, inline mutation, or new persistence was added for W1C.
-- **Next locked priority:** W2 Commercial Authority under a new bounded Owner task. Do not extend W1C without evidence of a required consumer or defect.
+- **Next locked priority:** W2A is complete; W2B Revision Lineage is the next separately authorized W2 slice. Do not extend W1C without evidence of a required consumer or defect.
+
+## CURRENT W2A CLOSEOUT — 31 August 2026
+
+- **W2A Commercial Authority Line Foundation:** `PASS`. The existing quotation and Approved Billing Scope lineage now carries customer-priced Authority Lines, zero-priced Included Components, and deterministically selected Optional Add-ons.
+- **Evidence boundary:** migration `20260831110000_w2a_commercial_authority_lines.sql` and the reviewed runtime/tests/generated types are included in this closeout; DEV apply/reconciliation and the transaction-local smoke passed. No DEV reapply, production/deployment work, or unrelated database mutation is part of publication.
+- **Next separately authorized slice:** W2B Revision Lineage. No W2B implementation is authorized by this roadmap entry.
 
 > The dated 27 August roadmap snapshot below is historical evidence; its prior next-task wording is superseded by this W1 closeout.
 

@@ -6,8 +6,14 @@
 - **W1A Effective Access:** the reviewed minimum `quotations:approve` user-override persistence and server-side DENY-wins evaluation are delivered through the existing authorization path. The migration was applied and reconciled on the Owner-authorized DEV environment only; no DEMO environment currently exists. No broader scopes, delegation, SoD, or generic authority engine was introduced.
 - **W1C Action Center:** the existing Dashboard Attention surface now derives bounded quotation-approval links and ready-to-start Service links from their real source workflows. Visibility is permission-filtered, dependency failures fail closed, source records remain authoritative, and no inline approval/start mutation or new workflow state is added.
 - **Review/validation:** the W1 publishable delta completed focused tests, TypeScript, ESLint, `git diff --check`, OCR delegation-only rule resolution, separate native findings-only review, same-Writer repair, and targeted rereview. No production, deployment, Layer 2, or unrelated database mutation is claimed.
-- **Current-to-target truth:** W1 delivery does not erase the remaining Layer 1 implementation gaps. W2 Commercial Authority is the next wave; W1B remains deferred until a real workflow consumer proves a bounded approval-authority/SoD gap.
-- **Exact next wave/action:** open a new Owner-authorized W2 Commercial Authority slice; do not add another W1C feature unless new evidence proves it required.
+- **Current-to-target truth:** W1 delivery does not erase the remaining Layer 1 implementation gaps. W2A Commercial Authority is now complete; W1B remains deferred until a real workflow consumer proves a bounded approval-authority/SoD gap.
+- **Exact next wave/action:** open the next separately authorized W2B Revision Lineage slice; do not add another W1C feature unless new evidence proves it required.
+
+## CURRENT W2A CLOSEOUT — 31 August 2026
+
+- **W2A Commercial Authority Line Foundation:** `PASS`. The reviewed additive quotation-item hierarchy is delivered through the existing Quotation and Approved Billing Scope lineage: customer-priced Authority Lines, zero-priced Included Components, and deterministically selected Optional Add-ons.
+- **Persistence and evidence:** migration `20260831110000_w2a_commercial_authority_lines.sql` was applied and reconciled on the Owner-authorized DEV environment only. The transaction-local DEV smoke verified hierarchy metadata, forced included pricing, selected-only optional contribution, database-derived totals, immutable ABS snapshots, expected audit events, and zero residue after rollback. This closeout performs no DEV reapply or database mutation.
+- **Scope boundary:** no parallel commercial engine, post-Sent revision lifecycle, catalog/Tender/supplier-pricing subsystem, or new workflow/authority infrastructure was introduced. W2B Revision Lineage is the next separately authorized W2 slice.
 
 > The dated 27 August status snapshot below is historical evidence; its prior next-task wording is superseded by this W1 closeout.
 
