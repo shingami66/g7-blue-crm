@@ -51,6 +51,7 @@ export function mapRowToQuotationItem(row: QuotationItemRow): QuotationItem {
     isSelected: row.is_selected ?? true,
     unit: row.unit ?? "unit",
     descriptionAr: row.description_ar ?? null,
+    discountAllocated: Number(row.discount_allocated ?? 0),
   };
 }
 

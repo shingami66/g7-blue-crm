@@ -26,7 +26,7 @@ import type {
 } from "./types";
 
 const SOURCE_QUOTATION_SELECT =
-  "id, quotation_number, service_id, event, date, valid_until, subtotal, discount, vat_rate, vat_amount, grand_total, status, is_deleted, snapshot_seller, quotation_items(id, quotation_id, description, details, category, qty, unit_price, vat, total, created_at, updated_at)";
+  "id, quotation_number, service_id, event, date, valid_until, subtotal, discount, vat_rate, vat_amount, grand_total, status, is_deleted, snapshot_seller, quotation_items(id, quotation_id, description, details, category, qty, unit_price, vat, total, discount_allocated, commercial_role, parent_authority_line_id, is_selected, unit, description_ar, created_at, updated_at)";
 const DEFAULT_SOURCE_CURRENCY = "SAR";
 const MAX_SCOPE_CREATE_ATTEMPTS = 3;
 const UNIQUE_VIOLATION_CODE = "23505";
@@ -80,6 +80,7 @@ type ApprovedBillingScopeDraftInsertRow = {
   source_subtotal: number;
   source_vat_amount: number;
   source_grand_total: number;
+  source_discount_allocated: number;
   accepted_qty: number;
   accepted_unit_price: number;
   accepted_subtotal: number;
@@ -170,18 +171,23 @@ function buildDraftItemInsertRows(
       return null;
     }
 
-    let sourceGrandTotal: number;
-    if (item.total != null) {
-      const parsedTotal = parseAbsWriteMoney(item.total);
-      if (parsedTotal == null) {
-        return null;
-      }
-      sourceGrandTotal = parsedTotal;
-    } else {
-      sourceGrandTotal = roundMoney(sourceSubtotal + sourceVatAmount);
-      if (!Number.isFinite(sourceGrandTotal) || sourceGrandTotal < 0) {
-        return null;
-      }
+    const sourceGrossTotal = parseAbsWriteMoney(item.total);
+    const sourceDiscountAllocated = parseAbsWriteMoney(item.discount_allocated ?? 0);
+    if (
+      sourceGrossTotal == null ||
+      sourceGrossTotal !== sourceSubtotal ||
+      sourceDiscountAllocated == null ||
+      sourceDiscountAllocated < 0 ||
+      sourceDiscountAllocated > sourceSubtotal
+    ) {
+      return null;
+    }
+
+    const sourceGrandTotal = roundMoney(
+      sourceSubtotal - sourceDiscountAllocated + sourceVatAmount
+    );
+    if (!Number.isFinite(sourceGrandTotal) || sourceGrandTotal < 0) {
+      return null;
     }
 
     rows.push({
@@ -198,6 +204,7 @@ function buildDraftItemInsertRows(
       source_subtotal: sourceSubtotal,
       source_vat_amount: sourceVatAmount,
       source_grand_total: sourceGrandTotal,
+      source_discount_allocated: sourceDiscountAllocated,
       accepted_qty: sourceQty,
       accepted_unit_price: sourceUnitPrice,
       accepted_subtotal: sourceSubtotal,
@@ -451,10 +458,6 @@ export async function createApprovedBillingScopeDraft(
       return errorResult("scope_unexpected_error");
     }
 
-    if (headerMoney.discount > 0) {
-      return errorResult("scope_discount_not_supported");
-    }
-
     const normalizedItems = normalizeQuotationItems(quotation);
 
     if (normalizedItems.length === 0) {
@@ -507,6 +510,17 @@ export async function createApprovedBillingScopeDraft(
         return errorResult("scope_unexpected_error");
       }
       const totals = draftTotals(itemInsertRows);
+      const allocatedDiscount = roundMoney(
+        itemInsertRows.reduce((sum, item) => sum + item.source_discount_allocated, 0)
+      );
+      if (
+        allocatedDiscount !== headerMoney.discount ||
+        totals.acceptedSubtotal !== headerMoney.subtotal ||
+        totals.acceptedVatAmount !== headerMoney.vatAmount ||
+        totals.acceptedGrandTotal !== headerMoney.grandTotal
+      ) {
+        return errorResult("scope_unexpected_error");
+      }
 
       const { data: createdScope, error: scopeInsertError } = await supabase
         .from("approved_billing_scopes")
@@ -912,6 +926,7 @@ export async function reviewApprovedBillingScopeLineSafety(
         const sourceSubtotal = Number(item.source_subtotal);
         const sourceVatAmount = Number(item.source_vat_amount);
         const sourceGrandTotal = Number(item.source_grand_total);
+        const sourceDiscountAllocated = Number(item.source_discount_allocated ?? 0);
 
         // d) all numeric values must be finite.
         if (
@@ -920,8 +935,26 @@ export async function reviewApprovedBillingScopeLineSafety(
           !Number.isFinite(acceptedSubtotal) ||
           !Number.isFinite(acceptedVatAmount) ||
           !Number.isFinite(acceptedGrandTotal)
+          || !Number.isFinite(sourceDiscountAllocated)
         ) {
           return errorResult("scope_unexpected_error");
+        }
+
+        if (
+          sourceDiscountAllocated < 0 ||
+          sourceDiscountAllocated > sourceSubtotal ||
+          Math.abs(
+            sourceGrandTotal -
+              (sourceSubtotal - sourceDiscountAllocated + sourceVatAmount)
+          ) > 0.01
+        ) {
+          return errorResult("scope_reduction_invalid");
+        }
+
+        // W2C has no policy for redistributing a quotation discount when an
+        // ABS line is reduced, excluded, or supplied by the customer.
+        if (sourceDiscountAllocated > 0 && decision !== "accepted") {
+          return errorResult("scope_reduction_invalid");
         }
 
         // 1. accepted: accepted qty/unit_price/subtotal/vat/grand_total must equal source values
@@ -962,7 +995,12 @@ export async function reviewApprovedBillingScopeLineSafety(
           ) {
             return errorResult("scope_reduction_invalid");
           }
-          if (Math.abs(acceptedGrandTotal - (acceptedSubtotal + acceptedVatAmount)) > 0.01) {
+          if (
+            Math.abs(
+              acceptedGrandTotal -
+                (acceptedSubtotal - sourceDiscountAllocated + acceptedVatAmount)
+            ) > 0.01
+          ) {
             return errorResult("scope_reduction_invalid");
           }
           if (!item.reason_code || !item.reason_code.trim()) {

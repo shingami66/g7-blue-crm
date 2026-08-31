@@ -5,7 +5,7 @@
 - **W1:** `PASS` after Owner acceptance. W1A Effective Access, Open Review routing hardening, W1C Quotation Approvals, and W1C Ready-to-Start Services are complete and published in the authorized sequence.
 - **W1B:** **NOT REQUIRED FOR THIS WAVE**. Approval Authority / SoD remains deferred and unimplemented; reopen only if a real existing workflow demonstrates a durable bounded gap.
 - **Delivered boundary:** Effective Access uses the reviewed narrow `quotations:approve` override path with DENY-wins semantics. Action Center uses the existing Dashboard Attention surface for two real source-linked slices: quotation approvals and transition-ready Services. No generic workflow engine, new authority, inline mutation, or new persistence was added for W1C.
-- **Next locked priority:** W2A and W2B are complete; W2C Deterministic Discount Allocation / Approval Projection preflight is the next separately authorized W2 action. Do not extend W1C without evidence of a required consumer or defect.
+- **Next locked priority:** W2A, W2B and W2C are complete and closed on the Owner-authorized DEV environment. The next locked roadmap task is W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`), requiring a new Owner-authorized task. Do not extend W1C without evidence of a required consumer or defect.
 
 ## W2A CLOSEOUT — 31 August 2026 (COMPLETED)
 
@@ -18,7 +18,14 @@
 - **W2B Quotation Revision Lineage:** `PASS`. Eligible non-approved post-Sent quotations now create an immutable, same-family Draft successor with monotonic revision lineage; Draft remains editable in place and Approved sources fail closed.
 - **Evidence boundary:** migration `20260831120000_w2b_quotation_revision_lineage.sql`, reviewed runtime/actions, generated types, focused tests, DEV apply/reconciliation, and the transaction-local success smoke passed. The source, W2A hierarchy, bilingual snapshots, totals, ABS, invoices, payments, approvals, and historical facts remain protected; rollback left zero residue. No DEMO or production claim is made.
 - **Scope boundary:** customer-facing numbering and main-list presentation remain unchanged. Post-approval Change Orders, ABS supersession/reapproval, invoice/payment correction, and W2C behavior remain outside this slice.
-- **Next separately authorized slice:** W2C Deterministic Discount Allocation / Approval Projection preflight. Start with the technical contract and finance review of the exact halala/remainder allocation rule; do not implement or apply it from this roadmap entry.
+- **Next separately authorized slice (historical W2B boundary):** W2C Deterministic Discount Allocation / Approval Projection was separately authorized after this W2B slice and is closed in the current section below.
+
+## CURRENT W2C CLOSEOUT — 1 September 2026
+
+- **W2C Deterministic Discount Allocation / Approval Projection:** `PASS` and closed. The approved fixed-amount SAR discount rule is persisted once on quotation items and projected by exact copy into approval/ABS evidence and W2B successor drafts. Allocation is integer-halal proportional largest remainder, with deterministic `created_at ASC, id ASC` tie-breaking and Authority Line-root attribution only.
+- **Evidence boundary:** migration `20260901100000_w2c_deterministic_discount_allocation.sql` was applied and reconciled on the Owner-authorized DEV project `dpddrqjzqohexixgdqiq`; schema, constraints, security grants, fail-closed behavior, approval/ABS equality, revision copying, focused tests, and transaction-local smoke passed. No DEMO environment currently exists; no production/deployment claim is made.
+- **Scope boundary:** Included Components and unselected Optional Add-ons receive zero allocation; quotation `grand_total` remains authoritative. Percentage discounts, non-SAR/FX allocation, VAT/revenue/accounting policy, Change Orders, ABS supersession/reapproval, historical backfill, and unrelated W2 work remain deferred or out of scope.
+- **Next locked roadmap task:** W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`) is the next separately authorized slice. This roadmap entry grants no further database mutation or implementation authority.
 
 ## 0. CURRENT RECONCILED ROADMAP — 31 August 2026
 

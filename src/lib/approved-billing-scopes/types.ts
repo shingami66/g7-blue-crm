@@ -107,6 +107,7 @@ export interface ApprovedBillingScopeItemRow {
   source_subtotal: number | string;
   source_vat_amount: number | string;
   source_grand_total: number | string;
+  source_discount_allocated: number | string;
   accepted_qty: number | string;
   accepted_unit_price: number | string;
   accepted_subtotal: number | string;
@@ -333,6 +334,7 @@ export interface ApprovedBillingScopeItem {
   sourceSubtotal: number;
   sourceVatAmount: number;
   sourceGrandTotal: number;
+  sourceDiscountAllocated?: number;
   acceptedQty: number;
   acceptedUnitPrice: number;
   acceptedSubtotal: number;

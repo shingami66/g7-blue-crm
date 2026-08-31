@@ -80,6 +80,7 @@ export function sanitizeQuotationDetailRow(row: Record<string, unknown>): Quotat
         unit_price: Number(itemObj.unit_price) || 0,
         vat: Number(itemObj.vat) || 0,
         total: Number(itemObj.total) || 0,
+        discount_allocated: Number(itemObj.discount_allocated) || 0,
         created_at: typeof itemObj.created_at === "string" ? itemObj.created_at : "",
         updated_at: typeof itemObj.updated_at === "string" ? itemObj.updated_at : "",
         commercial_role:

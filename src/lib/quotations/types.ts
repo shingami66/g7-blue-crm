@@ -143,6 +143,7 @@ export interface QuotationItemRow {
   is_selected?: boolean;
   unit?: string;
   description_ar?: string | null;
+  discount_allocated?: number;
 }
 
 export interface QuotationListItem {
@@ -191,6 +192,7 @@ export interface QuotationItem {
   isSelected?: boolean;
   unit?: string;
   descriptionAr?: string | null;
+  discountAllocated?: number;
 }
 
 export interface QuotationDetail extends QuotationListItem {

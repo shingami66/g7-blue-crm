@@ -111,6 +111,7 @@ export type Database = {
           source_description_ar: string | null
           source_details: string | null
           source_grand_total: number
+          source_discount_allocated: number
           source_is_selected: boolean
           source_parent_authority_line_id: string | null
           source_qty: number
@@ -141,6 +142,7 @@ export type Database = {
           source_description_ar?: string | null
           source_details?: string | null
           source_grand_total?: number
+          source_discount_allocated?: number
           source_is_selected?: boolean
           source_parent_authority_line_id?: string | null
           source_qty?: number
@@ -171,6 +173,7 @@ export type Database = {
           source_description_ar?: string | null
           source_details?: string | null
           source_grand_total?: number
+          source_discount_allocated?: number
           source_is_selected?: boolean
           source_parent_authority_line_id?: string | null
           source_qty?: number
@@ -1006,6 +1009,7 @@ export type Database = {
           quotation_id: string
           parent_authority_line_id: string | null
           total: number
+          discount_allocated: number
           unit_price: number
           unit: string
           updated_at: string | null
@@ -1024,6 +1028,7 @@ export type Database = {
           quotation_id: string
           parent_authority_line_id?: string | null
           total?: number
+          discount_allocated?: number
           unit_price?: number
           unit?: string
           updated_at?: string | null
@@ -1042,6 +1047,7 @@ export type Database = {
           quotation_id?: string
           parent_authority_line_id?: string | null
           total?: number
+          discount_allocated?: number
           unit_price?: number
           unit?: string
           updated_at?: string | null

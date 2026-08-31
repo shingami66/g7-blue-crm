@@ -150,6 +150,7 @@ export function mapApprovedBillingScopeItemRow(
     sourceSubtotal: mapAuthoritativeDecimal(row.source_subtotal),
     sourceVatAmount: mapAuthoritativeDecimal(row.source_vat_amount),
     sourceGrandTotal: mapAuthoritativeDecimal(row.source_grand_total),
+    sourceDiscountAllocated: mapAuthoritativeDecimal(row.source_discount_allocated ?? 0),
     acceptedQty: mapAuthoritativeDecimal(row.accepted_qty),
     acceptedUnitPrice: mapAuthoritativeDecimal(row.accepted_unit_price),
     acceptedSubtotal: mapAuthoritativeDecimal(row.accepted_subtotal),
