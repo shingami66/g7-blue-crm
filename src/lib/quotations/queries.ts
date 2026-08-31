@@ -82,6 +82,19 @@ export function sanitizeQuotationDetailRow(row: Record<string, unknown>): Quotat
         total: Number(itemObj.total) || 0,
         created_at: typeof itemObj.created_at === "string" ? itemObj.created_at : "",
         updated_at: typeof itemObj.updated_at === "string" ? itemObj.updated_at : "",
+        commercial_role:
+          itemObj.commercial_role === "authority_line" ||
+          itemObj.commercial_role === "included_component" ||
+          itemObj.commercial_role === "optional_add_on"
+            ? itemObj.commercial_role
+            : "authority_line",
+        parent_authority_line_id:
+          typeof itemObj.parent_authority_line_id === "string"
+            ? itemObj.parent_authority_line_id
+            : null,
+        is_selected: typeof itemObj.is_selected === "boolean" ? itemObj.is_selected : true,
+        unit: typeof itemObj.unit === "string" && itemObj.unit.trim() ? itemObj.unit : "unit",
+        description_ar: typeof itemObj.description_ar === "string" ? itemObj.description_ar : null,
       };
     }),
   };

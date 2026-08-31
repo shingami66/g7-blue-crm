@@ -13,6 +13,7 @@ import {
 import type { BusinessYear } from "@/lib/business-year";
 
 export type QuotationStatus = "draft" | "sent" | "approved" | "rejected" | "expired";
+export type QuotationCommercialRole = "authority_line" | "included_component" | "optional_add_on";
 
 export const QUOTATION_LIST_PAGE_SIZE = 10;
 export type QuotationSearchMode = "quotationNumber" | "customer" | "service";
@@ -132,6 +133,11 @@ export interface QuotationItemRow {
   total: number;
   created_at: string;
   updated_at: string;
+  commercial_role?: QuotationCommercialRole;
+  parent_authority_line_id?: string | null;
+  is_selected?: boolean;
+  unit?: string;
+  description_ar?: string | null;
 }
 
 export interface QuotationListItem {
@@ -175,6 +181,11 @@ export interface QuotationItem {
   unitPrice: number;
   vat: number;
   total: number;
+  commercialRole?: QuotationCommercialRole;
+  parentAuthorityLineId?: string | null;
+  isSelected?: boolean;
+  unit?: string;
+  descriptionAr?: string | null;
 }
 
 export interface QuotationDetail extends QuotationListItem {

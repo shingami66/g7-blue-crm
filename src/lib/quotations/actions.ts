@@ -10,8 +10,21 @@ import {
   executeQuotationApprovalActivation,
   type QuotationApprovalActivationData,
 } from "./approval-contract";
-import { createQuotationSchema, updateQuotationSchema } from "./schemas";
+import {
+  createQuotationSchema,
+  quotationCommercialStructureSchema,
+  updateQuotationSchema,
+} from "./schemas";
 import type { QuotationRpcResult } from "./types";
+
+export interface QuotationCommercialStructureResult {
+  quotation_id: string;
+  line_count: number;
+  subtotal: number;
+  discount: number;
+  vat_amount: number;
+  grand_total: number;
+}
 
 export type QuotationActionErrorCode =
   | "UNAUTHORIZED"
@@ -23,6 +36,7 @@ export type QuotationActionErrorCode =
   | "INVALID_VALIDITY_WINDOW"
   | "MUTATION_KEY_CONFLICT"
   | "CREATE_FAILED"
+  | "STRUCTURE_UPDATE_FAILED"
   | "UNKNOWN_ERROR";
 
 export type ActionResult<T = void> = {
@@ -71,7 +85,7 @@ async function getExistingQuotationForUpdate(
 ) {
   const { data, error } = await supabase
     .from("quotations")
-    .select("id, service_id, date, valid_until, status")
+    .select("id, service_id, date, valid_until, status, quotation_items(commercial_role)")
     .eq("id", id)
     .eq("is_deleted", false)
     .single();
@@ -214,6 +228,18 @@ export async function updateQuotation(id: string, input: unknown): Promise<Actio
       return { success: false, error: "Only draft quotations can be edited." };
     }
 
+    // The legacy replace-all RPC cannot carry W2A hierarchy metadata. Fail
+    // closed instead of silently flattening an already structured draft.
+    const existingItems = Array.isArray(existingQuotation.quotation_items)
+      ? existingQuotation.quotation_items
+      : [];
+    if (existingItems.some((item) => item?.commercial_role && item.commercial_role !== "authority_line")) {
+      return {
+        success: false,
+        error: "Structured quotations must be edited through the Authority Line editor.",
+      };
+    }
+
     const service = await getServiceById(existingQuotation.service_id);
     if (!service) {
       return { success: false, error: "Service not found or unavailable." };
@@ -259,6 +285,86 @@ export async function updateQuotation(id: string, input: unknown): Promise<Actio
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
     console.error("[updateQuotation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+/**
+ * Persist the bounded W2A Authority Line hierarchy on an existing draft.
+ * Pricing remains database-derived; the browser sends only item ids and
+ * structure metadata.
+ */
+export async function setQuotationCommercialStructure(
+  id: string,
+  input: unknown,
+): Promise<ActionResult<QuotationCommercialStructureResult>> {
+  try {
+    const user = await requirePermission("quotations:write");
+    const parsed = quotationCommercialStructureSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return { success: false, code: "INVALID_INPUT", error: "Invalid quotation commercial structure." };
+    }
+
+    const supabase = createAdminClient();
+    const { data, error } = await supabase.rpc("set_quotation_commercial_structure", {
+      p_quotation_id: id,
+      p_lines: parsed.data.lines,
+      p_user_id: user.clerk_user_id,
+    });
+
+    if (error) {
+      console.error("[setQuotationCommercialStructure] Supabase error:", error.message);
+      return { success: false, code: "STRUCTURE_UPDATE_FAILED", error: "Failed to update quotation structure." };
+    }
+
+    const row = data?.[0];
+    if (!row) {
+      return { success: false, code: "STRUCTURE_UPDATE_FAILED", error: "Failed to update quotation structure." };
+    }
+
+    if (row.error_code) {
+      const messageByCode: Record<string, string> = {
+        quotation_not_found: "Quotation not found or already deleted.",
+        quotation_not_draft: "Only draft quotations can be structured.",
+        discount_exceeds_subtotal: "Discount cannot exceed the quotation subtotal.",
+        quotation_no_items: "At least one quotation item is required.",
+        quotation_structure_must_cover_all_items: "Structure must cover every quotation item exactly once.",
+        quotation_structure_item_not_found: "A quotation item could not be found.",
+        commercial_parent_invalid: "Components must reference a root Authority Line in this quotation.",
+        included_component_must_be_non_priced: "Included Components cannot carry an independent price.",
+        optional_unselected_must_be_zero: "An unselected Optional Add-on cannot contribute to the quotation.",
+        quotation_requires_authority_line: "At least one customer-priced Authority Line is required.",
+      };
+      return {
+        success: false,
+        code: row.error_code === "commercial_structure_update_failed"
+          ? "STRUCTURE_UPDATE_FAILED"
+          : "INVALID_INPUT",
+        error: messageByCode[row.error_code] ?? "Quotation structure could not be updated.",
+      };
+    }
+
+    revalidatePath(`/quotations/${id}`);
+    revalidatePath("/quotations");
+    return {
+      success: true,
+      data: {
+        quotation_id: row.quotation_id,
+        line_count: Number(row.line_count),
+        subtotal: Number(row.subtotal),
+        discount: Number(row.discount),
+        vat_amount: Number(row.vat_amount),
+        grand_total: Number(row.grand_total),
+      },
+    };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
+    console.error(
+      "[setQuotationCommercialStructure] Unexpected error:",
+      err instanceof Error ? err.message : "Unknown",
+    );
+    return { success: false, code: "UNKNOWN_ERROR", error: "An unexpected error occurred." };
   }
 }
 

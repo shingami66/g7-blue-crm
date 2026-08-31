@@ -106,15 +106,20 @@ export type Database = {
           reason_code: string | null
           reason_note: string | null
           source_category: string | null
+          source_commercial_role: string
           source_description: string
+          source_description_ar: string | null
           source_details: string | null
           source_grand_total: number
+          source_is_selected: boolean
+          source_parent_authority_line_id: string | null
           source_qty: number
           source_quotation_id: string
           source_quotation_item_id: string
           source_subtotal: number
           source_unit_price: number
           source_vat_amount: number
+          source_unit: string
           updated_at: string
         }
         Insert: {
@@ -131,15 +136,20 @@ export type Database = {
           reason_code?: string | null
           reason_note?: string | null
           source_category?: string | null
+          source_commercial_role?: string
           source_description: string
+          source_description_ar?: string | null
           source_details?: string | null
           source_grand_total?: number
+          source_is_selected?: boolean
+          source_parent_authority_line_id?: string | null
           source_qty?: number
           source_quotation_id: string
           source_quotation_item_id: string
           source_subtotal?: number
           source_unit_price?: number
           source_vat_amount?: number
+          source_unit?: string
           updated_at?: string
         }
         Update: {
@@ -156,15 +166,20 @@ export type Database = {
           reason_code?: string | null
           reason_note?: string | null
           source_category?: string | null
+          source_commercial_role?: string
           source_description?: string
+          source_description_ar?: string | null
           source_details?: string | null
           source_grand_total?: number
+          source_is_selected?: boolean
+          source_parent_authority_line_id?: string | null
           source_qty?: number
           source_quotation_id?: string
           source_quotation_item_id?: string
           source_subtotal?: number
           source_unit_price?: number
           source_vat_amount?: number
+          source_unit?: string
           updated_at?: string
         }
         Relationships: [
@@ -980,40 +995,55 @@ export type Database = {
       quotation_items: {
         Row: {
           category: string
+          commercial_role: string
           created_at: string | null
           description: string
+          description_ar: string | null
           details: string | null
           id: string
+          is_selected: boolean
           qty: number
           quotation_id: string
+          parent_authority_line_id: string | null
           total: number
           unit_price: number
+          unit: string
           updated_at: string | null
           vat: number
         }
         Insert: {
           category: string
+          commercial_role?: string
           created_at?: string | null
           description: string
+          description_ar?: string | null
           details?: string | null
           id?: string
+          is_selected?: boolean
           qty?: number
           quotation_id: string
+          parent_authority_line_id?: string | null
           total?: number
           unit_price?: number
+          unit?: string
           updated_at?: string | null
           vat?: number
         }
         Update: {
           category?: string
+          commercial_role?: string
           created_at?: string | null
           description?: string
+          description_ar?: string | null
           details?: string | null
           id?: string
+          is_selected?: boolean
           qty?: number
           quotation_id?: string
+          parent_authority_line_id?: string | null
           total?: number
           unit_price?: number
+          unit?: string
           updated_at?: string | null
           vat?: number
         }
@@ -1024,6 +1054,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "quotations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotation_items_parent_authority_line_fkey"
+            columns: ["parent_authority_line_id", "quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotation_items"
+            referencedColumns: ["id", "quotation_id"]
           },
         ]
       }
@@ -2076,6 +2113,22 @@ export type Database = {
           idempotent_replay: boolean
           permission: string
           user_id: string
+        }[]
+      }
+      set_quotation_commercial_structure: {
+        Args: {
+          p_lines: Json
+          p_quotation_id: string
+          p_user_id: string
+        }
+        Returns: {
+          discount: number
+          error_code: string
+          grand_total: number
+          line_count: number
+          quotation_id: string
+          subtotal: number
+          vat_amount: number
         }[]
       }
       set_app_user_active: {

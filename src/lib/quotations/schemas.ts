@@ -8,6 +8,29 @@ export const quotationItemInputSchema = z.object({
   unit_price: z.coerce.number().nonnegative("Unit price cannot be negative"),
 });
 
+export const quotationCommercialRoleSchema = z.enum([
+  "authority_line",
+  "included_component",
+  "optional_add_on",
+]);
+
+/**
+ * W2A structure metadata is intentionally separate from ordinary quotation
+ * item pricing. The server/database remain the source of all amounts.
+ */
+export const quotationCommercialLineSchema = z.object({
+  quotation_item_id: z.string().uuid(),
+  commercial_role: quotationCommercialRoleSchema,
+  parent_authority_line_id: z.string().uuid().nullable().optional(),
+  is_selected: z.boolean().optional(),
+  unit: z.string().trim().min(1).max(80).optional(),
+  description_ar: z.string().trim().max(500).nullable().optional(),
+}).strict();
+
+export const quotationCommercialStructureSchema = z.object({
+  lines: z.array(quotationCommercialLineSchema).min(1),
+}).strict();
+
 export const createQuotationSchema = z.object({
   mutation_key: z.preprocess(
     (val) => (typeof val === "string" ? val.trim() : val),

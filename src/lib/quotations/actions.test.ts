@@ -163,7 +163,7 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { createQuotation } = await import("./actions");
+const { createQuotation, setQuotationCommercialStructure } = await import("./actions");
 const { createQuotationSchema, updateQuotationSchema } = await import("./schemas");
 
 const validQuotationInput = {
@@ -514,6 +514,77 @@ test("createQuotation handles unexpected runtime exception", async () => {
   assert.strictEqual(res.code, "UNKNOWN_ERROR");
 });
 
+const validCommercialStructure = {
+  lines: [
+    {
+      quotation_item_id: "33333333-3333-4333-8333-333333333333",
+      commercial_role: "authority_line",
+      is_selected: true,
+      unit: "service",
+      description_ar: "الخدمة",
+    },
+  ],
+};
+
+test("setQuotationCommercialStructure denies before any RPC", async () => {
+  resetScenario({ authError: "forbidden" });
+  const res = await setQuotationCommercialStructure(
+    "22222222-2222-4222-8222-222222222222",
+    validCommercialStructure,
+  );
+  assert.strictEqual(res.success, false);
+  assert.strictEqual(res.code, "FORBIDDEN");
+  assert.deepStrictEqual(scenarioState.rpcCalls, []);
+});
+
+test("setQuotationCommercialStructure rejects malformed input before any RPC", async () => {
+  resetScenario();
+  const res = await setQuotationCommercialStructure(
+    "22222222-2222-4222-8222-222222222222",
+    { lines: [{ quotation_item_id: "not-a-uuid", commercial_role: "authority_line" }] },
+  );
+  assert.strictEqual(res.success, false);
+  assert.strictEqual(res.code, "INVALID_INPUT");
+  assert.deepStrictEqual(scenarioState.rpcCalls, []);
+});
+
+test("setQuotationCommercialStructure maps a database error code safely", async () => {
+  resetScenario({ rpcData: [{ error_code: "quotation_not_draft" }] });
+  const res = await setQuotationCommercialStructure(
+    "22222222-2222-4222-8222-222222222222",
+    validCommercialStructure,
+  );
+  assert.strictEqual(res.success, false);
+  assert.strictEqual(res.code, "INVALID_INPUT");
+  assert.match(res.error ?? "", /draft/i);
+  assert.strictEqual(scenarioState.rpcCalls[0]?.name, "set_quotation_commercial_structure");
+});
+
+test("setQuotationCommercialStructure returns authoritative totals and revalidates paths", async () => {
+  resetScenario({
+    rpcData: [
+      {
+        error_code: null,
+        quotation_id: "22222222-2222-4222-8222-222222222222",
+        line_count: 2,
+        subtotal: 125,
+        discount: 0,
+        vat_amount: 0,
+        grand_total: 125,
+      },
+    ],
+  });
+  const res = await setQuotationCommercialStructure(
+    "22222222-2222-4222-8222-222222222222",
+    validCommercialStructure,
+  );
+  assert.strictEqual(res.success, true);
+  assert.strictEqual(res.data?.grand_total, 125);
+  const paths = (globalThis as unknown as { __lastRevalidatedPaths?: string[] }).__lastRevalidatedPaths;
+  assert.ok(paths?.includes("/quotations/22222222-2222-4222-8222-222222222222"));
+  assert.ok(paths?.includes("/quotations"));
+});
+
 test("migration static verification: durable canonical payload, no random-UUID item order dependency", async () => {
   const fs = await import("node:fs");
   const path = await import("node:path");
@@ -563,4 +634,3 @@ test("canonical item normalization preserves caller array order and numeric sema
     assert.strictEqual(parsed.data.items[1].description, "Item B");
   }
 });
-

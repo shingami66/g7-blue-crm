@@ -46,6 +46,11 @@ export function mapRowToQuotationItem(row: QuotationItemRow): QuotationItem {
     unitPrice: Number(row.unit_price),
     vat: Number(row.vat),
     total: Number(row.total),
+    commercialRole: row.commercial_role,
+    parentAuthorityLineId: row.parent_authority_line_id ?? null,
+    isSelected: row.is_selected ?? true,
+    unit: row.unit ?? "unit",
+    descriptionAr: row.description_ar ?? null,
   };
 }
 
