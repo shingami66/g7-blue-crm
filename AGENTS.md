@@ -100,6 +100,7 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 ## Independent Review
 
 - After a mutating implementation and its validation, use separate read-only/findings-only review. The Reviewer reports findings only and never repairs; confirmed in-scope findings return to the same logical Writer lane for validation and targeted rereview.
+- OCR-assisted review is delegation-only: run `ocr delegate preview --format json`, then `ocr delegate rule --format json <reviewable paths>`; a separate native Codex Reviewer performs the findings-only reasoning over the diff, source, tests, and resolved rules. Do not run `ocr review` or `ocr llm test`, configure an OCR provider/model, or request OCR credentials. A missing OCR LLM endpoint is irrelevant and must not produce HOLD when deterministic delegation is available; retain the existing independent-review-capacity and required-evidence HOLD gates.
 - Preserve one Writer per mutation slice and close review workers before any repair or commit stage.
 - If required review capacity is unavailable, return `HOLD` with the review marked incomplete; do not relabel self-review as independent review.
 
