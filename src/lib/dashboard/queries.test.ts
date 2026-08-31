@@ -68,23 +68,28 @@ mock.module("@/lib/auth/permissions", {
 
 function applyFilterLogic(rows: unknown[], filters: QueryFilter[]): unknown[] {
   let result = [...rows] as Array<Record<string, unknown>>;
+  const readColumn = (row: Record<string, unknown>, column: string) =>
+    column.split(".").reduce<unknown>((value, part) => (value && typeof value === "object" ? (value as Record<string, unknown>)[part] : undefined), row);
   for (const filter of filters) {
     if (filter.op === "eq") {
       const [col, val] = filter.args as [string, unknown];
-      result = result.filter((row) => row[col] === val);
+      result = result.filter((row) => readColumn(row, col) === val);
+    } else if (filter.op === "in") {
+      const [col, values] = filter.args as [string, unknown[]];
+      result = result.filter((row) => values.includes(readColumn(row, col)));
     } else if (filter.op === "gt") {
       const [col, val] = filter.args as [string, unknown];
-      result = result.filter((row) => Number(row[col]) > Number(val));
+      result = result.filter((row) => Number(readColumn(row, col)) > Number(val));
     } else if (filter.op === "gte") {
       const [col, val] = filter.args as [string, unknown];
-      result = result.filter((row) => String(row[col]) >= String(val));
+      result = result.filter((row) => String(readColumn(row, col)) >= String(val));
     } else if (filter.op === "is") {
       const [col, val] = filter.args as [string, unknown];
-      result = result.filter((row) => (val === null ? row[col] == null : row[col] === val));
+      result = result.filter((row) => (val === null ? readColumn(row, col) === null || readColumn(row, col) === undefined : readColumn(row, col) === val));
     } else if (filter.op === "not") {
       const [col, op, val] = filter.args as [string, string, unknown];
       if (op === "is" && val === null) {
-        result = result.filter((row) => row[col] != null);
+        result = result.filter((row) => readColumn(row, col) !== null && readColumn(row, col) !== undefined);
       }
     }
   }
@@ -131,6 +136,10 @@ function createMockQueryBuilder(table: string) {
     },
     gte(...args: unknown[]) {
       call.filters.push({ op: "gte", args });
+      return builder;
+    },
+    in(...args: unknown[]) {
+      call.filters.push({ op: "in", args });
       return builder;
     },
     is(...args: unknown[]) {
@@ -210,8 +219,10 @@ mock.module("@/lib/payments/queries", {
 const {
   getDashboardCustomersData,
   getDashboardQuotationsData,
+  getDashboardQuotationApprovalData,
   getDashboardInvoicesData,
   getDashboardServicesData,
+  getDashboardReadyToStartServicesData,
   getDashboardPaymentsData,
 } = await import("./queries.ts");
 
@@ -277,6 +288,62 @@ test("getDashboardQuotationsData uses head count, bounded limit(4), and propagat
 
   activeScenario.simulatedError = { quotations: "Quotation read error" };
   await assert.rejects(() => getDashboardQuotationsData(), /Count error|Recent error/);
+});
+
+test("getDashboardQuotationApprovalData derives bounded pending work from the quotation approval workflow", async () => {
+  const quotations: Array<{
+    id: string;
+    quotation_number: string;
+    status: string;
+    created_at: string;
+    is_deleted: boolean;
+    customers: { company: string | null } | null;
+    services: { service_title: string | null; status: string | null; event_name: string | null; deleted_at: string | null } | null;
+  }> = Array.from({ length: 7 }, (_, index) => ({
+    id: `q-${index + 1}`,
+    quotation_number: `QT-2026-${String(index + 1).padStart(4, "0")}`,
+    status: index === 6 ? "sent" : "draft",
+    created_at: `2026-08-${String(index + 1).padStart(2, "0")}T10:00:00Z`,
+    is_deleted: false,
+    customers: { company: `Company ${index + 1}` },
+    services: { service_title: `Service ${index + 1}`, status: index === 5 ? "Inquiry" : "Quoted", event_name: `Event ${index + 1}`, deleted_at: null },
+  }));
+  quotations.push(
+    { id: "q-approved", quotation_number: "QT-APPROVED", status: "approved", created_at: "2026-08-20T10:00:00Z", is_deleted: false, customers: null, services: { service_title: "Approved", status: "Quoted", event_name: "Approved event", deleted_at: null } },
+    { id: "q-service-approved", quotation_number: "QT-SERVICE-APPROVED", status: "draft", created_at: "2026-08-21T10:00:00Z", is_deleted: false, customers: null, services: { service_title: "Service approved", status: "Approved", event_name: "Not pending", deleted_at: null } },
+    { id: "q-service-deleted", quotation_number: "QT-SERVICE-DELETED", status: "draft", created_at: "2026-08-22T10:00:00Z", is_deleted: false, customers: null, services: { service_title: "Deleted service", status: "Quoted", event_name: "Not pending", deleted_at: "2026-08-22T12:00:00Z" } },
+  );
+  activeScenario = {
+    calls: [],
+    permissions: { "quotations:approve": true },
+    tableData: { quotations },
+  };
+
+  const result = await getDashboardQuotationApprovalData();
+  assert.equal(result.pendingQuotationApprovals.length, 6);
+  assert.equal(result.pendingQuotationApprovals[0].quotationNumber, "QT-2026-0001");
+  assert.equal(result.pendingQuotationApprovals[0].customer?.company, "Company 1");
+  assert.equal(result.pendingQuotationApprovals[5].event, "Event 6");
+
+  assert.equal(activeScenario.calls.length, 1);
+  const call = activeScenario.calls[0];
+  assert.equal(call.table, "quotations");
+  assert.equal(call.selectColumns, "id, quotation_number, status, created_at, services!inner(service_title, status, event_name, deleted_at), customers(company)");
+  assert.equal(call.selectOptions, undefined);
+  assert.deepEqual(call.filters, [
+    { op: "eq", args: ["is_deleted", false] },
+    { op: "in", args: ["status", ["draft", "sent"]] },
+    { op: "in", args: ["services.status", ["Inquiry", "Quoted"]] },
+    { op: "is", args: ["services.deleted_at", null] },
+  ]);
+  assert.deepEqual(call.orders, [
+    { column: "created_at", options: { ascending: true } },
+    { column: "id", options: { ascending: true } },
+  ]);
+  assert.equal(call.limitCount, 6);
+
+  activeScenario.simulatedError = { quotations: "Quotation approval DB error" };
+  await assert.rejects(() => getDashboardQuotationApprovalData(), /Pending approval error/);
 });
 
 test("getDashboardInvoicesData uses limit(6) for attention invoices without any full-table aggregate reads", async () => {
@@ -367,6 +434,62 @@ test("getDashboardServicesData uses bounded database-side counts for all workflo
   await assert.rejects(() => getDashboardServicesData("2026-08-11"), /Count error|Upcoming error|Inquiry count error/);
 });
 
+test("getDashboardReadyToStartServicesData uses the existing transition evidence and fails closed for blocked Services", async () => {
+  activeScenario = {
+    calls: [],
+    permissions: { "services:update_status": true },
+    tableData: {
+      services: [
+        { id: "s-ready", service_number: "SVC-2026-0001", service_title: "Ready Launch", status: "Deposit Paid", deleted_at: null },
+        { id: "s-blocked", service_number: "SVC-2026-0002", service_title: "Blocked Launch", status: "Deposit Paid", deleted_at: null },
+        { id: "s-inquiry", service_number: "SVC-2026-0003", service_title: "Not Ready", status: "Inquiry", deleted_at: null },
+        { id: "s-deleted", service_number: "SVC-2026-0004", service_title: "Deleted Launch", status: "Deposit Paid", deleted_at: "2026-08-01T00:00:00Z" },
+      ],
+      quotations: [],
+      invoices: [
+        { id: "inv-ready", service_id: "s-ready", invoice_type: "deposit", status: "paid", grand_total: 100, balance_due: 0, voided_at: null, is_deleted: false },
+        { id: "inv-blocked", service_id: "s-blocked", invoice_type: "deposit", status: "paid", grand_total: 100, balance_due: 25, voided_at: null, is_deleted: false },
+      ],
+    },
+  };
+
+  const result = await getDashboardReadyToStartServicesData("en");
+  assert.deepEqual(result.readyToStartServices, [
+    { id: "s-ready", serviceNumber: "SVC-2026-0001", serviceTitle: "Ready Launch" },
+  ]);
+
+  const serviceCall = activeScenario.calls.find((call) => call.table === "services");
+  assert.ok(serviceCall);
+  assert.equal(serviceCall.selectColumns, "id, service_number, service_title, status");
+  assert.deepEqual(serviceCall.filters, [
+    { op: "is", args: ["deleted_at", null] },
+    { op: "eq", args: ["status", "Deposit Paid"] },
+  ]);
+  assert.deepEqual(serviceCall.orders, [
+    { column: "service_number", options: { ascending: true } },
+    { column: "id", options: { ascending: true } },
+  ]);
+  assert.equal(serviceCall.limitCount, 6);
+
+  activeScenario.simulatedError = { services: "Service DB error" };
+  await assert.rejects(() => getDashboardReadyToStartServicesData("en"), /Ready-to-start error/);
+
+  activeScenario = {
+    calls: [],
+    permissions: { "services:update_status": true },
+    tableData: {
+      services: [
+        { id: "s-evidence-failure", service_number: "SVC-2026-0010", service_title: "Evidence Failure", status: "Deposit Paid", deleted_at: null },
+      ],
+      quotations: [],
+      invoices: [],
+    },
+    simulatedError: { invoices: "Invoice evidence unavailable" },
+  };
+  const unavailable = await getDashboardReadyToStartServicesData("en");
+  assert.deepEqual(unavailable.readyToStartServices, []);
+});
+
 test("getDashboardPaymentsData loads payments with limit and propagates errors", async () => {
   activeScenario = {
     calls: [],
@@ -388,8 +511,10 @@ test("dashboard query loaders reject with ForbiddenError when required permissio
     permissions: {
       "customers:read": false,
       "quotations:read": false,
+      "quotations:approve": false,
       "invoices:read": false,
       "services:read": false,
+      "services:update_status": false,
       "payments:read": false,
     },
     tableData: {},
@@ -397,7 +522,9 @@ test("dashboard query loaders reject with ForbiddenError when required permissio
 
   await assert.rejects(() => getDashboardCustomersData(), ForbiddenError);
   await assert.rejects(() => getDashboardQuotationsData(), ForbiddenError);
+  await assert.rejects(() => getDashboardQuotationApprovalData(), ForbiddenError);
   await assert.rejects(() => getDashboardInvoicesData(), ForbiddenError);
   await assert.rejects(() => getDashboardServicesData(), ForbiddenError);
+  await assert.rejects(() => getDashboardReadyToStartServicesData(), ForbiddenError);
   await assert.rejects(() => getDashboardPaymentsData(), ForbiddenError);
 });

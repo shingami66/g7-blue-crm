@@ -4,6 +4,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { getSharedUiStates } from "./dictionaries/common.ts";
 import { getDashboardDictionary } from "./dictionaries/dashboard.ts";
+import { getDashboardAdvancementDictionary } from "./dictionaries/dashboard-advancement.ts";
 import { formatSarAmount, formatUiDate } from "./formatting.ts";
 
 const REPO_ROOT = join(import.meta.dirname, "../../..");
@@ -246,8 +247,10 @@ test("12. Dashboard query, permission, formula, and data-source contracts remain
 
   assert.match(page, /getDashboardCustomersData/);
   assert.match(page, /getDashboardQuotationsData/);
+  assert.match(page, /getDashboardQuotationApprovalData/);
   assert.match(page, /getDashboardInvoicesData/);
   assert.match(page, /getDashboardServicesData/);
+  assert.match(page, /getDashboardReadyToStartServicesData/);
   assert.match(page, /customers: \{[\s\S]*?id: "customers-kpi"[\s\S]*?readPermission: "customers:read"/);
   assert.match(page, /quotations: \{[\s\S]*?id: "quotations-kpi-and-list"[\s\S]*?readPermission: "quotations:read"/);
   assert.match(page, /invoices: \{[\s\S]*?id: "invoices-kpi-and-attention"[\s\S]*?readPermission: "invoices:read"/);
@@ -260,6 +263,8 @@ test("12. Dashboard query, permission, formula, and data-source contracts remain
   assert.match(page, /loadIfAllowed\(DASHBOARD_WIDGETS\.invoices\.readPermission/);
   assert.match(page, /loadIfAllowed\(DASHBOARD_WIDGETS\.services\.readPermission/);
   assert.match(page, /loadIfAllowed\(DASHBOARD_WIDGETS\.payments\.readPermission/);
+  assert.match(page, /loadIfAllowed\("quotations:approve", getDashboardQuotationApprovalData\)/);
+  assert.match(page, /loadIfAllowed\("services:update_status", \(\) => getDashboardReadyToStartServicesData\(locale\)\)/);
   assert.match(page, /checkPermission\(permission\)/);
   assert.match(page, /requirePermission\("dashboard:read"\)/);
   assert.match(page, /totalCollected/);
@@ -267,6 +272,38 @@ test("12. Dashboard query, permission, formula, and data-source contracts remain
   assert.match(page, /recentQuotations/);
   assert.doesNotMatch(page, /createCustomer|createInvoice|createPayment|updateQuotation/);
   assert.doesNotMatch(page, /mock|placeholderKpi|fakeSar|sampleQuotation/i);
+});
+
+test("Dashboard Action Center exposes only workflow-derived quotation approvals with bilingual links", () => {
+  const page = readFileSync(DASHBOARD_PAGE, "utf8");
+  const english = getDashboardAdvancementDictionary("en");
+  const arabic = getDashboardAdvancementDictionary("ar");
+
+  assert.equal(english.pendingQuotationApprovals, "Quotation approvals");
+  assert.equal(arabic.pendingQuotationApprovals, "عروض أسعار بانتظار الاعتماد");
+  assert.equal(english.noPendingQuotationApprovals, "No pending quotation approvals.");
+  assert.equal(arabic.noPendingQuotationApprovals, "لا توجد عروض أسعار بانتظار الاعتماد.");
+  assert.match(page, /quotationApprovalState\.status === "ready"/);
+  assert.match(page, /advancementDictionary\.pendingQuotationApprovals/);
+  assert.match(page, /advancementDictionary\.noPendingQuotationApprovals/);
+  assert.match(page, /href=\{`\/quotations\/\$\{quotation\.id\}`\}/);
+  assert.doesNotMatch(page, /approveQuotation|onClick=.*quotation/i);
+});
+
+test("Dashboard Action Center exposes only transition-ready Services with bilingual source links", () => {
+  const page = readFileSync(DASHBOARD_PAGE, "utf8");
+  const english = getDashboardAdvancementDictionary("en");
+  const arabic = getDashboardAdvancementDictionary("ar");
+
+  assert.equal(english.readyToStart, "Ready to start");
+  assert.equal(arabic.readyToStart, "جاهزة للبدء");
+  assert.equal(english.noReadyToStart, "No services ready to start.");
+  assert.equal(arabic.noReadyToStart, "لا توجد خدمات جاهزة للبدء.");
+  assert.match(page, /readyToStartServicesState\.status === "ready"/);
+  assert.match(page, /advancementDictionary\.readyToStart/);
+  assert.match(page, /advancementDictionary\.noReadyToStart/);
+  assert.match(page, /href=\{`\/services\/\$\{service\.id\}`\}/);
+  assert.doesNotMatch(page, /startServiceExecution|onClick=.*service/i);
 });
 
 test("13. No raw internal errors are introduced on the Dashboard surface", () => {

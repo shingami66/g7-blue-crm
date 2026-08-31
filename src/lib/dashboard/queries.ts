@@ -3,6 +3,8 @@ import "server-only";
 import { requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { QuotationStatus } from "@/types/quotation";
+import { getServiceStatusTransitionState } from "@/lib/services/status-transitions";
+import type { Locale } from "@/lib/i18n/locales";
 
 export type DashboardCustomersData = {
   totalCount: number;
@@ -21,6 +23,19 @@ export type DashboardRecentQuotation = {
 export type DashboardQuotationsData = {
   totalCount: number;
   recentQuotations: DashboardRecentQuotation[];
+};
+
+export type DashboardPendingQuotationApproval = {
+  id: string;
+  quotationNumber: string;
+  status: QuotationStatus;
+  createdAt: string;
+  customer: { company: string | null } | null;
+  event: string | null;
+};
+
+export type DashboardQuotationApprovalData = {
+  pendingQuotationApprovals: DashboardPendingQuotationApproval[];
 };
 
 export type DashboardAttentionInvoice = {
@@ -50,6 +65,15 @@ export type DashboardServicesData = {
   workflowCounts: Record<string, number>;
   readyToStartCount: number;
   inProgressCount: number;
+};
+
+export type DashboardReadyToStartService = Pick<
+  DashboardUpcomingService,
+  "id" | "serviceNumber" | "serviceTitle"
+>;
+
+export type DashboardReadyToStartServicesData = {
+  readyToStartServices: DashboardReadyToStartService[];
 };
 
 export async function getDashboardCustomersData(): Promise<DashboardCustomersData> {
@@ -121,6 +145,50 @@ export async function getDashboardQuotationsData(): Promise<DashboardQuotationsD
   }));
 
   return { totalCount, recentQuotations };
+}
+
+export async function getDashboardQuotationApprovalData(): Promise<DashboardQuotationApprovalData> {
+  await requirePermission("quotations:approve");
+
+  const supabase = createAdminClient();
+  const result = await supabase
+    .from("quotations")
+    .select("id, quotation_number, status, created_at, services!inner(service_title, status, event_name, deleted_at), customers(company)")
+    .eq("is_deleted", false)
+    .in("status", ["draft", "sent"])
+    .in("services.status", ["Inquiry", "Quoted"])
+    .is("services.deleted_at", null)
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
+    .limit(6);
+
+  if (result.error) {
+    throw new Error(`[getDashboardQuotationApprovalData] Pending approval error: ${result.error.message}`);
+  }
+
+  const rawQuotations = (result.data ?? []) as unknown as Array<{
+    id: string;
+    quotation_number: string;
+    status: string;
+    created_at: string;
+    services: {
+      service_title: string | null;
+      status: string | null;
+      event_name: string | null;
+      deleted_at: string | null;
+    } | null;
+    customers: { company: string | null } | null;
+  }>;
+  const pendingQuotationApprovals: DashboardPendingQuotationApproval[] = rawQuotations.map((row) => ({
+    id: row.id,
+    quotationNumber: row.quotation_number,
+    status: row.status as QuotationStatus,
+    createdAt: row.created_at,
+    customer: row.customers ? { company: row.customers.company } : null,
+    event: row.services?.event_name ?? null,
+  }));
+
+  return { pendingQuotationApprovals };
 }
 
 export async function getDashboardInvoicesData(): Promise<DashboardInvoicesData> {
@@ -267,6 +335,63 @@ export async function getDashboardServicesData(todayOverride?: string): Promise<
     readyToStartCount: depositPaidCountResult.count ?? 0,
     inProgressCount: inProgressCountResult.count ?? 0,
   };
+}
+
+/**
+ * Returns only the bounded set of Services whose persisted lifecycle state is
+ * ready for the existing start-execution transition. The transition helper
+ * remains the source of readiness evidence; this loader never mutates state.
+ */
+export async function getDashboardReadyToStartServicesData(
+  locale: Locale = "en",
+): Promise<DashboardReadyToStartServicesData> {
+  await requirePermission("services:update_status");
+
+  const supabase = createAdminClient();
+  const result = await supabase
+    .from("services")
+    .select("id, service_number, service_title, status")
+    .is("deleted_at", null)
+    .eq("status", "Deposit Paid")
+    .order("service_number", { ascending: true })
+    .order("id", { ascending: true })
+    .limit(6);
+
+  if (result.error) {
+    throw new Error(`[getDashboardReadyToStartServicesData] Ready-to-start error: ${result.error.message}`);
+  }
+
+  const rawServices = (result.data ?? []) as unknown as Array<{
+    id: string;
+    service_number: string;
+    service_title: string;
+    status: "Deposit Paid";
+  }>;
+  const transitionResults = await Promise.all(
+    rawServices.map(async (service) => ({
+      service,
+      transitionState: await getServiceStatusTransitionState(
+        supabase,
+        service.id,
+        service.status,
+        locale,
+      ),
+    })),
+  );
+  const readyToStartServices: DashboardReadyToStartService[] = transitionResults
+    .filter(({ transitionState }) => {
+      const startAction = transitionState.actions.find(
+        (action) => action.status === "In Progress",
+      );
+      return Boolean(startAction && startAction.blockedReason === null);
+    })
+    .map(({ service }) => ({
+      id: service.id,
+      serviceNumber: service.service_number,
+      serviceTitle: service.service_title,
+    }));
+
+  return { readyToStartServices };
 }
 
 export async function getDashboardPaymentsData() {

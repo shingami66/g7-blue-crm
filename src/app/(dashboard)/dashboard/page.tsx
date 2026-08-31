@@ -20,8 +20,10 @@ import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import {
   getDashboardCustomersData,
   getDashboardQuotationsData,
+  getDashboardQuotationApprovalData,
   getDashboardInvoicesData,
   getDashboardServicesData,
+  getDashboardReadyToStartServicesData,
   getDashboardPaymentsData,
   type DashboardRecentQuotation,
 } from "@/lib/dashboard/queries";
@@ -126,13 +128,12 @@ async function loadIfAllowed<T>(
   permission: string,
   load: () => Promise<T>,
 ): Promise<LoadState<T>> {
-  const allowed = await checkPermission(permission);
-
-  if (!allowed) {
-    return { status: "unavailable" };
-  }
-
   try {
+    const allowed = await checkPermission(permission);
+    if (!allowed) {
+      return { status: "unavailable" };
+    }
+
     return { status: "ready", data: await load() };
   } catch (err) {
     console.error(
@@ -143,7 +144,7 @@ async function loadIfAllowed<T>(
   }
 }
 
-function recentQuotationPrimaryLabel(quotation: DashboardRecentQuotation): {
+function recentQuotationPrimaryLabel(quotation: Pick<DashboardRecentQuotation, "quotationNumber" | "customer" | "event">): {
   text: string;
   dir: "auto" | "ltr";
 } {
@@ -189,13 +190,15 @@ export default async function DashboardPage() {
     );
   }
 
-  const [customersState, quotationsState, invoicesState, servicesState, paymentsState] =
+  const [customersState, quotationsState, invoicesState, servicesState, paymentsState, quotationApprovalState, readyToStartServicesState] =
     await Promise.all([
       loadIfAllowed(DASHBOARD_WIDGETS.customers.readPermission, getDashboardCustomersData),
       loadIfAllowed(DASHBOARD_WIDGETS.quotations.readPermission, getDashboardQuotationsData),
       loadIfAllowed(DASHBOARD_WIDGETS.invoices.readPermission, getDashboardInvoicesData),
       loadIfAllowed(DASHBOARD_WIDGETS.services.readPermission, getDashboardServicesData),
       loadIfAllowed(DASHBOARD_WIDGETS.payments.readPermission, getDashboardPaymentsData),
+      loadIfAllowed("quotations:approve", getDashboardQuotationApprovalData),
+      loadIfAllowed("services:update_status", () => getDashboardReadyToStartServicesData(locale)),
     ]);
   const [canCreateCustomer, canCreateQuotation, canCreateInvoice, canCreateService] = await Promise.all([
     checkPermission("customers:write"),
@@ -210,6 +213,12 @@ export default async function DashboardPage() {
   const pendingBalance = invoicesData?.pendingBalance ?? null;
   const attentionInvoices = invoicesData?.attentionInvoices ?? [];
   const hasMoreAttentionInvoices = invoicesData?.hasMoreAttentionInvoices ?? false;
+
+  const quotationApprovalData = quotationApprovalState.status === "ready" ? quotationApprovalState.data : null;
+  const pendingQuotationApprovals = quotationApprovalData?.pendingQuotationApprovals ?? [];
+  const readyToStartServicesData = readyToStartServicesState.status === "ready" ? readyToStartServicesState.data : null;
+  const readyToStartServices = readyToStartServicesData?.readyToStartServices ?? [];
+  const attentionCardStatus = invoicesState.status === "ready" || quotationApprovalState.status === "ready" || readyToStartServicesState.status === "ready" ? "ready" : "unavailable";
 
   const quotationsData = quotationsState.status === "ready" ? quotationsState.data : null;
   const recentQuotations = quotationsData?.recentQuotations ?? [];
@@ -345,14 +354,23 @@ export default async function DashboardPage() {
       <div data-dashboard-section="dashboard-main-columns" className="mb-8">
         <div data-dashboard-main-columns="true" className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
           <div data-dashboard-column="left" className="min-w-0 space-y-6 lg:col-span-5">
-            <DashboardFocusCard headingId="dashboard-attention-needed" title={advancementDictionary.attentionTitle} status={invoicesState.status} unavailable={dictionary.states.unavailableForRole}>
-              <FocusGroup
+            <DashboardFocusCard headingId="dashboard-attention-needed" title={advancementDictionary.attentionTitle} status={attentionCardStatus} unavailable={dictionary.states.unavailableForRole}>
+              {invoicesState.status === "ready" ? <FocusGroup
                 title={advancementDictionary.outstandingInvoices}
                 empty={advancementDictionary.noAttention}
                 action={hasMoreAttentionInvoices ? <Link href="/invoices" className="shrink-0 text-[12px] font-semibold leading-[16px] tracking-[0.05em] text-primary hover:underline">{dictionary.quotations.viewAll}</Link> : undefined}
               >
                 {attentionInvoices.map((invoice) => <PendingLink key={invoice.id} href={`/invoices/${invoice.id}`} className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><span className="inline-block whitespace-nowrap text-[13px] text-on-surface" dir="ltr">{invoice.invoice_number}</span><DashboardAmount locale={locale} value={Number(invoice.balance_due)} /></PendingLink>)}
-              </FocusGroup>
+              </FocusGroup> : null}
+              {quotationApprovalState.status === "ready" ? <FocusGroup title={advancementDictionary.pendingQuotationApprovals} empty={advancementDictionary.noPendingQuotationApprovals}>
+                {pendingQuotationApprovals.map((quotation) => {
+                  const primary = recentQuotationPrimaryLabel(quotation);
+                  return <PendingLink key={quotation.id} href={`/quotations/${quotation.id}`} className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><span className="min-w-0 flex-1 truncate text-[13px] text-on-surface" dir={primary.dir}>{primary.text}</span><span className="shrink-0 whitespace-nowrap text-[12px] text-primary" dir="ltr">{quotation.quotationNumber}</span></PendingLink>;
+                })}
+              </FocusGroup> : null}
+              {readyToStartServicesState.status === "ready" ? <FocusGroup title={advancementDictionary.readyToStart} empty={advancementDictionary.noReadyToStart}>
+                {readyToStartServices.map((service) => <PendingLink key={service.id} href={`/services/${service.id}`} className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><span className="min-w-0 flex-1 truncate text-[13px] text-on-surface" dir="auto">{service.serviceTitle}</span><span className="shrink-0 whitespace-nowrap text-[12px] text-primary" dir="ltr">{service.serviceNumber}</span></PendingLink>)}
+              </FocusGroup> : null}
             </DashboardFocusCard>
 
             <section data-dashboard-section="workflow" aria-labelledby="dashboard-workflow" className="rounded-xl border border-surface-variant bg-surface-container-lowest p-5">
