@@ -50,6 +50,19 @@ const auditRows = [
     user_id: "actor-whitespace",
     details: { event_type: "service_event" },
   },
+  {
+    id: "audit-lifecycle",
+    timestamp: "2026-08-03T04:00:00Z",
+    user_id: null,
+    details: {
+      event_type: "service_lifecycle_changed",
+      dimension: "execution",
+      from_state: "not_started",
+      to_state: "in_progress",
+      gate_basis: "settled_payment",
+      evidence_ref: "Deposit invoice settled and readiness confirmed.",
+    },
+  },
 ];
 
 const actorRows = [
@@ -171,6 +184,19 @@ test("Deposit transition context is retained without exposing raw audit JSON", a
   assert.equal(depositEvent?.paymentNumber, "PAY-1");
   assert.equal(depositEvent?.amount, 50);
   assert.equal("userId" in (depositEvent ?? {}), false);
+});
+
+test("Lifecycle transition context is projected without exposing raw audit JSON", async () => {
+  const activity = await listServiceActivity("service-1");
+  const lifecycleEvent = activity.events[6];
+
+  assert.equal(lifecycleEvent?.eventType, "service_lifecycle_changed");
+  assert.equal(lifecycleEvent?.lifecycleDimension, "execution");
+  assert.equal(lifecycleEvent?.fromState, "not_started");
+  assert.equal(lifecycleEvent?.toState, "in_progress");
+  assert.equal(lifecycleEvent?.gateBasis, "settled_payment");
+  assert.equal(lifecycleEvent?.evidenceRef, "Deposit invoice settled and readiness confirmed.");
+  assert.equal("details" in (lifecycleEvent ?? {}), false);
 });
 
 test("Actor lookup failure preserves history with safe unknown-user fallbacks", async () => {

@@ -11,6 +11,11 @@ export type ServiceActivityEvent = {
   eventType: string;
   fromStatus: string | null;
   toStatus: string | null;
+  lifecycleDimension: string | null;
+  fromState: string | null;
+  toState: string | null;
+  gateBasis: string | null;
+  evidenceRef: string | null;
   reason: string | null;
   trigger: string | null;
   invoiceId: string | null;
@@ -113,6 +118,11 @@ export async function listServiceActivity(serviceId: string): Promise<{
         eventType: optionalString(details.event_type) ?? "service_event",
         fromStatus: optionalString(details.from_status),
         toStatus: optionalString(details.to_status),
+        lifecycleDimension: optionalString(details.dimension),
+        fromState: optionalString(details.from_state),
+        toState: optionalString(details.to_state),
+        gateBasis: optionalString(details.gate_basis),
+        evidenceRef: optionalString(details.evidence_ref),
         reason: optionalString(details.reason),
         trigger: optionalString(details.trigger),
         invoiceId: optionalString(details.invoice_id),

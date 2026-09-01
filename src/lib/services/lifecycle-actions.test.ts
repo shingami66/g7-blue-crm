@@ -106,7 +106,12 @@ mock.module("@/lib/supabase/admin", {
 });
 mock.module("./queries.ts", { namedExports: { getServiceById: async () => null } });
 
-const { startServiceExecution, completeService, cancelService } = await import("./actions.ts");
+const {
+  startServiceExecution,
+  completeService,
+  cancelService,
+  transitionServiceLifecycle,
+} = await import("./actions.ts");
 
 test("lifecycle actions derive the actor server-side and validate an exact Start result", async () => {
   const active = startScenario();
@@ -119,6 +124,58 @@ test("lifecycle actions derive the actor server-side and validate an exact Start
     name: "start_service_execution",
     args: { p_service_id: SERVICE_ID, p_actor_id: "server-derived-actor", p_actor_role: "manager" },
   }]);
+});
+
+test("W3 lifecycle actions separate authorized-credit start and keep actor fields server-derived", async () => {
+  const active = startScenario({
+    rpcData: [{
+      error_code: null,
+      service_id: SERVICE_ID,
+      legacy_status: "Approved",
+      commercial_state: "approved",
+      payment_state: "unassessed",
+      readiness_state: "ready",
+      execution_state: "in_progress",
+      completion_state: "pending",
+      close_state: "open",
+      start_gate_basis: "authorized_credit",
+      state_version: 2,
+      idempotent_replay: false,
+    }],
+  });
+
+  const result = await transitionServiceLifecycle(SERVICE_ID, "start", {
+    reason: "Manager approved execution on credit.",
+    gateBasis: "authorized_credit",
+    requestId: "22222222-2222-4222-8222-222222222222",
+  });
+
+  assert.equal(result.success, true);
+  assert.equal(result.data?.lifecycle.executionState, "in_progress");
+  assert.deepEqual(active.permissionCalls, [
+    "services:update_status",
+    "services:authorize_execution_credit",
+  ]);
+  assert.deepEqual(active.rpcCalls[0], {
+    name: "transition_service_lifecycle",
+    args: {
+      p_action: "start",
+      p_actor_id: "server-derived-actor",
+      p_actor_role: "manager",
+      p_gate_basis: "authorized_credit",
+      p_reason: "Manager approved execution on credit.",
+      p_request_id: "22222222-2222-4222-8222-222222222222",
+      p_service_id: SERVICE_ID,
+    },
+  });
+});
+
+test("W3 lifecycle actions reject blank evidence before calling the RPC", async () => {
+  const active = startScenario();
+  const result = await transitionServiceLifecycle(SERVICE_ID, "mark_ready", { reason: "  " });
+  assert.equal(result.code, "INVALID_INPUT");
+  assert.equal(active.permissionCalls.length, 0);
+  assert.equal(active.rpcCalls.length, 0);
 });
 
 test("lifecycle actions reject invalid input and permission denial before an RPC", async () => {
@@ -425,6 +482,8 @@ test("cancellation uses progressive disclosure and preserves backend authority",
   assert.match(component, /reason\.trim\(\)\.length === 0/);
   assert.match(component, /onClick=\{closeCancellation\}/);
   assert.match(component, /cancelService\(serviceId, reason\)/);
+  assert.match(component, /lifecycle: ServiceLifecycleState/);
+  assert.match(component, /lifecycle\.executionState === "not_started"/);
   assert.match(component, /disabled=\{isPending/);
   assert.doesNotMatch(component, /window\.confirm|confirmCancellation/);
 });

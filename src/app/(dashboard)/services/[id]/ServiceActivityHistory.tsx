@@ -36,9 +36,11 @@ export default function ServiceActivityHistory({ events, available, locale, dict
                   <p className="text-[13px] font-semibold text-on-surface">
                     {event.trigger === "deposit_payment_confirmed"
                       ? dictionary.serviceActivity.depositPaymentConfirmed
-                      : event.eventType === "service_status_changed"
-                        ? dictionary.serviceActivity.statusChanged
-                        : dictionary.serviceActivity.updated}
+                      : event.eventType === "service_lifecycle_changed"
+                        ? dictionary.serviceLifecycle.title
+                        : event.eventType === "service_status_changed"
+                          ? dictionary.serviceActivity.statusChanged
+                          : dictionary.serviceActivity.updated}
                   </p>
                   <UiDateTimeText locale={locale} value={event.timestamp} />
                 </div>
@@ -47,6 +49,21 @@ export default function ServiceActivityHistory({ events, available, locale, dict
                     {dictionary.serviceActivity.from}: {event.fromStatus ? getServiceStatusLabel(locale, event.fromStatus as never) : "—"}
                     {" · "}
                     {dictionary.serviceActivity.to}: {event.toStatus ? getServiceStatusLabel(locale, event.toStatus as never) : "—"}
+                  </p>
+                )}
+                {event.lifecycleDimension && (event.fromState || event.toState) && (
+                  <p className="mt-1 text-[12px] text-on-surface-variant">
+                    {dictionary.serviceActivity.lifecycle}: {dictionary.serviceLifecycle.dimensions[event.lifecycleDimension] ?? event.lifecycleDimension}
+                    {" · "}
+                    {event.fromState ? dictionary.serviceLifecycle.states[event.fromState] ?? isolateBidiText(event.fromState) : "—"}
+                    {" → "}
+                    {event.toState ? dictionary.serviceLifecycle.states[event.toState] ?? isolateBidiText(event.toState) : "—"}
+                    {event.gateBasis && (
+                      <>
+                        {" · "}
+                        {dictionary.serviceActivity.gateBasis}: {dictionary.serviceLifecycle.states[event.gateBasis] ?? event.gateBasis}
+                      </>
+                    )}
                   </p>
                 )}
                 {event.reason && (

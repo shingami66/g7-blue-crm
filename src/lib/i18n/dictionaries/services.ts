@@ -35,6 +35,10 @@ export interface ServicesDictionary {
     executionFinancial: string;
     completionFinancial: string;
     cancellationFinancial: string;
+    lifecyclePaymentRequired: string;
+    lifecycleReadinessRequired: string;
+    lifecycleCreditNotAuthorized: string;
+    lifecycleReopenForbidden: string;
     cancellationReason: string;
     generic: string;
   };
@@ -296,6 +300,32 @@ export interface ServicesDictionary {
     confirmCancel: string;
     keepService: string;
   };
+  serviceLifecycle: {
+    title: string;
+    hint: string;
+    legacyStatus: string;
+    sourceProjection: string;
+    sourceFallback: string;
+    paymentEvidence: string;
+    reasonLabel: string;
+    reasonPlaceholder: string;
+    gateLabel: string;
+    gatePayment: string;
+    gateCredit: string;
+    noStartGate: string;
+    dimensions: Record<string, string>;
+    states: Record<string, string>;
+    actions: {
+      markReady: string;
+      blockReadiness: string;
+      startExecution: string;
+      startWithCredit: string;
+      complete: string;
+      close: string;
+      reopenDelivery: string;
+      reopenCloseout: string;
+    };
+  };
   serviceActivity: {
     title: string;
     hint: string;
@@ -307,6 +337,8 @@ export interface ServicesDictionary {
     actor: string;
     from: string;
     to: string;
+    lifecycle: string;
+    gateBasis: string;
     reason: string;
     invoice: string;
     payment: string;
@@ -935,6 +967,10 @@ const servicesDictionaryEn: ServicesDictionary = {
     executionFinancial: "Execution can start only after one valid, fully settled deposit invoice is confirmed.",
     completionFinancial: "The Service can be completed only while it is In Progress.",
     cancellationFinancial: "Cancellation is blocked while invoice, payment, or active billing-authority history exists.",
+    lifecyclePaymentRequired: "Settle the active deposit or use an authorized credit gate before starting execution.",
+    lifecycleReadinessRequired: "Confirm operational readiness before starting execution.",
+    lifecycleCreditNotAuthorized: "You do not have permission to start execution with authorized credit.",
+    lifecycleReopenForbidden: "You do not have permission to reopen this Service lifecycle.",
     cancellationReason: "Enter a cancellation reason before continuing.",
     generic: "We couldn't complete the service action. Please try again.",
   },
@@ -1413,6 +1449,62 @@ const servicesDictionaryEn: ServicesDictionary = {
     confirmCancel: "Confirm cancellation",
     keepService: "Keep Service",
   },
+  serviceLifecycle: {
+    title: "Event Lifecycle",
+    hint: "Commercial, payment, readiness, execution, completion, and close are recorded separately.",
+    legacyStatus: "Legacy Service status",
+    sourceProjection: "W3 lifecycle projection",
+    sourceFallback: "Legacy compatibility view",
+    paymentEvidence: "Payment state is derived from current deposit evidence; historical voided or cancelled deposits are excluded.",
+    reasonLabel: "Reason or evidence reference",
+    reasonPlaceholder: "Record the operational reason or evidence reference.",
+    gateLabel: "Start gate",
+    gatePayment: "Settled payment",
+    gateCredit: "Authorized credit",
+    noStartGate: "Execution requires readiness and either settled payment or authorized credit.",
+    dimensions: {
+      commercial: "Commercial",
+      payment: "Payment",
+      readiness: "Readiness",
+      execution: "Execution",
+      execution_completion: "Execution and completion",
+      completion: "Completion",
+      close: "Operational close",
+    },
+    states: {
+      inquiry: "Inquiry",
+      quoted: "Quoted",
+      approved: "Approved",
+      cancelled: "Cancelled",
+      unassessed: "Unassessed",
+      unpaid: "Unpaid",
+      partial: "Partial",
+      settled: "Settled",
+      inconsistent: "Inconsistent active evidence",
+      blocked: "Blocked",
+      ready: "Ready",
+      not_applicable: "Not applicable",
+      not_started: "Not started",
+      in_progress: "In progress",
+      ended: "Ended",
+      pending: "Pending",
+      confirmed: "Confirmed",
+      open: "Open",
+      closed: "Closed",
+      settled_payment: "Settled payment",
+      authorized_credit: "Authorized credit",
+    },
+    actions: {
+      markReady: "Mark ready",
+      blockReadiness: "Block readiness",
+      startExecution: "Start execution",
+      startWithCredit: "Start with authorized credit",
+      complete: "Confirm completion",
+      close: "Close operationally",
+      reopenDelivery: "Reopen delivery",
+      reopenCloseout: "Reopen closeout",
+    },
+  },
   serviceActivity: {
     title: "Activity History",
     hint: "Recorded service events only; no inferred timeline is shown.",
@@ -1424,6 +1516,8 @@ const servicesDictionaryEn: ServicesDictionary = {
     actor: "By",
     from: "From",
     to: "To",
+    lifecycle: "Lifecycle",
+    gateBasis: "Start gate",
     reason: "Reason",
     invoice: "Invoice",
     payment: "Payment",
@@ -2366,6 +2460,10 @@ const servicesDictionaryAr: ServicesDictionary = {
     executionFinancial: "لا يمكن بدء التنفيذ إلا بعد تأكيد فاتورة عربون واحدة صالحة ومسـددة بالكامل.",
     completionFinancial: "يمكن إكمال الخدمة فقط عندما تكون حالتها قيد التنفيذ.",
     cancellationFinancial: "الإلغاء محظور عند وجود سجل فواتير أو مدفوعات أو صلاحية فوترة نشطة.",
+    lifecyclePaymentRequired: "سدّد العربون النشط أو استخدم بوابة ائتمان معتمدة قبل بدء التنفيذ.",
+    lifecycleReadinessRequired: "أكد الجاهزية التشغيلية قبل بدء التنفيذ.",
+    lifecycleCreditNotAuthorized: "ليس لديك صلاحية لبدء التنفيذ عبر بوابة ائتمان معتمدة.",
+    lifecycleReopenForbidden: "ليس لديك صلاحية لإعادة فتح دورة حياة هذه الخدمة.",
     cancellationReason: "أدخل سبب الإلغاء قبل المتابعة.",
     generic: "تعذر إكمال إجراء الخدمة. يرجى المحاولة مرة أخرى.",
   },
@@ -2840,6 +2938,62 @@ const servicesDictionaryAr: ServicesDictionary = {
     confirmCancel: "تأكيد الإلغاء",
     keepService: "الاحتفاظ بالخدمة",
   },
+  serviceLifecycle: {
+    title: "دورة حياة الفعالية",
+    hint: "يتم تسجيل الجانب التجاري والسداد والجاهزية والتنفيذ والإكمال والإغلاق بشكل منفصل.",
+    legacyStatus: "حالة الخدمة القديمة",
+    sourceProjection: "إسقاط دورة حياة W3",
+    sourceFallback: "عرض توافق الحالة القديمة",
+    paymentEvidence: "تُستمد حالة السداد من دليل العربون الحالي؛ ويتم استبعاد العربون التاريخي الملغي أو الملغى.",
+    reasonLabel: "السبب أو مرجع الدليل",
+    reasonPlaceholder: "سجّل السبب التشغيلي أو مرجع الدليل.",
+    gateLabel: "بوابة البدء",
+    gatePayment: "سداد مكتمل",
+    gateCredit: "ائتمان معتمد",
+    noStartGate: "يتطلب التنفيذ الجاهزية وإما السداد المكتمل أو الائتمان المعتمد.",
+    dimensions: {
+      commercial: "تجاري",
+      payment: "السداد",
+      readiness: "الجاهزية",
+      execution: "التنفيذ",
+      execution_completion: "التنفيذ والإكمال",
+      completion: "الإكمال",
+      close: "الإغلاق التشغيلي",
+    },
+    states: {
+      inquiry: "استفسار",
+      quoted: "تم تقديم عرض سعر",
+      approved: "معتمد",
+      cancelled: "ملغي",
+      unassessed: "غير مُقيّم",
+      unpaid: "غير مسدد",
+      partial: "مسدد جزئيًا",
+      settled: "مسدد بالكامل",
+      inconsistent: "دليل نشط غير متسق",
+      blocked: "محظورة",
+      ready: "جاهزة",
+      not_applicable: "لا ينطبق",
+      not_started: "لم يبدأ",
+      in_progress: "قيد التنفيذ",
+      ended: "انتهى",
+      pending: "قيد الانتظار",
+      confirmed: "مؤكد",
+      open: "مفتوح",
+      closed: "مغلق",
+      settled_payment: "سداد مكتمل",
+      authorized_credit: "ائتمان معتمد",
+    },
+    actions: {
+      markReady: "تحديد كجاهزة",
+      blockReadiness: "حظر الجاهزية",
+      startExecution: "بدء التنفيذ",
+      startWithCredit: "بدء التنفيذ بائتمان معتمد",
+      complete: "تأكيد الإكمال",
+      close: "إغلاق تشغيلي",
+      reopenDelivery: "إعادة فتح التسليم",
+      reopenCloseout: "إعادة فتح الإغلاق",
+    },
+  },
   serviceActivity: {
     title: "سجل النشاط",
     hint: "الأحداث المسجلة للخدمة فقط؛ لا يتم عرض مسار زمني مستنتج.",
@@ -2851,6 +3005,8 @@ const servicesDictionaryAr: ServicesDictionary = {
     actor: "بواسطة",
     from: "من",
     to: "إلى",
+    lifecycle: "دورة الحياة",
+    gateBasis: "بوابة البدء",
     reason: "السبب",
     invoice: "الفاتورة",
     payment: "الدفعة",

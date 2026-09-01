@@ -6,150 +6,144 @@
 - **W1 completion:** W1A Effective Access and the two bounded W1C Action Center consumers (Quotation Approvals and Ready-to-Start Services) are Owner-accepted. Their source workflows remain authoritative; no additional W1C feature is inferred.
 - **W2A/W2B completion:** Commercial Authority Line hierarchy and Quotation Revision Lineage are `PASS` on the Owner-authorized DEV environment only. W2B preserves source history, keeps Approved sources fail closed, and does not supersede ABS or reapprove billing authority.
 - **W2C completion:** Deterministic Discount Allocation / Approval Projection is `PASS` and closed on the Owner-authorized DEV environment only. The approved fixed-amount SAR rule is implemented with persisted integer-halal proportional largest-remainder allocation, deterministic `created_at ASC, id ASC` ties, Authority Line-root attribution, exact approval/ABS projection copies, W2B revision copying, and fail-closed invalid hierarchy/currency/ABS-adjustment behavior. No DEMO environment currently exists; no production or deployment claim is made.
-- **Next locked roadmap task:** W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`) requires a separate Owner-authorized task. Percentage discounts, non-SAR/FX allocation, VAT/revenue/accounting policy, Change Orders, ABS supersession/reapproval, historical backfill, and further W2 work remain deferred or out of scope. This closeout authorizes no new schema, database, production, deployment, Layer 2, or professional activation work.
+- **W3 completion:** Event Lifecycle compatibility is `PASS`, Owner-accepted, and closed on the Owner-authorized DEV environment only. The additive projection separates commercial, payment, readiness, execution, completion and operational close semantics, preserves legacy `services.status`, uses authoritative active-deposit payment evidence, and keeps authorized-credit permission separate from `app_user_permission_overrides`. No DEMO environment currently exists; no production or deployment claim is made.
+- **Next locked roadmap task:** W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`) requires a separate Owner-authorized task. Percentage discounts, non-SAR/FX allocation, VAT/revenue/accounting policy, Change Orders, ABS supersession/reapproval, broader historical correction/cutover work, and further W2/W3 expansion remain deferred or out of scope. This closeout authorizes no new schema, database, production, deployment, Layer 2, or professional activation work.
 
-> The dated 27 August deferral snapshot below is historical evidence; its prior next-task wording is superseded by this W1 closeout.
+## CURRENT DEFERRAL BOUNDARY — 31 August 2026
 
-## HISTORICAL DEFERRAL BOUNDARY — 27 August 2026 (SUPERSEDED BY CURRENT W1 CLOSEOUT ABOVE)
+All 11 Layer 1 Event ERP domains are closed at Product Truth level. No domain is deferred because its product identity is unknown. Deferrals below are implementation details, field-evidence defaults, professional activation gates, environment/authority gates, Owner acceptance, or future Layer 2 work.
 
-- P9 primary-detail performance is complete/published/verified for Customer, Supplier, Service, and Quotation; the retained Quotation primary-detail optimization is published in `3a00d23`. Invoice was measured and discarded. Reports and Customers complete the bounded module-entry follow-on; a later Quotations module-entry candidate was discarded. The remaining six-journey authenticated normal-network DOM-click rerank also completed, and no repeatable material target was established from the available browser and network-proxy evidence. These completed results do not activate a new data-layer phase.
-- **G2 closure evidence:** G2 Money and Payment Precision is **CLOSED / ENGINEERING COMPLETE**. Exact positive two-decimal SAR precision, pre-mutation rejection of malformed/sub-cent/non-positive/non-finite amounts, the seven-argument RPC contract, replay/idempotency and duplicate protection, overpayment protection, deposit-transition and audit behavior, DEV/DEMO migration reconciliation, read-only RPC permission/metadata verification, and the absence of a concrete G2 engineering defect were accepted.
-- **G2 verification warning:** The full `pnpm test:all` run did not complete within the verification window and surfaced unrelated `ModuleSearchInput` / `services-operational` failures; no G2/payment failure was reported. This warning is non-blocking and does not reopen G2.
-- **G5 closure evidence:** G5 Admin Security and Desired-State Mutations is **CLOSED / ENGINEERING COMPLETE**. Accepted evidence confirms admin mutations require `users:manage`; current role permissions restrict that capability to Admin; desired-state mutation semantics are retry-safe and idempotent; advisory transaction locking and row locking preserve atomicity; last-active-admin demotion and deactivation are rejected; self-role change and self-deactivation protections are enforced; structured `app_user` audit events are preserved; migration `20260811140000_g5_admin_user_atomic_mutations` is reconciled on DEV/DEMO; active RPCs are `SECURITY DEFINER`; execute permission is limited to `service_role` / postgres and denied to PUBLIC, anon, and authenticated; focused admin/auth verification passed; and no concrete G5 engineering defect remains. This does not certify production deployment or widen production authority.
-- **G6 closure evidence:** G6 Payload and Log Minimization is **CLOSED / ENGINEERING COMPLETE**. The reviewed repair establishes allowlisted invoice, customer, customer-picker, and admin-user list DTO boundaries with narrowed projections; invoice snapshot/internal metadata does not cross the client boundary; customer detail-only VAT, address, billing, and finance fields are excluded; admin-user `updated_at` and Clerk identifiers are excluded; repaired provider/database diagnostics use stable sanitized codes; fail-closed authorization and generic user-facing errors remain preserved; focused G6 validation passed 63/63 tests, TypeScript, scoped ESLint, the production build, and `git diff --check`; independent review concluded `0 BLOCKING / 0 MATERIAL`, and targeted rereview after the sole minor test gap was repaired concluded `0 BLOCKING / 0 MATERIAL / 0 MINOR`; no concrete G6 engineering defect remains within the scoped sensitive surfaces. Unchanged detail/non-list loaders with existing diagnostics were outside this bounded repair. This does not certify production deployment or widen execution or production authority.
-- **G7 closure evidence:** G7 Failure, Health, and Webhook Hardening is **CLOSED / ENGINEERING COMPLETE**. Accepted evidence confirms the database health verification is read-only with sanitized success/failure responses; dependency and authentication failures remain fail-closed; correlation/request identifiers are sanitized; operational diagnostics do not expose raw provider/database errors; Clerk webhook signing-secret presence and signature verification remain mandatory; missing/invalid signature paths fail safely; missing user ID, invalid role, and missing email are safely rejected; existing-user detection and duplicate-race recheck provide replay/idempotency safety; unique Clerk identity protection remains part of the persisted contract; webhook lookup/insert failures return safe responses and sanitized diagnostics; focused G7 verification passed 139/139 tests; TypeScript passed; scoped ESLint passed with no new errors; and no concrete G7 engineering defect remains.
-- **G7 verification warning:** Credentialed Clerk webhook runtime smoke was not performed because authorized signing-secret context was unavailable. This is a `CREDENTIAL / ENVIRONMENT LIMITATION`, not a code defect, does not reopen G7, and does not block bounded engineering closure.
-- **G7 closure boundary:** This closure does not certify production deployment or production operations, does not widen execution or production authority, and required no credentials or protected authentication material for the documentation task.
-- **Goal audit:** G2 is `CLOSED / ENGINEERING COMPLETE` for Money and Payment Precision; G4 is `CLOSED / ENGINEERING COMPLETE` for the current-core bounded performance and scale remediation program; G5 is `CLOSED / ENGINEERING COMPLETE` for Admin Security and Desired-State Mutations; G6 is `CLOSED / ENGINEERING COMPLETE` for Payload and Log Minimization; G7 is `CLOSED / ENGINEERING COMPLETE` for Failure, Health, and Webhook Hardening. G10 engineering remediation is closed/published/verified in current `main`; its former UI-consistency and Final Invoice entries are historical, not active deferrals.
-- **G4 closure boundary:** The six-journey rerank used repeated authenticated DOM-click timing under normal unthrottled network conditions, and no repeatable material target was established from the available browser and network-proxy evidence. This does not certify production performance, full server/database attribution, or SaaS acceptance. Server-Timing/database attribution remains evidence required only if future evidence justifies reopening G4.
-- Historical Chrome 3G-throttled browser measurements are not a normal-network baseline or proof of a 3G optimization. Preserve their structural/server evidence without restarting the completed campaign solely for that caveat.
-- Event ERP, Tender, VAT/ZATCA, production, Generic Product, and broad accounting remain deferred. No database, production, or ERP authority expansion is implied.
-- **NEXT PRODUCT / ENGINEERING DIRECTION — Quotation Commercial Model Field-Evidence Gate.** The next step is discovery/reconciliation of the real G7 quotation commercial model before any schema or implementation design lock. No quotation changes are implemented or authorized by this documentation closure.
-- **Governance rebaseline:** Agent Control is the BASE governance layer, with skills routed automatically by material task/domain relevance. The routed `g7-nextjs-performance-engineering` skill is implemented for materially relevant performance work, and the routed `g7-nextjs-framework-engineering` skill is implemented for materially relevant Next.js framework-mechanism work—not ordinary React/TSX work; both remain domain guidance rather than workflow controllers. Version-sensitive Next.js decisions use the installed framework version and bundled `node_modules/next/dist/docs/`. The routed `g7-supabase-data-engineering` skill is implemented for materially relevant Supabase-specific data-access, client, RPC, generated-type, trust-boundary, or product reasoning—not ordinary React/TSX work or incidental PostgreSQL persistence—and remains subordinate domain guidance rather than a workflow controller. Clerk remains G7's authentication authority; Supabase libraries or `@supabase/ssr` do not imply Supabase Auth adoption. Browser, server, and privileged admin/service-role access remain distinct trust boundaries; privileged service-role access is server-only and bypasses RLS. Generated Supabase `Database` types provide schema evidence but no mutation authority. RPCs remain database contract boundaries and do not bypass G7 authentication, authorization, validation, business rules, auditability, or fail-closed requirements. Performance remains responsible for measurement, attribution, and optimization proof; PostgreSQL query/index expertise remains responsible for query-plan/index reasoning; Framework remains responsible for Next.js mechanism selection; ERP, security, and business authority remain with the applicable existing guards and contracts. This skill routing activates no schema, migration, RLS/policy, grant, database-function, index, `db push`, remote database, production, deployment, or Supabase project-setting authority; optional Supabase tooling grants no execution authority and is not a synthetic HOLD condition. One logical Writer performs mutation; an independent read-only Reviewer is mandatory for mutating work; confirmed findings return to the same Writer for repair and targeted rereview; and the Controller owns reconciliation and the final Task Verdict. HOLD is reserved for genuine blockers, known unrelated dirty/untracked work is not itself a blocker, and publication validates the exact authorized staged slice rather than requiring a globally clean worktree. Documentation synchronization is a normal closeout reminder, not a synthetic HOLD gate. Design Guard and ERP Guard are domain guidance, not workflow controllers; the G7 ERP Design Contract remains the deep durable design reference. Prompts remain simple, bounded, and autonomy-friendly.
+Current source and delivery truth remains in [project-status.md](project-status.md). Ordered future work is in [project-roadmap.md](project-roadmap.md). Closed Product Truth is indexed in [event-erp-decision-register.md](product/event-erp-decision-register.md). The complete technical plan is [g7-layer1-technical-master-plan.md](product/g7-layer1-technical-master-plan.md).
 
-## 1. How To Use This Document
-- Completed work is summarized in `project-status.md`.
-- Execution order is owned by `project-roadmap.md`.
-- This document contains only unresolved, partial, or intentionally deferred decisions.
-- Historical task IDs are not active instructions.
+This file grants no runtime, schema, SQL, database, deployment, production, publication, or Layer 2 authority.
 
-## 2. Resolved Decisions To Preserve
-- **Core Entity:** Service / Booking is the operational entity for new ERP work, not Project.
-- **Locked Flow:** Customer Profile -> Service -> Quotation -> Invoice -> Payment.
-- **Quotations:** No standalone quotations. They are Service-scoped. One Service can have multiple Quotations. Approval requires `quotations:approve`. Approved quotations must not be fully editable or soft-deleted through ordinary `quotations:write`.
-- **Invoices:** Invoices are siblings under Service / Booking and Approved Quotation. No invoice-to-invoice FK in MVP. Deposit Invoice is an advance/prepayment invoice, not a discount. Deposit amount must be > 0 and <= approved quotation total. Active invoice definition: `status NOT IN ('voided','cancelled') AND voided_at IS NULL`.
-- **Payments:** Payments are separate from invoices. Multiple payments against one invoice do not create multiple invoices. Payments affect collected/uncollected balance, not invoiced/uninvoiced balance.
-- **Financial Controls:** Client-submitted financial totals must never be trusted; they are calculated server-side. Prevent overpayment unless explicitly approved.
-- **Snapshot Rules:** Every invoice created must persist full historical snapshot fields at issue time. Historical documents must not change meaning when language/settings change.
-- **Quotation approval / internal ABS:** Eligible quotation approval is the automatic activation boundary for the internal Approved Billing Scope; the immutable commercial snapshot, billable ceiling, invoice linkage, and audit history remain internal controls rather than a second user workflow. Non-zero discounts remain unsupported by the current approval contract.
-- **Service lifecycle:** Explicit guarded actions govern `Deposit Paid -> In Progress`, `In Progress -> Completed`, and reasoned cancellation from `Inquiry`, `Quoted`, or `Approved`; ordinary Service edit does not provide arbitrary status selection.
-- **Service evidence and billing:** Billing Summary, collapsed evidence-based Activity History, Deposit settlement audit, and Completed Final billing are delivered; Cancelled Services cannot create Deposit or Final invoices.
-- **Create Replay Safety (G8):** Family-specific create replay safety is complete and published across all five families: Customer (`be96bea`), Service (`ea61563`), Quotation (`61fd505`), Invoice (`04c89df`), and Payment (existing published architecture verified with no new code delta required). Each family implements immutable request/mutation key binding and dedicated reconciliation / conflict detection before mutable creation.
+## 1. DETAILS DEFERRED — PRODUCT TRUTH ALREADY CLOSED
 
-## 2.1 Performance Return-Later Queue
-- **Program classification (revised):** The entries below are evidence-gated return-later items within the current-core SaaS quality program, not active implementation instructions. P0-P9 primary-detail work is complete/published/verified; P8 shared/cold-shell work is closed; the bounded module-entry rerank has closed G4 with no target. Section 0 of the status and roadmap records the completed G4 closure boundary.
-- **Service Detail remaining optimization:** P2 is published and final runtime-recertified; the Service primary/secondary medians were 760 ms / 929 ms. Remaining Service Detail optimization stays in this return-later queue. Reopen only if it becomes the highest current measured priority again or a shared optimization found elsewhere materially affects its remaining server path; do not pre-select Billing Summary as the next repair without fresh attribution.
-- **P3 closeout:** `G7-SAAS-PERFORMANCE-P3-DATA-ACCESS-ROUND-TRIP-REDUCTION-01` is **COMPLETE / PUBLISHED / VERIFIED** in `0aed85835501c24d7834401d8cc9f296cc9de5cf` (`perf(customer): reduce Customer360 invoice round trips`). The invoice subflow reduced from `3 → 2` remote calls and the measured Customer route topology from `8 → 7` reads. Actual-click runtime recertification accepted **ROUND-TRIP REDUCTION ESTABLISHED WITH LIMITED USER-VISIBLE BENEFIT**; no material latency improvement, material regression, payload-size conclusion, or memory conclusion is claimed.
-- **P4 closeout:** `G7-SAAS-PERFORMANCE-P4-RELATED-RECORD-UX-BOUNDING-01` is **COMPLETE / PUBLISHED / VERIFIED** in `eca8b431140826851fc2251ba4bcdd9b6a15c908`. Customer Detail now previews the latest 10 contextual invoices with View All to the existing customer-filtered Invoice workspace route. Financial facts remain exhaustive, remote reads are unchanged, the UX verdict is **RELATED-RECORD UX SUCCESSFULLY BOUNDED — PERFORMANCE EFFECT NOT MATERIAL**, and financial truth is **FULL FINANCIAL TRUTH PRESERVED INDEPENDENTLY OF PREVIEW BOUND**. Final review and browser verification passed.
-- **P5-P9 closeout:** P5 is **COMPLETE / PUBLISHED / VERIFIED**. Service Detail → Related Quotations is published in `3b0ec95cec0b912f84fb4a2f0cdb9578c45a92df` (`perf(service): narrow related quotation projection`), replacing a full quotation row plus customer/service relations with a six-field route-specific projection while preserving one request. Customer360 secondary Services is published in `687371959bb75b0bb80394941c28c86ef478a1c8` (`perf(customer): narrow Customer360 service projection`), reducing `9 → 6` selected fields while preserving one request, filters, ordering, cardinality, operational facts, and financial reads. Both verdicts are **READ MODEL SUCCESSFULLY NARROWED — PERFORMANCE EFFECT NOT MATERIAL** and authoritative business/financial truth is preserved. **NO FURTHER MATERIAL P5 PROJECTION OPPORTUNITY JUSTIFIED.** P6 is **COMPLETE / PUBLISHED / VERIFIED**: Customer360 financial materialization is bounded in `896e5fd3b8ffdc2b7989915b6cc662bfd22526d7`; Service Billing is runtime-verified in `b8e33907be544402b4bc8d8c8ec5b612a2980dff` with two bounded aggregate RPC reads, preserved financial truth/failure semantics, authorized DEV/DEMO verification, and **NO ADDITIONAL INDEX JUSTIFIED**. P7 is **COMPLETE / PUBLISHED / VERIFIED** in `9ba1b67942ddeea045dcfd442e2aa690e3431409`; its Related Quotations survey found P50 `0`, P95/P99/MAX `1`, and no terminal history, so no further large-collection slice is justified. P8 is **COMPLETE / PUBLISHED / VERIFIED**: `06b303f3fd082bebf85d38be3faf55dcbf812033` removed the Business-Year primary-shell barrier, and final authorized DEV/DEMO attribution found one request-deduplicated app-user prerequisite, negligible effective-locale binding cost, and **P8 ENGINEERING COMPLETE — NO FURTHER MATERIAL SHARED/COLD-SHELL OPPORTUNITY JUSTIFIED**. P9 primary-detail work is complete; P10 remains a future evidence/acceptance rerank.
-- **Invoice Detail attribution:** Current median is 2330 ms. Reopen for bounded actual-interaction latency attribution after the completed P2 detail-page responsiveness work and any newly reranked higher-priority work are completed or reprioritized.
-- **Supplier workflow attribution:** Current median is 1890 ms. Reopen for bounded Supplier latency attribution according to the evidence-based ranking after higher-priority journeys.
-- **Payments query-plan/index review:** Payments is currently 317 ms median and lower priority, although the serialized exact-count plus ordered-data-read server path remains an established bounded bottleneck. `G7-PAYMENTS-EXACT-COUNT-QUERY-PLAN-AND-INDEX-REVIEW-01` remains valid only after higher-priority journeys are addressed, reranking materially changes priority, or Payments tail/scale evidence becomes operationally important.
-- **J4 Quotation coverage:** Comparable normal-detail completion evidence is not yet established. Reopen only when a normal safe interaction path is available or quotation work itself creates a reason to remeasure.
-- **J6 Billing coverage:** Measurement remains authorization-limited. Reopen only when the active authorized test context legitimately exposes the journey; do not bypass permissions to measure it.
+- Exact database field/table/RPC names, indexes, materialization, and migration batching.
+- Exact dashboard widget order, role-template defaults, ageing buckets, refresh cadence, notification channel, export format, and report layout.
+- Exact Event task/resource board interaction patterns beyond the locked authority/lifecycle semantics.
+- G7 default terminology and configuration values that require real sanitized examples.
+- Procurement tolerance values, approval thresholds, comparison presentation, document templates, and emergency-review timing.
+- Expense evidence limits, advance settlement timing, petty-cash replenishment details, and finance-owner defaults.
+- Customer credit-limit values, collection cadence, billing-schedule templates, and exception thresholds.
+- Event contingency defaults, ETC update cadence, close checklist, and proof thresholds.
+- Query indexes, caching, materialized views, payload changes, and performance tuning until a concrete measured question exists.
 
-## 2.2 Performance / Scale Evidence Gates
-- **Index changes:** Do not promise or create indexes until a concrete query/index question and appropriate authorized query-plan evidence exist. Current data-access evidence does not establish missing indexes or PostgreSQL engine slowness.
-- **Region / infrastructure changes:** Do not change placement or infrastructure because remote latency is merely plausible. Require safe placement/RTT evidence.
-- **Broad caching:** Do not cache mutable financial or authority-sensitive data without an explicit freshness/invalidation contract.
-- **Transactional same-snapshot architecture:** Concurrent preview and complete-financial-facts reads may theoretically observe different moments during a write, but no current user-visible/business inconsistency or same-snapshot product contract is established. Do not promote this to immediate architecture work without that evidence.
-- **Framework / data-platform replacement:** Replacing Next.js, Supabase, or the data platform is not justified by current evidence.
-- **Current conclusion boundary:** The active program conclusion is **PARTLY — MATERIAL IN SPECIFIC PATHS**. Data API request multiplication, sequencing, transfer, broad projections, complete-history reads, and blocking secondary work are material; PostgreSQL engine slowness itself is not established.
+These details may be decided inside a future bounded implementation slice if they do not weaken a Product Invariant. A proposed exception to a Product Invariant returns to the Owner.
 
-## 3. Financial And Billing Deferrals
-- **Invoice voiding and controlled adjustment:** Unpaid invoices may be voided by Admin with a reason and audit record. Paid or partially paid invoices require a controlled adjustment/reversal and replacement path (D03/D04). Remaining implementation (schema, permissions, replacement mechanics, accounting treatment) is deferred.
-- **Payment reversal/correction:** Payment correction workflows and reversal records remain deferred.
-- **Refunds:** Refund implementation is deferred.
-- **Wrong-Invoice reallocation:** Workflows to reallocate a payment to a different invoice remain deferred.
-- **Financial retention and no hard deletion:** Financial records must use void/cancel/reversal workflows rather than hard deletion.
-- **Rounding/currency hardening:** Currency and rounding standardization across the application remains deferred.
-- **Payment evidence/attachments:** Attaching evidence to payments remains deferred.
-- **Global Quotation entry selector:** Implemented in Feature 007 (`007-quotations-eligible-service-selector`). The bounded selector delegates only to the existing Service-scoped creation authority and does not create a standalone Quotation.
-- **Global Invoice chooser:** Implemented as a navigation-only chooser into Service Billing. Further selector-scale or eligibility redesign remains deferred unless evidence or a separately approved design requires it.
-- **Selector scale and eligibility redesign:** Server-side search/cursor pagination and any event-date eligibility redesign remain deferred unless Service-volume evidence or a separately approved design requires them.
-- **Multi-stage invoices beyond Deposit/Final:** Additional staged/progress invoice behavior remains deferred until final settlement design or ZATCA-grade settlement requires it.
+## 2. PROFESSIONAL REVIEW / ACTIVATION DEFERRALS
 
-## 4. Approved Billing Scope Deferrals
-- **ABS Void:** The application action and secondary technical-surface UI are delivered. They require `approvedBillingScopes:void`, a structured reason code and non-empty note, an eligible active scope, zero applicable invoice exposure, and zero payment history; they never mutate invoices or payments. Production rollout remains deferred.
-- **Successor/supersede UI:** The UI for superseding an Approved Billing Scope remains deferred.
-- **Optional richer ABS history:** A richer dedicated Approved Billing Scope history experience remains deferred; the delivered Service Activity History exposes evidence-based Service lifecycle and deposit-settlement events.
-- **Remaining production enforcement:** Production rollout of the ABS financial lifecycle remains deferred.
+### 2.1 Accounting and revenue
 
-## 5. Supplier And Costing Deferrals
-- **Supplier Rate Card V1 and broader procurement:** Supplier Rate Card V1 authority is COMPLETE, PUBLISHED, and DEV-DEMO VERIFIED under G9; Owner visual/manual acceptance is PASSED (do not reopen G9). The bounded V1 scope covers create, edit, activate/deactivate, valid-from/valid-to, and overlap behavior. Delete/restore, automatic supplier pricing, broader procurement, supplier accounting, Actual Cost, and Margin remain deferred.
-- **Broader Supplier Booking routes and workflows:** Standalone/broader Supplier Booking routes, UI, customer-facing documents, portal, edit/delete/restore, and expanded statuses remain deferred. Narrow internal Service-scoped V1 is implemented.
-- **Supplier invoices/payments:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. Supplier invoices, payables, outbound payments, accounting workflows, and supplier payment approval workflow are not implemented or immediately active.
-- **Company Expenses:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. Company overhead remains separate from Service/Event direct costs.
-- **Direct Event costing:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. Direct Service/Event expenses, committed/actual/paid/outstanding costs, and expected/actual Event Margin are not implemented or immediately active.
-- **Actual-cost posting:** Posting of actual supplier costs remains deferred.
-- **Profit/margin reporting:** Approved strategic expansion domain whose detailed design, sequencing, and implementation remain deferred pending product rebaseline, field evidence, accounting review, and explicit feature activation. Supplier costing, margin, and P&L reports are not implemented or immediately active.
-- **Customer-facing supplier cost exposure prohibition:** Any customer-facing exposure of supplier costs (documents, PDFs, portal) is strictly prohibited. Accountant, Sales, Operations, and Viewer do not have supplier cost access by default.
+Deferred until Saudi-qualified accounting review and explicit activation:
 
-## 6. Security, Production, And Operations Deferrals
-- **Remaining production RLS/security:** Production RLS validation and operational hardening (backup/monitoring/deployment readiness) are required before any hosted demo with real data.
-- **Deployment:** Production deployment remains deferred.
-- **Backups:** Database backups configuration remains deferred.
-- **Monitoring:** Application and database monitoring remains deferred.
-- **Logging:** Broader audit-log UI and detailed action logging beyond the delivered Service Activity History remain deferred.
-- **Incident ownership:** Incident ownership and operational support remain deferred.
-- **Clerk live invitation/webhook smoke:** Real Clerk invitation/webhook smoke testing remains pending until `CLERK_WEBHOOK_SIGNING_SECRET` is configured and approved.
-- **Session timeout:** Idle session timeout and inactivity auto-logout remain deferred.
-- **Graphify index:** The index remains stale; force remediation or refresh remains deferred and requires a separate approved task.
-- **Sensitive Server Action Rate Limiting:** Current MVP process-local rate limiting is implemented. Distributed/multi-instance enforcement remains deferred.
+- chart of accounts and control accounts;
+- operational-to-journal mappings;
+- posting, reversal, correction and period-lock policy;
+- opening balances and legacy accounting migration;
+- GL, bank reconciliation, trial balance, period close and financial statements;
+- revenue-recognition policy and reports;
+- cash-flow classification and accounting presentation;
+- accounting treatment of advances, deposits, credits, refunds, doubtful debt, foreign currency and tax.
 
-## 7. Documents, VAT, And Compliance Deferrals
-- **Official CR/VAT confirmation where still unresolved:** VAT Number and CR confirmation remain deferred/pending.
-- **Tax Invoice:** Tax Invoice issuance is blocked while `vat_mode = not_registered`.
-- **ZATCA/FATOORA:** Full ZATCA/FATOORA Phase 2 compliance remains deferred until official VAT registration and a separate approved design.
-- **QR/XML/clearance:** QR codes, XML generation, clearance, and statutory reporting remain deferred.
-- **Server-generated PDF:** Server-side PDF generation remains deferred (browser print is currently sufficient).
-- **Browser print headers/footers:** Customizing browser print headers/footers remains deferred.
-- **Document rendering locale:** The authoritative Quotation or Invoice is singular and may later render in Arabic or English. A future stored default rendering locale must not prevent either rendering. Financial data and snapshots are not duplicated, stored business text is not silently machine-translated, and side-by-side bilingual layout remains a separate decision. Locale schema/runtime and font work remain deferred.
-- **Formal historical snapshot discriminator:** A persisted discriminator for full quotation versus active Service scope versus synthetic historical shapes remains deferred. The current strict classifier fails ambiguous shapes closed to Invoice-summary-only presentation.
-- **Logo upload where still deferred:** Company Logo upload remains deferred.
+The Product Truth is not deferred: invoice, payment, revenue, payable, cost, commitment, cash and Event Margin remain separate. Operational and managerial work may proceed without labeling itself accounting.
 
-## 8. UX, Reporting, And Product Expansion Deferrals
-- **Temporary expansion gate:** New broad Product, Event ERP, and non-essential major feature-surface expansion is **DEFERRED, NOT CANCELLED** while the active SaaS Performance & Scale Program hardens the current core. The Expansion Master remains strategic reference only and is unchanged. Expansion requires explicit Owner reopening after an acceptable current-core SaaS baseline.
-- **Reports and broader reporting:** The Reports surface/read model exists; G3 Reporting Truth / Period Semantics engineering remediation is CLOSED (focused validation 24/24 passed) and Owner product/visual acceptance is PASSED (do not reopen G3). Kept deferred and not-open-as-engineering-defect: selected-period Collected Cash semantics, historical Outstanding-as-of-period-end cutoff, Revenue Recognition, payment terms/credit control, supplier cost/margin, and broader accounting reporting. Broader Reports product enhancements and a separate authoritative management/accounting Reports Center remain deferred product scope.
-- **Customer 360 and richer customer reporting:** The Customer 360 surface/read model exists; G3 engineering remediation is CLOSED (focused validation 13/13 passed) and Owner product/visual acceptance is PASSED. The latest-10 contextual invoice preview direction remains planned/documented and not yet implemented; richer customer reporting and a separate full customer profile report remain deferred product scope.
-- **Module-specific reports:** Module-specific reports remain deferred.
-- **Attachments:** General attachments (storage, permissions, file limits) for quotations, invoices, and customer records remain deferred.
-- **Notifications/WhatsApp/email:** Email, WhatsApp, and internal notifications remain deferred.
-- **Customer activity timeline:** A unified customer activity timeline remains deferred.
-- **Leads/inquiries:** Management of leads and inquiries remain deferred.
-- **Event taxonomy:** Formalizing event taxonomy (e.g., specific event types) remains deferred.
-- **Search/filter expansion:** Module-local search and major list/filter foundations exist; W5 search/accessibility defects are current G10 remediation. Global search remains intentionally absent/deferred, while unrelated future polish remains deferred.
-- **Business Year expansion beyond bounded list semantics:** The approved bounded Business Year foundation exists for temporal list routes; G3 period semantics engineering remediation is CLOSED. Broader calendar/fiscal expansion remains deferred.
-- **Service Hub:** Richer hub behavior (notes, attachments, and expansion beyond the delivered Activity History and explicit lifecycle actions) remains deferred.
-- **Advanced Dashboard expansion:** The current Dashboard workspace/hierarchy is delivered and owner-accepted, and remains intentionally outside Business Year scope; current bounded-read work remains remediation. Broader role-specific management, finance, and operations dashboards remain deferred.
+### 2.2 VAT, tax and FATOORA
 
-## 9. Data And Technical Debt
-- **Legacy Project cleanup:** Reviewing project types/mock data, project permissions, `projects`/`project_tasks` legacy schema, customer `projects_count`, and supplier PRJ mock references remains deferred.
-- **Numbering gaps as DEV/DEMO history:** Invoice numbering gaps are treated as development/smoke history. Do not reset or renumber.
-- **Remaining schema/type mismatches:** Any remaining schema/type mismatches remain deferred.
-- **Migration rollback process:** Formalizing a migration rollback procedure remains deferred.
-- **Data normalization:** Further data normalization remains deferred.
-- **Remaining mock/demo cleanup:** Auditing remaining mock/static app surfaces before further live-data polish remains deferred.
+Deferred until confirmed G7 registration/applicability evidence, Saudi tax professional review, current official ZATCA requirements, security/integration review, test-environment evidence, and explicit activation:
 
-## 10. Historical And Superseded Notes
-- **ERP-3B / Feature 001:** `001-erp-3b-invoice` is closed and historical. Its unchecked tasks are preserved as planning evidence and are not an active backlog. Current source and ordered migrations are authoritative.
-- **ERP-1:** Historical / Superseded Planning Note. Refers to the initial CRM/Service flow. The basic corresponding implementation is already complete. See `project-status.md`.
-- **ERP-2:** Historical / Superseded Planning Note. Refers to quotation approval flow. The basic corresponding implementation is already complete. See `project-status.md`.
-- **ERP-3 / ERP-3A / Full Invoice Schema:** Historical / Superseded Planning Note. Refers to basic invoice integration. Basic customer invoice/payment creation is implemented in DEV/DEMO. Financial correction workflows remain deferred.
-- **ERP-4:** Historical / Superseded Planning Note. Payment integration is implemented in DEV/DEMO. Financial reversal and refund workflows remain deferred.
-- **Phase 7A–7D / Phase 8:** Historical / Superseded Planning Note. Old roadmap phases; basic implementation is complete. See `project-status.md`.
-- **Raw Error Exposure / Viewer Bank Detail Masking:** Historical / Superseded Planning Note. Current documented verification is passed.
-- **Supplier Booking (Full):** Historical / Superseded Planning Note. Narrow internal Service-scoped V1 exists. Standalone broader features remain deferred. See Section 5.
-- **Dashboard Real Data:** Historical / Superseded Planning Note. Implemented live summary/list milestones are complete. Advanced reporting remains deferred. See Section 8.
-- **List Pagination Parity / Invoice List Sort:** Historical / Superseded Planning Note. Current documented verification is passed.
-- **Repository reconciliation:** Historical / resolved after G0. The canonical `main` checkout and retired historical worktree are recorded in `project-status.md` and `project-roadmap.md`; checkout reconciliation is no longer an active deferral.
+- VAT calculation and tax-accounting policy;
+- Tax Invoice / simplified invoice / tax note wording and data;
+- VAT return/reporting;
+- FATOORA generation, clearance/reporting, integration, cryptographic controls and compliance claims.
+
+Current company truth remains `vat_mode = not_registered`; the existing prohibition on VAT Number, Tax Invoice wording, VAT 15%, and ZATCA/FATOORA claims remains active until valid evidence changes it.
+
+### 2.3 Bank, HR, legal and insurance
+
+Deferred until the actual workflow and appropriate professional/security review exist:
+
+- bank import/reconciliation automation and payment files;
+- bank-destination mutation automation;
+- payroll-like labor/expense treatment;
+- temporary labor, insurance, claim and regulated contractual details.
+
+## 3. AUTHORITY-GATED WORK
+
+The following are not product deferrals; they require their own explicit authority:
+
+- protected `AGENTS.md`, ERP Guard, ERP Design Guard and Design Contract synchronization;
+- runtime code implementation;
+- schema, migration, SQL, RPC, RLS/policy, grant, index and generated-type changes;
+- DEV/DEMO database application;
+- staging, commit, push, PR, merge or publication;
+- deployment, production database/application, integration activation or data cutover;
+- credentialed provider work or inspection of protected authentication/configuration material.
+
+The exact protected-document proposal is Section 25 of the technical master plan. That proposal is retained as historical evidence; W2A and W2B are now closed, and the current next bounded W2 action is the W2C Deterministic Discount Allocation / Approval Projection preflight. Any remaining Product Truth synchronization is a separate authority boundary.
+
+## 4. OWNER MANUAL ACCEPTANCE STILL REQUIRED
+
+Automated validation and independent review do not substitute for Mozfer acceptance of future delivered behavior. W3 acceptance is complete for the bounded reviewed slice; each future applicable slice retains:
+
+- English desktop;
+- Arabic desktop and natural RTL;
+- mobile/responsive;
+- visual hierarchy and interaction meaning;
+- keyboard/focus and accessibility behavior;
+- customer/supplier-facing preview, PDF, print and export;
+- full workflow, corrections, failures, permissions and exception handling.
+
+Acceptance is exact to the reviewed slice and is not a general production-readiness claim.
+
+## 5. MIGRATION / CUTOVER DEFERRALS
+
+Implementation cannot silently reinterpret historical rows. Deferred until separately reviewed/authorized:
+
+- expansion beyond the bounded W3 legacy status projection, historical correction/exception-queue resolution, and legacy-path removal after stabilization evidence;
+- remaining legacy quotation/ABS mapping beyond the delivered W2A Authority Line hierarchy and W2B quotation-family/revision lineage;
+- deposit/final invoice/payment mapping into schedules, allocations, credits/refunds and historical as-of receivables;
+- supplier allocation/booking mapping without inventing commitments, receipt, AP or Actual Cost;
+- exception-queue resolution for facts that cannot be derived;
+- isolated rehearsal, backup/restore, reconciliation, rollback and domain-by-domain cutover;
+- legacy-path removal after stabilization evidence.
+
+No invented commitment, acceptance, allocation, cost, revenue, readiness or accounting entry is permitted to make a migration appear complete.
+
+## 6. PERFORMANCE / SCALE RETURN-LATER
+
+The current-core G4 program remains closed as documented in status/roadmap. Reopen a performance task only for a concrete, current, comparable user-visible or layer-attributed target. Do not pre-authorize cache, index, materialized view, payload, query, bundling or architecture changes from this Layer 1 plan.
+
+If a future query/index question is not supported by query text, schema, data distribution and plan evidence, report `INSUFFICIENT QUERY / INDEX EVIDENCE`.
+
+## 7. FUTURE EXTENSION SEAMS — NOT LAYER 1 SCOPE
+
+- AI dashboard/report summaries or proposal assistance. Any future seam is read-only, permission-filtered, source-cited, as-of disclosed, uncertainty-aware and human-controlled; it cannot approve/post/mutate or become authority.
+- Generic dashboard builder or generic workflow engine.
+- Tender/Bid Management implementation, Technical Proposal, Financial Proposal/BOQ and guarantees. Strategic direction remains in the Expansion Master; implementation is separate.
+- Generic Product/catalog abstraction beyond proven commercial needs.
+- Multi-company/company context, tenancy, memberships, isolation, subscriptions, onboarding, billing plans, quotas, cross-company analytics and other Layer 2 SaaS work.
+- Layer 2 proof thresholds and activation decision, to be set after real G7 Layer 1 use.
+
+## 8. NOT DEFERRED / MUST NOT BE REOPENED WITHOUT CONTRADICTION
+
+- Service/Event is the primary Layer 1 operating context.
+- Commercial, payment, operational, managerial-costing and accounting states are separate.
+- Deposit payment is not the target universal execution prerequisite.
+- Booking/Allocation is not Approved Commitment, receipt, Vendor Bill, payable, supplier payment, Actual Cost or accounting entry.
+- Cash Advance is not Expense; Petty Cash is not Employee Advance.
+- Invoice is not Payment and neither is Revenue Recognition.
+- Event Margin is managerial and not accounting profit.
+- Action Center is derived; source records retain authority.
+- Dashboard/report values are permission-filtered, source-traceable and as-of/freshness disclosed.
+- approved/issued/posted/paid/closed history is corrected or superseded, not hard-deleted.
+- One Product / One Codebase / Configurable Company Behavior; configuration cannot weaken invariants.
+- Layer 1 is single-company G7 BLUE; Layer 2 remains future.
+
+## 9. HISTORICAL DEFERRAL NOTE
+
+The 27 August 2026 “Quotation Commercial Model Field-Evidence Gate” and broad “Event ERP deferred” next-step wording is superseded by the 31 August decision closure. Real examples remain valuable for defaults, migration and acceptance; they no longer block Product Truth closure. Earlier G1–G12, P0–P10, Feature 009, ABS Void/Supersede and Wednesday-discovery references remain dated historical evidence and must not replace the current next action.
+
+## 10. HISTORICAL EXACT NEXT ACTION (SUPERSEDED BY CURRENT W1 CLOSEOUT)
+
+The prior action was approval of the seven-item protected synchronization manifest in technical master plan Section 25. The current next wave is W2 Commercial Authority under a new Owner-authorized task; no additional W1C feature is inferred and no runtime, schema, database, publication, deployment, production or Layer 2 authority is implied by this historical note.

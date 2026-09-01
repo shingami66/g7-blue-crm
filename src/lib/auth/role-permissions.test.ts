@@ -117,6 +117,18 @@ test("Other roles keep their existing access without financial mutation expansio
   }
 });
 
+test("W3 authorized credit and reopen permissions are separate role grants", () => {
+  for (const role of ["admin", "manager"] as const) {
+    assert.equal(hasPermissionForRole(role, "services:authorize_execution_credit"), true);
+    assert.equal(hasPermissionForRole(role, "services:reopen"), true);
+  }
+
+  for (const role of ["operations", "sales", "accountant", "viewer"] as const) {
+    assert.equal(hasPermissionForRole(role, "services:authorize_execution_credit"), false);
+    assert.equal(hasPermissionForRole(role, "services:reopen"), false);
+  }
+});
+
 test("Unknown or malformed role evidence fails closed", () => {
   for (const role of ["unknown", "", null, undefined, 42, {}]) {
     assert.equal(hasPermissionForRole(role, INVOICE_PERMISSIONS.write), false);

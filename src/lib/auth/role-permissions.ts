@@ -36,6 +36,8 @@ export const ROLE_PERMISSIONS = {
     SERVICE_BILLING_SUMMARY_PERMISSIONS.read,
     "services:write",
     "services:update_status",
+    "services:authorize_execution_credit",
+    "services:reopen",
     INVOICE_PERMISSIONS.read,
     INVOICE_PERMISSIONS.write,
     "payments:read",

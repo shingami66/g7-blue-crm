@@ -5,7 +5,7 @@
 - **W1:** `PASS` after Owner acceptance. W1A Effective Access, Open Review routing hardening, W1C Quotation Approvals, and W1C Ready-to-Start Services are complete and published in the authorized sequence.
 - **W1B:** **NOT REQUIRED FOR THIS WAVE**. Approval Authority / SoD remains deferred and unimplemented; reopen only if a real existing workflow demonstrates a durable bounded gap.
 - **Delivered boundary:** Effective Access uses the reviewed narrow `quotations:approve` override path with DENY-wins semantics. Action Center uses the existing Dashboard Attention surface for two real source-linked slices: quotation approvals and transition-ready Services. No generic workflow engine, new authority, inline mutation, or new persistence was added for W1C.
-- **Next locked priority:** W2A, W2B and W2C are complete and closed on the Owner-authorized DEV environment. The next locked roadmap task is W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`), requiring a new Owner-authorized task. Do not extend W1C without evidence of a required consumer or defect.
+- **Next locked priority:** W2A, W2B, W2C and W3 are complete and closed on the Owner-authorized DEV environment. The next locked roadmap task is W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`), requiring a new Owner-authorized task. Do not extend W1C without evidence of a required consumer or defect.
 
 ## W2A CLOSEOUT — 31 August 2026 (COMPLETED)
 
@@ -25,7 +25,15 @@
 - **W2C Deterministic Discount Allocation / Approval Projection:** `PASS` and closed. The approved fixed-amount SAR discount rule is persisted once on quotation items and projected by exact copy into approval/ABS evidence and W2B successor drafts. Allocation is integer-halal proportional largest remainder, with deterministic `created_at ASC, id ASC` tie-breaking and Authority Line-root attribution only.
 - **Evidence boundary:** migration `20260901100000_w2c_deterministic_discount_allocation.sql` was applied and reconciled on the Owner-authorized DEV project `dpddrqjzqohexixgdqiq`; schema, constraints, security grants, fail-closed behavior, approval/ABS equality, revision copying, focused tests, and transaction-local smoke passed. No DEMO environment currently exists; no production/deployment claim is made.
 - **Scope boundary:** Included Components and unselected Optional Add-ons receive zero allocation; quotation `grand_total` remains authoritative. Percentage discounts, non-SAR/FX allocation, VAT/revenue/accounting policy, Change Orders, ABS supersession/reapproval, historical backfill, and unrelated W2 work remain deferred or out of scope.
-- **Next locked roadmap task:** W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`) is the next separately authorized slice. This roadmap entry grants no further database mutation or implementation authority.
+- **Next locked roadmap task:** W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`) is closed in the current section below. The next locked roadmap task is W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`); this roadmap entry grants no further database mutation or implementation authority.
+
+## CURRENT W3 CLOSEOUT — 1 September 2026
+
+- **W3 Event Lifecycle compatibility:** `PASS` and closed. The additive lifecycle projection separates commercial, payment, readiness, execution, completion, and operational close semantics while preserving `services.status` as a legacy fact and keeping legacy writers synchronized.
+- **Evidence boundary:** migration `20260901110000_w3_event_lifecycle_compatibility.sql` was applied and reconciled on the Owner-authorized DEV project `dpddrqjzqohexixgdqiq`; the local migration SHA-256 is `209769B5F8691D7E499928D7E1A7A92CB4748CB05FD3DDB39687AA5EA111E0F7`. Backfill, constraints, RLS, fixed-search-path/service-role boundaries, payment projection, lifecycle transitions, audit/replay behavior, cancellation guard, and rollback-clean smoke passed.
+- **Validation and acceptance:** focused regression/reconciliation validation, TypeScript/lint, independent findings-only review, bounded repair and targeted rereview passed. Owner English/Arabic/RTL/mobile Service-detail acceptance is `PASS`; W3 is Owner-accepted. No further database mutation, DEMO/production, deployment, or accounting activation is claimed.
+- **Scope boundary:** no task/resource system, procurement, costing, AP/AR, accounting, broad dashboard, or app-user-permission-override expansion was introduced. Authorized-credit start remains a separate role-based gate.
+- **Next locked roadmap task:** W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`) is the next separately authorized slice. This closeout grants no W4 implementation or database authority.
 
 ## 0. CURRENT RECONCILED ROADMAP — 31 August 2026
 
@@ -34,7 +42,7 @@
 - **Current mechanics are not target policy:** legacy deposit-gated Service transitions, supplier Booking/Allocation semantics, deposit/final-only billing, role-only permissions, global dashboard metrics, and current-period reporting are preserved as source/migration evidence. They must not silently define the target.
 - **Quality lane:** every future slice uses one logical Writer, separate findings-only Reviewer, focused validation, Mozfer manual acceptance where required, and Controller verdict. Database draft, DEV/DEMO apply, publication, deployment, production, professional activation, and Layer 2 each remain separate authority gates.
 - **No implementation activation:** this roadmap is executable planning, not authority to change code/schema/database or publish/deploy. Professional accounting, revenue, VAT/FATOORA, bank, security and accessibility gates remain as named in the technical master plan.
-- **Historical next governed action (superseded):** This prior planning snapshot pointed to approval of the protected `AGENTS.md`/guard/Design Contract synchronization manifest. The current W1 and W2 closeouts above record the delivered Open Review routing hardening and W2A/W2B slices; W2C is the sole next bounded W2 action and requires a new Owner task.
+- **Historical next governed action (superseded):** This prior planning snapshot pointed to approval of the protected `AGENTS.md`/guard/Design Contract synchronization manifest. The current W1, W2 and W3 closeouts above record the delivered Open Review routing hardening, commercial authority work and Event Lifecycle compatibility slice; W4 Procurement & Commitments is the sole next locked roadmap task and requires a new Owner task.
 
 ## 0A. HISTORICAL RECONCILED ROADMAP — 27 August 2026 (SUPERSEDED FOR CURRENT LAYER 1 PLANNING)
 
@@ -67,7 +75,9 @@ After a published change that changes delivered behavior, phase status, or decis
 - add branch/commit/PR notes
 - update "Current Active Phase"
 
-## Final Approved ERP Decisions
+## Historical Current-Product ERP Decisions (superseded where the 31 August Layer 1 register says otherwise)
+
+The following list preserves current mechanics and earlier approvals. It is not a complete target Layer 1 model. In particular, payment state is not the target universal execution gate; Booking is not commitment/AP; and accounting/reporting activation remains separately governed.
 
 These decisions are locked for G7 BLUE CRM planning and must stay aligned across project docs:
 

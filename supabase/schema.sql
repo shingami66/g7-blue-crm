@@ -1350,6 +1350,41 @@ CREATE TABLE IF NOT EXISTS "public"."services" (
 ALTER TABLE "public"."services" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."service_lifecycle_states" (
+    "service_id" "uuid" NOT NULL,
+    "legacy_status" "text" NOT NULL,
+    "commercial_state" "text" NOT NULL,
+    "payment_state" "text" NOT NULL,
+    "readiness_state" "text" NOT NULL,
+    "execution_state" "text" NOT NULL,
+    "completion_state" "text" NOT NULL,
+    "close_state" "text" NOT NULL,
+    "start_gate_basis" "text",
+    "state_version" bigint DEFAULT 1 NOT NULL,
+    "mapping_version" "text" DEFAULT 'w3-v1'::"text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_by" "text",
+    CONSTRAINT "service_lifecycle_states_close_requires_completion_check" CHECK ((("close_state" = 'open'::"text") OR (("execution_state" = 'ended'::"text") AND ("completion_state" = 'confirmed'::"text")))),
+    CONSTRAINT "service_lifecycle_states_close_state_check" CHECK (("close_state" = ANY (ARRAY['open'::"text", 'closed'::"text"]))),
+    CONSTRAINT "service_lifecycle_states_commercial_state_check" CHECK (("commercial_state" = ANY (ARRAY['inquiry'::"text", 'quoted'::"text", 'approved'::"text", 'cancelled'::"text"]))),
+    CONSTRAINT "service_lifecycle_states_completion_state_check" CHECK (("completion_state" = ANY (ARRAY['pending'::"text", 'confirmed'::"text", 'not_applicable'::"text"]))),
+    CONSTRAINT "service_lifecycle_states_execution_state_check" CHECK (("execution_state" = ANY (ARRAY['not_started'::"text", 'in_progress'::"text", 'ended'::"text", 'not_applicable'::"text"]))),
+    CONSTRAINT "service_lifecycle_states_gate_check" CHECK (("start_gate_basis" IS NULL) OR ("start_gate_basis" = ANY (ARRAY['settled_payment'::"text", 'authorized_credit'::"text"]))),
+    CONSTRAINT "service_lifecycle_states_gate_requires_execution_check" CHECK (("start_gate_basis" IS NULL) OR ("execution_state" = ANY (ARRAY['in_progress'::"text", 'ended'::"text"]))),
+    CONSTRAINT "service_lifecycle_states_legacy_status_check" CHECK (("legacy_status" = ANY (ARRAY['Inquiry'::"text", 'Quoted'::"text", 'Approved'::"text", 'Deposit Paid'::"text", 'In Progress'::"text", 'Completed'::"text", 'Cancelled'::"text"]))),
+    CONSTRAINT "service_lifecycle_states_operational_consistency_check" CHECK ((((("execution_state" = 'not_applicable'::"text") AND ("completion_state" = 'not_applicable'::"text")) OR (("execution_state" = 'not_started'::"text") AND ("completion_state" = 'pending'::"text"))) OR (("execution_state" = 'in_progress'::"text") AND ("completion_state" = 'pending'::"text"))) OR (("execution_state" = 'ended'::"text") AND ("completion_state" = 'confirmed'::"text")))),
+    CONSTRAINT "service_lifecycle_states_payment_state_check" CHECK (("payment_state" = ANY (ARRAY['unassessed'::"text", 'unpaid'::"text", 'partial'::"text", 'settled'::"text", 'inconsistent'::"text"]))),
+    CONSTRAINT "service_lifecycle_states_readiness_state_check" CHECK (("readiness_state" = ANY (ARRAY['unassessed'::"text", 'blocked'::"text", 'ready'::"text", 'not_applicable'::"text"]))),
+    CONSTRAINT "service_lifecycle_states_service_id_fkey" FOREIGN KEY ("service_id") REFERENCES "public"."services"("id") ON DELETE RESTRICT,
+    CONSTRAINT "service_lifecycle_states_state_version_check" CHECK (("state_version" > 0)),
+    CONSTRAINT "service_lifecycle_states_pkey" PRIMARY KEY ("service_id")
+);
+
+
+ALTER TABLE "public"."service_lifecycle_states" OWNER TO "postgres";
+
+
 CREATE OR REPLACE VIEW "public"."customer_report_metrics" WITH ("security_invoker"='true') AS
  SELECT "c"."id" AS "customer_id",
     COALESCE("sc"."services_count", 0) AS "services_count",
@@ -2499,6 +2534,9 @@ ALTER TABLE "public"."service_supplier_allocations" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."services" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."service_lifecycle_states" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."supplier_bookings" ENABLE ROW LEVEL SECURITY;

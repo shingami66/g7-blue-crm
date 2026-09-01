@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ServiceStatus } from "@/types/service";
+import type { ServiceLifecycleState } from "@/lib/services/lifecycle";
 import { cancelService } from "@/lib/services/actions";
 import { getServiceStatusErrorMessage } from "@/lib/i18n/service-action-feedback";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
@@ -11,10 +12,11 @@ import Button from "@/components/ui/Button";
 type Props = {
   serviceId: string;
   status: ServiceStatus;
+  lifecycle: ServiceLifecycleState;
   dictionary: ServicesDictionary;
 };
 
-export default function ServiceCancellationActions({ serviceId, status, dictionary }: Props) {
+export default function ServiceCancellationActions({ serviceId, status, lifecycle, dictionary }: Props) {
   const [isPending, startTransition] = useTransition();
   const [reason, setReason] = useState("");
   const [isCancellationOpen, setIsCancellationOpen] = useState(false);
@@ -22,7 +24,10 @@ export default function ServiceCancellationActions({ serviceId, status, dictiona
   const [success, setSuccess] = useState(false);
   const cancelTriggerRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
-  const isCancellable = status === "Inquiry" || status === "Quoted" || status === "Approved";
+  const isCancellable =
+    (status === "Inquiry" || status === "Quoted" || status === "Approved") &&
+    (lifecycle.source === "legacy_fallback" ||
+      (lifecycle.executionState === "not_started" && lifecycle.closeState === "open"));
 
   const runAction = (action: () => Promise<{ success: boolean; code?: string }>) => {
     if (isPending) return;

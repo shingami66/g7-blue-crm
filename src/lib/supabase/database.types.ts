@@ -1189,6 +1189,65 @@ export type Database = {
           },
         ]
       }
+      service_lifecycle_states: {
+        Row: {
+          close_state: string
+          commercial_state: string
+          completion_state: string
+          created_at: string
+          execution_state: string
+          legacy_status: string
+          mapping_version: string
+          payment_state: string
+          readiness_state: string
+          service_id: string
+          start_gate_basis: string | null
+          state_version: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          close_state: string
+          commercial_state: string
+          completion_state: string
+          created_at?: string
+          execution_state: string
+          legacy_status: string
+          mapping_version?: string
+          payment_state: string
+          readiness_state: string
+          service_id: string
+          start_gate_basis?: string | null
+          state_version?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          close_state?: string
+          commercial_state?: string
+          completion_state?: string
+          created_at?: string
+          execution_state?: string
+          legacy_status?: string
+          mapping_version?: string
+          payment_state?: string
+          readiness_state?: string
+          service_id?: string
+          start_gate_basis?: string | null
+          state_version?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_lifecycle_states_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: true
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_supplier_allocations: {
         Row: {
           approved_quotation_id: string | null
@@ -2196,6 +2255,31 @@ export type Database = {
           idempotent_replay: boolean
           service_id: string
           service_status: string
+        }[]
+      }
+      transition_service_lifecycle: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_actor_role: string
+          p_gate_basis: string | null
+          p_reason: string
+          p_request_id: string | null
+          p_service_id: string
+        }
+        Returns: {
+          close_state: string
+          commercial_state: string
+          completion_state: string
+          error_code: string
+          execution_state: string
+          idempotent_replay: boolean
+          legacy_status: string
+          payment_state: string
+          readiness_state: string
+          service_id: string
+          start_gate_basis: string | null
+          state_version: number
         }[]
       }
       update_app_user_role: {

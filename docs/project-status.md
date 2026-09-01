@@ -8,7 +8,7 @@
 - **Review/validation:** the W1 publishable delta completed focused tests, TypeScript, ESLint, `git diff --check`, OCR delegation-only rule resolution, separate native findings-only review, same-Writer repair, and targeted rereview. No production, deployment, Layer 2, or unrelated database mutation is claimed.
 - **Current-to-target truth:** W1 delivery does not erase the remaining Layer 1 implementation gaps. W2A Commercial Authority and W2B Revision Lineage are now complete; W1B remains deferred until a real workflow consumer proves a bounded approval-authority/SoD gap.
 - **Current W2C state:** W2C Deterministic Discount Allocation / Approval Projection is implemented, applied and reconciled on the Owner-authorized DEV environment only, and independently verified. No DEMO environment currently exists; no production or deployment claim is made.
-- **Exact next wave/action:** W2 Commercial Authority is closed through W2C. The next locked roadmap task is W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`), which requires its own Owner-authorized task; do not add another W1C feature.
+- **Exact next wave/action:** W2 Commercial Authority and W3 Event Operations / Event Lifecycle are closed. The next locked roadmap task is W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`); do not add another W1C feature or begin W4 without a new Owner-authorized task.
 
 ## W2A CLOSEOUT — 31 August 2026 (COMPLETED)
 
@@ -27,9 +27,28 @@
 - **W2C Deterministic Discount Allocation / Approval Projection:** `PASS` and closed. The approved fixed-amount SAR finance rule is implemented through one canonical persisted quotation allocation path using integer-halal proportional largest remainder with deterministic `created_at ASC, id ASC` tie-breaking. Included Components and unselected Optional Add-ons remain zero; Authority Line roots receive the reconciled allocation; quotation `grand_total` remains authoritative.
 - **Persistence and evidence:** migration `20260901100000_w2c_deterministic_discount_allocation.sql` was applied and reconciled on the Owner-authorized DEV project `dpddrqjzqohexixgdqiq`. The required quotation and ABS source-allocation columns, SECURITY DEFINER/fixed-search-path/service-role-only boundaries, approval/ABS snapshot equality, W2B revision copying, invalid-hierarchy/currency fail-closed behavior, and existing-data validity were verified. No `accepted_discount_allocated` column was added. No DEMO environment currently exists; no production or deployment claim is made.
 - **Validation and scope boundary:** focused allocation/reconciliation tests, quotation/ABS regression tests, TypeScript, ESLint, migration/security checks, transaction-local DEV smoke, independent findings-only review, repair and targeted rereview passed. No VAT activation, revenue recognition, accounting journals, Change Orders, ABS supersession, percentage discounts, FX/non-SAR allocation, historical backfill, or further W2 slice was started.
-- **Next locked roadmap task:** W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`) is the next separately authorized slice. This closeout performs no further database mutation.
+- **Next locked roadmap task:** W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`) is closed in the current W3 section below. The next locked roadmap task is W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`); this closeout performs no further database mutation.
 
+## CURRENT W3 CLOSEOUT — 1 September 2026
 
+- **W3 Event Lifecycle compatibility:** `PASS` and closed. The additive lifecycle projection separates commercial, payment, readiness, execution, completion, and operational close semantics while preserving `services.status` as a legacy fact and keeping legacy writers synchronized.
+- **Persistence and evidence:** migration `20260901110000_w3_event_lifecycle_compatibility.sql` was applied and reconciled on the Owner-authorized DEV project `dpddrqjzqohexixgdqiq`; the local migration SHA-256 is `209769B5F8691D7E499928D7E1A7A92CB4748CB05FD3DDB39687AA5EA111E0F7`. Backfill, constraints, RLS, fixed-search-path/service-role boundaries, payment projection, lifecycle transitions, audit/replay behavior, cancellation guard, and rollback-clean smoke passed.
+- **Validation and acceptance:** focused regression/reconciliation validation, TypeScript/lint, independent findings-only review, bounded repair and targeted rereview passed. Owner English/Arabic/RTL/mobile Service-detail acceptance is `PASS`; W3 is Owner-accepted. No further database mutation, DEMO/production, deployment, or accounting activation is claimed.
+- **Scope boundary:** no task/resource system, procurement, costing, AP/AR, accounting, broad dashboard, or app-user-permission-override expansion was introduced. Authorized-credit start remains a separate role-based gate.
+- **Next locked roadmap task:** W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`) is the next separately authorized slice. This closeout grants no W4 implementation or database authority.
+
+## 0. HISTORICAL VERIFIED STATE — 31 August 2026 (SUPERSEDED BY CURRENT W1 CLOSEOUT ABOVE)
+
+- **Layer 1 decision closure:** `PASS WITH WARN`. All 11 G7 BLUE Layer 1 Event ERP domains are closed at Product Truth level. Domain 11 — Dashboards & Reporting is closed; Domains 1–10 were reconciled and not reopened. No genuine Owner decision remains open.
+- **Planning artifacts:** the repository Event ERP decision register is current and `docs/product/g7-layer1-technical-master-plan.md` is the sole Layer 1 technical architecture, gap, migration/cutover, validation, professional-gate, sequential-delivery, and first-15-workday plan. The Expansion Master remains the sole strategic expansion source.
+- **Repository evidence baseline for closure:** canonical checkout `D:/G7/g7-crm`, branch `main`; inspected `HEAD` = `origin/main` = `9b931d9cadec0e11b83cf85ace571bc053b1a875` (`docs(product): rebaseline Event ERP expansion`), parent `6d5bf7c2ae53561eac7031c8ab3397f2a0929ac9`. Existing unrelated modified/untracked work was preserved; protected build-watch logs were not inspected.
+- **Current-to-target truth:** the current application remains a Service-centered CRM/Billing foundation with quotations, ABS, deposit/final invoices, payments, suppliers/rate cards/allocations/bookings, a role-only permission model, Dashboard and Reports Center. Broad Layer 1 procurement, expenses, AP, formal accounting, event-cost ledger, independent operational lifecycle, scope/SoD authority model, Action Center, and target as-of reports are implementation gaps—not unresolved product decisions.
+- **Explicit supersession:** current deposit-gated Service transitions and current invoice-period-derived collection reporting are legacy/current mechanics, not target Layer 1 policy. Target Product Truth separates payment, readiness, execution, completion, financial close and accounting close; collected cash uses valid payment business dates and allocations; current and historical as-of outstanding are distinct.
+- **Authority boundary:** this documentation closure authorizes no runtime code, schema, SQL, migration/RPC/RLS, remote database, deployment, production, activation, staging, commit, push, merge, or Layer 2 work. Accounting, revenue recognition, financial statements, VAT and FATOORA remain professional and explicit-activation gates.
+- **Protected guidance warning (historical snapshot):** At this earlier checkpoint, `AGENTS.md`, the ERP Guards, and the durable Design Contract were described as awaiting the seven-item Product Truth synchronization. That wording is superseded by the W1 closeout above, which records the separately delivered Open Review routing hardening in `AGENTS.md`; any remaining Product Truth synchronization is a separate authority boundary.
+- **Historical exact next action (superseded):** The prior action was approval of the protected synchronization manifest. The current next action is the W2 Commercial Authority slice stated in the W1 closeout above; no additional W1C feature is inferred.
+
+## 0A. HISTORICAL VERIFIED STATE — 27 August 2026 (SUPERSEDED FOR CURRENT LAYER 1 PLANNING)
 
 - **Repository baseline:** Canonical checkout `D:/G7/g7-crm`, branch `main`; the reconciliation/pre-publication baseline was `824f017f54dab613d19096bd1ac86089c486a457` (`chore(agents): codify writer reviewer review loop`), parent `8d78d53d7aaa88365b72eda0c82d827845eb2ea0` (`fix(auth): harden sign-in and reviewed supplier access paths`). That baseline is retained for reconciliation context and is not the current repository `HEAD`; the approved G4 documentation closure was published afterward. The reviewed G6 repair is published in `f9fa193`; pre-existing dirty/untracked paths are preserved without inspection of build-watch contents, and this closure publication changes only the three project documentation files after that repair. No database, Controller state, or deployment state is changed.
 - **Delivered and independently verified:** The primary-detail performance pass is complete/published/verified for Customer, Supplier, Service, and Quotation. The Invoice candidate was measured and discarded with no retained optimization. The bounded module-entry follow-on is complete through Reports (`ae76974bddbfbdfcd5e95b6b85acb6f9cd472cf7`, PASS WITH WARN, limited user-visible benefit) and Customers (`cb8e0767de3bb63edf8679b352969cc755176254`, PASS, verified improvement); a later Quotations module-entry candidate worsened and was discarded, while the retained Quotation primary-detail optimization remains published in `3a00d23`. No retained Quotations module-entry optimization is claimed.
@@ -56,10 +75,10 @@
 ## 1. Project Overview
 - **Project Name:** G7 BLUE CRM
 - **Stack:** Next.js 16 App Router, TypeScript, Tailwind CSS, Supabase, Clerk Auth, PostgreSQL RPC
-- **Purpose:** A robust CRM tailored for G7 BLUE, managing customer relationships, event work, financial documents, payments, and operational tracking.
-- **Product Direction:** G7 BLUE CRM is an Events CRM + Billing system, not a generic billing-only CRM.
-- **Core Flow:** Customer Profile -> Service -> Quotation -> Invoice -> Payment
-- **Core Entity:** Service / Booking is the operational entity for new ERP work, not Project.
+- **Current implemented purpose:** A robust CRM/Billing foundation tailored for G7 BLUE, managing customer relationships, event work, financial documents, payments, suppliers, and operational tracking.
+- **Closed Layer 1 product direction:** a single-company G7 BLUE Event ERP with operational, commercial, managerial-financial, and professionally gated accounting truth; Layer 2 SaaS remains future.
+- **Current delivered flow:** Customer Profile -> Service -> Quotation -> Invoice -> Payment. This is useful current mechanics, not the complete target Layer 1 domain model.
+- **Layer 1 operating entity:** Service / Event is the primary operational context; linked records retain their own authority and lifecycle.
 - **Current VAT Field:** The implemented Company Settings VAT field is `company_settings.vat_mode`.
 
 ## 1.1 Confirmed Company Identity & Document Rules
@@ -85,7 +104,9 @@
 - **CR Status:** CR number is optional/unconfirmed.
 - **Official Email:** Must be stored as a plain email string without markdown.
 
-## 1.2 Event ERP Expansion Rebaseline
+## 1.2 Historical Event ERP Expansion Rebaseline (superseded by Section 0)
+
+The bullets in this subsection preserve the dated pre-closure position. They do not govern current Layer 1 Product Truth, planning status, or next action.
 
 - The Event ERP expansion is an approved strategic direction, not an active implementation feature.
 - Current V1 delivery work continues; the expansion is a separate product-rebaseline and field-discovery stream.

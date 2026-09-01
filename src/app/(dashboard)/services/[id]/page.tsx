@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth/role-permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceByIdResult } from "@/lib/services/queries";
+import { getServiceLifecycleState } from "@/lib/services/lifecycle-queries";
 import { getQuotationsByServiceIdResult } from "@/lib/quotations/queries";
 import { getServiceBillingSummary } from "@/lib/invoices";
 import { listServiceActivity } from "@/lib/services/activity-queries";
@@ -134,9 +135,15 @@ export default async function ServiceDetailPage({
 
   const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
-  const canCreateQuotation = await checkPermission("quotations:write");
-  const canEditService = await checkPermission("services:write");
-  const canUpdateServiceStatus = await checkPermission("services:update_status");
+  const [canCreateQuotation, canEditService, canUpdateServiceStatus, canAuthorizeCredit, canReopen, lifecycle] =
+    await Promise.all([
+      checkPermission("quotations:write"),
+      checkPermission("services:write"),
+      checkPermission("services:update_status"),
+      checkPermission("services:authorize_execution_credit"),
+      checkPermission("services:reopen"),
+      getServiceLifecycleState(service.id, service.status),
+    ]);
   const canModifyService = service.status === "Inquiry" || service.status === "Quoted";
 
   const today = new Date().toISOString().split("T")[0];
@@ -241,7 +248,9 @@ export default async function ServiceDetailPage({
       {canUpdateServiceStatus && (
         <ServiceLifecycleActions
           serviceId={service.id}
-          status={service.status}
+          lifecycle={lifecycle}
+          canAuthorizeCredit={canAuthorizeCredit}
+          canReopen={canReopen}
           dictionary={dictionary}
         />
       )}
@@ -250,6 +259,7 @@ export default async function ServiceDetailPage({
         <ServiceCancellationActions
           serviceId={service.id}
           status={service.status}
+          lifecycle={lifecycle}
           dictionary={dictionary}
         />
       )}
