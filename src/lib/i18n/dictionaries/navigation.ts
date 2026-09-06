@@ -30,6 +30,13 @@ export interface NavigationDictionary {
     suppliers: string;
     users: string;
   };
+  sections: {
+    customersAndSales: string;
+    operations: string;
+    suppliersAndProcurement: string;
+    billingAndPayments: string;
+    administration: string;
+  };
 }
 
 export const navigationDictionaryEn: NavigationDictionary = {
@@ -64,6 +71,13 @@ export const navigationDictionaryEn: NavigationDictionary = {
     suppliers: "Suppliers",
     users: "Users",
   },
+  sections: {
+    customersAndSales: "Customers & Sales",
+    operations: "Operations",
+    suppliersAndProcurement: "Suppliers & Procurement",
+    billingAndPayments: "Billing & Payments",
+    administration: "Administration",
+  },
 };
 
 export const navigationDictionaryAr: NavigationDictionary = {
@@ -97,5 +111,12 @@ export const navigationDictionaryAr: NavigationDictionary = {
     settings: "الإعدادات",
     suppliers: "الموردون",
     users: "المستخدمون",
+  },
+  sections: {
+    customersAndSales: "العملاء والمبيعات",
+    operations: "العمليات",
+    suppliersAndProcurement: "الموردون والمشتريات",
+    billingAndPayments: "الفواتير والمدفوعات",
+    administration: "الإدارة",
   },
 };

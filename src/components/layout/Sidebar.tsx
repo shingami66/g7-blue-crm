@@ -14,6 +14,8 @@ import {
   X,
   BriefcaseBusiness,
   ShieldAlert,
+  ChevronDown,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -24,36 +26,97 @@ import {
   type NavigationDictionary,
 } from "@/lib/i18n/dictionaries/navigation";
 
-const navItems = [
-  { labelKey: "dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { labelKey: "customers", href: "/customers", icon: Users },
-  { labelKey: "services", href: "/services", icon: BriefcaseBusiness },
-  { labelKey: "quotations", href: "/quotations", icon: FileText },
-  { labelKey: "invoices", href: "/invoices", icon: Receipt },
-  { labelKey: "suppliers", href: "/suppliers", icon: Package },
-  { labelKey: "payments", href: "/payments", icon: CreditCard },
-  { labelKey: "reports", href: "/reports", icon: BarChart3 },
-] as const;
+export type NavSectionKey =
+  | "customersAndSales"
+  | "operations"
+  | "suppliersAndProcurement"
+  | "billingAndPayments"
+  | "administration";
 
-const bottomItems = [
-  { labelKey: "settings", href: "/settings", icon: Settings },
-] as const;
+interface NavChildItem {
+  key: string;
+  label: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+interface NavSection {
+  key: NavSectionKey;
+  title: string;
+  icon: LucideIcon;
+  children: NavChildItem[];
+}
+
+export function getSectionForPathname(pathname: string): NavSectionKey | null {
+  if (pathname === "/dashboard" || pathname === "/reports") return null;
+  if (
+    pathname === "/customers" ||
+    pathname.startsWith("/customers/") ||
+    pathname === "/quotations" ||
+    pathname.startsWith("/quotations/")
+  ) {
+    return "customersAndSales";
+  }
+  if (pathname === "/services" || pathname.startsWith("/services/")) {
+    return "operations";
+  }
+  if (pathname === "/suppliers" || pathname.startsWith("/suppliers/")) {
+    return "suppliersAndProcurement";
+  }
+  if (
+    pathname === "/invoices" ||
+    pathname.startsWith("/invoices/") ||
+    pathname === "/payments" ||
+    pathname.startsWith("/payments/")
+  ) {
+    return "billingAndPayments";
+  }
+  if (
+    pathname === "/settings" ||
+    pathname.startsWith("/settings/") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/")
+  ) {
+    return "administration";
+  }
+  return null;
+}
+
+export function isRouteActive(currentPathname: string, targetHref: string): boolean {
+  if (targetHref === "/dashboard") {
+    return currentPathname === "/dashboard";
+  }
+  return currentPathname === targetHref || currentPathname.startsWith(`${targetHref}/`);
+}
 
 export default function Sidebar({
   isAdmin = false,
   shellDirection = "ltr",
+  currentPathname,
 }: {
   isAdmin?: boolean;
   shellDirection?: "ltr" | "rtl";
+  currentPathname?: string;
 }) {
   const locale = useLocale();
   const dictionary: NavigationDictionary =
     locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn;
-  const pathname = usePathname();
+  const routerPathname = usePathname();
+  const pathname = currentPathname ?? routerPathname;
+
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<NavSectionKey | null>(() =>
+    getSectionForPathname(pathname),
+  );
+  const lastPathnameRef = useRef(pathname);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const wasOpenRef = useRef(false);
   const isRtl = shellDirection === "rtl";
+
+  if (lastPathnameRef.current !== pathname) {
+    lastPathnameRef.current = pathname;
+    setExpandedSection(getSectionForPathname(pathname));
+  }
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -73,79 +136,230 @@ export default function Sidebar({
     wasOpenRef.current = mobileOpen;
   }, [mobileOpen]);
 
-  const isActive = (href: string) => {
-    if (href === "/dashboard") return pathname === "/dashboard";
-    return pathname.startsWith(href);
+  const toggleSection = (key: NavSectionKey) => {
+    setExpandedSection((current) => (current === key ? null : key));
+  };
+
+  const sections: NavSection[] = [
+    {
+      key: "customersAndSales",
+      title: dictionary.sections.customersAndSales,
+      icon: Users,
+      children: [
+        {
+          key: "customers",
+          label: dictionary.modules.customers,
+          href: "/customers",
+          icon: Users,
+        },
+        {
+          key: "quotations",
+          label: dictionary.modules.quotations,
+          href: "/quotations",
+          icon: FileText,
+        },
+      ],
+    },
+    {
+      key: "operations",
+      title: dictionary.sections.operations,
+      icon: BriefcaseBusiness,
+      children: [
+        {
+          key: "services",
+          label: dictionary.modules.services,
+          href: "/services",
+          icon: BriefcaseBusiness,
+        },
+      ],
+    },
+    {
+      key: "suppliersAndProcurement",
+      title: dictionary.sections.suppliersAndProcurement,
+      icon: Package,
+      children: [
+        {
+          key: "suppliers",
+          label: dictionary.modules.suppliers,
+          href: "/suppliers",
+          icon: Package,
+        },
+      ],
+    },
+    {
+      key: "billingAndPayments",
+      title: dictionary.sections.billingAndPayments,
+      icon: Receipt,
+      children: [
+        {
+          key: "invoices",
+          label: dictionary.modules.invoices,
+          href: "/invoices",
+          icon: Receipt,
+        },
+        {
+          key: "payments",
+          label: dictionary.modules.payments,
+          href: "/payments",
+          icon: CreditCard,
+        },
+      ],
+    },
+  ];
+
+  const adminSection: NavSection = {
+    key: "administration",
+    title: dictionary.sections.administration,
+    icon: Settings,
+    children: [
+      {
+        key: "settings",
+        label: dictionary.modules.settings,
+        href: "/settings",
+        icon: Settings,
+      },
+      ...(isAdmin
+        ? [
+            {
+              key: "users",
+              label: dictionary.modules.users,
+              href: "/admin/users",
+              icon: ShieldAlert,
+            },
+          ]
+        : []),
+    ],
+  };
+
+  const renderSection = (section: NavSection) => {
+    const isExpanded = expandedSection === section.key;
+    const hasActiveChild = section.children.some((child) =>
+      isRouteActive(pathname, child.href),
+    );
+    const SectionIcon = section.icon;
+
+    return (
+      <div key={section.key} className="flex flex-col">
+        <button
+          type="button"
+          id={`nav-section-trigger-${section.key}`}
+          aria-expanded={isExpanded}
+          aria-controls={`nav-section-content-${section.key}`}
+          onClick={() => toggleSection(section.key)}
+          className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-start w-full ${
+            isExpanded || hasActiveChild
+              ? "text-white bg-on-primary-fixed-variant/5"
+              : "text-white/70 hover:text-white hover:bg-on-primary-fixed-variant/5"
+          }`}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <SectionIcon
+              size={20}
+              className={isExpanded || hasActiveChild ? "opacity-100" : "opacity-70"}
+              aria-hidden="true"
+            />
+            <span className="truncate">{section.title}</span>
+          </div>
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className={`shrink-0 transition-transform duration-200 ${
+              isExpanded ? "rotate-180 text-white opacity-100" : "text-white/60 opacity-60"
+            }`}
+          />
+        </button>
+
+        <div
+          id={`nav-section-content-${section.key}`}
+          role="region"
+          aria-labelledby={`nav-section-trigger-${section.key}`}
+          hidden={!isExpanded}
+          className={
+            !isExpanded
+              ? "hidden"
+              : `flex flex-col gap-1 mt-1 ${isRtl ? "pr-4 pl-0" : "pl-4 pr-0"}`
+          }
+        >
+          {section.children.map((child) => {
+            const active = isRouteActive(pathname, child.href);
+            const ChildIcon = child.icon;
+            return (
+              <PendingLink
+                key={child.href}
+                href={child.href}
+                pendingLabel={child.label}
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.03em] ${
+                  active
+                    ? `${isRtl ? "border-r-2" : "border-l-2"} border-tertiary-fixed text-white bg-on-primary-fixed-variant/10 font-semibold`
+                    : "text-white/70 hover:text-white hover:bg-on-primary-fixed-variant/5 font-medium"
+                }`}
+              >
+                <ChildIcon
+                  size={16}
+                  className={active ? "opacity-100" : "opacity-70"}
+                  aria-hidden="true"
+                />
+                <span className="truncate">{child.label}</span>
+              </PendingLink>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const navContent = (
     <>
       {/* Brand */}
-      <div className="mb-8 px-4">
-        <h1 className="text-[36px] leading-[44px] tracking-[-0.02em] font-bold text-white">
-          {dictionary.app.name}
-        </h1>
-        <p className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-white/70 mt-1">
-          {dictionary.app.subtitle}
-        </p>
-      </div>
-
-      {/* Main Nav */}
-      <div className="flex flex-col gap-1 flex-1">
-        {navItems.map((item) => {
-          const active = isActive(item.href);
-          const Icon = item.icon;
-          return (
-            <PendingLink
-              key={item.href}
-              href={item.href}
-              pendingLabel={dictionary.modules[item.labelKey]}
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${
-                active
-                  ? `${isRtl ? "border-r-2" : "border-l-2"} border-tertiary-fixed text-white bg-on-primary-fixed-variant/10`
-                  : "text-white/70 hover:text-white hover:bg-on-primary-fixed-variant/5"
-              }`}
-            >
-              <Icon size={20} className={active ? "opacity-100" : "opacity-70"} />
-              <span>{dictionary.modules[item.labelKey]}</span>
-            </PendingLink>
-          );
-        })}
-      </div>
-
-      {/* Admin Nav */}
-      {isAdmin && (
-        <div className="mt-4 mb-2 flex flex-col gap-1">
-          <div className="px-4 py-2">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-white/50">{dictionary.admin}</span>
+      <div className="mb-5 flex justify-center">
+        <style>{`
+          @keyframes g7-brand-ring {
+            0% {
+              transform: rotate(0deg);
+            }
+            12.5%, 100% {
+              transform: rotate(360deg);
+            }
+          }
+          .g7-brand-ring {
+            animation: g7-brand-ring 8s ease-in-out infinite;
+            transform-origin: center;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .g7-brand-ring {
+              animation: none;
+            }
+          }
+        `}</style>
+        <div
+          aria-label="G7 BLUE"
+          className="relative flex h-14 w-14 items-center justify-center"
+        >
+          <span
+            aria-hidden="true"
+            className="g7-brand-ring absolute inset-0 rounded-full border border-primary-fixed-dim/50 border-l-transparent"
+          />
+          <div className="relative z-10 text-center">
+            <div className="text-[1.75rem] font-bold leading-none tracking-[-0.08em] text-white">
+              G7
+            </div>
+            <div className="mt-0.5 pl-[0.3em] text-[0.55rem] font-semibold uppercase tracking-[0.3em] text-primary-fixed-dim">
+              BLUE
+            </div>
           </div>
-          <PendingLink
-            href="/admin/users"
-            pendingLabel={dictionary.modules.users}
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${
-              isActive("/admin/users")
-                ? `${isRtl ? "border-r-2" : "border-l-2"} border-tertiary-fixed text-white bg-on-primary-fixed-variant/10`
-                : "text-white/70 hover:text-white hover:bg-on-primary-fixed-variant/5"
-            }`}
-          >
-            <ShieldAlert size={20} className={isActive("/admin/users") ? "opacity-100" : "opacity-70"} />
-            <span>{dictionary.modules.users}</span>
-          </PendingLink>
         </div>
-      )}
+      </div>
 
-      {/* Bottom Nav */}
-      <div className={isAdmin ? "mt-2" : "mt-auto"}>
-        {bottomItems.map((item) => {
-          const active = isActive(item.href);
-          const Icon = item.icon;
+      {/* Main Navigation List */}
+      <div className="flex flex-col gap-1 flex-1 overflow-y-auto">
+        {/* Dashboard Standalone Link */}
+        {(() => {
+          const active = isRouteActive(pathname, "/dashboard");
           return (
             <PendingLink
-              key={item.href}
-              href={item.href}
-              pendingLabel={dictionary.modules[item.labelKey]}
+              href="/dashboard"
+              pendingLabel={dictionary.modules.dashboard}
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${
                 active
@@ -153,11 +367,47 @@ export default function Sidebar({
                   : "text-white/70 hover:text-white hover:bg-on-primary-fixed-variant/5"
               }`}
             >
-              <Icon size={20} className={active ? "opacity-100" : "opacity-70"} />
-              <span>{dictionary.modules[item.labelKey]}</span>
+              <LayoutDashboard
+                size={20}
+                className={active ? "opacity-100" : "opacity-70"}
+                aria-hidden="true"
+              />
+              <span>{dictionary.modules.dashboard}</span>
             </PendingLink>
           );
-        })}
+        })()}
+
+        {/* Functional Domain Accordions */}
+        {sections.map(renderSection)}
+
+        {/* Reports Standalone Link */}
+        {(() => {
+          const active = isRouteActive(pathname, "/reports");
+          return (
+            <PendingLink
+              href="/reports"
+              pendingLabel={dictionary.modules.reports}
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${
+                active
+                  ? `${isRtl ? "border-r-2" : "border-l-2"} border-tertiary-fixed text-white bg-on-primary-fixed-variant/10`
+                  : "text-white/70 hover:text-white hover:bg-on-primary-fixed-variant/5"
+              }`}
+            >
+              <BarChart3
+                size={20}
+                className={active ? "opacity-100" : "opacity-70"}
+                aria-hidden="true"
+              />
+              <span>{dictionary.modules.reports}</span>
+            </PendingLink>
+          );
+        })()}
+
+        {/* Administration Accordion at Bottom */}
+        <div className="mt-auto pt-4 border-t border-white/10">
+          {renderSection(adminSection)}
+        </div>
       </div>
     </>
   );

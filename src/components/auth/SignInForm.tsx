@@ -9,6 +9,7 @@ import {
 import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import PreparingWorkspace from "@/components/ui/PreparingWorkspace";
 
 type FlowMode =
   | "signIn"
@@ -68,10 +69,19 @@ function getSupportedSessionTaskKey(value: unknown): SessionTaskKey | null {
   return null;
 }
 
-export default function SignInForm() {
+export interface SignInFormProps {
+  preparingMessage?: string;
+  direction?: "ltr" | "rtl";
+}
+
+export default function SignInForm({
+  preparingMessage,
+  direction,
+}: SignInFormProps = {}) {
   const { signIn, errors, fetchStatus } = useSignIn();
   const router = useRouter();
   const [mode, setMode] = useState<FlowMode>("signIn");
+  const [isPreparingWorkspace, setIsPreparingWorkspace] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -130,8 +140,9 @@ export default function SignInForm() {
               return;
             }
 
+            setIsPreparingWorkspace(true);
             const url = decorateUrl("/dashboard");
-            if (url.startsWith("http")) {
+            if (typeof window !== "undefined") {
               window.location.assign(url);
               return;
             }
@@ -444,6 +455,15 @@ export default function SignInForm() {
           Back to sign in
         </button>
       </div>
+    );
+  }
+
+  if (isPreparingWorkspace) {
+    return (
+      <PreparingWorkspace
+        message={preparingMessage}
+        direction={direction}
+      />
     );
   }
 

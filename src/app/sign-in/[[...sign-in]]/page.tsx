@@ -1,6 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import SignInForm from "@/components/auth/SignInForm";
+import { getPublicRequestLocale } from "@/lib/i18n/session-locale";
+import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
+import { getDirection } from "@/lib/i18n";
 
 export default async function SignInPage() {
   const { userId } = await auth();
@@ -8,6 +11,10 @@ export default async function SignInPage() {
   if (userId) {
     redirect("/dashboard");
   }
+
+  const locale = await getPublicRequestLocale();
+  const shared = getSharedUiStates(locale);
+  const direction = getDirection(locale);
 
   return (
     <main
@@ -92,7 +99,10 @@ export default async function SignInPage() {
             </p>
           </div>
 
-          <SignInForm />
+          <SignInForm
+            preparingMessage={shared.bootstrap.preparingWorkspace}
+            direction={direction}
+          />
         </section>
       </div>
     </main>
