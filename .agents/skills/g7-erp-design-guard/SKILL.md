@@ -271,6 +271,8 @@ The guard does not create separate-task ceremony. Implementation, review, commit
 
 Preserve the following repository state and direction:
 
+### CURRENT IMPLEMENTED MECHANICS (repository behavior/history)
+
 - V1 work continues.
 - Feature 009 remains inactive.
 - Event ERP implementation remains inactive unless explicitly activated.
@@ -278,6 +280,12 @@ Preserve the following repository state and direction:
 - Design governance does not activate redesign.
 - Wednesday discovery answers are not required for generic design governance.
 - Supplier-specific future screens still depend on relevant product evidence.
+
+### TARGET LAYER 1 PRODUCT TRUTH (planning only; not shipped)
+
+- Layer 1 planning defines the closed single-company Event ERP presentation and interaction target while preserving the enduring visual, RTL/LTR, responsive, accessibility, permission-presentation, record-authority, and void/supersede rules in this guard.
+- Existing design guidance and delivered flows remain current evidence; no target capability is presented as implemented or accepted.
+- After this protected synchronization, the exact next implementation gate is `G1-SLICE` for a named bounded W1 slice; this guidance does not start Day 1 implementation.
 
 ## Output Rule
 

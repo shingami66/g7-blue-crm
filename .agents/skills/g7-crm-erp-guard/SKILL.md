@@ -54,6 +54,8 @@ When planning or reviewing, report only the material domain findings, preserved 
 
 ## Service Rules
 
+### CURRENT IMPLEMENTED MECHANICS (repository behavior)
+
 - Services replaced Projects.
 - Use this Service status machine: Inquiry, Quoted, Approved, Deposit Paid, In Progress, Completed, Cancelled.
 - Status exit criteria:
@@ -70,6 +72,10 @@ When planning or reviewing, report only the material domain findings, preserved 
 - Service numbers should use `SVC-YYYY-0001` and be generated server-side.
 - Treat the Service detail page as the operational command center for service info, quotation, deposit invoice, final invoice, payments, notes/activity, and future suppliers/costing.
 - Do not build supplier costing inside Service unless explicitly approved.
+
+### TARGET LAYER 1 PRODUCT TRUTH (planning only; not implemented)
+
+The Layer 1 target separates payment state, operational readiness, execution start, completion, financial close, and accounting close. The Service status machine and deposit prerequisite above remain current mechanics until an authorized correction/migration and runtime slice establish the target; no migration or runtime implementation is asserted by this guard.
 
 ## Quotation Rules
 
@@ -141,6 +147,8 @@ When planning or reviewing, report only the material domain findings, preserved 
 
 ## Payment Rules
 
+### CURRENT IMPLEMENTED MECHANICS (repository behavior)
+
 - Payment must be linked to an invoice.
 - Payment is connected to Service through the Invoice.
 - If `service_id` is stored on payments for query convenience, it must match the invoice's `service_id` and be enforced in the data layer, preferably with database design.
@@ -153,6 +161,8 @@ When planning or reviewing, report only the material domain findings, preserved 
 - Do not mark a Service as Deposit Paid without a real recorded payment.
 
 ## Supplier/Future ERP Rules
+
+### CURRENT IMPLEMENTED MECHANICS (repository behavior and deferred scope)
 
 - Suppliers are basic master data now.
 - Supplier Operations V1 is complete for internal, Service-scoped Allocation and Supplier Booking create/cancel workflows. Supplier Bookings use the Supplier Booking / SBK terminology; do not use Internal PO / Purchase Order. Standalone Booking routes, portals, customer-facing documents, invoices/payments, actual costing, and margin reporting remain deferred.
@@ -259,6 +269,23 @@ The following remain deferred:
 - public/customer portal supplier cost exposure
 - quotation automation from supplier cost
 Do not mark these complete.
+
+## Layer 1 Cost and Margin Target
+
+### CURRENT IMPLEMENTED MECHANICS (repository behavior)
+
+The approved current slice is internal Supplier Allocation cost estimation with permission-aware visibility; broader supplier costing, margin reporting, supplier payments, and accounting behavior remain deferred as stated above.
+
+### TARGET LAYER 1 PRODUCT TRUTH (planning only; not implemented)
+
+When the authorized Layer 1 costing slice is implemented, preserve these distinct equations and truth planes:
+
+- Estimate/Base Budget + Event Contingency = Approved Budget Cost.
+- Approved Commitment -> Open Commitment -> Actual Cost -> Paid/Outstanding.
+- Actual Cost + ETC = EAC.
+- Net Approved Commercial Value - EAC = Forecast Margin.
+- Final Net Approved Commercial Value - Final Actual Event Cost = Actual Event Margin.
+- Operational truth, managerial truth, and accounting truth are separate planes; tax/accounting activation remains professionally gated and is not implemented by this guidance.
 
 ## Supplier Allocation Status State Machine
 Approved statuses: `draft`, `planned`, `selected`, `cancelled`

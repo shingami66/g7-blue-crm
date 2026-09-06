@@ -1,14 +1,18 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Resolve the installed repository version and read the relevant bundled guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
 <!-- END:nextjs-agent-rules -->
 
 # G7 BLUE CRM — Agent Project Guidance
 
 ## G7 Delegated Writer Execution
 
-For bounded G7 application work, the Controller assigns one logical Writer lane. `$agy-delegate` may provide that Writer when delegation is requested. The normal lifecycle is:
+For bounded G7 application work, the Controller assigns one logical Writer lane in the active coding harness. The normal lifecycle is:
 
 Owner request
 → Controller
@@ -18,9 +22,11 @@ Owner request
 → logical Writer-lane repair for confirmed in-scope findings
 → Controller revalidation and bounded rereview.
 
+The canonical repository workflow is coding-harness-neutral. Either supported coding harness (Codex or Antigravity) executes the complete workflow independently within its own native Writer and independent Reviewer contexts. Codex does not launch Antigravity; Antigravity does not launch Codex. No cross-provider switching or automatic failover is part of the default workflow. Optional cross-provider tooling under `.agents/skills/agy-delegate/` remains a future optional capability and is not invoked by or required for the everyday workflow.
+
 The Controller owns routine discovery and compiles compact evidence capsules plus task-specific delta prompts; standing repository law remains here and in the agent-control skill rather than being repeated in every routine prompt.
 
-The Writer may inspect and modify directly affected files inside the task-authorized working boundary, including relevant tests, local types/contracts, and direct callers/consumers required to complete the task. Exact-file allowlists remain binding when the task explicitly specifies them or when governance-sensitive, database/schema/RLS/RPC/migration, security, financial-authority, protected-infrastructure, or other materially high-risk work makes a broader envelope unsafe. A directly affected local file inside the authorized boundary is not by itself a HOLD or new Owner-approval condition; stop before a protected, materially excluded, destructive, database, deployment, production, or genuinely scope-expanding mutation. The Writer may run only task-authorized local focused tests, TypeScript, lint, or related validation inside that boundary; it is not the independent validator or final reviewer. The Writer never stages, commits, pushes, applies SQL, deploys, or changes production. The Controller owns independent validation, evidence, and the final verdict. A same logical Writer does not require the same provider conversation: prefer resumption, but after a classified authentication, session, transport, or comparable environment failure, preserve work, avoid repeated discovery, ensure no prior mutating Writer remains active when checkable, and start one fresh bounded session with a Recovery Capsule. Never run two mutating Writers concurrently. Do not make `--dangerously-skip-permissions` a default; it requires explicit Owner authorization for the affected task only. Never expose authentication material or substitute an unapproved implementer. The model is selected by the task or current AGY configuration; this standing file does not freeze a model version.
+The delegated Writer (or the current coding harness Writer) may inspect and modify directly affected files inside the task-authorized working boundary, including relevant tests, local types/contracts, and direct callers/consumers required to complete the task. Exact-file allowlists remain binding when the task explicitly specifies them or when governance-sensitive, database/schema/RLS/RPC/migration, security, financial-authority, protected-infrastructure, or other materially high-risk work makes a broader envelope unsafe. A directly affected local file inside the authorized boundary is not by itself a HOLD or new Owner-approval condition; stop before a protected, materially excluded, destructive, database, deployment, production, or genuinely scope-expanding mutation. The Writer may run only task-authorized local focused tests, TypeScript, lint, or related validation inside that boundary; it is not the independent validator or final reviewer. The Writer never stages, commits, pushes, applies SQL, deploys, or changes production. The Controller owns independent validation, evidence, and the final verdict. A same logical Writer does not require the same provider conversation: prefer resumption, but after a classified authentication, session, transport, or comparable environment failure, preserve work, avoid repeated discovery, ensure no prior mutating Writer remains active when checkable, and start one fresh bounded session with a Recovery Capsule. Never run two mutating Writers concurrently. Do not make `--dangerously-skip-permissions` a default; it requires explicit Owner authorization for the affected task only. Never expose authentication material or substitute an unapproved implementer. The model is selected by the task or current coding harness configuration; this standing file does not freeze a model version.
 
 ## GOVERNANCE PRECEDENCE AND SAFETY
 
@@ -36,6 +42,8 @@ The Writer may inspect and modify directly affected files inside the task-author
    Defines task-specific scope only.
 
 A task prompt must not weaken the preserved product, security, database, Git, or deployment safeguards. A clear bounded Owner instruction authorizes ordinary in-scope work; the task boundary may be defined by the primary feature/domain/behavior, directly affected implementation, relevant tests, local types/contracts, and direct callers/consumers. Task-specific instructions may add tighter restrictions, including exact-file allowlists. Execution-mode labels remain available for specialized operations but are not required for ordinary bounded work.
+
+The single canonical skill set in `.agents/skills/` applies equally across all supported coding harnesses. Do not duplicate skills per provider. The active coding harness reads `AGENTS.md`, inspects available repository skills, routes strictly to materially relevant skills for the task domain, and follows them during implementation and review.
 
 ## Project Identity
 
@@ -100,7 +108,14 @@ Do not treat the product as a generic billing-only CRM. Business-domain decision
 ## Independent Review
 
 - After a mutating implementation and its validation, use separate read-only/findings-only review. The Reviewer reports findings only and never repairs; confirmed in-scope findings return to the same logical Writer lane for validation and targeted rereview.
-- OCR-assisted review is delegation-only: run `ocr delegate preview --format json`, then `ocr delegate rule --format json <reviewable paths>`; a separate native Codex Reviewer performs the findings-only reasoning over the diff, source, tests, and resolved rules. Do not run `ocr review` or `ocr llm test`, configure an OCR provider/model, or request OCR credentials. A missing OCR LLM endpoint is irrelevant and must not produce HOLD when deterministic delegation is available; retain the existing independent-review-capacity and required-evidence HOLD gates.
+- OCR-assisted review is delegation-only: run `ocr delegate preview --format json`, then `ocr delegate rule --format json <reviewable paths>`; a fresh independent native Reviewer in the current coding harness performs the findings-only reasoning over the diff, source, tests, and resolved rules. Do not run `ocr review` or `ocr llm test`, configure an OCR provider/model, or request OCR credentials. A missing OCR LLM endpoint is irrelevant and must not produce HOLD when deterministic delegation is available; retain the existing independent-review-capacity and required-evidence HOLD gates.
+- Reviewer independence requires:
+  1. a separate context/session from the Writer's reasoning context;
+  2. read-only and findings-only authority;
+  3. no mutation authority (no editing, staging, committing, or deploying);
+  4. no repair execution;
+  5. substantive evaluation of the actual working-tree diff, source code, tests, and resolved OCR rules.
+  Provider diversity is not required: Codex uses a fresh native Codex Reviewer; Antigravity uses a fresh native Antigravity Reviewer (such as a subagent or separate read-only context). If the current runtime cannot create a genuinely separate native Reviewer context, the task must return HOLD rather than substitute unverified self-review.
 - Preserve one Writer per mutation slice and close review workers before any repair or commit stage.
 - If required review capacity is unavailable, return `HOLD` with the review marked incomplete; do not relabel self-review as independent review.
 
@@ -119,6 +134,8 @@ Standing execution, repository, secret, SQL/Supabase, validation, and HOLD contr
 Task prompts should include only task-specific scope, exceptions, expected state, validation, and next action. Routine prompts should not repeat standing prohibitions unless they create a special exception, address a material risk directly, or are high-risk and require explicit gates.
 
 ## Approved ERP Domain Rules
+
+### CURRENT IMPLEMENTED MECHANICS (repository behavior)
 
 - The core operational entity is Service / Booking, not Project.
 - The locked workflow is Customer Profile -> Service -> Quotation -> Invoice -> Payment.
@@ -142,6 +159,12 @@ Task prompts should include only task-specific scope, exceptions, expected state
 - Do not add fake Tax Invoice, ZATCA, FATOORA, QR, XML, clearance, or reporting behavior.
 - Financial records must use void/cancel/reversal workflows rather than hard deletion. Use soft delete for business records where applicable.
 - The current implemented Company Settings VAT field is `company_settings.vat_mode`.
+
+### TARGET LAYER 1 PRODUCT TRUTH (planning only; not implemented)
+
+- Payment state, operational readiness, execution start, completion, financial close, and accounting close are separate lifecycle concepts. The current `Deposit Paid` mechanics above remain current implementation evidence until an authorized correction/migration and runtime slice replace them.
+- Supplier Booking/Allocation is not an Approved Commitment, receipt/acceptance, Vendor Bill, payable, supplier payment, Actual Cost, or accounting entry. No target migration, accounting entry, or completion claim is implied here.
+- The target is a closed single-company Event ERP model; current CRM + Billing behavior remains the implemented baseline until separately authorized implementation and acceptance gates close.
 
 ## Auth / RBAC Facts
 
@@ -203,7 +226,13 @@ Never skip review gates for SQL, migrations, RLS, RPC, triggers, grants/revokes,
 
 ## Product Direction
 
-G7 BLUE CRM is moving toward Events CRM + Billing.
+### CURRENT IMPLEMENTED MECHANICS
+
+G7 BLUE CRM currently operates as an Events CRM + Billing system with the Service-linked quotation, invoice, payment, and operational rules above.
+
+### TARGET LAYER 1 PRODUCT TRUTH (planning only; not implemented)
+
+Layer 1 planning targets a closed single-company Event ERP model. This wording does not activate runtime or database implementation; current behavior remains authoritative until its own implementation, migration, professional, Owner, and acceptance gates are satisfied.
 
 Do not start invoice schema work before business-domain answers are documented. Core Service-linked quotation, invoice, payment, VAT safety, and deposit/final invoice decisions are documented; leads/inquiries, vendors/suppliers, event type taxonomy, production RLS, and real-vs-fake demo data remain decision gates.
 

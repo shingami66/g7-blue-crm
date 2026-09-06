@@ -1,12 +1,8 @@
 ---
 name: agy-delegate
 description: >-
-  Delegate a coding task to the Google Antigravity CLI (`agy`) as a background implementer, then review
-  its diff and land it yourself. Use this whenever the user wants to hand implementation work to
-  Antigravity or agy - phrasings like "have Antigravity do X", "delegate this to agy", "run it through
-  agy", or "use Antigravity to implement/fix/refactor" - or wants to run a queue of coding tasks
-  through agy while staying the reviewer. DO NOT USE for tasks small enough to do inline, or when the
-  user wants the code written directly without delegating.
+  Future optional capability: Delegate a coding task across providers (Codex / Antigravity CLI) or run host-supervised turns.
+  Not required for canonical everyday repository tasks, which execute directly within the current coding harness.
 license: MIT
 compatibility: Requires the `agy` CLI installed and authenticated, Node.js, and git. The orchestrator must be able to run shell commands and read files. Shell examples assume bash/zsh (macOS/Linux, or Git Bash/WSL on Windows).
 metadata:
@@ -141,6 +137,7 @@ nitpicks rather than silently keeping them) and **stop for scope changes** (if c
 going beyond the brief, ask - don't expand the mandate yourself). The full treatment is in
 [references/review-and-land.md](references/review-and-land.md).
 
+
 ## References
 
 - [references/writing-the-brief.md](references/writing-the-brief.md) - how to write a brief Antigravity
@@ -151,3 +148,38 @@ going beyond the brief, ask - don't expand the mandate yourself). The full treat
   boundary, and the rework cycle via `--resume-last`.
 - [references/multi-task-queues.md](references/multi-task-queues.md) - running a sequential queue:
   carrying constraints forward, progress tracking, and the end-of-run coherence check.
+
+## Provider-Neutral Execution (Codex + Antigravity)
+
+> [!NOTE]
+> **Status: Future Optional Capability**
+> This shared cross-provider execution tooling (`host-runner.mjs`, `controlled-task.mjs`) is an optional infrastructure capability preserved for future automation or cross-provider orchestration scenarios. It is **NOT** invoked by or required for the canonical everyday repository workflow.
+> The canonical everyday workflow executes entirely within the active coding harness alone (Codex or Antigravity) using native Writer and independent native Reviewer contexts.
+
+The repository provides a shared, host-owned execution foundation supporting both **Antigravity CLI** and **Codex CLI**:
+
+1. **Unified Host Runner (`host-runner.mjs`)**:
+   Run bounded tasks through either provider using the identical result contract:
+   ```bash
+   # Antigravity dispatch:
+   node "<skill-dir>/scripts/host-runner.mjs" --provider agy --brief brief.txt --cd /path/to/repo
+   # Codex dispatch:
+   node "<skill-dir>/scripts/host-runner.mjs" --provider codex --brief brief.txt --cd /path/to/repo
+   # Read-only Reviewer run (enforces pre/post SHA-256 fingerprinting):
+   node "<skill-dir>/scripts/host-runner.mjs" --provider codex --read-only --brief review-brief.txt --cd /path/to/repo
+   ```
+
+2. **Controlled Task State Machine (`controlled-task.mjs`)**:
+   Thin, deterministic host-owned state machine executing the complete bounded lifecycle from a structured task contract:
+   - Acquires host-owned logical Writer mutex (with PID and process start-time verification).
+   - Dispatches Writer through preferred provider.
+   - Automatically classifies failures (`TIMEOUT`, `AUTHENTICATION_FAILURE`, `SESSION_EXHAUSTION`, `TRANSPORT_FAILURE`, `ENVIRONMENT_FAILURE`, `MODEL_CAPABILITY_FAILURE`).
+   - Executes safe provider failover with Recovery Capsule when authorized.
+   - Runs manifest-driven host validation.
+   - Generates deterministic Open Code Review delegation packet (`ocr delegate preview` + `ocr delegate rule`).
+   - Launches fresh independent read-only Reviewer.
+   - Performs findings reconciliation and bounded repair loop by the same logical Writer.
+   - Produces structured `execution-packet.json` for Controller evaluation.
+   ```bash
+   node "<skill-dir>/scripts/controlled-task.mjs" --contract path/to/task-contract.json
+   ```
