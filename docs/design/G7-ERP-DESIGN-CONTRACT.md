@@ -162,17 +162,48 @@ Use the existing icon family consistently, with icons supporting recognition rat
 
 The shell provides stable navigation, locale/direction context, account context, permission-aware entry points, and a predictable content container without obscuring the primary task.
 
+- **Shell Branding:** Branding uses the compact circular G7 / BLUE mark centered in the shell header (replacing legacy large textual headers), preserving breathing room and layout proportion without visual distraction.
+- **Workspace Entry vs. Route Transitions:** The post-authentication bootstrap presentation ("Preparing your workspace…") is distinct from ordinary destination-shaped route loading (`WorkspaceSkeleton`). It provides clear, localized state feedback while user profile and tenant session state resolve, before handing off cleanly to the destination.
+- **Module Authorization Boundary:** The exact current global route grouping is an implemented snapshot and does not itself authorize future modules or roadmap waves.
+
 ## 36. Sidebar
 
 The sidebar presents business domains in a stable order, hides unauthorized navigation, preserves active context, and remains direction-aware. It must not become a dumping ground for every future module.
+
+- **Current Implemented Global Navigation Snapshot:**
+  - **Dashboard** — standalone
+  - **Customers & Sales:**
+    - Customers (`/customers`)
+    - Quotations (`/quotations`)
+  - **Operations:**
+    - Services (`/services`)
+  - **Suppliers & Procurement:**
+    - Suppliers (`/suppliers`)
+  - **Billing & Payments:**
+    - Invoices (`/invoices`)
+    - Payments (`/payments`)
+  - **Reports** — standalone (`/reports`)
+  - **Administration:**
+    - Settings (`/settings`)
+    - Users (`/settings/users`) [permission/admin-gated: `users:manage`]
+- **Workspace-Level Exposure Only:** The global sidebar exposes workspace-level destinations, not deep record-level or contextual sub-routes.
+- **Deep Context Confinement:** Deep Service and Supplier procurement, quotation, commitment, and receipt navigation remains inside the owning workspace and is not promoted to the global sidebar.
+- **Hierarchy Boundary:** Maximum global hierarchy depth is strictly two levels (domain section header → destination links).
 
 ## 37. Collapsible Navigation Groups
 
 Use grouped domains and progressive disclosure for deeper ERP areas. Group expansion state must not erase active location or hide a route the user is authorized to use.
 
+- **Single Accordion Expansion:** Only one accordion domain is expanded at a time to prevent vertical visual bloat and preserve viewport ergonomics.
+- **Route-Aware Expansion:** Active route context automatically opens its owning domain group and keeps the active destination visually indicated.
+- **Bilingual & Directional Harmony:** RTL mirrors shell placement and chevron indicator orientation without creating a separate Arabic navigation model or divergent interaction rules.
+
 ## 38. Mobile Navigation
 
 Mobile navigation must have an accessible menu control, clear open/close state, focus behavior, overlay dismissal, direction-aware placement, and parity for critical authorized routes.
+
+- **Information Architecture Parity:** Mobile sheet and desktop sidebar preserve the exact same two-level information architecture, accordion behavior, and permission rules.
+- **Accessibility & Touch Safety:** Accordion headers and destination links maintain accessible target sizing, explicit ARIA expansion attributes (`aria-expanded`, `aria-controls`), and keyboard accessibility.
 
 ## 39. Topbar
 
