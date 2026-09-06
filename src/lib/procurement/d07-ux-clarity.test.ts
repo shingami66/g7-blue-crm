@@ -3,12 +3,34 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 import { getProcurementCommitmentDictionary } from "../i18n/dictionaries/procurement-commitments.ts";
+import { getServicesDictionary } from "../i18n/dictionaries/services.ts";
 
 const REPO_ROOT = join(import.meta.dirname, "../../..");
 
 function read(relativePath: string) {
   return readFileSync(join(REPO_ROOT, relativePath), "utf8");
 }
+
+test("Service Detail is a compact procurement summary with a dedicated workspace", () => {
+  const servicePage = read("src/app/(dashboard)/services/[id]/page.tsx");
+  const summary = read("src/app/(dashboard)/services/[id]/ProcurementSummaryCard.tsx");
+  const workspacePage = read("src/app/(dashboard)/services/[id]/procurement/page.tsx");
+  const commitmentsPage = read("src/app/(dashboard)/services/[id]/commitments/page.tsx");
+
+  assert.match(servicePage, /<ProcurementSummaryCard/);
+  assert.match(servicePage, /returnTo=\{currentServiceUrl\}/);
+  assert.match(servicePage, /appendReturnTo\(`\/services\/\$\{service\.id\}\/commitments`, currentServiceUrl\)/);
+  assert.doesNotMatch(servicePage, /<ProcurementRequirementPanel|SupplierAllocationsPanel|SupplierBookingsPanel/);
+  assert.match(summary, /openRequirements|candidateSuppliers|supplierQuotations|selectedSupplier/);
+  assert.match(summary, /workspaceHref/);
+  assert.match(summary, /formatUiNumber/);
+  assert.match(workspacePage, /<ProcurementPackageWorkspace/);
+  assert.match(workspacePage, /checkPermission\("supplier_costing:write"\)/);
+  assert.match(workspacePage, /<RecordBackButton[\s\S]*href=\{returnTo\}/);
+  assert.match(commitmentsPage, /<RecordBackButton[\s\S]*href=\{returnTo\}/);
+  assert.doesNotMatch(workspacePage, /←|→/);
+  assert.doesNotMatch(commitmentsPage, /←|→/);
+});
 
 test("W4 operational numbers use the shared Latin-digit and bidi-safe display contract", () => {
   const workspace = read("src/app/(dashboard)/services/[id]/commitments/CommitmentReceiptWorkspace.tsx");
@@ -20,6 +42,75 @@ test("W4 operational numbers use the shared Latin-digit and bidi-safe display co
   assert.match(workspace, /formatUiQuantity\(dictionary\.locale, receipt\.actualQuantity/);
   assert.doesNotMatch(workspace, /new Intl\.NumberFormat|String\(receipt\.(actualQuantity|actualHours)\)/);
   assert.match(history, /formatUiNumber/);
+});
+
+test("D07 workspace presents secondary authority surfaces as clear collapsible sections", () => {
+  const servicePage = read("src/app/(dashboard)/services/[id]/page.tsx");
+  const workspace = read("src/app/(dashboard)/services/[id]/commitments/CommitmentReceiptWorkspace.tsx");
+  const cancellation = read("src/app/(dashboard)/services/[id]/ServiceCancellationActions.tsx");
+
+  assert.match(workspace, /dictionary\.fields\.documents/);
+  assert.match(workspace, /dictionary\.fields\.receipt/);
+  assert.match(workspace, /dictionary\.fields\.amendment/);
+  assert.match(workspace, /dictionary\.forms\.executeAction/);
+  assert.match(workspace, /formatUiDate\(dictionary\.locale, commitment\.approvedAt\)/);
+  assert.match(workspace, /formatUiDate\(dictionary\.locale, amendment\.approvedAt\)/);
+  assert.doesNotMatch(workspace, /<details open className="overflow-hidden/);
+  assert.doesNotMatch(workspace, /<details open=\{commitment\.receipts/);
+  assert.doesNotMatch(workspace, /<details open=\{commitment\.amendments/);
+  assert.match(workspace, /dictionary\.fields\.openAmount/);
+  assert.match(cancellation, /<details/);
+  assert.match(cancellation, /advancedActions/);
+  assert.match(servicePage, /<ServiceCancellationActions/);
+});
+
+test("D07 labels preserve the locked English and Arabic workflow language", () => {
+  const english = getProcurementCommitmentDictionary("en");
+  const arabic = getProcurementCommitmentDictionary("ar");
+  const servicesEnglish = getServicesDictionary("en");
+  const servicesArabic = getServicesDictionary("ar");
+
+  assert.equal(english.fields.amendmentType, "Amendment type");
+  assert.equal(english.fields.amendmentAmount, "Amendment amount");
+  assert.equal(english.fields.approvalEvidenceReference, "Approval evidence reference");
+  assert.equal(english.forms.action, "Action");
+  assert.equal(english.forms.executeAction, "Execute Action");
+  assert.equal(arabic.fields.amendmentType, "نوع التعديل");
+  assert.equal(arabic.fields.amendmentAmount, "قيمة التعديل");
+  assert.equal(arabic.fields.approvalEvidenceReference, "مرجع دليل الاعتماد");
+  assert.equal(arabic.fields.receipt, "استلام الخدمة");
+  assert.equal(arabic.fields.receivedAmount, "قيمة الجزء المستلم من الالتزام");
+  assert.equal(servicesEnglish.serviceStatusControl.advancedActions, "Advanced Actions");
+  assert.equal(servicesArabic.serviceStatusControl.advancedActions, "إجراءات متقدمة");
+  assert.equal(servicesEnglish.serviceLifecycle.actions.updateAction, "Update lifecycle state");
+  assert.equal(servicesArabic.serviceLifecycle.actions.updateAction, "تحديث حالة دورة الحياة");
+  assert.equal(servicesEnglish.commitmentSummary.title, "Approved Commitments & Receipts");
+  assert.equal(servicesArabic.commitmentSummary.title, "الالتزامات المعتمدة والاستلام");
+});
+
+test("Service Detail enforces the compact operational summary visual hierarchy", () => {
+  const servicePage = read("src/app/(dashboard)/services/[id]/page.tsx");
+  const lifecycleActions = read("src/app/(dashboard)/services/[id]/ServiceLifecycleActions.tsx");
+  const commitmentCard = read("src/app/(dashboard)/services/[id]/CommitmentSummaryCard.tsx");
+
+  // Verify visual hierarchy order in page:
+  // Lifecycle Summary -> Key Facts -> Related Quotations -> Procurement -> Commitments -> Billing -> Activity -> Advanced Actions
+  assert.match(
+    servicePage,
+    /<ServiceLifecycleActions[\s\S]*?<SectionHeader title=\{dictionary\.detail\.sections\.serviceSchedule\}[\s\S]*?<RelatedQuotationsCard[\s\S]*?<ProcurementSummaryCard[\s\S]*?<CommitmentSummaryCard[\s\S]*?<ServiceBillingSummaryCard[\s\S]*?<ServiceActivityHistory[\s\S]*?<ServiceCancellationActions/,
+  );
+
+  // Verify lifecycle compaction and secondary collapsible mutation
+  assert.match(lifecycleActions, /grid-cols-2 sm:grid-cols-3 lg:grid-cols-6/);
+  assert.match(lifecycleActions, /isUpdateOpen/);
+  assert.match(lifecycleActions, /aria-controls="service-lifecycle-update-panel"/);
+  assert.match(lifecycleActions, /dictionary\.serviceLifecycle\.actions\.updateAction/);
+
+  // Verify CommitmentSummaryCard adheres to formatting and isolation contracts
+  assert.match(commitmentCard, /formatSarAmount/);
+  assert.match(commitmentCard, /formatUiNumber/);
+  assert.match(commitmentCard, /isolateBidiText/);
+  assert.match(commitmentCard, /summary\.openWorkspace/);
 });
 
 test("Commitments workspace financial metrics preserve natural RTL cell alignment with LTR numeric spans", () => {
@@ -102,3 +193,5 @@ test("Commitments workspace canonical date-only input contracts (approvedAt and 
   assert.doesNotMatch(workspace, /<input[^>]*ref=\{approvedAtPickerRef\}[^>]*name=/);
   assert.doesNotMatch(workspace, /<input[^>]*ref=\{performanceDatePickerRef\}[^>]*name=/);
 });
+
+

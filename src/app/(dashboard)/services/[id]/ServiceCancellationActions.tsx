@@ -57,20 +57,22 @@ export default function ServiceCancellationActions({ serviceId, status, lifecycl
   if (!isCancellable) return null;
 
   return (
-    <section
+    <details
       aria-labelledby="service-danger-zone-title"
       aria-busy={isPending || undefined}
       className="overflow-hidden rounded-xl border border-error/20 bg-surface-container-lowest"
     >
-      <div className="border-b border-error/20 bg-surface-bright px-5 py-3">
-        <h3 id="service-danger-zone-title" className="font-semibold text-error">
-          {dictionary.serviceStatusControl.dangerZoneTitle}
+      <summary className="cursor-pointer list-none bg-surface-bright px-5 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error">
+        <h3 id="service-danger-zone-title" className="font-semibold text-on-surface">
+          {dictionary.serviceStatusControl.advancedActions}
         </h3>
         <p className="mt-1 text-[13px] text-on-surface-variant">
           {dictionary.serviceStatusControl.dangerZoneHint}
         </p>
-      </div>
-      <div className="space-y-3 p-5">
+      </summary>
+      <section className="border-t border-error/20 p-5">
+        <h4 className="text-[14px] font-semibold text-error">{dictionary.serviceStatusControl.dangerZoneTitle}</h4>
+        <div className="mt-3 space-y-3">
         {!isCancellationOpen ? (
           <button
             ref={cancelTriggerRef}
@@ -147,7 +149,8 @@ export default function ServiceCancellationActions({ serviceId, status, lifecycl
             {dictionary.serviceStatusControl.updatedSuccessfully}
           </p>
         )}
-      </div>
-    </section>
+        </div>
+      </section>
+    </details>
   );
 }

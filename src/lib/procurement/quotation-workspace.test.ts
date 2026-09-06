@@ -13,6 +13,9 @@ const DETAIL_PAGE = join(REPO_ROOT, "src/app/(dashboard)/suppliers/[id]/quotatio
 const HISTORY_COMPONENT = join(REPO_ROOT, "src/app/(dashboard)/suppliers/[id]/SupplierQuotationHistory.tsx");
 const FORM_COMPONENT = join(REPO_ROOT, "src/app/(dashboard)/suppliers/[id]/quotations/SupplierQuotationForm.tsx");
 const DETAIL_COMPONENT = join(REPO_ROOT, "src/app/(dashboard)/suppliers/[id]/quotations/SupplierQuotationDetail.tsx");
+const SERVICE_PAGE = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/page.tsx");
+const PROCUREMENT_WORKSPACE_PAGE = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/procurement/page.tsx");
+const PROCUREMENT_SUMMARY_CARD = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/ProcurementSummaryCard.tsx");
 const RETURN_TO_HELPER = join(REPO_ROOT, "src/lib/record-navigation/queries.ts");
 
 function read(path: string) {
@@ -95,6 +98,21 @@ test("Dedicated quotation detail keeps header identity, compact lines, and priva
   assert.match(component, /documentsAccessible/);
   assert.doesNotMatch(component, /lineEvidenceRef:|supplierReference.*requirement/i);
   assert.doesNotMatch(component, /score|rank|comparison/i);
+});
+
+test("Service Detail removes allocation and booking presentation but keeps procurement quotation navigation", () => {
+  const servicePage = read(SERVICE_PAGE);
+  const procurementWorkspacePage = read(PROCUREMENT_WORKSPACE_PAGE);
+  const procurementSummaryCard = read(PROCUREMENT_SUMMARY_CARD);
+
+  assert.doesNotMatch(servicePage, /SupplierAllocationsPanel|SupplierBookingsPanel|getSupplierAllocationsByServiceId|getSupplierBookingsByServiceId/);
+  assert.match(servicePage, /<ProcurementSummaryCard/);
+  assert.match(procurementSummaryCard, /workspaceHref/);
+  assert.match(procurementSummaryCard, /encodeURIComponent\(returnTo\)/);
+  assert.match(procurementWorkspacePage, /canReadCommitments/);
+  assert.match(procurementWorkspacePage, /PROCUREMENT_COMMITMENT_PERMISSIONS\.read/);
+  assert.doesNotMatch(servicePage, /checkPermission\("supplier_costing:write"\)/);
+  assert.match(procurementWorkspacePage, /<ProcurementPackageWorkspace/);
 });
 
 test("Quotation copy and Service quotation navigation remain bilingual", () => {

@@ -336,8 +336,8 @@ test("26-28. Operational subflow files and PDF/VAT surfaces remain untouched by 
   const billingWorkspace = readFileSync(BILLING_WORKSPACE, "utf8");
   assert.match(billingWorkspace, /BillingPanel/);
   assert.match(detail, /ApprovedBillingScopesCard/);
-  assert.match(detail, /SupplierAllocationsPanel/);
-  assert.match(detail, /SupplierBookingsPanel/);
+  assert.match(detail, /ProcurementSummaryCard/);
+  assert.doesNotMatch(detail, /SupplierAllocationsPanel|SupplierBookingsPanel/);
 
   assert.equal(getSharedUiStates("en").accessDenied.title, "Access denied");
 });

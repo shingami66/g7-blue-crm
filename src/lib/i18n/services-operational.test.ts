@@ -212,7 +212,8 @@ test("1a. Supplier secondary collections default to current records with an all-
   assert.equal(ar.supplierAllocations.tabs.history, "كل السجلات");
   assert.equal(en.supplierBookings.tabs.history, "All records");
   assert.equal(ar.supplierBookings.tabs.history, "كل السجلات");
-  assert.match(detail, /onlyActive: !showSupplierHistory/);
+  assert.match(detail, /ProcurementSummaryCard/);
+  assert.doesNotMatch(detail, /SupplierAllocationsPanel|SupplierBookingsPanel|showSupplierHistory/);
   assert.match(allocations, /showSupplierHistory=true/);
   assert.match(bookings, /showSupplierHistory=true/);
 });
@@ -690,8 +691,8 @@ test("8b. ABS draft-create action client contracts and EN/AR copy", () => {
   assert.doesNotMatch(createAction, /voidApproved|supersedeApproved|discardApproved|approveApproved/);
 
   const serviceDetail = read(SERVICE_DETAIL);
-  assert.match(serviceDetail, /approvedBillingScopes:create/);
-  assert.match(serviceDetail, /canCreateDraft/);
+  assert.match(serviceDetail, /ProcurementSummaryCard/);
+  assert.doesNotMatch(serviceDetail, /approvedBillingScopes:create|canCreateDraft/);
 
   const serviceStatuses = read(SERVICE_STATUS_TRANSITIONS);
   assert.match(serviceStatuses, /TERMINAL_STATUSES[\s\S]*?"Completed"[\s\S]*?"Cancelled"/);
@@ -925,8 +926,7 @@ test("9-11. ABS permissions and masking: accountant read-only; viewer/sales bloc
   assert.match(detail, /requirePermission\("approvedBillingScopes:read"\)/);
   assert.match(detail, /sourceDescription/);
   assert.doesNotMatch(detail, /estimatedUnitCost|supplier_allocations|supplier_costing/);
-  assert.match(read(SERVICE_DETAIL), /canReadApprovedBillingScopes/);
-  assert.match(read(SERVICE_DETAIL), /approvedBillingScopes:read/);
+  assert.doesNotMatch(read(SERVICE_DETAIL), /canReadApprovedBillingScopes|approvedBillingScopes:read/);
 });
 
 // ---------------------------------------------------------------------------
@@ -997,9 +997,7 @@ test("15. Supplier booking action contracts and permissions remain unchanged", (
   assert.match(actions, /sourceAllocationId/);
   assert.doesNotMatch(actions, /invoice|payment|margin|settlement/i);
   const detail = read(SERVICE_DETAIL);
-  assert.match(detail, /supplier_bookings:read/);
-  assert.match(detail, /supplier_bookings:write/);
-  assert.match(detail, /supplier_bookings:cancel/);
+  assert.doesNotMatch(detail, /supplier_bookings:read|supplier_bookings:write|supplier_bookings:cancel/);
   assert.deepEqual(Object.keys(getServicesDictionary("en").supplierBookings.statusLabels).sort(), [
     "cancelled",
     "draft",
@@ -1121,8 +1119,8 @@ test("25. Canonical RBAC stays centralized and operational UI does not redefine 
   assert.match(permissions, /ROLE_PERMISSIONS/);
   assert.match(permissions, /supplier_allocations:read_cost/);
   assert.match(permissions, /APPROVED_BILLING_SCOPE_MANAGER_PERMISSIONS/);
-  assert.match(read(SERVICE_DETAIL), /checkPermission\("supplier_allocations:read_cost"\)/);
-  assert.match(read(SERVICE_DETAIL), /checkPermission\("supplier_allocations:read"\)/);
+  assert.match(read(SERVICE_DETAIL), /checkPermission\("supplier_costing:read"\)/);
+  assert.doesNotMatch(read(SERVICE_DETAIL), /checkPermission\("supplier_allocations:read_cost"\)|checkPermission\("supplier_allocations:read"\)/);
   // Operational UI does not redefine role matrices
   assert.doesNotMatch(read(BILLING), /ROLE_PERMISSIONS/);
   assert.doesNotMatch(read(ALLOCATIONS), /ROLE_PERMISSIONS/);

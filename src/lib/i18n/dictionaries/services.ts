@@ -279,6 +279,7 @@ export interface ServicesDictionary {
   };
   serviceStatusControl: {
     title: string;
+    advancedActions: string;
     dangerZoneTitle: string;
     dangerZoneHint: string;
     currentStatus: string;
@@ -324,6 +325,7 @@ export interface ServicesDictionary {
       close: string;
       reopenDelivery: string;
       reopenCloseout: string;
+      updateAction: string;
     };
   };
   serviceActivity: {
@@ -816,18 +818,6 @@ export interface ServicesDictionary {
     };
     errors: Record<string, string>;
   };
-  commitmentSummary: {
-    title: string;
-    subtitle: string;
-    activeCommitments: string;
-    authorizedAmount: string;
-    openAmount: string;
-    serviceReceipts: string;
-    noCommitments: string;
-    unavailable: string;
-    loadError: string;
-    openWorkspace: string;
-  };
   procurementSummary: {
     title: string;
     subtitle: string;
@@ -836,6 +826,18 @@ export interface ServicesDictionary {
     supplierQuotations: string;
     selectedSupplier: string;
     noneSelected: string;
+    unavailable: string;
+    loadError: string;
+    openWorkspace: string;
+  };
+  commitmentSummary: {
+    title: string;
+    subtitle: string;
+    activeCommitments: string;
+    authorizedAmount: string;
+    openAmount: string;
+    serviceReceipts: string;
+    noCommitments: string;
     unavailable: string;
     loadError: string;
     openWorkspace: string;
@@ -1587,6 +1589,7 @@ const servicesDictionaryEn: ServicesDictionary = {
   },
   serviceStatusControl: {
     title: "Next Action",
+    advancedActions: "Advanced Actions",
     dangerZoneTitle: "Danger Zone",
     dangerZoneHint: "Exceptional actions that can stop this Service.",
     currentStatus: "Current status",
@@ -1662,6 +1665,7 @@ const servicesDictionaryEn: ServicesDictionary = {
       close: "Close operationally",
       reopenDelivery: "Reopen delivery",
       reopenCloseout: "Reopen closeout",
+      updateAction: "Update lifecycle state",
     },
   },
   serviceActivity: {
@@ -2273,18 +2277,6 @@ const servicesDictionaryEn: ServicesDictionary = {
       FORBIDDEN: "You do not have permission to change procurement evidence.",
     },
   },
-  commitmentSummary: {
-    title: "Approved Commitments & Receipts",
-    subtitle: "Authorized operational commitments and verified service delivery records for this Service.",
-    activeCommitments: "Active Commitments",
-    authorizedAmount: "Authorized Commitment Total",
-    openAmount: "Open Balance",
-    serviceReceipts: "Verified Receipts",
-    noCommitments: "No approved supplier commitments recorded for this Service.",
-    unavailable: "Commitment tracking unavailable",
-    loadError: "Failed to load commitment summary. Open the workspace to retry.",
-    openWorkspace: "Open Commitments Workspace",
-  },
   procurementSummary: {
     title: "Procurement workspace",
     subtitle: "A compact view of sourcing progress for this Service.",
@@ -2296,6 +2288,18 @@ const servicesDictionaryEn: ServicesDictionary = {
     unavailable: "Unavailable",
     loadError: "Procurement summary could not be loaded. Please open the workspace to retry.",
     openWorkspace: "Open Procurement Workspace",
+  },
+  commitmentSummary: {
+    title: "Approved Commitments & Receipts",
+    subtitle: "A compact view of approved commitments and operational service receipts.",
+    activeCommitments: "Active commitments",
+    authorizedAmount: "Authorized amount",
+    openAmount: "Open commitment",
+    serviceReceipts: "Service receipts",
+    noCommitments: "No commitments",
+    unavailable: "Unavailable",
+    loadError: "Commitment summary could not be loaded. Please open the workspace to retry.",
+    openWorkspace: "Open Commitments Workspace",
   },
   procurementWorkspace: {
     title: "Procurement Packages",
@@ -3261,6 +3265,7 @@ const servicesDictionaryAr: ServicesDictionary = {
   },
   serviceStatusControl: {
     title: "الإجراء التالي",
+    advancedActions: "إجراءات متقدمة",
     dangerZoneTitle: "منطقة الإجراءات الخطرة",
     dangerZoneHint: "إجراءات استثنائية قد توقف هذه الخدمة.",
     currentStatus: "الحالة الحالية",
@@ -3336,6 +3341,7 @@ const servicesDictionaryAr: ServicesDictionary = {
       close: "إغلاق تشغيلي",
       reopenDelivery: "إعادة فتح التسليم",
       reopenCloseout: "إعادة فتح الإغلاق",
+      updateAction: "تحديث حالة دورة الحياة",
     },
   },
   serviceActivity: {
@@ -3940,18 +3946,6 @@ const servicesDictionaryAr: ServicesDictionary = {
       FORBIDDEN: "ليست لديك صلاحية تغيير أدلة التوريد.",
     },
   },
-  commitmentSummary: {
-    title: "الالتزامات المعتمدة والاستلام",
-    subtitle: "الالتزامات التشغيلية المعتمدة وسجلات استلام الخدمة الموثقة لهذه الخدمة.",
-    activeCommitments: "الالتزامات النشطة",
-    authorizedAmount: "إجمالي الالتزامات المعتمدة",
-    openAmount: "الرصيد المتبقي",
-    serviceReceipts: "الإيصالات المعتمدة",
-    noCommitments: "لا توجد التزامات موردين معتمدة مسجلة لهذه الخدمة.",
-    unavailable: "تتبع الالتزامات غير متاح",
-    loadError: "تعذر تحميل ملخص الالتزامات. افتح مساحة العمل لإعادة المحاولة.",
-    openWorkspace: "فتح مساحة الالتزامات",
-  },
   procurementSummary: {
     title: "مساحة التوريد",
     subtitle: "ملخص موجز لتقدم التوريد لهذه الخدمة.",
@@ -3963,6 +3957,18 @@ const servicesDictionaryAr: ServicesDictionary = {
     unavailable: "غير متاح",
     loadError: "تعذر تحميل ملخص التوريد. افتح مساحة التوريد للمحاولة مرة أخرى.",
     openWorkspace: "فتح مساحة التوريد",
+  },
+  commitmentSummary: {
+    title: "الالتزامات المعتمدة والاستلام",
+    subtitle: "ملخص موجز للالتزامات المعتمدة وإيصالات استلام الخدمة التشغيلية.",
+    activeCommitments: "الالتزامات النشطة",
+    authorizedAmount: "المبلغ المعتمد",
+    openAmount: "الالتزام المتبقي",
+    serviceReceipts: "إيصالات الاستلام",
+    noCommitments: "لا توجد التزامات",
+    unavailable: "غير متاح",
+    loadError: "تعذر تحميل ملخص الالتزامات. افتح مساحة الالتزامات للمحاولة مرة أخرى.",
+    openWorkspace: "فتح مساحة الالتزامات",
   },
   procurementWorkspace: {
     title: "باقات التوريد",
