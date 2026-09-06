@@ -41,7 +41,9 @@ registerHooks({
 
 const {
   INVOICE_PERMISSIONS,
+  PROCUREMENT_COMMITMENT_PERMISSIONS,
   ROLE_PERMISSIONS,
+  SERVICE_RECEIPT_PERMISSIONS,
   SERVICE_BILLING_SUMMARY_PERMISSIONS,
   hasPermissionForRole,
 } = await import("./role-permissions.ts");
@@ -127,6 +129,20 @@ test("W3 authorized credit and reopen permissions are separate role grants", () 
     assert.equal(hasPermissionForRole(role, "services:authorize_execution_credit"), false);
     assert.equal(hasPermissionForRole(role, "services:reopen"), false);
   }
+});
+
+test("W4 commitment and receipt permissions preserve separation of duties", () => {
+  assert.equal(hasPermissionForRole("manager", PROCUREMENT_COMMITMENT_PERMISSIONS.write), true);
+  assert.equal(hasPermissionForRole("manager", PROCUREMENT_COMMITMENT_PERMISSIONS.amend), true);
+  assert.equal(hasPermissionForRole("operations", PROCUREMENT_COMMITMENT_PERMISSIONS.read), true);
+  assert.equal(hasPermissionForRole("operations", PROCUREMENT_COMMITMENT_PERMISSIONS.write), false);
+  assert.equal(hasPermissionForRole("operations", SERVICE_RECEIPT_PERMISSIONS.write), true);
+  assert.equal(hasPermissionForRole("operations", SERVICE_RECEIPT_PERMISSIONS.accept), false);
+  assert.equal(hasPermissionForRole("manager", SERVICE_RECEIPT_PERMISSIONS.correct), true);
+  assert.equal(hasPermissionForRole("operations", SERVICE_RECEIPT_PERMISSIONS.correct), false);
+  assert.equal(hasPermissionForRole("accountant", SERVICE_RECEIPT_PERMISSIONS.read), true);
+  assert.equal(hasPermissionForRole("accountant", SERVICE_RECEIPT_PERMISSIONS.accept), false);
+  assert.equal(hasPermissionForRole("viewer", PROCUREMENT_COMMITMENT_PERMISSIONS.read), false);
 });
 
 test("Unknown or malformed role evidence fails closed", () => {

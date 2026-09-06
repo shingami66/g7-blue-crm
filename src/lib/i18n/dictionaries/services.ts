@@ -816,6 +816,18 @@ export interface ServicesDictionary {
     };
     errors: Record<string, string>;
   };
+  commitmentSummary: {
+    title: string;
+    subtitle: string;
+    activeCommitments: string;
+    authorizedAmount: string;
+    openAmount: string;
+    serviceReceipts: string;
+    noCommitments: string;
+    unavailable: string;
+    loadError: string;
+    openWorkspace: string;
+  };
   procurementSummary: {
     title: string;
     subtitle: string;
@@ -2183,6 +2195,18 @@ const servicesDictionaryEn: ServicesDictionary = {
       UNAUTHORIZED: "You must be signed in to change procurement evidence.",
       FORBIDDEN: "You do not have permission to change procurement evidence.",
     },
+  },
+  commitmentSummary: {
+    title: "Approved Commitments & Receipts",
+    subtitle: "Authorized operational commitments and verified service delivery records for this Service.",
+    activeCommitments: "Active Commitments",
+    authorizedAmount: "Authorized Commitment Total",
+    openAmount: "Open Balance",
+    serviceReceipts: "Verified Receipts",
+    noCommitments: "No approved supplier commitments recorded for this Service.",
+    unavailable: "Commitment tracking unavailable",
+    loadError: "Failed to load commitment summary. Open the workspace to retry.",
+    openWorkspace: "Open Commitments Workspace",
   },
   procurementSummary: {
     title: "Procurement workspace",
@@ -3761,6 +3785,18 @@ const servicesDictionaryAr: ServicesDictionary = {
       UNAUTHORIZED: "يجب تسجيل الدخول لتغيير أدلة التوريد.",
       FORBIDDEN: "ليست لديك صلاحية تغيير أدلة التوريد.",
     },
+  },
+  commitmentSummary: {
+    title: "الالتزامات المعتمدة والاستلام",
+    subtitle: "الالتزامات التشغيلية المعتمدة وسجلات استلام الخدمة الموثقة لهذه الخدمة.",
+    activeCommitments: "الالتزامات النشطة",
+    authorizedAmount: "إجمالي الالتزامات المعتمدة",
+    openAmount: "الرصيد المتبقي",
+    serviceReceipts: "الإيصالات المعتمدة",
+    noCommitments: "لا توجد التزامات موردين معتمدة مسجلة لهذه الخدمة.",
+    unavailable: "تتبع الالتزامات غير متاح",
+    loadError: "تعذر تحميل ملخص الالتزامات. افتح مساحة العمل لإعادة المحاولة.",
+    openWorkspace: "فتح مساحة الالتزامات",
   },
   procurementSummary: {
     title: "مساحة التوريد",

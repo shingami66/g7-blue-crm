@@ -345,8 +345,191 @@ export type Database = {
             referencedColumns: ["id", "service_id"]
           },
         ]
+    }
+      approved_commitment_amendments: {
+        Row: {
+          amendment_number: number
+          amendment_type: string
+          amount_delta: number
+          approved_amount_after: number
+          approved_at: string
+          approved_by: string
+          commitment_id: string
+          created_at: string
+          created_by: string
+          evidence_ref: string
+          id: string
+          reason: string
+        }
+        Insert: {
+          amendment_number: number
+          amendment_type: string
+          amount_delta: number
+          approved_amount_after: number
+          approved_at: string
+          approved_by: string
+          commitment_id: string
+          created_at?: string
+          created_by: string
+          evidence_ref: string
+          id?: string
+          reason: string
+        }
+        Update: {
+          amendment_number?: number
+          amendment_type?: string
+          amount_delta?: number
+          approved_amount_after?: number
+          approved_at?: string
+          approved_by?: string
+          commitment_id?: string
+          created_at?: string
+          created_by?: string
+          evidence_ref?: string
+          id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approved_commitment_amendments_commitment_id_fkey"
+            columns: ["commitment_id"]
+            isOneToOne: false
+            referencedRelation: "approved_commitments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      business_document_links: {
+      approved_commitment_documents: {
+        Row: {
+          attached_at: string
+          attached_by: string
+          commitment_id: string
+          document_id: string
+        }
+        Insert: {
+          attached_at?: string
+          attached_by: string
+          commitment_id: string
+          document_id: string
+        }
+        Update: {
+          attached_at?: string
+          attached_by?: string
+          commitment_id?: string
+          document_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approved_commitment_documents_commitment_id_fkey"
+            columns: ["commitment_id"]
+            isOneToOne: false
+            referencedRelation: "approved_commitments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approved_commitment_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "business_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approved_commitments: {
+        Row: {
+          approved_at: string
+          approved_by: string
+          cancelled_at: string | null
+          cancelled_by: string | null
+          cancelled_reason: string | null
+          closed_at: string | null
+          closed_by: string | null
+          closed_reason: string | null
+          commitment_source: string
+          created_at: string
+          created_by: string
+          currency: string
+          id: string
+          original_approved_amount: number
+          service_id: string
+          source_reference: string | null
+          status: string
+          supplier_id: string
+          supplier_quotation_id: string | null
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          approved_at: string
+          approved_by: string
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cancelled_reason?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          closed_reason?: string | null
+          commitment_source: string
+          created_at?: string
+          created_by: string
+          currency?: string
+          id?: string
+          original_approved_amount: number
+          service_id: string
+          source_reference?: string | null
+          status?: string
+          supplier_id: string
+          supplier_quotation_id?: string | null
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          approved_at?: string
+          approved_by?: string
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cancelled_reason?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          closed_reason?: string | null
+          commitment_source?: string
+          created_at?: string
+          created_by?: string
+          currency?: string
+          id?: string
+          original_approved_amount?: number
+          service_id?: string
+          source_reference?: string | null
+          status?: string
+          supplier_id?: string
+          supplier_quotation_id?: string | null
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approved_commitments_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approved_commitments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approved_commitments_supplier_quotation_fkey"
+            columns: ["supplier_quotation_id", "service_id", "supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_quotations"
+            referencedColumns: ["id", "service_id", "supplier_id"]
+          },
+        ]
+      }
+    business_document_links: {
         Row: {
           created_at: string
           document_id: string
@@ -382,6 +565,196 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_receipt_documents: {
+        Row: {
+          attached_at: string
+          attached_by: string
+          document_id: string
+          receipt_id: string
+        }
+        Insert: {
+          attached_at?: string
+          attached_by: string
+          document_id: string
+          receipt_id: string
+        }
+        Update: {
+          attached_at?: string
+          attached_by?: string
+          document_id?: string
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_receipt_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "business_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_receipt_documents_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "service_receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_receipt_corrections: {
+        Row: {
+          corrected_acceptance_status: string
+          corrected_at: string
+          corrected_by: string
+          corrected_conditions_notes: string | null
+          corrected_received_amount: number | null
+          correction_number: number
+          correction_reason: string
+          created_at: string
+          created_by: string
+          id: string
+          prior_acceptance_status: string
+          prior_conditions_notes: string | null
+          prior_decision_at: string
+          prior_decision_by: string
+          prior_received_amount: number | null
+          receipt_id: string
+          request_id: string
+        }
+        Insert: {
+          corrected_acceptance_status: string
+          corrected_at: string
+          corrected_by: string
+          corrected_conditions_notes?: string | null
+          corrected_received_amount?: number | null
+          correction_number: number
+          correction_reason: string
+          created_at?: string
+          created_by: string
+          id?: string
+          prior_acceptance_status: string
+          prior_conditions_notes?: string | null
+          prior_decision_at: string
+          prior_decision_by: string
+          prior_received_amount?: number | null
+          receipt_id: string
+          request_id: string
+        }
+        Update: {
+          corrected_acceptance_status?: string
+          corrected_at?: string
+          corrected_by?: string
+          corrected_conditions_notes?: string | null
+          corrected_received_amount?: number | null
+          correction_number?: number
+          correction_reason?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          prior_acceptance_status?: string
+          prior_conditions_notes?: string | null
+          prior_decision_at?: string
+          prior_decision_by?: string
+          prior_received_amount?: number | null
+          receipt_id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_receipt_corrections_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "service_receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_receipts: {
+        Row: {
+          acceptance_status: string
+          actual_hours: number | null
+          actual_quantity: number | null
+          commitment_id: string
+          conditions_notes: string | null
+          created_at: string
+          created_by: string
+          delivered_scope: string
+          defects_incidents: string | null
+          extra_scope: string | null
+          id: string
+          missing_scope: string | null
+          performance_date: string
+          quantity_unit: string | null
+          received_amount: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          service_id: string
+          submitted_at: string
+          submitted_by: string
+          supplier_id: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          acceptance_status?: string
+          actual_hours?: number | null
+          actual_quantity?: number | null
+          commitment_id: string
+          conditions_notes?: string | null
+          created_at?: string
+          created_by: string
+          delivered_scope: string
+          defects_incidents?: string | null
+          extra_scope?: string | null
+          id?: string
+          missing_scope?: string | null
+          performance_date: string
+          quantity_unit?: string | null
+          received_amount?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_id: string
+          submitted_at?: string
+          submitted_by: string
+          supplier_id: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          acceptance_status?: string
+          actual_hours?: number | null
+          actual_quantity?: number | null
+          commitment_id?: string
+          conditions_notes?: string | null
+          created_at?: string
+          created_by?: string
+          delivered_scope?: string
+          defects_incidents?: string | null
+          extra_scope?: string | null
+          id?: string
+          missing_scope?: string | null
+          performance_date?: string
+          quantity_unit?: string | null
+          received_amount?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_id?: string
+          submitted_at?: string
+          submitted_by?: string
+          supplier_id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_receipts_commitment_fkey"
+            columns: ["commitment_id", "service_id", "supplier_id"]
+            isOneToOne: false
+            referencedRelation: "approved_commitments"
+            referencedColumns: ["id", "service_id", "supplier_id"]
           },
         ]
       }
@@ -2161,6 +2534,38 @@ export type Database = {
         }
         Relationships: []
       }
+      approved_commitment_balances: {
+        Row: {
+          amendment_count: number
+          approved_at: string
+          approved_by: string
+          cancelled_at: string | null
+          cancelled_by: string | null
+          cancelled_reason: string | null
+          closed_at: string | null
+          closed_by: string | null
+          closed_reason: string | null
+          commitment_source: string
+          created_at: string
+          created_by: string
+          currency: string
+          id: string
+          accepted_amount: number
+          authorized_amount: number
+          open_commitment_amount: number
+          original_approved_amount: number
+          pending_amount: number
+          receipt_count: number
+          service_id: string
+          source_reference: string | null
+          status: string
+          supplier_id: string
+          supplier_quotation_id: string | null
+          updated_at: string
+          updated_by: string
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _abs_get_service_invoice_exposure: {
@@ -2658,6 +3063,171 @@ export type Database = {
           idempotent_replay: boolean
           service_id: string
           service_status: string
+        }[]
+      }
+      add_approved_commitment_amendment: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_amount: number
+          p_commitment_id: string
+          p_evidence_ref: string
+          p_reason: string
+          p_request_id: string
+          p_amendment_type: string
+        }
+        Returns: {
+          amendment_id: string
+          amendment_number: number
+          authorized_amount: number
+          commitment_id: string
+          error_code: string
+          idempotent_replay: boolean
+          open_commitment_amount: number
+          service_id: string
+        }[]
+      }
+      attach_approved_commitment_documents: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_commitment_id: string
+          p_document_ids: string[]
+          p_request_id: string
+        }
+        Returns: {
+          commitment_id: string
+          document_count: number
+          error_code: string
+          idempotent_replay: boolean
+          service_id: string
+        }[]
+      }
+      attach_service_receipt_documents: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_document_ids: string[]
+          p_receipt_id: string
+          p_request_id: string
+        }
+        Returns: {
+          document_count: number
+          error_code: string
+          idempotent_replay: boolean
+          receipt_id: string
+          service_id: string
+        }[]
+      }
+      create_approved_commitment: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_approved_at: string
+          p_commitment_source: string
+          p_original_approved_amount: number
+          p_request_id: string
+          p_service_id: string
+          p_source_reference: string | null
+          p_supplier_id: string
+          p_supplier_quotation_id: string | null
+        }
+        Returns: {
+          authorized_amount: number
+          commitment_id: string
+          error_code: string
+          idempotent_replay: boolean
+          open_commitment_amount: number
+          service_id: string
+          supplier_id: string
+        }[]
+      }
+      create_service_receipt: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_actual_hours: number | null
+          p_actual_quantity: number | null
+          p_commitment_id: string
+          p_conditions_notes: string | null
+          p_defects_incidents: string | null
+          p_delivered_scope: string
+          p_extra_scope: string | null
+          p_missing_scope: string | null
+          p_performance_date: string
+          p_quantity_unit: string | null
+          p_received_amount: number | null
+          p_request_id: string
+          p_service_id: string
+        }
+        Returns: {
+          acceptance_status: string
+          commitment_id: string
+          error_code: string
+          idempotent_replay: boolean
+          receipt_id: string
+          service_id: string
+          supplier_id: string
+        }[]
+      }
+      review_service_receipt: {
+        Args: {
+          p_acceptance_status: string
+          p_actor_id: string
+          p_actor_role: string
+          p_conditions_notes: string | null
+          p_receipt_id: string
+          p_request_id: string
+        }
+        Returns: {
+          acceptance_status: string
+          commitment_id: string
+          error_code: string
+          idempotent_replay: boolean
+          receipt_id: string
+          service_id: string
+          supplier_id: string
+        }[]
+      }
+      correct_service_receipt: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_corrected_acceptance_status: string
+          p_corrected_conditions_notes: string | null
+          p_corrected_received_amount: number | null
+          p_correction_reason: string
+          p_receipt_id: string
+          p_request_id: string
+        }
+        Returns: {
+          acceptance_status: string
+          commitment_id: string
+          error_code: string
+          idempotent_replay: boolean
+          receipt_id: string
+          received_amount: number | null
+          service_id: string
+          supplier_id: string
+        }[]
+      }
+      transition_approved_commitment: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_actor_role: string
+          p_commitment_id: string
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          authorized_amount: number
+          commitment_id: string
+          commitment_status: string
+          error_code: string
+          idempotent_replay: boolean
+          open_commitment_amount: number
+          service_id: string
         }[]
       }
       attach_supplier_quotation_documents: {
