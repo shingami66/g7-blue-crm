@@ -836,6 +836,66 @@ export type Database = {
           },
         ]
       }
+      supplier_quotation_lines: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          line_total: number
+          package_requirement_id: string | null
+          quantity: number | null
+          quotation_id: string
+          service_id: string
+          sort_order: number
+          unit: string | null
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          line_total: number
+          package_requirement_id?: string | null
+          quantity?: number | null
+          quotation_id: string
+          service_id: string
+          sort_order?: number
+          unit?: string | null
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          line_total?: number
+          package_requirement_id?: string | null
+          quantity?: number | null
+          quotation_id?: string
+          service_id?: string
+          sort_order?: number
+          unit?: string | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_quotation_lines_pkg_req_fkey"
+            columns: ["package_requirement_id", "service_id"]
+            isOneToOne: false
+            referencedRelation: "service_procurement_package_requirements"
+            referencedColumns: ["id", "service_id"]
+          },
+          {
+            foreignKeyName: "supplier_quotation_lines_quotation_fkey"
+            columns: ["quotation_id", "service_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_quotations"
+            referencedColumns: ["id", "service_id"]
+          },
+        ]
+      }
       supplier_quotation_requirements: {
         Row: {
           created_at: string
@@ -3392,27 +3452,50 @@ export type Database = {
           service_id: string
         }[]
       }
-      create_supplier_quotation: {
-        Args: {
-          p_actor_id: string
-          p_actor_role: string
-          p_package_total: number | null
-          p_quotation_date: string
-          p_requirements: Json
-          p_request_id: string
-          p_service_id: string
-          p_supplier_id: string
-          p_supplier_reference: string
-        }
-        Returns: {
-          error_code: string
-          idempotent_replay: boolean
-          line_count: number
-          quotation_id: string
-          service_id: string
-          supplier_id: string
-        }[]
-      }
+      create_supplier_quotation:
+        | {
+            Args: {
+              p_actor_id: string
+              p_actor_role: string
+              p_package_total: number | null
+              p_quotation_date: string
+              p_requirements: Json
+              p_request_id: string
+              p_service_id: string
+              p_supplier_id: string
+              p_supplier_reference: string
+            }
+            Returns: {
+              error_code: string
+              idempotent_replay: boolean
+              line_count: number
+              quotation_id: string
+              service_id: string
+              supplier_id: string
+            }[]
+          }
+        | {
+            Args: {
+              p_actor_id: string
+              p_actor_role: string
+              p_lines: Json
+              p_package_total: number | null
+              p_quotation_date: string
+              p_requirements: Json
+              p_request_id: string
+              p_service_id: string
+              p_supplier_id: string
+              p_supplier_reference: string
+            }
+            Returns: {
+              error_code: string
+              idempotent_replay: boolean
+              line_count: number
+              quotation_id: string
+              service_id: string
+              supplier_id: string
+            }[]
+          }
       attach_service_procurement_candidate_document: {
         Args: {
           p_actor_id: string

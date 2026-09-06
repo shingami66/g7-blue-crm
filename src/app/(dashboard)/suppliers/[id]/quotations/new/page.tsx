@@ -4,7 +4,13 @@ import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { checkPermission } from "@/lib/auth/permissions";
 import { getSuppliersDictionary } from "@/lib/i18n/dictionaries/suppliers";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
-import { getSupplierQuotationRequirementOptions } from "@/lib/procurement/queries";
+import {
+  getEligibleServicesForSupplierQuotation,
+  getPackageRequirementsForQuotation,
+  getSupplierQuotationRequirementOptions,
+} from "@/lib/procurement/queries";
+import { getProcurementPackageById } from "@/lib/procurement/package-queries";
+import { validatePackageQuotationContext } from "@/lib/procurement/package-context";
 import { getSupplierById } from "@/lib/suppliers/queries";
 import { safeRecordReturnTo } from "@/lib/record-navigation/queries";
 import { RecordBackButton } from "@/components/navigation/RecordBackButton";
@@ -20,6 +26,8 @@ export default async function NewSupplierQuotationPage({
   searchParams: Promise<{
     returnTo?: string;
     showDeleted?: string;
+    serviceId?: string;
+    packageId?: string;
   }>;
 }) {
   const [{ id }, resolvedSearchParams, locale] = await Promise.all([
@@ -50,6 +58,57 @@ export default async function NewSupplierQuotationPage({
     `/suppliers/${data.supplier.id}/quotations`,
   );
 
+  // Validate contextual service eligibility if serviceId is provided in URL
+  if (resolvedSearchParams.serviceId) {
+    const isServiceEligible = data.eligibleServices.some(
+      (s) => s.serviceId === resolvedSearchParams.serviceId,
+    );
+    if (!isServiceEligible) {
+      return (
+        <div dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-4xl flex-col gap-6 pb-12">
+          <div className="flex items-start gap-3 py-4">
+            <RecordBackButton href={returnTo} locale={locale} />
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold text-on-surface-variant">{data.supplier.name}</p>
+              <h1 className="mt-1 break-words text-[28px] font-semibold leading-[36px] text-primary" dir="auto">
+                {dictionary.quotationHistory.newTitle}
+              </h1>
+            </div>
+          </div>
+          <StateCard
+            title={dictionary.quotationHistory.serviceSelection}
+            message={dictionary.quotationHistory.serviceUnavailable}
+          />
+        </div>
+      );
+    }
+  }
+
+  const contextualService = resolvedSearchParams.serviceId
+    ? data.eligibleServices.find((s) => s.serviceId === resolvedSearchParams.serviceId) ?? null
+    : null;
+
+  // Validate Package context against route Supplier, Service, and selected status
+  let packageContext: { packageId: string; packageTitle: string } | null = null;
+  let packageRequirements: Array<{ id: string; title: string; sortOrder: number }> = [];
+
+  if (resolvedSearchParams.packageId && contextualService) {
+    const packageDetailResult = await getProcurementPackageById(resolvedSearchParams.packageId);
+    const validation = validatePackageQuotationContext(packageDetailResult.package, {
+      packageId: resolvedSearchParams.packageId,
+      serviceId: contextualService.serviceId,
+      supplierId: data.supplier.id,
+    });
+
+    if (validation.isValid && validation.packageContext) {
+      packageContext = validation.packageContext;
+      packageRequirements = await getPackageRequirementsForQuotation(
+        validation.packageContext.packageId,
+        contextualService.serviceId,
+      );
+    }
+  }
+
   return (
     <div dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-4xl flex-col gap-6 pb-12">
       <div className="flex items-start gap-3 py-4">
@@ -79,6 +138,10 @@ export default async function NewSupplierQuotationPage({
           canWriteDocuments={data.canWriteDocuments}
           returnTo={returnTo}
           dictionary={dictionary.quotationHistory}
+          contextualService={contextualService}
+          packageRequirements={packageRequirements}
+          eligibleServices={data.eligibleServices}
+          packageContext={packageContext}
         />
       </section>
     </div>
@@ -96,10 +159,14 @@ async function loadNewSupplierQuotation(id: string, includeDeleted: boolean) {
     if (supplierResult.error) return { kind: "error" as const };
     if (!supplierResult.supplier) return { kind: "not_found" as const };
 
-    const requirementsResult =
+    const [requirementsResult, eligibleServicesResult] = await Promise.all([
       canManageCosting && !supplierResult.supplier.isDeleted && supplierResult.supplier.status === "active"
         ? await getSupplierQuotationRequirementOptions(id)
-        : { requirements: [] };
+        : { requirements: [] },
+      canManageCosting && !supplierResult.supplier.isDeleted && supplierResult.supplier.status === "active"
+        ? await getEligibleServicesForSupplierQuotation()
+        : { services: [] },
+    ]);
 
     return {
       kind: "ready" as const,
@@ -107,6 +174,7 @@ async function loadNewSupplierQuotation(id: string, includeDeleted: boolean) {
       canManageCosting,
       canWriteDocuments,
       requirementsResult,
+      eligibleServices: eligibleServicesResult.services,
     };
   } catch (err) {
     if (err instanceof UnauthorizedError) return { kind: "unauthorized" as const };

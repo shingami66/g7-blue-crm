@@ -823,9 +823,20 @@ export default function ProcurementPackageWorkspace({
                 {/* 4. Supplier Quotation (when supplier is selected) */}
                 {selectedSupplierId ? (
                   <div className="space-y-2 pt-2">
-                    <label htmlFor={quotationSelectId} className="block text-[13px] font-medium text-on-surface">
-                      {dictionary.modal.supplierQuotationSection}
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label htmlFor={quotationSelectId} className="text-[13px] font-medium text-on-surface">
+                        {dictionary.modal.supplierQuotationSection}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => handleSavePackage(true)}
+                        disabled={isPending}
+                        className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary hover:underline disabled:opacity-50 cursor-pointer"
+                      >
+                        <Plus size={13} aria-hidden="true" />
+                        <span>{dictionary.modal.recordSupplierQuotation}</span>
+                      </button>
+                    </div>
 
                     <select
                       id={quotationSelectId}
@@ -845,7 +856,7 @@ export default function ProcurementPackageWorkspace({
                   </div>
                 ) : (
                   <p className="pt-2 text-[12px] text-on-surface-variant/80 italic">
-                    {dictionary.noSupplierSelected}
+                    {dictionary.selectSupplierFirstNotice}
                   </p>
                 )}
               </fieldset>
@@ -899,6 +910,18 @@ export default function ProcurementPackageWorkspace({
               <Button type="button" variant="outline" onClick={closeModal} disabled={isPending}>
                 {dictionary.modal.cancel}
               </Button>
+              {selectedSupplierId && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleSavePackage(true)}
+                  loading={isPending && pendingAction === "quotation"}
+                  disabled={isPending}
+                >
+                  <Plus size={14} aria-hidden="true" />
+                  <span>{dictionary.modal.recordSupplierQuotation}</span>
+                </Button>
+              )}
               <Button
                 type="button"
                 onClick={() => handleSavePackage(false)}
@@ -1066,7 +1089,7 @@ function PackageCard({
             </div>
           ) : (
             <p className="mt-1.5 text-[13px] text-on-surface-variant/70 italic">
-              {dictionary.noSupplierSelected}
+              {dictionary.selectSupplierFirstNotice}
             </p>
           )}
         </div>

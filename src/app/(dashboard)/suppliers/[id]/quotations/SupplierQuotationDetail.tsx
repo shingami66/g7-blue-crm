@@ -70,10 +70,89 @@ export default function SupplierQuotationDetail({
           <Detail label={dictionary.quotationDate} value={quotation.quotationDate ? formatUiDate(locale, quotation.quotationDate) : dictionary.unknownQuotationDate} />
           <Detail label={dictionary.recorded} value={formatUiDate(locale, quotation.recordedAt)} />
           <Detail label={dictionary.packageTotal} value={quotation.packageTotal === null ? "—" : formatSarAmount(locale, quotation.packageTotal)} numeric />
+          <Detail
+            label={dictionary.pricingMode}
+            value={
+              quotation.pricingMode === "detailed"
+                ? dictionary.detailedPricing
+                : quotation.pricingMode === "total_only"
+                  ? dictionary.totalOnlyPricing
+                  : dictionary.legacyPricing
+            }
+          />
         </dl>
       </section>
 
-
+      {quotation.pricingMode === "detailed" ? (
+        <section className="overflow-hidden rounded-lg border border-surface-variant bg-surface-container-lowest">
+          <div className="border-b border-surface-variant bg-surface-bright px-5 py-4 flex items-center justify-between">
+            <h2 className="text-[15px] font-semibold text-primary">{dictionary.detailedItems}</h2>
+            <span className="text-[12px] text-on-surface-variant font-medium">
+              {quotation.lines.length} {dictionary.detailedPricing}
+            </span>
+          </div>
+          {quotation.lines.length === 0 ? (
+            <p className="p-5 text-[13px] text-on-surface-variant">{dictionary.noRequirementsOnQuotation}</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-[640px] w-full text-[13px] text-on-surface">
+                <caption className="sr-only">{dictionary.detailedItems}</caption>
+                <thead className="bg-surface-bright text-start text-[12px] font-semibold text-on-surface-variant">
+                  <tr>
+                    <th scope="col" className="px-4 py-3">{dictionary.itemDescription}</th>
+                    <th scope="col" className="px-4 py-3">{dictionary.packageRequirement}</th>
+                    <th scope="col" className="px-4 py-3 text-end">{dictionary.quantity}</th>
+                    <th scope="col" className="px-4 py-3">{dictionary.unit}</th>
+                    <th scope="col" className="px-4 py-3 text-end">{dictionary.unitPrice}</th>
+                    <th scope="col" className="px-4 py-3 text-end">{dictionary.lineTotal}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/70">
+                  {quotation.lines.map((line) => (
+                    <tr key={line.id} className="align-top">
+                      <td className="min-w-[200px] px-4 py-4 font-semibold" dir="auto">
+                        {isolateBidiText(line.description)}
+                      </td>
+                      <td className="min-w-[150px] px-4 py-4 text-on-surface-variant" dir="auto">
+                        {line.packageRequirementTitle ? isolateBidiText(line.packageRequirementTitle) : "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4 text-end tabular-nums" dir="ltr">
+                        {line.quantity !== null ? line.quantity : "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4" dir="auto">
+                        {line.unit ? isolateBidiText(line.unit) : "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4 text-end tabular-nums" dir="ltr">
+                        {line.unitPrice !== null ? formatSarAmount(locale, line.unitPrice) : "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4 text-end font-semibold tabular-nums" dir="ltr">
+                        {formatSarAmount(locale, line.lineTotal)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="border-t-2 border-surface-variant bg-surface-bright/80 font-semibold">
+                  <tr>
+                    <td colSpan={5} className="px-4 py-3 text-end">{dictionary.quotationTotal}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-end tabular-nums" dir="ltr">
+                      {quotation.packageTotal !== null
+                        ? formatSarAmount(locale, quotation.packageTotal)
+                        : formatSarAmount(locale, quotation.lines.reduce((s, l) => s + l.lineTotal, 0))}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+        </section>
+      ) : quotation.pricingMode === "total_only" ? (
+        <section className="rounded-lg border border-surface-variant bg-surface-container-lowest p-5">
+          <h2 className="text-[15px] font-semibold text-primary">{dictionary.totalOnlyPricing}</h2>
+          <p className="mt-2 text-[13px] text-on-surface-variant">
+            {dictionary.packageTotal}: <strong className="font-semibold text-on-surface font-sans" dir="ltr">{quotation.packageTotal !== null ? formatSarAmount(locale, quotation.packageTotal) : "—"}</strong>
+          </p>
+        </section>
+      ) : (
         <section className="overflow-hidden rounded-lg border border-surface-variant bg-surface-container-lowest">
           <div className="border-b border-surface-variant bg-surface-bright px-5 py-4">
             <h2 className="text-[15px] font-semibold text-primary">{dictionary.requirements}</h2>
@@ -106,6 +185,7 @@ export default function SupplierQuotationDetail({
             </div>
           )}
         </section>
+      )}
 
       <section className="rounded-lg border border-surface-variant bg-surface-container-lowest p-5">
         <h2 className="text-[15px] font-semibold text-primary">{dictionary.originalDocuments}</h2>

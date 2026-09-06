@@ -869,6 +869,7 @@ export interface ServicesDictionary {
     supplierClearedSuccess: string;
     dismiss: string;
     packageCreatedDraftNotice: string;
+    selectSupplierFirstNotice: string;
     quotationEvidence: string;
     statuses: {
       draft: string;
@@ -2325,6 +2326,7 @@ const servicesDictionaryEn: ServicesDictionary = {
     supplierClearedSuccess: "Supplier cleared successfully.",
     dismiss: "Dismiss",
     packageCreatedDraftNotice: "Package was created in draft status.",
+    selectSupplierFirstNotice: "Select a supplier first to record a quotation for this package.",
     quotationEvidence: "Quotation Evidence",
     statuses: {
       draft: "Draft",
@@ -3991,6 +3993,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     supplierClearedSuccess: "تم إخلاء المورد بنجاح.",
     dismiss: "إغلاق",
     packageCreatedDraftNotice: "تم إنشاء الباقة في حالة مسودة.",
+    selectSupplierFirstNotice: "اختر المورد أولاً لتسجيل عرض سعر لهذه الباقة.",
     quotationEvidence: "دليل عرض السعر",
     statuses: {
       draft: "مسودة",

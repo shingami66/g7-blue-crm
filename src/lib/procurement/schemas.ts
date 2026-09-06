@@ -101,6 +101,73 @@ export const procurementSelectionSchema = z
   })
   .strict();
 
+const optionalPositiveQuantity = z.preprocess(
+  (value) => {
+    if (value === undefined || value === null || value === "") return null;
+    if (typeof value === "string") return Number(value);
+    return value;
+  },
+  z
+    .number()
+    .finite("Quantity must be a finite number")
+    .positive("Quantity must be greater than zero")
+    .max(999999999.99)
+    .refine((value) => hasTwoDecimals(value), "Quantity supports up to two decimals.")
+    .nullable(),
+);
+
+const optionalUnitPrice = z.preprocess(
+  (value) => {
+    if (value === undefined || value === null || value === "") return null;
+    if (typeof value === "string") return Number(value);
+    return value;
+  },
+  z
+    .number()
+    .finite("Unit price must be a finite number")
+    .min(0, "Unit price must be non-negative")
+    .max(999999999999.99)
+    .refine((value) => hasTwoDecimals(value), "Unit price supports up to two decimals.")
+    .nullable(),
+);
+
+const requiredLineTotal = z.preprocess(
+  (value) => {
+    if (typeof value === "string") return Number(value);
+    return value;
+  },
+  z
+    .number()
+    .finite("Line total must be a finite number")
+    .min(0, "Line total must be non-negative")
+    .max(999999999999.99)
+    .refine((value) => hasTwoDecimals(value), "Line total supports up to two decimals."),
+);
+
+export const supplierQuotationDetailedLineSchema = z
+  .object({
+    packageRequirementId: z.string().uuid().nullable().optional(),
+    description: requiredText("Quotation line description is required", 2000),
+    quantity: optionalPositiveQuantity.optional(),
+    unit: optionalText.optional(),
+    unitPrice: optionalUnitPrice.optional(),
+    lineTotal: requiredLineTotal,
+    sortOrder: z.number().int().min(0).optional(),
+  })
+  .strict()
+  .superRefine((line, context) => {
+    if (line.quantity !== null && line.quantity !== undefined && line.unitPrice !== null && line.unitPrice !== undefined) {
+      const computed = roundMoney(line.quantity * line.unitPrice);
+      if (computed !== line.lineTotal) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Line total (${line.lineTotal}) must equal quantity (${line.quantity}) multiplied by unit price (${line.unitPrice}) = ${computed}`,
+          path: ["lineTotal"],
+        });
+      }
+    }
+  });
+
 export const supplierQuotationLineSchema = z
   .object({
     requirementId: z.string().uuid(),
@@ -118,12 +185,23 @@ export const supplierQuotationSchema = z
     packageTotal: optionalQuotedAmount,
     pricingMode: z.enum(["legacy", "total_only", "detailed"]).optional(),
     requirements: z.array(supplierQuotationLineSchema).optional(),
-    lines: z.array(z.unknown()).optional(),
+    lines: z.array(supplierQuotationDetailedLineSchema).optional(),
     requestId: z.string().uuid(),
   })
   .strict()
   .superRefine((value, context) => {
     const reqs = value.requirements ?? [];
+    const lines = value.lines ?? [];
+
+    if (reqs.length > 0 && lines.length > 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Quotation cannot combine legacy requirements with detailed line items.",
+        path: ["lines"],
+      });
+      return;
+    }
+
     if (reqs.length > 0) {
       const ids = reqs.map((line) => line.requirementId);
       if (new Set(ids).size !== ids.length) {
@@ -133,6 +211,43 @@ export const supplierQuotationSchema = z
           path: ["requirements"],
         });
       }
+      return;
+    }
+
+    if (lines.length > 0) {
+      if (lines.length > 100) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Quotation cannot exceed 100 line items.",
+          path: ["lines"],
+        });
+        return;
+      }
+      if (value.packageTotal === null || value.packageTotal === undefined) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Total amount is required for detailed supplier quotations.",
+          path: ["packageTotal"],
+        });
+        return;
+      }
+      const lineSubtotal = lines.reduce((sum, line) => roundMoney(sum + line.lineTotal), 0);
+      if (value.packageTotal !== lineSubtotal) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Quotation package total (${value.packageTotal}) must equal sum of line totals (${lineSubtotal}).`,
+          path: ["packageTotal"],
+        });
+      }
+      return;
+    }
+
+    if (value.packageTotal === null || value.packageTotal === undefined) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Total amount is required for total-only supplier quotations.",
+        path: ["packageTotal"],
+      });
     }
   });
 

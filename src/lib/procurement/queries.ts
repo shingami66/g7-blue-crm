@@ -12,6 +12,7 @@ import type {
   SupplierQuotationDocumentRow,
   SupplierQuotationRequirementRow,
   SupplierQuotationRow,
+  SupplierQuotationLineRow,
   SupplierQuotationLineItem,
   SupplierQuotationHistoryResult,
   SupplierQuotationHistoryRecord,
@@ -178,6 +179,39 @@ export async function getActiveProcurementSupplierOptions(): Promise<{
   }
 }
 
+export async function getPackageRequirementsForQuotation(
+  packageId: string,
+  serviceId: string,
+): Promise<{ id: string; title: string; sortOrder: number }[]> {
+  await requirePermission("supplier_costing:read");
+  try {
+    const { data, error } = await createAdminClient()
+      .from("service_procurement_package_requirements")
+      .select("id,title,sort_order")
+      .eq("package_id", packageId)
+      .eq("service_id", serviceId)
+      .order("sort_order", { ascending: true })
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.error("[getPackageRequirementsForQuotation] Lookup error:", error.message);
+      return [];
+    }
+
+    return ((data ?? []) as Array<{ id: string; title: string; sort_order: number }>).map((row) => ({
+      id: row.id,
+      title: row.title,
+      sortOrder: row.sort_order,
+    }));
+  } catch (error) {
+    console.error(
+      "[getPackageRequirementsForQuotation] Unexpected error:",
+      error instanceof Error ? error.message : "Unknown",
+    );
+    return [];
+  }
+}
+
 export async function getSupplierQuotationHistoryBySupplierId(
   supplierId: string,
   options: { includeDocuments?: boolean; quotationId?: string } = {},
@@ -220,6 +254,61 @@ export async function getSupplierQuotationHistoryBySupplierId(
       return { quotations: [], error: "supplier_quotation_history_load_failed" };
     }
 
+    const { data: itemizedRows, error: itemizedError } = await supabase
+      .from("supplier_quotation_lines")
+      .select("id,quotation_id,service_id,package_requirement_id,description,quantity,unit,unit_price,line_total,sort_order,created_at,created_by")
+      .in("quotation_id", quotationIds)
+      .order("sort_order", { ascending: true })
+      .order("id", { ascending: true });
+
+    if (itemizedError) {
+      console.error("[getSupplierQuotationHistoryBySupplierId] Detailed quotation lines lookup error:", itemizedError.message);
+      return { quotations: [], error: "supplier_quotation_history_load_failed" };
+    }
+
+    const itemizedLines = (itemizedRows ?? []) as unknown as SupplierQuotationLineRow[];
+    const packageRequirementIds = Array.from(
+      new Set(
+        itemizedLines
+          .map((row) => row.package_requirement_id)
+          .filter((id): id is string => typeof id === "string" && id.length > 0),
+      ),
+    );
+
+    const { data: packageReqRows, error: packageReqError } = packageRequirementIds.length > 0
+      ? await supabase
+        .from("service_procurement_package_requirements")
+        .select("id,title")
+        .in("id", packageRequirementIds)
+      : { data: [], error: null };
+
+    if (packageReqError) {
+      console.error("[getSupplierQuotationHistoryBySupplierId] Package requirement lookup error:", packageReqError.message);
+      return { quotations: [], error: "supplier_quotation_history_load_failed" };
+    }
+
+    const packageReqMap = new Map(
+      ((packageReqRows ?? []) as Array<{ id: string; title: string }>).map((row) => [row.id, row.title]),
+    );
+
+    const detailedLinesByQuotation = new Map<string, SupplierQuotationLineItem[]>();
+    for (const line of itemizedLines) {
+      const existing = detailedLinesByQuotation.get(line.quotation_id) ?? [];
+      existing.push({
+        id: line.id,
+        quotationId: line.quotation_id,
+        serviceId: line.service_id,
+        packageRequirementId: line.package_requirement_id,
+        packageRequirementTitle: line.package_requirement_id ? (packageReqMap.get(line.package_requirement_id) ?? null) : null,
+        description: line.description,
+        quantity: line.quantity === null ? null : Number(line.quantity),
+        unit: line.unit,
+        unitPrice: line.unit_price === null ? null : Number(line.unit_price),
+        lineTotal: Number(line.line_total),
+        sortOrder: line.sort_order,
+      });
+      detailedLinesByQuotation.set(line.quotation_id, existing);
+    }
 
     const lines = (lineRows ?? []) as SupplierQuotationRequirementRow[];
     const requirementIds = Array.from(new Set(lines.map((row) => row.requirement_id)));
@@ -312,8 +401,13 @@ export async function getSupplierQuotationHistoryBySupplierId(
       quotations: quotations.map((quotation) => {
         const service = serviceMap.get(quotation.service_id);
         const quotationLines = linesByQuotation.get(quotation.id) ?? [];
-                const pricingMode: "legacy" | "total_only" =
-          quotationLines.length > 0 ? "legacy" : "total_only";
+        const itemizedQuotationLines = detailedLinesByQuotation.get(quotation.id) ?? [];
+        const pricingMode: "legacy" | "total_only" | "detailed" =
+          itemizedQuotationLines.length > 0
+            ? "detailed"
+            : quotationLines.length > 0
+              ? "legacy"
+              : "total_only";
 
         return {
           id: quotation.id,
@@ -340,7 +434,7 @@ export async function getSupplierQuotationHistoryBySupplierId(
             lineAmount: line.line_amount === null ? null : Number(line.line_amount),
             legacyEvidenceRef: line.line_evidence_ref,
           })),
-          lines: [],
+          lines: itemizedQuotationLines,
           documents: attachmentsByQuotation.get(quotation.id) ?? [],
         };
       }),
@@ -479,3 +573,40 @@ export async function getSupplierQuotationRequirementOptions(
   }
 }
 
+export async function getEligibleServicesForSupplierQuotation(): Promise<{
+  services: SupplierQuotationServiceOption[];
+  error?: "eligible_services_load_failed";
+}> {
+  await requirePermission("supplier_costing:write");
+
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("services")
+      .select("id,service_number,service_title,event_name,status,deleted_at")
+      .is("deleted_at", null)
+      .not("status", "in", '("Completed","Cancelled")')
+      .order("service_number", { ascending: true });
+
+    if (error) {
+      console.error("[getEligibleServicesForSupplierQuotation] Lookup error:", error.message);
+      return { services: [], error: "eligible_services_load_failed" };
+    }
+
+    return {
+      services: ((data ?? []) as ServiceQuotationContextRow[]).map((row) => ({
+        serviceId: row.id,
+        serviceNumber: row.service_number,
+        serviceTitle: row.service_title,
+        eventName: row.event_name,
+        status: row.status,
+      })),
+    };
+  } catch (error) {
+    console.error(
+      "[getEligibleServicesForSupplierQuotation] Unexpected error:",
+      error instanceof Error ? error.message : "Unknown",
+    );
+    return { services: [], error: "eligible_services_load_failed" };
+  }
+}

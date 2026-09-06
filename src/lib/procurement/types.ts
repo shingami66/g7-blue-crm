@@ -3,6 +3,7 @@ import type {
   procurementCandidateSchema,
   procurementRequirementSchema,
   procurementSelectionSchema,
+  supplierQuotationDetailedLineSchema,
   supplierQuotationSchema,
 } from "./schemas";
 
@@ -118,6 +119,21 @@ export interface SupplierQuotationDocument {
   attachedAt: string;
 }
 
+export interface SupplierQuotationLineRow {
+  id: string;
+  quotation_id: string;
+  service_id: string;
+  package_requirement_id: string | null;
+  description: string;
+  quantity: number | string | null;
+  unit: string | null;
+  unit_price: number | string | null;
+  line_total: number | string;
+  sort_order: number;
+  created_at: string;
+  created_by: string;
+}
+
 export interface SupplierQuotationLine {
   requirementId: string;
   requirement: string;
@@ -203,6 +219,7 @@ export interface ProcurementRequirement {
 export type ProcurementRequirementInput = z.infer<typeof procurementRequirementSchema>;
 export type ProcurementCandidateInput = z.infer<typeof procurementCandidateSchema>;
 export type ProcurementSelectionInput = z.infer<typeof procurementSelectionSchema>;
+export type SupplierQuotationDetailedLineInput = z.infer<typeof supplierQuotationDetailedLineSchema>;
 export type SupplierQuotationInput = z.infer<typeof supplierQuotationSchema>;
 
 export type ProcurementRequirementsResult = {
