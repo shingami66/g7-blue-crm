@@ -13,6 +13,11 @@ export const SERVICE_BILLING_SUMMARY_PERMISSIONS = {
   read: "services:read_billing_summary",
 } as const;
 
+export const BUSINESS_DOCUMENT_PERMISSIONS = {
+  read: "documents:read",
+  write: "documents:write",
+} as const;
+
 export const ROLE_PERMISSIONS = {
   admin: [
     "*",
@@ -55,6 +60,8 @@ export const ROLE_PERMISSIONS = {
     "supplier_bookings:read_cost",
     "supplier_bookings:write",
     "supplier_bookings:cancel",
+    BUSINESS_DOCUMENT_PERMISSIONS.read,
+    BUSINESS_DOCUMENT_PERMISSIONS.write,
     "dashboard:read",
     ...APPROVED_BILLING_SCOPE_MANAGER_PERMISSIONS,
   ],

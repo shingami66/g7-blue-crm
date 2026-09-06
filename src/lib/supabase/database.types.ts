@@ -376,6 +376,87 @@ export type Database = {
         }
         Relationships: []
       }
+    business_document_links: {
+        Row: {
+          created_at: string
+          document_id: string
+          link_purpose: string
+          linked_by: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          link_purpose: string
+          linked_by: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          link_purpose?: string
+          linked_by?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_document_links_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "business_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_document_links_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_documents: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          document_type: string
+          file_size: number
+          id: string
+          mime_type: string
+          object_path: string
+          original_filename: string
+          purpose: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          bucket_id?: string
+          created_at?: string
+          document_type: string
+          file_size: number
+          id?: string
+          mime_type: string
+          object_path: string
+          original_filename: string
+          purpose: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          document_type?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          object_path?: string
+          original_filename?: string
+          purpose?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           bank_account_holder: string

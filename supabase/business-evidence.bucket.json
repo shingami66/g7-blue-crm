@@ -1,0 +1,12 @@
+{
+  "bucketId": "business-evidence",
+  "public": false,
+  "fileSizeLimitBytes": 26214400,
+  "allowedMimeTypes": [
+    "application/pdf",
+    "image/jpeg",
+    "image/png"
+  ],
+  "objectPathPrefix": "business-documents/",
+  "provisioning": "manual-supabase-dashboard"
+}
