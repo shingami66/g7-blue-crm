@@ -52,6 +52,30 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `payments`: Financial tracking of invoice payments. Current `payments.method` allowed values are `bank_transfer`, `cash`, `cheque`, and `online`; ERP-4 planning may later decide whether to change this to Cash / Bank Transfer / Card / Other. Contains the idempotent `request_id` (UUID, nullable, unique when not null) column to block double-submits.
 - `projects` / `project_tasks`: Existing legacy execution tracking. New ERP planning should use Service as the operational unit.
 
+### Procurement, Commitments & Business Documents (W4)
+- `business_documents`: Metadata table for business evidence files stored in the private Supabase bucket `business-evidence`. Stores `id`, `bucket_id`, `storage_path`, `file_name`, `file_size`, `mime_type`, `sha256`, `uploaded_by`, and timestamps.
+- `business_document_links`: Polymorphic relational linking table for business documents to domain entities (`service`, `supplier_quotation`, etc.) with `document_id`, `entity_type`, `entity_id`, `link_type`, `created_by`, and timestamps.
+- `supplier_quotations`: First-class supplier quotations, tracking `id`, `supplier_id`, `service_id` (nullable), `quotation_number` (`QUO-SUP-YYYY-NNNN`), `total_amount`, `currency` (SAR), `status` (`received`, `under_review`, `selected`, `rejected`, `expired`), `pricing_mode` (`total_only`, `line_items`), `procurement_package_id` (nullable), validity dates, notes, and audit timestamps.
+- `supplier_quotation_lines`: Detailed line items for supplier quotations with `quotation_id`, `package_requirement_id` (nullable), `item_description`, `quantity`, `unit_cost`, `line_total`, and sequence.
+- `approved_commitments`: Approved financial commitments representing governed obligations (`PO-YYYY-NNNN`), linking supplier, service, approved amount, status (`active`, `closed`, `cancelled`), and authorization metadata. Downstream human authorization only; no automatic commitment creation.
+- `approved_commitment_amendments`: Governed amendments preserving original commitment history and reason (`amendment_number`, delta amount, reason, authorized_by).
+- `approved_commitment_documents`: Relational linking of evidence documents to approved commitments.
+- `service_receipts`: Service receipts and acceptance tracking (`SR-YYYY-NNNN`), recording delivered quantity, unit price, total, recipient, and acceptance status (`received`, `accepted`, `rejected`, `corrected`).
+- `service_receipt_documents`: Relational linking of evidence documents to service receipts.
+- `service_receipt_corrections`: Correction records for service receipts.
+- `service_procurement_packages`: Canonical ERP organizing and selection workflow for service procurement under G7-OD-18. Groups requirements under a package (`PKG-YYYY-NNNN`), tracks `service_id`, `title`, `status` (`draft`, `selected`, `cancelled`), `selected_supplier_id` (at most one selected supplier per package), selection timestamp, and notes.
+- `service_procurement_package_requirements`: Junction table mapping service procurement requirements to packages.
+- `service_procurement_requirements` & `service_procurement_candidates`: Legacy sourcing compatibility tables. Preserved strictly for backward compatibility and historical integrity where still present. Candidate comparison, ranking, scoring, or automated evaluation is **NOT** active ERP Product Truth under G7-OD-18.
+
+### Key Procurement & Workflow RPCs
+- `create_supplier_quotation`: Creates a first-class supplier quotation with atomic numbering.
+- `attach_document_to_supplier_quotation`: Atomically attaches an uploaded business document to a supplier quotation.
+- `update_quotation_with_items`: Atomically updates quotation header and its detailed `supplier_quotation_lines`.
+- `upsert_procurement_package`: Atomically creates or updates a service procurement package.
+- `set_procurement_package_requirements`: Associates requirement IDs to a procurement package.
+- `select_procurement_package_supplier`: Explicitly records supplier selection on a procurement package (at most one selected supplier).
+- `clear_procurement_package_supplier`: Clears the selected supplier on a procurement package.
+
 ### Views
 - `customer_report_metrics`: Read-only view with `security_invoker = true`. Provides server-side aggregated metrics (`services_count`, `quotations_count`, `approved_quotations_count`, `draft_quotations_count`, `total_quoted_amount`) per customer for reporting and export.
 
@@ -63,6 +87,12 @@ These are approved target rules for future reviewed schema changes; they do not 
 - **Quotation** belongs to a **Service** and can keep `customer_id` only for reporting/query convenience.
 - **Invoice** is currently Service-linked: invoice creation persists `service_id` and its approved quotation basis. When an active Approved Billing Scope exists, invoice creation also persists `approved_billing_scope_id` and uses the scope accepted grand total as the billing ceiling; otherwise, the approved quotation total remains the transitional fallback.
 - **Payment** belongs to an **Invoice** and therefore connects to the Service through that invoice. The current schema does not establish a direct `payments.service_id` relationship.
+- **Procurement Package** belongs to a **Service**. One Service may contain multiple Procurement Packages.
+- **Procurement Requirements** are defined at the Service level and mapped to Procurement Packages.
+- **Supplier Quotation** is first-class commercial/operational evidence linked to a Supplier and optionally to a Service and/or Procurement Package.
+- **Selected Supplier:** A Procurement Package has at most one selected supplier (explicitly labeled "Selected Supplier", not approved; a draft package may have no selected supplier).
+- **Approved Commitment:** Represents a downstream human financial authorization linking to a Supplier and Service (`approved_commitments`, `approved_commitment_amendments`). Package creation or supplier selection creates no automatic commitment.
+- **Candidate Comparison:** Sourcing candidate ranking/scoring/comparison is **NOT** active ERP Product Truth (G7-OD-18); legacy candidate tables/RPCs are retained for historical compatibility only.
 
 ## Current implementation and future boundaries
 

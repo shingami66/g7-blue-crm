@@ -2,8 +2,8 @@
 ## Master Product Handover, Decision Register, Discovery Brief, and Rebaseline Report
 
 **Original report date:** 2 August 2026  
-**Latest decision sync:** 27 August 2026
-**Revision:** 0.15
+**Latest decision sync:** 6 September 2026
+**Revision:** 0.17
 **Owner:** Mozfer Mohamed Elhadi  
 **Product:** G7 BLUE CRM / Future Event ERP  
 **Document status:** Sole authoritative expansion reference, product decision register, strategic continuity record, and historical evidence ledger
@@ -23,12 +23,12 @@
 | Current operating company | G7 BLUE, a Saudi events and production company |
 | Current system shape | Internal Service-centered CRM with commercial workflow, suppliers foundation, users, and RBAC |
 | Future product direction | Two-layer strategy: first build and prove a complete single-company Event ERP inside G7 BLUE; only after real operational proof, productize the proven system as a multi-company SaaS for other event companies |
-| Current implementation status | Goal 2A/2B/2C remains delivered current-product foundation. The G1-G12 remediation program is separate from expansion activation and takes precedence where required before broad Layer 1 work. The exact active Goal, Git state, database state, validation evidence, and next action are governed by current project tracking/controller evidence rather than frozen here. |
+| Current implementation status | Goal 2A/2B/2C and the published G1-G12 remediation remain delivered current-product foundation. Layer 1 Product Truth Decision Closure is complete; W4 Procurement & Commitments is delivered across 9 reconstructed commits ahead of `origin/main` (PARTIAL / OPEN) under G7-OD-18. Exact Git, database, validation, authority, and next-action truth is governed by current project tracking/controller evidence rather than frozen here. |
 | Historical Post-G1 checkpoint (9 August 2026) | At that dated checkpoint, G1 Financial Lifecycle Authority, Cleanup & Rebaseline, DEV/DEMO Data Hygiene, UX/Loading Stabilization, and the Customer Document Architecture Correction were closed; the document correction was pushed at `93d3f132b3ff756f4c49904da8622e40babdaa18`; the Quotation Commercial Model Impact Check was `PARTIAL`; and G2 was still blocked. **Historical evidence only:** this row must never be used to infer the current active Goal, Git state, database state, or remediation status. |
 | Original report repository baseline | `cdd888b4cbc495a69be0a2cccb1f1ba5a3aae48d`, aligned with `origin/main` when the 2 August report was prepared |
 | Current dated delivery baseline | Section 28K preserves the Goal 2B/2C historical closeout. Current Git, working-tree, remediation, test, migration, and next-action truth is owned by verified repository evidence plus the current controller handover/project tracking, not by this strategic Master. |
-| Feature activation | Supplier Rate Card Management V1 remains the first separately governed bounded expansion slice. Its strategic scope remains bounded; current implementation, owner-acceptance, remediation, merge, and push status must be taken from the newest verified controller/repository evidence rather than inferred from historical snapshots in this Master. |
-| Latest owner decision sync | 27 August 2026: the Quotation Commercial Model strategic direction is locked; the product is explicitly configuration-driven; Layer 1 is strategically approved but requires Decision Closure before an executable roadmap is locked; and future Layer 2 Tender, Proposal, and Event Rendering direction is expanded. These product decisions do not authorize implementation, schema, database, deployment, or SaaS activation. |
+| Historical bounded feature activation | Supplier Rate Card Management V1 was the first separately governed bounded expansion slice. Its strategic scope remains bounded; it does not determine the current next action. Current implementation, Owner acceptance, remediation, merge, and push status must be taken from the newest verified controller/repository evidence rather than inferred from this Master. |
+| Latest owner decision sync | 6 September 2026: W4 Procurement & Commitments foundation is delivered across 9 reconstructed commits ahead of `origin/main` (PARTIAL / OPEN). Under G7-OD-18, Procurement Packages are the canonical organizing and selection workflow; candidate comparison/ranking is NOT active Product Truth; Supplier Quotation is first-class evidence; Commitments remain downstream human authorization. All 11 Layer 1 domains remain closed at Product Truth level. |
 | Current controlled-delivery snapshot | This Master deliberately does not freeze fast-changing Git/test/database truth. Use the newest verified controller/repository evidence for current execution state. This document owns strategic expansion direction, layer boundaries, decisions, and open questions. |
 | Field evidence still required | Real G7 commercial and Tender examples to validate configuration defaults, terminology, adoption, evidence capture, and later schema/migration preflight; wider Riyadh event-industry workflow evidence; customer billing/payment-term and credit-control practice; Tender guarantee/security practice where applicable; owned-versus-rented resource evidence; event-industry accountant review; and later tax/compliance review. This evidence does not reopen the locked strategic Quotation Commercial Model direction. |
 
@@ -55,6 +55,20 @@ This report consolidates:
 - The 9 August 2026 Post-G1 source-of-truth rebaseline: Customer Document Architecture Correction closed/pushed at `93d3f132`; Quotation Commercial Model Impact Check completed `PARTIAL` with Zainab field evidence required; Tender/Bid Management recorded as discover-now/build-later expansion with future in-system Technical Proposal, Financial Proposal/BOQ, and human-approved AI assistance.
 - The 10 August 2026 controller review of Reporting Truth and expansion readiness, including owner-confirmed invoice-status, invoice-period, and customer-activity semantics plus research-informed proposals for cash collection, historical receivables, customer payment terms/credit control, commercial authorization evidence, Tender guarantees, and owned-resource boundaries.
 - The 27 August 2026 Owner strategic decision sync locking the future Quotation Commercial Model direction, configuration-driven product philosophy, Layer 1 Decision Closure contract, and Layer 2 Tender, Proposal, and Event Rendering direction without activating implementation.
+- The 31 August 2026 Layer 1 Decision Closure completing all 11 domains, reconciling current mechanics against target Product Truth, and establishing one technical implementation plan without activating implementation, database, production, or Layer 2 work.
+- The 6 September 2026 W4 Procurement & Commitments partial delivery across 9 reconstructed commits ahead of origin/main under Owner Decision G7-OD-18.
+
+### 31 August 2026 Layer 1 closure continuity
+
+Layer 1 Decision Closure is complete at Product Truth level. The current repository-facing decision index is `event-erp-decision-register.md`; the sole technical architecture, gap, migration/cutover, validation, professional-gate, sequential-lane, and first-15-workday plan is `g7-layer1-technical-master-plan.md`. These two artifacts implement the closure requirement formerly recorded by Revision 0.15. They do not replace this strategic Master, reopen its historical ledger, or grant runtime, schema, SQL, database, deployment, production, publication, or Layer 2 authority.
+
+### 6 September 2026 W4 Partial Delivery & G7-OD-18 Continuity
+
+W4 Procurement & Commitments foundation is delivered across 9 reconstructed commits ahead of `origin/main`. In accordance with Owner Decision G7-OD-18:
+- **W4 Delivery Status:** `PARTIAL / OPEN`. W4 is actively delivered as a bounded foundation but remains open; W5 (Expenses & Cash Advances) remains locked and unstarted.
+- **Product Truth:** Procurement Packages (`service_procurement_packages`, `service_procurement_package_requirements`) are the canonical current ERP organizing and selection workflow for service procurement. A Procurement Package has at most one selected supplier (explicitly labeled "Selected Supplier", not approved; a draft package may have no selected supplier). Supplier Quotations (`supplier_quotations`, `supplier_quotation_lines`) are first-class commercial and operational evidence.
+- **Legacy Compatibility:** Candidate comparison, ranking, scoring, or automated evaluation is **NOT** active ERP Product Truth. Legacy candidate sourcing tables and RPCs (`service_procurement_requirements`, `service_procurement_candidates`) are retained strictly for backward compatibility and historical integrity where still present.
+- **Downstream Commitment:** Approved Commitment (`approved_commitments`, `approved_commitment_amendments`, `service_receipts`) remains a separate downstream human authorization workflow; package creation or supplier selection creates no automatic financial commitment, accounting entry, or vendor bill.
 
 
 ### 5 August 2026 revision summary

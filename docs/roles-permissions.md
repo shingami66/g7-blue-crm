@@ -6,12 +6,12 @@ The application uses Role-Based Access Control (RBAC) managed via the `app_users
 
 | Role | Permissions |
 |---|---|
-| **admin** | All permissions across all modules via `*` (including `services:read_billing_summary`, `invoices:read`, `invoices:write`, and relevant ABS write permissions). Canonical map: `src/lib/auth/role-permissions.ts` (re-exported through `src/lib/auth/permissions.ts`). |
-| **manager** | `customers:read/write/export`, `quotations:read/write/approve`, `services:read/write/update_status`, `services:read_billing_summary`, **`invoices:read` and `invoices:write`** (bounded application workflow for Deposit/Final creation under the same server gates as Admin), `payments:read`, `projects:read/write`, `suppliers:read/write`, Supplier Allocations permissions, Supplier Bookings (`supplier_bookings:read/read_cost/write/cancel`), Approved Billing Scope V1 (`approvedBillingScopes:read/create/update/review/approve/void/supersede/discard` via manager ABS grant set), `dashboard:read`. Detailed sections and `role-permissions.ts` / `permissions.ts` are authoritative. |
-| **sales** | `customers:read/write`, `quotations:read/write`, `services:read/write`, `services:read_billing_summary`, `invoices:read`, `payments:read`, `dashboard:read` |
-| **operations** | `customers:read`, `quotations:read`, `services:read`, `services:read_billing_summary`, `services:update_status`, `projects:read/write`, `suppliers:read/write`, `dashboard:read` |
-| **accountant** | `customers:read/export`, `quotations:read`, `services:read`, `services:read_billing_summary`, **`invoices:read` only (no `invoices:write`)**, `payments:read/write`, `settings:read`, `dashboard:read`, plus ABS accountant read grants. Financial visibility without Invoice mutation authority. |
-| **viewer** | Limited read-only access: `customers:read`, `quotations:read`, `services:read`, `invoices:read`, `payments:read`, `projects:read`, `suppliers:read`, `dashboard:read`, and `settings:read`. Viewer is not granted `services:read_billing_summary`. No bulk export, Approved Billing Scope, Supplier Allocation, or Supplier Booking access; no internal supplier cost visibility; and no full bank values in Company Settings responses. |
+| **admin** | All permissions across all modules via `*` (including `services:read_billing_summary`, `invoices:read`, `invoices:write`, relevant ABS write permissions, `procurement_commitments:*`, `service_receipts:*`, `documents:*`, and `supplier_costing:*`). Canonical map: `src/lib/auth/role-permissions.ts` (re-exported through `src/lib/auth/permissions.ts`). |
+| **manager** | `customers:read/write/export`, `quotations:read/write/approve`, `services:read/write/update_status`, `services:read_billing_summary`, **`invoices:read` and `invoices:write`** (bounded application workflow for Deposit/Final creation under the same server gates as Admin), `payments:read`, `projects:read/write`, `suppliers:read/write`, Supplier Allocations permissions, Supplier Bookings (`supplier_bookings:read/read_cost/write/cancel`), Approved Billing Scope V1 (`approvedBillingScopes:read/create/update/review/approve/void/supersede/discard` via manager ABS grant set), `procurement_commitments:read/write/amend/lifecycle`, `service_receipts:read/write/accept/correct`, `documents:read/write`, `supplier_costing:read/write`, `dashboard:read`. Detailed sections and `role-permissions.ts` / `permissions.ts` are authoritative. |
+| **sales** | `customers:read/write`, `quotations:read/write`, `services:read`, `services:read_billing_summary`, `services:write`, `invoices:read`, `payments:read`, `dashboard:read` |
+| **operations** | `customers:read`, `quotations:read`, `services:read`, `services:read_billing_summary`, `services:update_status`, `projects:read/write`, `suppliers:read/write`, `procurement_commitments:read`, `service_receipts:read/write`, `dashboard:read` |
+| **accountant** | `customers:read/export`, `quotations:read`, `services:read`, `services:read_billing_summary`, **`invoices:read` only (no `invoices:write`)**, `payments:read/write`, `settings:read`, `procurement_commitments:read`, `service_receipts:read`, `dashboard:read`, plus ABS accountant read grants. Financial visibility without Invoice mutation authority. |
+| **viewer** | Limited read-only access: `customers:read`, `quotations:read`, `services:read`, `invoices:read`, `payments:read`, `projects:read`, `suppliers:read`, `dashboard:read`, and `settings:read`. Viewer is not granted `services:read_billing_summary`. No bulk export, Approved Billing Scope, Supplier Allocation, Supplier Booking, Procurement Commitment, Service Receipt, or Document access; no internal supplier cost visibility; and no full bank values in Company Settings responses. |
 
 ## Company Settings CS-A
 
@@ -189,3 +189,31 @@ UI hiding alone is not sufficient.
 Early-stage supplier cost estimates inform Admin/Manager pricing decisions directly.
 Sales does not have direct access to supplier allocation cost data in MVP.
 Sales relies on Admin/Manager-provided or Admin/Manager-approved quotation pricing rather than viewing supplier estimates independently.
+
+## Shared Business Document Storage
+
+- `documents:read` and `documents:write` are currently Admin/Manager-only storage-capability permissions for the private business-evidence foundation; they are not record/domain authorization.
+- The current user-callable actions are Service-scoped and require `services:read` or `services:write` in addition to the corresponding document permission. Service document reads require a live relational Service link.
+- Generic storage plumbing remains server-only. Future domains must expose their own domain-scoped actions and record authorization; generic document permissions must never authorize arbitrary cross-domain document access.
+- The browser never receives the Supabase service-role credential or a public Storage URL. Future domains must add their own permission/record authorization before exposing documents to additional roles.
+
+## Procurement Commitments
+
+- `procurement_commitments:read`: Allows viewing approved commitments and their amendment history. Granted to: Admin, Manager, Operations, Accountant.
+- `procurement_commitments:write`: Required to create commitments from package/supplier selections. Granted to: Admin, Manager.
+- `procurement_commitments:amend`: Governs commitment amount/scope amendments with audit trail. Granted to: Admin, Manager.
+- `procurement_commitments:lifecycle`: Governs closing or cancelling commitments. Granted to: Admin, Manager.
+- Commitments represent downstream human financial authorizations; package creation or supplier selection creates no automatic commitment.
+
+## Service Receipts
+
+- `service_receipts:read`: Allows viewing service receipt records and delivery status. Granted to: Admin, Manager, Operations, Accountant.
+- `service_receipts:write`: Required to record delivered services/goods against commitments or allocations. Granted to: Admin, Manager, Operations.
+- `service_receipts:accept`: Formal operational acceptance of delivered items. Granted to: Admin, Manager.
+- `service_receipts:correct`: Governs corrections/reversals on recorded receipts. Granted to: Admin, Manager.
+
+## Supplier Costing
+
+- `supplier_costing:read`: Required to inspect supplier cost estimates, quotation lines, and costing breakdowns. Granted to: Admin, Manager.
+- `supplier_costing:write`: Required to update supplier costing lines and pricing models. Granted to: Admin, Manager.
+- Sales and Viewer roles have no access to supplier costing data.

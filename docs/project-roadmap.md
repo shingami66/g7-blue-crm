@@ -1,11 +1,33 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
+## CURRENT W4 DELIVERY STATUS — 6 September 2026 (PARTIAL / OPEN)
+
+- **W4 Delivery Status:** `PARTIAL / OPEN`. W4 is actively delivered as a bounded foundation across 9 reconstructed commits ahead of `origin/main` (`312b04d595f8ef8ce643a30ab7882c4cb88e0bad`), but remains PARTIAL / OPEN. W4 is NOT complete, the roadmap does NOT advance to W5, and no final Owner or Controller closure verdict is claimed.
+- **Current Product Truth under G7-OD-18:**
+  - **Procurement Packages** (`service_procurement_packages`, `service_procurement_package_requirements`) are the canonical current ERP organizing and selection workflow for service procurement.
+  - A Procurement Package has at most one selected supplier (explicitly labeled "Selected Supplier", not approved; a draft package may have no selected supplier).
+  - **Supplier Quotations** (`supplier_quotations`, `supplier_quotation_lines`) are first-class commercial and operational evidence.
+  - Candidate comparison, ranking, scoring, or automated evaluation is **NOT** current ERP Product Truth.
+  - Legacy candidate sourcing tables and RPCs (`service_procurement_requirements`, `service_procurement_candidates`) and compatibility endpoints are retained strictly for backward compatibility and historical integrity; they are not active operational workflow truth.
+  - **Approved Commitments** (`approved_commitments`, `approved_commitment_amendments`, `service_receipts`) remain a separate downstream human authorization workflow; package creation or supplier selection creates no automatic financial commitment, accounting entry, or vendor bill.
+- **Completed W4 Slices Delivered in Local Reconstructed History:**
+  1. **Procurement Requirement Foundation & Sourcing Compatibility:** Requirement sourcing migrations, actions, schemas, types, and service activity audit foundation (`160191d`).
+  2. **Shared Business Document Storage Foundation:** Private business-evidence bucket (`business-evidence`), metadata tables (`business_documents`, `business_document_links`), permissions (`documents:read`, `documents:write`), Next.js 25 MiB Server Action body limit (`74bcc1d`).
+  3. **First-Class Supplier Quotation History & Workspace:** Dedicated quotation routes (`/suppliers/[id]/quotations`, `/new`, `/[quotationId]`), header-level tracking, quotation actions, `RecordBackButton` returnTo navigation contracts, and file attachments (`b0a05f7`).
+  4. **Approved Commitments & Service Receipts Foundation:** `approved_commitments`, `approved_commitment_amendments`, and `service_receipts` schemas/types/actions/permissions (`procurement_commitments:read/write/amend/lifecycle`, `service_receipts:read/write/accept/correct`), commitment summary card, and dedicated workspace (`780caf1`).
+  5. **Procurement Package Foundation & Requirements Workspace:** Dedicated Package Workspace (`/services/[id]/procurement`), package-level requirement catalog (curated categories + custom text), supplier selection/clearing, draft/selected/cancelled statuses, bilingual English/Arabic localization (`481e0a4`).
+  6. **Quotation Line Items, Pricing Modes & Package Context UX:** Detailed line items (`supplier_quotation_lines`) vs Total-Only pricing modes, Package Requirement linkage, service eligibility rules, Save-then-Record flow, Add Line focus/scroll/highlight feedback, and exhaustion state (`b0a7e8a`).
+  7. **Shared Controls & Search Hardening:** Compact action button sizing and payments search draft/submit hardening (`e10f710`).
+  8. **Service Detail Operational UX Refinements:** Compact operational summary visual hierarchy, collapsible `ServiceLifecycleActions`, `ServiceCancellationActions` guard, cross-workspace tests, and canonical `RecordBackButton` integration across all operational routes (`b3445ac`).
+  9. **Delegation Harness & Agent Governance Hardening:** Provider-neutral delegation harness (`agy-delegate`), writer lock mutex, recovery capsule schema, deterministic OCR review packet fixture, and coding-harness workflow contracts (`e5973bc`).
+- **Roadmap Sequence Position:** W4 remains `PARTIAL / OPEN`. W5 (Expenses & Cash Advances) remains unstarted and locked. No roadmap advancement to W5 is permitted until remaining W4 scope is completed under explicit Owner task authorization.
+
 ## CURRENT W1 CLOSEOUT — 31 August 2026
 
 - **W1:** `PASS` after Owner acceptance. W1A Effective Access, Open Review routing hardening, W1C Quotation Approvals, and W1C Ready-to-Start Services are complete and published in the authorized sequence.
 - **W1B:** **NOT REQUIRED FOR THIS WAVE**. Approval Authority / SoD remains deferred and unimplemented; reopen only if a real existing workflow demonstrates a durable bounded gap.
 - **Delivered boundary:** Effective Access uses the reviewed narrow `quotations:approve` override path with DENY-wins semantics. Action Center uses the existing Dashboard Attention surface for two real source-linked slices: quotation approvals and transition-ready Services. No generic workflow engine, new authority, inline mutation, or new persistence was added for W1C.
-- **Next locked priority:** W2A, W2B, W2C and W3 are complete and closed on the Owner-authorized DEV environment. The next locked roadmap task is W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`), requiring a new Owner-authorized task. Do not extend W1C without evidence of a required consumer or defect.
+- **Next locked priority:** W2A, W2B, W2C and W3 are complete and closed on the Owner-authorized DEV environment. The next locked roadmap task is W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`), delivered in reconstructed local history as a bounded partial foundation across 9 commits ahead of `origin/main` (see `CURRENT W4 DELIVERY STATUS — 6 September 2026 (PARTIAL / OPEN)` above). W4 remains PARTIAL / OPEN; W5 remains locked and unstarted.
 
 ## W2A CLOSEOUT — 31 August 2026 (COMPLETED)
 
@@ -25,7 +47,7 @@
 - **W2C Deterministic Discount Allocation / Approval Projection:** `PASS` and closed. The approved fixed-amount SAR discount rule is persisted once on quotation items and projected by exact copy into approval/ABS evidence and W2B successor drafts. Allocation is integer-halal proportional largest remainder, with deterministic `created_at ASC, id ASC` tie-breaking and Authority Line-root attribution only.
 - **Evidence boundary:** migration `20260901100000_w2c_deterministic_discount_allocation.sql` was applied and reconciled on the Owner-authorized DEV project `dpddrqjzqohexixgdqiq`; schema, constraints, security grants, fail-closed behavior, approval/ABS equality, revision copying, focused tests, and transaction-local smoke passed. No DEMO environment currently exists; no production/deployment claim is made.
 - **Scope boundary:** Included Components and unselected Optional Add-ons receive zero allocation; quotation `grand_total` remains authoritative. Percentage discounts, non-SAR/FX allocation, VAT/revenue/accounting policy, Change Orders, ABS supersession/reapproval, historical backfill, and unrelated W2 work remain deferred or out of scope.
-- **Next locked roadmap task:** W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`) is closed in the current section below. The next locked roadmap task is W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`); this roadmap entry grants no further database mutation or implementation authority.
+- **Next locked roadmap task:** W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`) is closed in the current section below. W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`) is delivered in reconstructed local history as a bounded partial foundation across 9 commits ahead of `origin/main` (see `CURRENT W4 DELIVERY STATUS — 6 September 2026 (PARTIAL / OPEN)` above). W4 remains PARTIAL / OPEN; W5 remains locked and unstarted.
 
 ## CURRENT W3 CLOSEOUT — 1 September 2026
 
@@ -33,16 +55,16 @@
 - **Evidence boundary:** migration `20260901110000_w3_event_lifecycle_compatibility.sql` was applied and reconciled on the Owner-authorized DEV project `dpddrqjzqohexixgdqiq`; the local migration SHA-256 is `209769B5F8691D7E499928D7E1A7A92CB4748CB05FD3DDB39687AA5EA111E0F7`. Backfill, constraints, RLS, fixed-search-path/service-role boundaries, payment projection, lifecycle transitions, audit/replay behavior, cancellation guard, and rollback-clean smoke passed.
 - **Validation and acceptance:** focused regression/reconciliation validation, TypeScript/lint, independent findings-only review, bounded repair and targeted rereview passed. Owner English/Arabic/RTL/mobile Service-detail acceptance is `PASS`; W3 is Owner-accepted. No further database mutation, DEMO/production, deployment, or accounting activation is claimed.
 - **Scope boundary:** no task/resource system, procurement, costing, AP/AR, accounting, broad dashboard, or app-user-permission-override expansion was introduced. Authorized-credit start remains a separate role-based gate.
-- **Next locked roadmap task:** W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`) is the next separately authorized slice. This closeout grants no W4 implementation or database authority.
+- **Next locked roadmap task:** W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`) is delivered in reconstructed local history as a bounded partial foundation across 9 commits ahead of `origin/main` (see `CURRENT W4 DELIVERY STATUS — 6 September 2026 (PARTIAL / OPEN)` above). W4 remains PARTIAL / OPEN; W5 remains locked and unstarted.
 
-## 0. CURRENT RECONCILED ROADMAP — 31 August 2026
+## 0. CURRENT RECONCILED ROADMAP — 6 September 2026
 
 - **Decision closure:** all 11 Layer 1 Event ERP domains are closed at Product Truth level; Domain 11 — Dashboards & Reporting is closed without a new Owner Decision Packet. Exact classifications, conflicts and deferrals are in `docs/product/event-erp-decision-register.md` and `docs/product/g7-layer1-technical-master-plan.md`.
-- **Single delivery lane:** W0 protected truth synchronization → W1 Authority Foundation → W2 Commercial Authority → W3 Event Operations → W4 Procurement & Commitments → W5 Expenses & Cash Advances → W6 AP → W7 AR Expansion → W8 Event Costing → W9 Dashboards/Reports → W10 Accounting behind professional gates → W11 Cutover and G7 proof.
+- **Single delivery lane:** W0 protected truth synchronization → W1 Authority Foundation → W2 Commercial Authority → W3 Event Operations → W4 Procurement & Commitments (PARTIAL / OPEN) → W5 Expenses & Cash Advances (LOCKED / UNSTARTED) → W6 AP → W7 AR Expansion → W8 Event Costing → W9 Dashboards/Reports → W10 Accounting behind professional gates → W11 Cutover and G7 proof.
 - **Current mechanics are not target policy:** legacy deposit-gated Service transitions, supplier Booking/Allocation semantics, deposit/final-only billing, role-only permissions, global dashboard metrics, and current-period reporting are preserved as source/migration evidence. They must not silently define the target.
 - **Quality lane:** every future slice uses one logical Writer, separate findings-only Reviewer, focused validation, Mozfer manual acceptance where required, and Controller verdict. Database draft, DEV/DEMO apply, publication, deployment, production, professional activation, and Layer 2 each remain separate authority gates.
 - **No implementation activation:** this roadmap is executable planning, not authority to change code/schema/database or publish/deploy. Professional accounting, revenue, VAT/FATOORA, bank, security and accessibility gates remain as named in the technical master plan.
-- **Historical next governed action (superseded):** This prior planning snapshot pointed to approval of the protected `AGENTS.md`/guard/Design Contract synchronization manifest. The current W1, W2 and W3 closeouts above record the delivered Open Review routing hardening, commercial authority work and Event Lifecycle compatibility slice; W4 Procurement & Commitments is the sole next locked roadmap task and requires a new Owner task.
+- **Historical next governed action (superseded):** This prior planning snapshot pointed to approval of the protected `AGENTS.md`/guard/Design Contract synchronization manifest. The current W1, W2 and W3 closeouts above record the delivered Open Review routing hardening, commercial authority work and Event Lifecycle compatibility slice; W4 Procurement & Commitments is actively delivered as a bounded foundation across 9 reconstructed commits ahead of `origin/main` (PARTIAL / OPEN), and W5 remains locked and unstarted.
 
 ## 0A. HISTORICAL RECONCILED ROADMAP — 27 August 2026 (SUPERSEDED FOR CURRENT LAYER 1 PLANNING)
 

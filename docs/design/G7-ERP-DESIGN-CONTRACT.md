@@ -27,7 +27,24 @@ It does not invent product behavior, accounting or tax policy, permissions, sche
 
 ## 6. Current Product Continuity
 
+### CURRENT IMPLEMENTED MECHANICS (repository behavior/history)
+
 G7 BLUE remains an Events CRM + Billing system with the locked Customer Profile -> Service -> Quotation -> Invoice -> Payment flow and Service / Booking as the operational context. V1 continues; Feature 009 and Event ERP implementation remain inactive; ABS Void/Supersede remains a preserved preferred candidate pending activation.
+
+### CURRENT W4 PROCUREMENT & PACKAGES FOUNDATION (G7-OD-18)
+
+Under Owner Decision G7-OD-18, the ERP service procurement presentation and interaction model adheres to the following invariants:
+- **Procurement Packages** (`service_procurement_packages`, `service_procurement_package_requirements`) are the canonical ERP organizing and selection workflow for service procurement.
+- A Procurement Package has at most one selected supplier (explicitly labeled "Selected Supplier", not approved; a draft package may have no selected supplier).
+- **Supplier Quotations** are first-class commercial and operational evidence.
+- Candidate comparison, ranking, scoring, or automated evaluation is **NOT** active ERP Product Truth. UI designs must NOT present candidate scoring, ranking algorithms, or artificial automated comparison matrices.
+- Legacy candidate sourcing tables/RPCs are preserved only for compatibility and historical integrity where still present.
+- **Approved Commitment** remains a separate downstream human authorization workflow; package creation or supplier selection creates no automatic commitment.
+- W4 remains `PARTIAL / OPEN`; W5 is locked and unstarted.
+
+### TARGET LAYER 1 PRODUCT TRUTH (planning only; not implemented)
+
+Layer 1 planning targets a closed single-company Event ERP presentation and interaction model while preserving the current V1 evidence until separately authorized implementation, migration, professional, Owner, and acceptance gates close. This contract does not claim that target runtime behavior is shipped; after G0 synchronization the exact next implementation gate is `G1-SLICE` for a named bounded W1 slice.
 
 ## 7. G7 BLUE Visual Identity
 
