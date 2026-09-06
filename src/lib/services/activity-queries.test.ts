@@ -65,6 +65,30 @@ const auditRows = [
   },
 ];
 
+const procurementAuditRows = [
+  {
+    id: "audit-quotation",
+    timestamp: "2026-08-03T03:30:00Z",
+    user_id: "actor-name",
+    details: {
+      event_type: "supplier_quotation_created",
+      service_id: "service-1",
+      supplier_reference: "SUP-42",
+    },
+  },
+  {
+    id: "audit-procurement",
+    timestamp: "2026-08-03T03:00:00Z",
+    user_id: "actor-name",
+    details: {
+      event_type: "procurement_supplier_selected",
+      service_id: "service-1",
+      reason: "Best documented fit for the event requirement.",
+      evidence_ref: "quote-1",
+    },
+  },
+];
+
 const actorRows = [
   {
     clerk_user_id: "actor-name",
@@ -109,6 +133,7 @@ mock.module("@/lib/auth/permissions", {
     requirePermission: async (permission: string) => {
       permissionCalls.push(permission);
     },
+    checkPermission: async () => true,
   },
 });
 mock.module("@/lib/supabase/admin", {
@@ -116,11 +141,14 @@ mock.module("@/lib/supabase/admin", {
     createAdminClient: () => ({
       from(table: string) {
         if (table === "audit_logs") {
+          let procurementQuery = false;
           const auditQuery = {
             select() { return auditQuery; },
             eq() { return auditQuery; },
+            in() { procurementQuery = true; return auditQuery; },
+            filter() { return auditQuery; },
             order() { return auditQuery; },
-            limit: async () => ({ data: auditRows, error: null }),
+            limit: async () => ({ data: procurementQuery ? procurementAuditRows : auditRows, error: null }),
           };
           return auditQuery;
         }
@@ -197,6 +225,18 @@ test("Lifecycle transition context is projected without exposing raw audit JSON"
   assert.equal(lifecycleEvent?.gateBasis, "settled_payment");
   assert.equal(lifecycleEvent?.evidenceRef, "Deposit invoice settled and readiness confirmed.");
   assert.equal("details" in (lifecycleEvent ?? {}), false);
+});
+
+test("Authorized procurement audit rows join Service history with projected evidence only", async () => {
+  const activity = await listServiceActivity("service-1");
+  const procurementEvent = activity.events.find((event) => event.eventType === "procurement_supplier_selected");
+  const quotationEvent = activity.events.find((event) => event.eventType === "supplier_quotation_created");
+
+  assert.equal(procurementEvent?.reason, "Best documented fit for the event requirement.");
+  assert.equal(procurementEvent?.evidenceRef, "quote-1");
+  assert.equal("details" in (procurementEvent ?? {}), false);
+  assert.equal(quotationEvent?.eventType, "supplier_quotation_created");
+  assert.equal("details" in (quotationEvent ?? {}), false);
 });
 
 test("Actor lookup failure preserves history with safe unknown-user fallbacks", async () => {

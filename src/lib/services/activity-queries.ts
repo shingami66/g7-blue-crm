@@ -1,6 +1,6 @@
 import "server-only";
 
-import { requirePermission } from "@/lib/auth/permissions";
+import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type ServiceActivityEvent = {
@@ -43,6 +43,15 @@ function auditAmount(value: unknown): number | null {
   return null;
 }
 
+function isProcurementEvent(details: unknown): boolean {
+  if (!details || typeof details !== "object" || Array.isArray(details)) return false;
+  const eventType = (details as Record<string, unknown>).event_type;
+  return typeof eventType === "string" && (
+    eventType.startsWith("procurement_") ||
+    eventType.startsWith("supplier_quotation_")
+  );
+}
+
 function resolveActor(
   userId: string | null,
   actorsById: ReadonlyMap<string, ActorRecord>,
@@ -69,7 +78,8 @@ export async function listServiceActivity(serviceId: string): Promise<{
 
   try {
     const supabase = createAdminClient();
-    const { data, error } = await supabase
+    const canReadProcurement = await checkPermission("supplier_costing:read");
+    const serviceAuditPromise = supabase
       .from("audit_logs")
       .select("id, timestamp, user_id, details")
       .eq("entity_type", "service")
@@ -78,12 +88,48 @@ export async function listServiceActivity(serviceId: string): Promise<{
       .order("id", { ascending: false })
       .limit(20);
 
-    if (error) {
-      console.error("[listServiceActivity] Audit lookup error:", error.message);
+    // Procurement audit rows retain their specific entity type. They carry the
+    // owning service id in details so the shared Service activity stream can
+    // include them without widening the generic audit query.
+    const procurementAuditPromise = canReadProcurement
+      ? supabase
+          .from("audit_logs")
+          .select("id, timestamp, user_id, details")
+          .in("entity_type", [
+            "service_procurement_requirement",
+            "service_procurement_candidate",
+            "supplier_quotation",
+          ])
+          .filter("details->>service_id", "eq", serviceId)
+          .order("timestamp", { ascending: false })
+          .order("id", { ascending: false })
+          .limit(20)
+      : Promise.resolve({ data: [], error: null });
+
+    const [serviceAudit, procurementAudit] = await Promise.all([
+      serviceAuditPromise,
+      procurementAuditPromise,
+    ]);
+
+    if (serviceAudit.error || procurementAudit.error) {
+      console.error(
+        "[listServiceActivity] Audit lookup error:",
+        serviceAudit.error?.message ?? procurementAudit.error?.message,
+      );
       return { success: false, events: [] };
     }
 
-    const rows = data ?? [];
+    // Supplier procurement evidence is internal and must not become visible to
+    // ordinary Service readers through the shared activity stream.
+    const rows = [...(serviceAudit.data ?? []), ...(procurementAudit.data ?? [])]
+      .filter((row) => canReadProcurement || !isProcurementEvent(row.details))
+      .sort((left, right) => {
+        const timestampOrder = String(right.timestamp).localeCompare(String(left.timestamp));
+        return timestampOrder !== 0
+          ? timestampOrder
+          : String(right.id).localeCompare(String(left.id));
+      })
+      .slice(0, 20);
     const actorIds = Array.from(new Set(
       rows
         .map((row) => optionalString(row.user_id))

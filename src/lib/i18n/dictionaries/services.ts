@@ -333,6 +333,11 @@ export interface ServicesDictionary {
     unavailable: string;
     statusChanged: string;
     depositPaymentConfirmed: string;
+    procurementRequirementCreated: string;
+    procurementRequirementUpdated: string;
+    procurementCandidateRecorded: string;
+    procurementSupplierSelected: string;
+    procurementQuotationDocumentAttached: string;
     updated: string;
     actor: string;
     from: string;
@@ -343,6 +348,7 @@ export interface ServicesDictionary {
     invoice: string;
     payment: string;
     amount: string;
+    evidence: string;
     systemActor: string;
     userActor: string;
     unknownActor: string;
@@ -757,6 +763,70 @@ export interface ServicesDictionary {
       noReason: string;
       empty: string;
     };
+  };
+  procurementRequirement: {
+    title: string;
+    subtitle: string;
+    empty: string;
+    loadError: string;
+    noPermission: string;
+    statusLabels: Record<string, string>;
+    sourcingPaths: Record<string, string>;
+    fields: {
+      requirement: string;
+      sourcingPath: string;
+      sourcingReason: string;
+      sourcingEvidence: string;
+      selectionStatus: string;
+      selectedSupplier: string;
+      selectionReason: string;
+      selectionEvidence: string;
+      supplier: string;
+      offerSummary: string;
+      evidence: string;
+      updated: string;
+    };
+    noCandidates: string;
+    actions: {
+      saveRequirement: string;
+      savingRequirement: string;
+      editRequirement: string;
+      closeEdit: string;
+      addCandidate: string;
+      saveCandidate: string;
+      savingCandidate: string;
+      selectSupplier: string;
+      savingSelection: string;
+      viewQuotations: string;
+    };
+    placeholders: {
+      requirement: string;
+      sourcingReason: string;
+      sourcingEvidence: string;
+      selectSupplier: string;
+      offerSummary: string;
+      evidence: string;
+      selectionReason: string;
+      selectionEvidence: string;
+    };
+    success: {
+      requirementSaved: string;
+      candidateSaved: string;
+      selectionSaved: string;
+    };
+    errors: Record<string, string>;
+  };
+  procurementSummary: {
+    title: string;
+    subtitle: string;
+    openRequirements: string;
+    candidateSuppliers: string;
+    supplierQuotations: string;
+    selectedSupplier: string;
+    noneSelected: string;
+    unavailable: string;
+    loadError: string;
+    openWorkspace: string;
   };
   billing: {
     title: string;
@@ -1512,6 +1582,11 @@ const servicesDictionaryEn: ServicesDictionary = {
     unavailable: "Activity history is currently unavailable.",
     statusChanged: "Service status changed",
     depositPaymentConfirmed: "Deposit payment confirmed",
+    procurementRequirementCreated: "Procurement requirement recorded",
+    procurementRequirementUpdated: "Procurement requirement corrected",
+    procurementCandidateRecorded: "Supplier candidate evidence recorded",
+    procurementSupplierSelected: "Supplier selection recorded",
+    procurementQuotationDocumentAttached: "Supplier quotation original attached",
     updated: "Activity updated",
     actor: "By",
     from: "From",
@@ -1522,6 +1597,7 @@ const servicesDictionaryEn: ServicesDictionary = {
     invoice: "Invoice",
     payment: "Payment",
     amount: "Amount",
+    evidence: "Evidence",
     systemActor: "System",
     userActor: "User",
     unknownActor: "Unknown user",
@@ -2029,6 +2105,96 @@ const servicesDictionaryEn: ServicesDictionary = {
       noReason: "No reason recorded",
       empty: "—",
     },
+  },
+  procurementRequirement: {
+    title: "Procurement Requirement & Sourcing",
+    subtitle: "Internal evidence for the Service need and supplier choice. This is not a Booking or commitment.",
+    empty: "No procurement requirement has been recorded for this Service.",
+    loadError: "Procurement requirement data could not be loaded. Please try again.",
+    noPermission: "Procurement evidence is restricted to authorized supplier-cost users.",
+    statusLabels: { open: "Open", selected: "Supplier selected" },
+    sourcingPaths: {
+      make: "Make",
+      rent: "Rent",
+      buy: "Buy",
+      source: "Source",
+      sole_source: "Sole source",
+      emergency: "Emergency",
+    },
+    fields: {
+      requirement: "Requirement",
+      sourcingPath: "Sourcing path",
+      sourcingReason: "Sourcing reason",
+      sourcingEvidence: "Sourcing evidence",
+      selectionStatus: "Selection status",
+      selectedSupplier: "Selected supplier",
+      selectionReason: "Selection reason",
+      selectionEvidence: "Selection evidence",
+      supplier: "Supplier",
+      offerSummary: "Offer summary",
+      evidence: "Evidence reference",
+      updated: "Updated",
+    },
+    noCandidates: "No candidate supplier evidence has been recorded yet.",
+    actions: {
+      saveRequirement: "Save requirement",
+      savingRequirement: "Saving requirement…",
+      editRequirement: "Edit requirement",
+      closeEdit: "Close editor",
+      addCandidate: "Add candidate evidence",
+      saveCandidate: "Save candidate evidence",
+      savingCandidate: "Saving candidate evidence…",
+      selectSupplier: "Record supplier selection",
+      savingSelection: "Saving selection…",
+      viewQuotations: "View supplier quotations",
+    },
+    placeholders: {
+      requirement: "Describe what the Service needs…",
+      sourcingReason: "Why this sourcing path is appropriate…",
+      sourcingEvidence: "Reference the supporting approval, request, or record…",
+      selectSupplier: "Select an active supplier…",
+      offerSummary: "Summarize the supplier offer…",
+      evidence: "Quote, email, proposal, or other evidence reference…",
+      selectionReason: "Why this candidate was selected…",
+      selectionEvidence: "Reference the approval or decision evidence…",
+    },
+    success: {
+      requirementSaved: "Procurement requirement saved.",
+      candidateSaved: "Candidate supplier evidence saved.",
+      selectionSaved: "Supplier selection recorded.",
+    },
+    errors: {
+      procurement_request_invalid: "The request could not be validated. Please try again.",
+      procurement_permission_denied: "You do not have permission to change procurement evidence.",
+      procurement_sourcing_path_invalid: "Select a valid sourcing path.",
+      procurement_requirement_fields_required: "Requirement, reason, and evidence are required.",
+      procurement_exception_evidence_required: "Emergency and sole-source paths require reason and evidence.",
+      procurement_request_conflict: "This request identifier was already used with different evidence.",
+      procurement_requirement_not_found: "The procurement requirement was not found.",
+      procurement_requirement_unavailable: "The procurement requirement is no longer available.",
+      service_procurement_service_locked: "Procurement evidence is unavailable for a completed or cancelled Service.",
+      procurement_candidate_fields_required: "Candidate supplier, offer, and evidence are required.",
+      procurement_candidate_fields_invalid: "Candidate evidence is invalid.",
+      procurement_supplier_unavailable: "The selected supplier is not currently available.",
+      procurement_selection_evidence_required: "Selection reason and evidence are required.",
+      procurement_candidate_required: "Record candidate evidence before selecting a supplier.",
+      PROCUREMENT_WRITE_FAILED: "Could not save procurement evidence. Please try again.",
+      INVALID_INPUT: "Please review the procurement fields.",
+      UNAUTHORIZED: "You must be signed in to change procurement evidence.",
+      FORBIDDEN: "You do not have permission to change procurement evidence.",
+    },
+  },
+  procurementSummary: {
+    title: "Procurement workspace",
+    subtitle: "A compact view of sourcing progress for this Service.",
+    openRequirements: "Open requirements",
+    candidateSuppliers: "Candidate suppliers",
+    supplierQuotations: "Supplier quotations",
+    selectedSupplier: "Selected supplier",
+    noneSelected: "None selected",
+    unavailable: "Unavailable",
+    loadError: "Procurement summary could not be loaded. Please open the workspace to retry.",
+    openWorkspace: "Open Procurement Workspace",
   },
   billing: {
     title: "Billing",
@@ -3001,6 +3167,11 @@ const servicesDictionaryAr: ServicesDictionary = {
     unavailable: "سجل النشاط غير متاح حاليًا.",
     statusChanged: "تم تغيير حالة الخدمة",
     depositPaymentConfirmed: "تم تأكيد سداد الدفعة المقدمة",
+    procurementRequirementCreated: "تم تسجيل متطلب التوريد",
+    procurementRequirementUpdated: "تم تصحيح متطلب التوريد",
+    procurementCandidateRecorded: "تم تسجيل دليل المورد المرشح",
+    procurementSupplierSelected: "تم تسجيل اختيار المورد",
+    procurementQuotationDocumentAttached: "تم إرفاق أصل عرض سعر المورد",
     updated: "تم تحديث النشاط",
     actor: "بواسطة",
     from: "من",
@@ -3011,6 +3182,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     invoice: "الفاتورة",
     payment: "الدفعة",
     amount: "المبلغ",
+    evidence: "الدليل",
     systemActor: "النظام",
     userActor: "مستخدم",
     unknownActor: "مستخدم غير معروف",
@@ -3512,6 +3684,96 @@ const servicesDictionaryAr: ServicesDictionary = {
       empty: "—",
     },
   },
+  procurementRequirement: {
+    title: "متطلب التوريد ومسار التوريد",
+    subtitle: "أدلة داخلية لحاجة الخدمة واختيار المورد. هذا ليس حجز مورد ولا التزامًا.",
+    empty: "لم يتم تسجيل متطلب توريد لهذه الخدمة.",
+    loadError: "تعذر تحميل بيانات متطلب التوريد. يرجى المحاولة مرة أخرى.",
+    noPermission: "أدلة التوريد مقيدة بالمستخدمين المصرح لهم بتكاليف الموردين.",
+    statusLabels: { open: "مفتوح", selected: "تم اختيار المورد" },
+    sourcingPaths: {
+      make: "تصنيع داخلي",
+      rent: "استئجار",
+      buy: "شراء",
+      source: "توريد",
+      sole_source: "مصدر وحيد",
+      emergency: "طوارئ",
+    },
+    fields: {
+      requirement: "المتطلب",
+      sourcingPath: "مسار التوريد",
+      sourcingReason: "سبب مسار التوريد",
+      sourcingEvidence: "دليل مسار التوريد",
+      selectionStatus: "حالة الاختيار",
+      selectedSupplier: "المورد المختار",
+      selectionReason: "سبب الاختيار",
+      selectionEvidence: "دليل الاختيار",
+      supplier: "المورد",
+      offerSummary: "ملخص العرض",
+      evidence: "مرجع الدليل",
+      updated: "آخر تحديث",
+    },
+    noCandidates: "لم يتم تسجيل أدلة لموردين مرشحين حتى الآن.",
+    actions: {
+      saveRequirement: "حفظ المتطلب",
+      savingRequirement: "جارٍ حفظ المتطلب…",
+      editRequirement: "تعديل المتطلب",
+      closeEdit: "إغلاق المحرر",
+      addCandidate: "إضافة دليل مورد مرشح",
+      saveCandidate: "حفظ دليل المرشح",
+      savingCandidate: "جارٍ حفظ دليل المرشح…",
+      selectSupplier: "تسجيل اختيار المورد",
+      savingSelection: "جارٍ حفظ الاختيار…",
+      viewQuotations: "عرض عروض أسعار المورد",
+    },
+    placeholders: {
+      requirement: "صف ما تحتاجه الخدمة…",
+      sourcingReason: "لماذا يناسب هذا المسار…",
+      sourcingEvidence: "أدخل مرجع الاعتماد أو الطلب أو السجل الداعم…",
+      selectSupplier: "اختر موردًا نشطًا…",
+      offerSummary: "لخص عرض المورد…",
+      evidence: "مرجع عرض السعر أو البريد أو المقترح أو الدليل الآخر…",
+      selectionReason: "لماذا تم اختيار هذا المرشح…",
+      selectionEvidence: "أدخل مرجع الاعتماد أو دليل القرار…",
+    },
+    success: {
+      requirementSaved: "تم حفظ متطلب التوريد.",
+      candidateSaved: "تم حفظ دليل المورد المرشح.",
+      selectionSaved: "تم تسجيل اختيار المورد.",
+    },
+    errors: {
+      procurement_request_invalid: "تعذر التحقق من الطلب. يرجى المحاولة مرة أخرى.",
+      procurement_permission_denied: "ليست لديك صلاحية تغيير أدلة التوريد.",
+      procurement_sourcing_path_invalid: "اختر مسار توريد صالحًا.",
+      procurement_requirement_fields_required: "المتطلب والسبب والدليل مطلوبة.",
+      procurement_exception_evidence_required: "مسارا الطوارئ والمصدر الوحيد يتطلبان سببًا ودليلًا.",
+      procurement_request_conflict: "تم استخدام معرّف الطلب هذا مسبقًا مع أدلة مختلفة.",
+      procurement_requirement_not_found: "لم يتم العثور على متطلب التوريد.",
+      procurement_requirement_unavailable: "متطلب التوريد لم يعد متاحًا.",
+      service_procurement_service_locked: "أدلة التوريد غير متاحة للخدمة المكتملة أو الملغاة.",
+      procurement_candidate_fields_required: "المورد والعرض والدليل مطلوبة.",
+      procurement_candidate_fields_invalid: "دليل المرشح غير صالح.",
+      procurement_supplier_unavailable: "المورد المختار غير متاح حاليًا.",
+      procurement_selection_evidence_required: "سبب الاختيار ودليله مطلوبان.",
+      procurement_candidate_required: "سجل دليل المرشح قبل اختيار المورد.",
+      PROCUREMENT_WRITE_FAILED: "تعذر حفظ أدلة التوريد. يرجى المحاولة مرة أخرى.",
+      INVALID_INPUT: "راجع حقول التوريد.",
+      UNAUTHORIZED: "يجب تسجيل الدخول لتغيير أدلة التوريد.",
+      FORBIDDEN: "ليست لديك صلاحية تغيير أدلة التوريد.",
+    },
+  },
+  procurementSummary: {
+    title: "مساحة التوريد",
+    subtitle: "ملخص موجز لتقدم التوريد لهذه الخدمة.",
+    openRequirements: "المتطلبات المفتوحة",
+    candidateSuppliers: "الموردون المرشحون",
+    supplierQuotations: "عروض أسعار الموردين",
+    selectedSupplier: "المورد المختار",
+    noneSelected: "لم يتم الاختيار",
+    unavailable: "غير متاح",
+    loadError: "تعذر تحميل ملخص التوريد. افتح مساحة التوريد للمحاولة مرة أخرى.",
+    openWorkspace: "فتح مساحة التوريد",
+  },
   billing: {
     title: "الفوترة",
     workspaceTitle: "مساحة فوترة الخدمة",
@@ -3746,4 +4008,32 @@ export function getServiceStatusLabel(locale: Locale, status: ServiceStatus): st
     namespace: "services",
     surface: "service-status",
   });
+}
+
+const CANONICAL_SERVICE_EVENT_TYPES: Record<Locale, Record<string, string>> = {
+  en: {
+    "corporate conference": "Corporate Conference",
+    "corporate": "Corporate",
+    "conference": "Conference",
+    "wedding": "Wedding",
+    "exhibition": "Exhibition",
+  },
+  ar: {
+    "corporate conference": "مؤتمر شركات",
+    "corporate": "فعالية شركة",
+    "conference": "مؤتمر",
+    "wedding": "زفاف",
+    "exhibition": "معرض",
+  },
+};
+
+export function getServiceEventTypeLabel(
+  locale: Locale,
+  eventType: string | null | undefined,
+): string | null {
+  if (!eventType || typeof eventType !== "string") return null;
+  const trimmed = eventType.trim();
+  if (!trimmed) return null;
+  const canonical = CANONICAL_SERVICE_EVENT_TYPES[locale]?.[trimmed.toLowerCase()];
+  return canonical ?? trimmed;
 }

@@ -13,6 +13,34 @@ type Props = {
   dictionary: ServicesDictionary;
 };
 
+function activityLabel(
+  event: ServiceActivityEvent,
+  dictionary: ServicesDictionary,
+): string {
+  if (event.trigger === "deposit_payment_confirmed") {
+    return dictionary.serviceActivity.depositPaymentConfirmed;
+  }
+
+  switch (event.eventType) {
+    case "service_lifecycle_changed":
+      return dictionary.serviceLifecycle.title;
+    case "service_status_changed":
+      return dictionary.serviceActivity.statusChanged;
+    case "procurement_requirement_created":
+      return dictionary.serviceActivity.procurementRequirementCreated;
+    case "procurement_requirement_updated":
+      return dictionary.serviceActivity.procurementRequirementUpdated;
+    case "procurement_candidate_upserted":
+      return dictionary.serviceActivity.procurementCandidateRecorded;
+    case "procurement_supplier_selected":
+      return dictionary.serviceActivity.procurementSupplierSelected;
+    case "supplier_quotation_document_attached":
+      return dictionary.serviceActivity.procurementQuotationDocumentAttached;
+    default:
+      return dictionary.serviceActivity.updated;
+  }
+}
+
 export default function ServiceActivityHistory({ events, available, locale, dictionary }: Props) {
   return (
     <details className="rounded-xl border border-surface-variant bg-surface-container-lowest overflow-hidden">
@@ -34,13 +62,7 @@ export default function ServiceActivityHistory({ events, available, locale, dict
               <li key={event.id} className="border-b border-surface-variant pb-4 last:border-b-0 last:pb-0">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <p className="text-[13px] font-semibold text-on-surface">
-                    {event.trigger === "deposit_payment_confirmed"
-                      ? dictionary.serviceActivity.depositPaymentConfirmed
-                      : event.eventType === "service_lifecycle_changed"
-                        ? dictionary.serviceLifecycle.title
-                        : event.eventType === "service_status_changed"
-                          ? dictionary.serviceActivity.statusChanged
-                          : dictionary.serviceActivity.updated}
+                    {activityLabel(event, dictionary)}
                   </p>
                   <UiDateTimeText locale={locale} value={event.timestamp} />
                 </div>
@@ -69,6 +91,11 @@ export default function ServiceActivityHistory({ events, available, locale, dict
                 {event.reason && (
                   <p dir="auto" className="mt-1 text-[12px] text-on-surface-variant">
                     {dictionary.serviceActivity.reason}: {isolateBidiText(event.reason)}
+                  </p>
+                )}
+                {event.eventType.startsWith("procurement_") && event.evidenceRef && (
+                  <p dir="auto" className="mt-1 text-[12px] text-on-surface-variant">
+                    {dictionary.serviceActivity.evidence}: {isolateBidiText(event.evidenceRef)}
                   </p>
                 )}
                 {event.trigger === "deposit_payment_confirmed" && (
