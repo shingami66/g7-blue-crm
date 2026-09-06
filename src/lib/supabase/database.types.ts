@@ -346,37 +346,7 @@ export type Database = {
           },
         ]
       }
-      audit_logs: {
-        Row: {
-          action: string
-          details: Json | null
-          entity_id: string
-          entity_type: string
-          id: string
-          timestamp: string | null
-          user_id: string | null
-        }
-        Insert: {
-          action: string
-          details?: Json | null
-          entity_id: string
-          entity_type: string
-          id?: string
-          timestamp?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          action?: string
-          details?: Json | null
-          entity_id?: string
-          entity_type?: string
-          id?: string
-          timestamp?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-    business_document_links: {
+      business_document_links: {
         Row: {
           created_at: string
           document_id: string
@@ -454,6 +424,229 @@ export type Database = {
           purpose?: string
           updated_at?: string
           uploaded_by?: string
+        }
+        Relationships: []
+      }
+      supplier_quotation_documents: {
+        Row: {
+          attached_at: string
+          attached_by: string
+          document_id: string
+          quotation_id: string
+        }
+        Insert: {
+          attached_at?: string
+          attached_by: string
+          document_id: string
+          quotation_id: string
+        }
+        Update: {
+          attached_at?: string
+          attached_by?: string
+          document_id?: string
+          quotation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_quotation_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: true
+            referencedRelation: "business_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_quotation_documents_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_quotation_requirements: {
+        Row: {
+          created_at: string
+          created_by: string
+          line_amount: number | null
+          line_evidence_ref: string | null
+          line_summary: string
+          quotation_id: string
+          requirement_id: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          line_amount?: number | null
+          line_evidence_ref?: string | null
+          line_summary: string
+          quotation_id: string
+          requirement_id: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          line_amount?: number | null
+          line_evidence_ref?: string | null
+          line_summary?: string
+          quotation_id?: string
+          requirement_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_quotation_requirements_quotation_fkey"
+            columns: ["quotation_id", "service_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_quotations"
+            referencedColumns: ["id", "service_id"]
+          },
+          {
+            foreignKeyName: "supplier_quotation_requirements_requirement_fkey"
+            columns: ["requirement_id", "service_id"]
+            isOneToOne: false
+            referencedRelation: "service_procurement_requirements"
+            referencedColumns: ["id", "service_id"]
+          },
+        ]
+      }
+      supplier_quotations: {
+        Row: {
+          currency: string
+          id: string
+          package_total: number | null
+          quotation_date: string | null
+          recorded_at: string
+          recorded_by: string
+          service_id: string
+          source_candidate_requirement_id: string | null
+          source_candidate_supplier_id: string | null
+          supplier_id: string
+          supplier_reference: string | null
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          currency?: string
+          id?: string
+          package_total?: number | null
+          quotation_date?: string | null
+          recorded_at?: string
+          recorded_by: string
+          service_id: string
+          source_candidate_requirement_id?: string | null
+          source_candidate_supplier_id?: string | null
+          supplier_id: string
+          supplier_reference?: string | null
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          currency?: string
+          id?: string
+          package_total?: number | null
+          quotation_date?: string | null
+          recorded_at?: string
+          recorded_by?: string
+          service_id?: string
+          source_candidate_requirement_id?: string | null
+          source_candidate_supplier_id?: string | null
+          supplier_id?: string
+          supplier_reference?: string | null
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_quotations_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_quotations_source_candidate_fkey"
+            columns: ["source_candidate_requirement_id", "source_candidate_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "service_procurement_candidates"
+            referencedColumns: ["requirement_id", "supplier_id"]
+          },
+          {
+            foreignKeyName: "supplier_quotations_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_procurement_candidate_documents: {
+        Row: {
+          attached_at: string
+          attached_by: string
+          document_id: string
+          requirement_id: string
+          supplier_id: string
+        }
+        Insert: {
+          attached_at?: string
+          attached_by: string
+          document_id: string
+          requirement_id: string
+          supplier_id: string
+        }
+        Update: {
+          attached_at?: string
+          attached_by?: string
+          document_id?: string
+          requirement_id?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_procurement_candidate_documents_candidate_fkey"
+            columns: ["requirement_id", "supplier_id"]
+            isOneToOne: false
+            referencedRelation: "service_procurement_candidates"
+            referencedColumns: ["requirement_id", "supplier_id"]
+          },
+          {
+            foreignKeyName: "service_procurement_candidate_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: true
+            referencedRelation: "business_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          details: Json | null
+          entity_id: string
+          entity_type: string
+          id: string
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          details?: Json | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          details?: Json | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          timestamp?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2467,6 +2660,61 @@ export type Database = {
           service_status: string
         }[]
       }
+      attach_supplier_quotation_documents: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_document_ids: string[]
+          p_request_id: string
+          p_quotation_id: string
+        }
+        Returns: {
+          document_count: number
+          error_code: string
+          idempotent_replay: boolean
+          quotation_id: string
+          service_id: string
+        }[]
+      }
+      create_supplier_quotation: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_package_total: number | null
+          p_quotation_date: string
+          p_requirements: Json
+          p_request_id: string
+          p_service_id: string
+          p_supplier_id: string
+          p_supplier_reference: string
+        }
+        Returns: {
+          error_code: string
+          idempotent_replay: boolean
+          line_count: number
+          quotation_id: string
+          service_id: string
+          supplier_id: string
+        }[]
+      }
+      attach_service_procurement_candidate_document: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_document_id: string
+          p_request_id: string
+          p_supplier_id: string
+          p_requirement_id: string
+        }
+        Returns: {
+          document_id: string
+          error_code: string
+          idempotent_replay: boolean
+          requirement_id: string
+          service_id: string
+          supplier_id: string
+        }[]
+      }
       select_service_procurement_supplier: {
         Args: {
           p_actor_id: string
@@ -2526,22 +2774,6 @@ export type Database = {
           user_id: string
         }[]
       }
-      update_quotation_with_items: {
-        Args: {
-          p_items: Json
-          p_quotation: Json
-          p_quotation_id: string
-          p_user_id: string
-        }
-        Returns: {
-          discount: number
-          grand_total: number
-          quotation_id: string
-          quotation_number: string
-          subtotal: number
-          vat_amount: number
-        }[]
-      }
       upsert_service_procurement_candidate: {
         Args: {
           p_actor_id: string
@@ -2583,73 +2815,20 @@ export type Database = {
           service_id: string
         }[]
       }
-      upsert_procurement_package: {
+      update_quotation_with_items: {
         Args: {
-          p_actor_id: string
-          p_actor_role: string
-          p_description: string | null
-          p_name: string
-          p_package_id: string | null
-          p_procurement_method: string | null
-          p_request_id: string
-          p_service_id: string
+          p_items: Json
+          p_quotation: Json
+          p_quotation_id: string
+          p_user_id: string
         }
         Returns: {
-          error_code: string
-          idempotent_replay: boolean
-          package_id: string
-          service_id: string
-          status: string
-        }[]
-      }
-      set_procurement_package_requirements: {
-        Args: {
-          p_actor_id: string
-          p_actor_role: string
-          p_package_id: string
-          p_requirements: Json
-          p_request_id: string
-          p_service_id: string
-        }
-        Returns: {
-          error_code: string
-          idempotent_replay: boolean
-          package_id: string
-          requirement_count: number
-        }[]
-      }
-      select_procurement_package_supplier: {
-        Args: {
-          p_actor_id: string
-          p_actor_role: string
-          p_package_id: string
-          p_request_id: string
-          p_selection_evidence: string | null
-          p_selection_reason: string | null
-          p_service_id: string
-          p_supplier_id: string
-          p_supplier_quotation_id: string | null
-        }
-        Returns: {
-          error_code: string
-          idempotent_replay: boolean
-          package_id: string
-          quotation_id: string | null
-          supplier_id: string
-        }[]
-      }
-      clear_procurement_package_supplier: {
-        Args: {
-          p_actor_id: string
-          p_actor_role: string
-          p_package_id: string
-          p_request_id: string
-          p_service_id: string
-        }
-        Returns: {
-          error_code: string
-          idempotent_replay: boolean
-          package_id: string
+          discount: number
+          grand_total: number
+          quotation_id: string
+          quotation_number: string
+          subtotal: number
+          vat_amount: number
         }[]
       }
       void_approved_billing_scope: {

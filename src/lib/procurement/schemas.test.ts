@@ -4,6 +4,7 @@ import {
   procurementCandidateSchema,
   procurementRequirementSchema,
   procurementSelectionSchema,
+  supplierQuotationSchema,
 } from "./schemas.ts";
 
 const SERVICE_ID = "11111111-1111-4111-8111-111111111111";
@@ -72,6 +73,60 @@ test("supplier selection requires a reason and evidence", () => {
     supplierId: SUPPLIER_ID,
     selectionReason: " ",
     selectionEvidence: "",
+    requestId: REQUEST_ID,
+  });
+
+  assert.equal(result.success, false);
+});
+
+test("supplier quotation schema validates requirements and package total", () => {
+  const parsed = supplierQuotationSchema.parse({
+    supplierId: SUPPLIER_ID,
+    serviceId: SERVICE_ID,
+    supplierReference: "SUP-42",
+    quotationDate: "2026-09-02",
+    packageTotal: "1500.50",
+    requirements: [{
+      requirementId: REQUIREMENT_ID,
+      lineSummary: "Supplier scope",
+      lineAmount: "1500.50",
+    }],
+    requestId: REQUEST_ID,
+  });
+
+  assert.equal(parsed.packageTotal, 1500.5);
+  assert.equal(parsed.requirements?.[0]?.lineAmount, 1500.5);
+});
+
+test("supplier quotation rejects duplicate requirements in a single payload", () => {
+  const result = supplierQuotationSchema.safeParse({
+    supplierId: SUPPLIER_ID,
+    serviceId: SERVICE_ID,
+    supplierReference: "SUP-42",
+    quotationDate: "2026-09-02",
+    packageTotal: null,
+    requirements: [
+      { requirementId: REQUIREMENT_ID, lineSummary: "First", lineAmount: null },
+      { requirementId: REQUIREMENT_ID, lineSummary: "Duplicate", lineAmount: null },
+    ],
+    requestId: REQUEST_ID,
+  });
+
+  assert.equal(result.success, false);
+});
+
+test("supplier quotation rejects impossible calendar dates before database mutation", () => {
+  const result = supplierQuotationSchema.safeParse({
+    supplierId: SUPPLIER_ID,
+    serviceId: SERVICE_ID,
+    supplierReference: "SUP-42",
+    quotationDate: "2026-02-30",
+    packageTotal: null,
+    requirements: [{
+      requirementId: REQUIREMENT_ID,
+      lineSummary: "Supplier scope",
+      lineAmount: null,
+    }],
     requestId: REQUEST_ID,
   });
 

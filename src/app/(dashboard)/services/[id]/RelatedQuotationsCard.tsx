@@ -6,7 +6,7 @@ import { UiDateText } from "@/components/i18n/UiDateText";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { getQuotationStatusLabel } from "@/lib/i18n/dictionaries/quotations";
 import { isolateBidiText } from "@/lib/i18n/bidi";
-import { formatSarAmount } from "@/lib/i18n/formatting";
+import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import type { QuotationStatus, ServiceQuotationListItem } from "@/lib/quotations/types";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
@@ -51,7 +51,7 @@ export default function RelatedQuotationsCard({
         <div className="flex flex-wrap items-center gap-3 sm:gap-4 shrink-0">
           {quotations && !loadError && (
             <div className="text-[13px] leading-[18px] text-on-surface-variant">
-              {quotations.length}{" "}
+              <span className="tabular-nums font-semibold">{formatUiNumber(dictionary.locale, quotations.length)}</span>{" "}
               {quotations.length === 1
                 ? dictionary.relatedQuotations.countSingular
                 : dictionary.relatedQuotations.countPlural}
@@ -91,16 +91,16 @@ export default function RelatedQuotationsCard({
             <table className="w-full min-w-[720px] table-fixed border-collapse text-start">
               <thead>
                 <tr className="border-b border-surface-variant text-[12px] uppercase text-on-surface-variant">
-                  <th className="py-3 pe-6 w-[22%] font-semibold">
+                  <th className="py-3 pe-6 w-[22%] font-semibold text-start">
                     {dictionary.relatedQuotations.table.quotation}
                   </th>
-                  <th className="py-3 pe-6 w-[16%] font-semibold">
+                  <th className="py-3 pe-6 w-[16%] font-semibold text-start">
                     {dictionary.relatedQuotations.table.status}
                   </th>
-                  <th className="py-3 pe-6 w-[18%] font-semibold">
+                  <th className="py-3 pe-6 w-[18%] font-semibold text-start">
                     {dictionary.relatedQuotations.table.issueDate}
                   </th>
-                  <th className="py-3 pe-6 w-[18%] font-semibold">
+                  <th className="py-3 pe-6 w-[18%] font-semibold text-start">
                     {dictionary.relatedQuotations.table.validUntil}
                   </th>
                   <th className="py-3 w-[26%] text-end font-semibold">
@@ -111,7 +111,7 @@ export default function RelatedQuotationsCard({
               <tbody className="divide-y divide-surface-variant text-[14px]">
                 {quotations.map((quotation) => (
                   <tr key={quotation.id}>
-                    <td className="py-4 pe-6 font-mono font-semibold align-top">
+                    <td className="py-4 pe-6 font-mono font-semibold align-top text-start">
                       <Link
                         href={`/quotations/${quotation.id}`}
                         className="text-primary hover:underline"
@@ -121,15 +121,15 @@ export default function RelatedQuotationsCard({
                         </span>
                       </Link>
                     </td>
-                    <td className="py-4 pe-6 align-top">
+                    <td className="py-4 pe-6 align-top text-start">
                       <StatusBadge variant={QUOTATION_STATUS_VARIANTS[quotation.status]}>
                         {getQuotationStatusLabel(dictionary.locale, quotation.status)}
                       </StatusBadge>
                     </td>
-                    <td className="py-4 pe-6 text-on-surface-variant align-top">
+                    <td className="py-4 pe-6 text-on-surface-variant align-top text-start">
                       <UiDateText locale={dictionary.locale} value={quotation.date} />
                     </td>
-                    <td className="py-4 pe-6 text-on-surface-variant align-top">
+                    <td className="py-4 pe-6 text-on-surface-variant align-top text-start">
                       {quotation.validUntil ? (
                         <UiDateText locale={dictionary.locale} value={quotation.validUntil} />
                       ) : (
@@ -138,7 +138,7 @@ export default function RelatedQuotationsCard({
                     </td>
                     <td className="py-4 text-end font-semibold text-on-surface tabular-nums align-top">
                       <span dir="ltr" className="inline-block whitespace-nowrap">
-                        {formatSarAmount(dictionary.locale, quotation.grandTotal)}
+                        {formatSarAmount(dictionary.locale, quotation.grandTotal, { isolate: true })}
                       </span>
                     </td>
                   </tr>

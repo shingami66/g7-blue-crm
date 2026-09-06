@@ -16,6 +16,10 @@ const candidateCorrectiveMigration = readFileSync(
   join(REPO_ROOT, "supabase/migrations/20260901071504_w4_procurement_candidate_rpc_ambiguity_repair.sql"),
   "utf8",
 );
+const documentAttachmentCorrectiveMigration = readFileSync(
+  join(REPO_ROOT, "supabase/migrations/20260901173000_w4_supplier_quotation_document_attachment_rpc_ambiguity_repair.sql"),
+  "utf8",
+);
 
 function functionSection(source: string, functionName: string) {
   const start = source.indexOf(`CREATE OR REPLACE FUNCTION public.${functionName}`);
@@ -111,3 +115,30 @@ test("the candidate corrective replacement preserves the W4 RPC boundary", () =>
   assert.match(candidateRpc, /LANGUAGE plpgsql\s+SECURITY DEFINER\s+SET search_path = pg_catalog, public/);
 });
 
+test("document attachment repair qualifies the conflict target and preserves attach replay outcomes", () => {
+  const originalRpc = functionSection(
+    readFileSync(
+      join(REPO_ROOT, "supabase/migrations/20260901170000_w4_supplier_quotation_history.sql"),
+      "utf8",
+    ),
+    "attach_service_procurement_candidate_document",
+  );
+  const repairedRpc = functionSection(
+    documentAttachmentCorrectiveMigration,
+    "attach_service_procurement_candidate_document",
+  );
+
+  assert.match(originalRpc, /ON CONFLICT \(document_id\) DO NOTHING/);
+  assert.match(repairedRpc, /ON CONFLICT ON CONSTRAINT service_procurement_candidate_documents_pkey DO NOTHING/);
+  assert.doesNotMatch(repairedRpc, /ON CONFLICT\s*\(\s*document_id\s*\)/);
+  assert.match(repairedRpc, /INSERT INTO public\.service_procurement_candidate_documents/);
+  assert.match(repairedRpc, /INSERT INTO public\.audit_logs/);
+  assert.match(repairedRpc, /'procurement_document_already_attached'/);
+  assert.match(repairedRpc, /'procurement_request_conflict'/);
+  assert.match(repairedRpc, /v_audit_payload IS DISTINCT FROM v_payload/);
+  assert.match(repairedRpc, /RETURN QUERY SELECT NULL::text, p_requirement_id, p_supplier_id, v_service_id, p_document_id, true;/);
+  assert.match(repairedRpc, /RETURN QUERY SELECT NULL::text, p_requirement_id, p_supplier_id, v_service_id, p_document_id, false;/);
+  assert.match(repairedRpc, /LANGUAGE plpgsql\s+SECURITY DEFINER\s+SET search_path = pg_catalog, public/);
+  assert.match(documentAttachmentCorrectiveMigration, /REVOKE ALL ON FUNCTION public\.attach_service_procurement_candidate_document/);
+  assert.match(documentAttachmentCorrectiveMigration, /GRANT EXECUTE ON FUNCTION public\.attach_service_procurement_candidate_document[^\n]+TO service_role/);
+});
