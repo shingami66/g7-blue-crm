@@ -840,6 +840,82 @@ export interface ServicesDictionary {
     loadError: string;
     openWorkspace: string;
   };
+  procurementWorkspace: {
+    title: string;
+    subtitle: string;
+    backToService: string;
+    openCommitments: string;
+    addPackage: string;
+    totalPackages: string;
+    selectedSupplierPackages: string;
+    draftPackages: string;
+    emptyTitle: string;
+    emptyDescription: string;
+    requirementsLabel: string;
+    noRequirements: string;
+    selectedSupplierLabel: string;
+    noSupplierSelected: string;
+    supplierQuotationLabel: string;
+    noQuotationLinked: string;
+    openQuotation: string;
+    procurementMethodLabel: string;
+    statusLabel: string;
+    actionsLabel: string;
+    editPackage: string;
+    selectSupplier: string;
+    changeSupplier: string;
+    clearSupplier: string;
+    clearSupplierConfirm: string;
+    supplierClearedSuccess: string;
+    dismiss: string;
+    packageCreatedDraftNotice: string;
+    quotationEvidence: string;
+    statuses: {
+      draft: string;
+      selected: string;
+      cancelled: string;
+    };
+    methods: {
+      rental: string;
+      purchase: string;
+      service: string;
+      none: string;
+    };
+    modal: {
+      addTitle: string;
+      editTitle: string;
+      packageDetailsSection: string;
+      packageName: string;
+      packageNamePlaceholder: string;
+      description: string;
+      descriptionPlaceholder: string;
+      procurementMethod: string;
+      selectMethodPlaceholder: string;
+      requirementsSection: string;
+      requirementsHelp: string;
+      selectCommonRequirement: string;
+      addCustomRequirement: string;
+      customRequirementPlaceholder: string;
+      specificationsPlaceholder: string;
+      selectedSupplierSection: string;
+      selectSupplierPlaceholder: string;
+      noSupplierSelectedOption: string;
+      supplierQuotationSection: string;
+      quotationSelectPlaceholder: string;
+      noQuotationOption: string;
+      recordNewQuotation: string;
+      recordSupplierQuotation: string;
+      selectionDetailsSection: string;
+      selectionReason: string;
+      selectionReasonPlaceholder: string;
+      selectionEvidence: string;
+      selectionEvidencePlaceholder: string;
+      cancel: string;
+      save: string;
+      saving: string;
+      saveError: string;
+    };
+  };
   billing: {
     title: string;
     workspaceTitle: string;
@@ -2219,6 +2295,82 @@ const servicesDictionaryEn: ServicesDictionary = {
     unavailable: "Unavailable",
     loadError: "Procurement summary could not be loaded. Please open the workspace to retry.",
     openWorkspace: "Open Procurement Workspace",
+  },
+  procurementWorkspace: {
+    title: "Procurement Packages",
+    subtitle: "Group event requirements and record selected suppliers for this service.",
+    backToService: "Back to Service",
+    openCommitments: "Open Commitments & Receipt",
+    addPackage: "Add Package",
+    totalPackages: "Total Packages",
+    selectedSupplierPackages: "Selected Supplier",
+    draftPackages: "Draft Packages",
+    emptyTitle: "No Procurement Packages",
+    emptyDescription: "Create a package to group event requirements and assign a selected supplier.",
+    requirementsLabel: "Requirements",
+    noRequirements: "No requirements added",
+    selectedSupplierLabel: "Selected Supplier",
+    noSupplierSelected: "No supplier selected",
+    supplierQuotationLabel: "Supplier Quotation",
+    noQuotationLinked: "No quotation linked",
+    openQuotation: "Open Quotation",
+    procurementMethodLabel: "Procurement Method",
+    statusLabel: "Status",
+    actionsLabel: "Actions",
+    editPackage: "Edit Package",
+    selectSupplier: "Select Supplier",
+    changeSupplier: "Change Supplier",
+    clearSupplier: "Clear Supplier",
+    clearSupplierConfirm: "Are you sure you want to clear the selected supplier?",
+    supplierClearedSuccess: "Supplier cleared successfully.",
+    dismiss: "Dismiss",
+    packageCreatedDraftNotice: "Package was created in draft status.",
+    quotationEvidence: "Quotation Evidence",
+    statuses: {
+      draft: "Draft",
+      selected: "Selected",
+      cancelled: "Cancelled",
+    },
+    methods: {
+      rental: "Rental",
+      purchase: "Purchase",
+      service: "Service",
+      none: "Not specified",
+    },
+    modal: {
+      addTitle: "Add Procurement Package",
+      editTitle: "Edit Procurement Package",
+      packageDetailsSection: "Package Details",
+      packageName: "Package Name",
+      packageNamePlaceholder: "e.g., Technical Production",
+      description: "Description / Scope",
+      descriptionPlaceholder: "Scope description...",
+      procurementMethod: "Procurement Method (Optional)",
+      selectMethodPlaceholder: "Select method...",
+      requirementsSection: "Requirements",
+      requirementsHelp: "Select from common requirements or add custom items.",
+      selectCommonRequirement: "Select common requirement...",
+      addCustomRequirement: "Add Custom Requirement",
+      customRequirementPlaceholder: "Type custom requirement...",
+      specificationsPlaceholder: "Specifications (optional)...",
+      selectedSupplierSection: "Selected Supplier",
+      selectSupplierPlaceholder: "Select a supplier...",
+      noSupplierSelectedOption: "None (Draft)",
+      supplierQuotationSection: "Supplier Quotation (Optional)",
+      quotationSelectPlaceholder: "Select quotation for this service...",
+      noQuotationOption: "None",
+      recordNewQuotation: "Record New Quotation",
+      recordSupplierQuotation: "Record Supplier Quotation",
+      selectionDetailsSection: "Selection Details",
+      selectionReason: "Selection Reason",
+      selectionReasonPlaceholder: "Why was this supplier selected?",
+      selectionEvidence: "Selection Evidence",
+      selectionEvidencePlaceholder: "Reference or evidence notes...",
+      cancel: "Cancel",
+      save: "Save Package",
+      saving: "Saving...",
+      saveError: "Failed to save procurement package. Please check and retry.",
+    },
   },
   billing: {
     title: "Billing",
@@ -3809,6 +3961,82 @@ const servicesDictionaryAr: ServicesDictionary = {
     unavailable: "غير متاح",
     loadError: "تعذر تحميل ملخص التوريد. افتح مساحة التوريد للمحاولة مرة أخرى.",
     openWorkspace: "فتح مساحة التوريد",
+  },
+  procurementWorkspace: {
+    title: "باقات التوريد",
+    subtitle: "تجميع متطلبات الفعالية وتوثيق الموردين المختارين لهذه الخدمة.",
+    backToService: "العودة إلى الخدمة",
+    openCommitments: "فتح الالتزامات واستلام الخدمة",
+    addPackage: "إضافة باقة توريد",
+    totalPackages: "إجمالي الباقات",
+    selectedSupplierPackages: "المورد المختار",
+    draftPackages: "باقات مسودة",
+    emptyTitle: "لا توجد باقات توريد",
+    emptyDescription: "أنشئ باقة لتجميع متطلبات الفعالية وتعيين مورد مختار.",
+    requirementsLabel: "المتطلبات",
+    noRequirements: "لم يتم تحديد متطلبات",
+    selectedSupplierLabel: "المورد المختار",
+    noSupplierSelected: "لم يتم اختيار مورد",
+    supplierQuotationLabel: "عرض أسعار المورد",
+    noQuotationLinked: "لا يوجد عرض أسعار مرتبط",
+    openQuotation: "فتح عرض الأسعار",
+    procurementMethodLabel: "طريقة التوريد",
+    statusLabel: "الحالة",
+    actionsLabel: "الإجراءات",
+    editPackage: "تعديل الباقة",
+    selectSupplier: "اختيار مورد",
+    changeSupplier: "تغيير المورد",
+    clearSupplier: "إلغاء اختيار المورد",
+    clearSupplierConfirm: "هل أنت متأكد من رغبتك في إلغاء اختيار المورد؟",
+    supplierClearedSuccess: "تم إخلاء المورد بنجاح.",
+    dismiss: "إغلاق",
+    packageCreatedDraftNotice: "تم إنشاء الباقة في حالة مسودة.",
+    quotationEvidence: "دليل عرض السعر",
+    statuses: {
+      draft: "مسودة",
+      selected: "تم الاختيار",
+      cancelled: "ملغاة",
+    },
+    methods: {
+      rental: "تأجير",
+      purchase: "شراء",
+      service: "خدمة",
+      none: "غير محدد",
+    },
+    modal: {
+      addTitle: "إضافة باقة توريد",
+      editTitle: "تعديل باقة التوريد",
+      packageDetailsSection: "تفاصيل الباقة",
+      packageName: "اسم الباقة",
+      packageNamePlaceholder: "مثال: الإنتاج الفني",
+      description: "الوصف / نطاق العمل",
+      descriptionPlaceholder: "وصف نطاق العمل...",
+      procurementMethod: "طريقة التوريد (اختياري)",
+      selectMethodPlaceholder: "اختر طريقة التوريد...",
+      requirementsSection: "المتطلبات",
+      requirementsHelp: "اختر من المتطلبات الشائعة أو اكتب متطلباً مخصصاً.",
+      selectCommonRequirement: "اختر من المتطلبات الشائعة...",
+      addCustomRequirement: "إضافة متطلب مخصص",
+      customRequirementPlaceholder: "اكتب متطلباً مخصصاً...",
+      specificationsPlaceholder: "المواصفات (اختياري)...",
+      selectedSupplierSection: "المورد المختار",
+      selectSupplierPlaceholder: "اختر مورداً...",
+      noSupplierSelectedOption: "بدون مورد (مسودة)",
+      supplierQuotationSection: "عرض أسعار المورد (اختياري)",
+      quotationSelectPlaceholder: "اختر عرض أسعار مسجل لهذه الخدمة...",
+      noQuotationOption: "بدون عرض أسعار",
+      recordNewQuotation: "تسجيل عرض أسعار جديد",
+      recordSupplierQuotation: "تسجيل عرض سعر",
+      selectionDetailsSection: "تفاصيل الاختيار",
+      selectionReason: "سبب الاختيار",
+      selectionReasonPlaceholder: "ما سبب اختيار هذا المورد؟",
+      selectionEvidence: "دليل أو مرجع الاختيار",
+      selectionEvidencePlaceholder: "مرجع العرض أو ملاحظات التوثيق...",
+      cancel: "إلغاء",
+      save: "حفظ الباقة",
+      saving: "جاري الحفظ...",
+      saveError: "تعذر حفظ باقة التوريد. يرجى التحقق والمحاولة مرة أخرى.",
+    },
   },
   billing: {
     title: "الفوترة",

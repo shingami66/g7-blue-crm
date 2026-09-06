@@ -2024,6 +2024,152 @@ export type Database = {
           },
         ]
       }
+      service_procurement_packages: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          procurement_method: string | null
+          selected_at: string | null
+          selected_by: string | null
+          selected_supplier_id: string | null
+          selected_supplier_quotation_id: string | null
+          selection_evidence: string | null
+          selection_reason: string | null
+          service_id: string
+          status: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          procurement_method?: string | null
+          selected_at?: string | null
+          selected_by?: string | null
+          selected_supplier_id?: string | null
+          selected_supplier_quotation_id?: string | null
+          selection_evidence?: string | null
+          selection_reason?: string | null
+          service_id: string
+          status?: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          procurement_method?: string | null
+          selected_at?: string | null
+          selected_by?: string | null
+          selected_supplier_id?: string | null
+          selected_supplier_quotation_id?: string | null
+          selection_evidence?: string | null
+          selection_reason?: string | null
+          service_id?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_procurement_packages_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_procurement_packages_selected_supplier_id_fkey"
+            columns: ["selected_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_procurement_packages_quotation_fkey"
+            columns: ["selected_supplier_quotation_id", "service_id", "selected_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_quotations"
+            referencedColumns: ["id", "service_id", "supplier_id"]
+          },
+        ]
+      }
+      service_procurement_package_requirements: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          legacy_requirement_id: string | null
+          package_id: string
+          requirement_key: string | null
+          service_id: string
+          sort_order: number
+          specifications: string | null
+          title: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          legacy_requirement_id?: string | null
+          package_id: string
+          requirement_key?: string | null
+          service_id: string
+          sort_order?: number
+          specifications?: string | null
+          title: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          legacy_requirement_id?: string | null
+          package_id?: string
+          requirement_key?: string | null
+          service_id?: string
+          sort_order?: number
+          specifications?: string | null
+          title?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_procurement_package_requirements_package_fkey"
+            columns: ["package_id", "service_id"]
+            isOneToOne: false
+            referencedRelation: "service_procurement_packages"
+            referencedColumns: ["id", "service_id"]
+          },
+          {
+            foreignKeyName: "service_procurement_package_requirements_service_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_procurement_package_requirements_legacy_requirement_id_fkey"
+            columns: ["legacy_requirement_id"]
+            isOneToOne: false
+            referencedRelation: "service_procurement_requirements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_supplier_allocations: {
         Row: {
           approved_quotation_id: string | null
@@ -3383,6 +3529,75 @@ export type Database = {
           selected_supplier_id: string | null
           selection_status: string
           service_id: string
+        }[]
+      }
+      upsert_procurement_package: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_description: string | null
+          p_name: string
+          p_package_id: string | null
+          p_procurement_method: string | null
+          p_request_id: string
+          p_service_id: string
+        }
+        Returns: {
+          error_code: string
+          idempotent_replay: boolean
+          package_id: string
+          service_id: string
+          status: string
+        }[]
+      }
+      set_procurement_package_requirements: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_package_id: string
+          p_requirements: Json
+          p_request_id: string
+          p_service_id: string
+        }
+        Returns: {
+          error_code: string
+          idempotent_replay: boolean
+          package_id: string
+          requirement_count: number
+        }[]
+      }
+      select_procurement_package_supplier: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_package_id: string
+          p_request_id: string
+          p_selection_evidence: string | null
+          p_selection_reason: string | null
+          p_service_id: string
+          p_supplier_id: string
+          p_supplier_quotation_id: string | null
+        }
+        Returns: {
+          error_code: string
+          idempotent_replay: boolean
+          package_id: string
+          quotation_id: string | null
+          supplier_id: string
+        }[]
+      }
+      clear_procurement_package_supplier: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_package_id: string
+          p_request_id: string
+          p_service_id: string
+        }
+        Returns: {
+          error_code: string
+          idempotent_replay: boolean
+          package_id: string
         }[]
       }
       update_quotation_with_items: {
