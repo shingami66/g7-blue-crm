@@ -112,13 +112,17 @@ export default function Button({
       disabled={isDisabled}
       type={type}
     >
-      {loading && (
-        <LoaderCircle
-          aria-hidden="true"
-          className="size-4 shrink-0 motion-safe:animate-spin"
-        />
+      {loading ? (
+        <>
+          <LoaderCircle
+            aria-hidden="true"
+            className="size-4 shrink-0 motion-safe:animate-spin"
+          />
+          <span aria-live={loading ? "polite" : undefined}>{buttonContent}</span>
+        </>
+      ) : (
+        children
       )}
-      <span aria-live={loading ? "polite" : undefined}>{buttonContent}</span>
     </button>
   );
 }

@@ -223,16 +223,16 @@ export default function SettingsForm({
         {canEdit ? (
           isEditing ? (
             <div className="flex items-center gap-3">
-              <Button onClick={handleCancel} disabled={pending} variant="ghost">
+              <Button onClick={handleCancel} disabled={pending} variant="ghost" size="sm">
                 {dictionary.actions.cancel}
               </Button>
-              <Button form="company-settings-form" loading={pending} type="submit">
+              <Button form="company-settings-form" loading={pending} type="submit" size="sm">
                 <Save size={18} />
                 {pending ? dictionary.actions.saving : dictionary.actions.save}
               </Button>
             </div>
           ) : (
-            <Button onClick={() => setIsEditing(true)} variant="secondary">
+            <Button onClick={() => setIsEditing(true)} variant="secondary" size="sm">
               <Settings2 size={18} />
               {dictionary.actions.edit}
             </Button>

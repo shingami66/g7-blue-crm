@@ -25,6 +25,7 @@ export default function ModuleSearchInput({
   className = "",
 }: ModuleSearchInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const isComposingRef = useRef(false);
   const hasValue = value.length > 0;
 
   function clear() {
@@ -48,10 +49,23 @@ export default function ModuleSearchInput({
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onCompositionStart={() => {
+          isComposingRef.current = true;
+        }}
+        onCompositionEnd={() => {
+          isComposingRef.current = false;
+        }}
         onKeyDown={(event) => {
           if (event.key === "Escape" && value.length > 0) {
             event.preventDefault();
             clear();
+            return;
+          }
+          if (
+            event.key === "Enter" &&
+            (isComposingRef.current || event.nativeEvent.isComposing)
+          ) {
+            event.preventDefault();
           }
         }}
         placeholder={placeholder}
