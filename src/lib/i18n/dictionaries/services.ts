@@ -34,6 +34,7 @@ export interface ServicesDictionary {
     transitionBlocked: string;
     executionFinancial: string;
     completionFinancial: string;
+    cancellationSupplierCommitment: string;
     cancellationFinancial: string;
     lifecyclePaymentRequired: string;
     lifecycleReadinessRequired: string;
@@ -1127,6 +1128,7 @@ const servicesDictionaryEn: ServicesDictionary = {
     transitionBlocked: "This Service status change is not currently allowed.",
     executionFinancial: "Execution can start only after one valid, fully settled deposit invoice is confirmed.",
     completionFinancial: "The Service can be completed only while it is In Progress.",
+    cancellationSupplierCommitment: "Resolve open supplier commitments before cancelling this Service.",
     cancellationFinancial: "Cancellation is blocked while invoice, payment, or active billing-authority history exists.",
     lifecyclePaymentRequired: "Settle the active deposit or use an authorized credit gate before starting execution.",
     lifecycleReadinessRequired: "Confirm operational readiness before starting execution.",
@@ -2807,6 +2809,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     transitionBlocked: "تغيير حالة هذه الخدمة غير مسموح به حاليًا.",
     executionFinancial: "لا يمكن بدء التنفيذ إلا بعد تأكيد فاتورة عربون واحدة صالحة ومسـددة بالكامل.",
     completionFinancial: "يمكن إكمال الخدمة فقط عندما تكون حالتها قيد التنفيذ.",
+    cancellationSupplierCommitment: "عالج التزامات المورد المفتوحة قبل إلغاء هذه الخدمة.",
     cancellationFinancial: "الإلغاء محظور عند وجود سجل فواتير أو مدفوعات أو صلاحية فوترة نشطة.",
     lifecyclePaymentRequired: "سدّد العربون النشط أو استخدم بوابة ائتمان معتمدة قبل بدء التنفيذ.",
     lifecycleReadinessRequired: "أكد الجاهزية التشغيلية قبل بدء التنفيذ.",

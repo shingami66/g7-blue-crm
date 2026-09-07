@@ -40,7 +40,7 @@ Under Owner Decision G7-OD-18, the ERP service procurement presentation and inte
 - Candidate comparison, ranking, scoring, or automated evaluation is **NOT** active ERP Product Truth. UI designs must NOT present candidate scoring, ranking algorithms, or artificial automated comparison matrices.
 - Legacy candidate sourcing tables/RPCs are preserved only for compatibility and historical integrity where still present.
 - **Approved Commitment** remains a separate downstream human authorization workflow; package creation or supplier selection creates no automatic commitment.
-- W4 remains `PARTIAL / OPEN`; W5 is locked and unstarted.
+- W4 is CLOSED / COMPLETED; W5 remains locked and unstarted.
 
 ### TARGET LAYER 1 PRODUCT TRUTH (planning only; not implemented)
 
@@ -185,7 +185,7 @@ The sidebar presents business domains in a stable order, hides unauthorized navi
   - **Reports** — standalone (`/reports`)
   - **Administration:**
     - Settings (`/settings`)
-    - Users (`/settings/users`) [permission/admin-gated: `users:manage`]
+    - Users (`/admin/users`) [permission/admin-gated: `users:manage`]
 - **Workspace-Level Exposure Only:** The global sidebar exposes workspace-level destinations, not deep record-level or contextual sub-routes.
 - **Deep Context Confinement:** Deep Service and Supplier procurement, quotation, commitment, and receipt navigation remains inside the owning workspace and is not promoted to the global sidebar.
 - **Hierarchy Boundary:** Maximum global hierarchy depth is strictly two levels (domain section header → destination links).

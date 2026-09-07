@@ -54,6 +54,7 @@ export function getServiceStatusErrorMessage(
       SERVICE_NOT_FOUND: dictionary.actionErrors.notFound,
       SERVICE_STATUS_TRANSITION_INELIGIBLE: dictionary.actionErrors.transitionBlocked,
       SERVICE_FINANCIAL_EXECUTION_BLOCKED: dictionary.actionErrors.executionFinancial,
+      SERVICE_SUPPLIER_COMMITMENT_UNRESOLVED: dictionary.actionErrors.cancellationSupplierCommitment,
       SERVICE_FINANCIAL_CANCELLATION_BLOCKED: dictionary.actionErrors.cancellationFinancial,
       SERVICE_LIFECYCLE_PAYMENT_REQUIRED: dictionary.actionErrors.lifecyclePaymentRequired,
       SERVICE_LIFECYCLE_READINESS_REQUIRED: dictionary.actionErrors.lifecycleReadinessRequired,

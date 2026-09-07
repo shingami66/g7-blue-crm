@@ -28,7 +28,7 @@ Allowed closure verdicts are `PASS`, `PASS WITH WARN`, `PARTIAL`, `HOLD`, and `F
 | Domain | Status | Product-decision result | Remaining boundary |
 |---|---|---|---|
 | 1 Quotation / Commercial Model | LOCKED | One customer-priced Authority Line, included components, selected optional add-ons, presentation-only groups, whole approval, revision lineage, deterministic discount allocation and one bilingual authority. | Exact schema/UI/defaults; no Tender/catalog activation. |
-| 2 Procurement | LOCKED / DETAILS DEFERRED | Requirement, sourcing evidence, supplier comparison where useful, Approved Commitment/amendment, emergency path and receipt/acceptance remain explicit and separate. | Thresholds/templates; implementation/DB authority. |
+| 2 Procurement | LOCKED / DETAILS DEFERRED | G7-OD-18 canonical Procurement Packages, first-class Supplier Quotations, separate Approved Commitment/amendment, emergency path and receipt/acceptance. Candidate comparison remains historical compatibility only. | Thresholds/templates; implementation/DB authority. |
 | 3 Expenses / Advances / Petty Cash | LOCKED / DETAILS DEFERRED | Expense, reimbursement, employee advance and petty cash are distinct; evidence exception is controlled; no self-approval; settlement/correction are traceable. | G7 defaults and professional cases. |
 | 4 Accounts Payable | LOCKED / PROFESSIONAL REVIEW | Commitment/acceptance/vendor bill/matching/dispute/payable/due/payment are separate; supplier advances/deposits separate. | Accounting/tax mapping and activation. |
 | 5 Accounts Receivable | LOCKED / PROFESSIONAL REVIEW | Commercial/billable authority, invoice, issue/due, payment, allocation, outstanding/overdue/ageing, credit/refund/correction remain separate; revenue separate. | Credit defaults; accounting/tax activation. |
@@ -64,12 +64,12 @@ No Domain 1–10 decision was reopened. No Owner Decision Packet is required.
 
 ## 6. Procurement and Supplier Obligations
 
-- **PROC-01 — PRODUCT INVARIANT:** Event Requirement, supplier sourcing/quote/comparison, Approved Commitment, Booking, receipt/acceptance, Vendor Bill, payable and supplier payment remain separate.
+- **PROC-01 — PRODUCT INVARIANT:** Procurement Package/Requirement, Supplier Quotation, Approved Commitment, Booking, receipt/acceptance, Vendor Bill, payable and supplier payment remain separate. Retained candidate sourcing/comparison records are legacy compatibility only, not current workflow authority (G7-OD-18).
 - **PROC-02 — PRODUCT INVARIANT:** Approved Commitment is the controlled obligation basis; Open Commitment is its remaining unfulfilled/unreleased value.
 - **PROC-03 — PRODUCT INVARIANT:** amendments preserve original authority and reason; cancellation does not erase history.
 - **PROC-04 — PRODUCT INVARIANT:** emergency/sole-source work uses bounded authority, reason, evidence and retrospective review; it does not require fake competition.
-- **PROC-05 — PRODUCT INVARIANT:** supplier cost and comparison evidence are permission-sensitive and never customer-visible by default.
-- **PROC-06 — DETAILS DEFERRED:** thresholds, tolerance, document form, comparison layout and G7 default approval path.
+- **PROC-05 — PRODUCT INVARIANT:** supplier cost and first-class Supplier Quotation evidence are permission-sensitive and never customer-visible by default. Any retained historical candidate comparison evidence remains confidential as legacy compatibility evidence only.
+- **PROC-06 — DETAILS DEFERRED:** thresholds, tolerance, document form and G7 default approval path. Comparison layout is superseded as current planning scope by G7-OD-18; no comparison/ranking delivery is implied.
 - **PROC-07 — PRODUCT INVARIANT (G7-OD-18):** Procurement Packages (`service_procurement_packages`, `service_procurement_package_requirements`) are the canonical current ERP organizing and selection workflow for service procurement. A Procurement Package has at most one selected supplier (a draft package may have no selected supplier). Supplier Quotations (`supplier_quotations`, `supplier_quotation_lines`) are first-class commercial and operational evidence. Candidate comparison, ranking, scoring, or automated evaluation is NOT current ERP Product Truth. Legacy candidate sourcing tables and RPCs (`service_procurement_requirements`, `service_procurement_candidates`) are preserved strictly for backward compatibility and historical integrity where still present. Approved Commitment remains a separate downstream human authorization workflow; package creation or supplier selection creates no automatic commitment.
 
 ## 7. Expenses, Advances and Petty Cash
@@ -185,4 +185,4 @@ Register version 0.1 dated 2 August 2026 recorded 26 `LOCKED`, 16 `DIRECTIONALLY
 
 ## 19. Exact Next Action
 
-Mozfer approves the seven-item protected `AGENTS.md`/guard/Design Contract synchronization manifest in technical master plan Section 25 for one Writer and one independent findings-only Reviewer. No runtime, schema, database, publication, deployment, production or Layer 2 authority is included.
+W4 final engineering closeout completed; ready for Controller final W4 verdict. Migration `20260906120000_w4_architecture_remediation.sql` is applied to DEV project `dpddrqjzqohexixgdqiq` under migration identity `20260907085656 w4_architecture_remediation`. DEV transactional smoke PASS (zero residue). W4 is **CLOSED / COMPLETED**; W5 remains **LOCKED / UNSTARTED**. Residual Layer 1 delivery obligations remain tracked in technical master plan Section 15.1; bounded W2/W3 acceptance does not close that residual scope.

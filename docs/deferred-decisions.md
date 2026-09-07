@@ -1,13 +1,13 @@
 # G7 BLUE CRM — Deferred Decisions
 
-## CURRENT W1 CLOSEOUT — 31 August 2026
+## CURRENT DELIVERY AND DEFERRALS — 7 September 2026
 
 - **W1B Approval Authority / SoD:** explicitly **NOT REQUIRED FOR THIS WAVE** after review of the real quotation-approval consumer. It remains deferred, unimplemented, and must not be replaced with a generic approval/rules engine.
 - **W1 completion:** W1A Effective Access and the two bounded W1C Action Center consumers (Quotation Approvals and Ready-to-Start Services) are Owner-accepted. Their source workflows remain authoritative; no additional W1C feature is inferred.
 - **W2A/W2B completion:** Commercial Authority Line hierarchy and Quotation Revision Lineage are `PASS` on the Owner-authorized DEV environment only. W2B preserves source history, keeps Approved sources fail closed, and does not supersede ABS or reapprove billing authority.
 - **W2C completion:** Deterministic Discount Allocation / Approval Projection is `PASS` and closed on the Owner-authorized DEV environment only. The approved fixed-amount SAR rule is implemented with persisted integer-halal proportional largest-remainder allocation, deterministic `created_at ASC, id ASC` ties, Authority Line-root attribution, exact approval/ABS projection copies, W2B revision copying, and fail-closed invalid hierarchy/currency/ABS-adjustment behavior. No DEMO environment currently exists; no production or deployment claim is made.
 - **W3 completion:** Event Lifecycle compatibility is `PASS`, Owner-accepted, and closed on the Owner-authorized DEV environment only. The additive projection separates commercial, payment, readiness, execution, completion and operational close semantics, preserves legacy `services.status`, uses authoritative active-deposit payment evidence, and keeps authorized-credit permission separate from `app_user_permission_overrides`. No DEMO environment currently exists; no production or deployment claim is made.
-- **Next locked roadmap task:** W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`) requires a separate Owner-authorized task. Percentage discounts, non-SAR/FX allocation, VAT/revenue/accounting policy, Change Orders, ABS supersession/reapproval, broader historical correction/cutover work, and further W2/W3 expansion remain deferred or out of scope. This closeout authorizes no new schema, database, production, deployment, Layer 2, or professional activation work.
+- **Current action:** W4 final engineering closeout completed; ready for Controller final W4 verdict. Migration `20260906120000_w4_architecture_remediation.sql` is applied to DEV project `dpddrqjzqohexixgdqiq` under migration identity `20260907085656 w4_architecture_remediation`. DEV transactional smoke PASS (zero residue). W4 is **CLOSED / COMPLETED**; W5 remains **LOCKED / UNSTARTED**. Required residual delivery gates L1-R01–L1-R08 are recorded in technical master plan Section 15.1. Percentage discounts, non-SAR/FX allocation, VAT/revenue/accounting policy, Change Orders, ABS supersession/reapproval, broader historical correction/cutover work, and further W2/W3 expansion remain deferred or out of scope. This closeout authorizes no new schema, database, production, deployment, Layer 2, or professional activation work.
 
 ## CURRENT DEFERRAL BOUNDARY — 31 August 2026
 
@@ -23,7 +23,7 @@ This file grants no runtime, schema, SQL, database, deployment, production, publ
 - Exact dashboard widget order, role-template defaults, ageing buckets, refresh cadence, notification channel, export format, and report layout.
 - Exact Event task/resource board interaction patterns beyond the locked authority/lifecycle semantics.
 - G7 default terminology and configuration values that require real sanitized examples.
-- Procurement tolerance values, approval thresholds, comparison presentation, document templates, and emergency-review timing.
+- Procurement tolerance values, approval thresholds, document templates, and emergency-review timing. G7-OD-18 excludes candidate comparison/ranking from current ERP workflow; retained candidates are historical compatibility only.
 - Expense evidence limits, advance settlement timing, petty-cash replenishment details, and finance-owner defaults.
 - Customer credit-limit values, collection cadence, billing-schedule templates, and exception thresholds.
 - Event contingency defaults, ETC update cadence, close checklist, and proof thresholds.
@@ -80,7 +80,7 @@ The following are not product deferrals; they require their own explicit authori
 - deployment, production database/application, integration activation or data cutover;
 - credentialed provider work or inspection of protected authentication/configuration material.
 
-The exact protected-document proposal is Section 25 of the technical master plan. That proposal is retained as historical evidence; W2A and W2B are now closed, and the current next bounded W2 action is the W2C Deterministic Discount Allocation / Approval Projection preflight. Any remaining Product Truth synchronization is a separate authority boundary.
+The exact protected-document proposal is Section 25 of the technical master plan. That proposal is retained as historical evidence; W2A/W2B/W2C, bounded W3 lifecycle, and W4 Procurement & Commitments are closed. Current continuation is W4 closeout, with residual L1-R01–L1-R08 delivery gates retained. Any remaining Product Truth synchronization is a separate authority boundary.
 
 ## 4. OWNER MANUAL ACCEPTANCE STILL REQUIRED
 
@@ -146,4 +146,4 @@ The 27 August 2026 “Quotation Commercial Model Field-Evidence Gate” and broa
 
 ## 10. HISTORICAL EXACT NEXT ACTION (SUPERSEDED BY CURRENT W1 CLOSEOUT)
 
-The prior action was approval of the seven-item protected synchronization manifest in technical master plan Section 25. The current next wave is W2 Commercial Authority under a new Owner-authorized task; no additional W1C feature is inferred and no runtime, schema, database, publication, deployment, production or Layer 2 authority is implied by this historical note.
+The prior action was approval of the seven-item protected synchronization manifest in technical master plan Section 25. That W2 instruction is also superseded by the current delivery section above; no additional W1C feature is inferred and no runtime, schema, database, publication, deployment, production or Layer 2 authority is implied by this historical note.

@@ -1,5 +1,11 @@
 # G7 BLUE CRM - Project Status
 
+## W4 CLOSEOUT — 7 September 2026 (COMPLETED / CLOSED)
+
+- **Review boundary:** F01–F06 and Admin Users route documentation are verified and completed. Independent review reported PASS; targeted F06 rereview reported 0 BLOCKING, 0 MATERIAL, 0 MINOR (PASS). Local migration `20260906120000_w4_architecture_remediation.sql` is applied to DEV project `dpddrqjzqohexixgdqiq` under migration identity `20260907085656 w4_architecture_remediation`. DEV transactional smoke confirmed PASS (zero synthetic residue). SQL regression fixture (`supabase/verification/w4_architecture_remediation_regression.sql`) was evaluated against DEV; fixture synthetic seed data halted on check constraint `chk_services_service_number_format` and rolled back cleanly with 0 persistent residue, while real-RPC behaviors F01–F04 remain fully proven by DEV transactional smoke and 199 passing automated tests. No production deployment or production database mutation is made.
+- **Current action:** W4 final engineering closeout completed; ready for Controller final W4 verdict.
+- **Delivery boundary:** W4 is **CLOSED / COMPLETED**; W5 remains **LOCKED / UNSTARTED**. Accepted W2A/W2B/W2C and W3 lifecycle slices stay closed. Undelivered percentage discounts, Change Orders, ABS supersession/reapproval, Event Brief, Tasks, Milestones, Issues and Team/Resources are required future Layer 1 gates L1-R01–L1-R08 in [technical master plan Section 15.1](product/g7-layer1-technical-master-plan.md#151-residual-layer-1-delivery-gates--current-7-september-2026). Bounded closeouts do not discharge those obligations.
+
 ## CURRENT APPLICATION SHELL & NAVIGATION DELIVERY — 6 September 2026 (OWNER-ACCEPTED)
 
 - **Status:** Owner visually accepted. The application shell and global navigation have been upgraded to a scalable, route-aware accordion information architecture with refined shell branding and workspace entry UX.
@@ -18,7 +24,7 @@
   - **Reports** — standalone (`/reports`)
   - **Administration:**
     - Settings (`/settings`)
-    - Users (`/settings/users`), admin-gated (`users:manage`)
+    - Users (`/admin/users`), admin-gated (`users:manage`)
 - **Navigation Invariants & Rules:**
   - **Single Expansion Rule:** At most one functional accordion section is expanded at a time to prevent vertical menu bloat.
   - **Route-Aware Expansion:** Navigating to an active route automatically expands its parent domain section while collapsing others.
@@ -39,11 +45,11 @@
   - No database, schema, RPC, or migration change was made.
   - No permission widening occurred.
   - No W5 activation occurred.
-  - W4 remains `PARTIAL / OPEN`.
+  - W4 is `CLOSED / COMPLETED`.
 
-## CURRENT W4 DELIVERY STATUS — 6 September 2026 (PARTIAL / OPEN)
+## CURRENT W4 DELIVERY STATUS — 7 September 2026 (COMPLETED / CLOSED)
 
-- **W4 Delivery Status:** `PARTIAL / OPEN`. W4 is actively delivered as a bounded foundation but remains open. W4 is NOT complete, the roadmap does NOT advance to W5, and no final Owner or Controller closure verdict is claimed.
+- **W4 Delivery Status:** `CLOSED / COMPLETED`. W4 architecture remediation F01–F06 is complete, independent review passed, targeted F06 rereview passed, DEV migration is applied (`20260907085656 w4_architecture_remediation`), and DEV smoke passed with zero residue. W5 remains `LOCKED / UNSTARTED`.
 - **Current Product Truth under G7-OD-18:**
   - **Procurement Packages** (`service_procurement_packages`, `service_procurement_package_requirements`) are the canonical current ERP organizing and selection workflow for service procurement.
   - A Procurement Package has at most one selected supplier (explicitly labeled "Selected Supplier", not approved; a draft package may have no selected supplier).
@@ -61,10 +67,10 @@
   7. **Shared Controls & Search Hardening:** Compact action button sizing and payments search draft/submit hardening (`e10f710`).
   8. **Service Detail Operational UX Refinements:** Compact operational summary visual hierarchy, collapsible `ServiceLifecycleActions`, `ServiceCancellationActions` guard, cross-workspace tests, and canonical `RecordBackButton` integration across all operational routes (`b3445ac`).
   9. **Delegation Harness & Agent Governance Hardening:** Provider-neutral delegation harness (`agy-delegate`), writer lock mutex, recovery capsule schema, deterministic OCR review packet fixture, and coding-harness workflow contracts (`e5973bc`).
-- **Persistence & Migration Ledger:** 13 W4 migrations committed and published, preserving exact local filenames and recording known DEV project mappings (see `docs/database-migrations.md`). No database migration was applied, mutated, or squashed during this delivery.
-- **Validation:** Clean TypeScript (`tsc --noEmit`), zero historical validity defects across the published W4 commits, full procurement suite PASS (163/163 tests), full UI/i18n suite PASS (270/270 tests), delegation/governance suite PASS (37/37 tests).
+- **Persistence & Migration Ledger:** 14 migrations committed and recorded, including DEV migration `20260907085656 w4_architecture_remediation` (local `20260906120000_w4_architecture_remediation.sql`). DEV smoke passed with zero residue.
+- **Validation:** Clean TypeScript (`tsc --noEmit`), architecture-remediation contract PASS (7/7), full procurement/lifecycle suite PASS (199/199 tests), full UI/i18n suite PASS (270/270 tests), delegation/governance suite PASS (37/37 tests).
 - **Scope Boundary:** No automatic commitment creation, no candidate comparison/ranking UI, no Vendor Bill/AP integration, no expenses, no cash advances, no production mutation, and no push.
-- **Exact Next Wave / Action:** Continuation of remaining W4 procurement and commitment requirements under explicit Owner task authorization. W5 (Expenses & Cash Advances) remains locked and unstarted.
+- **Exact Next Wave / Action:** W4 is CLOSED / COMPLETED; ready for Controller final W4 verdict. W5 (Expenses & Cash Advances) remains locked and unstarted until separate Owner task authorization.
 
 ## CURRENT W1 CLOSEOUT — 31 August 2026
 
@@ -74,7 +80,7 @@
 - **Review/validation:** the W1 publishable delta completed focused tests, TypeScript, ESLint, `git diff --check`, OCR delegation-only rule resolution, separate native findings-only review, same-Writer repair, and targeted rereview. No production, deployment, Layer 2, or unrelated database mutation is claimed.
 - **Current-to-target truth:** W1 delivery does not erase the remaining Layer 1 implementation gaps. W2A Commercial Authority and W2B Revision Lineage are now complete; W1B remains deferred until a real workflow consumer proves a bounded approval-authority/SoD gap.
 - **Current W2C state:** W2C Deterministic Discount Allocation / Approval Projection is implemented, applied and reconciled on the Owner-authorized DEV environment only, and independently verified. No DEMO environment currently exists; no production or deployment claim is made.
-- **Exact next wave/action:** W2 Commercial Authority and W3 Event Operations / Event Lifecycle are closed. The next locked roadmap task is W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`); do not add another W1C feature or begin W4 without a new Owner-authorized task.
+- **Current continuation:** Accepted W2 commercial, bounded W3 lifecycle, and W4 Procurement & Commitments slices are closed. W5 remains LOCKED / UNSTARTED. No further wave or W1C feature is inferred.
 
 ## W2A CLOSEOUT — 31 August 2026 (COMPLETED)
 
@@ -101,7 +107,7 @@
 - **Persistence and evidence:** migration `20260901110000_w3_event_lifecycle_compatibility.sql` was applied and reconciled on the Owner-authorized DEV project `dpddrqjzqohexixgdqiq`; the local migration SHA-256 is `209769B5F8691D7E499928D7E1A7A92CB4748CB05FD3DDB39687AA5EA111E0F7`. Backfill, constraints, RLS, fixed-search-path/service-role boundaries, payment projection, lifecycle transitions, audit/replay behavior, cancellation guard, and rollback-clean smoke passed.
 - **Validation and acceptance:** focused regression/reconciliation validation, TypeScript/lint, independent findings-only review, bounded repair and targeted rereview passed. Owner English/Arabic/RTL/mobile Service-detail acceptance is `PASS`; W3 is Owner-accepted. No further database mutation, DEMO/production, deployment, or accounting activation is claimed.
 - **Scope boundary:** no task/resource system, procurement, costing, AP/AR, accounting, broad dashboard, or app-user-permission-override expansion was introduced. Authorized-credit start remains a separate role-based gate.
-- **Next locked roadmap task:** W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`) is delivered as a bounded partial foundation published through `cb79a951347790aec088b67e57a378306f3d595f` (see `CURRENT W4 DELIVERY STATUS — 6 September 2026 (PARTIAL / OPEN)` above). W4 remains PARTIAL / OPEN; W5 remains locked and unstarted.
+- **Next locked roadmap task:** W4 Procurement & Commitments is closed in the current section above. W5 Expenses & Cash Advances remains locked and unstarted.
 
 ## 0. HISTORICAL VERIFIED STATE — 31 August 2026 (SUPERSEDED BY CURRENT W1 CLOSEOUT ABOVE)
 

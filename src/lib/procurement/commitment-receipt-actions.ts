@@ -44,7 +44,8 @@ function oneRow<T>(data: T[] | null): T | null {
 }
 
 function rpcFailure<T>(code = "PROCUREMENT_COMMITMENT_WRITE_FAILED"): ProcurementCommitmentActionResult<T> {
-  return { success: false, code, error: code };
+  const safeCode = /^[a-z][a-z0-9_]*$/iu.test(code) ? code : "PROCUREMENT_COMMITMENT_WRITE_FAILED";
+  return { success: false, code: safeCode, error: safeCode };
 }
 
 function handleException<T>(error: unknown, action: string): ProcurementCommitmentActionResult<T> {

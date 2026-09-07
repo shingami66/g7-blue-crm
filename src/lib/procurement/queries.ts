@@ -190,6 +190,7 @@ export async function getPackageRequirementsForQuotation(
       .select("id,title,sort_order")
       .eq("package_id", packageId)
       .eq("service_id", serviceId)
+      .is("retired_at", null)
       .order("sort_order", { ascending: true })
       .order("id", { ascending: true });
 

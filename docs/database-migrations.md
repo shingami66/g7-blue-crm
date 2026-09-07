@@ -57,12 +57,12 @@ DO UPDATE SET
 
 ## W4 Procurement & Commitments Migration Ledger — 6 September 2026
 
-The following 13 local migrations represent the W4 Procurement & Commitments schema foundation delivered in reconstructed local history.
+The following 14 local migrations represent the W4 Procurement & Commitments schema foundation and architecture remediation delivered in reconstructed local history.
 
 - All exact local migration filenames are preserved without modification, reordering, rewriting, or squashing.
 - Known local-to-DEV identity mappings are recorded based on canonical evidence from DEV project `dpddrqjzqohexixgdqiq`.
 - Migrations where DEV identity remains unproven from current canonical evidence are recorded as `UNKNOWN` rather than inventing an unverified mapping.
-- No database migration was applied, mutated, or squashed during this documentation synchronization.
+- Local remediation migration `20260906120000_w4_architecture_remediation.sql` was applied to DEV under remote identity `20260907085656`.
 
 | Local Migration Filename | DEV Project Migration Identity | Scope & Description |
 |---|---|---|
@@ -79,3 +79,4 @@ The following 13 local migrations represent the W4 Procurement & Commitments sch
 | `20260905062323_w4_procurement_package_upsert_rpc_ambiguity_repair.sql` | `20260905062323` | RPC parameter qualification repair for `upsert_procurement_package`. |
 | `20260905062540_w4_procurement_package_audit_action_compatibility.sql` | `20260905062540` | Audit action enum compatibility for procurement package lifecycle events. |
 | `20260905140000_w4_supplier_quotation_line_items.sql` | `20260905114939` | Detailed supplier quotation line items (`supplier_quotation_lines`), pricing modes (`total_only`, `line_items`), and package requirement linkage. |
+| `20260906120000_w4_architecture_remediation.sql` | `20260907085656` | W4 architecture remediation foundation (F01–F06): stable procurement package requirement identity, retirement columns, ON DELETE RESTRICT FK, service receipt submitter/reviewer separation, cancellation obligation guard, governed commitment reopening, audit close evidence, correction replay. |

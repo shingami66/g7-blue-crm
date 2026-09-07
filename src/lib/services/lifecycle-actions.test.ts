@@ -487,3 +487,20 @@ test("cancellation uses progressive disclosure and preserves backend authority",
   assert.match(component, /disabled=\{isPending/);
   assert.doesNotMatch(component, /window\.confirm|confirmCancellation/);
 });
+
+
+test("cancellation surfaces the open supplier obligation denial without changing existing financial errors", async () => {
+  for (const [rpcCode, code] of [
+    ["service_supplier_commitment_unresolved", "SERVICE_SUPPLIER_COMMITMENT_UNRESOLVED"],
+    ["service_invoice_history_exists", "SERVICE_FINANCIAL_CANCELLATION_BLOCKED"],
+    ["service_payment_history_exists", "SERVICE_FINANCIAL_CANCELLATION_BLOCKED"],
+    ["service_billing_authority_unresolved", "SERVICE_FINANCIAL_CANCELLATION_BLOCKED"],
+  ]) {
+    const active = startScenario({ rpcData: [{ error_code: rpcCode, service_id: SERVICE_ID, service_status: "Approved", idempotent_replay: false }] });
+    const value = await cancelService(SERVICE_ID, "Customer cancellation");
+    assert.equal(value.success, false);
+    if (!value.success) assert.equal(value.code, code);
+    assert.deepEqual(active.permissionCalls, ["services:update_status"]);
+    assert.equal(active.rpcCalls[0].name, "cancel_service");
+  }
+});

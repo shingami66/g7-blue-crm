@@ -3,13 +3,13 @@
 **Status:** CURRENT PLANNING AUTHORITY — NO IMPLEMENTATION AUTHORITY
 **Date:** 31 August 2026 (Asia/Riyadh)
 **Product boundary:** Layer 1, single-company G7 BLUE proof lab
-**Repository evidence baseline:** `main` at `9b931d9cadec0e11b83cf85ace571bc053b1a875`; `HEAD = origin/main` when inspected
+**Historical planning evidence baseline (31 August 2026):** `main` at `9b931d9cadec0e11b83cf85ace571bc053b1a875`; `HEAD = origin/main` when inspected
 **Authority:** Owner-requested decision closure, reconciliation, architecture, migration planning, validation planning, professional gates, and Mozfer daily execution planning only
 **Not authorized:** runtime code, schema, SQL, migration creation/application, RLS/RPC, remote database, deployment, production, activation, staging, commit, push, merge, or Layer 2 work
 
 This is the sole Layer 1 technical implementation-planning artifact. The Expansion Master remains the sole strategic expansion source; the repository decision register and the Controller closure register own Product Truth; current repository evidence owns current mechanics. Where an older document describes a current mechanic that conflicts with the closed target Product Truth, the mechanic is preserved as migration evidence and is not promoted to target policy.
 
-> **CURRENT DELIVERY NOTE — 31 August 2026:** W1A Effective Access, Open Review routing hardening, W1C Quotation Approvals, and W1C Ready-to-Start Services are Owner-accepted. W1B Approval Authority / SoD is **NOT REQUIRED FOR THIS WAVE** and remains deferred. W2A Commercial Authority Line Foundation and W2B Quotation Revision Lineage are now Owner-accepted through separate implementation authorities. The next bounded W2 candidate is W2C Deterministic Discount Allocation / Approval Projection preflight; it requires a new Owner task and finance review before any implementation or migration.
+> **CURRENT DELIVERY NOTE — 7 September 2026:** W1 accepted slices, W2A/W2B/W2C, bounded W3 Event Lifecycle compatibility, and W4 Procurement & Commitments are closed. W1B remains deferred as not required for its accepted wave. W4 is **CLOSED / COMPLETED**; W5 is **LOCKED / UNSTARTED**. G7-OD-18 governs current package and supplier-quotation workflows. The F01–F06 architecture remediation is complete, independent review and targeted F06 rereview passed, DEV migration `20260907085656 w4_architecture_remediation` is applied, and DEV smoke passed with zero residue. Section 15.1 maps undelivered Layer 1 obligations without reopening accepted slices.
 
 ## 1. CONTINUITY RESULT
 
@@ -80,15 +80,15 @@ No Owner Decision Packet is required: these decisions are derivable from locked 
 
 | Domain | Final closed Product Truth | Existing useful foundation | Primary reconciliation result |
 |---|---|---|---|
-| 1 Quotation / Commercial | One customer-priced Authority Line; included components do not price independently; selected optional add-ons contribute; approval is whole-quotation; post-Sent change creates revision; bilingual presentation maps to one authority. | Quotations, items, approval, ABS snapshots, bilingual PDF paths. | Target hierarchy/revisions exceed current flat model; preserve current data as legacy commercial evidence. |
-| 2 Procurement | Requirement → sourcing path → supplier evidence/comparison → Approved Commitment/amendment; emergency path is controlled, bounded, evidenced, and reviewed. | Suppliers, rate cards, allocations, bookings. | Booking/allocation is not commitment, procurement approval, receipt, or AP. |
+| 1 Quotation / Commercial | One customer-priced Authority Line; included components do not price independently; selected optional add-ons contribute; approval is whole-quotation; post-Sent change creates revision; bilingual presentation maps to one authority. | Quotations, items, approval, ABS snapshots, bilingual PDF paths. | W2A hierarchy, W2B eligible non-approved post-Sent revisions, and W2C fixed-SAR allocation are delivered; percentage and post-approval correction remain Section 15.1 obligations. |
+| 2 Procurement | G7-OD-18: Procurement Packages → first-class Supplier Quotations → separate human-authorized Approved Commitment/amendment and receipt. | Package requirements, quotation lines, commitments, receipts, suppliers and bookings. | W4 CLOSED / COMPLETED. Candidate comparison/ranking is historical compatibility only; Booking/allocation is not commitment or AP. |
 | 3 Expenses / Cash | Expense, reimbursement, employee advance, petty cash, evidence exception, approval, settlement, and correction history remain distinct; no self-approval. | Payments/audit patterns only. | New domain required; do not misuse Customer Payment or supplier allocation. |
 | 4 Accounts Payable | Commitment → receipt/acceptance → vendor bill → validation/matching → approved payable → due → supplier payment; advances/deposits/disputes separate. | Supplier directory/booking snapshots. | AP does not exist as a formal domain; accounting/tax mapping gated. |
 | 5 Accounts Receivable | Commercial/billable authority → advance/progress/final invoice → issue/due → payment → allocation → outstanding/overdue/ageing; credit/refund/correction separate; revenue separate. | ABS, deposit/final invoices, payment RPC, due dates, audit. | Current two-type invoice/payment link is narrower than target schedules/allocations/credits. |
 | 6 Accounting | Operational truth → accountant mapping → balanced JE → posting → GL → reconciliation/TB → period close → statements; invoices/payments/revenue remain distinct. | Financial records and audit evidence only. | Formal accounting subsystem absent; professional design and activation mandatory. |
 | 7 Event Costing / Margin | Approved budget, contingency, commitments, actuals, ETC, EAC, forecast margin, final actual margin; managerial truth separate from accounting profit. | Estimated supplier allocation cost and quotation/invoice totals. | No authoritative cost ledger, ETC/EAC, or event close reconciliation exists. |
-| 8 Event Operations | Service is primary Event container; lifecycle, handoff, readiness, requirements, tasks, milestones, issues, people, resources, incidents, closeout and learning remain explicit and distinct. | Service dates/status, supplier allocation/booking, customer/quotation/invoice links. | Deposit state must be decoupled from execution; completion must not imply financial close. |
-| 9 Permissions / Approval | Role templates plus user grants/denials, record scope, sensitive fields, approval authority, SoD, bounded exceptions, audit, derived Action Center. | Clerk auth, app user role, hard-coded permission catalog, audit log. | Current role-only model lacks user overrides, scope, approval policy, SoD, and sensitive-field policy. |
+| 8 Event Operations | Service is primary Event container; lifecycle, handoff, readiness, requirements, tasks, milestones, issues, people, resources, incidents, closeout and learning remain explicit and distinct. | Service dates/status, supplier allocation/booking, customer/quotation/invoice links. | Bounded W3 lifecycle compatibility is delivered; broader Event work management remains undelivered in Section 15.1. Completion does not imply financial close. |
+| 9 Permissions / Approval | Role templates plus user grants/denials, record scope, sensitive fields, approval authority, SoD, bounded exceptions, audit, derived Action Center. | Clerk auth, app user role, hard-coded permission catalog, audit log. | W1A delivers a bounded quotations:approve override and W1C two Action Center consumers; broader authority remains deferred. W4 receipt separation is an unapplied remediation candidate. |
 | 10 Navigation / Design | Dashboard is landing context, lists are work surfaces, reports are analytical; actions are semantically distinct; mobile/RTL/a11y and uncertainty states are first-class. | App Router modules, shared UI, bilingual/RTL contracts, responsive list patterns. | Preserve good UI foundation; redesign only where new workflow truth requires it. |
 | 11 Dashboards / Reporting | Role/responsibility/context dashboard, derived Action Center, traceable as-of reporting, operational/managerial/accounting separation, permission-safe drill/export. | Dashboard and Reports Center with billing/operations/customer/supplier sections. | Current metrics are global and narrower; some collection/period semantics do not meet target historical/as-of truth. |
 
@@ -111,7 +111,7 @@ Cross-domain invariants:
 | CF-05 | Reports `Collected` can be derived from invoice-period selected invoices and `amount_paid`, rather than payment business date. | D — EXPLICIT SUPERSESSION REQUIRED | New reporting read model uses valid payments and allocations by payment business date; current screen remains current-mechanic evidence until replaced. |
 | CF-06 | Current outstanding reports are primarily present-state, not historical as-of. | B — IMPLEMENTATION LAG | Add replayable as-of read models only after source lifecycle and correction records exist. |
 | CF-07 | Old repository decision register leaves procurement, expenses, AP, accounting, costing, operations, permissions, navigation, and reports proposed/pending. | C — STALE DOC | Replaced by the 31 August closed register; old question set retained as historical discovery evidence. |
-| CF-08 | Project status/roadmap/deferred documents name Quotation field evidence as the next gate and broad Event ERP as deferred. | C — STALE DOC | Current sections now point to Layer 1 closure and protected governance synchronization as the next gate. |
+| CF-08 | Project status/roadmap/deferred documents name Quotation field evidence as the next gate and broad Event ERP as deferred. | C — STALE DOC | Current sections point to the authorized W4 remediation review; protected synchronization is historical planning evidence. |
 | CF-09 | Expansion Master says Layer 1 decision closure is required before roadmap lock. | A — NO CONFLICT | Closure and technical roadmap now exist; Master remains strategic and receives a continuity pointer only. |
 | CF-10 | Formal accounting/revenue/tax detail is closed in principle but not professionally activated. | E — PROFESSIONAL REVIEW DEPENDENCY | Keep operational and managerial implementation separable; block accounting/tax activation at named gates. |
 | CF-11 | Exact company dashboard defaults and acceptance thresholds are not yet field-proven. | A — NO CONFLICT | Treat as configurable details and acceptance evidence, not Product Truth gaps. |
@@ -175,13 +175,13 @@ Configuration may select terminology, templates, thresholds, dashboard compositi
 
 | Area | Current evidence | Layer 1 target | Priority / dependency |
 |---|---|---|---|
-| Identity | Clerk + `app_users`; single role; active/locale fields. | Same identity authority plus auditable role templates, user grants/denials, record scopes, sensitive-field and approval authority. | P0; precedes every new privileged workflow. |
-| Authorization | Hard-coded role permission checks; Admin wildcard. | Deny-overrides-allow policy evaluation with source/scope/reason, SoD exceptions, approval delegation, and server enforcement. | P0; Authority Foundation. |
+| Identity | Clerk + `app_users`; role plus bounded quotation-approval user overrides; active/locale fields. | Same identity authority plus auditable role templates, user grants/denials, record scopes, sensitive-field and approval authority. | P0; precedes every new privileged workflow. |
+| Authorization | Role catalog plus W1A quotations:approve DENY-wins overrides; other permissions remain role-based. | Deny-overrides-allow policy evaluation with source/scope/reason, SoD exceptions, approval delegation, and server enforcement. | P0; Authority Foundation. |
 | Audit | Generic audit log and workflow audit events. | Append-only domain events with actor, authority, reason, source version, before/after or event payload, request id, and trace link. | P0; extend, do not replace useful history. |
 | Action Center | No cross-domain authoritative task index. | Derived assigned/blocking/overdue/exception index linked to source; no duplicate authority. | P1 after authority kernel; incremental per domain. |
-| Commercial | Flat quotation items and whole approval/ABS snapshot. | Authority Lines, included components, selected options, revision lineage, evidence, deterministic discount allocation, bilingual projection. | P1; must precede target billing/cost baseline. |
-| Event Operations | Basic Service dates/status; deposit-gated transition; allocations/bookings. | Independent commercial, payment, operational readiness, execution, completion, financial close; brief, requirement, milestone, task, issue, team, resource and incident references. | P1; compatibility mapping required. |
-| Procurement | Supplier directory, rate cards, allocations, booking snapshots. | Requirement, sourcing path, supplier quote/comparison, Approved Commitment/amendment, emergency exception, receipt/acceptance. | P2 after authority/Event foundations. |
+| Commercial | W2A hierarchy, W2B eligible revision lineage, W2C persisted fixed-SAR allocation and approval/ABS copies. | Authority Lines, included components, selected options, revision lineage, evidence, deterministic discount allocation, bilingual projection. | Residual gates in Section 15.1 precede expanded billing/cost consumers. |
+| Event Operations | W3 additive lifecycle/readiness/execution/operational-close compatibility; legacy status preserved; allocations/bookings. | Independent commercial, payment, operational readiness, execution, completion, financial close; brief, requirement, milestone, task, issue, team, resource and incident references. | Broader work-management delivery required by Section 15.1; accepted lifecycle slice stays closed. |
+| Procurement | W4 package/requirement, first-class quotation, commitment/amendment and receipt foundation. | G7-OD-18 canonical packages, supplier evidence, separate authorization, controlled receipt/correction and historical traceability. | W4 CLOSED / COMPLETED. Candidate comparison/ranking is not current ERP Product Truth. |
 | Expenses / Cash | No formal expense, reimbursement, advance, petty-cash domain. | Separate governed records, evidence exceptions, settlement and correction history. | P2 after authority kernel. |
 | AP | No vendor bill/payable/supplier payment domain. | Match/validate/dispute/approve/due/pay lifecycle; advances/deposits separate. | P2 after commitment/acceptance. |
 | AR | Deposit/final invoices, direct payment link, outstanding balances. | Billing schedule, progress invoices, allocations, unapplied funds, credit/debit correction, refund, ageing/as-of. | P2 after commercial authority. |
@@ -205,7 +205,7 @@ Future source modules are bounded by authority rather than page name:
 - `authority`: permission catalog, templates, grants/denials, scopes, sensitive fields, approval policies, delegations, SoD exceptions;
 - `commercial`: quotation authority, revisions, approval evidence and commercial change;
 - `events`: brief, lifecycle, handoff, readiness, requirements, milestones, tasks, issues, team roles, resources, incidents and closeout;
-- `procurement`: sourcing, quotes, comparison, commitment and receipt/acceptance;
+- `procurement`: packages, requirements, supplier quotations, separate commitment and receipt/acceptance under G7-OD-18; legacy candidate comparison is compatibility evidence only;
 - `expenses`: expense, reimbursement, advance and petty cash;
 - `ap`: vendor bill, matching, dispute, payable and supplier payment;
 - `ar`: billing schedule, invoice, allocation, receivable, corrections, credit and refund;
@@ -264,7 +264,7 @@ Warning: the permission/action/audit foundation is cross-cutting. It must remain
 | W1 Authority Foundation | One ordered wave with W1A Effective Access; conditional W1B Approval Authority / SoD only when a real consumer requires it; W1C derived Action Center through an existing G7 workflow consumer. | Each sub-slice closes a durable evidence boundary; no generic workflow/rules engine and no UI-only enforcement. | Every persistence slice follows contract/design → SQL draft → migration review → exact Owner DEV/DEMO apply gate → apply/reconciliation → runtime. |
 | W2 Commercial Authority | Authority Line hierarchy, revisions, evidence and deterministic financial projection. | Approved values reconcile; post-Sent changes create lineage; ABS bridge proven. | Preserve current quotations; no destructive conversion. |
 | W3 Event Operations | Decouple payment from operations; event brief, readiness, handoffs, tasks/milestones/issues/team/resources. | Legacy services map; start/readiness/complete/close are distinct; mobile event-day path accepted. | Lifecycle migration separately authorized. |
-| W4 Procurement & Commitments | Requirements, sourcing, supplier comparison, Approved Commitment/amendment, emergency path, receipt/acceptance. | Booking and commitment remain distinct; approval/SoD/audit/reconciliation proven. | New financial tables/functions gated. |
+| W4 Procurement & Commitments | G7-OD-18 packages, requirements, supplier quotations, separate Approved Commitment/amendment and receipt/acceptance. | Stable links, no self-review, obligation-safe cancellation, governed correction and audit/reconciliation proven. | CLOSED / COMPLETED; no candidate comparison/ranking; migration applied to DEV; W5 remains locked. |
 | W5 Expenses & Cash Advances | Expenses, reimbursements, employee advances, petty cash, evidence exceptions and settlement. | No self-approval; balances reconcile; correction history proven. | Professional policy where payroll/tax/accounting touches. |
 | W6 AP | Vendor bill, matching, dispute, payable, supplier advance/deposit and payment. | Commitment/receipt/bill/payable/payment states reconcile; duplicates/replays blocked. | Accountant/tax review before posting/VAT claims. |
 | W7 AR Expansion | Billing schedules, progress invoices, allocations, unapplied credit, ageing, corrections/refunds. | Issued/billed/collected/outstanding/as-of reconcile independently. | ZATCA/VAT inactive until gates. |
@@ -272,6 +272,23 @@ Warning: the permission/action/audit foundation is cross-cutting. It must remain
 | W9 Dashboards / Reports | Role/Event context, Action Center, operational/managerial read models, drill and safe exports. | Definitions/as-of/source/freshness visible; denied/unavailable/partial states proven. | Incremental read models may ship with preceding waves. |
 | W10 Accounting Foundation | Professionally approved chart, mapping, balanced journals, posting, GL, reconciliation, periods/TB/close/statements. | Accounting sign-off, balanced/replay-safe tests, reconciliation and controlled close. | Hard professional + DB + production gates. |
 | W11 Cutover & G7 Proof | Rehearsal, reconciliation, phased cutover, training, support, owner acceptance and real-use proof. | No unexplained variance; rollback proven; Layer 1 acceptance evidence collected. | Layer 2 remains blocked pending later Owner proof decision. |
+
+### 15.1 Residual Layer 1 delivery gates — current, 7 September 2026
+
+Accepted W2A/W2B/W2C, W3 lifecycle, and W4 Procurement & Commitments slices stay closed. Their acceptance covers the delivered behavior below, not every objective of the broader waves. These are required future Layer 1 delivery gates, not implementation authorization or dates. W4 is **CLOSED / COMPLETED** and W5 remains **LOCKED / UNSTARTED**. W11 cannot claim complete Layer 1 proof while these required gates lack delivery/acceptance evidence.
+
+| Residual ID / capability | Delivered / not delivered | Current deferral | Required future delivery gate / wave | Product Truth closed? |
+|---|---|---|---|---|
+| L1-R01 — Percentage discount | Fixed-SAR deterministic allocation delivered by W2C; percentage input/calculation not delivered. | Outside accepted W2C; no implementation now. | Named commercial extension gate before W7 AR expansion consumes percentage quotations, and before W11 proof. Validate deterministic allocation and approval/ABS equality. | Yes — COM-04; parameter/UI details remain design work. |
+| L1-R02 — Change Orders / post-approval commercial correction | W2B non-approved post-Sent revision lineage delivered; post-approval Change Orders not delivered. | Approved sources remain fail-closed; no silent rewrite. | Named post-approval commercial correction gate before W7 correction/billing consumers and W11 proof; finance review and Owner acceptance required. | Yes — COM-03 and preserved-history invariant; exact contract remains gated. |
+| L1-R03 — ABS supersession / reapproval | Approval creates immutable ABS snapshots; supersession/reapproval not delivered. | Separate from W2B/W2C; existing financial history must remain intact. | Paired billing-authority gate with L1-R02 before W7 consumes changed approved authority and before W11 proof. Reconcile quotation/ABS/invoice/payment lineage. | Yes — one approved authority and historical supersession invariants; mechanics await design/review. |
+| L1-R04 — Event Brief | Service/Event container and lifecycle delivered; first-class Event Brief not delivered. | Outside accepted W3 lifecycle. | Named Event work-management extension before W9 operational consolidation and W11 Event workflow proof. | Yes — Operations domain; fields/defaults remain deferred. |
+| L1-R05 — Tasks | Bounded W1C derived Action Center delivered; Event task system not delivered. | No duplicate source authority or generic workflow engine. | Same Event work-management gate before W9 task reporting and W11 proof. | Yes — Operations domain; assignment/escalation details deferred. |
+| L1-R06 — Milestones | Lifecycle/readiness states delivered; Event milestones not delivered. | Outside accepted W3 lifecycle. | Same Event work-management gate before W9 milestone reporting and W11 proof. | Yes — Operations domain; exact milestone templates deferred. |
+| L1-R07 — Issues | Receipt defects/incidents evidence exists; broader Event issue management not delivered. | Receipt evidence is not an Event issue system. | Same Event work-management gate before W9 issue reporting and W11 proof. | Yes — Operations domain; severity/escalation details deferred. |
+| L1-R08 — Team / Resources | Supplier Booking/Allocation foundation exists; Event team/resource functionality not delivered. | Booking does not satisfy people/resource planning or availability. | Same Event work-management gate before W9 resource reporting and W11 proof. | Yes — Operations domain; capacity/assignment policy details deferred. |
+
+Each gate requires a separately authorized contract, one Writer, independent review, focused regression evidence, and Owner workflow/language acceptance. Schema changes additionally require migration review, separately authorized apply and reconciliation. This mapping does not reopen completed slices, advance W5, create AP/accounting behavior, or authorize Layer 2.
 
 ## 16. MASTER SEQUENTIAL DELIVERY LANE
 
@@ -1346,7 +1363,7 @@ Deferrals are bounded details or gates, not reopened product domains:
 
 ## 27. FINAL RISKS / WARNINGS
 
-- Protected guard wording remains stale until separately authorized synchronization; this is the next governance gate.
+- The protected synchronization proposal in Section 25 is historical; any remaining exact wording change needs its own authority and is not the current next action.
 - Current Service and reporting mechanics can mislead target implementation if their legacy labels are copied without the supersession matrix.
 - Cross-cutting authority work can become overbuilt; keep the kernel small and prove one vertical slice.
 - Historical financial truth cannot be reconstructed from absent evidence. Use exception queues; never invent commitments, acceptance, allocations, revenue, costs or readiness.
@@ -1361,17 +1378,17 @@ Deferrals are bounded details or gates, not reopened product domains:
 
 ## 29. TOMORROW - DAY 1
 
-**Historical next action (superseded):** This earlier snapshot directed the next turn to G0-PROTECTED-SYNC and then W1 readiness. The current W1 closeout above records the delivered W1 slices; W2 Commercial Authority is now the sole next wave under a new Owner-authorized task.
+**Historical next action (superseded):** G0 synchronization and W1 readiness belonged to this earlier planning snapshot. See Section 30 for the current action.
 
 Day 1 success is narrow: one Writer, one findings-only Reviewer, no schema, no DB, no UI breadth, no staging/publication unless separately authorized.
 
 ## 30. EXACT SINGLE NEXT ACTION
 
-**Historical exact next action (superseded):** Approval of the seven-item protected synchronization manifest in Section 25. The current exact next action is to open a new Owner-authorized W2 Commercial Authority slice; no additional W1C feature is inferred.
+W4 final engineering closeout completed; ready for Controller final W4 verdict. Migration `20260906120000_w4_architecture_remediation.sql` is applied to DEV project `dpddrqjzqohexixgdqiq` under migration identity `20260907085656 w4_architecture_remediation`. DEV transactional smoke PASS (zero residue). W4 is **CLOSED / COMPLETED**; W5 remains **LOCKED / UNSTARTED**.
 
 ## 31. ROTATION HANDOVER / CONTINUITY STATUS
 
-**PASS WITH WARN — restart-safe.** Restart from the current W2B closeout note and a new Owner-authorized W2C preflight task, not from this historical W0/W1 pack or older Quotation field-evidence, Feature 009, ABS Void/Supersede, Wednesday discovery, G1–G12 remediation, or broad Event ERP deferral text. Reverify repository `HEAD`, `origin/main`, dirty paths, latest Controller state and any newer Owner instruction. Preserve unrelated dirty/untracked work and do not inspect protected build-watch logs. W1B remains closed as not required for this wave; W2C is only a candidate until separately authorized.
+**Restart-safe boundary:** W4 architecture remediation F01–F06 is complete and verified. W4 is CLOSED / COMPLETED; W5 remains LOCKED / UNSTARTED. W1, W2A/W2B/W2C and bounded W3 lifecycle remain closed. Reverify checkout identity and preserve dirty/protected paths without inspecting build-watch logs.
 
 ## 32. W1 CLOSEOUT — 31 August 2026
 
@@ -1379,4 +1396,4 @@ Owner acceptance is complete for W1A Effective Access, Open Review routing harde
 
 W1A uses the reviewed minimum user-specific `quotations:approve` override persistence with server-side DENY-wins evaluation. W1C is derived from two real existing consumers on the Dashboard Attention surface: pending quotation approvals and Services whose existing transition evidence permits `Deposit Paid` → `In Progress`. Both remain permission-filtered, source-linked, bounded, fail-closed, and mutation-free from the Action Center.
 
-The completed W1 delta has focused validation, separate findings-only review, same-Writer repair, targeted rereview, and Owner acceptance. W2A and W2B are now complete with their own validation and Owner gates. The next bounded W2 candidate is W2C Deterministic Discount Allocation / Approval Projection preflight; no additional W1C feature is inferred without new evidence and a separate Owner task.
+The completed W1 delta has focused validation, independent review and Owner acceptance. W2A/W2B/W2C and bounded W3 lifecycle are also closed. Remaining Layer 1 obligations are named in Section 15.1; the current action is Section 30, not another W1C feature or W2C preflight.

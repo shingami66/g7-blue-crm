@@ -39,6 +39,7 @@ export type ServiceActionErrorCode =
   | "SERVICE_STATUS_TRANSITION_INELIGIBLE"
   | "SERVICE_FINANCIAL_EXECUTION_BLOCKED"
   | "SERVICE_FINANCIAL_CANCELLATION_BLOCKED"
+  | "SERVICE_SUPPLIER_COMMITMENT_UNRESOLVED"
   | "SERVICE_CANCELLATION_REASON_REQUIRED"
   | "SERVICE_LIFECYCLE_PAYMENT_REQUIRED"
   | "SERVICE_LIFECYCLE_READINESS_REQUIRED"
@@ -338,7 +339,7 @@ const serviceLifecycleErrorSchema = z.enum([
   "service_deposit_invoice_missing", "service_deposit_invoice_ambiguous", "service_deposit_invoice_invalid",
   "service_deposit_invoice_not_paid", "service_deposit_payment_missing", "service_deposit_payment_inconsistent",
   "service_cancellation_reason_required", "service_cancellation_reason_too_long", "service_invoice_history_exists",
-  "service_payment_history_exists", "service_billing_authority_unresolved",
+  "service_payment_history_exists", "service_billing_authority_unresolved", "service_supplier_commitment_unresolved",
   "service_transition_failed",
 ]).nullable();
 const serviceLifecycleRpcRowSchema = z.object({
@@ -369,6 +370,8 @@ function mapServiceLifecycleRpcError(errorCode: string | null): ServiceActionErr
     case "service_payment_history_exists":
     case "service_billing_authority_unresolved":
       return "SERVICE_FINANCIAL_CANCELLATION_BLOCKED";
+    case "service_supplier_commitment_unresolved":
+      return "SERVICE_SUPPLIER_COMMITMENT_UNRESOLVED";
     case "service_cancellation_reason_required":
       return "SERVICE_CANCELLATION_REASON_REQUIRED";
     case "service_transition_failed":

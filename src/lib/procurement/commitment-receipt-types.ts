@@ -226,7 +226,7 @@ export type CommitmentAmendmentInput = {
 
 export type CommitmentTransitionInput = {
   commitmentId: string;
-  action: "close" | "cancel";
+  action: "close" | "cancel" | "reopen";
   reason: string;
   requestId: string;
 };

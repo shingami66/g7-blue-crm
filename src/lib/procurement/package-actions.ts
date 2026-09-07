@@ -81,6 +81,7 @@ export async function createProcurementPackage(
         p_package_id: pkgRow.package_id,
         p_service_id: value.serviceId,
         p_requirements: value.requirements.map((req, idx) => ({
+        id: req.id ?? null,
           title: req.title,
           requirement_key: req.requirementKey ?? null,
           specifications: req.specifications ?? null,
@@ -169,6 +170,7 @@ export async function setProcurementPackageRequirements(
       p_package_id: value.packageId,
       p_service_id: value.serviceId,
       p_requirements: value.requirements.map((req, idx) => ({
+        id: req.id ?? null,
         title: req.title,
         requirement_key: req.requirementKey ?? null,
         specifications: req.specifications ?? null,

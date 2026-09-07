@@ -2170,6 +2170,8 @@ export type Database = {
           id: string
           legacy_requirement_id: string | null
           package_id: string
+          retired_at: string | null
+          retired_by: string | null
           requirement_key: string | null
           service_id: string
           sort_order: number
@@ -2184,6 +2186,8 @@ export type Database = {
           id?: string
           legacy_requirement_id?: string | null
           package_id: string
+          retired_at?: string | null
+          retired_by?: string | null
           requirement_key?: string | null
           service_id: string
           sort_order?: number
@@ -2198,6 +2202,8 @@ export type Database = {
           id?: string
           legacy_requirement_id?: string | null
           package_id?: string
+          retired_at?: string | null
+          retired_by?: string | null
           requirement_key?: string | null
           service_id?: string
           sort_order?: number

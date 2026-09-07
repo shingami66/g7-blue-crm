@@ -87,6 +87,7 @@ export async function getProcurementPackagesByServiceId(
       .from("service_procurement_package_requirements")
       .select("*")
       .in("package_id", packageIds)
+      .is("retired_at", null)
       .order("sort_order", { ascending: true })
       .order("id", { ascending: true });
 

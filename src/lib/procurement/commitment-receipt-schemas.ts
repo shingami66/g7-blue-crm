@@ -68,7 +68,7 @@ export const commitmentAmendmentSchema = z.object({
 
 export const commitmentTransitionSchema = z.object({
   commitmentId: z.string().uuid(),
-  action: z.enum(["close", "cancel"]),
+  action: z.enum(["close", "cancel", "reopen"]),
   reason: z.string().trim().min(1).max(2000),
   requestId: z.string().uuid(),
 }).strict();

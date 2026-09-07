@@ -259,6 +259,7 @@ export default function ProcurementPackageWorkspace({
           description: description.trim() || null,
           procurementMethod: validMethod,
           requirements: draftRequirements.map((r, idx) => ({
+            id: r.id ?? null,
             requirementKey: r.requirementKey ?? null,
             title: r.title,
             specifications: r.specifications?.trim() || null,
@@ -358,6 +359,7 @@ export default function ProcurementPackageWorkspace({
           packageId,
           serviceId,
           requirements: draftRequirements.map((r, idx) => ({
+            id: r.id ?? null,
             requirementKey: r.requirementKey ?? null,
             title: r.title,
             specifications: r.specifications?.trim() || null,
