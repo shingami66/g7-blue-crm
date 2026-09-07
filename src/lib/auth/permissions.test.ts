@@ -444,3 +444,40 @@ test("quotations:approve override dependency failures remain fail-closed", async
   );
   assertOverrideFilters("u1");
 });
+
+test("W5A Permissions: Admin wildcard satisfies all W5 permissions; non-admin roles deny by default", async () => {
+  const {
+    EXPENSE_PERMISSIONS,
+    CASH_ADVANCE_PERMISSIONS,
+    PETTY_CASH_PERMISSIONS,
+    hasPermissionForRole,
+  } = await import("./role-permissions.ts");
+
+  const allW5Permissions = [
+    EXPENSE_PERMISSIONS.read,
+    EXPENSE_PERMISSIONS.write,
+    EXPENSE_PERMISSIONS.approve,
+    EXPENSE_PERMISSIONS.settle,
+    CASH_ADVANCE_PERMISSIONS.read,
+    CASH_ADVANCE_PERMISSIONS.create,
+    CASH_ADVANCE_PERMISSIONS.approve,
+    CASH_ADVANCE_PERMISSIONS.issue,
+    CASH_ADVANCE_PERMISSIONS.settle,
+    PETTY_CASH_PERMISSIONS.read,
+    PETTY_CASH_PERMISSIONS.manage,
+    PETTY_CASH_PERMISSIONS.transact,
+  ];
+
+  for (const perm of allW5Permissions) {
+    assert.equal(
+      hasPermissionForRole("admin", perm),
+      true,
+      `Admin wildcard must satisfy ${perm}`,
+    );
+    assert.equal(
+      hasPermissionForRole("viewer", perm),
+      false,
+      `Viewer must not have ${perm}`,
+    );
+  }
+});

@@ -1,10 +1,25 @@
 # G7 BLUE CRM - Project Status
 
+## W5A CLOSEOUT — 7 September 2026 (COMPLETED / CLOSED)
+
+- **Review boundary:** W5A Expense & Cash Accountability Foundation (`L1-D08-EXPENSE-CASH`) is verified and completed on DEV project `dpddrqjzqohexixgdqiq`.
+  - **Schema & Persistence Foundation:** Delivered 9 domain tables (`employee_cash_advances`, `cash_advance_returns`, `petty_cash_funds`, `expenses`, `cash_advance_expense_settlements`, `expense_reimbursement_settlements`, `expense_evidence_exceptions`, `expense_documents`, `petty_cash_transactions`), 1 audit compatibility index (`idx_audit_logs_w5_request_id`), and 1 authoritative SQL view (`public.expense_accountability_summaries`) for derived accountability metrics.
+  - **Governed Transactional RPCs:** 16 atomic RPCs with strict `SECURITY DEFINER` and fixed `search_path = pg_catalog, public`. All 16 mutation RPCs enforce fail-closed `request_id` idempotency and payload-conflict rejection.
+  - **Segregation of Duties (SoD):** Table constraints and RPC business rules prevent expense submitters and employee claimants from self-approving expenses, and prevent cash advance requesters and recipients from self-approving advances.
+  - **Funding-Path Exclusivity:** Enforces strict exclusivity across personal reimbursement (`employee_paid`), employee cash advance allocations, and petty cash disbursements (`company_direct`).
+  - **PostgreSQL Output-Column Ambiguity Repair:** Repaired PL/pgSQL `RETURNS TABLE` output-column collision in `attach_expense_document` (`ed.expense_id`, `ed.document_id`) and relation column qualification/syntax in `cancel_expense` (`ers.expense_id`, `caes.expense_id`, `pct.expense_id`) via corrective migration `20260907164500_w5a_rpc_output_ambiguity_repair.sql`.
+  - **DEV Migration Status:** Base migration `20260907150000_w5a_expense_cash_foundation.sql` applied as DEV `20260907133406`; corrective migration `20260907164500_w5a_rpc_output_ambiguity_repair.sql` applied as DEV `20260907164500`.
+  - **Workflow Deviation (Bounded WARN):** Corrective migration was applied via direct linked SQL query followed by `migration repair` registration rather than standard CLI migration push. Live RPC definitions, privileges, and remote migration history list were confirmed. Migration history must not be altered or repaired again.
+  - **DEV Transactional Smoke Verification:** Smoke script `supabase/verification/w5a_smoke_test.sql` executed inside `BEGIN ... ROLLBACK` on DEV; verified expense creation, attachment without ambiguity, idempotency replays, conflict rejections, cancellation, SoD rejections, cash advances, and petty cash transactions. Verified clean rollback with `0` residual rows in DEV database.
+  - **Automated Validation:** 37/37 focused tests passing (`contract.test.ts`, `actions.test.ts`, `repairs.test.ts`), `tsc --noEmit` PASS (exit 0), ESLint PASS (exit 0), `git diff --check` PASS.
+- **Current action:** W5A final engineering closeout completed; ready for Controller final W5A verdict.
+- **Delivery boundary:** W4 is **CLOSED / COMPLETED**; W5A is **CLOSED / COMPLETED**; W5B (UI workspaces, expense capture, receipts upload) remains **LOCKED / UNSTARTED**. Accepted W2A/W2B/W2C, W3 lifecycle, and W4 procurement slices stay closed. Undelivered percentage discounts, Change Orders, ABS supersession/reapproval, Event Brief, Tasks, Milestones, Issues and Team/Resources are required future Layer 1 gates L1-R01–L1-R08 in [technical master plan Section 15.1](product/g7-layer1-technical-master-plan.md#151-residual-layer-1-delivery-gates--current-7-september-2026). Bounded closeouts do not discharge those obligations.
+
 ## W4 CLOSEOUT — 7 September 2026 (COMPLETED / CLOSED)
 
 - **Review boundary:** F01–F06 and Admin Users route documentation are verified and completed. Independent review reported PASS; targeted F06 rereview reported 0 BLOCKING, 0 MATERIAL, 0 MINOR (PASS). Local migration `20260906120000_w4_architecture_remediation.sql` is applied to DEV project `dpddrqjzqohexixgdqiq` under migration identity `20260907085656 w4_architecture_remediation`. DEV transactional smoke confirmed PASS (zero synthetic residue). SQL regression fixture (`supabase/verification/w4_architecture_remediation_regression.sql`) was evaluated against DEV; fixture synthetic seed data halted on check constraint `chk_services_service_number_format` and rolled back cleanly with 0 persistent residue, while real-RPC behaviors F01–F04 remain fully proven by DEV transactional smoke and 199 passing automated tests. No production deployment or production database mutation is made.
 - **Current action:** W4 final engineering closeout completed; ready for Controller final W4 verdict.
-- **Delivery boundary:** W4 is **CLOSED / COMPLETED**; W5 remains **LOCKED / UNSTARTED**. Accepted W2A/W2B/W2C and W3 lifecycle slices stay closed. Undelivered percentage discounts, Change Orders, ABS supersession/reapproval, Event Brief, Tasks, Milestones, Issues and Team/Resources are required future Layer 1 gates L1-R01–L1-R08 in [technical master plan Section 15.1](product/g7-layer1-technical-master-plan.md#151-residual-layer-1-delivery-gates--current-7-september-2026). Bounded closeouts do not discharge those obligations.
+- **Delivery boundary:** W4 is **CLOSED / COMPLETED**; W5A is **CLOSED / COMPLETED**; W5B remains **LOCKED / UNSTARTED**. Accepted W2A/W2B/W2C and W3 lifecycle slices stay closed. Undelivered percentage discounts, Change Orders, ABS supersession/reapproval, Event Brief, Tasks, Milestones, Issues and Team/Resources are required future Layer 1 gates L1-R01–L1-R08 in [technical master plan Section 15.1](product/g7-layer1-technical-master-plan.md#151-residual-layer-1-delivery-gates--current-7-september-2026). Bounded closeouts do not discharge those obligations.
 
 ## CURRENT APPLICATION SHELL & NAVIGATION DELIVERY — 6 September 2026 (OWNER-ACCEPTED)
 
@@ -70,7 +85,7 @@
 - **Persistence & Migration Ledger:** 14 migrations committed and recorded, including DEV migration `20260907085656 w4_architecture_remediation` (local `20260906120000_w4_architecture_remediation.sql`). DEV smoke passed with zero residue.
 - **Validation:** Clean TypeScript (`tsc --noEmit`), architecture-remediation contract PASS (7/7), full procurement/lifecycle suite PASS (199/199 tests), full UI/i18n suite PASS (270/270 tests), delegation/governance suite PASS (37/37 tests).
 - **Scope Boundary:** No automatic commitment creation, no candidate comparison/ranking UI, no Vendor Bill/AP integration, no expenses, no cash advances, no production mutation, and no push.
-- **Exact Next Wave / Action:** W4 is CLOSED / COMPLETED; ready for Controller final W4 verdict. W5 (Expenses & Cash Advances) remains locked and unstarted until separate Owner task authorization.
+- **Exact Next Wave / Action:** W4 is CLOSED / COMPLETED; W5A is CLOSED / COMPLETED; ready for Controller final W5A verdict. W5B (Expense Management Workspaces & UI) remains locked and unstarted until separate Owner task authorization.
 
 ## CURRENT W1 CLOSEOUT — 31 August 2026
 
@@ -80,7 +95,7 @@
 - **Review/validation:** the W1 publishable delta completed focused tests, TypeScript, ESLint, `git diff --check`, OCR delegation-only rule resolution, separate native findings-only review, same-Writer repair, and targeted rereview. No production, deployment, Layer 2, or unrelated database mutation is claimed.
 - **Current-to-target truth:** W1 delivery does not erase the remaining Layer 1 implementation gaps. W2A Commercial Authority and W2B Revision Lineage are now complete; W1B remains deferred until a real workflow consumer proves a bounded approval-authority/SoD gap.
 - **Current W2C state:** W2C Deterministic Discount Allocation / Approval Projection is implemented, applied and reconciled on the Owner-authorized DEV environment only, and independently verified. No DEMO environment currently exists; no production or deployment claim is made.
-- **Current continuation:** Accepted W2 commercial, bounded W3 lifecycle, and W4 Procurement & Commitments slices are closed. W5 remains LOCKED / UNSTARTED. No further wave or W1C feature is inferred.
+- **Current continuation:** Accepted W2 commercial, bounded W3 lifecycle, W4 Procurement & Commitments, and W5A Expense & Cash Foundation slices are closed. W5B remains LOCKED / UNSTARTED. No further wave or W1C feature is inferred.
 
 ## W2A CLOSEOUT — 31 August 2026 (COMPLETED)
 

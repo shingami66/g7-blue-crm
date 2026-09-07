@@ -32,6 +32,27 @@ export const SERVICE_RECEIPT_PERMISSIONS = {
   correct: "service_receipts:correct",
 } as const;
 
+export const EXPENSE_PERMISSIONS = {
+  read: "expenses:read",
+  write: "expenses:write",
+  approve: "expenses:approve",
+  settle: "expenses:settle",
+} as const;
+
+export const CASH_ADVANCE_PERMISSIONS = {
+  read: "cash_advances:read",
+  create: "cash_advances:create",
+  approve: "cash_advances:approve",
+  issue: "cash_advances:issue",
+  settle: "cash_advances:settle",
+} as const;
+
+export const PETTY_CASH_PERMISSIONS = {
+  read: "petty_cash:read",
+  manage: "petty_cash:manage",
+  transact: "petty_cash:transact",
+} as const;
+
 export const ROLE_PERMISSIONS = {
   admin: [
     "*",

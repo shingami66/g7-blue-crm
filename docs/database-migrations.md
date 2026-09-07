@@ -80,3 +80,22 @@ The following 14 local migrations represent the W4 Procurement & Commitments sch
 | `20260905062540_w4_procurement_package_audit_action_compatibility.sql` | `20260905062540` | Audit action enum compatibility for procurement package lifecycle events. |
 | `20260905140000_w4_supplier_quotation_line_items.sql` | `20260905114939` | Detailed supplier quotation line items (`supplier_quotation_lines`), pricing modes (`total_only`, `line_items`), and package requirement linkage. |
 | `20260906120000_w4_architecture_remediation.sql` | `20260907085656` | W4 architecture remediation foundation (F01–F06): stable procurement package requirement identity, retirement columns, ON DELETE RESTRICT FK, service receipt submitter/reviewer separation, cancellation obligation guard, governed commitment reopening, audit close evidence, correction replay. |
+
+## W5A Expense & Cash Foundation Migration Ledger — 7 September 2026
+
+The following migrations establish the W5A Expense & Cash Accountability Foundation (`L1-D08-EXPENSE-CASH`) and its verified PL/pgSQL output-ambiguity corrective repair on DEV project `dpddrqjzqohexixgdqiq`.
+
+| Local Migration Filename | DEV Project Migration Identity | Scope & Description |
+|---|---|---|
+| `20260907150000_w5a_expense_cash_foundation.sql` | `20260907133406` | W5A core domain schema: 9 domain tables (`employee_cash_advances`, `cash_advance_returns`, `petty_cash_funds`, `expenses`, `cash_advance_expense_settlements`, `expense_reimbursement_settlements`, `expense_evidence_exceptions`, `expense_documents`, `petty_cash_transactions`), 1 audit compatibility index, 1 authoritative accountability view (`public.expense_accountability_summaries`), 16 transactional RPCs, and strict Segregation of Duties (SoD) table constraints and RPC guards. |
+| `20260907164500_w5a_rpc_output_ambiguity_repair.sql` | `20260907164500` | Corrective migration repairing PL/pgSQL `RETURNS TABLE` output-column collision in `attach_expense_document` (`ed.expense_id`, `ed.document_id`) and relation column qualification/syntax in `cancel_expense` (`ers.expense_id`, `caes.expense_id`, `pct.expense_id`). |
+
+### Workflow Deviation Record (Bounded WARN)
+
+- **Deviation**: Corrective migration `20260907164500_w5a_rpc_output_ambiguity_repair.sql` was applied to DEV project `dpddrqjzqohexixgdqiq` via direct linked SQL query (`npx supabase db query --linked --file ...`) followed by registration via `npx supabase migration repair 20260907164500 --status applied --linked`, rather than standard sequential CLI migration push.
+- **Verification Evidence**:
+  - Live RPC definitions on DEV verified with explicitly qualified columns.
+  - RPC execution privileges verified intact for `service_role` and revoked from `public`/`anon`/`authenticated`.
+  - Remote migration list (`npx supabase migration list`) confirmed migration `20260907164500` recorded as applied.
+  - Atomic transactional smoke test (`supabase/verification/w5a_smoke_test.sql`) executed inside `BEGIN ... ROLLBACK` on DEV with clean execution of all 13 assertion steps and confirmed `0` persistent residue.
+- **Governance Mandate**: Migration history is preserved and must not be altered, reapplied, or repaired again without new evidence.

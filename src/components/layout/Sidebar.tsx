@@ -15,6 +15,7 @@ import {
   BriefcaseBusiness,
   ShieldAlert,
   ChevronDown,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -31,6 +32,7 @@ export type NavSectionKey =
   | "operations"
   | "suppliersAndProcurement"
   | "billingAndPayments"
+  | "expensesAndCosting"
   | "administration";
 
 interface NavChildItem {
@@ -70,6 +72,9 @@ export function getSectionForPathname(pathname: string): NavSectionKey | null {
     pathname.startsWith("/payments/")
   ) {
     return "billingAndPayments";
+  }
+  if (pathname === "/expenses" || pathname.startsWith("/expenses/")) {
+    return "expensesAndCosting";
   }
   if (
     pathname === "/settings" ||
@@ -202,6 +207,19 @@ export default function Sidebar({
           label: dictionary.modules.payments,
           href: "/payments",
           icon: CreditCard,
+        },
+      ],
+    },
+    {
+      key: "expensesAndCosting",
+      title: dictionary.sections.expensesAndCosting,
+      icon: Wallet,
+      children: [
+        {
+          key: "expenses",
+          label: dictionary.modules.expenses,
+          href: "/expenses",
+          icon: Wallet,
         },
       ],
     },

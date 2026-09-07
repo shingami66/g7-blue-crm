@@ -396,7 +396,6 @@ test("14. Deep contextual routes expand parent section and activate parent child
   assert.ok(!srvHtml.includes("Supplier Quotations"));
   assert.ok(!srvHtml.includes("Approved Commitments"));
   assert.ok(!srvHtml.includes("Service Receipts"));
-  assert.ok(!srvHtml.includes("Expenses &amp; Costing"));
   assert.ok(!srvHtml.includes("Finance &amp; Accounting"));
 });
 
@@ -438,4 +437,14 @@ test("17. PreparingWorkspace renders centered brand mark, status text, and acces
   );
   assert.ok(arHtml.includes('dir="rtl"'), "Must support RTL direction");
   assert.ok(arHtml.includes("جاري تجهيز مساحة العمل…"), "Must render Arabic copy");
+});
+
+test("18. /expenses expands Expenses & Costing accordion and activates Expenses & Cash", () => {
+  const html = renderSidebar({ currentPathname: "/expenses" });
+  assert.equal(
+    getSectionExpandedState(html, "expensesAndCosting"),
+    true,
+    "/expenses route must expand Expenses & Costing",
+  );
+  assert.ok(html.includes('href="/expenses"'), "Expenses child link must be rendered");
 });

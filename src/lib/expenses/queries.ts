@@ -1,0 +1,246 @@
+import "server-only";
+
+import { requirePermission } from "@/lib/auth/permissions";
+import {
+  EXPENSE_PERMISSIONS,
+  CASH_ADVANCE_PERMISSIONS,
+  PETTY_CASH_PERMISSIONS,
+} from "@/lib/auth/role-permissions";
+import { createAdminClient } from "@/lib/supabase/admin";
+import type {
+  ExpenseAccountabilitySummary,
+  EmployeeCashAdvance,
+  PettyCashFund,
+  PettyCashTransaction,
+  CashAdvanceExpenseSettlement,
+  CashAdvanceReturn,
+  ExpenseReimbursementSettlement,
+  ExpenseDocumentLink,
+} from "./types";
+
+export interface ExpenseListFilters {
+  serviceId?: string;
+  contextType?: "company" | "event";
+  status?: string;
+  limit?: number;
+}
+
+// Helper to query unapplied W5A tables before migration is applied
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getExpenseClient(): any {
+  return createAdminClient();
+}
+
+export async function getExpensesAccountabilityList(
+  filters?: ExpenseListFilters,
+): Promise<ExpenseAccountabilitySummary[]> {
+  await requirePermission(EXPENSE_PERMISSIONS.read);
+  const supabase = getExpenseClient();
+
+  let query = supabase
+    .from("expense_accountability_summaries")
+    .select("*")
+    .order("expense_date", { ascending: false });
+
+  if (filters?.serviceId) {
+    query = query.eq("service_id", filters.serviceId);
+  }
+  if (filters?.contextType) {
+    query = query.eq("context_type", filters.contextType);
+  }
+  if (filters?.status) {
+    query = query.eq("status", filters.status);
+  }
+  if (filters?.limit) {
+    query = query.limit(filters.limit);
+  } else {
+    query = query.limit(100);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    throw new Error(`Failed to load expenses: ${error.message}`);
+  }
+
+  return (data ?? []) as ExpenseAccountabilitySummary[];
+}
+
+export async function getExpenseDetailById(id: string): Promise<{
+  expense: ExpenseAccountabilitySummary | null;
+  documents: ExpenseDocumentLink[];
+  reimbursements: ExpenseReimbursementSettlement[];
+  advanceAllocations: CashAdvanceExpenseSettlement[];
+}> {
+  await requirePermission(EXPENSE_PERMISSIONS.read);
+  const supabase = getExpenseClient();
+
+  const { data: expenseData, error: expenseError } = await supabase
+    .from("expense_accountability_summaries")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (expenseError) {
+    throw new Error(`Failed to load expense: ${expenseError.message}`);
+  }
+  if (!expenseData) {
+    return {
+      expense: null,
+      documents: [],
+      reimbursements: [],
+      advanceAllocations: [],
+    };
+  }
+
+  const [docsRes, reimbursementsRes, advanceAllocationsRes] = await Promise.all([
+    supabase
+      .from("expense_documents")
+      .select("*")
+      .eq("expense_id", id)
+      .order("attached_at", { ascending: false }),
+    supabase
+      .from("expense_reimbursement_settlements")
+      .select("*")
+      .eq("expense_id", id)
+      .order("settled_at", { ascending: false }),
+    supabase
+      .from("cash_advance_expense_settlements")
+      .select("*")
+      .eq("expense_id", id)
+      .order("settled_at", { ascending: false }),
+  ]);
+
+  return {
+    expense: expenseData as ExpenseAccountabilitySummary,
+    documents: (docsRes.data ?? []) as ExpenseDocumentLink[],
+    reimbursements: (reimbursementsRes.data ?? []) as ExpenseReimbursementSettlement[],
+    advanceAllocations: (advanceAllocationsRes.data ?? []) as CashAdvanceExpenseSettlement[],
+  };
+}
+
+export async function getCashAdvancesList(filters?: {
+  recipientId?: string;
+  status?: string;
+  limit?: number;
+}): Promise<EmployeeCashAdvance[]> {
+  await requirePermission(CASH_ADVANCE_PERMISSIONS.read);
+  const supabase = getExpenseClient();
+
+  let query = supabase
+    .from("employee_cash_advances")
+    .select("*")
+    .order("requested_at", { ascending: false });
+
+  if (filters?.recipientId) {
+    query = query.eq("recipient_id", filters.recipientId);
+  }
+  if (filters?.status) {
+    query = query.eq("status", filters.status);
+  }
+  if (filters?.limit) {
+    query = query.limit(filters.limit);
+  } else {
+    query = query.limit(100);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    throw new Error(`Failed to load cash advances: ${error.message}`);
+  }
+
+  return (data ?? []) as EmployeeCashAdvance[];
+}
+
+export async function getCashAdvanceDetailById(id: string): Promise<{
+  advance: EmployeeCashAdvance | null;
+  allocations: CashAdvanceExpenseSettlement[];
+  returns: CashAdvanceReturn[];
+}> {
+  await requirePermission(CASH_ADVANCE_PERMISSIONS.read);
+  const supabase = getExpenseClient();
+
+  const { data: advanceData, error: advanceError } = await supabase
+    .from("employee_cash_advances")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (advanceError) {
+    throw new Error(`Failed to load cash advance: ${advanceError.message}`);
+  }
+  if (!advanceData) {
+    return { advance: null, allocations: [], returns: [] };
+  }
+
+  const [allocationsRes, returnsRes] = await Promise.all([
+    supabase
+      .from("cash_advance_expense_settlements")
+      .select("*")
+      .eq("cash_advance_id", id)
+      .order("settled_at", { ascending: false }),
+    supabase
+      .from("cash_advance_returns")
+      .select("*")
+      .eq("cash_advance_id", id)
+      .order("returned_at", { ascending: false }),
+  ]);
+
+  return {
+    advance: advanceData as EmployeeCashAdvance,
+    allocations: (allocationsRes.data ?? []) as CashAdvanceExpenseSettlement[],
+    returns: (returnsRes.data ?? []) as CashAdvanceReturn[],
+  };
+}
+
+export async function getPettyCashFundsList(): Promise<PettyCashFund[]> {
+  await requirePermission(PETTY_CASH_PERMISSIONS.read);
+  const supabase = getExpenseClient();
+
+  const { data, error } = await supabase
+    .from("petty_cash_funds")
+    .select("*")
+    .order("fund_name", { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to load petty cash funds: ${error.message}`);
+  }
+
+  return (data ?? []) as PettyCashFund[];
+}
+
+export async function getPettyCashFundDetailById(id: string): Promise<{
+  fund: PettyCashFund | null;
+  transactions: PettyCashTransaction[];
+}> {
+  await requirePermission(PETTY_CASH_PERMISSIONS.read);
+  const supabase = getExpenseClient();
+
+  const { data: fundData, error: fundError } = await supabase
+    .from("petty_cash_funds")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (fundError) {
+    throw new Error(`Failed to load petty cash fund: ${fundError.message}`);
+  }
+  if (!fundData) {
+    return { fund: null, transactions: [] };
+  }
+
+  const { data: txData, error: txError } = await supabase
+    .from("petty_cash_transactions")
+    .select("*")
+    .eq("fund_id", id)
+    .order("recorded_at", { ascending: false })
+    .limit(100);
+
+  if (txError) {
+    throw new Error(`Failed to load petty cash transactions: ${txError.message}`);
+  }
+
+  return {
+    fund: fundData as PettyCashFund,
+    transactions: (txData ?? []) as PettyCashTransaction[],
+  };
+}

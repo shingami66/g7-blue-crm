@@ -29,12 +29,14 @@ export interface NavigationDictionary {
     settings: string;
     suppliers: string;
     users: string;
+    expenses: string;
   };
   sections: {
     customersAndSales: string;
     operations: string;
     suppliersAndProcurement: string;
     billingAndPayments: string;
+    expensesAndCosting: string;
     administration: string;
   };
 }
@@ -70,12 +72,14 @@ export const navigationDictionaryEn: NavigationDictionary = {
     settings: "Settings",
     suppliers: "Suppliers",
     users: "Users",
+    expenses: "Expenses & Cash",
   },
   sections: {
     customersAndSales: "Customers & Sales",
     operations: "Operations",
     suppliersAndProcurement: "Suppliers & Procurement",
     billingAndPayments: "Billing & Payments",
+    expensesAndCosting: "Expenses & Costing",
     administration: "Administration",
   },
 };
@@ -111,12 +115,14 @@ export const navigationDictionaryAr: NavigationDictionary = {
     settings: "الإعدادات",
     suppliers: "الموردون",
     users: "المستخدمون",
+    expenses: "المصروفات والعهد",
   },
   sections: {
     customersAndSales: "العملاء والمبيعات",
     operations: "العمليات",
     suppliersAndProcurement: "الموردون والمشتريات",
     billingAndPayments: "الفواتير والمدفوعات",
+    expensesAndCosting: "المصروفات والتكاليف",
     administration: "الإدارة",
   },
 };
