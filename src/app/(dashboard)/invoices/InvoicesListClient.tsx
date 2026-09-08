@@ -170,33 +170,44 @@ export default function InvoicesListClient({
       <div className="flex min-h-0 flex-1 gap-6">
         <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-busy={isPending || undefined}>
           <div className="flex flex-wrap items-center gap-3 border-b border-surface-variant bg-surface-bright p-4">
-            <ModuleSearchControl
-              mode={activeMode}
-              modes={searchModes}
-              query={query.search ?? ""}
-              modeLabel={dictionary.list.filters.searchModeLabel}
-              submitLabel={common.labels.search}
-              pendingLabel={common.states.searching}
-              clearLabel={common.actions.clear}
-              isPending={isPending}
-              isSearchPending={isSearchPending}
-              selectModeLabel={common.labels.select}
-              disabledPlaceholder={common.labels.searchTypeFirst}
-              onSubmit={(mode, search) => updateQuery({ searchMode: mode as InvoiceSearchMode, search: search || undefined }, "search")}
-              onModeChange={(mode) => { if (!mode) updateQuery({ searchMode: undefined, search: undefined }); }}
-            />
-            <div className="relative shrink-0">
-              <select value={query.status ?? "all"} disabled={isPending} onChange={(event) => updateQuery({ status: event.target.value === "all" ? undefined : event.target.value })} aria-label={dictionary.list.filters.allStatuses} className="appearance-none rounded-lg border border-outline-variant bg-surface py-2 ps-3 pe-8 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60">
-                <option value="all">{dictionary.list.filters.allStatuses}</option>
-                <option value="paid">{dictionary.list.filters.paid}</option>
-                <option value="overdue">{dictionary.list.filters.overdue}</option>
-                <option value="draft">{dictionary.statuses.draft}</option>
-                <option value="sent">{dictionary.statuses.sent}</option>
-                <option value="partial">{dictionary.statuses.partial}</option>
-                <option value="cancelled">{dictionary.statuses.cancelled}</option>
-                <option value="voided">{dictionary.statuses.voided}</option>
-              </select>
-              <Filter size={14} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+            <div className="w-full sm:flex-1 sm:min-w-0">
+              <ModuleSearchControl
+                mode={activeMode}
+                modes={searchModes}
+                query={query.search ?? ""}
+                modeLabel={dictionary.list.filters.searchModeLabel}
+                submitLabel={common.labels.search}
+                pendingLabel={common.states.searching}
+                clearLabel={common.actions.clear}
+                isPending={isPending}
+                isSearchPending={isSearchPending}
+                selectModeLabel={common.labels.select}
+                disabledPlaceholder={common.labels.searchTypeFirst}
+                onSubmit={(mode, search) => updateQuery({ searchMode: mode as InvoiceSearchMode, search: search || undefined }, "search")}
+                onModeChange={(mode) => { if (!mode) updateQuery({ searchMode: undefined, search: undefined }); }}
+                className="w-full"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-initial shrink-0">
+                <select
+                  value={query.status ?? "all"}
+                  disabled={isPending}
+                  onChange={(event) => updateQuery({ status: event.target.value === "all" ? undefined : event.target.value })}
+                  aria-label={dictionary.list.filters.allStatuses}
+                  className="w-full sm:w-auto appearance-none rounded-lg border border-outline-variant bg-surface py-2 ps-3 pe-8 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+                >
+                  <option value="all">{dictionary.list.filters.allStatuses}</option>
+                  <option value="paid">{dictionary.list.filters.paid}</option>
+                  <option value="overdue">{dictionary.list.filters.overdue}</option>
+                  <option value="draft">{dictionary.statuses.draft}</option>
+                  <option value="sent">{dictionary.statuses.sent}</option>
+                  <option value="partial">{dictionary.statuses.partial}</option>
+                  <option value="cancelled">{dictionary.statuses.cancelled}</option>
+                  <option value="voided">{dictionary.statuses.voided}</option>
+                </select>
+                <Filter size={14} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+              </div>
             </div>
           </div>
 
@@ -212,30 +223,112 @@ export default function InvoicesListClient({
           />
 
           <div className="relative min-h-0 flex-1 overflow-auto">
-            {loadError ? <ListInlineError message={dictionary.states.invoicesLoadError} retryLabel={sharedStates.retry.tryAgain} onRetry={refresh} pending={isPending} /> : <table className="w-full min-w-[1060px] table-fixed border-collapse text-start">
-              <colgroup>
-                {INVOICE_COLUMN_WIDTHS.map((width, index) => <col key={index} className={width} />)}
-              </colgroup>
-              <thead><tr className="border-b border-surface-variant bg-surface-container-low">
-                {[dictionary.list.table.invoice, dictionary.list.table.type, dictionary.list.table.document, dictionary.list.table.customer, dictionary.list.table.issueDate, dictionary.list.table.amountSar, dictionary.list.table.status, dictionary.list.table.preview, dictionary.list.table.printPdf].map((header, index) => <th key={header} className={`px-4 py-3 text-[12px] font-semibold uppercase text-on-surface-variant ${INVOICE_COLUMN_ALIGNMENTS[index]}`}>{header}</th>)}
-              </tr></thead>
-              <tbody className="divide-y divide-surface-variant text-[14px]">
-                {initialInvoices.map((invoice) => (
-                  <tr key={invoice.id} className="transition-colors hover:bg-surface-container-low/50">
-                    <td className="px-4 py-4 font-mono font-semibold text-primary"><span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(invoice.invoice_number || invoice.id)}</span></td>
-                    <td className="px-4 py-4 text-on-surface">{invoice.invoice_type ? getInvoiceTypeLabel(locale, invoice.invoice_type) : "—"}</td>
-                    <td className="px-4 py-4 text-on-surface"><span dir="auto">{getInvoiceDocumentLabelDisplay(locale, invoice.document_label)}</span></td>
-                    <td className="px-4 py-4 font-medium text-on-surface"><span dir="auto">{invoice.customer}</span></td>
-                    <td className="px-4 py-4 text-on-surface-variant"><UiDateText locale={locale} value={invoice.issued_at ?? invoice.created_at} /></td>
-                    <td className="px-4 py-4 text-end font-semibold text-on-surface tabular-nums"><span dir="ltr" className="inline-block whitespace-nowrap">{formatSarAmount(locale, invoice.grand_total)}</span></td>
-                    <td className="px-4 py-4"><StatusBadge variant={invoiceStatusBadgeVariant[invoice.status]}>{getInvoiceStatusLabel(dictionary.locale, invoice.status)}</StatusBadge></td>
-                    <td className="px-4 py-4 text-center"><PendingLink href={`/invoices/${invoice.id}?returnTo=${encodeURIComponent(returnTo)}`} pendingLabel={dictionary.list.navigationPending} aria-label={`${dictionary.list.table.preview} ${invoice.invoice_number || invoice.id}`} title={`${dictionary.list.table.preview} ${invoice.invoice_number || invoice.id}`} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40"><Eye size={17} /></PendingLink></td>
-                    <td className="px-4 py-4 text-center"><div className="grid place-items-center"><DenseTableIconAction label={dictionary.list.table.printPdf} onClick={() => window.open(`/invoices/${invoice.id}/pdf`, "_blank", "noopener,noreferrer")}><Printer size={16} aria-hidden="true" /></DenseTableIconAction></div></td>
-                  </tr>
-                ))}
-                {!loadError && initialInvoices.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">{pagination.total === 0 && !query.search && !query.status ? dictionary.list.table.noInvoices : dictionary.list.table.noFilteredInvoices}</td></tr>}
-              </tbody>
-            </table>}
+            {loadError ? (
+              <ListInlineError message={dictionary.states.invoicesLoadError} retryLabel={sharedStates.retry.tryAgain} onRetry={refresh} pending={isPending} />
+            ) : initialInvoices.length === 0 ? (
+              <div className="flex min-h-[14rem] flex-col items-center justify-center p-8 text-center text-on-surface-variant">
+                <p>{pagination.total === 0 && !query.search && !query.status ? dictionary.list.table.noInvoices : dictionary.list.table.noFilteredInvoices}</p>
+              </div>
+            ) : (
+              <div className="rounded-b-xl border border-surface-variant bg-surface-container-lowest overflow-hidden">
+                <div className="hidden md:block w-full overflow-x-auto">
+                  <table className="w-full min-w-[1060px] table-fixed border-collapse text-start">
+                    <colgroup>
+                      {INVOICE_COLUMN_WIDTHS.map((width, index) => <col key={index} className={width} />)}
+                    </colgroup>
+                    <thead>
+                      <tr className="border-b border-surface-variant bg-surface-container-low">
+                        {[dictionary.list.table.invoice, dictionary.list.table.type, dictionary.list.table.document, dictionary.list.table.customer, dictionary.list.table.issueDate, dictionary.list.table.amountSar, dictionary.list.table.status, dictionary.list.table.preview, dictionary.list.table.printPdf].map((header, index) => (
+                          <th key={header} className={`px-4 py-3 text-[12px] font-semibold uppercase text-on-surface-variant ${INVOICE_COLUMN_ALIGNMENTS[index]}`}>{header}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-surface-variant text-[14px]">
+                      {initialInvoices.map((invoice) => (
+                        <tr key={invoice.id} className="transition-colors hover:bg-surface-container-low/50">
+                          <td className="px-4 py-4 font-mono font-semibold text-primary"><span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(invoice.invoice_number || invoice.id)}</span></td>
+                          <td className="px-4 py-4 text-on-surface">{invoice.invoice_type ? getInvoiceTypeLabel(locale, invoice.invoice_type) : "—"}</td>
+                          <td className="px-4 py-4 text-on-surface"><span dir="auto">{getInvoiceDocumentLabelDisplay(locale, invoice.document_label)}</span></td>
+                          <td className="px-4 py-4 font-medium text-on-surface"><span dir="auto">{invoice.customer}</span></td>
+                          <td className="px-4 py-4 text-on-surface-variant"><UiDateText locale={locale} value={invoice.issued_at ?? invoice.created_at} /></td>
+                          <td className="px-4 py-4 text-end font-semibold text-on-surface tabular-nums"><span dir="ltr" className="inline-block whitespace-nowrap">{formatSarAmount(locale, invoice.grand_total)}</span></td>
+                          <td className="px-4 py-4"><StatusBadge variant={invoiceStatusBadgeVariant[invoice.status]}>{getInvoiceStatusLabel(dictionary.locale, invoice.status)}</StatusBadge></td>
+                          <td className="px-4 py-4 text-center"><PendingLink href={`/invoices/${invoice.id}?returnTo=${encodeURIComponent(returnTo)}`} pendingLabel={dictionary.list.navigationPending} aria-label={`${dictionary.list.table.preview} ${invoice.invoice_number || invoice.id}`} title={`${dictionary.list.table.preview} ${invoice.invoice_number || invoice.id}`} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40"><Eye size={17} /></PendingLink></td>
+                          <td className="px-4 py-4 text-center"><div className="grid place-items-center"><DenseTableIconAction label={dictionary.list.table.printPdf} onClick={() => window.open(`/invoices/${invoice.id}/pdf`, "_blank", "noopener,noreferrer")}><Printer size={16} aria-hidden="true" /></DenseTableIconAction></div></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="block md:hidden divide-y divide-surface-variant" data-testid="mobile-invoice-cards">
+                  {initialInvoices.map((invoice) => (
+                    <div key={invoice.id} className="p-4 space-y-3 transition-colors hover:bg-surface-container-low/40">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span dir="ltr" className="font-mono font-semibold text-primary text-[14px]">
+                            {isolateBidiText(invoice.invoice_number || invoice.id)}
+                          </span>
+                          <div className="mt-0.5 text-[12px] text-on-surface-variant">
+                            <UiDateText locale={locale} value={invoice.issued_at ?? invoice.created_at} />
+                          </div>
+                        </div>
+                        <div className="shrink-0">
+                          <StatusBadge variant={invoiceStatusBadgeVariant[invoice.status]}>
+                            {getInvoiceStatusLabel(dictionary.locale, invoice.status)}
+                          </StatusBadge>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="font-semibold text-on-surface break-words text-[14px]" dir="auto">
+                          {invoice.customer}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-on-surface-variant">
+                          <span className="inline-flex items-center rounded-md bg-surface-container-low px-2 py-0.5 font-medium text-on-surface">
+                            {invoice.invoice_type ? getInvoiceTypeLabel(locale, invoice.invoice_type) : "—"}
+                          </span>
+                          <span dir="auto" className="break-words">
+                            {getInvoiceDocumentLabelDisplay(locale, invoice.document_label)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between border-t border-outline-variant/60 pt-2">
+                        <span className="text-[12px] text-on-surface-variant">
+                          {dictionary.list.table.amountSar}
+                        </span>
+                        <span className="font-semibold text-on-surface text-[14px] tabular-nums" dir="ltr">
+                          {formatSarAmount(locale, invoice.grand_total)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <PendingLink
+                          href={`/invoices/${invoice.id}?returnTo=${encodeURIComponent(returnTo)}`}
+                          pendingLabel={dictionary.list.navigationPending}
+                          aria-label={`${dictionary.list.table.preview} ${invoice.invoice_number || invoice.id}`}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface py-2 text-[13px] font-medium text-primary hover:bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        >
+                          <Eye size={16} aria-hidden="true" />
+                          <span>{dictionary.list.table.preview}</span>
+                        </PendingLink>
+
+                        <button
+                          type="button"
+                          onClick={() => window.open(`/invoices/${invoice.id}/pdf`, "_blank", "noopener,noreferrer")}
+                          aria-label={`${dictionary.list.table.printPdf} ${invoice.invoice_number || invoice.id}`}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] font-medium text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        >
+                          <Printer size={16} aria-hidden="true" />
+                          <span>{dictionary.list.table.printPdf}</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
