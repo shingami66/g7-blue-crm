@@ -351,6 +351,78 @@ export async function getCashAdvanceDetailById(id: string): Promise<{
   };
 }
 
+export async function getOwnCashAdvancesList(filters?: {
+  status?: string;
+  limit?: number;
+}): Promise<EmployeeCashAdvance[]> {
+  const user = await requirePermission(CASH_ADVANCE_PERMISSIONS.readOwn);
+  const supabase = getExpenseClient();
+
+  let query = supabase
+    .from("employee_cash_advances")
+    .select("*")
+    .eq("recipient_id", user.id)
+    .order("requested_at", { ascending: false });
+
+  if (filters?.status) {
+    query = query.eq("status", filters.status);
+  }
+  if (filters?.limit) {
+    query = query.limit(filters.limit);
+  } else {
+    query = query.limit(100);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    throw new Error(`Failed to load own cash advances: ${error.message}`);
+  }
+
+  return (data ?? []) as EmployeeCashAdvance[];
+}
+
+export async function getOwnCashAdvanceDetailById(id: string): Promise<{
+  advance: EmployeeCashAdvance | null;
+  allocations: CashAdvanceExpenseSettlement[];
+  returns: CashAdvanceReturn[];
+}> {
+  const user = await requirePermission(CASH_ADVANCE_PERMISSIONS.readOwn);
+  const supabase = getExpenseClient();
+
+  const { data: advanceData, error: advanceError } = await supabase
+    .from("employee_cash_advances")
+    .select("*")
+    .eq("id", id)
+    .eq("recipient_id", user.id)
+    .maybeSingle();
+
+  if (advanceError) {
+    throw new Error(`Failed to load own cash advance: ${advanceError.message}`);
+  }
+  if (!advanceData) {
+    return { advance: null, allocations: [], returns: [] };
+  }
+
+  const [allocationsRes, returnsRes] = await Promise.all([
+    supabase
+      .from("cash_advance_expense_settlements")
+      .select("*")
+      .eq("cash_advance_id", id)
+      .order("settled_at", { ascending: false }),
+    supabase
+      .from("cash_advance_returns")
+      .select("*")
+      .eq("cash_advance_id", id)
+      .order("returned_at", { ascending: false }),
+  ]);
+
+  return {
+    advance: advanceData as EmployeeCashAdvance,
+    allocations: (allocationsRes.data ?? []) as CashAdvanceExpenseSettlement[],
+    returns: (returnsRes.data ?? []) as CashAdvanceReturn[],
+  };
+}
+
 export async function getPettyCashFundsList(): Promise<PettyCashFund[]> {
   await requirePermission(PETTY_CASH_PERMISSIONS.read);
   const supabase = getExpenseClient();

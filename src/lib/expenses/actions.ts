@@ -27,6 +27,7 @@ import {
   attachExpenseDocumentSchema,
   settleExpenseReimbursementSchema,
   requestCashAdvanceSchema,
+  requestOwnCashAdvanceSchema,
   approveCashAdvanceSchema,
   rejectCashAdvanceSchema,
   cancelCashAdvanceSchema,
@@ -1049,6 +1050,59 @@ export async function requestCashAdvanceAction(
       p_context_type: parsed.data.context_type,
       p_service_id: parsed.data.service_id ?? null,
       p_recipient_id: parsed.data.recipient_id,
+      p_purpose: parsed.data.purpose,
+      p_amount_issued: parsed.data.amount_issued,
+      p_request_id: parsed.data.request_id,
+      p_actor_id: user.id,
+      p_actor_role: user.role,
+    });
+
+    if (error) {
+      return { success: false, error: error.message, errorCode: error.code };
+    }
+
+    const row = data?.[0];
+    if (row?.error_code) {
+      return { success: false, error: row.error_code, errorCode: row.error_code };
+    }
+
+    return {
+      success: true,
+      data: { advance_id: row.advance_id },
+      idempotentReplay: row.idempotent_replay,
+    };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unexpected error during cash advance request";
+    return { success: false, error: message };
+  }
+}
+
+// 9b. Request Own Cash Advance (Self-Service)
+export async function requestOwnCashAdvanceAction(
+  rawInput: unknown,
+): Promise<W5ActionResult<{ advance_id: string }>> {
+  try {
+    const user = await requirePermission(CASH_ADVANCE_PERMISSIONS.submitOwn);
+    const parsed = requestOwnCashAdvanceSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message ?? "Invalid cash advance request payload",
+        errorCode: "validation_error",
+      };
+    }
+
+    const supabase = getExpenseRpcClient();
+    // Server-authoritative constraints forced by backend:
+    // p_advance_number = null (database generates authoritative ADV-YYYY-0001)
+    // p_recipient_id = user.id
+    // p_actor_id = user.id
+    // p_actor_role = user.role
+    const { data, error } = await supabase.rpc("request_cash_advance", {
+      p_advance_number: null,
+      p_context_type: parsed.data.context_type,
+      p_service_id: parsed.data.service_id ?? null,
+      p_recipient_id: user.id,
       p_purpose: parsed.data.purpose,
       p_amount_issued: parsed.data.amount_issued,
       p_request_id: parsed.data.request_id,

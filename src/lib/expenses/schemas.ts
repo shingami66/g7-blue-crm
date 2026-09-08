@@ -213,6 +213,38 @@ export const requestCashAdvanceSchema = z
     }
   });
 
+export const requestOwnCashAdvanceSchema = z
+  .object({
+    context_type: z.enum(["company", "event"]),
+    service_id: uuidSchema.nullable().optional(),
+    purpose: z
+      .string()
+      .trim()
+      .min(5, { message: "Purpose must be at least 5 characters" }),
+    amount_issued: z
+      .number()
+      .positive({ message: "Amount must be greater than zero" }),
+    request_id: uuidSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (data.context_type === "company" && data.service_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Company context advance must not specify a service_id",
+        path: ["service_id"],
+      });
+    }
+    if (data.context_type === "event" && !data.service_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Event context advance must specify a service_id",
+        path: ["service_id"],
+      });
+    }
+  });
+
+export type RequestOwnCashAdvanceInput = z.infer<typeof requestOwnCashAdvanceSchema>;
+
 export const approveCashAdvanceSchema = z.object({
   advance_id: uuidSchema,
   request_id: uuidSchema,
