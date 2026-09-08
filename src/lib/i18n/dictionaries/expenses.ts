@@ -93,6 +93,20 @@ export interface ExpensesDictionary {
     receiptHint: string;
     receiptSelected: string;
     chooseFile: string;
+    takePhoto: string;
+    useDeviceCamera: string;
+    cameraPreview: string;
+    capture: string;
+    retake: string;
+    usePhoto: string;
+    cameraUnavailable: string;
+    cameraPermissionDenied: string;
+    couldNotCaptureImage: string;
+    cameraNotSupported: string;
+    unsupportedImageType: string;
+    heicNotSupported: string;
+    replaceFile: string;
+    orDivider: string;
     removeFile: string;
     submit: string;
     submitting: string;
@@ -211,6 +225,20 @@ const expensesDictionaryEn: ExpensesDictionary = {
     receiptHint: "Accepted: PDF, JPEG, PNG (Up to 25 MB)",
     receiptSelected: "Selected file",
     chooseFile: "Choose File",
+    takePhoto: "Take Photo",
+    useDeviceCamera: "Use Device Camera",
+    cameraPreview: "Camera Preview",
+    capture: "Capture",
+    retake: "Retake",
+    usePhoto: "Use Photo",
+    cameraUnavailable: "Camera unavailable",
+    cameraPermissionDenied: "Camera permission denied",
+    couldNotCaptureImage: "Could not capture image",
+    cameraNotSupported: "Camera is not supported on this browser",
+    unsupportedImageType: "Unsupported image format. Please upload JPEG or PNG",
+    heicNotSupported: "HEIC/HEIF photo format is not supported. Please use the direct camera or upload JPEG/PNG.",
+    replaceFile: "Replace",
+    orDivider: "or",
     removeFile: "Remove",
     submit: "Submit Expense",
     submitting: "Submitting...",
@@ -365,6 +393,20 @@ const expensesDictionaryAr: ExpensesDictionary = {
     receiptHint: "المقبول: PDF, JPEG, PNG (حتى 25 ميجابايت)",
     receiptSelected: "الملف المختار",
     chooseFile: "اختيار ملف",
+    takePhoto: "التقاط صورة",
+    useDeviceCamera: "استخدام كاميرا الجهاز",
+    cameraPreview: "معاينة الكاميرا",
+    capture: "التقاط",
+    retake: "إعادة التصوير",
+    usePhoto: "استخدام الصورة",
+    cameraUnavailable: "الكاميرا غير متاحة",
+    cameraPermissionDenied: "تم رفض إذن الكاميرا",
+    couldNotCaptureImage: "تعذر التقاط الصورة",
+    cameraNotSupported: "الكاميرا غير مدعومة في هذا المتصفح",
+    unsupportedImageType: "نوع الصورة غير مدعوم. يرجى اختيار JPEG أو PNG",
+    heicNotSupported: "صيغة HEIC/HEIF غير مدعومة. يرجى استخدام الكاميرا المباشرة أو رفع ملف JPEG أو PNG.",
+    replaceFile: "استبدال",
+    orDivider: "أو",
     removeFile: "إزالة",
     submit: "تقديم المصروف",
     submitting: "جاري التقديم...",

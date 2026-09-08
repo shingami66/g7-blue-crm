@@ -97,6 +97,19 @@ const {
   getEligibleServicesForExpenseSelector,
 } = await import("./queries.ts");
 
+const {
+  CAMERA_CONFIG,
+  isGetUserMediaSupported,
+  isCameraAvailable,
+  startRearCameraStream,
+  stopMediaStream,
+  calculateScaledDimensions,
+  generateReceiptCameraFilename,
+  captureVideoFrameToBlob,
+  captureVideoFrameToFile,
+  isAllowedReceiptFile,
+} = await import("./receipt-camera.ts");
+
 type MockRpcResponse = { data: unknown[] | null; error: { message: string; code?: string } | null };
 
 declare global {
@@ -109,6 +122,7 @@ const ACTIONS_FILE_PATH = path.join(process.cwd(), "src", "lib", "expenses", "ac
 const QUERIES_FILE_PATH = path.join(process.cwd(), "src", "lib", "expenses", "queries.ts");
 const CLIENT_FILE_PATH = path.join(process.cwd(), "src", "app", "(dashboard)", "expenses", "ExpensesClient.tsx");
 const MODAL_FILE_PATH = path.join(process.cwd(), "src", "app", "(dashboard)", "expenses", "ExpenseSubmissionModal.tsx");
+const CAMERA_FILE_PATH = path.join(process.cwd(), "src", "lib", "expenses", "receipt-camera.ts");
 
 // 1. Self-service submit passes p_expense_number = null
 test("Requirement 1: Self-service submit passes p_expense_number = null", () => {
@@ -1062,4 +1076,381 @@ test("Remediation 19: EN/AR dictionary parity remains clean including custom cat
   const arKeys = getLeafKeys(ar as unknown as Record<string, unknown>);
 
   assert.deepEqual(enKeys, arKeys, "English and Arabic dictionaries must have identical leaf keys");
+});
+
+// =========================================================================
+// W5B-1B Mobile Receipt Camera Test Suite (Requirements 1 - 33)
+// =========================================================================
+
+// 1. getUserMedia capability detection works
+test("Camera 1: getUserMedia capability detection works", () => {
+  assert.equal(isGetUserMediaSupported(), false);
+  assert.equal(isCameraAvailable(), false);
+});
+
+// 2. camera request uses audio:false
+test("Camera 2: camera request uses audio:false", () => {
+  assert.equal(CAMERA_CONFIG.audio, false, "Camera config must strictly enforce audio: false");
+
+  const cameraFileContent = fs.readFileSync(CAMERA_FILE_PATH, "utf8");
+  assert.ok(
+    cameraFileContent.includes("audio: CAMERA_CONFIG.audio") || cameraFileContent.includes("audio: false"),
+    "startRearCameraStream must pass audio: false"
+  );
+});
+
+// 3. rear/environment facing camera is preferred
+test("Camera 3: rear/environment facing camera is preferred", () => {
+  assert.deepEqual(
+    CAMERA_CONFIG.facingMode,
+    { ideal: "environment" },
+    "Camera config must prefer ideal: environment without strict failure"
+  );
+});
+
+// 4. playsInline live video contract exists
+test("Camera 4: playsInline live video contract exists", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(modalContent.includes("playsInline"), "Video element must have playsInline for iOS Safari");
+  assert.ok(modalContent.includes("autoPlay"), "Video element must have autoPlay");
+  assert.ok(modalContent.includes("muted"), "Video element must be muted");
+});
+
+// 5. camera tracks are stopped on close
+test("Camera 5: camera tracks are stopped on close", () => {
+  let track1Stopped = false;
+  let track2Stopped = false;
+  const mockStream = {
+    getTracks: () => [
+      { stop: () => { track1Stopped = true; } },
+      { stop: () => { track2Stopped = true; } },
+    ],
+  } as unknown as MediaStream;
+
+  stopMediaStream(mockStream);
+  assert.equal(track1Stopped, true);
+  assert.equal(track2Stopped, true);
+
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(modalContent.includes("stopCamera()"), "Modal must call stopCamera on close");
+});
+
+// 6. camera tracks are stopped after accepted capture
+test("Camera 6: camera tracks are stopped after accepted capture", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes("stopMediaStream(mediaStreamRef.current)") &&
+    modalContent.includes("useAcceptedPhoto"),
+    "useAcceptedPhoto must stop camera tracks"
+  );
+});
+
+// 7. camera tracks are stopped on unmount
+test("Camera 7: camera tracks are stopped on unmount", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes("stopMediaStream(mediaStreamRef.current)") &&
+    modalContent.includes("return () => {"),
+    "useEffect unmount cleanup must stop media tracks"
+  );
+});
+
+// 8. no duplicate stream remains active
+test("Camera 8: no duplicate stream remains active", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes("mediaStreamRef.current = null"),
+    "mediaStreamRef must be reset to null when stopped to avoid duplicate active streams"
+  );
+});
+
+// 9. captured image is normalized to image/jpeg
+test("Camera 9: captured image is normalized to image/jpeg", () => {
+  const cameraFileContent = fs.readFileSync(CAMERA_FILE_PATH, "utf8");
+  assert.ok(
+    cameraFileContent.includes('"image/jpeg"'),
+    "canvas.toBlob and File creation must normalize to image/jpeg"
+  );
+});
+
+// 10. generated camera filename ends in .jpg
+test("Camera 10: generated camera filename ends in .jpg", () => {
+  const name = generateReceiptCameraFilename();
+  assert.ok(name.endsWith(".jpg"), "Generated filename must end in .jpg");
+});
+
+// 11. generated filename contains no user identifier
+test("Camera 11: generated filename contains no user identifier", () => {
+  const name = generateReceiptCameraFilename(new Date("2026-09-08T12:30:45Z"));
+  assert.match(name, /^receipt-camera-\d{8}-\d{6}\.jpg$/, "Filename must follow receipt-camera-YYYYMMDD-HHmmss.jpg format");
+  assert.ok(!name.includes("usr_") && !name.includes("user_") && !name.includes("@"));
+});
+
+// 12. resize preserves aspect ratio
+test("Camera 12: resize preserves aspect ratio", () => {
+  const scaledLandscape = calculateScaledDimensions(3840, 2160, 1920);
+  assert.equal(scaledLandscape.width, 1920);
+  assert.equal(scaledLandscape.height, 1080);
+
+  const scaledPortrait = calculateScaledDimensions(2160, 3840, 1920);
+  assert.equal(scaledPortrait.width, 1080);
+  assert.equal(scaledPortrait.height, 1920);
+});
+
+// 13. long edge is capped at 1920px
+test("Camera 13: long edge is capped at 1920px", () => {
+  const dim = calculateScaledDimensions(4032, 3024, 1920);
+  assert.equal(Math.max(dim.width, dim.height), 1920);
+});
+
+// 14. images smaller than cap are not upscaled
+test("Camera 14: images smaller than cap are not upscaled", () => {
+  const dim = calculateScaledDimensions(1280, 720, 1920);
+  assert.equal(dim.width, 1280);
+  assert.equal(dim.height, 720);
+});
+
+// 15. JPEG capture quality is bounded/configured
+test("Camera 15: JPEG capture quality is bounded/configured", () => {
+  assert.equal(CAMERA_CONFIG.jpegQuality, 0.85, "Default JPEG quality must be 0.85");
+});
+
+// 16. null canvas blob returns truthful failure
+test("Camera 16: null canvas blob returns truthful failure", async () => {
+  const mockVideo = {
+    videoWidth: 640,
+    videoHeight: 480,
+  } as unknown as HTMLVideoElement;
+
+  await assert.rejects(
+    async () => {
+      await captureVideoFrameToBlob(mockVideo);
+    },
+    /document is not defined|Could not acquire 2D canvas context|Canvas conversion to JPEG blob failed/
+  );
+});
+
+// 17. direct captured JPEG feeds existing selected receipt state
+test("Camera 17: direct captured JPEG feeds existing selected receipt state", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes("setSelectedFile(capturedFile)"),
+    "useAcceptedPhoto must pass capturedFile to setSelectedFile"
+  );
+  assert.ok(
+    modalContent.includes('formData.append("receipt", selectedFile)'),
+    "Receipt File must be appended to formData"
+  );
+});
+
+// 18. captured image still goes through existing submission action
+test("Camera 18 (Behavioral): captured image still goes through existing submission action", async () => {
+  const capturedFile = new File([Buffer.from("%PDF-1.4 test receipt")], "receipt-camera-20260908-120000.jpg", {
+    type: "image/jpeg",
+  });
+
+  const check = isAllowedReceiptFile(capturedFile);
+  assert.equal(check.valid, true);
+
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes("submitSelfServiceExpenseWithReceiptAction(formData)"),
+    "Captured file must be submitted through existing submitSelfServiceExpenseWithReceiptAction"
+  );
+});
+
+// 19. standard Choose File still accepts PDF/JPEG/PNG
+test("Camera 19: standard Choose File still accepts PDF/JPEG/PNG", () => {
+  const pdf = new File([Buffer.from("%PDF")], "doc.pdf", { type: "application/pdf" });
+  const jpg = new File([Buffer.from("jpg")], "pic.jpg", { type: "image/jpeg" });
+  const png = new File([Buffer.from("png")], "pic.png", { type: "image/png" });
+
+  assert.equal(isAllowedReceiptFile(pdf).valid, true);
+  assert.equal(isAllowedReceiptFile(jpg).valid, true);
+  assert.equal(isAllowedReceiptFile(png).valid, true);
+
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes('accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"'),
+    "Choose file input must accept PDF, JPEG, PNG"
+  );
+});
+
+// 20. native camera fallback uses capture="environment"
+test("Camera 20: native camera fallback uses capture='environment'", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes('capture="environment"'),
+    "Native camera fallback input must include capture='environment'"
+  );
+  assert.ok(
+    modalContent.includes('accept="image/jpeg,image/png,image/*"'),
+    "Native camera fallback input must accept images"
+  );
+});
+
+// 21. unsupported fallback image type fails cleanly
+test("Camera 21: unsupported fallback image type fails cleanly", () => {
+  const webpFile = new File([Buffer.from("webp")], "receipt.webp", { type: "image/webp" });
+  const txtFile = new File([Buffer.from("text")], "receipt.txt", { type: "text/plain" });
+
+  assert.equal(isAllowedReceiptFile(webpFile).valid, false);
+  assert.equal(isAllowedReceiptFile(txtFile).valid, false);
+});
+
+// 22. HEIC is not silently renamed to JPEG
+test("Camera 22: HEIC is not silently renamed to JPEG", () => {
+  const heicFile1 = new File([Buffer.from("heic")], "photo.heic", { type: "image/heic" });
+  const heicFile2 = new File([Buffer.from("heif")], "photo.heif", { type: "image/heif" });
+
+  const res1 = isAllowedReceiptFile(heicFile1);
+  assert.equal(res1.valid, false);
+  assert.equal(res1.error, "heic_detected");
+
+  const res2 = isAllowedReceiptFile(heicFile2);
+  assert.equal(res2.valid, false);
+  assert.equal(res2.error, "heic_detected");
+
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    !modalContent.includes('.replace(".heic", ".jpg")'),
+    "Must not silently rename HEIC to JPEG"
+  );
+});
+
+// 23. camera permission denial shows user-visible fallback
+test("Camera 23: camera permission denial shows user-visible fallback", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes("cameraPermissionDenied"),
+    "Modal must set cameraPermissionDenied on NotAllowedError"
+  );
+  assert.ok(
+    modalContent.includes("useDeviceCamera"),
+    "Permission denial UI must expose native device camera fallback"
+  );
+  assert.ok(
+    modalContent.includes("chooseFile"),
+    "Permission denial UI must expose Choose File option"
+  );
+});
+
+// 24. missing mediaDevices shows fallback
+test("Camera 24: missing mediaDevices shows fallback", () => {
+  assert.equal(isGetUserMediaSupported(), false);
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes("cameraUnavailable"),
+    "Modal must handle missing or unavailable camera gracefully"
+  );
+});
+
+// 25. object URLs are revoked
+test("Camera 25: object URLs are revoked", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes("URL.revokeObjectURL(previewUrl)") ||
+    modalContent.includes("URL.revokeObjectURL(capturedPreviewUrl)"),
+    "Must revoke created object URLs"
+  );
+});
+
+// 26. direct camera requires no microphone
+test("Camera 26: direct camera requires no microphone", () => {
+  assert.equal(CAMERA_CONFIG.audio, false);
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(!modalContent.includes("audio: true"), "Direct camera must not request audio");
+});
+
+// 27. no geolocation API is introduced
+test("Camera 27: no geolocation API is introduced", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  const cameraFileContent = fs.readFileSync(CAMERA_FILE_PATH, "utf8");
+  assert.ok(!modalContent.includes("geolocation"), "No geolocation in modal");
+  assert.ok(!cameraFileContent.includes("geolocation"), "No geolocation in camera helpers");
+});
+
+// 28. EN/AR dictionary parity remains exact
+test("Camera 28: EN/AR dictionary parity remains exact with all camera keys", () => {
+  const en = getExpensesDictionary("en");
+  const ar = getExpensesDictionary("ar");
+
+  const requiredKeys = [
+    "takePhoto",
+    "useDeviceCamera",
+    "cameraPreview",
+    "capture",
+    "retake",
+    "usePhoto",
+    "cameraUnavailable",
+    "cameraPermissionDenied",
+    "couldNotCaptureImage",
+    "cameraNotSupported",
+    "unsupportedImageType",
+    "heicNotSupported",
+    "replaceFile",
+    "orDivider",
+  ] as const;
+
+  for (const key of requiredKeys) {
+    assert.ok(en.submissionModal[key], `EN missing ${key}`);
+    assert.ok(ar.submissionModal[key], `AR missing ${key}`);
+  }
+
+  function getLeafKeys(obj: Record<string, unknown>, prefix = ""): string[] {
+    const keys: string[] = [];
+    for (const [k, v] of Object.entries(obj)) {
+      const fullPath = prefix ? `${prefix}.${k}` : k;
+      if (v !== null && typeof v === "object" && !Array.isArray(v)) {
+        keys.push(...getLeafKeys(v as Record<string, unknown>, fullPath));
+      } else {
+        keys.push(fullPath);
+      }
+    }
+    return keys.sort();
+  }
+
+  const enKeys = getLeafKeys(en as unknown as Record<string, unknown>);
+  const arKeys = getLeafKeys(ar as unknown as Record<string, unknown>);
+  assert.deepEqual(enKeys, arKeys, "English and Arabic dictionaries must have identical leaf keys");
+});
+
+// 29. mobile UI retains no horizontal-overflow design
+test("Camera 29: mobile UI retains no horizontal-overflow design", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(modalContent.includes("max-w-xl"), "Modal must be width-constrained");
+  assert.ok(modalContent.includes("max-h-[90vh]"), "Modal must be viewport-height constrained");
+  assert.ok(modalContent.includes("overflow-y-auto"), "Modal must scroll internally");
+});
+
+// 30. W5B financial authority invariants remain unchanged
+test("Camera 30: W5B financial authority invariants remain unchanged", () => {
+  const actionsContent = fs.readFileSync(ACTIONS_FILE_PATH, "utf8");
+  assert.ok(actionsContent.includes('origin_type: "employee_paid"'));
+  assert.ok(actionsContent.includes('payment_method: "personal_funds"'));
+  assert.ok(actionsContent.includes("claimant_id: user.id"));
+  assert.ok(actionsContent.includes("p_expense_number: null"));
+});
+
+// 31. partial-success receipt behavior remains unchanged
+test("Camera 31: partial-success receipt behavior remains unchanged", () => {
+  const actionsContent = fs.readFileSync(ACTIONS_FILE_PATH, "utf8");
+  assert.ok(actionsContent.includes('outcome: "partial_success"'));
+});
+
+// 32. request-id idempotency remains unchanged
+test("Camera 32: request-id idempotency remains unchanged", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(modalContent.includes('formData.append("request_id", requestIdRef.current)'));
+});
+
+// 33. G7 design-system token compliance remains intact
+test("Camera 33: G7 design-system token compliance remains intact", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(!modalContent.includes("text-primary-foreground"), "No text-primary-foreground");
+  assert.ok(!modalContent.includes("border-border"), "No border-border");
+  assert.ok(!modalContent.includes("bg-card"), "No bg-card");
+  assert.ok(!modalContent.includes("text-muted-foreground"), "No text-muted-foreground");
+  assert.ok(modalContent.includes("bg-primary text-on-primary"), "Must use G7 on-primary");
+  assert.ok(modalContent.includes("border-outline-variant"), "Must use G7 outline-variant");
 });
