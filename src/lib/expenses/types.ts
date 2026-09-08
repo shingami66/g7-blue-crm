@@ -72,6 +72,8 @@ export interface Expense {
   cancelled_by: string | null;
   cancelled_at: string | null;
   cancellation_reason: string | null;
+  finance_reviewed_by: string | null;
+  finance_reviewed_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -229,6 +231,9 @@ export interface ExpenseAccountabilitySummary {
   exception_disposition: ExceptionDisposition | null;
   exception_review_before: string | null;
   exception_accountable_owner_id: string | null;
+  finance_reviewed_by: string | null;
+  finance_reviewed_at: string | null;
+  is_finance_reviewed?: boolean;
 }
 
 export interface W5ActionResult<T = Record<string, unknown>> {
@@ -237,4 +242,34 @@ export interface W5ActionResult<T = Record<string, unknown>> {
   error?: string;
   errorCode?: string;
   idempotentReplay?: boolean;
+}
+
+export interface ExpenseServiceOption {
+  id: string;
+  serviceNumber: string;
+  serviceTitle: string;
+  eventName: string | null;
+  status: string;
+}
+
+export interface ExpenseDocumentDetail {
+  documentId: string;
+  originalFilename: string;
+  mimeType: string;
+  fileSize: number;
+  attachedAt: string;
+  attachedBy: string;
+}
+
+export type SelfServiceSubmissionOutcome =
+  | "full_success"
+  | "partial_success"
+  | "validation_error";
+
+export interface SelfServiceExpenseSubmissionData {
+  expenseId: string;
+  expenseNumber: string;
+  documentId?: string;
+  outcome: SelfServiceSubmissionOutcome;
+  warning?: string;
 }

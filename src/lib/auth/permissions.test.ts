@@ -445,18 +445,22 @@ test("quotations:approve override dependency failures remain fail-closed", async
   assertOverrideFilters("u1");
 });
 
-test("W5A Permissions: Admin wildcard satisfies all W5 permissions; non-admin roles deny by default", async () => {
+test("W5A/W5B-1A Permissions: Admin wildcard satisfies all W5 permissions; non-admin roles follow exact authority contract", async () => {
   const {
     EXPENSE_PERMISSIONS,
     CASH_ADVANCE_PERMISSIONS,
     PETTY_CASH_PERMISSIONS,
+    BUSINESS_DOCUMENT_PERMISSIONS,
     hasPermissionForRole,
   } = await import("./role-permissions.ts");
 
   const allW5Permissions = [
     EXPENSE_PERMISSIONS.read,
+    EXPENSE_PERMISSIONS.readOwn,
     EXPENSE_PERMISSIONS.write,
+    EXPENSE_PERMISSIONS.submitOwn,
     EXPENSE_PERMISSIONS.approve,
+    EXPENSE_PERMISSIONS.financeReview,
     EXPENSE_PERMISSIONS.settle,
     CASH_ADVANCE_PERMISSIONS.read,
     CASH_ADVANCE_PERMISSIONS.create,
@@ -468,16 +472,72 @@ test("W5A Permissions: Admin wildcard satisfies all W5 permissions; non-admin ro
     PETTY_CASH_PERMISSIONS.transact,
   ];
 
+  // 1. Admin satisfies everything via wildcard
   for (const perm of allW5Permissions) {
     assert.equal(
       hasPermissionForRole("admin", perm),
       true,
       `Admin wildcard must satisfy ${perm}`,
     );
+  }
+
+  // 2. Viewer denies all W5 permissions
+  for (const perm of allW5Permissions) {
     assert.equal(
       hasPermissionForRole("viewer", perm),
       false,
       `Viewer must not have ${perm}`,
     );
   }
+
+  // 3. Sales authority contract
+  assert.equal(hasPermissionForRole("sales", EXPENSE_PERMISSIONS.readOwn), true);
+  assert.equal(hasPermissionForRole("sales", EXPENSE_PERMISSIONS.submitOwn), true);
+  assert.equal(hasPermissionForRole("sales", EXPENSE_PERMISSIONS.read), false);
+  assert.equal(hasPermissionForRole("sales", EXPENSE_PERMISSIONS.write), false);
+  assert.equal(hasPermissionForRole("sales", EXPENSE_PERMISSIONS.approve), false);
+  assert.equal(hasPermissionForRole("sales", EXPENSE_PERMISSIONS.financeReview), false);
+  assert.equal(hasPermissionForRole("sales", EXPENSE_PERMISSIONS.settle), false);
+
+  // 4. Operations authority contract
+  assert.equal(hasPermissionForRole("operations", EXPENSE_PERMISSIONS.readOwn), true);
+  assert.equal(hasPermissionForRole("operations", EXPENSE_PERMISSIONS.submitOwn), true);
+  assert.equal(hasPermissionForRole("operations", EXPENSE_PERMISSIONS.read), false);
+  assert.equal(hasPermissionForRole("operations", EXPENSE_PERMISSIONS.write), false);
+  assert.equal(hasPermissionForRole("operations", EXPENSE_PERMISSIONS.approve), false);
+  assert.equal(hasPermissionForRole("operations", EXPENSE_PERMISSIONS.financeReview), false);
+  assert.equal(hasPermissionForRole("operations", EXPENSE_PERMISSIONS.settle), false);
+
+  // 5. Manager authority contract
+  assert.equal(hasPermissionForRole("manager", EXPENSE_PERMISSIONS.readOwn), true);
+  assert.equal(hasPermissionForRole("manager", EXPENSE_PERMISSIONS.submitOwn), true);
+  assert.equal(hasPermissionForRole("manager", EXPENSE_PERMISSIONS.read), true);
+  assert.equal(hasPermissionForRole("manager", EXPENSE_PERMISSIONS.approve), true);
+  assert.equal(hasPermissionForRole("manager", EXPENSE_PERMISSIONS.write), false);
+  assert.equal(hasPermissionForRole("manager", EXPENSE_PERMISSIONS.financeReview), false);
+  assert.equal(hasPermissionForRole("manager", EXPENSE_PERMISSIONS.settle), false);
+
+  // 6. Accountant authority contract
+  assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.readOwn), true);
+  assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.submitOwn), true);
+  assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.read), true);
+  assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.financeReview), true);
+  assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.settle), true);
+  assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.write), false);
+  assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.approve), false);
+
+  // 7. Strictly verify EXPENSE_PERMISSIONS.write is NOT newly granted to non-admin roles
+  for (const role of ["sales", "operations", "manager", "accountant", "viewer"] as const) {
+    assert.equal(
+      hasPermissionForRole(role, EXPENSE_PERMISSIONS.write),
+      false,
+      `${role} must NOT have broad expenses:write`,
+    );
+  }
+
+  // 8. Strictly verify documents:write is not widened for W5 self-service roles
+  assert.equal(hasPermissionForRole("sales", BUSINESS_DOCUMENT_PERMISSIONS.write), false);
+  assert.equal(hasPermissionForRole("operations", BUSINESS_DOCUMENT_PERMISSIONS.write), false);
+  assert.equal(hasPermissionForRole("accountant", BUSINESS_DOCUMENT_PERMISSIONS.write), false);
+  assert.equal(hasPermissionForRole("viewer", BUSINESS_DOCUMENT_PERMISSIONS.write), false);
 });

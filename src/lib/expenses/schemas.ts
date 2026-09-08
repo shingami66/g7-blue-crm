@@ -277,3 +277,40 @@ export const recordPettyCashTransactionSchema = z
       });
     }
   });
+
+export const reviewExpenseFinanceSchema = z.object({
+  expense_id: uuidSchema,
+  request_id: uuidSchema,
+});
+export type ReviewExpenseFinanceInput = z.infer<typeof reviewExpenseFinanceSchema>;
+
+export const selfServiceSubmitExpenseSchema = z
+  .object({
+    context_type: z.enum(["company", "event"]),
+    service_id: uuidSchema.nullable().optional(),
+    expense_category: z.string().trim().min(1, { message: "Category is required" }),
+    description: z.string().trim().min(1, { message: "Description is required" }),
+    amount: z.number().positive({ message: "Amount must be greater than zero" }),
+    expense_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Expense date must be YYYY-MM-DD" }),
+    request_id: uuidSchema.optional().default(() => crypto.randomUUID()),
+  })
+  .superRefine((data, ctx) => {
+    if (data.context_type === "company" && data.service_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Company context expense must not specify a service_id",
+        path: ["service_id"],
+      });
+    }
+    if (data.context_type === "event" && !data.service_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Event context expense must specify a service_id",
+        path: ["service_id"],
+      });
+    }
+  });
+
+export type SelfServiceSubmitExpenseInput = z.infer<typeof selfServiceSubmitExpenseSchema>;

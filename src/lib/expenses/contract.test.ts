@@ -410,3 +410,160 @@ test("W5A Contract: Generalized scan of all 16 W5A RPCs confirms no unqualified 
     );
   }
 });
+
+const W5B1_MIGRATION_PATH = path.join(
+  process.cwd(),
+  "supabase",
+  "migrations",
+  "20260907223000_w5b1_expense_finance_review_access.sql",
+);
+
+const W5B1_SMOKE_PATH = path.join(
+  process.cwd(),
+  "supabase",
+  "verification",
+  "w5b1_expense_finance_review_smoke.sql",
+);
+
+test("W5B-1A Contract: Migration file exists locally and contains required guards and constraints", () => {
+  assert.ok(fs.existsSync(W5B1_MIGRATION_PATH), "W5B-1A migration must exist locally");
+  const sql = fs.readFileSync(W5B1_MIGRATION_PATH, "utf8");
+
+  // Preflight guards
+  assert.ok(sql.includes("to_regclass('public.expenses') IS NULL"));
+  assert.ok(sql.includes("to_regclass('public.app_users') IS NULL"));
+  assert.ok(sql.includes("to_regclass('public.audit_logs') IS NULL"));
+  assert.ok(sql.includes("to_regclass('public.expense_documents') IS NULL"));
+  assert.ok(sql.includes("to_regclass('public.expense_evidence_exceptions') IS NULL"));
+
+  // Columns & Constraints
+  assert.ok(sql.includes("finance_reviewed_by uuid NULL REFERENCES public.app_users(id) ON DELETE RESTRICT"));
+  assert.ok(sql.includes("finance_reviewed_at timestamptz NULL"));
+  assert.ok(sql.includes("chk_expenses_finance_review_pair"));
+
+  // Audit constraint expansion
+  assert.ok(sql.includes("'expense_finance_reviewed'::text"));
+
+  // Governed RPC review_expense_finance
+  assert.ok(sql.includes("CREATE OR REPLACE FUNCTION public.review_expense_finance"));
+  assert.ok(sql.includes("SECURITY DEFINER"));
+  assert.ok(sql.includes("SET search_path = pg_catalog, public"));
+  assert.ok(sql.includes("REVOKE ALL ON FUNCTION public.review_expense_finance(uuid, uuid, text, text) FROM PUBLIC, anon, authenticated;"));
+  assert.ok(sql.includes("GRANT EXECUTE ON FUNCTION public.review_expense_finance(uuid, uuid, text, text) TO service_role;"));
+
+  // Evidence prerequisite in review_expense_finance
+  assert.ok(sql.includes("expense_evidence_required_for_finance_review"));
+
+  // Forward-only replacement of approve_expense
+  assert.ok(sql.includes("CREATE OR REPLACE FUNCTION public.approve_expense"));
+  assert.ok(sql.includes("expense_not_finance_reviewed"));
+
+  // View extension
+  assert.ok(sql.includes("CREATE OR REPLACE VIEW public.expense_accountability_summaries"));
+  assert.ok(sql.includes("e.finance_reviewed_by"));
+  assert.ok(sql.includes("e.finance_reviewed_at"));
+
+  // Syntax safety: no nested EXCEPTION block ends with END IF;
+  let inException = false;
+  for (const line of sql.split("\n")) {
+    if (line.includes("EXCEPTION WHEN")) inException = true;
+    if (inException && line.trim() === "END IF;") {
+      assert.fail("Nested EXCEPTION block ended with END IF;");
+    }
+    if (inException && line.trim() === "END;") inException = false;
+  }
+  assert.equal(inException, false, "All nested EXCEPTION blocks must be closed with END;");
+});
+
+test("W5B-1A Contract: Smoke verification script is rollback-clean and comprehensive", () => {
+  assert.ok(fs.existsSync(W5B1_SMOKE_PATH), "W5B-1A smoke script must exist");
+  const sql = fs.readFileSync(W5B1_SMOKE_PATH, "utf8");
+
+  assert.ok(sql.includes("BEGIN;"), "Smoke script must contain BEGIN;");
+  assert.ok(sql.trimEnd().endsWith("ROLLBACK;"), "Smoke script must end with ROLLBACK");
+  assert.ok(sql.includes("review_expense_finance"));
+  assert.ok(sql.includes("expense_not_finance_reviewed"));
+  assert.ok(sql.includes("expense_evidence_required_for_finance_review"));
+  assert.ok(sql.includes("expense_finance_reviewed"));
+});
+
+const W5B1B0_MIGRATION_PATH = path.join(
+  process.cwd(),
+  "supabase",
+  "migrations",
+  "20260908100000_w5b1_expense_document_numbering.sql",
+);
+
+const W5B1B0_SMOKE_PATH = path.join(
+  process.cwd(),
+  "supabase",
+  "verification",
+  "w5b1_expense_document_numbering_smoke.sql",
+);
+
+test("W5B-1B0 Contract: Migration file exists locally and contains required guards, constraints, and RPC replacement", () => {
+  assert.ok(fs.existsSync(W5B1B0_MIGRATION_PATH), "W5B-1B0 migration must exist locally");
+  const sql = fs.readFileSync(W5B1B0_MIGRATION_PATH, "utf8");
+
+  // Preflight guards
+  assert.ok(sql.includes("to_regclass('public.number_sequences') IS NULL"));
+  assert.ok(sql.includes("to_regprocedure('public.generate_document_number(text)') IS NULL"));
+  assert.ok(sql.includes("to_regclass('public.expenses') IS NULL"));
+  assert.ok(sql.includes("to_regprocedure('public.submit_expense(text, text, uuid, text, text, numeric, date, text, text, uuid, uuid, uuid, uuid, text, text)') IS NULL"));
+
+  // number_sequences constraint preserves all 7 existing types and appends expense
+  const expectedTypes = ["quotation", "invoice", "payment", "project", "service", "customer", "supplier_booking", "expense"];
+  for (const t of expectedTypes) {
+    assert.ok(sql.includes(`'${t}'`), `number_sequences constraint must include '${t}'`);
+  }
+
+  // generate_document_number supports 'expense' with 'EXP' and 'EXP-YYYY-0001'
+  assert.ok(/WHEN doc_type = 'expense'\s+THEN 'EXP'/.test(sql));
+  assert.ok(/WHEN doc_type = 'expense'\s+THEN 'EXP-YYYY-0001'/.test(sql));
+  assert.ok(sql.includes("SECURITY DEFINER"));
+  assert.ok(sql.includes("SET search_path = pg_catalog, public"));
+  assert.ok(sql.includes("REVOKE ALL ON FUNCTION public.generate_document_number(text) FROM PUBLIC, anon, authenticated;"));
+  assert.ok(sql.includes("GRANT EXECUTE ON FUNCTION public.generate_document_number(text) TO service_role;"));
+
+  // submit_expense replacement
+  assert.ok(sql.includes("CREATE OR REPLACE FUNCTION public.submit_expense"));
+  assert.ok(sql.includes("v_effective_expense_number := NULLIF(btrim(p_expense_number), '');"));
+  assert.ok(sql.includes("public.generate_document_number('expense')"));
+  assert.ok(sql.includes("hashtextextended('w5a:expense_submit:' || p_request_id::text, 0)"));
+  assert.ok(sql.includes("REVOKE ALL ON FUNCTION public.submit_expense"));
+  assert.ok(sql.includes("GRANT EXECUTE ON FUNCTION public.submit_expense"));
+
+  // Ordering check: advisory lock and replay check MUST precede generate_document_number
+  const lockIndex = sql.indexOf("pg_advisory_xact_lock");
+  const replayIndex = sql.indexOf("IF FOUND THEN");
+  const genIndex = sql.indexOf("public.generate_document_number('expense')");
+  assert.ok(lockIndex > 0 && replayIndex > lockIndex, "Advisory lock must precede replay check");
+  assert.ok(genIndex > replayIndex, "Document number generation must occur AFTER replay check");
+
+  // Syntax safety: no nested EXCEPTION block ends with END IF;
+  let inException = false;
+  for (const line of sql.split("\n")) {
+    if (line.includes("EXCEPTION WHEN")) inException = true;
+    if (inException && line.trim() === "END IF;") {
+      assert.fail("Nested EXCEPTION block ended with END IF;");
+    }
+    if (inException && line.trim() === "END;") inException = false;
+  }
+  assert.equal(inException, false, "All nested EXCEPTION blocks must be closed with END;");
+});
+
+test("W5B-1B0 Contract: Smoke verification script is rollback-clean and verifies numbering invariants", () => {
+  assert.ok(fs.existsSync(W5B1B0_SMOKE_PATH), "W5B-1B0 smoke script must exist");
+  const sql = fs.readFileSync(W5B1B0_SMOKE_PATH, "utf8");
+
+  assert.ok(sql.includes("BEGIN;"), "Smoke script must contain BEGIN;");
+  assert.ok(sql.trimEnd().endsWith("ROLLBACK;"), "Smoke script must end with ROLLBACK");
+  assert.ok(sql.includes("generate_document_number('expense')"));
+  assert.ok(sql.includes("^EXP-[0-9]{4}-[0-9]{4}$"));
+  assert.ok(sql.includes("generate_document_number('quotation')"));
+  assert.ok(sql.includes("generate_document_number('customer')"));
+  assert.ok(sql.includes("submit_expense"));
+  assert.ok(sql.includes("idempotent_replay"));
+  assert.ok(sql.includes("expense_submit_request_conflict"));
+  assert.ok(sql.includes("EXP-LEGACY-SMOKE-001"));
+});

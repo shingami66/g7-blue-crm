@@ -34,8 +34,11 @@ export const SERVICE_RECEIPT_PERMISSIONS = {
 
 export const EXPENSE_PERMISSIONS = {
   read: "expenses:read",
+  readOwn: "expenses:read_own",
   write: "expenses:write",
+  submitOwn: "expenses:submit_own",
   approve: "expenses:approve",
+  financeReview: "expenses:finance_review",
   settle: "expenses:settle",
 } as const;
 
@@ -113,6 +116,10 @@ export const ROLE_PERMISSIONS = {
     SERVICE_RECEIPT_PERMISSIONS.correct,
     BUSINESS_DOCUMENT_PERMISSIONS.read,
     BUSINESS_DOCUMENT_PERMISSIONS.write,
+    EXPENSE_PERMISSIONS.readOwn,
+    EXPENSE_PERMISSIONS.submitOwn,
+    EXPENSE_PERMISSIONS.read,
+    EXPENSE_PERMISSIONS.approve,
     "dashboard:read",
     ...APPROVED_BILLING_SCOPE_MANAGER_PERMISSIONS,
   ],
@@ -126,6 +133,8 @@ export const ROLE_PERMISSIONS = {
     "services:write",
     INVOICE_PERMISSIONS.read,
     "payments:read",
+    EXPENSE_PERMISSIONS.readOwn,
+    EXPENSE_PERMISSIONS.submitOwn,
     "dashboard:read",
   ],
   operations: [
@@ -141,6 +150,8 @@ export const ROLE_PERMISSIONS = {
     PROCUREMENT_COMMITMENT_PERMISSIONS.read,
     SERVICE_RECEIPT_PERMISSIONS.read,
     SERVICE_RECEIPT_PERMISSIONS.write,
+    EXPENSE_PERMISSIONS.readOwn,
+    EXPENSE_PERMISSIONS.submitOwn,
     "dashboard:read",
   ],
   accountant: [
@@ -155,6 +166,11 @@ export const ROLE_PERMISSIONS = {
     "settings:read",
     PROCUREMENT_COMMITMENT_PERMISSIONS.read,
     SERVICE_RECEIPT_PERMISSIONS.read,
+    EXPENSE_PERMISSIONS.readOwn,
+    EXPENSE_PERMISSIONS.submitOwn,
+    EXPENSE_PERMISSIONS.read,
+    EXPENSE_PERMISSIONS.financeReview,
+    EXPENSE_PERMISSIONS.settle,
     "dashboard:read",
     ...APPROVED_BILLING_SCOPE_ACCOUNTANT_PERMISSIONS,
   ],

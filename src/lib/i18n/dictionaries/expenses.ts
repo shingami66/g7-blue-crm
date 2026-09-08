@@ -16,6 +16,11 @@ export interface ExpensesDictionary {
     stageBadge: string;
     title: string;
     subtitle: string;
+    newExpense: string;
+  };
+  myExpenses: {
+    title: string;
+    subtitle: string;
   };
   tabs: {
     expensesLedger: string;
@@ -33,13 +38,64 @@ export interface ExpensesDictionary {
       evidence: string;
       amount: string;
       status: string;
+      financeReview: string;
       reimbursement: string;
+      actions: string;
     };
     empty: {
       title: string;
       description: string;
     };
   };
+  detail: {
+    title: string;
+    expenseNumber: string;
+    date: string;
+    context: string;
+    serviceEvent: string;
+    category: string;
+    description: string;
+    amount: string;
+    currency: string;
+    evidenceStatus: string;
+    financeReview: string;
+    financeReviewedBy: string;
+    financeReviewedAt: string;
+    reimbursementStatus: string;
+    reimbursedAmount: string;
+    remainingAmount: string;
+    lifecycleStatus: string;
+    receiptDocument: string;
+    noReceiptUploaded: string;
+    viewReceipt: string;
+    attachReceipt: string;
+    attachingReceipt: string;
+    close: string;
+  };
+  submissionModal: {
+    title: string;
+    subtitle: string;
+    contextLabel: string;
+    contextCompany: string;
+    contextEvent: string;
+    serviceLabel: string;
+    servicePlaceholder: string;
+    categoryLabel: string;
+    categoryPlaceholder: string;
+    descriptionLabel: string;
+    descriptionPlaceholder: string;
+    amountLabel: string;
+    dateLabel: string;
+    receiptLabel: string;
+    receiptHint: string;
+    receiptSelected: string;
+    chooseFile: string;
+    removeFile: string;
+    submit: string;
+    submitting: string;
+    cancel: string;
+  };
+  categories: Record<string, string>;
   contextTypes: Record<ExpenseContextType, string>;
   originTypes: Record<ExpenseOriginType, string>;
   paymentMethods: Record<ExpensePaymentMethod, string>;
@@ -50,7 +106,16 @@ export interface ExpensesDictionary {
     exception: string;
     noEvidence: string;
   };
+  financeReviewStates: {
+    reviewed: string;
+    pending: string;
+  };
   dispositions: Record<ExceptionDisposition, string>;
+  notices: {
+    fullSuccess: string;
+    partialSuccess: string;
+    receiptAttachedSuccess: string;
+  };
   states: {
     accessRestricted: string;
     accessRestrictedMessage: string;
@@ -64,8 +129,13 @@ const expensesDictionaryEn: ExpensesDictionary = {
   header: {
     sectionBadge: "Expenses & Costing",
     stageBadge: "W5A Foundation",
-    title: "Expenses & Cash Accountability",
+    title: "Expenses & Cash",
     subtitle: "Authoritative foundation for incurred expenses, employee reimbursements, cash advances, and petty cash.",
+    newExpense: "New Expense",
+  },
+  myExpenses: {
+    title: "My Expenses",
+    subtitle: "Track your submitted expenses, receipts, and reimbursement status",
   },
   tabs: {
     expensesLedger: "Expenses Ledger",
@@ -83,12 +153,71 @@ const expensesDictionaryEn: ExpensesDictionary = {
       evidence: "Evidence",
       amount: "Amount",
       status: "Status",
+      financeReview: "Finance Review",
       reimbursement: "Reimbursement",
+      actions: "Actions",
     },
     empty: {
       title: "No expense records found",
       description: "The W5A expense and cash foundation is established. Records submitted through governed Server Actions will appear here.",
     },
+  },
+  detail: {
+    title: "Expense Details",
+    expenseNumber: "Expense Number",
+    date: "Date",
+    context: "Context",
+    serviceEvent: "Event / Service",
+    category: "Category",
+    description: "Description",
+    amount: "Amount",
+    currency: "Currency",
+    evidenceStatus: "Evidence Status",
+    financeReview: "Finance Review",
+    financeReviewedBy: "Reviewed By",
+    financeReviewedAt: "Reviewed At",
+    reimbursementStatus: "Reimbursement Status",
+    reimbursedAmount: "Reimbursed Amount",
+    remainingAmount: "Remaining Unsettled",
+    lifecycleStatus: "Lifecycle Status",
+    receiptDocument: "Receipt Document",
+    noReceiptUploaded: "No receipt uploaded yet",
+    viewReceipt: "View Receipt",
+    attachReceipt: "Attach Receipt",
+    attachingReceipt: "Attaching...",
+    close: "Close",
+  },
+  submissionModal: {
+    title: "Submit New Expense",
+    subtitle: "Create an employee-paid expense claim with receipt evidence",
+    contextLabel: "Expense Context",
+    contextCompany: "Company",
+    contextEvent: "Event / Service",
+    serviceLabel: "Select Event / Service",
+    servicePlaceholder: "Choose an Event or Service...",
+    categoryLabel: "Category",
+    categoryPlaceholder: "Select a category...",
+    descriptionLabel: "Description",
+    descriptionPlaceholder: "Describe the incurred business expense...",
+    amountLabel: "Amount (SAR)",
+    dateLabel: "Expense Date",
+    receiptLabel: "Receipt Document",
+    receiptHint: "Accepted: PDF, JPEG, PNG (Up to 25 MB)",
+    receiptSelected: "Selected file",
+    chooseFile: "Choose File",
+    removeFile: "Remove",
+    submit: "Submit Expense",
+    submitting: "Submitting...",
+    cancel: "Cancel",
+  },
+  categories: {
+    travel: "Travel",
+    meals: "Meals & Subsistence",
+    supplies: "Supplies & Materials",
+    equipment: "Equipment & Tools",
+    accommodation: "Accommodation",
+    transport: "Transport & Logistics",
+    other: "Other",
   },
   contextTypes: {
     company: "Company",
@@ -122,11 +251,21 @@ const expensesDictionaryEn: ExpensesDictionary = {
     exception: "Exception",
     noEvidence: "No Evidence",
   },
+  financeReviewStates: {
+    reviewed: "Finance Reviewed",
+    pending: "Pending Finance Review",
+  },
   dispositions: {
     pending: "Pending",
     accepted: "Accepted",
     rejected: "Rejected",
     rectified: "Rectified",
+  },
+  notices: {
+    fullSuccess: "Expense submitted successfully with receipt attached!",
+    partialSuccess:
+      "Expense was created successfully, but receipt attachment failed. You can attach the receipt using the retry action.",
+    receiptAttachedSuccess: "Receipt attached successfully!",
   },
   states: {
     accessRestricted: "Access Restricted",
@@ -143,6 +282,11 @@ const expensesDictionaryAr: ExpensesDictionary = {
     stageBadge: "تأسيس W5A",
     title: "المصروفات والعهد",
     subtitle: "الأساس المعتمد للمصروفات المتكبدة، والتعويضات للموظفين، والسلف والعهد النقدية.",
+    newExpense: "مصروف جديد",
+  },
+  myExpenses: {
+    title: "مصروفاتي",
+    subtitle: "متابعة مصروفاتك المقدمة، والإيصالات، وحالة التعويض",
   },
   tabs: {
     expensesLedger: "سجل المصروفات",
@@ -160,12 +304,71 @@ const expensesDictionaryAr: ExpensesDictionary = {
       evidence: "الإثبات",
       amount: "المبلغ",
       status: "الحالة",
+      financeReview: "المراجعة المالية",
       reimbursement: "التعويض",
+      actions: "الإجراءات",
     },
     empty: {
       title: "لا توجد مصروفات مسجلة",
       description: "تم تأسيس بنية المصروفات والعهد النقدية. السجلات المسجلة عبر الإجراءات المعتمدة ستظهر هنا.",
     },
+  },
+  detail: {
+    title: "تفاصيل المصروف",
+    expenseNumber: "رقم المصروف",
+    date: "التاريخ",
+    context: "السياق",
+    serviceEvent: "الفعالية / الخدمة",
+    category: "التصنيف",
+    description: "الوصف",
+    amount: "المبلغ",
+    currency: "العملة",
+    evidenceStatus: "حالة الإثبات",
+    financeReview: "المراجعة المالية",
+    financeReviewedBy: "تمت المراجعة بواسطة",
+    financeReviewedAt: "تاريخ المراجعة",
+    reimbursementStatus: "حالة التعويض",
+    reimbursedAmount: "المبلغ المعوض",
+    remainingAmount: "المبلغ المتبقي",
+    lifecycleStatus: "حالة دورة الحياة",
+    receiptDocument: "إيصال المصروف",
+    noReceiptUploaded: "لم يتم إرفاق إيصال بعد",
+    viewReceipt: "عرض الإيصال",
+    attachReceipt: "إرفاق إيصال",
+    attachingReceipt: "جاري الإرفاق...",
+    close: "إغلاق",
+  },
+  submissionModal: {
+    title: "تقديم مصروف جديد",
+    subtitle: "إنشاء مطالبة بمصروف مدفوع من الموظف مع إثبات الإيصال",
+    contextLabel: "سياق المصروف",
+    contextCompany: "عام للشركة",
+    contextEvent: "خاص بالفعالية / الخدمة",
+    serviceLabel: "اختر الفعالية / الخدمة",
+    servicePlaceholder: "اختر فعالية أو خدمة...",
+    categoryLabel: "التصنيف",
+    categoryPlaceholder: "اختر تصنيفاً...",
+    descriptionLabel: "الوصف",
+    descriptionPlaceholder: "وضح سبب المصروف وطبيعته...",
+    amountLabel: "المبلغ (ريال)",
+    dateLabel: "تاريخ المصروف",
+    receiptLabel: "إيصال المصروف",
+    receiptHint: "المقبول: PDF, JPEG, PNG (حتى 25 ميجابايت)",
+    receiptSelected: "الملف المختار",
+    chooseFile: "اختيار ملف",
+    removeFile: "إزالة",
+    submit: "تقديم المصروف",
+    submitting: "جاري التقديم...",
+    cancel: "إلغاء",
+  },
+  categories: {
+    travel: "سفر وتنقل",
+    meals: "وجبات وإعاشة",
+    supplies: "مستلزمات ومواد",
+    equipment: "معدات وأدوات",
+    accommodation: "إقامة وفنادق",
+    transport: "شحن ونقل",
+    other: "أخرى",
   },
   contextTypes: {
     company: "عام للشركة",
@@ -199,11 +402,21 @@ const expensesDictionaryAr: ExpensesDictionary = {
     exception: "استثناء",
     noEvidence: "بدون إثبات",
   },
+  financeReviewStates: {
+    reviewed: "تمت المراجعة المالية",
+    pending: "قيد المراجعة المالية",
+  },
   dispositions: {
     pending: "قيد المراجعة",
     accepted: "مقبول",
     rejected: "مرفوض",
     rectified: "تمت التسوية",
+  },
+  notices: {
+    fullSuccess: "تم تقديم المصروف بنجاح مع إرفاق الإيصال!",
+    partialSuccess:
+      "تم إنشاء المصروف بنجاح ولكن تعذر إرفاق الإيصال. يمكنك إرفاق الإيصال عبر خيار الإرفاق.",
+    receiptAttachedSuccess: "تم إرفاق الإيصال بنجاح!",
   },
   states: {
     accessRestricted: "تم تقييد الوصول",

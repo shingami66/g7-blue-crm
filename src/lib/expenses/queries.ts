@@ -16,6 +16,8 @@ import type {
   CashAdvanceReturn,
   ExpenseReimbursementSettlement,
   ExpenseDocumentLink,
+  ExpenseServiceOption,
+  ExpenseDocumentDetail,
 } from "./types";
 
 export interface ExpenseListFilters {
@@ -117,6 +119,163 @@ export async function getExpenseDetailById(id: string): Promise<{
     advanceAllocations: (advanceAllocationsRes.data ?? []) as CashAdvanceExpenseSettlement[],
   };
 }
+
+export async function getOwnExpensesAccountabilityList(
+  filters?: ExpenseListFilters,
+): Promise<ExpenseAccountabilitySummary[]> {
+  const user = await requirePermission(EXPENSE_PERMISSIONS.readOwn);
+  const supabase = getExpenseClient();
+
+  let query = supabase
+    .from("expense_accountability_summaries")
+    .select("*")
+    .or(`submitted_by.eq.${user.id},claimant_id.eq.${user.id}`)
+    .order("expense_date", { ascending: false });
+
+  if (filters?.serviceId) {
+    query = query.eq("service_id", filters.serviceId);
+  }
+  if (filters?.contextType) {
+    query = query.eq("context_type", filters.contextType);
+  }
+  if (filters?.status) {
+    query = query.eq("status", filters.status);
+  }
+  if (filters?.limit) {
+    query = query.limit(filters.limit);
+  } else {
+    query = query.limit(100);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    throw new Error(`Failed to load own expenses: ${error.message}`);
+  }
+
+  return (data ?? []) as ExpenseAccountabilitySummary[];
+}
+
+export async function getOwnExpenseDetailById(id: string): Promise<{
+  expense: ExpenseAccountabilitySummary | null;
+  documents: ExpenseDocumentLink[];
+  documentDetails: ExpenseDocumentDetail[];
+  reimbursements: ExpenseReimbursementSettlement[];
+  advanceAllocations: CashAdvanceExpenseSettlement[];
+}> {
+  const user = await requirePermission(EXPENSE_PERMISSIONS.readOwn);
+  const supabase = getExpenseClient();
+
+  const { data: expenseData, error: expenseError } = await supabase
+    .from("expense_accountability_summaries")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (expenseError) {
+    throw new Error(`Failed to load expense: ${expenseError.message}`);
+  }
+  if (!expenseData) {
+    return {
+      expense: null,
+      documents: [],
+      documentDetails: [],
+      reimbursements: [],
+      advanceAllocations: [],
+    };
+  }
+
+  if (expenseData.submitted_by !== user.id && expenseData.claimant_id !== user.id) {
+    return {
+      expense: null,
+      documents: [],
+      documentDetails: [],
+      reimbursements: [],
+      advanceAllocations: [],
+    };
+  }
+
+  const [docsRes, reimbursementsRes, advanceAllocationsRes] = await Promise.all([
+    supabase
+      .from("expense_documents")
+      .select("*")
+      .eq("expense_id", id)
+      .order("attached_at", { ascending: false }),
+    supabase
+      .from("expense_reimbursement_settlements")
+      .select("*")
+      .eq("expense_id", id)
+      .order("settled_at", { ascending: false }),
+    supabase
+      .from("cash_advance_expense_settlements")
+      .select("*")
+      .eq("expense_id", id)
+      .order("settled_at", { ascending: false }),
+  ]);
+
+  const docLinks = (docsRes.data ?? []) as ExpenseDocumentLink[];
+  let documentDetails: ExpenseDocumentDetail[] = [];
+  if (docLinks.length > 0) {
+    const docIds = docLinks.map((d) => d.document_id);
+    const { data: metaRows } = await supabase
+      .from("business_documents")
+      .select("id, original_filename, mime_type, file_size")
+      .in("id", docIds);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const metaMap = new Map<string, any>(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ((metaRows as any[]) ?? []).map((m: any) => [m.id, m]),
+    );
+
+    documentDetails = docLinks.map((link) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const meta = metaMap.get(link.document_id) as any;
+      return {
+        documentId: link.document_id,
+        originalFilename: meta?.original_filename ?? "receipt",
+        mimeType: meta?.mime_type ?? "application/octet-stream",
+        fileSize: Number(meta?.file_size ?? 0),
+        attachedAt: link.attached_at,
+        attachedBy: link.attached_by,
+      };
+    });
+  }
+
+  return {
+    expense: expenseData as ExpenseAccountabilitySummary,
+    documents: docLinks,
+    documentDetails,
+    reimbursements: (reimbursementsRes.data ?? []) as ExpenseReimbursementSettlement[],
+    advanceAllocations: (advanceAllocationsRes.data ?? []) as CashAdvanceExpenseSettlement[],
+  };
+}
+
+export async function getEligibleServicesForExpenseSelector(): Promise<ExpenseServiceOption[]> {
+  await requirePermission("services:read");
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("services")
+    .select("id, service_number, service_title, event_name, status")
+    .is("deleted_at", null)
+    .order("service_number", { ascending: true });
+
+  if (error) {
+    console.error("[getEligibleServicesForExpenseSelector] Supabase error:", error.message);
+    return [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    serviceNumber: row.service_number,
+    serviceTitle: row.service_title,
+    eventName: row.event_name,
+    status: row.status,
+  }));
+}
+
+
 
 export async function getCashAdvancesList(filters?: {
   recipientId?: string;
