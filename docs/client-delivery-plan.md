@@ -29,11 +29,12 @@ No production-readiness, security-compliance, financial-correctness, VAT, Tax In
 - Deposit/final invoice creation under the approved quotation and active Approved Billing Scope rules.
 - Payment recording against invoices.
 - Read-only invoice, payment, Service, customer, and Approved Billing Scope detail surfaces.
+- Bounded mobile responsive and operational card presentation across Customers, Quotations, Invoices, Services, Suppliers, Payments, Supplier Quotations, Expenses, and receipt capture, backed by progressive navigation feedback (see [mobile-runtime-acceptance.md](mobile-runtime-acceptance.md)).
 - Existing user-only smoke records for completed slices.
 
 ### Prevents client delivery
 
-- Responsive core source and Mozfer manual smoke acceptance are complete; no responsive-smoke blocker remains.
+- Responsive core source and Mozfer physical mobile smoke acceptance are complete across core operational surfaces; mobile cards replace complex horizontal tables without widening business semantics (see [mobile-runtime-acceptance.md](mobile-runtime-acceptance.md)). No responsive-smoke blocker remains.
 - Invoice/payment correction, void, credit, and reversal controls remain incomplete.
 - Approved Billing Scope **management design and lifecycle policy are locked** (`docs/approved-billing-scope-management-design.md`); Draft/Create, Edit/Discard, Review/Approve, invoice integration, and **ABS Void** are delivered. **ABS Supersede** remains a distinct deferred future candidate. Repository migration/RPC definitions and historical synthetic DEV/DEMO evidence exist, but current database state, migration application state, grants, and RPC definitions require fresh verification before future Supersede implementation.
 - Supplier Booking remains narrow and is not a professional end-to-end supplier operations module.
