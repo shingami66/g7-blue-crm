@@ -53,10 +53,10 @@
 ## W4 CLOSEOUT — 7 September 2026 (COMPLETED / CLOSED)
 
 - **Review boundary:** F01–F06 and Admin Users route documentation are verified and completed. Independent review reported PASS; targeted F06 rereview reported 0 BLOCKING, 0 MATERIAL, 0 MINOR (PASS). Local migration `20260906120000_w4_architecture_remediation.sql` is applied to DEV project `dpddrqjzqohexixgdqiq` under migration identity `20260907085656 w4_architecture_remediation`. DEV transactional smoke confirmed PASS (zero synthetic residue). SQL regression fixture (`supabase/verification/w4_architecture_remediation_regression.sql`) was evaluated against DEV; fixture synthetic seed data halted on check constraint `chk_services_service_number_format` and rolled back cleanly with 0 persistent residue, while real-RPC behaviors F01–F04 remain fully proven by DEV transactional smoke and 199 passing automated tests. No production deployment or production database mutation is made.
-- **Current action:** W4 final engineering closeout completed; ready for Controller final W4 verdict.
-- **Delivery boundary:** W4 is **CLOSED / COMPLETED**; W5A is **CLOSED / COMPLETED**; W5B remains **LOCKED / UNSTARTED**. Accepted W2A/W2B/W2C and W3 lifecycle slices stay closed. Undelivered percentage discounts, Change Orders, ABS supersession/reapproval, Event Brief, Tasks, Milestones, Issues and Team/Resources are required future Layer 1 gates L1-R01–L1-R08 in [technical master plan Section 15.1](product/g7-layer1-technical-master-plan.md#151-residual-layer-1-delivery-gates--current-7-september-2026). Bounded closeouts do not discharge those obligations.
+- **Historical action (as of 7 September 2026 closeout):** W4 final engineering closeout completed; ready for Controller final W4 verdict.
+- **Historical delivery boundary (as of 7 September 2026 closeout):** W4 is **CLOSED / COMPLETED**; W5A is **CLOSED / COMPLETED**; subsequent W5B delivered the bounded Employee Expense Self-Service slice on 8–9 September 2026 while remaining W5 Cash Advance and Petty Cash workspaces remain unstarted future slices. Accepted W2A/W2B/W2C and W3 lifecycle slices stay closed. Undelivered percentage discounts, Change Orders, ABS supersession/reapproval, Event Brief, Tasks, Milestones, Issues and Team/Resources are required future Layer 1 gates L1-R01–L1-R08 in [technical master plan Section 15.1](product/g7-layer1-technical-master-plan.md#151-residual-layer-1-delivery-gates--current-7-september-2026). Bounded closeouts do not discharge those obligations.
 
-## CURRENT APPLICATION SHELL & NAVIGATION DELIVERY — 6 September 2026 (OWNER-ACCEPTED)
+## APPLICATION SHELL & NAVIGATION DELIVERY — 6 September 2026 (OWNER-ACCEPTED)
 
 - **Status:** Owner visually accepted. The application shell and global navigation have been upgraded to a scalable, route-aware accordion information architecture with refined shell branding and workspace entry UX.
 - **Implemented Global Navigation Snapshot:**
@@ -97,9 +97,9 @@
   - No W5 activation occurred.
   - W4 is `CLOSED / COMPLETED`.
 
-## CURRENT W4 DELIVERY STATUS — 7 September 2026 (COMPLETED / CLOSED)
+## HISTORICAL W4 DELIVERY STATUS — 7 September 2026 (COMPLETED / CLOSED)
 
-- **W4 Delivery Status:** `CLOSED / COMPLETED`. W4 architecture remediation F01–F06 is complete, independent review passed, targeted F06 rereview passed, DEV migration is applied (`20260907085656 w4_architecture_remediation`), and DEV smoke passed with zero residue. W5 remains `LOCKED / UNSTARTED`.
+- **W4 Delivery Status (Historical 7 September 2026):** `CLOSED / COMPLETED`. W4 architecture remediation F01–F06 is complete, independent review passed, targeted F06 rereview passed, DEV migration is applied (`20260907085656 w4_architecture_remediation`), and DEV smoke passed with zero residue. At the time of this 7 September 2026 closeout, W5 remained locked and unstarted; W5A was subsequently closed and W5B bounded employee expense self-service delivered on 8–9 September 2026.
 - **Current Product Truth under G7-OD-18:**
   - **Procurement Packages** (`service_procurement_packages`, `service_procurement_package_requirements`) are the canonical current ERP organizing and selection workflow for service procurement.
   - A Procurement Package has at most one selected supplier (explicitly labeled "Selected Supplier", not approved; a draft package may have no selected supplier).
@@ -122,7 +122,7 @@
 - **Scope Boundary:** No automatic commitment creation, no candidate comparison/ranking UI, no Vendor Bill/AP integration, no expenses, no cash advances, no production mutation, and no push.
 - **Historical Next Wave / Action (as of 7 September 2026 closeout):** W4 is CLOSED / COMPLETED; W5A is CLOSED / COMPLETED. W5B Employee Expense Self-Service was subsequently delivered and Owner-accepted on 8–9 September 2026; remaining W5 Cash Advance and Petty Cash workspaces remain unstarted future slices.
 
-## CURRENT W1 CLOSEOUT — 31 August 2026
+## HISTORICAL W1 CLOSEOUT — 31 August 2026
 
 - **W1 delivery verdict:** `PASS`. Owner acceptance is complete for W1A Effective Access, Open Review routing hardening, W1C Quotation Approvals, and W1C Ready-to-Start Services. W1B Approval Authority / SoD is explicitly **NOT REQUIRED FOR THIS WAVE** and is not implemented.
 - **W1A Effective Access:** the reviewed minimum `quotations:approve` user-override persistence and server-side DENY-wins evaluation are delivered through the existing authorization path. The migration was applied and reconciled on the Owner-authorized DEV environment only; no DEMO environment currently exists. No broader scopes, delegation, SoD, or generic authority engine was introduced.
@@ -138,26 +138,26 @@
 - **Persistence and evidence:** migration `20260831110000_w2a_commercial_authority_lines.sql` was applied and reconciled on the Owner-authorized DEV environment only. The transaction-local DEV smoke verified hierarchy metadata, forced included pricing, selected-only optional contribution, database-derived totals, immutable ABS snapshots, expected audit events, and zero residue after rollback. This closeout performs no DEV reapply or database mutation.
 - **Scope boundary:** no parallel commercial engine, catalog/Tender/supplier-pricing subsystem, or new workflow/authority infrastructure was introduced. W2B Revision Lineage is complete; its closeout is recorded below.
 
-## CURRENT W2B CLOSEOUT — 31 August 2026
+## HISTORICAL W2B CLOSEOUT — 31 August 2026
 
 - **W2B Quotation Revision Lineage:** `PASS`. The reviewed additive lineage preserves Draft in-place editing while creating a new Draft successor for eligible non-approved `sent`, `rejected`, or `expired` quotations. The source quotation remains immutable and approved sources fail closed.
 - **Persistence and evidence:** migration `20260831120000_w2b_quotation_revision_lineage.sql` was applied and reconciled on the Owner-authorized DEV environment only. The transaction-local success smoke verified same-family revision 2 linkage, copied W2A hierarchy, Arabic metadata, totals, snapshots, one-successor enforcement, Approved/Draft fail-closed behavior, audit evidence, and zero rollback residue. No DEMO environment currently exists; production is not claimed.
 - **Scope boundary:** customer-facing numbering and main-list behavior remain unchanged. No post-approval Change Order path, ABS supersession, reapproval, invoice/payment correction, or W2C behavior was introduced in W2B; W2C is closed in the current section below.
 
-## CURRENT W2C CLOSEOUT — 1 September 2026
+## HISTORICAL W2C CLOSEOUT — 1 September 2026
 
 - **W2C Deterministic Discount Allocation / Approval Projection:** `PASS` and closed. The approved fixed-amount SAR finance rule is implemented through one canonical persisted quotation allocation path using integer-halal proportional largest remainder with deterministic `created_at ASC, id ASC` tie-breaking. Included Components and unselected Optional Add-ons remain zero; Authority Line roots receive the reconciled allocation; quotation `grand_total` remains authoritative.
 - **Persistence and evidence:** migration `20260901100000_w2c_deterministic_discount_allocation.sql` was applied and reconciled on the Owner-authorized DEV project `dpddrqjzqohexixgdqiq`. The required quotation and ABS source-allocation columns, SECURITY DEFINER/fixed-search-path/service-role-only boundaries, approval/ABS snapshot equality, W2B revision copying, invalid-hierarchy/currency fail-closed behavior, and existing-data validity were verified. No `accepted_discount_allocated` column was added. No DEMO environment currently exists; no production or deployment claim is made.
 - **Validation and scope boundary:** focused allocation/reconciliation tests, quotation/ABS regression tests, TypeScript, ESLint, migration/security checks, transaction-local DEV smoke, independent findings-only review, repair and targeted rereview passed. No VAT activation, revenue recognition, accounting journals, Change Orders, ABS supersession, percentage discounts, FX/non-SAR allocation, historical backfill, or further W2 slice was started.
 - **Next locked roadmap task:** W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`) is closed in the current W3 section below. The next locked roadmap task is W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`); this closeout performs no further database mutation.
 
-## CURRENT W3 CLOSEOUT — 1 September 2026
+## HISTORICAL W3 CLOSEOUT — 1 September 2026
 
 - **W3 Event Lifecycle compatibility:** `PASS` and closed. The additive lifecycle projection separates commercial, payment, readiness, execution, completion, and operational close semantics while preserving `services.status` as a legacy fact and keeping legacy writers synchronized.
 - **Persistence and evidence:** migration `20260901110000_w3_event_lifecycle_compatibility.sql` was applied and reconciled on the Owner-authorized DEV project `dpddrqjzqohexixgdqiq`; the local migration SHA-256 is `209769B5F8691D7E499928D7E1A7A92CB4748CB05FD3DDB39687AA5EA111E0F7`. Backfill, constraints, RLS, fixed-search-path/service-role boundaries, payment projection, lifecycle transitions, audit/replay behavior, cancellation guard, and rollback-clean smoke passed.
 - **Validation and acceptance:** focused regression/reconciliation validation, TypeScript/lint, independent findings-only review, bounded repair and targeted rereview passed. Owner English/Arabic/RTL/mobile Service-detail acceptance is `PASS`; W3 is Owner-accepted. No further database mutation, DEMO/production, deployment, or accounting activation is claimed.
 - **Scope boundary:** no task/resource system, procurement, costing, AP/AR, accounting, broad dashboard, or app-user-permission-override expansion was introduced. Authorized-credit start remains a separate role-based gate.
-- **Next locked roadmap task:** W4 Procurement & Commitments is closed in the current section above. W5 Expenses & Cash Advances remains locked and unstarted.
+- **Historical next locked roadmap task (as of 1 September 2026 W3 closeout):** W4 Procurement & Commitments was closed in the section above. W5A was subsequently closed and W5B employee expense self-service delivered, while remaining W5 Cash Advance and Petty Cash scopes remain unstarted future slices.
 
 ## 0. HISTORICAL VERIFIED STATE — 31 August 2026 (SUPERSEDED BY CURRENT W1 CLOSEOUT ABOVE)
 

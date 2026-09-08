@@ -62,13 +62,13 @@ The Owner (Mozfer) physically exercised and accepted the bounded responsive and 
 | **Receipt Camera Capture** | `/expenses` | `PASS` (Mobile Camera) | Camera-first handheld capture, file gallery fallback, thumbnail preview. |
 | **Customers List** | `/customers` | `PASS` (EN/AR/RTL) | Responsive list projection, card layout, customer navigation. |
 | **Quotations List** | `/quotations` | `PASS` (EN/AR/RTL) | Mobile card layout, status indicators, SAR totals formatting. |
-| **Invoices List** | `/invoices` | `PASS` (EN/AR/RTL) | Mobile card alignment, status badges, payment progress indicators. |
+| **Invoices List** | `/invoices` | `PASS` (EN/AR/RTL) | Mobile card layout exposing invoice number, issue date, status, customer, invoice type, document label, amount, View action, and Print/PDF action. |
 | **Services List** | `/services` | `PASS` (EN/AR/RTL) | Service cards, status badges, event dates, customer links. |
 | **Suppliers List & Filter Region** | `/suppliers` | `PASS` (EN/AR/RTL) | Filter controls wrapping, touch targets, supplier cards. |
 | **Payments List** | `/payments` | `PASS` (EN/AR/RTL) | Payment cards, method badges, SAR currency alignment. |
-| **Supplier Quotation History** | `/supplier-quotations` | `PASS` (EN/AR/RTL) | Quotation cards, supplier links, package requirement linkage. |
+| **Supplier Quotation History** | `/suppliers/[id]/quotations` | `PASS` (EN/AR/RTL) | Quotation cards, supplier links, package requirement linkage. |
 | **Quotation Detail** | `/quotations/[id]` | `PASS` (EN/AR/RTL) | Commercial hierarchy cards, line items, totals summary. |
-| **Supplier Quotation Detail & Requirements**| `/supplier-quotations/[id]` | `PASS` (EN/AR/RTL) | Detailed line pricing cards, procurement requirement cards. |
+| **Supplier Quotation Detail & Requirements**| `/suppliers/[id]/quotations/[quotationId]` | `PASS` (EN/AR/RTL) | Detailed line pricing cards, procurement requirement cards. |
 | **Mobile Navigation Feedback** | System-wide | `PASS` (EN/AR/RTL) | `PendingLink` touch response, Pending Halo activation, zero flicker. |
 | **Mobile Loading Skeletons** | System-wide | `PASS` (EN/AR/RTL) | Destination-shaped shimmer skeletons matching final layouts. |
 
