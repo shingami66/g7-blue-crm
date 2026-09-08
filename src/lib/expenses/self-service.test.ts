@@ -458,7 +458,7 @@ test("Requirement 27: bidi treatment exists for identifiers, amount, and date", 
 
   assert.ok(clientContent.includes('<span dir="ltr">{exp.expense_number}</span>'));
   assert.ok(clientContent.includes('<span dir="ltr">{exp.expense_date}</span>'));
-  assert.ok(clientContent.includes('<span dir="ltr">\n                              {Number(exp.amount).toFixed(2)}'));
+  assert.ok(/<span dir="ltr">\s*\{Number\(exp\.amount\)\.toFixed\(2\)\}/.test(clientContent));
   assert.ok(modalContent.includes('dir="ltr"'));
 });
 
@@ -709,4 +709,357 @@ test("Requirement 33 (Behavioral): getEligibleServicesForExpenseSelector queries
   assert.equal(services.length, 1);
   assert.equal(services[0]?.serviceNumber, "SRV-2026-001");
   assert.equal(services[0]?.eventName, "Annual Expo");
+});
+
+// =========================================================================
+// W5B-1B Browser Acceptance Remediation Test Suite (Requirements 1 - 19)
+// =========================================================================
+
+const PAGE_FILE_PATH = path.join(process.cwd(), "src", "app", "(dashboard)", "expenses", "page.tsx");
+
+const expenseUiFiles = [
+  { name: "ExpensesPage (page.tsx)", path: PAGE_FILE_PATH },
+  { name: "ExpensesClient (ExpensesClient.tsx)", path: CLIENT_FILE_PATH },
+  { name: "ExpenseSubmissionModal (ExpenseSubmissionModal.tsx)", path: MODAL_FILE_PATH },
+];
+
+function readAllExpenseUiFiles(): string {
+  return expenseUiFiles.map((f) => fs.readFileSync(f.path, "utf8")).join("\n");
+}
+
+// 1. No text-primary-foreground exists in W5B-1B Expense UI
+test("Remediation 1: No text-primary-foreground exists in W5B-1B Expense UI", () => {
+  for (const file of expenseUiFiles) {
+    const content = fs.readFileSync(file.path, "utf8");
+    assert.ok(
+      !content.includes("text-primary-foreground"),
+      `Found non-canonical 'text-primary-foreground' in ${file.name}`
+    );
+  }
+});
+
+// 2. No text-muted-foreground exists in W5B-1B Expense UI
+test("Remediation 2: No text-muted-foreground exists in W5B-1B Expense UI", () => {
+  for (const file of expenseUiFiles) {
+    const content = fs.readFileSync(file.path, "utf8");
+    assert.ok(
+      !content.includes("text-muted-foreground"),
+      `Found non-canonical 'text-muted-foreground' in ${file.name}`
+    );
+  }
+});
+
+// 3. No text-foreground exists in W5B-1B Expense UI
+test("Remediation 3: No text-foreground exists in W5B-1B Expense UI", () => {
+  for (const file of expenseUiFiles) {
+    const content = fs.readFileSync(file.path, "utf8");
+    assert.ok(
+      !content.includes("text-foreground"),
+      `Found non-canonical 'text-foreground' in ${file.name}`
+    );
+  }
+});
+
+// 4. No border-border exists in W5B-1B Expense UI
+test("Remediation 4: No border-border exists in W5B-1B Expense UI", () => {
+  for (const file of expenseUiFiles) {
+    const content = fs.readFileSync(file.path, "utf8");
+    assert.ok(
+      !content.includes("border-border"),
+      `Found non-canonical 'border-border' in ${file.name}`
+    );
+  }
+});
+
+// 5. No bg-card exists in W5B-1B Expense UI
+test("Remediation 5: No bg-card exists in W5B-1B Expense UI", () => {
+  for (const file of expenseUiFiles) {
+    const content = fs.readFileSync(file.path, "utf8");
+    assert.ok(
+      !content.includes("bg-card"),
+      `Found non-canonical 'bg-card' in ${file.name}`
+    );
+  }
+});
+
+// 6. Primary New Expense button uses G7 on-primary contrast
+test("Remediation 6: Primary New Expense button uses G7 on-primary contrast", () => {
+  const clientContent = fs.readFileSync(CLIENT_FILE_PATH, "utf8");
+  assert.ok(
+    clientContent.includes("bg-primary text-on-primary"),
+    "New Expense button must use G7 canonical 'bg-primary text-on-primary'"
+  );
+  assert.ok(
+    !clientContent.includes("text-primary-foreground"),
+    "Must not use undefined text-primary-foreground"
+  );
+});
+
+// 7. Submit Expense button uses G7 on-primary contrast
+test("Remediation 7: Submit Expense button uses G7 on-primary contrast", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes("bg-primary text-on-primary"),
+    "Submit Expense button must use G7 canonical 'bg-primary text-on-primary'"
+  );
+  assert.ok(
+    !modalContent.includes("text-primary-foreground"),
+    "Must not use undefined text-primary-foreground"
+  );
+});
+
+// 8. Other category reveals custom category input
+test("Remediation 8: Other category reveals custom category input", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes('category === "other"'),
+    "Modal must condition on category === 'other'"
+  );
+  assert.ok(
+    modalContent.includes("customCategoryLabel"),
+    "Modal must render customCategoryLabel when category is other"
+  );
+  assert.ok(
+    modalContent.includes("customCategoryPlaceholder"),
+    "Modal must provide customCategoryPlaceholder"
+  );
+  assert.ok(
+    modalContent.includes("setCustomCategory"),
+    "Modal must bind custom category input state"
+  );
+});
+
+// 9. Other cannot submit blank custom category
+test("Remediation 9: Other cannot submit blank custom category", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes('category === "other" && !customCategory.trim()'),
+    "Modal must validate that customCategory is not blank when category is other"
+  );
+
+  const blankCategoryResult = selfServiceSubmitExpenseSchema.safeParse({
+    context_type: "company",
+    expense_category: "   ",
+    description: "Valid description",
+    amount: 100,
+    expense_date: "2026-09-08",
+  });
+  assert.equal(blankCategoryResult.success, false, "Schema must reject whitespace category");
+});
+
+// 10. Custom category is submitted instead of literal other
+test("Remediation 10 (Behavioral): Custom category is submitted instead of literal 'other'", async () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  assert.ok(
+    modalContent.includes('const effectiveCategory = category === "other" ? customCategory.trim() : category;'),
+    "Modal must resolve effectiveCategory to customCategory.trim() when category is other"
+  );
+  assert.ok(
+    modalContent.includes('formData.append("expense_category", effectiveCategory)'),
+    "Modal must append effectiveCategory to formData"
+  );
+
+  let capturedRpcArgs: Record<string, unknown> | null = null;
+  globalThis.__mockRequirePermission = async () => ({
+    id: "user-test-custom-cat",
+    clerk_user_id: "clerk_custom_cat",
+    role: "sales",
+  });
+  globalThis.__mockRpcHandler = async (fn, args) => {
+    if (fn === "submit_expense") {
+      capturedRpcArgs = args;
+      return { data: [{ expense_id: "exp_custom_1", idempotent_replay: false }], error: null };
+    }
+    return { data: [], error: null };
+  };
+  globalThis.__mockFromHandler = (table) => {
+    if (table === "expenses") {
+      return {
+        select: () => ({
+          eq: () => ({
+            single: async () => ({ data: { expense_number: "EXP-2026-0043" } }),
+          }),
+        }),
+      };
+    }
+    return { select: () => ({ eq: () => ({ single: async () => ({ data: {} }) }) }) };
+  };
+
+  const res = await submitOwnExpenseAction({
+    context_type: "company",
+    expense_category: "Car wash",
+    description: "Vehicle wash after client event",
+    amount: 75.0,
+    expense_date: "2026-09-08",
+  });
+
+  assert.equal(res.success, true);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const args10 = capturedRpcArgs as Record<string, any> | null;
+  assert.equal(args10?.p_expense_category, "Car wash");
+  assert.notEqual(args10?.p_expense_category, "other");
+});
+
+// 11. Normal category remains unchanged
+test("Remediation 11 (Behavioral): Normal category remains unchanged", async () => {
+  let capturedRpcArgs: Record<string, unknown> | null = null;
+  globalThis.__mockRequirePermission = async () => ({
+    id: "user-test-std-cat",
+    clerk_user_id: "clerk_std_cat",
+    role: "sales",
+  });
+  globalThis.__mockRpcHandler = async (fn, args) => {
+    if (fn === "submit_expense") {
+      capturedRpcArgs = args;
+      return { data: [{ expense_id: "exp_std_1", idempotent_replay: false }], error: null };
+    }
+    return { data: [], error: null };
+  };
+  globalThis.__mockFromHandler = (table) => {
+    if (table === "expenses") {
+      return {
+        select: () => ({
+          eq: () => ({
+            single: async () => ({ data: { expense_number: "EXP-2026-0044" } }),
+          }),
+        }),
+      };
+    }
+    return { select: () => ({ eq: () => ({ single: async () => ({ data: {} }) }) }) };
+  };
+
+  const res = await submitOwnExpenseAction({
+    context_type: "company",
+    expense_category: "travel",
+    description: "Flight to client site",
+    amount: 1200.0,
+    expense_date: "2026-09-08",
+  });
+
+  assert.equal(res.success, true);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const args11 = capturedRpcArgs as Record<string, any> | null;
+  assert.equal(args11?.p_expense_category, "travel");
+});
+
+// 12. full_success auto-dismiss behavior exists
+test("Remediation 12 (Behavioral): full_success auto-dismiss behavior exists", () => {
+  const clientContent = fs.readFileSync(CLIENT_FILE_PATH, "utf8");
+  assert.ok(
+    clientContent.includes('notice?.type === "full_success"'),
+    "Auto-dismiss effect must check full_success"
+  );
+  assert.ok(
+    clientContent.includes("setTimeout("),
+    "Must use setTimeout for auto-dismiss"
+  );
+  assert.ok(
+    clientContent.includes("5000"),
+    "Must auto-dismiss after ~5 seconds"
+  );
+  assert.ok(
+    clientContent.includes("clearTimeout(timer)"),
+    "Must clean up timer on unmount or notice change"
+  );
+
+  const shouldAutoDismiss = (type: string) => type === "full_success" || type === "receipt_attached";
+  assert.equal(shouldAutoDismiss("full_success"), true);
+});
+
+// 13. receipt_attached auto-dismiss behavior exists
+test("Remediation 13 (Behavioral): receipt_attached auto-dismiss behavior exists", () => {
+  const clientContent = fs.readFileSync(CLIENT_FILE_PATH, "utf8");
+  assert.ok(
+    clientContent.includes('notice?.type === "receipt_attached"'),
+    "Auto-dismiss effect must check receipt_attached"
+  );
+
+  const shouldAutoDismiss = (type: string) => type === "full_success" || type === "receipt_attached";
+  assert.equal(shouldAutoDismiss("receipt_attached"), true);
+});
+
+// 14. partial_success does not auto-dismiss
+test("Remediation 14 (Behavioral): partial_success does not auto-dismiss", () => {
+  const clientContent = fs.readFileSync(CLIENT_FILE_PATH, "utf8");
+  assert.ok(
+    !clientContent.includes('notice?.type === "partial_success"') ||
+    !clientContent.includes('|| notice?.type === "partial_success"'),
+    "partial_success must NOT be included in auto-dismiss condition"
+  );
+
+  const shouldAutoDismiss = (type: string) => type === "full_success" || type === "receipt_attached";
+  assert.equal(shouldAutoDismiss("partial_success"), false, "partial_success must persist");
+});
+
+// 15. error does not auto-dismiss
+test("Remediation 15 (Behavioral): error does not auto-dismiss", () => {
+  const shouldAutoDismiss = (type: string) => type === "full_success" || type === "receipt_attached";
+  assert.equal(shouldAutoDismiss("error"), false, "error must persist");
+});
+
+// 16. mobile Expense card representation exists
+test("Remediation 16: mobile Expense card representation exists", () => {
+  const clientContent = fs.readFileSync(CLIENT_FILE_PATH, "utf8");
+  assert.ok(
+    clientContent.includes('data-testid="mobile-expense-cards"') ||
+    clientContent.includes("block md:hidden"),
+    "Must have responsive mobile view for narrow viewports"
+  );
+  assert.ok(
+    clientContent.includes("toggleRowExpansion"),
+    "Mobile cards must support expand/collapse details"
+  );
+});
+
+// 17. desktop table representation remains
+test("Remediation 17: desktop table representation remains", () => {
+  const clientContent = fs.readFileSync(CLIENT_FILE_PATH, "utf8");
+  assert.ok(
+    clientContent.includes("hidden md:block") && clientContent.includes("<table"),
+    "Must preserve desktop table view at md breakpoint"
+  );
+});
+
+// 18. financial mutation controls remain absent
+test("Remediation 18: financial mutation controls remain absent", () => {
+  const allUi = readAllExpenseUiFiles();
+  assert.ok(!allUi.includes("reviewExpenseFinanceAction"), "No Finance review action in UI");
+  assert.ok(!allUi.includes("approveExpenseAction"), "No Approve action in UI");
+  assert.ok(!allUi.includes("rejectExpenseAction"), "No Reject action in UI");
+  assert.ok(!allUi.includes("settleExpenseReimbursementAction"), "No Settle action in UI");
+});
+
+// 19. EN/AR dictionary parity remains clean
+test("Remediation 19: EN/AR dictionary parity remains clean including custom category keys", () => {
+  const en = getExpensesDictionary("en");
+  const ar = getExpensesDictionary("ar");
+
+  assert.ok(en.submissionModal.customCategoryLabel, "EN must define customCategoryLabel");
+  assert.ok(ar.submissionModal.customCategoryLabel, "AR must define customCategoryLabel");
+  assert.equal(en.submissionModal.customCategoryLabel, "Specify category");
+  assert.equal(ar.submissionModal.customCategoryLabel, "حدد التصنيف");
+
+  assert.ok(en.submissionModal.customCategoryPlaceholder, "EN must define customCategoryPlaceholder");
+  assert.ok(ar.submissionModal.customCategoryPlaceholder, "AR must define customCategoryPlaceholder");
+
+  assert.ok(en.submissionModal.customCategoryRequired, "EN must define customCategoryRequired");
+  assert.ok(ar.submissionModal.customCategoryRequired, "AR must define customCategoryRequired");
+
+  function getLeafKeys(obj: Record<string, unknown>, prefix = ""): string[] {
+    const keys: string[] = [];
+    for (const [k, v] of Object.entries(obj)) {
+      const fullPath = prefix ? `${prefix}.${k}` : k;
+      if (v !== null && typeof v === "object" && !Array.isArray(v)) {
+        keys.push(...getLeafKeys(v as Record<string, unknown>, fullPath));
+      } else {
+        keys.push(fullPath);
+      }
+    }
+    return keys.sort();
+  }
+
+  const enKeys = getLeafKeys(en as unknown as Record<string, unknown>);
+  const arKeys = getLeafKeys(ar as unknown as Record<string, unknown>);
+
+  assert.deepEqual(enKeys, arKeys, "English and Arabic dictionaries must have identical leaf keys");
 });

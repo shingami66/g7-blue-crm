@@ -82,6 +82,9 @@ export interface ExpensesDictionary {
     servicePlaceholder: string;
     categoryLabel: string;
     categoryPlaceholder: string;
+    customCategoryLabel: string;
+    customCategoryPlaceholder: string;
+    customCategoryRequired: string;
     descriptionLabel: string;
     descriptionPlaceholder: string;
     amountLabel: string;
@@ -197,6 +200,9 @@ const expensesDictionaryEn: ExpensesDictionary = {
     servicePlaceholder: "Choose an Event or Service...",
     categoryLabel: "Category",
     categoryPlaceholder: "Select a category...",
+    customCategoryLabel: "Specify category",
+    customCategoryPlaceholder: "e.g., Car wash, Parking fee",
+    customCategoryRequired: "Please specify the custom category",
     descriptionLabel: "Description",
     descriptionPlaceholder: "Describe the incurred business expense...",
     amountLabel: "Amount (SAR)",
@@ -348,6 +354,9 @@ const expensesDictionaryAr: ExpensesDictionary = {
     servicePlaceholder: "اختر فعالية أو خدمة...",
     categoryLabel: "التصنيف",
     categoryPlaceholder: "اختر تصنيفاً...",
+    customCategoryLabel: "حدد التصنيف",
+    customCategoryPlaceholder: "مثال: غسيل سيارة، رسوم مواقف",
+    customCategoryRequired: "يرجى تحديد التصنيف الخاص",
     descriptionLabel: "الوصف",
     descriptionPlaceholder: "وضح سبب المصروف وطبيعته...",
     amountLabel: "المبلغ (ريال)",
