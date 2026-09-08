@@ -169,8 +169,8 @@ export default async function QuotationDetailPage({
   return (
     <div data-p2-detail-primary-ready="true" className="flex flex-col gap-6 pb-12">
       {/* Top Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
           <PendingLink
             href={returnTo}
             className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
@@ -178,9 +178,9 @@ export default async function QuotationDetailPage({
           >
             <LocaleBackIcon size={16} />
           </PendingLink>
-          <div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight" dir="ltr">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h2 className="text-[24px] sm:text-[28px] leading-[32px] sm:leading-[36px] font-semibold text-primary font-mono tracking-tight whitespace-nowrap" dir="ltr">
                 {isolateBidiText(quotation.quotationNumber)}
               </h2>
               <StatusBadge variant={quotation.status as StatusBadgeVariant}>
@@ -189,7 +189,7 @@ export default async function QuotationDetailPage({
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 sm:justify-end">
           <Suspense
             fallback={
               <RecordNavigationPlaceholder
@@ -307,13 +307,19 @@ export default async function QuotationDetailPage({
             </div>
           </div>
 
-          {/* Line Items Table */}
+          {/* Line Items Table & Mobile Cards */}
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
               <h3 className="font-semibold text-primary">{dictionary.detail.sections.lineItems}</h3>
+              <span className="text-[12px] text-on-surface-variant font-medium md:hidden">
+                {quotation.items.length}
+              </span>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] table-fixed text-start">
+
+            {/* Desktop Table View (>= md) */}
+            <div className="hidden md:block">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[760px] table-fixed text-start">
                 <colgroup>
                   <col className="w-[6%]" />
                   <col className="w-[44%]" />
@@ -377,6 +383,56 @@ export default async function QuotationDetailPage({
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+            {/* Mobile Cards View (< md) */}
+            <div className="block md:hidden divide-y divide-surface-variant" data-testid="mobile-quotation-line-items">
+              {quotation.items.map((item, i) => (
+                <div key={i} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-on-surface text-[14px] leading-snug">
+                        <bdi dir="auto">{item.description}</bdi>
+                      </div>
+                      {item.details && (
+                        <div className="mt-1 text-[12px] text-on-surface-variant leading-relaxed">
+                          <bdi dir="auto">{item.details}</bdi>
+                        </div>
+                      )}
+                    </div>
+                    <span className="shrink-0 text-[12px] font-mono font-medium text-on-surface-variant" dir="ltr">
+                      #{i + 1}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 pt-1 text-[13px]">
+                    <div className="flex justify-between items-baseline gap-2">
+                      <span className="text-on-surface-variant">{dictionary.detail.labels.qty}:</span>
+                      <span className="font-medium text-on-surface tabular-nums" dir="ltr">
+                        {formatQuantity(item.qty)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-baseline gap-2">
+                      <span className="text-on-surface-variant">{dictionary.detail.labels.unitSar}:</span>
+                      <span className="font-medium text-on-surface tabular-nums" dir="ltr">
+                        {formatMoney(item.unitPrice)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-baseline gap-2 border-t border-surface-variant/60 pt-1.5 font-semibold">
+                      <span className="text-primary">{dictionary.detail.labels.totalSar}:</span>
+                      <span className="text-primary tabular-nums" dir="ltr">
+                        {formatMoney(item.total)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {quotation.items.length === 0 && (
+                <div className="p-6 text-center text-[14px] text-on-surface-variant">
+                  {dictionary.detail.states.noLineItems}
+                </div>
+              )}
             </div>
           </div>
         </div>

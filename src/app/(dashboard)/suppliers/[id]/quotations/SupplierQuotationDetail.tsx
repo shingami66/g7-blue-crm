@@ -94,55 +94,110 @@ export default function SupplierQuotationDetail({
           {quotation.lines.length === 0 ? (
             <p className="p-5 text-[13px] text-on-surface-variant">{dictionary.noRequirementsOnQuotation}</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-[640px] w-full text-[13px] text-on-surface">
-                <caption className="sr-only">{dictionary.detailedItems}</caption>
-                <thead className="bg-surface-bright text-start text-[12px] font-semibold text-on-surface-variant">
-                  <tr>
-                    <th scope="col" className="px-4 py-3">{dictionary.itemDescription}</th>
-                    <th scope="col" className="px-4 py-3">{dictionary.packageRequirement}</th>
-                    <th scope="col" className="px-4 py-3 text-end">{dictionary.quantity}</th>
-                    <th scope="col" className="px-4 py-3">{dictionary.unit}</th>
-                    <th scope="col" className="px-4 py-3 text-end">{dictionary.unitPrice}</th>
-                    <th scope="col" className="px-4 py-3 text-end">{dictionary.lineTotal}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/70">
-                  {quotation.lines.map((line) => (
-                    <tr key={line.id} className="align-top">
-                      <td className="min-w-[200px] px-4 py-4 font-semibold" dir="auto">
-                        {isolateBidiText(line.description)}
-                      </td>
-                      <td className="min-w-[150px] px-4 py-4 text-on-surface-variant" dir="auto">
-                        {line.packageRequirementTitle ? isolateBidiText(line.packageRequirementTitle) : "—"}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-4 text-end tabular-nums" dir="ltr">
-                        {line.quantity !== null ? line.quantity : "—"}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-4" dir="auto">
-                        {line.unit ? isolateBidiText(line.unit) : "—"}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-4 text-end tabular-nums" dir="ltr">
-                        {line.unitPrice !== null ? formatSarAmount(locale, line.unitPrice) : "—"}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-4 text-end font-semibold tabular-nums" dir="ltr">
-                        {formatSarAmount(locale, line.lineTotal)}
+            <>
+              {/* Desktop Table View (>= md) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="min-w-[640px] w-full text-[13px] text-on-surface">
+                  <caption className="sr-only">{dictionary.detailedItems}</caption>
+                  <thead className="bg-surface-bright text-start text-[12px] font-semibold text-on-surface-variant">
+                    <tr>
+                      <th scope="col" className="px-4 py-3">{dictionary.itemDescription}</th>
+                      <th scope="col" className="px-4 py-3">{dictionary.packageRequirement}</th>
+                      <th scope="col" className="px-4 py-3 text-end">{dictionary.quantity}</th>
+                      <th scope="col" className="px-4 py-3">{dictionary.unit}</th>
+                      <th scope="col" className="px-4 py-3 text-end">{dictionary.unitPrice}</th>
+                      <th scope="col" className="px-4 py-3 text-end">{dictionary.lineTotal}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-outline-variant/70">
+                    {quotation.lines.map((line) => (
+                      <tr key={line.id} className="align-top">
+                        <td className="min-w-[200px] px-4 py-4 font-semibold" dir="auto">
+                          {isolateBidiText(line.description)}
+                        </td>
+                        <td className="min-w-[150px] px-4 py-4 text-on-surface-variant" dir="auto">
+                          {line.packageRequirementTitle ? isolateBidiText(line.packageRequirementTitle) : "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-end tabular-nums" dir="ltr">
+                          {line.quantity !== null ? line.quantity : "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4" dir="auto">
+                          {line.unit ? isolateBidiText(line.unit) : "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-end tabular-nums" dir="ltr">
+                          {line.unitPrice !== null ? formatSarAmount(locale, line.unitPrice) : "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-end font-semibold tabular-nums" dir="ltr">
+                          {formatSarAmount(locale, line.lineTotal)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="border-t-2 border-surface-variant bg-surface-bright/80 font-semibold">
+                    <tr>
+                      <td colSpan={5} className="px-4 py-3 text-end">{dictionary.quotationTotal}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-end tabular-nums" dir="ltr">
+                        {quotation.packageTotal !== null
+                          ? formatSarAmount(locale, quotation.packageTotal)
+                          : formatSarAmount(locale, quotation.lines.reduce((s, l) => s + l.lineTotal, 0))}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot className="border-t-2 border-surface-variant bg-surface-bright/80 font-semibold">
-                  <tr>
-                    <td colSpan={5} className="px-4 py-3 text-end">{dictionary.quotationTotal}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-end tabular-nums" dir="ltr">
-                      {quotation.packageTotal !== null
-                        ? formatSarAmount(locale, quotation.packageTotal)
-                        : formatSarAmount(locale, quotation.lines.reduce((s, l) => s + l.lineTotal, 0))}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Mobile Cards View (< md) */}
+              <div className="block md:hidden divide-y divide-surface-variant" data-testid="mobile-supplier-quotation-lines">
+                {quotation.lines.map((line) => (
+                  <div key={line.id} className="p-4 space-y-3">
+                    <div className="space-y-1">
+                      <div className="font-semibold text-on-surface text-[14px] break-words" dir="auto">
+                        {isolateBidiText(line.description)}
+                      </div>
+                      <div className="text-[12px] text-on-surface-variant" dir="auto">
+                        <span className="font-medium">{dictionary.packageRequirement}:</span>{" "}
+                        {line.packageRequirementTitle ? isolateBidiText(line.packageRequirementTitle) : "—"}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 pt-1 text-[13px]">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <span className="text-on-surface-variant">{dictionary.quantity}:</span>
+                        <span className="font-medium text-on-surface tabular-nums" dir="ltr">
+                          {line.quantity !== null ? line.quantity : "—"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-baseline gap-2">
+                        <span className="text-on-surface-variant">{dictionary.unit}:</span>
+                        <span className="text-on-surface" dir="auto">
+                          {line.unit ? isolateBidiText(line.unit) : "—"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-baseline gap-2">
+                        <span className="text-on-surface-variant">{dictionary.unitPrice}:</span>
+                        <span className="font-medium text-on-surface tabular-nums" dir="ltr">
+                          {line.unitPrice !== null ? formatSarAmount(locale, line.unitPrice) : "—"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-baseline gap-2 border-t border-surface-variant/60 pt-1.5 font-semibold">
+                        <span className="text-primary">{dictionary.lineTotal}:</span>
+                        <span className="text-primary tabular-nums" dir="ltr">
+                          {formatSarAmount(locale, line.lineTotal)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div className="p-4 bg-surface-bright/80 border-t-2 border-surface-variant flex justify-between items-center text-[13px] font-semibold">
+                  <span className="text-primary">{dictionary.quotationTotal}</span>
+                  <span className="text-primary tabular-nums" dir="ltr">
+                    {quotation.packageTotal !== null
+                      ? formatSarAmount(locale, quotation.packageTotal)
+                      : formatSarAmount(locale, quotation.lines.reduce((s, l) => s + l.lineTotal, 0))}
+                  </span>
+                </div>
+              </div>
+            </>
           )}
         </section>
       ) : quotation.pricingMode === "total_only" ? (
@@ -160,29 +215,60 @@ export default function SupplierQuotationDetail({
           {quotation.requirements.length === 0 ? (
             <p className="p-5 text-[13px] text-on-surface-variant">{dictionary.noRequirementsOnQuotation}</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-[640px] w-full text-[13px] text-on-surface">
-                <caption className="sr-only">{dictionary.requirements}</caption>
-                <thead className="bg-surface-bright text-start text-[12px] font-semibold text-on-surface-variant">
-                  <tr>
-                    <th scope="col" className="px-4 py-3">{dictionary.requirement}</th>
-                    <th scope="col" className="px-4 py-3">{dictionary.scopeSummary}</th>
-                    <th scope="col" className="px-4 py-3 text-end">{dictionary.lineAmount}</th>
-                    {hasLegacyEvidence && <th scope="col" className="px-4 py-3">{dictionary.legacyEvidenceReference}</th>}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/70">
-                  {quotation.requirements.map((line) => (
-                    <tr key={line.requirementId} className="align-top">
-                      <td className="min-w-[170px] px-4 py-4 font-semibold" dir="auto">{isolateBidiText(line.requirement)}</td>
-                      <td className="min-w-[230px] whitespace-pre-wrap px-4 py-4" dir="auto">{isolateBidiText(line.lineSummary)}</td>
-                      <td className="whitespace-nowrap px-4 py-4 text-end tabular-nums" dir="ltr">{line.lineAmount === null ? "—" : formatSarAmount(locale, line.lineAmount)}</td>
-                      {hasLegacyEvidence && <td className="max-w-[220px] break-words px-4 py-4" dir="auto">{line.legacyEvidenceRef ? isolateBidiText(line.legacyEvidenceRef) : "—"}</td>}
+            <>
+              {/* Desktop Table View (>= md) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="min-w-[640px] w-full text-[13px] text-on-surface">
+                  <caption className="sr-only">{dictionary.requirements}</caption>
+                  <thead className="bg-surface-bright text-start text-[12px] font-semibold text-on-surface-variant">
+                    <tr>
+                      <th scope="col" className="px-4 py-3">{dictionary.requirement}</th>
+                      <th scope="col" className="px-4 py-3">{dictionary.scopeSummary}</th>
+                      <th scope="col" className="px-4 py-3 text-end">{dictionary.lineAmount}</th>
+                      {hasLegacyEvidence && <th scope="col" className="px-4 py-3">{dictionary.legacyEvidenceReference}</th>}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-outline-variant/70">
+                    {quotation.requirements.map((line) => (
+                      <tr key={line.requirementId} className="align-top">
+                        <td className="min-w-[170px] px-4 py-4 font-semibold" dir="auto">{isolateBidiText(line.requirement)}</td>
+                        <td className="min-w-[230px] whitespace-pre-wrap px-4 py-4" dir="auto">{isolateBidiText(line.lineSummary)}</td>
+                        <td className="whitespace-nowrap px-4 py-4 text-end tabular-nums" dir="ltr">{line.lineAmount === null ? "—" : formatSarAmount(locale, line.lineAmount)}</td>
+                        {hasLegacyEvidence && <td className="max-w-[220px] break-words px-4 py-4" dir="auto">{line.legacyEvidenceRef ? isolateBidiText(line.legacyEvidenceRef) : "—"}</td>}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards View (< md) */}
+              <div className="block md:hidden divide-y divide-surface-variant" data-testid="mobile-supplier-quotation-requirements">
+                {quotation.requirements.map((line) => (
+                  <div key={line.requirementId} className="p-4 space-y-2.5">
+                    <div className="font-semibold text-on-surface text-[14px] break-words" dir="auto">
+                      {isolateBidiText(line.requirement)}
+                    </div>
+                    {line.lineSummary && (
+                      <div className="text-[13px] text-on-surface whitespace-pre-wrap leading-relaxed" dir="auto">
+                        {isolateBidiText(line.lineSummary)}
+                      </div>
+                    )}
+                    <div className="flex justify-between items-baseline gap-2 pt-1 text-[13px]">
+                      <span className="text-on-surface-variant">{dictionary.lineAmount}:</span>
+                      <span className="font-semibold text-on-surface tabular-nums" dir="ltr">
+                        {line.lineAmount === null ? "—" : formatSarAmount(locale, line.lineAmount)}
+                      </span>
+                    </div>
+                    {line.legacyEvidenceRef && (
+                      <div className="text-[12px] text-on-surface-variant break-words" dir="auto">
+                        <span className="font-medium">{dictionary.legacyEvidenceReference}:</span>{" "}
+                        {isolateBidiText(line.legacyEvidenceRef)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </section>
       )}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PendingLink from "@/components/ui/PendingLink";
 import { FileText } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { isolateBidiText, isolateLtrText } from "@/lib/i18n/bidi";
@@ -120,13 +121,14 @@ export default function SupplierQuotationHistory({
                     ) : dictionary.documentsRestricted}
                   </td>
                   <td className="px-4 py-4 text-end">
-                    <Link
+                    <PendingLink
                       href={detailHref}
+                      pendingLabel={dictionary.navigationPending}
                       className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-outline-variant bg-surface px-3 py-2 font-semibold text-primary hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                       <FileText size={15} aria-hidden="true" />
                       {dictionary.view}
-                    </Link>
+                    </PendingLink>
                   </td>
                 </tr>
               );
@@ -217,13 +219,14 @@ export default function SupplierQuotationHistory({
               </div>
 
               <div className="pt-1">
-                <Link
+                <PendingLink
                   href={detailHref}
+                  pendingLabel={dictionary.navigationPending}
                   className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface py-2 text-[13px] font-semibold text-primary hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                   <FileText size={15} aria-hidden="true" />
                   <span>{dictionary.view}</span>
-                </Link>
+                </PendingLink>
               </div>
             </div>
           );

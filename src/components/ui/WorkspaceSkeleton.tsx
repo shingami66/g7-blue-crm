@@ -38,7 +38,11 @@ function ListSkeleton() {
           <SkeletonLine className="h-10 w-28" />
         </div>
       </div>
-      <div className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
+      {/* Desktop Table View (>= md) */}
+      <div
+        className="hidden md:block overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest"
+        data-testid="desktop-list-skeleton"
+      >
         <div className="grid grid-cols-3 gap-4 border-b border-surface-variant bg-surface-container-low p-4">
           <SkeletonLine className="w-24" />
           <SkeletonLine className="w-28" />
@@ -53,6 +57,36 @@ function ListSkeleton() {
             </div>
           ))}
         </div>
+      </div>
+      {/* Mobile Cards View (< md) */}
+      <div
+        className="block md:hidden divide-y divide-surface-variant overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest"
+        data-testid="mobile-list-skeleton"
+      >
+        {Array.from({ length: 3 }, (_, index) => (
+          <div key={index} className="p-4 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="space-y-1.5">
+                <SkeletonLine className="h-4 w-36" />
+                <SkeletonLine className="h-3 w-20" />
+              </div>
+              <div className="g7-skeleton h-6 w-16 rounded-full" />
+            </div>
+            <div className="space-y-2 pt-1">
+              <div className="flex justify-between items-center">
+                <SkeletonLine className="h-3 w-20" />
+                <SkeletonLine className="h-3 w-28" />
+              </div>
+              <div className="flex justify-between items-center">
+                <SkeletonLine className="h-3 w-16" />
+                <SkeletonLine className="h-3 w-24" />
+              </div>
+            </div>
+            <div className="pt-1">
+              <SkeletonLine className="h-8 w-full rounded-lg" />
+            </div>
+          </div>
+        ))}
       </div>
       <div className="flex justify-end">
         <SkeletonLine className="h-9 w-48" />
@@ -85,14 +119,14 @@ function DashboardSkeleton() {
 function DetailSkeleton() {
   return (
     <div className="min-h-[34rem] space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-3">
-          <SkeletonLine className="h-7 w-56" />
-          <SkeletonLine className="w-72" />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="max-w-full space-y-3">
+          <SkeletonLine className="h-7 w-48 max-w-full" />
+          <SkeletonLine className="w-64 max-w-full" />
         </div>
-        <div className="flex gap-2">
-          <SkeletonLine className="h-10 w-24" />
-          <SkeletonLine className="h-10 w-24" />
+        <div className="flex flex-wrap gap-2 sm:justify-end">
+          <SkeletonLine className="h-9 w-24 rounded-lg" />
+          <SkeletonLine className="h-9 w-24 rounded-lg" />
         </div>
       </div>
       <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">

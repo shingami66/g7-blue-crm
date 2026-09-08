@@ -10,6 +10,10 @@ import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { getDirection } from "@/lib/i18n";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import BusinessYearSelectorData from "@/components/i18n/BusinessYearSelectorData";
+import {
+  NavigationFeedbackProvider,
+  NavigationFeedbackBoundary,
+} from "@/components/ui/NavigationFeedbackProvider";
 
 export default async function DashboardLayout({
   children,
@@ -30,32 +34,36 @@ export default async function DashboardLayout({
 
   return (
     <LocaleProvider locale={locale}>
-      <div
-        className="dashboard-shell flex min-h-screen max-w-full bg-surface"
-        dir={shellDirection}
-      >
-        <div className="dashboard-sidebar">
-          <Sidebar isAdmin={isAdmin} shellDirection={shellDirection} />
-        </div>
+      <NavigationFeedbackProvider>
         <div
-          className={`dashboard-content flex min-h-screen min-w-0 max-w-full flex-1 flex-col ${
-            shellDirection === "rtl" ? "md:mr-[260px]" : "md:ml-[260px]"
-          }`}
+          className="dashboard-shell flex min-h-screen max-w-full bg-surface"
+          dir={shellDirection}
         >
-          <div className="dashboard-topbar">
-            <Topbar
-              businessYearSelector={
-                <Suspense fallback={null}>
-                  <BusinessYearSelectorData />
-                </Suspense>
-              }
-            />
+          <div className="dashboard-sidebar">
+            <Sidebar isAdmin={isAdmin} shellDirection={shellDirection} />
           </div>
-          <main className="dashboard-main mx-auto w-full min-w-0 max-w-[1440px] flex-1 p-4 md:p-6">
-            {children}
-          </main>
+          <div
+            className={`dashboard-content flex min-h-screen min-w-0 max-w-full flex-1 flex-col ${
+              shellDirection === "rtl" ? "md:mr-[260px]" : "md:ml-[260px]"
+            }`}
+          >
+            <div className="dashboard-topbar">
+              <Topbar
+                businessYearSelector={
+                  <Suspense fallback={null}>
+                    <BusinessYearSelectorData />
+                  </Suspense>
+                }
+              />
+            </div>
+            <main className="dashboard-main relative mx-auto w-full min-w-0 max-w-[1440px] flex-1 p-4 md:p-6">
+              <NavigationFeedbackBoundary>
+                {children}
+              </NavigationFeedbackBoundary>
+            </main>
+          </div>
         </div>
-      </div>
+      </NavigationFeedbackProvider>
     </LocaleProvider>
   );
 }
