@@ -165,6 +165,17 @@ export interface CashAdvanceReturn {
   notes: string | null;
 }
 
+export interface EnrichedCashAdvance extends EmployeeCashAdvance {
+  recipientName?: string;
+  serviceNumber?: string;
+  serviceTitle?: string;
+  eventName?: string | null;
+}
+
+export interface EnrichedCashAdvanceExpenseSettlement extends CashAdvanceExpenseSettlement {
+  expenseNumber?: string;
+}
+
 export interface PettyCashFund {
   id: string;
   fund_name: string;

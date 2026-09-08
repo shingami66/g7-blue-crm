@@ -10,9 +10,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   ExpenseAccountabilitySummary,
   EmployeeCashAdvance,
+  EnrichedCashAdvance,
   PettyCashFund,
   PettyCashTransaction,
   CashAdvanceExpenseSettlement,
+  EnrichedCashAdvanceExpenseSettlement,
   CashAdvanceReturn,
   ExpenseReimbursementSettlement,
   ExpenseDocumentLink,
@@ -421,6 +423,112 @@ export async function getOwnCashAdvanceDetailById(id: string): Promise<{
     allocations: (allocationsRes.data ?? []) as CashAdvanceExpenseSettlement[],
     returns: (returnsRes.data ?? []) as CashAdvanceReturn[],
   };
+}
+
+export async function enrichCashAdvancesBatch(
+  advances: EmployeeCashAdvance[],
+): Promise<EnrichedCashAdvance[]> {
+  if (advances.length === 0) return [];
+  const supabase = createAdminClient();
+
+  const serviceIds = Array.from(
+    new Set(
+      advances
+        .map((a) => a.service_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+
+  const recipientIds = Array.from(
+    new Set(
+      advances
+        .map((a) => a.recipient_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+
+  const [servicesRes, recipientsRes] = await Promise.all([
+    serviceIds.length > 0
+      ? supabase
+          .from("services")
+          .select("id, service_number, service_title, event_name")
+          .in("id", serviceIds)
+      : Promise.resolve({ data: [] }),
+    recipientIds.length > 0
+      ? supabase
+          .from("app_users")
+          .select("id, name, email")
+          .in("id", recipientIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const serviceMap = new Map<
+    string,
+    { serviceNumber: string; serviceTitle: string; eventName: string | null }
+  >();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const s of (servicesRes.data ?? []) as any[]) {
+    serviceMap.set(s.id, {
+      serviceNumber: s.service_number,
+      serviceTitle: s.service_title,
+      eventName: s.event_name,
+    });
+  }
+
+  const recipientMap = new Map<string, string>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const u of (recipientsRes.data ?? []) as any[]) {
+    const displayName =
+      u.name && typeof u.name === "string" && u.name.trim().length > 0
+        ? u.name.trim()
+        : (u.email ?? "");
+    recipientMap.set(u.id, displayName);
+  }
+
+  return advances.map((a) => {
+    const s = a.service_id ? serviceMap.get(a.service_id) : undefined;
+    const recipientName = recipientMap.get(a.recipient_id);
+    return {
+      ...a,
+      recipientName,
+      serviceNumber: s?.serviceNumber,
+      serviceTitle: s?.serviceTitle,
+      eventName: s?.eventName,
+    };
+  });
+}
+
+export async function enrichExpenseSettlements(
+  allocations: CashAdvanceExpenseSettlement[],
+): Promise<EnrichedCashAdvanceExpenseSettlement[]> {
+  if (allocations.length === 0) return [];
+  const supabase = getExpenseClient();
+
+  const expenseIds = Array.from(
+    new Set(
+      allocations
+        .map((al) => al.expense_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+
+  if (expenseIds.length === 0) return allocations;
+
+  const { data } = await supabase
+    .from("expenses")
+    .select("id, expense_number")
+    .in("id", expenseIds);
+
+  const expenseNumberMap = new Map<string, string>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const exp of (data ?? []) as any[]) {
+    expenseNumberMap.set(exp.id, exp.expense_number);
+  }
+
+  return allocations.map((al) => ({
+    ...al,
+    expenseNumber: expenseNumberMap.get(al.expense_id),
+  }));
 }
 
 export async function getPettyCashFundsList(): Promise<PettyCashFund[]> {

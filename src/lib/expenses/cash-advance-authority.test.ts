@@ -577,17 +577,21 @@ test("43. Regression/Security: No AP or general accounting permissions were intr
   assert.equal(allPermissions.some((p) => p.startsWith("ledger:")), false);
 });
 
-test("44. Regression/Security: No UI routes invoke requestOwnCashAdvanceAction (non-routable in UI)", () => {
+test("44. Regression/Security: Only advances UI route invokes requestOwnCashAdvanceAction", () => {
   const dashboardDir = path.join(process.cwd(), "src", "app", "(dashboard)");
   const files = fs.readdirSync(dashboardDir, { recursive: true }) as string[];
   for (const f of files) {
     if (f.endsWith(".tsx") || f.endsWith(".ts")) {
+      const normalizedPath = f.replace(/\\/g, "/");
+      const isAdvancesFile = normalizedPath.startsWith("advances/");
       const content = fs.readFileSync(path.join(dashboardDir, f), "utf8");
-      assert.equal(
-        content.includes("requestOwnCashAdvanceAction"),
-        false,
-        `UI route file ${f} must not invoke requestOwnCashAdvanceAction in W5B-2A`,
-      );
+      if (!isAdvancesFile) {
+        assert.equal(
+          content.includes("requestOwnCashAdvanceAction"),
+          false,
+          `UI route file ${f} outside advances must not invoke requestOwnCashAdvanceAction`,
+        );
+      }
     }
   }
 });

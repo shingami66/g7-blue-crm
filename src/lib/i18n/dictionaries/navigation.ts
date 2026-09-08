@@ -30,6 +30,7 @@ export interface NavigationDictionary {
     suppliers: string;
     users: string;
     expenses: string;
+    advances: string;
   };
   sections: {
     customersAndSales: string;
@@ -72,7 +73,8 @@ export const navigationDictionaryEn: NavigationDictionary = {
     settings: "Settings",
     suppliers: "Suppliers",
     users: "Users",
-    expenses: "Expenses & Cash",
+    expenses: "Expenses",
+    advances: "Cash Advances",
   },
   sections: {
     customersAndSales: "Customers & Sales",
@@ -115,7 +117,8 @@ export const navigationDictionaryAr: NavigationDictionary = {
     settings: "الإعدادات",
     suppliers: "الموردون",
     users: "المستخدمون",
-    expenses: "المصروفات والعهد",
+    expenses: "المصروفات",
+    advances: "العهد النقدية",
   },
   sections: {
     customersAndSales: "العملاء والمبيعات",

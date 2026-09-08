@@ -21,6 +21,7 @@ import {
   attachExpenseReceiptAction,
 } from "@/lib/expenses/actions";
 import { ExpenseSubmissionModal } from "./ExpenseSubmissionModal";
+import PendingLink from "@/components/ui/PendingLink";
 import {
   Receipt,
   AlertCircle,
@@ -35,6 +36,7 @@ import {
   CheckCircle2,
   Clock,
   ShieldCheck,
+  Wallet,
 } from "lucide-react";
 
 interface ExpensesClientProps {
@@ -205,20 +207,30 @@ export default function ExpensesClient({
           </p>
         </div>
 
-        {/* Primary Action: New Expense */}
-        {canSubmitOwn && (
-          <button
-            type="button"
-            onClick={() => {
-              setNotice(null);
-              setIsSubmissionModalOpen(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm shrink-0"
+        <div className="flex items-center gap-3 shrink-0">
+          <PendingLink
+            href="/advances"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface text-xs font-semibold hover:bg-surface-container transition-all shadow-xs"
           >
-            <Plus className="w-4 h-4" />
-            <span>{dictionary.header.newExpense}</span>
-          </button>
-        )}
+            <Wallet className="w-4 h-4 text-primary" />
+            <span>{locale === "ar" ? "العهد النقدية" : "Cash Advances"}</span>
+          </PendingLink>
+
+          {/* Primary Action: New Expense */}
+          {canSubmitOwn && (
+            <button
+              type="button"
+              onClick={() => {
+                setNotice(null);
+                setIsSubmissionModalOpen(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{dictionary.header.newExpense}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Notices / Alert banners */}
