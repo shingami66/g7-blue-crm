@@ -184,7 +184,8 @@ export default function PaymentsClient({ payments, pagination, query, error, dic
           onPageSizeChange={(pageSize) => navigate(paymentListHref({ ...query, pageSize }, 1), "replace")}
         />
         <div className="flex-1 overflow-auto min-h-0 overflow-y-auto overflow-x-hidden">
-          <div ref={scrollRef} className="w-full overflow-x-auto">
+          {/* Desktop Table View (>= md) */}
+          <div ref={scrollRef} className="hidden md:block w-full overflow-x-auto">
             <div className="min-w-[980px]">
               <DataTable
               columns={[
@@ -249,6 +250,85 @@ export default function PaymentsClient({ payments, pagination, query, error, dic
               )}
             </DataTable>
             </div>
+          </div>
+
+          {/* Mobile Cards View (< md) */}
+          <div className="block md:hidden divide-y divide-surface-variant" data-testid="mobile-payment-cards">
+            {payments.length === 0 ? (
+              <div className="p-8 text-center text-on-surface-variant">
+                {error
+                  ? dictionary.states.paymentDataUnavailable
+                  : query.search
+                    ? dictionary.states.noFilteredPayments
+                    : dictionary.table.empty}
+              </div>
+            ) : (
+              payments.map((payment) => (
+                <div key={payment.id} className="p-4 space-y-3 transition-colors hover:bg-surface-container-low/40">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-mono font-semibold text-primary" dir="ltr">
+                        {isolateBidiText(payment.paymentNumber)}
+                      </div>
+                      <div className="mt-0.5 text-[12px] text-on-surface-variant">
+                        <UiDateText locale={locale} value={payment.date} />
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      <StatusBadge variant={getPaymentStatusBadgeVariant(payment.status)}>
+                        {getPaymentStatusLabel(locale, payment.status)}
+                      </StatusBadge>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 text-[13px]">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-on-surface-variant">{dictionary.table.customer}:</span>
+                      <span className="font-medium text-on-surface text-end break-words" dir="auto">
+                        {payment.customerName}
+                      </span>
+                    </div>
+                    {(payment.invoiceNumber || payment.invoiceId) && (
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-on-surface-variant">{dictionary.table.invoice}:</span>
+                        <span className="font-mono text-[12px] text-primary" dir="ltr">
+                          {isolateBidiText(payment.invoiceNumber ?? payment.invoiceId)}
+                        </span>
+                      </div>
+                    )}
+                    {payment.serviceLabel && (
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-on-surface-variant">{dictionary.table.service}:</span>
+                        <span className="text-on-surface text-end break-words" dir="auto">
+                          {payment.serviceLabel}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-on-surface-variant">{dictionary.table.method}:</span>
+                      <span className="text-on-surface text-end">
+                        {getPaymentMethodLabel(locale, payment.method)}
+                      </span>
+                    </div>
+                    {payment.reference && (
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-on-surface-variant">{dictionary.table.reference}:</span>
+                        <span className="text-on-surface text-end truncate max-w-[200px]" dir="auto" title={payment.reference}>
+                          {payment.reference}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-outline-variant/60 pt-2">
+                    <span className="text-[12px] text-on-surface-variant">{dictionary.table.amount}</span>
+                    <span className="font-semibold text-on-surface tabular-nums" dir="ltr">
+                      {formatSarAmount(locale, payment.amount)}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

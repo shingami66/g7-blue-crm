@@ -230,115 +230,119 @@ export default function CustomersClient({
       <div className="flex min-h-0 flex-1 gap-6">
         <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
           <div className="flex flex-wrap items-center gap-3 border-b border-surface-variant bg-surface-bright p-4">
-            <form
-              className="flex w-full max-w-sm min-w-0 flex-1 items-center gap-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (!searchComposing.current) submitSearch();
-              }}
-              aria-busy={isSearchPending || undefined}
-            >
-              <div className="relative min-w-0 flex-1">
-                <Search
-                  size={16}
-                  aria-hidden="true"
-                  className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
-                />
-                <input
-                  ref={searchInputRef}
-                  type="search"
-                  value={draftSearch}
-                  onChange={(event) => setDraftSearch(event.target.value)}
-                  onCompositionStart={() => {
-                    searchComposing.current = true;
-                  }}
-                  onCompositionEnd={() => {
-                    searchComposing.current = false;
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape" && draftSearch.length > 0) {
-                      event.preventDefault();
-                      clearSearch();
-                    }
-                    if (event.key === "Enter" && (searchComposing.current || event.nativeEvent.isComposing)) {
-                      event.preventDefault();
-                    }
-                  }}
-                  placeholder={dictionary.list.searchPlaceholder}
-                  aria-label={dictionary.list.searchPlaceholder}
-                  disabled={isListPending}
-                  className="w-full min-w-0 rounded-lg border border-outline-variant bg-surface py-2 ps-9 pe-10 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
-                />
-                {draftSearch.length > 0 ? (
-                  <button
-                    type="button"
-                    onClick={clearSearch}
-                    disabled={isListPending}
-                    aria-label={`${common.actions.clear}: ${dictionary.list.searchPlaceholder}`}
-                    className="absolute end-2 top-1/2 inline-flex -translate-y-1/2 rounded p-1 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  >
-                    <X size={15} aria-hidden="true" />
-                  </button>
-                ) : null}
-              </div>
-              <button
-                type="submit"
-                disabled={isListPending}
+            <div className="w-full sm:flex-1 sm:min-w-0 sm:max-w-sm">
+              <form
+                className="flex w-full min-w-0 items-center gap-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (!searchComposing.current) submitSearch();
+                }}
                 aria-busy={isSearchPending || undefined}
-                aria-label={isSearchPending ? common.states.searching : common.labels.search}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[13px] font-semibold text-on-primary transition-colors hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <Search size={14} aria-hidden="true" />
-                <span className={isSearchPending ? "" : "hidden sm:inline"}>
-                  {isSearchPending ? common.states.searching : common.labels.search}
-                </span>
-              </button>
-            </form>
-            <div className="relative">
-              <label htmlFor="customer-status-filter" className="sr-only">
-                {dictionary.list.report.statusFilter}
-              </label>
-              <select
-                id="customer-status-filter"
-                value={statusFilter}
-                onChange={(event) => navigate(customerListHref({ status: event.target.value as CustomerListQuery["status"] }), "replace")}
-                disabled={isListPending}
-                className="appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
-              >
-                <option value="all">{dictionary.list.allStatuses}</option>
-                <option value="active">{getCustomerStatusLabel(dictionary.locale, "active")}</option>
-                <option value="inactive">{getCustomerStatusLabel(dictionary.locale, "inactive")}</option>
-                <option value="lead">{getCustomerStatusLabel(dictionary.locale, "lead")}</option>
-              </select>
-              <Filter
-                size={14}
-                aria-hidden="true"
-                className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
-              />
+                <div className="relative min-w-0 flex-1">
+                  <Search
+                    size={16}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
+                  />
+                  <input
+                    ref={searchInputRef}
+                    type="search"
+                    value={draftSearch}
+                    onChange={(event) => setDraftSearch(event.target.value)}
+                    onCompositionStart={() => {
+                      searchComposing.current = true;
+                    }}
+                    onCompositionEnd={() => {
+                      searchComposing.current = false;
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape" && draftSearch.length > 0) {
+                        event.preventDefault();
+                        clearSearch();
+                      }
+                      if (event.key === "Enter" && (searchComposing.current || event.nativeEvent.isComposing)) {
+                        event.preventDefault();
+                      }
+                    }}
+                    placeholder={dictionary.list.searchPlaceholder}
+                    aria-label={dictionary.list.searchPlaceholder}
+                    disabled={isListPending}
+                    className="w-full min-w-0 rounded-lg border border-outline-variant bg-surface py-2 ps-9 pe-10 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+                  />
+                  {draftSearch.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      disabled={isListPending}
+                      aria-label={`${common.actions.clear}: ${dictionary.list.searchPlaceholder}`}
+                      className="absolute end-2 top-1/2 inline-flex -translate-y-1/2 rounded p-1 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    >
+                      <X size={15} aria-hidden="true" />
+                    </button>
+                  ) : null}
+                </div>
+                <button
+                  type="submit"
+                  disabled={isListPending}
+                  aria-busy={isSearchPending || undefined}
+                  aria-label={isSearchPending ? common.states.searching : common.labels.search}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[13px] font-semibold text-on-primary transition-colors hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Search size={14} aria-hidden="true" />
+                  <span className={isSearchPending ? "" : "hidden sm:inline"}>
+                    {isSearchPending ? common.states.searching : common.labels.search}
+                  </span>
+                </button>
+              </form>
             </div>
-            <div className="relative">
-              <label htmlFor="customer-city-filter" className="sr-only">
-                {dictionary.list.report.cityFilter}
-              </label>
-              <select
-                id="customer-city-filter"
-                value={cityFilter}
-                onChange={(event) => navigate(customerListHref({ city: event.target.value }), "replace")}
-                disabled={isListPending}
-                className="appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
-              >
-                <option value="all">{dictionary.list.allCities}</option>
-                {cities.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
-              <Filter
-                size={14}
-                aria-hidden="true"
-                className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
-              />
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-initial">
+                <label htmlFor="customer-status-filter" className="sr-only">
+                  {dictionary.list.report.statusFilter}
+                </label>
+                <select
+                  id="customer-status-filter"
+                  value={statusFilter}
+                  onChange={(event) => navigate(customerListHref({ status: event.target.value as CustomerListQuery["status"] }), "replace")}
+                  disabled={isListPending}
+                  className="w-full sm:w-auto appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
+                >
+                  <option value="all">{dictionary.list.allStatuses}</option>
+                  <option value="active">{getCustomerStatusLabel(dictionary.locale, "active")}</option>
+                  <option value="inactive">{getCustomerStatusLabel(dictionary.locale, "inactive")}</option>
+                  <option value="lead">{getCustomerStatusLabel(dictionary.locale, "lead")}</option>
+                </select>
+                <Filter
+                  size={14}
+                  aria-hidden="true"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
+                />
+              </div>
+              <div className="relative flex-1 sm:flex-initial">
+                <label htmlFor="customer-city-filter" className="sr-only">
+                  {dictionary.list.report.cityFilter}
+                </label>
+                <select
+                  id="customer-city-filter"
+                  value={cityFilter}
+                  onChange={(event) => navigate(customerListHref({ city: event.target.value }), "replace")}
+                  disabled={isListPending}
+                  className="w-full sm:w-auto appearance-none bg-surface border border-outline-variant rounded-lg ps-3 pe-8 py-2 text-[14px] leading-[20px] text-on-surface focus:outline-none focus:border-primary"
+                >
+                  <option value="all">{dictionary.list.allCities}</option>
+                  {cities.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+                <Filter
+                  size={14}
+                  aria-hidden="true"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
+                />
+              </div>
             </div>
             {isSearchPending && <span className="text-[12px] text-on-surface-variant">{common.states.searching}</span>}
           </div>
@@ -368,93 +372,170 @@ export default function CustomersClient({
                 </p>
               </div>
             ) : (
-              <div className="w-full overflow-x-auto">
-                <table className="w-full min-w-[1060px] table-fixed border-collapse text-start">
-                  <thead>
-                    <tr className="bg-surface-container-low border-b border-surface-variant">
-                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.company}`}>
-                        {dictionary.list.table.company}
-                      </th>
-                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.contact}`}>
-                        {dictionary.list.table.contactPerson}
-                      </th>
-                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.location}`}>
-                        {dictionary.list.table.location}
-                      </th>
-                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.status}`}>
-                        {dictionary.list.table.status}
-                      </th>
-                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.services}`}>
-                        {dictionary.list.table.services}
-                      </th>
-                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.quotedValue}`}>
-                        {dictionary.list.table.quotedValue}
-                      </th>
-                      <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.view}`}>
-                        {dictionary.list.actions.view}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
-                    {customers.map((customer) => (
-                      <tr key={customer.id} className="hover:bg-surface-container-low/50 transition-colors">
-                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.company}`}>
-                          <div className="font-semibold text-primary">
-                            <span dir="auto">{customer.company}</span>
-                          </div>
-                          <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
+              <div className="w-full">
+                {/* Desktop Table View (>= md) */}
+                <div className="hidden md:block w-full overflow-x-auto">
+                  <table className="w-full min-w-[1060px] table-fixed border-collapse text-start">
+                    <thead>
+                      <tr className="bg-surface-container-low border-b border-surface-variant">
+                        <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.company}`}>
+                          {dictionary.list.table.company}
+                        </th>
+                        <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.contact}`}>
+                          {dictionary.list.table.contactPerson}
+                        </th>
+                        <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.location}`}>
+                          {dictionary.list.table.location}
+                        </th>
+                        <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.status}`}>
+                          {dictionary.list.table.status}
+                        </th>
+                        <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.services}`}>
+                          {dictionary.list.table.services}
+                        </th>
+                        <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.quotedValue}`}>
+                          {dictionary.list.table.quotedValue}
+                        </th>
+                        <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.view}`}>
+                          {dictionary.list.actions.view}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
+                      {customers.map((customer) => (
+                        <tr key={customer.id} className="hover:bg-surface-container-low/50 transition-colors">
+                          <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.company}`}>
+                            <div className="font-semibold text-primary">
+                              <span dir="auto">{customer.company}</span>
+                            </div>
+                            <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
+                              <span dir="ltr" className="inline-block whitespace-nowrap">
+                                {customer.customerNumber}
+                              </span>
+                            </div>
+                          </td>
+                          <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.contact}`}>
+                            <div className="text-on-surface">
+                              <span dir="auto">{customer.contact}</span>
+                            </div>
+                            <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
+                              <span dir="ltr" className="inline-block whitespace-nowrap">
+                                {customer.email}
+                              </span>
+                            </div>
+                          </td>
+                          <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.location} text-on-surface-variant`}>
+                            <span dir="auto">{customer.city}</span>
+                          </td>
+                          <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.status}`}>
+                            <div className="flex justify-center">
+                              <StatusBadge variant={customer.status}>
+                                {getCustomerStatusLabel(dictionary.locale, customer.status)}
+                              </StatusBadge>
+                            </div>
+                          </td>
+                          <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.services} font-semibold text-on-surface tabular-nums`}>
                             <span dir="ltr" className="inline-block whitespace-nowrap">
+                              {formatUiNumber(dictionary.locale, customer.servicesCount)}
+                            </span>
+                          </td>
+                          <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.quotedValue} font-semibold text-on-surface tabular-nums`}>
+                            <span dir="ltr" className="inline-block whitespace-nowrap">
+                              {formatSarAmount(dictionary.locale, customer.totalQuotedAmount)}
+                            </span>
+                          </td>
+                          <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}>
+                            <div className="flex justify-center">
+                              <PendingLink
+                                href={`/customers/${customer.id}?returnTo=${encodeURIComponent(returnTo)}`}
+                                pendingLabel={dictionary.list.actions.opening}
+                                aria-label={`${dictionary.list.actions.view} ${customer.customerNumber}`}
+                                title={`${dictionary.list.actions.view} ${customer.customerNumber}`}
+                                className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed"
+                              >
+                                <Eye size={17} />
+                              </PendingLink>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards View (< md) */}
+                <div className="block md:hidden divide-y divide-surface-variant" data-testid="mobile-customer-cards">
+                  {customers.map((customer) => (
+                    <div key={customer.id} className="p-4 space-y-3 transition-colors hover:bg-surface-container-low/40">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-primary break-words" dir="auto">
+                            {customer.company}
+                          </div>
+                          <div className="mt-0.5 text-[12px] leading-[16px] text-on-surface-variant">
+                            <span dir="ltr" className="inline-block font-mono">
                               {customer.customerNumber}
                             </span>
                           </div>
-                        </td>
-                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.contact}`}>
-                          <div className="text-on-surface">
-                            <span dir="auto">{customer.contact}</span>
-                          </div>
-                          <div className="text-[12px] leading-[16px] text-on-surface-variant mt-1">
-                            <span dir="ltr" className="inline-block whitespace-nowrap">
+                        </div>
+                        <div className="shrink-0">
+                          <StatusBadge variant={customer.status}>
+                            {getCustomerStatusLabel(dictionary.locale, customer.status)}
+                          </StatusBadge>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 text-[13px]">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="text-on-surface-variant">{dictionary.list.table.contactPerson}:</span>
+                          <span className="font-medium text-on-surface text-end break-words" dir="auto">
+                            {customer.contact}
+                          </span>
+                        </div>
+                        {customer.email && (
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="text-on-surface-variant">{dictionary.form.core.email}:</span>
+                            <span className="text-on-surface text-end truncate" dir="ltr">
                               {customer.email}
                             </span>
                           </div>
-                        </td>
-                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.location} text-on-surface-variant`}>
-                          <span dir="auto">{customer.city}</span>
-                        </td>
-                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.status}`}>
-                          <div className="flex justify-center">
-                            <StatusBadge variant={customer.status}>
-                              {getCustomerStatusLabel(dictionary.locale, customer.status)}
-                            </StatusBadge>
+                        )}
+                        {customer.city && (
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="text-on-surface-variant">{dictionary.list.table.location}:</span>
+                            <span className="text-on-surface text-end" dir="auto">
+                              {customer.city}
+                            </span>
                           </div>
-                        </td>
-                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.services} font-semibold text-on-surface tabular-nums`}>
-                          <span dir="ltr" className="inline-block whitespace-nowrap">
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between border-t border-outline-variant/60 pt-2 text-[12px]">
+                        <div className="text-on-surface-variant">
+                          <span>{dictionary.list.table.services}: </span>
+                          <span className="font-semibold text-on-surface tabular-nums" dir="ltr">
                             {formatUiNumber(dictionary.locale, customer.servicesCount)}
                           </span>
-                        </td>
-                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.quotedValue} font-semibold text-on-surface tabular-nums`}>
-                          <span dir="ltr" className="inline-block whitespace-nowrap">
-                            {formatSarAmount(dictionary.locale, customer.totalQuotedAmount)}
-                          </span>
-                        </td>
-                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}>
-                          <div className="flex justify-center">
-                            <PendingLink
-                              href={`/customers/${customer.id}?returnTo=${encodeURIComponent(returnTo)}`}
-                              pendingLabel={dictionary.list.actions.opening}
-                              aria-label={`${dictionary.list.actions.view} ${customer.customerNumber}`}
-                              title={`${dictionary.list.actions.view} ${customer.customerNumber}`}
-                              className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed"
-                            >
-                              <Eye size={17} />
-                            </PendingLink>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </div>
+                        <div className="font-semibold text-on-surface tabular-nums" dir="ltr">
+                          {formatSarAmount(dictionary.locale, customer.totalQuotedAmount)}
+                        </div>
+                      </div>
+
+                      <div className="pt-1">
+                        <PendingLink
+                          href={`/customers/${customer.id}?returnTo=${encodeURIComponent(returnTo)}`}
+                          pendingLabel={dictionary.list.actions.opening}
+                          aria-label={`${dictionary.list.actions.view} ${customer.customerNumber}`}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface py-2 text-[13px] font-medium text-primary transition-colors hover:bg-surface-container-low"
+                        >
+                          <Eye size={16} aria-hidden="true" />
+                          <span>{dictionary.list.actions.view}</span>
+                        </PendingLink>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

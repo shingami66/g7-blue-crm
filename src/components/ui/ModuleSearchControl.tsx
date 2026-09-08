@@ -108,7 +108,7 @@ export default function ModuleSearchControl({
             onChange={(event) => handleModeChange(event.target.value)}
             aria-label={modeLabel}
             disabled={isPending}
-            className="min-w-[9.5rem] rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+            className="w-full sm:w-auto sm:min-w-[9.5rem] rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
           >
             <option value="">{selectModeLabel}</option>
             {modes.map((option) => (

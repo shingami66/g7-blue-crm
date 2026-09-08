@@ -157,50 +157,54 @@ export default function SuppliersClient({
         aria-busy={isPending || undefined}
       >
         <div className="flex flex-wrap items-center gap-3 border-b border-surface-variant bg-surface-bright p-4">
-          <ModuleSearchControl
-            mode="supplier"
-            modes={[{ value: "supplier", label: dictionary.list.searchPlaceholder, placeholder: dictionary.list.searchPlaceholder }]}
-            query={search}
-            modeLabel={dictionary.list.searchPlaceholder}
-            submitLabel={common.labels.search}
-            pendingLabel={common.states.searching}
-            clearLabel={common.actions.clear}
-            showModeSelect={false}
-            isPending={isPending}
-            isSearchPending={isSearchPending}
-            onSubmit={(_, nextSearch) => updateFilters({ search: nextSearch }, true)}
-            className="w-full max-w-xl"
-          />
-          <SelectFilter
-            value={filters.status}
-            label={dictionary.list.allStatuses}
-            disabled={isPending}
-            onChange={(status) => updateFilters({ status }, true)}
-          >
-            <>
-              <option value="all">{dictionary.list.allStatuses}</option>
-              {STATUS_OPTIONS.map((status) => (
-                <option key={status} value={status}>
-                  {getSupplierStatusLabel(locale, status)}
-                </option>
-              ))}
-            </>
-          </SelectFilter>
-          <SelectFilter
-            value={filters.category}
-            label={dictionary.list.allCategories}
-            disabled={isPending}
-            onChange={(category) => updateFilters({ category }, true)}
-          >
-            <>
-              <option value="all">{dictionary.list.allCategories}</option>
-              {SUPPLIER_CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {getSupplierCategoryLabel(locale, category)}
-                </option>
-              ))}
-            </>
-          </SelectFilter>
+          <div className="w-full sm:w-auto sm:max-w-xl grow">
+            <ModuleSearchControl
+              mode="supplier"
+              modes={[{ value: "supplier", label: dictionary.list.searchPlaceholder, placeholder: dictionary.list.searchPlaceholder }]}
+              query={search}
+              modeLabel={dictionary.list.searchPlaceholder}
+              submitLabel={common.labels.search}
+              pendingLabel={common.states.searching}
+              clearLabel={common.actions.clear}
+              showModeSelect={false}
+              isPending={isPending}
+              isSearchPending={isSearchPending}
+              onSubmit={(_, nextSearch) => updateFilters({ search: nextSearch }, true)}
+              className="w-full"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <SelectFilter
+              value={filters.status}
+              label={dictionary.list.allStatuses}
+              disabled={isPending}
+              onChange={(status) => updateFilters({ status }, true)}
+            >
+              <>
+                <option value="all">{dictionary.list.allStatuses}</option>
+                {STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {getSupplierStatusLabel(locale, status)}
+                  </option>
+                ))}
+              </>
+            </SelectFilter>
+            <SelectFilter
+              value={filters.category}
+              label={dictionary.list.allCategories}
+              disabled={isPending}
+              onChange={(category) => updateFilters({ category }, true)}
+            >
+              <>
+                <option value="all">{dictionary.list.allCategories}</option>
+                {SUPPLIER_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {getSupplierCategoryLabel(locale, category)}
+                  </option>
+                ))}
+              </>
+            </SelectFilter>
+          </div>
         </div>
 
         {pagination.total > 0 && (
@@ -361,13 +365,13 @@ function SelectFilter({
   children: ReactNode;
 }) {
   return (
-    <div className="relative">
+    <div className="relative grow sm:grow-0 min-w-[130px]">
       <select
         value={value}
         disabled={disabled}
         aria-label={label}
         onChange={(event) => onChange(event.target.value)}
-        className="appearance-none rounded-lg border border-outline-variant bg-surface py-2 ps-3 pe-8 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+        className="w-full appearance-none rounded-lg border border-outline-variant bg-surface py-2 ps-3 pe-8 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
       >
         {children}
       </select>

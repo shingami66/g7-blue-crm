@@ -149,49 +149,54 @@ export default function QuotationsClient({
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-busy={isPending || undefined}>
         <div className="flex flex-wrap items-center gap-3 border-b border-surface-variant bg-surface-bright p-4">
-          <ModuleSearchControl
-            mode={activeMode}
-            modes={searchModes}
-            query={query.search ?? ""}
-            modeLabel={dictionary.list.searchModeLabel}
-            submitLabel={common.labels.search}
-            pendingLabel={common.states.searching}
-            clearLabel={common.actions.clear}
-            isPending={isPending}
-            isSearchPending={isSearchPending}
-            selectModeLabel={common.labels.select}
-            disabledPlaceholder={common.labels.searchTypeFirst}
-            onSubmit={(mode, search) => updateQuery({ searchMode: mode as QuotationSearchMode, search: search || undefined }, "search")}
-            onModeChange={(mode) => { if (!mode) updateQuery({ searchMode: undefined, search: undefined }); }}
-          />
-          <div className="relative shrink-0">
-            <select
-              value={query.status ?? "all"}
-              disabled={isPending}
-              onChange={(event) => updateQuery({ status: event.target.value === "all" ? undefined : event.target.value as QuotationListQuery["status"] })}
-              aria-label={dictionary.list.allStatuses}
-              className="appearance-none rounded-lg border border-outline-variant bg-surface py-2 ps-3 pe-8 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="all">{dictionary.list.allStatuses}</option>
-              <option value="draft">{dictionary.statuses.draft}</option>
-              <option value="sent">{dictionary.statuses.sent}</option>
-              <option value="approved">{dictionary.statuses.approved}</option>
-              <option value="rejected">{dictionary.statuses.rejected}</option>
-            </select>
-            <Filter size={14} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
-          </div>
-          <div className="relative shrink-0">
-            <label className="sr-only" htmlFor="quotation-month-filter">{dictionary.list.dateFilter.label}</label>
-            <input
-              id="quotation-month-filter"
-              type="month"
-              value={query.month ?? ""}
-              disabled={isPending}
-              onChange={(event) => updateQuery({ month: event.target.value || undefined })}
-              aria-label={dictionary.list.dateFilter.label}
-              className={`rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${query.month ? "" : "text-transparent"}`}
+          <div className="w-full sm:flex-1 sm:min-w-0">
+            <ModuleSearchControl
+              mode={activeMode}
+              modes={searchModes}
+              query={query.search ?? ""}
+              modeLabel={dictionary.list.searchModeLabel}
+              submitLabel={common.labels.search}
+              pendingLabel={common.states.searching}
+              clearLabel={common.actions.clear}
+              isPending={isPending}
+              isSearchPending={isSearchPending}
+              selectModeLabel={common.labels.select}
+              disabledPlaceholder={common.labels.searchTypeFirst}
+              onSubmit={(mode, search) => updateQuery({ searchMode: mode as QuotationSearchMode, search: search || undefined }, "search")}
+              onModeChange={(mode) => { if (!mode) updateQuery({ searchMode: undefined, search: undefined }); }}
+              className="w-full"
             />
-            {!query.month && <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 flex items-center pe-6 text-[14px] text-on-surface-variant">{dictionary.list.dateFilter.anyMonth}</span>}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-initial shrink-0">
+              <select
+                value={query.status ?? "all"}
+                disabled={isPending}
+                onChange={(event) => updateQuery({ status: event.target.value === "all" ? undefined : event.target.value as QuotationListQuery["status"] })}
+                aria-label={dictionary.list.allStatuses}
+                className="w-full sm:w-auto appearance-none rounded-lg border border-outline-variant bg-surface py-2 ps-3 pe-8 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="all">{dictionary.list.allStatuses}</option>
+                <option value="draft">{dictionary.statuses.draft}</option>
+                <option value="sent">{dictionary.statuses.sent}</option>
+                <option value="approved">{dictionary.statuses.approved}</option>
+                <option value="rejected">{dictionary.statuses.rejected}</option>
+              </select>
+              <Filter size={14} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+            </div>
+            <div className="relative flex-1 sm:flex-initial shrink-0">
+              <label className="sr-only" htmlFor="quotation-month-filter">{dictionary.list.dateFilter.label}</label>
+              <input
+                id="quotation-month-filter"
+                type="month"
+                value={query.month ?? ""}
+                disabled={isPending}
+                onChange={(event) => updateQuery({ month: event.target.value || undefined })}
+                aria-label={dictionary.list.dateFilter.label}
+                className={`w-full sm:w-auto rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${query.month ? "" : "text-transparent"}`}
+              />
+              {!query.month && <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 flex items-center pe-6 text-[14px] text-on-surface-variant">{dictionary.list.dateFilter.anyMonth}</span>}
+            </div>
           </div>
         </div>
 
@@ -214,47 +219,122 @@ export default function QuotationsClient({
               <p>{pagination.total === 0 && !query.search && !query.status && !query.month ? dictionary.list.noQuotations : dictionary.list.noFilteredQuotations}</p>
             </div>
           ) : (
-            <div className="w-full overflow-x-auto border border-surface-variant rounded-b-xl bg-surface-container-lowest">
-              <table className="w-full min-w-[1100px] table-fixed border-collapse text-start">
-                <colgroup>
-                  <col className="w-[18%]" />
-                  <col className="w-[26%]" />
-                  <col className="w-[14%]" />
-                  <col className="w-[15%]" />
-                  <col className="w-[11%]" />
-                  <col className="w-[7%]" />
-                  <col className="w-[9%]" />
-                </colgroup>
-                <thead>
-                  <tr className="bg-surface-container-low border-b border-surface-variant">
-                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-start">{dictionary.list.table.quotationNumber}</th>
-                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-start">{dictionary.list.table.clientEvent}</th>
-                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-start">{dictionary.list.table.issueDate}</th>
-                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-end">{dictionary.list.table.amountSar}</th>
-                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-start">{dictionary.list.table.status}</th>
-                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-center">{dictionary.list.table.view}</th>
-                    <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-center">{dictionary.list.table.printPdf}</th>
+            <div className="rounded-b-xl border border-surface-variant bg-surface-container-lowest overflow-hidden">
+              <div className="hidden md:block w-full overflow-x-auto">
+                <table className="w-full min-w-[1100px] table-fixed border-collapse text-start">
+                  <colgroup>
+                    <col className="w-[18%]" />
+                    <col className="w-[26%]" />
+                    <col className="w-[14%]" />
+                    <col className="w-[15%]" />
+                    <col className="w-[11%]" />
+                    <col className="w-[7%]" />
+                    <col className="w-[9%]" />
+                  </colgroup>
+                  <thead>
+                    <tr className="bg-surface-container-low border-b border-surface-variant">
+                      <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-start">{dictionary.list.table.quotationNumber}</th>
+                      <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-start">{dictionary.list.table.clientEvent}</th>
+                      <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-start">{dictionary.list.table.issueDate}</th>
+                      <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-end">{dictionary.list.table.amountSar}</th>
+                      <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-start">{dictionary.list.table.status}</th>
+                      <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-center">{dictionary.list.table.view}</th>
+                      <th className="px-4 py-3 text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant uppercase text-center">{dictionary.list.table.printPdf}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
+                {quotations.map((quotation) => (
+                  <tr key={quotation.id} className="transition-colors hover:bg-surface-container-low/50">
+                    <td className="px-4 py-4 font-mono font-semibold text-primary">
+                      <span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(quotation.quotationNumber)}</span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="font-semibold text-on-surface"><span dir="auto">{quotation.customer?.company || dictionary.list.unknownCompany}</span></div>
+                      <div className="mt-1 text-[12px] leading-[16px] text-on-surface-variant"><span dir="auto">{quotation.event}</span></div>
+                    </td>
+                    <td className="px-4 py-4 text-on-surface-variant"><UiDateText locale={dictionary.locale} value={quotation.date} /></td>
+                    <td className="px-4 py-4 text-end font-semibold text-on-surface tabular-nums"><span dir="ltr" className="inline-block whitespace-nowrap">{formatSarAmount(dictionary.locale, quotation.grandTotal)}</span></td>
+                    <td className="px-4 py-4"><StatusBadge variant={quotation.status as StatusBadgeVariant}>{getQuotationStatusLabel(dictionary.locale, quotation.status)}</StatusBadge></td>
+                    <td className="px-4 py-4 text-center"><button type="button" disabled={isNavigationPending} aria-busy={isNavigationPending || undefined} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50" aria-label={`${dictionary.list.actionTitles.viewDetails} ${quotation.quotationNumber}`} title={dictionary.list.actionTitles.viewDetails} onClick={() => push(`/quotations/${quotation.id}?returnTo=${encodeURIComponent(returnTo)}`)}><Eye size={17} /></button></td>
+                    <td className="px-4 py-4 text-center"><div className="grid place-items-center"><DenseTableIconAction label={dictionary.list.table.printPdf} disabled={pendingDocumentId !== null} aria-busy={pendingDocumentId === quotation.id || undefined} onClick={() => openQuotationPdf(quotation)}>{pendingDocumentId === quotation.id ? <LoaderCircle size={16} aria-hidden="true" className="motion-safe:animate-spin" /> : <Printer size={16} aria-hidden="true" />}</DenseTableIconAction></div></td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
-              {quotations.map((quotation) => (
-                <tr key={quotation.id} className="transition-colors hover:bg-surface-container-low/50">
-                  <td className="px-4 py-4 font-mono font-semibold text-primary">
-                    <span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(quotation.quotationNumber)}</span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="font-semibold text-on-surface"><span dir="auto">{quotation.customer?.company || dictionary.list.unknownCompany}</span></div>
-                    <div className="mt-1 text-[12px] leading-[16px] text-on-surface-variant"><span dir="auto">{quotation.event}</span></div>
-                  </td>
-                  <td className="px-4 py-4 text-on-surface-variant"><UiDateText locale={dictionary.locale} value={quotation.date} /></td>
-                  <td className="px-4 py-4 text-end font-semibold text-on-surface tabular-nums"><span dir="ltr" className="inline-block whitespace-nowrap">{formatSarAmount(dictionary.locale, quotation.grandTotal)}</span></td>
-                  <td className="px-4 py-4"><StatusBadge variant={quotation.status as StatusBadgeVariant}>{getQuotationStatusLabel(dictionary.locale, quotation.status)}</StatusBadge></td>
-                  <td className="px-4 py-4 text-center"><button type="button" disabled={isNavigationPending} aria-busy={isNavigationPending || undefined} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50" aria-label={`${dictionary.list.actionTitles.viewDetails} ${quotation.quotationNumber}`} title={dictionary.list.actionTitles.viewDetails} onClick={() => push(`/quotations/${quotation.id}?returnTo=${encodeURIComponent(returnTo)}`)}><Eye size={17} /></button></td>
-                  <td className="px-4 py-4 text-center"><div className="grid place-items-center"><DenseTableIconAction label={dictionary.list.table.printPdf} disabled={pendingDocumentId !== null} aria-busy={pendingDocumentId === quotation.id || undefined} onClick={() => openQuotationPdf(quotation)}>{pendingDocumentId === quotation.id ? <LoaderCircle size={16} aria-hidden="true" className="motion-safe:animate-spin" /> : <Printer size={16} aria-hidden="true" />}</DenseTableIconAction></div></td>
-                </tr>
-              ))}
-                </tbody>
-              </table>
+                ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards View (< md) */}
+              <div className="block md:hidden divide-y divide-surface-variant" data-testid="mobile-quotation-cards">
+                {quotations.map((quotation) => (
+                  <div key={quotation.id} className="p-4 space-y-3 transition-colors hover:bg-surface-container-low/40">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span dir="ltr" className="font-mono font-semibold text-primary text-[14px]">
+                          {isolateBidiText(quotation.quotationNumber)}
+                        </span>
+                        <div className="mt-0.5 text-[12px] text-on-surface-variant">
+                          <UiDateText locale={dictionary.locale} value={quotation.date} />
+                        </div>
+                      </div>
+                      <div className="shrink-0">
+                        <StatusBadge variant={quotation.status as StatusBadgeVariant}>
+                          {getQuotationStatusLabel(dictionary.locale, quotation.status)}
+                        </StatusBadge>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="font-semibold text-on-surface break-words text-[14px]" dir="auto">
+                        {quotation.customer?.company || dictionary.list.unknownCompany}
+                      </div>
+                      {quotation.event && (
+                        <div className="text-[12px] text-on-surface-variant break-words" dir="auto">
+                          {quotation.event}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-outline-variant/60 pt-2">
+                      <span className="text-[12px] text-on-surface-variant">
+                        {dictionary.list.table.amountSar}
+                      </span>
+                      <span className="font-semibold text-on-surface text-[14px] tabular-nums" dir="ltr">
+                        {formatSarAmount(dictionary.locale, quotation.grandTotal)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={isNavigationPending}
+                        aria-busy={isNavigationPending || undefined}
+                        onClick={() => push(`/quotations/${quotation.id}?returnTo=${encodeURIComponent(returnTo)}`)}
+                        aria-label={`${dictionary.list.actionTitles.viewDetails} ${quotation.quotationNumber}`}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface py-2 text-[13px] font-medium text-primary hover:bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Eye size={16} aria-hidden="true" />
+                        <span>{dictionary.list.table.view}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={pendingDocumentId !== null}
+                        aria-busy={pendingDocumentId === quotation.id || undefined}
+                        onClick={() => openQuotationPdf(quotation)}
+                        aria-label={`${dictionary.list.table.printPdf} ${quotation.quotationNumber}`}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] font-medium text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {pendingDocumentId === quotation.id ? (
+                          <LoaderCircle size={16} aria-hidden="true" className="motion-safe:animate-spin" />
+                        ) : (
+                          <Printer size={16} aria-hidden="true" />
+                        )}
+                        <span>{dictionary.list.table.printPdf}</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

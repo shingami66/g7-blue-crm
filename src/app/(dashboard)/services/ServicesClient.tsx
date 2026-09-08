@@ -97,33 +97,38 @@ export default function ServicesClient({
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-busy={isPending || undefined}>
         <div className="flex flex-wrap items-center gap-3 border-b border-surface-variant bg-surface-bright p-4">
-          <ModuleSearchControl
-            mode={activeMode}
-            modes={searchModes}
-            query={query.search ?? ""}
-            modeLabel={dictionary.list.searchModeLabel}
-            submitLabel={common.labels.search}
-            pendingLabel={common.states.searching}
-            clearLabel={common.actions.clear}
-            isPending={isPending}
-            isSearchPending={isSearchPending}
-            selectModeLabel={common.labels.select}
-            disabledPlaceholder={common.labels.searchTypeFirst}
-            onSubmit={(mode, search) => updateQuery({ searchMode: mode as ServiceSearchMode, search: search || undefined }, "search")}
-            onModeChange={(mode) => { if (!mode) updateQuery({ searchMode: undefined, search: undefined }); }}
-          />
-          <div className="relative shrink-0">
-            <select value={query.status ?? "all"} disabled={isPending} onChange={(event) => updateQuery({ status: event.target.value === "all" ? undefined : event.target.value as ServiceListQuery["status"] })} aria-label={dictionary.list.allStatuses} className="appearance-none rounded-lg border border-outline-variant bg-surface py-2 ps-3 pe-8 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60">
-              <option value="all">{dictionary.list.allStatuses}</option>
-              <option value="Inquiry">{dictionary.serviceStatuses.Inquiry}</option>
-              <option value="Quoted">{dictionary.serviceStatuses.Quoted}</option>
-              <option value="Approved">{dictionary.serviceStatuses.Approved}</option>
-              <option value="Deposit Paid">{dictionary.serviceStatuses["Deposit Paid"]}</option>
-              <option value="In Progress">{dictionary.serviceStatuses["In Progress"]}</option>
-              <option value="Completed">{dictionary.serviceStatuses.Completed}</option>
-              <option value="Cancelled">{dictionary.serviceStatuses.Cancelled}</option>
-            </select>
-            <Filter size={14} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+          <div className="w-full sm:flex-1 sm:min-w-0">
+            <ModuleSearchControl
+              mode={activeMode}
+              modes={searchModes}
+              query={query.search ?? ""}
+              modeLabel={dictionary.list.searchModeLabel}
+              submitLabel={common.labels.search}
+              pendingLabel={common.states.searching}
+              clearLabel={common.actions.clear}
+              isPending={isPending}
+              isSearchPending={isSearchPending}
+              selectModeLabel={common.labels.select}
+              disabledPlaceholder={common.labels.searchTypeFirst}
+              onSubmit={(mode, search) => updateQuery({ searchMode: mode as ServiceSearchMode, search: search || undefined }, "search")}
+              onModeChange={(mode) => { if (!mode) updateQuery({ searchMode: undefined, search: undefined }); }}
+              className="w-full"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto shrink-0">
+              <select value={query.status ?? "all"} disabled={isPending} onChange={(event) => updateQuery({ status: event.target.value === "all" ? undefined : event.target.value as ServiceListQuery["status"] })} aria-label={dictionary.list.allStatuses} className="w-full sm:w-auto appearance-none rounded-lg border border-outline-variant bg-surface py-2 ps-3 pe-8 text-[14px] leading-[20px] text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60">
+                <option value="all">{dictionary.list.allStatuses}</option>
+                <option value="Inquiry">{dictionary.serviceStatuses.Inquiry}</option>
+                <option value="Quoted">{dictionary.serviceStatuses.Quoted}</option>
+                <option value="Approved">{dictionary.serviceStatuses.Approved}</option>
+                <option value="Deposit Paid">{dictionary.serviceStatuses["Deposit Paid"]}</option>
+                <option value="In Progress">{dictionary.serviceStatuses["In Progress"]}</option>
+                <option value="Completed">{dictionary.serviceStatuses.Completed}</option>
+                <option value="Cancelled">{dictionary.serviceStatuses.Cancelled}</option>
+              </select>
+              <Filter size={14} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+            </div>
           </div>
         </div>
 
@@ -144,31 +149,98 @@ export default function ServicesClient({
           ) : services.length === 0 ? (
             <div className="flex min-h-[14rem] flex-col items-center justify-center rounded-b-xl border border-surface-variant bg-surface-container-lowest"><p className="text-[14px] text-on-surface-variant">{pagination.total === 0 && !query.search && !query.status ? (canWrite ? dictionary.states.noServices : dictionary.states.noServicesFound) : dictionary.states.noFilteredServices}</p></div>
           ) : (
-            <div className="w-full overflow-x-auto rounded-b-xl border border-surface-variant bg-surface-container-lowest">
-              <table className="w-full min-w-[1120px] table-fixed border-collapse text-start">
-                <thead><tr className="border-b border-surface-variant bg-surface-container-low">
-                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.serviceNumber}`}>{dictionary.list.table.serviceNumber}</th>
-                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.serviceTitle}`}>{dictionary.list.table.serviceTitle}</th>
-                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.customer}`}>{dictionary.list.table.customer}</th>
-                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.eventDate}`}>{dictionary.list.table.eventDate}</th>
-                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.status}`}>{dictionary.list.table.status}</th>
-                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.budget}`}>{dictionary.list.table.budget}</th>
-                  <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.view}`}>{dictionary.list.actions.view}</th>
-                </tr></thead>
-                <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
-                  {services.map((service) => (
-                    <tr key={service.id} className="transition-colors hover:bg-surface-container-low/50">
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.serviceNumber} font-mono font-semibold text-primary`}><span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(service.serviceNumber)}</span></td>
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.serviceTitle}`}><div className="font-semibold text-on-surface"><span dir="auto">{service.serviceTitle}</span></div><div className="mt-1 text-[12px] leading-[16px] text-on-surface-variant"><span dir="auto">{service.eventName || "—"}</span></div></td>
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.customer} text-on-surface-variant`}><span dir="auto">{service.customer?.company || "—"}</span></td>
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.eventDate} text-on-surface-variant`}>{service.eventStartDate ? <UiDateText locale={dictionary.locale} value={service.eventStartDate} /> : "—"}</td>
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.status}`}><div className="flex justify-center"><StatusBadge variant={(STATUS_VARIANT_MAP[service.status] ?? "pending") as React.ComponentProps<typeof StatusBadge>["variant"]}>{getServiceStatusLabel(dictionary.locale, service.status)}</StatusBadge></div></td>
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.budget} font-semibold text-on-surface tabular-nums`}><span dir="ltr" className="inline-block whitespace-nowrap">{service.estimatedBudget != null ? formatSarAmount(dictionary.locale, Number(service.estimatedBudget)) : "—"}</span></td>
-                      <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}><div className="flex justify-center"><PendingLink href={`/services/${service.id}?returnTo=${encodeURIComponent(returnTo)}`} pendingLabel={dictionary.list.actions.opening} aria-label={`${dictionary.list.actions.view} ${service.serviceNumber}`} title={`${dictionary.list.actions.view} ${service.serviceNumber}`} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40"><Eye size={17} /></PendingLink></div></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="rounded-b-xl border border-surface-variant bg-surface-container-lowest overflow-hidden">
+              <div className="hidden md:block w-full overflow-x-auto">
+                <table className="w-full min-w-[1120px] table-fixed border-collapse text-start">
+                  <thead><tr className="border-b border-surface-variant bg-surface-container-low">
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.serviceNumber}`}>{dictionary.list.table.serviceNumber}</th>
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.serviceTitle}`}>{dictionary.list.table.serviceTitle}</th>
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.customer}`}>{dictionary.list.table.customer}</th>
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.eventDate}`}>{dictionary.list.table.eventDate}</th>
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.status}`}>{dictionary.list.table.status}</th>
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.budget}`}>{dictionary.list.table.budget}</th>
+                    <th className={`${TABLE_HEADER_BASE} ${COLUMN_LAYOUT.view}`}>{dictionary.list.actions.view}</th>
+                  </tr></thead>
+                  <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
+                    {services.map((service) => (
+                      <tr key={service.id} className="transition-colors hover:bg-surface-container-low/50">
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.serviceNumber} font-mono font-semibold text-primary`}><span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(service.serviceNumber)}</span></td>
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.serviceTitle}`}><div className="font-semibold text-on-surface"><span dir="auto">{service.serviceTitle}</span></div><div className="mt-1 text-[12px] leading-[16px] text-on-surface-variant"><span dir="auto">{service.eventName || "—"}</span></div></td>
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.customer} text-on-surface-variant`}><span dir="auto">{service.customer?.company || "—"}</span></td>
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.eventDate} text-on-surface-variant`}>{service.eventStartDate ? <UiDateText locale={dictionary.locale} value={service.eventStartDate} /> : "—"}</td>
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.status}`}><div className="flex justify-center"><StatusBadge variant={(STATUS_VARIANT_MAP[service.status] ?? "pending") as React.ComponentProps<typeof StatusBadge>["variant"]}>{getServiceStatusLabel(dictionary.locale, service.status)}</StatusBadge></div></td>
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.budget} font-semibold text-on-surface tabular-nums`}><span dir="ltr" className="inline-block whitespace-nowrap">{service.estimatedBudget != null ? formatSarAmount(dictionary.locale, Number(service.estimatedBudget)) : "—"}</span></td>
+                        <td className={`${TABLE_CELL_BASE} ${COLUMN_LAYOUT.view}`}><div className="flex justify-center"><PendingLink href={`/services/${service.id}?returnTo=${encodeURIComponent(returnTo)}`} pendingLabel={dictionary.list.actions.opening} aria-label={`${dictionary.list.actions.view} ${service.serviceNumber}`} title={`${dictionary.list.actions.view} ${service.serviceNumber}`} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40"><Eye size={17} /></PendingLink></div></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards View (< md) */}
+              <div className="block md:hidden divide-y divide-surface-variant" data-testid="mobile-service-cards">
+                {services.map((service) => (
+                  <div key={service.id} className="p-4 space-y-3 transition-colors hover:bg-surface-container-low/40">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span dir="ltr" className="font-mono font-semibold text-primary text-[14px]">
+                          {isolateBidiText(service.serviceNumber)}
+                        </span>
+                        <div className="mt-0.5 text-[12px] text-on-surface-variant">
+                          {service.eventStartDate ? (
+                            <UiDateText locale={dictionary.locale} value={service.eventStartDate} />
+                          ) : (
+                            "—"
+                          )}
+                        </div>
+                      </div>
+                      <div className="shrink-0">
+                        <StatusBadge variant={(STATUS_VARIANT_MAP[service.status] ?? "pending") as React.ComponentProps<typeof StatusBadge>["variant"]}>
+                          {getServiceStatusLabel(dictionary.locale, service.status)}
+                        </StatusBadge>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="font-semibold text-on-surface break-words text-[14px]" dir="auto">
+                        {service.serviceTitle}
+                      </div>
+                      {service.eventName && (
+                        <div className="text-[12px] text-on-surface-variant break-words" dir="auto">
+                          {service.eventName}
+                        </div>
+                      )}
+                      <div className="text-[13px] text-on-surface-variant pt-1">
+                        <span className="text-on-surface-variant">{dictionary.list.table.customer}: </span>
+                        <span className="text-on-surface font-medium" dir="auto">
+                          {service.customer?.company || "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-outline-variant/60 pt-2">
+                      <span className="text-[12px] text-on-surface-variant">
+                        {dictionary.list.table.budget}
+                      </span>
+                      <span className="font-semibold text-on-surface text-[14px] tabular-nums" dir="ltr">
+                        {service.estimatedBudget != null ? formatSarAmount(dictionary.locale, Number(service.estimatedBudget)) : "—"}
+                      </span>
+                    </div>
+
+                    <div className="pt-1">
+                      <PendingLink
+                        href={`/services/${service.id}?returnTo=${encodeURIComponent(returnTo)}`}
+                        pendingLabel={dictionary.list.actions.opening}
+                        aria-label={`${dictionary.list.actions.view} ${service.serviceNumber}`}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface py-2 text-[13px] font-medium text-primary hover:bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      >
+                        <Eye size={16} aria-hidden="true" />
+                        <span>{dictionary.list.actions.view}</span>
+                      </PendingLink>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
