@@ -37,7 +37,7 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `app_users`: Server-side app user and RBAC role table keyed by Clerk `clerk_user_id` text. RLS is enabled, but no broad `DEV_ONLY` policy is present by design; access should remain through protected server logic and the Supabase service role.
 - `company_settings`: Singleton seller/master-company settings for CS-A. It stores English and Arabic legal names, nullable CR, TIN, VAT mode, nullable VAT number/effective date, official contact details, national address, bank details, currency, default VAT percent, and default terms. The stable `setting_key='default'` column enforces one active settings row. The current implemented VAT field is `company_settings.vat_mode`.
   - **Snapshot Rule (Intended):** Generated customer-facing documents must snapshot company details, financial values, VAT mode, VAT rate, document labels, logo path, and bank/payment details at issue time. Historical documents must not change if Company Settings change later. (This does not invent new migrations, but outlines the required snapshot fields for future document logic).
-- `number_sequences`: Atomic counters for generated IDs (e.g., QT-2026-0001). Current allowed types are `quotation`, `invoice`, `payment`, `project`, `service`, and `customer`. Current prefixes are `QT`, `INV`, `PAY`, `PRJ`, `SVC`, and `CUST`.
+- `number_sequences`: Atomic counters for generated IDs (e.g., QT-2026-0001). Current allowed types are `quotation`, `invoice`, `payment`, `project`, `service`, `customer`, and `expense`. Current prefixes are `QT`, `INV`, `PAY`, `PRJ`, `SVC`, `CUST`, and `EXP`.
 - `customers`: Client database with revenue metrics, soft deletes, and a system-generated unique `customer_number`.
 - `services`: ERP-1 operational unit linked to `customers(id)` with `service_number`, event fields, status, ownership, cancellation reason, timestamps, audit text fields, and soft-delete timestamp. The DB foundation and app list/create/detail/edit foundation are implemented; explicit guarded lifecycle RPCs now cover execution start, completion, and cancellation, while ordinary edit still cannot select arbitrary status.
 - `suppliers`: Third-party vendor directory. Supplier Directory V1 uses a summary-only normal list projection (no notes, CR/VAT, bank, blacklist-audit, or Clerk audit values), responsive detail reads, required create/edit validation, lifecycle/blacklist workflows, and `is_deleted`/`deleted_at`/`deleted_by` soft delete audit fields. Bank reads/writes and delete/restore are enforced in the application server layer for Admin only; the active Allocation/Booking delete check is application-layer and nontransactional. No Supplier production-RLS/readiness claim is made.
@@ -67,6 +67,17 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `service_procurement_package_requirements`: Junction table mapping service procurement requirements to packages.
 - `service_procurement_requirements` & `service_procurement_candidates`: Legacy sourcing compatibility tables. Preserved strictly for backward compatibility and historical integrity where still present. Candidate comparison, ranking, scoring, or automated evaluation is **NOT** active ERP Product Truth under G7-OD-18.
 
+### Expense & Cash Accountability (W5A / W5B)
+- `expenses`: Bounded employee expense records tracking `id`, `expense_number` (`EXP-YYYY-NNNN`), `claimant_id` (`app_users.clerk_user_id`), `reviewer_id`, `amount` (numeric >= 0), `currency` (SAR), `expense_date`, `category`, `description`, `context_type` (`company`, `service`), `service_id` (nullable), `status` (`draft`, `submitted`, `approved`, `rejected`, `paid`, `cancelled`), `review_notes`, and audit timestamps. Claimant self-approval is strictly forbidden via table constraint `claimant_id != reviewer_id` and RPC guards.
+- `expense_documents`: Relational link between an expense and uploaded business evidence documents stored in `business_documents`.
+- `employee_cash_advances`: Employee cash advance requests and balances tracking `id`, `advance_number` (`ADV-YYYY-NNNN`), `employee_id`, `requested_amount`, `disbursed_amount`, `currency` (SAR), `purpose`, `event_id` (service linkage), `status` (`requested`, `disbursed`, `partially_settled`, `settled`, `cancelled`), and audit timestamps.
+- `cash_advance_returns`: Records return of unspent cash advance funds.
+- `cash_advance_expense_settlements`: Settlement linkage offsetting approved expenses against open cash advances.
+- `expense_reimbursement_settlements`: Reimbursement payment records for company or out-of-pocket employee expenses.
+- `expense_evidence_exceptions`: Governed exceptions where receipt evidence is missing or lost, requiring higher authorization.
+- `petty_cash_funds`: Governed petty cash fund accounts with custodian, balance limits, currency, and operational status.
+- `petty_cash_transactions`: Individual disbursements and replenishments from petty cash funds (`disbursement`, `replenishment`).
+
 ### Key Procurement & Workflow RPCs
 - `create_supplier_quotation`: Creates a first-class supplier quotation with atomic numbering.
 - `attach_document_to_supplier_quotation`: Atomically attaches an uploaded business document to a supplier quotation.
@@ -76,8 +87,16 @@ These are approved target rules for future reviewed schema changes; they do not 
 - `select_procurement_package_supplier`: Explicitly records supplier selection on a procurement package (at most one selected supplier).
 - `clear_procurement_package_supplier`: Clears the selected supplier on a procurement package.
 
+### Key Expense & Cash Accountability RPCs
+- `create_expense`: Creates an expense record with atomic sequence numbering (`EXP-YYYY-NNNN`) and idempotent `request_id` replay protection.
+- `submit_expense`: Submits draft expense for finance review.
+- `review_expense`: Governed review/approval or rejection with strict segregation of duties (claimant self-approval rejected).
+- `attach_expense_document`: Relational attachment of uploaded private receipt evidence to an expense record.
+- `cancel_expense`: Cancels an expense record, releasing linked settlement or advance obligations.
+
 ### Views
 - `customer_report_metrics`: Read-only view with `security_invoker = true`. Provides server-side aggregated metrics (`services_count`, `quotations_count`, `approved_quotations_count`, `draft_quotations_count`, `total_quoted_amount`) per customer for reporting and export.
+- `expense_accountability_summaries`: Authoritative accountability view with `security_invoker = true`. Projects net advance balances, unreconciled expenses, and petty cash positions without mutating underlying transaction ledgers.
 
 ## Relationships
 - Current legacy schema still contains direct Customer → Invoice / Project relationships and denormalized quotation customer linkage for reporting/query convenience.
@@ -262,7 +281,7 @@ The sections below distinguish current DEV/DEMO implementation facts from deferr
 - **Bank Detail Visibility**: Bank details are sensitive. CS-A reads them server-side only for Admin and Accountant; Viewer can read settings without receiving bank values from the server.
 
 ## Numbering Strategy
-Unique document numbers (`quotation_number`, `invoice_number`, `payment_number`, `project_number`, `service_number`, `customer_number`) are generated using the `number_sequences` table and `generate_document_number(doc_type text)`. Current supported document types are `quotation`, `invoice`, `payment`, `project`, `service`, and `customer`. Current prefixes are `QT`, `INV`, `PAY`, `PRJ`, `SVC`, and `CUST`; the payment prefix remains `PAY` to preserve verified live DB behavior. Invoice numbering must remain one shared `INV-YYYY-0001` sequence for both deposit and final invoices.
+Unique document numbers (`quotation_number`, `invoice_number`, `payment_number`, `project_number`, `service_number`, `customer_number`, `expense_number`) are generated using the `number_sequences` table and `generate_document_number(doc_type text)`. Current supported document types are `quotation`, `invoice`, `payment`, `project`, `service`, `customer`, and `expense`. Current prefixes are `QT`, `INV`, `PAY`, `PRJ`, `SVC`, `CUST`, and `EXP`; the payment prefix remains `PAY` to preserve verified live DB behavior. Invoice numbering must remain one shared `INV-YYYY-0001` sequence for both deposit and final invoices. Expense numbering uses `EXP-YYYY-NNNN`.
 
 ## Soft Delete Strategy
 Entities like `customers`, `quotations`, `invoices`, and `projects` implement a soft delete pattern using `is_deleted` (boolean) and `deleted_at` (timestamptz). `services` currently uses `deleted_at` without `is_deleted`. This preserves historical references in financial data while hiding records from the active UI. Future schema should prefer `deleted_at` timestamp over only `is_deleted`, or document any `is_deleted`-only usage as technical debt. Financial records must use void/cancel/reversal workflows rather than hard deletion.

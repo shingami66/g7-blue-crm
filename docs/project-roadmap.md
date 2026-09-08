@@ -1,5 +1,30 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
+## CURRENT W5B EMPLOYEE EXPENSE SELF-SERVICE DELIVERY — 9 September 2026 (DELIVERED / OWNER-ACCEPTED SLICE)
+
+- **W5B Bounded Delivery Status:** `DELIVERED / OWNER-ACCEPTED FOR THE BOUNDED EXPENSE SLICE`.
+- **Delivered Expense Slice:**
+  - Governed Employee Expense Self-Service workspace (`/expenses`)
+  - Finance Review access gate (`expenses:review`) and role-aware own/broad list visibility
+  - Authoritative document numbering (`EXP-YYYY-NNNN`) via sequence migration
+  - Private receipt document attachment pipeline (`business-evidence` bucket)
+  - Mobile receipt camera capture
+  - Segregation of Duties (claimant self-approval prohibited)
+  - Bilingual EN/AR and mobile responsive layout
+- **W5 Overall Status:** `NOT COMPLETE`.
+- **Remaining Major W5 Scope (Unstarted Future Slices):**
+  - Cash Advance workspace (issuance, employee holding balance, settlement against expenses or cash returns)
+  - Petty Cash workspace (custody, float management, disbursement, replenishment)
+  - Automated replenishment scheduling
+  - Multi-tier corporate finance approval routing
+  - General Ledger / accounting journal integration
+- **Roadmap Sequence Position:**
+  - W4: `CLOSED / COMPLETED`
+  - W5A Expense & Cash Accountability Foundation: `CLOSED / COMPLETED`
+  - W5B Employee Expense Self-Service: `DELIVERED / OWNER-ACCEPTED FOR THE BOUNDED EXPENSE SLICE`
+  - W5 Remaining Work (Cash Advances, Petty Cash): `NOT YET DELIVERED / SEPARATE FUTURE SLICES`
+  - Later W6+ waves (AP, AR, Event Costing, Accounting) remain locked behind professional and architectural gates.
+
 ## CURRENT W5A DELIVERY STATUS — 7 September 2026 (COMPLETED / CLOSED)
 
 - **W5A Delivery Status:** `CLOSED / COMPLETED`. W5A Expense & Cash Accountability Foundation (`L1-D08-EXPENSE-CASH`) is complete on DEV project `dpddrqjzqohexixgdqiq`.
@@ -8,13 +33,13 @@
   - **DEV Applied Migrations:** Base migration `20260907150000_w5a_expense_cash_foundation.sql` applied as DEV `20260907133406`; corrective repair migration `20260907164500_w5a_rpc_output_ambiguity_repair.sql` applied as DEV `20260907164500`.
   - **Workflow Deviation (Bounded WARN):** Corrective migration applied via direct SQL query followed by `migration repair` registration; live RPCs, privileges, and remote migration history list verified; migration history must not be altered further.
   - **Runtime Verification:** DEV transactional smoke (`supabase/verification/w5a_smoke_test.sql`) executed inside `BEGIN ... ROLLBACK` with 13/13 assertion steps passing and zero persistent residue.
-  - **Roadmap Sequence Position:** W4 is `CLOSED / COMPLETED`; W5A is `CLOSED / COMPLETED`. W5B (Expense Management Workspaces & UI) remains unstarted and locked until separate Owner task authorization.
+  - **Roadmap Sequence Position:** W4 is `CLOSED / COMPLETED`; W5A is `CLOSED / COMPLETED`; W5B Employee Expense Self-Service is `DELIVERED / OWNER-ACCEPTED FOR THE BOUNDED EXPENSE SLICE`; remaining W5 Cash Advance and Petty Cash workspaces remain unstarted future slices.
 
 ## CURRENT W4 ARCHITECTURE REMEDIATION — 7 September 2026 (COMPLETED / CLOSED)
 
 - **Review boundary:** F01–F06 and Admin Users route documentation are verified and completed. Independent review reported PASS; targeted F06 rereview reported 0 BLOCKING, 0 MATERIAL, 0 MINOR (PASS). Local migration `20260906120000_w4_architecture_remediation.sql` is applied to DEV project `dpddrqjzqohexixgdqiq` under migration identity `20260907085656 w4_architecture_remediation`. DEV transactional smoke confirmed PASS (zero synthetic residue). SQL regression fixture (`supabase/verification/w4_architecture_remediation_regression.sql`) was evaluated against DEV; fixture synthetic seed data halted on check constraint `chk_services_service_number_format` and rolled back cleanly with 0 persistent residue, while real-RPC behaviors F01–F04 remain fully proven by DEV transactional smoke and 199 passing automated tests. No production deployment or production database mutation is made.
-- **Current action:** W4 final engineering closeout completed; ready for Controller final W4 verdict.
-- **Delivery boundary:** W4 is **CLOSED / COMPLETED**; W5A is **CLOSED / COMPLETED**; W5B remains **LOCKED / UNSTARTED**. Accepted W2A/W2B/W2C and W3 lifecycle slices stay closed. Undelivered percentage discounts, Change Orders, ABS supersession/reapproval, Event Brief, Tasks, Milestones, Issues and Team/Resources are required future Layer 1 gates L1-R01–L1-R08 in [technical master plan Section 15.1](product/g7-layer1-technical-master-plan.md#151-residual-layer-1-delivery-gates--current-7-september-2026). Bounded closeouts do not discharge those obligations.
+- **Historical action:** W4 final engineering closeout completed; accepted and closed.
+- **Delivery boundary (as of 7 September 2026 closeout):** W4 is **CLOSED / COMPLETED**; W5A is **CLOSED / COMPLETED**; subsequent W5B delivered the bounded Employee Expense Self-Service slice while remaining W5 Cash Advance and Petty Cash workspaces remain future separately controlled slices. Accepted W2A/W2B/W2C and W3 lifecycle slices stay closed. Undelivered percentage discounts, Change Orders, ABS supersession/reapproval, Event Brief, Tasks, Milestones, Issues and Team/Resources are required future Layer 1 gates L1-R01–L1-R08 in [technical master plan Section 15.1](product/g7-layer1-technical-master-plan.md#151-residual-layer-1-delivery-gates--current-7-september-2026). Bounded closeouts do not discharge those obligations.
 
 ## CURRENT APPLICATION SHELL & NAVIGATION DELIVERY — 6 September 2026 (OWNER-ACCEPTED CROSS-CUTTING UX)
 
@@ -25,7 +50,7 @@
   - Does NOT authorize W5 (Expenses & Cash Advances).
   - Does NOT authorize Finance & Accounting implementation.
   - W4 is `CLOSED / COMPLETED`.
-  - W5 remains `LOCKED / UNSTARTED`.
+  - W5A is `CLOSED / COMPLETED`; W5B Employee Expense Self-Service is `DELIVERED / OWNER-ACCEPTED FOR THE BOUNDED EXPENSE SLICE`; remaining W5 scopes remain unstarted.
 - **Architectural Delivery:** Implements a scalable accordion global navigation backbone that provides stable placement for future separately authorized modules while exposing only current verified global routes.
 - **Visual Acceptance:** Owner visual acceptance is complete across desktop English, mobile viewport, Arabic RTL, compact 56px circular G7 / BLUE brand mark, and the post-authentication localized "Preparing your workspace…" bootstrap handoff.
 
@@ -49,14 +74,14 @@
   7. **Shared Controls & Search Hardening:** Compact action button sizing and payments search draft/submit hardening (`e10f710`).
   8. **Service Detail Operational UX Refinements:** Compact operational summary visual hierarchy, collapsible `ServiceLifecycleActions`, `ServiceCancellationActions` guard, cross-workspace tests, and canonical `RecordBackButton` integration across all operational routes (`b3445ac`).
   9. **Delegation Harness & Agent Governance Hardening:** Provider-neutral delegation harness (`agy-delegate`), writer lock mutex, recovery capsule schema, deterministic OCR review packet fixture, and coding-harness workflow contracts (`e5973bc`).
-- **Roadmap Sequence Position:** W4 is `CLOSED / COMPLETED`; W5A is `CLOSED / COMPLETED`. W5B (Expense Management Workspaces & UI) remains unstarted and locked until separate Owner task authorization.
+- **Roadmap Sequence Position (as of 7 September 2026 closeout):** W4 is `CLOSED / COMPLETED`; W5A is `CLOSED / COMPLETED`; W5B Employee Expense Self-Service was delivered and Owner-accepted on 8–9 September 2026.
 
 ## CURRENT W1 CLOSEOUT — 31 August 2026
 
 - **W1:** `PASS` after Owner acceptance. W1A Effective Access, Open Review routing hardening, W1C Quotation Approvals, and W1C Ready-to-Start Services are complete and published in the authorized sequence.
 - **W1B:** **NOT REQUIRED FOR THIS WAVE**. Approval Authority / SoD remains deferred and unimplemented; reopen only if a real existing workflow demonstrates a durable bounded gap.
 - **Delivered boundary:** Effective Access uses the reviewed narrow `quotations:approve` override path with DENY-wins semantics. Action Center uses the existing Dashboard Attention surface for two real source-linked slices: quotation approvals and transition-ready Services. No generic workflow engine, new authority, inline mutation, or new persistence was added for W1C.
-- **Next locked priority:** W2A, W2B, W2C, W3, and W4 are complete and closed on the Owner-authorized DEV environment. W5A Expense & Cash Accountability Foundation is CLOSED / COMPLETED; W5B remains locked and unstarted.
+- **Historical next locked priority (as of W1 closeout):** W2A, W2B, W2C, W3, and W4 are complete and closed on the Owner-authorized DEV environment. W5A is CLOSED / COMPLETED; W5B Employee Expense Self-Service was subsequently delivered.
 
 ## W2A CLOSEOUT — 31 August 2026 (COMPLETED)
 
@@ -76,7 +101,7 @@
 - **W2C Deterministic Discount Allocation / Approval Projection:** `PASS` and closed. The approved fixed-amount SAR discount rule is persisted once on quotation items and projected by exact copy into approval/ABS evidence and W2B successor drafts. Allocation is integer-halal proportional largest remainder, with deterministic `created_at ASC, id ASC` tie-breaking and Authority Line-root attribution only.
 - **Evidence boundary:** migration `20260901100000_w2c_deterministic_discount_allocation.sql` was applied and reconciled on the Owner-authorized DEV project `dpddrqjzqohexixgdqiq`; schema, constraints, security grants, fail-closed behavior, approval/ABS equality, revision copying, focused tests, and transaction-local smoke passed. No DEMO environment currently exists; no production/deployment claim is made.
 - **Scope boundary:** Included Components and unselected Optional Add-ons receive zero allocation; quotation `grand_total` remains authoritative. Percentage discounts, non-SAR/FX allocation, VAT/revenue/accounting policy, Change Orders, ABS supersession/reapproval, historical backfill, and unrelated W2 work remain deferred or out of scope.
-- **Next locked roadmap task:** W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`) is closed in the current section below. W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`) is CLOSED / COMPLETED (see `CURRENT W4 DELIVERY STATUS — 7 September 2026 (COMPLETED / CLOSED)` above); W5 remains locked and unstarted.
+- **Historical next locked roadmap task (as of W2C closeout):** W3 Event Operations / Event Lifecycle (`L1-D05-EVENT-LIFECYCLE`) is closed in the current section below. W4 Procurement & Commitments (`L1-D06-PROCUREMENT-REQUIREMENT`) is CLOSED / COMPLETED; W5A is CLOSED / COMPLETED; W5B Employee Expense Self-Service was subsequently delivered on 8–9 September 2026.
 
 ## CURRENT W3 CLOSEOUT — 1 September 2026
 
@@ -84,16 +109,16 @@
 - **Evidence boundary:** migration `20260901110000_w3_event_lifecycle_compatibility.sql` was applied and reconciled on the Owner-authorized DEV project `dpddrqjzqohexixgdqiq`; the local migration SHA-256 is `209769B5F8691D7E499928D7E1A7A92CB4748CB05FD3DDB39687AA5EA111E0F7`. Backfill, constraints, RLS, fixed-search-path/service-role boundaries, payment projection, lifecycle transitions, audit/replay behavior, cancellation guard, and rollback-clean smoke passed.
 - **Validation and acceptance:** focused regression/reconciliation validation, TypeScript/lint, independent findings-only review, bounded repair and targeted rereview passed. Owner English/Arabic/RTL/mobile Service-detail acceptance is `PASS`; W3 is Owner-accepted. No further database mutation, DEMO/production, deployment, or accounting activation is claimed.
 - **Scope boundary:** no task/resource system, procurement, costing, AP/AR, accounting, broad dashboard, or app-user-permission-override expansion was introduced. Authorized-credit start remains a separate role-based gate.
-- **Next locked roadmap task:** W4 Procurement & Commitments is CLOSED / COMPLETED; W5A Expense & Cash Accountability Foundation is CLOSED / COMPLETED; W5B remains locked and unstarted.
+- **Historical next locked roadmap task (as of W3 closeout):** W4 Procurement & Commitments is CLOSED / COMPLETED; W5A Expense & Cash Accountability Foundation is CLOSED / COMPLETED; W5B Employee Expense Self-Service is DELIVERED / OWNER-ACCEPTED for the bounded expense slice; remaining W5 Cash Advance and Petty Cash workspaces remain unstarted future slices.
 
-## 0. CURRENT RECONCILED ROADMAP — 7 September 2026
+## 0. CURRENT RECONCILED ROADMAP — 9 September 2026
 
 - **Decision closure:** all 11 Layer 1 Event ERP domains are closed at Product Truth level; Domain 11 — Dashboards & Reporting is closed without a new Owner Decision Packet. Exact classifications, conflicts and deferrals are in `docs/product/event-erp-decision-register.md` and `docs/product/g7-layer1-technical-master-plan.md`.
-- **Single delivery lane:** W0 protected truth synchronization → W1 Authority Foundation → W2 Commercial Authority → W3 Event Operations → W4 Procurement & Commitments (CLOSED / COMPLETED) → W5A Expenses & Cash Accountability Foundation (CLOSED / COMPLETED) → W5B Expense Management Workspaces & UI (LOCKED / UNSTARTED) → W6 AP → W7 AR Expansion → W8 Event Costing → W9 Dashboards/Reports → W10 Accounting behind professional gates → W11 Cutover and G7 proof.
+- **Single delivery lane:** W0 protected truth synchronization → W1 Authority Foundation → W2 Commercial Authority → W3 Event Operations → W4 Procurement & Commitments (CLOSED / COMPLETED) → W5A Expenses & Cash Accountability Foundation (CLOSED / COMPLETED) → W5B Employee Expense Self-Service (DELIVERED / OWNER-ACCEPTED BOUNDED SLICE) → W5 Remaining Cash Advance & Petty Cash Workspaces (UNSTARTED / FUTURE SLICES) → W6 AP → W7 AR Expansion → W8 Event Costing → W9 Dashboards/Reports → W10 Accounting behind professional gates → W11 Cutover and G7 proof.
 - **Current mechanics are not target policy:** legacy deposit-gated Service transitions, supplier Booking/Allocation semantics, deposit/final-only billing, role-only permissions, global dashboard metrics, and current-period reporting are preserved as source/migration evidence. They must not silently define the target.
 - **Quality lane:** every future slice uses one logical Writer, separate findings-only Reviewer, focused validation, Mozfer manual acceptance where required, and Controller verdict. Database draft, DEV/DEMO apply, publication, deployment, production, professional activation, and Layer 2 each remain separate authority gates.
 - **No implementation activation:** this roadmap is executable planning, not authority to change code/schema/database or publish/deploy. Professional accounting, revenue, VAT/FATOORA, bank, security and accessibility gates remain as named in the technical master plan.
-- **Historical next governed action (superseded):** This prior planning snapshot pointed to approval of the protected `AGENTS.md`/guard/Design Contract synchronization manifest. The current W1, W2 and W3 closeouts above record the delivered Open Review routing hardening, commercial authority work and Event Lifecycle compatibility slice; W4 Procurement & Commitments is CLOSED / COMPLETED, and W5 remains locked and unstarted.
+- **Historical next governed action (superseded):** This prior planning snapshot pointed to approval of the protected `AGENTS.md`/guard/Design Contract synchronization manifest. The current closeouts above record the delivered slices through W5B Employee Expense Self-Service; remaining W5 Cash Advance and Petty Cash workspaces remain unstarted future slices.
 
 ## 0A. HISTORICAL RECONCILED ROADMAP — 27 August 2026 (SUPERSEDED FOR CURRENT LAYER 1 PLANNING)
 

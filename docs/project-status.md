@@ -1,5 +1,40 @@
 # G7 BLUE CRM - Project Status
 
+## W5B EMPLOYEE EXPENSE SELF-SERVICE DELIVERY — 9 September 2026 (DELIVERED / OWNER-ACCEPTED SLICE)
+
+- **Status:** DELIVERED and Owner-accepted for the bounded employee expense self-service slice. W5 as a whole is **NOT COMPLETE**.
+- **Delivered Scope:**
+  - **Employee Expense Self-Service Workspace (`/expenses`):** Governed submission modal and operational expense list supporting company-direct and employee-paid reimbursement claims.
+  - **Operational Context:** Explicit selection between company overhead and Event/Service attribution (`service_id`).
+  - **Authoritative Expense Document Numbering:** Atomic numbering (`EXP-YYYY-NNNN`) via `generate_document_number('expense')` backed by database sequence migration `20260908100000_w5b1_expense_document_numbering.sql`.
+  - **Receipt Attachment Pipeline:** Private document upload pipeline using existing `business-evidence` bucket integration, metadata linkage (`expense_documents`), and Server Action body safety.
+  - **Mobile Receipt Camera Capture:** Camera-first / gallery receipt capture on supported handheld devices with visual feedback and thumbnail management.
+  - **Role & Access Boundaries:** Role-aware list projection (`expenses:read` own vs. broad finance view), server-side ownership isolation, and separate Finance review gate (`expenses:review`).
+  - **Segregation of Duties (SoD):** Enforces separation between submitter/claimant and finance reviewer/approver; claimant self-approval is strictly rejected by server-side constraints and RPC logic.
+  - **Bilingual & Responsive UX:** Complete English/Arabic parity, natural RTL layout, monospace/LTR bidi-safe expense numbering, tabular SAR formatting, and mobile card presentation without horizontal table scrolling.
+- **Published Delivery Commit Chain:**
+  - `ca26b06` `feat(expenses): close W5A expense and cash accountability foundation`
+  - `7b3fc18` `feat(expenses): add governed employee expense self-service`
+  - `3559c45` `fix(expenses): align self-service UX with G7 design system`
+  - `3f56ff7` `feat(expenses): add mobile receipt camera capture`
+  - `0ed07c2` `fix(ui): improve mobile operational layouts`
+  - `722a625` `fix(ui): refine mobile details and navigation feedback`
+  - `309396c` `fix(ui): stabilize navigation feedback callback identity across halo transitions`
+  - `2a0ba1d` `fix(invoices): align mobile list with operational cards`
+- **Validation & Quality Evidence:**
+  - Automated suites: self-service contracts, permission boundaries, receipt capture, bidi isolation, and responsive layout suites (712+ lines in `self-service.test.ts`, 164+ lines in `access.test.ts`, 157+ lines in `contract.test.ts`).
+  - Strict TypeScript (`tsc --noEmit`), ESLint, and Next.js production build (`next build`) passing with zero errors.
+  - Independent findings-only reviews and Owner physical testing on handheld devices.
+- **Explicit Non-Claims:**
+  - Does NOT claim W5 or all of W5B is complete.
+  - Does NOT activate AP, Accounts Payable, GL journals, automated replenishment, or professional accounting.
+  - Does NOT claim production deployment or production database migration apply.
+- **Remaining W5 Scope (Separate Future Slices):**
+  - Cash Advance workspace (`/advances` or employee advance request/settlement UI)
+  - Petty Cash fund custody and disbursement workspace (`/petty-cash`)
+  - Multi-tier corporate finance threshold routing (where not delivered)
+  - General Ledger and accounting period reconciliation integration
+
 ## W5A CLOSEOUT — 7 September 2026 (COMPLETED / CLOSED)
 
 - **Review boundary:** W5A Expense & Cash Accountability Foundation (`L1-D08-EXPENSE-CASH`) is verified and completed on DEV project `dpddrqjzqohexixgdqiq`.
@@ -12,8 +47,8 @@
   - **Workflow Deviation (Bounded WARN):** Corrective migration was applied via direct linked SQL query followed by `migration repair` registration rather than standard CLI migration push. Live RPC definitions, privileges, and remote migration history list were confirmed. Migration history must not be altered or repaired again.
   - **DEV Transactional Smoke Verification:** Smoke script `supabase/verification/w5a_smoke_test.sql` executed inside `BEGIN ... ROLLBACK` on DEV; verified expense creation, attachment without ambiguity, idempotency replays, conflict rejections, cancellation, SoD rejections, cash advances, and petty cash transactions. Verified clean rollback with `0` residual rows in DEV database.
   - **Automated Validation:** 37/37 focused tests passing (`contract.test.ts`, `actions.test.ts`, `repairs.test.ts`), `tsc --noEmit` PASS (exit 0), ESLint PASS (exit 0), `git diff --check` PASS.
-- **Current action:** W5A final engineering closeout completed; ready for Controller final W5A verdict.
-- **Delivery boundary:** W4 is **CLOSED / COMPLETED**; W5A is **CLOSED / COMPLETED**; W5B (UI workspaces, expense capture, receipts upload) remains **LOCKED / UNSTARTED**. Accepted W2A/W2B/W2C, W3 lifecycle, and W4 procurement slices stay closed. Undelivered percentage discounts, Change Orders, ABS supersession/reapproval, Event Brief, Tasks, Milestones, Issues and Team/Resources are required future Layer 1 gates L1-R01–L1-R08 in [technical master plan Section 15.1](product/g7-layer1-technical-master-plan.md#151-residual-layer-1-delivery-gates--current-7-september-2026). Bounded closeouts do not discharge those obligations.
+- **Historical action:** W5A final engineering closeout completed; accepted and followed by W5B Employee Expense Self-Service delivery.
+- **Delivery boundary:** W4 is **CLOSED / COMPLETED**; W5A is **CLOSED / COMPLETED**; W5B Employee Expense Self-Service is **DELIVERED / OWNER-ACCEPTED FOR THE BOUNDED EXPENSE SLICE**; remaining W5 Cash Advance and Petty Cash workspaces remain unstarted future slices. Accepted W2A/W2B/W2C, W3 lifecycle, and W4 procurement slices stay closed. Undelivered percentage discounts, Change Orders, ABS supersession/reapproval, Event Brief, Tasks, Milestones, Issues and Team/Resources are required future Layer 1 gates L1-R01–L1-R08 in [technical master plan Section 15.1](product/g7-layer1-technical-master-plan.md#151-residual-layer-1-delivery-gates--current-7-september-2026). Bounded closeouts do not discharge those obligations.
 
 ## W4 CLOSEOUT — 7 September 2026 (COMPLETED / CLOSED)
 
@@ -85,7 +120,7 @@
 - **Persistence & Migration Ledger:** 14 migrations committed and recorded, including DEV migration `20260907085656 w4_architecture_remediation` (local `20260906120000_w4_architecture_remediation.sql`). DEV smoke passed with zero residue.
 - **Validation:** Clean TypeScript (`tsc --noEmit`), architecture-remediation contract PASS (7/7), full procurement/lifecycle suite PASS (199/199 tests), full UI/i18n suite PASS (270/270 tests), delegation/governance suite PASS (37/37 tests).
 - **Scope Boundary:** No automatic commitment creation, no candidate comparison/ranking UI, no Vendor Bill/AP integration, no expenses, no cash advances, no production mutation, and no push.
-- **Exact Next Wave / Action:** W4 is CLOSED / COMPLETED; W5A is CLOSED / COMPLETED; ready for Controller final W5A verdict. W5B (Expense Management Workspaces & UI) remains locked and unstarted until separate Owner task authorization.
+- **Historical Next Wave / Action (as of 7 September 2026 closeout):** W4 is CLOSED / COMPLETED; W5A is CLOSED / COMPLETED. W5B Employee Expense Self-Service was subsequently delivered and Owner-accepted on 8–9 September 2026; remaining W5 Cash Advance and Petty Cash workspaces remain unstarted future slices.
 
 ## CURRENT W1 CLOSEOUT — 31 August 2026
 
@@ -95,7 +130,7 @@
 - **Review/validation:** the W1 publishable delta completed focused tests, TypeScript, ESLint, `git diff --check`, OCR delegation-only rule resolution, separate native findings-only review, same-Writer repair, and targeted rereview. No production, deployment, Layer 2, or unrelated database mutation is claimed.
 - **Current-to-target truth:** W1 delivery does not erase the remaining Layer 1 implementation gaps. W2A Commercial Authority and W2B Revision Lineage are now complete; W1B remains deferred until a real workflow consumer proves a bounded approval-authority/SoD gap.
 - **Current W2C state:** W2C Deterministic Discount Allocation / Approval Projection is implemented, applied and reconciled on the Owner-authorized DEV environment only, and independently verified. No DEMO environment currently exists; no production or deployment claim is made.
-- **Current continuation:** Accepted W2 commercial, bounded W3 lifecycle, W4 Procurement & Commitments, and W5A Expense & Cash Foundation slices are closed. W5B remains LOCKED / UNSTARTED. No further wave or W1C feature is inferred.
+- **Historical continuation (as of W1 closeout):** Accepted W2 commercial, bounded W3 lifecycle, W4 Procurement & Commitments, and W5A Expense & Cash Foundation slices are closed; subsequent W5B delivered Employee Expense Self-Service while remaining W5 scopes remain future slices. No further wave or W1C feature is inferred.
 
 ## W2A CLOSEOUT — 31 August 2026 (COMPLETED)
 

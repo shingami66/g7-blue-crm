@@ -99,3 +99,14 @@ The following migrations establish the W5A Expense & Cash Accountability Foundat
   - Remote migration list (`npx supabase migration list`) confirmed migration `20260907164500` recorded as applied.
   - Atomic transactional smoke test (`supabase/verification/w5a_smoke_test.sql`) executed inside `BEGIN ... ROLLBACK` on DEV with clean execution of all 13 assertion steps and confirmed `0` persistent residue.
 - **Governance Mandate**: Migration history is preserved and must not be altered, reapplied, or repaired again without new evidence.
+
+## W5B Employee Expense Self-Service Migration Ledger — 9 September 2026
+
+The following migrations support the W5B Employee Expense Self-Service delivery. In accordance with governance rules, local migration filenames are recorded and remote identities are conservatively noted based on live read-only inspection of DEV project `dpddrqjzqohexixgdqiq`.
+
+| Local Migration Filename | DEV Project Migration Identity | Scope & Description |
+|---|---|---|
+| `20260907223000_w5b1_expense_finance_review_access.sql` | `UNMAPPED` | Adds `expenses:review` permission to finance reviewer roles (`accountant`, `admin`), establishes Finance review access gate, and validates role-based read/review boundary. Live remote migration history contains remote-only timestamp `20260907195718`; remote identity remains conservatively unmapped without verified pairing. |
+| `20260908100000_w5b1_expense_document_numbering.sql` | `UNMAPPED` | Authoritative Expense document numbering using `generate_document_number('expense')` and `EXP-YYYY-NNNN` sequence formatting; aligns `number_sequences` constraint. Live remote migration history contains remote-only timestamp `20260908052104`; remote identity remains conservatively unmapped without verified pairing. |
+
+- **Governance & Verification**: Migration history was read-only inspected (`npx supabase migration list`); no migration history was repaired, marked, or altered. No database apply was performed in this closeout.
