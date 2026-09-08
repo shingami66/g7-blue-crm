@@ -168,9 +168,7 @@ export default function AdvancesClient({
       {loadError && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs sm:text-sm text-amber-800 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-          <span>
-            {dictionary.states.noticePrefix} {loadError}
-          </span>
+          <span>{dictionary.states.loadErrorMessage}</span>
         </div>
       )}
 

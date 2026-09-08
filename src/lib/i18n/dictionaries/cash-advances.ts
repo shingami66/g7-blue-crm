@@ -138,6 +138,7 @@ export interface CashAdvancesDictionary {
     notFoundTitle: string;
     notFoundMessage: string;
     loadErrorTitle: string;
+    loadErrorMessage: string;
     noticePrefix: string;
   };
 }
@@ -286,6 +287,7 @@ export const cashAdvancesDictionaryEn: CashAdvancesDictionary = {
     notFoundTitle: "Cash Advance Not Found",
     notFoundMessage: "The requested cash advance could not be found or you do not have permission to view it.",
     loadErrorTitle: "Failed to Load",
+    loadErrorMessage: "Unable to load cash advances. Please try again later.",
     noticePrefix: "Notice:",
   },
 };
@@ -434,6 +436,7 @@ export const cashAdvancesDictionaryAr: CashAdvancesDictionary = {
     notFoundTitle: "العهدة النقدية غير موجودة",
     notFoundMessage: "تعذر العثور على العهدة النقدية المطلوبة أو ليس لديك صلاحية لعرضها.",
     loadErrorTitle: "تعذر تحميل البيانات",
+    loadErrorMessage: "تعذر تحميل بيانات العهد النقدية. يرجى المحاولة مرة أخرى لاحقاً.",
     noticePrefix: "ملاحظة:",
   },
 };

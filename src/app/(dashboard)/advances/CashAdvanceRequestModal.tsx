@@ -40,12 +40,8 @@ export function CashAdvanceRequestModal({
   const [isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Idempotency UUID generated on modal open/reset
-  const requestIdRef = useRef<string>(
-    typeof crypto !== "undefined" && crypto.randomUUID
-      ? crypto.randomUUID()
-      : "00000000-0000-4000-8000-000000000000",
-  );
+  // Idempotency UUID generated for submission attempt; preserved across retry of the same attempt
+  const requestIdRef = useRef<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -55,9 +51,7 @@ export function CashAdvanceRequestModal({
     setPurpose("");
     setAmountInput("");
     setErrorMessage(null);
-    if (typeof crypto !== "undefined" && crypto.randomUUID) {
-      requestIdRef.current = crypto.randomUUID();
-    }
+    requestIdRef.current = null;
   };
 
   const handleClose = () => {
@@ -91,6 +85,18 @@ export function CashAdvanceRequestModal({
     // Round to 2 decimal places to prevent floating point artifacts
     const cleanAmount = Math.round(parsedAmount * 100) / 100;
 
+    // Obtain or generate cryptographically suitable UUID for this attempt.
+    // Fail closed if crypto.randomUUID is unavailable; never proceed with a constant fallback.
+    if (!requestIdRef.current) {
+      if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+        requestIdRef.current = crypto.randomUUID();
+      } else {
+        setErrorMessage(dictionary.requestModal.errors.genericError);
+        return;
+      }
+    }
+    const activeRequestId = requestIdRef.current;
+
     startTransition(async () => {
       try {
         const payload = {
@@ -98,7 +104,7 @@ export function CashAdvanceRequestModal({
           service_id: contextType === "event" ? serviceId : null,
           purpose: trimmedPurpose,
           amount_issued: cleanAmount,
-          request_id: requestIdRef.current,
+          request_id: activeRequestId,
         };
 
         const result = await requestOwnCashAdvanceAction(payload);

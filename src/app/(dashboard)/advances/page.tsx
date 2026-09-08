@@ -63,8 +63,9 @@ export default async function AdvancesPage() {
     myAdvances = enrichedMy;
     allAdvances = enrichedAll;
     eligibleServices = servicesData;
-  } catch (err: unknown) {
-    loadError = err instanceof Error ? err.message : "Failed to load cash advances";
+  } catch {
+    console.error("[AdvancesPage] Failed to load cash advances");
+    loadError = "load_failed";
   }
 
   return (
