@@ -39,6 +39,7 @@ export function NavigationFeedbackProvider({
 }) {
   const pendingSetRef = useRef<Set<string>>(new Set());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showHaloRef = useRef(false);
   const [isPending, setIsPending] = useState(false);
   const [showHalo, setShowHalo] = useState(false);
 
@@ -52,10 +53,11 @@ export function NavigationFeedbackProvider({
         setIsPending(true);
 
         // Start delayed halo reveal timer if not already scheduled
-        if (!timerRef.current && !showHalo) {
+        if (!timerRef.current && !showHaloRef.current) {
           timerRef.current = setTimeout(() => {
             timerRef.current = null;
             if (pendingSetRef.current.size > 0) {
+              showHaloRef.current = true;
               setShowHalo(true);
             }
           }, thresholdMs);
@@ -65,6 +67,7 @@ export function NavigationFeedbackProvider({
 
         if (pendingSet.size === 0) {
           setIsPending(false);
+          showHaloRef.current = false;
           setShowHalo(false);
           if (timerRef.current) {
             clearTimeout(timerRef.current);
@@ -73,7 +76,7 @@ export function NavigationFeedbackProvider({
         }
       }
     },
-    [showHalo, thresholdMs],
+    [thresholdMs],
   );
 
   useEffect(() => {
@@ -84,6 +87,7 @@ export function NavigationFeedbackProvider({
         timerRef.current = null;
       }
       pendingSet.clear();
+      showHaloRef.current = false;
     };
   }, []);
 

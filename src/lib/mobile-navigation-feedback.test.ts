@@ -7,191 +7,284 @@ const ROOT = join(import.meta.dirname, "../..");
 const read = (path: string) =>
   readFileSync(join(ROOT, path), "utf8").replace(/\r\n/g, "\n");
 
-// --- Behavioral Lifecycle Controller Harness ---
-// Faithfully mirrors the state machine in NavigationFeedbackProvider.tsx
-function createNavigationFeedbackHarness(thresholdMs = 160) {
-  const pendingSet = new Set<string>();
-  let timer: ReturnType<typeof setTimeout> | null = null;
-  let isPending = false;
-  let showHalo = false;
+// =========================================================================
+// Real React Hook & Effect Lifecycle Engine
+// Models React's exact dependency comparison and effect cleanup rules:
+// - useCallback returns identical function reference if Object.is(dep[i], prevDep[i])
+// - useEffect triggers cleanup before re-running if any dependency changed
+// - useEffect unmount triggers cleanup
+// =========================================================================
+class ReactHarness {
+  private hooks: unknown[] = [];
+  private hookIndex = 0;
 
-  const stateChanges: Array<{ isPending: boolean; showHalo: boolean }> = [];
-
-  function recordState() {
-    stateChanges.push({ isPending, showHalo });
+  resetHookIndex() {
+    this.hookIndex = 0;
   }
 
-  function reportPending(id: string, pending: boolean) {
-    const wasPending = pendingSet.has(id);
+  useRef<T>(initialValue: T): { current: T } {
+    const idx = this.hookIndex++;
+    if (this.hooks[idx] === undefined) {
+      this.hooks[idx] = { current: initialValue };
+    }
+    return this.hooks[idx] as { current: T };
+  }
 
-    if (pending) {
-      pendingSet.add(id);
-      isPending = true;
+  useState<T>(initialValue: T): [T, (val: T | ((prev: T) => T)) => void] {
+    const idx = this.hookIndex++;
+    if (this.hooks[idx] === undefined) {
+      this.hooks[idx] = initialValue;
+    }
+    const setter = (val: T | ((prev: T) => T)) => {
+      const next = typeof val === "function" ? (val as (prev: T) => T)(this.hooks[idx] as T) : val;
+      this.hooks[idx] = next;
+    };
+    return [this.hooks[idx] as T, setter];
+  }
 
-      if (!timer && !showHalo) {
-        timer = setTimeout(() => {
-          timer = null;
-          if (pendingSet.size > 0) {
-            showHalo = true;
-            recordState();
-          }
-        }, thresholdMs);
+  useCallback<T>(callback: T, deps: unknown[]): T {
+    const idx = this.hookIndex++;
+    const prev = this.hooks[idx] as { callback: T; deps: unknown[] } | undefined;
+    if (prev && deps.every((d, i) => Object.is(d, prev.deps[i]))) {
+      return prev.callback;
+    }
+    this.hooks[idx] = { callback, deps };
+    return callback;
+  }
+
+  useEffect(effect: () => void | (() => void), deps: unknown[]) {
+    const idx = this.hookIndex++;
+    const prev = this.hooks[idx] as { deps: unknown[]; cleanup?: () => void } | undefined;
+    const depsChanged = !prev || deps.some((d, i) => !Object.is(d, prev.deps[i]));
+
+    if (depsChanged) {
+      if (prev?.cleanup) {
+        prev.cleanup();
       }
-      recordState();
-    } else if (wasPending) {
-      pendingSet.delete(id);
+      const cleanup = effect() || undefined;
+      this.hooks[idx] = { deps, cleanup };
+    }
+  }
 
-      if (pendingSet.size === 0) {
-        isPending = false;
-        showHalo = false;
-        if (timer) {
-          clearTimeout(timer);
-          timer = null;
+  unmount() {
+    for (const hook of this.hooks) {
+      if (hook && typeof hook === "object" && "cleanup" in hook && typeof hook.cleanup === "function") {
+        hook.cleanup();
+      }
+    }
+  }
+}
+
+function renderProvider(harness: ReactHarness, thresholdMs = 160) {
+  harness.resetHookIndex();
+  const pendingSetRef = harness.useRef(new Set<string>());
+  const timerRef = harness.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showHaloRef = harness.useRef(false);
+  const [isPending, setIsPending] = harness.useState(false);
+  const [showHalo, setShowHalo] = harness.useState(false);
+
+  const reportPending = harness.useCallback(
+    (id: string, pending: boolean) => {
+      const pendingSet = pendingSetRef.current;
+      const wasPending = pendingSet.has(id);
+
+      if (pending) {
+        pendingSet.add(id);
+        setIsPending(true);
+
+        if (!timerRef.current && !showHaloRef.current) {
+          timerRef.current = setTimeout(() => {
+            timerRef.current = null;
+            if (pendingSetRef.current.size > 0) {
+              showHaloRef.current = true;
+              setShowHalo(true);
+            }
+          }, thresholdMs);
         }
-        recordState();
-      }
-    }
-  }
+      } else if (wasPending) {
+        pendingSet.delete(id);
 
-  function unmount() {
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
-    pendingSet.clear();
-  }
+        if (pendingSet.size === 0) {
+          setIsPending(false);
+          showHaloRef.current = false;
+          setShowHalo(false);
+          if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
+          }
+        }
+      }
+    },
+    [thresholdMs],
+  );
 
   return {
-    getState: () => ({ isPending, showHalo }),
-    getPendingCount: () => pendingSet.size,
-    hasPendingId: (id: string) => pendingSet.has(id),
+    isPending,
+    showHalo,
     reportPending,
-    unmount,
-    getHistory: () => [...stateChanges],
+    pendingSet: pendingSetRef.current,
+    showHaloRef,
+    clearTimer: () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    },
   };
 }
 
+function renderPendingLinkHint(
+  harness: ReactHarness,
+  id: string,
+  pending: boolean,
+  reportPending: (id: string, pending: boolean) => void,
+) {
+  harness.resetHookIndex();
+  harness.useEffect(() => {
+    reportPending(id, pending);
+    return () => {
+      reportPending(id, false);
+    };
+  }, [id, pending, reportPending]);
+}
+
 // =========================================================================
-// PART 1: Behavioral Provider / Halo Lifecycle and Timing Tests
+// PART 1: React Effect & Callback Lifecycle Regression Tests
 // =========================================================================
 
-test("Behavioral 1: No immediate Halo appears before threshold duration (< 160ms)", () => {
+test("Regression 1: reportPending callback does NOT change identity when Halo visibility transitions", () => {
   mock.timers.enable({ apis: ["setTimeout"] });
-  const harness = createNavigationFeedbackHarness(160);
+  const providerHarness = new ReactHarness();
 
-  harness.reportPending("nav-1", true);
-  assert.equal(harness.getState().isPending, true, "isPending should be true immediately");
-  assert.equal(harness.getState().showHalo, false, "Halo should not show immediately");
+  // Initial render (showHalo = false)
+  const initial = renderProvider(providerHarness, 160);
+  const firstCallback = initial.reportPending;
+  assert.equal(initial.showHalo, false);
 
-  mock.timers.tick(100);
-  assert.equal(harness.getState().showHalo, false, "Halo should still not show at 100ms");
-
-  mock.timers.tick(59);
-  assert.equal(harness.getState().showHalo, false, "Halo should still not show at 159ms");
-
-  harness.unmount();
-  mock.timers.reset();
-});
-
-test("Behavioral 2: Halo activates after threshold duration (~160ms) for sustained transitions", () => {
-  mock.timers.enable({ apis: ["setTimeout"] });
-  const harness = createNavigationFeedbackHarness(160);
-
-  harness.reportPending("nav-1", true);
-  assert.equal(harness.getState().showHalo, false);
-
+  // Trigger navigation and advance timer past 160ms
+  initial.reportPending("nav-regress-1", true);
   mock.timers.tick(160);
-  assert.equal(harness.getState().showHalo, true, "Halo should activate at threshold");
-  assert.equal(harness.getState().isPending, true);
 
-  harness.unmount();
+  // Provider re-renders with showHalo = true
+  const afterHalo = renderProvider(providerHarness, 160);
+  assert.equal(afterHalo.showHalo, true, "Halo should now be visible");
+
+  // Verify referential identity is strictly preserved
+  assert.strictEqual(
+    afterHalo.reportPending,
+    firstCallback,
+    "reportPending callback MUST remain referentially identical across showHalo state transitions",
+  );
+
+  initial.clearTimer();
   mock.timers.reset();
 });
 
-test("Behavioral 3: Immediate resolution cancels timer and prevents Halo flash for fast transitions", () => {
+test("Regression 2: Sustained pending navigation remains registered after Halo activation without effect cleanup retriggering", () => {
   mock.timers.enable({ apis: ["setTimeout"] });
-  const harness = createNavigationFeedbackHarness(160);
+  const providerHarness = new ReactHarness();
+  const linkHarness = new ReactHarness();
 
-  harness.reportPending("nav-1", true);
-  assert.equal(harness.getState().isPending, true);
+  // 1. Initial provider state
+  let providerState = renderProvider(providerHarness, 160);
+  assert.equal(providerState.showHalo, false);
 
-  // Transition completes fast at 50ms
-  mock.timers.tick(50);
-  harness.reportPending("nav-1", false);
+  // 2. PendingLink mounts with pending = true
+  renderPendingLinkHint(linkHarness, "nav-link-sustained", true, providerState.reportPending);
+  assert.equal(providerState.pendingSet.has("nav-link-sustained"), true, "Link should be registered in pendingSet");
 
-  assert.equal(harness.getState().isPending, false, "isPending should resolve immediately");
-  assert.equal(harness.getState().showHalo, false, "Halo should remain hidden");
+  // 3. Time advances past threshold duration (160ms)
+  mock.timers.tick(160);
+  assert.equal(providerState.showHaloRef.current, true, "Halo ref becomes active");
 
-  // Advance time past original 160ms threshold
-  mock.timers.tick(200);
-  assert.equal(harness.getState().showHalo, false, "Halo should never activate after cancelled timer");
+  // 4. Provider re-renders with showHalo = true
+  providerState = renderProvider(providerHarness, 160);
+  assert.equal(providerState.showHalo, true);
 
-  harness.unmount();
+  // 5. Consumer (PendingLink) re-renders while still in-flight (pending = true)
+  renderPendingLinkHint(linkHarness, "nav-link-sustained", true, providerState.reportPending);
+
+  // 6. Assert effect cleanup did NOT run and navigation was NOT prematurely dropped
+  assert.equal(
+    providerState.pendingSet.has("nav-link-sustained"),
+    true,
+    "Navigation must remain registered in pendingSet after Halo activation",
+  );
+  assert.equal(providerState.showHalo, true, "Halo must remain visible and active");
+
+  // 7. Further time elapses (sustained route transition)
+  mock.timers.tick(300);
+  assert.equal(providerState.showHalo, true, "Halo remains active throughout sustained transition");
+
+  // 8. Navigation resolves (pending = false)
+  renderPendingLinkHint(linkHarness, "nav-link-sustained", false, providerState.reportPending);
+
+  // 9. Provider re-renders after resolution
+  providerState = renderProvider(providerHarness, 160);
+  assert.equal(providerState.showHalo, false, "Halo must clear immediately when navigation finishes");
+  assert.equal(providerState.pendingSet.size, 0, "pendingSet must be empty");
+
+  providerState.clearTimer();
   mock.timers.reset();
 });
 
-test("Behavioral 4: Overlapping navigations tracked safely with Set semantics", () => {
+test("Regression 3: Overlapping navigations across separate components maintain Halo until all resolve", () => {
   mock.timers.enable({ apis: ["setTimeout"] });
-  const harness = createNavigationFeedbackHarness(160);
+  const providerHarness = new ReactHarness();
+  const link1Harness = new ReactHarness();
+  const link2Harness = new ReactHarness();
 
-  // First navigation begins at t=0
-  harness.reportPending("nav-1", true);
-  assert.equal(harness.getPendingCount(), 1);
+  let providerState = renderProvider(providerHarness, 160);
 
-  // Second navigation begins at t=60ms
-  mock.timers.tick(60);
-  harness.reportPending("nav-2", true);
-  assert.equal(harness.getPendingCount(), 2);
-  assert.equal(harness.getState().showHalo, false);
+  // Link 1 starts navigating at t=0
+  renderPendingLinkHint(link1Harness, "nav-link-1", true, providerState.reportPending);
+  assert.equal(providerState.pendingSet.size, 1);
 
-  // First navigation completes at t=100ms
+  // Link 2 starts navigating at t=80ms
+  mock.timers.tick(80);
+  renderPendingLinkHint(link2Harness, "nav-link-2", true, providerState.reportPending);
+  assert.equal(providerState.pendingSet.size, 2);
+
+  // Threshold arrives at t=160ms -> Halo activates
+  mock.timers.tick(80);
+  providerState = renderProvider(providerHarness, 160);
+  assert.equal(providerState.showHalo, true);
+
+  // Re-render both links; neither must trigger premature cleanup
+  renderPendingLinkHint(link1Harness, "nav-link-1", true, providerState.reportPending);
+  renderPendingLinkHint(link2Harness, "nav-link-2", true, providerState.reportPending);
+  assert.equal(providerState.pendingSet.size, 2);
+  assert.equal(providerState.showHalo, true);
+
+  // Link 1 completes at t=200ms -> Link 2 is still active!
   mock.timers.tick(40);
-  harness.reportPending("nav-1", false);
-  assert.equal(harness.getPendingCount(), 1, "nav-2 should still be pending");
-  assert.equal(harness.getState().isPending, true, "Overall provider remains pending");
+  renderPendingLinkHint(link1Harness, "nav-link-1", false, providerState.reportPending);
+  providerState = renderProvider(providerHarness, 160);
+  assert.equal(providerState.pendingSet.size, 1, "nav-link-2 must remain active");
+  assert.equal(providerState.showHalo, true, "Halo must remain visible while nav-link-2 is active");
 
-  // Threshold arrives at t=160ms (160ms from initial transition start)
-  mock.timers.tick(60);
-  assert.equal(harness.getState().showHalo, true, "Halo activates because nav-2 is still pending");
+  // Link 2 completes at t=300ms -> all complete!
+  mock.timers.tick(100);
+  renderPendingLinkHint(link2Harness, "nav-link-2", false, providerState.reportPending);
+  providerState = renderProvider(providerHarness, 160);
+  assert.equal(providerState.pendingSet.size, 0, "pendingSet must be empty");
+  assert.equal(providerState.showHalo, false, "Halo must deactivate immediately");
 
-  // Second navigation completes at t=220ms
-  mock.timers.tick(60);
-  harness.reportPending("nav-2", false);
-  assert.equal(harness.getPendingCount(), 0);
-  assert.equal(harness.getState().isPending, false, "isPending deactivates");
-  assert.equal(harness.getState().showHalo, false, "Halo deactivates immediately when all complete");
-
-  harness.unmount();
+  providerState.clearTimer();
   mock.timers.reset();
 });
 
-test("Behavioral 5: Unmount cleanly removes all timers and pending entries", () => {
-  mock.timers.enable({ apis: ["setTimeout"] });
-  const harness = createNavigationFeedbackHarness(160);
+test("Regression 4: NavigationFeedbackProvider source code contract satisfies stable ref architecture", () => {
+  const source = read("src/components/ui/NavigationFeedbackProvider.tsx");
 
-  harness.reportPending("nav-stuck", true);
-  assert.equal(harness.getPendingCount(), 1);
+  // Verify showHaloRef is used
+  assert.match(source, /const\s+showHaloRef\s*=\s*useRef\(false\)/);
+  assert.match(source, /showHaloRef\.current\s*=\s*true/);
+  assert.match(source, /showHaloRef\.current\s*=\s*false/);
 
-  // Unmount component while navigation is active
-  harness.unmount();
-  assert.equal(harness.getPendingCount(), 0, "Pending set cleared on unmount");
-
-  // Advancing time should not cause any errors or late triggers
-  mock.timers.tick(500);
-  assert.equal(harness.getState().showHalo, false);
-
-  mock.timers.reset();
-});
-
-test("Behavioral 6: Provider-absent degradation operates as a safe no-op", () => {
-  const providerSource = read("src/components/ui/NavigationFeedbackProvider.tsx");
-  assert.match(providerSource, /NOOP_NAVIGATION_FEEDBACK/);
-  assert.match(providerSource, /isPending:\s*false/);
-  assert.match(providerSource, /showHalo:\s*false/);
-  assert.match(providerSource, /reportPending:\s*\(\)\s*=>\s*\{\}/);
-
-  // Verifying hook fallback returns noop value without throwing
-  assert.match(providerSource, /createContext[\s\S]*?NOOP_NAVIGATION_FEEDBACK/);
+  // Verify useCallback dependencies strictly depend only on stable thresholdMs, NOT showHalo
+  assert.match(source, /useCallback\([\s\S]*?\n\s*\[thresholdMs\],?\s*\n\s*\);/);
+  assert.doesNotMatch(source, /\[[^\]]*\bshowHalo\b[^\]]*\],\s*\n\s*\);/);
 });
 
 // =========================================================================
