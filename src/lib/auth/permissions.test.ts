@@ -541,3 +541,22 @@ test("W5A/W5B-1A Permissions: Admin wildcard satisfies all W5 permissions; non-a
   assert.equal(hasPermissionForRole("accountant", BUSINESS_DOCUMENT_PERMISSIONS.write), false);
   assert.equal(hasPermissionForRole("viewer", BUSINESS_DOCUMENT_PERMISSIONS.write), false);
 });
+
+test("Cash Advance Owner Decision approval matrix preserves unrelated authority", async () => {
+  const {
+    CASH_ADVANCE_PERMISSIONS,
+    EXPENSE_PERMISSIONS,
+    hasPermissionForRole,
+  } = await import("./role-permissions.ts");
+
+  assert.equal(hasPermissionForRole("admin", CASH_ADVANCE_PERMISSIONS.approve), true);
+  assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.approve), true);
+  assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.approve), false);
+  assert.equal(hasPermissionForRole("sales", CASH_ADVANCE_PERMISSIONS.approve), false);
+  assert.equal(hasPermissionForRole("operations", CASH_ADVANCE_PERMISSIONS.approve), false);
+  assert.equal(hasPermissionForRole("viewer", CASH_ADVANCE_PERMISSIONS.approve), false);
+
+  assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.issue), true);
+  assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.settle), true);
+  assert.equal(hasPermissionForRole("manager", EXPENSE_PERMISSIONS.approve), true);
+});

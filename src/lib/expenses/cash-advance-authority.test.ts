@@ -91,11 +91,11 @@ const MIGRATION_PATH = path.join(
   "migrations",
   "20260909100000_w5b2_cash_advance_numbering_and_integrity.sql",
 );
-const BASE_MIGRATION_PATH = path.join(
+const APPROVAL_REPAIR_MIGRATION_PATH = path.join(
   process.cwd(),
   "supabase",
   "migrations",
-  "20260907150000_w5a_expense_cash_foundation.sql",
+  "20260911100000_w5b2c_cash_advance_approval_authority_repair.sql",
 );
 const ACTIONS_PATH = path.join(process.cwd(), "src", "lib", "expenses", "actions.ts");
 const QUERIES_PATH = path.join(process.cwd(), "src", "lib", "expenses", "queries.ts");
@@ -137,11 +137,11 @@ test("6. Authority: Operations role lacks broad financial authority (read, appro
   assert.equal(hasPermissionForRole("operations", CASH_ADVANCE_PERMISSIONS.settle), false);
 });
 
-test("7. Authority: Manager role has readOwn, submitOwn, broad read, and approve", () => {
+test("7. Authority: Manager role has readOwn, submitOwn, and broad read but no Cash Advance approval", () => {
   assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.readOwn), true);
   assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.submitOwn), true);
   assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.read), true);
-  assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.approve), true);
+  assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.approve), false);
 });
 
 test("8. Authority: Manager role lacks issue and settle", () => {
@@ -157,8 +157,8 @@ test("9. Authority: Accountant role has readOwn, submitOwn, broad read, issue, a
   assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.settle), true);
 });
 
-test("10. Authority: Accountant role lacks Cash Advance approve authority", () => {
-  assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.approve), false);
+test("10. Authority: Accountant role has Cash Advance approve authority", () => {
+  assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.approve), true);
 });
 
 test("11. Authority: Viewer role has zero Cash Advance permissions", () => {
@@ -526,32 +526,86 @@ test("36. Service Integrity: settle_cash_advance_spend retains all double-bounde
 // REGRESSION & SECURITY TESTS (37-44)
 // ============================================================================
 
-test("37. Regression/Security: Base schema prevents requester self-approval (chk_advance_no_self_approval)", () => {
-  const sql = fs.readFileSync(BASE_MIGRATION_PATH, "utf8");
+test("37. Approval repair: replaces the legacy table self-approval check with a role-aware trigger", () => {
+  const sql = fs.readFileSync(APPROVAL_REPAIR_MIGRATION_PATH, "utf8");
   assert.ok(
-    sql.includes("approved_by != requested_by"),
-    "chk_advance_no_self_approval must prevent requester from approving own advance",
+    sql.includes("DROP CONSTRAINT IF EXISTS chk_advance_no_self_approval"),
+    "The corrective migration must supersede the legacy table-level self-approval check",
+  );
+  assert.ok(
+    sql.includes("CREATE OR REPLACE FUNCTION public.enforce_cash_advance_approval_authority()"),
+    "The corrective migration must add a role-aware database guard",
+  );
+  assert.ok(
+    sql.includes("current_setting('g7.cash_advance_actor_role', true)"),
+    "The database guard must read the transaction-local actor role",
   );
 });
 
-test("38. Regression/Security: Base schema prevents recipient self-approval (chk_advance_no_self_approval)", () => {
-  const sql = fs.readFileSync(BASE_MIGRATION_PATH, "utf8");
+test("38. Approval repair: Admin and Accountant are the only self-approval exception roles", () => {
+  const sql = fs.readFileSync(APPROVAL_REPAIR_MIGRATION_PATH, "utf8");
   assert.ok(
-    sql.includes("approved_by != recipient_id"),
-    "chk_advance_no_self_approval must prevent recipient from approving own advance",
+    sql.includes("COALESCE(p_actor_role, '') NOT IN ('admin', 'accountant')"),
+    "The RPC must preserve self-approval rejection for every other actor role",
   );
+  assert.ok(
+    sql.includes("COALESCE(v_actor_role, '') NOT IN ('admin', 'accountant')"),
+    "The trigger must preserve self-approval rejection for every other actor role",
+  );
+  assert.ok(sql.includes("v_requested_by = v_actor_uuid"));
+  assert.ok(sql.includes("v_recipient_id = v_actor_uuid"));
 });
 
-test("39. Regression/Security: Accountant role does not have cash_advances:approve", () => {
-  assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.approve), false);
+test("39. Approval repair: Accountant role has Cash Advance approve authority", () => {
+  assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.approve), true);
 });
 
-test("40. Regression/Security: Manager role does not have cash_advances:issue or cash_advances:settle", () => {
+test("40. Approval repair: Manager has no Cash Advance decision authority and retains no issue/settle authority", () => {
+  assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.approve), false);
   assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.issue), false);
   assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.settle), false);
 });
 
-test("41. Regression/Security: Existing Employee Expense Self-Service authority is preserved unchanged", () => {
+test("41. Approval repair: Sales, Operations, and Viewer remain outside Cash Advance decision authority", () => {
+  for (const role of ["sales", "operations", "viewer"] as const) {
+    assert.equal(hasPermissionForRole(role, CASH_ADVANCE_PERMISSIONS.approve), false);
+  }
+});
+
+test("42. Approval repair: Admin and Accountant self-approval remains submitted-state-only", () => {
+  const sql = fs.readFileSync(APPROVAL_REPAIR_MIGRATION_PATH, "utf8");
+  assert.ok(sql.includes("IF v_status != 'submitted' THEN"));
+  assert.ok(sql.includes("SET status = 'approved'"));
+});
+
+test("43. Approval repair: replay, conflict, row-lock, audit, and grant contracts remain intact", () => {
+  const sql = fs.readFileSync(APPROVAL_REPAIR_MIGRATION_PATH, "utf8");
+  for (const required of [
+    "pg_advisory_xact_lock",
+    "cash_advance_approve_request_conflict",
+    "idempotent_replay",
+    "FOR UPDATE",
+    "cash_advance_approved",
+    "REVOKE ALL ON FUNCTION public.approve_cash_advance(uuid, uuid, text, text)",
+    "GRANT EXECUTE ON FUNCTION public.approve_cash_advance(uuid, uuid, text, text) TO service_role",
+  ]) {
+    assert.ok(sql.includes(required), `Approval repair must preserve ${required}`);
+  }
+});
+
+test("44. Approval repair: migration scope does not redefine unrelated financial RPCs", () => {
+  const sql = fs.readFileSync(APPROVAL_REPAIR_MIGRATION_PATH, "utf8");
+  for (const unrelatedRpc of [
+    "CREATE OR REPLACE FUNCTION public.submit_expense",
+    "CREATE OR REPLACE FUNCTION public.record_cash_advance_return",
+    "CREATE OR REPLACE FUNCTION public.settle_cash_advance_spend",
+    "CREATE OR REPLACE FUNCTION public.issue_cash_advance",
+  ]) {
+    assert.equal(sql.includes(unrelatedRpc), false, `Migration must not redefine ${unrelatedRpc}`);
+  }
+});
+
+test("45. Regression/Security: Existing Employee Expense Self-Service authority is preserved unchanged", () => {
   assert.equal(hasPermissionForRole("sales", EXPENSE_PERMISSIONS.readOwn), true);
   assert.equal(hasPermissionForRole("sales", EXPENSE_PERMISSIONS.submitOwn), true);
   assert.equal(hasPermissionForRole("operations", EXPENSE_PERMISSIONS.readOwn), true);
@@ -562,7 +616,7 @@ test("41. Regression/Security: Existing Employee Expense Self-Service authority 
   assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.submitOwn), true);
 });
 
-test("42. Regression/Security: Petty Cash permissions are untouched in this slice", () => {
+test("46. Regression/Security: Petty Cash permissions are untouched in this slice", () => {
   assert.equal(hasPermissionForRole("sales", PETTY_CASH_PERMISSIONS.read), false);
   assert.equal(hasPermissionForRole("operations", PETTY_CASH_PERMISSIONS.read), false);
   assert.equal(hasPermissionForRole("manager", PETTY_CASH_PERMISSIONS.read), false);
@@ -570,14 +624,14 @@ test("42. Regression/Security: Petty Cash permissions are untouched in this slic
   assert.equal(hasPermissionForRole("admin", PETTY_CASH_PERMISSIONS.read), true);
 });
 
-test("43. Regression/Security: No AP or general accounting permissions were introduced", () => {
+test("47. Regression/Security: No AP or general accounting permissions were introduced", () => {
   const allPermissions = Object.values(ROLE_PERMISSIONS).flat();
   assert.equal(allPermissions.some((p) => p.startsWith("ap:")), false);
   assert.equal(allPermissions.some((p) => p.startsWith("bills:")), false);
   assert.equal(allPermissions.some((p) => p.startsWith("ledger:")), false);
 });
 
-test("44. Regression/Security: Only advances UI route invokes requestOwnCashAdvanceAction", () => {
+test("48. Regression/Security: Only advances UI route invokes requestOwnCashAdvanceAction", () => {
   const dashboardDir = path.join(process.cwd(), "src", "app", "(dashboard)");
   const files = fs.readdirSync(dashboardDir, { recursive: true }) as string[];
   for (const f of files) {

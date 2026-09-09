@@ -106,22 +106,22 @@ test("3. Authority: Operations can read own and submit own", () => {
   assert.equal(hasPermissionForRole("operations", CASH_ADVANCE_PERMISSIONS.read), false);
 });
 
-test("4. Authority: Manager can read own and broad", () => {
+test("4. Authority: Manager can read own and broad but cannot approve", () => {
   assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.readOwn), true);
   assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.submitOwn), true);
   assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.read), true);
-  assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.approve), true);
+  assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.approve), false);
   assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.issue), false);
   assert.equal(hasPermissionForRole("manager", CASH_ADVANCE_PERMISSIONS.settle), false);
 });
 
-test("5. Authority: Accountant can read own and broad", () => {
+test("5. Authority: Accountant can read own, broad, and approve", () => {
   assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.readOwn), true);
   assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.submitOwn), true);
   assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.read), true);
   assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.issue), true);
   assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.settle), true);
-  assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.approve), false);
+  assert.equal(hasPermissionForRole("accountant", CASH_ADVANCE_PERMISSIONS.approve), true);
 });
 
 test("6. Authority: Sales cannot activate broad query", () => {
@@ -631,16 +631,14 @@ test("38. Regression: ExpenseSubmissionModal semantics unchanged", () => {
   );
 });
 
-test("39. Regression: No database migration added in W5B-2B", () => {
+test("39. Regression: W5B approval repair is the only new migration in this bounded slice", () => {
   const migrationsDir = path.join(process.cwd(), "supabase/migrations");
   const files = fs.readdirSync(migrationsDir);
-  // Verify that the newest migration in migrations folder is still 20260909100000_w5b2_cash_advance_numbering_and_integrity.sql
   const migrationFiles = files.filter((f) => f.endsWith(".sql")).sort();
   const lastMigration = migrationFiles[migrationFiles.length - 1];
   assert.ok(
-    lastMigration === "20260909100000_w5b2_cash_advance_numbering_and_integrity.sql" ||
-      lastMigration === "20260910100000_w5b2c_cash_advance_spend_reservation_integrity.sql",
-    "No new database migration must be added in W5B-2B",
+    lastMigration === "20260911100000_w5b2c_cash_advance_approval_authority_repair.sql",
+    "The approval-authority corrective migration must be the newest migration",
   );
 });
 
@@ -874,13 +872,20 @@ test("53. Sidebar correctly maps /advances to expensesAndCosting section (W5B-2B
   assert.equal(sidebarSource.includes("issueCashAdvanceAction"), false);
 });
 
-test("54. Repair: no migration files changed", () => {
+test("54. Approval repair: corrective migration exists without changing applied migration history", () => {
   const migrationsDir = path.join(process.cwd(), "supabase/migrations");
   const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith(".sql")).sort();
   assert.ok(
-    files[files.length - 1] === "20260909100000_w5b2_cash_advance_numbering_and_integrity.sql" ||
-      files[files.length - 1] === "20260910100000_w5b2c_cash_advance_spend_reservation_integrity.sql",
-    "No new migration must be added in W5B-2B repair",
+    files.includes("20260907150000_w5a_expense_cash_foundation.sql"),
+    "The applied W5A migration must remain present",
+  );
+  assert.ok(
+    files.includes("20260910100000_w5b2c_cash_advance_spend_reservation_integrity.sql"),
+    "The applied W5B-2C spend migration must remain present",
+  );
+  assert.ok(
+    files.includes("20260911100000_w5b2c_cash_advance_approval_authority_repair.sql"),
+    "The new approval-authority corrective migration must be present",
   );
 });
 
@@ -1182,9 +1187,46 @@ test("70. Error safety: Cash Advance receipt wrapper masks private pipeline fail
   assert.ok(wrapper.includes("expense.submitted_by !== user.id"));
 });
 
-test("71. Regression: dashboard layout and permission files remain untouched by the operational slice", () => {
-  const layoutDiff = require("child_process").execFileSync("git", ["diff", "--", "src/app/(dashboard)/layout.tsx", "src/lib/auth/role-permissions.ts"], { encoding: "utf8" });
+test("71. Regression: dashboard layout remains untouched and permission change stays scoped", () => {
+  const layoutDiff = require("child_process").execFileSync("git", ["diff", "--", "src/app/(dashboard)/layout.tsx"], { encoding: "utf8" });
   assert.equal(layoutDiff, "");
+  const permissionsDiff = require("child_process").execFileSync("git", ["diff", "HEAD", "--", "src/lib/auth/role-permissions.ts"], { encoding: "utf8" });
+  assert.ok(permissionsDiff.includes("-    CASH_ADVANCE_PERMISSIONS.approve,"));
+  assert.ok(permissionsDiff.includes("+    CASH_ADVANCE_PERMISSIONS.approve,"));
   const status = require("child_process").execFileSync("git", ["status", "--short", "--", "supabase/migrations"], { encoding: "utf8" });
-  assert.equal(status, "");
+  assert.ok(status.includes("20260911100000_w5b2c_cash_advance_approval_authority_repair.sql"));
+});
+
+test("72. Approval UI: final row eligibility is server-calculated and Approve/Reject are fail-closed", () => {
+  const pageSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/page.tsx"),
+    "utf8",
+  );
+  const actionsSource = fs.readFileSync(
+    path.join(
+      process.cwd(),
+      "src/app/(dashboard)/advances/[id]/CashAdvanceOperationalActions.tsx",
+    ),
+    "utf8",
+  );
+  const serverActionsSource = fs.readFileSync(
+    path.join(process.cwd(), "src/lib/expenses/actions.ts"),
+    "utf8",
+  );
+
+  assert.ok(pageSource.includes("isApprovalEligibleForAdvance"));
+  assert.ok(pageSource.includes('advance.status !== "submitted"'));
+  assert.ok(pageSource.includes('currentUser.role === "admin" || currentUser.role === "accountant"'));
+  assert.ok(
+    actionsSource.includes('const showApproveReject = advance.status === "submitted" && capabilities.canApproveAdvance'),
+  );
+  assert.equal(actionsSource.includes('role === "admin"'), false);
+  assert.equal(actionsSource.includes('role === "accountant"'), false);
+  assert.ok(serverActionsSource.includes("requirePermission(CASH_ADVANCE_PERMISSIONS.approve)"));
+  assert.equal(
+    serverActionsSource.split("export async function rejectCashAdvanceAction")[1]?.includes(
+      "requirePermission(CASH_ADVANCE_PERMISSIONS.approve)",
+    ),
+    true,
+  );
 });

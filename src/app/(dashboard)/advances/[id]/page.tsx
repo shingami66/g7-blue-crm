@@ -85,7 +85,7 @@ export default async function CashAdvanceDetailPage({ params }: PageProps) {
   );
   }
 
-  const capabilities = await getCapabilities();
+  const capabilities = await getCapabilities(detailData.advance, currentUser);
   const isRecipient = Boolean(currentUser?.id && detailData.advance.recipient_id === currentUser.id);
   let balance: CashAdvanceBalanceSummary | null = null;
   let linkedExpenses: LinkedCashAdvanceExpense[] = [];
@@ -195,9 +195,26 @@ const emptyCapabilities = {
   canRecordReturn: false,
 };
 
-async function getCapabilities() {
+function isApprovalEligibleForAdvance(
+  advance: EmployeeCashAdvance,
+  currentUser: Awaited<ReturnType<typeof getCurrentAppUser>>,
+  hasApprovalPermission: boolean,
+) {
+  if (!hasApprovalPermission || !currentUser || advance.status !== "submitted") {
+    return false;
+  }
+
+  // The Owner Decision is role-specific and intentionally supersedes the
+  // previous requester/recipient maker-checker restriction for these roles.
+  return currentUser.role === "admin" || currentUser.role === "accountant";
+}
+
+async function getCapabilities(
+  advance: EmployeeCashAdvance,
+  currentUser: Awaited<ReturnType<typeof getCurrentAppUser>>,
+) {
   const [
-    canApproveAdvance,
+    hasApprovalPermission,
     canIssueAdvance,
     canSubmitOwnCashAdvance,
     canSubmitOwnExpense,
@@ -215,7 +232,11 @@ async function getCapabilities() {
   ]);
 
   return {
-    canApproveAdvance,
+    canApproveAdvance: isApprovalEligibleForAdvance(
+      advance,
+      currentUser,
+      hasApprovalPermission,
+    ),
     canIssueAdvance,
     canSubmitOwnSpend: canSubmitOwnCashAdvance && canSubmitOwnExpense,
     canSubmitSpendOnBehalf: canSettleSpend && canFinanceReviewExpense,
