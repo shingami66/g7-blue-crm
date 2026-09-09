@@ -379,42 +379,38 @@ export async function submitOwnCashAdvanceExpenseAction(
 
     const supabase = getExpenseRpcClient();
 
-    // Server-side verification: advance exists, is issued, belongs to user
+    // Server-side verification: query Advance by BOTH id and recipient_id to prevent information leak
     const { data: advance, error: advError } = await supabase
       .from("employee_cash_advances")
       .select("id, status, recipient_id, context_type, service_id")
       .eq("id", parsed.data.advance_id)
+      .eq("recipient_id", user.id)
       .maybeSingle();
 
     if (advError) {
+      console.error("[submitOwnCashAdvanceExpenseAction] advance_lookup_failed:", advError.message);
       return {
         success: false,
-        error: `Failed to verify cash advance: ${advError.message}`,
+        error: "Failed to verify cash advance",
         errorCode: "advance_lookup_failed",
       };
     }
 
+    // Single stable non-enumerating domain result: do NOT distinguish nonexistent vs another user's advance
     if (!advance) {
       return {
         success: false,
-        error: "Cash advance not found",
-        errorCode: "advance_not_found",
+        error: "Cash advance unavailable",
+        errorCode: "cash_advance_unavailable",
       };
     }
 
+    // Only evaluate status after ownership is established
     if (advance.status !== "issued") {
       return {
         success: false,
         error: "Cash advance is not in issued status",
         errorCode: "advance_not_in_issued_status",
-      };
-    }
-
-    if (advance.recipient_id !== user.id) {
-      return {
-        success: false,
-        error: "Cannot submit expense against another user's cash advance",
-        errorCode: "forbidden",
       };
     }
 
@@ -438,7 +434,12 @@ export async function submitOwnCashAdvanceExpenseAction(
     });
 
     if (error) {
-      return { success: false, error: error.message, errorCode: error.code };
+      console.error("[submitOwnCashAdvanceExpenseAction] submit_expense_rpc_failed:", error.message);
+      return {
+        success: false,
+        error: "Failed to submit cash advance expense",
+        errorCode: "cash_advance_expense_submission_failed",
+      };
     }
 
     const row = data?.[0];
@@ -461,9 +462,12 @@ export async function submitOwnCashAdvanceExpenseAction(
       idempotentReplay: row.idempotent_replay,
     };
   } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : "Unexpected error during cash advance expense submission";
-    return { success: false, error: message };
+    console.error("[submitOwnCashAdvanceExpenseAction] unexpected_error:", err);
+    return {
+      success: false,
+      error: "Unexpected error during cash advance expense submission",
+      errorCode: "internal_error",
+    };
   }
 }
 
@@ -494,9 +498,10 @@ export async function submitCashAdvanceExpenseOnBehalfAction(
       .maybeSingle();
 
     if (advError) {
+      console.error("[submitCashAdvanceExpenseOnBehalfAction] advance_lookup_failed:", advError.message);
       return {
         success: false,
-        error: `Failed to verify cash advance: ${advError.message}`,
+        error: "Failed to verify cash advance",
         errorCode: "advance_lookup_failed",
       };
     }
@@ -539,7 +544,12 @@ export async function submitCashAdvanceExpenseOnBehalfAction(
     });
 
     if (error) {
-      return { success: false, error: error.message, errorCode: error.code };
+      console.error("[submitCashAdvanceExpenseOnBehalfAction] submit_expense_rpc_failed:", error.message);
+      return {
+        success: false,
+        error: "Failed to submit cash advance expense",
+        errorCode: "cash_advance_expense_submission_failed",
+      };
     }
 
     const row = data?.[0];
@@ -562,13 +572,15 @@ export async function submitCashAdvanceExpenseOnBehalfAction(
       idempotentReplay: row.idempotent_replay,
     };
   } catch (err: unknown) {
-    const message =
-      err instanceof Error
-        ? err.message
-        : "Unexpected error during cash advance expense submission on behalf";
-    return { success: false, error: message };
+    console.error("[submitCashAdvanceExpenseOnBehalfAction] unexpected_error:", err);
+    return {
+      success: false,
+      error: "Unexpected error during cash advance expense submission on behalf",
+      errorCode: "internal_error",
+    };
   }
 }
+
 
 
 // 1c. Submit Self-Service Expense with Receipt (Full & Partial Success Handling)

@@ -597,7 +597,8 @@ export async function getLinkedCashAdvanceExpenses(
   });
 
   if (error) {
-    throw new Error(`Failed to load linked cash advance expenses: ${error.message}`);
+    console.error("[getLinkedCashAdvanceExpenses] rpc_failed:", error.message);
+    throw new Error("Failed to load linked cash advance expenses");
   }
 
   return (data ?? []) as LinkedCashAdvanceExpense[];
@@ -611,14 +612,16 @@ export async function getOwnLinkedCashAdvanceExpenses(
 
   const { data: advance, error: advErr } = await supabase
     .from("employee_cash_advances")
-    .select("recipient_id")
+    .select("id")
     .eq("id", advanceId)
+    .eq("recipient_id", user.id)
     .maybeSingle();
 
   if (advErr) {
-    throw new Error(`Failed to load cash advance: ${advErr.message}`);
+    console.error("[getOwnLinkedCashAdvanceExpenses] advance_lookup_failed:", advErr.message);
+    throw new Error("Failed to load cash advance");
   }
-  if (!advance || advance.recipient_id !== user.id) {
+  if (!advance) {
     return [];
   }
 
@@ -627,7 +630,8 @@ export async function getOwnLinkedCashAdvanceExpenses(
   });
 
   if (error) {
-    throw new Error(`Failed to load own linked cash advance expenses: ${error.message}`);
+    console.error("[getOwnLinkedCashAdvanceExpenses] rpc_failed:", error.message);
+    throw new Error("Failed to load own linked cash advance expenses");
   }
 
   return (data ?? []) as LinkedCashAdvanceExpense[];
@@ -644,7 +648,8 @@ export async function getCashAdvanceBalanceSummary(
   });
 
   if (error) {
-    throw new Error(`Failed to load cash advance balance summary: ${error.message}`);
+    console.error("[getCashAdvanceBalanceSummary] rpc_failed:", error.message);
+    throw new Error("Failed to load cash advance balance summary");
   }
 
   return (data?.[0] as CashAdvanceBalanceSummary) ?? null;
@@ -658,14 +663,16 @@ export async function getOwnCashAdvanceBalanceSummary(
 
   const { data: advance, error: advErr } = await supabase
     .from("employee_cash_advances")
-    .select("recipient_id")
+    .select("id")
     .eq("id", advanceId)
+    .eq("recipient_id", user.id)
     .maybeSingle();
 
   if (advErr) {
-    throw new Error(`Failed to load cash advance: ${advErr.message}`);
+    console.error("[getOwnCashAdvanceBalanceSummary] advance_lookup_failed:", advErr.message);
+    throw new Error("Failed to load own cash advance balance summary");
   }
-  if (!advance || advance.recipient_id !== user.id) {
+  if (!advance) {
     return null;
   }
 
@@ -674,7 +681,8 @@ export async function getOwnCashAdvanceBalanceSummary(
   });
 
   if (error) {
-    throw new Error(`Failed to load own cash advance balance summary: ${error.message}`);
+    console.error("[getOwnCashAdvanceBalanceSummary] rpc_failed:", error.message);
+    throw new Error("Failed to load own cash advance balance summary");
   }
 
   return (data?.[0] as CashAdvanceBalanceSummary) ?? null;

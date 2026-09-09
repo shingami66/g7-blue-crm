@@ -3,36 +3,44 @@
 -- Description: G7 BLUE W5B-2C-1 Dual-Entry Cash Advance Spend & Reserved-Balance Integrity
 --              Hardens submit_expense and record_cash_advance_return RPCs with
 --              transactional reserved-spend calculation GREATEST(amount - settled, 0),
---              row-level locking, and canonical read models for balance summary and
---              linked expenses.
+--              row-level locking, explicit revoke grants, and canonical read models.
 -- ============================================================================
 
--- Preflight Safety Assertions
+BEGIN;
+
+-- ----------------------------------------------------------------------------
+-- 1. Preflight Safety Guards
+-- ----------------------------------------------------------------------------
 DO $$
 BEGIN
-    ASSERT EXISTS (
-        SELECT 1 FROM information_schema.tables
-        WHERE table_schema = 'public' AND table_name = 'employee_cash_advances'
-    ), 'preflight_failed: table employee_cash_advances does not exist';
+    IF to_regclass('public.employee_cash_advances') IS NULL THEN
+        RAISE EXCEPTION 'Preflight failed: public.employee_cash_advances does not exist';
+    END IF;
 
-    ASSERT EXISTS (
-        SELECT 1 FROM information_schema.tables
-        WHERE table_schema = 'public' AND table_name = 'expenses'
-    ), 'preflight_failed: table expenses does not exist';
+    IF to_regclass('public.expenses') IS NULL THEN
+        RAISE EXCEPTION 'Preflight failed: public.expenses does not exist';
+    END IF;
 
-    ASSERT EXISTS (
-        SELECT 1 FROM information_schema.tables
-        WHERE table_schema = 'public' AND table_name = 'cash_advance_expense_settlements'
-    ), 'preflight_failed: table cash_advance_expense_settlements does not exist';
+    IF to_regclass('public.cash_advance_expense_settlements') IS NULL THEN
+        RAISE EXCEPTION 'Preflight failed: public.cash_advance_expense_settlements does not exist';
+    END IF;
 
-    ASSERT EXISTS (
-        SELECT 1 FROM information_schema.tables
-        WHERE table_schema = 'public' AND table_name = 'cash_advance_returns'
-    ), 'preflight_failed: table cash_advance_returns does not exist';
+    IF to_regclass('public.cash_advance_returns') IS NULL THEN
+        RAISE EXCEPTION 'Preflight failed: public.cash_advance_returns does not exist';
+    END IF;
+
+    IF to_regprocedure('public.submit_expense(text, text, uuid, text, text, numeric, date, text, text, uuid, uuid, uuid, uuid, text, text)') IS NULL THEN
+        RAISE EXCEPTION 'Preflight failed: public.submit_expense with expected 15 parameters does not exist';
+    END IF;
+
+    IF to_regprocedure('public.record_cash_advance_return(uuid, numeric, text, text, uuid, text, text)') IS NULL THEN
+        RAISE EXCEPTION 'Preflight failed: public.record_cash_advance_return with expected 7 parameters does not exist';
+    END IF;
 END $$;
 
 -- ----------------------------------------------------------------------------
--- 1. Canonical submit_expense RPC (Hardened for Cash Advance Funding)
+-- 2. Canonical submit_expense RPC (Hardened for Cash Advance Funding)
+--    Preserves exact pre-W5B-2C canonical behavior for all non-CA funding paths.
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.submit_expense(
     p_expense_number text,
@@ -66,8 +74,8 @@ DECLARE
     v_existing_id uuid;
     v_existing_payload jsonb;
     v_new_payload jsonb;
-    v_effective_expense_number text;
     v_id uuid;
+    v_effective_expense_number text;
     v_adv_status text;
     v_adv_context text;
     v_adv_service_id uuid;
@@ -88,16 +96,7 @@ BEGIN
         RETURN;
     END;
 
-    IF p_amount IS NULL OR p_amount <= 0 OR p_expense_date IS NULL
-       OR NULLIF(btrim(p_expense_category), '') IS NULL
-       OR NULLIF(btrim(p_description), '') IS NULL
-       OR p_context_type NOT IN ('company', 'event')
-       OR p_origin_type NOT IN ('company_direct', 'employee_paid')
-       OR p_payment_method NOT IN ('company_funds', 'petty_cash', 'cash_advance', 'personal_funds') THEN
-        RETURN QUERY SELECT 'request_invalid'::text, NULL::uuid, false;
-        RETURN;
-    END IF;
-
+    -- Store caller intent: record NULL if expense_number is blank/null
     v_effective_expense_number := NULLIF(btrim(p_expense_number), '');
 
     v_new_payload := jsonb_build_object(
@@ -137,73 +136,51 @@ BEGIN
         RETURN;
     END IF;
 
-    -- F. Genuinely new request: structural and funding path integrity checks
-    IF p_origin_type = 'employee_paid' THEN
-        IF p_payment_method != 'personal_funds' THEN
-            RETURN QUERY SELECT 'employee_paid_requires_personal_funds'::text, NULL::uuid, false;
-            RETURN;
-        END IF;
-        IF p_claimant_id IS NULL THEN
-            RETURN QUERY SELECT 'employee_paid_requires_claimant'::text, NULL::uuid, false;
-            RETURN;
-        END IF;
-        IF p_cash_advance_id IS NOT NULL OR p_petty_cash_fund_id IS NOT NULL THEN
-            RETURN QUERY SELECT 'employee_paid_cannot_link_funds'::text, NULL::uuid, false;
-            RETURN;
-        END IF;
-    END IF;
-
-    IF p_origin_type = 'company_direct' THEN
-        IF p_payment_method = 'personal_funds' THEN
-            RETURN QUERY SELECT 'company_direct_cannot_use_personal_funds'::text, NULL::uuid, false;
-            RETURN;
-        END IF;
-        IF p_claimant_id IS NOT NULL THEN
-            RETURN QUERY SELECT 'company_direct_cannot_have_claimant'::text, NULL::uuid, false;
-            RETURN;
-        END IF;
-    END IF;
-
-    IF p_payment_method = 'petty_cash' THEN
-        IF p_petty_cash_fund_id IS NULL THEN
-            RETURN QUERY SELECT 'petty_cash_fund_id_required'::text, NULL::uuid, false;
-            RETURN;
-        END IF;
-        IF p_cash_advance_id IS NOT NULL THEN
-            RETURN QUERY SELECT 'petty_cash_cannot_link_cash_advance'::text, NULL::uuid, false;
-            RETURN;
-        END IF;
-    END IF;
-
-    -- Context structural integrity
-    IF p_context_type = 'company' AND p_service_id IS NOT NULL THEN
-        RETURN QUERY SELECT 'company_context_cannot_have_service'::text, NULL::uuid, false;
+    -- F. Funding path exclusivity validations (preserved canonical legacy contracts)
+    IF p_origin_type = 'employee_paid' AND p_payment_method != 'personal_funds' THEN
+        RETURN QUERY SELECT 'employee_paid_requires_personal_funds'::text, NULL::uuid, false;
         RETURN;
     END IF;
+
+    IF p_origin_type = 'company_direct' AND p_payment_method = 'personal_funds' THEN
+        RETURN QUERY SELECT 'company_direct_cannot_use_personal_funds'::text, NULL::uuid, false;
+        RETURN;
+    END IF;
+
+    IF p_payment_method = 'cash_advance' AND p_cash_advance_id IS NULL THEN
+        RETURN QUERY SELECT 'cash_advance_id_required'::text, NULL::uuid, false;
+        RETURN;
+    END IF;
+
+    IF p_payment_method = 'petty_cash' AND p_petty_cash_fund_id IS NULL THEN
+        RETURN QUERY SELECT 'petty_cash_fund_id_required'::text, NULL::uuid, false;
+        RETURN;
+    END IF;
+
+    -- Context validations (preserved canonical legacy contracts)
     IF p_context_type = 'event' AND p_service_id IS NULL THEN
-        RETURN QUERY SELECT 'event_context_requires_service'::text, NULL::uuid, false;
+        RETURN QUERY SELECT 'event_requires_service_id'::text, NULL::uuid, false;
         RETURN;
     END IF;
 
-    -- Cash Advance specific structural and financial integrity
-    IF p_payment_method = 'cash_advance' THEN
-        IF p_cash_advance_id IS NULL THEN
-            RETURN QUERY SELECT 'cash_advance_id_required'::text, NULL::uuid, false;
-            RETURN;
-        END IF;
-        IF p_origin_type != 'company_direct' THEN
-            RETURN QUERY SELECT 'cash_advance_requires_company_direct'::text, NULL::uuid, false;
-            RETURN;
-        END IF;
-        IF p_claimant_id IS NOT NULL THEN
-            RETURN QUERY SELECT 'cash_advance_cannot_have_claimant'::text, NULL::uuid, false;
-            RETURN;
-        END IF;
-        IF p_petty_cash_fund_id IS NOT NULL THEN
-            RETURN QUERY SELECT 'cash_advance_cannot_have_petty_cash_fund'::text, NULL::uuid, false;
-            RETURN;
-        END IF;
+    IF p_context_type = 'company' AND p_service_id IS NOT NULL THEN
+        RETURN QUERY SELECT 'company_cannot_have_service_id'::text, NULL::uuid, false;
+        RETURN;
+    END IF;
 
+    -- Claimant validations (preserved canonical legacy contracts)
+    IF p_origin_type = 'employee_paid' AND p_claimant_id IS NULL THEN
+        RETURN QUERY SELECT 'employee_paid_requires_claimant'::text, NULL::uuid, false;
+        RETURN;
+    END IF;
+
+    IF p_origin_type = 'company_direct' AND p_claimant_id IS NOT NULL THEN
+        RETURN QUERY SELECT 'company_direct_cannot_have_claimant'::text, NULL::uuid, false;
+        RETURN;
+    END IF;
+
+    -- G. Cash Advance specific structural and financial hardening
+    IF p_payment_method = 'cash_advance' THEN
         -- Row lock on employee_cash_advances before reservation calculation
         SELECT status, context_type, service_id, remaining_balance
         INTO v_adv_status, v_adv_context, v_adv_service_id, v_adv_remaining_balance
@@ -266,7 +243,7 @@ BEGIN
         END IF;
     END IF;
 
-    -- Document number generation if not provided
+    -- Only generate document number for genuinely new request when not provided by caller
     IF v_effective_expense_number IS NULL THEN
         v_effective_expense_number := public.generate_document_number('expense');
         IF v_effective_expense_number IS NULL OR btrim(v_effective_expense_number) = '' THEN
@@ -309,14 +286,14 @@ $$;
 
 REVOKE ALL ON FUNCTION public.submit_expense(
     text, text, uuid, text, text, numeric, date, text, text, uuid, uuid, uuid, uuid, text, text
-) FROM PUBLIC;
+) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.submit_expense(
     text, text, uuid, text, text, numeric, date, text, text, uuid, uuid, uuid, uuid, text, text
 ) TO service_role;
 
 
 -- ----------------------------------------------------------------------------
--- 2. Canonical record_cash_advance_return RPC (Hardened for Reserved Spend)
+-- 3. Canonical record_cash_advance_return RPC (Hardened for Reserved Spend)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.record_cash_advance_return(
     p_advance_id uuid,
@@ -467,14 +444,14 @@ $$;
 
 REVOKE ALL ON FUNCTION public.record_cash_advance_return(
     uuid, numeric, text, text, uuid, text, text
-) FROM PUBLIC;
+) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.record_cash_advance_return(
     uuid, numeric, text, text, uuid, text, text
 ) TO service_role;
 
 
 -- ----------------------------------------------------------------------------
--- 3. Canonical get_cash_advance_balance_summary RPC (Read Model)
+-- 4. Canonical get_cash_advance_balance_summary RPC (Read Model)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.get_cash_advance_balance_summary(p_advance_id uuid)
 RETURNS TABLE(
@@ -540,12 +517,12 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.get_cash_advance_balance_summary(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_cash_advance_balance_summary(uuid) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_cash_advance_balance_summary(uuid) TO service_role;
 
 
 -- ----------------------------------------------------------------------------
--- 4. Canonical get_linked_cash_advance_expenses RPC (Read Model)
+-- 5. Canonical get_linked_cash_advance_expenses RPC (Read Model)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.get_linked_cash_advance_expenses(p_advance_id uuid)
 RETURNS TABLE(
@@ -594,5 +571,7 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.get_linked_cash_advance_expenses(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_linked_cash_advance_expenses(uuid) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_linked_cash_advance_expenses(uuid) TO service_role;
+
+COMMIT;

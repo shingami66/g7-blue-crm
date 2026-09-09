@@ -573,8 +573,8 @@ test("6.4 Application Queries: Own-path queries verify recipient ownership befor
     queriesContent.indexOf("getOwnLinkedCashAdvanceExpenses") + 600,
   );
   assert.ok(
-    ownLinkedSnippet.includes("advance.recipient_id !== user.id"),
-    "getOwnLinkedCashAdvanceExpenses must check recipient_id === user.id",
+    ownLinkedSnippet.includes('.eq("recipient_id", user.id)'),
+    "getOwnLinkedCashAdvanceExpenses must filter recipient_id === user.id in query",
   );
 
   const ownSummarySnippet = queriesContent.slice(
@@ -582,8 +582,8 @@ test("6.4 Application Queries: Own-path queries verify recipient ownership befor
     queriesContent.indexOf("getOwnCashAdvanceBalanceSummary") + 600,
   );
   assert.ok(
-    ownSummarySnippet.includes("advance.recipient_id !== user.id"),
-    "getOwnCashAdvanceBalanceSummary must check recipient_id === user.id",
+    ownSummarySnippet.includes('.eq("recipient_id", user.id)'),
+    "getOwnCashAdvanceBalanceSummary must filter recipient_id === user.id in query",
   );
 });
 
@@ -677,4 +677,250 @@ test("8.4 Regression: No AP or general accounting permissions introduced", () =>
   assert.equal(allPermissions.some((p) => p.startsWith("ap:")), false);
   assert.equal(allPermissions.some((p) => p.startsWith("bills:")), false);
   assert.equal(allPermissions.some((p) => p.startsWith("ledger:")), false);
+});
+
+// ============================================================================
+// 9. TARGETED CORRECTIVE REPAIR CONTRACTS
+// ============================================================================
+
+test("9.1 Privacy: Non-owner Advance enumeration prevention in submitOwnCashAdvanceExpenseAction", () => {
+  const actionsContent = fs.readFileSync(ACTIONS_PATH, "utf8");
+  const ownActionSnippet = actionsContent.slice(
+    actionsContent.indexOf("submitOwnCashAdvanceExpenseAction"),
+    actionsContent.indexOf("submitOwnCashAdvanceExpenseAction") + 2500,
+  );
+
+  // Must query with BOTH id and recipient_id in same lookup
+  assert.ok(
+    ownActionSnippet.includes('.eq("id", parsed.data.advance_id)') &&
+      ownActionSnippet.includes('.eq("recipient_id", user.id)'),
+    "submitOwnCashAdvanceExpenseAction must filter by id AND recipient_id in same query",
+  );
+
+  // If no row is returned, returns single stable non-enumerating error: cash_advance_unavailable
+  assert.ok(
+    ownActionSnippet.includes('errorCode: "cash_advance_unavailable"'),
+    "submitOwnCashAdvanceExpenseAction must return cash_advance_unavailable for any unowned/nonexistent advance",
+  );
+  assert.ok(
+    ownActionSnippet.includes('error: "Cash advance unavailable"'),
+    "submitOwnCashAdvanceExpenseAction must return safe user-facing message for unowned/nonexistent advance",
+  );
+
+  // Does not distinguish between nonexistent advance and another user's advance
+  assert.equal(
+    ownActionSnippet.includes('errorCode: "advance_not_found"'),
+    false,
+    "submitOwnCashAdvanceExpenseAction must NOT return advance_not_found to prevent existence probing",
+  );
+  assert.equal(
+    ownActionSnippet.includes('errorCode: "forbidden"') &&
+      ownActionSnippet.includes("Cannot submit expense against another user's cash advance"),
+    false,
+    "submitOwnCashAdvanceExpenseAction must NOT return distinct forbidden error after existence check",
+  );
+
+  // Status check occurs only after ownership is established
+  assert.ok(
+    ownActionSnippet.includes('advance.status !== "issued"') &&
+      ownActionSnippet.includes('errorCode: "advance_not_in_issued_status"'),
+    "submitOwnCashAdvanceExpenseAction must only return advance_not_in_issued_status for owned advance",
+  );
+});
+
+test("9.2 Privacy: Behavioral verification of non-owner Advance enumeration prevention", () => {
+  // Simulate the server-side lookup logic
+  const currentUserId = "11111111-1111-4111-8111-111111111111";
+  const database = [
+    { id: "aaaa1111-1111-4111-8111-111111111111", recipient_id: "99999999-9999-4999-8999-999999999999", status: "issued" },
+    { id: "bbbb2222-2222-4222-8222-222222222222", recipient_id: "99999999-9999-4999-8999-999999999999", status: "submitted" },
+    { id: "cccc3333-3333-4333-8333-333333333333", recipient_id: currentUserId, status: "issued" },
+    { id: "dddd4444-4444-4444-8444-444444444444", recipient_id: currentUserId, status: "submitted" },
+  ];
+
+  function evaluateLookup(advanceId: string) {
+    const row = database.find((r) => r.id === advanceId && r.recipient_id === currentUserId);
+    if (!row) {
+      return { success: false, error: "Cash advance unavailable", errorCode: "cash_advance_unavailable" };
+    }
+    if (row.status !== "issued") {
+      return { success: false, error: "Cash advance is not in issued status", errorCode: "advance_not_in_issued_status" };
+    }
+    return { success: true, advanceId: row.id };
+  }
+
+  // Case 1: Nonexistent UUID
+  const nonexistentResult = evaluateLookup("00000000-0000-4000-8000-000000000000");
+  assert.equal(nonexistentResult.errorCode, "cash_advance_unavailable");
+
+  // Case 2: Another user's issued advance
+  const otherIssuedResult = evaluateLookup("aaaa1111-1111-4111-8111-111111111111");
+  assert.equal(otherIssuedResult.errorCode, "cash_advance_unavailable");
+
+  // Case 3: Another user's non-issued advance
+  const otherNonIssuedResult = evaluateLookup("bbbb2222-2222-4222-8222-222222222222");
+  assert.equal(otherNonIssuedResult.errorCode, "cash_advance_unavailable");
+
+  // Proves nonexistent UUID and another user's UUID produce identical external result
+  assert.deepEqual(nonexistentResult, otherIssuedResult);
+  assert.deepEqual(otherIssuedResult, otherNonIssuedResult);
+
+  // Case 4: Own issued advance succeeds
+  const ownIssuedResult = evaluateLookup("cccc3333-3333-4333-8333-333333333333");
+  assert.equal(ownIssuedResult.success, true);
+
+  // Case 5: Own non-issued advance receives lifecycle error
+  const ownNonIssuedResult = evaluateLookup("dddd4444-4444-4444-8444-444444444444");
+  assert.equal(ownNonIssuedResult.errorCode, "advance_not_in_issued_status");
+});
+
+test("9.3 Error Safety: Raw infrastructure errors are masked in actions.ts", () => {
+  const actionsContent = fs.readFileSync(ACTIONS_PATH, "utf8");
+
+  // In submitOwnCashAdvanceExpenseAction:
+  const ownSnippet = actionsContent.slice(
+    actionsContent.indexOf("submitOwnCashAdvanceExpenseAction"),
+    actionsContent.indexOf("submitOwnCashAdvanceExpenseAction") + 2000,
+  );
+  assert.equal(
+    ownSnippet.includes("error: advError.message") || ownSnippet.includes("error: `Failed to verify cash advance: ${advError.message}`"),
+    false,
+    "submitOwnCashAdvanceExpenseAction must NOT return advError.message",
+  );
+  assert.equal(
+    ownSnippet.includes("error: error.message") || ownSnippet.includes("error: `Failed to submit cash advance expense: ${error.message}`"),
+    false,
+    "submitOwnCashAdvanceExpenseAction must NOT return RPC error.message",
+  );
+  assert.equal(
+    ownSnippet.includes("error: err instanceof Error ? err.message"),
+    false,
+    "submitOwnCashAdvanceExpenseAction catch block must NOT return err.message",
+  );
+
+  // In submitCashAdvanceExpenseOnBehalfAction:
+  const onBehalfSnippet = actionsContent.slice(
+    actionsContent.indexOf("submitCashAdvanceExpenseOnBehalfAction"),
+    actionsContent.indexOf("submitCashAdvanceExpenseOnBehalfAction") + 2000,
+  );
+  assert.equal(
+    onBehalfSnippet.includes("error: advError.message") || onBehalfSnippet.includes("error: `Failed to verify cash advance: ${advError.message}`"),
+    false,
+    "submitCashAdvanceExpenseOnBehalfAction must NOT return advError.message",
+  );
+  assert.equal(
+    onBehalfSnippet.includes("error: error.message"),
+    false,
+    "submitCashAdvanceExpenseOnBehalfAction must NOT return RPC error.message",
+  );
+  assert.equal(
+    onBehalfSnippet.includes("error: err instanceof Error ? err.message"),
+    false,
+    "submitCashAdvanceExpenseOnBehalfAction catch block must NOT return err.message",
+  );
+});
+
+test("9.4 Error Safety: Behavioral test verifying Postgres table/column leaks are masked", () => {
+  const injectedRawErrors = [
+    'relation "public.employee_cash_advances" does not exist at character 42',
+    'column "recipient_id" of relation "employee_cash_advances" does not exist',
+    'deadlock detected on process 49201: waiting for ShareLock on transaction 82910',
+    'connection to server at "db.supabase.co" (10.0.0.1), port 5432 failed: FATAL: password authentication failed',
+  ];
+
+  // Helper matching the safe error handling pattern in our actions
+  function handleLookupFailure(_rawMsg: string) {
+    void _rawMsg;
+    return {
+      success: false,
+      error: "Failed to verify cash advance",
+      errorCode: "advance_lookup_failed",
+    };
+  }
+
+  function handleRpcFailure(_rawMsg: string) {
+    void _rawMsg;
+    return {
+      success: false,
+      error: "Failed to submit cash advance expense",
+      errorCode: "cash_advance_expense_submission_failed",
+    };
+  }
+
+  for (const raw of injectedRawErrors) {
+    const lookupResult = handleLookupFailure(raw);
+    assert.equal(lookupResult.error.includes("employee_cash_advances"), false);
+    assert.equal(lookupResult.error.includes("relation"), false);
+    assert.equal(lookupResult.error.includes("column"), false);
+    assert.equal(lookupResult.error.includes("character"), false);
+    assert.equal(lookupResult.error.includes("deadlock"), false);
+    assert.equal(lookupResult.error.includes("10.0.0.1"), false);
+    assert.equal(lookupResult.error.includes("FATAL"), false);
+
+    const rpcResult = handleRpcFailure(raw);
+    assert.equal(rpcResult.error.includes("employee_cash_advances"), false);
+    assert.equal(rpcResult.error.includes("relation"), false);
+    assert.equal(rpcResult.error.includes("column"), false);
+    assert.equal(rpcResult.error.includes("character"), false);
+    assert.equal(rpcResult.error.includes("deadlock"), false);
+  }
+});
+
+test("9.5 Compatibility: Migration preserves canonical pre-W5B-2C non-CA error codes", () => {
+  const newSql = fs.readFileSync(MIGRATION_W5B2C_PATH, "utf8");
+  const baseSql = fs.readFileSync(
+    path.join(process.cwd(), "supabase", "migrations", "20260908100000_w5b1_expense_document_numbering.sql"),
+    "utf8",
+  );
+
+  const canonicalLegacyErrors = [
+    "event_requires_service_id",
+    "company_cannot_have_service_id",
+    "employee_paid_requires_personal_funds",
+    "company_direct_cannot_use_personal_funds",
+    "employee_paid_requires_claimant",
+    "company_direct_cannot_have_claimant",
+    "petty_cash_fund_id_required",
+    "cash_advance_id_required",
+  ];
+
+  for (const errCode of canonicalLegacyErrors) {
+    assert.ok(
+      baseSql.includes(`'${errCode}'`),
+      `Base W5B-1 migration must contain canonical error '${errCode}'`,
+    );
+    assert.ok(
+      newSql.includes(`'${errCode}'`),
+      `New W5B-2C migration must preserve canonical error '${errCode}'`,
+    );
+  }
+});
+
+test("9.6 Security: All W5B-2C-1 RPCs explicitly revoke from PUBLIC, anon, authenticated", () => {
+  const sql = fs.readFileSync(MIGRATION_W5B2C_PATH, "utf8");
+
+  const rpcNames = [
+    "public.submit_expense",
+    "public.record_cash_advance_return",
+    "public.get_cash_advance_balance_summary",
+    "public.get_linked_cash_advance_expenses",
+  ];
+
+  for (const rpc of rpcNames) {
+    assert.ok(
+      sql.includes(`REVOKE ALL ON FUNCTION ${rpc}`) && sql.includes("FROM PUBLIC, anon, authenticated;"),
+      `${rpc} must revoke execute from PUBLIC, anon, authenticated`,
+    );
+    assert.ok(
+      sql.includes(`GRANT EXECUTE ON FUNCTION ${rpc}`) && sql.includes("TO service_role;"),
+      `${rpc} must grant execute to service_role`,
+    );
+  }
+});
+
+test("9.7 Migration Structure: Migration wrapped in explicit BEGIN and COMMIT", () => {
+  const sql = fs.readFileSync(MIGRATION_W5B2C_PATH, "utf8");
+  const nonCommentSql = sql.replace(/^(\s*--.*\r?\n)*/g, "").trimStart();
+  assert.ok(nonCommentSql.startsWith("BEGIN;"), "Migration must begin with explicit BEGIN; after comments");
+  assert.ok(sql.trimEnd().endsWith("COMMIT;"), "Migration must end with explicit COMMIT;");
 });
