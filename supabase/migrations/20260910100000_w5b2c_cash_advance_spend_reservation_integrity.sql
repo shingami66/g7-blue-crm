@@ -325,6 +325,7 @@ DECLARE
     v_existing_advance_id uuid;
     v_existing_amount numeric;
     v_existing_ref text;
+    v_existing_notes text;
     v_id uuid;
     v_reserved_unsettled_spend numeric;
     v_available_uncommitted_balance numeric;
@@ -347,8 +348,8 @@ BEGIN
     PERFORM pg_advisory_xact_lock(hashtextextended('w5a:advance_return:' || p_request_id::text, 0));
 
     -- C. Inspect existing row for request_id
-    SELECT id, cash_advance_id, amount, receipt_reference
-    INTO v_existing_id, v_existing_advance_id, v_existing_amount, v_existing_ref
+    SELECT id, cash_advance_id, amount, receipt_reference, notes
+    INTO v_existing_id, v_existing_advance_id, v_existing_amount, v_existing_ref, v_existing_notes
     FROM public.cash_advance_returns
     WHERE request_id = p_request_id;
 
@@ -356,7 +357,8 @@ BEGIN
     IF FOUND THEN
         IF v_existing_advance_id IS DISTINCT FROM p_advance_id
            OR v_existing_amount IS DISTINCT FROM p_amount
-           OR v_existing_ref IS DISTINCT FROM p_receipt_reference THEN
+           OR v_existing_ref IS DISTINCT FROM p_receipt_reference
+           OR v_existing_notes IS DISTINCT FROM p_notes THEN
             RETURN QUERY SELECT 'cash_advance_return_request_conflict'::text, v_existing_id, false;
             RETURN;
         END IF;
@@ -429,7 +431,8 @@ BEGIN
             'payload', jsonb_build_object(
                 'cash_advance_id', p_advance_id,
                 'amount', p_amount,
-                'receipt_reference', p_receipt_reference
+                'receipt_reference', p_receipt_reference,
+                'notes', p_notes
             ),
             'cash_advance_id', p_advance_id,
             'amount', p_amount,

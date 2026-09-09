@@ -498,6 +498,162 @@ test("5.5 Base Schema: W5A base migration defines predecessor record_cash_advanc
 });
 
 // ============================================================================
+type CashAdvanceReturnPayload = {
+  cash_advance_id: string;
+  amount: number;
+  receipt_reference: string | null;
+  notes: string | null;
+  actor_role: string;
+};
+
+function isDistinctFrom(left: string | number | null, right: string | number | null) {
+  return left === null || right === null ? left !== right : left !== right;
+}
+
+function evaluateCashAdvanceReturnReplay(
+  existing: CashAdvanceReturnPayload,
+  incoming: CashAdvanceReturnPayload,
+) {
+  const hasBusinessPayloadConflict =
+    isDistinctFrom(existing.cash_advance_id, incoming.cash_advance_id) ||
+    isDistinctFrom(existing.amount, incoming.amount) ||
+    isDistinctFrom(existing.receipt_reference, incoming.receipt_reference) ||
+    isDistinctFrom(existing.notes, incoming.notes);
+
+  return hasBusinessPayloadConflict
+    ? { error_code: "cash_advance_return_request_conflict", idempotent_replay: false }
+    : { error_code: null, idempotent_replay: true };
+}
+
+test("5.6 SQL record_cash_advance_return: Compares all business fields NULL-safely and audits them", () => {
+  const sql = fs.readFileSync(MIGRATION_W5B2C_PATH, "utf8");
+  const returnFunction = sql.slice(
+    sql.indexOf("CREATE OR REPLACE FUNCTION public.record_cash_advance_return("),
+    sql.indexOf("REVOKE ALL ON FUNCTION public.record_cash_advance_return("),
+  );
+
+  for (const comparison of [
+    "v_existing_advance_id IS DISTINCT FROM p_advance_id",
+    "v_existing_amount IS DISTINCT FROM p_amount",
+    "v_existing_ref IS DISTINCT FROM p_receipt_reference",
+    "v_existing_notes IS DISTINCT FROM p_notes",
+  ]) {
+    assert.ok(returnFunction.includes(comparison), `Missing NULL-safe comparison: ${comparison}`);
+  }
+
+  assert.equal(
+    returnFunction.includes("v_existing_actor_role") ||
+      returnFunction.includes("p_actor_role IS DISTINCT FROM"),
+    false,
+    "actor_role must not participate in return business-payload idempotency",
+  );
+
+  const auditPayloadStart = returnFunction.indexOf("'payload', jsonb_build_object(");
+  const auditPayload = returnFunction.slice(auditPayloadStart, auditPayloadStart + 250);
+  for (const field of ["'cash_advance_id'", "'amount'", "'receipt_reference'", "'notes'"]) {
+    assert.ok(auditPayload.includes(field), `Audit payload must include ${field}`);
+  }
+});
+
+test("5.7 Regression: Identical return payload replays successfully", () => {
+  const payload: CashAdvanceReturnPayload = {
+    cash_advance_id: "11111111-1111-4111-8111-111111111111",
+    amount: 125,
+    receipt_reference: "RCPT-001",
+    notes: "Returned in full",
+    actor_role: "accountant",
+  };
+
+  assert.deepEqual(evaluateCashAdvanceReturnReplay(payload, payload), {
+    error_code: null,
+    idempotent_replay: true,
+  });
+});
+
+test("5.8 Regression: Changed notes conflict on the same request_id", () => {
+  const existing: CashAdvanceReturnPayload = {
+    cash_advance_id: "11111111-1111-4111-8111-111111111111",
+    amount: 125,
+    receipt_reference: "RCPT-001",
+    notes: "Returned in full",
+    actor_role: "accountant",
+  };
+
+  assert.deepEqual(evaluateCashAdvanceReturnReplay(existing, { ...existing, notes: "Different note" }), {
+    error_code: "cash_advance_return_request_conflict",
+    idempotent_replay: false,
+  });
+});
+
+test("5.9 Regression: Changed amount conflicts on the same request_id", () => {
+  const existing: CashAdvanceReturnPayload = {
+    cash_advance_id: "11111111-1111-4111-8111-111111111111",
+    amount: 125,
+    receipt_reference: "RCPT-001",
+    notes: "Returned in full",
+    actor_role: "accountant",
+  };
+
+  assert.deepEqual(evaluateCashAdvanceReturnReplay(existing, { ...existing, amount: 126 }), {
+    error_code: "cash_advance_return_request_conflict",
+    idempotent_replay: false,
+  });
+});
+
+test("5.10 Regression: Changed receipt_reference conflicts on the same request_id", () => {
+  const existing: CashAdvanceReturnPayload = {
+    cash_advance_id: "11111111-1111-4111-8111-111111111111",
+    amount: 125,
+    receipt_reference: "RCPT-001",
+    notes: "Returned in full",
+    actor_role: "accountant",
+  };
+
+  assert.deepEqual(
+    evaluateCashAdvanceReturnReplay(existing, { ...existing, receipt_reference: "RCPT-002" }),
+    {
+      error_code: "cash_advance_return_request_conflict",
+      idempotent_replay: false,
+    },
+  );
+});
+
+test("5.11 Regression: Changed advance_id conflicts on the same request_id", () => {
+  const existing: CashAdvanceReturnPayload = {
+    cash_advance_id: "11111111-1111-4111-8111-111111111111",
+    amount: 125,
+    receipt_reference: "RCPT-001",
+    notes: "Returned in full",
+    actor_role: "accountant",
+  };
+
+  assert.deepEqual(
+    evaluateCashAdvanceReturnReplay(existing, {
+      ...existing,
+      cash_advance_id: "22222222-2222-4222-8222-222222222222",
+    }),
+    {
+      error_code: "cash_advance_return_request_conflict",
+      idempotent_replay: false,
+    },
+  );
+});
+
+test("5.12 Regression: NULL notes replay safely when both payloads have NULL notes", () => {
+  const payload: CashAdvanceReturnPayload = {
+    cash_advance_id: "11111111-1111-4111-8111-111111111111",
+    amount: 125,
+    receipt_reference: "RCPT-001",
+    notes: null,
+    actor_role: "accountant",
+  };
+
+  assert.deepEqual(evaluateCashAdvanceReturnReplay(payload, { ...payload, actor_role: "admin" }), {
+    error_code: null,
+    idempotent_replay: true,
+  });
+});
+
 // 6. CANONICAL READ RPCS AND APPLICATION WRAPPERS
 // ============================================================================
 
