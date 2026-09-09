@@ -924,3 +924,131 @@ test("9.7 Migration Structure: Migration wrapped in explicit BEGIN and COMMIT", 
   assert.ok(nonCommentSql.startsWith("BEGIN;"), "Migration must begin with explicit BEGIN; after comments");
   assert.ok(sql.trimEnd().endsWith("COMMIT;"), "Migration must end with explicit COMMIT;");
 });
+
+// ============================================================================
+// 10. FINAL PRE-DEV-APPLY ERROR-SAFETY AND REVIEW CLOSURE CONTRACTS
+// ============================================================================
+
+test("10.1 Error Safety: submitExpenseAction Cash Advance RPC infrastructure failure does not return raw error.message", () => {
+  const actionsContent = fs.readFileSync(ACTIONS_PATH, "utf8");
+  const submitExpenseSnippet = actionsContent.slice(
+    actionsContent.indexOf("export async function submitExpenseAction"),
+    actionsContent.indexOf("uploadAndAttachExpenseReceiptInternal"),
+  );
+
+  // Checks that when isCashAdvance is true, RPC failure returns safe domain code and text
+  assert.ok(
+    submitExpenseSnippet.includes("isCashAdvance") &&
+      submitExpenseSnippet.includes('errorCode: "cash_advance_expense_submission_failed"') &&
+      submitExpenseSnippet.includes('error: "Failed to submit cash advance expense"'),
+    "submitExpenseAction must return safe generic domain text and code for cash advance RPC failure",
+  );
+
+  // Verifies raw error.message is not returned when payment_method is cash_advance
+  assert.ok(
+    submitExpenseSnippet.includes("if (isCashAdvance)"),
+    "submitExpenseAction must branch on isCashAdvance before returning raw error.message",
+  );
+});
+
+test("10.2 Error Safety: submitExpenseAction Cash Advance catch path does not return arbitrary Error.message", () => {
+  const actionsContent = fs.readFileSync(ACTIONS_PATH, "utf8");
+  const submitExpenseSnippet = actionsContent.slice(
+    actionsContent.indexOf("export async function submitExpenseAction"),
+    actionsContent.indexOf("uploadAndAttachExpenseReceiptInternal"),
+  );
+
+  const catchBlock = submitExpenseSnippet.slice(submitExpenseSnippet.indexOf("} catch (err: unknown) {"));
+  assert.ok(
+    catchBlock.includes("if (isCashAdvance)") &&
+      catchBlock.includes('errorCode: "cash_advance_expense_submission_failed"') &&
+      catchBlock.includes('error: "Failed to submit cash advance expense"'),
+    "submitExpenseAction catch block must return safe domain result for cash advance without arbitrary Error.message",
+  );
+});
+
+test("10.3 Compatibility: Non-Cash-Advance submitExpenseAction behavior remains unchanged", () => {
+  const actionsContent = fs.readFileSync(ACTIONS_PATH, "utf8");
+  const submitExpenseSnippet = actionsContent.slice(
+    actionsContent.indexOf("export async function submitExpenseAction"),
+    actionsContent.indexOf("uploadAndAttachExpenseReceiptInternal"),
+  );
+
+  // Non-cash-advance RPC error returns error.message and error.code
+  assert.ok(
+    submitExpenseSnippet.includes("return { success: false, error: error.message, errorCode: error.code };"),
+    "Non-cash-advance submitExpenseAction must preserve exact pre-existing RPC error contract",
+  );
+
+  // Non-cash-advance catch block returns err.message
+  const catchBlock = submitExpenseSnippet.slice(submitExpenseSnippet.indexOf("} catch (err: unknown) {"));
+  assert.ok(
+    catchBlock.includes('const message = err instanceof Error ? err.message : "Unexpected error during expense submission";') &&
+      catchBlock.includes("return { success: false, error: message };"),
+    "Non-cash-advance submitExpenseAction must preserve exact pre-existing catch behavior",
+  );
+});
+
+test("10.4 Server Log Safety: W5B-2C actions do not log advError.message, error.message, or raw err objects", () => {
+  const actionsContent = fs.readFileSync(ACTIONS_PATH, "utf8");
+
+  // Inspect submitExpenseAction cash_advance branch
+  const submitExpenseSnippet = actionsContent.slice(
+    actionsContent.indexOf("export async function submitExpenseAction"),
+    actionsContent.indexOf("export async function submitExpenseAction") + 2500,
+  );
+  assert.equal(
+    submitExpenseSnippet.includes('console.error("[submitExpenseAction] cash_advance_expense_submission_failed",') ||
+      submitExpenseSnippet.includes('console.error("[submitExpenseAction] cash_advance_unexpected_error",'),
+    false,
+    "submitExpenseAction cash_advance branch must NOT log error payloads",
+  );
+
+  // Inspect submitOwnCashAdvanceExpenseAction
+  const ownActionSnippet = actionsContent.slice(
+    actionsContent.indexOf("export async function submitOwnCashAdvanceExpenseAction"),
+    actionsContent.indexOf("export async function submitOwnCashAdvanceExpenseAction") + 2500,
+  );
+  assert.equal(
+    ownActionSnippet.includes('console.error("[submitOwnCashAdvanceExpenseAction] advance_lookup_failed",') ||
+      ownActionSnippet.includes('console.error("[submitOwnCashAdvanceExpenseAction] submit_expense_rpc_failed",') ||
+      ownActionSnippet.includes('console.error("[submitOwnCashAdvanceExpenseAction] unexpected_error",'),
+    false,
+    "submitOwnCashAdvanceExpenseAction must NOT log error payloads or objects",
+  );
+
+  // Inspect submitCashAdvanceExpenseOnBehalfAction
+  const onBehalfSnippet = actionsContent.slice(
+    actionsContent.indexOf("export async function submitCashAdvanceExpenseOnBehalfAction"),
+    actionsContent.indexOf("export async function submitCashAdvanceExpenseOnBehalfAction") + 2500,
+  );
+  assert.equal(
+    onBehalfSnippet.includes('console.error("[submitCashAdvanceExpenseOnBehalfAction] advance_lookup_failed",') ||
+      onBehalfSnippet.includes('console.error("[submitCashAdvanceExpenseOnBehalfAction] submit_expense_rpc_failed",') ||
+      onBehalfSnippet.includes('console.error("[submitCashAdvanceExpenseOnBehalfAction] unexpected_error",'),
+    false,
+    "submitCashAdvanceExpenseOnBehalfAction must NOT log error payloads or objects",
+  );
+});
+
+test("10.5 Server Log Safety: W5B-2C query functions do not log raw infrastructure messages", () => {
+  const queriesContent = fs.readFileSync(QUERIES_PATH, "utf8");
+  const w5b2cQueries = queriesContent.slice(
+    queriesContent.indexOf("export async function getLinkedCashAdvanceExpenses"),
+  );
+
+  assert.equal(
+    w5b2cQueries.includes("error.message") || w5b2cQueries.includes("advErr.message"),
+    false,
+    "W5B-2C queries must NOT log or interpolate error.message or advErr.message",
+  );
+  assert.ok(
+    w5b2cQueries.includes('console.error("[getLinkedCashAdvanceExpenses] rpc_failed");') &&
+      w5b2cQueries.includes('console.error("[getOwnLinkedCashAdvanceExpenses] advance_lookup_failed");') &&
+      w5b2cQueries.includes('console.error("[getOwnLinkedCashAdvanceExpenses] rpc_failed");') &&
+      w5b2cQueries.includes('console.error("[getCashAdvanceBalanceSummary] rpc_failed");') &&
+      w5b2cQueries.includes('console.error("[getOwnCashAdvanceBalanceSummary] advance_lookup_failed");') &&
+      w5b2cQueries.includes('console.error("[getOwnCashAdvanceBalanceSummary] rpc_failed");'),
+    "W5B-2C queries must log only stable labels",
+  );
+});

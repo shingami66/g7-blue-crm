@@ -597,7 +597,7 @@ export async function getLinkedCashAdvanceExpenses(
   });
 
   if (error) {
-    console.error("[getLinkedCashAdvanceExpenses] rpc_failed:", error.message);
+    console.error("[getLinkedCashAdvanceExpenses] rpc_failed");
     throw new Error("Failed to load linked cash advance expenses");
   }
 
@@ -618,7 +618,7 @@ export async function getOwnLinkedCashAdvanceExpenses(
     .maybeSingle();
 
   if (advErr) {
-    console.error("[getOwnLinkedCashAdvanceExpenses] advance_lookup_failed:", advErr.message);
+    console.error("[getOwnLinkedCashAdvanceExpenses] advance_lookup_failed");
     throw new Error("Failed to load cash advance");
   }
   if (!advance) {
@@ -630,7 +630,7 @@ export async function getOwnLinkedCashAdvanceExpenses(
   });
 
   if (error) {
-    console.error("[getOwnLinkedCashAdvanceExpenses] rpc_failed:", error.message);
+    console.error("[getOwnLinkedCashAdvanceExpenses] rpc_failed");
     throw new Error("Failed to load own linked cash advance expenses");
   }
 
@@ -648,7 +648,7 @@ export async function getCashAdvanceBalanceSummary(
   });
 
   if (error) {
-    console.error("[getCashAdvanceBalanceSummary] rpc_failed:", error.message);
+    console.error("[getCashAdvanceBalanceSummary] rpc_failed");
     throw new Error("Failed to load cash advance balance summary");
   }
 
@@ -669,7 +669,7 @@ export async function getOwnCashAdvanceBalanceSummary(
     .maybeSingle();
 
   if (advErr) {
-    console.error("[getOwnCashAdvanceBalanceSummary] advance_lookup_failed:", advErr.message);
+    console.error("[getOwnCashAdvanceBalanceSummary] advance_lookup_failed");
     throw new Error("Failed to load own cash advance balance summary");
   }
   if (!advance) {
@@ -681,7 +681,7 @@ export async function getOwnCashAdvanceBalanceSummary(
   });
 
   if (error) {
-    console.error("[getOwnCashAdvanceBalanceSummary] rpc_failed:", error.message);
+    console.error("[getOwnCashAdvanceBalanceSummary] rpc_failed");
     throw new Error("Failed to load own cash advance balance summary");
   }
 

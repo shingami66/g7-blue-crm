@@ -51,6 +51,7 @@ function getExpenseRpcClient(): any {
 export async function submitExpenseAction(
   rawInput: unknown,
 ): Promise<W5ActionResult<{ expense_id: string }>> {
+  let isCashAdvance = false;
   try {
     const parsed = submitExpenseSchema.safeParse(rawInput);
     if (!parsed.success) {
@@ -63,6 +64,7 @@ export async function submitExpenseAction(
 
     let user;
     if (parsed.data.payment_method === "cash_advance") {
+      isCashAdvance = true;
       user = await requirePermission(CASH_ADVANCE_PERMISSIONS.settle);
       await requirePermission(EXPENSE_PERMISSIONS.financeReview);
     } else {
@@ -100,6 +102,14 @@ export async function submitExpenseAction(
     });
 
     if (error) {
+      if (isCashAdvance) {
+        console.error("[submitExpenseAction] cash_advance_expense_submission_failed");
+        return {
+          success: false,
+          error: "Failed to submit cash advance expense",
+          errorCode: "cash_advance_expense_submission_failed",
+        };
+      }
       return { success: false, error: error.message, errorCode: error.code };
     }
 
@@ -114,6 +124,14 @@ export async function submitExpenseAction(
       idempotentReplay: row.idempotent_replay,
     };
   } catch (err: unknown) {
+    if (isCashAdvance) {
+      console.error("[submitExpenseAction] cash_advance_unexpected_error");
+      return {
+        success: false,
+        error: "Failed to submit cash advance expense",
+        errorCode: "cash_advance_expense_submission_failed",
+      };
+    }
     const message = err instanceof Error ? err.message : "Unexpected error during expense submission";
     return { success: false, error: message };
   }
@@ -388,7 +406,7 @@ export async function submitOwnCashAdvanceExpenseAction(
       .maybeSingle();
 
     if (advError) {
-      console.error("[submitOwnCashAdvanceExpenseAction] advance_lookup_failed:", advError.message);
+      console.error("[submitOwnCashAdvanceExpenseAction] advance_lookup_failed");
       return {
         success: false,
         error: "Failed to verify cash advance",
@@ -434,7 +452,7 @@ export async function submitOwnCashAdvanceExpenseAction(
     });
 
     if (error) {
-      console.error("[submitOwnCashAdvanceExpenseAction] submit_expense_rpc_failed:", error.message);
+      console.error("[submitOwnCashAdvanceExpenseAction] submit_expense_rpc_failed");
       return {
         success: false,
         error: "Failed to submit cash advance expense",
@@ -461,8 +479,8 @@ export async function submitOwnCashAdvanceExpenseAction(
       },
       idempotentReplay: row.idempotent_replay,
     };
-  } catch (err: unknown) {
-    console.error("[submitOwnCashAdvanceExpenseAction] unexpected_error:", err);
+  } catch {
+    console.error("[submitOwnCashAdvanceExpenseAction] unexpected_error");
     return {
       success: false,
       error: "Unexpected error during cash advance expense submission",
@@ -498,7 +516,7 @@ export async function submitCashAdvanceExpenseOnBehalfAction(
       .maybeSingle();
 
     if (advError) {
-      console.error("[submitCashAdvanceExpenseOnBehalfAction] advance_lookup_failed:", advError.message);
+      console.error("[submitCashAdvanceExpenseOnBehalfAction] advance_lookup_failed");
       return {
         success: false,
         error: "Failed to verify cash advance",
@@ -544,7 +562,7 @@ export async function submitCashAdvanceExpenseOnBehalfAction(
     });
 
     if (error) {
-      console.error("[submitCashAdvanceExpenseOnBehalfAction] submit_expense_rpc_failed:", error.message);
+      console.error("[submitCashAdvanceExpenseOnBehalfAction] submit_expense_rpc_failed");
       return {
         success: false,
         error: "Failed to submit cash advance expense",
@@ -571,8 +589,8 @@ export async function submitCashAdvanceExpenseOnBehalfAction(
       },
       idempotentReplay: row.idempotent_replay,
     };
-  } catch (err: unknown) {
-    console.error("[submitCashAdvanceExpenseOnBehalfAction] unexpected_error:", err);
+  } catch {
+    console.error("[submitCashAdvanceExpenseOnBehalfAction] unexpected_error");
     return {
       success: false,
       error: "Unexpected error during cash advance expense submission on behalf",

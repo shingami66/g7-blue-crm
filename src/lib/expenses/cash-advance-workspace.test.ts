@@ -641,9 +641,9 @@ test("39. Regression: No database migration added in W5B-2B", () => {
   // Verify that the newest migration in migrations folder is still 20260909100000_w5b2_cash_advance_numbering_and_integrity.sql
   const migrationFiles = files.filter((f) => f.endsWith(".sql")).sort();
   const lastMigration = migrationFiles[migrationFiles.length - 1];
-  assert.equal(
-    lastMigration,
-    "20260909100000_w5b2_cash_advance_numbering_and_integrity.sql",
+  assert.ok(
+    lastMigration === "20260909100000_w5b2_cash_advance_numbering_and_integrity.sql" ||
+      lastMigration === "20260910100000_w5b2c_cash_advance_spend_reservation_integrity.sql",
     "No new database migration must be added in W5B-2B",
   );
 });
@@ -881,9 +881,9 @@ test("53. Sidebar correctly maps /advances to expensesAndCosting section (W5B-2B
 test("54. Repair: no migration files changed", () => {
   const migrationsDir = path.join(process.cwd(), "supabase/migrations");
   const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith(".sql")).sort();
-  assert.equal(
-    files[files.length - 1],
-    "20260909100000_w5b2_cash_advance_numbering_and_integrity.sql",
+  assert.ok(
+    files[files.length - 1] === "20260909100000_w5b2_cash_advance_numbering_and_integrity.sql" ||
+      files[files.length - 1] === "20260910100000_w5b2c_cash_advance_spend_reservation_integrity.sql",
     "No new migration must be added in W5B-2B repair",
   );
 });
