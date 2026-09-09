@@ -524,7 +524,7 @@ test("W5A/W5B-1A Permissions: Admin wildcard satisfies all W5 permissions; non-a
   assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.financeReview), true);
   assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.settle), true);
   assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.write), false);
-  assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.approve), false);
+  assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.approve), true);
 
   // 7. Strictly verify EXPENSE_PERMISSIONS.write is NOT newly granted to non-admin roles
   for (const role of ["sales", "operations", "manager", "accountant", "viewer"] as const) {

@@ -16,6 +16,7 @@ import {
 import type {
   ExpenseAccountabilitySummary,
   ExpenseServiceOption,
+  ExpenseRowCapabilities,
 } from "@/lib/expenses/types";
 import {
   getPrivateExpenseReceiptUrlAction,
@@ -48,10 +49,15 @@ interface ExpensesClientProps {
   expenses?: ExpenseAccountabilitySummary[];
   eligibleServices?: ExpenseServiceOption[];
   loadError: boolean;
-  canFinanceReview?: boolean;
-  canApproveExpense?: boolean;
+  rowCapabilities?: Record<string, ExpenseRowCapabilities>;
   dictionary?: ExpensesDictionary;
 }
+
+const EMPTY_ROW_CAPABILITIES: ExpenseRowCapabilities = {
+  canFinanceReview: false,
+  canApprove: false,
+  canReject: false,
+};
 
 export default function ExpensesClient({
   canRead,
@@ -62,8 +68,7 @@ export default function ExpensesClient({
   expenses: legacyExpensesProp,
   eligibleServices = [],
   loadError = false,
-  canFinanceReview = false,
-  canApproveExpense = false,
+  rowCapabilities = {},
   dictionary: dictionaryProp,
 }: ExpensesClientProps) {
   const locale = useLocale();
@@ -666,8 +671,7 @@ export default function ExpensesClient({
                                   <div className="border-t border-outline-variant pt-2">
                                     <ExpenseWorkspaceActions
                                       expense={exp}
-                                      canFinanceReview={canFinanceReview}
-                                      canApproveExpense={canApproveExpense}
+                                      capabilities={rowCapabilities[exp.id] ?? EMPTY_ROW_CAPABILITIES}
                                       dictionary={dictionary}
                                     />
                                   </div>
@@ -947,8 +951,7 @@ export default function ExpensesClient({
                           <div className="border-t border-outline-variant pt-2">
                             <ExpenseWorkspaceActions
                               expense={exp}
-                              canFinanceReview={canFinanceReview}
-                              canApproveExpense={canApproveExpense}
+                              capabilities={rowCapabilities[exp.id] ?? EMPTY_ROW_CAPABILITIES}
                               dictionary={dictionary}
                             />
                           </div>

@@ -74,14 +74,14 @@ test("W5B-1A Authority Matrix: Exactly matches approved role behavior", () => {
   assert.equal(hasPermissionForRole("manager", EXPENSE_PERMISSIONS.financeReview), false, "Manager must NOT have financeReview");
   assert.equal(hasPermissionForRole("manager", EXPENSE_PERMISSIONS.settle), false, "Manager must NOT have settle");
 
-  // Accountant: self-service + full Expense read + Finance review + reimbursement settlement
+  // Accountant: self-service + full Expense read + Finance review + approval + reimbursement settlement
   assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.readOwn), true);
   assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.submitOwn), true);
   assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.read), true);
   assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.financeReview), true);
   assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.settle), true);
   assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.write), false, "Accountant must NOT have expenses:write");
-  assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.approve), false, "Accountant must NOT have approve");
+  assert.equal(hasPermissionForRole("accountant", EXPENSE_PERMISSIONS.approve), true);
 
   // Viewer: no W5 access
   assert.equal(hasPermissionForRole("viewer", EXPENSE_PERMISSIONS.readOwn), false);

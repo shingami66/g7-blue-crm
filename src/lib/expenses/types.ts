@@ -247,6 +247,12 @@ export interface ExpenseAccountabilitySummary {
   is_finance_reviewed?: boolean;
 }
 
+export interface ExpenseRowCapabilities {
+  canFinanceReview: boolean;
+  canApprove: boolean;
+  canReject: boolean;
+}
+
 export interface W5ActionResult<T = Record<string, unknown>> {
   success: boolean;
   data?: T;

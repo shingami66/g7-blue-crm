@@ -631,14 +631,14 @@ test("38. Regression: ExpenseSubmissionModal semantics unchanged", () => {
   );
 });
 
-test("39. Regression: W5B approval repair is the only new migration in this bounded slice", () => {
+test("39. Regression: Expense approval repair is a separate newest migration and Cash Advance repair remains present", () => {
   const migrationsDir = path.join(process.cwd(), "supabase/migrations");
   const files = fs.readdirSync(migrationsDir);
   const migrationFiles = files.filter((f) => f.endsWith(".sql")).sort();
   const lastMigration = migrationFiles[migrationFiles.length - 1];
   assert.ok(
-    lastMigration === "20260911100000_w5b2c_cash_advance_approval_authority_repair.sql",
-    "The approval-authority corrective migration must be the newest migration",
+    lastMigration === "20260912100000_w5b3_expense_self_approval_authority_repair.sql",
+    "The Expense self-approval corrective migration must be the newest migration",
   );
 });
 
@@ -1187,15 +1187,16 @@ test("70. Error safety: Cash Advance receipt wrapper masks private pipeline fail
   assert.ok(wrapper.includes("expense.submitted_by !== user.id"));
 });
 
-test("71. Regression: dashboard layout remains untouched and permission change stays scoped", () => {
+test("71. Regression: dashboard layout remains untouched and authority changes stay scoped", () => {
   const layoutDiff = require("child_process").execFileSync("git", ["diff", "--", "src/app/(dashboard)/layout.tsx"], { encoding: "utf8" });
   assert.equal(layoutDiff, "");
   const permissionsDiff = require("child_process").execFileSync("git", ["diff", "HEAD", "--", "src/lib/auth/role-permissions.ts"], { encoding: "utf8" });
-  assert.equal(permissionsDiff, "");
+  assert.ok(permissionsDiff.includes("EXPENSE_PERMISSIONS.approve"));
   const migrationDiff = require("child_process").execFileSync("git", ["diff", "HEAD", "--", "supabase/migrations"], { encoding: "utf8" });
   assert.equal(migrationDiff, "");
   const status = require("child_process").execFileSync("git", ["status", "--short", "--", "supabase/migrations"], { encoding: "utf8" });
-  assert.equal(status, "");
+  assert.ok(status.includes("20260912100000_w5b3_expense_self_approval_authority_repair.sql"));
+  assert.equal(status.includes("20260911100000_w5b2c_cash_advance_approval_authority_repair.sql"), false);
 });
 
 test("72. Approval UI: final row eligibility is server-calculated and Approve/Reject are fail-closed", () => {

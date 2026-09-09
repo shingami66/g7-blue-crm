@@ -1,4 +1,4 @@
-import { checkPermission } from "@/lib/auth/permissions";
+import { checkPermission, getCurrentAppUser } from "@/lib/auth/permissions";
 import { EXPENSE_PERMISSIONS } from "@/lib/auth/role-permissions";
 import {
   getExpensesAccountabilityList,
@@ -8,19 +8,55 @@ import {
 import type {
   ExpenseAccountabilitySummary,
   ExpenseServiceOption,
+  ExpenseRowCapabilities,
 } from "@/lib/expenses/types";
 import ExpensesClient from "./ExpensesClient";
 
 export const dynamic = "force-dynamic";
 
+function buildExpenseRowCapabilities(
+  expenses: ExpenseAccountabilitySummary[],
+  currentUser: Awaited<ReturnType<typeof getCurrentAppUser>>,
+  canFinanceReview: boolean,
+  canApproveExpense: boolean,
+): Record<string, ExpenseRowCapabilities> {
+  const isOwnerDecisionRole =
+    currentUser?.role === "admin" ||
+    currentUser?.role === "accountant" ||
+    currentUser?.role === "manager";
+
+  return Object.fromEntries(
+    expenses.map((expense) => {
+      const isSubmitted = expense.status === "submitted";
+      const isReviewed = Boolean(expense.finance_reviewed_at);
+      const canReviewThisRow = canFinanceReview && isSubmitted && !isReviewed;
+      const canApproveThisRow =
+        canApproveExpense && isOwnerDecisionRole && isSubmitted && isReviewed;
+      const canRejectThisRow =
+        canApproveThisRow && expense.submitted_by !== currentUser?.id;
+
+      return [
+        expense.id,
+        {
+          canFinanceReview: canReviewThisRow,
+          canApprove: canApproveThisRow,
+          canReject: canRejectThisRow,
+        },
+      ];
+    }),
+  );
+}
+
 export default async function ExpensesPage() {
-  const [canReadOwn, canReadBroad, canSubmitOwn, canFinanceReview, canApproveExpense] = await Promise.all([
-    checkPermission(EXPENSE_PERMISSIONS.readOwn),
-    checkPermission(EXPENSE_PERMISSIONS.read),
-    checkPermission(EXPENSE_PERMISSIONS.submitOwn),
-    checkPermission(EXPENSE_PERMISSIONS.financeReview),
-    checkPermission(EXPENSE_PERMISSIONS.approve),
-  ]);
+  const [currentUser, canReadOwn, canReadBroad, canSubmitOwn, canFinanceReview, canApproveExpense] =
+    await Promise.all([
+      getCurrentAppUser(),
+      checkPermission(EXPENSE_PERMISSIONS.readOwn),
+      checkPermission(EXPENSE_PERMISSIONS.read),
+      checkPermission(EXPENSE_PERMISSIONS.submitOwn),
+      checkPermission(EXPENSE_PERMISSIONS.financeReview),
+      checkPermission(EXPENSE_PERMISSIONS.approve),
+    ]);
 
   const canRead = canReadOwn || canReadBroad;
   if (!canRead) {
@@ -34,8 +70,7 @@ export default async function ExpensesPage() {
         expenses={[]}
         eligibleServices={[]}
         loadError={false}
-        canFinanceReview={false}
-        canApproveExpense={false}
+        rowCapabilities={{}}
       />
     );
   }
@@ -64,6 +99,13 @@ export default async function ExpensesPage() {
     loadError = true;
   }
 
+  const rowCapabilities = buildExpenseRowCapabilities(
+    [...myExpenses, ...expenses],
+    currentUser,
+    canFinanceReview,
+    canApproveExpense,
+  );
+
   return (
     <ExpensesClient
       canRead={true}
@@ -74,8 +116,7 @@ export default async function ExpensesPage() {
       expenses={expenses}
       eligibleServices={eligibleServices}
       loadError={loadError}
-      canFinanceReview={canFinanceReview}
-      canApproveExpense={canApproveExpense}
+      rowCapabilities={rowCapabilities}
     />
   );
 }

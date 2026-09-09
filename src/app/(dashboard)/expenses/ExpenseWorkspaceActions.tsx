@@ -8,7 +8,11 @@ import {
   rejectExpenseAction,
   reviewExpenseFinanceAction,
 } from "@/lib/expenses/actions";
-import type { ExpenseAccountabilitySummary, W5ActionResult } from "@/lib/expenses/types";
+import type {
+  ExpenseAccountabilitySummary,
+  ExpenseRowCapabilities,
+  W5ActionResult,
+} from "@/lib/expenses/types";
 import {
   getExpenseActionErrorMessage,
   type ExpensesDictionary,
@@ -19,8 +23,7 @@ type ActionResult = W5ActionResult<Record<string, string>>;
 
 interface ExpenseWorkspaceActionsProps {
   expense: ExpenseAccountabilitySummary;
-  canFinanceReview: boolean;
-  canApproveExpense: boolean;
+  capabilities: ExpenseRowCapabilities;
   dictionary: ExpensesDictionary;
 }
 
@@ -98,8 +101,7 @@ function ActionDialog({
 
 export default function ExpenseWorkspaceActions({
   expense,
-  canFinanceReview,
-  canApproveExpense,
+  capabilities,
   dictionary,
 }: ExpenseWorkspaceActionsProps) {
   const router = useRouter();
@@ -109,9 +111,9 @@ export default function ExpenseWorkspaceActions({
   const requestIdRef = useRef<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  const isReviewed = Boolean(expense.finance_reviewed_at);
-  const canReview = canFinanceReview && expense.status === "submitted" && !isReviewed;
-  const canApprove = canApproveExpense && expense.status === "submitted" && isReviewed;
+  const canReview = capabilities.canFinanceReview;
+  const canApprove = capabilities.canApprove;
+  const canReject = capabilities.canReject;
 
   const openDialog = (nextDialog: DialogKind) => {
     setError("");
@@ -177,7 +179,7 @@ export default function ExpenseWorkspaceActions({
     });
   };
 
-  if (!canReview && !canApprove) return null;
+  if (!canReview && !canApprove && !canReject) return null;
 
   return (
     <>
@@ -193,24 +195,24 @@ export default function ExpenseWorkspaceActions({
           </button>
         )}
         {canApprove && (
-          <>
-            <button
-              type="button"
-              onClick={() => openDialog("approve")}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-on-primary hover:bg-primary/90"
-            >
-              <Check className="h-3.5 w-3.5" />
-              {dictionary.actions.approveExpense}
-            </button>
-            <button
-              type="button"
-              onClick={() => openDialog("reject")}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-error/40 px-3 text-xs font-semibold text-error hover:bg-error-container/40"
-            >
-              <X className="h-3.5 w-3.5" />
-              {dictionary.actions.rejectExpense}
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={() => openDialog("approve")}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-on-primary hover:bg-primary/90"
+          >
+            <Check className="h-3.5 w-3.5" />
+            {dictionary.actions.approveExpense}
+          </button>
+        )}
+        {canReject && (
+          <button
+            type="button"
+            onClick={() => openDialog("reject")}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-error/40 px-3 text-xs font-semibold text-error hover:bg-error-container/40"
+          >
+            <X className="h-3.5 w-3.5" />
+            {dictionary.actions.rejectExpense}
+          </button>
         )}
       </div>
 

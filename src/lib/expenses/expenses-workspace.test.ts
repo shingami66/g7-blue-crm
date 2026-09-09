@@ -71,8 +71,9 @@ test("Expenses ledger exposes funding method and governed row-level finance acti
   assert.ok(actions.includes("reviewExpenseFinanceAction"));
   assert.ok(actions.includes("approveExpenseAction"));
   assert.ok(actions.includes("rejectExpenseAction"));
-  assert.ok(actions.includes('expense.status === "submitted" && !isReviewed'));
-  assert.ok(actions.includes('expense.status === "submitted" && isReviewed'));
+  assert.ok(actions.includes("capabilities.canFinanceReview"));
+  assert.ok(actions.includes("capabilities.canApprove"));
+  assert.ok(actions.includes("capabilities.canReject"));
   assert.equal(actions.includes("setError(result.error)"), false);
   assert.ok(serverActions.includes("finance_review_required"));
   assert.ok(serverActions.includes('from("expense_accountability_summaries")'));
