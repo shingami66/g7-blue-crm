@@ -932,28 +932,85 @@ test("55. Layout Shell: AdvancesClient does NOT duplicate max-w-7xl shell and re
   );
 });
 
-test("56. Layout Shell: AdvanceDetailClient does NOT contain duplicate outer shell", () => {
+test("56. Layout Shell: AdvanceDetailClient uses the canonical dashboard width", () => {
   const detailSource = fs.readFileSync(
     path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/AdvanceDetailClient.tsx"),
     "utf8",
   );
   assert.equal(
-    detailSource.includes("max-w-7xl"),
+    detailSource.includes("max-w-5xl mx-auto"),
     false,
-    "AdvanceDetailClient must not contain duplicate max-w-7xl outer shell",
+    "AdvanceDetailClient must not add a page-level max-w-5xl mx-auto constraint",
   );
   assert.equal(
-    detailSource.includes("p-4 sm:p-6 md:p-8"),
+    detailSource.includes('<div className="flex flex-col gap-6 pb-12 max-w'),
     false,
-    "AdvanceDetailClient must not contain duplicate outer shell padding",
+    "AdvanceDetailClient must not add a width constraint to the normal-workspace root",
   );
   assert.ok(
-    detailSource.includes('<div className="space-y-6 max-w-5xl mx-auto">'),
-    "AdvanceDetailClient must retain space-y-6 max-w-5xl mx-auto root structure",
+    detailSource.includes('<div className="flex flex-col gap-6 pb-12">'),
+    "AdvanceDetailClient must use the canonical detail-page root rhythm",
   );
 });
 
-test("57. Dictionary: dead sectionBadge and stageBadge fields are cleaned up from CashAdvancesDictionary", () => {
+test("57. Detail: record header preserves hierarchy, identity direction, and status", () => {
+  const detailSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/AdvanceDetailClient.tsx"),
+    "utf8",
+  );
+  assert.ok(
+    detailSource.includes("text-[28px]") &&
+      detailSource.includes("leading-[36px]") &&
+      detailSource.includes("font-mono") &&
+      detailSource.includes('dir="ltr"'),
+    "Advance header must use mature title scale and LTR identifier treatment",
+  );
+  assert.ok(
+    detailSource.includes("getCashAdvanceStatusLabel") &&
+      detailSource.includes("dictionary.detail.fields.purpose"),
+    "Advance header must retain status and purpose context",
+  );
+});
+
+test("58. Detail: four metrics use a responsive workspace grid", () => {
+  const detailSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/AdvanceDetailClient.tsx"),
+    "utf8",
+  );
+  assert.ok(
+    detailSource.includes("grid-cols-1") &&
+      detailSource.includes("sm:grid-cols-2") &&
+      detailSource.includes("xl:grid-cols-4"),
+    "Advance metrics must reflow from one to two to four columns",
+  );
+  for (const field of [
+    "advance.amount_issued",
+    "advance.amount_spent_settled",
+    "advance.amount_returned",
+    "advance.remaining_balance",
+  ]) {
+    assert.ok(detailSource.includes(field), `Advance detail must retain ${field}`);
+  }
+});
+
+test("59. Detail: sections use aligned section headers and padded bodies", () => {
+  const detailSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/AdvanceDetailClient.tsx"),
+    "utf8",
+  );
+  const sectionCount = (
+    detailSource.match(
+      /<section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">/g,
+    ) ?? []
+  ).length;
+  assert.ok(sectionCount >= 3, "Detail workspace must retain the aligned section containers");
+  assert.ok(
+    detailSource.includes("px-6 py-4") && detailSource.includes("p-6"),
+    "Detail sections must retain mature header and body spacing",
+  );
+});
+
+test("60. Dictionary: dead sectionBadge and stageBadge fields are cleaned up from CashAdvancesDictionary", () => {
   const dictSource = fs.readFileSync(
     path.join(process.cwd(), "src/lib/i18n/dictionaries/cash-advances.ts"),
     "utf8",
@@ -970,7 +1027,7 @@ test("57. Dictionary: dead sectionBadge and stageBadge fields are cleaned up fro
   );
 });
 
-test("58. Canonical Shell: dashboard layout owns max-w-[1440px] and ExpensesClient does NOT duplicate max-w-7xl shell", () => {
+test("61. Canonical Shell: dashboard layout owns max-w-[1440px] and ExpensesClient does NOT duplicate max-w-7xl shell", () => {
   const layoutSource = fs.readFileSync(
     path.join(process.cwd(), "src/app/(dashboard)/layout.tsx"),
     "utf8",

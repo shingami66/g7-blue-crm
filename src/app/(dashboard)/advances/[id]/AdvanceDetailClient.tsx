@@ -114,60 +114,47 @@ export default function AdvanceDetailClient({
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Top Back Navigation */}
-      <div>
-        <PendingLink
-          href="/advances"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline transition-colors"
-        >
-          {isRtl ? <ArrowRight className="w-3.5 h-3.5" /> : <ArrowLeft className="w-3.5 h-3.5" />}
-          <span>{dictionary.detail.backToAdvances}</span>
-        </PendingLink>
-      </div>
-
-      {/* Header Banner */}
-      <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <span className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">
-              {dictionary.detail.fields.advanceNumber}
-            </span>
-            <h1 className="text-2xl font-mono font-bold text-primary flex items-center gap-2">
-              <span dir="ltr">{advance.advance_number}</span>
-            </h1>
+    <div className="flex flex-col gap-6 pb-12">
+      {/* Record Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <PendingLink
+            href="/advances"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            aria-label={dictionary.detail.backToAdvances}
+            title={dictionary.detail.backToAdvances}
+          >
+            {isRtl ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+          </PendingLink>
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="break-words text-[28px] leading-[36px] font-semibold tracking-tight text-primary font-mono" dir="ltr">
+                {advance.advance_number}
+              </h1>
+              <span
+                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(
+                  advance.status,
+                )}`}
+              >
+                {getCashAdvanceStatusLabel(locale, advance.status)}
+              </span>
+            </div>
+            <p className="text-[14px] leading-[20px] text-on-surface-variant" dir="auto">
+              <span className="font-medium">{dictionary.detail.fields.purpose}:</span>{" "}
+              {advance.purpose}
+            </p>
           </div>
-
-          <div>
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadgeClass(
-                advance.status,
-              )}`}
-            >
-              {getCashAdvanceStatusLabel(locale, advance.status)}
-            </span>
-          </div>
-        </div>
-
-        {/* Purpose */}
-        <div className="pt-2 border-t border-outline-variant/60">
-          <span className="text-[11px] font-semibold text-on-surface-variant block">
-            {dictionary.detail.fields.purpose}
-          </span>
-          <p className="text-sm text-on-surface mt-0.5 leading-relaxed">
-            {advance.purpose}
-          </p>
         </div>
       </div>
 
       {/* 4-Metric Accountability Block */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {/* Issued */}
-        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-xs">
-          <span className="text-[11px] font-medium text-on-surface-variant block">
+        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
+          <span className="block text-xs font-medium leading-4 text-on-surface-variant">
             {dictionary.accountability.amountIssued}
           </span>
-          <p className="text-lg font-mono font-bold text-on-surface mt-1">
+          <p className="mt-2 text-xl font-mono font-semibold leading-7 text-on-surface">
             <span dir="ltr">
               {Number(advance.amount_issued).toFixed(2)} {dictionary.accountability.currency}
             </span>
@@ -175,11 +162,11 @@ export default function AdvanceDetailClient({
         </div>
 
         {/* Spent */}
-        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-xs">
-          <span className="text-[11px] font-medium text-on-surface-variant block">
+        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
+          <span className="block text-xs font-medium leading-4 text-on-surface-variant">
             {dictionary.accountability.amountSpent}
           </span>
-          <p className="text-lg font-mono font-medium text-on-surface mt-1">
+          <p className="mt-2 text-xl font-mono font-semibold leading-7 text-on-surface">
             <span dir="ltr">
               {Number(advance.amount_spent_settled).toFixed(2)} {dictionary.accountability.currency}
             </span>
@@ -187,11 +174,11 @@ export default function AdvanceDetailClient({
         </div>
 
         {/* Returned */}
-        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-xs">
-          <span className="text-[11px] font-medium text-on-surface-variant block">
+        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
+          <span className="block text-xs font-medium leading-4 text-on-surface-variant">
             {dictionary.accountability.amountReturned}
           </span>
-          <p className="text-lg font-mono font-medium text-on-surface mt-1">
+          <p className="mt-2 text-xl font-mono font-semibold leading-7 text-on-surface">
             <span dir="ltr">
               {Number(advance.amount_returned).toFixed(2)} {dictionary.accountability.currency}
             </span>
@@ -199,11 +186,11 @@ export default function AdvanceDetailClient({
         </div>
 
         {/* Remaining */}
-        <div className="rounded-xl border border-primary/30 bg-primary-container/20 p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-primary block">
+        <div className="rounded-xl border border-primary/30 bg-primary-container/20 p-5">
+          <span className="block text-xs font-bold leading-4 text-primary">
             {dictionary.accountability.remainingBalance}
           </span>
-          <p className="text-lg font-mono font-bold text-primary mt-1">
+          <p className="mt-2 text-xl font-mono font-bold leading-7 text-primary">
             <span dir="ltr">
               {Number(advance.remaining_balance).toFixed(2)} {dictionary.accountability.currency}
             </span>
@@ -212,34 +199,37 @@ export default function AdvanceDetailClient({
       </div>
 
       {/* Identity & Context Details */}
-      <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-xs space-y-4">
-        <h2 className="text-sm font-bold text-on-surface flex items-center gap-2 border-b border-outline-variant pb-2">
+      <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
+        <div className="flex items-center gap-2 border-b border-surface-variant bg-surface-bright px-6 py-4">
+          <h2 className="font-semibold text-primary flex items-center gap-2">
           <User className="w-4 h-4 text-primary" />
           {dictionary.detail.sections.identity}
-        </h2>
+          </h2>
+        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+        <div className="p-6">
+          <div className="grid grid-cols-1 gap-6 text-[14px] sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <span className="text-on-surface-variant block">{dictionary.detail.fields.recipient}:</span>
-            <p className="font-semibold text-on-surface mt-0.5">
+            <span className="block text-xs leading-4 text-on-surface-variant">{dictionary.detail.fields.recipient}:</span>
+            <p className="mt-1 font-semibold leading-5 text-on-surface">
               {advance.recipientName || "—"}
             </p>
           </div>
 
           <div>
-            <span className="text-on-surface-variant block">{dictionary.detail.fields.requestedAt}:</span>
-            <p className="font-medium text-on-surface mt-0.5" dir="ltr">
+            <span className="block text-xs leading-4 text-on-surface-variant">{dictionary.detail.fields.requestedAt}:</span>
+            <p className="mt-1 font-medium leading-5 text-on-surface" dir="ltr">
               {new Date(advance.requested_at).toLocaleString()}
             </p>
             {requesterName && (
-              <span className="text-[11px] text-on-surface-variant mt-0.5 block">
+              <span className="mt-1 block text-xs leading-4 text-on-surface-variant">
                 {dictionary.detail.fields.requestedBy}: {requesterName}
               </span>
             )}
           </div>
 
           <div>
-            <span className="text-on-surface-variant block">{dictionary.detail.fields.context}:</span>
+            <span className="block text-xs leading-4 text-on-surface-variant">{dictionary.detail.fields.context}:</span>
             <div className="mt-0.5">
               {advance.context_type === "company" ? (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
@@ -257,8 +247,8 @@ export default function AdvanceDetailClient({
 
           {advance.service_id && (
             <div className="sm:col-span-2">
-              <span className="text-on-surface-variant block">{dictionary.detail.fields.service}:</span>
-              <p className="font-medium text-on-surface mt-0.5">
+              <span className="block text-xs leading-4 text-on-surface-variant">{dictionary.detail.fields.service}:</span>
+              <p className="mt-1 font-medium leading-5 text-on-surface">
                 {advance.serviceNumber && (
                   <span dir="ltr" className="font-mono font-bold me-1.5">
                     [{advance.serviceNumber}]
@@ -273,8 +263,9 @@ export default function AdvanceDetailClient({
               </p>
             </div>
           )}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Lifecycle & Audit (Only rendered if meaningful values exist) */}
       {(advance.approved_at ||
@@ -283,21 +274,24 @@ export default function AdvanceDetailClient({
         advance.settled_at ||
         advance.rejection_reason ||
         advance.cancellation_reason) && (
-        <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-xs space-y-4">
-          <h2 className="text-sm font-bold text-on-surface flex items-center gap-2 border-b border-outline-variant pb-2">
+        <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
+          <div className="flex items-center gap-2 border-b border-surface-variant bg-surface-bright px-6 py-4">
             <Clock className="w-4 h-4 text-primary" />
-            {dictionary.detail.sections.lifecycle}
-          </h2>
+            <h2 className="font-semibold text-primary">
+              {dictionary.detail.sections.lifecycle}
+            </h2>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+          <div className="p-6">
+            <div className="grid grid-cols-1 gap-6 text-[14px] sm:grid-cols-2 lg:grid-cols-3">
             {advance.approved_at && (
               <div>
-                <span className="text-on-surface-variant block">{dictionary.detail.fields.approvedAt}:</span>
-                <p className="font-medium text-on-surface mt-0.5" dir="ltr">
+                <span className="block text-xs leading-4 text-on-surface-variant">{dictionary.detail.fields.approvedAt}:</span>
+                <p className="mt-1 font-medium leading-5 text-on-surface" dir="ltr">
                   {new Date(advance.approved_at).toLocaleString()}
                 </p>
                 {approverName && (
-                  <span className="text-[11px] text-on-surface-variant mt-0.5 block">
+                  <span className="mt-1 block text-xs leading-4 text-on-surface-variant">
                     {dictionary.detail.fields.approvedBy}: {approverName}
                   </span>
                 )}
@@ -306,12 +300,12 @@ export default function AdvanceDetailClient({
 
             {advance.issued_at && (
               <div>
-                <span className="text-on-surface-variant block">{dictionary.detail.fields.issuedAt}:</span>
-                <p className="font-medium text-on-surface mt-0.5" dir="ltr">
+                <span className="block text-xs leading-4 text-on-surface-variant">{dictionary.detail.fields.issuedAt}:</span>
+                <p className="mt-1 font-medium leading-5 text-on-surface" dir="ltr">
                   {new Date(advance.issued_at).toLocaleString()}
                 </p>
                 {issuerName && (
-                  <span className="text-[11px] text-on-surface-variant mt-0.5 block">
+                  <span className="mt-1 block text-xs leading-4 text-on-surface-variant">
                     {dictionary.detail.fields.issuedBy}: {issuerName}
                   </span>
                 )}
@@ -320,10 +314,10 @@ export default function AdvanceDetailClient({
 
             {advance.payment_reference && (
               <div>
-                <span className="text-on-surface-variant block">
+                <span className="block text-xs leading-4 text-on-surface-variant">
                   {dictionary.detail.fields.paymentReference}:
                 </span>
-                <p className="font-mono font-medium text-on-surface mt-0.5" dir="ltr">
+                <p className="mt-1 font-mono font-medium leading-5 text-on-surface" dir="ltr">
                   {advance.payment_reference}
                 </p>
               </div>
@@ -331,8 +325,8 @@ export default function AdvanceDetailClient({
 
             {advance.settled_at && (
               <div>
-                <span className="text-on-surface-variant block">{dictionary.detail.fields.settledAt}:</span>
-                <p className="font-medium text-on-surface mt-0.5" dir="ltr">
+                <span className="block text-xs leading-4 text-on-surface-variant">{dictionary.detail.fields.settledAt}:</span>
+                <p className="mt-1 font-medium leading-5 text-on-surface" dir="ltr">
                   {new Date(advance.settled_at).toLocaleString()}
                 </p>
               </div>
@@ -347,12 +341,12 @@ export default function AdvanceDetailClient({
                   {advance.rejection_reason}
                 </p>
                 {rejecterName && (
-                  <span className="text-[11px] text-on-surface-variant mt-1 block">
+                  <span className="mt-1 block text-xs leading-4 text-on-surface-variant">
                     {dictionary.detail.fields.rejectedBy}: {rejecterName}
                   </span>
                 )}
                 {advance.rejected_at && (
-                  <span className="text-[11px] text-on-surface-variant mt-0.5 block" dir="ltr">
+                  <span className="mt-1 block text-xs leading-4 text-on-surface-variant" dir="ltr">
                     {dictionary.detail.fields.rejectedAt}: {new Date(advance.rejected_at).toLocaleString()}
                   </span>
                 )}
@@ -368,36 +362,40 @@ export default function AdvanceDetailClient({
                   {advance.cancellation_reason}
                 </p>
                 {cancellerName && (
-                  <span className="text-[11px] text-on-surface-variant mt-1 block">
+                  <span className="mt-1 block text-xs leading-4 text-on-surface-variant">
                     {dictionary.detail.fields.cancelledBy}: {cancellerName}
                   </span>
                 )}
                 {advance.cancelled_at && (
-                  <span className="text-[11px] text-on-surface-variant mt-0.5 block" dir="ltr">
+                  <span className="mt-1 block text-xs leading-4 text-on-surface-variant" dir="ltr">
                     {dictionary.detail.fields.cancelledAt}: {new Date(advance.cancelled_at).toLocaleString()}
                   </span>
                 )}
               </div>
             )}
+            </div>
           </div>
-        </div>
+        </section>
       )}
 
       {/* Spend / Allocation History */}
-      <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-xs space-y-4">
-        <h2 className="text-sm font-bold text-on-surface flex items-center gap-2 border-b border-outline-variant pb-2">
+      <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
+        <div className="flex items-center gap-2 border-b border-surface-variant bg-surface-bright px-6 py-4">
+          <h2 className="font-semibold text-primary flex items-center gap-2">
           <Receipt className="w-4 h-4 text-primary" />
           {dictionary.detail.sections.allocations}
-        </h2>
+          </h2>
+        </div>
 
-        {allocations.length === 0 ? (
-          <p className="text-xs text-on-surface-variant italic py-2">
+        <div className="p-6">
+          {allocations.length === 0 ? (
+          <p className="text-sm italic text-on-surface-variant">
             {dictionary.detail.allocationsTable.empty}
           </p>
-        ) : (
+          ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-start text-xs">
-              <thead className="bg-surface-container-low text-on-surface-variant font-semibold border-b border-outline-variant">
+            <table className="w-full text-start text-sm">
+              <thead className="bg-surface-container-low text-xs text-on-surface-variant font-semibold border-b border-outline-variant">
                 <tr>
                   <th className="px-4 py-2.5 text-start">
                     {dictionary.detail.allocationsTable.expenseNumber}
@@ -435,24 +433,28 @@ export default function AdvanceDetailClient({
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+          )}
+        </div>
+      </section>
 
       {/* Cash Return History */}
-      <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-xs space-y-4">
-        <h2 className="text-sm font-bold text-on-surface flex items-center gap-2 border-b border-outline-variant pb-2">
+      <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
+        <div className="flex items-center gap-2 border-b border-surface-variant bg-surface-bright px-6 py-4">
+          <h2 className="font-semibold text-primary flex items-center gap-2">
           <RotateCcw className="w-4 h-4 text-primary" />
           {dictionary.detail.sections.returns}
-        </h2>
+          </h2>
+        </div>
 
-        {returns.length === 0 ? (
-          <p className="text-xs text-on-surface-variant italic py-2">
+        <div className="p-6">
+          {returns.length === 0 ? (
+          <p className="text-sm italic text-on-surface-variant">
             {dictionary.detail.returnsTable.empty}
           </p>
-        ) : (
+          ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-start text-xs">
-              <thead className="bg-surface-container-low text-on-surface-variant font-semibold border-b border-outline-variant">
+            <table className="w-full text-start text-sm">
+              <thead className="bg-surface-container-low text-xs text-on-surface-variant font-semibold border-b border-outline-variant">
                 <tr>
                   <th className="px-4 py-2.5 text-end">
                     {dictionary.detail.returnsTable.amount}
@@ -490,8 +492,9 @@ export default function AdvanceDetailClient({
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
