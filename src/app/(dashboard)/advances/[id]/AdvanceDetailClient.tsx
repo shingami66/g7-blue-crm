@@ -114,9 +114,8 @@ export default function AdvanceDetailClient({
   };
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
-      <div className="space-y-6 max-w-5xl">
-        {/* Top Back Navigation */}
+    <div className="space-y-6 max-w-5xl mx-auto">
+      {/* Top Back Navigation */}
       <div>
         <PendingLink
           href="/advances"
@@ -494,6 +493,5 @@ export default function AdvanceDetailClient({
         )}
       </div>
     </div>
-  </div>
   );
 }

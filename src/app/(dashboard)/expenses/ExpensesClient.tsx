@@ -21,7 +21,6 @@ import {
   attachExpenseReceiptAction,
 } from "@/lib/expenses/actions";
 import { ExpenseSubmissionModal } from "./ExpenseSubmissionModal";
-import PendingLink from "@/components/ui/PendingLink";
 import {
   Receipt,
   AlertCircle,
@@ -36,7 +35,6 @@ import {
   CheckCircle2,
   Clock,
   ShieldCheck,
-  Wallet,
 } from "lucide-react";
 
 interface ExpensesClientProps {
@@ -189,7 +187,7 @@ export default function ExpensesClient({
   };
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-outline-variant pb-5">
         <div>
@@ -207,30 +205,20 @@ export default function ExpensesClient({
           </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
-          <PendingLink
-            href="/advances"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface text-xs font-semibold hover:bg-surface-container transition-all shadow-xs"
+        {/* Primary Action: New Expense */}
+        {canSubmitOwn && (
+          <button
+            type="button"
+            onClick={() => {
+              setNotice(null);
+              setIsSubmissionModalOpen(true);
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm shrink-0"
           >
-            <Wallet className="w-4 h-4 text-primary" />
-            <span>{locale === "ar" ? "العهد النقدية" : "Cash Advances"}</span>
-          </PendingLink>
-
-          {/* Primary Action: New Expense */}
-          {canSubmitOwn && (
-            <button
-              type="button"
-              onClick={() => {
-                setNotice(null);
-                setIsSubmissionModalOpen(true);
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{dictionary.header.newExpense}</span>
-            </button>
-          )}
-        </div>
+            <Plus className="w-4 h-4" />
+            <span>{dictionary.header.newExpense}</span>
+          </button>
+        )}
       </div>
 
       {/* Notices / Alert banners */}

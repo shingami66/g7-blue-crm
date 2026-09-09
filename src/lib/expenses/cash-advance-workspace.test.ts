@@ -545,19 +545,20 @@ test("31. Detail: zero operational mutation buttons present in W5B-2B", () => {
 // NAVIGATION & DISCOVERABILITY (Tests 32 - 36)
 // ============================================================================
 
-test("32. Navigation: /expenses includes active discoverability PendingLink to /advances", () => {
+test("32. Navigation: redundant Expenses -> Advances header cross-link is removed", () => {
   const expensesClientSource = fs.readFileSync(
     path.join(process.cwd(), "src/app/(dashboard)/expenses/ExpensesClient.tsx"),
     "utf8",
   );
-  assert.ok(
+  assert.equal(
     expensesClientSource.includes('href="/advances"'),
-    "ExpensesClient must have a link to /advances",
+    false,
+    "ExpensesClient must not contain redundant cross-link to /advances",
   );
-  assert.ok(
-    expensesClientSource.includes("<PendingLink") &&
-      expensesClientSource.includes('href="/advances"'),
-    "Link to /advances must use PendingLink",
+  assert.equal(
+    expensesClientSource.includes("PendingLink"),
+    false,
+    "ExpensesClient no longer requires PendingLink after cross-link removal",
   );
 });
 
@@ -887,65 +888,113 @@ test("54. Repair: no migration files changed", () => {
   );
 });
 
-test("55. Owner Acceptance: AdvancesClient uses dashboard shell container matching Expenses pattern", () => {
+test("55. Layout Shell: AdvancesClient does NOT duplicate max-w-7xl shell and restores pre-01b5 visual baseline", () => {
   const clientSource = fs.readFileSync(
     path.join(process.cwd(), "src/app/(dashboard)/advances/AdvancesClient.tsx"),
     "utf8",
   );
-  // Must have the full outer shell matching ExpensesClient
-  assert.ok(
-    clientSource.includes("p-4 sm:p-6 md:p-8 max-w-7xl mx-auto"),
-    "AdvancesClient must use p-4 sm:p-6 md:p-8 max-w-7xl mx-auto outer shell",
+  assert.equal(
+    clientSource.includes("max-w-7xl"),
+    false,
+    "AdvancesClient must not duplicate max-w-7xl shell",
   );
-  // Must have header border-b matching Expenses header divider
+  assert.equal(
+    clientSource.includes("p-4 sm:p-6 md:p-8"),
+    false,
+    "AdvancesClient must not have duplicate page padding",
+  );
   assert.ok(
+    clientSource.includes('<div className="space-y-6">'),
+    "AdvancesClient must use canonical space-y-6 root",
+  );
+  assert.equal(
     clientSource.includes("border-b border-outline-variant pb-5"),
-    "AdvancesClient header must have border-b bottom divider",
+    false,
+    "AdvancesClient header must not have extra border-b divider",
   );
-  // Must have sectionBadge in header
-  assert.ok(
+  assert.equal(
     clientSource.includes("dictionary.header.sectionBadge"),
-    "AdvancesClient header must render sectionBadge",
+    false,
+    "AdvancesClient header must not render sectionBadge",
   );
-  // Must have stageBadge in header
-  assert.ok(
+  assert.equal(
     clientSource.includes("dictionary.header.stageBadge"),
-    "AdvancesClient header must render stageBadge",
+    false,
+    "AdvancesClient header must not render stageBadge",
+  );
+  assert.ok(
+    clientSource.includes("gap-2.5"),
+    "AdvancesClient header h1 must restore gap-2.5",
+  );
+  assert.ok(
+    clientSource.includes("text-xs font-semibold shadow-xs"),
+    "AdvancesClient header button must restore text-xs shadow-xs",
   );
 });
 
-test("56. Owner Acceptance: AdvanceDetailClient uses dashboard shell container", () => {
+test("56. Layout Shell: AdvanceDetailClient does NOT contain duplicate outer shell", () => {
   const detailSource = fs.readFileSync(
     path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/AdvanceDetailClient.tsx"),
     "utf8",
   );
-  // Must have the full outer shell
-  assert.ok(
-    detailSource.includes("p-4 sm:p-6 md:p-8 max-w-7xl mx-auto"),
-    "AdvanceDetailClient must use p-4 sm:p-6 md:p-8 max-w-7xl mx-auto outer shell",
+  assert.equal(
+    detailSource.includes("max-w-7xl"),
+    false,
+    "AdvanceDetailClient must not contain duplicate max-w-7xl outer shell",
   );
-  // Must have inner content wrapper for proper width
+  assert.equal(
+    detailSource.includes("p-4 sm:p-6 md:p-8"),
+    false,
+    "AdvanceDetailClient must not contain duplicate outer shell padding",
+  );
   assert.ok(
-    detailSource.includes("max-w-5xl"),
-    "AdvanceDetailClient must have max-w-5xl inner content wrapper",
+    detailSource.includes('<div className="space-y-6 max-w-5xl mx-auto">'),
+    "AdvanceDetailClient must retain space-y-6 max-w-5xl mx-auto root structure",
   );
 });
 
-test("57. Owner Acceptance: CashAdvancesDictionary has sectionBadge and stageBadge in both locales", () => {
+test("57. Dictionary: dead sectionBadge and stageBadge fields are cleaned up from CashAdvancesDictionary", () => {
   const dictSource = fs.readFileSync(
     path.join(process.cwd(), "src/lib/i18n/dictionaries/cash-advances.ts"),
     "utf8",
   );
-  assert.ok(
-    dictSource.includes('sectionBadge: "Expenses & Costing"'),
-    "EN sectionBadge must be 'Expenses & Costing'",
+  assert.equal(
+    dictSource.includes("sectionBadge"),
+    false,
+    "CashAdvancesDictionary must not contain dead sectionBadge field",
+  );
+  assert.equal(
+    dictSource.includes("stageBadge"),
+    false,
+    "CashAdvancesDictionary must not contain dead stageBadge field",
+  );
+});
+
+test("58. Canonical Shell: dashboard layout owns max-w-[1440px] and ExpensesClient does NOT duplicate max-w-7xl shell", () => {
+  const layoutSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/layout.tsx"),
+    "utf8",
   );
   assert.ok(
-    dictSource.includes('stageBadge: "W5B Foundation"'),
-    "EN stageBadge must be 'W5B Foundation'",
+    layoutSource.includes("dashboard-main relative mx-auto w-full min-w-0 max-w-[1440px] flex-1 p-4 md:p-6"),
+    "Dashboard layout must own canonical max-w-[1440px] page shell with p-4 md:p-6",
+  );
+  const expensesSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/expenses/ExpensesClient.tsx"),
+    "utf8",
+  );
+  assert.equal(
+    expensesSource.includes("max-w-7xl"),
+    false,
+    "ExpensesClient must not duplicate max-w-7xl shell",
+  );
+  assert.equal(
+    expensesSource.includes("p-4 sm:p-6 md:p-8"),
+    false,
+    "ExpensesClient must not have duplicate page padding",
   );
   assert.ok(
-    dictSource.includes("sectionBadge") && dictSource.includes("المصروفات والتكاليف"),
-    "AR sectionBadge must be present",
+    expensesSource.includes('<div className="space-y-6">'),
+    "ExpensesClient must use minimal space-y-6 root",
   );
 });
