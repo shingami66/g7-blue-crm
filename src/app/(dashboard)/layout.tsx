@@ -4,6 +4,7 @@ import {
   checkPermission,
   getCurrentAppUser,
 } from "@/lib/auth/permissions";
+import { PETTY_CASH_PERMISSIONS } from "@/lib/auth/role-permissions";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
@@ -26,8 +27,9 @@ export default async function DashboardLayout({
     redirect("/unauthorized");
   }
 
-  const [isAdmin, locale] = await Promise.all([
+  const [isAdmin, canReadPettyCash, locale] = await Promise.all([
     checkPermission("users:manage"),
+    checkPermission(PETTY_CASH_PERMISSIONS.read),
     getCurrentSessionEffectiveLocale(),
   ]);
   const shellDirection = getDirection(locale);
@@ -40,7 +42,11 @@ export default async function DashboardLayout({
           dir={shellDirection}
         >
           <div className="dashboard-sidebar">
-            <Sidebar isAdmin={isAdmin} shellDirection={shellDirection} />
+              <Sidebar
+                isAdmin={isAdmin}
+                canReadPettyCash={canReadPettyCash}
+                shellDirection={shellDirection}
+              />
           </div>
           <div
             className={`dashboard-content flex min-h-screen min-w-0 max-w-full flex-1 flex-col ${

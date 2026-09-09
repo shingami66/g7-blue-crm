@@ -35,11 +35,15 @@ import {
   settleCashAdvanceSpendSchema,
   recordCashAdvanceReturnSchema,
   recordPettyCashTransactionSchema,
+  createPettyCashFundSchema,
+  updatePettyCashFundSchema,
+  pettyCashFundStatusSchema,
+  pettyCashExpenseSchema,
   reviewExpenseFinanceSchema,
   submitOwnCashAdvanceExpenseSchema,
   submitCashAdvanceExpenseOnBehalfSchema,
 } from "./schemas";
-import type { W5ActionResult, SelfServiceExpenseSubmissionData } from "./types";
+import type { W5ActionResult, SelfServiceExpenseSubmissionData, PettyCashExpenseSubmissionData } from "./types";
 
 // Helper to invoke unapplied W5A RPCs before migration is applied to remote schema
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,6 +68,126 @@ function financeReviewRequiredResult<T>(): W5ActionResult<T> {
     error: "Finance review is required before this expense action.",
     errorCode: "finance_review_required",
   };
+}
+
+const pettyCashErrorMessages: Record<string, string> = {
+  petty_cash_fund_request_invalid: "Review the fund details and try again.",
+  petty_cash_fund_request_conflict: "This fund request was already used with different details.",
+  petty_cash_fund_name_exists: "A Petty Cash fund with this name already exists.",
+  petty_cash_custodian_not_authorized: "Select an active Admin or Accountant as custodian.",
+  petty_cash_fund_not_found: "The Petty Cash fund could not be found.",
+  petty_cash_fund_closed_immutable: "A closed Petty Cash fund cannot be changed.",
+  petty_cash_float_limit_below_balance: "The float limit cannot be below the current balance.",
+  petty_cash_status_request_invalid: "The requested fund status is invalid.",
+  petty_cash_status_request_conflict: "This fund status request was already used differently.",
+  petty_cash_fund_reactivation_invalid: "Only a suspended fund can be reactivated.",
+  petty_cash_fund_suspension_invalid: "Only an active fund can be suspended.",
+  petty_cash_fund_close_requires_zero_balance: "A fund can close only when its balance is zero.",
+  petty_cash_fund_status_change_failed: "The fund status could not be changed.",
+  petty_cash_disbursement_expense_required: "Select one approved Petty Cash expense before disbursing.",
+  petty_cash_withdrawal_reference_required: "Enter treasury evidence or reference before withdrawing cash.",
+  petty_cash_fund_not_active: "Transactions are unavailable while this fund is not active.",
+  insufficient_petty_cash_balance: "The fund does not have enough available cash.",
+  expense_not_found: "The linked Expense could not be found.",
+  expense_must_be_approved_for_petty_cash_disbursement: "Only an approved Expense can be disbursed.",
+  expense_not_eligible_for_petty_cash: "The Expense is not linked to this Petty Cash fund.",
+  disbursement_exceeds_expense_ceiling: "The disbursement exceeds the Expense amount remaining.",
+  replenishment_exceeds_float_limit: "The transaction would exceed the fund float limit.",
+  petty_cash_transaction_request_conflict: "This Petty Cash transaction request was already used differently.",
+  petty_cash_transaction_failed: "The Petty Cash transaction could not be recorded.",
+};
+
+function pettyCashErrorMessage(errorCode?: string): string {
+  return pettyCashErrorMessages[errorCode ?? ""] ?? "The Petty Cash action could not be completed.";
+}
+
+function pettyCashActionFailure(errorCode?: string): W5ActionResult<never> {
+  return {
+    success: false,
+    error: pettyCashErrorMessage(errorCode),
+    errorCode,
+  };
+}
+
+// 0. Create Petty Cash Fund
+export async function createPettyCashFundAction(
+  rawInput: unknown,
+): Promise<W5ActionResult<{ fund_id: string }>> {
+  try {
+    const user = await requirePermission(PETTY_CASH_PERMISSIONS.manage);
+    const parsed = createPettyCashFundSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? "Review the fund details.", errorCode: "validation_error" };
+    }
+    const { data, error } = await getExpenseRpcClient().rpc("create_petty_cash_fund", {
+      p_fund_name: parsed.data.fund_name,
+      p_custodian_id: parsed.data.custodian_id,
+      p_float_limit: parsed.data.float_limit,
+      p_request_id: parsed.data.request_id,
+      p_actor_id: user.id,
+      p_actor_role: user.role,
+    });
+    if (error) return pettyCashActionFailure(error.code);
+    const row = data?.[0];
+    if (row?.error_code) return pettyCashActionFailure(row.error_code);
+    return { success: true, data: { fund_id: row.fund_id }, idempotentReplay: row.idempotent_replay };
+  } catch {
+    return pettyCashActionFailure("petty_cash_fund_create_failed");
+  }
+}
+
+// 0b. Update Petty Cash Fund metadata
+export async function updatePettyCashFundAction(
+  rawInput: unknown,
+): Promise<W5ActionResult<{ fund_id: string }>> {
+  try {
+    const user = await requirePermission(PETTY_CASH_PERMISSIONS.manage);
+    const parsed = updatePettyCashFundSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? "Review the fund details.", errorCode: "validation_error" };
+    }
+    const { data, error } = await getExpenseRpcClient().rpc("update_petty_cash_fund", {
+      p_fund_id: parsed.data.fund_id,
+      p_fund_name: parsed.data.fund_name,
+      p_custodian_id: parsed.data.custodian_id,
+      p_float_limit: parsed.data.float_limit,
+      p_request_id: parsed.data.request_id,
+      p_actor_id: user.id,
+      p_actor_role: user.role,
+    });
+    if (error) return pettyCashActionFailure(error.code);
+    const row = data?.[0];
+    if (row?.error_code) return pettyCashActionFailure(row.error_code);
+    return { success: true, data: { fund_id: row.fund_id }, idempotentReplay: row.idempotent_replay };
+  } catch {
+    return pettyCashActionFailure("petty_cash_fund_update_failed");
+  }
+}
+
+// 0c. Change Petty Cash Fund status
+export async function setPettyCashFundStatusAction(
+  rawInput: unknown,
+): Promise<W5ActionResult<{ fund_id: string }>> {
+  try {
+    const user = await requirePermission(PETTY_CASH_PERMISSIONS.manage);
+    const parsed = pettyCashFundStatusSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? "Review the fund status.", errorCode: "validation_error" };
+    }
+    const { data, error } = await getExpenseRpcClient().rpc("set_petty_cash_fund_status", {
+      p_fund_id: parsed.data.fund_id,
+      p_new_status: parsed.data.new_status,
+      p_request_id: parsed.data.request_id,
+      p_actor_id: user.id,
+      p_actor_role: user.role,
+    });
+    if (error) return pettyCashActionFailure(error.code);
+    const row = data?.[0];
+    if (row?.error_code) return pettyCashActionFailure(row.error_code);
+    return { success: true, data: { fund_id: row.fund_id }, idempotentReplay: row.idempotent_replay };
+  } catch {
+    return pettyCashActionFailure("petty_cash_fund_status_change_failed");
+  }
 }
 
 // 1. Submit Expense
@@ -167,11 +291,35 @@ async function uploadAndAttachExpenseReceiptInternal({
   file: unknown;
   user: { id: string; clerk_user_id: string; role: string };
   requestId: string;
-}): Promise<{ success: boolean; documentId?: string; error?: string; errorCode?: string }> {
+}): Promise<{ success: boolean; documentId?: string; error?: string; errorCode?: string; idempotentReplay?: boolean }> {
   const validatedFile = await validateBusinessDocumentFile(file);
+  const supabase = getExpenseRpcClient();
+
+  // A retry reuses the attachment request id. Reconcile a prior committed
+  // attachment before creating a second document or calling the RPC again.
+  const { data: priorAttachmentAudit, error: priorAttachmentAuditError } = await supabase
+    .from("audit_logs")
+    .select("details")
+    .eq("entity_type", "expense")
+    .eq("entity_id", expenseId)
+    .eq("details->>operation", "attach_expense_document")
+    .eq("details->>request_id", requestId)
+    .limit(1)
+    .maybeSingle();
+  const priorDocumentId =
+    !priorAttachmentAuditError &&
+    priorAttachmentAudit?.details &&
+    typeof priorAttachmentAudit.details === "object" &&
+    "document_id" in priorAttachmentAudit.details &&
+    typeof priorAttachmentAudit.details.document_id === "string"
+      ? priorAttachmentAudit.details.document_id
+      : undefined;
+  if (priorDocumentId) {
+    return { success: true, documentId: priorDocumentId, idempotentReplay: true };
+  }
+
   const documentId = randomUUID();
   const objectPath = buildBusinessDocumentObjectPath(documentId, validatedFile.mimeType);
-  const supabase = getExpenseRpcClient();
 
   // Step 1: Upload to private storage
   const { error: uploadError } = await supabase.storage
@@ -249,6 +397,27 @@ async function uploadAndAttachExpenseReceiptInternal({
 
   const attachRow = attachData?.[0];
   if (attachRpcError || attachRow?.error_code) {
+    if (attachRpcError) {
+      // A transport error is indeterminate: the RPC may have committed before
+      // the response was lost. Never compensate until durable link state is read.
+      const { data: committedAttachment, error: attachmentStateError } = await supabase
+        .from("expense_documents")
+        .select("document_id")
+        .eq("expense_id", expenseId)
+        .eq("document_id", documentId)
+        .maybeSingle();
+      if (attachmentStateError) {
+        return {
+          success: false,
+          error: "Receipt attachment could not be confirmed. Retry the same receipt upload.",
+          errorCode: "document_attachment_uncertain",
+        };
+      }
+      if (committedAttachment) {
+        return { success: true, documentId, idempotentReplay: true };
+      }
+    }
+
     // Case C: Storage + metadata succeed, Expense attachment fails -> delete metadata row -> delete storage object -> return failure
     const cleanupFailures: string[] = [];
     try {
@@ -1751,6 +1920,115 @@ export async function recordCashAdvanceReturnAction(
   }
 }
 
+// 15b. Record a canonical company-direct Petty Cash Expense.
+// The browser may provide business fields and the selected fund only; funding
+// route, claimant, and cash-advance linkage are forced here on the server.
+export async function recordPettyCashExpenseAction(
+  formData: FormData,
+): Promise<W5ActionResult<PettyCashExpenseSubmissionData>> {
+  try {
+    const user = await requirePermission(PETTY_CASH_PERMISSIONS.transact);
+    const amountRaw = formData.get("amount");
+    const parsed = pettyCashExpenseSchema.safeParse({
+      fund_id: formData.get("fund_id"),
+      context_type: formData.get("context_type"),
+      service_id: formData.get("service_id") || null,
+      expense_category: formData.get("expense_category"),
+      description: formData.get("description"),
+      amount: typeof amountRaw === "string" ? Number(amountRaw) : Number(amountRaw),
+      expense_date: formData.get("expense_date"),
+      request_id: formData.get("request_id"),
+    });
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message ?? "Review the expense details.",
+        errorCode: "validation_error",
+      };
+    }
+
+    const receiptFile = formData.get("receipt");
+    const hasReceipt =
+      receiptFile !== null &&
+      typeof receiptFile === "object" &&
+      "size" in receiptFile &&
+      Number((receiptFile as { size: number }).size) > 0;
+    if (hasReceipt) {
+      try {
+        await validateBusinessDocumentFile(receiptFile);
+      } catch {
+        return { success: false, error: "The receipt file could not be accepted.", errorCode: "invalid_document_file" };
+      }
+    }
+
+    const supabase = getExpenseRpcClient();
+    const { data, error } = await supabase.rpc("submit_expense", {
+      p_expense_number: null,
+      p_context_type: parsed.data.context_type,
+      p_service_id: parsed.data.service_id ?? null,
+      p_expense_category: parsed.data.expense_category,
+      p_description: parsed.data.description,
+      p_amount: parsed.data.amount,
+      p_expense_date: parsed.data.expense_date,
+      p_origin_type: "company_direct",
+      p_payment_method: "petty_cash",
+      p_cash_advance_id: null,
+      p_petty_cash_fund_id: parsed.data.fund_id,
+      p_claimant_id: null,
+      p_request_id: parsed.data.request_id,
+      p_actor_id: user.id,
+      p_actor_role: user.role,
+    });
+    if (error) {
+      return { success: false, error: "The Petty Cash Expense could not be submitted.", errorCode: "petty_cash_expense_submission_failed" };
+    }
+    const row = data?.[0];
+    if (row?.error_code || !row?.expense_id) {
+      return { success: false, error: "The Petty Cash Expense could not be submitted.", errorCode: row?.error_code ?? "petty_cash_expense_submission_failed" };
+    }
+
+    const { data: expenseRow } = await supabase
+      .from("expenses")
+      .select("expense_number")
+      .eq("id", row.expense_id)
+      .single();
+    const expenseNumber = expenseRow?.expense_number ?? "";
+
+    if (hasReceipt) {
+      // The parent submission request is the canonical idempotency key for the
+      // optional receipt attachment, so a lost response can be replayed safely.
+      const receiptRequestId = parsed.data.request_id;
+      const attachment = await uploadAndAttachExpenseReceiptInternal({
+        expenseId: row.expense_id,
+        file: receiptFile,
+        user,
+        requestId: receiptRequestId,
+      });
+      if (!attachment.success) {
+        return {
+          success: true,
+          data: {
+            expense_id: row.expense_id,
+            expense_number: expenseNumber,
+            outcome: "partial_success",
+            warning_code: "receipt_attachment_failed",
+            receipt_request_id: receiptRequestId,
+          },
+          idempotentReplay: row.idempotent_replay,
+        };
+      }
+    }
+
+    return {
+      success: true,
+      data: { expense_id: row.expense_id, expense_number: expenseNumber, outcome: "full_success" },
+      idempotentReplay: row.idempotent_replay,
+    };
+  } catch {
+    return { success: false, error: "The Petty Cash Expense could not be submitted.", errorCode: "petty_cash_expense_submission_failed" };
+  }
+}
+
 // 16. Record Petty Cash Transaction
 export async function recordPettyCashTransactionAction(
   rawInput: unknown,
@@ -1779,23 +2057,18 @@ export async function recordPettyCashTransactionAction(
       p_actor_role: user.role,
     });
 
-    if (error) {
-      return { success: false, error: error.message, errorCode: error.code };
-    }
+    if (error) return pettyCashActionFailure(error.code);
 
     const row = data?.[0];
-    if (row?.error_code) {
-      return { success: false, error: row.error_code, errorCode: row.error_code };
-    }
+    if (row?.error_code) return pettyCashActionFailure(row.error_code);
 
     return {
       success: true,
       data: { transaction_id: row.transaction_id },
       idempotentReplay: row.idempotent_replay,
     };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unexpected error during petty cash transaction recording";
-    return { success: false, error: message };
+  } catch {
+    return pettyCashActionFailure("petty_cash_transaction_failed");
   }
 }
 

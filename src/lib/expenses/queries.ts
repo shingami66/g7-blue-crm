@@ -22,12 +22,15 @@ import type {
   ExpenseDocumentDetail,
   LinkedCashAdvanceExpense,
   CashAdvanceBalanceSummary,
+  PettyCashCustodianOption,
+  PettyCashExpenseSummary,
 } from "./types";
 
 export interface ExpenseListFilters {
   serviceId?: string;
   contextType?: "company" | "event";
   status?: string;
+  pettyCashFundId?: string;
   limit?: number;
 }
 
@@ -56,6 +59,9 @@ export async function getExpensesAccountabilityList(
   }
   if (filters?.status) {
     query = query.eq("status", filters.status);
+  }
+  if (filters?.pettyCashFundId) {
+    query = query.eq("petty_cash_fund_id", filters.pettyCashFundId);
   }
   if (filters?.limit) {
     query = query.limit(filters.limit);
@@ -543,10 +549,51 @@ export async function getPettyCashFundsList(): Promise<PettyCashFund[]> {
     .order("fund_name", { ascending: true });
 
   if (error) {
-    throw new Error(`Failed to load petty cash funds: ${error.message}`);
+    throw new Error("Failed to load petty cash funds");
   }
 
-  return (data ?? []) as PettyCashFund[];
+  const funds = (data ?? []) as PettyCashFund[];
+  if (funds.length === 0) return [];
+
+  const custodianIds = [...new Set(funds.map((fund) => fund.custodian_id))];
+  const { data: users, error: usersError } = await supabase
+    .from("app_users")
+    .select("id, name, email")
+    .in("id", custodianIds);
+  if (usersError) {
+    throw new Error("Failed to load petty cash custodians");
+  }
+  const usersById = new Map<string, { id: string; name: string | null; email: string | null }>(
+    (users ?? []).map((user: { id: string; name: string | null; email: string | null }) => [
+      user.id,
+      user,
+    ] as [string, { id: string; name: string | null; email: string | null }]),
+  );
+
+  const { data: activity, error: activityError } = await supabase
+    .from("petty_cash_transactions")
+    .select("fund_id, recorded_at")
+    .in("fund_id", funds.map((fund) => fund.id))
+    .order("recorded_at", { ascending: false });
+  if (activityError) {
+    throw new Error("Failed to load petty cash activity");
+  }
+  const lastActivityByFund = new Map<string, string>();
+  for (const row of activity ?? []) {
+    if (!lastActivityByFund.has(row.fund_id)) {
+      lastActivityByFund.set(row.fund_id, row.recorded_at);
+    }
+  }
+
+  return funds.map((fund) => {
+    const custodian = usersById.get(fund.custodian_id);
+    return {
+      ...fund,
+      custodian_name: custodian?.name ?? custodian?.email ?? "",
+      custodian_email: custodian?.email ?? "",
+      last_activity_at: lastActivityByFund.get(fund.id) ?? null,
+    };
+  });
 }
 
 export async function getPettyCashFundDetailById(id: string): Promise<{
@@ -563,27 +610,80 @@ export async function getPettyCashFundDetailById(id: string): Promise<{
     .maybeSingle();
 
   if (fundError) {
-    throw new Error(`Failed to load petty cash fund: ${fundError.message}`);
+    throw new Error("Failed to load petty cash fund");
   }
   if (!fundData) {
     return { fund: null, transactions: [] };
   }
 
-  const { data: txData, error: txError } = await supabase
+  const [{ data: txData, error: txError }, { data: custodianData }] = await Promise.all([
+    supabase
     .from("petty_cash_transactions")
     .select("*")
     .eq("fund_id", id)
     .order("recorded_at", { ascending: false })
-    .limit(100);
+    .limit(100),
+    supabase
+      .from("app_users")
+      .select("id, name, email")
+      .eq("id", fundData.custodian_id)
+      .maybeSingle(),
+  ]);
 
   if (txError) {
-    throw new Error(`Failed to load petty cash transactions: ${txError.message}`);
+    throw new Error("Failed to load petty cash transactions");
   }
 
+  const custodian = custodianData as { name: string | null; email: string | null } | null;
   return {
-    fund: fundData as PettyCashFund,
+    fund: {
+      ...(fundData as PettyCashFund),
+      custodian_name: custodian?.name ?? custodian?.email ?? "",
+      custodian_email: custodian?.email ?? "",
+    },
     transactions: (txData ?? []) as PettyCashTransaction[],
   };
+}
+
+export async function getPettyCashCustodianOptions(): Promise<PettyCashCustodianOption[]> {
+  await requirePermission(PETTY_CASH_PERMISSIONS.manage);
+  const supabase = getExpenseClient();
+  const { data, error } = await supabase
+    .from("app_users")
+    .select("id, name, email, role")
+    .eq("is_active", true)
+    .in("role", ["admin", "accountant"])
+    .order("name", { ascending: true });
+  if (error) throw new Error("Failed to load petty cash custodians");
+  return (data ?? []).map((user: PettyCashCustodianOption) => ({
+    id: user.id,
+    name: user.name ?? user.email ?? "",
+    email: user.email ?? "",
+    role: user.role,
+  }));
+}
+
+export async function getPettyCashExpensesByFund(
+  fundId: string,
+): Promise<PettyCashExpenseSummary[]> {
+  const expenses = await getExpensesAccountabilityList({ pettyCashFundId: fundId, limit: 100 });
+  return expenses.map((expense) => ({
+    id: expense.id,
+    expense_number: expense.expense_number,
+    status: expense.status,
+    expense_date: expense.expense_date,
+    context_type: expense.context_type,
+    expense_category: expense.expense_category,
+    description: expense.description,
+    amount: Number(expense.amount),
+    finance_reviewed_at: expense.finance_reviewed_at,
+    approved_at: expense.approved_at,
+    petty_cash_allocated_amount: Number(expense.petty_cash_allocated_amount ?? 0),
+    remaining_petty_cash_amount: Math.max(
+      0,
+      Number(expense.amount) - Number(expense.petty_cash_allocated_amount ?? 0),
+    ),
+  }));
 }
 
 export async function getLinkedCashAdvanceExpenses(

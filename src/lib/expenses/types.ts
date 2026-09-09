@@ -44,7 +44,11 @@ export type CashAdvanceStatus =
 export type SettlementMethod = "bank_transfer" | "cash" | "advance_offset";
 
 export type PettyCashFundStatus = "active" | "suspended" | "closed";
-export type PettyCashTransactionType = "replenishment" | "disbursement" | "return";
+export type PettyCashTransactionType =
+  | "replenishment"
+  | "disbursement"
+  | "return"
+  | "treasury_withdrawal";
 
 export interface Expense {
   id: string;
@@ -185,6 +189,9 @@ export interface PettyCashFund {
   status: PettyCashFundStatus;
   created_at: string;
   updated_at: string;
+  custodian_name?: string;
+  custodian_email?: string;
+  last_activity_at?: string | null;
 }
 
 export interface PettyCashTransaction {
@@ -200,6 +207,28 @@ export interface PettyCashTransaction {
   recorded_by: string;
   recorded_at: string;
   notes: string | null;
+}
+
+export interface PettyCashCustodianOption {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export interface PettyCashExpenseSummary {
+  id: string;
+  expense_number: string;
+  status: ExpenseStatus;
+  expense_date: string;
+  context_type: ExpenseContextType;
+  expense_category: string;
+  description: string;
+  amount: number;
+  finance_reviewed_at: string | null;
+  approved_at: string | null;
+  petty_cash_allocated_amount: number;
+  remaining_petty_cash_amount: number;
 }
 
 export interface ExpenseAccountabilitySummary {
@@ -259,6 +288,17 @@ export interface W5ActionResult<T = Record<string, unknown>> {
   error?: string;
   errorCode?: string;
   idempotentReplay?: boolean;
+}
+
+export type PettyCashExpenseSubmissionOutcome = "full_success" | "partial_success";
+export type PettyCashExpenseSubmissionWarningCode = "receipt_attachment_failed";
+
+export interface PettyCashExpenseSubmissionData {
+  expense_id: string;
+  expense_number: string;
+  outcome: PettyCashExpenseSubmissionOutcome;
+  warning_code?: PettyCashExpenseSubmissionWarningCode;
+  receipt_request_id?: string;
 }
 
 export interface ExpenseServiceOption {

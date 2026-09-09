@@ -820,11 +820,15 @@ test("8.2 Regression: No auto-review, auto-approval, or auto-settlement in on-be
   );
 });
 
-test("8.3 Regression: Petty Cash permissions untouched", () => {
+test("8.3 Regression: Petty Cash permissions remain narrowly governed", () => {
   assert.equal(hasPermissionForRole("sales", PETTY_CASH_PERMISSIONS.read), false);
   assert.equal(hasPermissionForRole("operations", PETTY_CASH_PERMISSIONS.read), false);
-  assert.equal(hasPermissionForRole("manager", PETTY_CASH_PERMISSIONS.read), false);
-  assert.equal(hasPermissionForRole("accountant", PETTY_CASH_PERMISSIONS.read), false);
+  assert.equal(hasPermissionForRole("manager", PETTY_CASH_PERMISSIONS.read), true);
+  assert.equal(hasPermissionForRole("manager", PETTY_CASH_PERMISSIONS.manage), false);
+  assert.equal(hasPermissionForRole("manager", PETTY_CASH_PERMISSIONS.transact), false);
+  assert.equal(hasPermissionForRole("accountant", PETTY_CASH_PERMISSIONS.read), true);
+  assert.equal(hasPermissionForRole("accountant", PETTY_CASH_PERMISSIONS.manage), true);
+  assert.equal(hasPermissionForRole("accountant", PETTY_CASH_PERMISSIONS.transact), true);
   assert.equal(hasPermissionForRole("admin", PETTY_CASH_PERMISSIONS.read), true);
 });
 

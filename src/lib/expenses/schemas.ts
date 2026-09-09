@@ -293,7 +293,7 @@ export const recordCashAdvanceReturnSchema = z.object({
 export const recordPettyCashTransactionSchema = z
   .object({
     fund_id: uuidSchema,
-    transaction_type: z.enum(["replenishment", "disbursement", "return"]),
+    transaction_type: z.enum(["replenishment", "disbursement", "return", "treasury_withdrawal"]),
     amount: z.number().positive({ message: "Amount must be positive" }),
     reference: z.string().trim().nullable().optional(),
     expense_id: uuidSchema.nullable().optional(),
@@ -307,6 +307,57 @@ export const recordPettyCashTransactionSchema = z
         message: "Only disbursements may be linked to an expense",
         path: ["expense_id"],
       });
+    }
+    if (data.transaction_type === "disbursement" && !data.expense_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Approved expense is required for disbursement",
+        path: ["expense_id"],
+      });
+    }
+    if (data.transaction_type === "treasury_withdrawal" && !data.reference) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Treasury reference is required for withdrawal",
+        path: ["reference"],
+      });
+    }
+  });
+
+export const createPettyCashFundSchema = z.object({
+  fund_name: z.string().trim().min(3, { message: "Fund name must be at least 3 characters" }),
+  custodian_id: uuidSchema,
+  float_limit: z.number().positive({ message: "Float limit must be greater than zero" }),
+  request_id: uuidSchema,
+});
+
+export const updatePettyCashFundSchema = createPettyCashFundSchema.extend({
+  fund_id: uuidSchema,
+});
+
+export const pettyCashFundStatusSchema = z.object({
+  fund_id: uuidSchema,
+  new_status: z.enum(["active", "suspended", "closed"]),
+  request_id: uuidSchema,
+});
+
+export const pettyCashExpenseSchema = z
+  .object({
+    fund_id: uuidSchema,
+    context_type: z.enum(["company", "event"]),
+    service_id: uuidSchema.nullable().optional(),
+    expense_category: z.string().trim().min(1, { message: "Category is required" }),
+    description: z.string().trim().min(1, { message: "Description is required" }),
+    amount: z.number().positive({ message: "Amount must be greater than zero" }),
+    expense_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Expense date must be YYYY-MM-DD" }),
+    request_id: uuidSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (data.context_type === "company" && data.service_id) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Company context expense must not specify a service_id", path: ["service_id"] });
+    }
+    if (data.context_type === "event" && !data.service_id) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Event context expense must specify a service_id", path: ["service_id"] });
     }
   });
 

@@ -596,12 +596,12 @@ test("35. Navigation: PendingLink semantics preserved across workspace", () => {
   );
 });
 
-test("36. Navigation: Petty Cash navigation remains absent", () => {
+test("36. Navigation: Petty Cash navigation is a gated Expenses sibling", () => {
   const navKeys = Object.keys(navigationDictionaryEn.modules);
   assert.equal(
     navKeys.includes("pettyCash"),
-    false,
-    "pettyCash must not be in active navigation dictionary modules",
+    true,
+    "pettyCash must be present in the active navigation dictionary modules",
   );
 });
 
@@ -631,14 +631,14 @@ test("38. Regression: ExpenseSubmissionModal semantics unchanged", () => {
   );
 });
 
-test("39. Regression: Expense approval repair is a separate newest migration and Cash Advance repair remains present", () => {
+test("39. Regression: W5C Petty Cash migration is the newest bounded extension", () => {
   const migrationsDir = path.join(process.cwd(), "supabase/migrations");
   const files = fs.readdirSync(migrationsDir);
   const migrationFiles = files.filter((f) => f.endsWith(".sql")).sort();
   const lastMigration = migrationFiles[migrationFiles.length - 1];
   assert.ok(
-    lastMigration === "20260912100000_w5b3_expense_self_approval_authority_repair.sql",
-    "The Expense self-approval corrective migration must be the newest migration",
+    lastMigration === "20260913100000_w5c_petty_cash_governed_workspace_foundation.sql",
+    "The W5C Petty Cash migration must be the newest migration",
   );
 });
 
@@ -654,18 +654,14 @@ test("40. Regression: Cash Advance lifecycle permissions unchanged", () => {
   });
 });
 
-test("41. Regression: No Petty Cash implementation in UI", () => {
+test("41. Regression: Petty Cash implementation stays within the dashboard workspace", () => {
   assert.ok(EXPENSE_PERMISSIONS.submitOwn, "Expense permissions must be intact");
   const dashboardDir = path.join(process.cwd(), "src/app/(dashboard)");
   const files = fs.readdirSync(dashboardDir, { recursive: true }) as string[];
   const pettyCashFiles = files.filter(
     (f) => f.toLowerCase().includes("petty-cash") || f.toLowerCase().includes("pettycash"),
   );
-  assert.equal(
-    pettyCashFiles.length,
-    0,
-    "No petty cash UI route files must exist in this slice",
-  );
+  assert.ok(pettyCashFiles.length >= 4, "Petty Cash UI route files must exist for the W5C workspace");
 });
 
 test("42. Regression: No AP / accounting work introduced", () => {
@@ -1187,15 +1183,15 @@ test("70. Error safety: Cash Advance receipt wrapper masks private pipeline fail
   assert.ok(wrapper.includes("expense.submitted_by !== user.id"));
 });
 
-test("71. Regression: dashboard layout remains untouched and authority changes stay scoped", () => {
+test("71. Regression: dashboard layout and authority changes stay scoped to W5C", () => {
   const layoutDiff = require("child_process").execFileSync("git", ["diff", "--", "src/app/(dashboard)/layout.tsx"], { encoding: "utf8" });
-  assert.equal(layoutDiff, "");
+  assert.ok(layoutDiff.includes("PETTY_CASH_PERMISSIONS"));
   const permissionsDiff = require("child_process").execFileSync("git", ["diff", "HEAD", "--", "src/lib/auth/role-permissions.ts"], { encoding: "utf8" });
   assert.ok(permissionsDiff.includes("EXPENSE_PERMISSIONS.approve"));
   const migrationDiff = require("child_process").execFileSync("git", ["diff", "HEAD", "--", "supabase/migrations"], { encoding: "utf8" });
-  assert.equal(migrationDiff, "");
+  assert.doesNotMatch(migrationDiff, /DROP TABLE/i);
   const status = require("child_process").execFileSync("git", ["status", "--short", "--", "supabase/migrations"], { encoding: "utf8" });
-  assert.ok(status.includes("20260912100000_w5b3_expense_self_approval_authority_repair.sql"));
+  assert.ok(status.includes("20260913100000_w5c_petty_cash_governed_workspace_foundation.sql"));
   assert.equal(status.includes("20260911100000_w5b2c_cash_advance_approval_authority_repair.sql"), false);
 });
 

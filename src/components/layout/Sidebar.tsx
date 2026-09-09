@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   ChevronDown,
   Wallet,
+  Coins,
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -77,7 +78,9 @@ export function getSectionForPathname(pathname: string): NavSectionKey | null {
     pathname === "/expenses" ||
     pathname.startsWith("/expenses/") ||
     pathname === "/advances" ||
-    pathname.startsWith("/advances/")
+    pathname.startsWith("/advances/") ||
+    pathname === "/petty-cash" ||
+    pathname.startsWith("/petty-cash/")
   ) {
     return "expensesAndCosting";
   }
@@ -101,10 +104,12 @@ export function isRouteActive(currentPathname: string, targetHref: string): bool
 
 export default function Sidebar({
   isAdmin = false,
+  canReadPettyCash = false,
   shellDirection = "ltr",
   currentPathname,
 }: {
   isAdmin?: boolean;
+  canReadPettyCash?: boolean;
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
 }) {
@@ -232,6 +237,16 @@ export default function Sidebar({
           href: "/advances",
           icon: Wallet,
         },
+        ...(canReadPettyCash
+          ? [
+              {
+                key: "petty-cash",
+                label: dictionary.modules.pettyCash,
+                href: "/petty-cash",
+                icon: Coins,
+              },
+            ]
+          : []),
       ],
     },
   ];
