@@ -12,7 +12,10 @@ import {
   Check,
   Smartphone,
 } from "lucide-react";
-import type { ExpensesDictionary } from "@/lib/i18n/dictionaries/expenses";
+import {
+  getExpenseActionErrorMessage,
+  type ExpensesDictionary,
+} from "@/lib/i18n/dictionaries/expenses";
 import type { ExpenseServiceOption } from "@/lib/expenses/types";
 import { submitSelfServiceExpenseWithReceiptAction } from "@/lib/expenses/actions";
 import {
@@ -30,7 +33,6 @@ interface ExpenseSubmissionModalProps {
     expenseId: string;
     expenseNumber: string;
     outcome: "full_success" | "partial_success";
-    receiptError?: string;
   }) => void;
   eligibleServices: ExpenseServiceOption[];
   dictionary: ExpensesDictionary;
@@ -370,7 +372,7 @@ export function ExpenseSubmissionModal({
       try {
         const result = await submitSelfServiceExpenseWithReceiptAction(formData);
         if (!result.success || !result.data || result.data.outcome === "validation_error") {
-          setError(result.error ?? result.data?.warning ?? "Failed to submit expense");
+          setError(getExpenseActionErrorMessage(dictionary, result.errorCode));
           return;
         }
 
@@ -384,11 +386,10 @@ export function ExpenseSubmissionModal({
           expenseId: result.data.expenseId,
           expenseNumber: result.data.expenseNumber,
           outcome: result.data.outcome,
-          receiptError: result.data.warning,
         });
         onClose();
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "An unexpected error occurred");
+      } catch {
+        setError(getExpenseActionErrorMessage(dictionary));
       }
     });
   };

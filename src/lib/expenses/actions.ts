@@ -47,6 +47,25 @@ function getExpenseRpcClient(): any {
   return createAdminClient();
 }
 
+async function hasCompletedExpenseFinanceReview(expenseId: string): Promise<boolean> {
+  const { data, error } = await getExpenseRpcClient()
+    .from("expense_accountability_summaries")
+    .select("status, finance_reviewed_at")
+    .eq("id", expenseId)
+    .maybeSingle();
+
+  if (error || !data) return false;
+  return data.status !== "submitted" || Boolean(data.finance_reviewed_at);
+}
+
+function financeReviewRequiredResult<T>(): W5ActionResult<T> {
+  return {
+    success: false,
+    error: "Finance review is required before this expense action.",
+    errorCode: "finance_review_required",
+  };
+}
+
 // 1. Submit Expense
 export async function submitExpenseAction(
   rawInput: unknown,
@@ -1036,6 +1055,10 @@ export async function approveExpenseAction(
       };
     }
 
+    if (!(await hasCompletedExpenseFinanceReview(parsed.data.expense_id))) {
+      return financeReviewRequiredResult<{ expense_id: string }>();
+    }
+
     const supabase = getExpenseRpcClient();
     const { data, error } = await supabase.rpc("approve_expense", {
       p_expense_id: parsed.data.expense_id,
@@ -1077,6 +1100,10 @@ export async function rejectExpenseAction(
         error: parsed.error.issues[0]?.message ?? "Invalid rejection payload",
         errorCode: "validation_error",
       };
+    }
+
+    if (!(await hasCompletedExpenseFinanceReview(parsed.data.expense_id))) {
+      return financeReviewRequiredResult<{ expense_id: string }>();
     }
 
     const supabase = getExpenseRpcClient();

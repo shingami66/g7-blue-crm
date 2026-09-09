@@ -101,12 +101,10 @@ const {
   CAMERA_CONFIG,
   isGetUserMediaSupported,
   isCameraAvailable,
-  startRearCameraStream,
   stopMediaStream,
   calculateScaledDimensions,
   generateReceiptCameraFilename,
   captureVideoFrameToBlob,
-  captureVideoFrameToFile,
   isAllowedReceiptFile,
 } = await import("./receipt-camera.ts");
 
@@ -121,6 +119,7 @@ declare global {
 const ACTIONS_FILE_PATH = path.join(process.cwd(), "src", "lib", "expenses", "actions.ts");
 const QUERIES_FILE_PATH = path.join(process.cwd(), "src", "lib", "expenses", "queries.ts");
 const CLIENT_FILE_PATH = path.join(process.cwd(), "src", "app", "(dashboard)", "expenses", "ExpensesClient.tsx");
+const WORKSPACE_ACTIONS_FILE_PATH = path.join(process.cwd(), "src", "app", "(dashboard)", "expenses", "ExpenseWorkspaceActions.tsx");
 const MODAL_FILE_PATH = path.join(process.cwd(), "src", "app", "(dashboard)", "expenses", "ExpenseSubmissionModal.tsx");
 const CAMERA_FILE_PATH = path.join(process.cwd(), "src", "lib", "expenses", "receipt-camera.ts");
 
@@ -737,10 +736,6 @@ const expenseUiFiles = [
   { name: "ExpenseSubmissionModal (ExpenseSubmissionModal.tsx)", path: MODAL_FILE_PATH },
 ];
 
-function readAllExpenseUiFiles(): string {
-  return expenseUiFiles.map((f) => fs.readFileSync(f.path, "utf8")).join("\n");
-}
-
 // 1. No text-primary-foreground exists in W5B-1B Expense UI
 test("Remediation 1: No text-primary-foreground exists in W5B-1B Expense UI", () => {
   for (const file of expenseUiFiles) {
@@ -1034,13 +1029,17 @@ test("Remediation 17: desktop table representation remains", () => {
   );
 });
 
-// 18. financial mutation controls remain absent
-test("Remediation 18: financial mutation controls remain absent", () => {
-  const allUi = readAllExpenseUiFiles();
-  assert.ok(!allUi.includes("reviewExpenseFinanceAction"), "No Finance review action in UI");
-  assert.ok(!allUi.includes("approveExpenseAction"), "No Approve action in UI");
-  assert.ok(!allUi.includes("rejectExpenseAction"), "No Reject action in UI");
-  assert.ok(!allUi.includes("settleExpenseReimbursementAction"), "No Settle action in UI");
+// 18. self-service modal remains free of governed finance mutations
+test("Remediation 18: self-service modal remains free of governed finance mutations", () => {
+  const modalContent = fs.readFileSync(MODAL_FILE_PATH, "utf8");
+  const workspaceActions = fs.readFileSync(WORKSPACE_ACTIONS_FILE_PATH, "utf8");
+  assert.ok(!modalContent.includes("reviewExpenseFinanceAction"), "No Finance review action in self-service modal");
+  assert.ok(!modalContent.includes("approveExpenseAction"), "No Approve action in self-service modal");
+  assert.ok(!modalContent.includes("rejectExpenseAction"), "No Reject action in self-service modal");
+  assert.ok(!modalContent.includes("settleExpenseReimbursementAction"), "No Settle action in self-service modal");
+  assert.ok(workspaceActions.includes("reviewExpenseFinanceAction"), "Governed Finance Review action belongs to workspace controls");
+  assert.ok(workspaceActions.includes("approveExpenseAction"), "Governed approval action belongs to workspace controls");
+  assert.ok(workspaceActions.includes("rejectExpenseAction"), "Governed rejection action belongs to workspace controls");
 });
 
 // 19. EN/AR dictionary parity remains clean

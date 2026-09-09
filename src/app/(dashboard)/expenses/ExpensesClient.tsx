@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   getExpensesDictionary,
+  getExpenseActionErrorMessage,
   getExpenseStatusLabel,
   getExpenseOriginTypeLabel,
   getExpensePaymentMethodLabel,
@@ -21,6 +22,7 @@ import {
   attachExpenseReceiptAction,
 } from "@/lib/expenses/actions";
 import { ExpenseSubmissionModal } from "./ExpenseSubmissionModal";
+import ExpenseWorkspaceActions from "./ExpenseWorkspaceActions";
 import {
   Receipt,
   AlertCircle,
@@ -39,28 +41,51 @@ import {
 
 interface ExpensesClientProps {
   canRead: boolean;
+  canReadOwn?: boolean;
+  canReadBroad?: boolean;
   canSubmitOwn?: boolean;
   myExpenses?: ExpenseAccountabilitySummary[];
   expenses?: ExpenseAccountabilitySummary[];
   eligibleServices?: ExpenseServiceOption[];
-  loadError: string | null;
+  loadError: boolean;
+  canFinanceReview?: boolean;
+  canApproveExpense?: boolean;
   dictionary?: ExpensesDictionary;
 }
 
 export default function ExpensesClient({
   canRead,
+  canReadOwn,
+  canReadBroad,
   canSubmitOwn = false,
   myExpenses: myExpensesProp,
   expenses: legacyExpensesProp,
   eligibleServices = [],
-  loadError,
+  loadError = false,
+  canFinanceReview = false,
+  canApproveExpense = false,
   dictionary: dictionaryProp,
 }: ExpensesClientProps) {
   const locale = useLocale();
   const router = useRouter();
   const dictionary = dictionaryProp ?? getExpensesDictionary(locale);
 
-  const expensesList = myExpensesProp ?? legacyExpensesProp ?? [];
+  const hasOwnView = canReadOwn ?? myExpensesProp !== undefined;
+  const hasBroadView = canReadBroad ?? legacyExpensesProp !== undefined;
+  const myExpenses = myExpensesProp ?? [];
+  const allExpenses = legacyExpensesProp ?? [];
+  const [activeView, setActiveView] = useState<"mine" | "all">(
+    hasOwnView ? "mine" : "all",
+  );
+  const selectedView =
+    hasOwnView && hasBroadView ? activeView : hasOwnView ? "mine" : "all";
+  const expensesList = selectedView === "mine" ? myExpenses : allExpenses;
+  const selectedViewTitle =
+    selectedView === "mine" ? dictionary.tabs.myExpenses : dictionary.tabs.allExpenses;
+  const selectedViewSubtitle =
+    selectedView === "mine"
+      ? dictionary.myExpenses.subtitle
+      : dictionary.tabs.allExpensesSubtitle;
 
   // Modal state
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
@@ -128,12 +153,12 @@ export default function ExpensesClient({
     try {
       const res = await getPrivateExpenseReceiptUrlAction(expenseId);
       if (!res.success || !res.data?.signedUrl) {
-        setReceiptUrlError(res.error ?? "Could not generate receipt URL");
+        setReceiptUrlError(getExpenseActionErrorMessage(dictionary, res.errorCode));
       } else {
         window.open(res.data.signedUrl, "_blank", "noopener,noreferrer");
       }
-    } catch (err: unknown) {
-      setReceiptUrlError(err instanceof Error ? err.message : "Error opening receipt");
+    } catch {
+      setReceiptUrlError(getExpenseActionErrorMessage(dictionary));
     } finally {
       setLoadingReceiptId(null);
     }
@@ -167,7 +192,7 @@ export default function ExpensesClient({
       try {
         const res = await attachExpenseReceiptAction(formData);
         if (res.error) {
-          setRetryError(res.error);
+          setRetryError(getExpenseActionErrorMessage(dictionary, res.errorCode));
         } else {
           setNotice({
             type: "receipt_attached",
@@ -175,8 +200,8 @@ export default function ExpensesClient({
           });
           router.refresh();
         }
-      } catch (err: unknown) {
-        setRetryError(err instanceof Error ? err.message : "Failed to attach receipt");
+      } catch {
+        setRetryError(getExpenseActionErrorMessage(dictionary));
       } finally {
         setAttachingReceiptExpenseId(null);
         if (retryFileInputRef.current) {
@@ -193,8 +218,6 @@ export default function ExpensesClient({
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">
             <span>{dictionary.header.sectionBadge}</span>
-            <span>•</span>
-            <span className="text-primary font-medium">{dictionary.header.stageBadge}</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-on-surface flex items-center gap-2">
             <Receipt className="w-6 h-6 text-primary" />
@@ -277,19 +300,51 @@ export default function ExpensesClient({
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
           <span>
-            {dictionary.states.noticePrefix} {loadError}
+            {dictionary.states.noticePrefix} {dictionary.states.loadErrorDefault}
           </span>
         </div>
       )}
 
-      {/* Section Title: My Expenses */}
+      {/* Workspace views */}
+      {hasOwnView && hasBroadView && (
+        <div className="flex flex-wrap gap-2 border-b border-outline-variant pb-3" role="tablist" aria-label={dictionary.header.title}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={selectedView === "mine"}
+            onClick={() => setActiveView("mine")}
+            className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+              selectedView === "mine"
+                ? "bg-primary text-on-primary"
+                : "text-on-surface-variant hover:bg-surface-container-low"
+            }`}
+          >
+            {dictionary.tabs.myExpenses}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={selectedView === "all"}
+            onClick={() => setActiveView("all")}
+            className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+              selectedView === "all"
+                ? "bg-primary text-on-primary"
+                : "text-on-surface-variant hover:bg-surface-container-low"
+            }`}
+          >
+            {dictionary.tabs.allExpenses}
+          </button>
+        </div>
+      )}
+
+      {/* Section Title */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold tracking-tight text-on-surface">
-            {dictionary.myExpenses.title}
+            {selectedViewTitle}
           </h2>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            {dictionary.myExpenses.subtitle}
+            {selectedViewSubtitle}
           </p>
         </div>
         <span className="text-xs text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-full font-medium">
@@ -356,6 +411,9 @@ export default function ExpensesClient({
                                   {getExpenseContextTypeLabel(locale, exp.context_type)}
                                 </span>
                               )}
+                              <p className="mt-1 text-[10px] text-on-surface-variant">
+                                {getExpenseOriginTypeLabel(locale, exp.origin_type)} · {getExpensePaymentMethodLabel(locale, exp.payment_method)}
+                              </p>
                             </div>
 
                             {/* Evidence Status */}
@@ -605,6 +663,14 @@ export default function ExpensesClient({
                                       </p>
                                     </div>
                                   </div>
+                                  <div className="border-t border-outline-variant pt-2">
+                                    <ExpenseWorkspaceActions
+                                      expense={exp}
+                                      canFinanceReview={canFinanceReview}
+                                      canApproveExpense={canApproveExpense}
+                                      dictionary={dictionary}
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -688,6 +754,9 @@ export default function ExpensesClient({
                         }`}
                       >
                         {getExpenseStatusLabel(locale, exp.status)}
+                      </span>
+                      <span className="inline-flex items-center rounded border border-outline-variant px-2 py-0.5 text-[11px] font-medium text-on-surface-variant">
+                        {getExpensePaymentMethodLabel(locale, exp.payment_method)}
                       </span>
                     </div>
 
@@ -875,6 +944,14 @@ export default function ExpensesClient({
                               </p>
                             </div>
                           </div>
+                          <div className="border-t border-outline-variant pt-2">
+                            <ExpenseWorkspaceActions
+                              expense={exp}
+                              canFinanceReview={canFinanceReview}
+                              canApproveExpense={canApproveExpense}
+                              dictionary={dictionary}
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
@@ -901,7 +978,7 @@ export default function ExpensesClient({
             } else if (result.outcome === "partial_success") {
               setNotice({
                 type: "partial_success",
-                message: result.receiptError ?? dictionary.notices.partialSuccess,
+                message: dictionary.notices.partialSuccess,
                 expenseNumber: result.expenseNumber,
               });
             }

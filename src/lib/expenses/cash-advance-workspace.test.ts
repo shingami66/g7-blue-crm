@@ -1191,10 +1191,11 @@ test("71. Regression: dashboard layout remains untouched and permission change s
   const layoutDiff = require("child_process").execFileSync("git", ["diff", "--", "src/app/(dashboard)/layout.tsx"], { encoding: "utf8" });
   assert.equal(layoutDiff, "");
   const permissionsDiff = require("child_process").execFileSync("git", ["diff", "HEAD", "--", "src/lib/auth/role-permissions.ts"], { encoding: "utf8" });
-  assert.ok(permissionsDiff.includes("-    CASH_ADVANCE_PERMISSIONS.approve,"));
-  assert.ok(permissionsDiff.includes("+    CASH_ADVANCE_PERMISSIONS.approve,"));
+  assert.equal(permissionsDiff, "");
+  const migrationDiff = require("child_process").execFileSync("git", ["diff", "HEAD", "--", "supabase/migrations"], { encoding: "utf8" });
+  assert.equal(migrationDiff, "");
   const status = require("child_process").execFileSync("git", ["status", "--short", "--", "supabase/migrations"], { encoding: "utf8" });
-  assert.ok(status.includes("20260911100000_w5b2c_cash_advance_approval_authority_repair.sql"));
+  assert.equal(status, "");
 });
 
 test("72. Approval UI: final row eligibility is server-calculated and Approve/Reject are fail-closed", () => {

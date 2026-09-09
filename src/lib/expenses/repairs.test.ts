@@ -25,6 +25,7 @@ type MockActor = { id: string; role: string };
 declare global {
   var __mockRpcHandler: ((name: string, args: Record<string, unknown>) => Promise<MockRpcResponse>) | undefined;
   var __mockActorHandler: (() => MockActor) | undefined;
+  var __mockFinanceReviewState: { status: string; finance_reviewed_at: string | null } | undefined;
 }
 
 registerHooks({
@@ -53,7 +54,7 @@ registerHooks({
     if (specifier === "@/lib/supabase/admin") {
       return {
         shortCircuit: true,
-        url: "data:text/javascript,export const createAdminClient = () => ({ rpc: async (name, args) => (globalThis.__mockRpcHandler ? globalThis.__mockRpcHandler(name, args) : { data: [], error: null }) });",
+        url: "data:text/javascript,export const createAdminClient = () => ({ rpc: async (name, args) => (globalThis.__mockRpcHandler ? globalThis.__mockRpcHandler(name, args) : { data: [], error: null }), from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: globalThis.__mockFinanceReviewState ?? { status: 'submitted', finance_reviewed_at: '2026-09-09T00:00:00.000Z' }, error: null }) }) }) }) });",
       };
     }
 
@@ -422,6 +423,33 @@ test("Finding 1: Conflicting lifecycle payload fails closed with stable request-
 
   assert.equal(result.success, false);
   assert.equal(result.errorCode, "expense_reject_request_conflict");
+});
+
+test("Finance review gate: direct approval and rejection calls fail closed before the lifecycle RPC", async () => {
+  globalThis.__mockActorHandler = () => ({ id: USER_C_APPROVER, role: "manager" });
+  globalThis.__mockFinanceReviewState = { status: "submitted", finance_reviewed_at: null };
+  let rpcCalled = false;
+  globalThis.__mockRpcHandler = async () => {
+    rpcCalled = true;
+    return { data: [], error: null };
+  };
+
+  const approveResult = await approveExpenseAction({
+    expense_id: EXPENSE_ID,
+    request_id: REQUEST_ID_2,
+  });
+  const rejectResult = await rejectExpenseAction({
+    expense_id: EXPENSE_ID,
+    rejection_reason: "Not supported",
+    request_id: REQUEST_ID_2,
+  });
+
+  assert.equal(approveResult.success, false);
+  assert.equal(approveResult.errorCode, "finance_review_required");
+  assert.equal(rejectResult.success, false);
+  assert.equal(rejectResult.errorCode, "finance_review_required");
+  assert.equal(rpcCalled, false);
+  globalThis.__mockFinanceReviewState = undefined;
 });
 
 // ============================================================================

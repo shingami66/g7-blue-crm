@@ -37,26 +37,20 @@ test("Expenses dictionary English and Arabic shapes remain aligned", () => {
   assert.deepEqual(enKeys, arKeys);
 });
 
-test("Expenses dictionary includes all 6 mandatory Arabic strings", () => {
+test("Expenses dictionary exposes the Expenses-only bilingual workspace contract", () => {
   const arDict = getExpensesDictionary("ar");
+  const enDict = getExpensesDictionary("en");
 
-  // 1. المصروفات والعهد
-  assert.equal(arDict.header.title, "المصروفات والعهد");
-  assert.match(arDict.states.accessRestrictedMessage, /المصروفات والعهد/);
-
-  // 2. المصروفات والتكاليف
+  assert.equal(enDict.header.title, "Expenses");
+  assert.equal(enDict.header.sectionBadge, "Expenses & Costing");
+  assert.equal("stageBadge" in enDict.header, false);
+  assert.doesNotMatch(enDict.header.subtitle, /Cash Advances|Petty Cash|W5A/);
+  assert.equal(arDict.header.title, "المصروفات");
   assert.equal(arDict.header.sectionBadge, "المصروفات والتكاليف");
-
-  // 3. سجل المصروفات
-  assert.equal(arDict.tabs.expensesLedger, "سجل المصروفات");
-
-  // 4. السلف النقدية
-  assert.match(arDict.tabs.cashAdvancesLocked, /السلف النقدية/);
-
-  // 5. العهد النقدية
-  assert.match(arDict.tabs.pettyCashLocked, /العهد النقدية/);
-
-  // 6. لا توجد مصروفات مسجلة
+  assert.equal(arDict.tabs.myExpenses, "مصروفاتي");
+  assert.equal(arDict.tabs.allExpenses, "كل المصروفات");
+  assert.equal("stageBadge" in arDict.header, false);
+  assert.doesNotMatch(arDict.header.subtitle, /السلف|العهد/);
   assert.equal(arDict.table.empty.title, "لا توجد مصروفات مسجلة");
 });
 
@@ -77,8 +71,8 @@ test("Expenses labels and statuses resolve correctly for en and ar", () => {
   // Payment methods
   assert.equal(getExpensePaymentMethodLabel("en", "company_funds"), "Company Funds");
   assert.equal(getExpensePaymentMethodLabel("ar", "company_funds"), "أموال الشركة");
-  assert.equal(getExpensePaymentMethodLabel("ar", "petty_cash"), "عهدة نقدية");
-  assert.equal(getExpensePaymentMethodLabel("ar", "cash_advance"), "سلفة نقدية");
+  assert.equal(getExpensePaymentMethodLabel("ar", "petty_cash"), "نقدية نثرية");
+  assert.equal(getExpensePaymentMethodLabel("ar", "cash_advance"), "العهدة النقدية");
   assert.equal(getExpensePaymentMethodLabel("ar", "personal_funds"), "أموال شخصية");
 
   // Context types
@@ -125,6 +119,10 @@ test("Expenses UI adheres to LocaleProvider and repository i18n architecture", (
     ">Expense #<",
     ">Origin &amp; Method<",
     ">Receipt Attached<",
+    "W5A Foundation",
+    "تأسيس W5A",
+    "Expenses & Cash",
+    "المصروفات والعهد",
   ];
 
   for (const phrase of forbiddenPhrases) {

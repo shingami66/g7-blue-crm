@@ -13,7 +13,6 @@ export interface ExpensesDictionary {
   locale: Locale;
   header: {
     sectionBadge: string;
-    stageBadge: string;
     title: string;
     subtitle: string;
     newExpense: string;
@@ -23,9 +22,9 @@ export interface ExpensesDictionary {
     subtitle: string;
   };
   tabs: {
-    expensesLedger: string;
-    cashAdvancesLocked: string;
-    pettyCashLocked: string;
+    myExpenses: string;
+    allExpenses: string;
+    allExpensesSubtitle: string;
   };
   table: {
     cardTitle: string;
@@ -127,6 +126,27 @@ export interface ExpensesDictionary {
     reviewed: string;
     pending: string;
   };
+  actions: {
+    financeReview: string;
+    approveExpense: string;
+    rejectExpense: string;
+    pending: string;
+    cancel: string;
+    confirmations: {
+      financeReview: string;
+      approveExpense: string;
+      rejectExpense: string;
+    };
+    fields: {
+      rejectionReason: string;
+    };
+    errors: {
+      generic: string;
+      validation: string;
+      rejectionReasonRequired: string;
+      requestUnavailable: string;
+    };
+  };
   dispositions: Record<ExceptionDisposition, string>;
   notices: {
     fullSuccess: string;
@@ -145,9 +165,8 @@ const expensesDictionaryEn: ExpensesDictionary = {
   locale: "en",
   header: {
     sectionBadge: "Expenses & Costing",
-    stageBadge: "W5A Foundation",
-    title: "Expenses & Cash",
-    subtitle: "Authoritative foundation for incurred expenses, employee reimbursements, cash advances, and petty cash.",
+    title: "Expenses",
+    subtitle: "Track expenses, receipts, finance review, approvals, and reimbursements.",
     newExpense: "New Expense",
   },
   myExpenses: {
@@ -155,9 +174,9 @@ const expensesDictionaryEn: ExpensesDictionary = {
     subtitle: "Track your submitted expenses, receipts, and reimbursement status",
   },
   tabs: {
-    expensesLedger: "Expenses Ledger",
-    cashAdvancesLocked: "Cash Advances (W5B)",
-    pettyCashLocked: "Petty Cash (W5B)",
+    myExpenses: "My Expenses",
+    allExpenses: "All Expenses",
+    allExpensesSubtitle: "Review the governed ledger across all accessible expenses",
   },
   table: {
     cardTitle: "Expenses Accountability Ledger",
@@ -176,7 +195,7 @@ const expensesDictionaryEn: ExpensesDictionary = {
     },
     empty: {
       title: "No expense records found",
-      description: "The W5A expense and cash foundation is established. Records submitted through governed Server Actions will appear here.",
+      description: "Expenses submitted through the governed workflow will appear here.",
     },
   },
   detail: {
@@ -289,6 +308,27 @@ const expensesDictionaryEn: ExpensesDictionary = {
     reviewed: "Finance Reviewed",
     pending: "Pending Finance Review",
   },
+  actions: {
+    financeReview: "Finance Review",
+    approveExpense: "Approve Expense",
+    rejectExpense: "Reject Expense",
+    pending: "Working...",
+    cancel: "Cancel",
+    confirmations: {
+      financeReview: "Mark this submitted expense as finance reviewed?",
+      approveExpense: "Approve this finance-reviewed expense?",
+      rejectExpense: "Reject this expense and provide a reason.",
+    },
+    fields: {
+      rejectionReason: "Rejection reason",
+    },
+    errors: {
+      generic: "The expense action could not be completed.",
+      validation: "Please review the required fields.",
+      rejectionReasonRequired: "Enter a rejection reason.",
+      requestUnavailable: "Could not start this action. Please try again.",
+    },
+  },
   dispositions: {
     pending: "Pending",
     accepted: "Accepted",
@@ -303,7 +343,7 @@ const expensesDictionaryEn: ExpensesDictionary = {
   },
   states: {
     accessRestricted: "Access Restricted",
-    accessRestrictedMessage: "You do not have permission to view Expenses & Cash accountability records.",
+    accessRestrictedMessage: "You do not have permission to view Expenses accountability records.",
     noticePrefix: "Notice:",
     loadErrorDefault: "Failed to load expenses",
   },
@@ -313,9 +353,8 @@ const expensesDictionaryAr: ExpensesDictionary = {
   locale: "ar",
   header: {
     sectionBadge: "المصروفات والتكاليف",
-    stageBadge: "تأسيس W5A",
-    title: "المصروفات والعهد",
-    subtitle: "الأساس المعتمد للمصروفات المتكبدة، والتعويضات للموظفين، والسلف والعهد النقدية.",
+    title: "المصروفات",
+    subtitle: "إدارة ومتابعة المصروفات، والإيصالات، والمراجعة المالية، والتعويضات.",
     newExpense: "مصروف جديد",
   },
   myExpenses: {
@@ -323,9 +362,9 @@ const expensesDictionaryAr: ExpensesDictionary = {
     subtitle: "متابعة مصروفاتك المقدمة، والإيصالات، وحالة التعويض",
   },
   tabs: {
-    expensesLedger: "سجل المصروفات",
-    cashAdvancesLocked: "السلف النقدية (W5B)",
-    pettyCashLocked: "العهد النقدية (W5B)",
+    myExpenses: "مصروفاتي",
+    allExpenses: "كل المصروفات",
+    allExpensesSubtitle: "مراجعة سجل المصروفات المتاح لك",
   },
   table: {
     cardTitle: "سجل محاسبة المصروفات",
@@ -344,7 +383,7 @@ const expensesDictionaryAr: ExpensesDictionary = {
     },
     empty: {
       title: "لا توجد مصروفات مسجلة",
-      description: "تم تأسيس بنية المصروفات والعهد النقدية. السجلات المسجلة عبر الإجراءات المعتمدة ستظهر هنا.",
+      description: "ستظهر هنا المصروفات المقدمة عبر المسار المعتمد.",
     },
   },
   detail: {
@@ -431,8 +470,8 @@ const expensesDictionaryAr: ExpensesDictionary = {
   },
   paymentMethods: {
     company_funds: "أموال الشركة",
-    petty_cash: "عهدة نقدية",
-    cash_advance: "سلفة نقدية",
+    petty_cash: "نقدية نثرية",
+    cash_advance: "العهدة النقدية",
     personal_funds: "أموال شخصية",
   },
   statuses: {
@@ -457,6 +496,27 @@ const expensesDictionaryAr: ExpensesDictionary = {
     reviewed: "تمت المراجعة المالية",
     pending: "قيد المراجعة المالية",
   },
+  actions: {
+    financeReview: "المراجعة المالية",
+    approveExpense: "اعتماد المصروف",
+    rejectExpense: "رفض المصروف",
+    pending: "جارٍ التنفيذ...",
+    cancel: "إلغاء",
+    confirmations: {
+      financeReview: "هل تريد وضع علامة المراجعة المالية على هذا المصروف المقدم؟",
+      approveExpense: "هل تريد اعتماد هذا المصروف الذي تمت مراجعته مالياً؟",
+      rejectExpense: "ارفض هذا المصروف مع توضيح السبب.",
+    },
+    fields: {
+      rejectionReason: "سبب الرفض",
+    },
+    errors: {
+      generic: "تعذر تنفيذ إجراء المصروف.",
+      validation: "يرجى مراجعة الحقول المطلوبة.",
+      rejectionReasonRequired: "يرجى إدخال سبب الرفض.",
+      requestUnavailable: "تعذر بدء الإجراء. حاول مرة أخرى.",
+    },
+  },
   dispositions: {
     pending: "قيد المراجعة",
     accepted: "مقبول",
@@ -471,7 +531,7 @@ const expensesDictionaryAr: ExpensesDictionary = {
   },
   states: {
     accessRestricted: "تم تقييد الوصول",
-    accessRestrictedMessage: "ليس لديك صلاحية لعرض سجلات المصروفات والعهد.",
+    accessRestrictedMessage: "ليس لديك صلاحية لعرض سجلات المصروفات.",
     noticePrefix: "تنبيه:",
     loadErrorDefault: "فشل تحميل المصروفات",
   },
@@ -484,6 +544,16 @@ const expensesDictionaries: Record<Locale, ExpensesDictionary> = {
 
 export function getExpensesDictionary(locale: Locale): ExpensesDictionary {
   return expensesDictionaries[locale] ?? expensesDictionaries.en;
+}
+
+export function getExpenseActionErrorMessage(
+  dictionary: ExpensesDictionary,
+  errorCode?: string,
+): string {
+  if (errorCode === "validation_error") {
+    return dictionary.actions.errors.validation;
+  }
+  return dictionary.actions.errors.generic;
 }
 
 export function getExpenseStatusLabel(locale: Locale, status: ExpenseStatus): string {
