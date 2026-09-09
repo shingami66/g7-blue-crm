@@ -20,6 +20,8 @@ import type {
   ExpenseDocumentLink,
   ExpenseServiceOption,
   ExpenseDocumentDetail,
+  LinkedCashAdvanceExpense,
+  CashAdvanceBalanceSummary,
 } from "./types";
 
 export interface ExpenseListFilters {
@@ -582,4 +584,98 @@ export async function getPettyCashFundDetailById(id: string): Promise<{
     fund: fundData as PettyCashFund,
     transactions: (txData ?? []) as PettyCashTransaction[],
   };
+}
+
+export async function getLinkedCashAdvanceExpenses(
+  advanceId: string,
+): Promise<LinkedCashAdvanceExpense[]> {
+  await requirePermission(CASH_ADVANCE_PERMISSIONS.read);
+  const supabase = getExpenseClient();
+
+  const { data, error } = await supabase.rpc("get_linked_cash_advance_expenses", {
+    p_advance_id: advanceId,
+  });
+
+  if (error) {
+    throw new Error(`Failed to load linked cash advance expenses: ${error.message}`);
+  }
+
+  return (data ?? []) as LinkedCashAdvanceExpense[];
+}
+
+export async function getOwnLinkedCashAdvanceExpenses(
+  advanceId: string,
+): Promise<LinkedCashAdvanceExpense[]> {
+  const user = await requirePermission(CASH_ADVANCE_PERMISSIONS.readOwn);
+  const supabase = getExpenseClient();
+
+  const { data: advance, error: advErr } = await supabase
+    .from("employee_cash_advances")
+    .select("recipient_id")
+    .eq("id", advanceId)
+    .maybeSingle();
+
+  if (advErr) {
+    throw new Error(`Failed to load cash advance: ${advErr.message}`);
+  }
+  if (!advance || advance.recipient_id !== user.id) {
+    return [];
+  }
+
+  const { data, error } = await supabase.rpc("get_linked_cash_advance_expenses", {
+    p_advance_id: advanceId,
+  });
+
+  if (error) {
+    throw new Error(`Failed to load own linked cash advance expenses: ${error.message}`);
+  }
+
+  return (data ?? []) as LinkedCashAdvanceExpense[];
+}
+
+export async function getCashAdvanceBalanceSummary(
+  advanceId: string,
+): Promise<CashAdvanceBalanceSummary | null> {
+  await requirePermission(CASH_ADVANCE_PERMISSIONS.read);
+  const supabase = getExpenseClient();
+
+  const { data, error } = await supabase.rpc("get_cash_advance_balance_summary", {
+    p_advance_id: advanceId,
+  });
+
+  if (error) {
+    throw new Error(`Failed to load cash advance balance summary: ${error.message}`);
+  }
+
+  return (data?.[0] as CashAdvanceBalanceSummary) ?? null;
+}
+
+export async function getOwnCashAdvanceBalanceSummary(
+  advanceId: string,
+): Promise<CashAdvanceBalanceSummary | null> {
+  const user = await requirePermission(CASH_ADVANCE_PERMISSIONS.readOwn);
+  const supabase = getExpenseClient();
+
+  const { data: advance, error: advErr } = await supabase
+    .from("employee_cash_advances")
+    .select("recipient_id")
+    .eq("id", advanceId)
+    .maybeSingle();
+
+  if (advErr) {
+    throw new Error(`Failed to load cash advance: ${advErr.message}`);
+  }
+  if (!advance || advance.recipient_id !== user.id) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc("get_cash_advance_balance_summary", {
+    p_advance_id: advanceId,
+  });
+
+  if (error) {
+    throw new Error(`Failed to load own cash advance balance summary: ${error.message}`);
+  }
+
+  return (data?.[0] as CashAdvanceBalanceSummary) ?? null;
 }

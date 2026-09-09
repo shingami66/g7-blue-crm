@@ -284,3 +284,34 @@ export interface SelfServiceExpenseSubmissionData {
   outcome: SelfServiceSubmissionOutcome;
   warning?: string;
 }
+
+export interface LinkedCashAdvanceExpense {
+  expense_id: string;
+  expense_number: string;
+  status: ExpenseStatus;
+  expense_category: string;
+  description: string;
+  amount: number;
+  expense_date: string;
+  finance_reviewed_at: string | null;
+  approved_at: string | null;
+  rejected_at: string | null;
+  cash_advance_id: string;
+  settled_amount: number;
+  unsettled_amount: number;
+}
+
+export interface CashAdvanceBalanceSummary {
+  advance_id: string;
+  advance_number: string;
+  recipient_id: string;
+  context_type: ExpenseContextType;
+  service_id: string | null;
+  status: CashAdvanceStatus;
+  amount_issued: number;
+  amount_spent_settled: number;
+  amount_returned: number;
+  remaining_balance: number;
+  reserved_unsettled_spend: number;
+  available_uncommitted_balance: number;
+}

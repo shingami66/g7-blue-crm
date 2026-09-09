@@ -36,6 +36,8 @@ import {
   recordCashAdvanceReturnSchema,
   recordPettyCashTransactionSchema,
   reviewExpenseFinanceSchema,
+  submitOwnCashAdvanceExpenseSchema,
+  submitCashAdvanceExpenseOnBehalfSchema,
 } from "./schemas";
 import type { W5ActionResult, SelfServiceExpenseSubmissionData } from "./types";
 
@@ -60,16 +62,21 @@ export async function submitExpenseAction(
     }
 
     let user;
-    try {
-      user = await requirePermission(EXPENSE_PERMISSIONS.write);
-    } catch {
-      user = await requirePermission(EXPENSE_PERMISSIONS.submitOwn);
-      if (parsed.data.origin_type !== "employee_paid" || parsed.data.claimant_id !== user.id) {
-        return {
-          success: false,
-          error: "Self-service submission is restricted to own employee-paid expenses",
-          errorCode: "forbidden",
-        };
+    if (parsed.data.payment_method === "cash_advance") {
+      user = await requirePermission(CASH_ADVANCE_PERMISSIONS.settle);
+      await requirePermission(EXPENSE_PERMISSIONS.financeReview);
+    } else {
+      try {
+        user = await requirePermission(EXPENSE_PERMISSIONS.write);
+      } catch {
+        user = await requirePermission(EXPENSE_PERMISSIONS.submitOwn);
+        if (parsed.data.origin_type !== "employee_paid" || parsed.data.claimant_id !== user.id) {
+          return {
+            success: false,
+            error: "Self-service submission is restricted to own employee-paid expenses",
+            errorCode: "forbidden",
+          };
+        }
       }
     }
 
@@ -352,6 +359,217 @@ export async function submitOwnExpenseAction(
     return { success: false, error: message };
   }
 }
+
+// 1d. Submit Own Cash Advance Expense (Self-Service Custodian)
+export async function submitOwnCashAdvanceExpenseAction(
+  rawInput: unknown,
+): Promise<W5ActionResult<{ expense_id: string; expense_number: string }>> {
+  try {
+    const user = await requirePermission(CASH_ADVANCE_PERMISSIONS.submitOwn);
+    await requirePermission(EXPENSE_PERMISSIONS.submitOwn);
+
+    const parsed = submitOwnCashAdvanceExpenseSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message ?? "Invalid cash advance expense submission payload",
+        errorCode: "validation_error",
+      };
+    }
+
+    const supabase = getExpenseRpcClient();
+
+    // Server-side verification: advance exists, is issued, belongs to user
+    const { data: advance, error: advError } = await supabase
+      .from("employee_cash_advances")
+      .select("id, status, recipient_id, context_type, service_id")
+      .eq("id", parsed.data.advance_id)
+      .maybeSingle();
+
+    if (advError) {
+      return {
+        success: false,
+        error: `Failed to verify cash advance: ${advError.message}`,
+        errorCode: "advance_lookup_failed",
+      };
+    }
+
+    if (!advance) {
+      return {
+        success: false,
+        error: "Cash advance not found",
+        errorCode: "advance_not_found",
+      };
+    }
+
+    if (advance.status !== "issued") {
+      return {
+        success: false,
+        error: "Cash advance is not in issued status",
+        errorCode: "advance_not_in_issued_status",
+      };
+    }
+
+    if (advance.recipient_id !== user.id) {
+      return {
+        success: false,
+        error: "Cannot submit expense against another user's cash advance",
+        errorCode: "forbidden",
+      };
+    }
+
+    // Force server-authoritative values
+    const { data, error } = await supabase.rpc("submit_expense", {
+      p_expense_number: null,
+      p_context_type: advance.context_type,
+      p_service_id: advance.service_id,
+      p_expense_category: parsed.data.expense_category,
+      p_description: parsed.data.description,
+      p_amount: parsed.data.amount,
+      p_expense_date: parsed.data.expense_date,
+      p_origin_type: "company_direct",
+      p_payment_method: "cash_advance",
+      p_cash_advance_id: advance.id,
+      p_petty_cash_fund_id: null,
+      p_claimant_id: null,
+      p_request_id: parsed.data.request_id,
+      p_actor_id: user.id,
+      p_actor_role: user.role,
+    });
+
+    if (error) {
+      return { success: false, error: error.message, errorCode: error.code };
+    }
+
+    const row = data?.[0];
+    if (row?.error_code) {
+      return { success: false, error: row.error_code, errorCode: row.error_code };
+    }
+
+    const { data: expRow } = await supabase
+      .from("expenses")
+      .select("expense_number")
+      .eq("id", row.expense_id)
+      .single();
+
+    return {
+      success: true,
+      data: {
+        expense_id: row.expense_id,
+        expense_number: expRow?.expense_number ?? "",
+      },
+      idempotentReplay: row.idempotent_replay,
+    };
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "Unexpected error during cash advance expense submission";
+    return { success: false, error: message };
+  }
+}
+
+// 1e. Submit Cash Advance Expense On Behalf (Accountant / Admin)
+export async function submitCashAdvanceExpenseOnBehalfAction(
+  rawInput: unknown,
+): Promise<W5ActionResult<{ expense_id: string; expense_number: string }>> {
+  try {
+    const user = await requirePermission(CASH_ADVANCE_PERMISSIONS.settle);
+    await requirePermission(EXPENSE_PERMISSIONS.financeReview);
+
+    const parsed = submitCashAdvanceExpenseOnBehalfSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message ?? "Invalid cash advance expense submission payload",
+        errorCode: "validation_error",
+      };
+    }
+
+    const supabase = getExpenseRpcClient();
+
+    // Server-side verification: advance exists, is issued
+    const { data: advance, error: advError } = await supabase
+      .from("employee_cash_advances")
+      .select("id, status, recipient_id, context_type, service_id")
+      .eq("id", parsed.data.advance_id)
+      .maybeSingle();
+
+    if (advError) {
+      return {
+        success: false,
+        error: `Failed to verify cash advance: ${advError.message}`,
+        errorCode: "advance_lookup_failed",
+      };
+    }
+
+    if (!advance) {
+      return {
+        success: false,
+        error: "Cash advance not found",
+        errorCode: "advance_not_found",
+      };
+    }
+
+    if (advance.status !== "issued") {
+      return {
+        success: false,
+        error: "Cash advance is not in issued status",
+        errorCode: "advance_not_in_issued_status",
+      };
+    }
+
+    // Force server-authoritative values; Accountant is the submission actor
+    // The advance defines the custodian (advance.recipient_id)
+    // Expense is submitted in status 'submitted' (NO auto-review, NO auto-approval, NO auto-settlement)
+    const { data, error } = await supabase.rpc("submit_expense", {
+      p_expense_number: null,
+      p_context_type: advance.context_type,
+      p_service_id: advance.service_id,
+      p_expense_category: parsed.data.expense_category,
+      p_description: parsed.data.description,
+      p_amount: parsed.data.amount,
+      p_expense_date: parsed.data.expense_date,
+      p_origin_type: "company_direct",
+      p_payment_method: "cash_advance",
+      p_cash_advance_id: advance.id,
+      p_petty_cash_fund_id: null,
+      p_claimant_id: null,
+      p_request_id: parsed.data.request_id,
+      p_actor_id: user.id,
+      p_actor_role: user.role,
+    });
+
+    if (error) {
+      return { success: false, error: error.message, errorCode: error.code };
+    }
+
+    const row = data?.[0];
+    if (row?.error_code) {
+      return { success: false, error: row.error_code, errorCode: row.error_code };
+    }
+
+    const { data: expRow } = await supabase
+      .from("expenses")
+      .select("expense_number")
+      .eq("id", row.expense_id)
+      .single();
+
+    return {
+      success: true,
+      data: {
+        expense_id: row.expense_id,
+        expense_number: expRow?.expense_number ?? "",
+      },
+      idempotentReplay: row.idempotent_replay,
+    };
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error
+        ? err.message
+        : "Unexpected error during cash advance expense submission on behalf";
+    return { success: false, error: message };
+  }
+}
+
 
 // 1c. Submit Self-Service Expense with Receipt (Full & Partial Success Handling)
 export async function submitSelfServiceExpenseWithReceiptAction(

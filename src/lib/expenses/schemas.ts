@@ -346,3 +346,37 @@ export const selfServiceSubmitExpenseSchema = z
   });
 
 export type SelfServiceSubmitExpenseInput = z.infer<typeof selfServiceSubmitExpenseSchema>;
+
+export const submitOwnCashAdvanceExpenseSchema = z
+  .object({
+    advance_id: uuidSchema,
+    expense_category: z.string().trim().min(1, { message: "Category is required" }),
+    description: z.string().trim().min(1, { message: "Description is required" }),
+    amount: z.number().positive({ message: "Amount must be greater than zero" }),
+    expense_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Expense date must be YYYY-MM-DD" }),
+    request_id: uuidSchema,
+  })
+  .strict();
+
+export type SubmitOwnCashAdvanceExpenseInput = z.infer<
+  typeof submitOwnCashAdvanceExpenseSchema
+>;
+
+export const submitCashAdvanceExpenseOnBehalfSchema = z
+  .object({
+    advance_id: uuidSchema,
+    expense_category: z.string().trim().min(1, { message: "Category is required" }),
+    description: z.string().trim().min(1, { message: "Description is required" }),
+    amount: z.number().positive({ message: "Amount must be greater than zero" }),
+    expense_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Expense date must be YYYY-MM-DD" }),
+    request_id: uuidSchema,
+  })
+  .strict();
+
+export type SubmitCashAdvanceExpenseOnBehalfInput = z.infer<
+  typeof submitCashAdvanceExpenseOnBehalfSchema
+>;
