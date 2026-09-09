@@ -140,6 +140,7 @@ const ALL_SECTION_KEYS = [
   "operations",
   "suppliersAndProcurement",
   "billingAndPayments",
+  "expensesAndCosting",
   "administration",
 ] as const;
 
@@ -292,7 +293,7 @@ test("8. Administration renders Settings for all, but Users appears only for adm
 });
 
 test("9. Only one accordion section is expanded at a time", () => {
-  for (const path of ["/customers", "/services", "/suppliers", "/invoices", "/settings"]) {
+  for (const path of ["/customers", "/services", "/suppliers", "/invoices", "/settings", "/expenses", "/advances"]) {
     const html = renderSidebar({ currentPathname: path, isAdmin: true });
     const expandedSections = ALL_SECTION_KEYS.filter((key) => getSectionExpandedState(html, key));
     assert.equal(expandedSections.length, 1, `Exactly one section should be expanded on path ${path}, got: ${expandedSections.join(", ")}`);
@@ -321,7 +322,7 @@ test("11. Collapsed child navigation is hidden and not rendered as active naviga
   );
 
   // Other sections are collapsed: must have hidden attribute
-  for (const key of ["operations", "suppliersAndProcurement", "billingAndPayments", "administration"]) {
+  for (const key of ["operations", "suppliersAndProcurement", "billingAndPayments", "expensesAndCosting", "administration"]) {
     const collapsedPattern = new RegExp(`id="nav-section-content-${key}"[^>]*hidden=""`);
     assert.ok(collapsedPattern.test(html), `Collapsed section ${key} must have hidden attribute`);
   }
@@ -439,7 +440,7 @@ test("17. PreparingWorkspace renders centered brand mark, status text, and acces
   assert.ok(arHtml.includes("جاري تجهيز مساحة العمل…"), "Must render Arabic copy");
 });
 
-test("18. /expenses expands Expenses & Costing accordion and activates Expenses & Cash", () => {
+test("18. /expenses expands Expenses & Costing accordion, activates Expenses and renders both Expenses and Cash Advances children", () => {
   const html = renderSidebar({ currentPathname: "/expenses" });
   assert.equal(
     getSectionExpandedState(html, "expensesAndCosting"),
@@ -447,4 +448,44 @@ test("18. /expenses expands Expenses & Costing accordion and activates Expenses 
     "/expenses route must expand Expenses & Costing",
   );
   assert.ok(html.includes('href="/expenses"'), "Expenses child link must be rendered");
+  assert.ok(html.includes('href="/advances"'), "Cash Advances child link must be rendered");
+});
+
+test("19. /advances and /advances/:id expand Expenses & Costing accordion and activate Cash Advances", () => {
+  // /advances root
+  const advHtml = renderSidebar({ currentPathname: "/advances" });
+  assert.equal(
+    getSectionExpandedState(advHtml, "expensesAndCosting"),
+    true,
+    "/advances must expand Expenses & Costing",
+  );
+  assert.ok(advHtml.includes('href="/advances"'), "Cash Advances child link must be rendered");
+  assert.ok(advHtml.includes('href="/expenses"'), "Expenses child link must be rendered");
+
+  // Nested /advances/:id route (detail page)
+  const advDetailHtml = renderSidebar({ currentPathname: "/advances/adv-uuid-123" });
+  assert.equal(
+    getSectionExpandedState(advDetailHtml, "expensesAndCosting"),
+    true,
+    "/advances/:id must expand Expenses & Costing",
+  );
+
+  // All other sections must be collapsed
+  const otherSections = ["customersAndSales", "operations", "suppliersAndProcurement", "billingAndPayments", "administration"] as const;
+  for (const key of otherSections) {
+    assert.equal(
+      getSectionExpandedState(advHtml, key),
+      false,
+      `Section ${key} must be collapsed on /advances`,
+    );
+  }
+});
+
+test("20. Expenses & Costing section dictionary labels are correctly localized EN and AR", () => {
+  assert.equal(navigationDictionaryEn.sections.expensesAndCosting, "Expenses & Costing");
+  assert.equal(navigationDictionaryAr.sections.expensesAndCosting, "المصروفات والتكاليف");
+  assert.equal(navigationDictionaryEn.modules.expenses, "Expenses");
+  assert.equal(navigationDictionaryEn.modules.advances, "Cash Advances");
+  assert.equal(navigationDictionaryAr.modules.expenses, "المصروفات");
+  assert.equal(navigationDictionaryAr.modules.advances, "العهد النقدية");
 });

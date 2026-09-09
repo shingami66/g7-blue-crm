@@ -11,6 +11,8 @@ export interface CashAdvancesDictionary {
     title: string;
     subtitle: string;
     requestAdvance: string;
+    sectionBadge: string;
+    stageBadge: string;
   };
   tabs: {
     myAdvances: string;
@@ -149,6 +151,8 @@ export const cashAdvancesDictionaryEn: CashAdvancesDictionary = {
     title: "Cash Advances",
     subtitle: "Employee cash advances, balances, allocations, and settlement tracking",
     requestAdvance: "Request Cash Advance",
+    sectionBadge: "Expenses & Costing",
+    stageBadge: "W5B Foundation",
   },
   tabs: {
     myAdvances: "My Advances",
@@ -298,6 +302,8 @@ export const cashAdvancesDictionaryAr: CashAdvancesDictionary = {
     title: "العهد النقدية",
     subtitle: "العهد النقدية للموظفين، الأرصدة، التسويات وسجل المبالغ المتبقية",
     requestAdvance: "طلب عهدة نقدية",
+    sectionBadge: "المصروفات والتكاليف",
+    stageBadge: "تأسيس W5B",
   },
   tabs: {
     myAdvances: "عهدي النقدية",

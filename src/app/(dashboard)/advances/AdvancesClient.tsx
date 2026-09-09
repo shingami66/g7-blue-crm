@@ -122,15 +122,20 @@ export default function AdvancesClient({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-outline-variant pb-5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-on-surface flex items-center gap-2.5">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">
+            <span>{dictionary.header.sectionBadge}</span>
+            <span>•</span>
+            <span className="text-primary font-medium">{dictionary.header.stageBadge}</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-on-surface flex items-center gap-2">
             <Wallet className="w-6 h-6 text-primary" />
             {dictionary.header.title}
           </h1>
-          <p className="text-xs sm:text-sm text-on-surface-variant mt-1">
+          <p className="text-sm text-on-surface-variant mt-1">
             {dictionary.header.subtitle}
           </p>
         </div>
@@ -139,7 +144,7 @@ export default function AdvancesClient({
           <button
             type="button"
             onClick={() => setIsRequestModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-semibold shadow-xs hover:bg-primary/90 transition-all shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-semibold shadow-sm hover:bg-primary/90 transition-all shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>{dictionary.header.requestAdvance}</span>

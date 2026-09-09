@@ -73,7 +73,12 @@ export function getSectionForPathname(pathname: string): NavSectionKey | null {
   ) {
     return "billingAndPayments";
   }
-  if (pathname === "/expenses" || pathname.startsWith("/expenses/")) {
+  if (
+    pathname === "/expenses" ||
+    pathname.startsWith("/expenses/") ||
+    pathname === "/advances" ||
+    pathname.startsWith("/advances/")
+  ) {
     return "expensesAndCosting";
   }
   if (
@@ -219,6 +224,12 @@ export default function Sidebar({
           key: "expenses",
           label: dictionary.modules.expenses,
           href: "/expenses",
+          icon: Receipt,
+        },
+        {
+          key: "advances",
+          label: dictionary.modules.advances,
+          href: "/advances",
           icon: Wallet,
         },
       ],

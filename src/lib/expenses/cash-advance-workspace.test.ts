@@ -855,16 +855,26 @@ test("52. Repair: no lifecycle mutation buttons introduced", () => {
   }
 });
 
-test("53. Repair: Sidebar remains untouched", () => {
+test("53. Sidebar correctly maps /advances to expensesAndCosting section (W5B-2B Owner Acceptance)", () => {
   const sidebarSource = fs.readFileSync(
     path.join(process.cwd(), "src/components/layout/Sidebar.tsx"),
     "utf8",
   );
+  // /advances must now be present as an approved nav child (Owner Acceptance activated Sidebar)
   assert.equal(
     sidebarSource.includes('href: "/advances"'),
-    false,
-    "Sidebar must not have active /advances link",
+    true,
+    "Sidebar must have /advances nav child under expensesAndCosting section",
   );
+  // /advances route must map to expensesAndCosting in getSectionForPathname
+  assert.ok(
+    sidebarSource.includes('"/advances"') &&
+    sidebarSource.includes("expensesAndCosting"),
+    "getSectionForPathname must map /advances to expensesAndCosting",
+  );
+  // Unrelated lifecycle actions must not be present in Sidebar
+  assert.equal(sidebarSource.includes("approveCashAdvanceAction"), false);
+  assert.equal(sidebarSource.includes("issueCashAdvanceAction"), false);
 });
 
 test("54. Repair: no migration files changed", () => {
@@ -874,5 +884,68 @@ test("54. Repair: no migration files changed", () => {
     files[files.length - 1],
     "20260909100000_w5b2_cash_advance_numbering_and_integrity.sql",
     "No new migration must be added in W5B-2B repair",
+  );
+});
+
+test("55. Owner Acceptance: AdvancesClient uses dashboard shell container matching Expenses pattern", () => {
+  const clientSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/AdvancesClient.tsx"),
+    "utf8",
+  );
+  // Must have the full outer shell matching ExpensesClient
+  assert.ok(
+    clientSource.includes("p-4 sm:p-6 md:p-8 max-w-7xl mx-auto"),
+    "AdvancesClient must use p-4 sm:p-6 md:p-8 max-w-7xl mx-auto outer shell",
+  );
+  // Must have header border-b matching Expenses header divider
+  assert.ok(
+    clientSource.includes("border-b border-outline-variant pb-5"),
+    "AdvancesClient header must have border-b bottom divider",
+  );
+  // Must have sectionBadge in header
+  assert.ok(
+    clientSource.includes("dictionary.header.sectionBadge"),
+    "AdvancesClient header must render sectionBadge",
+  );
+  // Must have stageBadge in header
+  assert.ok(
+    clientSource.includes("dictionary.header.stageBadge"),
+    "AdvancesClient header must render stageBadge",
+  );
+});
+
+test("56. Owner Acceptance: AdvanceDetailClient uses dashboard shell container", () => {
+  const detailSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/AdvanceDetailClient.tsx"),
+    "utf8",
+  );
+  // Must have the full outer shell
+  assert.ok(
+    detailSource.includes("p-4 sm:p-6 md:p-8 max-w-7xl mx-auto"),
+    "AdvanceDetailClient must use p-4 sm:p-6 md:p-8 max-w-7xl mx-auto outer shell",
+  );
+  // Must have inner content wrapper for proper width
+  assert.ok(
+    detailSource.includes("max-w-5xl"),
+    "AdvanceDetailClient must have max-w-5xl inner content wrapper",
+  );
+});
+
+test("57. Owner Acceptance: CashAdvancesDictionary has sectionBadge and stageBadge in both locales", () => {
+  const dictSource = fs.readFileSync(
+    path.join(process.cwd(), "src/lib/i18n/dictionaries/cash-advances.ts"),
+    "utf8",
+  );
+  assert.ok(
+    dictSource.includes('sectionBadge: "Expenses & Costing"'),
+    "EN sectionBadge must be 'Expenses & Costing'",
+  );
+  assert.ok(
+    dictSource.includes('stageBadge: "W5B Foundation"'),
+    "EN stageBadge must be 'W5B Foundation'",
+  );
+  assert.ok(
+    dictSource.includes("sectionBadge") && dictSource.includes("المصروفات والتكاليف"),
+    "AR sectionBadge must be present",
   );
 });
