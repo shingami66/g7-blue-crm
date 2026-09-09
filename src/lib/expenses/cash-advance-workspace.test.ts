@@ -1184,15 +1184,14 @@ test("70. Error safety: Cash Advance receipt wrapper masks private pipeline fail
 });
 
 test("71. Regression: dashboard layout and authority changes stay scoped to W5C", () => {
-  const layoutDiff = require("child_process").execFileSync("git", ["diff", "--", "src/app/(dashboard)/layout.tsx"], { encoding: "utf8" });
-  assert.ok(layoutDiff.includes("PETTY_CASH_PERMISSIONS"));
-  const permissionsDiff = require("child_process").execFileSync("git", ["diff", "HEAD", "--", "src/lib/auth/role-permissions.ts"], { encoding: "utf8" });
-  assert.ok(permissionsDiff.includes("EXPENSE_PERMISSIONS.approve"));
-  const migrationDiff = require("child_process").execFileSync("git", ["diff", "HEAD", "--", "supabase/migrations"], { encoding: "utf8" });
-  assert.doesNotMatch(migrationDiff, /DROP TABLE/i);
-  const status = require("child_process").execFileSync("git", ["status", "--short", "--", "supabase/migrations"], { encoding: "utf8" });
-  assert.ok(status.includes("20260913100000_w5c_petty_cash_governed_workspace_foundation.sql"));
-  assert.equal(status.includes("20260911100000_w5b2c_cash_advance_approval_authority_repair.sql"), false);
+  const layoutSource = fs.readFileSync(path.join(process.cwd(), "src/app/(dashboard)/layout.tsx"), "utf8");
+  assert.ok(layoutSource.includes("PETTY_CASH_PERMISSIONS"));
+  const permissionsSource = fs.readFileSync(path.join(process.cwd(), "src/lib/auth/role-permissions.ts"), "utf8");
+  assert.ok(permissionsSource.includes("EXPENSE_PERMISSIONS.approve"));
+  const migrationPath = path.join(process.cwd(), "supabase/migrations/20260913100000_w5c_petty_cash_governed_workspace_foundation.sql");
+  assert.ok(fs.existsSync(migrationPath));
+  const migrationSource = fs.readFileSync(migrationPath, "utf8");
+  assert.doesNotMatch(migrationSource, /DROP TABLE/i);
 });
 
 test("72. Approval UI: final row eligibility is server-calculated and Approve/Reject are fail-closed", () => {

@@ -570,28 +570,13 @@ export async function getPettyCashFundsList(): Promise<PettyCashFund[]> {
     ] as [string, { id: string; name: string | null; email: string | null }]),
   );
 
-  const { data: activity, error: activityError } = await supabase
-    .from("petty_cash_transactions")
-    .select("fund_id, recorded_at")
-    .in("fund_id", funds.map((fund) => fund.id))
-    .order("recorded_at", { ascending: false });
-  if (activityError) {
-    throw new Error("Failed to load petty cash activity");
-  }
-  const lastActivityByFund = new Map<string, string>();
-  for (const row of activity ?? []) {
-    if (!lastActivityByFund.has(row.fund_id)) {
-      lastActivityByFund.set(row.fund_id, row.recorded_at);
-    }
-  }
-
   return funds.map((fund) => {
     const custodian = usersById.get(fund.custodian_id);
     return {
       ...fund,
       custodian_name: custodian?.name ?? custodian?.email ?? "",
       custodian_email: custodian?.email ?? "",
-      last_activity_at: lastActivityByFund.get(fund.id) ?? null,
+      last_activity_at: fund.updated_at ?? null,
     };
   });
 }
