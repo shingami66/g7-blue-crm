@@ -500,7 +500,7 @@ test("30. Detail: return history is read-only", () => {
   );
 });
 
-test("31. Detail: zero operational mutation buttons present in W5B-2B", () => {
+test("31. Detail: operational mutations stay in the governed action component", () => {
   const detailClientSource = fs.readFileSync(
     path.join(
       process.cwd(),
@@ -508,36 +508,32 @@ test("31. Detail: zero operational mutation buttons present in W5B-2B", () => {
     ),
     "utf8",
   );
-  // Verify no action buttons for Approve, Reject, Issue, Cancel, Settle, or Return
+  const actionsSource = fs.readFileSync(
+    path.join(
+      process.cwd(),
+      "src/app/(dashboard)/advances/[id]/CashAdvanceOperationalActions.tsx",
+    ),
+    "utf8",
+  );
+  // The record view composes the action component; it must not issue RPCs directly.
   assert.equal(
     detailClientSource.includes("approveCashAdvanceAction"),
     false,
-    "Must not invoke approveCashAdvanceAction",
+    "AdvanceDetailClient must not invoke approveCashAdvanceAction directly",
   );
   assert.equal(
-    detailClientSource.includes("rejectCashAdvanceAction"),
-    false,
-    "Must not invoke rejectCashAdvanceAction",
+    detailClientSource.includes("CashAdvanceOperationalActions"),
+    true,
+    "AdvanceDetailClient must render the governed action component",
   );
   assert.equal(
-    detailClientSource.includes("issueCashAdvanceAction"),
-    false,
-    "Must not invoke issueCashAdvanceAction",
-  );
-  assert.equal(
-    detailClientSource.includes("cancelCashAdvanceAction"),
-    false,
-    "Must not invoke cancelCashAdvanceAction",
-  );
-  assert.equal(
-    detailClientSource.includes("settleCashAdvanceAction"),
-    false,
-    "Must not invoke settleCashAdvanceAction",
-  );
-  assert.equal(
-    detailClientSource.includes("recordCashAdvanceReturnAction"),
-    false,
-    "Must not invoke recordCashAdvanceReturnAction",
+    actionsSource.includes("approveCashAdvanceAction") &&
+      actionsSource.includes("rejectCashAdvanceAction") &&
+      actionsSource.includes("issueCashAdvanceAction") &&
+      actionsSource.includes("settleCashAdvanceSpendAction") &&
+      actionsSource.includes("recordCashAdvanceReturnAction"),
+    true,
+    "Operational lifecycle controls must use the existing governed actions",
   );
 });
 
@@ -1054,4 +1050,141 @@ test("61. Canonical Shell: dashboard layout owns max-w-[1440px] and ExpensesClie
     expensesSource.includes('<div className="space-y-6">'),
     "ExpensesClient must use minimal space-y-6 root",
   );
+});
+
+test("62. Detail data: balance and linked expenses use own or broad canonical queries", () => {
+  const pageSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/page.tsx"),
+    "utf8",
+  );
+  for (const symbol of [
+    "getCashAdvanceBalanceSummary(id)",
+    "getOwnCashAdvanceBalanceSummary(id)",
+    "getLinkedCashAdvanceExpenses(id)",
+    "getOwnLinkedCashAdvanceExpenses(id)",
+    "getCurrentAppUser()",
+  ]) {
+    assert.ok(pageSource.includes(symbol), `Detail page must use ${symbol}`);
+  }
+  assert.ok(pageSource.includes("detailData.advance.recipient_id === currentUser.id"));
+});
+
+test("63. Authority: server capability composition covers every operational control", () => {
+  const pageSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/page.tsx"),
+    "utf8",
+  );
+  for (const capability of [
+    "canApproveAdvance",
+    "canIssueAdvance",
+    "canSubmitOwnSpend",
+    "canSubmitSpendOnBehalf",
+    "canFinanceReviewExpense",
+    "canApproveExpense",
+    "canSettleSpend",
+    "canRecordReturn",
+  ]) {
+    assert.ok(pageSource.includes(capability), `Missing server capability ${capability}`);
+  }
+  assert.ok(pageSource.includes("CASH_ADVANCE_PERMISSIONS.approve"));
+  assert.ok(pageSource.includes("CASH_ADVANCE_PERMISSIONS.issue"));
+  assert.ok(pageSource.includes("EXPENSE_PERMISSIONS.financeReview"));
+  assert.ok(pageSource.includes("EXPENSE_PERMISSIONS.approve"));
+});
+
+test("64. Lifecycle: status-aware controls preserve single issue and read-only terminal states", () => {
+  const actionsSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/CashAdvanceOperationalActions.tsx"),
+    "utf8",
+  );
+  assert.ok(actionsSource.includes('advance.status === "submitted"'));
+  assert.ok(actionsSource.includes('advance.status === "approved"'));
+  assert.ok(actionsSource.includes('advance.status === "issued"'));
+  assert.ok(actionsSource.includes("issueCashAdvanceAction"));
+  assert.equal(actionsSource.includes("issued_amount"), false);
+  assert.equal(actionsSource.includes("topUp"), false);
+  assert.equal(actionsSource.includes("multipleDisbursement"), false);
+});
+
+test("65. Dual entry: self and on-behalf forms use canonical actions and omit routing fields", () => {
+  const actionsSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/CashAdvanceOperationalActions.tsx"),
+    "utf8",
+  );
+  assert.ok(actionsSource.includes("submitOwnCashAdvanceExpenseAction"));
+  assert.ok(actionsSource.includes("submitCashAdvanceExpenseOnBehalfAction"));
+  for (const field of ["recipient_id", "service_id", "context_type", "payment_method", "origin_type", "claimant_id"]) {
+    assert.equal(actionsSource.includes(`${field}:`), false, `New forms must not submit ${field}`);
+  }
+  assert.ok(actionsSource.includes("recordedByFinance"));
+});
+
+test("66. Request IDs: every new operational form creates one secure ID and retains it in a ref", () => {
+  const actionsSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/CashAdvanceOperationalActions.tsx"),
+    "utf8",
+  );
+  const occurrences = actionsSource.match(/crypto\.randomUUID\(\)/g) ?? [];
+  assert.ok(occurrences.length >= 2, "Lifecycle and linked-expense actions need secure request IDs");
+  assert.ok(actionsSource.includes("requestIdRef = useRef<string | null>(null)"));
+  assert.equal(actionsSource.includes("Date.now()"), false);
+  assert.equal(actionsSource.includes("Math.random()"), false);
+});
+
+test("67. Expense lifecycle: finance review precedes manager approval and settlement is partial-capable", () => {
+  const actionsSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/CashAdvanceOperationalActions.tsx"),
+    "utf8",
+  );
+  assert.ok(actionsSource.includes("reviewExpenseFinanceAction"));
+  assert.ok(actionsSource.includes("expense.status === \"submitted\" && capabilities.canApproveExpense && isReviewed"));
+  assert.ok(actionsSource.includes("expense.status === \"submitted\" && capabilities.canApproveExpense && !isReviewed"));
+  assert.ok(actionsSource.includes("settleCashAdvanceSpendAction"));
+  assert.ok(actionsSource.includes("amount > Number(expense.unsettled_amount)"));
+});
+
+test("68. Financial display: operational values come from the canonical balance summary", () => {
+  const detailSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/AdvanceDetailClient.tsx"),
+    "utf8",
+  );
+  assert.ok(detailSource.includes("balance.reserved_unsettled_spend"));
+  assert.ok(detailSource.includes("balance.available_uncommitted_balance"));
+  assert.equal(detailSource.includes("allocations.reduce"), false);
+  assert.equal(detailSource.includes("linkedExpenses.reduce"), false);
+});
+
+test("69. Linked expenses: desktop table and mobile cards expose workflow and settlement fields", () => {
+  const actionsSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/CashAdvanceOperationalActions.tsx"),
+    "utf8",
+  );
+  assert.ok(actionsSource.includes("hidden overflow-x-auto md:block"));
+  assert.ok(actionsSource.includes("md:hidden"));
+  for (const field of ["expense_number", "expense_category", "description", "expense_date", "amount", "settled_amount", "unsettled_amount"]) {
+    assert.ok(actionsSource.includes(`expense.${field}`), `Linked expense must expose ${field}`);
+  }
+});
+
+test("70. Error safety: Cash Advance receipt wrapper masks private pipeline failures", () => {
+  const actionsSource = fs.readFileSync(
+    path.join(process.cwd(), "src/lib/expenses/actions.ts"),
+    "utf8",
+  );
+  assert.ok(actionsSource.includes("attachCashAdvanceExpenseReceiptAction"));
+  const wrapper = actionsSource.slice(actionsSource.indexOf("attachCashAdvanceExpenseReceiptAction"), actionsSource.indexOf("// 1e. Get Private Expense Receipt Signed URL"));
+  assert.equal(wrapper.includes("error: result.error"), false);
+  assert.equal(wrapper.includes("err.message"), false);
+  assert.ok(wrapper.includes('errorCode: "attachment_failed"'));
+  assert.ok(wrapper.includes('select("id, submitted_by, claimant_id, cash_advance_id, payment_method")'));
+  assert.ok(wrapper.includes("expense.payment_method !== \"cash_advance\""));
+  assert.ok(wrapper.includes("expense.cash_advance_id"));
+  assert.ok(wrapper.includes("expense.submitted_by !== user.id"));
+});
+
+test("71. Regression: dashboard layout and permission files remain untouched by the operational slice", () => {
+  const layoutDiff = require("child_process").execFileSync("git", ["diff", "--", "src/app/(dashboard)/layout.tsx", "src/lib/auth/role-permissions.ts"], { encoding: "utf8" });
+  assert.equal(layoutDiff, "");
+  const status = require("child_process").execFileSync("git", ["status", "--short", "--", "supabase/migrations"], { encoding: "utf8" });
+  assert.equal(status, "");
 });

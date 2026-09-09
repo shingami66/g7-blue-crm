@@ -12,8 +12,14 @@ import type {
   EnrichedCashAdvanceExpenseSettlement,
   CashAdvanceReturn,
   CashAdvanceStatus,
+  CashAdvanceBalanceSummary,
+  LinkedCashAdvanceExpense,
 } from "@/lib/expenses/types";
 import PendingLink from "@/components/ui/PendingLink";
+import {
+  CashAdvanceOperationalActions,
+  CashAdvanceExpensesSection,
+} from "./CashAdvanceOperationalActions";
 import {
   ArrowLeft,
   ArrowRight,
@@ -36,6 +42,19 @@ interface AdvanceDetailClientProps {
   rejecterName?: string | null;
   cancellerName?: string | null;
   requesterName?: string | null;
+  balance: CashAdvanceBalanceSummary | null;
+  linkedExpenses: LinkedCashAdvanceExpense[];
+  isRecipient: boolean;
+  capabilities: {
+    canApproveAdvance: boolean;
+    canIssueAdvance: boolean;
+    canSubmitOwnSpend: boolean;
+    canSubmitSpendOnBehalf: boolean;
+    canFinanceReviewExpense: boolean;
+    canApproveExpense: boolean;
+    canSettleSpend: boolean;
+    canRecordReturn: boolean;
+  };
   dictionary?: CashAdvancesDictionary;
 }
 
@@ -49,6 +68,10 @@ export default function AdvanceDetailClient({
   rejecterName,
   cancellerName,
   requesterName,
+  balance,
+  linkedExpenses,
+  isRecipient,
+  capabilities,
   dictionary: dictionaryProp,
 }: AdvanceDetailClientProps) {
   const locale = useLocale();
@@ -114,7 +137,7 @@ export default function AdvanceDetailClient({
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-12">
+      <div className="flex flex-col gap-6 pb-12">
       {/* Record Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-4">
@@ -145,6 +168,13 @@ export default function AdvanceDetailClient({
             </p>
           </div>
         </div>
+        <CashAdvanceOperationalActions
+          advance={advance}
+          balance={balance}
+          capabilities={capabilities}
+          isRecipient={isRecipient}
+          dictionary={dictionary}
+        />
       </div>
 
       {/* 4-Metric Accountability Block */}
@@ -197,6 +227,27 @@ export default function AdvanceDetailClient({
           </p>
         </div>
       </div>
+
+      {balance && (
+        <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
+          <div className="border-b border-surface-variant bg-surface-bright px-6 py-4">
+            <h2 className="font-semibold text-primary">{dictionary.operationalAvailability.title}</h2>
+            <p className="mt-1 text-sm text-on-surface-variant">{dictionary.operationalAvailability.description}</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-2">
+            <div className="rounded-lg border border-outline-variant bg-surface-container-low p-4">
+              <span className="block text-sm font-medium text-on-surface-variant">{dictionary.operationalAvailability.reservedSpend}</span>
+              <strong className="mt-2 block font-mono text-xl text-on-surface"><span dir="ltr">{Number(balance.reserved_unsettled_spend).toFixed(2)} {dictionary.accountability.currency}</span></strong>
+              <p className="mt-2 text-xs leading-5 text-on-surface-variant">{dictionary.operationalAvailability.reservedSpendHelp}</p>
+            </div>
+            <div className="rounded-lg border border-primary/30 bg-primary-container/20 p-4">
+              <span className="block text-sm font-medium text-primary">{dictionary.operationalAvailability.availableBalance}</span>
+              <strong className="mt-2 block font-mono text-xl text-primary"><span dir="ltr">{Number(balance.available_uncommitted_balance).toFixed(2)} {dictionary.accountability.currency}</span></strong>
+              <p className="mt-2 text-xs leading-5 text-on-surface-variant">{dictionary.operationalAvailability.availableBalanceHelp}</p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Identity & Context Details */}
       <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
@@ -436,6 +487,14 @@ export default function AdvanceDetailClient({
           )}
         </div>
       </section>
+
+      <CashAdvanceExpensesSection
+        expenses={linkedExpenses}
+        advance={advance}
+        balance={balance}
+        capabilities={capabilities}
+        dictionary={dictionary}
+      />
 
       {/* Cash Return History */}
       <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">

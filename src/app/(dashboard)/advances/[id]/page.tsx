@@ -1,16 +1,25 @@
-import { checkPermission } from "@/lib/auth/permissions";
-import { CASH_ADVANCE_PERMISSIONS } from "@/lib/auth/role-permissions";
+import { checkPermission, getCurrentAppUser } from "@/lib/auth/permissions";
+import {
+  CASH_ADVANCE_PERMISSIONS,
+  EXPENSE_PERMISSIONS,
+} from "@/lib/auth/role-permissions";
 import {
   getCashAdvanceDetailById,
   getOwnCashAdvanceDetailById,
   enrichCashAdvancesBatch,
   enrichExpenseSettlements,
+  getCashAdvanceBalanceSummary,
+  getOwnCashAdvanceBalanceSummary,
+  getLinkedCashAdvanceExpenses,
+  getOwnLinkedCashAdvanceExpenses,
 } from "@/lib/expenses/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   EmployeeCashAdvance,
   CashAdvanceExpenseSettlement,
   CashAdvanceReturn,
+  CashAdvanceBalanceSummary,
+  LinkedCashAdvanceExpense,
 } from "@/lib/expenses/types";
 import AdvanceDetailClient from "./AdvanceDetailClient";
 
@@ -23,9 +32,10 @@ interface PageProps {
 export default async function CashAdvanceDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  const [canReadOwn, canReadBroad] = await Promise.all([
+  const [canReadOwn, canReadBroad, currentUser] = await Promise.all([
     checkPermission(CASH_ADVANCE_PERMISSIONS.readOwn),
     checkPermission(CASH_ADVANCE_PERMISSIONS.read),
+    getCurrentAppUser(),
   ]);
 
   const canRead = canReadOwn || canReadBroad;
@@ -36,6 +46,10 @@ export default async function CashAdvanceDetailPage({ params }: PageProps) {
         advance={null}
         allocations={[]}
         returns={[]}
+        balance={null}
+        linkedExpenses={[]}
+        isRecipient={false}
+        capabilities={emptyCapabilities}
       />
     );
   }
@@ -63,8 +77,34 @@ export default async function CashAdvanceDetailPage({ params }: PageProps) {
         advance={null}
         allocations={[]}
         returns={[]}
+        balance={null}
+        linkedExpenses={[]}
+        isRecipient={false}
+        capabilities={emptyCapabilities}
       />
-    );
+  );
+  }
+
+  const capabilities = await getCapabilities();
+  const isRecipient = Boolean(currentUser?.id && detailData.advance.recipient_id === currentUser.id);
+  let balance: CashAdvanceBalanceSummary | null = null;
+  let linkedExpenses: LinkedCashAdvanceExpense[] = [];
+
+  try {
+    if (canReadBroad) {
+      [balance, linkedExpenses] = await Promise.all([
+        getCashAdvanceBalanceSummary(id),
+        getLinkedCashAdvanceExpenses(id),
+      ]);
+    } else {
+      [balance, linkedExpenses] = await Promise.all([
+        getOwnCashAdvanceBalanceSummary(id),
+        getOwnLinkedCashAdvanceExpenses(id),
+      ]);
+    }
+  } catch {
+    balance = null;
+    linkedExpenses = [];
   }
 
   const [enrichedAdvances, enrichedAllocations] = await Promise.all([
@@ -115,6 +155,10 @@ export default async function CashAdvanceDetailPage({ params }: PageProps) {
       advance={advance}
       allocations={enrichedAllocations}
       returns={detailData.returns}
+      balance={balance}
+      linkedExpenses={linkedExpenses}
+      isRecipient={isRecipient}
+      capabilities={capabilities}
       requesterName={actorMap.get(detailData.advance.requested_by)}
       approverName={
         detailData.advance.approved_by
@@ -138,4 +182,46 @@ export default async function CashAdvanceDetailPage({ params }: PageProps) {
       }
     />
   );
+}
+
+const emptyCapabilities = {
+  canApproveAdvance: false,
+  canIssueAdvance: false,
+  canSubmitOwnSpend: false,
+  canSubmitSpendOnBehalf: false,
+  canFinanceReviewExpense: false,
+  canApproveExpense: false,
+  canSettleSpend: false,
+  canRecordReturn: false,
+};
+
+async function getCapabilities() {
+  const [
+    canApproveAdvance,
+    canIssueAdvance,
+    canSubmitOwnCashAdvance,
+    canSubmitOwnExpense,
+    canSettleSpend,
+    canFinanceReviewExpense,
+    canApproveExpense,
+  ] = await Promise.all([
+    checkPermission(CASH_ADVANCE_PERMISSIONS.approve),
+    checkPermission(CASH_ADVANCE_PERMISSIONS.issue),
+    checkPermission(CASH_ADVANCE_PERMISSIONS.submitOwn),
+    checkPermission(EXPENSE_PERMISSIONS.submitOwn),
+    checkPermission(CASH_ADVANCE_PERMISSIONS.settle),
+    checkPermission(EXPENSE_PERMISSIONS.financeReview),
+    checkPermission(EXPENSE_PERMISSIONS.approve),
+  ]);
+
+  return {
+    canApproveAdvance,
+    canIssueAdvance,
+    canSubmitOwnSpend: canSubmitOwnCashAdvance && canSubmitOwnExpense,
+    canSubmitSpendOnBehalf: canSettleSpend && canFinanceReviewExpense,
+    canFinanceReviewExpense,
+    canApproveExpense,
+    canSettleSpend,
+    canRecordReturn: canSettleSpend,
+  };
 }

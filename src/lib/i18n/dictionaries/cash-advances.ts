@@ -2,6 +2,7 @@ import type { Locale } from "../locales";
 import type {
   CashAdvanceStatus,
   ExpenseContextType,
+  ExpenseStatus,
 } from "../../expenses/types.ts";
 import { resolveDictionaryValue } from "../fallback.ts";
 
@@ -29,6 +30,94 @@ export interface CashAdvancesDictionary {
     amountReturned: string;
     remainingBalance: string;
     currency: string;
+  };
+  operationalAvailability: {
+    title: string;
+    description: string;
+    reservedSpend: string;
+    reservedSpendHelp: string;
+    availableBalance: string;
+    availableBalanceHelp: string;
+  };
+  actions: {
+    sectionLabel: string;
+    approve: string;
+    reject: string;
+    issue: string;
+    recordSpend: string;
+    recordSpendOnBehalf: string;
+    submitExpense: string;
+    financeReview: string;
+    approveExpense: string;
+    rejectExpense: string;
+    settleSpend: string;
+    recordConfirmedCashReturn: string;
+    confirmations: {
+      approve: string;
+      reject: string;
+      issue: string;
+      recordSpend: string;
+      recordSpendOnBehalf: string;
+      financeReview: string;
+      approveExpense: string;
+      rejectExpense: string;
+      settleSpend: string;
+      recordReturn: string;
+    };
+    fields: {
+      rejectionReason: string;
+      paymentReference: string;
+      expenseCategory: string;
+      description: string;
+      amount: string;
+      expenseDate: string;
+      receiptOptional: string;
+      receiptReference: string;
+      notes: string;
+      remainingBalance: string;
+      reservedSpend: string;
+      availableBalance: string;
+      expenseNumber: string;
+      totalAmount: string;
+      settledAmount: string;
+      unsettledAmount: string;
+      settlementAmount: string;
+    };
+    states: {
+      awaitingFinanceReview: string;
+      recordedByFinance: string;
+      accountableCustodian: string;
+      privateReceipt: string;
+    };
+    errors: {
+      validation: string;
+      generic: string;
+      advanceUnavailable: string;
+      advanceNotIssued: string;
+      staleBalance: string;
+      selfApproval: string;
+      rejectionReasonRequired: string;
+      returnAmountInvalid: string;
+      settlementAmountInvalid: string;
+      receiptRequired: string;
+      receiptFailed: string;
+    };
+  };
+  linkedExpenses: {
+    title: string;
+    empty: string;
+    statuses: Record<ExpenseStatus, string>;
+    fields: {
+      expenseNumber: string;
+      status: string;
+      category: string;
+      description: string;
+      expenseDate: string;
+      amount: string;
+      settledAmount: string;
+      unsettledAmount: string;
+      actions: string;
+    };
   };
   table: {
     recordsLoaded: string;
@@ -179,6 +268,100 @@ export const cashAdvancesDictionaryEn: CashAdvancesDictionary = {
     remainingBalance: "Remaining Balance",
     currency: "SAR",
   },
+  operationalAvailability: {
+    title: "Operational Availability",
+    description: "Cash that is still available after settled spend, returns, and unsettled reservations.",
+    reservedSpend: "Reserved Spend",
+    reservedSpendHelp: "Submitted or approved linked spend that has not been fully settled.",
+    availableBalance: "Available to Spend / Return",
+    availableBalanceHelp: "Cash not already settled, returned, or reserved.",
+  },
+  actions: {
+    sectionLabel: "Cash Advance actions",
+    approve: "Approve",
+    reject: "Reject",
+    issue: "Issue Cash Advance",
+    recordSpend: "Record Spend",
+    recordSpendOnBehalf: "Record Spend on Behalf",
+    submitExpense: "Submit Expense",
+    financeReview: "Finance Review",
+    approveExpense: "Approve Expense",
+    rejectExpense: "Reject Expense",
+    settleSpend: "Settle Spend",
+    recordConfirmedCashReturn: "Record Confirmed Cash Return",
+    confirmations: {
+      approve: "Approve this Cash Advance request?",
+      reject: "Reject this Cash Advance request. A reason is required.",
+      issue: "Issue the full approved Cash Advance. No partial issuance is supported.",
+      recordSpend: "Record an expense funded by this issued Cash Advance.",
+      recordSpendOnBehalf: "Record an expense for the current Cash Advance custodian. Finance review is not automatic.",
+      financeReview: "Confirm that Finance has reviewed this linked Expense.",
+      approveExpense: "Approve this finance-reviewed linked Expense?",
+      rejectExpense: "Reject this linked Expense. A reason is required.",
+      settleSpend: "Allocate the entered amount against this approved Cash Advance Expense.",
+      recordReturn: "Record cash only after the physical cash has been received or the deposit has been confirmed.",
+    },
+    fields: {
+      rejectionReason: "Rejection Reason",
+      paymentReference: "Payment Reference (optional)",
+      expenseCategory: "Expense Category",
+      description: "Description",
+      amount: "Amount",
+      expenseDate: "Expense Date",
+      receiptOptional: "Receipt / Evidence (optional)",
+      receiptReference: "Receipt Reference (optional)",
+      notes: "Notes (optional)",
+      remainingBalance: "Remaining Balance",
+      reservedSpend: "Reserved Spend",
+      availableBalance: "Available Balance",
+      expenseNumber: "Expense Number",
+      totalAmount: "Expense Total",
+      settledAmount: "Already Settled",
+      unsettledAmount: "Unsettled Amount",
+      settlementAmount: "Amount to Settle",
+    },
+    states: {
+      awaitingFinanceReview: "Awaiting Finance Review",
+      recordedByFinance: "Recorded by Finance",
+      accountableCustodian: "Accountable Custodian",
+      privateReceipt: "Stored in the existing private Expense evidence pipeline.",
+    },
+    errors: {
+      validation: "Please complete the required fields with valid values.",
+      generic: "The action could not be completed. Please try again.",
+      advanceUnavailable: "This Cash Advance is unavailable for your account.",
+      advanceNotIssued: "This Cash Advance is not currently issued.",
+      staleBalance: "The available balance changed. Refresh the page and try again.",
+      selfApproval: "This request cannot be approved by its requester or recipient.",
+      rejectionReasonRequired: "A rejection reason is required.",
+      returnAmountInvalid: "Return amount must be positive and no greater than Available Balance.",
+      settlementAmountInvalid: "Settlement amount must be positive and no greater than the unsettled amount.",
+      receiptRequired: "A receipt file is required.",
+      receiptFailed: "The Expense was recorded, but the receipt could not be attached. Retry the receipt from the Expense workspace.",
+    },
+  },
+  linkedExpenses: {
+    title: "Cash Advance Expenses",
+    empty: "No Cash-Advance-funded Expenses have been submitted yet.",
+    statuses: {
+      draft: "Draft",
+      submitted: "Submitted",
+      approved: "Approved",
+      rejected: "Rejected",
+      cancelled: "Cancelled",
+    },
+    fields: {
+      expenseNumber: "Expense Number",
+      status: "Status",
+      category: "Category",
+      description: "Description",
+      expenseDate: "Expense Date",
+      amount: "Amount",
+      settledAmount: "Settled Amount",
+      unsettledAmount: "Unsettled Amount",
+      actions: "Actions",
+    },
+  },
   table: {
     recordsLoaded: "records",
     columns: {
@@ -327,6 +510,100 @@ export const cashAdvancesDictionaryAr: CashAdvancesDictionary = {
     amountReturned: "المسترد",
     remainingBalance: "الرصيد المتبقي",
     currency: "ر.س",
+  },
+  operationalAvailability: {
+    title: "الرصيد التشغيلي المتاح",
+    description: "النقد المتاح بعد خصم المصروفات المسواة والمبالغ المستردة والحجوزات غير المسواة.",
+    reservedSpend: "المصروفات المحجوزة",
+    reservedSpendHelp: "مصروفات مرتبطة بحالة التقديم أو الاعتماد ولم تتم تسويتها بالكامل.",
+    availableBalance: "المتاح للصرف أو الاسترداد",
+    availableBalanceHelp: "النقد غير المسوى أو المسترد أو المحجوز مسبقاً.",
+  },
+  actions: {
+    sectionLabel: "إجراءات العهدة النقدية",
+    approve: "اعتماد",
+    reject: "رفض",
+    issue: "صرف العهدة النقدية",
+    recordSpend: "تسجيل مصروف",
+    recordSpendOnBehalf: "تسجيل مصروف بالنيابة",
+    submitExpense: "إرسال المصروف",
+    financeReview: "مراجعة مالية",
+    approveExpense: "اعتماد المصروف",
+    rejectExpense: "رفض المصروف",
+    settleSpend: "تسوية المصروف",
+    recordConfirmedCashReturn: "تسجيل استرداد نقدي مؤكد",
+    confirmations: {
+      approve: "هل تريد اعتماد طلب العهدة النقدية هذا؟",
+      reject: "سيتم رفض طلب العهدة النقدية. يجب إدخال السبب.",
+      issue: "سيتم صرف كامل مبلغ العهدة المعتمد. لا يدعم الإصدار الجزئي.",
+      recordSpend: "تسجيل مصروف ممول من هذه العهدة النقدية المصروفة.",
+      recordSpendOnBehalf: "تسجيل مصروف لصالح مستلم العهدة الحالي. لا تتم المراجعة المالية تلقائياً.",
+      financeReview: "أكد أن المالية راجعت المصروف المرتبط.",
+      approveExpense: "هل تريد اعتماد المصروف المرتبط بعد مراجعته مالياً؟",
+      rejectExpense: "سيتم رفض المصروف المرتبط. يجب إدخال السبب.",
+      settleSpend: "سيتم تخصيص المبلغ المدخل مقابل المصروف المعتمد من العهدة.",
+      recordReturn: "سجل المبلغ فقط بعد استلام النقد فعلياً أو تأكيد الإيداع.",
+    },
+    fields: {
+      rejectionReason: "سبب الرفض",
+      paymentReference: "مرجع الدفع (اختياري)",
+      expenseCategory: "تصنيف المصروف",
+      description: "الوصف",
+      amount: "المبلغ",
+      expenseDate: "تاريخ المصروف",
+      receiptOptional: "الإيصال / الإثبات (اختياري)",
+      receiptReference: "مرجع الإيصال (اختياري)",
+      notes: "ملاحظات (اختياري)",
+      remainingBalance: "الرصيد المتبقي",
+      reservedSpend: "المصروفات المحجوزة",
+      availableBalance: "الرصيد المتاح",
+      expenseNumber: "رقم المصروف",
+      totalAmount: "إجمالي المصروف",
+      settledAmount: "المسوى سابقاً",
+      unsettledAmount: "المبلغ غير المسوى",
+      settlementAmount: "المبلغ المراد تسويته",
+    },
+    states: {
+      awaitingFinanceReview: "بانتظار المراجعة المالية",
+      recordedByFinance: "مسجل بواسطة المالية",
+      accountableCustodian: "المستلم المسؤول",
+      privateReceipt: "يتم حفظه عبر مسار إثبات المصروف الخاص الحالي.",
+    },
+    errors: {
+      validation: "يرجى إكمال الحقول المطلوبة وإدخال قيم صحيحة.",
+      generic: "تعذر إكمال الإجراء. يرجى المحاولة مرة أخرى.",
+      advanceUnavailable: "هذه العهدة النقدية غير متاحة لحسابك.",
+      advanceNotIssued: "العهدة النقدية ليست في حالة مصروفة حالياً.",
+      staleBalance: "تغير الرصيد المتاح. حدّث الصفحة وحاول مرة أخرى.",
+      selfApproval: "لا يمكن لمقدم الطلب أو مستلم العهدة اعتماد هذا الطلب.",
+      rejectionReasonRequired: "يجب إدخال سبب الرفض.",
+      returnAmountInvalid: "يجب أن يكون مبلغ الاسترداد موجباً ولا يتجاوز الرصيد المتاح.",
+      settlementAmountInvalid: "يجب أن يكون مبلغ التسوية موجباً ولا يتجاوز المبلغ غير المسوى.",
+      receiptRequired: "يجب اختيار ملف إيصال.",
+      receiptFailed: "تم تسجيل المصروف، ولكن تعذر إرفاق الإيصال. أعد المحاولة من مساحة المصروفات.",
+    },
+  },
+  linkedExpenses: {
+    title: "مصروفات العهدة النقدية",
+    empty: "لم يتم إرسال مصروفات ممولة من هذه العهدة بعد.",
+    statuses: {
+      draft: "مسودة",
+      submitted: "مرسل",
+      approved: "معتمد",
+      rejected: "مرفوض",
+      cancelled: "ملغى",
+    },
+    fields: {
+      expenseNumber: "رقم المصروف",
+      status: "الحالة",
+      category: "التصنيف",
+      description: "الوصف",
+      expenseDate: "تاريخ المصروف",
+      amount: "المبلغ",
+      settledAmount: "المبلغ المسوى",
+      unsettledAmount: "المبلغ غير المسوى",
+      actions: "الإجراءات",
+    },
   },
   table: {
     recordsLoaded: "سجلات",

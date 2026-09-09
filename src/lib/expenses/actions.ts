@@ -825,6 +825,85 @@ export async function attachExpenseReceiptAction(
   }
 }
 
+// Cash Advance UI wrapper: reuse the private receipt pipeline while exposing
+// only stable domain failures to the operational workspace.
+export async function attachCashAdvanceExpenseReceiptAction(
+  formData: FormData,
+): Promise<W5ActionResult<{ expense_id: string; document_id: string }>> {
+  try {
+    const user = await requirePermission(EXPENSE_PERMISSIONS.submitOwn);
+    const expenseId = formData.get("expense_id");
+    const requestId = formData.get("request_id");
+    const receiptFile = formData.get("receipt") ?? formData.get("file");
+
+    if (
+      typeof expenseId !== "string" ||
+      typeof requestId !== "string" ||
+      !requestId ||
+      !receiptFile ||
+      typeof receiptFile !== "object" ||
+      !("size" in receiptFile) ||
+      Number((receiptFile as { size: number }).size) === 0
+    ) {
+      return {
+        success: false,
+        error: "Receipt file is required",
+        errorCode: "missing_file",
+      };
+    }
+
+    const supabase = getExpenseRpcClient();
+    const { data: expense, error: expenseError } = await supabase
+      .from("expenses")
+      .select("id, submitted_by, claimant_id, cash_advance_id, payment_method")
+      .eq("id", expenseId)
+      .maybeSingle();
+
+    if (
+      expenseError ||
+      !expense ||
+      expense.payment_method !== "cash_advance" ||
+      !expense.cash_advance_id ||
+      (expense.submitted_by !== user.id && expense.claimant_id !== user.id)
+    ) {
+      return {
+        success: false,
+        error: "Receipt attachment is unavailable for this Expense",
+        errorCode: "forbidden",
+      };
+    }
+
+    const result = await uploadAndAttachExpenseReceiptInternal({
+      expenseId,
+      file: receiptFile,
+      user,
+      requestId,
+    });
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: "Failed to attach receipt",
+        errorCode: result.errorCode ?? "attachment_failed",
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        expense_id: expenseId,
+        document_id: result.documentId!,
+      },
+    };
+  } catch {
+    return {
+      success: false,
+      error: "Failed to attach receipt",
+      errorCode: "attachment_failed",
+    };
+  }
+}
+
 // 1e. Get Private Expense Receipt Signed URL
 export async function getPrivateExpenseReceiptUrlAction(
   expenseId: string,
