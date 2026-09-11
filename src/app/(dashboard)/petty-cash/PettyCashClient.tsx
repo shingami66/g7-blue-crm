@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Plus, Wallet, AlertCircle, UserRound, Clock3 } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import type { Locale } from "@/lib/i18n";
 import { getPettyCashDictionary } from "@/lib/i18n/dictionaries/petty-cash";
 import type { PettyCashCustodianOption, PettyCashFund } from "@/lib/expenses/types";
 import { createPettyCashFundAction } from "@/lib/expenses/actions";
@@ -13,13 +12,28 @@ function money(value: number) {
   return `${Number(value).toFixed(2)} SAR`;
 }
 
-function formatFundDate(value: string | null | undefined, locale: Locale) {
+function formatFundDate(value: string | null | undefined) {
   if (!value) return "—";
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA-u-nu-latn" : "en-GB", {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  const parts = new Intl.DateTimeFormat("en-US", {
+    calendar: "gregory",
+    numberingSystem: "latn",
+    timeZone: "UTC",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-  }).format(new Date(value));
+  }).formatToParts(date);
+  const values = Object.fromEntries(
+    parts
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value]),
+  );
+
+  return values.year && values.month && values.day
+    ? `${values.year}-${values.month}-${values.day}`
+    : "—";
 }
 
 export default function PettyCashClient({
@@ -93,7 +107,7 @@ export default function PettyCashClient({
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4 md:hidden">
-            {funds.map((fund) => <FundCard key={fund.id} fund={fund} dictionary={dictionary} locale={locale} />)}
+            {funds.map((fund) => <FundCard key={fund.id} fund={fund} dictionary={dictionary} />)}
           </div>
           <div className="hidden rounded-xl border border-outline-variant bg-surface-container-lowest md:block">
             <table className="w-full table-fixed text-start text-sm">
@@ -125,10 +139,10 @@ export default function PettyCashClient({
                     <td className="px-3 py-3 text-start font-semibold text-on-surface">{fund.fund_name}</td>
                     <td className="px-3 py-3 text-start text-on-surface-variant">{fund.custodian_name}</td>
                     <td className="px-3 py-3 text-start"><StatusBadge status={fund.status} dictionary={dictionary} /></td>
-                    <td className="px-3 py-3 text-end font-mono" dir="ltr">{money(fund.float_limit)}</td>
-                    <td className="px-3 py-3 text-end font-mono" dir="ltr">{money(fund.current_balance)}</td>
-                    <td className="px-3 py-3 text-end font-mono" dir="ltr">{money(Math.max(0, fund.float_limit - fund.current_balance))}</td>
-                    <td className="px-3 py-3 text-start text-on-surface-variant"><span dir="ltr">{formatFundDate(fund.last_activity_at, locale)}</span></td>
+                    <td className="px-3 py-3 text-end font-mono"><bdi dir="ltr">{money(fund.float_limit)}</bdi></td>
+                    <td className="px-3 py-3 text-end font-mono"><bdi dir="ltr">{money(fund.current_balance)}</bdi></td>
+                    <td className="px-3 py-3 text-end font-mono"><bdi dir="ltr">{money(Math.max(0, fund.float_limit - fund.current_balance))}</bdi></td>
+                    <td className="px-3 py-3 text-start text-on-surface-variant"><bdi dir="ltr">{formatFundDate(fund.last_activity_at)}</bdi></td>
                     <td className="px-3 py-3 text-end"><Link href={`/petty-cash/${fund.id}`} className="inline-block font-semibold text-primary underline-offset-2 hover:underline">{dictionary.labels.viewFund}</Link></td>
                   </tr>
                 ))}
@@ -148,8 +162,8 @@ function StatusBadge({ status, dictionary }: { status: PettyCashFund["status"]; 
   return <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${classes}`}>{dictionary.statuses[status]}</span>;
 }
 
-function FundCard({ fund, dictionary, locale }: { fund: PettyCashFund; dictionary: ReturnType<typeof getPettyCashDictionary>; locale: Locale }) {
-  return <Link href={`/petty-cash/${fund.id}`} className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-xs"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold text-on-surface">{fund.fund_name}</h2><p className="mt-1 flex items-center gap-1 text-xs text-on-surface-variant"><UserRound className="h-3.5 w-3.5" aria-hidden="true" />{fund.custodian_name}</p></div><StatusBadge status={fund.status} dictionary={dictionary} /></div><div className="mt-4 grid grid-cols-2 gap-2 text-xs"><Metric label={dictionary.labels.floatLimit} value={money(fund.float_limit)} /><Metric label={dictionary.labels.currentBalance} value={money(fund.current_balance)} /><Metric label={dictionary.labels.replenishmentCapacity} value={money(Math.max(0, fund.float_limit - fund.current_balance))} /><Metric label={dictionary.labels.lastActivity} value={formatFundDate(fund.last_activity_at, locale)} icon={<Clock3 className="h-3 w-3" aria-hidden="true" />} /></div></Link>;
+function FundCard({ fund, dictionary }: { fund: PettyCashFund; dictionary: ReturnType<typeof getPettyCashDictionary> }) {
+  return <Link href={`/petty-cash/${fund.id}`} className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-xs"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold text-on-surface">{fund.fund_name}</h2><p className="mt-1 flex items-center gap-1 text-xs text-on-surface-variant"><UserRound className="h-3.5 w-3.5" aria-hidden="true" />{fund.custodian_name}</p></div><StatusBadge status={fund.status} dictionary={dictionary} /></div><div className="mt-4 grid grid-cols-2 gap-2 text-xs"><Metric label={dictionary.labels.floatLimit} value={money(fund.float_limit)} /><Metric label={dictionary.labels.currentBalance} value={money(fund.current_balance)} /><Metric label={dictionary.labels.replenishmentCapacity} value={money(Math.max(0, fund.float_limit - fund.current_balance))} /><Metric label={dictionary.labels.lastActivity} value={formatFundDate(fund.last_activity_at)} icon={<Clock3 className="h-3 w-3" aria-hidden="true" />} /></div></Link>;
 }
 
 function Metric({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) { return <div className="rounded-lg bg-surface-container-low p-2"><span className="block text-[11px] text-on-surface-variant">{label}</span><span className="mt-1 flex items-center gap-1 font-mono text-xs font-semibold text-on-surface" dir="ltr">{icon}{value}</span></div>; }

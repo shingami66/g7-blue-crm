@@ -375,13 +375,13 @@ export default function ExpensesClient({
                 <colgroup>
                   <col className="w-[12%]" />
                   <col className="w-[10%]" />
-                  <col className="w-[15%]" />
-                  <col className="w-[15%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[14%]" />
                   <col className="w-[12%]" />
                   <col className="w-[10%]" />
-                  <col className="w-[12%]" />
-                  <col className="w-[10%]" />
-                  <col className="w-[4%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[9%]" />
+                  <col className="w-[8%]" />
                 </colgroup>
                 <thead className="bg-surface-container-low text-xs font-semibold text-on-surface-variant border-b border-outline-variant uppercase">
                   <tr>
