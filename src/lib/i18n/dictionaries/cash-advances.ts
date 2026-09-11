@@ -262,8 +262,8 @@ export const cashAdvancesDictionaryEn: CashAdvancesDictionary = {
     event: "Event / Service",
   },
   accountability: {
-    amountIssued: "Issued",
-    amountSpent: "Spent",
+    amountIssued: "Advance Value",
+    amountSpent: "Settled Expense",
     amountReturned: "Returned",
     remainingBalance: "Remaining Balance",
     currency: "SAR",
@@ -505,8 +505,8 @@ export const cashAdvancesDictionaryAr: CashAdvancesDictionary = {
     event: "فعالية / خدمة",
   },
   accountability: {
-    amountIssued: "المبلغ المصروف",
-    amountSpent: "المسوى",
+    amountIssued: "قيمة العهدة",
+    amountSpent: "المصروف المسوّى",
     amountReturned: "المسترد",
     remainingBalance: "الرصيد المتبقي",
     currency: "ر.س",

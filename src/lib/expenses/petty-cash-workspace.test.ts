@@ -55,3 +55,24 @@ test("W5C fund-list Last Activity stays bounded to fund rows", () => {
   assert.doesNotMatch(fundsList, /petty_cash_transactions/);
   assert.match(fundsList, /last_activity_at: fund\.updated_at/);
 });
+
+test("W5C fund list keeps fixed desktop columns and an explicit action column", () => {
+  const list = read("src/app/(dashboard)/petty-cash/PettyCashClient.tsx");
+  assert.match(list, /table className="[^"]*table-fixed/);
+  assert.match(list, /<colgroup>[\s\S]*<col className="w-\[20%\]"[\s\S]*<\/colgroup>/);
+  assert.match(list, /<th className="px-4 py-3 text-end font-semibold">\{dictionary\.labels\.viewFund\}<\/th>/);
+  assert.match(list, /<td className="px-4 py-3 text-end font-mono" dir="ltr">\{money\(fund\.float_limit\)\}<\/td>/);
+});
+
+test("W5C detail exposes distinct financial metrics without internal implementation copy", () => {
+  const detail = read("src/app/(dashboard)/petty-cash/[id]/PettyCashDetailClient.tsx");
+  const dictionary = read("src/lib/i18n/dictionaries/petty-cash.ts");
+  assert.match(detail, /Metric label=\{dictionary\.labels\.replenishmentCapacity\} value=\{money\(Math\.max\(0, fund\.float_limit - fund\.current_balance\)\)\}/);
+  assert.equal(detail.includes("Metric label={dictionary.labels.availableCash}"), false);
+  assert.equal(detail.includes("dictionary.labels.database"), false);
+  assert.equal(detail.includes("dictionary.labels.governedBoundary"), false);
+  assert.equal(detail.includes("<span dir=\"ltr\">({partialReceipt.expenseId})</span>"), false);
+  assert.equal(dictionary.includes("Governed RPC"), false);
+  assert.equal(dictionary.includes("service-role"), false);
+  assert.equal(dictionary.includes("database: "), false);
+});

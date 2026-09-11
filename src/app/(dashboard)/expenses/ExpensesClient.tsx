@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef, useEffect } from "react";
+import { Fragment, useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
@@ -371,7 +371,18 @@ export default function ExpensesClient({
           <>
             {/* Desktop Table View (>= md) */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-start text-sm">
+              <table className="w-full min-w-[1120px] table-fixed text-start text-sm">
+                <colgroup>
+                  <col className="w-[12%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[4%]" />
+                </colgroup>
                 <thead className="bg-surface-container-low text-xs font-semibold text-on-surface-variant border-b border-outline-variant uppercase">
                   <tr>
                     <th className="px-4 py-3 text-start">{dictionary.table.columns.expenseNumber}</th>
@@ -391,22 +402,21 @@ export default function ExpensesClient({
                     const isReviewed = Boolean(exp.finance_reviewed_at);
 
                     return (
+                      <Fragment key={exp.id}>
                       <tr key={exp.id} className="group hover:bg-surface-container-low/60 transition-colors">
-                        <td colSpan={9} className="p-0">
                           {/* Summary Row */}
-                          <div className="flex items-center px-4 py-3 text-xs w-full divide-x-0">
                             {/* Expense Number */}
-                            <div className="w-[14%] font-mono font-bold text-start text-on-surface">
+                            <td className="px-4 py-3 align-top font-mono font-bold text-start text-on-surface">
                               <span dir="ltr">{exp.expense_number}</span>
-                            </div>
+                            </td>
 
                             {/* Date */}
-                            <div className="w-[11%] text-on-surface-variant whitespace-nowrap text-start">
+                            <td className="px-4 py-3 align-top text-on-surface-variant whitespace-nowrap text-start">
                               <span dir="ltr">{exp.expense_date}</span>
-                            </div>
+                            </td>
 
                             {/* Context */}
-                            <div className="w-[14%] text-start">
+                            <td className="px-4 py-3 align-top text-start">
                               {exp.context_type === "event" ? (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
                                   {getExpenseContextTypeLabel(locale, exp.context_type)}
@@ -419,10 +429,10 @@ export default function ExpensesClient({
                               <p className="mt-1 text-[10px] text-on-surface-variant">
                                 {getExpenseOriginTypeLabel(locale, exp.origin_type)} · {getExpensePaymentMethodLabel(locale, exp.payment_method)}
                               </p>
-                            </div>
+                            </td>
 
                             {/* Evidence Status */}
-                            <div className="w-[15%] text-start">
+                            <td className="px-4 py-3 align-top text-start">
                               {exp.evidence_status === "receipt_attached" && (
                                 <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                                   <FileCheck className="w-3 h-3 shrink-0" />
@@ -441,17 +451,17 @@ export default function ExpensesClient({
                                   {dictionary.evidenceStatuses.noEvidence}
                                 </span>
                               )}
-                            </div>
+                            </td>
 
                             {/* Amount */}
-                            <div className="w-[12%] text-end font-mono font-bold text-on-surface">
+                            <td className="px-4 py-3 align-top text-end font-mono font-bold text-on-surface">
                               <span dir="ltr">
                                 {Number(exp.amount).toFixed(2)} {exp.currency}
                               </span>
-                            </div>
+                            </td>
 
                             {/* Status */}
-                            <div className="w-[11%] text-center">
+                            <td className="px-4 py-3 align-top text-center">
                               <span
                                 className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
                                   exp.status === "approved"
@@ -465,10 +475,10 @@ export default function ExpensesClient({
                               >
                                 {getExpenseStatusLabel(locale, exp.status)}
                               </span>
-                            </div>
+                            </td>
 
                             {/* Finance Review State */}
-                            <div className="w-[11%] text-center">
+                            <td className="px-4 py-3 align-top text-center">
                               {isReviewed ? (
                                 <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                                   <ShieldCheck className="w-3 h-3" />
@@ -480,10 +490,10 @@ export default function ExpensesClient({
                                   {dictionary.financeReviewStates.pending}
                                 </span>
                               )}
-                            </div>
+                            </td>
 
                             {/* Reimbursement State */}
-                            <div className="w-[8%] text-center">
+                            <td className="px-4 py-3 align-top text-center">
                               {exp.origin_type === "employee_paid" ? (
                                 <span
                                   className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${
@@ -501,10 +511,10 @@ export default function ExpensesClient({
                                   {dictionary.reimbursementStatuses.not_applicable}
                                 </span>
                               )}
-                            </div>
+                            </td>
 
                             {/* Actions / Expansion trigger */}
-                            <div className="w-[4%] text-center">
+                            <td className="px-4 py-3 align-top text-center">
                               <button
                                 type="button"
                                 onClick={() => toggleRowExpansion(exp.id)}
@@ -517,12 +527,14 @@ export default function ExpensesClient({
                                   <ChevronDown className="w-4 h-4" />
                                 )}
                               </button>
-                            </div>
-                          </div>
+                            </td>
+                      </tr>
 
                           {/* Expandable Detail Panel */}
                           {isExpanded && (
-                            <div className="border-t border-outline-variant bg-surface-container-low/40 p-5 space-y-4">
+                            <tr key={`${exp.id}-details`} className="border-t border-outline-variant">
+                              <td colSpan={9} className="p-0">
+                            <div className="bg-surface-container-low/40 p-5 space-y-4">
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                                 {/* Column 1: Core Details */}
                                 <div className="space-y-2 rounded-lg border border-outline-variant bg-surface-container-lowest p-3 shadow-xs">
@@ -678,9 +690,10 @@ export default function ExpensesClient({
                                 </div>
                               </div>
                             </div>
+                              </td>
+                            </tr>
                           )}
-                        </td>
-                      </tr>
+                      </Fragment>
                     );
                   })}
                 </tbody>

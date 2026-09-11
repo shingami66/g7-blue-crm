@@ -92,3 +92,13 @@ test("Expenses page keeps infrastructure failures behind stable user-facing copy
   assert.ok(client.includes("dictionary.states.loadErrorDefault"));
   assert.equal(client.includes("{loadError}") , false);
 });
+
+test("Expenses desktop ledger uses shared table columns for headers and summary rows", () => {
+  const client = read(CLIENT_PATH);
+  assert.match(client, /table className="[^"]*table-fixed/);
+  assert.match(client, /<colgroup>[\s\S]*<col className="w-\[12%\]"[\s\S]*<\/colgroup>/);
+  assert.match(client, /<td className="px-4 py-3 align-top font-mono/);
+  assert.match(client, /<tr key=\{`\$\{exp\.id\}-details`\}[\s\S]*<td colSpan=\{9\}/);
+  assert.equal(client.includes("<td colSpan={9} className=\"p-0\">\n                          {/* Summary Row */}"), false);
+  assert.equal(client.includes("w-[14%]"), false);
+});

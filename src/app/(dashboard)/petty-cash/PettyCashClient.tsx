@@ -87,7 +87,44 @@ export default function PettyCashClient({
             {funds.map((fund) => <FundCard key={fund.id} fund={fund} dictionary={dictionary} locale={locale} />)}
           </div>
           <div className="hidden overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-lowest md:block">
-            <table className="min-w-full text-start text-sm"><thead className="border-b border-outline-variant bg-surface-container-low"><tr><th className="px-4 py-3 font-semibold">{dictionary.labels.fundName}</th><th className="px-4 py-3 font-semibold">{dictionary.labels.custodian}</th><th className="px-4 py-3 font-semibold">{dictionary.labels.status}</th><th className="px-4 py-3 font-semibold">{dictionary.labels.floatLimit}</th><th className="px-4 py-3 font-semibold">{dictionary.labels.currentBalance}</th><th className="px-4 py-3 font-semibold">{dictionary.labels.replenishmentCapacity}</th><th className="px-4 py-3 font-semibold">{dictionary.labels.lastActivity}</th><th className="px-4 py-3" /></tr></thead><tbody>{funds.map((fund) => <tr key={fund.id} className="border-b border-outline-variant last:border-0"><td className="px-4 py-3 font-semibold text-on-surface">{fund.fund_name}</td><td className="px-4 py-3 text-on-surface-variant">{fund.custodian_name}</td><td className="px-4 py-3"><StatusBadge status={fund.status} dictionary={dictionary} /></td><td className="px-4 py-3 font-mono" dir="ltr">{money(fund.float_limit)}</td><td className="px-4 py-3 font-mono" dir="ltr">{money(fund.current_balance)}</td><td className="px-4 py-3 font-mono" dir="ltr">{money(Math.max(0, fund.float_limit - fund.current_balance))}</td><td className="px-4 py-3 text-on-surface-variant">{fund.last_activity_at ? new Date(fund.last_activity_at).toLocaleDateString(locale) : "—"}</td><td className="px-4 py-3 text-end"><Link href={`/petty-cash/${fund.id}`} className="font-semibold text-primary underline-offset-2 hover:underline">{dictionary.labels.viewFund}</Link></td></tr>)}</tbody></table>
+            <table className="min-w-[980px] w-full table-fixed text-start text-sm">
+              <colgroup>
+                <col className="w-[20%]" />
+                <col className="w-[16%]" />
+                <col className="w-[11%]" />
+                <col className="w-[12%]" />
+                <col className="w-[12%]" />
+                <col className="w-[14%]" />
+                <col className="w-[10%]" />
+                <col className="w-[5%]" />
+              </colgroup>
+              <thead className="border-b border-outline-variant bg-surface-container-low text-xs text-on-surface-variant">
+                <tr>
+                  <th className="px-4 py-3 text-start font-semibold">{dictionary.labels.fundName}</th>
+                  <th className="px-4 py-3 text-start font-semibold">{dictionary.labels.custodian}</th>
+                  <th className="px-4 py-3 text-start font-semibold">{dictionary.labels.status}</th>
+                  <th className="px-4 py-3 text-end font-semibold">{dictionary.labels.floatLimit}</th>
+                  <th className="px-4 py-3 text-end font-semibold">{dictionary.labels.currentBalance}</th>
+                  <th className="px-4 py-3 text-end font-semibold">{dictionary.labels.replenishmentCapacity}</th>
+                  <th className="px-4 py-3 text-start font-semibold">{dictionary.labels.lastActivity}</th>
+                  <th className="px-4 py-3 text-end font-semibold">{dictionary.labels.viewFund}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {funds.map((fund) => (
+                  <tr key={fund.id} className="border-b border-outline-variant last:border-0">
+                    <td className="px-4 py-3 text-start font-semibold text-on-surface">{fund.fund_name}</td>
+                    <td className="px-4 py-3 text-start text-on-surface-variant">{fund.custodian_name}</td>
+                    <td className="px-4 py-3 text-start"><StatusBadge status={fund.status} dictionary={dictionary} /></td>
+                    <td className="px-4 py-3 text-end font-mono" dir="ltr">{money(fund.float_limit)}</td>
+                    <td className="px-4 py-3 text-end font-mono" dir="ltr">{money(fund.current_balance)}</td>
+                    <td className="px-4 py-3 text-end font-mono" dir="ltr">{money(Math.max(0, fund.float_limit - fund.current_balance))}</td>
+                    <td className="px-4 py-3 text-start text-on-surface-variant" dir="ltr">{fund.last_activity_at ? new Date(fund.last_activity_at).toLocaleDateString(locale) : "—"}</td>
+                    <td className="px-4 py-3 text-end whitespace-nowrap"><Link href={`/petty-cash/${fund.id}`} className="font-semibold text-primary underline-offset-2 hover:underline">{dictionary.labels.viewFund}</Link></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </>
       )}

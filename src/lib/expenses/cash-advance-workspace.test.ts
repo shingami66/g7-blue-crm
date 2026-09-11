@@ -945,8 +945,8 @@ test("56. Layout Shell: AdvanceDetailClient uses the canonical dashboard width",
     "AdvanceDetailClient must not add a width constraint to the normal-workspace root",
   );
   assert.ok(
-    detailSource.includes('<div className="flex flex-col gap-6 pb-12">'),
-    "AdvanceDetailClient must use the canonical detail-page root rhythm",
+    detailSource.includes('<div className="flex flex-col gap-4 pb-12">'),
+    "AdvanceDetailClient must use the compact detail-page root rhythm",
   );
 });
 
@@ -1002,9 +1002,22 @@ test("59. Detail: sections use aligned section headers and padded bodies", () =>
   ).length;
   assert.ok(sectionCount >= 3, "Detail workspace must retain the aligned section containers");
   assert.ok(
-    detailSource.includes("px-6 py-4") && detailSource.includes("p-6"),
-    "Detail sections must retain mature header and body spacing",
+    detailSource.includes("px-4 py-3") && detailSource.includes("p-4"),
+    "Detail sections must retain compact header and body spacing",
   );
+});
+
+test("Detail: financial cards stay neutral and Arabic accountability labels are semantic", () => {
+  const detailSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/AdvanceDetailClient.tsx"),
+    "utf8",
+  );
+  assert.equal(detailSource.includes("bg-primary-container/20"), false);
+  assert.equal(detailSource.includes("border-primary/30"), false);
+  assert.equal(cashAdvancesDictionaryAr.accountability.amountIssued, "قيمة العهدة");
+  assert.equal(cashAdvancesDictionaryAr.accountability.amountSpent, "المصروف المسوّى");
+  assert.equal(cashAdvancesDictionaryAr.accountability.amountReturned, "المسترد");
+  assert.equal(cashAdvancesDictionaryAr.accountability.remainingBalance, "الرصيد المتبقي");
 });
 
 test("60. Dictionary: dead sectionBadge and stageBadge fields are cleaned up from CashAdvancesDictionary", () => {
