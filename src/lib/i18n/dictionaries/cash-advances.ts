@@ -32,12 +32,8 @@ export interface CashAdvancesDictionary {
     currency: string;
   };
   operationalAvailability: {
-    title: string;
-    description: string;
     reservedSpend: string;
-    reservedSpendHelp: string;
     availableBalance: string;
-    availableBalanceHelp: string;
   };
   actions: {
     sectionLabel: string;
@@ -184,6 +180,11 @@ export interface CashAdvancesDictionary {
       allocations: string;
       returns: string;
     };
+    events: {
+      approval: string;
+      issuance: string;
+      settlement: string;
+    };
     fields: {
       advanceNumber: string;
       status: string;
@@ -269,12 +270,8 @@ export const cashAdvancesDictionaryEn: CashAdvancesDictionary = {
     currency: "SAR",
   },
   operationalAvailability: {
-    title: "Operational Availability",
-    description: "Cash that is still available after settled spend, returns, and unsettled reservations.",
     reservedSpend: "Reserved Spend",
-    reservedSpendHelp: "Submitted or approved linked spend that has not been fully settled.",
     availableBalance: "Available to Spend / Return",
-    availableBalanceHelp: "Cash not already settled, returned, or reserved.",
   },
   actions: {
     sectionLabel: "Cash Advance actions",
@@ -427,6 +424,11 @@ export const cashAdvancesDictionaryEn: CashAdvancesDictionary = {
       allocations: "Spend & Settlement History",
       returns: "Cash Return History",
     },
+    events: {
+      approval: "Approval",
+      issuance: "Issuance",
+      settlement: "Settlement",
+    },
     fields: {
       advanceNumber: "Advance Number",
       status: "Status",
@@ -512,12 +514,8 @@ export const cashAdvancesDictionaryAr: CashAdvancesDictionary = {
     currency: "ر.س",
   },
   operationalAvailability: {
-    title: "الرصيد التشغيلي المتاح",
-    description: "النقد المتاح بعد خصم المصروفات المسواة والمبالغ المستردة والحجوزات غير المسواة.",
     reservedSpend: "المصروفات المحجوزة",
-    reservedSpendHelp: "مصروفات مرتبطة بحالة التقديم أو الاعتماد ولم تتم تسويتها بالكامل.",
     availableBalance: "المتاح للصرف أو الاسترداد",
-    availableBalanceHelp: "النقد غير المسوى أو المسترد أو المحجوز مسبقاً.",
   },
   actions: {
     sectionLabel: "إجراءات العهدة النقدية",
@@ -669,6 +667,11 @@ export const cashAdvancesDictionaryAr: CashAdvancesDictionary = {
       lifecycle: "سجل الإجراءات والاعتماد",
       allocations: "سجل المصروفات والتسويات",
       returns: "سجل استرداد المبالغ النقدية",
+    },
+    events: {
+      approval: "الاعتماد",
+      issuance: "الصرف",
+      settlement: "التسوية",
     },
     fields: {
       advanceNumber: "رقم العهدة",

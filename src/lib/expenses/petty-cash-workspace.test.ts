@@ -23,7 +23,7 @@ test("W5C list and detail surfaces preserve canonical dashboard shell and respon
   const dictionary = read("src/lib/i18n/dictionaries/petty-cash.ts");
   assert.match(list, /getPettyCashDictionary/);
   assert.match(list, /md:hidden/);
-  assert.match(list, /hidden overflow-x-auto/);
+  assert.match(list, /hidden rounded-xl border border-outline-variant bg-surface-container-lowest md:block/);
   assert.match(detail, /transactionLedger/);
   assert.match(detail, /md:grid-cols-8/);
   assert.match(detail, /mobile-petty-cash-expense-cards/);
@@ -59,9 +59,13 @@ test("W5C fund-list Last Activity stays bounded to fund rows", () => {
 test("W5C fund list keeps fixed desktop columns and an explicit action column", () => {
   const list = read("src/app/(dashboard)/petty-cash/PettyCashClient.tsx");
   assert.match(list, /table className="[^"]*table-fixed/);
-  assert.match(list, /<colgroup>[\s\S]*<col className="w-\[20%\]"[\s\S]*<\/colgroup>/);
-  assert.match(list, /<th className="px-4 py-3 text-end font-semibold">\{dictionary\.labels\.viewFund\}<\/th>/);
-  assert.match(list, /<td className="px-4 py-3 text-end font-mono" dir="ltr">\{money\(fund\.float_limit\)\}<\/td>/);
+  assert.match(list, /<colgroup>[\s\S]*<col className="w-\[17%\]"[\s\S]*<col className="w-\[14%\]"[\s\S]*<col className="w-\[12%\]"[\s\S]*<\/colgroup>/);
+  assert.match(list, /<th className="px-3 py-3 text-end font-semibold">\{dictionary\.labels\.viewFund\}<\/th>/);
+  assert.match(list, /<td className="px-3 py-3 text-end font-mono" dir="ltr">\{money\(fund\.float_limit\)\}<\/td>/);
+  assert.doesNotMatch(list, /min-w-\[980px\]/);
+  assert.doesNotMatch(list, /w-\[5%\]/);
+  assert.match(list, /formatFundDate\(fund\.last_activity_at, locale\)/);
+  assert.match(list, /<span dir="ltr">\{formatFundDate\(fund\.last_activity_at, locale\)\}<\/span>/);
 });
 
 test("W5C detail exposes distinct financial metrics without internal implementation copy", () => {

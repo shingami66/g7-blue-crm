@@ -13,6 +13,15 @@ function money(value: number) {
   return `${Number(value).toFixed(2)} SAR`;
 }
 
+function formatFundDate(value: string | null | undefined, locale: Locale) {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA-u-nu-latn" : "en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
 export default function PettyCashClient({
   canRead,
   canManage,
@@ -86,41 +95,41 @@ export default function PettyCashClient({
           <div className="grid grid-cols-1 gap-4 md:hidden">
             {funds.map((fund) => <FundCard key={fund.id} fund={fund} dictionary={dictionary} locale={locale} />)}
           </div>
-          <div className="hidden overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-lowest md:block">
-            <table className="min-w-[980px] w-full table-fixed text-start text-sm">
+          <div className="hidden rounded-xl border border-outline-variant bg-surface-container-lowest md:block">
+            <table className="w-full table-fixed text-start text-sm">
               <colgroup>
-                <col className="w-[20%]" />
-                <col className="w-[16%]" />
+                <col className="w-[17%]" />
+                <col className="w-[13%]" />
+                <col className="w-[9%]" />
                 <col className="w-[11%]" />
-                <col className="w-[12%]" />
-                <col className="w-[12%]" />
+                <col className="w-[11%]" />
+                <col className="w-[13%]" />
                 <col className="w-[14%]" />
-                <col className="w-[10%]" />
-                <col className="w-[5%]" />
+                <col className="w-[12%]" />
               </colgroup>
               <thead className="border-b border-outline-variant bg-surface-container-low text-xs text-on-surface-variant">
                 <tr>
-                  <th className="px-4 py-3 text-start font-semibold">{dictionary.labels.fundName}</th>
-                  <th className="px-4 py-3 text-start font-semibold">{dictionary.labels.custodian}</th>
-                  <th className="px-4 py-3 text-start font-semibold">{dictionary.labels.status}</th>
-                  <th className="px-4 py-3 text-end font-semibold">{dictionary.labels.floatLimit}</th>
-                  <th className="px-4 py-3 text-end font-semibold">{dictionary.labels.currentBalance}</th>
-                  <th className="px-4 py-3 text-end font-semibold">{dictionary.labels.replenishmentCapacity}</th>
-                  <th className="px-4 py-3 text-start font-semibold">{dictionary.labels.lastActivity}</th>
-                  <th className="px-4 py-3 text-end font-semibold">{dictionary.labels.viewFund}</th>
+                  <th className="px-3 py-3 text-start font-semibold">{dictionary.labels.fundName}</th>
+                  <th className="px-3 py-3 text-start font-semibold">{dictionary.labels.custodian}</th>
+                  <th className="px-3 py-3 text-start font-semibold">{dictionary.labels.status}</th>
+                  <th className="px-3 py-3 text-end font-semibold">{dictionary.labels.floatLimit}</th>
+                  <th className="px-3 py-3 text-end font-semibold">{dictionary.labels.currentBalance}</th>
+                  <th className="px-3 py-3 text-end font-semibold">{dictionary.labels.replenishmentCapacity}</th>
+                  <th className="px-3 py-3 text-start font-semibold">{dictionary.labels.lastActivity}</th>
+                  <th className="px-3 py-3 text-end font-semibold">{dictionary.labels.viewFund}</th>
                 </tr>
               </thead>
               <tbody>
                 {funds.map((fund) => (
                   <tr key={fund.id} className="border-b border-outline-variant last:border-0">
-                    <td className="px-4 py-3 text-start font-semibold text-on-surface">{fund.fund_name}</td>
-                    <td className="px-4 py-3 text-start text-on-surface-variant">{fund.custodian_name}</td>
-                    <td className="px-4 py-3 text-start"><StatusBadge status={fund.status} dictionary={dictionary} /></td>
-                    <td className="px-4 py-3 text-end font-mono" dir="ltr">{money(fund.float_limit)}</td>
-                    <td className="px-4 py-3 text-end font-mono" dir="ltr">{money(fund.current_balance)}</td>
-                    <td className="px-4 py-3 text-end font-mono" dir="ltr">{money(Math.max(0, fund.float_limit - fund.current_balance))}</td>
-                    <td className="px-4 py-3 text-start text-on-surface-variant" dir="ltr">{fund.last_activity_at ? new Date(fund.last_activity_at).toLocaleDateString(locale) : "—"}</td>
-                    <td className="px-4 py-3 text-end whitespace-nowrap"><Link href={`/petty-cash/${fund.id}`} className="font-semibold text-primary underline-offset-2 hover:underline">{dictionary.labels.viewFund}</Link></td>
+                    <td className="px-3 py-3 text-start font-semibold text-on-surface">{fund.fund_name}</td>
+                    <td className="px-3 py-3 text-start text-on-surface-variant">{fund.custodian_name}</td>
+                    <td className="px-3 py-3 text-start"><StatusBadge status={fund.status} dictionary={dictionary} /></td>
+                    <td className="px-3 py-3 text-end font-mono" dir="ltr">{money(fund.float_limit)}</td>
+                    <td className="px-3 py-3 text-end font-mono" dir="ltr">{money(fund.current_balance)}</td>
+                    <td className="px-3 py-3 text-end font-mono" dir="ltr">{money(Math.max(0, fund.float_limit - fund.current_balance))}</td>
+                    <td className="px-3 py-3 text-start text-on-surface-variant"><span dir="ltr">{formatFundDate(fund.last_activity_at, locale)}</span></td>
+                    <td className="px-3 py-3 text-end"><Link href={`/petty-cash/${fund.id}`} className="inline-block font-semibold text-primary underline-offset-2 hover:underline">{dictionary.labels.viewFund}</Link></td>
                   </tr>
                 ))}
               </tbody>
@@ -140,7 +149,7 @@ function StatusBadge({ status, dictionary }: { status: PettyCashFund["status"]; 
 }
 
 function FundCard({ fund, dictionary, locale }: { fund: PettyCashFund; dictionary: ReturnType<typeof getPettyCashDictionary>; locale: Locale }) {
-  return <Link href={`/petty-cash/${fund.id}`} className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-xs"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold text-on-surface">{fund.fund_name}</h2><p className="mt-1 flex items-center gap-1 text-xs text-on-surface-variant"><UserRound className="h-3.5 w-3.5" aria-hidden="true" />{fund.custodian_name}</p></div><StatusBadge status={fund.status} dictionary={dictionary} /></div><div className="mt-4 grid grid-cols-2 gap-2 text-xs"><Metric label={dictionary.labels.floatLimit} value={money(fund.float_limit)} /><Metric label={dictionary.labels.currentBalance} value={money(fund.current_balance)} /><Metric label={dictionary.labels.replenishmentCapacity} value={money(Math.max(0, fund.float_limit - fund.current_balance))} /><Metric label={dictionary.labels.lastActivity} value={fund.last_activity_at ? new Date(fund.last_activity_at).toLocaleDateString(locale) : "—"} icon={<Clock3 className="h-3 w-3" aria-hidden="true" />} /></div></Link>;
+  return <Link href={`/petty-cash/${fund.id}`} className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-xs"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold text-on-surface">{fund.fund_name}</h2><p className="mt-1 flex items-center gap-1 text-xs text-on-surface-variant"><UserRound className="h-3.5 w-3.5" aria-hidden="true" />{fund.custodian_name}</p></div><StatusBadge status={fund.status} dictionary={dictionary} /></div><div className="mt-4 grid grid-cols-2 gap-2 text-xs"><Metric label={dictionary.labels.floatLimit} value={money(fund.float_limit)} /><Metric label={dictionary.labels.currentBalance} value={money(fund.current_balance)} /><Metric label={dictionary.labels.replenishmentCapacity} value={money(Math.max(0, fund.float_limit - fund.current_balance))} /><Metric label={dictionary.labels.lastActivity} value={formatFundDate(fund.last_activity_at, locale)} icon={<Clock3 className="h-3 w-3" aria-hidden="true" />} /></div></Link>;
 }
 
 function Metric({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) { return <div className="rounded-lg bg-surface-container-low p-2"><span className="block text-[11px] text-on-surface-variant">{label}</span><span className="mt-1 flex items-center gap-1 font-mono text-xs font-semibold text-on-surface" dir="ltr">{icon}{value}</span></div>; }

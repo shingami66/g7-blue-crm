@@ -1020,6 +1020,30 @@ test("Detail: financial cards stay neutral and Arabic accountability labels are 
   assert.equal(cashAdvancesDictionaryAr.accountability.remainingBalance, "الرصيد المتبقي");
 });
 
+test("Detail: operational strip is compact and lifecycle events keep payment reference grouped", () => {
+  const detailSource = fs.readFileSync(
+    path.join(process.cwd(), "src/app/(dashboard)/advances/[id]/AdvanceDetailClient.tsx"),
+    "utf8",
+  );
+  assert.ok(detailSource.includes("grid-cols-1 divide-y divide-outline-variant"));
+  assert.ok(detailSource.includes("dictionary.operationalAvailability.reservedSpend"));
+  assert.ok(detailSource.includes("dictionary.operationalAvailability.availableBalance"));
+  assert.equal(detailSource.includes("dictionary.operationalAvailability.title"), false);
+  assert.equal(detailSource.includes("reservedSpendHelp"), false);
+  assert.ok(detailSource.includes("dictionary.detail.events.approval"));
+  assert.ok(detailSource.includes("dictionary.detail.events.issuance"));
+  assert.ok(detailSource.includes("dictionary.detail.events.settlement"));
+  assert.ok(detailSource.includes("advance.payment_reference"));
+  assert.ok(detailSource.includes("dictionary.detail.fields.paymentReference"));
+  assert.equal(
+    detailSource.includes("{advance.payment_reference && (\n              <div>"),
+    false,
+    "Payment reference must not be rendered as a standalone lifecycle cell",
+  );
+  assert.equal(cashAdvancesDictionaryEn.detail.events.issuance, "Issuance");
+  assert.equal(cashAdvancesDictionaryAr.detail.events.issuance, "الصرف");
+});
+
 test("60. Dictionary: dead sectionBadge and stageBadge fields are cleaned up from CashAdvancesDictionary", () => {
   const dictSource = fs.readFileSync(
     path.join(process.cwd(), "src/lib/i18n/dictionaries/cash-advances.ts"),

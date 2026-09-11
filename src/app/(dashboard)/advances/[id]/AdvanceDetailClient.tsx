@@ -229,24 +229,20 @@ export default function AdvanceDetailClient({
       </div>
 
       {balance && (
-        <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
-          <div className="border-b border-surface-variant bg-surface-container-low px-4 py-3">
-            <h2 className="font-semibold text-on-surface">{dictionary.operationalAvailability.title}</h2>
-            <p className="mt-1 text-xs text-on-surface-variant">{dictionary.operationalAvailability.description}</p>
+        <div className="grid grid-cols-1 divide-y divide-outline-variant overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest sm:grid-cols-2 sm:divide-y-0 sm:divide-x rtl:divide-x-reverse">
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <span className="text-xs font-medium text-on-surface-variant">{dictionary.operationalAvailability.reservedSpend}</span>
+            <span className="shrink-0 font-mono text-sm font-semibold text-on-surface" dir="ltr">
+              {Number(balance.reserved_unsettled_spend).toFixed(2)} {dictionary.accountability.currency}
+            </span>
           </div>
-          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-3">
-              <span className="block text-sm font-medium text-on-surface-variant">{dictionary.operationalAvailability.reservedSpend}</span>
-              <strong className="mt-1 block font-mono text-lg text-on-surface"><span dir="ltr">{Number(balance.reserved_unsettled_spend).toFixed(2)} {dictionary.accountability.currency}</span></strong>
-              <p className="mt-1 text-xs leading-5 text-on-surface-variant">{dictionary.operationalAvailability.reservedSpendHelp}</p>
-            </div>
-            <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-3">
-              <span className="block text-sm font-medium text-on-surface-variant">{dictionary.operationalAvailability.availableBalance}</span>
-              <strong className="mt-1 block font-mono text-lg text-on-surface"><span dir="ltr">{Number(balance.available_uncommitted_balance).toFixed(2)} {dictionary.accountability.currency}</span></strong>
-              <p className="mt-1 text-xs leading-5 text-on-surface-variant">{dictionary.operationalAvailability.availableBalanceHelp}</p>
-            </div>
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <span className="text-xs font-medium text-on-surface-variant">{dictionary.operationalAvailability.availableBalance}</span>
+            <span className="shrink-0 font-mono text-sm font-semibold text-on-surface" dir="ltr">
+              {Number(balance.available_uncommitted_balance).toFixed(2)} {dictionary.accountability.currency}
+            </span>
           </div>
-        </section>
+        </div>
       )}
 
       {/* Identity & Context Details */}
@@ -334,52 +330,70 @@ export default function AdvanceDetailClient({
           </div>
 
           <div className="p-4">
-            <div className="grid grid-cols-1 gap-4 text-[14px] sm:grid-cols-2 lg:grid-cols-3">
-            {advance.approved_at && (
-              <div>
-                <span className="block text-xs leading-4 text-on-surface-variant">{dictionary.detail.fields.approvedAt}:</span>
-                <p className="mt-1 font-medium leading-5 text-on-surface" dir="ltr">
-                  {new Date(advance.approved_at).toLocaleString()}
-                </p>
-                {approverName && (
-                  <span className="mt-1 block text-xs leading-4 text-on-surface-variant">
-                    {dictionary.detail.fields.approvedBy}: {approverName}
-                  </span>
-                )}
+            <div className="grid grid-cols-1 gap-3 text-[14px] sm:grid-cols-2">
+            {(advance.approved_at || approverName) && (
+              <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
+                <h3 className="text-xs font-semibold text-on-surface">{dictionary.detail.events.approval}</h3>
+                <dl className="mt-2 space-y-1.5">
+                  {advance.approved_at && (
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="text-xs text-on-surface-variant">{dictionary.detail.fields.approvedAt}</dt>
+                      <dd className="text-end text-sm font-medium text-on-surface" dir="ltr">
+                        {new Date(advance.approved_at).toLocaleString()}
+                      </dd>
+                    </div>
+                  )}
+                  {approverName && (
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="text-xs text-on-surface-variant">{dictionary.detail.fields.approvedBy}</dt>
+                      <dd className="text-end text-sm font-medium text-on-surface">{approverName}</dd>
+                    </div>
+                  )}
+                </dl>
               </div>
             )}
 
-            {advance.issued_at && (
-              <div>
-                <span className="block text-xs leading-4 text-on-surface-variant">{dictionary.detail.fields.issuedAt}:</span>
-                <p className="mt-1 font-medium leading-5 text-on-surface" dir="ltr">
-                  {new Date(advance.issued_at).toLocaleString()}
-                </p>
-                {issuerName && (
-                  <span className="mt-1 block text-xs leading-4 text-on-surface-variant">
-                    {dictionary.detail.fields.issuedBy}: {issuerName}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {advance.payment_reference && (
-              <div>
-                <span className="block text-xs leading-4 text-on-surface-variant">
-                  {dictionary.detail.fields.paymentReference}:
-                </span>
-                <p className="mt-1 font-mono font-medium leading-5 text-on-surface" dir="ltr">
-                  {advance.payment_reference}
-                </p>
+            {(advance.issued_at || issuerName || advance.payment_reference) && (
+              <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
+                <h3 className="text-xs font-semibold text-on-surface">{dictionary.detail.events.issuance}</h3>
+                <dl className="mt-2 space-y-1.5">
+                  {advance.issued_at && (
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="text-xs text-on-surface-variant">{dictionary.detail.fields.issuedAt}</dt>
+                      <dd className="text-end text-sm font-medium text-on-surface" dir="ltr">
+                        {new Date(advance.issued_at).toLocaleString()}
+                      </dd>
+                    </div>
+                  )}
+                  {issuerName && (
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="text-xs text-on-surface-variant">{dictionary.detail.fields.issuedBy}</dt>
+                      <dd className="text-end text-sm font-medium text-on-surface">{issuerName}</dd>
+                    </div>
+                  )}
+                  {advance.payment_reference && (
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="text-xs text-on-surface-variant">{dictionary.detail.fields.paymentReference}</dt>
+                      <dd className="text-end font-mono text-sm font-medium text-on-surface" dir="ltr">
+                        {advance.payment_reference}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
               </div>
             )}
 
             {advance.settled_at && (
-              <div>
-                <span className="block text-xs leading-4 text-on-surface-variant">{dictionary.detail.fields.settledAt}:</span>
-                <p className="mt-1 font-medium leading-5 text-on-surface" dir="ltr">
-                  {new Date(advance.settled_at).toLocaleString()}
-                </p>
+              <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
+                <h3 className="text-xs font-semibold text-on-surface">{dictionary.detail.events.settlement}</h3>
+                <dl className="mt-2">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <dt className="text-xs text-on-surface-variant">{dictionary.detail.fields.settledAt}</dt>
+                    <dd className="text-end text-sm font-medium text-on-surface" dir="ltr">
+                      {new Date(advance.settled_at).toLocaleString()}
+                    </dd>
+                  </div>
+                </dl>
               </div>
             )}
 
