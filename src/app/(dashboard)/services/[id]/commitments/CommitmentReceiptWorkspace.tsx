@@ -119,7 +119,8 @@ function CommitmentForm({ serviceId, suppliers, quotationOptions, dictionary }: 
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const date = String(form.get("approvedAt") ?? "");
     startTransition(async () => {
       const result = await createApprovedCommitment({
@@ -138,7 +139,7 @@ function CommitmentForm({ serviceId, suppliers, quotationOptions, dictionary }: 
       }
       resetRequestId(requestRef);
       setMessage(dictionary.success.commitmentCreated);
-      event.currentTarget.reset();
+      formElement.reset();
       setApprovedAtValue("");
       router.refresh();
     });
@@ -276,12 +277,13 @@ function ReceiptForm({ serviceId, commitmentId, dictionary }: { serviceId: strin
   const router = useRouter();
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const optional = (name: string) => String(form.get(name) ?? "") || null;
     startTransition(async () => {
       const result = await createServiceReceipt({ serviceId, commitmentId, performanceDate: String(form.get("performanceDate") ?? ""), deliveredScope: String(form.get("deliveredScope") ?? ""), actualQuantity: optional("actualQuantity") === null ? null : Number(optional("actualQuantity")), actualHours: optional("actualHours") === null ? null : Number(optional("actualHours")), quantityUnit: optional("quantityUnit"), receivedAmount: optional("receivedAmount") === null ? null : Number(optional("receivedAmount")), missingScope: optional("missingScope"), extraScope: optional("extraScope"), defectsIncidents: optional("defectsIncidents"), conditionsNotes: optional("conditionsNotes"), requestId: requestId(requestRef) });
       if (!result.success) { setMessage(errorText(dictionary, result.code)); return; }
-      resetRequestId(requestRef); setMessage(dictionary.success.receiptCreated); event.currentTarget.reset(); setPerformanceDateValue(""); router.refresh();
+      resetRequestId(requestRef); setMessage(dictionary.success.receiptCreated); formElement.reset(); setPerformanceDateValue(""); router.refresh();
     });
   }
   return (
@@ -399,7 +401,7 @@ function ReceiptCorrectionActions({ receipt, dictionary }: { receipt: ApprovedCo
 
 function AmendmentForm({ commitmentId, dictionary }: { commitmentId: string; dictionary: ProcurementCommitmentDictionary }) {
   const [message, setMessage] = useState<string | null>(null); const [isPending, startTransition] = useTransition(); const requestRef = useRef<string | null>(null); const router = useRouter();
-  function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const form = new FormData(event.currentTarget); startTransition(async () => { const result = await addApprovedCommitmentAmendment({ commitmentId, amendmentType: String(form.get("amendmentType")), amount: Number(form.get("amount")), reason: String(form.get("reason")), evidenceRef: String(form.get("evidenceRef")), requestId: requestId(requestRef) }); if (!result.success) { setMessage(errorText(dictionary, result.code)); return; } resetRequestId(requestRef); setMessage(dictionary.success.amendmentCreated); event.currentTarget.reset(); router.refresh(); }); }
+  function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const formElement = event.currentTarget; const form = new FormData(formElement); startTransition(async () => { const result = await addApprovedCommitmentAmendment({ commitmentId, amendmentType: String(form.get("amendmentType")), amount: Number(form.get("amount")), reason: String(form.get("reason")), evidenceRef: String(form.get("evidenceRef")), requestId: requestId(requestRef) }); if (!result.success) { setMessage(errorText(dictionary, result.code)); return; } resetRequestId(requestRef); setMessage(dictionary.success.amendmentCreated); formElement.reset(); router.refresh(); }); }
   return <form onSubmit={submit} className="rounded-lg border border-outline-variant bg-surface p-4"><h3 className="text-[14px] font-semibold text-primary">{dictionary.forms.amendmentTitle}</h3><div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3"><label className="text-[12px] font-semibold">{dictionary.fields.amendmentType}<select className={inputClass} name="amendmentType" disabled={isPending}><option value="increase">{dictionary.forms.increase}</option><option value="reduction">{dictionary.forms.reduction}</option></select></label><label className="text-[12px] font-semibold">{dictionary.fields.amendmentAmount}<input className={inputClass} name="amount" type="number" min="0.01" step="0.01" required disabled={isPending} /></label><label className="text-[12px] font-semibold">{dictionary.fields.approvalEvidenceReference}<input className={inputClass} name="evidenceRef" required disabled={isPending} placeholder={dictionary.forms.evidencePlaceholder} /></label><label className="text-[12px] font-semibold md:col-span-3">{dictionary.fields.reason}<textarea className={textAreaClass} name="reason" rows={2} required disabled={isPending} placeholder={dictionary.forms.reasonPlaceholder} /></label></div><div className="mt-3 flex flex-wrap items-center gap-3"><Button type="submit" size="sm" disabled={isPending}>{isPending ? "…" : dictionary.forms.amend}</Button>{message && <span role="status" className="text-[13px] text-on-surface-variant">{message}</span>}</div></form>;
 }
 
