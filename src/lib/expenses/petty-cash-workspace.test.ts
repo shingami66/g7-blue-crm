@@ -84,3 +84,33 @@ test("W5C detail exposes distinct financial metrics without internal implementat
   assert.equal(dictionary.includes("service-role"), false);
   assert.equal(dictionary.includes("database: "), false);
 });
+
+test("W5C detail renders one active action panel directly below the action toolbar", () => {
+  const detail = read("src/app/(dashboard)/petty-cash/[id]/PettyCashDetailClient.tsx");
+  const toolbarIndex = detail.indexOf('id="petty-cash-action-toolbar"');
+  const panelIndex = detail.indexOf('{panel === "manage"');
+  const statusIndex = detail.indexOf("{statusTarget &&");
+
+  assert.ok(toolbarIndex >= 0 && panelIndex > toolbarIndex && panelIndex < statusIndex);
+  assert.equal((detail.match(/<Panel id=/g) ?? []).length, 5);
+  for (const action of ["manage", "replenish", "expense", "disburse", "withdraw"]) {
+    assert.ok(detail.includes(`aria-expanded={panel === "${action}"}`));
+    assert.ok(detail.includes(`aria-controls="petty-cash-${action}-panel"`));
+  }
+  assert.ok(detail.includes("actionButtonClass(panel"));
+  assert.ok((detail.match(/autoFocus/g) ?? []).length >= 5);
+  assert.equal(detail.includes("locale: Locale"), false);
+});
+
+test("W5C transaction timestamps use clean Riyadh Gregorian Latin-digit output", () => {
+  const detail = read("src/app/(dashboard)/petty-cash/[id]/PettyCashDetailClient.tsx");
+  assert.match(detail, /function formatTransactionDateTime/);
+  assert.match(detail, /calendar: "gregory"/);
+  assert.match(detail, /numberingSystem: "latn"/);
+  assert.match(detail, /timeZone: "Asia\/Riyadh"/);
+  assert.match(detail, /hourCycle: "h23"/);
+  assert.match(detail, /formatToParts\(date\)/);
+  assert.match(detail, /<bdi dir="ltr">\{formatTransactionDateTime\(transaction\.recorded_at\)\}<\/bdi>/);
+  assert.doesNotMatch(detail, /transaction\.recorded_at\)\.toLocaleString/);
+  assert.doesNotMatch(detail, /transaction\.recorded_at\}\)\.toLocaleString/);
+});
