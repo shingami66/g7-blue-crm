@@ -25,11 +25,11 @@ test("W5C list and detail surfaces preserve canonical dashboard shell and respon
   assert.match(list, /md:hidden/);
   assert.match(list, /hidden rounded-xl border border-outline-variant bg-surface-container-lowest md:block/);
   assert.match(detail, /transactionLedger/);
-  assert.match(detail, /md:grid-cols-8/);
+  assert.match(detail, /desktop-petty-cash-transaction-table/);
   assert.match(detail, /mobile-petty-cash-expense-cards/);
   assert.match(detail, /mobile-petty-cash-expense-card/);
   assert.match(detail, /desktop-petty-cash-expense-table/);
-  assert.match(detail, /hidden overflow-x-auto[^\"]*md:block/);
+  assert.match(detail, /hidden overflow-hidden[^\"]*md:block/);
   assert.match(detail, /dictionary\.labels\.replenishmentCapacity/);
   assert.match(list, /Math\.max\(0, fund\.float_limit - fund\.current_balance\)/);
   assert.match(detail, /Math\.max\(0, fund\.float_limit - fund\.current_balance\)/);
@@ -44,6 +44,31 @@ test("W5C list and detail surfaces preserve canonical dashboard shell and respon
   assert.match(detail, /formData\.append\("request_id", partialReceipt\.requestId\)/);
   assert.doesNotMatch(list, /max-w-/);
   assert.doesNotMatch(detail, /max-w-/);
+});
+
+test("W5C record-expense context controls the service field and payload", () => {
+  const detail = read("src/app/(dashboard)/petty-cash/[id]/PettyCashDetailClient.tsx");
+  assert.match(detail, /useState<"company" \| "event">\("company"\)/);
+  assert.match(detail, /name="context_type" value=\{contextType\}/);
+  assert.match(detail, /contextType === "event" && <TextInput name="service_id"/);
+  assert.match(detail, /if \(next === "company"\) setServiceId\(""\)/);
+  assert.match(detail, /data\.set\("context_type", contextType\)/);
+  assert.match(detail, /if \(contextType === "company"\) \{\s*data\.delete\("service_id"\)/);
+  assert.match(detail, /data\.set\("service_id", serviceId\)/);
+  assert.match(detail, /value=\{serviceId\} onChange=/);
+});
+
+test("W5C linked expenses and transactions use real desktop table column models", () => {
+  const detail = read("src/app/(dashboard)/petty-cash/[id]/PettyCashDetailClient.tsx");
+  assert.match(detail, /desktop-petty-cash-expense-table[\s\S]*<table className="w-full table-fixed/);
+  assert.match(detail, /desktop-petty-cash-transaction-table[\s\S]*<table className="w-full table-fixed/);
+  assert.match(detail, /labels\.transactionType/);
+  assert.match(detail, /labels\.balanceChange/);
+  assert.match(detail, /labels\.recordedAt/);
+  assert.match(detail, /<bdi dir="ltr">\{expense\.expense_number\}<\/bdi>/);
+  assert.match(detail, /<bdi dir="ltr">\{formatTransactionDateTime\(tx\.recorded_at\)\}<\/bdi>/);
+  assert.doesNotMatch(detail, /<td[^>]*dir="ltr"/);
+  assert.doesNotMatch(detail, /md:grid-cols-8/);
 });
 
 test("W5C fund-list Last Activity stays bounded to fund rows", () => {

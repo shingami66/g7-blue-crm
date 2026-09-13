@@ -22,6 +22,9 @@ export interface PettyCashDictionary {
     ledger: string;
     immutableHistory: string;
     recordedBy: string;
+    transactionType: string;
+    balanceChange: string;
+    recordedAt: string;
     reference: string;
     linkedExpense: string;
     balanceBefore: string;
@@ -86,7 +89,7 @@ const en: PettyCashDictionary = {
     replenishmentCapacity: "Replenishment Capacity", lastActivity: "Last activity", status: "Status", viewFund: "View fund",
     noFunds: "No Petty Cash funds", noFundsDescription: "Create a fund to begin managing petty cash.",
     fundDetails: "Fund Details", pettyCashExpenses: "Petty Cash Expenses", transactionLedger: "Transaction Ledger", lifecycleAudit: "Fund history", created: "Created", updated: "Updated", ledger: "Transactions", immutableHistory: "Transaction history",
-    recordedBy: "Recorded by", reference: "Reference", linkedExpense: "Linked Expense", balanceBefore: "Balance before", balanceAfter: "Balance after",
+    recordedBy: "Recorded by", transactionType: "Type", balanceChange: "Balance change", recordedAt: "Recorded at", reference: "Reference", linkedExpense: "Linked Expense", balanceBefore: "Balance before", balanceAfter: "Balance after",
     amount: "Amount", date: "Date", context: "Context", category: "Category", description: "Description", review: "Finance review", approved: "Approved", allocated: "Allocated", remaining: "Remaining",
   },
   statuses: { active: "Active", suspended: "Suspended", closed: "Closed", submitted: "Submitted", approved: "Approved", rejected: "Rejected" },
@@ -98,7 +101,7 @@ const en: PettyCashDictionary = {
 
 const ar: PettyCashDictionary = {
   header: { title: "المصروفات النثرية", subtitle: "صندوق نقدي للشركة مع مصروفات معتمدة وإعادة تغذية وإرجاع للخزينة.", sectionBadge: "المصروفات والتكاليف", createFund: "إنشاء صندوق" },
-  labels: { fundName: "اسم الصندوق", custodian: "أمين العهدة", floatLimit: "حد الصندوق", currentBalance: "الرصيد الحالي", replenishmentCapacity: "المتاح لإعادة التغذية", lastActivity: "آخر نشاط", status: "الحالة", viewFund: "عرض الصندوق", noFunds: "لا توجد صناديق نقدية نثرية", noFundsDescription: "أنشئ صندوقاً لبدء إدارة النقدية.", fundDetails: "تفاصيل الصندوق", pettyCashExpenses: "مصروفات الصندوق", transactionLedger: "سجل المعاملات", lifecycleAudit: "سجل الصندوق", created: "تاريخ الإنشاء", updated: "آخر تحديث", ledger: "المعاملات", immutableHistory: "سجل المعاملات", recordedBy: "سجل بواسطة", reference: "المرجع", linkedExpense: "المصروف المرتبط", balanceBefore: "الرصيد قبل", balanceAfter: "الرصيد بعد", amount: "المبلغ", date: "التاريخ", context: "السياق", category: "التصنيف", description: "الوصف", review: "المراجعة المالية", approved: "معتمد", allocated: "المخصص", remaining: "المتبقي" },
+  labels: { fundName: "اسم الصندوق", custodian: "أمين العهدة", floatLimit: "حد الصندوق", currentBalance: "الرصيد الحالي", replenishmentCapacity: "المتاح لإعادة التغذية", lastActivity: "آخر نشاط", status: "الحالة", viewFund: "عرض الصندوق", noFunds: "لا توجد صناديق نقدية نثرية", noFundsDescription: "أنشئ صندوقاً لبدء إدارة النقدية.", fundDetails: "تفاصيل الصندوق", pettyCashExpenses: "مصروفات الصندوق", transactionLedger: "سجل المعاملات", lifecycleAudit: "سجل الصندوق", created: "تاريخ الإنشاء", updated: "آخر تحديث", ledger: "المعاملات", immutableHistory: "سجل المعاملات", recordedBy: "سجل بواسطة", transactionType: "النوع", balanceChange: "التغير في الرصيد", recordedAt: "وقت التسجيل", reference: "المرجع", linkedExpense: "المصروف المرتبط", balanceBefore: "الرصيد قبل", balanceAfter: "الرصيد بعد", amount: "المبلغ", date: "التاريخ", context: "السياق", category: "التصنيف", description: "الوصف", review: "المراجعة المالية", approved: "معتمد", allocated: "المخصص", remaining: "المتبقي" },
   statuses: { active: "نشط", suspended: "موقوف", closed: "مغلق", submitted: "مقدم", approved: "معتمد", rejected: "مرفوض" },
   transactionTypes: { replenishment: "إعادة تغذية", disbursement: "صرف مصروف", treasury_withdrawal: "إرجاع النقد إلى الخزينة", return: "إرجاع نقدي" },
   actions: { manage: "إدارة الصندوق", replenish: "إعادة تغذية", recordExpense: "تسجيل مصروف", disburse: "صرف المصروف المعتمد", withdraw: "إرجاع النقد للخزينة", suspend: "إيقاف", reactivate: "إعادة تفعيل", close: "إغلاق", save: "حفظ", cancel: "إلغاء", create: "إنشاء", working: "جارٍ التنفيذ...", retryReceipt: "إعادة رفع الإيصال", openExpenseWorkspace: "فتح مساحة المصروفات" },
