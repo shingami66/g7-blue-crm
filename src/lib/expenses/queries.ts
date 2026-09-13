@@ -49,7 +49,8 @@ export async function getExpensesAccountabilityList(
   let query = supabase
     .from("expense_accountability_summaries")
     .select("*")
-    .order("expense_date", { ascending: false });
+    .order("expense_number", { ascending: true })
+    .order("id", { ascending: true });
 
   if (filters?.serviceId) {
     query = query.eq("service_id", filters.serviceId);
@@ -140,7 +141,8 @@ export async function getOwnExpensesAccountabilityList(
     .from("expense_accountability_summaries")
     .select("*")
     .or(`submitted_by.eq.${user.id},claimant_id.eq.${user.id}`)
-    .order("expense_date", { ascending: false });
+    .order("expense_number", { ascending: true })
+    .order("id", { ascending: true });
 
   if (filters?.serviceId) {
     query = query.eq("service_id", filters.serviceId);

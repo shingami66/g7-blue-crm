@@ -58,6 +58,35 @@ test("Expenses workspace keeps own and broad views separate with a My Expenses d
   assert.equal(client.includes("pettyCashLocked"), false);
 });
 
+test("Expenses lists use canonical expense number ascending order in both views", () => {
+  const queries = read(join(REPO_ROOT, "src/lib/expenses/queries.ts"));
+  const readFunctionSegment = (startMarker: string, endMarker: string) => {
+    const start = queries.indexOf(startMarker);
+    const end = queries.indexOf(endMarker, start);
+    assert.ok(start >= 0, `Missing function marker: ${startMarker}`);
+    assert.ok(end > start, `Missing function boundary: ${endMarker}`);
+    return queries.slice(start, end);
+  };
+  const broadList = readFunctionSegment(
+    "export async function getExpensesAccountabilityList",
+    "export async function getExpenseDetailById",
+  );
+  const ownList = readFunctionSegment(
+    "export async function getOwnExpensesAccountabilityList",
+    "export async function getOwnExpenseDetailById",
+  );
+
+  for (const list of [ownList, broadList]) {
+    const expenseNumberOrder = list.indexOf('.order("expense_number", { ascending: true })');
+    const idOrder = list.indexOf('.order("id", { ascending: true })');
+    assert.ok(expenseNumberOrder >= 0);
+    assert.equal(list.indexOf(".order("), expenseNumberOrder);
+    assert.ok(idOrder > expenseNumberOrder);
+    assert.equal(list.includes('.order("expense_date"'), false);
+    assert.equal(list.includes('.order("created_at"'), false);
+  }
+});
+
 test("Expenses ledger exposes funding method and governed row-level finance actions", () => {
   const client = read(CLIENT_PATH);
   const actions = read(ACTIONS_PATH);
