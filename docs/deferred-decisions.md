@@ -1,6 +1,27 @@
 # G7 BLUE CRM — Deferred Decisions
 
-## CURRENT DELIVERY AND DEFERRALS — 9 September 2026
+## CURRENT DELIVERY STATUS — W5 CLOSE / W6 DISCOVERY — 13 September 2026
+
+- **W5 — Expenses & Cash Advances & Petty Cash:** `CLOSED / COMPLETE`.
+  - Expenses workflow, employee reimbursement workflow, Cash Advance workflow, and the Petty Cash workspace/end-to-end lifecycle are complete.
+  - Owner physical acceptance and DEV verification are complete.
+  - Latest W5-close product HEAD: `b4ce5b366115b1a81bc8e270d00a7a6bea9494b4`.
+  - Existing Cash Advance two-session concurrency limitation remains a non-blocking environment `WARN`.
+- **W6 — Accounts Payable:** Discovery `COMPLETE`; Product Truth `OWNER APPROVED`; Implementation `NOT STARTED`.
+  - AP is for genuine supplier obligations, primarily Event/Service suppliers. Routine operating purchases such as office water, internet, electricity, small stationery, and similar day-to-day costs remain in W5 Expense / Cash Advance / Petty Cash workflows and must not be duplicated in AP merely to create supplier records.
+  - Event/Service supplier bills normally require an approved financial commitment/agreement. Final bills for delivered work require accepted receipt/performance evidence. Explicitly authorized deposits/prepayments may be paid before receipt when allowed by the approved commitment.
+  - Accountant/Admin may record and review supplier bills. Manager/Admin may approve supplier bills. Accountant/Admin may record supplier payments. No additional self-approval authority is inferred.
+  - Bills exceeding the approved commitment require a governed amendment, corrected supplier document, credit adjustment, or explicitly authorized exception.
+  - Capture operational Saudi supplier invoice/tax evidence, but do not implement a VAT filing/accounting engine or claim broader ZATCA compliance.
+  - Accounts Payable is a distinct domain from customer Billing & Payments. Expected workspace direction: `Supplier Bills`; `Supplier Payments`.
+  - UX principle: do not expose redundant review/approval buttons; combine internal checks into one governed user action when they occur as one business decision; keep separate actions only for genuinely separate events such as approval and a later actual payment.
+- **Next product step:** `W6A — Supplier Bills foundation`. Discovery and Product Truth are complete; implementation is not started.
+
+> Dated delivery and deferral sections below preserve historical snapshots; this current section takes precedence when an older snapshot differs.
+
+## HISTORICAL DELIVERY AND DEFERRALS — 9 September 2026 (SUPERSEDED CURRENT SNAPSHOT)
+
+> This section preserves the 9 September deferral snapshot. Its W5-incomplete and remaining-scope statements are historical and are superseded by the current delivery status above.
 
 - **W1B Approval Authority / SoD:** explicitly **NOT REQUIRED FOR THIS WAVE** after review of the real quotation-approval consumer. It remains deferred, unimplemented, and must not be replaced with a generic approval/rules engine.
 - **W1 completion:** W1A Effective Access and the two bounded W1C Action Center consumers (Quotation Approvals and Ready-to-Start Services) are Owner-accepted. Their source workflows remain authoritative; no additional W1C feature is inferred.

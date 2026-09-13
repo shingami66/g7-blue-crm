@@ -1,6 +1,33 @@
 # G7 BLUE CRM - Project Status
 
-## W5B EMPLOYEE EXPENSE SELF-SERVICE DELIVERY — 9 September 2026 (DELIVERED / OWNER-ACCEPTED SLICE)
+## CURRENT DELIVERY STATUS — W5 CLOSE / W6 DISCOVERY — 13 September 2026
+
+- **W5 — Expenses & Cash Advances & Petty Cash:** `CLOSED / COMPLETE`.
+  - Expenses workflow is complete.
+  - Employee reimbursement workflow is complete.
+  - Cash Advance workflow is complete.
+  - Petty Cash workspace and end-to-end lifecycle are complete.
+  - Owner physical acceptance is complete.
+  - DEV verification is complete.
+  - Latest W5-close product HEAD: `b4ce5b366115b1a81bc8e270d00a7a6bea9494b4`.
+  - Existing Cash Advance two-session concurrency limitation remains a non-blocking environment `WARN`.
+- **W6 — Accounts Payable:** Discovery `COMPLETE`; Product Truth `OWNER APPROVED`; Implementation `NOT STARTED`.
+  - AP is for genuine supplier obligations, primarily Event/Service suppliers.
+  - Routine operating purchases such as office water, internet, electricity, small stationery, and similar day-to-day costs remain in W5 Expense / Cash Advance / Petty Cash workflows; they must not be duplicated in AP merely to create supplier records.
+  - Event/Service supplier bills normally require an approved financial commitment/agreement. Final bills for delivered work require accepted receipt/performance evidence. Explicitly authorized deposits/prepayments may be paid before receipt when allowed by the approved commitment.
+  - Accountant/Admin may record and review supplier bills. Manager/Admin may approve supplier bills. Accountant/Admin may record supplier payments. No additional self-approval authority is inferred.
+  - Bills exceeding the approved commitment require a governed amendment, corrected supplier document, credit adjustment, or explicitly authorized exception.
+  - Capture operational Saudi supplier invoice/tax evidence, without implementing a VAT filing/accounting engine or claiming broader ZATCA compliance.
+  - Accounts Payable is distinct from customer Billing & Payments.
+  - Expected workspace direction: `Supplier Bills` and `Supplier Payments`.
+  - UX principle: do not expose redundant review/approval buttons; combine internal checks into one governed user action when they occur as one business decision, while keeping separate actions for genuinely separate events such as approval and a later actual payment.
+- **Next product step:** `W6A — Supplier Bills foundation`. Discovery and Product Truth are complete; implementation has not started.
+
+> Dated delivery sections below preserve historical snapshots; this current section takes precedence when an older snapshot differs.
+
+## HISTORICAL W5B EMPLOYEE EXPENSE SELF-SERVICE DELIVERY — 9 September 2026 (SUPERSEDED CURRENT SNAPSHOT)
+
+> This section preserves the 9 September delivery snapshot. Its W5-incomplete and remaining-scope statements are historical and are superseded by the current W5 closeout above.
 
 - **Status:** DELIVERED and Owner-accepted for the bounded employee expense self-service slice. W5 as a whole is **NOT COMPLETE**.
 - **Delivered Scope:**
@@ -35,7 +62,7 @@
   - Multi-tier corporate finance threshold routing (where not delivered)
   - General Ledger and accounting period reconciliation integration
 
-## W5A CLOSEOUT — 7 September 2026 (COMPLETED / CLOSED)
+## HISTORICAL W5A CLOSEOUT — 7 September 2026 (COMPLETED / CLOSED)
 
 - **Review boundary:** W5A Expense & Cash Accountability Foundation (`L1-D08-EXPENSE-CASH`) is verified and completed on DEV project `dpddrqjzqohexixgdqiq`.
   - **Schema & Persistence Foundation:** Delivered 9 domain tables (`employee_cash_advances`, `cash_advance_returns`, `petty_cash_funds`, `expenses`, `cash_advance_expense_settlements`, `expense_reimbursement_settlements`, `expense_evidence_exceptions`, `expense_documents`, `petty_cash_transactions`), 1 audit compatibility index (`idx_audit_logs_w5_request_id`), and 1 authoritative SQL view (`public.expense_accountability_summaries`) for derived accountability metrics.
