@@ -11,10 +11,11 @@ let denied = false;
 let result: Record<string, unknown> = {};
 let calls: Array<{ name: string; args: Record<string, unknown> }> = [];
 let permissions: string[] = [];
+let actorRole = "manager";
 class ForbiddenError extends Error {}
 class UnauthorizedError extends Error {}
 function reset(row: Record<string, unknown> = {}) {
-  denied = false; result = row; calls = []; permissions = [];
+  denied = false; result = row; calls = []; permissions = []; actorRole = "manager";
 }
 const testModuleLoader = `
   export async function resolve(specifier, context, nextResolve) {
@@ -37,7 +38,7 @@ mock.module("@/lib/auth/permissions", { namedExports: {
   requirePermission: async (permission: string) => {
     permissions.push(permission);
     if (denied) throw new ForbiddenError();
-    return { clerk_user_id: "authenticated-reviewer", role: "manager" };
+    return { clerk_user_id: "authenticated-reviewer", role: actorRole };
   },
 } });
 mock.module("@/lib/supabase/admin", { namedExports: {
@@ -85,6 +86,30 @@ test("authorized reviewer success is preserved at the action boundary", async ()
   assert.equal(value.success, true);
   if (value.success) assert.equal(value.data.acceptanceStatus, "ACCEPTED");
 });
+
+test("receipt review preserves idempotent replay and request-conflict mapping", async () => {
+  reset({ error_code: null, receipt_id: ID, service_id: ID, supplier_id: ID, commitment_id: ID, acceptance_status: "ACCEPTED", idempotent_replay: true });
+  const replay = await reviewServiceReceipt({ receiptId: ID, acceptanceStatus: "ACCEPTED", requestId: REQUEST });
+  assert.equal(replay.success, true);
+  if (replay.success) assert.equal(replay.data.idempotent, true);
+
+  reset({ error_code: "service_receipt_request_conflict" });
+  const conflict = await reviewServiceReceipt({ receiptId: ID, acceptanceStatus: "ACCEPTED", requestId: REQUEST });
+  assert.deepEqual(conflict, { success: false, code: "service_receipt_request_conflict", error: "service_receipt_request_conflict" });
+});
+
+for (const acceptanceStatus of ["ACCEPTED", "ACCEPTED_WITH_CONDITIONS", "REJECTED"] as const) {
+  test(`Admin self-review ${acceptanceStatus} preserves the governed action contract`, async () => {
+    reset({ error_code: null, receipt_id: ID, service_id: ID, supplier_id: ID, commitment_id: ID, acceptance_status: acceptanceStatus, idempotent_replay: false });
+    actorRole = "admin";
+    const value = await reviewServiceReceipt({ receiptId: ID, acceptanceStatus, conditionsNotes: acceptanceStatus === "ACCEPTED_WITH_CONDITIONS" ? "Admin review conditions" : null, requestId: REQUEST });
+    assert.equal(value.success, true);
+    assert.deepEqual(permissions, ["service_receipts:accept"]);
+    assert.equal(calls[0].args.p_actor_id, "authenticated-reviewer");
+    assert.equal(calls[0].args.p_actor_role, "admin");
+    assert.equal(calls[0].args.p_acceptance_status, acceptanceStatus);
+  });
+}
 
 test("permission denial prevents receipt, package, correction and reopen RPCs", async () => {
   for (const [action, input, permission] of [
