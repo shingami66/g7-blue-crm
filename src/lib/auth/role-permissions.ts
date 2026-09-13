@@ -58,6 +58,12 @@ export const PETTY_CASH_PERMISSIONS = {
   transact: "petty_cash:transact",
 } as const;
 
+export const SUPPLIER_BILL_PERMISSIONS = {
+  read: "supplier_bills:read",
+  record: "supplier_bills:record",
+  approve: "supplier_bills:approve",
+} as const;
+
 export const ROLE_PERMISSIONS = {
   admin: [
     "*",
@@ -123,6 +129,8 @@ export const ROLE_PERMISSIONS = {
     EXPENSE_PERMISSIONS.read,
     EXPENSE_PERMISSIONS.approve,
     PETTY_CASH_PERMISSIONS.read,
+    SUPPLIER_BILL_PERMISSIONS.read,
+    SUPPLIER_BILL_PERMISSIONS.approve,
     CASH_ADVANCE_PERMISSIONS.readOwn,
     CASH_ADVANCE_PERMISSIONS.submitOwn,
     CASH_ADVANCE_PERMISSIONS.read,
@@ -191,6 +199,8 @@ export const ROLE_PERMISSIONS = {
     PETTY_CASH_PERMISSIONS.read,
     PETTY_CASH_PERMISSIONS.manage,
     PETTY_CASH_PERMISSIONS.transact,
+    SUPPLIER_BILL_PERMISSIONS.read,
+    SUPPLIER_BILL_PERMISSIONS.record,
     "dashboard:read",
     ...APPROVED_BILLING_SCOPE_ACCOUNTANT_PERMISSIONS,
   ],

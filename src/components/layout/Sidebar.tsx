@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Wallet,
   Coins,
+  ClipboardCheck,
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -34,6 +35,7 @@ export type NavSectionKey =
   | "suppliersAndProcurement"
   | "billingAndPayments"
   | "expensesAndCosting"
+  | "accountsPayable"
   | "administration";
 
 interface NavChildItem {
@@ -84,6 +86,9 @@ export function getSectionForPathname(pathname: string): NavSectionKey | null {
   ) {
     return "expensesAndCosting";
   }
+  if (pathname === "/supplier-bills" || pathname.startsWith("/supplier-bills/")) {
+    return "accountsPayable";
+  }
   if (
     pathname === "/settings" ||
     pathname.startsWith("/settings/") ||
@@ -105,11 +110,13 @@ export function isRouteActive(currentPathname: string, targetHref: string): bool
 export default function Sidebar({
   isAdmin = false,
   canReadPettyCash = false,
+  canReadSupplierBills = false,
   shellDirection = "ltr",
   currentPathname,
 }: {
   isAdmin?: boolean;
   canReadPettyCash?: boolean;
+  canReadSupplierBills?: boolean;
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
 }) {
@@ -201,6 +208,19 @@ export default function Sidebar({
         },
       ],
     },
+    ...(canReadSupplierBills
+      ? [{
+          key: "accountsPayable" as const,
+          title: dictionary.sections.accountsPayable,
+          icon: ClipboardCheck,
+          children: [{
+            key: "supplier-bills",
+            label: dictionary.modules.supplierBills,
+            href: "/supplier-bills",
+            icon: ClipboardCheck,
+          }],
+        }]
+      : []),
     {
       key: "billingAndPayments",
       title: dictionary.sections.billingAndPayments,

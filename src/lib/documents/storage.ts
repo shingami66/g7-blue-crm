@@ -4,7 +4,10 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { BUSINESS_DOCUMENT_PERMISSIONS } from "@/lib/auth/role-permissions";
+import {
+  BUSINESS_DOCUMENT_PERMISSIONS,
+  SUPPLIER_BILL_PERMISSIONS,
+} from "@/lib/auth/role-permissions";
 import type { Tables } from "@/lib/supabase/database.types";
 
 export const BUSINESS_DOCUMENT_BUCKET = "business-evidence" as const;
@@ -426,10 +429,11 @@ async function insertDocumentLink(
   }
 }
 
-export async function uploadPrivateBusinessDocument(
+async function uploadPrivateBusinessDocumentWithPermission(
   input: unknown,
+  permission: string,
 ): Promise<BusinessDocumentRow> {
-  const user = await requirePermission(BUSINESS_DOCUMENT_PERMISSIONS.write);
+  const user = await requirePermission(permission);
   const value = parseUploadInput(input);
   const file = await validateBusinessDocumentFile(value.file);
   const documentId = randomUUID();
@@ -496,6 +500,24 @@ export async function uploadPrivateBusinessDocument(
   return data;
 }
 
+export async function uploadPrivateBusinessDocument(
+  input: unknown,
+): Promise<BusinessDocumentRow> {
+  return uploadPrivateBusinessDocumentWithPermission(
+    input,
+    BUSINESS_DOCUMENT_PERMISSIONS.write,
+  );
+}
+
+export async function uploadPrivateSupplierBillInvoice(
+  input: unknown,
+): Promise<BusinessDocumentRow> {
+  return uploadPrivateBusinessDocumentWithPermission(
+    input,
+    SUPPLIER_BILL_PERMISSIONS.record,
+  );
+}
+
 export async function getPrivateBusinessDocumentForService(
   input: unknown,
 ): Promise<BusinessDocumentRow> {
@@ -507,10 +529,11 @@ export async function getPrivateBusinessDocumentForService(
   return document;
 }
 
-export async function createPrivateBusinessDocumentUrlForService(
+async function createPrivateBusinessDocumentUrlWithPermission(
   input: unknown,
+  permission: string,
 ): Promise<PrivateBusinessDocumentUrl> {
-  await requirePermission(BUSINESS_DOCUMENT_PERMISSIONS.read);
+  await requirePermission(permission);
   const supabase = createAdminClient();
   const reference = documentServiceReferenceFromInput(input);
   const document = await loadDocument(supabase, reference.documentId);
@@ -528,6 +551,24 @@ export async function createPrivateBusinessDocumentUrlForService(
     signedUrl: data.signedUrl,
     expiresInSeconds: BUSINESS_DOCUMENT_SIGNED_URL_SECONDS,
   };
+}
+
+export async function createPrivateBusinessDocumentUrlForService(
+  input: unknown,
+): Promise<PrivateBusinessDocumentUrl> {
+  return createPrivateBusinessDocumentUrlWithPermission(
+    input,
+    BUSINESS_DOCUMENT_PERMISSIONS.read,
+  );
+}
+
+export async function createPrivateSupplierBillInvoiceUrl(
+  input: unknown,
+): Promise<PrivateBusinessDocumentUrl> {
+  return createPrivateBusinessDocumentUrlWithPermission(
+    input,
+    SUPPLIER_BILL_PERMISSIONS.read,
+  );
 }
 
 export async function downloadPrivateBusinessDocumentForService(
