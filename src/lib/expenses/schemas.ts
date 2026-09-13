@@ -361,6 +361,12 @@ export const pettyCashExpenseSchema = z
     }
   });
 
+export const approveAndDisbursePettyCashExpenseSchema = z.object({
+  fund_id: uuidSchema,
+  expense_id: uuidSchema,
+  request_id: uuidSchema,
+});
+
 export const reviewExpenseFinanceSchema = z.object({
   expense_id: uuidSchema,
   request_id: uuidSchema,

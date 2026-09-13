@@ -37,6 +37,7 @@ test("W5C list and detail surfaces preserve canonical dashboard shell and respon
   assert.match(dictionary, /replenishmentCapacity: "المتاح لإعادة التغذية"/);
   assert.doesNotMatch(list, /dictionary\.labels\.utilized/);
   assert.doesNotMatch(detail, /dictionary\.labels\.utilized/);
+  assert.doesNotMatch(detail, /dictionary\.labels\.review/);
   assert.match(detail, /crypto\.randomUUID\(\)/);
   assert.match(detail, /attachExpenseReceiptAction/);
   assert.match(detail, /partialReceipt/);
@@ -117,11 +118,12 @@ test("W5C detail renders one active action panel directly below the action toolb
   const statusIndex = detail.indexOf("{statusTarget &&");
 
   assert.ok(toolbarIndex >= 0 && panelIndex > toolbarIndex && panelIndex < statusIndex);
-  assert.equal((detail.match(/<Panel id=/g) ?? []).length, 5);
-  for (const action of ["manage", "replenish", "expense", "disburse", "withdraw"]) {
+  assert.equal((detail.match(/<Panel id=/g) ?? []).length, 4);
+  for (const action of ["manage", "replenish", "expense", "withdraw"]) {
     assert.ok(detail.includes(`aria-expanded={panel === "${action}"}`));
     assert.ok(detail.includes(`aria-controls="petty-cash-${action}-panel"`));
   }
+  assert.doesNotMatch(detail, /petty-cash-disburse-panel/);
   assert.ok(detail.includes("actionButtonClass(panel"));
   assert.ok((detail.match(/autoFocus/g) ?? []).length >= 5);
   assert.equal(detail.includes("locale: Locale"), false);
@@ -138,4 +140,39 @@ test("W5C transaction timestamps use clean Riyadh Gregorian Latin-digit output",
   assert.match(detail, /<bdi dir="ltr">\{formatTransactionDateTime\(transaction\.recorded_at\)\}<\/bdi>/);
   assert.doesNotMatch(detail, /transaction\.recorded_at\)\.toLocaleString/);
   assert.doesNotMatch(detail, /transaction\.recorded_at\}\)\.toLocaleString/);
+});
+
+test("W5C one-click Petty Cash completion composes the governed Expense and ledger RPCs", () => {
+  const detail = read("src/app/(dashboard)/petty-cash/[id]/PettyCashDetailClient.tsx");
+  const actions = read("src/lib/expenses/actions.ts");
+  const schemas = read("src/lib/expenses/schemas.ts");
+  const dictionary = read("src/lib/i18n/dictionaries/petty-cash.ts");
+  const migration = read("supabase/migrations/20260913110000_w5c_petty_cash_approve_and_disburse.sql");
+
+  assert.match(detail, /approveAndDisbursePettyCashExpenseAction/);
+  assert.match(detail, /dictionary\.actions\.approveAndDisburse/);
+  assert.match(detail, /dictionary\.labels\.disbursed/);
+  assert.match(detail, /dictionary\.labels\.action/);
+  assert.doesNotMatch(detail, /dictionary\.labels\.review/);
+  assert.match(dictionary, /approveAndDisburse: "Approve & Disburse"/);
+  assert.match(dictionary, /approveAndDisburse: "اعتماد وصرف"/);
+  assert.match(actions, /requirePermission\(PETTY_CASH_PERMISSIONS\.transact\)/);
+  assert.match(actions, /approve_and_disburse_petty_cash_expense/);
+  assert.match(schemas, /approveAndDisbursePettyCashExpenseSchema/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.approve_and_disburse_petty_cash_expense/);
+  assert.match(migration, /public\.review_expense_finance\(/);
+  assert.match(migration, /public\.approve_expense\(/);
+  assert.match(migration, /public\.record_petty_cash_transaction\(/);
+  assert.match(migration, /COALESCE\(p_actor_role, ''\) NOT IN \('admin', 'accountant'\)/);
+  assert.match(migration, /u\.is_active = true/);
+  assert.match(migration, /v_expense_fund_id IS DISTINCT FROM p_fund_id/);
+  assert.match(migration, /v_disbursed_amount/);
+  assert.match(migration, /WHERE t\.request_id = p_request_id/);
+  assert.match(migration, /v_existing_transaction_id, true/);
+  assert.match(migration, /v_error_code := v_review_error;[\s\S]*RAISE EXCEPTION/);
+  assert.match(migration, /v_error_code := v_transaction_error;[\s\S]*RAISE EXCEPTION/);
+  assert.match(migration, /COALESCE\(v_error_code, 'petty_cash_approve_disburse_failed'\)/);
+  assert.match(migration, /EXCEPTION WHEN OTHERS THEN/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.approve_and_disburse_petty_cash_expense/);
+  assert.doesNotMatch(migration, /CREATE OR REPLACE FUNCTION public\.(review_expense_finance|approve_expense|record_petty_cash_transaction)\(/);
 });

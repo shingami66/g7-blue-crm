@@ -637,7 +637,7 @@ test("39. Regression: W5C Petty Cash migration is the newest bounded extension",
   const migrationFiles = files.filter((f) => f.endsWith(".sql")).sort();
   const lastMigration = migrationFiles[migrationFiles.length - 1];
   assert.ok(
-    lastMigration === "20260913100000_w5c_petty_cash_governed_workspace_foundation.sql",
+    lastMigration === "20260913110000_w5c_petty_cash_approve_and_disburse.sql",
     "The W5C Petty Cash migration must be the newest migration",
   );
 });

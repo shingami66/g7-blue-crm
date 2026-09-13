@@ -39,6 +39,7 @@ import {
   updatePettyCashFundSchema,
   pettyCashFundStatusSchema,
   pettyCashExpenseSchema,
+  approveAndDisbursePettyCashExpenseSchema,
   reviewExpenseFinanceSchema,
   submitOwnCashAdvanceExpenseSchema,
   submitCashAdvanceExpenseOnBehalfSchema,
@@ -95,6 +96,16 @@ const pettyCashErrorMessages: Record<string, string> = {
   replenishment_exceeds_float_limit: "The transaction would exceed the fund float limit.",
   petty_cash_transaction_request_conflict: "This Petty Cash transaction request was already used differently.",
   petty_cash_transaction_failed: "The Petty Cash transaction could not be recorded.",
+  petty_cash_transaction_authority_required: "Only an Admin or Accountant can approve and disburse Petty Cash expenses.",
+  petty_cash_approve_disburse_request_invalid: "Review the Petty Cash expense and try again.",
+  petty_cash_approve_disburse_request_conflict: "This approval and disbursement request was already used differently.",
+  petty_cash_expense_not_found: "The linked Expense could not be found.",
+  petty_cash_expense_not_eligible: "The Expense is not eligible for this Petty Cash fund.",
+  petty_cash_expense_not_approvable: "Only a submitted or approved Expense can be completed here.",
+  petty_cash_expense_already_disbursed: "This Expense has already been fully disbursed.",
+  petty_cash_approve_disburse_failed: "The Petty Cash Expense could not be approved and disbursed.",
+  expense_evidence_required_for_finance_review: "Attach canonical supporting evidence before approving this Expense.",
+  expense_finance_review_incomplete: "The Expense finance review is incomplete and must be corrected before approval.",
 };
 
 function pettyCashErrorMessage(errorCode?: string): string {
@@ -2026,6 +2037,41 @@ export async function recordPettyCashExpenseAction(
     };
   } catch {
     return { success: false, error: "The Petty Cash Expense could not be submitted.", errorCode: "petty_cash_expense_submission_failed" };
+  }
+}
+
+// 15c. Approve and fully disburse one Petty Cash Expense in one governed RPC.
+export async function approveAndDisbursePettyCashExpenseAction(
+  rawInput: unknown,
+): Promise<W5ActionResult<{ expense_id: string; transaction_id: string }>> {
+  try {
+    const user = await requirePermission(PETTY_CASH_PERMISSIONS.transact);
+    const parsed = approveAndDisbursePettyCashExpenseSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return pettyCashActionFailure("petty_cash_approve_disburse_request_invalid");
+    }
+
+    const supabase = getExpenseRpcClient();
+    const { data, error } = await supabase.rpc("approve_and_disburse_petty_cash_expense", {
+      p_fund_id: parsed.data.fund_id,
+      p_expense_id: parsed.data.expense_id,
+      p_request_id: parsed.data.request_id,
+      p_actor_id: user.id,
+      p_actor_role: user.role,
+    });
+    if (error) return pettyCashActionFailure(error.code);
+
+    const row = data?.[0];
+    if (row?.error_code) return pettyCashActionFailure(row.error_code);
+    if (!row?.expense_id || !row?.transaction_id) return pettyCashActionFailure("petty_cash_approve_disburse_failed");
+
+    return {
+      success: true,
+      data: { expense_id: row.expense_id, transaction_id: row.transaction_id },
+      idempotentReplay: row.idempotent_replay,
+    };
+  } catch {
+    return pettyCashActionFailure("petty_cash_approve_disburse_failed");
   }
 }
 
