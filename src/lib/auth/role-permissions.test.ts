@@ -45,8 +45,27 @@ const {
   ROLE_PERMISSIONS,
   SERVICE_RECEIPT_PERMISSIONS,
   SERVICE_BILLING_SUMMARY_PERMISSIONS,
+  SUPPLIER_PAYMENT_PERMISSIONS,
   hasPermissionForRole,
 } = await import("./role-permissions.ts");
+
+test("Supplier Payments use distinct read, record, and reversal authority", () => {
+  for (const role of ["admin", "accountant"] as const) {
+    assert.equal(hasPermissionForRole(role, SUPPLIER_PAYMENT_PERMISSIONS.read), true);
+    assert.equal(hasPermissionForRole(role, SUPPLIER_PAYMENT_PERMISSIONS.record), true);
+    assert.equal(hasPermissionForRole(role, SUPPLIER_PAYMENT_PERMISSIONS.reverse), true);
+  }
+  assert.equal(hasPermissionForRole("manager", SUPPLIER_PAYMENT_PERMISSIONS.read), true);
+  assert.equal(hasPermissionForRole("manager", SUPPLIER_PAYMENT_PERMISSIONS.record), false);
+  assert.equal(hasPermissionForRole("manager", SUPPLIER_PAYMENT_PERMISSIONS.reverse), false);
+  for (const role of ["sales", "operations", "viewer"] as const) {
+    assert.equal(hasPermissionForRole(role, SUPPLIER_PAYMENT_PERMISSIONS.read), false);
+    assert.equal(hasPermissionForRole(role, SUPPLIER_PAYMENT_PERMISSIONS.record), false);
+    assert.equal(hasPermissionForRole(role, SUPPLIER_PAYMENT_PERMISSIONS.reverse), false);
+  }
+  assert.notEqual(SUPPLIER_PAYMENT_PERMISSIONS.read, "payments:read");
+  assert.notEqual(SUPPLIER_PAYMENT_PERMISSIONS.record, "payments:write");
+});
 
 test("Service Billing Summary defaults are distinct from Invoice visibility", () => {
   for (const role of ["admin", "manager", "accountant", "operations", "sales"] as const) {

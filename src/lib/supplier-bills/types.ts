@@ -1,3 +1,5 @@
+import type { SupplierBillPaymentHistoryItem, SupplierBillPaymentSummary } from "@/lib/supplier-payments/types";
+
 export type SupplierBillStatus = "pending" | "approved";
 
 export interface SupplierBill {
@@ -65,6 +67,8 @@ export interface SupplierBillDetail extends SupplierBill {
   receipt_reviewed_at: string | null;
   receipt_reviewed_by: string | null;
   documents: SupplierBillDocument[];
+  paymentSummary: SupplierBillPaymentSummary | null;
+  paymentHistory: SupplierBillPaymentHistoryItem[];
 }
 
 export interface SupplierBillSupplierOption {

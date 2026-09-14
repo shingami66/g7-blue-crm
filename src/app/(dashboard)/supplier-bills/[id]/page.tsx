@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { checkPermission } from "@/lib/auth/permissions";
 import { SUPPLIER_BILL_PERMISSIONS } from "@/lib/auth/role-permissions";
+import { SUPPLIER_PAYMENT_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getSupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
 import { getSupplierBillById, getSupplierBillFormOptions } from "@/lib/supplier-bills/queries";
@@ -10,12 +11,13 @@ import SupplierBillDetailClient from "../SupplierBillDetailClient";
 export const dynamic = "force-dynamic";
 
 export default async function SupplierBillDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const [{ id }, locale, canRead, canRecord, canApprove] = await Promise.all([
+  const [{ id }, locale, canRead, canRecord, canApprove, canRecordPayment] = await Promise.all([
     params,
     getCurrentSessionEffectiveLocale(),
     checkPermission(SUPPLIER_BILL_PERMISSIONS.read),
     checkPermission(SUPPLIER_BILL_PERMISSIONS.record),
     checkPermission(SUPPLIER_BILL_PERMISSIONS.approve),
+    checkPermission(SUPPLIER_PAYMENT_PERMISSIONS.record),
   ]);
   const dictionary = getSupplierBillsDictionary(locale);
   if (!canRead) return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
@@ -31,7 +33,7 @@ export default async function SupplierBillDetailPage({ params }: { params: Promi
   if (state === "accessDenied") return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
   if (state === "loadError" || !detail || !options) return <StateCard title={dictionary.states.loadError} message={dictionary.states.loadError} />;
   if (!detail.bill) notFound();
-  return <SupplierBillDetailClient bill={detail.bill} options={options} canRecord={canRecord} canApprove={canApprove} dictionary={dictionary} />;
+  return <SupplierBillDetailClient bill={detail.bill} options={options} canRecord={canRecord} canApprove={canApprove} canRecordPayment={canRecordPayment} dictionary={dictionary} />;
 }
 
 function StateCard({ title, message }: { title: string; message: string }) {

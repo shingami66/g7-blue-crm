@@ -4,7 +4,7 @@ import {
   checkPermission,
   getCurrentAppUser,
 } from "@/lib/auth/permissions";
-import { PETTY_CASH_PERMISSIONS, SUPPLIER_BILL_PERMISSIONS } from "@/lib/auth/role-permissions";
+import { PETTY_CASH_PERMISSIONS, SUPPLIER_BILL_PERMISSIONS, SUPPLIER_PAYMENT_PERMISSIONS } from "@/lib/auth/role-permissions";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
@@ -27,10 +27,11 @@ export default async function DashboardLayout({
     redirect("/unauthorized");
   }
 
-  const [isAdmin, canReadPettyCash, canReadSupplierBills, locale] = await Promise.all([
+  const [isAdmin, canReadPettyCash, canReadSupplierBills, canReadSupplierPayments, locale] = await Promise.all([
     checkPermission("users:manage"),
     checkPermission(PETTY_CASH_PERMISSIONS.read),
     checkPermission(SUPPLIER_BILL_PERMISSIONS.read),
+    checkPermission(SUPPLIER_PAYMENT_PERMISSIONS.read),
     getCurrentSessionEffectiveLocale(),
   ]);
   const shellDirection = getDirection(locale);
@@ -47,6 +48,7 @@ export default async function DashboardLayout({
                 isAdmin={isAdmin}
                 canReadPettyCash={canReadPettyCash}
                 canReadSupplierBills={canReadSupplierBills}
+                canReadSupplierPayments={canReadSupplierPayments}
                 shellDirection={shellDirection}
               />
           </div>

@@ -3,6 +3,7 @@ import "server-only";
 import { requirePermission } from "@/lib/auth/permissions";
 import { SUPPLIER_BILL_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSupplierBillPaymentHistory, getSupplierBillPaymentSummary } from "@/lib/supplier-payments/queries";
 import type {
   SupplierBill,
   SupplierBillCommitmentOption,
@@ -112,12 +113,14 @@ export async function getSupplierBillById(id: string): Promise<{ bill: SupplierB
   if (error) return { bill: null, error: "supplier_bill_load_failed" };
   if (!data) return { bill: null };
   const base = mapBill(data as Record<string, unknown>);
-  const [supplierResult, serviceResult, commitmentResult, receiptResult, documentLinksResult] = await Promise.all([
+  const [supplierResult, serviceResult, commitmentResult, receiptResult, documentLinksResult, paymentSummary, paymentHistory] = await Promise.all([
     supabase.from("suppliers").select("id,name,display_name,legal_name").eq("id", base.supplier_id).maybeSingle(),
     supabase.from("services").select("id,service_number,service_title,event_name").eq("id", base.service_id).maybeSingle(),
     supabase.from("approved_commitment_balances").select("commitment_source,source_reference,supplier_quotation_id,currency,status,authorized_amount,accepted_amount").eq("id", base.commitment_id).maybeSingle(),
     supabase.from("service_receipts").select("acceptance_status,performance_date,received_amount,delivered_scope,reviewed_at,reviewed_by").eq("id", base.service_receipt_id).maybeSingle(),
     supabase.from("supplier_bill_documents").select("document_id,attached_at,attached_by").eq("supplier_bill_id", base.id).order("attached_at", { ascending: true }),
+    getSupplierBillPaymentSummary(base.id),
+    getSupplierBillPaymentHistory(base.id),
   ]);
   const supplier = (supplierResult.data ?? {}) as Record<string, unknown>;
   const service = (serviceResult.data ?? {}) as Record<string, unknown>;
@@ -167,6 +170,8 @@ export async function getSupplierBillById(id: string): Promise<{ bill: SupplierB
       receipt_reviewed_at: text(receipt.reviewed_at),
       receipt_reviewed_by: text(receipt.reviewed_by),
       documents,
+      paymentSummary,
+      paymentHistory,
     },
   };
 }

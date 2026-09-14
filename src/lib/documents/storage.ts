@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   BUSINESS_DOCUMENT_PERMISSIONS,
+  SUPPLIER_PAYMENT_PERMISSIONS,
   SUPPLIER_BILL_PERMISSIONS,
 } from "@/lib/auth/role-permissions";
 import type { Tables } from "@/lib/supabase/database.types";
@@ -518,6 +519,15 @@ export async function uploadPrivateSupplierBillInvoice(
   );
 }
 
+export async function uploadPrivateSupplierPaymentEvidence(
+  input: unknown,
+): Promise<BusinessDocumentRow> {
+  return uploadPrivateBusinessDocumentWithPermission(
+    input,
+    SUPPLIER_PAYMENT_PERMISSIONS.record,
+  );
+}
+
 export async function getPrivateBusinessDocumentForService(
   input: unknown,
 ): Promise<BusinessDocumentRow> {
@@ -568,6 +578,15 @@ export async function createPrivateSupplierBillInvoiceUrl(
   return createPrivateBusinessDocumentUrlWithPermission(
     input,
     SUPPLIER_BILL_PERMISSIONS.read,
+  );
+}
+
+export async function createPrivateSupplierPaymentEvidenceUrl(
+  input: unknown,
+): Promise<PrivateBusinessDocumentUrl> {
+  return createPrivateBusinessDocumentUrlWithPermission(
+    input,
+    SUPPLIER_PAYMENT_PERMISSIONS.read,
   );
 }
 

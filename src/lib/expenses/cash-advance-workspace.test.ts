@@ -631,14 +631,18 @@ test("38. Regression: ExpenseSubmissionModal semantics unchanged", () => {
   );
 });
 
-test("39. Regression: W5C Petty Cash migration is the newest bounded extension", () => {
+test("39. Regression: W5C Petty Cash migration remains before later bounded extensions", () => {
   const migrationsDir = path.join(process.cwd(), "supabase/migrations");
   const files = fs.readdirSync(migrationsDir);
   const migrationFiles = files.filter((f) => f.endsWith(".sql")).sort();
   const lastMigration = migrationFiles[migrationFiles.length - 1];
   assert.ok(
-    lastMigration === "20260913110000_w5c_petty_cash_approve_and_disburse.sql",
-    "The W5C Petty Cash migration must be the newest migration",
+    files.includes("20260913110000_w5c_petty_cash_approve_and_disburse.sql"),
+    "The W5C Petty Cash migration must remain present",
+  );
+  assert.ok(
+    lastMigration === "20260914112636_w6b_supplier_payments_foundation.sql",
+    "The W6B Supplier Payments migration must be the newest migration",
   );
 });
 

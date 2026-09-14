@@ -30,12 +30,14 @@ export default function SupplierBillDetailClient({
   options,
   canRecord,
   canApprove,
+  canRecordPayment,
   dictionary,
 }: {
   bill: SupplierBillDetail;
   options: SupplierBillFormOptions;
   canRecord: boolean;
   canApprove: boolean;
+  canRecordPayment: boolean;
   dictionary: SupplierBillsDictionary;
 }) {
   const router = useRouter();
@@ -106,6 +108,7 @@ export default function SupplierBillDetailClient({
         <div className="flex flex-wrap items-center gap-2">
           {canRecord && !approved && <Button id={editTriggerId} type="button" variant="secondary" onClick={() => setIsEditOpen((open) => !open)} aria-expanded={isEditOpen} aria-controls={isEditOpen ? "supplier-bill-edit-panel" : undefined}>{isEditOpen ? dictionary.actions.closeEdit : dictionary.actions.editBill}</Button>}
           {canApprove && !approved && <Button type="button" onClick={approve} disabled={isApprovePending}>{isApprovePending ? "…" : dictionary.actions.approve}</Button>}
+          {canRecordPayment && approved && bill.paymentSummary && bill.paymentSummary.outstanding_amount > 0 && <Button asChild size="sm"><PendingLink href={`/supplier-payments/new?billId=${bill.id}`} pendingLabel={dictionary.actions.recordPayment}>{dictionary.actions.recordPayment}</PendingLink></Button>}
         </div>
       </div>
 
@@ -118,6 +121,8 @@ export default function SupplierBillDetailClient({
           <div><dt className="text-[11px] font-semibold text-on-surface-variant">{dictionary.fields.currency}</dt><Value numeric>{bill.currency}</Value></div>
         </dl>
       </section>
+
+      {approved && bill.paymentSummary && <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-4" aria-labelledby="supplier-bill-payment-summary"><div className="flex flex-wrap items-center justify-between gap-3"><h2 id="supplier-bill-payment-summary" className="text-[14px] font-semibold text-primary">{dictionary.fields.paymentHistory}</h2></div><dl className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4"><div><dt className="text-[11px] font-semibold text-on-surface-variant">{dictionary.fields.payable}</dt><dd className="mt-1 font-semibold"><bdi dir="ltr">{formatSarAmount(locale, bill.paymentSummary.payable_amount)}</bdi></dd></div><div><dt className="text-[11px] font-semibold text-on-surface-variant">{dictionary.fields.paid}</dt><dd className="mt-1 font-semibold"><bdi dir="ltr">{formatSarAmount(locale, bill.paymentSummary.paid_amount)}</bdi></dd></div><div><dt className="text-[11px] font-semibold text-on-surface-variant">{dictionary.fields.outstanding}</dt><dd className="mt-1 font-semibold"><bdi dir="ltr">{formatSarAmount(locale, bill.paymentSummary.outstanding_amount)}</bdi></dd></div><div><dt className="text-[11px] font-semibold text-on-surface-variant">{dictionary.fields.paymentStatus}</dt><dd className="mt-1 font-medium">{dictionary.paymentStatuses[bill.paymentSummary.payment_status]}</dd></div></dl>{bill.paymentHistory.length > 0 && <ul className="mt-4 divide-y divide-surface-variant rounded-lg border border-surface-variant">{bill.paymentHistory.map((payment) => <li key={payment.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-3 text-[12px]"><span className="flex min-w-0 items-center gap-3"><bdi dir="ltr" className="font-semibold">{payment.payment_number}</bdi><UiDateText locale={locale} value={payment.payment_date} /><span>{dictionary.paymentMethods[payment.method]}</span></span><span className="flex items-center gap-3"><bdi dir="ltr" className="font-semibold">{formatSarAmount(locale, payment.amount)}</bdi><span>{dictionary.paymentStatuses[payment.status]}</span></span></li>)}</ul>}</section>}
 
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <InfoSection title={dictionary.fields.supplier}>
