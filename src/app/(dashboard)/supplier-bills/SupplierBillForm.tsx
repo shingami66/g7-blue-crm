@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { createSupplierBillAction, updateSupplierBillAction } from "@/lib/supplier-bills/actions";
 import type { SupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
-import type { SupplierBillCommitmentOption, SupplierBillDetail, SupplierBillFormOptions } from "@/lib/supplier-bills/types";
+import type { SupplierBillDetail, SupplierBillFormOptions } from "@/lib/supplier-bills/types";
 
 function fieldClass() {
   return "mt-1 w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
@@ -13,10 +13,6 @@ function fieldClass() {
 
 function requestId() {
   return globalThis.crypto.randomUUID();
-}
-
-function optionLabel(option: SupplierBillCommitmentOption, dictionary: SupplierBillsDictionary) {
-  return `${option.currency} · ${option.authorizedAmount.toFixed(2)} ${dictionary.fields.commitment}`;
 }
 
 export default function SupplierBillForm({
@@ -90,7 +86,7 @@ export default function SupplierBillForm({
         <label className="text-[12px] font-semibold">{dictionary.fields.commitment}
           <select className={fieldClass()} name="commitment_id" value={commitmentId} onChange={(event) => { setCommitmentId(event.target.value); setReceiptId(""); }} required disabled={isPending || !serviceId || !supplierId}>
             <option value="">{dictionary.forms.selectCommitment}</option>
-            {filteredCommitments.map((option) => <option key={option.id} value={option.id}>{optionLabel(option, dictionary)}</option>)}
+            {filteredCommitments.map((option) => <option key={option.id} value={option.id}><bdi dir="ltr">{option.currency}</bdi> · <bdi dir="ltr">{option.authorizedAmount.toFixed(2)}</bdi> <span>{dictionary.fields.commitment}</span></option>)}
           </select>
         </label>
         <label className="text-[12px] font-semibold">{dictionary.fields.receipt}

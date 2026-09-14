@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import PendingLink from "@/components/ui/PendingLink";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { formatSarAmount, formatUiDate, formatUiDateTime } from "@/lib/i18n/formatting";
 import { approveSupplierBillAction, attachSupplierBillInvoiceAction, createSupplierBillDocumentViewUrl } from "@/lib/supplier-bills/actions";
 import type { SupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
@@ -20,7 +21,7 @@ function requestId() {
 }
 
 function Value({ children, numeric = false }: { children: React.ReactNode; numeric?: boolean }) {
-  return <dd className={numeric ? "mt-1 text-[14px] font-semibold tabular-nums" : "mt-1 text-[14px]"} dir={numeric ? undefined : "auto"}>{numeric ? <bdi dir="ltr">{children}</bdi> : children}</dd>;
+  return <dd className={numeric ? "mt-1 text-[14px] font-semibold tabular-nums" : "mt-1 text-[14px]"}>{numeric ? <bdi dir="ltr">{children}</bdi> : <bdi dir="auto">{children}</bdi>}</dd>;
 }
 
 export default function SupplierBillDetailClient({
@@ -46,6 +47,7 @@ export default function SupplierBillDetailClient({
   const [isEditOpen, setIsEditOpen] = useState(false);
   const wasEditOpen = useRef(false);
   const locale = dictionary.locale;
+  const isRtl = locale === "ar";
   const approved = bill.status === "approved";
   const editTriggerId = "supplier-bill-edit-trigger";
 
@@ -90,12 +92,15 @@ export default function SupplierBillDetailClient({
     <div dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-5 pb-12" data-supplier-bill-detail="workspace">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <PendingLink href="/supplier-bills" pendingLabel={dictionary.backToList} className="text-[12px] font-semibold text-primary hover:underline">{dictionary.backToList}</PendingLink>
+          <PendingLink href="/supplier-bills" pendingLabel={dictionary.backToList} className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-[12px] font-semibold text-primary hover:bg-surface-container-low hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+            {isRtl ? <ArrowRight size={16} aria-hidden="true" /> : <ArrowLeft size={16} aria-hidden="true" />}
+            <span>{dictionary.backToList}</span>
+          </PendingLink>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <h1 className="text-[26px] font-semibold text-primary" dir="ltr">{bill.bill_number}</h1>
+            <h1 className="text-[26px] font-semibold text-primary"><bdi dir="ltr">{bill.bill_number}</bdi></h1>
             <StatusBadge variant={approved ? "active" : "pending"}>{approved ? dictionary.statuses.approved : dictionary.statuses.pending}</StatusBadge>
           </div>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-[14px] text-on-surface-variant" dir="auto"><bdi dir="auto">{bill.supplier_name}</bdi><span aria-hidden="true">·</span><bdi dir="ltr">{bill.service_number}</bdi></p>
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-[14px] text-on-surface-variant"><bdi dir="auto">{bill.supplier_name}</bdi><span aria-hidden="true">·</span><bdi dir="ltr">{bill.service_number}</bdi></p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {canRecord && !approved && <Button id={editTriggerId} type="button" variant="secondary" onClick={() => setIsEditOpen((open) => !open)} aria-expanded={isEditOpen} aria-controls={isEditOpen ? "supplier-bill-edit-panel" : undefined}>{isEditOpen ? dictionary.actions.closeEdit : dictionary.actions.editBill}</Button>}
@@ -121,13 +126,13 @@ export default function SupplierBillDetailClient({
         </InfoSection>
         <InfoSection title={dictionary.fields.service}>
           <Info label={dictionary.fields.service}>
-            <span className="flex flex-wrap items-center gap-1" dir="auto"><bdi dir="ltr">{bill.service_number}</bdi><span aria-hidden="true">—</span><bdi dir="auto">{bill.event_name || bill.service_title}</bdi></span>
+            <span className="flex flex-wrap items-center gap-1"><bdi dir="ltr">{bill.service_number}</bdi><span aria-hidden="true">—</span><bdi dir="auto">{bill.event_name || bill.service_title}</bdi></span>
           </Info>
           <Info label={dictionary.fields.commitment}>
-            <span className="flex flex-wrap items-center gap-x-2 gap-y-1" dir="auto"><bdi dir="ltr">{formatSarAmount(locale, bill.authorized_amount)}</bdi><bdi dir="ltr">{bill.commitment_currency}</bdi><span>{dictionary.commitmentStatuses[bill.commitment_status] ?? "—"}</span>{bill.commitment_source && <span><span className="font-semibold">{dictionary.fields.commitmentSource}:</span> {dictionary.commitmentSources[bill.commitment_source] ?? "—"}</span>}{bill.commitment_quotation_reference && <span><span className="font-semibold">{dictionary.fields.supplierQuotation}:</span> <bdi dir="auto">{bill.commitment_quotation_reference}</bdi></span>}{bill.commitment_source_reference && <span><span className="font-semibold">{dictionary.fields.sourceReference}:</span> <bdi dir="auto">{bill.commitment_source_reference}</bdi></span>}</span>
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1"><bdi dir="ltr">{formatSarAmount(locale, bill.authorized_amount)}</bdi><bdi dir="ltr">{bill.commitment_currency}</bdi><span>{dictionary.commitmentStatuses[bill.commitment_status] ?? "—"}</span>{bill.commitment_source && <span><span className="font-semibold">{dictionary.fields.commitmentSource}:</span> {dictionary.commitmentSources[bill.commitment_source] ?? "—"}</span>}{bill.commitment_quotation_reference && <span><span className="font-semibold">{dictionary.fields.supplierQuotation}:</span> <bdi dir="auto">{bill.commitment_quotation_reference}</bdi></span>}{bill.commitment_source_reference && <span><span className="font-semibold">{dictionary.fields.sourceReference}:</span> <bdi dir="auto">{bill.commitment_source_reference}</bdi></span>}</span>
           </Info>
           <Info label={dictionary.fields.receipt}>
-            <span className="flex flex-wrap items-center gap-x-2 gap-y-1" dir="auto"><bdi dir="ltr">{bill.receipt_performance_date || "—"}</bdi><bdi dir="ltr">{bill.receipt_received_amount == null ? "—" : formatSarAmount(locale, bill.receipt_received_amount)}</bdi><span>{dictionary.acceptanceStatuses[bill.receipt_acceptance_status] ?? "—"}</span></span>
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1"><bdi dir="ltr">{bill.receipt_performance_date || "—"}</bdi><bdi dir="ltr">{bill.receipt_received_amount == null ? "—" : formatSarAmount(locale, bill.receipt_received_amount)}</bdi><span>{dictionary.acceptanceStatuses[bill.receipt_acceptance_status] ?? "—"}</span></span>
           </Info>
         </InfoSection>
         <InfoSection title={dictionary.fields.receipt}>
@@ -168,7 +173,7 @@ function InfoSection({ title, children }: { title: string; children: React.React
 }
 
 function Info({ label, value, numeric = false, children }: { label: string; value?: string | null; numeric?: boolean; children?: React.ReactNode }) {
-  return <div className="min-w-0"><dt className="text-[11px] font-semibold text-on-surface-variant">{label}</dt><dd className="mt-1 break-words text-[13px] text-on-surface" dir={numeric ? undefined : "auto"}>{children ?? (numeric ? <bdi dir="ltr">{value || "—"}</bdi> : <bdi dir="auto">{value || "—"}</bdi>)}</dd></div>;
+  return <div className="min-w-0"><dt className="text-[11px] font-semibold text-on-surface-variant">{label}</dt><dd className="mt-1 break-words text-[13px] text-on-surface">{children ?? (numeric ? <bdi dir="ltr">{value || "—"}</bdi> : <bdi dir="auto">{value || "—"}</bdi>)}</dd></div>;
 }
 
 function DocumentRow({ billId, document, dictionary }: { billId: string; document: SupplierBillDetail["documents"][number]; dictionary: SupplierBillsDictionary }) {
@@ -180,5 +185,5 @@ function DocumentRow({ billId, document, dictionary }: { billId: string; documen
       if (result.success) setHref(result.data?.signedUrl ?? null);
     });
   }
-  return <li className="flex flex-wrap items-center justify-between gap-3 px-3 py-3"><span className="min-w-0 truncate text-[13px]" dir="auto">{document.original_filename}</span>{href ? <a href={href} target="_blank" rel="noreferrer" className="shrink-0 text-[12px] font-semibold text-primary hover:underline">{dictionary.actions.openDocument}</a> : <button type="button" onClick={open} disabled={pending} className="shrink-0 text-[12px] font-semibold text-primary hover:underline disabled:opacity-60">{pending ? "…" : dictionary.actions.openDocument}</button>}</li>;
+  return <li className="flex flex-wrap items-center justify-between gap-3 px-3 py-3"><bdi className="min-w-0 truncate text-[13px]" dir="auto">{document.original_filename}</bdi>{href ? <a href={href} target="_blank" rel="noreferrer" className="shrink-0 text-[12px] font-semibold text-primary hover:underline">{dictionary.actions.openDocument}</a> : <button type="button" onClick={open} disabled={pending} className="shrink-0 text-[12px] font-semibold text-primary hover:underline disabled:opacity-60">{pending ? "…" : dictionary.actions.openDocument}</button>}</li>;
 }

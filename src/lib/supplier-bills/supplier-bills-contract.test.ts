@@ -15,6 +15,8 @@ const permissions = readFileSync(new URL("../auth/role-permissions.ts", import.m
 const storage = readFileSync(new URL("../documents/storage.ts", import.meta.url), "utf8");
 const listClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/SupplierBillsClient.tsx", import.meta.url), "utf8");
 const detailClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/SupplierBillDetailClient.tsx", import.meta.url), "utf8");
+const formClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/SupplierBillForm.tsx", import.meta.url), "utf8");
+const newPage = readFileSync(new URL("../../app/(dashboard)/supplier-bills/new/page.tsx", import.meta.url), "utf8");
 const dictionary = readFileSync(new URL("../i18n/dictionaries/supplier-bills.ts", import.meta.url), "utf8");
 
 function functionBody(source: string, name: string): string {
@@ -142,6 +144,29 @@ test("W6A exposes a distinct bilingual Supplier Bills workspace with one approva
     assert.match(dictionary, new RegExp(code));
   }
   assert.match(dictionary, /supplier_bill_self_approval_forbidden/);
+});
+
+test("Supplier Bills keep RTL table alignment and isolate atomic values at the leaf", () => {
+  assert.doesNotMatch(listClient, /<(?:td|th)\b[^>]*\bdir\s*=/);
+  assert.doesNotMatch(listClient, /<PendingLink\b[^>]*\bdir\s*=/);
+  assert.match(listClient, /<th className="px-4 py-3 text-start">\{dictionary\.columns\.bill\}<\/th>/);
+  assert.match(listClient, /<td className="px-4 py-4 align-top text-start">/);
+  assert.match(listClient, /<td className="px-4 py-4 text-end align-top"><bdi dir="ltr" className="font-semibold tabular-nums">\{formatSarAmount/);
+  assert.match(listClient, /<bdi dir="ltr">\{bill\.bill_number\}<\/bdi>/);
+  assert.match(listClient, /<bdi dir="auto">\{bill\.supplier_name\}<\/bdi>/);
+  assert.match(listClient, /<bdi dir="ltr">\{bill\.service_number\}<\/bdi>/);
+  assert.match(listClient, /<bdi dir="auto">\{bill\.event_name \|\| bill\.service_title\}<\/bdi>/);
+  assert.doesNotMatch(detailClient, /<p\b[^>]*\bdir\s*=\s*"auto"/);
+  assert.doesNotMatch(detailClient, /<span\b[^>]*\bdir\s*=\s*"auto"/);
+  assert.doesNotMatch(detailClient, /<dd\b[^>]*\bdir\s*=/);
+  assert.match(detailClient, /<h1 className="[^"]+"><bdi dir="ltr">\{bill\.bill_number\}<\/bdi><\/h1>/);
+  assert.match(detailClient, /<bdi dir="ltr">\{bill\.service_number\}<\/bdi>/);
+  assert.match(detailClient, /<bdi dir="auto">\{bill\.event_name \|\| bill\.service_title\}<\/bdi>/);
+  assert.match(detailClient, /isRtl \? <ArrowRight[^>]+> : <ArrowLeft/);
+  assert.match(newPage, /isRtl \? <ArrowRight[^>]+> : <ArrowLeft/);
+  assert.match(newPage, /inline-flex items-center gap-2/);
+  assert.match(formClient, /<bdi dir="ltr">\{option\.currency\}<\/bdi>/);
+  assert.match(formClient, /<bdi dir="ltr">\{option\.authorizedAmount\.toFixed\(2\)\}<\/bdi>/);
 });
 
 test("supplier invoice storage reuses the private business-document pipeline with AP permission", () => {

@@ -67,19 +67,19 @@ export default function SupplierBillsClient({
             <tbody className="divide-y divide-surface-variant text-[13px]">
               {bills.map((bill) => (
                 <tr key={bill.id} className="transition-colors hover:bg-surface-container-low/50">
-                  <td className="px-4 py-4 align-top">
-                    <PendingLink href={`/supplier-bills/${bill.id}`} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline" dir="ltr">
-                      {bill.bill_number}
+                  <td className="px-4 py-4 align-top text-start">
+                    <PendingLink href={`/supplier-bills/${bill.id}`} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline">
+                      <bdi dir="ltr">{bill.bill_number}</bdi>
                     </PendingLink>
-                    <div className="mt-1 text-[12px] text-on-surface-variant" dir="ltr">{bill.invoice_number}</div>
+                    <div className="mt-1 text-[12px] text-on-surface-variant"><bdi dir="ltr">{bill.invoice_number}</bdi></div>
                   </td>
-                  <td className="break-words px-4 py-4 align-top text-on-surface" dir="auto">{bill.supplier_name}</td>
-                  <td className="break-words px-4 py-4 align-top" dir="auto">
-                    <div className="font-medium text-on-surface">{bill.service_number}</div>
-                    <div className="mt-0.5 text-[12px] text-on-surface-variant">{bill.event_name || bill.service_title}</div>
+                  <td className="break-words px-4 py-4 align-top text-start text-on-surface"><bdi dir="auto">{bill.supplier_name}</bdi></td>
+                  <td className="break-words px-4 py-4 align-top text-start">
+                    <div className="font-medium text-on-surface"><bdi dir="ltr">{bill.service_number}</bdi></div>
+                    <div className="mt-0.5 text-[12px] text-on-surface-variant"><bdi dir="auto">{bill.event_name || bill.service_title}</bdi></div>
                   </td>
-                  <td className="px-4 py-4 align-top" dir="ltr"><bdi>{formatUiDate(locale, bill.invoice_date)}</bdi></td>
-                  <td className="px-4 py-4 text-end align-top" dir="ltr"><bdi className="font-semibold tabular-nums">{formatSarAmount(locale, bill.total_amount)}</bdi></td>
+                  <td className="px-4 py-4 align-top text-start"><bdi dir="ltr">{formatUiDate(locale, bill.invoice_date)}</bdi></td>
+                  <td className="px-4 py-4 text-end align-top"><bdi dir="ltr" className="font-semibold tabular-nums">{formatSarAmount(locale, bill.total_amount)}</bdi></td>
                   <td className="px-4 py-4 text-center align-top"><StatusBadge variant={statusVariant(bill.status)}>{bill.status === "approved" ? dictionary.statuses.approved : dictionary.statuses.pending}</StatusBadge></td>
                   <td className="px-4 py-4 text-center align-top">
                     <PendingLink href={`/supplier-bills/${bill.id}`} pendingLabel={dictionary.actions.view} aria-label={`${dictionary.actions.view}: ${bill.bill_number}`} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
@@ -99,16 +99,16 @@ export default function SupplierBillsClient({
             <article key={bill.id} className="space-y-3 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <PendingLink href={`/supplier-bills/${bill.id}`} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline" dir="ltr">
-                    <bdi>{bill.bill_number}</bdi>
+                  <PendingLink href={`/supplier-bills/${bill.id}`} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline">
+                    <bdi dir="ltr">{bill.bill_number}</bdi>
                   </PendingLink>
                   <div className="mt-1 truncate text-[12px] text-on-surface-variant"><bdi dir="ltr">{bill.invoice_number}</bdi></div>
                 </div>
                 <StatusBadge variant={statusVariant(bill.status)}>{bill.status === "approved" ? dictionary.statuses.approved : dictionary.statuses.pending}</StatusBadge>
               </div>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]">
-                <div><dt className="text-on-surface-variant">{dictionary.columns.supplier}</dt><dd className="mt-0.5 break-words font-medium" dir="auto">{bill.supplier_name}</dd></div>
-                <div><dt className="text-on-surface-variant">{dictionary.columns.service}</dt><dd className="mt-0.5 break-words font-medium" dir="auto">{bill.service_number}</dd></div>
+                <div><dt className="text-on-surface-variant">{dictionary.columns.supplier}</dt><dd className="mt-0.5 break-words font-medium"><bdi dir="auto">{bill.supplier_name}</bdi></dd></div>
+                <div><dt className="text-on-surface-variant">{dictionary.columns.service}</dt><dd className="mt-0.5 break-words font-medium"><bdi dir="ltr">{bill.service_number}</bdi></dd></div>
                 <div><dt className="text-on-surface-variant">{dictionary.columns.invoiceDate}</dt><dd className="mt-0.5"><bdi dir="ltr">{formatUiDate(locale, bill.invoice_date)}</bdi></dd></div>
                 <div><dt className="text-on-surface-variant">{dictionary.columns.total}</dt><dd className="mt-0.5 text-end font-semibold tabular-nums"><bdi dir="ltr">{formatSarAmount(locale, bill.total_amount)}</bdi></dd></div>
               </dl>
