@@ -1,21 +1,27 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W5 CLOSE / W6 DISCOVERY — 13 September 2026
+## CURRENT ROADMAP POSITION — W5 CLOSE / W6A CLOSE / W6B DISCOVERY — 14 September 2026
 
 - **W5 — Expenses & Cash Advances & Petty Cash:** `CLOSED / COMPLETE`.
   - Expenses, employee reimbursement, Cash Advance, and the Petty Cash workspace/end-to-end lifecycle are complete.
   - Owner physical acceptance and DEV verification are complete.
   - Latest W5-close product HEAD: `b4ce5b366115b1a81bc8e270d00a7a6bea9494b4`.
   - Existing Cash Advance two-session concurrency limitation remains a non-blocking environment `WARN`.
-- **W6 — Accounts Payable:** Discovery `COMPLETE`; Product Truth `OWNER APPROVED`; Implementation `NOT STARTED`.
+- **W6 — Accounts Payable:** Discovery `COMPLETE`; Product Truth `OWNER APPROVED`; W6A Supplier Bills `CLOSED / COMPLETE`; W6B implementation `NOT STARTED / NOT AUTHORIZED`.
   - AP covers genuine supplier obligations, primarily Event/Service suppliers. Routine operating purchases such as office water, internet, electricity, small stationery, and similar day-to-day costs remain in W5 Expense / Cash Advance / Petty Cash and are not duplicated in AP merely to create supplier records.
   - Event/Service supplier bills normally require an approved financial commitment/agreement. Final bills for delivered work require accepted receipt/performance evidence. Explicitly authorized deposits/prepayments may be paid before receipt when allowed by the approved commitment.
-  - Accountant/Admin may record and review supplier bills; Manager/Admin may approve supplier bills; Accountant/Admin may record supplier payments. No additional self-approval authority is inferred.
+  - **W6A — Supplier Bills:** Supplier Bills foundation implemented and published. The W6A migration was applied successfully to the authorized DEV project. `BILL-2026-0001` was physically recorded and approved in DEV.
+  - W6A evidence gates were verified: supplier bill evidence, accepted Service Receipt, approved Commitment, commitment and accepted-receipt ceilings, audit, idempotency, and approved-bill immutability.
+  - Owner Decision: Admin may approve a Supplier Bill recorded by the same Admin. Manager approval remains valid; Accountant remains record-only. No other role or self-approval authority was widened.
+  - Supplier Bill edit UI and Service Receipt correction UI are collapsed by default. Internal UUIDs and raw statuses are not exposed as business-facing values.
+  - Arabic RTL/Bidi, structured Arabic dates/date-times, mixed-content presentation, back navigation, and validation messaging were corrected and physically accepted.
+  - **W6B boundary:** Supplier Bill approval and Supplier Payment are separate business events; Supplier Payments discovery is the next bounded step, and W6B implementation is not authorized here.
   - Bills exceeding the approved commitment require a governed amendment, corrected supplier document, credit adjustment, or explicitly authorized exception.
   - Capture operational Saudi supplier invoice/tax evidence without implementing a VAT filing/accounting engine or claiming broader ZATCA compliance.
   - AP is distinct from customer Billing & Payments. Expected workspace direction: `Supplier Bills` and `Supplier Payments`.
   - UX principle: combine internal checks into one governed user action when they are one business decision; do not expose redundant review/approval buttons; keep separate actions only for genuinely separate events such as approval and a later actual payment.
-- **Next roadmap step:** `W6A — Supplier Bills foundation`. Do not start implementation until separately authorized.
+  - No GL/accounting engine, VAT filing engine, FATOORA activation, deployment, or production work is authorized by this roadmap position.
+- **Next roadmap step:** `W6B — Supplier Payments discovery`. W6B implementation is not authorized by this documentation update.
 
 > Dated roadmap sections below preserve historical snapshots; this current section takes precedence when an older snapshot differs.
 
