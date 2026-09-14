@@ -52,6 +52,9 @@ export interface SupplierBillDetail extends SupplierBill {
   service_title: string;
   event_name: string | null;
   commitment_currency: string;
+  commitment_source: string;
+  commitment_source_reference: string | null;
+  commitment_quotation_reference: string | null;
   commitment_status: string;
   authorized_amount: number;
   accepted_amount: number;

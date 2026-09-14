@@ -115,7 +115,7 @@ export async function getSupplierBillById(id: string): Promise<{ bill: SupplierB
   const [supplierResult, serviceResult, commitmentResult, receiptResult, documentLinksResult] = await Promise.all([
     supabase.from("suppliers").select("id,name,display_name,legal_name").eq("id", base.supplier_id).maybeSingle(),
     supabase.from("services").select("id,service_number,service_title,event_name").eq("id", base.service_id).maybeSingle(),
-    supabase.from("approved_commitment_balances").select("currency,status,authorized_amount,accepted_amount").eq("id", base.commitment_id).maybeSingle(),
+    supabase.from("approved_commitment_balances").select("commitment_source,source_reference,supplier_quotation_id,currency,status,authorized_amount,accepted_amount").eq("id", base.commitment_id).maybeSingle(),
     supabase.from("service_receipts").select("acceptance_status,performance_date,received_amount,delivered_scope,reviewed_at,reviewed_by").eq("id", base.service_receipt_id).maybeSingle(),
     supabase.from("supplier_bill_documents").select("document_id,attached_at,attached_by").eq("supplier_bill_id", base.id).order("attached_at", { ascending: true }),
   ]);
@@ -123,6 +123,11 @@ export async function getSupplierBillById(id: string): Promise<{ bill: SupplierB
   const service = (serviceResult.data ?? {}) as Record<string, unknown>;
   const commitment = (commitmentResult.data ?? {}) as Record<string, unknown>;
   const receipt = (receiptResult.data ?? {}) as Record<string, unknown>;
+  const quotationId = text(commitment.supplier_quotation_id);
+  const quotationResult = quotationId
+    ? await supabase.from("supplier_quotations").select("supplier_reference").eq("id", quotationId).maybeSingle()
+    : { data: null };
+  const quotation = (quotationResult.data ?? {}) as Record<string, unknown>;
   const linkRows = rows(documentLinksResult.data);
   const documentIds = linkRows.map((row) => text(row.document_id)).filter((value): value is string => Boolean(value));
   const metadataResult = documentIds.length
@@ -149,6 +154,9 @@ export async function getSupplierBillById(id: string): Promise<{ bill: SupplierB
       service_title: text(service.service_title) ?? "—",
       event_name: text(service.event_name),
       commitment_currency: text(commitment.currency) ?? base.currency,
+      commitment_source: text(commitment.commitment_source) ?? "",
+      commitment_source_reference: text(commitment.source_reference),
+      commitment_quotation_reference: text(quotation.supplier_reference),
       commitment_status: text(commitment.status) ?? "unknown",
       authorized_amount: number(commitment.authorized_amount),
       accepted_amount: number(commitment.accepted_amount),

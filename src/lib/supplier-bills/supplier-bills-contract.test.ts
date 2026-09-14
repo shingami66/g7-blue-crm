@@ -6,6 +6,10 @@ const migration = readFileSync(
   new URL("../../../supabase/migrations/20260913120000_w6a_supplier_bills_foundation.sql", import.meta.url),
   "utf8",
 );
+const correctiveMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260914051846_w6a_supplier_bill_admin_self_approval.sql", import.meta.url),
+  "utf8",
+);
 const sidebar = readFileSync(new URL("../../components/layout/Sidebar.tsx", import.meta.url), "utf8");
 const permissions = readFileSync(new URL("../auth/role-permissions.ts", import.meta.url), "utf8");
 const storage = readFileSync(new URL("../documents/storage.ts", import.meta.url), "utf8");
@@ -13,11 +17,12 @@ const listClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/Su
 const detailClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/SupplierBillDetailClient.tsx", import.meta.url), "utf8");
 const dictionary = readFileSync(new URL("../i18n/dictionaries/supplier-bills.ts", import.meta.url), "utf8");
 
-function functionBody(name: string): string {
-  const start = migration.indexOf(`CREATE OR REPLACE FUNCTION public.${name}`);
+function functionBody(source: string, name: string): string {
+  const start = source.indexOf(`CREATE OR REPLACE FUNCTION public.${name}`);
   assert.notEqual(start, -1, `${name} must be declared`);
-  const end = migration.indexOf("CREATE OR REPLACE FUNCTION public.", start + 1);
-  return migration.slice(start, end === -1 ? migration.length : end);
+  const end = source.indexOf("$$;", start);
+  assert.notEqual(end, -1, `${name} body must be complete`);
+  return source.slice(start, end + 3).replace(/--.*$/gm, "").replace(/\s+/g, " ").trim();
 }
 
 test("W6A durable model links supplier bills to approved commitment and receipt scope", () => {
@@ -42,7 +47,7 @@ test("W6A mutation RPCs are service-role-only SECURITY DEFINER operations", () =
     "attach_supplier_bill_documents(",
     "approve_supplier_bill(",
   ]) {
-    const body = functionBody(name);
+    const body = functionBody(migration, name);
     assert.match(body, /SECURITY DEFINER/);
     assert.match(body, /SET search_path = pg_catalog, public/);
   }
@@ -54,7 +59,7 @@ test("W6A mutation RPCs are service-role-only SECURITY DEFINER operations", () =
 });
 
 test("W6A approval fails closed on every governed evidence and authority gate", () => {
-  const approval = functionBody("approve_supplier_bill(");
+  const approval = functionBody(correctiveMigration, "approve_supplier_bill(");
   for (const code of [
     "supplier_bill_approval_permission_denied",
     "supplier_bill_self_approval_forbidden",
@@ -75,19 +80,40 @@ test("W6A approval fails closed on every governed evidence and authority gate", 
   assert.match(approval, /b\.commitment_id = v_commitment_id/);
   assert.match(approval, /v_approved_billed_amount \+ v_total_amount > v_authorized_amount/);
   assert.match(approval, /v_approved_billed_amount \+ v_total_amount > v_accepted_amount/);
+  assert.match(approval, /v_recorded_by = v_actor_uuid AND p_actor_role <> 'admin'/);
+  assert.doesNotMatch(approval, /IF v_recorded_by = v_actor_uuid THEN/);
+  assert.equal(
+    approval,
+    functionBody(migration, "approve_supplier_bill(").replace(
+      "IF v_recorded_by = v_actor_uuid THEN",
+      "IF v_recorded_by = v_actor_uuid AND p_actor_role <> 'admin' THEN",
+    ),
+  );
   assert.match(migration, /supplier_bills b[\s\S]*lower\(btrim\(b\.invoice_number\)\)/);
   assert.match(migration, /supplier_bill_duplicate_invoice/);
 });
 
 test("W6A request replay, conflict, and approved immutability contracts are retained", () => {
   for (const name of ["create_supplier_bill(", "update_supplier_bill(", "attach_supplier_bill_documents(", "approve_supplier_bill("]) {
-    assert.match(functionBody(name), /pg_advisory_xact_lock/);
-    assert.match(functionBody(name), /request_id/);
+    assert.match(functionBody(migration, name), /pg_advisory_xact_lock/);
+    assert.match(functionBody(migration, name), /request_id/);
   }
+  assert.match(functionBody(correctiveMigration, "approve_supplier_bill("), /pg_advisory_xact_lock/);
   assert.match(migration, /supplier_bill_request_conflict/);
   assert.match(migration, /supplier_bill_document_request_conflict/);
   assert.match(migration, /supplier_bill_approval_request_conflict/);
   assert.match(migration, /IF OLD\.status = 'approved'/);
+});
+
+test("W6A field failures return stable user-facing validation codes before governed writes", () => {
+  for (const name of ["create_supplier_bill(", "update_supplier_bill("]) {
+    const body = functionBody(correctiveMigration, name);
+    assert.match(body, /supplier_bill_fields_invalid/);
+    assert.match(body, /supplier_bill_total_mismatch/);
+    assert.match(body, /supplier_bill_due_date_invalid/);
+    assert.match(body, /SECURITY DEFINER/);
+    assert.match(body, /SET search_path = pg_catalog, public/);
+  }
 });
 
 test("W6A exposes a distinct bilingual Supplier Bills workspace with one approval action", () => {
@@ -100,9 +126,21 @@ test("W6A exposes a distinct bilingual Supplier Bills workspace with one approva
   assert.match(listClient, /supplier-bills-mobile-cards/);
   assert.match(listClient, /<bdi dir="ltr">/);
   assert.match(detailClient, /dictionary\.actions\.approve/);
+  assert.match(detailClient, /useState\(false\)/);
+  assert.match(detailClient, /aria-expanded=\{isEditOpen\}/);
+  assert.match(detailClient, /dictionary\.actions\.editBill/);
+  assert.doesNotMatch(detailClient, /value=\{bill\.commitment_id\}/);
+  assert.doesNotMatch(detailClient, /value=\{bill\.service_receipt_id\}/);
+  assert.match(detailClient, /dictionary\.acceptanceStatuses\[bill\.receipt_acceptance_status\]/);
+  assert.match(detailClient, /<bdi dir="ltr">\{bill\.service_number\}<\/bdi>/);
   assert.doesNotMatch(detailClient, /Finance Review|finance review/i);
   assert.match(dictionary, /Supplier Bills/);
   assert.match(dictionary, /فواتير الموردين/);
+  assert.match(dictionary, /ACCEPTED_WITH_CONDITIONS: "Accepted with conditions"/);
+  assert.match(dictionary, /ACCEPTED_WITH_CONDITIONS: "مقبول بشروط"/);
+  for (const code of ["supplier_bill_total_mismatch", "supplier_bill_due_date_invalid", "supplier_bill_fields_invalid", "supplier_bill_duplicate_invoice", "supplier_bill_invoice_evidence_required", "supplier_bill_commitment_ceiling_exceeded", "supplier_bill_received_value_ceiling_exceeded", "supplier_bill_currency_mismatch", "supplier_bill_receipt_not_accepted", "supplier_bill_commitment_not_eligible", "supplier_bill_self_approval_forbidden", "supplier_bill_approval_permission_denied", "supplier_bill_approval_request_conflict", "supplier_bill_unavailable", "supplier_bill_not_found", "supplier_bill_already_approved"]) {
+    assert.match(dictionary, new RegExp(code));
+  }
   assert.match(dictionary, /supplier_bill_self_approval_forbidden/);
 });
 

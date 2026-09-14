@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { createSupplierBillAction, updateSupplierBillAction } from "@/lib/supplier-bills/actions";
 import type { SupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
-import type { SupplierBillCommitmentOption, SupplierBillDetail, SupplierBillFormOptions, SupplierBillReceiptOption } from "@/lib/supplier-bills/types";
+import type { SupplierBillCommitmentOption, SupplierBillDetail, SupplierBillFormOptions } from "@/lib/supplier-bills/types";
 
 function fieldClass() {
   return "mt-1 w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[13px] text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
@@ -19,18 +19,18 @@ function optionLabel(option: SupplierBillCommitmentOption, dictionary: SupplierB
   return `${option.currency} · ${option.authorizedAmount.toFixed(2)} ${dictionary.fields.commitment}`;
 }
 
-function receiptLabel(option: SupplierBillReceiptOption) {
-  return `${option.performanceDate} · ${option.acceptanceStatus} · ${option.receivedAmount == null ? "—" : option.receivedAmount.toFixed(2)}`;
-}
-
 export default function SupplierBillForm({
   options,
   dictionary,
   bill,
+  autoFocus = false,
+  onCancel,
 }: {
   options: SupplierBillFormOptions;
   dictionary: SupplierBillsDictionary;
   bill?: SupplierBillDetail;
+  autoFocus?: boolean;
+  onCancel?: () => void;
 }) {
   const router = useRouter();
   const [serviceId, setServiceId] = useState(bill?.service_id ?? "");
@@ -40,9 +40,14 @@ export default function SupplierBillForm({
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [request, setRequest] = useState(requestId);
+  const firstFieldRef = useRef<HTMLSelectElement>(null);
   const filteredCommitments = useMemo(() => options.commitments.filter((item) => item.serviceId === serviceId && item.supplierId === supplierId), [options.commitments, serviceId, supplierId]);
   const filteredReceipts = useMemo(() => options.receipts.filter((item) => item.commitmentId === commitmentId && item.serviceId === serviceId && item.supplierId === supplierId), [options.receipts, commitmentId, serviceId, supplierId]);
   const initial = bill;
+
+  useEffect(() => {
+    if (autoFocus) firstFieldRef.current?.focus();
+  }, [autoFocus]);
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -52,7 +57,7 @@ export default function SupplierBillForm({
     startTransition(async () => {
       const result = bill ? await updateSupplierBillAction(data) : await createSupplierBillAction(data);
       if (!result.success) {
-        setMessage(dictionary.errors[result.errorCode ?? ""] ?? result.error ?? dictionary.errors.supplier_bill_record_failed);
+        setMessage(dictionary.errors[result.errorCode ?? ""] ?? dictionary.errors.supplier_bill_record_failed);
         return;
       }
       const warningCode = result.data && "warning_code" in result.data ? result.data.warning_code : undefined;
@@ -71,15 +76,15 @@ export default function SupplierBillForm({
       <p className="mb-4 text-[12px] text-on-surface-variant">{dictionary.forms.eventOnlyNotice}</p>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <label className="text-[12px] font-semibold">{dictionary.fields.supplier}
-          <select className={fieldClass()} name="supplier_id" value={supplierId} onChange={(event) => { setSupplierId(event.target.value); setCommitmentId(""); setReceiptId(""); }} required disabled={isPending}>
+          <select ref={firstFieldRef} className={fieldClass()} name="supplier_id" value={supplierId} onChange={(event) => { setSupplierId(event.target.value); setCommitmentId(""); setReceiptId(""); }} required disabled={isPending}>
             <option value="">{dictionary.forms.selectSupplier}</option>
-            {options.suppliers.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
+            {options.suppliers.map((option) => <option key={option.id} value={option.id}><bdi dir="auto">{option.name}</bdi></option>)}
           </select>
         </label>
         <label className="text-[12px] font-semibold">{dictionary.fields.service}
           <select className={fieldClass()} name="service_id" value={serviceId} onChange={(event) => { setServiceId(event.target.value); setCommitmentId(""); setReceiptId(""); }} required disabled={isPending}>
             <option value="">{dictionary.forms.selectService}</option>
-            {options.services.map((option) => <option key={option.id} value={option.id}>{option.serviceNumber} — {option.eventName || option.serviceTitle}</option>)}
+            {options.services.map((option) => <option key={option.id} value={option.id}><bdi dir="ltr">{option.serviceNumber}</bdi> — <bdi dir="auto">{option.eventName || option.serviceTitle}</bdi></option>)}
           </select>
         </label>
         <label className="text-[12px] font-semibold">{dictionary.fields.commitment}
@@ -91,7 +96,7 @@ export default function SupplierBillForm({
         <label className="text-[12px] font-semibold">{dictionary.fields.receipt}
           <select className={fieldClass()} name="service_receipt_id" value={receiptId} onChange={(event) => setReceiptId(event.target.value)} required disabled={isPending || !commitmentId}>
             <option value="">{dictionary.forms.selectReceipt}</option>
-            {filteredReceipts.map((option) => <option key={option.id} value={option.id}>{receiptLabel(option)}</option>)}
+            {filteredReceipts.map((option) => <option key={option.id} value={option.id}><bdi dir="ltr">{option.performanceDate}</bdi> · <span>{dictionary.acceptanceStatuses[option.acceptanceStatus] ?? "—"}</span> · <bdi dir="ltr">{option.receivedAmount == null ? "—" : option.receivedAmount.toFixed(2)}</bdi></option>)}
           </select>
         </label>
         <label className="text-[12px] font-semibold">{dictionary.fields.invoiceNumber}<input className={fieldClass()} name="invoice_number" defaultValue={initial?.invoice_number ?? ""} required maxLength={200} disabled={isPending} /></label>
@@ -105,6 +110,7 @@ export default function SupplierBillForm({
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={isPending}>{isPending ? "…" : bill ? dictionary.actions.saveChanges : dictionary.actions.save}</Button>
+        {onCancel && <Button type="button" variant="secondary" onClick={onCancel} disabled={isPending}>{dictionary.actions.closeEdit}</Button>}
         {message && <span role="status" className="text-[12px] text-on-surface-variant">{message}</span>}
       </div>
       <input type="hidden" name="request_id" value={request} readOnly />

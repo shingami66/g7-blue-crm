@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import PendingLink from "@/components/ui/PendingLink";
@@ -43,8 +43,16 @@ export default function SupplierBillDetailClient({
   const [attachMessage, setAttachMessage] = useState<string | null>(null);
   const [approveRequest, setApproveRequest] = useState(requestId);
   const [attachRequest, setAttachRequest] = useState(requestId);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const wasEditOpen = useRef(false);
   const locale = dictionary.locale;
   const approved = bill.status === "approved";
+  const editTriggerId = "supplier-bill-edit-trigger";
+
+  useEffect(() => {
+    if (!isEditOpen && wasEditOpen.current) document.getElementById(editTriggerId)?.focus();
+    wasEditOpen.current = isEditOpen;
+  }, [isEditOpen]);
 
   function approve() {
     startApprove(async () => {
@@ -87,9 +95,12 @@ export default function SupplierBillDetailClient({
             <h1 className="text-[26px] font-semibold text-primary" dir="ltr">{bill.bill_number}</h1>
             <StatusBadge variant={approved ? "active" : "pending"}>{approved ? dictionary.statuses.approved : dictionary.statuses.pending}</StatusBadge>
           </div>
-          <p className="mt-1 text-[14px] text-on-surface-variant" dir="auto">{bill.supplier_name} · {bill.service_number}</p>
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-[14px] text-on-surface-variant" dir="auto"><bdi dir="auto">{bill.supplier_name}</bdi><span aria-hidden="true">·</span><bdi dir="ltr">{bill.service_number}</bdi></p>
         </div>
-        {canApprove && !approved && <Button type="button" onClick={approve} disabled={isApprovePending}>{isApprovePending ? "…" : dictionary.actions.approve}</Button>}
+        <div className="flex flex-wrap items-center gap-2">
+          {canRecord && !approved && <Button id={editTriggerId} type="button" variant="secondary" onClick={() => setIsEditOpen((open) => !open)} aria-expanded={isEditOpen} aria-controls={isEditOpen ? "supplier-bill-edit-panel" : undefined}>{isEditOpen ? dictionary.actions.closeEdit : dictionary.actions.editBill}</Button>}
+          {canApprove && !approved && <Button type="button" onClick={approve} disabled={isApprovePending}>{isApprovePending ? "…" : dictionary.actions.approve}</Button>}
+        </div>
       </div>
 
       <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-4" aria-labelledby="supplier-bill-financial-summary">
@@ -109,12 +120,19 @@ export default function SupplierBillDetailClient({
           <Info label={dictionary.fields.vatNumber} value={bill.supplier_vat_number_snapshot} numeric />
         </InfoSection>
         <InfoSection title={dictionary.fields.service}>
-          <Info label={dictionary.fields.service} value={`${bill.service_number} — ${bill.event_name || bill.service_title}`} />
-          <Info label={dictionary.fields.commitment} value={bill.commitment_id} numeric />
-          <Info label={dictionary.fields.receipt} value={bill.service_receipt_id} numeric />
+          <Info label={dictionary.fields.service}>
+            <span className="flex flex-wrap items-center gap-1" dir="auto"><bdi dir="ltr">{bill.service_number}</bdi><span aria-hidden="true">—</span><bdi dir="auto">{bill.event_name || bill.service_title}</bdi></span>
+          </Info>
+          <Info label={dictionary.fields.commitment}>
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1" dir="auto"><bdi dir="ltr">{formatSarAmount(locale, bill.authorized_amount)}</bdi><bdi dir="ltr">{bill.commitment_currency}</bdi><span>{dictionary.commitmentStatuses[bill.commitment_status] ?? "—"}</span>{bill.commitment_source && <span><span className="font-semibold">{dictionary.fields.commitmentSource}:</span> {dictionary.commitmentSources[bill.commitment_source] ?? "—"}</span>}{bill.commitment_quotation_reference && <span><span className="font-semibold">{dictionary.fields.supplierQuotation}:</span> <bdi dir="auto">{bill.commitment_quotation_reference}</bdi></span>}{bill.commitment_source_reference && <span><span className="font-semibold">{dictionary.fields.sourceReference}:</span> <bdi dir="auto">{bill.commitment_source_reference}</bdi></span>}</span>
+          </Info>
+          <Info label={dictionary.fields.receipt}>
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1" dir="auto"><bdi dir="ltr">{bill.receipt_performance_date || "—"}</bdi><bdi dir="ltr">{bill.receipt_received_amount == null ? "—" : formatSarAmount(locale, bill.receipt_received_amount)}</bdi><span>{dictionary.acceptanceStatuses[bill.receipt_acceptance_status] ?? "—"}</span></span>
+          </Info>
         </InfoSection>
         <InfoSection title={dictionary.fields.receipt}>
-          <Info label={dictionary.fields.receiptStatus} value={bill.receipt_acceptance_status} />
+          <Info label={dictionary.fields.receiptStatus} value={dictionary.acceptanceStatuses[bill.receipt_acceptance_status] ?? null} />
+          <Info label={dictionary.fields.performanceDate} value={bill.receipt_performance_date} numeric />
           <Info label={dictionary.fields.receivedValue} value={bill.receipt_received_amount == null ? null : formatSarAmount(locale, bill.receipt_received_amount)} numeric />
           <Info label={dictionary.fields.commitmentCeiling} value={formatSarAmount(locale, bill.authorized_amount)} numeric />
           <Info label={dictionary.fields.acceptedValue} value={formatSarAmount(locale, bill.accepted_amount)} numeric />
@@ -139,7 +157,7 @@ export default function SupplierBillDetailClient({
         {!approved && canRecord && <form onSubmit={attach} className="mt-4 flex flex-wrap items-end gap-3"><label className="min-w-[240px] flex-1 text-[12px] font-semibold">{dictionary.forms.invoiceFile}<input className={fieldClass()} name="invoice" type="file" required accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" disabled={isAttachPending} /></label><Button type="submit" size="sm" disabled={isAttachPending}>{isAttachPending ? "…" : dictionary.actions.attachInvoice}</Button>{attachMessage && <span role="status" className="basis-full text-[12px] text-on-surface-variant">{attachMessage}</span>}</form>}
       </section>
 
-      {canRecord && !approved && <section><h2 className="mb-3 text-[15px] font-semibold text-primary">{dictionary.forms.pendingNotice}</h2><SupplierBillForm options={options} dictionary={dictionary} bill={bill} /></section>}
+      {canRecord && !approved && <section><h2 className="text-[15px] font-semibold text-primary">{dictionary.forms.pendingNotice}</h2>{isEditOpen && <div id="supplier-bill-edit-panel" className="mt-3"><SupplierBillForm options={options} dictionary={dictionary} bill={bill} autoFocus onCancel={() => setIsEditOpen(false)} /></div>}</section>}
       {message && <p role="status" className="text-[12px] text-on-surface-variant">{message}</p>}
     </div>
   );
@@ -149,8 +167,8 @@ function InfoSection({ title, children }: { title: string; children: React.React
   return <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-4"><h2 className="text-[13px] font-semibold text-primary">{title}</h2><dl className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</dl></section>;
 }
 
-function Info({ label, value, numeric = false }: { label: string; value: string | null; numeric?: boolean }) {
-  return <div className="min-w-0"><dt className="text-[11px] font-semibold text-on-surface-variant">{label}</dt><dd className="mt-1 break-words text-[13px] text-on-surface" dir={numeric ? undefined : "auto"}>{numeric ? <bdi dir="ltr">{value || "—"}</bdi> : value || "—"}</dd></div>;
+function Info({ label, value, numeric = false, children }: { label: string; value?: string | null; numeric?: boolean; children?: React.ReactNode }) {
+  return <div className="min-w-0"><dt className="text-[11px] font-semibold text-on-surface-variant">{label}</dt><dd className="mt-1 break-words text-[13px] text-on-surface" dir={numeric ? undefined : "auto"}>{children ?? (numeric ? <bdi dir="ltr">{value || "—"}</bdi> : <bdi dir="auto">{value || "—"}</bdi>)}</dd></div>;
 }
 
 function DocumentRow({ billId, document, dictionary }: { billId: string; document: SupplierBillDetail["documents"][number]; dictionary: SupplierBillsDictionary }) {

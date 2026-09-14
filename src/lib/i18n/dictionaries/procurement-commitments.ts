@@ -57,6 +57,7 @@ export interface ProcurementCommitmentDictionary {
     priorOutcome: string;
     correctedOutcome: string;
     correctedConditions: string;
+    correctionNoteReason: string;
     correctionReason: string;
     correctionBy: string;
   };
@@ -82,6 +83,7 @@ export interface ProcurementCommitmentDictionary {
     cancel: string;
     upload: string;
     correctionTitle: string;
+    correctReceipt: string;
     correctionReasonPlaceholder: string;
     correct: string;
     action: string;
@@ -146,14 +148,14 @@ const english: ProcurementCommitmentDictionary = {
     approvedAt: "Approval date", approvedBy: "Approved by", reviewedBy: "Reviewed by", submittedBy: "Submitted by", submittedAt: "Submitted at", reviewedAt: "Reviewed at", lifecycleAt: "Lifecycle updated at", lifecycleBy: "Lifecycle updated by", lifecycleReason: "Lifecycle reason", performanceDate: "Delivery/performance date", deliveredScope: "Delivered scope",
     actualQuantity: "Actual quantity", actualHours: "Actual hours", unit: "Unit", receivedAmount: "Received amount",
     missingScope: "Missing scope", extraScope: "Extra scope", defectsIncidents: "Defects/incidents", conditionsNotes: "Conditions/notes",
-    reason: "Reason", evidence: "Evidence reference", approvalEvidenceReference: "Approval evidence reference", amendmentType: "Amendment type", amendmentAmount: "Amendment amount", amendment: "Amendment", receipt: "Service Receipt", documents: "Supporting documents", correction: "Receipt correction history", priorOutcome: "Prior reviewed outcome", correctedOutcome: "Corrected outcome", correctedConditions: "Corrected conditions/notes", correctionReason: "Correction reason", correctionBy: "Corrected by",
+    reason: "Reason", evidence: "Evidence reference", approvalEvidenceReference: "Approval evidence reference", amendmentType: "Amendment type", amendmentAmount: "Amendment amount", amendment: "Amendment", receipt: "Service Receipt", documents: "Supporting documents", correction: "Receipt correction history", priorOutcome: "Prior reviewed outcome", correctedOutcome: "Corrected outcome", correctedConditions: "Corrected conditions/notes", correctionNoteReason: "Correction note / reason", correctionReason: "Correction reason", correctionBy: "Corrected by",
   },
   forms: {
     createTitle: "Approve a Commitment", amendmentTitle: "Add an approved amendment", receiptTitle: "Record Service Receipt",
     sourceReferencePlaceholder: "PO, contract, or authorized record reference", quotationPlaceholder: "Select a quotation source",
     amountPlaceholder: "0.00", reasonPlaceholder: "Explain the authorized change or lifecycle decision", evidencePlaceholder: "Approval or supporting evidence reference",
     scopePlaceholder: "Describe what was delivered", optionalPlaceholder: "Optional", create: "Approve Commitment", amend: "Add Amendment",
-    submitReceipt: "Submit Receipt for Review", accepted: "Accept", conditional: "Accept with Conditions", rejected: "Reject", reopen: "Reopen for Receipt Correction", close: "Close Commitment", cancel: "Cancel Commitment", upload: "Attach documents", correctionTitle: "Correct reviewed receipt", correctionReasonPlaceholder: "Explain the correction or reversal", correct: "Record correction", action: "Action", executeAction: "Execute Action", increase: "Increase", reduction: "Reduction",
+    submitReceipt: "Submit Receipt for Review", accepted: "Accept", conditional: "Accept with Conditions", rejected: "Reject", cancel: "Cancel", reopen: "Reopen for Receipt Correction", close: "Close Commitment", upload: "Attach documents", correctionTitle: "Correct reviewed receipt", correctReceipt: "Correct Receipt", correctionReasonPlaceholder: "Explain the correction or reversal", correct: "Record correction", action: "Action", executeAction: "Execute Action", increase: "Increase", reduction: "Reduction",
   },
   notices: {
     bookingSeparation: "Supplier Booking remains an operational reservation and is not this Approved Commitment.",
@@ -193,10 +195,10 @@ const arabic: ProcurementCommitmentDictionary = {
     supplier: "المورد", service: "الخدمة", source: "مصدر الالتزام", sourceReference: "مرجع المصدر المعتمد", supplierQuotation: "عرض سعر المورد",
     originalAmount: "القيمة الأصلية المعتمدة (ريال)", authorizedAmount: "القيمة المعتمدة (ريال)", acceptedAmount: "القيمة المقبولة (ريال)", pendingAmount: "القيمة قيد المراجعة (ريال)", openAmount: "قيمة الالتزام المفتوحة (ريال)",
     approvedAt: "تاريخ الاعتماد", approvedBy: "اعتمد بواسطة", reviewedBy: "راجع بواسطة", submittedBy: "أرسل بواسطة", submittedAt: "وقت الإرسال", reviewedAt: "وقت المراجعة", lifecycleAt: "وقت تحديث دورة الحياة", lifecycleBy: "حدّث بواسطة", lifecycleReason: "سبب دورة الحياة", performanceDate: "تاريخ التسليم/الأداء", deliveredScope: "النطاق المسلم", actualQuantity: "الكمية الفعلية", actualHours: "الساعات الفعلية", unit: "الوحدة", receivedAmount: "قيمة الجزء المستلم من الالتزام",
-    missingScope: "النطاق الناقص", extraScope: "النطاق الإضافي", defectsIncidents: "العيوب/الحوادث", conditionsNotes: "الشروط/الملاحظات", reason: "السبب", evidence: "مرجع الدليل", approvalEvidenceReference: "مرجع دليل الاعتماد", amendmentType: "نوع التعديل", amendmentAmount: "قيمة التعديل", amendment: "التعديل", receipt: "استلام الخدمة", documents: "المستندات الداعمة", correction: "سجل تصحيحات الإيصال", priorOutcome: "النتيجة السابقة التي تمت مراجعتها", correctedOutcome: "النتيجة المصححة", correctedConditions: "الشروط/الملاحظات المصححة", correctionReason: "سبب التصحيح", correctionBy: "صحح بواسطة",
+    missingScope: "النطاق الناقص", extraScope: "النطاق الإضافي", defectsIncidents: "العيوب/الحوادث", conditionsNotes: "الشروط/الملاحظات", reason: "السبب", evidence: "مرجع الدليل", approvalEvidenceReference: "مرجع دليل الاعتماد", amendmentType: "نوع التعديل", amendmentAmount: "قيمة التعديل", amendment: "التعديل", receipt: "استلام الخدمة", documents: "المستندات الداعمة", correction: "سجل تصحيحات الإيصال", priorOutcome: "النتيجة السابقة التي تمت مراجعتها", correctedOutcome: "النتيجة المصححة", correctedConditions: "الشروط/الملاحظات المصححة", correctionNoteReason: "ملاحظة / سبب التصحيح", correctionReason: "سبب التصحيح", correctionBy: "صحح بواسطة",
   },
   forms: {
-    createTitle: "اعتماد التزام", amendmentTitle: "إضافة تعديل معتمد", receiptTitle: "تسجيل إيصال خدمة", sourceReferencePlaceholder: "مرجع أمر الشراء أو العقد أو السجل المعتمد", quotationPlaceholder: "اختر مصدر عرض السعر", amountPlaceholder: "0.00", reasonPlaceholder: "اشرح التغيير أو قرار دورة الحياة المعتمد", evidencePlaceholder: "مرجع الاعتماد أو الدليل الداعم", scopePlaceholder: "صف ما تم تسليمه", optionalPlaceholder: "اختياري", create: "اعتماد الالتزام", amend: "إضافة التعديل", submitReceipt: "إرسال الإيصال للمراجعة", accepted: "قبول", conditional: "قبول بشروط", rejected: "رفض", reopen: "إعادة الفتح لتصحيح الإيصال", close: "إغلاق الالتزام", cancel: "إلغاء الالتزام", upload: "إرفاق المستندات", correctionTitle: "تصحيح إيصال تمت مراجعته", correctionReasonPlaceholder: "اشرح التصحيح أو الإلغاء", correct: "تسجيل التصحيح", action: "الإجراء", executeAction: "تنفيذ الإجراء", increase: "زيادة", reduction: "تخفيض",
+    createTitle: "اعتماد التزام", amendmentTitle: "إضافة تعديل معتمد", receiptTitle: "تسجيل إيصال خدمة", sourceReferencePlaceholder: "مرجع أمر الشراء أو العقد أو السجل المعتمد", quotationPlaceholder: "اختر مصدر عرض السعر", amountPlaceholder: "0.00", reasonPlaceholder: "اشرح التغيير أو قرار دورة الحياة المعتمد", evidencePlaceholder: "مرجع الاعتماد أو الدليل الداعم", scopePlaceholder: "صف ما تم تسليمه", optionalPlaceholder: "اختياري", create: "اعتماد الالتزام", amend: "إضافة التعديل", submitReceipt: "إرسال الإيصال للمراجعة", accepted: "قبول", conditional: "قبول بشروط", rejected: "رفض", cancel: "إلغاء", reopen: "إعادة الفتح لتصحيح الإيصال", close: "إغلاق الالتزام", upload: "إرفاق المستندات", correctionTitle: "تصحيح إيصال تمت مراجعته", correctReceipt: "تصحيح الإيصال", correctionReasonPlaceholder: "اشرح التصحيح أو الإلغاء", correct: "تسجيل التصحيح", action: "الإجراء", executeAction: "تنفيذ الإجراء", increase: "زيادة", reduction: "تخفيض",
   },
   notices: {
     bookingSeparation: "يبقى حجز المورد حجزًا تشغيليًا ولا يمثل هذا الالتزام المعتمد.", receiptSeparation: "استلام الخدمة دليل تسليم منفصل عن فاتورة المورد والذمم والدفع.", historyPreserved: "يبقى الاعتماد السابق ظاهرًا بعد التعديلات أو الإلغاء.", pendingReview: "تحجز الإيصالات قيد المراجعة القيمة المسجلة حتى تتم مراجعتها.", noAmount: "لم يتم تسجيل قيمة لهذا الاستلام.", noDocuments: "لا توجد مستندات داعمة مرفقة.", noReceipts: "لم يتم تسجيل استلام خدمة.", noAmendments: "لم يتم تسجيل تعديلات.", documentHelper: "مستندات PDF أو JPEG أو PNG خاصة؛ يتم الاحتفاظ بالملفات الأصلية دون نسخها.", unknownQuotationReference: "عرض سعر مورد مسجل؛ مرجع المورد غير معروف", correctionHelper: "تحافظ التصحيحات على نتيجة المراجعة السابقة وتتطلب سببًا صريحًا.",

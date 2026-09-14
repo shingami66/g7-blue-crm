@@ -37,7 +37,18 @@ function nullableString(value: FormDataEntryValue | null): string | null {
 }
 
 function numberValue(value: FormDataEntryValue | null): number {
-  return Number(stringValue(value));
+  const raw = stringValue(value).trim();
+  return raw ? Number(raw) : Number.NaN;
+}
+
+function validationErrorCode(error: { issues: Array<{ message: string; path: PropertyKey[] }> }): string {
+  if (error.issues.some((issue) => issue.path.includes("total_amount") && issue.message === "Total must equal subtotal plus VAT.")) {
+    return "supplier_bill_total_mismatch";
+  }
+  if (error.issues.some((issue) => issue.path.includes("due_date") && issue.message === "Due date cannot precede invoice date.")) {
+    return "supplier_bill_due_date_invalid";
+  }
+  return "supplier_bill_fields_invalid";
 }
 
 function inputFromFormData(formData: FormData): SupplierBillInput {
@@ -125,7 +136,7 @@ export async function createSupplierBillAction(
   try {
     const user = await requirePermission(SUPPLIER_BILL_PERMISSIONS.record);
     const parsed = supplierBillInputSchema.safeParse(inputFromFormData(formData));
-    if (!parsed.success) return actionError("supplier_bill_fields_invalid");
+    if (!parsed.success) return actionError(validationErrorCode(parsed.error));
     const supabase = getSupplierBillClient();
     const { data, error } = await supabase.rpc("create_supplier_bill", {
       p_service_id: parsed.data.service_id,
@@ -171,7 +182,7 @@ export async function updateSupplierBillAction(
   try {
     const user = await requirePermission(SUPPLIER_BILL_PERMISSIONS.record);
     const parsed = updateSupplierBillSchema.safeParse({ ...inputFromFormData(formData), bill_id: stringValue(formData.get("bill_id")) });
-    if (!parsed.success) return actionError("supplier_bill_fields_invalid");
+    if (!parsed.success) return actionError(validationErrorCode(parsed.error));
     const supabase = getSupplierBillClient();
     const { data, error } = await supabase.rpc("update_supplier_bill", {
       p_bill_id: parsed.data.bill_id,

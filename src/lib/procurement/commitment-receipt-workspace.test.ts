@@ -50,3 +50,16 @@ test("other async form submitters with reset use the same durable form reference
     assert.doesNotMatch(handler, /event\.currentTarget\.reset\(\)/);
   }
 });
+
+test("reviewed receipt correction is collapsed until explicitly opened", () => {
+  const correction = section(readWorkspace(), "function ReceiptCorrectionActions", "function AmendmentForm");
+
+  assert.match(correction, /const \[isOpen, setIsOpen\] = useState\(false\)/);
+  assert.match(correction, /aria-expanded=\{isOpen\}/);
+  assert.match(correction, /aria-controls=\{isOpen \?/);
+  assert.match(correction, /isOpen &&/);
+  assert.match(correction, /correctedConditionsNotes: status === "ACCEPTED_WITH_CONDITIONS"/);
+  assert.match(correction, /dictionary\.fields\.correctionNoteReason/);
+  assert.match(correction, /dictionary\.fields\.correctedConditions/);
+  assert.match(correction, /dictionary\.fields\.correctionReason/);
+});
