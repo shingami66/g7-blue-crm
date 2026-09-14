@@ -6,7 +6,8 @@ import Button from "@/components/ui/Button";
 import PendingLink from "@/components/ui/PendingLink";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { formatSarAmount, formatUiDate, formatUiDateTime } from "@/lib/i18n/formatting";
+import { UiDateText, UiDateTimeText } from "@/components/i18n/UiDateText";
+import { formatSarAmount } from "@/lib/i18n/formatting";
 import { approveSupplierBillAction, attachSupplierBillInvoiceAction, createSupplierBillDocumentViewUrl } from "@/lib/supplier-bills/actions";
 import type { SupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
 import type { SupplierBillDetail, SupplierBillFormOptions } from "@/lib/supplier-bills/types";
@@ -126,27 +127,37 @@ export default function SupplierBillDetailClient({
         </InfoSection>
         <InfoSection title={dictionary.fields.service}>
           <Info label={dictionary.fields.service}>
-            <span className="flex flex-wrap items-center gap-1"><bdi dir="ltr">{bill.service_number}</bdi><span aria-hidden="true">—</span><bdi dir="auto">{bill.event_name || bill.service_title}</bdi></span>
+            <span className="flex flex-col items-start gap-1"><bdi dir="ltr">{bill.service_number}</bdi><bdi dir="auto">{bill.event_name || bill.service_title}</bdi></span>
           </Info>
           <Info label={dictionary.fields.commitment}>
-            <span className="flex flex-wrap items-center gap-x-2 gap-y-1"><bdi dir="ltr">{formatSarAmount(locale, bill.authorized_amount)}</bdi><bdi dir="ltr">{bill.commitment_currency}</bdi><span>{dictionary.commitmentStatuses[bill.commitment_status] ?? "—"}</span>{bill.commitment_source && <span><span className="font-semibold">{dictionary.fields.commitmentSource}:</span> {dictionary.commitmentSources[bill.commitment_source] ?? "—"}</span>}{bill.commitment_quotation_reference && <span><span className="font-semibold">{dictionary.fields.supplierQuotation}:</span> <bdi dir="auto">{bill.commitment_quotation_reference}</bdi></span>}{bill.commitment_source_reference && <span><span className="font-semibold">{dictionary.fields.sourceReference}:</span> <bdi dir="auto">{bill.commitment_source_reference}</bdi></span>}</span>
+            <div className="grid gap-2 text-[12px]">
+              <ContextRow label={dictionary.fields.commitmentCeiling}><bdi dir="ltr">{formatSarAmount(locale, bill.authorized_amount)}</bdi></ContextRow>
+              <ContextRow label={dictionary.fields.commitmentStatus}><span>{dictionary.commitmentStatuses[bill.commitment_status] ?? "—"}</span></ContextRow>
+              {bill.commitment_source && <ContextRow label={dictionary.fields.commitmentSource}><span>{dictionary.commitmentSources[bill.commitment_source] ?? "—"}</span></ContextRow>}
+              {bill.commitment_quotation_reference && <ContextRow label={dictionary.fields.supplierQuotation}><bdi dir="auto">{bill.commitment_quotation_reference}</bdi></ContextRow>}
+              {bill.commitment_source_reference && <ContextRow label={dictionary.fields.sourceReference}><bdi dir="auto">{bill.commitment_source_reference}</bdi></ContextRow>}
+            </div>
           </Info>
           <Info label={dictionary.fields.receipt}>
-            <span className="flex flex-wrap items-center gap-x-2 gap-y-1"><bdi dir="ltr">{bill.receipt_performance_date || "—"}</bdi><bdi dir="ltr">{bill.receipt_received_amount == null ? "—" : formatSarAmount(locale, bill.receipt_received_amount)}</bdi><span>{dictionary.acceptanceStatuses[bill.receipt_acceptance_status] ?? "—"}</span></span>
+            <div className="grid gap-2 text-[12px]">
+              <ContextRow label={dictionary.fields.performanceDate}><UiDateText locale={locale} value={bill.receipt_performance_date} /></ContextRow>
+              <ContextRow label={dictionary.fields.receivedValue}><bdi dir="ltr">{bill.receipt_received_amount == null ? "—" : formatSarAmount(locale, bill.receipt_received_amount)}</bdi></ContextRow>
+              <ContextRow label={dictionary.fields.receiptStatus}><span>{dictionary.acceptanceStatuses[bill.receipt_acceptance_status] ?? "—"}</span></ContextRow>
+            </div>
           </Info>
         </InfoSection>
         <InfoSection title={dictionary.fields.receipt}>
           <Info label={dictionary.fields.receiptStatus} value={dictionary.acceptanceStatuses[bill.receipt_acceptance_status] ?? null} />
-          <Info label={dictionary.fields.performanceDate} value={bill.receipt_performance_date} numeric />
+          <Info label={dictionary.fields.performanceDate}><UiDateText locale={locale} value={bill.receipt_performance_date} /></Info>
           <Info label={dictionary.fields.receivedValue} value={bill.receipt_received_amount == null ? null : formatSarAmount(locale, bill.receipt_received_amount)} numeric />
           <Info label={dictionary.fields.commitmentCeiling} value={formatSarAmount(locale, bill.authorized_amount)} numeric />
           <Info label={dictionary.fields.acceptedValue} value={formatSarAmount(locale, bill.accepted_amount)} numeric />
         </InfoSection>
         <InfoSection title={dictionary.fields.status}>
           <Info label={dictionary.fields.invoiceNumber} value={bill.invoice_number} numeric />
-          <Info label={dictionary.fields.invoiceDate} value={formatUiDate(locale, bill.invoice_date)} numeric />
-          <Info label={dictionary.fields.dueDate} value={bill.due_date ? formatUiDate(locale, bill.due_date) : null} numeric />
-          <Info label={dictionary.fields.recordedAt} value={formatUiDateTime(locale, bill.recorded_at)} numeric />
+          <Info label={dictionary.fields.invoiceDate}><UiDateText locale={locale} value={bill.invoice_date} /></Info>
+          <Info label={dictionary.fields.dueDate}><UiDateText locale={locale} value={bill.due_date} /></Info>
+          <Info label={dictionary.fields.recordedAt}><UiDateTimeText locale={locale} value={bill.recorded_at} /></Info>
         </InfoSection>
       </section>
 
@@ -170,6 +181,10 @@ export default function SupplierBillDetailClient({
 
 function InfoSection({ title, children }: { title: string; children: React.ReactNode }) {
   return <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-4"><h2 className="text-[13px] font-semibold text-primary">{title}</h2><dl className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</dl></section>;
+}
+
+function ContextRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div className="flex min-w-0 items-baseline justify-between gap-3"><span className="text-on-surface-variant">{label}</span><span className="min-w-0 text-end font-medium text-on-surface">{children}</span></div>;
 }
 
 function Info({ label, value, numeric = false, children }: { label: string; value?: string | null; numeric?: boolean; children?: React.ReactNode }) {

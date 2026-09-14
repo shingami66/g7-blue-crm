@@ -17,6 +17,7 @@ const listClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/Su
 const detailClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/SupplierBillDetailClient.tsx", import.meta.url), "utf8");
 const formClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/SupplierBillForm.tsx", import.meta.url), "utf8");
 const newPage = readFileSync(new URL("../../app/(dashboard)/supplier-bills/new/page.tsx", import.meta.url), "utf8");
+const dateText = readFileSync(new URL("../../components/i18n/UiDateText.tsx", import.meta.url), "utf8");
 const dictionary = readFileSync(new URL("../i18n/dictionaries/supplier-bills.ts", import.meta.url), "utf8");
 
 function functionBody(source: string, name: string): string {
@@ -165,8 +166,30 @@ test("Supplier Bills keep RTL table alignment and isolate atomic values at the l
   assert.match(detailClient, /isRtl \? <ArrowRight[^>]+> : <ArrowLeft/);
   assert.match(newPage, /isRtl \? <ArrowRight[^>]+> : <ArrowLeft/);
   assert.match(newPage, /inline-flex items-center gap-2/);
-  assert.match(formClient, /<bdi dir="ltr">\{option\.currency\}<\/bdi>/);
-  assert.match(formClient, /<bdi dir="ltr">\{option\.authorizedAmount\.toFixed\(2\)\}<\/bdi>/);
+});
+
+test("Supplier Bills use structured dates, stable context rows, and text-safe native options", () => {
+  assert.match(dateText, /resolveUiDateDisplay/);
+  assert.match(dateText, /resolveUiDateTimeDisplay/);
+  assert.match(dateText, /<span\s+dir="rtl"/);
+  assert.match(listClient, /<UiDateText locale=\{locale\} value=\{bill\.invoice_date\} \/>/);
+  assert.match(detailClient, /<UiDateText locale=\{locale\} value=\{bill\.invoice_date\} \/>/);
+  assert.match(detailClient, /<UiDateText locale=\{locale\} value=\{bill\.due_date\} \/>/);
+  assert.match(detailClient, /<UiDateTimeText locale=\{locale\} value=\{bill\.recorded_at\} \/>/);
+  assert.match(detailClient, /<ContextRow label=\{dictionary\.fields\.performanceDate\}><UiDateText/);
+  assert.match(detailClient, /function ContextRow/);
+  assert.doesNotMatch(detailClient, /bill\.commitment_currency/);
+  assert.doesNotMatch(detailClient, /SAR\s+SAR/);
+  assert.doesNotMatch(detailClient, /\b(?:ACCEPTED|ACCEPTED_WITH_CONDITIONS|REJECTED|PENDING)\b/);
+  assert.doesNotMatch(detailClient, /commitment_id|service_receipt_id/);
+
+  const optionBlocks = formClient.match(/<option\b[^>]*>[\s\S]*?<\/option>/g) ?? [];
+  assert.ok(optionBlocks.length >= 4, "supplier form should keep its native option labels");
+  for (const optionBlock of optionBlocks) {
+    assert.doesNotMatch(optionBlock, /<bdi|<span/);
+  }
+  assert.match(formClient, /isolateBidiText/);
+  assert.match(formClient, /isolateLtrText/);
 });
 
 test("supplier invoice storage reuses the private business-document pipeline with AP permission", () => {

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { createSupplierBillAction, updateSupplierBillAction } from "@/lib/supplier-bills/actions";
+import { isolateBidiText, isolateLtrText } from "@/lib/i18n/bidi";
 import type { SupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
 import type { SupplierBillDetail, SupplierBillFormOptions } from "@/lib/supplier-bills/types";
 
@@ -74,25 +75,25 @@ export default function SupplierBillForm({
         <label className="text-[12px] font-semibold">{dictionary.fields.supplier}
           <select ref={firstFieldRef} className={fieldClass()} name="supplier_id" value={supplierId} onChange={(event) => { setSupplierId(event.target.value); setCommitmentId(""); setReceiptId(""); }} required disabled={isPending}>
             <option value="">{dictionary.forms.selectSupplier}</option>
-            {options.suppliers.map((option) => <option key={option.id} value={option.id}><bdi dir="auto">{option.name}</bdi></option>)}
+            {options.suppliers.map((option) => <option key={option.id} value={option.id}>{isolateBidiText(option.name)}</option>)}
           </select>
         </label>
         <label className="text-[12px] font-semibold">{dictionary.fields.service}
           <select className={fieldClass()} name="service_id" value={serviceId} onChange={(event) => { setServiceId(event.target.value); setCommitmentId(""); setReceiptId(""); }} required disabled={isPending}>
             <option value="">{dictionary.forms.selectService}</option>
-            {options.services.map((option) => <option key={option.id} value={option.id}><bdi dir="ltr">{option.serviceNumber}</bdi> — <bdi dir="auto">{option.eventName || option.serviceTitle}</bdi></option>)}
+            {options.services.map((option) => <option key={option.id} value={option.id}>{isolateLtrText(option.serviceNumber)} — {isolateBidiText(option.eventName || option.serviceTitle)}</option>)}
           </select>
         </label>
         <label className="text-[12px] font-semibold">{dictionary.fields.commitment}
           <select className={fieldClass()} name="commitment_id" value={commitmentId} onChange={(event) => { setCommitmentId(event.target.value); setReceiptId(""); }} required disabled={isPending || !serviceId || !supplierId}>
             <option value="">{dictionary.forms.selectCommitment}</option>
-            {filteredCommitments.map((option) => <option key={option.id} value={option.id}><bdi dir="ltr">{option.currency}</bdi> · <bdi dir="ltr">{option.authorizedAmount.toFixed(2)}</bdi> <span>{dictionary.fields.commitment}</span></option>)}
+            {filteredCommitments.map((option) => <option key={option.id} value={option.id}>{isolateLtrText(option.currency)} · {isolateLtrText(option.authorizedAmount.toFixed(2))} {dictionary.fields.commitment}</option>)}
           </select>
         </label>
         <label className="text-[12px] font-semibold">{dictionary.fields.receipt}
           <select className={fieldClass()} name="service_receipt_id" value={receiptId} onChange={(event) => setReceiptId(event.target.value)} required disabled={isPending || !commitmentId}>
             <option value="">{dictionary.forms.selectReceipt}</option>
-            {filteredReceipts.map((option) => <option key={option.id} value={option.id}><bdi dir="ltr">{option.performanceDate}</bdi> · <span>{dictionary.acceptanceStatuses[option.acceptanceStatus] ?? "—"}</span> · <bdi dir="ltr">{option.receivedAmount == null ? "—" : option.receivedAmount.toFixed(2)}</bdi></option>)}
+            {filteredReceipts.map((option) => <option key={option.id} value={option.id}>{isolateLtrText(option.performanceDate)} · {dictionary.acceptanceStatuses[option.acceptanceStatus] ?? "—"} · {option.receivedAmount == null ? "—" : isolateLtrText(option.receivedAmount.toFixed(2))}</option>)}
           </select>
         </label>
         <label className="text-[12px] font-semibold">{dictionary.fields.invoiceNumber}<input className={fieldClass()} name="invoice_number" defaultValue={initial?.invoice_number ?? ""} required maxLength={200} disabled={isPending} /></label>

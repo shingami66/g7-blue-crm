@@ -5,7 +5,8 @@ import PendingLink from "@/components/ui/PendingLink";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { formatSarAmount, formatUiDate } from "@/lib/i18n/formatting";
+import { UiDateText } from "@/components/i18n/UiDateText";
+import { formatSarAmount } from "@/lib/i18n/formatting";
 import type { SupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
 import type { SupplierBillListItem } from "@/lib/supplier-bills/types";
 
@@ -78,7 +79,7 @@ export default function SupplierBillsClient({
                     <div className="font-medium text-on-surface"><bdi dir="ltr">{bill.service_number}</bdi></div>
                     <div className="mt-0.5 text-[12px] text-on-surface-variant"><bdi dir="auto">{bill.event_name || bill.service_title}</bdi></div>
                   </td>
-                  <td className="px-4 py-4 align-top text-start"><bdi dir="ltr">{formatUiDate(locale, bill.invoice_date)}</bdi></td>
+                  <td className="px-4 py-4 align-top text-start"><UiDateText locale={locale} value={bill.invoice_date} /></td>
                   <td className="px-4 py-4 text-end align-top"><bdi dir="ltr" className="font-semibold tabular-nums">{formatSarAmount(locale, bill.total_amount)}</bdi></td>
                   <td className="px-4 py-4 text-center align-top"><StatusBadge variant={statusVariant(bill.status)}>{bill.status === "approved" ? dictionary.statuses.approved : dictionary.statuses.pending}</StatusBadge></td>
                   <td className="px-4 py-4 text-center align-top">
@@ -109,7 +110,7 @@ export default function SupplierBillsClient({
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]">
                 <div><dt className="text-on-surface-variant">{dictionary.columns.supplier}</dt><dd className="mt-0.5 break-words font-medium"><bdi dir="auto">{bill.supplier_name}</bdi></dd></div>
                 <div><dt className="text-on-surface-variant">{dictionary.columns.service}</dt><dd className="mt-0.5 break-words font-medium"><bdi dir="ltr">{bill.service_number}</bdi></dd></div>
-                <div><dt className="text-on-surface-variant">{dictionary.columns.invoiceDate}</dt><dd className="mt-0.5"><bdi dir="ltr">{formatUiDate(locale, bill.invoice_date)}</bdi></dd></div>
+                <div><dt className="text-on-surface-variant">{dictionary.columns.invoiceDate}</dt><dd className="mt-0.5"><UiDateText locale={locale} value={bill.invoice_date} /></dd></div>
                 <div><dt className="text-on-surface-variant">{dictionary.columns.total}</dt><dd className="mt-0.5 text-end font-semibold tabular-nums"><bdi dir="ltr">{formatSarAmount(locale, bill.total_amount)}</bdi></dd></div>
               </dl>
               <PendingLink href={`/supplier-bills/${bill.id}`} pendingLabel={dictionary.actions.view} className="inline-flex text-[12px] font-semibold text-primary hover:underline">
