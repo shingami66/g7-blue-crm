@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { isSupplierAdvanceAuthorizationAvailable } from "./authorization-availability.ts";
 
 const root = new URL("../../../", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), "utf8");
@@ -20,6 +21,7 @@ const billDetail = read("src/app/(dashboard)/supplier-bills/SupplierBillDetailCl
 const supplierPaymentQueries = read("src/lib/supplier-payments/queries.ts");
 const paymentTypes = read("src/lib/supplier-payments/types.ts");
 const advanceFormatting = read("src/lib/supplier-advances/formatting.ts");
+const advancesPage = read("src/app/(dashboard)/supplier-advances/page.tsx");
 const authorizationPage = read("src/app/(dashboard)/supplier-advances/new/page.tsx");
 const supplierAdvanceEventTables = [
   "supplier_advances",
@@ -228,6 +230,31 @@ test("authorization route hides the editable form at zero capacity and shows the
   assert.match(authorizationPage, /<SupplierAdvanceAuthorizationForm commitments=\{commitments\}/);
   assert.match(dictionary, /noCommitments: "No open commitment has remaining authorization capacity\."/);
   assert.match(dictionary, /noCommitments: "لا توجد التزامات مفتوحة ذات سعة اعتماد متبقية\."/);
+});
+
+test("Supplier Advances entry requires authorization permission and eligible commitment capacity", () => {
+  for (const [hasPermission, eligibleCount, expected] of [
+    [true, 1, true],
+    [true, 0, false],
+    [false, 1, false],
+    [false, 0, false],
+  ] as const) {
+    assert.equal(
+      isSupplierAdvanceAuthorizationAvailable(hasPermission, eligibleCount),
+      expected,
+    );
+  }
+
+  assert.match(advancesPage, /checkPermission\(SUPPLIER_ADVANCE_PERMISSIONS\.authorize\)/);
+  assert.match(advancesPage, /hasAuthorizationPermission\s*\?\s*getSupplierAdvanceCommitmentOptions\(\)\s*:\s*Promise\.resolve\(\[\]\)/);
+  assert.match(advancesPage, /isSupplierAdvanceAuthorizationAvailable\(\s*hasAuthorizationPermission,\s*eligibleCommitments\.length,?\s*\)/);
+  assert.match(advancesPage, /canAuthorize=\{canAuthorize\}/);
+  assert.match(list, /\{canAuthorize && <PendingLink href="\/supplier-advances\/new"/);
+  assert.match(queries, /\.from\("supplier_advance_commitment_balances"\)/);
+  assert.match(queries, /\.eq\("commitment_status", "open"\)/);
+  assert.match(queries, /\.gt\("available_authorization_amount", 0\)/);
+  assert.match(dictionary, /authorizeAdvance: "Authorize Advance"/);
+  assert.match(dictionary, /authorizeAdvance: "اعتماد سلفة"/);
 });
 
 test("request IDs are replay-safe and conflicting payloads are rejected without exposing database text", () => {

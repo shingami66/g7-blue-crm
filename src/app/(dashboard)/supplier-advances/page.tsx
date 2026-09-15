@@ -4,13 +4,17 @@ import { checkPermission } from "@/lib/auth/permissions";
 import { SUPPLIER_ADVANCE_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getSupplierAdvancesDictionary } from "@/lib/i18n/dictionaries/supplier-advances";
-import { getSupplierAdvancesList } from "@/lib/supplier-advances/queries";
+import {
+  getSupplierAdvanceCommitmentOptions,
+  getSupplierAdvancesList,
+} from "@/lib/supplier-advances/queries";
+import { isSupplierAdvanceAuthorizationAvailable } from "@/lib/supplier-advances/authorization-availability";
 import SupplierAdvancesClient from "./SupplierAdvancesClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function SupplierAdvancesPage() {
-  const [locale, canRead, canAuthorize] = await Promise.all([
+  const [locale, canRead, hasAuthorizationPermission] = await Promise.all([
     getCurrentSessionEffectiveLocale(),
     checkPermission(SUPPLIER_ADVANCE_PERMISSIONS.read),
     checkPermission(SUPPLIER_ADVANCE_PERMISSIONS.authorize),
@@ -19,10 +23,21 @@ export default async function SupplierAdvancesPage() {
   if (!canRead) return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
   let advances: Awaited<ReturnType<typeof getSupplierAdvancesList>>["advances"] = [];
   let stateMessage: string | null = null;
+  let canAuthorize = false;
   try {
-    const result = await getSupplierAdvancesList();
+    const eligibleCommitmentsPromise = hasAuthorizationPermission
+      ? getSupplierAdvanceCommitmentOptions()
+      : Promise.resolve([]);
+    const [result, eligibleCommitments] = await Promise.all([
+      getSupplierAdvancesList(),
+      eligibleCommitmentsPromise,
+    ]);
     if (result.error) stateMessage = dictionary.states.loadError;
     else advances = result.advances;
+    canAuthorize = isSupplierAdvanceAuthorizationAvailable(
+      hasAuthorizationPermission,
+      eligibleCommitments.length,
+    );
   } catch (error) {
     if (error instanceof UnauthorizedError) redirect("/sign-in");
     stateMessage = error instanceof ForbiddenError ? dictionary.states.accessDenied : dictionary.states.loadError;
