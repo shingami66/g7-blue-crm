@@ -42,6 +42,8 @@ export interface SupplierBillsDictionary {
     paymentStatus: string;
     paymentMethod: string;
     paymentHistory: string;
+    advanceAllocated: string;
+    advanceAllocationHistory: string;
   };
   columns: {
     bill: string;
@@ -77,6 +79,7 @@ export interface SupplierBillsDictionary {
   statuses: { pending: string; approved: string };
   paymentMethods: Record<string, string>;
   paymentStatuses: Record<string, string>;
+  advanceAllocationStatuses: Record<"allocated" | "corrected", string>;
   acceptanceStatuses: Record<string, string>;
   commitmentStatuses: Record<string, string>;
   commitmentSources: Record<string, string>;
@@ -175,7 +178,7 @@ export const supplierBillsDictionaryEn: SupplierBillsDictionary = {
   newBill: "New Supplier Bill",
   backToList: "Back to Supplier Bills",
   fields: {
-    billNumber: "Bill Number", supplier: "Supplier", service: "Event / Service", commitment: "Approved Commitment", receipt: "Service Receipt", invoiceNumber: "Supplier Invoice Number", invoiceDate: "Invoice Date", dueDate: "Due Date", currency: "Currency", subtotal: "Subtotal", vat: "VAT", total: "Total", status: "Status", evidence: "Invoice Evidence", recordedAt: "Recorded At", recordedBy: "Recorded By", approvedAt: "Approved At", approvedBy: "Approved By", receiptStatus: "Receipt Status", receivedValue: "Accepted Receipt Value", commitmentCeiling: "Commitment Ceiling", acceptedValue: "Accepted Value", performanceDate: "Performance Date", commitmentStatus: "Commitment Status", commitmentSource: "Commitment Source", sourceReference: "Source Reference", supplierQuotation: "Supplier Quotation", commercialRegistration: "Commercial Registration", vatNumber: "VAT Number", payable: "Payable", paid: "Paid", outstanding: "Outstanding", paymentStatus: "Payment Status", paymentMethod: "Payment Method", paymentHistory: "Payment History",
+    billNumber: "Bill Number", supplier: "Supplier", service: "Event / Service", commitment: "Approved Commitment", receipt: "Service Receipt", invoiceNumber: "Supplier Invoice Number", invoiceDate: "Invoice Date", dueDate: "Due Date", currency: "Currency", subtotal: "Subtotal", vat: "VAT", total: "Total", status: "Status", evidence: "Invoice Evidence", recordedAt: "Recorded At", recordedBy: "Recorded By", approvedAt: "Approved At", approvedBy: "Approved By", receiptStatus: "Receipt Status", receivedValue: "Accepted Receipt Value", commitmentCeiling: "Commitment Ceiling", acceptedValue: "Accepted Value", performanceDate: "Performance Date", commitmentStatus: "Commitment Status", commitmentSource: "Commitment Source", sourceReference: "Source Reference", supplierQuotation: "Supplier Quotation", commercialRegistration: "Commercial Registration", vatNumber: "VAT Number", payable: "Payable", paid: "Paid", outstanding: "Outstanding", paymentStatus: "Payment Status", paymentMethod: "Payment Method", paymentHistory: "Payment History", advanceAllocated: "Advance Allocated", advanceAllocationHistory: "Advance Allocations",
   },
   columns: { bill: "Bill", supplier: "Supplier", service: "Event / Service", invoiceDate: "Invoice Date", total: "Total", status: "Status", actions: "Actions" },
   actions: { view: "View bill", create: "Record Supplier Bill", save: "Record Bill", saveChanges: "Save Changes", editBill: "Edit Bill", closeEdit: "Close edit", approve: "Approve", attachInvoice: "Attach Invoice", openDocument: "Open document", recordPayment: "Record Payment" },
@@ -183,6 +186,7 @@ export const supplierBillsDictionaryEn: SupplierBillsDictionary = {
   statuses: { pending: "Pending", approved: "Approved" },
   paymentMethods: { bank_transfer: "Bank transfer", cash: "Cash", cheque: "Cheque" },
   paymentStatuses: { recorded: "Recorded", reversed: "Reversed", unpaid: "Unpaid", partially_paid: "Partially paid", paid: "Paid" },
+  advanceAllocationStatuses: { allocated: "Allocated", corrected: "Corrected" },
   acceptanceStatuses: { PENDING: "Pending", ACCEPTED: "Accepted", ACCEPTED_WITH_CONDITIONS: "Accepted with conditions", REJECTED: "Rejected" },
   commitmentStatuses: { open: "Open", closed: "Closed", cancelled: "Cancelled" },
   commitmentSources: { purchase_order: "Approved Purchase Order", approved_contract: "Approved contract", supplier_quotation: "Accepted Supplier Quotation", other_authorized: "Other authorized commitment" },
@@ -198,13 +202,14 @@ export const supplierBillsDictionaryAr: SupplierBillsDictionary = {
   subtitle: "التزامات موردي الفعاليات والخدمات المسجلة على التزامات مالية معتمدة.",
   newBill: "فاتورة مورد جديدة",
   backToList: "العودة إلى فواتير الموردين",
-  fields: { billNumber: "رقم الفاتورة الداخلي", supplier: "المورد", service: "الفعالية / الخدمة", commitment: "الالتزام المالي المعتمد", receipt: "إيصال الخدمة", invoiceNumber: "رقم فاتورة المورد", invoiceDate: "تاريخ الفاتورة", dueDate: "تاريخ الاستحقاق", currency: "العملة", subtotal: "المبلغ قبل الضريبة", vat: "ضريبة القيمة المضافة", total: "الإجمالي", status: "الحالة", evidence: "مستند الفاتورة", recordedAt: "تاريخ التسجيل", recordedBy: "سجّلها", approvedAt: "تاريخ الاعتماد", approvedBy: "اعتمدها", receiptStatus: "حالة الإيصال", receivedValue: "قيمة الإيصالات المقبولة", commitmentCeiling: "سقف الالتزام", acceptedValue: "القيمة المقبولة", performanceDate: "تاريخ الأداء", commitmentStatus: "حالة الالتزام", commitmentSource: "مصدر الالتزام", sourceReference: "مرجع المصدر", supplierQuotation: "عرض سعر المورد", commercialRegistration: "السجل التجاري", vatNumber: "الرقم الضريبي", payable: "المستحق", paid: "المدفوع", outstanding: "المتبقي", paymentStatus: "حالة الدفع", paymentMethod: "طريقة الدفع", paymentHistory: "سجل الدفعات" },
+  fields: { billNumber: "رقم الفاتورة الداخلي", supplier: "المورد", service: "الفعالية / الخدمة", commitment: "الالتزام المالي المعتمد", receipt: "إيصال الخدمة", invoiceNumber: "رقم فاتورة المورد", invoiceDate: "تاريخ الفاتورة", dueDate: "تاريخ الاستحقاق", currency: "العملة", subtotal: "المبلغ قبل الضريبة", vat: "ضريبة القيمة المضافة", total: "الإجمالي", status: "الحالة", evidence: "مستند الفاتورة", recordedAt: "تاريخ التسجيل", recordedBy: "سجّلها", approvedAt: "تاريخ الاعتماد", approvedBy: "اعتمدها", receiptStatus: "حالة الإيصال", receivedValue: "قيمة الإيصالات المقبولة", commitmentCeiling: "سقف الالتزام", acceptedValue: "القيمة المقبولة", performanceDate: "تاريخ الأداء", commitmentStatus: "حالة الالتزام", commitmentSource: "مصدر الالتزام", sourceReference: "مرجع المصدر", supplierQuotation: "عرض سعر المورد", commercialRegistration: "السجل التجاري", vatNumber: "الرقم الضريبي", payable: "المستحق", paid: "المدفوع", outstanding: "المتبقي", paymentStatus: "حالة الدفع", paymentMethod: "طريقة الدفع", paymentHistory: "سجل الدفعات", advanceAllocated: "السلفة المخصصة", advanceAllocationHistory: "تخصيصات السلف" },
   columns: { bill: "الفاتورة", supplier: "المورد", service: "الفعالية / الخدمة", invoiceDate: "تاريخ الفاتورة", total: "الإجمالي", status: "الحالة", actions: "الإجراءات" },
   actions: { view: "عرض الفاتورة", create: "تسجيل فاتورة مورد", save: "تسجيل الفاتورة", saveChanges: "حفظ التعديلات", editBill: "تعديل الفاتورة", closeEdit: "إغلاق التعديل", approve: "اعتماد", attachInvoice: "إرفاق الفاتورة", openDocument: "فتح المستند", recordPayment: "تسجيل دفعة" },
   forms: { selectSupplier: "اختر المورد", selectService: "اختر الفعالية / الخدمة", selectCommitment: "اختر الالتزام المالي المعتمد", selectReceipt: "اختر إيصال الخدمة", invoiceFile: "ملف فاتورة المورد", invoiceFileHelp: "PDF أو JPG أو PNG. يتطلب الاعتماد مستند فاتورة مؤيدًا.", pendingNotice: "يمكن تعديل الفواتير المعلقة حتى اعتمادها.", eventOnlyNotice: "فواتير الموردين مخصصة لالتزامات الفعاليات والخدمات المرتبطة بالتزام مالي معتمد." },
   statuses: { pending: "معلقة", approved: "معتمدة" },
   paymentMethods: { bank_transfer: "تحويل بنكي", cash: "نقدًا", cheque: "شيك" },
   paymentStatuses: { recorded: "مسجلة", reversed: "معكوسة", unpaid: "غير مدفوعة", partially_paid: "مدفوعة جزئيًا", paid: "مدفوعة" },
+  advanceAllocationStatuses: { allocated: "مخصصة", corrected: "مصححة" },
   acceptanceStatuses: { PENDING: "قيد المراجعة", ACCEPTED: "مقبول", ACCEPTED_WITH_CONDITIONS: "مقبول بشروط", REJECTED: "مرفوض" },
   commitmentStatuses: { open: "مفتوح", closed: "مغلق", cancelled: "ملغى" },
   commitmentSources: { purchase_order: "أمر شراء معتمد", approved_contract: "عقد معتمد", supplier_quotation: "عرض سعر مورد مقبول", other_authorized: "التزام آخر معتمد" },

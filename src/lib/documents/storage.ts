@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   BUSINESS_DOCUMENT_PERMISSIONS,
+  SUPPLIER_ADVANCE_PERMISSIONS,
   SUPPLIER_PAYMENT_PERMISSIONS,
   SUPPLIER_BILL_PERMISSIONS,
 } from "@/lib/auth/role-permissions";
@@ -528,6 +529,33 @@ export async function uploadPrivateSupplierPaymentEvidence(
   );
 }
 
+export async function uploadPrivateSupplierAdvanceAuthorizationEvidence(
+  input: unknown,
+): Promise<BusinessDocumentRow> {
+  return uploadPrivateBusinessDocumentWithPermission(
+    input,
+    SUPPLIER_ADVANCE_PERMISSIONS.authorize,
+  );
+}
+
+export async function uploadPrivateSupplierAdvancePaymentEvidence(
+  input: unknown,
+): Promise<BusinessDocumentRow> {
+  return uploadPrivateBusinessDocumentWithPermission(
+    input,
+    SUPPLIER_ADVANCE_PERMISSIONS.pay,
+  );
+}
+
+export async function uploadPrivateSupplierAdvanceRefundEvidence(
+  input: unknown,
+): Promise<BusinessDocumentRow> {
+  return uploadPrivateBusinessDocumentWithPermission(
+    input,
+    SUPPLIER_ADVANCE_PERMISSIONS.refund,
+  );
+}
+
 export async function getPrivateBusinessDocumentForService(
   input: unknown,
 ): Promise<BusinessDocumentRow> {
@@ -587,6 +615,15 @@ export async function createPrivateSupplierPaymentEvidenceUrl(
   return createPrivateBusinessDocumentUrlWithPermission(
     input,
     SUPPLIER_PAYMENT_PERMISSIONS.read,
+  );
+}
+
+export async function createPrivateSupplierAdvanceEvidenceUrl(
+  input: unknown,
+): Promise<PrivateBusinessDocumentUrl> {
+  return createPrivateBusinessDocumentUrlWithPermission(
+    input,
+    SUPPLIER_ADVANCE_PERMISSIONS.read,
   );
 }
 

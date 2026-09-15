@@ -92,6 +92,9 @@ export function getSectionForPathname(pathname: string): NavSectionKey | null {
   if (pathname === "/supplier-payments" || pathname.startsWith("/supplier-payments/")) {
     return "accountsPayable";
   }
+  if (pathname === "/supplier-advances" || pathname.startsWith("/supplier-advances/")) {
+    return "accountsPayable";
+  }
   if (
     pathname === "/settings" ||
     pathname.startsWith("/settings/") ||
@@ -115,6 +118,7 @@ export default function Sidebar({
   canReadPettyCash = false,
   canReadSupplierBills = false,
   canReadSupplierPayments = false,
+  canReadSupplierAdvances = false,
   shellDirection = "ltr",
   currentPathname,
 }: {
@@ -122,6 +126,7 @@ export default function Sidebar({
   canReadPettyCash?: boolean;
   canReadSupplierBills?: boolean;
   canReadSupplierPayments?: boolean;
+  canReadSupplierAdvances?: boolean;
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
 }) {
@@ -213,7 +218,7 @@ export default function Sidebar({
         },
       ],
     },
-    ...(canReadSupplierBills || canReadSupplierPayments
+    ...(canReadSupplierBills || canReadSupplierPayments || canReadSupplierAdvances
       ? [{
           key: "accountsPayable" as const,
           title: dictionary.sections.accountsPayable,
@@ -230,6 +235,12 @@ export default function Sidebar({
               label: dictionary.modules.supplierPayments,
               href: "/supplier-payments",
               icon: CreditCard,
+            }] : []),
+            ...(canReadSupplierAdvances ? [{
+              key: "supplier-advances",
+              label: dictionary.modules.supplierAdvances,
+              href: "/supplier-advances",
+              icon: Coins,
             }] : []),
           ],
         }]

@@ -70,6 +70,16 @@ export const SUPPLIER_PAYMENT_PERMISSIONS = {
   reverse: "supplier_payments:reverse",
 } as const;
 
+export const SUPPLIER_ADVANCE_PERMISSIONS = {
+  read: "supplier_advances:read",
+  authorize: "supplier_advances:authorize",
+  pay: "supplier_advances:pay",
+  allocate: "supplier_advances:allocate",
+  refund: "supplier_advances:refund",
+  reverse: "supplier_advances:reverse",
+  correct: "supplier_advances:correct",
+} as const;
+
 export const ROLE_PERMISSIONS = {
   admin: [
     "*",
@@ -138,6 +148,8 @@ export const ROLE_PERMISSIONS = {
     SUPPLIER_BILL_PERMISSIONS.read,
     SUPPLIER_BILL_PERMISSIONS.approve,
     SUPPLIER_PAYMENT_PERMISSIONS.read,
+    SUPPLIER_ADVANCE_PERMISSIONS.read,
+    SUPPLIER_ADVANCE_PERMISSIONS.authorize,
     CASH_ADVANCE_PERMISSIONS.readOwn,
     CASH_ADVANCE_PERMISSIONS.submitOwn,
     CASH_ADVANCE_PERMISSIONS.read,
@@ -211,6 +223,12 @@ export const ROLE_PERMISSIONS = {
     SUPPLIER_PAYMENT_PERMISSIONS.read,
     SUPPLIER_PAYMENT_PERMISSIONS.record,
     SUPPLIER_PAYMENT_PERMISSIONS.reverse,
+    SUPPLIER_ADVANCE_PERMISSIONS.read,
+    SUPPLIER_ADVANCE_PERMISSIONS.pay,
+    SUPPLIER_ADVANCE_PERMISSIONS.allocate,
+    SUPPLIER_ADVANCE_PERMISSIONS.refund,
+    SUPPLIER_ADVANCE_PERMISSIONS.reverse,
+    SUPPLIER_ADVANCE_PERMISSIONS.correct,
     "dashboard:read",
     ...APPROVED_BILLING_SCOPE_ACCOUNTANT_PERMISSIONS,
   ],

@@ -1,4 +1,5 @@
 import type { SupplierBillPaymentHistoryItem, SupplierBillPaymentSummary } from "@/lib/supplier-payments/types";
+import type { SupplierBillAdvanceAllocationHistoryItem } from "@/lib/supplier-advances/types";
 
 export type SupplierBillStatus = "pending" | "approved";
 
@@ -69,6 +70,7 @@ export interface SupplierBillDetail extends SupplierBill {
   documents: SupplierBillDocument[];
   paymentSummary: SupplierBillPaymentSummary | null;
   paymentHistory: SupplierBillPaymentHistoryItem[];
+  advanceAllocationHistory: SupplierBillAdvanceAllocationHistoryItem[];
 }
 
 export interface SupplierBillSupplierOption {

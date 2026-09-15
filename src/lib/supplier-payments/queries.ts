@@ -70,6 +70,7 @@ function mapSummary(row: Record<string, unknown>): SupplierBillPaymentSummary {
     currency: text(row.currency) ?? "SAR",
     payable_amount: number(row.payable_amount),
     paid_amount: number(row.paid_amount),
+    advance_allocated_amount: number(row.advance_allocated_amount),
     outstanding_amount: number(row.outstanding_amount),
     payment_status: paymentStatus,
   };

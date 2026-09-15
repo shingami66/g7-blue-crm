@@ -8,6 +8,7 @@ export interface SupplierBillPaymentSummary {
   currency: string;
   payable_amount: number;
   paid_amount: number;
+  advance_allocated_amount: number;
   outstanding_amount: number;
   payment_status: SupplierBillPaymentStatus;
 }

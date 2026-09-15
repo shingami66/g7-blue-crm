@@ -52,7 +52,7 @@ registerHooks({
   },
 });
 
-const { recordSupplierPaymentAction } = await import("./actions.ts");
+const { recordSupplierPaymentAction, reverseSupplierPaymentAction } = await import("./actions.ts");
 
 declare global {
   var __supplierPaymentMockClient: unknown;
@@ -147,7 +147,45 @@ test("same-request concurrent recording returns one payment and a replay", async
   assert.equal(second.success, true);
   assert.equal(second.idempotentReplay, true);
   assert.equal(first.data?.payment_id, second.data?.payment_id);
+  assert.equal(first.data?.outstanding_amount, 500);
+  assert.equal(second.data?.outstanding_amount, 500);
   assert.equal(uploadCalls, 2);
   assert.equal(cleanupCalls, 1);
   assert.equal(rpcCalls, 2);
+});
+
+test("payment reversal returns the balance including Supplier Advance allocations", async () => {
+  const paymentId = "55555555-5555-4555-8555-555555555555";
+  const supplierBillId = "22222222-2222-4222-8222-222222222222";
+  globalThis.__supplierPaymentMockClient = {
+    from: (table: string) => {
+      const chain = {
+        select: () => chain,
+        eq: () => chain,
+        maybeSingle: async () => table === "supplier_bill_payment_balances"
+          ? { data: { outstanding_amount: 300, payment_status: "partially_paid" }, error: null }
+          : { data: null, error: null },
+      };
+      return chain;
+    },
+    rpc: async () => ({ data: [{
+      error_code: null,
+      payment_id: paymentId,
+      supplier_bill_id: supplierBillId,
+      paid_amount: 400,
+      outstanding_amount: 600,
+      payment_status: "partially_paid",
+      idempotent_replay: false,
+    }], error: null }),
+  };
+
+  const result = await reverseSupplierPaymentAction({
+    payment_id: paymentId,
+    reason: "Reversed after owner review",
+    request_id: "66666666-6666-4666-8666-666666666666",
+  });
+
+  assert.equal(result.success, true);
+  assert.equal(result.data?.outstanding_amount, 300);
+  assert.equal(result.data?.payment_status, "partially_paid");
 });

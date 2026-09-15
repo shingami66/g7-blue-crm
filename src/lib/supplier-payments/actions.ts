@@ -201,13 +201,18 @@ export async function recordSupplierPaymentAction(
     revalidatePath(`/supplier-payments/${row.payment_id}`);
     revalidatePath(`/supplier-bills/${parsed.data.supplier_bill_id}`);
     revalidatePath("/supplier-bills");
+    const { data: billBalance } = await supabase
+      .from("supplier_bill_payment_balances")
+      .select("outstanding_amount,payment_status")
+      .eq("supplier_bill_id", parsed.data.supplier_bill_id)
+      .maybeSingle();
     return {
       success: true,
       data: {
         payment_id: row.payment_id,
         payment_number: row.payment_number,
-        outstanding_amount: Number(row.outstanding_amount ?? 0),
-        payment_status: row.payment_status ?? "partially_paid",
+        outstanding_amount: Number(billBalance?.outstanding_amount ?? row.outstanding_amount ?? 0),
+        payment_status: billBalance?.payment_status ?? row.payment_status ?? "partially_paid",
       },
       idempotentReplay: row.idempotent_replay,
     };
@@ -239,13 +244,18 @@ export async function reverseSupplierPaymentAction(
     revalidatePath("/supplier-payments");
     revalidatePath(`/supplier-payments/${row.payment_id}`);
     revalidatePath(`/supplier-bills/${row.supplier_bill_id}`);
+    const { data: billBalance } = await getSupplierPaymentClient()
+      .from("supplier_bill_payment_balances")
+      .select("outstanding_amount,payment_status")
+      .eq("supplier_bill_id", row.supplier_bill_id)
+      .maybeSingle();
     return {
       success: true,
       data: {
         payment_id: row.payment_id,
         supplier_bill_id: row.supplier_bill_id,
-        outstanding_amount: Number(row.outstanding_amount ?? 0),
-        payment_status: row.payment_status ?? "unpaid",
+        outstanding_amount: Number(billBalance?.outstanding_amount ?? row.outstanding_amount ?? 0),
+        payment_status: billBalance?.payment_status ?? row.payment_status ?? "unpaid",
       },
       idempotentReplay: row.idempotent_replay,
     };
