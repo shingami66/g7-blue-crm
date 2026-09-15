@@ -132,7 +132,7 @@ export const navigationDictionaryAr: NavigationDictionary = {
     pettyCash: "المصروفات النثرية",
     supplierBills: "فواتير الموردين",
     supplierPayments: "مدفوعات الموردين",
-    supplierAdvances: "سلف الموردين",
+    supplierAdvances: "الدفعات المقدمة للموردين",
   },
   sections: {
     customersAndSales: "العملاء والمبيعات",
@@ -140,7 +140,7 @@ export const navigationDictionaryAr: NavigationDictionary = {
     suppliersAndProcurement: "الموردون والمشتريات",
     billingAndPayments: "الفواتير والمدفوعات",
     expensesAndCosting: "المصروفات والتكاليف",
-    accountsPayable: "الحسابات الدائنة",
+    accountsPayable: "حسابات الموردين",
     administration: "الإدارة",
   },
 };

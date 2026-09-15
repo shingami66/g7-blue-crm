@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { cashAdvancesDictionaryAr } from "../i18n/dictionaries/cash-advances.ts";
+import { navigationDictionaryAr, navigationDictionaryEn } from "../i18n/dictionaries/navigation.ts";
+import { supplierAdvancesDictionaryAr, supplierAdvancesDictionaryEn } from "../i18n/dictionaries/supplier-advances.ts";
+import { supplierBillsDictionaryAr } from "../i18n/dictionaries/supplier-bills.ts";
 import { isSupplierAdvanceAuthorizationAvailable } from "./authorization-availability.ts";
 
 const root = new URL("../../../", import.meta.url);
@@ -75,7 +79,8 @@ test("only Admin/Manager authorize; Admin/Accountant pay, allocate, refund, reve
   assert.match(sidebar, /canReadSupplierAdvances/);
   assert.match(sidebar, /href: "\/supplier-advances"/);
   assert.match(navDictionary, /supplierAdvances: "Supplier Advances"/);
-  assert.match(navDictionary, /supplierAdvances: "سلف الموردين"/);
+  assert.match(navDictionary, /supplierAdvances: "الدفعات المقدمة للموردين"/);
+  assert.match(navDictionary, /accountsPayable: "حسابات الموردين"/);
 });
 
 test("all six mutation RPCs pin SECURITY DEFINER, validate active actors, and grant service_role only", () => {
@@ -195,13 +200,29 @@ test("bill balance separates ordinary payments from advance allocation and avoid
 
 test("Supplier Advances UI is bilingual, responsive, localized, and bidi-isolated", () => {
   assert.match(dictionary, /title: "Supplier Advances"/);
-  assert.match(dictionary, /title: "سلف الموردين"/);
+  assert.match(dictionary, /title: "الدفعات المقدمة للموردين"/);
   assert.match(dictionary, /commitment no longer has enough open capacity/i);
   assert.match(dictionary, /لم تعد سعة الالتزام المفتوحة كافية/);
   assert.match(list, /table-fixed/);
   assert.match(list, /supplier-advances-mobile-cards/);
+  const desktopTable = list.match(/<table[\s\S]*?data-testid="supplier-advances-desktop-table"[\s\S]*?<\/table>/)?.[0] ?? "";
+  assert.notEqual(desktopTable, "", "the desktop table must remain a real table with its own test contract");
+  const expectedAlignment = ["text-start", "text-start", "text-start", "text-start", "text-end", "text-center", "text-center"];
+  const headerCells = [...desktopTable.matchAll(/<th\b[^>]*className="([^"]*)"/g)].map((match) => match[1]);
+  const bodyCells = [...desktopTable.matchAll(/<td\b[^>]*>/g)]
+    .map((match) => match[0])
+    .filter((cell) => !/\bcolSpan=/.test(cell));
+  const getAlignment = (cell: string) => cell.match(/\btext-(?:start|end|center)\b/)?.[0] ?? "";
+  assert.deepEqual(headerCells.map(getAlignment), expectedAlignment, "desktop headers retain their logical per-column alignment");
+  assert.deepEqual(bodyCells.map(getAlignment), expectedAlignment, "desktop row values pair with their matching headers");
+  assert.ok(bodyCells.every((cell) => /\balign-middle\b/.test(cell)), "ordinary desktop cells align vertically in the middle");
+  assert.doesNotMatch(bodyCells.join(" "), /\bdir=/, "direction stays on the page; only value leaves are isolated");
+  assert.match(desktopTable, /<colgroup>[\s\S]*?<\/colgroup>/);
+  assert.match(list, /dir=\{isRtl \? "rtl" : "ltr"\}/);
   assert.match(list, /<bdi dir="ltr">\{advance\.advance_number\}<\/bdi>/);
   assert.match(list, /<bdi dir="auto">\{advance\.supplier_name\}<\/bdi>/);
+  assert.match(list, /<bdi dir="ltr" className="text-\[12px\] font-medium">\{advance\.service_number\}<\/bdi>/);
+  assert.match(list, /<bdi dir="auto" className="break-words text-\[12px\] text-on-surface-variant">\{advance\.service_title\}<\/bdi>/);
   assert.match(authorizationForm, /isolateBidiText/);
   assert.match(authorizationForm, /<option key=\{commitment\.id\} value=\{commitment\.id\}>\{label\}<\/option>/);
   assert.match(detail, /<UiDateTimeText locale=\{locale\} value=\{advance\.authorized_at\} \/>/);
@@ -214,6 +235,46 @@ test("Supplier Advances UI is bilingual, responsive, localized, and bidi-isolate
   assert.match(queries, /iban_snapshot_masked: maskIban\(text\(row\.iban_snapshot\)\)/);
   assert.doesNotMatch(detail, /payment\.iban_snapshot/);
   assert.doesNotMatch(detail, /commitment_id\}|service_receipt_id\}|\.reversed_by\}|\.allocated_by\}/);
+});
+
+test("Accounts Payable Arabic terminology is consistent and W5 Cash Advance wording stays distinct", () => {
+  assert.equal(navigationDictionaryAr.sections.accountsPayable, "حسابات الموردين");
+  assert.equal(navigationDictionaryEn.sections.accountsPayable, "Accounts Payable");
+  assert.equal(navigationDictionaryAr.modules.supplierBills, "فواتير الموردين");
+  assert.equal(navigationDictionaryAr.modules.supplierPayments, "مدفوعات الموردين");
+  assert.equal(navigationDictionaryAr.modules.supplierAdvances, "الدفعات المقدمة للموردين");
+  assert.equal(navigationDictionaryEn.modules.supplierBills, "Supplier Bills");
+  assert.equal(navigationDictionaryEn.modules.supplierPayments, "Supplier Payments");
+  assert.equal(navigationDictionaryEn.modules.supplierAdvances, "Supplier Advances");
+
+  assert.equal(supplierAdvancesDictionaryAr.title, "الدفعات المقدمة للموردين");
+  assert.equal(supplierAdvancesDictionaryAr.authorizeAdvance, "اعتماد دفعة مقدمة");
+  assert.equal(supplierAdvancesDictionaryEn.title, "Supplier Advances");
+  assert.equal(supplierAdvancesDictionaryAr.fields.paid, "الدفعة المقدمة المدفوعة");
+  assert.equal(supplierAdvancesDictionaryAr.fields.allocated, "المطبق على الفواتير");
+  assert.equal(supplierAdvancesDictionaryAr.fields.remaining, "رصيد الدفعة المقدمة المتاح");
+  assert.equal(supplierAdvancesDictionaryAr.fields.reserved, "محجوز للدفعات المقدمة");
+  assert.equal(supplierAdvancesDictionaryAr.fields.reason, "سبب اعتماد الدفعة المقدمة");
+  assert.equal(supplierAdvancesDictionaryAr.actions.recordPayment, "تسجيل دفعة مقدمة للمورد");
+  assert.equal(supplierAdvancesDictionaryAr.actions.allocate, "تطبيق الدفعة المقدمة على فاتورة المورد");
+  assert.equal(supplierAdvancesDictionaryAr.actions.refund, "تسجيل استرداد من الدفعة المقدمة");
+  assert.equal(supplierAdvancesDictionaryAr.actions.reversePayment, "عكس الدفعة المقدمة للمورد");
+  assert.equal(supplierAdvancesDictionaryAr.statuses.allocated, "مطبقة");
+  assert.doesNotMatch(JSON.stringify(supplierAdvancesDictionaryAr), /سلف/u);
+  assert.doesNotMatch(JSON.stringify(supplierAdvancesDictionaryAr), /عربون/u);
+  assert.doesNotMatch(JSON.stringify(supplierAdvancesDictionaryAr), /دفعة\s+المورد\s+المقدمة/u);
+  assert.equal(supplierBillsDictionaryAr.fields.advanceAllocated, "قيمة الدفعة المقدمة المطبقة");
+  assert.equal(supplierBillsDictionaryAr.fields.advanceAllocationHistory, "سجل تطبيقات الدفعات المقدمة");
+  assert.equal(supplierBillsDictionaryAr.advanceAllocationStatuses.allocated, "مطبقة");
+  assert.doesNotMatch(JSON.stringify(supplierBillsDictionaryAr), /سلف/u);
+
+  assert.equal(cashAdvancesDictionaryAr.header.title, "العهد النقدية");
+  assert.equal(cashAdvancesDictionaryAr.header.requestAdvance, "طلب عهدة نقدية");
+  assert.equal(cashAdvancesDictionaryAr.accountability.amountIssued, "قيمة العهدة");
+  assert.equal(cashAdvancesDictionaryAr.accountability.amountSpent, "المصروف المسوّى");
+  assert.equal(cashAdvancesDictionaryAr.accountability.amountReturned, "المسترد");
+  assert.equal(cashAdvancesDictionaryAr.accountability.remainingBalance, "الرصيد المتبقي");
+  assert.equal(cashAdvancesDictionaryAr.detail.title, "تفاصيل العهدة النقدية");
 });
 
 test("authorization route hides the editable form at zero capacity and shows the localized empty state", () => {
@@ -229,7 +290,7 @@ test("authorization route hides the editable form at zero capacity and shows the
   assert.match(authorizationPage, /dir=\{isRtl \? "rtl" : "ltr"\}/);
   assert.match(authorizationPage, /<SupplierAdvanceAuthorizationForm commitments=\{commitments\}/);
   assert.match(dictionary, /noCommitments: "No open commitment has remaining authorization capacity\."/);
-  assert.match(dictionary, /noCommitments: "لا توجد التزامات مفتوحة ذات سعة اعتماد متبقية\."/);
+  assert.match(dictionary, /noCommitments: "لا توجد التزامات مفتوحة ذات سعة متبقية لاعتماد دفعة مقدمة\."/);
 });
 
 test("Supplier Advances entry requires authorization permission and eligible commitment capacity", () => {
@@ -254,7 +315,7 @@ test("Supplier Advances entry requires authorization permission and eligible com
   assert.match(queries, /\.eq\("commitment_status", "open"\)/);
   assert.match(queries, /\.gt\("available_authorization_amount", 0\)/);
   assert.match(dictionary, /authorizeAdvance: "Authorize Advance"/);
-  assert.match(dictionary, /authorizeAdvance: "اعتماد سلفة"/);
+  assert.match(dictionary, /authorizeAdvance: "اعتماد دفعة مقدمة"/);
 });
 
 test("request IDs are replay-safe and conflicting payloads are rejected without exposing database text", () => {

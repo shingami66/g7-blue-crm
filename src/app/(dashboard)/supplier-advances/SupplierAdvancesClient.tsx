@@ -45,13 +45,13 @@ export default function SupplierAdvancesClient({
             <tbody className="divide-y divide-surface-variant text-[13px]">
               {advances.map((advance) => (
                 <tr key={advance.supplier_advance_id} className="transition-colors hover:bg-surface-container-low/50">
-                  <td className="px-3 py-3 align-top text-start"><PendingLink href={`/supplier-advances/${advance.supplier_advance_id}`} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline"><bdi dir="ltr">{advance.advance_number}</bdi></PendingLink></td>
-                  <td className="break-words px-3 py-3 align-top text-start"><bdi dir="auto">{advance.supplier_name}</bdi></td>
-                  <td className="px-3 py-3 align-top text-start"><span className="flex min-w-0 flex-col gap-0.5"><bdi dir="ltr" className="text-[12px] font-medium">{advance.service_number}</bdi><bdi dir="auto" className="break-words text-[12px] text-on-surface-variant">{advance.service_title}</bdi></span></td>
-                  <td className="px-3 py-3 align-top text-start"><UiDateText locale={locale} value={advance.authorized_at} /></td>
-                  <td className="px-3 py-3 align-top text-end"><bdi dir="ltr" className="font-semibold tabular-nums">{formatSupplierAdvanceAmount(advance.currency, advance.authorized_amount)}</bdi></td>
-                  <td className="px-3 py-3 align-top text-center"><StatusBadge variant={advance.status === "paid" ? "active" : "pending"}>{dictionary.statuses[advance.status]}</StatusBadge></td>
-                  <td className="px-3 py-3 align-top text-center"><PendingLink href={`/supplier-advances/${advance.supplier_advance_id}`} pendingLabel={dictionary.actions.view} aria-label={`${dictionary.actions.view}: ${advance.advance_number}`} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"><Eye size={16} aria-hidden="true" /></PendingLink></td>
+                  <td className="px-3 py-3 align-middle text-start"><PendingLink href={`/supplier-advances/${advance.supplier_advance_id}`} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline"><bdi dir="ltr">{advance.advance_number}</bdi></PendingLink></td>
+                  <td className="break-words px-3 py-3 align-middle text-start"><bdi dir="auto">{advance.supplier_name}</bdi></td>
+                  <td className="px-3 py-3 align-middle text-start"><span className="flex min-w-0 flex-col gap-0.5"><bdi dir="ltr" className="text-[12px] font-medium">{advance.service_number}</bdi><bdi dir="auto" className="break-words text-[12px] text-on-surface-variant">{advance.service_title}</bdi></span></td>
+                  <td className="px-3 py-3 align-middle text-start"><UiDateText locale={locale} value={advance.authorized_at} /></td>
+                  <td className="px-3 py-3 align-middle text-end"><bdi dir="ltr" className="font-semibold tabular-nums">{formatSupplierAdvanceAmount(advance.currency, advance.authorized_amount)}</bdi></td>
+                  <td className="px-3 py-3 align-middle text-center"><StatusBadge variant={advance.status === "paid" ? "active" : "pending"}>{dictionary.statuses[advance.status]}</StatusBadge></td>
+                  <td className="px-3 py-3 align-middle text-center"><PendingLink href={`/supplier-advances/${advance.supplier_advance_id}`} pendingLabel={dictionary.actions.view} aria-label={`${dictionary.actions.view}: ${advance.advance_number}`} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"><Eye size={16} aria-hidden="true" /></PendingLink></td>
                 </tr>
               ))}
               {advances.length === 0 && <tr><td colSpan={7} className="px-4 py-12 text-center text-on-surface-variant">{dictionary.states.empty}</td></tr>}
