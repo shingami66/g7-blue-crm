@@ -32,14 +32,25 @@ export default async function NewSupplierAdvancePage() {
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-5 pb-12">
       <div>
-        <PendingLink href="/supplier-advances" pendingLabel={dictionary.backToList} className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-[12px] font-semibold text-primary hover:bg-surface-container-low hover:underline">
-          {isRtl ? <ArrowRight size={16} aria-hidden="true" /> : <ArrowLeft size={16} aria-hidden="true" />}
-          <span>{dictionary.backToList}</span>
-        </PendingLink>
+        {commitments.length > 0 && (
+          <PendingLink href="/supplier-advances" pendingLabel={dictionary.backToList} className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-[12px] font-semibold text-primary hover:bg-surface-container-low hover:underline">
+            {isRtl ? <ArrowRight size={16} aria-hidden="true" /> : <ArrowLeft size={16} aria-hidden="true" />}
+            <span>{dictionary.backToList}</span>
+          </PendingLink>
+        )}
         <h1 className="mt-3 text-[24px] font-semibold text-primary">{dictionary.authorizeAdvance}</h1>
       </div>
-      {commitments.length === 0 && <p className="rounded-lg border border-surface-variant bg-surface-container-low px-4 py-3 text-[13px] text-on-surface-variant">{dictionary.states.noCommitments}</p>}
-      <SupplierAdvanceAuthorizationForm commitments={commitments} dictionary={dictionary} requestId={randomUUID()} />
+      {commitments.length === 0 ? (
+        <section role="status" data-testid="supplier-advance-no-commitments" className="flex flex-col items-start gap-4 rounded-xl border border-surface-variant bg-surface-container-lowest p-5 sm:p-6">
+          <h2 className="text-[15px] font-semibold text-on-surface">{dictionary.states.noCommitments}</h2>
+          <PendingLink href="/supplier-advances" pendingLabel={dictionary.backToList} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[13px] font-semibold text-on-primary hover:opacity-90">
+            {isRtl ? <ArrowRight size={16} aria-hidden="true" /> : <ArrowLeft size={16} aria-hidden="true" />}
+            <span>{dictionary.backToList}</span>
+          </PendingLink>
+        </section>
+      ) : (
+        <SupplierAdvanceAuthorizationForm commitments={commitments} dictionary={dictionary} requestId={randomUUID()} />
+      )}
     </div>
   );
 }

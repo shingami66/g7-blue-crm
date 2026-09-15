@@ -20,6 +20,7 @@ const billDetail = read("src/app/(dashboard)/supplier-bills/SupplierBillDetailCl
 const supplierPaymentQueries = read("src/lib/supplier-payments/queries.ts");
 const paymentTypes = read("src/lib/supplier-payments/types.ts");
 const advanceFormatting = read("src/lib/supplier-advances/formatting.ts");
+const authorizationPage = read("src/app/(dashboard)/supplier-advances/new/page.tsx");
 const supplierAdvanceEventTables = [
   "supplier_advances",
   "supplier_advance_payments",
@@ -211,6 +212,22 @@ test("Supplier Advances UI is bilingual, responsive, localized, and bidi-isolate
   assert.match(queries, /iban_snapshot_masked: maskIban\(text\(row\.iban_snapshot\)\)/);
   assert.doesNotMatch(detail, /payment\.iban_snapshot/);
   assert.doesNotMatch(detail, /commitment_id\}|service_receipt_id\}|\.reversed_by\}|\.allocated_by\}/);
+});
+
+test("authorization route hides the editable form at zero capacity and shows the localized empty state", () => {
+  const emptyBranch = authorizationPage.match(/commitments\.length === 0 \? \(([\s\S]*?)\) : \(\s*<SupplierAdvanceAuthorizationForm/)?.[1] ?? "";
+  assert.notEqual(emptyBranch, "", "the zero-commitment branch must be explicit");
+  assert.match(emptyBranch, /data-testid="supplier-advance-no-commitments"/);
+  assert.match(emptyBranch, /dictionary\.states\.noCommitments/);
+  assert.match(emptyBranch, /dictionary\.backToList/);
+  assert.match(emptyBranch, /href="\/supplier-advances"/);
+  assert.match(emptyBranch, /isRtl \? <ArrowRight size=\{16\} aria-hidden="true" \/> : <ArrowLeft size=\{16\} aria-hidden="true" \/>/);
+  assert.doesNotMatch(emptyBranch, /SupplierAdvanceAuthorizationForm|name="(?:amount|reason|document|commitment_id)"/);
+  assert.match(authorizationPage, /commitments\.length > 0 && \(/);
+  assert.match(authorizationPage, /dir=\{isRtl \? "rtl" : "ltr"\}/);
+  assert.match(authorizationPage, /<SupplierAdvanceAuthorizationForm commitments=\{commitments\}/);
+  assert.match(dictionary, /noCommitments: "No open commitment has remaining authorization capacity\."/);
+  assert.match(dictionary, /noCommitments: "لا توجد التزامات مفتوحة ذات سعة اعتماد متبقية\."/);
 });
 
 test("request IDs are replay-safe and conflicting payloads are rejected without exposing database text", () => {
