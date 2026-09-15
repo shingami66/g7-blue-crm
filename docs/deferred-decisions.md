@@ -1,13 +1,13 @@
 # G7 BLUE CRM — Deferred Decisions
 
-## CURRENT DELIVERY STATUS — W5 CLOSE / W6A CLOSE / W6B DISCOVERY — 14 September 2026
+## CURRENT DELIVERY STATUS — W5 CLOSE / W6A CLOSE / W6B CLOSE — 15 September 2026
 
 - **W5 — Expenses & Cash Advances & Petty Cash:** `CLOSED / COMPLETE`.
   - Expenses workflow, employee reimbursement workflow, Cash Advance workflow, and the Petty Cash workspace/end-to-end lifecycle are complete.
   - Owner physical acceptance and DEV verification are complete.
   - Latest W5-close product HEAD: `b4ce5b366115b1a81bc8e270d00a7a6bea9494b4`.
   - Existing Cash Advance two-session concurrency limitation remains a non-blocking environment `WARN`.
-- **W6 — Accounts Payable:** Discovery `COMPLETE`; Product Truth `OWNER APPROVED`; W6A Supplier Bills `CLOSED / COMPLETE`; W6B implementation `NOT STARTED / NOT AUTHORIZED`.
+- **W6 — Accounts Payable:** Discovery `COMPLETE`; Product Truth `OWNER APPROVED`; W6A Supplier Bills `CLOSED / COMPLETE`; W6B Supplier Payments `CLOSED / COMPLETE`.
   - AP is for genuine supplier obligations, primarily Event/Service suppliers. Routine operating purchases such as office water, internet, electricity, small stationery, and similar day-to-day costs remain in W5 Expense / Cash Advance / Petty Cash workflows and must not be duplicated in AP merely to create supplier records.
   - Event/Service supplier bills normally require an approved financial commitment/agreement. Final bills for delivered work require accepted receipt/performance evidence. Explicitly authorized deposits/prepayments may be paid before receipt when allowed by the approved commitment.
   - **W6A — Supplier Bills:** Supplier Bills foundation implemented and published. The W6A migration was applied successfully to the authorized DEV project. `BILL-2026-0001` was physically recorded and approved in DEV.
@@ -15,13 +15,20 @@
   - Owner Decision: Admin may approve a Supplier Bill recorded by the same Admin. Manager approval remains valid; Accountant remains record-only. No other role or self-approval authority was widened.
   - Supplier Bill edit UI and Service Receipt correction UI are collapsed by default. Internal UUIDs and raw statuses are not exposed as business-facing values.
   - Arabic RTL/Bidi, structured Arabic dates/date-times, mixed-content presentation, back navigation, and validation messaging were corrected and physically accepted.
-  - **W6B boundary:** Supplier Bill approval and Supplier Payment are separate business events; Supplier Payments discovery is the next bounded step, and W6B implementation is not authorized here.
+  - **W6B — Supplier Payments:** Foundation implemented and published; the DEV migration was successfully applied. AP Supplier Payments remain separate from customer payments.
+  - Admin and Accountant can read, record, and reverse Supplier Payments; Manager is read-only; Sales, Operations, and Viewer have no Supplier Payments workspace access.
+  - Partial and multiple payments are supported; payments cannot exceed the outstanding Supplier Bill balance. Payment evidence is mandatory. Bank transfers use stored supplier bank details with a payment-time snapshot.
+  - Payments are immutable; correction is by explicit reversal. Replay/idempotency and concurrency protections are implemented. Supplier Bill payment summary and history are live.
+  - `SPAY-2026-0001` was physically recorded and then reversed in DEV. The reversal restored `BILL-2026-0001` to payable `SAR 10,000.00`, paid `SAR 0.00`, outstanding `SAR 10,000.00`, status `unpaid`.
+  - Reversal audit evidence—reason, reversal date/time, and reversing user name—was physically verified. Arabic RTL/Bidi and structured date/time presentation were physically accepted.
+  - Latest accepted W6B product HEAD: `6b4590c0155f5de6f4b2a7111709fd8453bb63fc`.
   - Bills exceeding the approved commitment require a governed amendment, corrected supplier document, credit adjustment, or explicitly authorized exception.
   - Capture operational Saudi supplier invoice/tax evidence, but do not implement a VAT filing/accounting engine or claim broader ZATCA compliance.
   - Accounts Payable is a distinct domain from customer Billing & Payments. Expected workspace direction: `Supplier Bills`; `Supplier Payments`.
   - UX principle: do not expose redundant review/approval buttons; combine internal checks into one governed user action when they occur as one business decision; keep separate actions only for genuinely separate events such as approval and a later actual payment.
-  - No GL/accounting engine, VAT filing engine, FATOORA activation, deployment, or production work is authorized by this status.
-- **Next product step:** `W6B — Supplier Payments discovery`. W6B implementation is not authorized by this documentation update.
+  - W6B remains operational AP, not accounting posting. Supplier advances/deposits remain distinct from ordinary Supplier Bill payments; supplier disputes/governed corrections remain distinct from silent mutation.
+  - No GL/accounting engine, VAT filing engine, FATOORA/ZATCA activation, bank integration, PROD deployment, or production mutation is authorized by this status.
+- **Next product step:** `W6 residual discovery` covering `Supplier Advance / Deposit` and `Supplier Dispute / governed correction boundaries`. Discovery only; implementation is not authorized by this documentation update.
 
 > Dated delivery and deferral sections below preserve historical snapshots; this current section takes precedence when an older snapshot differs.
 
