@@ -27,8 +27,10 @@ export interface SupplierPaymentsDictionary {
     bankName: string;
     accountName: string;
     iban: string;
+    reversalAudit: string;
     reversalReason: string;
     reversedAt: string;
+    reversedBy: string;
   };
   columns: {
     payment: string;
@@ -66,6 +68,7 @@ export interface SupplierPaymentsDictionary {
     empty: string;
     notFound: string;
     invalidBill: string;
+    unknownUser: string;
   };
   notices: {
     saved: string;
@@ -117,7 +120,7 @@ const base: Omit<SupplierPaymentsDictionary, "locale"> = {
   recordPayment: "Record Payment",
   backToList: "Back to Supplier Payments",
   fields: {
-    paymentNumber: "Payment Number", bill: "Supplier Bill", supplier: "Supplier", service: "Event / Service", paymentDate: "Payment Date", currency: "Currency", amount: "Amount", method: "Method", reference: "Payment Reference", evidence: "Payment Evidence", notes: "Notes", recordedAt: "Recorded At", recordedBy: "Recorded By", status: "Status", payable: "Payable", paid: "Paid", outstanding: "Outstanding", bankName: "Bank", accountName: "Account Name", iban: "IBAN snapshot", reversalReason: "Reversal Reason", reversedAt: "Reversed At",
+    paymentNumber: "Payment Number", bill: "Supplier Bill", supplier: "Supplier", service: "Event / Service", paymentDate: "Payment Date", currency: "Currency", amount: "Amount", method: "Method", reference: "Payment Reference", evidence: "Payment Evidence", notes: "Notes", recordedAt: "Recorded At", recordedBy: "Recorded By", status: "Status", payable: "Payable", paid: "Paid", outstanding: "Outstanding", bankName: "Bank", accountName: "Account Name", iban: "IBAN snapshot", reversalAudit: "Reversal Audit", reversalReason: "Reversal Reason", reversedAt: "Reversed At", reversedBy: "Reversed by",
   },
   columns: { payment: "Payment", bill: "Bill", supplier: "Supplier", date: "Date", amount: "Amount", method: "Method", status: "Status", actions: "Actions" },
   methods: { bank_transfer: "Bank transfer", cash: "Cash", cheque: "Cheque" },
@@ -125,7 +128,7 @@ const base: Omit<SupplierPaymentsDictionary, "locale"> = {
   billStatuses: { unpaid: "Unpaid", partially_paid: "Partially paid", paid: "Paid" },
   actions: { view: "View payment", save: "Record Payment", cancel: "Cancel", openDocument: "Open document", reverse: "Reverse Payment", confirmReverse: "Confirm reversal" },
   forms: { paymentEvidence: "Payment evidence", paymentEvidenceHelp: "PDF, JPG, or PNG. Evidence is required for every payment.", selectMethod: "Select payment method", referenceHelp: "Reference is required for bank transfer and cheque.", bankDetailsNotice: "Bank transfer uses the supplier's stored bank details; IBAN cannot be entered here.", approvedBillOnly: "Payments can only be recorded against approved Supplier Bills.", reversalReason: "Explain why this payment is being reversed." },
-  states: { accessDenied: "Access denied", loadError: "Supplier Payments could not be loaded.", empty: "No Supplier Payments recorded yet.", notFound: "Supplier Payment not found.", invalidBill: "Select an approved Supplier Bill to record a payment." },
+  states: { accessDenied: "Access denied", loadError: "Supplier Payments could not be loaded.", empty: "No Supplier Payments recorded yet.", notFound: "Supplier Payment not found.", invalidBill: "Select an approved Supplier Bill to record a payment.", unknownUser: "Unavailable" },
   notices: { saved: "Supplier Payment recorded.", reversed: "Supplier Payment reversed.", noOutstanding: "This Supplier Bill has no outstanding balance." },
   errors: errorsEn,
 };
@@ -138,14 +141,14 @@ export const supplierPaymentsDictionaryAr: SupplierPaymentsDictionary = {
   subtitle: "المدفوعات المسجلة مقابل فواتير موردي الفعاليات والخدمات المعتمدة.",
   recordPayment: "تسجيل دفعة",
   backToList: "العودة إلى مدفوعات الموردين",
-  fields: { paymentNumber: "رقم الدفعة", bill: "فاتورة المورد", supplier: "المورد", service: "الفعالية / الخدمة", paymentDate: "تاريخ الدفع", currency: "العملة", amount: "المبلغ", method: "طريقة الدفع", reference: "مرجع الدفع", evidence: "مستند تأييد الدفع", notes: "ملاحظات", recordedAt: "تاريخ التسجيل", recordedBy: "سجّلها", status: "الحالة", payable: "المستحق", paid: "المدفوع", outstanding: "المتبقي", bankName: "البنك", accountName: "اسم الحساب", iban: "نسخة IBAN", reversalReason: "سبب العكس", reversedAt: "تاريخ العكس" },
+  fields: { paymentNumber: "رقم الدفعة", bill: "فاتورة المورد", supplier: "المورد", service: "الفعالية / الخدمة", paymentDate: "تاريخ الدفع", currency: "العملة", amount: "المبلغ", method: "طريقة الدفع", reference: "مرجع الدفع", evidence: "مستند تأييد الدفع", notes: "ملاحظات", recordedAt: "تاريخ التسجيل", recordedBy: "سجّلها", status: "الحالة", payable: "المستحق", paid: "المدفوع", outstanding: "المتبقي", bankName: "البنك", accountName: "اسم الحساب", iban: "نسخة IBAN", reversalAudit: "سجل العكس", reversalReason: "سبب العكس", reversedAt: "تاريخ العكس", reversedBy: "تم العكس بواسطة" },
   columns: { payment: "الدفعة", bill: "الفاتورة", supplier: "المورد", date: "التاريخ", amount: "المبلغ", method: "الطريقة", status: "الحالة", actions: "الإجراءات" },
   methods: { bank_transfer: "تحويل بنكي", cash: "نقدًا", cheque: "شيك" },
   statuses: { recorded: "مسجلة", reversed: "معكوسة" },
   billStatuses: { unpaid: "غير مدفوعة", partially_paid: "مدفوعة جزئيًا", paid: "مدفوعة" },
   actions: { view: "عرض الدفعة", save: "تسجيل الدفعة", cancel: "إلغاء", openDocument: "فتح المستند", reverse: "عكس الدفعة", confirmReverse: "تأكيد العكس" },
   forms: { paymentEvidence: "مستند تأييد الدفع", paymentEvidenceHelp: "PDF أو JPG أو PNG. يلزم مستند لكل دفعة.", selectMethod: "اختر طريقة الدفع", referenceHelp: "يلزم المرجع للتحويل البنكي والشيك.", bankDetailsNotice: "يستخدم التحويل البنكي بيانات المورد المحفوظة، ولا يمكن إدخال IBAN من هنا.", approvedBillOnly: "لا يمكن تسجيل الدفع إلا مقابل فاتورة مورد معتمدة.", reversalReason: "وضّح سبب عكس هذه الدفعة." },
-  states: { accessDenied: "لا توجد صلاحية", loadError: "تعذر تحميل مدفوعات الموردين.", empty: "لا توجد مدفوعات موردين مسجلة.", notFound: "لم يتم العثور على دفعة المورد.", invalidBill: "اختر فاتورة مورد معتمدة لتسجيل الدفعة." },
+  states: { accessDenied: "لا توجد صلاحية", loadError: "تعذر تحميل مدفوعات الموردين.", empty: "لا توجد مدفوعات موردين مسجلة.", notFound: "لم يتم العثور على دفعة المورد.", invalidBill: "اختر فاتورة مورد معتمدة لتسجيل الدفعة.", unknownUser: "غير متاح" },
   notices: { saved: "تم تسجيل دفعة المورد.", reversed: "تم عكس دفعة المورد.", noOutstanding: "لا يوجد رصيد مستحق على فاتورة المورد هذه." },
   errors: errorsAr,
 };

@@ -58,7 +58,6 @@ function mapPayment(row: Record<string, unknown>, reversal?: Record<string, unkn
     record_request_id: text(row.record_request_id) ?? "",
     reversed_at: text(reversal?.reversed_at),
     reversal_reason: text(reversal?.reason),
-    reversed_by: text(reversal?.reversed_by),
     status: reversal ? "reversed" : "recorded",
   };
 }
@@ -172,6 +171,12 @@ export async function getSupplierPaymentById(id: string): Promise<{ payment: Sup
     supabase.from("supplier_payment_documents").select("document_id,attached_at").eq("supplier_payment_id", payment.id).order("attached_at", { ascending: true }),
   ]);
   const reversal = (reversalResult.data ?? undefined) as Record<string, unknown> | undefined;
+  const reversedById = text(reversal?.reversed_by);
+  const reversedByResult = reversedById
+    ? await supabase.from("app_users").select("id,name,email").eq("id", reversedById).maybeSingle()
+    : { data: null };
+  const reversedBy = (reversedByResult.data ?? undefined) as Record<string, unknown> | undefined;
+  const reversedByName = text(reversedBy?.name)?.trim() || text(reversedBy?.email);
   const bill = (summaryResult.data ?? {}) as Record<string, unknown>;
   const documentLinks = rows(documentsResult.data);
   const documentIds = documentLinks.map((link) => text(link.document_id)).filter((value): value is string => Boolean(value));
@@ -197,6 +202,7 @@ export async function getSupplierPaymentById(id: string): Promise<{ payment: Sup
       bill_total: number(bill.payable_amount),
       outstanding_amount: number(bill.outstanding_amount),
       documents,
+      reversed_by_name: reversedByName,
     },
   };
 }

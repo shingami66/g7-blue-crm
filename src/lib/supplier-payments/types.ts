@@ -39,7 +39,6 @@ export interface SupplierPayment {
   record_request_id: string;
   reversed_at: string | null;
   reversal_reason: string | null;
-  reversed_by: string | null;
   status: SupplierPaymentRecordStatus;
 }
 
@@ -59,6 +58,7 @@ export interface SupplierPaymentDetail extends SupplierPayment {
   bill_total: number;
   outstanding_amount: number;
   documents: SupplierPaymentDocument[];
+  reversed_by_name: string | null;
 }
 
 export interface SupplierBillPaymentHistoryItem {
