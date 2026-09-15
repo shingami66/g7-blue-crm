@@ -1,5 +1,6 @@
 import type { SupplierBillPaymentHistoryItem, SupplierBillPaymentSummary } from "@/lib/supplier-payments/types";
 import type { SupplierBillAdvanceAllocationHistoryItem } from "@/lib/supplier-advances/types";
+import type { ListPageSize } from "../pagination.ts";
 
 export type SupplierBillStatus = "pending" | "approved";
 
@@ -32,11 +33,36 @@ export interface SupplierBill {
   record_request_id: string;
 }
 
-export interface SupplierBillListItem extends SupplierBill {
+/** Fields required by the authenticated Supplier Bills list only. */
+export interface SupplierBillListItem {
+  id: string;
+  bill_number: string;
+  invoice_number: string;
+  invoice_date: string;
+  total_amount: number;
+  status: SupplierBillStatus;
   supplier_name: string;
   service_number: string;
   service_title: string;
   event_name: string | null;
+}
+
+export interface SupplierBillListQuery {
+  page?: number;
+  pageSize?: ListPageSize;
+}
+
+export interface SupplierBillListPagination {
+  page: number;
+  pageSize: ListPageSize;
+  total: number;
+  totalPages: number;
+}
+
+export interface SupplierBillsListResult {
+  bills: SupplierBillListItem[];
+  pagination: SupplierBillListPagination;
+  error?: "supplier_bills_load_failed";
 }
 
 export interface SupplierBillDocument {

@@ -8,7 +8,18 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import { UiDateText } from "@/components/i18n/UiDateText";
 import { formatSarAmount } from "@/lib/i18n/formatting";
 import type { SupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
-import type { SupplierBillListItem } from "@/lib/supplier-bills/types";
+import type { SupplierBillListItem, SupplierBillListPagination } from "@/lib/supplier-bills/types";
+import PaginationFooter from "@/components/ui/PaginationFooter";
+import { useListNavigation } from "@/components/ui/useListNavigation";
+import type { ListPageSize } from "@/lib/pagination";
+
+function supplierBillsHref(page: number, pageSize: ListPageSize) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (pageSize !== 10) params.set("pageSize", String(pageSize));
+  const query = params.toString();
+  return query ? `/supplier-bills?${query}` : "/supplier-bills";
+}
 
 function statusVariant(status: SupplierBillListItem["status"]): "pending" | "active" {
   return status === "approved" ? "active" : "pending";
@@ -16,16 +27,20 @@ function statusVariant(status: SupplierBillListItem["status"]): "pending" | "act
 
 export default function SupplierBillsClient({
   bills,
+  pagination,
   canRecord,
   canApprove,
   dictionary,
 }: {
   bills: SupplierBillListItem[];
+  pagination: SupplierBillListPagination;
   canRecord: boolean;
   canApprove: boolean;
   dictionary: SupplierBillsDictionary;
 }) {
   const locale = dictionary.locale;
+  const stateKey = `${pagination.page}|${pagination.pageSize}`;
+  const { isPending, navigate } = useListNavigation(stateKey);
   return (
     <div dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-5 pb-12" data-supplier-bills-workspace="list">
       <PageHeader title={dictionary.title} subtitle={dictionary.subtitle}>
@@ -43,6 +58,18 @@ export default function SupplierBillsClient({
         <div className="border-b border-surface-variant bg-surface-container-low px-4 py-3 text-[12px] text-on-surface-variant">
           {dictionary.notices.approvalGate}
         </div>
+        {pagination.total > 0 && (
+          <PaginationFooter
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            pageSize={pagination.pageSize}
+            paginationMode="bounded"
+            isPending={isPending}
+            onPageChange={(page) => navigate(supplierBillsHref(page, pagination.pageSize), "push")}
+            onPageSizeChange={(pageSize: ListPageSize) => navigate(supplierBillsHref(1, pageSize), "replace")}
+          />
+        )}
         <div className="hidden overflow-x-auto lg:block">
           <table className="w-full min-w-[940px] table-fixed border-collapse text-start" data-testid="supplier-bills-desktop-table">
             <colgroup>

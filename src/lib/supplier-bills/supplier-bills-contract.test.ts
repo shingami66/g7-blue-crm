@@ -13,6 +13,8 @@ const correctiveMigration = readFileSync(
 const sidebar = readFileSync(new URL("../../components/layout/Sidebar.tsx", import.meta.url), "utf8");
 const permissions = readFileSync(new URL("../auth/role-permissions.ts", import.meta.url), "utf8");
 const storage = readFileSync(new URL("../documents/storage.ts", import.meta.url), "utf8");
+const listQueries = readFileSync(new URL("./queries.ts", import.meta.url), "utf8");
+const listPage = readFileSync(new URL("../../app/(dashboard)/supplier-bills/page.tsx", import.meta.url), "utf8");
 const listClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/SupplierBillsClient.tsx", import.meta.url), "utf8");
 const detailClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/SupplierBillDetailClient.tsx", import.meta.url), "utf8");
 const formClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/SupplierBillForm.tsx", import.meta.url), "utf8");
@@ -145,6 +147,34 @@ test("W6A exposes a distinct bilingual Supplier Bills workspace with one approva
     assert.match(dictionary, new RegExp(code));
   }
   assert.match(dictionary, /supplier_bill_self_approval_forbidden/);
+});
+
+test("Supplier Bills list uses shared server pagination and keeps URL page state", () => {
+  const start = listQueries.indexOf("export async function getSupplierBillsList");
+  const end = listQueries.indexOf("export async function getSupplierBillById", start);
+  assert.ok(start >= 0 && end > start, "the paginated Supplier Bills query must remain identifiable");
+  const listQuery = listQueries.slice(start, end);
+  const countStart = listQueries.indexOf("async function getSupplierBillsCount");
+  const countEnd = listQueries.indexOf("function getSupplierBillsPagination", countStart);
+  const pageRowsStart = listQueries.indexOf("async function getSupplierBillListRows");
+  const pageRowsEnd = listQueries.indexOf("function mapSupplierBillListItem", pageRowsStart);
+  const countQuery = listQueries.slice(countStart, countEnd);
+  const pageRowsQuery = listQueries.slice(pageRowsStart, pageRowsEnd);
+  assert.match(listQuery, /getSupplierBillsCount\(supabase\)/);
+  assert.match(listQuery, /getSupplierBillListRows\(supabase, pagination\)/);
+  assert.match(countQuery, /\.select\("id", \{ count: "exact", head: true \}\)/);
+  assert.match(pageRowsQuery, /\.select\(SUPPLIER_BILL_LIST_SELECT\)/);
+  assert.match(pageRowsQuery, /\.range\(rangeStart, rangeStart \+ pagination\.pageSize - 1\)/);
+  assert.doesNotMatch(pageRowsQuery, /\.select\("\*"\)/);
+  assert.match(listPage, /searchParams: Promise<SupplierBillsSearchParams>/);
+  assert.match(listPage, /page: normalizeListPage\(params\.page\)/);
+  assert.match(listPage, /pageSize: normalizeListPageSize\(params\.pageSize\)/);
+  assert.match(listClient, /<PaginationFooter/);
+  assert.match(listClient, /paginationMode="bounded"/);
+  assert.match(listClient, /supplierBillsHref\(page, pagination\.pageSize\)/);
+  assert.match(listClient, /supplierBillsHref\(1, pageSize\)/);
+  assert.match(listClient, /data-testid="supplier-bills-desktop-table"/);
+  assert.match(listClient, /data-testid="supplier-bills-mobile-cards"/);
 });
 
 test("Supplier Bills keep RTL table alignment and isolate atomic values at the leaf", () => {

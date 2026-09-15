@@ -2,6 +2,7 @@ import "server-only";
 
 import { requirePermission } from "@/lib/auth/permissions";
 import { SUPPLIER_BILL_PERMISSIONS } from "@/lib/auth/role-permissions";
+import { normalizeListPage, normalizeListPageSize } from "@/lib/pagination";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupplierBillPaymentHistory, getSupplierBillPaymentSummary } from "@/lib/supplier-payments/queries";
 import { getSupplierBillAdvanceAllocationHistory } from "@/lib/supplier-advances/queries";
@@ -12,6 +13,9 @@ import type {
   SupplierBillDocument,
   SupplierBillFormOptions,
   SupplierBillListItem,
+  SupplierBillListPagination,
+  SupplierBillListQuery,
+  SupplierBillsListResult,
   SupplierBillReceiptOption,
   SupplierBillServiceOption,
   SupplierBillSupplierOption,
@@ -69,41 +73,118 @@ function mapBill(row: Record<string, unknown>): SupplierBill {
   };
 }
 
-export async function getSupplierBillsList(): Promise<{ bills: SupplierBillListItem[]; error?: string }> {
-  await requirePermission(SUPPLIER_BILL_PERMISSIONS.read);
-  const supabase = getSupplierBillClient();
-  const { data, error } = await supabase
+const SUPPLIER_BILL_LIST_SELECT =
+  "id,bill_number,supplier_id,service_id,invoice_number,invoice_date,total_amount,status,supplier_name_snapshot";
+
+type SupplierBillListServiceContext = {
+  serviceNumber: string;
+  serviceTitle: string;
+  eventName: string | null;
+};
+
+type SupplierBillClient = ReturnType<typeof getSupplierBillClient>;
+
+function emptySupplierBillsResult(
+  pageSize: ReturnType<typeof normalizeListPageSize>,
+): SupplierBillsListResult {
+  return {
+    bills: [],
+    pagination: { page: 1, pageSize, total: 0, totalPages: 1 },
+    error: "supplier_bills_load_failed",
+  };
+}
+
+async function getSupplierBillsCount(supabase: SupplierBillClient): Promise<number | null> {
+  const { count, error: countError } = await supabase
     .from("supplier_bills")
-    .select("*")
+    .select("id", { count: "exact", head: true });
+  return countError ? null : count ?? 0;
+}
+
+function getSupplierBillsPagination(
+  total: number,
+  requestedPage: number | undefined,
+  pageSize: ReturnType<typeof normalizeListPageSize>,
+): SupplierBillListPagination {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  return {
+    page: Math.min(normalizeListPage(requestedPage), totalPages),
+    pageSize,
+    total,
+    totalPages,
+  };
+}
+
+async function getSupplierBillListRows(
+  supabase: SupplierBillClient,
+  pagination: SupplierBillListPagination,
+): Promise<Record<string, unknown>[] | null> {
+  const rangeStart = (pagination.page - 1) * pagination.pageSize;
+  const { data: billQueryData, error: billQueryError } = await supabase
+    .from("supplier_bills")
+    .select(SUPPLIER_BILL_LIST_SELECT)
     .order("invoice_date", { ascending: false })
     .order("bill_number", { ascending: true })
-    .order("id", { ascending: true });
-  if (error) return { bills: [], error: "supplier_bills_load_failed" };
+    .order("id", { ascending: true })
+    .range(rangeStart, rangeStart + pagination.pageSize - 1);
+  return billQueryError ? null : rows(billQueryData);
+}
 
-  const bills = rows(data).map(mapBill);
-  const supplierIds = [...new Set(bills.map((bill) => bill.supplier_id).filter(Boolean))];
-  const serviceIds = [...new Set(bills.map((bill) => bill.service_id).filter(Boolean))];
+function mapSupplierBillListItem(
+  row: Record<string, unknown>,
+  supplierNames: Map<string, string>,
+  services: Map<string, SupplierBillListServiceContext>,
+): SupplierBillListItem {
+  const supplierId = text(row.supplier_id) ?? "";
+  const serviceId = text(row.service_id) ?? "";
+  const service = services.get(serviceId);
+  return {
+    id: text(row.id) ?? "",
+    bill_number: text(row.bill_number) ?? "",
+    invoice_number: text(row.invoice_number) ?? "",
+    invoice_date: text(row.invoice_date) ?? "",
+    total_amount: number(row.total_amount),
+    status: row.status === "approved" ? "approved" : "pending",
+    supplier_name: supplierNames.get(supplierId) ?? text(row.supplier_name_snapshot) ?? "",
+    service_number: service?.serviceNumber ?? "—",
+    service_title: service?.serviceTitle ?? "—",
+    event_name: service?.eventName ?? null,
+  };
+}
+
+async function enrichSupplierBillListRows(
+  supabase: SupplierBillClient,
+  billRows: Record<string, unknown>[],
+): Promise<SupplierBillListItem[]> {
+  const supplierIds = [...new Set(billRows.map((bill) => text(bill.supplier_id)).filter((id): id is string => Boolean(id)))];
+  const serviceIds = [...new Set(billRows.map((bill) => text(bill.service_id)).filter((id): id is string => Boolean(id)))];
   const [supplierResult, serviceResult] = await Promise.all([
-    supplierIds.length ? supabase.from("suppliers").select("id,name,display_name,legal_name").in("id", supplierIds) : Promise.resolve({ data: [], error: null }),
+    supplierIds.length ? supabase.from("suppliers").select("id,name,display_name").in("id", supplierIds) : Promise.resolve({ data: [], error: null }),
     serviceIds.length ? supabase.from("services").select("id,service_number,service_title,event_name").in("id", serviceIds) : Promise.resolve({ data: [], error: null }),
   ]);
-  const suppliers = new Map(rows(supplierResult.data).map((row) => [text(row.id) ?? "", text(row.display_name) ?? text(row.name) ?? "—"]));
+  const supplierNames = new Map(rows(supplierResult.data).map((row) => [text(row.id) ?? "", text(row.display_name) ?? text(row.name) ?? "—"]));
   const services = new Map(rows(serviceResult.data).map((row) => [text(row.id) ?? "", {
     serviceNumber: text(row.service_number) ?? "—",
     serviceTitle: text(row.service_title) ?? "—",
     eventName: text(row.event_name),
   }]));
+  return billRows.map((row) => mapSupplierBillListItem(row, supplierNames, services));
+}
+
+export async function getSupplierBillsList(
+  options: SupplierBillListQuery = {},
+): Promise<SupplierBillsListResult> {
+  await requirePermission(SUPPLIER_BILL_PERMISSIONS.read);
+  const pageSize = normalizeListPageSize(options.pageSize);
+  const supabase = getSupplierBillClient();
+  const total = await getSupplierBillsCount(supabase);
+  if (total === null) return emptySupplierBillsResult(pageSize);
+  const pagination = getSupplierBillsPagination(total, options.page, pageSize);
+  const billRows = await getSupplierBillListRows(supabase, pagination);
+  if (!billRows) return emptySupplierBillsResult(pageSize);
   return {
-    bills: bills.map((bill) => {
-      const service = services.get(bill.service_id);
-      return {
-        ...bill,
-        supplier_name: suppliers.get(bill.supplier_id) ?? bill.supplier_name_snapshot,
-        service_number: service?.serviceNumber ?? "—",
-        service_title: service?.serviceTitle ?? "—",
-        event_name: service?.eventName ?? null,
-      };
-    }),
+    bills: await enrichSupplierBillListRows(supabase, billRows),
+    pagination,
   };
 }
 

@@ -3,32 +3,55 @@ import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { checkPermission } from "@/lib/auth/permissions";
 import { SUPPLIER_BILL_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import { normalizeListPage, normalizeListPageSize } from "@/lib/pagination";
 import { getSupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
 import { getSupplierBillsList } from "@/lib/supplier-bills/queries";
 import SupplierBillsClient from "./SupplierBillsClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function SupplierBillsPage() {
-  const [locale, canRead, canRecord, canApprove] = await Promise.all([
+type SupplierBillsSearchParams = {
+  page?: string;
+  pageSize?: string;
+};
+
+type SupplierBillsPageLoad =
+  | { state: "accessDenied" | "loadError" }
+  | { list: Awaited<ReturnType<typeof getSupplierBillsList>> };
+
+async function loadSupplierBillsPage(params: SupplierBillsSearchParams): Promise<SupplierBillsPageLoad> {
+  try {
+    const list = await getSupplierBillsList({
+      page: normalizeListPage(params.page),
+      pageSize: normalizeListPageSize(params.pageSize),
+    });
+    return list.error ? { state: "loadError" } : { list };
+  } catch (error) {
+    if (error instanceof UnauthorizedError) redirect("/sign-in");
+    return { state: error instanceof ForbiddenError ? "accessDenied" : "loadError" };
+  }
+}
+
+export default async function SupplierBillsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SupplierBillsSearchParams>;
+}) {
+  const [locale, canRead, canRecord, canApprove, params] = await Promise.all([
     getCurrentSessionEffectiveLocale(),
     checkPermission(SUPPLIER_BILL_PERMISSIONS.read),
     checkPermission(SUPPLIER_BILL_PERMISSIONS.record),
     checkPermission(SUPPLIER_BILL_PERMISSIONS.approve),
+    searchParams,
   ]);
   const dictionary = getSupplierBillsDictionary(locale);
   if (!canRead) return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
-  let bills: Awaited<ReturnType<typeof getSupplierBillsList>>["bills"] = [];
-  let state: "accessDenied" | "loadError" | null = null;
-  try {
-    bills = (await getSupplierBillsList()).bills;
-  } catch (error) {
-    if (error instanceof UnauthorizedError) redirect("/sign-in");
-    state = error instanceof ForbiddenError ? "accessDenied" : "loadError";
+  const pageLoad = await loadSupplierBillsPage(params);
+  if ("state" in pageLoad) {
+    const message = pageLoad.state === "accessDenied" ? dictionary.states.accessDenied : dictionary.states.loadError;
+    return <StateCard title={message} message={message} />;
   }
-  if (state === "accessDenied") return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
-  if (state === "loadError") return <StateCard title={dictionary.states.loadError} message={dictionary.states.loadError} />;
-  return <SupplierBillsClient bills={bills} canRecord={canRecord} canApprove={canApprove} dictionary={dictionary} />;
+  return <SupplierBillsClient bills={pageLoad.list.bills} pagination={pageLoad.list.pagination} canRecord={canRecord} canApprove={canApprove} dictionary={dictionary} />;
 }
 
 function StateCard({ title, message }: { title: string; message: string }) {
