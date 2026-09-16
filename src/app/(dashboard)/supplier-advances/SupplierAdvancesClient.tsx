@@ -7,25 +7,45 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import { UiDateText } from "@/components/i18n/UiDateText";
 import { formatSupplierAdvanceAmount } from "@/lib/supplier-advances/formatting";
 import type { SupplierAdvancesDictionary } from "@/lib/i18n/dictionaries/supplier-advances";
-import type { SupplierAdvanceListItem } from "@/lib/supplier-advances/types";
+import type { SupplierAdvanceListItem, SupplierAdvanceListPagination } from "@/lib/supplier-advances/types";
+import PaginationFooter from "@/components/ui/PaginationFooter";
+import { useListNavigation } from "@/components/ui/useListNavigation";
+import type { ListPageSize } from "@/lib/pagination";
+import { supplierAdvancesHref } from "@/lib/supplier-advances/navigation";
 
 export default function SupplierAdvancesClient({
   advances,
+  pagination,
   canAuthorize,
   dictionary,
 }: {
   advances: SupplierAdvanceListItem[];
+  pagination: SupplierAdvanceListPagination;
   canAuthorize: boolean;
   dictionary: SupplierAdvancesDictionary;
 }) {
   const locale = dictionary.locale;
   const isRtl = locale === "ar";
+  const stateKey = `${pagination.page}|${pagination.pageSize}`;
+  const { isPending, navigate } = useListNavigation(stateKey);
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-5 pb-12" data-supplier-advances-workspace="list">
       <PageHeader title={dictionary.title} subtitle={dictionary.subtitle}>
         {canAuthorize && <PendingLink href="/supplier-advances/new" pendingLabel={dictionary.authorizeAdvance} className="inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 py-2 text-[13px] font-semibold text-on-primary hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{dictionary.authorizeAdvance}</PendingLink>}
       </PageHeader>
       <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-label={dictionary.title}>
+        {pagination.total > 0 && (
+          <PaginationFooter
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            pageSize={pagination.pageSize}
+            paginationMode="bounded"
+            isPending={isPending}
+            onPageChange={(page) => navigate(supplierAdvancesHref(page, pagination.pageSize), "push")}
+            onPageSizeChange={(pageSize: ListPageSize) => navigate(supplierAdvancesHref(1, pageSize), "replace")}
+          />
+        )}
         <div className="hidden overflow-x-auto lg:block">
           <table className="w-full min-w-0 table-fixed border-collapse text-start" data-testid="supplier-advances-desktop-table">
             <colgroup>

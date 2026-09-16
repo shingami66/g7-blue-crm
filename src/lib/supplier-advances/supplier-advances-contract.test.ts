@@ -6,6 +6,7 @@ import { navigationDictionaryAr, navigationDictionaryEn } from "../i18n/dictiona
 import { supplierAdvancesDictionaryAr, supplierAdvancesDictionaryEn } from "../i18n/dictionaries/supplier-advances.ts";
 import { supplierBillsDictionaryAr } from "../i18n/dictionaries/supplier-bills.ts";
 import { isSupplierAdvanceAuthorizationAvailable } from "./authorization-availability.ts";
+import { supplierAdvancesHref, supplierAdvancesQueryMatchesPagination } from "./navigation.ts";
 
 const root = new URL("../../../", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), "utf8");
@@ -26,6 +27,8 @@ const supplierPaymentQueries = read("src/lib/supplier-payments/queries.ts");
 const paymentTypes = read("src/lib/supplier-payments/types.ts");
 const advanceFormatting = read("src/lib/supplier-advances/formatting.ts");
 const advancesPage = read("src/app/(dashboard)/supplier-advances/page.tsx");
+const advancesNavigation = read("src/lib/supplier-advances/navigation.ts");
+const advancesTypes = read("src/lib/supplier-advances/types.ts");
 const authorizationPage = read("src/app/(dashboard)/supplier-advances/new/page.tsx");
 const supplierAdvanceEventTables = [
   "supplier_advances",
@@ -307,15 +310,48 @@ test("Supplier Advances entry requires authorization permission and eligible com
   }
 
   assert.match(advancesPage, /checkPermission\(SUPPLIER_ADVANCE_PERMISSIONS\.authorize\)/);
-  assert.match(advancesPage, /hasAuthorizationPermission\s*\?\s*getSupplierAdvanceCommitmentOptions\(\)\s*:\s*Promise\.resolve\(\[\]\)/);
-  assert.match(advancesPage, /isSupplierAdvanceAuthorizationAvailable\(\s*hasAuthorizationPermission,\s*eligibleCommitments\.length,?\s*\)/);
+  assert.match(advancesPage, /hasAuthorizationPermission\s*\?\s*hasEligibleSupplierAdvanceCommitments\(\)\s*:\s*Promise\.resolve\(false\)/);
+  assert.match(advancesPage, /isSupplierAdvanceAuthorizationAvailable\(\s*hasAuthorizationPermission,\s*hasEligibleCommitment \? 1 : 0,?\s*\)/);
   assert.match(advancesPage, /canAuthorize=\{canAuthorize\}/);
   assert.match(list, /\{canAuthorize && <PendingLink href="\/supplier-advances\/new"/);
   assert.match(queries, /\.from\("supplier_advance_commitment_balances"\)/);
   assert.match(queries, /\.eq\("commitment_status", "open"\)/);
   assert.match(queries, /\.gt\("available_authorization_amount", 0\)/);
+  assert.match(queries, /export async function hasEligibleSupplierAdvanceCommitments\(\)/);
+  assert.match(queries, /\.select\("commitment_id"\)/);
+  assert.match(queries, /\.limit\(1\)/);
+  assert.match(authorizationPage, /getSupplierAdvanceCommitmentOptions\(\)/);
   assert.match(dictionary, /authorizeAdvance: "Authorize Advance"/);
   assert.match(dictionary, /authorizeAdvance: "اعتماد دفعة مقدمة"/);
+});
+
+test("Supplier Advances global list is bounded, compact, and canonicalized", () => {
+  assert.match(advancesTypes, /interface SupplierAdvanceListQuery/);
+  assert.match(advancesTypes, /interface SupplierAdvanceListPagination/);
+  assert.match(advancesTypes, /interface SupplierAdvancesListResult/);
+  assert.match(queries, /const SUPPLIER_ADVANCE_LIST_SELECT =/);
+  assert.match(queries, /\.select\("supplier_advance_id", \{ count: "exact", head: true \}\)/);
+  assert.match(queries, /\.select\(SUPPLIER_ADVANCE_LIST_SELECT\)/);
+  assert.match(queries, /\.range\(rangeStart, rangeStart \+ pagination\.pageSize - 1\)/);
+  assert.match(queries, /getSupplierAdvancesPagination\(/);
+  assert.match(queries, /enrichListItems\(supabase, base, times\)/);
+  assert.match(advancesPage, /searchParams: Promise<SupplierAdvancesSearchParams>/);
+  assert.match(advancesPage, /page: normalizeListPage\(params\.page\)/);
+  assert.match(advancesPage, /pageSize: normalizeListPageSize\(params\.pageSize\)/);
+  assert.match(advancesPage, /supplierAdvancesQueryMatchesPagination\(params, pageLoad\.list\.pagination\.page, pageLoad\.list\.pagination\.pageSize\)/);
+  assert.match(advancesPage, /redirect\(supplierAdvancesHref\(pageLoad\.list\.pagination\.page, pageLoad\.list\.pagination\.pageSize\)\)/);
+  assert.match(list, /<PaginationFooter/);
+  assert.match(list, /paginationMode="bounded"/);
+  assert.match(list, /supplierAdvancesHref\(page, pagination\.pageSize\)/);
+  assert.match(list, /supplierAdvancesHref\(1, pageSize\)/);
+
+  assert.equal(supplierAdvancesHref(1, 10), "/supplier-advances");
+  assert.equal(supplierAdvancesHref(1, 20), "/supplier-advances?pageSize=20");
+  assert.equal(supplierAdvancesHref(2, 10), "/supplier-advances?page=2");
+  assert.equal(supplierAdvancesQueryMatchesPagination({ page: "2", pageSize: "10" }, 1, 10), false);
+  assert.equal(supplierAdvancesQueryMatchesPagination({ page: "1", pageSize: "20" }, 1, 20), true);
+  assert.equal(supplierAdvancesQueryMatchesPagination({}, 1, 10), true);
+  assert.match(advancesNavigation, /LIST_PAGE_SIZES|ListPageSize/);
 });
 
 test("request IDs are replay-safe and conflicting payloads are rejected without exposing database text", () => {

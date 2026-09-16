@@ -2,6 +2,7 @@ import "server-only";
 
 import { requirePermission } from "@/lib/auth/permissions";
 import { SUPPLIER_ADVANCE_PERMISSIONS } from "@/lib/auth/role-permissions";
+import { normalizeListPage, normalizeListPageSize } from "@/lib/pagination";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   SupplierAdvanceAllocation,
@@ -11,6 +12,9 @@ import type {
   SupplierAdvanceDetail,
   SupplierAdvanceDocument,
   SupplierAdvanceListItem,
+  SupplierAdvanceListPagination,
+  SupplierAdvanceListQuery,
+  SupplierAdvancesListResult,
   SupplierAdvancePayment,
   SupplierAdvanceRefund,
   SupplierBillAdvanceAllocationHistoryItem,
@@ -99,7 +103,7 @@ async function commitmentContext(supabase: ReturnType<typeof client>, commitment
 
 async function enrichListItems(
   supabase: ReturnType<typeof client>,
-  base: SupplierAdvanceBalance[],
+  base: Array<Pick<SupplierAdvanceBalance, "supplier_advance_id" | "advance_number" | "commitment_id" | "supplier_id" | "service_id" | "currency" | "authorized_amount" | "status">>,
   authorizedAtById: Map<string, string>,
 ): Promise<SupplierAdvanceListItem[]> {
   const supplierIds = [...new Set(base.map((item) => item.supplier_id).filter(Boolean))];
@@ -130,19 +134,92 @@ async function enrichListItems(
   });
 }
 
-export async function getSupplierAdvancesList(): Promise<{ advances: SupplierAdvanceListItem[]; error?: string }> {
+const SUPPLIER_ADVANCE_LIST_SELECT =
+  "supplier_advance_id,advance_number,commitment_id,supplier_id,service_id,currency,authorized_amount,authorized_at,status";
+
+type SupplierAdvanceClient = ReturnType<typeof client>;
+
+function emptySupplierAdvancesResult(
+  pageSize: ReturnType<typeof normalizeListPageSize>,
+): SupplierAdvancesListResult {
+  return {
+    advances: [],
+    pagination: { page: 1, pageSize, total: 0, totalPages: 1 },
+    error: "supplier_advances_load_failed",
+  };
+}
+
+async function getSupplierAdvancesCount(supabase: SupplierAdvanceClient): Promise<number | null> {
+  const { count, error: countError } = await supabase
+    .from("supplier_advance_balances")
+    .select("supplier_advance_id", { count: "exact", head: true });
+  return countError ? null : count ?? 0;
+}
+
+function getSupplierAdvancesPagination(
+  total: number,
+  requestedPage: number | undefined,
+  pageSize: ReturnType<typeof normalizeListPageSize>,
+): SupplierAdvanceListPagination {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  return {
+    page: Math.min(normalizeListPage(requestedPage), totalPages),
+    pageSize,
+    total,
+    totalPages,
+  };
+}
+
+async function getSupplierAdvanceListRows(
+  supabase: SupplierAdvanceClient,
+  pagination: SupplierAdvanceListPagination,
+): Promise<Record<string, unknown>[] | null> {
+  const rangeStart = (pagination.page - 1) * pagination.pageSize;
+  const { data: advanceQueryData, error: advanceQueryError } = await supabase
+    .from("supplier_advance_balances")
+    .select(SUPPLIER_ADVANCE_LIST_SELECT)
+    .order("authorized_at", { ascending: false })
+    .order("advance_number", { ascending: true })
+    .order("supplier_advance_id", { ascending: true })
+    .range(rangeStart, rangeStart + pagination.pageSize - 1);
+  return advanceQueryError ? null : rows(advanceQueryData);
+}
+
+export async function getSupplierAdvancesList(
+  options: SupplierAdvanceListQuery = {},
+): Promise<SupplierAdvancesListResult> {
   await requirePermission(SUPPLIER_ADVANCE_PERMISSIONS.read);
   const supabase = client();
-  const { data, error } = await supabase
-    .from("supplier_advance_balances")
-    .select("*")
-    .order("authorized_at", { ascending: false })
-    .order("advance_number", { ascending: true });
-  if (error) return { advances: [], error: "supplier_advances_load_failed" };
-  const balanceRows = rows(data);
-  const base = balanceRows.map(mapBalance);
+  const pageSize = normalizeListPageSize(options.pageSize);
+  const total = await getSupplierAdvancesCount(supabase);
+  if (total === null) return emptySupplierAdvancesResult(pageSize);
+  const pagination = getSupplierAdvancesPagination(total, options.page, pageSize);
+  const balanceRows = await getSupplierAdvanceListRows(supabase, pagination);
+  if (!balanceRows) return emptySupplierAdvancesResult(pageSize);
+  const base = balanceRows.map((row) => ({
+    supplier_advance_id: text(row.supplier_advance_id) ?? "",
+    advance_number: text(row.advance_number) ?? "",
+    commitment_id: text(row.commitment_id) ?? "",
+    supplier_id: text(row.supplier_id) ?? "",
+    service_id: text(row.service_id) ?? "",
+    currency: text(row.currency)?.trim() ?? "",
+    authorized_amount: number(row.authorized_amount),
+    status: row.status === "paid" || row.status === "partially_paid" ? row.status : "authorized",
+  } satisfies Pick<SupplierAdvanceBalance, "supplier_advance_id" | "advance_number" | "commitment_id" | "supplier_id" | "service_id" | "currency" | "authorized_amount" | "status">));
   const times = new Map(balanceRows.map((row) => [text(row.supplier_advance_id) ?? "", text(row.authorized_at) ?? ""]));
-  return { advances: await enrichListItems(supabase, base, times) };
+  return { advances: await enrichListItems(supabase, base, times), pagination };
+}
+
+export async function hasEligibleSupplierAdvanceCommitments(): Promise<boolean> {
+  await requirePermission(SUPPLIER_ADVANCE_PERMISSIONS.read);
+  const { data, error } = await client()
+    .from("supplier_advance_commitment_balances")
+    .select("commitment_id")
+    .eq("commitment_status", "open")
+    .gt("available_authorization_amount", 0)
+    .limit(1);
+  if (error) throw new Error("Supplier Advance commitments could not be loaded");
+  return rows(data).length > 0;
 }
 
 export async function getSupplierAdvanceCommitmentOptions(): Promise<SupplierAdvanceCommitmentOption[]> {
@@ -404,6 +481,7 @@ export async function getSupplierAdvanceById(id: string): Promise<{ advance: Sup
   const baseItem = await enrichListItems(supabase, [balance], new Map([[id, text(advance.authorized_at) ?? ""]]));
   return {
     advance: {
+      ...balance,
       ...baseItem[0],
       reason: text(advance.reason) ?? "",
       authorized_by_name: userNames.get(text(advance.authorized_by) ?? "") ?? "Unavailable",

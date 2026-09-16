@@ -1,3 +1,4 @@
+import type { ListPageSize } from "@/lib/pagination";
 import type { SupplierPaymentMethod } from "@/lib/supplier-payments/types";
 
 export type SupplierAdvanceStatus = "authorized" | "partially_paid" | "paid";
@@ -18,13 +19,39 @@ export interface SupplierAdvanceBalance {
   status: SupplierAdvanceStatus;
 }
 
-export interface SupplierAdvanceListItem extends SupplierAdvanceBalance {
+export interface SupplierAdvanceListItem {
+  supplier_advance_id: string;
+  advance_number: string;
+  commitment_id: string;
+  supplier_id: string;
+  service_id: string;
+  currency: string;
+  authorized_amount: number;
+  status: SupplierAdvanceStatus;
   supplier_name: string;
   service_number: string;
   service_title: string;
   commitment_source: string;
   commitment_reference: string | null;
   authorized_at: string;
+}
+
+export interface SupplierAdvanceListQuery {
+  page?: number;
+  pageSize?: ListPageSize;
+}
+
+export interface SupplierAdvanceListPagination {
+  page: number;
+  pageSize: ListPageSize;
+  total: number;
+  totalPages: number;
+}
+
+export interface SupplierAdvancesListResult {
+  advances: SupplierAdvanceListItem[];
+  pagination: SupplierAdvanceListPagination;
+  error?: "supplier_advances_load_failed";
 }
 
 export interface SupplierAdvanceDocument {
@@ -80,7 +107,13 @@ export interface SupplierAdvanceRefund {
   documents: SupplierAdvanceDocument[];
 }
 
-export interface SupplierAdvanceDetail extends SupplierAdvanceListItem {
+export interface SupplierAdvanceDetail extends SupplierAdvanceBalance {
+  supplier_name: string;
+  service_number: string;
+  service_title: string;
+  commitment_source: string;
+  commitment_reference: string | null;
+  authorized_at: string;
   reason: string;
   authorized_by_name: string;
   commitment_authorized_amount: number;
