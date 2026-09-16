@@ -12,14 +12,7 @@ import type { SupplierBillListItem, SupplierBillListPagination } from "@/lib/sup
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import { useListNavigation } from "@/components/ui/useListNavigation";
 import type { ListPageSize } from "@/lib/pagination";
-
-function supplierBillsHref(page: number, pageSize: ListPageSize) {
-  const params = new URLSearchParams();
-  if (page > 1) params.set("page", String(page));
-  if (pageSize !== 10) params.set("pageSize", String(pageSize));
-  const query = params.toString();
-  return query ? `/supplier-bills?${query}` : "/supplier-bills";
-}
+import { supplierBillsHref } from "@/lib/supplier-bills/navigation";
 
 function statusVariant(status: SupplierBillListItem["status"]): "pending" | "active" {
   return status === "approved" ? "active" : "pending";

@@ -5,6 +5,7 @@ import { SUPPLIER_BILL_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { normalizeListPage, normalizeListPageSize } from "@/lib/pagination";
 import { getSupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
+import { supplierBillsHref, supplierBillsQueryMatchesPagination } from "@/lib/supplier-bills/navigation";
 import { getSupplierBillsList } from "@/lib/supplier-bills/queries";
 import SupplierBillsClient from "./SupplierBillsClient";
 
@@ -50,6 +51,9 @@ export default async function SupplierBillsPage({
   if ("state" in pageLoad) {
     const message = pageLoad.state === "accessDenied" ? dictionary.states.accessDenied : dictionary.states.loadError;
     return <StateCard title={message} message={message} />;
+  }
+  if (!supplierBillsQueryMatchesPagination(params, pageLoad.list.pagination.page, pageLoad.list.pagination.pageSize)) {
+    redirect(supplierBillsHref(pageLoad.list.pagination.page, pageLoad.list.pagination.pageSize));
   }
   return <SupplierBillsClient bills={pageLoad.list.bills} pagination={pageLoad.list.pagination} canRecord={canRecord} canApprove={canApprove} dictionary={dictionary} />;
 }

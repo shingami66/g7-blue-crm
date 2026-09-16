@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import {
+  supplierBillsHref,
+  supplierBillsQueryMatchesPagination,
+} from "./navigation.ts";
 
 const migration = readFileSync(
   new URL("../../../supabase/migrations/20260913120000_w6a_supplier_bills_foundation.sql", import.meta.url),
@@ -175,6 +179,27 @@ test("Supplier Bills list uses shared server pagination and keeps URL page state
   assert.match(listClient, /supplierBillsHref\(1, pageSize\)/);
   assert.match(listClient, /data-testid="supplier-bills-desktop-table"/);
   assert.match(listClient, /data-testid="supplier-bills-mobile-cards"/);
+});
+
+test("Supplier Bills canonicalize out-of-range page URLs to effective pagination", () => {
+  assert.equal(
+    supplierBillsQueryMatchesPagination({ page: "2", pageSize: "10" }, 1, 10),
+    false,
+  );
+  assert.equal(supplierBillsHref(1, 10), "/supplier-bills");
+
+  assert.equal(
+    supplierBillsQueryMatchesPagination({ page: "2", pageSize: "20" }, 1, 20),
+    false,
+  );
+  assert.equal(supplierBillsHref(1, 20), "/supplier-bills?pageSize=20");
+
+  assert.equal(
+    supplierBillsQueryMatchesPagination({ page: "1", pageSize: "20" }, 1, 20),
+    true,
+  );
+  assert.match(listPage, /supplierBillsQueryMatchesPagination\(params, pageLoad\.list\.pagination\.page, pageLoad\.list\.pagination\.pageSize\)/);
+  assert.match(listPage, /redirect\(supplierBillsHref\(pageLoad\.list\.pagination\.page, pageLoad\.list\.pagination\.pageSize\)\)/);
 });
 
 test("Supplier Bills keep RTL table alignment and isolate atomic values at the leaf", () => {
