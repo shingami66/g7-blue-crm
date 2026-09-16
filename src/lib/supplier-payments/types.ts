@@ -1,3 +1,5 @@
+import type { ListPageSize } from "@/lib/pagination";
+
 export type SupplierPaymentMethod = "bank_transfer" | "cash" | "cheque";
 export type SupplierPaymentRecordStatus = "recorded" | "reversed";
 export type SupplierBillPaymentStatus = "unpaid" | "partially_paid" | "paid";
@@ -43,11 +45,34 @@ export interface SupplierPayment {
   status: SupplierPaymentRecordStatus;
 }
 
-export interface SupplierPaymentListItem extends SupplierPayment {
+export interface SupplierPaymentListItem {
+  id: string;
+  payment_number: string;
+  supplier_bill_id: string;
+  payment_date: string;
+  amount: number;
+  method: SupplierPaymentMethod;
   bill_number: string;
   supplier_name: string;
-  service_number: string;
-  service_title: string;
+  status: SupplierPaymentRecordStatus;
+}
+
+export interface SupplierPaymentListQuery {
+  page?: number;
+  pageSize?: ListPageSize;
+}
+
+export interface SupplierPaymentListPagination {
+  page: number;
+  pageSize: ListPageSize;
+  total: number;
+  totalPages: number;
+}
+
+export interface SupplierPaymentsListResult {
+  payments: SupplierPaymentListItem[];
+  pagination: SupplierPaymentListPagination;
+  error?: "supplier_payments_load_failed";
 }
 
 export interface SupplierPaymentDetail extends SupplierPayment {

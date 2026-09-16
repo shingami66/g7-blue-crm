@@ -2,6 +2,7 @@ import "server-only";
 
 import { requirePermission } from "@/lib/auth/permissions";
 import { SUPPLIER_PAYMENT_PERMISSIONS } from "@/lib/auth/role-permissions";
+import { normalizeListPage, normalizeListPageSize } from "@/lib/pagination";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   SupplierBillPaymentHistoryItem,
@@ -10,6 +11,9 @@ import type {
   SupplierPaymentDetail,
   SupplierPaymentDocument,
   SupplierPaymentListItem,
+  SupplierPaymentListPagination,
+  SupplierPaymentListQuery,
+  SupplierPaymentsListResult,
   SupplierPaymentMethod,
 } from "./types";
 
@@ -76,6 +80,17 @@ function mapSummary(row: Record<string, unknown>): SupplierBillPaymentSummary {
   };
 }
 
+const SUPPLIER_PAYMENT_LIST_SELECT =
+  "id,payment_number,supplier_bill_id,supplier_id,payment_date,amount,method";
+
+type SupplierPaymentClient = ReturnType<typeof getSupplierPaymentClient>;
+type SupplierPaymentEnriched = SupplierPayment & {
+  bill_number: string;
+  supplier_name: string;
+  service_number: string;
+  service_title: string;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function reversalMap(supabase: any, paymentIds: string[]) {
   if (!paymentIds.length) return new Map<string, Record<string, unknown>>();
@@ -87,7 +102,15 @@ async function reversalMap(supabase: any, paymentIds: string[]) {
 async function enrichPayments(supabase: any, baseRows: Record<string, unknown>[]) {
   const payments = baseRows.map((row) => mapPayment(row));
   const reversalByPayment = await reversalMap(supabase, payments.map((payment) => payment.id).filter(Boolean));
-  const enriched = payments.map((payment) => mapPayment(baseRows.find((row) => row.id === payment.id) ?? {}, reversalByPayment.get(payment.id)));
+  const enriched = payments.map((payment) => {
+    const reversal = reversalByPayment.get(payment.id);
+    return {
+      ...payment,
+      reversed_at: text(reversal?.reversed_at),
+      reversal_reason: text(reversal?.reason),
+      status: reversal ? "reversed" : "recorded",
+    } satisfies SupplierPayment;
+  });
   const billIds = [...new Set(enriched.map((payment) => payment.supplier_bill_id).filter(Boolean))];
   const supplierIds = [...new Set(enriched.map((payment) => payment.supplier_id).filter(Boolean))];
   const serviceIds = [...new Set(enriched.map((payment) => payment.service_id).filter(Boolean))];
@@ -108,21 +131,115 @@ async function enrichPayments(supabase: any, baseRows: Record<string, unknown>[]
       supplier_name: suppliers.get(payment.supplier_id) ?? "—",
       service_number: service.number,
       service_title: service.title,
+    } satisfies SupplierPaymentEnriched;
+  });
+}
+
+function emptySupplierPaymentsResult(
+  pageSize: ReturnType<typeof normalizeListPageSize>,
+): SupplierPaymentsListResult {
+  return {
+    payments: [],
+    pagination: { page: 1, pageSize, total: 0, totalPages: 1 },
+    error: "supplier_payments_load_failed",
+  };
+}
+
+async function getSupplierPaymentsCount(supabase: SupplierPaymentClient): Promise<number | null> {
+  const { count, error: countError } = await supabase
+    .from("supplier_payments")
+    .select("id", { count: "exact", head: true });
+  return countError ? null : count ?? 0;
+}
+
+function getSupplierPaymentsPagination(
+  total: number,
+  requestedPage: number | undefined,
+  pageSize: ReturnType<typeof normalizeListPageSize>,
+): SupplierPaymentListPagination {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  return {
+    page: Math.min(normalizeListPage(requestedPage), totalPages),
+    pageSize,
+    total,
+    totalPages,
+  };
+}
+
+async function getSupplierPaymentListRows(
+  supabase: SupplierPaymentClient,
+  pagination: SupplierPaymentListPagination,
+): Promise<Record<string, unknown>[] | null> {
+  const rangeStart = (pagination.page - 1) * pagination.pageSize;
+  const { data: paymentQueryData, error: paymentQueryError } = await supabase
+    .from("supplier_payments")
+    .select(SUPPLIER_PAYMENT_LIST_SELECT)
+    .order("payment_date", { ascending: false })
+    .order("payment_number", { ascending: true })
+    .order("id", { ascending: true })
+    .range(rangeStart, rangeStart + pagination.pageSize - 1);
+  return paymentQueryError ? null : rows(paymentQueryData);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function reversedPaymentIds(supabase: any, paymentIds: string[]): Promise<Set<string>> {
+  if (!paymentIds.length) return new Set<string>();
+  const { data } = await supabase
+    .from("supplier_payment_reversals")
+    .select("supplier_payment_id")
+    .in("supplier_payment_id", paymentIds);
+  return new Set(
+    rows(data)
+      .map((row) => text(row.supplier_payment_id))
+      .filter((id): id is string => Boolean(id)),
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function enrichSupplierPaymentListRows(supabase: any, baseRows: Record<string, unknown>[]): Promise<SupplierPaymentListItem[]> {
+  const paymentIds = baseRows.map((row) => text(row.id)).filter((id): id is string => Boolean(id));
+  const billIds = [...new Set(baseRows.map((row) => text(row.supplier_bill_id)).filter((id): id is string => Boolean(id)))];
+  const supplierIds = [...new Set(baseRows.map((row) => text(row.supplier_id)).filter((id): id is string => Boolean(id)))];
+  const [reversedIds, billsResult, suppliersResult] = await Promise.all([
+    reversedPaymentIds(supabase, paymentIds),
+    billIds.length ? supabase.from("supplier_bills").select("id,bill_number").in("id", billIds) : Promise.resolve({ data: [] }),
+    supplierIds.length ? supabase.from("suppliers").select("id,name,display_name").in("id", supplierIds) : Promise.resolve({ data: [] }),
+  ]);
+  const billNumbers = new Map(rows(billsResult.data).map((row) => [text(row.id) ?? "", text(row.bill_number) ?? "—"]));
+  const supplierNames = new Map(rows(suppliersResult.data).map((row) => [text(row.id) ?? "", text(row.display_name) ?? text(row.name) ?? "—"]));
+  return baseRows.map((row) => {
+    const id = text(row.id) ?? "";
+    const supplierBillId = text(row.supplier_bill_id) ?? "";
+    const supplierId = text(row.supplier_id) ?? "";
+    return {
+      id,
+      payment_number: text(row.payment_number) ?? "",
+      supplier_bill_id: supplierBillId,
+      payment_date: text(row.payment_date) ?? "",
+      amount: number(row.amount),
+      method: method(row.method),
+      bill_number: billNumbers.get(supplierBillId) ?? "—",
+      supplier_name: supplierNames.get(supplierId) ?? "—",
+      status: reversedIds.has(id) ? "reversed" : "recorded",
     } satisfies SupplierPaymentListItem;
   });
 }
 
-export async function getSupplierPaymentsList(): Promise<{ payments: SupplierPaymentListItem[]; error?: string }> {
+export async function getSupplierPaymentsList(
+  options: SupplierPaymentListQuery = {},
+): Promise<SupplierPaymentsListResult> {
   await requirePermission(SUPPLIER_PAYMENT_PERMISSIONS.read);
+  const pageSize = normalizeListPageSize(options.pageSize);
   const supabase = getSupplierPaymentClient();
-  const { data, error } = await supabase
-    .from("supplier_payments")
-    .select("*")
-    .order("payment_date", { ascending: false })
-    .order("payment_number", { ascending: true })
-    .order("id", { ascending: true });
-  if (error) return { payments: [], error: "supplier_payments_load_failed" };
-  return { payments: await enrichPayments(supabase, rows(data)) };
+  const total = await getSupplierPaymentsCount(supabase);
+  if (total === null) return emptySupplierPaymentsResult(pageSize);
+  const pagination = getSupplierPaymentsPagination(total, options.page, pageSize);
+  const paymentRows = await getSupplierPaymentListRows(supabase, pagination);
+  if (!paymentRows) return emptySupplierPaymentsResult(pageSize);
+  return {
+    payments: await enrichSupplierPaymentListRows(supabase, paymentRows),
+    pagination,
+  };
 }
 
 export async function getSupplierBillPaymentSummary(billId: string): Promise<SupplierBillPaymentSummary | null> {

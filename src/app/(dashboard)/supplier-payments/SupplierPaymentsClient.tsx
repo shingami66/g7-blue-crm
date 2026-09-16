@@ -6,22 +6,42 @@ import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { UiDateText } from "@/components/i18n/UiDateText";
 import { formatSarAmount } from "@/lib/i18n/formatting";
+import PaginationFooter from "@/components/ui/PaginationFooter";
+import { useListNavigation } from "@/components/ui/useListNavigation";
+import type { ListPageSize } from "@/lib/pagination";
 import type { SupplierPaymentsDictionary } from "@/lib/i18n/dictionaries/supplier-payments";
-import type { SupplierPaymentListItem } from "@/lib/supplier-payments/types";
+import { supplierPaymentsHref } from "@/lib/supplier-payments/navigation";
+import type { SupplierPaymentListItem, SupplierPaymentListPagination } from "@/lib/supplier-payments/types";
 
 export default function SupplierPaymentsClient({
   payments,
+  pagination,
   dictionary,
 }: {
   payments: SupplierPaymentListItem[];
+  pagination: SupplierPaymentListPagination;
   dictionary: SupplierPaymentsDictionary;
 }) {
   const locale = dictionary.locale;
   const isRtl = locale === "ar";
+  const stateKey = `${pagination.page}|${pagination.pageSize}`;
+  const { isPending, navigate } = useListNavigation(stateKey);
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-5 pb-12" data-supplier-payments-workspace="list">
       <PageHeader title={dictionary.title} subtitle={dictionary.subtitle} />
       <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-label={dictionary.title}>
+        {pagination.total > 0 && (
+          <PaginationFooter
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            pageSize={pagination.pageSize}
+            paginationMode="bounded"
+            isPending={isPending}
+            onPageChange={(page) => navigate(supplierPaymentsHref(page, pagination.pageSize), "push")}
+            onPageSizeChange={(pageSize: ListPageSize) => navigate(supplierPaymentsHref(1, pageSize), "replace")}
+          />
+        )}
         <div className="hidden overflow-x-auto lg:block">
           <table className="w-full min-w-[960px] table-fixed border-collapse text-start" data-testid="supplier-payments-desktop-table">
             <colgroup>

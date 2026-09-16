@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { supplierPaymentsHref, supplierPaymentsQueryMatchesPagination } from "./navigation.ts";
 
 const migration = readFileSync(new URL("../../../supabase/migrations/20260914112636_w6b_supplier_payments_foundation.sql", import.meta.url), "utf8");
 const permissions = readFileSync(new URL("../auth/role-permissions.ts", import.meta.url), "utf8");
@@ -9,6 +10,8 @@ const sidebar = readFileSync(new URL("../../components/layout/Sidebar.tsx", impo
 const layout = readFileSync(new URL("../../app/(dashboard)/layout.tsx", import.meta.url), "utf8");
 const actions = readFileSync(new URL("./actions.ts", import.meta.url), "utf8");
 const queries = readFileSync(new URL("./queries.ts", import.meta.url), "utf8");
+const paymentTypes = readFileSync(new URL("./types.ts", import.meta.url), "utf8");
+const listPage = readFileSync(new URL("../../app/(dashboard)/supplier-payments/page.tsx", import.meta.url), "utf8");
 const listClient = readFileSync(new URL("../../app/(dashboard)/supplier-payments/SupplierPaymentsClient.tsx", import.meta.url), "utf8");
 const formClient = readFileSync(new URL("../../app/(dashboard)/supplier-payments/SupplierPaymentForm.tsx", import.meta.url), "utf8");
 const detailClient = readFileSync(new URL("../../app/(dashboard)/supplier-payments/SupplierPaymentDetailClient.tsx", import.meta.url), "utf8");
@@ -113,6 +116,45 @@ test("payable view is derived from approved bills and excludes reversed payments
   assert.match(queries, /getSupplierBillPaymentHistory/);
   assert.match(queries, /supplier_bill_payment_balances/);
   assert.match(queries, /supplier_payment_reversals/);
+});
+
+test("Supplier Payments global list is bounded, compact, and URL-backed", () => {
+  const listStart = queries.indexOf("export async function getSupplierPaymentsList");
+  const listEnd = queries.indexOf("export async function getSupplierBillPaymentSummary", listStart);
+  assert.notEqual(listStart, -1);
+  assert.notEqual(listEnd, -1);
+  const listQuery = queries.slice(listStart, listEnd);
+
+  assert.match(listQuery, /SupplierPaymentListQuery/);
+  assert.match(queries, /const SUPPLIER_PAYMENT_LIST_SELECT/);
+  assert.match(listQuery, /getSupplierPaymentListRows/);
+  assert.match(queries, /count: "exact", head: true/);
+  assert.match(queries, /\.range\(rangeStart, rangeStart \+ pagination\.pageSize - 1\)/);
+  assert.match(queries, /enrichSupplierPaymentListRows/);
+  assert.doesNotMatch(queries, /baseRows\.find/);
+  assert.doesNotMatch(paymentTypes, /interface SupplierPaymentListItem extends SupplierPayment/);
+
+  assert.match(listPage, /searchParams/);
+  assert.match(listPage, /normalizeListPage\(params\.page\)/);
+  assert.match(listPage, /normalizeListPageSize\(params\.pageSize\)/);
+  assert.match(listPage, /supplierPaymentsQueryMatchesPagination/);
+  assert.match(listPage, /redirect\(supplierPaymentsHref\(/);
+  assert.match(listClient, /PaginationFooter/);
+  assert.match(listClient, /useListNavigation/);
+  assert.match(listClient, /supplierPaymentsHref/);
+  assert.match(listClient, /onPageSizeChange/);
+
+  assert.equal(supplierPaymentsHref(1, 10), "/supplier-payments");
+  assert.equal(supplierPaymentsHref(1, 20), "/supplier-payments?pageSize=20");
+  assert.equal(supplierPaymentsHref(3, 50), "/supplier-payments?page=3&pageSize=50");
+  assert.equal(
+    supplierPaymentsQueryMatchesPagination({ page: "2", pageSize: "10" }, 1, 10),
+    false,
+  );
+  assert.equal(
+    supplierPaymentsQueryMatchesPagination({ page: "1", pageSize: "20" }, 1, 20),
+    true,
+  );
 });
 
 test("permissions and navigation keep Supplier Payments distinct from customer payments", () => {
