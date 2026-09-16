@@ -7,10 +7,15 @@ description: Evidence-first performance guidance for materially relevant Next.js
 
 Use this skill when a task has a reported page or navigation slowdown, a measurable
 performance regression, payload or bundle concern, rendering or hydration concern,
-performance-sensitive loading, or a candidate optimization that must be remeasured.
-It is routed domain expertise, not a workflow controller. Agent Control remains the
-authority for task scope, Writer/Reviewer lifecycle, HOLD semantics, Git, database,
-deployment, production, and the final Task Verdict.
+performance-sensitive loading, a candidate optimization that must be remeasured, or
+new or modified code that materially introduces or changes a scale-sensitive
+collection surface. This includes global or growing operational lists, search or
+result collections, history or activity feeds, large or growing pickers or choosers,
+dashboard collection reads, and collection-enrichment pipelines. Do not route this
+skill for ordinary presentation-only React/TSX changes or provably bounded trivial
+collections. It is routed domain expertise, not a workflow controller. Agent Control
+remains the authority for task scope, Writer/Reviewer lifecycle, HOLD semantics,
+Git, database, deployment, production, and the final Task Verdict.
 
 ## Evidence first
 
@@ -28,6 +33,54 @@ deployment, production, and the final Task Verdict.
   a slow Postgres query.
 - Treat PRIMARY, SECONDARY, and OPTIONAL as reasoning categories, not mandatory
   execution modes or a fixed benchmark ceremony.
+
+## Structural scale-safety and collection invariants
+
+Structural scale-safety violations may be established from deterministic repository
+evidence without runtime benchmarking. Examples include:
+
+- a growing global list with no application-defined bound;
+- enrichment performed before collection bounding;
+- unnecessary detail-sized projection crossing a list boundary;
+- per-row remote calls across a growing collection;
+- repeated whole-collection scans with avoidable collection-size amplification;
+- silent fixed truncation where users need access to remaining records.
+
+Runtime measurement remains required for claims that a page is currently slow, one
+implementation materially improves latency, a cache or index improves runtime
+performance, database execution is the responsible bottleneck, or production
+capacity or performance is acceptable. Structural scale safety is not proof of
+measured user-visible latency.
+
+For a materially affected collection path, classify the collection as growing,
+provably domain-bounded, or an intentional exhaustive operation. For growing
+interactive collections:
+
+- establish a server-side application-defined bound before enrichment or
+  serialization using pagination, range, cursor, validated limit, or equivalent;
+- preserve access to remaining records where completeness is required;
+- use deterministic ordering suitable for the pagination strategy;
+- use list-appropriate projections or DTOs instead of defaulting to detail payloads;
+- perform enrichment against the bounded result set;
+- avoid per-row remote calls and avoidable repeated whole-collection scans.
+
+For exhaustive financial or authoritative processing, preserve complete truth
+independently of display bounds through appropriate aggregation, batching, or
+deterministic chunk traversal rather than truncating authoritative calculations.
+Naturally or domain-bounded collections may remain unpaginated when repository or
+domain evidence establishes a real, justified bound. A foreign-key filter or a
+currently small DEV dataset does not establish a hard cardinality bound.
+
+## Regression protection
+
+When a scale invariant is part of the feature contract, add a focused feature-local
+regression contract for the material behavior. Depending on the path, cover
+server-side range, cursor, or limit behavior; continuation or pagination access;
+deterministic ordering; compact list projection; enrichment after bounding; and
+boundary normalization or canonicalization for URL-backed pagination. Do not require
+generic repository-wide regex enforcement, and do not define `.select("*")` itself
+as a defect: single-record detail reads, legitimate bounded queries, aggregate or
+RPC results, and intentionally exhaustive processing remain valid.
 
 ## Safe reasoning and candidate changes
 
@@ -72,6 +125,9 @@ or production authority.
 - Use the smallest evidence set that can answer the question; Lighthouse, Core Web
   Vitals, Vercel telemetry, Server-Timing, or database plans are useful only when
   they match the claim, and none is mandatory for every task.
+- Do not require runtime benchmarking merely to report a deterministic structural
+  scale-safety violation. Benchmark when the claim is about latency, runtime
+  improvement, database attribution, cache or index benefit, or production capacity.
 - Remeasure a candidate under comparable conditions, including repeated runs when
   variability could change the result. Retain a candidate only when the measured
   user-visible or server-side result is materially better without a regression in
