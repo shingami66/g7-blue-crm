@@ -66,6 +66,7 @@ test("Application workflow uses bounded queries and all four W7A RPCs", () => {
   assert.match(queries, /customer_invoice_settlement_balances/);
   assert.match(queries, /receipt_amount/);
   assert.match(queries, /searchCustomerOptions/);
+  assert.match(queries, /getCustomerReceiptAllocationPage/);
   assert.match(actions, /record_customer_receipt/);
   assert.match(actions, /allocate_customer_receipt/);
   assert.match(actions, /reverse_customer_receipt_allocation/);
@@ -75,4 +76,6 @@ test("Application workflow uses bounded queries and all four W7A RPCs", () => {
   assert.match(client, /reverseCustomerReceiptAction/);
   assert.match(client, /dictionary\.actions\.search/);
   assert.doesNotMatch(client, /dictionary\.states\.failed \+?\s*`?\$\{/);
+  assert.doesNotMatch(client, /Customer receipt allocation correction|Customer receipt correction/);
+  assert.match(client, /reasonRequired/);
 });

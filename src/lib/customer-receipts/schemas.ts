@@ -49,3 +49,9 @@ export const customerReceiptInvoiceSearchSchema = z.object({
 export const customerSearchSchema = z.object({
   search: z.string().max(120).optional(),
 });
+
+export const customerReceiptAllocationPageSchema = z.object({
+  paymentId: z.string().uuid(),
+  page: z.number().int().min(1).optional(),
+  pageSize: z.union([z.literal(10), z.literal(20), z.literal(50)]).optional(),
+});

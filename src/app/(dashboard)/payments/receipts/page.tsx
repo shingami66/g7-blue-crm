@@ -6,10 +6,15 @@ import {
   normalizeListPage,
   normalizeListPageSize,
 } from "@/lib/pagination";
-import { getCustomerReceiptWorkspaceData } from "@/lib/customer-receipts/queries";
+import { getCustomerReceiptAllocationPage, getCustomerReceiptWorkspaceData } from "@/lib/customer-receipts/queries";
+import type { CustomerReceiptAllocationPage } from "@/lib/customer-receipts/types";
 import CustomerReceiptsClient from "./CustomerReceiptsClient";
 
 export const dynamic = "force-dynamic";
+
+function emptyAllocationPage(): CustomerReceiptAllocationPage {
+  return { allocations: [], pagination: { page: 1, pageSize: 10, total: 0, totalPages: 1 } };
+}
 
 type SearchParams = {
   page?: string;
@@ -34,8 +39,12 @@ export default async function CustomerReceiptsPage({
   };
 
   let data: Awaited<ReturnType<typeof getCustomerReceiptWorkspaceData>>;
+  let initialAllocationPage: CustomerReceiptAllocationPage;
   try {
     data = await getCustomerReceiptWorkspaceData(query);
+    initialAllocationPage = data.receipts[0]
+      ? await getCustomerReceiptAllocationPage(data.receipts[0].paymentId, { page: 1, pageSize: 10 })
+      : emptyAllocationPage();
   } catch (error) {
     if (error instanceof UnauthorizedError) redirect("/sign-in");
     if (error instanceof ForbiddenError) {
@@ -57,5 +66,6 @@ export default async function CustomerReceiptsPage({
     );
   }
 
-  return <CustomerReceiptsClient data={data} query={query} dictionary={dictionary} />;
+  const workspaceKey = `${query.page}:${query.pageSize}:${query.search ?? ""}:${data.receipts[0]?.paymentId ?? "empty"}`;
+  return <CustomerReceiptsClient key={workspaceKey} data={data} initialAllocationPage={initialAllocationPage} query={query} dictionary={dictionary} />;
 }

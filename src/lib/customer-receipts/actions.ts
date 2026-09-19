@@ -5,14 +5,15 @@ import { AuthDependencyError, ForbiddenError, UnauthorizedError } from "@/lib/au
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   allocateCustomerReceiptSchema,
+  customerReceiptAllocationPageSchema,
   customerSearchSchema,
   customerReceiptInvoiceSearchSchema,
   recordCustomerReceiptSchema,
   reverseCustomerReceiptAllocationSchema,
   reverseCustomerReceiptSchema,
 } from "./schemas";
-import { getEligibleCustomerInvoices, searchCustomerOptions } from "./queries";
-import type { CustomerOption, CustomerReceiptActionResult, EligibleCustomerInvoice } from "./types";
+import { getCustomerReceiptAllocationPage, getEligibleCustomerInvoices, searchCustomerOptions } from "./queries";
+import type { CustomerOption, CustomerReceiptActionResult, CustomerReceiptAllocationPage, EligibleCustomerInvoice } from "./types";
 
 type ReceiptRpcClient = {
   rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
@@ -92,6 +93,27 @@ export async function searchCustomerOptionsAction(
     if (error instanceof ForbiddenError) return { success: false, error: "Forbidden" };
     console.error("[searchCustomerOptionsAction] operation failed");
     return { success: false, error: "customer_search_failed" };
+  }
+}
+
+export async function getCustomerReceiptAllocationPageAction(
+  input: unknown,
+): Promise<{ success: boolean; error?: string; data?: CustomerReceiptAllocationPage }> {
+  try {
+    const parsed = customerReceiptAllocationPageSchema.safeParse(input);
+    if (!parsed.success) return { success: false, error: "invalid_customer_receipt_allocation_page" };
+    return {
+      success: true,
+      data: await getCustomerReceiptAllocationPage(parsed.data.paymentId, {
+        page: parsed.data.page ?? 1,
+        pageSize: parsed.data.pageSize ?? 10,
+      }),
+    };
+  } catch (error) {
+    if (error instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (error instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    console.error("[getCustomerReceiptAllocationPageAction] operation failed");
+    return { success: false, error: "customer_receipt_allocation_page_failed" };
   }
 }
 

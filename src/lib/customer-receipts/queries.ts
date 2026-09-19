@@ -7,6 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   CustomerOption,
   CustomerReceiptAllocation,
+  CustomerReceiptAllocationPage,
+  CustomerReceiptAllocationQuery,
   CustomerReceiptMethod,
   CustomerReceiptWorkspaceData,
   CustomerReceiptWorkspaceQuery,
@@ -156,57 +158,17 @@ export async function getCustomerReceiptWorkspaceData(
   if (error) throw new Error("customer_receipts_data_failed");
 
   const rows = (Array.isArray(data) ? data : []) as ReceiptViewRow[];
-  const paymentIds = rows.map((row) => row.payment_id);
   const customerIdSet = [...new Set(rows.map((row) => row.customer_id))];
 
-  const [allocationResult, customerResult] = await Promise.all([
-    paymentIds.length > 0
-      ? supabase
-        .from("customer_receipt_allocations")
-        .select("id, payment_id, invoice_id, customer_id, amount, allocated_at, allocated_by, customer_receipt_allocation_reversals(id)")
-        .in("payment_id", paymentIds)
-        .limit(Math.max(50, paymentIds.length * 20))
-      : Promise.resolve({ data: [], error: null }),
-    customerIdSet.length > 0
-      ? supabase.from("customers").select("id, company, contact").in("id", customerIdSet).limit(customerIdSet.length)
-      : Promise.resolve({ data: [], error: null }),
-  ]);
-  if (allocationResult.error || customerResult.error) throw new Error("customer_receipts_detail_failed");
-
-  const allocationRows = (Array.isArray(allocationResult.data) ? allocationResult.data : []) as AllocationRow[];
-  const invoiceIds = [...new Set(allocationRows.map((row) => row.invoice_id))];
-  const { data: invoiceRows, error: invoiceError } = invoiceIds.length > 0
-    ? await supabase.from("invoices").select("id, invoice_number").in("id", invoiceIds).limit(invoiceIds.length)
+  const customerResult = customerIdSet.length > 0
+    ? await supabase.from("customers").select("id, company, contact").in("id", customerIdSet).limit(customerIdSet.length)
     : { data: [], error: null };
-  if (invoiceError) throw new Error("customer_receipts_invoice_detail_failed");
+  if (customerResult.error) throw new Error("customer_receipts_customer_detail_failed");
 
-  const invoiceRowsTyped = (Array.isArray(invoiceRows) ? invoiceRows : []) as Array<{ id: string; invoice_number: string | null }>;
   const customerRowsTyped = (Array.isArray(customerResult.data) ? customerResult.data : []) as CustomerRow[];
-  const invoiceNumberById = new Map<string, string | null>(
-    invoiceRowsTyped.map((row): [string, string | null] => [row.id, row.invoice_number ?? null]),
-  );
   const customerNameById = new Map<string, string>(
     customerRowsTyped.map((row): [string, string] => [row.id, customerLabel(row)]),
   );
-  const allocationsByPayment = new Map<string, CustomerReceiptAllocation[]>();
-  for (const row of allocationRows) {
-    const allocation: CustomerReceiptAllocation = {
-      id: row.id,
-      paymentId: row.payment_id,
-      invoiceId: row.invoice_id,
-      invoiceNumber: invoiceNumberById.get(row.invoice_id) ?? null,
-      amount: money(row.amount),
-      allocatedAt: row.allocated_at,
-      allocatedBy: row.allocated_by,
-      reversed: Array.isArray(row.customer_receipt_allocation_reversals)
-        ? row.customer_receipt_allocation_reversals.length > 0
-        : Boolean(row.customer_receipt_allocation_reversals),
-    };
-    const list = allocationsByPayment.get(row.payment_id) ?? [];
-    list.push(allocation);
-    allocationsByPayment.set(row.payment_id, list);
-  }
-
   return {
     receipts: rows.map((row) => ({
       paymentId: row.payment_id,
@@ -222,11 +184,76 @@ export async function getCustomerReceiptWorkspaceData(
       unappliedAmount: money(row.unapplied_amount),
       receiptStatus: row.receipt_status,
       createdAt: row.created_at,
-      allocations: allocationsByPayment.get(row.payment_id) ?? [],
     })),
     customers: await getCustomerOptions(supabase),
     pagination: { page, pageSize: query.pageSize, total, totalPages },
   };
+}
+
+export async function getCustomerReceiptAllocationPage(
+  paymentId: string,
+  query: CustomerReceiptAllocationQuery,
+): Promise<CustomerReceiptAllocationPage> {
+  await requirePermission("payments:read");
+  const supabase = createAdminClient() as unknown as ReceiptSupabaseClient;
+  const { data: parentRows, error: parentError } = await supabase
+    .from("payments")
+    .select("id")
+    .eq("id", paymentId)
+    .is("invoice_id", null)
+    .eq("is_deleted", false)
+    .limit(1);
+  if (parentError) throw new Error("customer_receipts_parent_failed");
+  if (!Array.isArray(parentRows) || parentRows.length === 0) {
+    return { allocations: [], pagination: { page: 1, pageSize: query.pageSize, total: 0, totalPages: 1 } };
+  }
+
+  const allocationProjection = "id, payment_id, invoice_id, amount, allocated_at, allocated_by, customer_receipt_allocation_reversals(id)";
+  const countQuery = supabase
+    .from("customer_receipt_allocations")
+    .select("id", { count: "exact", head: true })
+    .eq("payment_id", paymentId);
+  const { count, error: countError } = await countQuery;
+  if (countError) throw new Error("customer_receipts_allocation_count_failed");
+
+  const total = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / query.pageSize));
+  const page = Math.min(Math.max(query.page, 1), totalPages);
+  const rangeStart = (page - 1) * query.pageSize;
+  const { data, error } = await supabase
+    .from("customer_receipt_allocations")
+    .select(allocationProjection)
+    .eq("payment_id", paymentId)
+    .order("allocated_at", { ascending: false })
+    .order("id", { ascending: false })
+    .range(rangeStart, rangeStart + query.pageSize - 1);
+  if (error) throw new Error("customer_receipts_allocation_data_failed");
+
+  const allocationRows = (Array.isArray(data) ? data : []) as AllocationRow[];
+  const invoiceIds = [...new Set(allocationRows.map((row) => row.invoice_id))];
+  const { data: invoiceRows, error: invoiceError } = invoiceIds.length > 0
+    ? await supabase.from("invoices").select("id, invoice_number").in("id", invoiceIds).limit(invoiceIds.length)
+    : { data: [], error: null };
+  if (invoiceError) throw new Error("customer_receipts_invoice_detail_failed");
+
+  const invoiceRowsTyped = (Array.isArray(invoiceRows) ? invoiceRows : []) as Array<{ id: string; invoice_number: string | null }>;
+  const invoiceNumberById = new Map<string, string | null>(
+    invoiceRowsTyped.map((row): [string, string | null] => [row.id, row.invoice_number ?? null]),
+  );
+  const allocations = allocationRows.map((row): CustomerReceiptAllocation => ({
+    id: row.id,
+    paymentId: row.payment_id,
+    invoiceId: row.invoice_id,
+    invoiceNumber: invoiceNumberById.get(row.invoice_id) ?? null,
+    amount: money(row.amount),
+    allocatedAt: row.allocated_at,
+    allocatedBy: row.allocated_by,
+    reversed: Array.isArray(row.customer_receipt_allocation_reversals)
+      ? row.customer_receipt_allocation_reversals.length > 0
+      : Boolean(row.customer_receipt_allocation_reversals),
+  }));
+
+  return { allocations, pagination: { page, pageSize: query.pageSize, total, totalPages } };
 }
 
 export async function getEligibleCustomerInvoices(

@@ -139,7 +139,7 @@ Task prompts should include only task-specific scope, exceptions, expected state
 ### CURRENT IMPLEMENTED MECHANICS (repository behavior)
 
 - The core operational entity is Service / Booking, not Project.
-- The locked workflow is Customer Profile -> Service -> Quotation -> Invoice -> Payment.
+- The high-level workflow remains Customer Profile -> Service -> Quotation -> Invoice; settlement uses either Invoice-specific Record Payment or Independent Customer Receipt -> Allocation -> Invoice settlement.
 - No standalone quotations. Quotations are Service-scoped.
 - Quotation `customer_id`, if retained, is derived server-side from the Service.
 - One Service can have multiple Quotations. Do not add `UNIQUE(service_id)` to quotations.
@@ -150,7 +150,9 @@ Task prompts should include only task-specific scope, exceptions, expected state
 - Invoice must reference an approved quotation basis using `approved_quotation_id` or an equivalent required FK.
 - Invoice numbering uses one shared `INV-YYYY-0001` sequence. Do not create separate `DEP-` or `FIN-` sequences.
 - Invoice type uses `invoice_type = deposit | final`.
-- Payment must link to Invoice.
+- **Invoice-specific Record Payment:** the existing user-facing path remains linked to its Invoice and creates the corresponding settlement Allocation.
+- **Independent Customer Receipt:** a Receipt may exist without one Invoice and may be explicitly allocated to one or more same-Customer Invoices; Receipt creation alone does not settle an Invoice.
+- Active Allocations are settlement authority for W7A reconciliation. Unapplied Receipt value may remain unallocated and is not automatically Revenue, Customer Credit, Advance, or Refund.
 - Prevent overpayment unless explicitly approved.
 - Deposit is flexible, not fixed 50%.
 - `Deposit Paid` requires a valid/cleared deposit payment. A Deposit Invoice alone and a pending payment do not confirm booking.

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import { UiDateText } from "@/components/i18n/UiDateText";
@@ -11,6 +11,7 @@ import { isolateBidiText } from "@/lib/i18n/bidi";
 import type { CustomerReceiptsDictionary } from "@/lib/i18n/dictionaries/customer-receipts";
 import {
   allocateCustomerReceiptAction,
+  getCustomerReceiptAllocationPageAction,
   recordCustomerReceiptAction,
   reverseCustomerReceiptAction,
   reverseCustomerReceiptAllocationAction,
@@ -19,13 +20,16 @@ import {
 } from "@/lib/customer-receipts/actions";
 import type {
   CustomerReceiptMethod,
+  CustomerReceiptAllocationPage,
   CustomerReceiptWorkspaceData,
   CustomerReceiptWorkspaceQuery,
   EligibleCustomerInvoice,
 } from "@/lib/customer-receipts/types";
+import type { ListPageSize } from "@/lib/pagination";
 
 type Props = {
   data: CustomerReceiptWorkspaceData;
+  initialAllocationPage: CustomerReceiptAllocationPage;
   query: CustomerReceiptWorkspaceQuery;
   dictionary: CustomerReceiptsDictionary;
 };
@@ -43,6 +47,10 @@ function newRequestId() {
   return crypto.randomUUID();
 }
 
+function emptyAllocationPage(pageSize: ListPageSize = 10): CustomerReceiptAllocationPage {
+  return { allocations: [], pagination: { page: 1, pageSize, total: 0, totalPages: 1 } };
+}
+
 function badgeClass(status: string) {
   if (status === "reversed") return "bg-error-container text-on-error-container";
   if (status === "fully_allocated") return "bg-primary-fixed text-on-primary-fixed-variant";
@@ -50,7 +58,7 @@ function badgeClass(status: string) {
   return "bg-surface-variant text-on-surface";
 }
 
-export default function CustomerReceiptsClient({ data, query, dictionary }: Props) {
+export default function CustomerReceiptsClient({ data, initialAllocationPage, query, dictionary }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedPaymentId, setSelectedPaymentId] = useState(data.receipts[0]?.paymentId ?? "");
@@ -71,11 +79,35 @@ export default function CustomerReceiptsClient({ data, query, dictionary }: Prop
   const [selectedInvoiceId, setSelectedInvoiceId] = useState("");
   const [allocationAmount, setAllocationAmount] = useState("");
   const [correctionReason, setCorrectionReason] = useState("");
+  const [allocationPage, setAllocationPage] = useState(initialAllocationPage);
+  const [allocationPageSize, setAllocationPageSize] = useState<ListPageSize>(initialAllocationPage.pagination.pageSize);
+  const [allocationLoading, setAllocationLoading] = useState(false);
+  const allocationRequestRef = useRef(0);
 
   const selectedReceipt = useMemo(
     () => data.receipts.find((receipt) => receipt.paymentId === selectedPaymentId) ?? data.receipts[0] ?? null,
     [data.receipts, selectedPaymentId],
   );
+  const selectedReceiptId = selectedReceipt?.paymentId ?? "";
+
+  const loadAllocationPage = useCallback(async (paymentId: string, page: number, pageSize: ListPageSize) => {
+    const requestNumber = allocationRequestRef.current + 1;
+    allocationRequestRef.current = requestNumber;
+    setAllocationLoading(true);
+    const result = await getCustomerReceiptAllocationPageAction({ paymentId, page, pageSize });
+    if (requestNumber !== allocationRequestRef.current) return;
+    if (!result.success) {
+      setNotice(dictionary.states.failed);
+    } else {
+      setAllocationPage(result.data ?? emptyAllocationPage(pageSize));
+    }
+    setAllocationLoading(false);
+  }, [dictionary.states.failed]);
+
+  function changeAllocationPageSize(pageSize: ListPageSize) {
+    setAllocationPageSize(pageSize);
+    if (selectedReceiptId) void loadAllocationPage(selectedReceiptId, 1, pageSize);
+  }
 
   function refreshWithNotice(message: string) {
     setNotice(message);
@@ -156,37 +188,50 @@ export default function CustomerReceiptsClient({ data, query, dictionary }: Prop
         return;
       }
       setAllocationAmount("");
+      void loadAllocationPage(selectedReceipt.paymentId, 1, allocationPageSize);
       refreshWithNotice(dictionary.states.success);
     });
   }
 
   function reverseAllocation(allocationId: string) {
+    const reason = correctionReason.trim();
+    if (reason.length < 5) {
+      setNotice(dictionary.states.reasonRequired);
+      return;
+    }
     startTransition(async () => {
       const result = await reverseCustomerReceiptAllocationAction({
         allocationId,
-        reason: correctionReason || "Customer receipt allocation correction",
+        reason,
         requestId: newRequestId(),
       });
       if (!result.success) {
         setNotice(dictionary.states.failed);
         return;
       }
+      void loadAllocationPage(selectedReceiptId, 1, allocationPageSize);
       refreshWithNotice(dictionary.states.success);
     });
   }
 
   function reverseReceipt() {
     if (!selectedReceipt) return;
+    const reason = correctionReason.trim();
+    if (reason.length < 5) {
+      setNotice(dictionary.states.reasonRequired);
+      return;
+    }
     startTransition(async () => {
       const result = await reverseCustomerReceiptAction({
         paymentId: selectedReceipt.paymentId,
-        reason: correctionReason || "Customer receipt correction",
+        reason,
         requestId: newRequestId(),
       });
       if (!result.success) {
         setNotice(dictionary.states.failed);
         return;
       }
+      void loadAllocationPage(selectedReceiptId, 1, allocationPageSize);
       refreshWithNotice(dictionary.states.success);
     });
   }
@@ -267,7 +312,7 @@ export default function CustomerReceiptsClient({ data, query, dictionary }: Prop
             {data.receipts.length === 0 ? (
               <div className="p-8 text-center text-[13px] text-on-surface-variant">{dictionary.states.empty}</div>
             ) : data.receipts.map((receipt) => (
-              <button key={receipt.paymentId} type="button" onClick={() => { setSelectedPaymentId(receipt.paymentId); setEligibleInvoices([]); setSelectedInvoiceId(""); }} className={`block w-full p-4 text-start hover:bg-surface-container-low ${selectedPaymentId === receipt.paymentId ? "bg-surface-container-low" : ""}`}>
+              <button key={receipt.paymentId} type="button" onClick={() => { setSelectedPaymentId(receipt.paymentId); setEligibleInvoices([]); setSelectedInvoiceId(""); void loadAllocationPage(receipt.paymentId, 1, allocationPageSize); }} className={`block w-full p-4 text-start hover:bg-surface-container-low ${selectedPaymentId === receipt.paymentId ? "bg-surface-container-low" : ""}`}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <div className="font-mono text-[13px] font-semibold text-primary" dir="ltr">{isolateBidiText(receipt.paymentNumber)}</div>
@@ -307,7 +352,7 @@ export default function CustomerReceiptsClient({ data, query, dictionary }: Prop
               <div className="mt-5 border-t border-outline-variant pt-4">
                 <h3 className="text-[14px] font-semibold text-on-surface">{dictionary.allocationTitle}</h3>
                 <div className="mt-3 space-y-2">
-                  {selectedReceipt.allocations.length === 0 ? <p className="text-[12px] text-on-surface-variant">{dictionary.states.noInvoices}</p> : selectedReceipt.allocations.map((allocation) => (
+                  {allocationLoading ? <p className="text-[12px] text-on-surface-variant">{dictionary.states.loadingAllocations}</p> : allocationPage.allocations.length === 0 ? <p className="text-[12px] text-on-surface-variant">{dictionary.states.noAllocations}</p> : allocationPage.allocations.map((allocation) => (
                     <div key={allocation.id} className="rounded-lg border border-outline-variant p-3">
                       <div className="flex items-center justify-between gap-2 text-[12px]">
                         <span className="font-mono text-primary" dir="ltr">{isolateBidiText(allocation.invoiceNumber ?? allocation.invoiceId)}</span>
@@ -318,6 +363,7 @@ export default function CustomerReceiptsClient({ data, query, dictionary }: Prop
                     </div>
                   ))}
                 </div>
+                <PaginationFooter currentPage={allocationPage.pagination.page} totalPages={allocationPage.pagination.totalPages} total={allocationPage.pagination.total} pageSize={allocationPage.pagination.pageSize} paginationMode="bounded" isPending={isPending || allocationLoading} onPageChange={(page) => { if (selectedReceiptId) void loadAllocationPage(selectedReceiptId, page, allocationPage.pagination.pageSize); }} onPageSizeChange={changeAllocationPageSize} />
                 <form onSubmit={searchInvoices} className="mt-4 flex gap-2">
                   <input value={invoiceSearch} onChange={(event) => setInvoiceSearch(event.target.value)} placeholder={dictionary.fields.invoiceSearch} className="min-w-0 flex-1 rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[12px] text-on-surface" />
                   <button type="submit" disabled={isPending} className="rounded-lg border border-outline-variant px-3 py-2 text-[12px] font-semibold text-on-surface disabled:opacity-50">{dictionary.actions.searchInvoices}</button>
@@ -336,7 +382,7 @@ export default function CustomerReceiptsClient({ data, query, dictionary }: Prop
               <div className="mt-5 border-t border-outline-variant pt-4">
                 <label className="text-[12px] text-on-surface-variant">
                   {dictionary.fields.reason}
-                  <input value={correctionReason} onChange={(event) => setCorrectionReason(event.target.value)} className="mt-1 w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[12px] text-on-surface" />
+                  <input required minLength={5} value={correctionReason} onChange={(event) => setCorrectionReason(event.target.value)} className="mt-1 w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[12px] text-on-surface" />
                 </label>
                 {selectedReceipt.receiptStatus === "unapplied" ? (
                   <button type="button" disabled={isPending} onClick={reverseReceipt} className="mt-3 rounded-lg border border-error px-3 py-2 text-[12px] font-semibold text-error disabled:opacity-50">{dictionary.actions.reverseReceipt}</button>

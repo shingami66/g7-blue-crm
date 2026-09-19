@@ -32,7 +32,16 @@ export interface CustomerReceiptBalance {
   unappliedAmount: number;
   receiptStatus: string;
   createdAt: string;
+}
+
+export interface CustomerReceiptAllocationPage {
   allocations: CustomerReceiptAllocation[];
+  pagination: {
+    page: number;
+    pageSize: ListPageSize;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface EligibleCustomerInvoice {
@@ -67,4 +76,9 @@ export interface CustomerReceiptWorkspaceQuery {
   page: number;
   pageSize: ListPageSize;
   search?: string;
+}
+
+export interface CustomerReceiptAllocationQuery {
+  page: number;
+  pageSize: ListPageSize;
 }

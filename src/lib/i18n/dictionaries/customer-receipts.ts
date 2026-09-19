@@ -36,10 +36,13 @@ export interface CustomerReceiptsDictionary {
   states: {
     empty: string;
     noInvoices: string;
+    noAllocations: string;
+    loadingAllocations: string;
     selectReceipt: string;
     activeAllocationsBlockReversal: string;
     success: string;
     failed: string;
+    reasonRequired: string;
     loadError: string;
     accessDenied: string;
     accessDeniedMessage: string;
@@ -91,10 +94,13 @@ const en: CustomerReceiptsDictionary = {
   states: {
     empty: "No customer receipts found.",
     noInvoices: "No eligible same-customer invoices found.",
+    noAllocations: "No allocations recorded for this receipt.",
+    loadingAllocations: "Loading allocation history...",
     selectReceipt: "Select a receipt to allocate or correct it.",
     activeAllocationsBlockReversal: "Reverse all active allocations before reversing this receipt.",
     success: "Change completed.",
     failed: "The change could not be completed.",
+    reasonRequired: "Enter a correction reason of at least 5 characters.",
     loadError: "Customer receipts are unavailable right now.",
     accessDenied: "Access denied",
     accessDeniedMessage: "You do not have permission to use customer receipts.",
@@ -147,10 +153,13 @@ const ar: CustomerReceiptsDictionary = {
   states: {
     empty: "لا توجد إيصالات عملاء.",
     noInvoices: "لا توجد فواتير مؤهلة للعميل نفسه.",
+    noAllocations: "لا توجد تخصيصات مسجلة لهذا الإيصال.",
+    loadingAllocations: "جارٍ تحميل سجل التخصيصات...",
     selectReceipt: "اختر إيصالاً لتخصيصه أو تصحيحه.",
     activeAllocationsBlockReversal: "اعكس جميع التخصيصات النشطة قبل عكس الإيصال.",
     success: "اكتملت العملية.",
     failed: "تعذر إكمال العملية.",
+    reasonRequired: "أدخل سبب تصحيح لا يقل عن 5 أحرف.",
     loadError: "إيصالات العملاء غير متاحة حالياً.",
     accessDenied: "تم رفض الوصول",
     accessDeniedMessage: "ليس لديك صلاحية لاستخدام إيصالات العملاء.",
