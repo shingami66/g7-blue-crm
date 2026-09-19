@@ -25,9 +25,13 @@
   - Customer Receipt and Allocation are now separate; existing Customer Payments were preserved and reconciled.
   - Unapplied Receipt value is represented but is not yet classified as Customer Credit, Advance, or Refund.
   - VAT/ZATCA remain inactive.
+  - **W7-P0A Approved Commercial Amendment & Billing Authority Supersession Foundation — CLOSED / COMPLETE / DEV VERIFIED / PUBLISHED / READY FOR CONTROLLER VERDICT**.
+    - The locked Authority Line, Package, Optional Add-on, and Commercial Group model is preserved through full successor-quotation snapshots, customer reapproval, atomic quotation/ABS supersession, lifetime invoice exposure ceilings, exact replay/conflict handling, and historical financial-row preservation.
+    - DEV migration identities: `20260919120834` (`20260919113218_w7p0a_approved_commercial_amendment_authority_bridge`) and `20260919122807` (`20260919131500_w7p0a_approved_commercial_amendment_creation_ambiguity_repair`).
+    - W7-P0A does not activate W7-P0B owner-facing UI, Credit Note/Refund/Credit Balance, VAT/ZATCA/FATOORA, GL/revenue/accounting, Tender, PROD deployment, or W7B.
   - W7B has not started.
-  - Current dependency before W7B billing schedules and credit consumers: `W7-P0 — post-approval commercial correction / ABS supersession-reapproval prerequisite`.
-- **EXACT NEXT ACTION:** `Reconcile the W7-P0 post-approval commercial correction and ABS supersession/reapproval prerequisite before starting W7B Billing Schedules and Progress Invoices. Do not start W7B yet.`
+  - Current dependency before W7B billing schedules and credit consumers: `W7-P0B — owner-facing Commercial Amendment workflow using the locked flexible Quotation Commercial Model`.
+- **EXACT NEXT ACTION:** `Design and implement the bounded W7-P0B owner-facing Commercial Amendment workflow using the locked flexible Quotation Commercial Model, including Itemized, Package and Mixed/Hybrid presentation as supported by the governed commercial structure. Preserve the W7-P0A authority bridge. Do not start W7B.`
 
 > Dated delivery sections below preserve historical snapshots; this current section takes precedence when an older snapshot differs.
 
