@@ -6,6 +6,7 @@ export interface PaymentsDictionary {
   locale: Locale;
   title: string;
   subtitle: string;
+  receiptsLink: string;
   searchPlaceholder: string;
   stats: {
     confirmedCollected: string;
@@ -40,6 +41,7 @@ const paymentsDictionaryEn: PaymentsDictionary = {
   locale: "en",
   title: "Payments",
   subtitle: "Track recorded payments linked to invoices and services.",
+  receiptsLink: "Customer Receipts",
   searchPlaceholder: "Search payment, invoice, reference, customer, or service",
   stats: {
     confirmedCollected: "Confirmed Collected",
@@ -84,6 +86,7 @@ const paymentsDictionaryAr: PaymentsDictionary = {
   locale: "ar",
   title: "المدفوعات",
   subtitle: "متابعة المدفوعات المسجلة المرتبطة بالفواتير والخدمات.",
+  receiptsLink: "إيصالات العملاء",
   searchPlaceholder: "ابحث عن الدفعة أو الفاتورة أو المرجع أو العميل أو الخدمة",
   stats: {
     confirmedCollected: "المبالغ المحصلة المؤكدة",

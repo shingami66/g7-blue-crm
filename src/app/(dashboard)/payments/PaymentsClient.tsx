@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, type ComponentProps } from "react";
+import Link from "next/link";
 import { Banknote, CheckCircle2, Clock, Search } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import DataTable from "@/components/ui/DataTable";
@@ -111,7 +112,14 @@ export default function PaymentsClient({ payments, pagination, query, error, dic
       <PageHeader
         title={dictionary.title}
         subtitle={dictionary.subtitle}
-      />
+      >
+        <Link
+          href="/payments/receipts"
+          className="rounded-lg border border-outline-variant px-3 py-2 text-[13px] font-semibold text-on-surface hover:bg-surface-container-low"
+        >
+          {dictionary.receiptsLink}
+        </Link>
+      </PageHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <KpiCard
