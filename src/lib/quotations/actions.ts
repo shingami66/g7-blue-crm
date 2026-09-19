@@ -11,6 +11,11 @@ import {
   type QuotationApprovalActivationData,
 } from "./approval-contract";
 import {
+  executeApproveApprovedCommercialAmendment,
+  executeCreateApprovedCommercialAmendment,
+  type ApprovedCommercialAmendmentData,
+} from "./commercial-amendment-contract";
+import {
   createQuotationSchema,
   quotationCommercialStructureSchema,
   quotationRevisionSchema,
@@ -38,6 +43,7 @@ export type QuotationActionErrorCode =
   | "MUTATION_KEY_CONFLICT"
   | "CREATE_FAILED"
   | "REVISION_FAILED"
+  | "AMENDMENT_FAILED"
   | "STRUCTURE_UPDATE_FAILED"
   | "UNKNOWN_ERROR";
 
@@ -553,6 +559,101 @@ export async function approveQuotation(
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
     console.error("[approveQuotation] Unexpected error:", err instanceof Error ? err.message : "Unknown");
     return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+/**
+ * Create the W7-P0A successor Draft for the current approved quotation.
+ * The database RPC owns the full-snapshot clone and idempotency boundary;
+ * this action supplies only the existing permission and actor context.
+ */
+export async function createApprovedCommercialAmendment(
+  input: unknown,
+): Promise<ActionResult<ApprovedCommercialAmendmentData>> {
+  try {
+    const user = await requirePermission("quotations:write");
+    await requirePermission("services:read");
+    const supabase = createAdminClient();
+    const result = await executeCreateApprovedCommercialAmendment({
+      value: input,
+      actor: { clerk_user_id: user.clerk_user_id, role: user.role },
+      invoke: async (params) =>
+        await supabase.rpc(
+          "create_approved_commercial_amendment",
+          params as unknown as {
+            p_source_quotation_id: string;
+            p_amendment_reason: string;
+            p_mutation_key: string;
+            p_actor_id: string;
+            p_actor_role: string;
+          },
+        ),
+    });
+
+    if (!result.success) return result;
+
+    revalidatePath("/quotations");
+    revalidatePath(`/quotations/${result.data.source_quotation_id}`);
+    revalidatePath(`/quotations/${result.data.successor_quotation_id}`);
+    revalidatePath(`/services/${result.data.service_id}`);
+    return result;
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
+    console.error(
+      "[createApprovedCommercialAmendment] Unexpected error:",
+      err instanceof Error ? err.message : "Unknown",
+    );
+    return { success: false, code: "UNKNOWN_ERROR", error: "An unexpected error occurred." };
+  }
+}
+
+/**
+ * Approve a W7-P0A successor Draft and atomically supersede quotation and ABS
+ * authority. This remains separate from ordinary first-time approval.
+ */
+export async function approveApprovedCommercialAmendment(
+  input: unknown,
+): Promise<ActionResult<ApprovedCommercialAmendmentData>> {
+  try {
+    const user = await requirePermission("quotations:approve");
+    if (!consumeRateLimit("approveApprovedCommercialAmendment", user.clerk_user_id, APPROVAL_RATE_LIMIT)) {
+      return { success: false, code: "RATE_LIMITED", error: RATE_LIMIT_ERROR };
+    }
+
+    const supabase = createAdminClient();
+    const result = await executeApproveApprovedCommercialAmendment({
+      value: input,
+      actor: { clerk_user_id: user.clerk_user_id, role: user.role },
+      invoke: async (params) =>
+        await supabase.rpc(
+          "approve_approved_commercial_amendment",
+          params as unknown as {
+            p_source_quotation_id: string;
+            p_successor_quotation_id: string;
+            p_mutation_key: string;
+            p_actor_id: string;
+            p_actor_role: string;
+          },
+        ),
+    });
+
+    if (!result.success) return result;
+
+    revalidatePath("/quotations");
+    revalidatePath(`/quotations/${result.data.source_quotation_id}`);
+    revalidatePath(`/quotations/${result.data.successor_quotation_id}`);
+    revalidatePath(`/services/${result.data.service_id}`);
+    revalidatePath("/invoices");
+    return result;
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
+    console.error(
+      "[approveApprovedCommercialAmendment] Unexpected error:",
+      err instanceof Error ? err.message : "Unknown",
+    );
+    return { success: false, code: "UNKNOWN_ERROR", error: "An unexpected error occurred." };
   }
 }
 

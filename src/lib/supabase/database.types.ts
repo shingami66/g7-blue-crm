@@ -1779,6 +1779,8 @@ export type Database = {
       }
       quotations: {
         Row: {
+          amendment_approval_key: string | null
+          amendment_approval_payload: Json | null
           created_at: string | null
           created_by: string | null
           customer_id: string
@@ -1800,6 +1802,8 @@ export type Database = {
           snapshot_buyer: Json
           snapshot_seller: Json
           status: string
+          superseded_at: string | null
+          superseded_by_quotation_id: string | null
           subtotal: number | null
           updated_at: string | null
           updated_by: string | null
@@ -1808,6 +1812,8 @@ export type Database = {
           vat_rate: number
         }
         Insert: {
+          amendment_approval_key?: string | null
+          amendment_approval_payload?: Json | null
           created_at?: string | null
           created_by?: string | null
           customer_id: string
@@ -1829,6 +1835,8 @@ export type Database = {
           snapshot_buyer: Json
           snapshot_seller: Json
           status: string
+          superseded_at?: string | null
+          superseded_by_quotation_id?: string | null
           subtotal?: number | null
           updated_at?: string | null
           updated_by?: string | null
@@ -1837,6 +1845,8 @@ export type Database = {
           vat_rate?: number
         }
         Update: {
+          amendment_approval_key?: string | null
+          amendment_approval_payload?: Json | null
           created_at?: string | null
           created_by?: string | null
           customer_id?: string
@@ -1858,6 +1868,8 @@ export type Database = {
           snapshot_buyer?: Json
           snapshot_seller?: Json
           status?: string
+          superseded_at?: string | null
+          superseded_by_quotation_id?: string | null
           subtotal?: number | null
           updated_at?: string | null
           updated_by?: string | null
@@ -2869,6 +2881,54 @@ export type Database = {
           scope_id: string
           scope_version: number
           service_id: string
+        }[]
+      }
+      approve_approved_commercial_amendment: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_mutation_key: string
+          p_source_quotation_id: string
+          p_successor_quotation_id: string
+        }
+        Returns: {
+          abs_activated: boolean
+          abs_status: string | null
+          approved_at: string | null
+          error_code: string | null
+          idempotent_replay: boolean
+          lifetime_invoice_total: number | null
+          previous_ceiling: number | null
+          quotation_approved: boolean
+          quotation_status: string | null
+          successor_ceiling: number | null
+          successor_scope_id: string | null
+          successor_scope_version: number | null
+          service_id: string | null
+          source_scope_id: string | null
+          source_scope_version: number | null
+          source_quotation_id: string | null
+          successor_quotation_id: string | null
+        }[]
+      }
+      create_approved_commercial_amendment: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_amendment_reason: string
+          p_mutation_key: string
+          p_source_quotation_id: string
+        }
+        Returns: {
+          created: boolean
+          error_code: string | null
+          idempotent_replay: boolean
+          quotation_family_id: string | null
+          quotation_number: string | null
+          revision_number: number | null
+          service_id: string | null
+          source_quotation_id: string | null
+          successor_quotation_id: string | null
         }[]
       }
       approve_quotation_and_activate_internal_abs: {

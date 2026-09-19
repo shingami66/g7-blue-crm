@@ -31,6 +31,7 @@ type QuotationRow = {
   quotation_number: string;
   grand_total: unknown;
   status?: string;
+  superseded_at?: string | null;
   created_at?: string;
 };
 
@@ -386,10 +387,11 @@ export async function getBatchServiceBillingStates(
       while (true) {
         const { data, error } = await supabase
           .from("quotations")
-          .select("id, service_id, quotation_number, status, grand_total, created_at")
+          .select("id, service_id, quotation_number, status, grand_total, superseded_at, created_at")
           .in("service_id", uniqueIds)
           .eq("status", "approved")
           .eq("is_deleted", false)
+          .is("superseded_at", null)
           .order("created_at", { ascending: false })
           .order("id", { ascending: true })
           .range(offset, offset + PAGE_SIZE - 1);
@@ -525,10 +527,11 @@ export async function getServiceBillingState(
       while (true) {
         const { data, error } = await supabase
           .from("quotations")
-          .select("id, quotation_number, status, grand_total, created_at")
+          .select("id, quotation_number, status, grand_total, superseded_at, created_at")
           .eq("service_id", serviceId)
           .eq("status", "approved")
           .eq("is_deleted", false)
+          .is("superseded_at", null)
           .order("created_at", { ascending: false })
           .order("id", { ascending: true })
           .range(offset, offset + PAGE_SIZE - 1);
