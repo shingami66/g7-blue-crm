@@ -25,9 +25,10 @@
   - Customer Receipt and Allocation are now separate; existing Customer Payments were preserved and reconciled.
   - Unapplied Receipt value is represented but is not yet classified as Customer Credit, Advance, or Refund.
   - VAT/ZATCA remain inactive.
-  - **W7-P0A Approved Commercial Amendment & Billing Authority Supersession Foundation — CLOSED / COMPLETE / DEV VERIFIED / PUBLISHED / READY FOR CONTROLLER VERDICT**.
+  - **W7-P0A Approved Commercial Amendment & Billing Authority Supersession Foundation — PUBLISHED / DEV VERIFIED / FINAL CLOSEOUT HOLD**.
     - The locked Authority Line, Package, Optional Add-on, and Commercial Group model is preserved through full successor-quotation snapshots, customer reapproval, atomic quotation/ABS supersession, lifetime invoice exposure ceilings, exact replay/conflict handling, and historical financial-row preservation.
     - DEV migration identities: `20260919120834` (`20260919113218_w7p0a_approved_commercial_amendment_authority_bridge`), `20260919122807` (`20260919131500_w7p0a_approved_commercial_amendment_creation_ambiguity_repair`), and `20260919124225` (`20260919152000_w7p0a_approved_commercial_amendment_creation_ambiguity_recovery`). DEV also records concurrent migration `20260919123842` (`w7p0a_approved_commercial_amendment_review_repair`), which remains preserved outside this publication set because its source is unowned.
+    - Final closeout is held because concurrent worktree edits overlap the published foundation migration and introduce additional unowned repair migrations; they are preserved, not staged, and require owner reconciliation before any further W7 mutation.
     - W7-P0A does not activate W7-P0B owner-facing UI, Credit Note/Refund/Credit Balance, VAT/ZATCA/FATOORA, GL/revenue/accounting, Tender, PROD deployment, or W7B.
   - W7B has not started.
   - Current dependency before W7B billing schedules and credit consumers: `W7-P0B — owner-facing Commercial Amendment workflow using the locked flexible Quotation Commercial Model`.
