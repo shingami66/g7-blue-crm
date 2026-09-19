@@ -20,7 +20,14 @@
   - **Supplier Dispute / governed correction:** `NO-BUILD / DEFERRED` for current W6. Existing governed correction primitives remain available through Supplier Payment reversal, Supplier Advance payment reversal, Supplier Advance refund, Supplier Advance allocation correction, and governed commitment amendment/correction boundaries.
   - Supplier Credits, Supplier Claims, and a dedicated Supplier Dispute case-management module are not implemented and remain separately governed future capabilities.
   - W6 closure does not activate General Ledger, accounting journal posting or close, VAT filing, FATOORA/ZATCA, bank integration, production deployment or mutation, Layer 2/SaaS, or W7 implementation.
-- **Next roadmap step:** `W7 — NEXT GOVERNED WAVE / NOT STARTED`. Bounded W7 discovery/reconciliation or preparation requires separate Controller/Owner authority; W7 implementation is not active or authorized by this closeout.
+- **W7 — ACTIVE / NOT COMPLETE:** Accounts Receivable and downstream billing.
+  - **W7A Customer Receipt & Allocation Foundation — CLOSED / COMPLETE / DEV VERIFIED / PUBLISHED**.
+  - Customer Receipt and Allocation are now separate; existing Customer Payments were preserved and reconciled.
+  - Unapplied Receipt value is represented but is not yet classified as Customer Credit, Advance, or Refund.
+  - VAT/ZATCA remain inactive.
+  - W7B has not started.
+  - Current dependency before W7B billing schedules and credit consumers: `W7-P0 — post-approval commercial correction / ABS supersession-reapproval prerequisite`.
+- **EXACT NEXT ACTION:** `Reconcile the W7-P0 post-approval commercial correction and ABS supersession/reapproval prerequisite before starting W7B Billing Schedules and Progress Invoices. Do not start W7B yet.`
 
 > Dated roadmap sections below preserve historical snapshots; this current section takes precedence when an older snapshot differs.
 
