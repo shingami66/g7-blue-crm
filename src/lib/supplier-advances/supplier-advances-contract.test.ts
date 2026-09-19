@@ -11,6 +11,7 @@ import { supplierAdvancesHref, supplierAdvancesQueryMatchesPagination } from "./
 const root = new URL("../../../", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), "utf8");
 const migration = read("supabase/migrations/20260915070149_w6c_supplier_advances_foundation.sql");
+const correctiveMigration = read("supabase/migrations/20260919053011_w6c_supplier_advance_rpc_output_ambiguity_repair.sql");
 const permissions = read("src/lib/auth/role-permissions.ts");
 const layout = read("src/app/(dashboard)/layout.tsx");
 const sidebar = read("src/components/layout/Sidebar.tsx");
@@ -48,6 +49,14 @@ function functionBody(name: string): string {
   const end = migration.indexOf("$$;", start);
   assert.notEqual(end, -1, `${name} must have a closed body`);
   return migration.slice(start, end + 3).replace(/--.*$/gm, "").replace(/\s+/g, " ");
+}
+
+function correctiveFunctionBody(name: string): string {
+  const start = correctiveMigration.indexOf(`CREATE OR REPLACE FUNCTION public.${name}`);
+  assert.notEqual(start, -1, `${name} must be redefined in the corrective migration`);
+  const end = correctiveMigration.indexOf("$$;", start);
+  assert.notEqual(end, -1, `${name} corrective body must be closed`);
+  return correctiveMigration.slice(start, end + 3).replace(/--.*$/gm, "").replace(/\s+/g, " ");
 }
 
 test("W6C is a distinct immutable event model, separate from Supplier Bills and Supplier Payments", () => {
@@ -185,6 +194,32 @@ test("refunds and payment reversals are append-only and bounded by currently una
   assert.match(reversal, /supplier_advance_payment_already_reversed/);
   assert.match(reversal, /supplier_advance_payment_reversed/);
   assert.match(migration, /supplier_advance_payment_reversals\(supplier_advance_payment_id,reason,reversed_by,reversed_at,reversal_request_id\)/);
+});
+
+test("W6C corrective RPCs qualify balance-view reads that collide with output columns", () => {
+  const qualifiedReads = [
+    ["record_supplier_advance_payment(", ["b.paid_amount", "b.remaining_unallocated_amount"]],
+    ["refund_supplier_advance(", ["b.paid_amount", "b.allocated_amount", "b.refunded_amount", "b.remaining_unallocated_amount"]],
+    ["reverse_supplier_advance_payment(", ["b.paid_amount", "b.remaining_unallocated_amount"]],
+    ["reverse_supplier_advance_allocation(", ["b.remaining_unallocated_amount"]],
+  ] as const;
+
+  for (const [name, references] of qualifiedReads) {
+    const body = correctiveFunctionBody(name);
+    assert.match(body, /FROM public\.supplier_advance_balances b/);
+    for (const reference of references) assert.match(body, new RegExp(reference.replace(".", "\\.")));
+  }
+  assert.doesNotMatch(correctiveMigration, /CREATE OR REPLACE FUNCTION public\.authorize_supplier_advance/);
+  assert.doesNotMatch(correctiveMigration, /CREATE OR REPLACE FUNCTION public\.allocate_supplier_advance/);
+  for (const name of [
+    "record_supplier_advance_payment",
+    "refund_supplier_advance",
+    "reverse_supplier_advance_payment",
+    "reverse_supplier_advance_allocation",
+  ]) {
+    assert.match(correctiveMigration, new RegExp(`REVOKE ALL ON FUNCTION public\\.${name}`));
+    assert.match(correctiveMigration, new RegExp(`GRANT EXECUTE ON FUNCTION public\\.${name}[\\s\\S]*?TO service_role`));
+  }
 });
 
 test("bill balance separates ordinary payments from advance allocation and avoids payable duplication", () => {
