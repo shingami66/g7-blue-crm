@@ -1,34 +1,26 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W5 CLOSE / W6A CLOSE / W6B CLOSE — 15 September 2026
+## CURRENT ROADMAP POSITION — W5 CLOSE / W6 CLOSE — 19 September 2026
 
 - **W5 — Expenses & Cash Advances & Petty Cash:** `CLOSED / COMPLETE`.
-  - Expenses, employee reimbursement, Cash Advance, and the Petty Cash workspace/end-to-end lifecycle are complete.
-  - Owner physical acceptance and DEV verification are complete.
+  - Expenses, employee reimbursement, Cash Advance, and Petty Cash workflows are complete with Owner acceptance and DEV verification.
   - Latest W5-close product HEAD: `b4ce5b366115b1a81bc8e270d00a7a6bea9494b4`.
-  - Existing Cash Advance two-session concurrency limitation remains a non-blocking environment `WARN`.
-- **W6 — Accounts Payable:** Discovery `COMPLETE`; Product Truth `OWNER APPROVED`; W6A Supplier Bills `CLOSED / COMPLETE`; W6B Supplier Payments `CLOSED / COMPLETE`.
-  - AP covers genuine supplier obligations, primarily Event/Service suppliers. Routine operating purchases such as office water, internet, electricity, small stationery, and similar day-to-day costs remain in W5 Expense / Cash Advance / Petty Cash and are not duplicated in AP merely to create supplier records.
-  - Event/Service supplier bills normally require an approved financial commitment/agreement. Final bills for delivered work require accepted receipt/performance evidence. Explicitly authorized deposits/prepayments may be paid before receipt when allowed by the approved commitment.
-  - **W6A — Supplier Bills:** Supplier Bills foundation implemented and published. The W6A migration was applied successfully to the authorized DEV project. `BILL-2026-0001` was physically recorded and approved in DEV.
-  - W6A evidence gates were verified: supplier bill evidence, accepted Service Receipt, approved Commitment, commitment and accepted-receipt ceilings, audit, idempotency, and approved-bill immutability.
-  - Owner Decision: Admin may approve a Supplier Bill recorded by the same Admin. Manager approval remains valid; Accountant remains record-only. No other role or self-approval authority was widened.
-  - Supplier Bill edit UI and Service Receipt correction UI are collapsed by default. Internal UUIDs and raw statuses are not exposed as business-facing values.
-  - Arabic RTL/Bidi, structured Arabic dates/date-times, mixed-content presentation, back navigation, and validation messaging were corrected and physically accepted.
-  - **W6B — Supplier Payments:** Foundation implemented and published; the DEV migration was successfully applied. AP Supplier Payments remain separate from customer payments.
-  - Admin and Accountant can read, record, and reverse Supplier Payments; Manager is read-only; Sales, Operations, and Viewer have no Supplier Payments workspace access.
-  - Partial and multiple payments are supported; payments cannot exceed the outstanding Supplier Bill balance. Payment evidence is mandatory. Bank transfers use stored supplier bank details with a payment-time snapshot.
-  - Payments are immutable; correction is by explicit reversal. Replay/idempotency and concurrency protections are implemented. Supplier Bill payment summary and history are live.
-  - `SPAY-2026-0001` was physically recorded and then reversed in DEV. The reversal restored `BILL-2026-0001` to payable `SAR 10,000.00`, paid `SAR 0.00`, outstanding `SAR 10,000.00`, status `unpaid`.
-  - Reversal audit evidence—reason, reversal date/time, and reversing user name—was physically verified. Arabic RTL/Bidi and structured date/time presentation were physically accepted.
-  - Latest accepted W6B product HEAD: `6b4590c0155f5de6f4b2a7111709fd8453bb63fc`.
-  - Bills exceeding the approved commitment require a governed amendment, corrected supplier document, credit adjustment, or explicitly authorized exception.
-  - Capture operational Saudi supplier invoice/tax evidence without implementing a VAT filing/accounting engine or claiming broader ZATCA compliance.
-  - AP is distinct from customer Billing & Payments. Expected workspace direction: `Supplier Bills` and `Supplier Payments`.
-  - UX principle: combine internal checks into one governed user action when they are one business decision; do not expose redundant review/approval buttons; keep separate actions only for genuinely separate events such as approval and a later actual payment.
-  - W6B remains operational AP, not accounting posting. Supplier advances/deposits remain distinct from ordinary Supplier Bill payments; supplier disputes/governed corrections remain distinct from silent mutation.
-  - No GL/accounting engine, VAT filing engine, FATOORA/ZATCA activation, bank integration, PROD deployment, or production mutation is authorized by this roadmap position.
-- **Next roadmap step:** `W6 residual discovery` covering `Supplier Advance / Deposit` and `Supplier Dispute / governed correction boundaries`. Discovery only; implementation is not authorized by this documentation update.
+  - The existing Cash Advance two-session concurrency limitation remains a non-blocking environment `WARN`.
+- **W6 — Accounts Payable:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV VERIFIED / PUBLISHED`.
+  - W6 remains bounded operational Accounts Payable for genuine supplier obligations and remains separate from customer Billing & Payments.
+  - **W6A — Supplier Bills:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV VERIFIED / PUBLISHED`. Supplier Bill authority, evidence, approval, immutability, correction, and AP boundaries remain in force.
+  - **W6B — Supplier Payments:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV VERIFIED / PUBLISHED`. Supplier Payments remain separate from customer payments; partial/multiple payments, mandatory evidence, bank snapshots, immutable events, explicit reversals, replay/idempotency, concurrency protection, and role boundaries remain in force.
+  - **W6C — Supplier Advances:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV VERIFIED / PUBLISHED`.
+    - Latest published W6C repair commit: `a3303a902985b992e1b3074c2458157bdafaf8c7`.
+    - Corrective migration source: `supabase/migrations/20260919053011_w6c_supplier_advance_rpc_output_ambiguity_repair.sql`.
+    - DEV migration identity: `20260919064622`.
+    - The four-RPC ambiguity repair preserved public signatures, return shapes, `SECURITY DEFINER`, fixed `search_path`, service-role-only execution, actor/role validation, replay/idempotency, ceilings, evidence, bank snapshots, locking/concurrency, and audit behavior. The historical W6C foundation migration was not rewritten.
+    - Rollback-clean DEV lifecycle verification passed for payment, allocation, refund, payment reversal, allocation correction, replay/conflict, payable integrity, and Approved Commitment reserve guards. Synthetic work ended in `ROLLBACK`; post-rollback residue was `0`; pre-existing DEV state remained unchanged.
+  - Independent Reviewer completed with no BLOCKING or MATERIAL findings. Focused tests passed `15/15`; scoped ESLint, TypeScript, production build, and diff check passed. The single MINOR note was that the focused contract regression is source-level.
+  - **Supplier Dispute / governed correction:** `NO-BUILD / DEFERRED` for current W6. Existing governed correction primitives remain available through Supplier Payment reversal, Supplier Advance payment reversal, Supplier Advance refund, Supplier Advance allocation correction, and governed commitment amendment/correction boundaries.
+  - Supplier Credits, Supplier Claims, and a dedicated Supplier Dispute case-management module are not implemented and remain separately governed future capabilities.
+  - W6 closure does not activate General Ledger, accounting journal posting or close, VAT filing, FATOORA/ZATCA, bank integration, production deployment or mutation, Layer 2/SaaS, or W7 implementation.
+- **Next roadmap step:** `W7 — NEXT GOVERNED WAVE / NOT STARTED`. Bounded W7 discovery/reconciliation or preparation requires separate Controller/Owner authority; W7 implementation is not active or authorized by this closeout.
 
 > Dated roadmap sections below preserve historical snapshots; this current section takes precedence when an older snapshot differs.
 
