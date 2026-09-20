@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  Children,
   cloneElement,
-  isValidElement,
   type MouseEvent,
   type ButtonHTMLAttributes,
   type HTMLAttributes,
@@ -11,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { LoaderCircle } from "lucide-react";
+import { normalizeAsChild } from "./normalizeAsChild";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 type ButtonSize = "sm" | "md" | "lg" | "icon";
@@ -73,9 +72,9 @@ export default function Button({
   );
 
   if (asChild) {
-    const child = Children.only(children);
+    const child = normalizeAsChild(children);
 
-    if (!isValidElement(child)) {
+    if (!child) {
       throw new Error("Button with asChild requires a single valid React element.");
     }
 
