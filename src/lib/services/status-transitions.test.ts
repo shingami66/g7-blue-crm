@@ -26,6 +26,7 @@ type QuotationRow = {
   grand_total: number | string | null;
   service_id: string;
   is_deleted: boolean;
+  superseded_at?: string | null;
 };
 
 type Scenario = {
@@ -212,6 +213,16 @@ test("non-Deposit transition rules remain unchanged", async () => {
   const quoted = await validate("Quoted", "Approved", { quotations: [quotation()] });
   assert.deepEqual(inquiry.result, { success: true });
   assert.deepEqual(quoted.result, { success: true });
+});
+
+test("superseded approved quotation history does not create multiple current authorities", async () => {
+  const { result } = await validate("Quoted", "Approved", {
+    quotations: [
+      quotation({ id: "quotation-old", superseded_at: "2026-09-19T10:00:00Z" }),
+      quotation({ id: "quotation-current", superseded_at: null }),
+    ],
+  });
+  assert.deepEqual(result, { success: true });
 });
 
 test("cancellation still fails closed when financial records exist", async () => {

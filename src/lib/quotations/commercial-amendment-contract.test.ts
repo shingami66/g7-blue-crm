@@ -141,6 +141,14 @@ test("migration preserves the locked authority bridge and security boundaries", 
     new URL("../../../supabase/migrations/20260919131500_w7p0a_approved_commercial_amendment_creation_ambiguity_repair.sql", import.meta.url),
     "utf8",
   );
+  const reviewSourceRecoveryMigration = readFileSync(
+    new URL("../../../supabase/migrations/20260920052403_w7p0a_approved_commercial_amendment_review_source_recovery.sql", import.meta.url),
+    "utf8",
+  );
+  const absMetadataRecoveryMigration = readFileSync(
+    new URL("../../../supabase/migrations/20260919160000_w7p0a_approved_commercial_amendment_abs_metadata_repair.sql", import.meta.url),
+    "utf8",
+  );
 
   for (const column of ["superseded_at", "superseded_by_quotation_id", "amendment_approval_key", "amendment_approval_payload"]) {
     assert.match(migration, new RegExp(`ADD COLUMN ${column}`));
@@ -154,6 +162,12 @@ test("migration preserves the locked authority bridge and security boundaries", 
   assert.match(migration, /approve_approved_commercial_amendment/);
   assert.match(migration, /scope_successor_ceiling_below_invoiced/);
   assert.match(migration, /invoice_authority_quotation_mismatch/);
+  assert.match(reviewSourceRecoveryMigration, /CREATE OR REPLACE FUNCTION public\.prevent_approved_quotation_mutation/);
+  assert.match(reviewSourceRecoveryMigration, /CREATE OR REPLACE FUNCTION public\.check_approved_billing_scopes_before_write/);
+  assert.match(reviewSourceRecoveryMigration, /SET search_path = pg_catalog, public/);
+  assert.match(absMetadataRecoveryMigration, /CREATE OR REPLACE FUNCTION public\.approve_approved_commercial_amendment/);
+  assert.match(absMetadataRecoveryMigration, /source_commercial_role, source_parent_authority_line_id, source_is_selected/);
+  assert.match(absMetadataRecoveryMigration, /qi\.commercial_role, qi\.parent_authority_line_id/);
   assert.match(migration, /SET search_path = pg_catalog, public/);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.create_approved_commercial_amendment/);
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.approve_approved_commercial_amendment[\s\S]*TO service_role/);

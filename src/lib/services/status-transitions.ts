@@ -64,7 +64,7 @@ async function loadTransitionEvidence(
 ): Promise<EvidenceResult> {
   const { data: quotations, error: quotationsError } = await supabase
     .from("quotations")
-    .select("id, status, grand_total")
+    .select("id, status, grand_total, superseded_at")
     .eq("service_id", serviceId)
     .eq("is_deleted", false);
 
@@ -74,7 +74,9 @@ async function loadTransitionEvidence(
   }
 
   const approvedQuotations = (quotations ?? []).filter(
-    (quotation) => quotation.status === "approved"
+    (quotation) =>
+      quotation.status === "approved" &&
+      (quotation.superseded_at === null || quotation.superseded_at === undefined),
   );
 
   const { data: allInvoices, error: allInvoicesError } = await supabase
