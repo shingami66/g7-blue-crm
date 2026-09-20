@@ -231,6 +231,71 @@ export interface QuotationsDictionary {
     serviceContextMessage: string;
     backToQuotations: string;
   };
+  amendment: {
+    label: string;
+    current: string;
+    superseded: string;
+    revision: string;
+    predecessor: string;
+    successor: string;
+    internalReason: string;
+    currentAmount: string;
+    proposedAmount: string;
+    delta: string;
+    originalActiveNotice: string;
+    createAction: string;
+    openAction: string;
+    createTitle: string;
+    createDescription: string;
+    reasonLabel: string;
+    reasonPlaceholder: string;
+    reasonRequired: string;
+    cancel: string;
+    continue: string;
+    workspaceTitle: string;
+    workspaceSubtitle: string;
+    builderTitle: string;
+    modeItemized: string;
+    modePackage: string;
+    modeMixed: string;
+    authorityLine: string;
+    included: string;
+    optional: string;
+    selected: string;
+    notSelected: string;
+    addAuthorityLine: string;
+    addIncluded: string;
+    addOptional: string;
+    removeLine: string;
+    descriptionAr: string;
+    unit: string;
+    unitPrice: string;
+    saveDraft: string;
+    savingDraft: string;
+    savedDraft: string;
+    saveFailed: string;
+    unsavedChanges: string;
+    summaryTitle: string;
+    noChanges: string;
+    changesPresent: string;
+    addedLines: string;
+    removedLines: string;
+    changedLines: string;
+    optionalChanges: string;
+    approveAction: string;
+    approveTitle: string;
+    approveDescription: string;
+    approveWarning: string;
+    approveConfirm: string;
+    approvalFailed: string;
+    belowExposure: string;
+    sourceActiveUntilApproval: string;
+    priorInvoicesUnchanged: string;
+    noOpDisabled: string;
+    reloadRequired: string;
+    workspaceNotFound: string;
+    workspaceLocked: string;
+  };
 }
 
 const quotationsDictionaryEn: QuotationsDictionary = {
@@ -462,6 +527,71 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     serviceContextMessage: "This quotation cannot be edited until its Service relationship is available.",
     backToQuotations: "Back to Quotations",
   },
+  amendment: {
+    label: "Commercial Amendment",
+    current: "Current",
+    superseded: "Superseded",
+    revision: "Revision {number}",
+    predecessor: "Predecessor",
+    successor: "Successor",
+    internalReason: "Internal reason",
+    currentAmount: "Current approved amount",
+    proposedAmount: "Proposed amount",
+    delta: "Change",
+    originalActiveNotice: "The current approved quotation remains active until the customer-approved amendment is activated. Creating or editing this Draft does not change the active billing authority or invoices.",
+    createAction: "Create Commercial Amendment",
+    openAction: "Open Commercial Amendment",
+    createTitle: "Create Commercial Amendment",
+    createDescription: "Create a successor Draft for a bounded commercial change. The current approved quotation remains active until final approval.",
+    reasonLabel: "Reason for amendment",
+    reasonPlaceholder: "Describe the bounded customer-facing change",
+    reasonRequired: "Enter a reason before continuing.",
+    cancel: "Cancel",
+    continue: "Create Draft",
+    workspaceTitle: "Commercial Amendment Workspace",
+    workspaceSubtitle: "Edit the complete proposed commercial snapshot, review the change summary, then confirm customer approval.",
+    builderTitle: "Proposed commercial structure",
+    modeItemized: "Itemized",
+    modePackage: "Package",
+    modeMixed: "Mixed / Hybrid",
+    authorityLine: "Authority Line",
+    included: "Included",
+    optional: "Optional",
+    selected: "Selected",
+    notSelected: "Not selected",
+    addAuthorityLine: "Add Authority Line",
+    addIncluded: "Add Included Component",
+    addOptional: "Add Optional Add-on",
+    removeLine: "Remove line",
+    descriptionAr: "Arabic description",
+    unit: "Unit",
+    unitPrice: "Unit price (SAR)",
+    saveDraft: "Save Draft",
+    savingDraft: "Saving…",
+    savedDraft: "Draft saved",
+    saveFailed: "Draft was not saved.",
+    unsavedChanges: "You have unsaved changes.",
+    summaryTitle: "Review changes",
+    noChanges: "No commercial changes detected. Approval remains disabled.",
+    changesPresent: "Informational comparison only; the server is the final financial authority.",
+    addedLines: "Added lines",
+    removedLines: "Removed lines",
+    changedLines: "Changed lines",
+    optionalChanges: "Optional selection changes",
+    approveAction: "Confirm Customer Approval & Activate Amendment",
+    approveTitle: "Activate this commercial amendment?",
+    approveDescription: "This replaces the current approved commercial authority for future billing.",
+    approveWarning: "The current approved quotation will be superseded only after this confirmation. Prior invoices remain unchanged.",
+    approveConfirm: "Confirm Customer Approval & Activate Amendment",
+    approvalFailed: "The amendment was not activated.",
+    belowExposure: "The proposed amount cannot be below Service-lifetime invoiced exposure.",
+    sourceActiveUntilApproval: "Current quotation remains active until approval.",
+    priorInvoicesUnchanged: "Prior invoices are unchanged.",
+    noOpDisabled: "Make and save a commercial change before approval.",
+    reloadRequired: "This Draft changed elsewhere. Reload the workspace before saving.",
+    workspaceNotFound: "Commercial amendment workspace not found.",
+    workspaceLocked: "Only an eligible Commercial Amendment Draft can be edited.",
+  },
 };
 
 const quotationsDictionaryAr: QuotationsDictionary = {
@@ -692,6 +822,71 @@ const quotationsDictionaryAr: QuotationsDictionary = {
     serviceContextRequired: "سياق الخدمة مطلوب",
     serviceContextMessage: "لا يمكن تعديل عرض السعر حتى تتوفر علاقته بالخدمة.",
     backToQuotations: "العودة إلى عروض الأسعار",
+  },
+  amendment: {
+    label: "تعديل تجاري",
+    current: "الحالي",
+    superseded: "مستبدل",
+    revision: "المراجعة {number}",
+    predecessor: "السابق",
+    successor: "اللاحق",
+    internalReason: "السبب الداخلي",
+    currentAmount: "القيمة المعتمدة الحالية",
+    proposedAmount: "القيمة المقترحة",
+    delta: "التغيير",
+    originalActiveNotice: "يبقى عرض السعر المعتمد الحالي نشطًا حتى اعتماد تعديل العميل وتفعيله. إنشاء هذه المسودة أو تعديلها لا يغيّر مرجعية الفوترة النشطة أو الفواتير.",
+    createAction: "إنشاء تعديل تجاري",
+    openAction: "فتح التعديل التجاري",
+    createTitle: "إنشاء تعديل تجاري",
+    createDescription: "أنشئ مسودة لاحقة لتغيير تجاري محدود. يبقى عرض السعر المعتمد الحالي نشطًا حتى الاعتماد النهائي.",
+    reasonLabel: "سبب التعديل",
+    reasonPlaceholder: "صف التغيير المحدود الموجه للعميل",
+    reasonRequired: "أدخل سببًا قبل المتابعة.",
+    cancel: "إلغاء",
+    continue: "إنشاء المسودة",
+    workspaceTitle: "مساحة عمل التعديل التجاري",
+    workspaceSubtitle: "عدّل اللقطة التجارية المقترحة كاملة، ثم راجع ملخص التغيير وأكد اعتماد العميل.",
+    builderTitle: "الهيكل التجاري المقترح",
+    modeItemized: "بنود مفصلة",
+    modePackage: "حزمة",
+    modeMixed: "مختلط / هجين",
+    authorityLine: "بند مرجعي",
+    included: "مشمول",
+    optional: "اختياري",
+    selected: "محدد",
+    notSelected: "غير محدد",
+    addAuthorityLine: "إضافة بند مرجعي",
+    addIncluded: "إضافة مكوّن مشمول",
+    addOptional: "إضافة إضافة اختيارية",
+    removeLine: "إزالة البند",
+    descriptionAr: "الوصف بالعربية",
+    unit: "الوحدة",
+    unitPrice: "سعر الوحدة (SAR)",
+    saveDraft: "حفظ المسودة",
+    savingDraft: "جارٍ الحفظ…",
+    savedDraft: "تم حفظ المسودة",
+    saveFailed: "لم يتم حفظ المسودة.",
+    unsavedChanges: "لديك تغييرات غير محفوظة.",
+    summaryTitle: "مراجعة التغييرات",
+    noChanges: "لم يتم اكتشاف تغييرات تجارية. يظل الاعتماد معطلًا.",
+    changesPresent: "مقارنة إرشادية فقط؛ الخادم هو المرجع المالي النهائي.",
+    addedLines: "البنود المضافة",
+    removedLines: "البنود المحذوفة",
+    changedLines: "البنود المتغيرة",
+    optionalChanges: "تغييرات اختيارية البنود",
+    approveAction: "تأكيد اعتماد العميل وتفعيل التعديل",
+    approveTitle: "تفعيل هذا التعديل التجاري؟",
+    approveDescription: "سيحل هذا محل المرجعية التجارية المعتمدة الحالية للفوترة المستقبلية.",
+    approveWarning: "سيتم استبدال عرض السعر المعتمد الحالي بعد هذا التأكيد فقط. تبقى الفواتير السابقة دون تغيير.",
+    approveConfirm: "تأكيد اعتماد العميل وتفعيل التعديل",
+    approvalFailed: "لم يتم تفعيل التعديل.",
+    belowExposure: "لا يمكن أن تكون القيمة المقترحة أقل من إجمالي تعرض فواتير الخدمة مدى الحياة.",
+    sourceActiveUntilApproval: "يبقى عرض السعر الحالي نشطًا حتى الاعتماد.",
+    priorInvoicesUnchanged: "الفواتير السابقة دون تغيير.",
+    noOpDisabled: "أجرِ تغييرًا تجاريًا واحفظه قبل الاعتماد.",
+    reloadRequired: "تم تغيير هذه المسودة في مكان آخر. أعد تحميل مساحة العمل قبل الحفظ.",
+    workspaceNotFound: "مساحة التعديل التجاري غير موجودة.",
+    workspaceLocked: "يمكن تعديل مسودة تعديل تجاري مؤهلة فقط.",
   },
 };
 

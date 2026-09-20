@@ -8,6 +8,11 @@ import type {
 } from "./types";
 
 export function mapRowToQuotationListItem(row: QuotationRowWithRelations): QuotationListItem {
+  const mutationPayload = row.mutation_payload;
+  const isApprovedCommercialAmendment =
+    typeof mutationPayload === "object" &&
+    mutationPayload !== null &&
+    (mutationPayload as { operation?: unknown }).operation === "approved_commercial_amendment_creation";
   return {
     id: row.id,
     quotationNumber: row.quotation_number,
@@ -30,6 +35,13 @@ export function mapRowToQuotationListItem(row: QuotationRowWithRelations): Quota
     status: row.status,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    quotationFamilyId: row.quotation_family_id,
+    revisionOfQuotationId: row.revision_of_quotation_id ?? null,
+    revisionNumber: row.revision_number,
+    revisionReason: row.revision_reason ?? null,
+    supersededAt: row.superseded_at ?? null,
+    supersededByQuotationId: row.superseded_by_quotation_id ?? null,
+    isApprovedCommercialAmendment,
     snapshotSeller: row.snapshot_seller,
     snapshotBuyer: row.snapshot_buyer,
   };
@@ -64,5 +76,7 @@ export function mapRowToQuotationDetail(row: QuotationDetailRow): QuotationDetai
     vatRate: Number(row.vat_rate),
     vatAmount: Number(row.vat_amount),
     items: (row.quotation_items || []).map(mapRowToQuotationItem),
+    predecessor: null,
+    successor: null,
   };
 }

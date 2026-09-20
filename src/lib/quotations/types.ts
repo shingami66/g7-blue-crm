@@ -91,6 +91,8 @@ export interface QuotationRow {
   revision_of_quotation_id?: string | null;
   revision_number?: number;
   revision_reason?: string | null;
+  superseded_at?: string | null;
+  superseded_by_quotation_id?: string | null;
   created_by: string;
   updated_by: string;
   snapshot_seller: QuotationSnapshotSeller | null;
@@ -160,6 +162,13 @@ export interface QuotationListItem {
   status: QuotationStatus;
   createdAt: string;
   updatedAt: string;
+  quotationFamilyId?: string;
+  revisionOfQuotationId?: string | null;
+  revisionNumber?: number;
+  revisionReason?: string | null;
+  supersededAt?: string | null;
+  supersededByQuotationId?: string | null;
+  isApprovedCommercialAmendment?: boolean;
   snapshotSeller?: QuotationSnapshotSeller | null;
   snapshotBuyer?: QuotationSnapshotBuyer | null;
 }
@@ -201,6 +210,16 @@ export interface QuotationDetail extends QuotationListItem {
   vatRate: number;
   vatAmount: number;
   items: QuotationItem[];
+  predecessor?: QuotationLineageSummary | null;
+  successor?: QuotationLineageSummary | null;
+}
+
+export interface QuotationLineageSummary {
+  id: string;
+  quotationNumber: string;
+  status: QuotationStatus;
+  revisionNumber?: number;
+  grandTotal: number;
 }
 
 export interface QuotationRpcResult {

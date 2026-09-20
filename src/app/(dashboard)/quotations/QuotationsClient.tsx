@@ -247,6 +247,7 @@ export default function QuotationsClient({
                   <tr key={quotation.id} className="transition-colors hover:bg-surface-container-low/50">
                     <td className="px-4 py-4 font-mono font-semibold text-primary">
                       <span dir="ltr" className="inline-block whitespace-nowrap">{isolateBidiText(quotation.quotationNumber)}</span>
+                      {quotation.revisionNumber && <div className="mt-1 font-sans text-[11px] font-medium text-on-surface-variant">{dictionary.amendment.revision.replace("{number}", String(quotation.revisionNumber))}</div>}
                     </td>
                     <td className="px-4 py-4">
                       <div className="font-semibold text-on-surface"><span dir="auto">{quotation.customer?.company || dictionary.list.unknownCompany}</span></div>
@@ -254,7 +255,7 @@ export default function QuotationsClient({
                     </td>
                     <td className="px-4 py-4 text-on-surface-variant"><UiDateText locale={dictionary.locale} value={quotation.date} /></td>
                     <td className="px-4 py-4 text-end font-semibold text-on-surface tabular-nums"><span dir="ltr" className="inline-block whitespace-nowrap">{formatSarAmount(dictionary.locale, quotation.grandTotal)}</span></td>
-                    <td className="px-4 py-4"><StatusBadge variant={quotation.status as StatusBadgeVariant}>{getQuotationStatusLabel(dictionary.locale, quotation.status)}</StatusBadge></td>
+                    <td className="px-4 py-4"><StatusBadge variant={quotation.status as StatusBadgeVariant}>{getQuotationStatusLabel(dictionary.locale, quotation.status)}</StatusBadge>{quotation.status === "approved" && quotation.supersededAt && <div className="mt-1 text-[11px] text-on-surface-variant">{dictionary.amendment.superseded}</div>}{quotation.status === "approved" && !quotation.supersededAt && <div className="mt-1 text-[11px] text-on-surface-variant">{dictionary.amendment.current}</div>}</td>
                     <td className="px-4 py-4 text-center"><button type="button" disabled={isNavigationPending} aria-busy={isNavigationPending || undefined} className="inline-flex rounded p-2 text-primary hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50" aria-label={`${dictionary.list.actionTitles.viewDetails} ${quotation.quotationNumber}`} title={dictionary.list.actionTitles.viewDetails} onClick={() => push(`/quotations/${quotation.id}?returnTo=${encodeURIComponent(returnTo)}`)}><Eye size={17} /></button></td>
                     <td className="px-4 py-4 text-center"><div className="grid place-items-center"><DenseTableIconAction label={dictionary.list.table.printPdf} disabled={pendingDocumentId !== null} aria-busy={pendingDocumentId === quotation.id || undefined} onClick={() => openQuotationPdf(quotation)}>{pendingDocumentId === quotation.id ? <LoaderCircle size={16} aria-hidden="true" className="motion-safe:animate-spin" /> : <Printer size={16} aria-hidden="true" />}</DenseTableIconAction></div></td>
                   </tr>
@@ -272,6 +273,7 @@ export default function QuotationsClient({
                         <span dir="ltr" className="font-mono font-semibold text-primary text-[14px]">
                           {isolateBidiText(quotation.quotationNumber)}
                         </span>
+                        {quotation.revisionNumber && <div className="text-[11px] text-on-surface-variant">{dictionary.amendment.revision.replace("{number}", String(quotation.revisionNumber))}</div>}
                         <div className="mt-0.5 text-[12px] text-on-surface-variant">
                           <UiDateText locale={dictionary.locale} value={quotation.date} />
                         </div>
@@ -280,6 +282,7 @@ export default function QuotationsClient({
                         <StatusBadge variant={quotation.status as StatusBadgeVariant}>
                           {getQuotationStatusLabel(dictionary.locale, quotation.status)}
                         </StatusBadge>
+                        {quotation.status === "approved" && <div className="mt-1 text-end text-[11px] text-on-surface-variant">{quotation.supersededAt ? dictionary.amendment.superseded : dictionary.amendment.current}</div>}
                       </div>
                     </div>
 

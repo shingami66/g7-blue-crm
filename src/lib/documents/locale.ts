@@ -76,6 +76,11 @@ export type DocumentDictionary = {
     discount: string;
     grandTotal: string;
     termsAndConditions: string;
+    authorityLine: string;
+    included: string;
+    optional: string;
+    selected: string;
+    notSelected: string;
   };
   invoice: {
     commercialInvoice: string;
@@ -175,6 +180,11 @@ const english: DocumentDictionary = {
     discount: "Discount:",
     grandTotal: "Grand Total:",
     termsAndConditions: "Terms & Conditions",
+    authorityLine: "Authority Line",
+    included: "Included",
+    optional: "Optional",
+    selected: "Selected",
+    notSelected: "Not selected",
   },
   invoice: {
     commercialInvoice: "Commercial Invoice",
@@ -274,6 +284,11 @@ const arabic: DocumentDictionary = {
     discount: "الخصم:",
     grandTotal: "الإجمالي الكلي:",
     termsAndConditions: "الشروط والأحكام",
+    authorityLine: "البند المرجعي",
+    included: "مشمول",
+    optional: "اختياري",
+    selected: "محدد",
+    notSelected: "غير محدد",
   },
   invoice: {
     commercialInvoice: "فاتورة تجارية",

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Json } from "@/lib/supabase/database.types";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { consumeRateLimit } from "@/lib/security/rate-limit";
@@ -15,6 +16,7 @@ import {
   executeCreateApprovedCommercialAmendment,
   type ApprovedCommercialAmendmentData,
 } from "./commercial-amendment-contract";
+import { executeUpdateApprovedCommercialAmendmentDraft } from "./commercial-amendment-draft-contract";
 import {
   createQuotationSchema,
   quotationCommercialStructureSchema,
@@ -51,6 +53,7 @@ export type ActionResult<T = void> = {
   success: boolean;
   error?: string;
   code?: QuotationActionErrorCode;
+  domainErrorCode?: string;
   data?: T;
 };
 
@@ -93,7 +96,7 @@ async function getExistingQuotationForUpdate(
 ) {
   const { data, error } = await supabase
     .from("quotations")
-    .select("id, service_id, date, valid_until, status, quotation_items(commercial_role)")
+    .select("id, service_id, date, valid_until, status, revision_of_quotation_id, mutation_payload, quotation_items(commercial_role)")
     .eq("id", id)
     .eq("is_deleted", false)
     .single();
@@ -322,6 +325,19 @@ export async function updateQuotation(id: string, input: unknown): Promise<Actio
 
     if (existingQuotation.status !== "draft") {
       return { success: false, error: "Only draft quotations can be edited." };
+    }
+
+    const mutationPayload = existingQuotation.mutation_payload;
+    if (
+      existingQuotation.revision_of_quotation_id &&
+      typeof mutationPayload === "object" &&
+      mutationPayload !== null &&
+      (mutationPayload as { operation?: unknown }).operation === "approved_commercial_amendment_creation"
+    ) {
+      return {
+        success: false,
+        error: "Commercial amendment Drafts must be edited through the Commercial Amendment workspace.",
+      };
     }
 
     // The legacy replace-all RPC cannot carry W2A hierarchy metadata. Fail
@@ -590,7 +606,7 @@ export async function createApprovedCommercialAmendment(
         ),
     });
 
-    if (!result.success) return result;
+    if (!result.success) return { ...result, domainErrorCode: result.errorCode };
 
     revalidatePath("/quotations");
     revalidatePath(`/quotations/${result.data.source_quotation_id}`);
@@ -638,7 +654,7 @@ export async function approveApprovedCommercialAmendment(
         ),
     });
 
-    if (!result.success) return result;
+    if (!result.success) return { ...result, domainErrorCode: result.errorCode };
 
     revalidatePath("/quotations");
     revalidatePath(`/quotations/${result.data.source_quotation_id}`);
@@ -651,6 +667,74 @@ export async function approveApprovedCommercialAmendment(
     if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
     console.error(
       "[approveApprovedCommercialAmendment] Unexpected error:",
+      err instanceof Error ? err.message : "Unknown",
+    );
+    return { success: false, code: "UNKNOWN_ERROR", error: "An unexpected error occurred." };
+  }
+}
+
+/**
+ * Save the complete structured snapshot of a W7-P0B successor Draft.
+ * The database function owns hierarchy validation, totals, and concurrency.
+ */
+export async function updateApprovedCommercialAmendmentDraft(
+  input: unknown,
+): Promise<ActionResult<{
+  quotation_id: string;
+  updated_at: string;
+  line_count: number;
+  subtotal: number;
+  discount: number;
+  vat_amount: number;
+  grand_total: number;
+}>> {
+  try {
+    const user = await requirePermission("quotations:write");
+    if (!consumeRateLimit("updateApprovedCommercialAmendmentDraft", user.clerk_user_id, CREATE_QUOTATION_RATE_LIMIT)) {
+      return { success: false, code: "RATE_LIMITED", error: RATE_LIMIT_ERROR };
+    }
+
+    const supabase = createAdminClient();
+    const result = await executeUpdateApprovedCommercialAmendmentDraft({
+      value: input,
+      actor: { clerk_user_id: user.clerk_user_id, role: user.role },
+      invoke: async (params) =>
+        await supabase.rpc(
+          "update_approved_commercial_amendment_draft",
+          params as unknown as {
+            p_quotation_id: string;
+            p_quotation: Json;
+            p_lines: Json;
+            p_expected_updated_at: string;
+            p_user_id: string;
+          },
+        ),
+    });
+
+    if (!result.success) {
+      return { ...result, code: result.code === "INVALID_INPUT" ? "INVALID_INPUT" : "STRUCTURE_UPDATE_FAILED", domainErrorCode: result.errorCode };
+    }
+
+    revalidatePath("/quotations");
+    revalidatePath(`/quotations/${result.data.quotation_id}`);
+    revalidatePath(`/quotations/${result.data.quotation_id}/amendment`);
+    return {
+      success: true,
+      data: {
+        quotation_id: result.data.quotation_id ?? "",
+        updated_at: result.data.updated_at ?? "",
+        line_count: result.data.line_count ?? 0,
+        subtotal: result.data.subtotal ?? 0,
+        discount: result.data.discount ?? 0,
+        vat_amount: result.data.vat_amount ?? 0,
+        grand_total: result.data.grand_total ?? 0,
+      },
+    };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
+    console.error(
+      "[updateApprovedCommercialAmendmentDraft] Unexpected error:",
       err instanceof Error ? err.message : "Unknown",
     );
     return { success: false, code: "UNKNOWN_ERROR", error: "An unexpected error occurred." };

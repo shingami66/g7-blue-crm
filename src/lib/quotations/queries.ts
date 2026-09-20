@@ -9,6 +9,7 @@ import {
   normalizeQuotationSearchMode,
   type QuotationDetail,
   type QuotationDetailRow,
+  type QuotationLineageSummary,
   type QuotationListItem,
   type QuotationListQuery,
   type QuotationRowWithRelations,
@@ -21,6 +22,7 @@ import { getBusinessYearBounds } from "@/lib/business-year";
 const QUOTATION_SELECT = "*, customers(company, contact), services(service_number, service_title, status, event_name)";
 const QUOTATION_DETAIL_SELECT = `${QUOTATION_SELECT}, quotation_items(*)`;
 const SERVICE_QUOTATION_LIST_SELECT = "id, quotation_number, date, valid_until, grand_total, status";
+const QUOTATION_LINEAGE_SELECT = "id, quotation_number, status, revision_number, grand_total";
 
 function mapRowToServiceQuotationListItem(row: Record<string, unknown>): ServiceQuotationListItem {
   return {
@@ -54,12 +56,30 @@ export function sanitizeQuotationRow(row: Record<string, unknown>): QuotationRow
     deleted_at: typeof row.deleted_at === "string" ? row.deleted_at : null,
     mutation_key: typeof row.mutation_key === "string" ? row.mutation_key : null,
     mutation_payload: row.mutation_payload ?? null,
+    quotation_family_id: typeof row.quotation_family_id === "string" ? row.quotation_family_id : undefined,
+    revision_of_quotation_id:
+      typeof row.revision_of_quotation_id === "string" ? row.revision_of_quotation_id : null,
+    revision_number: Number.isFinite(Number(row.revision_number)) ? Number(row.revision_number) : undefined,
+    revision_reason: typeof row.revision_reason === "string" ? row.revision_reason : null,
+    superseded_at: typeof row.superseded_at === "string" ? row.superseded_at : null,
+    superseded_by_quotation_id:
+      typeof row.superseded_by_quotation_id === "string" ? row.superseded_by_quotation_id : null,
     created_by: typeof row.created_by === "string" ? row.created_by : "",
     updated_by: typeof row.updated_by === "string" ? row.updated_by : "",
     snapshot_seller: (row.snapshot_seller as QuotationRowWithRelations["snapshot_seller"]) ?? null,
     snapshot_buyer: (row.snapshot_buyer as QuotationRowWithRelations["snapshot_buyer"]) ?? null,
     customers: (row.customers as QuotationRowWithRelations["customers"]) ?? null,
     services: (row.services as QuotationRowWithRelations["services"]) ?? null,
+  };
+}
+
+function mapLineageSummary(row: Record<string, unknown>): QuotationLineageSummary {
+  return {
+    id: typeof row.id === "string" ? row.id : "",
+    quotationNumber: typeof row.quotation_number === "string" ? row.quotation_number : "",
+    status: (typeof row.status === "string" ? row.status : "draft") as QuotationLineageSummary["status"],
+    revisionNumber: Number.isFinite(Number(row.revision_number)) ? Number(row.revision_number) : undefined,
+    grandTotal: Number(row.grand_total) || 0,
   };
 }
 
@@ -302,9 +322,36 @@ export async function getQuotationByIdResult(
 
     if (!data) return { status: "not_found" };
 
+    const quotation = mapRowToQuotationDetail(sanitizeQuotationDetailRow(data));
+    const [predecessorResult, successorResult] = await Promise.all([
+      quotation.revisionOfQuotationId
+        ? supabase
+            .from("quotations")
+            .select(QUOTATION_LINEAGE_SELECT)
+            .eq("id", quotation.revisionOfQuotationId)
+            .eq("is_deleted", false)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      supabase
+        .from("quotations")
+        .select(QUOTATION_LINEAGE_SELECT)
+        .eq("revision_of_quotation_id", quotation.id)
+        .eq("is_deleted", false)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if (predecessorResult.error) console.error("[getQuotationById] Predecessor error:", predecessorResult.error.message);
+    if (successorResult.error) console.error("[getQuotationById] Successor error:", successorResult.error.message);
+
     return {
       status: "ready",
-      quotation: mapRowToQuotationDetail(sanitizeQuotationDetailRow(data)),
+      quotation: {
+        ...quotation,
+        predecessor: predecessorResult.data ? mapLineageSummary(predecessorResult.data) : null,
+        successor: successorResult.data ? mapLineageSummary(successorResult.data) : null,
+      },
     };
   } catch (err) {
     if (err instanceof UnauthorizedError || err instanceof ForbiddenError) throw err;

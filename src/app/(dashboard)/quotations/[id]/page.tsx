@@ -25,6 +25,7 @@ import RecordNavigationSlot from "@/components/records/RecordNavigationSlot";
 import { RecordNavigationPlaceholder } from "@/components/records/RecordNavigation";
 import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
 import { getQuotationRecordNavigation, safeRecordReturnTo } from "@/lib/record-navigation/queries";
+import CommercialAmendmentCreateDialog from "./CommercialAmendmentCreateDialog";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -219,7 +220,20 @@ export default async function QuotationDetailPage({
               listDictionary={dictionary.list}
             />
           )}
-          {canWrite && (quotation.status === "draft" ? (
+          {quotation.status === "approved" && quotation.revisionOfQuotationId === null && !quotation.supersededAt && quotation.successor && (canWrite || canApprove) && (
+            <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
+              <Link href={quotation.successor.status === "draft" ? `/quotations/${quotation.successor.id}/amendment` : `/quotations/${quotation.successor.id}`}>{dictionary.amendment.openAction}</Link>
+            </Button>
+          )}
+          {quotation.status === "approved" && quotation.revisionOfQuotationId === null && !quotation.supersededAt && !quotation.successor && canWrite && (
+            <CommercialAmendmentCreateDialog sourceQuotationId={quotation.id} dictionary={dictionary.amendment} />
+          )}
+          {quotation.status === "draft" && quotation.revisionOfQuotationId && canWrite && (
+            <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
+              <Link href={`/quotations/${quotation.id}/amendment`}>{dictionary.amendment.openAction}</Link>
+            </Button>
+          )}
+          {canWrite && (quotation.status === "draft" && !quotation.isApprovedCommercialAmendment ? (
             <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
               <PendingLink href={`/quotations/${quotation.id}/edit`}>
                 <span className="inline-flex items-center gap-2 whitespace-nowrap">
@@ -307,6 +321,18 @@ export default async function QuotationDetailPage({
             </div>
           </div>
 
+          {(quotation.revisionOfQuotationId || quotation.successor) && (
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 text-sm">
+              <div className="font-semibold text-primary">{dictionary.amendment.label}</div>
+              <div className="mt-2 grid gap-2 text-on-surface-variant sm:grid-cols-2">
+                {quotation.predecessor && <Link className="hover:text-primary hover:underline" href={`/quotations/${quotation.predecessor.id}`}>{dictionary.amendment.predecessor}: <span dir="ltr">{isolateBidiText(quotation.predecessor.quotationNumber)}</span></Link>}
+                {quotation.successor && <Link className="hover:text-primary hover:underline" href={quotation.successor.status === "draft" ? `/quotations/${quotation.successor.id}/amendment` : `/quotations/${quotation.successor.id}`}>{dictionary.amendment.successor}: <span dir="ltr">{isolateBidiText(quotation.successor.quotationNumber)}</span></Link>}
+              </div>
+              {quotation.status === "approved" && quotation.supersededAt && <p className="mt-3 text-on-surface">{dictionary.amendment.superseded}</p>}
+              {quotation.status === "approved" && !quotation.supersededAt && <p className="mt-3 text-on-surface">{dictionary.amendment.current}</p>}
+            </div>
+          )}
+
           {/* Line Items Table & Mobile Cards */}
           <div className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
@@ -353,9 +379,14 @@ export default async function QuotationDetailPage({
                         <span dir="ltr">{i + 1}</span>
                       </td>
                       <td className="px-4 py-4 text-start align-top">
-                        <div className="font-semibold text-on-surface mb-1">
-                          <bdi dir="auto">{item.description}</bdi>
+                        <div className={`font-semibold text-on-surface mb-1 ${item.parentAuthorityLineId ? "ps-5" : ""}`}>
+                          <bdi dir="auto">{locale === "ar" ? item.descriptionAr || item.description : item.description}</bdi>
                         </div>
+                        {item.commercialRole !== "authority_line" && (
+                          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
+                            {item.commercialRole === "included_component" ? dictionary.amendment.included : `${dictionary.amendment.optional} · ${item.isSelected ? dictionary.amendment.selected : dictionary.amendment.notSelected}`}
+                          </div>
+                        )}
                         <div className="text-[12px] text-on-surface-variant leading-relaxed">
                           <bdi dir="auto">{item.details}</bdi>
                         </div>
@@ -364,10 +395,10 @@ export default async function QuotationDetailPage({
                         <span dir="ltr">{formatQuantity(item.qty)}</span>
                       </td>
                       <td className="px-4 py-4 text-end text-on-surface align-top">
-                        <span dir="ltr">{formatMoney(item.unitPrice)}</span>
+                        <span dir="ltr">{item.commercialRole === "included_component" || (item.commercialRole === "optional_add_on" && !item.isSelected) ? "—" : formatMoney(item.unitPrice)}</span>
                       </td>
                       <td className="px-4 py-4 text-end font-medium text-on-surface align-top">
-                        <span dir="ltr">{formatMoney(item.total)}</span>
+                        <span dir="ltr">{item.commercialRole === "included_component" || (item.commercialRole === "optional_add_on" && !item.isSelected) ? "—" : formatMoney(item.total)}</span>
                       </td>
                     </tr>
                   ))}
@@ -392,9 +423,10 @@ export default async function QuotationDetailPage({
                 <div key={i} className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-on-surface text-[14px] leading-snug">
-                        <bdi dir="auto">{item.description}</bdi>
+                      <div className={`font-semibold text-on-surface text-[14px] leading-snug ${item.parentAuthorityLineId ? "ps-5" : ""}`}>
+                        <bdi dir="auto">{locale === "ar" ? item.descriptionAr || item.description : item.description}</bdi>
                       </div>
+                      {item.commercialRole !== "authority_line" && <div className="text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">{item.commercialRole === "included_component" ? dictionary.amendment.included : `${dictionary.amendment.optional} · ${item.isSelected ? dictionary.amendment.selected : dictionary.amendment.notSelected}`}</div>}
                       {item.details && (
                         <div className="mt-1 text-[12px] text-on-surface-variant leading-relaxed">
                           <bdi dir="auto">{item.details}</bdi>
@@ -416,13 +448,13 @@ export default async function QuotationDetailPage({
                     <div className="flex justify-between items-baseline gap-2">
                       <span className="text-on-surface-variant">{dictionary.detail.labels.unitSar}:</span>
                       <span className="font-medium text-on-surface tabular-nums" dir="ltr">
-                        {formatMoney(item.unitPrice)}
+                        {item.commercialRole === "included_component" || (item.commercialRole === "optional_add_on" && !item.isSelected) ? "—" : formatMoney(item.unitPrice)}
                       </span>
                     </div>
                     <div className="flex justify-between items-baseline gap-2 border-t border-surface-variant/60 pt-1.5 font-semibold">
                       <span className="text-primary">{dictionary.detail.labels.totalSar}:</span>
                       <span className="text-primary tabular-nums" dir="ltr">
-                        {formatMoney(item.total)}
+                        {item.commercialRole === "included_component" || (item.commercialRole === "optional_add_on" && !item.isSelected) ? "—" : formatMoney(item.total)}
                       </span>
                     </div>
                   </div>

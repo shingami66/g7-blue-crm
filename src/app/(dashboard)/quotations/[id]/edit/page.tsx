@@ -85,6 +85,10 @@ export default async function EditQuotationPage({
     );
   }
 
+  if (quotation.isApprovedCommercialAmendment) {
+    redirect(`/quotations/${quotation.id}/amendment`);
+  }
+
   if (!quotation.service) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">

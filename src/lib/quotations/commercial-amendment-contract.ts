@@ -109,7 +109,7 @@ export async function executeCreateApprovedCommercialAmendment(input: {
   invoke: (params: Record<string, string>) => Promise<RpcResponse>;
 }): Promise<
   | { success: true; data: ApprovedCommercialAmendmentData }
-  | { success: false; code: "INVALID_INPUT" | "AMENDMENT_FAILED"; error: string }
+  | { success: false; code: "INVALID_INPUT" | "AMENDMENT_FAILED"; error: string; errorCode?: string }
 > {
   const parsed = approvedCommercialAmendmentCreationSchema.safeParse(input.value);
   const actor = actorSchema.safeParse(input.actor);
@@ -133,10 +133,12 @@ export async function executeCreateApprovedCommercialAmendment(input: {
   if (response.error) return { success: false, code: "AMENDMENT_FAILED", error: GENERIC_ERROR };
   const result = approvedCommercialAmendmentCreationRpcResultSchema.safeParse(oneRow(response.data));
   if (!result.success || result.data.error_code) {
+    const errorCode = result.success ? result.data.error_code ?? undefined : undefined;
     return {
       success: false,
       code: "AMENDMENT_FAILED",
       error: mapError(result.success ? result.data.error_code : null),
+      ...(errorCode ? { errorCode } : {}),
     };
   }
   if (!result.data.created || !result.data.successor_quotation_id || !result.data.service_id) {
@@ -151,7 +153,7 @@ export async function executeApproveApprovedCommercialAmendment(input: {
   invoke: (params: Record<string, string>) => Promise<RpcResponse>;
 }): Promise<
   | { success: true; data: ApprovedCommercialAmendmentData }
-  | { success: false; code: "INVALID_INPUT" | "AMENDMENT_FAILED"; error: string }
+  | { success: false; code: "INVALID_INPUT" | "AMENDMENT_FAILED"; error: string; errorCode?: string }
 > {
   const parsed = approvedCommercialAmendmentApprovalSchema.safeParse(input.value);
   const actor = actorSchema.safeParse(input.actor);
@@ -175,10 +177,12 @@ export async function executeApproveApprovedCommercialAmendment(input: {
   if (response.error) return { success: false, code: "AMENDMENT_FAILED", error: GENERIC_ERROR };
   const result = approvedCommercialAmendmentApprovalRpcResultSchema.safeParse(oneRow(response.data));
   if (!result.success || result.data.error_code) {
+    const errorCode = result.success ? result.data.error_code ?? undefined : undefined;
     return {
       success: false,
       code: "AMENDMENT_FAILED",
       error: mapError(result.success ? result.data.error_code : null),
+      ...(errorCode ? { errorCode } : {}),
     };
   }
   if (!result.data.quotation_approved || !result.data.abs_activated || !result.data.service_id) {

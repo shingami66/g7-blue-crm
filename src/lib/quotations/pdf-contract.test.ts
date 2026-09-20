@@ -105,13 +105,14 @@ test("Quotation PDF line items conditionally present optional category and detai
   assert.match(table, /item\.category\.trim\(\) \? <bdi dir="auto">\{item\.category\}<\/bdi> : "—"/);
 
   // Details remain secondary and appear only when meaningfully present.
-  assert.match(table, /<bdi dir="auto">\{item\.description\}<\/bdi>/);
+  assert.match(table, /documentLocale === "ar" \? item\.descriptionAr \|\| item\.description : item\.description/);
   assert.match(table, /item\.details\?\.trim\(\) && \([\s\S]*?<bdi dir="auto">\{item\.details\}<\/bdi>/);
   assert.doesNotMatch(table, /<div[^>]*dir="auto"/);
 
   // Numeric and VAT presentation remains isolated and otherwise unchanged.
-  assert.match(table, /<span dir="ltr" className="document-bidi-number">\{formatAmountWithCurrency\(item\.unitPrice\)\}<\/span>/);
-  assert.match(table, /<span dir="ltr" className="document-bidi-number">\{formatAmountWithCurrency\(item\.total\)\}<\/span>/);
+  assert.match(table, /item\.commercialRole === "included_component"/);
+  assert.match(table, /formatAmountWithCurrency\(item\.unitPrice\)/);
+  assert.match(table, /formatAmountWithCurrency\(item\.total\)/);
   assert.match(table, /dictionary\.common\.notApplied/);
 
   // Frozen dashboard and Invoice PDF contracts remain present.

@@ -2931,6 +2931,25 @@ export type Database = {
           successor_quotation_id: string | null
         }[]
       }
+      update_approved_commercial_amendment_draft: {
+        Args: {
+          p_expected_updated_at: string
+          p_lines: Json
+          p_quotation: Json
+          p_quotation_id: string
+          p_user_id: string
+        }
+        Returns: {
+          discount: number | null
+          error_code: string | null
+          grand_total: number | null
+          line_count: number | null
+          quotation_id: string | null
+          subtotal: number | null
+          updated_at: string | null
+          vat_amount: number | null
+        }[]
+      }
       approve_quotation_and_activate_internal_abs: {
         Args: {
           p_actor_id: string

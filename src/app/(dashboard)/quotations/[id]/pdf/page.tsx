@@ -257,9 +257,16 @@ export default async function QuotationPdfPage({
                     <span dir="ltr" className="document-bidi-number">{i + 1}</span>
                   </td>
                   <td className="py-4 px-2 align-top text-start">
-                    <div className="font-semibold mb-1">
-                      <bdi dir="auto">{item.description}</bdi>
-                    </div>
+                      <div className={`font-semibold mb-1 ${item.parentAuthorityLineId ? "ps-4" : ""}`}>
+                        <bdi dir="auto">{documentLocale === "ar" ? item.descriptionAr || item.description : item.description}</bdi>
+                      </div>
+                    {item.commercialRole !== "authority_line" && (
+                      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
+                        {item.commercialRole === "included_component"
+                          ? dictionary.quotation.included
+                          : `${dictionary.quotation.optional} · ${item.isSelected ? dictionary.quotation.selected : dictionary.quotation.notSelected}`}
+                      </div>
+                    )}
                     {item.details?.trim() && (
                       <div className="text-[12px] leading-relaxed text-on-surface-variant">
                         <bdi dir="auto">{item.details}</bdi>
@@ -273,14 +280,14 @@ export default async function QuotationPdfPage({
                   )}
                   <td className="py-4 px-2 align-top text-center"><span dir="ltr" className="document-bidi-number">{formatQuantity(item.qty)}</span></td>
                   <td className="py-4 px-2 align-top text-end">
-                    <span dir="ltr" className="document-bidi-number">{formatAmountWithCurrency(item.unitPrice)}</span>
+                    <span dir="ltr" className="document-bidi-number">{item.commercialRole === "included_component" || (item.commercialRole === "optional_add_on" && !item.isSelected) ? "—" : formatAmountWithCurrency(item.unitPrice)}</span>
                   </td>
                   <td className="py-4 px-2 align-top text-end text-[12px] text-on-surface-variant">
                     {/* TODO CS-B: show item.vat from the document snapshot when VAT registration is enabled. */}
                     {dictionary.common.notApplied}
                   </td>
                   <td className="py-4 px-2 align-top text-end font-medium">
-                     <span dir="ltr" className="document-bidi-number">{formatAmountWithCurrency(item.total)}</span>
+                     <span dir="ltr" className="document-bidi-number">{item.commercialRole === "included_component" || (item.commercialRole === "optional_add_on" && !item.isSelected) ? "—" : formatAmountWithCurrency(item.total)}</span>
                   </td>
                 </tr>
               ))}
