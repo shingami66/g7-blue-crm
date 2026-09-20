@@ -10,6 +10,10 @@ const actions = readFileSync(
   new URL("./actions.ts", import.meta.url),
   "utf8",
 );
+const flexibleMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260920090000_w7p0_flexible_quotation_builder.sql", import.meta.url),
+  "utf8",
+);
 
 test("W2A migration stays on quotation and ABS lineage", () => {
   assert.match(migration, /ALTER TABLE public\.quotation_items/);
@@ -35,7 +39,9 @@ test("W2A migration protects optional and included contribution semantics", () =
   assert.match(migration, /ORDER BY CASE[\s\S]*current_item\.commercial_role <> 'authority_line'/);
 });
 
-test("legacy quotation replacement fails closed for structured drafts", () => {
-  assert.match(actions, /legacy replace-all RPC cannot carry W2A hierarchy metadata/);
-  assert.match(actions, /commercial_role.*!== "authority_line"/);
+test("flexible quotation replacement preserves structured hierarchy and server authority", () => {
+  assert.match(actions, /update_flexible_quotation_draft/);
+  assert.doesNotMatch(actions, /legacy replace-all RPC cannot carry W2A hierarchy metadata/);
+  assert.match(flexibleMigration, /CREATE FUNCTION public\.update_flexible_quotation_draft/);
+  assert.match(flexibleMigration, /reconcile_quotation_discount_allocations\(v_draft\.id\)/);
 });

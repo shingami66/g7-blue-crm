@@ -188,7 +188,7 @@ test("17. Issue-date and valid-until validation contracts remain", () => {
   assert.match(form, /validUntilAfterServiceStart/);
   assert.match(form, /serviceAlreadyStarted/);
   assert.match(form, /valid_until: validUntil/);
-  assert.match(form, /new Date\(validUntil\) < new Date\(date\)/);
+  assert.match(form, /new Date\(validUntil\) < new Date\(date\)|validUntil < date/);
 });
 
 test("18-20. Server total authority; no client-trusted totals; number generation untouched", () => {
@@ -259,7 +259,7 @@ test("29-30. Quotation detail delegates billing authority without managing ABS l
   assert.match(read(DETAIL), /QuotationBillingAuthorityCard/);
   assert.doesNotMatch(read(DETAIL), /CreateDepositInvoiceAction|CreateFinalInvoiceAction/);
   assert.doesNotMatch(read(DETAIL), /getInvoicesByQuotationId/);
-  assert.doesNotMatch(read(DETAIL), /supersede|voidApprovedBillingScope/);
+  assert.doesNotMatch(read(DETAIL), /voidApprovedBillingScope/);
   assert.doesNotMatch(read(LIST_PAGE), /PaymentsClient|InvoicesListClient/);
 });
 

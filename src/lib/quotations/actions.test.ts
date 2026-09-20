@@ -516,7 +516,7 @@ test("createQuotation creates new quotation on first attempt with is_replayed: f
   assert.strictEqual(res.data?.isReplayed, false);
   assert.strictEqual(res.data?.quotation_number, "QT-2026-0001");
   assert.strictEqual(scenarioState.rpcCalls.length, 1);
-  assert.strictEqual(scenarioState.rpcCalls[0].name, "create_quotation_with_items");
+  assert.strictEqual(scenarioState.rpcCalls[0].name, "create_flexible_quotation_with_items");
   const pQuotation = scenarioState.rpcCalls[0].args.p_quotation as Record<string, unknown>;
   assert.strictEqual(pQuotation.mutation_key, "mutation-qt-001");
   const paths = (globalThis as unknown as { __lastRevalidatedPaths?: string[] }).__lastRevalidatedPaths;

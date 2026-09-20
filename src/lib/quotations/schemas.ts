@@ -6,7 +6,13 @@ export const quotationItemInputSchema = z.object({
   category: z.string().optional().nullable(),
   qty: z.coerce.number().positive("Quantity must be greater than 0"),
   unit_price: z.coerce.number().nonnegative("Unit price cannot be negative"),
-});
+  line_key: z.string().trim().min(1).max(100).optional(),
+  parent_line_key: z.string().trim().max(100).nullable().optional(),
+  commercial_role: z.enum(["authority_line", "included_component", "optional_add_on"]).optional(),
+  is_selected: z.boolean().optional(),
+  unit: z.string().trim().min(1).max(80).optional(),
+  description_ar: z.string().trim().max(2000).nullable().optional(),
+}).strict();
 
 export const quotationCommercialRoleSchema = z.enum([
   "authority_line",

@@ -100,6 +100,71 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 const GENERIC_ERROR = "The amendment draft could not be saved. Please try again.";
 
+export const flexibleQuotationDraftSchema = approvedCommercialAmendmentDraftSchema;
+
+const FLEXIBLE_ERROR_MESSAGES: Record<string, string> = {
+  invalid_input: "Invalid quotation draft details.",
+  quotation_not_found: "The quotation draft was not found.",
+  quotation_not_draft: "Only a Draft quotation can be edited.",
+  quotation_draft_ineligible: "This Draft is not eligible for ordinary quotation editing.",
+  quotation_amendment_draft_ineligible: "Commercial Amendment Drafts must be edited through the Commercial Amendment workspace.",
+  quotation_draft_concurrency_conflict: "This quotation changed elsewhere. Reload the quotation before saving again.",
+  quotation_service_lifecycle_ineligible: "Quotation editing is unavailable because the Service is no longer eligible.",
+  invalid_validity_window: "The quotation validity window is not allowed for this Service.",
+  invalid_commercial_hierarchy: "The commercial structure is invalid. Check each child and Authority Line.",
+  discount_exceeds_subtotal: "The fixed discount cannot exceed the proposed subtotal.",
+  w2c_discount_currency_unsupported: "Only fixed SAR discounts are supported for this quotation.",
+  commercial_draft_update_failed: "The quotation draft could not be saved. No changes were made.",
+};
+
+export async function executeUpdateFlexibleQuotationDraft(input: {
+  value: unknown;
+  actor: { clerk_user_id: string; role: string };
+  invoke: (params: Record<string, unknown>) => Promise<RpcResponse>;
+}): Promise<
+  | { success: true; data: z.infer<typeof rpcResultSchema> }
+  | { success: false; code: "INVALID_INPUT" | "STRUCTURE_UPDATE_FAILED"; error: string; errorCode?: string }
+> {
+  const parsed = flexibleQuotationDraftSchema.safeParse(input.value);
+  if (!parsed.success || !input.actor.clerk_user_id || !input.actor.role) {
+    return { success: false, code: "INVALID_INPUT", error: "Invalid quotation draft details." };
+  }
+
+  let response: RpcResponse;
+  try {
+    response = await input.invoke({
+      p_quotation_id: parsed.data.quotation_id,
+      p_quotation: {
+        event: parsed.data.event,
+        date: parsed.data.date,
+        valid_until: parsed.data.valid_until,
+        discount: parsed.data.discount,
+      },
+      p_lines: parsed.data.lines,
+      p_expected_updated_at: parsed.data.expected_updated_at,
+      p_user_id: input.actor.clerk_user_id,
+    });
+  } catch {
+    return { success: false, code: "STRUCTURE_UPDATE_FAILED", error: "The quotation draft could not be saved. Please try again." };
+  }
+
+  if (response.error) return { success: false, code: "STRUCTURE_UPDATE_FAILED", error: "The quotation draft could not be saved. Please try again." };
+  const result = rpcResultSchema.safeParse(oneRow(response.data));
+  if (!result.success || result.data.error_code) {
+    const errorCode = result.success ? result.data.error_code ?? undefined : undefined;
+    return {
+      success: false,
+      code: "STRUCTURE_UPDATE_FAILED",
+      error: (errorCode && FLEXIBLE_ERROR_MESSAGES[errorCode]) || "The quotation draft could not be saved. Please try again.",
+      errorCode,
+    };
+  }
+  if (!result.data.quotation_id || !result.data.updated_at || result.data.subtotal === null || result.data.grand_total === null) {
+    return { success: false, code: "STRUCTURE_UPDATE_FAILED", error: "The quotation draft could not be saved. Please try again." };
+  }
+  return { success: true, data: result.data };
+}
+
 function oneRow(data: unknown): unknown | null {
   return Array.isArray(data) && data.length === 1 ? data[0] : null;
 }

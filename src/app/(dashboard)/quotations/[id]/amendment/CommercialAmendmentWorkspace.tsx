@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { approveApprovedCommercialAmendment, updateApprovedCommercialAmendmentDraft } from "@/lib/quotations/actions";
 import type { QuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
@@ -10,10 +10,10 @@ import {
   buildCommercialAmendmentChangeSummary,
   commercialAmendmentPreviewGrandTotal,
   commercialAmendmentPreviewSubtotal,
-  deriveCommercialAmendmentMode,
   toCommercialAmendmentDraftLines,
   type CommercialAmendmentDraftLine,
 } from "@/lib/quotations/commercial-amendment-view-model";
+import FlexibleCommercialBuilder from "../../FlexibleCommercialBuilder";
 
 function serializeDraft(input: {
   event: string;
@@ -22,10 +22,7 @@ function serializeDraft(input: {
   discount: number;
   lines: CommercialAmendmentDraftLine[];
 }) {
-  return JSON.stringify({
-    ...input,
-    lines: input.lines.map(({ line_key, ...line }) => ({ line_key, ...line })),
-  });
+  return JSON.stringify(input);
 }
 
 export default function CommercialAmendmentWorkspace({
@@ -43,12 +40,12 @@ export default function CommercialAmendmentWorkspace({
 }) {
   const router = useRouter();
   const amendment = dictionary.amendment;
-  const nextKey = useRef(1);
+  const initialLines = toCommercialAmendmentDraftLines(quotation.items);
   const [event, setEvent] = useState(quotation.event);
   const [date, setDate] = useState(quotation.date);
   const [validUntil, setValidUntil] = useState(quotation.validUntil ?? "");
   const [discount, setDiscount] = useState(quotation.discount);
-  const [lines, setLines] = useState(() => toCommercialAmendmentDraftLines(quotation.items));
+  const [lines, setLines] = useState(initialLines);
   const [updatedAt, setUpdatedAt] = useState(quotation.updatedAt);
   const [serverTotals, setServerTotals] = useState({
     subtotal: quotation.subtotal,
@@ -56,13 +53,15 @@ export default function CommercialAmendmentWorkspace({
     vatAmount: quotation.vatAmount,
     grandTotal: quotation.grandTotal,
   });
-  const [savedSnapshot, setSavedSnapshot] = useState(() => serializeDraft({
-    event: quotation.event,
-    date: quotation.date,
-    validUntil: quotation.validUntil ?? "",
-    discount: quotation.discount,
-    lines: toCommercialAmendmentDraftLines(quotation.items),
-  }));
+  const [savedSnapshot, setSavedSnapshot] = useState(() =>
+    serializeDraft({
+      event: quotation.event,
+      date: quotation.date,
+      validUntil: quotation.validUntil ?? "",
+      discount: quotation.discount,
+      lines: initialLines,
+    }),
+  );
   const [pending, setPending] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +71,6 @@ export default function CommercialAmendmentWorkspace({
 
   const currentSnapshot = serializeDraft({ event, date, validUntil, discount, lines });
   const dirty = currentSnapshot !== savedSnapshot;
-  const mode = deriveCommercialAmendmentMode(lines);
   const previewSubtotal = commercialAmendmentPreviewSubtotal(lines);
   const previewGrandTotal = commercialAmendmentPreviewGrandTotal(lines, discount, quotation.vatRate);
   const summary = buildCommercialAmendmentChangeSummary({
@@ -83,77 +81,21 @@ export default function CommercialAmendmentWorkspace({
     vatRate: quotation.vatRate,
     proposedPersistedTotal: dirty ? undefined : serverTotals.grandTotal,
   });
-  const orderedLines = useMemo(() => {
-    const roots = lines.filter((line) => line.parent_line_key === null);
-    const children = new Map<string, CommercialAmendmentDraftLine[]>();
-    for (const line of lines) {
-      if (line.parent_line_key) {
-        const current = children.get(line.parent_line_key) ?? [];
-        current.push(line);
-        children.set(line.parent_line_key, current);
-      }
-    }
-    return roots.flatMap((root) => [root, ...(children.get(root.line_key) ?? [])]);
-  }, [lines]);
 
   useEffect(() => {
     if (!dirty) return;
-    const handler = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = amendment.unsavedChanges;
+    const handler = (beforeUnloadEvent: BeforeUnloadEvent) => {
+      beforeUnloadEvent.preventDefault();
+      beforeUnloadEvent.returnValue = amendment.unsavedChanges;
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [amendment.unsavedChanges, dirty]);
 
-  function updateLine(lineKey: string, update: Partial<CommercialAmendmentDraftLine>) {
-    setLines((current) => current.map((line) => (line.line_key === lineKey ? { ...line, ...update } : line)));
+  function handleLinesChange(nextLines: CommercialAmendmentDraftLine[]) {
+    setLines(nextLines);
     setSaveMessage(null);
     setError(null);
-  }
-
-  function addAuthorityLine() {
-    const lineKey = `new-${nextKey.current++}`;
-    setLines((current) => [
-      ...current,
-      {
-        line_key: lineKey,
-        parent_line_key: null,
-        commercial_role: "authority_line",
-        description: "",
-        description_ar: null,
-        details: null,
-        category: "",
-        qty: 1,
-        unit: "unit",
-        unit_price: 0,
-        is_selected: true,
-      },
-    ]);
-  }
-
-  function addChild(parentLineKey: string, role: "included_component" | "optional_add_on") {
-    const lineKey = `new-${nextKey.current++}`;
-    setLines((current) => [
-      ...current,
-      {
-        line_key: lineKey,
-        parent_line_key: parentLineKey,
-        commercial_role: role,
-        description: "",
-        description_ar: null,
-        details: null,
-        category: "",
-        qty: 1,
-        unit: "unit",
-        unit_price: 0,
-        is_selected: role === "included_component",
-      },
-    ]);
-  }
-
-  function removeLine(lineKey: string) {
-    setLines((current) => current.filter((line) => line.line_key !== lineKey && line.parent_line_key !== lineKey));
   }
 
   async function saveDraft() {
@@ -206,9 +148,7 @@ export default function CommercialAmendmentWorkspace({
     router.push(`/quotations/${quotation.id}`);
   }
 
-  function money(value: number) {
-    return formatSarAmount(dictionary.locale, value);
-  }
+  const money = (value: number) => formatSarAmount(dictionary.locale, value);
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-12">
@@ -221,99 +161,27 @@ export default function CommercialAmendmentWorkspace({
         <h1 className="text-2xl font-semibold text-primary">{amendment.workspaceTitle}</h1>
         <p className="max-w-3xl text-sm leading-6 text-on-surface-variant">{amendment.workspaceSubtitle}</p>
         <p className="text-sm leading-6 text-on-surface">{amendment.originalActiveNotice}</p>
-        {quotation.revisionReason && (
-          <p className="text-sm text-on-surface"><span className="font-semibold">{amendment.internalReason}:</span> {quotation.revisionReason}</p>
-        )}
+        {quotation.revisionReason && <p className="text-sm text-on-surface"><span className="font-semibold">{amendment.internalReason}:</span> {quotation.revisionReason}</p>}
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="flex min-w-0 flex-col gap-6">
           <fieldset disabled={!canWrite} className="contents">
-          <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-primary">{amendment.builderTitle}</h2>
-                <p className="mt-1 text-sm text-on-surface-variant">
-                  {mode === "itemized" ? amendment.modeItemized : mode === "package" ? amendment.modePackage : amendment.modeMixed}
-                </p>
+            <FlexibleCommercialBuilder lines={lines} onChange={handleLinesChange} dictionary={dictionary} disabled={!canWrite} />
+            <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-5">
+              <h2 className="text-lg font-semibold text-primary">{amendment.workspaceTitle}</h2>
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <label className="text-sm font-semibold text-on-surface">{dictionary.form.quotationEventLabel}<input value={event} onChange={(inputEvent) => setEvent(inputEvent.target.value)} dir="auto" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
+                <label className="text-sm font-semibold text-on-surface">{dictionary.form.issueDate}<input type="date" value={date} onChange={(inputEvent) => setDate(inputEvent.target.value)} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
+                <label className="text-sm font-semibold text-on-surface">{dictionary.form.validUntil}<input type="date" value={validUntil} onChange={(inputEvent) => setValidUntil(inputEvent.target.value)} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
+                <label className="text-sm font-semibold text-on-surface">{dictionary.form.discountSar}<input type="number" min="0" step="0.01" value={discount} onChange={(inputEvent) => setDiscount(Number(inputEvent.target.value) || 0)} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
               </div>
-              <button type="button" onClick={addAuthorityLine} className="rounded-lg border border-primary px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/5">
-                {amendment.addAuthorityLine}
-              </button>
-            </div>
-
-            <div className="mt-5 flex flex-col gap-4">
-              {orderedLines.map((line) => {
-                const isChild = line.parent_line_key !== null;
-                return (
-                  <div key={line.line_key} className={`rounded-lg border p-4 ${isChild ? "ms-4 border-outline-variant bg-surface" : "border-primary/20 bg-primary/5"}`}>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
-                        <span>{line.commercial_role === "authority_line" ? amendment.authorityLine : line.commercial_role === "included_component" ? amendment.included : amendment.optional}</span>
-                        {line.commercial_role === "optional_add_on" && <span className="rounded-full bg-surface-container-high px-2 py-1 normal-case">{line.is_selected ? amendment.selected : amendment.notSelected}</span>}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {!isChild && <>
-                          <button type="button" onClick={() => addChild(line.line_key, "included_component")} className="rounded border border-outline-variant px-2 py-1 text-xs font-semibold text-on-surface hover:bg-surface">{amendment.addIncluded}</button>
-                          <button type="button" onClick={() => addChild(line.line_key, "optional_add_on")} className="rounded border border-outline-variant px-2 py-1 text-xs font-semibold text-on-surface hover:bg-surface">{amendment.addOptional}</button>
-                        </>}
-                        <button type="button" onClick={() => removeLine(line.line_key)} className="rounded border border-error/30 px-2 py-1 text-xs font-semibold text-error hover:bg-error/5">{amendment.removeLine}</button>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-                      <label className="text-xs font-semibold text-on-surface-variant">{dictionary.detail.labels.service}
-                        <input value={line.description} onChange={(e) => updateLine(line.line_key, { description: e.target.value })} dir="auto" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface" />
-                      </label>
-                      <label className="text-xs font-semibold text-on-surface-variant">{amendment.descriptionAr}
-                        <input value={line.description_ar ?? ""} onChange={(e) => updateLine(line.line_key, { description_ar: e.target.value || null })} dir="rtl" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface" />
-                      </label>
-                      <label className="text-xs font-semibold text-on-surface-variant">{dictionary.form.detailsCategoryOptional}
-                        <input value={line.details ?? ""} onChange={(e) => updateLine(line.line_key, { details: e.target.value || null })} dir="auto" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface" />
-                      </label>
-                      <label className="text-xs font-semibold text-on-surface-variant">{dictionary.form.categoryPlaceholder}
-                        <input value={line.category} onChange={(e) => updateLine(line.line_key, { category: e.target.value })} dir="auto" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface" />
-                      </label>
-                      <label className="text-xs font-semibold text-on-surface-variant">{dictionary.detail.labels.qty}
-                        <input type="number" min="0.01" step="0.01" value={line.qty} onChange={(e) => updateLine(line.line_key, { qty: Number(e.target.value) || 0 })} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface" />
-                      </label>
-                      <label className="text-xs font-semibold text-on-surface-variant">{amendment.unit}
-                        <input value={line.unit} onChange={(e) => updateLine(line.line_key, { unit: e.target.value })} dir="auto" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface" />
-                      </label>
-                      <label className="text-xs font-semibold text-on-surface-variant">{amendment.unitPrice}
-                        <input type="number" min="0" step="0.01" value={line.commercial_role === "included_component" ? 0 : line.unit_price} readOnly={line.commercial_role === "included_component"} onChange={(e) => updateLine(line.line_key, { unit_price: Number(e.target.value) || 0 })} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface read-only:bg-surface-container-low read-only:text-on-surface-variant" />
-                      </label>
-                      {line.commercial_role === "optional_add_on" && (
-                        <label className="flex items-end gap-2 pb-2 text-sm font-semibold text-on-surface">
-                          <input type="checkbox" checked={line.is_selected} onChange={(e) => updateLine(line.line_key, { is_selected: e.target.checked })} />
-                          {line.is_selected ? amendment.selected : amendment.notSelected}
-                        </label>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-5">
-            <h2 className="text-lg font-semibold text-primary">{amendment.workspaceTitle}</h2>
-            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-              <label className="text-sm font-semibold text-on-surface">{dictionary.form.quotationEventLabel}<input value={event} onChange={(e) => setEvent(e.target.value)} dir="auto" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
-              <label className="text-sm font-semibold text-on-surface">{dictionary.form.issueDate}<input type="date" value={date} onChange={(e) => setDate(e.target.value)} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
-              <label className="text-sm font-semibold text-on-surface">{dictionary.form.validUntil}<input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
-              <label className="text-sm font-semibold text-on-surface">{dictionary.form.discountSar}<input type="number" min="0" step="0.01" value={discount} onChange={(e) => setDiscount(Number(e.target.value) || 0)} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
-            </div>
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-surface-variant pt-4">
-              <div className="text-sm text-on-surface-variant">{dirty ? amendment.unsavedChanges : saveMessage ?? ""}</div>
-              {canWrite && (
-                <button type="button" onClick={saveDraft} disabled={pending || !dirty} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">
-                  {pending ? amendment.savingDraft : amendment.saveDraft}
-                </button>
-              )}
-            </div>
-            {error && <p className="mt-3 text-sm text-error" role="alert">{error}</p>}
-          </section>
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-surface-variant pt-4">
+                <div className="text-sm text-on-surface-variant">{dirty ? amendment.unsavedChanges : saveMessage ?? ""}</div>
+                {canWrite && <button type="button" onClick={saveDraft} disabled={pending || !dirty} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">{pending ? amendment.savingDraft : amendment.saveDraft}</button>}
+              </div>
+              {error && <p className="mt-3 text-sm text-error" role="alert">{error}</p>}
+            </section>
           </fieldset>
         </div>
 
@@ -332,9 +200,7 @@ export default function CommercialAmendmentWorkspace({
               <p>{amendment.changedLines}: <span className="font-semibold text-on-surface" dir="ltr">{formatUiNumber(dictionary.locale, summary.changedLines)}</span></p>
               <p>{amendment.optionalChanges}: <span className="font-semibold text-on-surface" dir="ltr">{formatUiNumber(dictionary.locale, summary.optionalChanges)}</span></p>
             </div>
-            <div className="mt-4 rounded-lg bg-surface-container-low p-3 text-sm text-on-surface-variant">
-              {summary.hasChanges ? amendment.sourceActiveUntilApproval : amendment.noChanges}
-            </div>
+            <div className="mt-4 rounded-lg bg-surface-container-low p-3 text-sm text-on-surface-variant">{summary.hasChanges ? amendment.sourceActiveUntilApproval : amendment.noChanges}</div>
           </section>
 
           <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-5">
@@ -343,11 +209,7 @@ export default function CommercialAmendmentWorkspace({
               <div className="flex justify-between gap-3"><span className="text-on-surface-variant">{dictionary.form.discount}</span><span dir="ltr" className="font-semibold tabular-nums">{money(dirty ? discount : serverTotals.discount)}</span></div>
               <div className="flex justify-between gap-3 border-t border-surface-variant pt-3"><span className="font-semibold text-primary">{dictionary.form.grandTotal}</span><span dir="ltr" className="font-semibold text-primary tabular-nums">{money(dirty ? previewGrandTotal : serverTotals.grandTotal)}</span></div>
             </div>
-            {canApprove && (
-              <button type="button" onClick={() => setApprovalOpen(true)} disabled={dirty || !summary.hasChanges || approvalPending} className="mt-5 w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-on-primary hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">
-                {amendment.approveAction}
-              </button>
-            )}
+            {canApprove && <button type="button" onClick={() => setApprovalOpen(true)} disabled={dirty || !summary.hasChanges || approvalPending} className="mt-5 w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-on-primary hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">{amendment.approveAction}</button>}
             {!summary.hasChanges && <p className="mt-3 text-xs leading-5 text-on-surface-variant">{amendment.noOpDisabled}</p>}
           </section>
         </aside>

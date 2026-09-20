@@ -16,7 +16,10 @@ import {
   executeCreateApprovedCommercialAmendment,
   type ApprovedCommercialAmendmentData,
 } from "./commercial-amendment-contract";
-import { executeUpdateApprovedCommercialAmendmentDraft } from "./commercial-amendment-draft-contract";
+import {
+  executeUpdateApprovedCommercialAmendmentDraft,
+  executeUpdateFlexibleQuotationDraft,
+} from "./commercial-amendment-draft-contract";
 import {
   createQuotationSchema,
   quotationCommercialStructureSchema,
@@ -96,7 +99,7 @@ async function getExistingQuotationForUpdate(
 ) {
   const { data, error } = await supabase
     .from("quotations")
-    .select("id, service_id, date, valid_until, status, revision_of_quotation_id, mutation_payload, quotation_items(commercial_role)")
+    .select("id, quotation_number, service_id, event, date, valid_until, updated_at, status, revision_of_quotation_id, mutation_payload, quotation_items(commercial_role)")
     .eq("id", id)
     .eq("is_deleted", false)
     .single();
@@ -143,11 +146,20 @@ export async function createQuotation(input: unknown): Promise<ActionResult<Quot
     }
 
     const { items, ...quotationData } = parsed.data;
+    const flexibleItems = items.map((item, index) => ({
+      ...item,
+      line_key: item.line_key ?? `line-${index + 1}`,
+      parent_line_key: item.parent_line_key ?? null,
+      commercial_role: item.commercial_role ?? "authority_line",
+      is_selected: item.is_selected ?? true,
+      unit: item.unit ?? "unit",
+      description_ar: item.description_ar ?? null,
+    }));
 
     const supabase = createAdminClient();
-    const { data, error } = await supabase.rpc("create_quotation_with_items", {
+    const { data, error } = await supabase.rpc("create_flexible_quotation_with_items", {
       p_quotation: quotationData,
-      p_items: items,
+      p_items: flexibleItems,
       p_user_id: user.clerk_user_id,
     });
 
@@ -178,10 +190,16 @@ export async function createQuotation(input: unknown): Promise<ActionResult<Quot
       if (row.error_code === "invalid_input" || row.error_code === "missing_mutation_key") {
         return { success: false, code: "INVALID_INPUT", error: "Invalid quotation input." };
       }
+      if (row.error_code === "invalid_commercial_hierarchy") {
+        return { success: false, code: "INVALID_INPUT", error: "The commercial structure is invalid. Check each child and Authority Line." };
+      }
+      if (row.error_code === "discount_exceeds_subtotal") {
+        return { success: false, code: "INVALID_INPUT", error: "The fixed discount cannot exceed the proposed subtotal." };
+      }
       return { success: false, code: "CREATE_FAILED", error: "Failed to create quotation. Please try again." };
     }
 
-    if (!row.quotation_id) {
+    if (!row.quotation_id || !row.quotation_number) {
       return { success: false, code: "CREATE_FAILED", error: "Failed to create quotation. Please try again." };
     }
 
@@ -307,15 +325,7 @@ export async function updateQuotation(id: string, input: unknown): Promise<Actio
       return { success: false, error: firstError };
     }
 
-    const { items, ...quotationData } = parsed.data;
-
-    // Filter out undefined keys to match RPC fallback behavior effectively
-    const updates: Record<string, string | number | null> = {};
-    for (const [key, value] of Object.entries(quotationData)) {
-      if (value !== undefined) {
-        updates[key] = value;
-      }
-    }
+    const { items } = parsed.data;
 
     const supabase = createAdminClient();
     const existingQuotation = await getExistingQuotationForUpdate(supabase, id);
@@ -340,18 +350,6 @@ export async function updateQuotation(id: string, input: unknown): Promise<Actio
       };
     }
 
-    // The legacy replace-all RPC cannot carry W2A hierarchy metadata. Fail
-    // closed instead of silently flattening an already structured draft.
-    const existingItems = Array.isArray(existingQuotation.quotation_items)
-      ? existingQuotation.quotation_items
-      : [];
-    if (existingItems.some((item) => item?.commercial_role && item.commercial_role !== "authority_line")) {
-      return {
-        success: false,
-        error: "Structured quotations must be edited through the Authority Line editor.",
-      };
-    }
-
     const service = await getServiceById(existingQuotation.service_id);
     if (!service) {
       return { success: false, error: "Service not found or unavailable." };
@@ -371,27 +369,55 @@ export async function updateQuotation(id: string, input: unknown): Promise<Actio
       return { success: false, error: validityError };
     }
 
-    const { data, error } = await supabase.rpc("update_quotation_with_items", {
-      p_quotation_id: id,
-      p_quotation: updates,
-      p_items: items,
-      p_user_id: user.clerk_user_id,
+    const flexibleItems = items.map((item, index) => ({
+      ...item,
+      line_key: item.line_key ?? `line-${index + 1}`,
+      parent_line_key: item.parent_line_key ?? null,
+      commercial_role: item.commercial_role ?? "authority_line",
+      is_selected: item.is_selected ?? true,
+      unit: item.unit ?? "unit",
+      description_ar: item.description_ar ?? null,
+    }));
+    const result = await executeUpdateFlexibleQuotationDraft({
+      value: {
+        quotation_id: id,
+        event: parsed.data.event ?? existingQuotation.event,
+        date: parsed.data.date ?? existingQuotation.date,
+        valid_until: parsed.data.valid_until === undefined ? existingQuotation.valid_until : parsed.data.valid_until,
+        discount: parsed.data.discount ?? 0,
+        expected_updated_at: existingQuotation.updated_at,
+        lines: flexibleItems,
+      },
+      actor: { clerk_user_id: user.clerk_user_id, role: user.role },
+      invoke: async (params) =>
+        await supabase.rpc("update_flexible_quotation_draft", params as {
+          p_quotation_id: string;
+          p_quotation: Json;
+          p_lines: Json;
+          p_expected_updated_at: string;
+          p_user_id: string;
+        }),
     });
 
-    if (error) {
-      console.error("[updateQuotation] Supabase error:", error.message);
-      if (
-        error.message.includes("Cannot edit quotation with status") ||
-        error.message.includes("approved_quotation_immutable")
-      ) {
-        return { success: false, error: "Only draft quotations can be edited." };
-      }
-      return { success: false, error: "Failed to update quotation. Please try again." };
+    if (!result.success) {
+      return { ...result, code: result.code === "INVALID_INPUT" ? "INVALID_INPUT" : "STRUCTURE_UPDATE_FAILED", domainErrorCode: result.errorCode };
     }
 
     revalidatePath("/quotations");
     revalidatePath(`/quotations/${id}`);
-    return { success: true, data: data?.[0] };
+    return {
+      success: true,
+      data: {
+        quotation_id: result.data.quotation_id ?? id,
+        quotation_number: existingQuotation.quotation_number ?? "",
+        subtotal: result.data.subtotal ?? 0,
+        discount: result.data.discount ?? 0,
+        vat_amount: result.data.vat_amount ?? 0,
+        grand_total: result.data.grand_total ?? 0,
+        is_replayed: false,
+        isReplayed: false,
+      },
+    };
   } catch (err) {
     if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
