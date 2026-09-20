@@ -91,10 +91,11 @@ test("Quotation PDF line items conditionally present optional category and detai
   assert.ok(tableEnd > tableStart);
   assert.match(source, /const hasAnyCategory = documentItems\.some\(\(item\) => item\.category\.trim\(\)\.length > 0\);/);
   assert.match(source, /groupQuotationItemsForDocument/);
+  assert.match(source, /group\.rows\.map/);
   assert.match(source, /quotation-print-hierarchy-group/);
   assert.match(source, /quotation\.eventSnapshot/);
   assert.match(source, /dictionary\.quotation\.eventInformation/);
-  assert.match(source, /dictionary\.quotation\.notIncludedInTotal/);
+  assert.match(source, /dictionary\.quotation\.notIncludedInQuotationTotal/);
   assert.match(source, /buyer\.paymentTerms/);
   assert.match(source, /eventSnapshot \? eventSnapshot\.eventName\?\.trim\(\) \|\| "" : quotation\.event\.trim\(\)/);
   assert.match(source, /\{eventName && \(/);
@@ -122,6 +123,13 @@ test("Quotation PDF line items conditionally present optional category and detai
 
   // Numeric and VAT presentation remains isolated and otherwise unchanged.
   assert.match(table, /item\.commercialRole === "included_component"/);
+  assert.match(table, /dictionary\.quotation\.includedInPackage/);
+  assert.match(table, /dictionary\.quotation\.selectedAddOn/);
+  assert.match(table, /dictionary\.quotation\.includedInQuotationTotal/);
+  assert.match(table, /dictionary\.quotation\.availableAddOn/);
+  assert.match(table, /dictionary\.quotation\.notIncludedInQuotationTotal/);
+  assert.doesNotMatch(table, /dictionary\.quotation\.authorityLine/);
+  assert.doesNotMatch(table, /dictionary\.quotation\.notIncludedInTotal/);
   assert.match(table, /formatAmountWithCurrency\(item\.unitPrice\)/);
   assert.match(table, /formatAmountWithCurrency\(item\.total\)/);
   assert.match(table, /dictionary\.common\.notApplied/);

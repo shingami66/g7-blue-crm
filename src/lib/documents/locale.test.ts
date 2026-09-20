@@ -35,6 +35,14 @@ test("presentation language normalizes safely and keeps AR/EN dictionaries align
   assert.equal(getDocumentDictionary("ar").common.print, "طباعة");
   assert.equal(getDocumentDictionary("en").common.print, "Print");
   assert.equal(getDocumentDictionary("ar").quotation.termsAndConditions, "الشروط والأحكام");
+  assert.equal(getDocumentDictionary("en").quotation.package, "Package");
+  assert.equal(getDocumentDictionary("en").quotation.includedInPackage, "Included in Package");
+  assert.equal(getDocumentDictionary("en").quotation.selectedAddOn, "Selected Add-on");
+  assert.equal(getDocumentDictionary("en").quotation.availableAddOn, "Available Add-on");
+  assert.equal(getDocumentDictionary("ar").quotation.package, "باقة");
+  assert.equal(getDocumentDictionary("ar").quotation.includedInPackage, "ضمن سعر الباقة");
+  assert.equal(getDocumentDictionary("ar").quotation.selectedAddOn, "إضافة اختيارية محددة");
+  assert.equal(getDocumentDictionary("ar").quotation.availableAddOn, "إضافة اختيارية متاحة");
 });
 
 test("AR and EN fixtures preserve canonical financial authority while changing presentation", () => {
@@ -184,7 +192,7 @@ test("AR and EN quotation representations consume the same canonical quotation a
   assert.match(source, /formatDocumentAmount\(val, documentLocale\)/);
   assert.match(source, /quotation\.quotationNumber/);
   assert.match(source, /quotation\.event/);
-  assert.match(source, /group\.items\.map/);
+   assert.match(source, /group\.rows\.map/);
   assert.match(source, /groupQuotationItemsForDocument/);
   assert.match(source, /seller\.terms/);
 });

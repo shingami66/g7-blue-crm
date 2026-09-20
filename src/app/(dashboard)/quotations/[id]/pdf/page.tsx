@@ -309,30 +309,49 @@ export default async function QuotationPdfPage({
             </thead>
             {documentGroups.map((group) => (
               <tbody key={group.rootId ?? "legacy-orphans"} className="quotation-print-hierarchy-group text-[14px] text-on-surface">
-                {group.items.map((item) => {
+                {group.rows.map((row) => {
+                  const { item } = row;
                   const isAuthorityLine = item.commercialRole === "authority_line";
                   const isIncluded = item.commercialRole === "included_component";
-                  const isUnselectedOptional = item.commercialRole === "optional_add_on" && !item.isSelected;
+                  const isOptional = item.commercialRole === "optional_add_on";
+                  const isSelectedOptional = isOptional && item.isSelected !== false;
+                  const isUnselectedOptional = isOptional && item.isSelected === false;
                   const isChild = Boolean(item.parentAuthorityLineId);
-                  let roleLabel = dictionary.quotation.authorityLine;
-                  if (isIncluded) {
-                    roleLabel = dictionary.quotation.included;
-                  } else if (!isAuthorityLine) {
-                    roleLabel = `${dictionary.quotation.optional} · ${item.isSelected ? dictionary.quotation.selected : dictionary.quotation.notSelected}`;
+                  const isPackage = isAuthorityLine && group.rows.some((candidate) => candidate.item.parentAuthorityLineId === item.id);
+                  let roleLabel: string | null = null;
+                  if (isPackage) {
+                    roleLabel = dictionary.quotation.package;
+                  } else if (isIncluded) {
+                    roleLabel = dictionary.quotation.includedInPackage;
+                  } else if (isSelectedOptional) {
+                    roleLabel = dictionary.quotation.selectedAddOn;
+                  } else if (isUnselectedOptional) {
+                    roleLabel = dictionary.quotation.availableAddOn;
                   }
                   return (
                 <tr key={item.id} className={`quotation-print-line border-b border-outline-variant/50 ${isChild ? "quotation-print-child" : "quotation-print-root"}`}>
                   <td className="py-4 px-2 align-top text-center text-on-surface-variant">
-                    <span dir="ltr" className="document-bidi-number">{documentItems.findIndex((line) => line.id === item.id) + 1}</span>
+                    <span dir="ltr" className="document-bidi-number">{row.displayNumber}</span>
                   </td>
                   <td className="py-4 px-2 align-top text-start">
                     <div className={`font-semibold mb-1 ${isChild ? "ps-4" : ""}`}>
                       <bdi dir="auto">{documentLocale === "ar" ? item.descriptionAr || item.description : item.description}</bdi>
                     </div>
-                    <div className={`mb-1 text-[11px] font-semibold uppercase tracking-wide ${isUnselectedOptional ? "text-on-surface-variant italic" : "text-on-surface-variant"}`}>
+                    {roleLabel && (
+                      <div className={`mb-1 text-[11px] font-semibold uppercase tracking-wide ${isUnselectedOptional ? "text-on-surface-variant italic" : "text-on-surface-variant"}`}>
                         {roleLabel}
-                        {isUnselectedOptional && ` · ${dictionary.quotation.notIncludedInTotal}`}
                       </div>
+                    )}
+                    {isSelectedOptional && (
+                      <div className="mb-1 text-[11px] text-on-surface-variant">
+                        {dictionary.quotation.includedInQuotationTotal}
+                      </div>
+                    )}
+                    {isUnselectedOptional && (
+                      <div className="mb-1 text-[11px] text-on-surface-variant italic">
+                        {dictionary.quotation.notIncludedInQuotationTotal}
+                      </div>
+                    )}
                     {item.details?.trim() && (
                       <div className="text-[12px] leading-relaxed text-on-surface-variant">
                         <bdi dir="auto">{item.details}</bdi>
@@ -346,14 +365,24 @@ export default async function QuotationPdfPage({
                   )}
                   <td className="py-4 px-2 align-top text-center"><span dir="ltr" className="document-bidi-number">{formatQuantity(item.qty)}</span></td>
                   <td className="py-4 px-2 align-top text-end">
-                    <span dir="ltr" className="document-bidi-number">{isIncluded || isUnselectedOptional ? "—" : formatAmountWithCurrency(item.unitPrice)}</span>
+                    {isIncluded ? (
+                      <span className="text-[11px] leading-tight">{dictionary.quotation.includedInPackage}</span>
+                    ) : (
+                      <span dir="ltr" className="document-bidi-number">{formatAmountWithCurrency(item.unitPrice)}</span>
+                    )}
                   </td>
                   <td className="py-4 px-2 align-top text-end text-[12px] text-on-surface-variant">
                     {/* TODO CS-B: show item.vat from the document snapshot when VAT registration is enabled. */}
                     {dictionary.common.notApplied}
                   </td>
                   <td className="py-4 px-2 align-top text-end font-medium">
-                     <span dir="ltr" className="document-bidi-number">{isIncluded || isUnselectedOptional ? "—" : formatAmountWithCurrency(item.total)}</span>
+                    {isIncluded ? (
+                      <span className="text-[11px] leading-tight">{dictionary.quotation.includedInPackage}</span>
+                    ) : isUnselectedOptional ? (
+                      <span className="text-[11px] leading-tight">{dictionary.quotation.notIncludedInQuotationTotal}</span>
+                    ) : (
+                      <span dir="ltr" className="document-bidi-number">{formatAmountWithCurrency(item.total)}</span>
+                    )}
                   </td>
                 </tr>
                   );

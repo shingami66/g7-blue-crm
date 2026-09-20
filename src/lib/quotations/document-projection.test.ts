@@ -48,10 +48,49 @@ test("quotation document projection keeps every package parent-first and contigu
   });
 
   const projected = projectQuotationItemsForDocument([childA, rootB, childB, rootA]);
+  const groups = groupQuotationItemsForDocument([childA, rootB, childB, rootA]);
 
   assert.deepEqual(projected.map((line) => line.id), ["a", "a-child", "b", "b-child"]);
+  assert.deepEqual(
+    groups.flatMap((group) => group.rows.map((row) => row.displayNumber)),
+    ["1", "1.1", "2", "2.1"],
+  );
   assert.equal(projected.length, 4);
   assert.equal(new Set(projected.map((line) => line.id)).size, 4);
+});
+
+test("nested quotation document numbering remains deterministic across persisted row order", () => {
+  const root = item({ id: "root", createdAt: "2026-01-01T00:00:00Z" });
+  const firstChild = item({
+    id: "first-child",
+    parentAuthorityLineId: "root",
+    commercialRole: "included_component",
+    createdAt: "2026-01-02T00:00:00Z",
+  });
+  const secondChild = item({
+    id: "second-child",
+    parentAuthorityLineId: "root",
+    commercialRole: "optional_add_on",
+    createdAt: "2026-01-03T00:00:00Z",
+  });
+  const grandchild = item({
+    id: "grandchild",
+    parentAuthorityLineId: "first-child",
+    commercialRole: "included_component",
+    createdAt: "2026-01-04T00:00:00Z",
+  });
+
+  const groups = groupQuotationItemsForDocument([grandchild, secondChild, root, firstChild]);
+
+  assert.deepEqual(
+    groups.flatMap((group) => group.rows.map((row) => [row.item.id, row.displayNumber, row.depth])),
+    [
+      ["root", "1", 0],
+      ["first-child", "1.1", 1],
+      ["grandchild", "1.1.1", 2],
+      ["second-child", "1.2", 1],
+    ],
+  );
 });
 
 test("document projection preserves financial and commercial facts", () => {

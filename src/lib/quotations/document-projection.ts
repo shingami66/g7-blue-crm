@@ -3,6 +3,13 @@ import type { QuotationItem } from "./types";
 export interface QuotationDocumentGroup {
   rootId: string | null;
   items: QuotationItem[];
+  rows: QuotationDocumentRow[];
+}
+
+export interface QuotationDocumentRow {
+  item: QuotationItem;
+  displayNumber: string;
+  depth: number;
 }
 
 type IndexedItem = {
@@ -53,19 +60,26 @@ export function groupQuotationItemsForDocument(items: QuotationItem[]): Quotatio
   const emitted = new Set<string>();
   const groups: QuotationDocumentGroup[] = [];
 
-  function appendTree(entry: IndexedItem, target: QuotationItem[]): void {
+  function appendTree(
+    entry: IndexedItem,
+    target: QuotationItem[],
+    rows: QuotationDocumentRow[],
+    displayNumber: string,
+    depth: number,
+  ): void {
     if (emitted.has(entry.item.id)) return;
     emitted.add(entry.item.id);
     target.push(entry.item);
+    rows.push({ item: entry.item, displayNumber, depth });
 
-    for (const child of childrenByParent.get(entry.item.id) ?? []) {
-      appendTree(child, target);
+    for (const [childIndex, child] of (childrenByParent.get(entry.item.id) ?? []).entries()) {
+      appendTree(child, target, rows, `${displayNumber}.${childIndex + 1}`, depth + 1);
     }
   }
 
-  for (const root of roots) {
-    const group: QuotationDocumentGroup = { rootId: root.item.id, items: [] };
-    appendTree(root, group.items);
+  for (const [rootIndex, root] of roots.entries()) {
+    const group: QuotationDocumentGroup = { rootId: root.item.id, items: [], rows: [] };
+    appendTree(root, group.items, group.rows, String(rootIndex + 1), 0);
     groups.push(group);
   }
 
@@ -75,8 +89,11 @@ export function groupQuotationItemsForDocument(items: QuotationItem[]): Quotatio
     .filter((entry) => !emitted.has(entry.item.id))
     .sort(comparePersistedOrder);
   if (leftovers.length > 0) {
-    const fallback: QuotationDocumentGroup = { rootId: null, items: [] };
-    for (const entry of leftovers) appendTree(entry, fallback.items);
+    const fallback: QuotationDocumentGroup = { rootId: null, items: [], rows: [] };
+    const fallbackNumber = roots.length + 1;
+    for (const [leftoverIndex, entry] of leftovers.entries()) {
+      appendTree(entry, fallback.items, fallback.rows, String(fallbackNumber + leftoverIndex), 0);
+    }
     groups.push(fallback);
   }
 

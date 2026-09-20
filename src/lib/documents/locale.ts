@@ -84,12 +84,12 @@ export type DocumentDictionary = {
     commercialTerms: string;
     paymentTerms: string;
     paymentSchedulePolicyGap: string;
-    authorityLine: string;
-    included: string;
-    optional: string;
-    selected: string;
-    notSelected: string;
-    notIncludedInTotal: string;
+    package: string;
+    includedInPackage: string;
+    selectedAddOn: string;
+    includedInQuotationTotal: string;
+    availableAddOn: string;
+    notIncludedInQuotationTotal: string;
   };
   invoice: {
     commercialInvoice: string;
@@ -197,12 +197,12 @@ const english: DocumentDictionary = {
     commercialTerms: "Commercial Terms",
     paymentTerms: "Payment Terms:",
     paymentSchedulePolicyGap: "PAYMENT_SCHEDULE_POLICY_GAP: payment schedule not captured",
-    authorityLine: "Authority Line",
-    included: "Included",
-    optional: "Optional",
-    selected: "Selected",
-    notSelected: "Not selected",
-    notIncludedInTotal: "Not included in total",
+    package: "Package",
+    includedInPackage: "Included in Package",
+    selectedAddOn: "Selected Add-on",
+    includedInQuotationTotal: "Included in quotation total",
+    availableAddOn: "Available Add-on",
+    notIncludedInQuotationTotal: "Not included in quotation total",
   },
   invoice: {
     commercialInvoice: "Commercial Invoice",
@@ -310,12 +310,12 @@ const arabic: DocumentDictionary = {
     commercialTerms: "الشروط التجارية",
     paymentTerms: "شروط الدفع:",
     paymentSchedulePolicyGap: "PAYMENT_SCHEDULE_POLICY_GAP: لم يتم تسجيل جدول السداد",
-    authorityLine: "البند المرجعي",
-    included: "مشمول",
-    optional: "اختياري",
-    selected: "محدد",
-    notSelected: "غير محدد",
-    notIncludedInTotal: "غير مشمول في الإجمالي",
+    package: "باقة",
+    includedInPackage: "ضمن سعر الباقة",
+    selectedAddOn: "إضافة اختيارية محددة",
+    includedInQuotationTotal: "مشمولة في إجمالي عرض السعر",
+    availableAddOn: "إضافة اختيارية متاحة",
+    notIncludedInQuotationTotal: "غير مشمولة في إجمالي عرض السعر",
   },
   invoice: {
     commercialInvoice: "فاتورة تجارية",
