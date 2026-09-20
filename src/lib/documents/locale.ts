@@ -65,6 +65,11 @@ export type DocumentDictionary = {
     client: string;
     contact: string;
     eventName: string;
+    eventInformation: string;
+    eventLabel: string;
+    eventType: string;
+    eventDate: string;
+    venue: string;
     serviceDescription: string;
     category: string;
     qty: string;
@@ -76,11 +81,15 @@ export type DocumentDictionary = {
     discount: string;
     grandTotal: string;
     termsAndConditions: string;
+    commercialTerms: string;
+    paymentTerms: string;
+    paymentSchedulePolicyGap: string;
     authorityLine: string;
     included: string;
     optional: string;
     selected: string;
     notSelected: string;
+    notIncludedInTotal: string;
   };
   invoice: {
     commercialInvoice: string;
@@ -169,6 +178,11 @@ const english: DocumentDictionary = {
     client: "Client:",
     contact: "Contact:",
     eventName: "Event Name:",
+    eventInformation: "Event Information",
+    eventLabel: "Event:",
+    eventType: "Type:",
+    eventDate: "Date:",
+    venue: "Venue:",
     serviceDescription: "Service Description",
     category: "Category",
     qty: "Qty",
@@ -180,11 +194,15 @@ const english: DocumentDictionary = {
     discount: "Discount:",
     grandTotal: "Grand Total:",
     termsAndConditions: "Terms & Conditions",
+    commercialTerms: "Commercial Terms",
+    paymentTerms: "Payment Terms:",
+    paymentSchedulePolicyGap: "PAYMENT_SCHEDULE_POLICY_GAP: payment schedule not captured",
     authorityLine: "Authority Line",
     included: "Included",
     optional: "Optional",
     selected: "Selected",
     notSelected: "Not selected",
+    notIncludedInTotal: "Not included in total",
   },
   invoice: {
     commercialInvoice: "Commercial Invoice",
@@ -273,6 +291,11 @@ const arabic: DocumentDictionary = {
     client: "العميل:",
     contact: "جهة الاتصال:",
     eventName: "اسم الفعالية:",
+    eventInformation: "معلومات الفعالية",
+    eventLabel: "الفعالية:",
+    eventType: "النوع:",
+    eventDate: "التاريخ:",
+    venue: "الموقع:",
     serviceDescription: "وصف الخدمة",
     category: "الفئة",
     qty: "الكمية",
@@ -284,11 +307,15 @@ const arabic: DocumentDictionary = {
     discount: "الخصم:",
     grandTotal: "الإجمالي الكلي:",
     termsAndConditions: "الشروط والأحكام",
+    commercialTerms: "الشروط التجارية",
+    paymentTerms: "شروط الدفع:",
+    paymentSchedulePolicyGap: "PAYMENT_SCHEDULE_POLICY_GAP: لم يتم تسجيل جدول السداد",
     authorityLine: "البند المرجعي",
     included: "مشمول",
     optional: "اختياري",
     selected: "محدد",
     notSelected: "غير محدد",
+    notIncludedInTotal: "غير مشمول في الإجمالي",
   },
   invoice: {
     commercialInvoice: "فاتورة تجارية",

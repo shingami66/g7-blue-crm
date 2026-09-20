@@ -64,6 +64,7 @@ export function sanitizeQuotationRow(row: Record<string, unknown>): QuotationRow
     superseded_at: typeof row.superseded_at === "string" ? row.superseded_at : null,
     superseded_by_quotation_id:
       typeof row.superseded_by_quotation_id === "string" ? row.superseded_by_quotation_id : null,
+    event_snapshot: (row.event_snapshot as QuotationRowWithRelations["event_snapshot"]) ?? null,
     created_by: typeof row.created_by === "string" ? row.created_by : "",
     updated_by: typeof row.updated_by === "string" ? row.updated_by : "",
     snapshot_seller: (row.snapshot_seller as QuotationRowWithRelations["snapshot_seller"]) ?? null,

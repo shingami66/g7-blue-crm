@@ -42,6 +42,7 @@ export function mapRowToQuotationListItem(row: QuotationRowWithRelations): Quota
     supersededAt: row.superseded_at ?? null,
     supersededByQuotationId: row.superseded_by_quotation_id ?? null,
     isApprovedCommercialAmendment,
+    eventSnapshot: row.event_snapshot ?? null,
     snapshotSeller: row.snapshot_seller,
     snapshotBuyer: row.snapshot_buyer,
   };
@@ -64,6 +65,7 @@ export function mapRowToQuotationItem(row: QuotationItemRow): QuotationItem {
     unit: row.unit ?? "unit",
     descriptionAr: row.description_ar ?? null,
     discountAllocated: Number(row.discount_allocated ?? 0),
+    createdAt: row.created_at,
   };
 }
 

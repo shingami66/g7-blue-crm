@@ -184,7 +184,8 @@ test("AR and EN quotation representations consume the same canonical quotation a
   assert.match(source, /formatDocumentAmount\(val, documentLocale\)/);
   assert.match(source, /quotation\.quotationNumber/);
   assert.match(source, /quotation\.event/);
-  assert.match(source, /quotation\.items\.map/);
+  assert.match(source, /group\.items\.map/);
+  assert.match(source, /groupQuotationItemsForDocument/);
   assert.match(source, /seller\.terms/);
 });
 

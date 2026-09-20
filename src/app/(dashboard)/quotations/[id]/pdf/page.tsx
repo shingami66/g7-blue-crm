@@ -11,6 +11,7 @@ import {
 } from "@/lib/documents/locale";
 import { getDirection } from "@/lib/i18n/direction";
 import DocumentPreviewToolbar from "@/components/documents/DocumentPreviewToolbar";
+import { groupQuotationItemsForDocument } from "@/lib/quotations/document-projection";
 
 export default async function QuotationPdfPage({
   params,
@@ -72,7 +73,25 @@ export default async function QuotationPdfPage({
   };
   const formatAmountWithCurrency = (val: number | null | undefined) =>
     `${formatMoney(val)}${documentCurrency ? ` ${documentCurrency}` : ""}`;
-  const hasAnyCategory = quotation.items.some((item) => item.category.trim().length > 0);
+  const documentGroups = groupQuotationItemsForDocument(quotation.items);
+  const documentItems = documentGroups.flatMap((group) => group.items);
+  const hasAnyCategory = documentItems.some((item) => item.category.trim().length > 0);
+  const eventSnapshot = quotation.eventSnapshot;
+  const eventName = eventSnapshot ? eventSnapshot.eventName?.trim() || "" : quotation.event.trim();
+  const eventType = eventSnapshot?.eventType?.trim() || "";
+  const eventLocation = eventSnapshot?.eventLocation?.trim() || "";
+  const formatEventDate = (value: string | null | undefined) => {
+    if (!value) return "";
+    const formatted = formatDocumentDate(value, documentLocale);
+    return formatted === "-" ? "" : formatted;
+  };
+  const eventStartDate = formatEventDate(eventSnapshot?.eventStartDate);
+  const eventEndDate = formatEventDate(eventSnapshot?.eventEndDate);
+  const eventDate = eventStartDate && eventEndDate && eventStartDate !== eventEndDate
+    ? `${eventStartDate} - ${eventEndDate}`
+    : eventStartDate || eventEndDate;
+  const hasEventInformation = Boolean(eventName || eventType || eventDate || eventLocation);
+  const isLargeQuotation = documentItems.length >= 10;
 
   return (
     <div
@@ -184,14 +203,52 @@ export default async function QuotationPdfPage({
                   <div className="text-on-surface mt-2" dir="auto">{buyer.contactName}</div>
                 </>
               )}
-              <div className="text-on-surface-variant mt-2">{dictionary.quotation.eventName}</div>
-              <div className="text-on-surface font-semibold mt-2" dir="auto">{quotation.event}</div>
+              {eventName && (
+                <>
+                  <div className="text-on-surface-variant mt-2">{dictionary.quotation.eventName}</div>
+                  <div className="text-on-surface font-semibold mt-2" dir="auto">{eventName}</div>
+                </>
+              )}
             </div>
           </div>
         </div>
 
+        {hasEventInformation && (
+          <section className="quotation-print-event-info mb-8 rounded border border-outline-variant bg-surface p-4">
+            <h3 className="text-[12px] font-semibold uppercase tracking-wide text-primary-container border-b border-outline-variant pb-2 mb-3">
+              {dictionary.quotation.eventInformation}
+            </h3>
+            <dl className="grid grid-cols-1 gap-y-2 text-[13px] sm:grid-cols-[120px_1fr]">
+              {eventName && (
+                <>
+                  <dt className="text-on-surface-variant">{dictionary.quotation.eventLabel}</dt>
+                  <dd className="font-semibold text-on-surface" dir="auto">{eventName}</dd>
+                </>
+              )}
+              {eventType && (
+                <>
+                  <dt className="text-on-surface-variant">{dictionary.quotation.eventType}</dt>
+                  <dd className="text-on-surface" dir="auto">{eventType}</dd>
+                </>
+              )}
+              {eventDate && (
+                <>
+                  <dt className="text-on-surface-variant">{dictionary.quotation.eventDate}</dt>
+                  <dd className="text-on-surface" dir="auto">{eventDate}</dd>
+                </>
+              )}
+              {eventLocation && (
+                <>
+                  <dt className="text-on-surface-variant">{dictionary.quotation.venue}</dt>
+                  <dd className="text-on-surface" dir="auto">{eventLocation}</dd>
+                </>
+              )}
+            </dl>
+          </section>
+        )}
+
         {/* Services Table */}
-        <div className="quotation-print-services mb-10 flex-grow">
+        <div className="quotation-print-services mb-10">
           <table className="w-full table-fixed text-start border-collapse">
             <colgroup>
               {hasAnyCategory ? (
@@ -250,23 +307,32 @@ export default async function QuotationPdfPage({
                 </th>
               </tr>
             </thead>
-            <tbody className="text-[14px] text-on-surface">
-              {quotation.items.map((item, i) => (
-                <tr key={i} className="border-b border-outline-variant/50">
+            {documentGroups.map((group) => (
+              <tbody key={group.rootId ?? "legacy-orphans"} className="quotation-print-hierarchy-group text-[14px] text-on-surface">
+                {group.items.map((item) => {
+                  const isAuthorityLine = item.commercialRole === "authority_line";
+                  const isIncluded = item.commercialRole === "included_component";
+                  const isUnselectedOptional = item.commercialRole === "optional_add_on" && !item.isSelected;
+                  const isChild = Boolean(item.parentAuthorityLineId);
+                  let roleLabel = dictionary.quotation.authorityLine;
+                  if (isIncluded) {
+                    roleLabel = dictionary.quotation.included;
+                  } else if (!isAuthorityLine) {
+                    roleLabel = `${dictionary.quotation.optional} · ${item.isSelected ? dictionary.quotation.selected : dictionary.quotation.notSelected}`;
+                  }
+                  return (
+                <tr key={item.id} className={`quotation-print-line border-b border-outline-variant/50 ${isChild ? "quotation-print-child" : "quotation-print-root"}`}>
                   <td className="py-4 px-2 align-top text-center text-on-surface-variant">
-                    <span dir="ltr" className="document-bidi-number">{i + 1}</span>
+                    <span dir="ltr" className="document-bidi-number">{documentItems.findIndex((line) => line.id === item.id) + 1}</span>
                   </td>
                   <td className="py-4 px-2 align-top text-start">
-                      <div className={`font-semibold mb-1 ${item.parentAuthorityLineId ? "ps-4" : ""}`}>
-                        <bdi dir="auto">{documentLocale === "ar" ? item.descriptionAr || item.description : item.description}</bdi>
+                    <div className={`font-semibold mb-1 ${isChild ? "ps-4" : ""}`}>
+                      <bdi dir="auto">{documentLocale === "ar" ? item.descriptionAr || item.description : item.description}</bdi>
+                    </div>
+                    <div className={`mb-1 text-[11px] font-semibold uppercase tracking-wide ${isUnselectedOptional ? "text-on-surface-variant italic" : "text-on-surface-variant"}`}>
+                        {roleLabel}
+                        {isUnselectedOptional && ` · ${dictionary.quotation.notIncludedInTotal}`}
                       </div>
-                    {item.commercialRole !== "authority_line" && (
-                      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
-                        {item.commercialRole === "included_component"
-                          ? dictionary.quotation.included
-                          : `${dictionary.quotation.optional} · ${item.isSelected ? dictionary.quotation.selected : dictionary.quotation.notSelected}`}
-                      </div>
-                    )}
                     {item.details?.trim() && (
                       <div className="text-[12px] leading-relaxed text-on-surface-variant">
                         <bdi dir="auto">{item.details}</bdi>
@@ -280,25 +346,29 @@ export default async function QuotationPdfPage({
                   )}
                   <td className="py-4 px-2 align-top text-center"><span dir="ltr" className="document-bidi-number">{formatQuantity(item.qty)}</span></td>
                   <td className="py-4 px-2 align-top text-end">
-                    <span dir="ltr" className="document-bidi-number">{item.commercialRole === "included_component" || (item.commercialRole === "optional_add_on" && !item.isSelected) ? "—" : formatAmountWithCurrency(item.unitPrice)}</span>
+                    <span dir="ltr" className="document-bidi-number">{isIncluded || isUnselectedOptional ? "—" : formatAmountWithCurrency(item.unitPrice)}</span>
                   </td>
                   <td className="py-4 px-2 align-top text-end text-[12px] text-on-surface-variant">
                     {/* TODO CS-B: show item.vat from the document snapshot when VAT registration is enabled. */}
                     {dictionary.common.notApplied}
                   </td>
                   <td className="py-4 px-2 align-top text-end font-medium">
-                     <span dir="ltr" className="document-bidi-number">{item.commercialRole === "included_component" || (item.commercialRole === "optional_add_on" && !item.isSelected) ? "—" : formatAmountWithCurrency(item.total)}</span>
+                     <span dir="ltr" className="document-bidi-number">{isIncluded || isUnselectedOptional ? "—" : formatAmountWithCurrency(item.total)}</span>
                   </td>
                 </tr>
-              ))}
-              {quotation.items.length === 0 && (
+                  );
+                })}
+              </tbody>
+            ))}
+            {documentItems.length === 0 && (
+              <tbody>
                 <tr>
                   <td colSpan={hasAnyCategory ? 7 : 6} className="py-8 text-center text-on-surface-variant">
                     {dictionary.quotation.noLineItems}
                   </td>
                 </tr>
+              </tbody>
               )}
-            </tbody>
           </table>
         </div>
 
@@ -331,19 +401,32 @@ export default async function QuotationPdfPage({
           </div>
         </div>
 
-        {seller.terms?.trim() && (
-          <section className="quotation-print-terms mb-8 border-t border-outline-variant pt-4">
+        <div className={`quotation-print-acceptance ${isLargeQuotation ? "quotation-print-large" : ""}`}>
+          <section className="quotation-print-commercial-terms mb-8 border-t border-outline-variant pt-4">
             <h3 className="text-[13px] font-semibold text-on-surface mb-2">
-              {dictionary.quotation.termsAndConditions}
+              {dictionary.quotation.commercialTerms}
             </h3>
-            <p className="whitespace-pre-line text-[13px] text-on-surface-variant" dir="auto">
-              {seller.terms}
-            </p>
+            <dl className="grid grid-cols-[120px_1fr] gap-y-2 text-[13px]">
+              <dt className="text-on-surface-variant">{dictionary.quotation.paymentTerms}</dt>
+              <dd className="text-on-surface" dir="auto">
+                {buyer.paymentTerms?.trim() || dictionary.quotation.paymentSchedulePolicyGap}
+              </dd>
+            </dl>
           </section>
-        )}
 
-        {/* Signatures Section */}
-        <div className="quotation-print-signatures mt-auto pt-8 border-t border-outline-variant flex justify-around px-4">
+          {seller.terms?.trim() && (
+            <section className="quotation-print-terms mb-8 border-t border-outline-variant pt-4">
+              <h3 className="text-[13px] font-semibold text-on-surface mb-2">
+                {dictionary.quotation.termsAndConditions}
+              </h3>
+              <p className="whitespace-pre-line text-[13px] text-on-surface-variant" dir="auto">
+                {seller.terms}
+              </p>
+            </section>
+          )}
+
+          {/* Signatures Section */}
+          <div className="quotation-print-signatures mt-8 pt-8 border-t border-outline-variant flex justify-around px-4">
           <div className="w-1/3 text-center">
             <div className="h-20 flex items-end justify-center mb-2"></div>
             <div className="border-t border-outline-variant pt-2">
@@ -362,10 +445,10 @@ export default async function QuotationPdfPage({
               <p className="text-[12px] text-on-surface-variant" dir="auto">{sellerName}</p>
             </div>
           </div>
-        </div>
+          </div>
 
-        {/* Footer */}
-        <footer className="quotation-print-footer mt-12 text-center text-[12px] text-on-surface-variant border-t border-outline-variant/30 pt-4">
+          {/* Footer */}
+          <footer className="quotation-print-footer mt-12 text-center text-[12px] text-on-surface-variant border-t border-outline-variant/30 pt-4">
           <div className="flex justify-center gap-8 mb-2">
             <p>
               <span className="font-semibold text-on-surface">{dictionary.common.bank}</span> {seller.bank.bankName}
@@ -378,7 +461,8 @@ export default async function QuotationPdfPage({
               <span dir="ltr" className="document-bidi-number">{seller.bank.iban}</span>
             </p>
           </div>
-        </footer>
+          </footer>
+        </div>
       </div>
     </div>
   );

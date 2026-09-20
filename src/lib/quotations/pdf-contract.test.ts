@@ -23,8 +23,10 @@ function read(path: string) {
 }
 
 function getQuotationTemplate(source: string) {
-  const start = source.lastIndexOf("return (");
+  const componentStart = source.indexOf("export default async function QuotationPdfPage");
+  const start = source.indexOf("\n  return (\n", componentStart);
   const end = source.length;
+  assert.notEqual(componentStart, -1, "Quotation PDF component must exist");
   assert.notEqual(start, -1, "Quotation PDF return block must exist");
   return source.slice(start, end);
 }
@@ -87,7 +89,16 @@ test("Quotation PDF line items conditionally present optional category and detai
 
   assert.notEqual(tableStart, -1);
   assert.ok(tableEnd > tableStart);
-  assert.match(source, /const hasAnyCategory = quotation\.items\.some\(\(item\) => item\.category\.trim\(\)\.length > 0\);/);
+  assert.match(source, /const hasAnyCategory = documentItems\.some\(\(item\) => item\.category\.trim\(\)\.length > 0\);/);
+  assert.match(source, /groupQuotationItemsForDocument/);
+  assert.match(source, /quotation-print-hierarchy-group/);
+  assert.match(source, /quotation\.eventSnapshot/);
+  assert.match(source, /dictionary\.quotation\.eventInformation/);
+  assert.match(source, /dictionary\.quotation\.notIncludedInTotal/);
+  assert.match(source, /buyer\.paymentTerms/);
+  assert.match(source, /eventSnapshot \? eventSnapshot\.eventName\?\.trim\(\) \|\| "" : quotation\.event\.trim\(\)/);
+  assert.match(source, /\{eventName && \(/);
+  assert.match(source, /dictionary\.quotation\.paymentSchedulePolicyGap/);
 
   // An all-empty category set omits the header/cells and uses six fixed columns.
   assert.match(table, /\{hasAnyCategory && \([\s\S]*?dictionary\.quotation\.category/);
@@ -144,4 +155,15 @@ test("Quotation print contract preserves A4 and natural pagination", () => {
   assert.match(read(QUOTATION_PDF), /resolveDocumentLocale\(resolvedSearchParams\)/);
   assert.doesNotMatch(read(QUOTATION_PDF), /quotation\.documentLocale|document_locale|readDocumentLocaleFromSnapshot/);
   assert.match(read(QUOTATION_PDF), /dir=\{documentDirection\}/);
+});
+
+test("Quotation PDF keeps hierarchy and acceptance content pagination intentional", () => {
+  const source = read(QUOTATION_PDF);
+  const styles = read(PRINT_CSS);
+  assert.match(source, /const isLargeQuotation = documentItems\.length >= 10;/);
+  assert.match(source, /quotation-print-acceptance/);
+  assert.match(styles, /\.quotation-print-hierarchy-group/);
+  assert.match(styles, /\.quotation-print-large\s*\{[\s\S]*?page-break-before: always;/);
+  assert.match(source, /dictionary\.quotation\.commercialTerms/);
+  assert.match(source, /seller\.terms/);
 });

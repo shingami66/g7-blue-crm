@@ -240,6 +240,24 @@ body {
   orphans: 3;
 }
 
+.quotation-print-hierarchy-group,
+.quotation-print-event-info,
+.quotation-print-commercial-terms,
+.quotation-print-terms,
+.quotation-print-signatures,
+.quotation-print-footer {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.quotation-print-child .font-semibold {
+  font-weight: 500;
+}
+
+.quotation-print-child td:first-child {
+  border-inline-start: 2px solid var(--color-outline-variant);
+}
+
 @media print {
   html,
   body {
@@ -290,7 +308,10 @@ body {
 
   .quotation-print-document header,
   .quotation-print-meta,
+  .quotation-print-event-info,
+  .quotation-print-hierarchy-group,
   .quotation-print-summary,
+  .quotation-print-commercial-terms,
   .quotation-print-terms,
   .quotation-print-signatures {
     break-inside: avoid;
@@ -395,6 +416,11 @@ body {
     font-size: 9pt !important;
     line-height: 1.2 !important;
     padding: 4mm !important;
+  }
+
+  .quotation-print-large {
+    break-before: page;
+    page-break-before: always;
   }
 
   .document-ltr .quotation-print-document {

@@ -93,6 +93,7 @@ export interface QuotationRow {
   revision_reason?: string | null;
   superseded_at?: string | null;
   superseded_by_quotation_id?: string | null;
+  event_snapshot?: QuotationEventSnapshot | null;
   created_by: string;
   updated_by: string;
   snapshot_seller: QuotationSnapshotSeller | null;
@@ -169,6 +170,7 @@ export interface QuotationListItem {
   supersededAt?: string | null;
   supersededByQuotationId?: string | null;
   isApprovedCommercialAmendment?: boolean;
+  eventSnapshot?: QuotationEventSnapshot | null;
   snapshotSeller?: QuotationSnapshotSeller | null;
   snapshotBuyer?: QuotationSnapshotBuyer | null;
 }
@@ -202,6 +204,7 @@ export interface QuotationItem {
   unit?: string;
   descriptionAr?: string | null;
   discountAllocated?: number;
+  createdAt?: string;
 }
 
 export interface QuotationDetail extends QuotationListItem {
@@ -318,4 +321,16 @@ export interface QuotationSnapshotBuyer {
     country: string | null;
     display: string | null;
   };
+}
+
+export interface QuotationEventSnapshot {
+  snapshotVersion: number;
+  snapshotSource: string;
+  snapshotCapturedAt: string;
+  snapshotNote: string | null;
+  eventName: string | null;
+  eventType: string | null;
+  eventStartDate: string | null;
+  eventEndDate: string | null;
+  eventLocation: string | null;
 }
