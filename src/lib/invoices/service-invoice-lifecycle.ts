@@ -8,6 +8,7 @@ export type ServiceInvoiceLifecycleError =
 export type ServiceInvoiceLifecycleDecision = {
   status: ServiceStatus | null;
   canCreateDeposit: boolean;
+  canCreateFlexible: boolean;
   canCreateFinal: boolean;
   depositDenial: ServiceInvoiceLifecycleError | null;
   finalDenial: ServiceInvoiceLifecycleError | null;
@@ -15,6 +16,7 @@ export type ServiceInvoiceLifecycleDecision = {
 
 type LifecycleAllowance = {
   deposit: boolean;
+  flexible: boolean;
   final: boolean;
 };
 
@@ -22,13 +24,13 @@ const SERVICE_INVOICE_LIFECYCLE_MATRIX: Record<
   ServiceStatus,
   LifecycleAllowance
 > = {
-  Inquiry: { deposit: true, final: true },
-  Quoted: { deposit: true, final: true },
-  Approved: { deposit: true, final: true },
-  "Deposit Paid": { deposit: false, final: true },
-  "In Progress": { deposit: false, final: true },
-  Completed: { deposit: false, final: true },
-  Cancelled: { deposit: false, final: false },
+  Inquiry: { deposit: true, flexible: true, final: true },
+  Quoted: { deposit: true, flexible: true, final: true },
+  Approved: { deposit: true, flexible: true, final: true },
+  "Deposit Paid": { deposit: false, flexible: true, final: true },
+  "In Progress": { deposit: false, flexible: true, final: true },
+  Completed: { deposit: false, flexible: false, final: true },
+  Cancelled: { deposit: false, flexible: false, final: false },
 };
 
 const SERVICE_STATUS_SET = new Set<string>(
@@ -53,6 +55,7 @@ function unavailableDecision(): ServiceInvoiceLifecycleDecision {
   return {
     status: null,
     canCreateDeposit: false,
+    canCreateFlexible: false,
     canCreateFinal: false,
     depositDenial: "service_lifecycle_unavailable",
     finalDenial: "service_lifecycle_unavailable",
@@ -79,6 +82,7 @@ export function getServiceInvoiceLifecycleDecision(
   return {
     status,
     canCreateDeposit: allowance.deposit,
+    canCreateFlexible: allowance.flexible,
     canCreateFinal: allowance.final,
     depositDenial: allowance.deposit
       ? null

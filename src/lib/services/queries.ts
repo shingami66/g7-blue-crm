@@ -112,7 +112,7 @@ export async function getEligibleServicesForInvoiceChooser(): Promise<
       eligibilityStates
         .map(({ service }) => service)
         .filter(
-          (service) => service.canCreateDeposit || service.canCreateFinal,
+          (service) => service.canCreateDeposit || service.canCreateFinal || service.canCreateProgress,
         ),
     ),
   };

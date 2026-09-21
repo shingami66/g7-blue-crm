@@ -37,7 +37,7 @@ export type ServiceBillingWorkspaceClientProps = {
   canCreateInvoices: boolean;
   canReadCost: boolean;
   supplierAllocations: SupplierAllocation[] | null;
-  intent?: "deposit" | "final";
+  intent?: "deposit" | "progress" | "final";
 };
 
 export default function ServiceBillingWorkspaceClient({

@@ -75,6 +75,7 @@ export function createDefaultBillingState(serviceId: string): ServiceBillingStat
     activePriorInvoiceTotal: null,
     remainingUninvoicedAmount: null,
     canCreateDepositInvoice: false,
+    canCreateFlexibleInvoice: false,
     canCreateFinalInvoice: false,
     disabledReasons: [],
   };
@@ -92,6 +93,7 @@ export function failBillingState(
     activePriorInvoiceTotal: null,
     remainingUninvoicedAmount: null,
     canCreateDepositInvoice: false,
+    canCreateFlexibleInvoice: false,
     canCreateFinalInvoice: false,
     disabledReasons: [reason],
   };
@@ -99,7 +101,7 @@ export function failBillingState(
 
 export function mapInvoiceSummary(
   invoice: InvoiceRow,
-  invoiceType: "deposit" | "final",
+  invoiceType: "deposit" | "progress" | "final",
 ): BillingInvoiceSummary {
   return {
     id: invoice.id,
@@ -285,6 +287,13 @@ export function computeServiceBillingState({
   }
 
   state.canCreateDepositInvoice = state.disabledReasons.length === 0;
+  const flexibleBlockers = state.disabledReasons.filter(
+    (reason) =>
+      reason !== "deposit_invoice_already_exists" &&
+      reason !== "final_invoice_already_exists",
+  );
+  state.canCreateFlexibleInvoice =
+    flexibleBlockers.length === 0 && state.remainingUninvoicedAmount > 0;
   const finalBlockers = state.disabledReasons.filter(
     (reason) => reason !== "deposit_invoice_already_exists",
   );

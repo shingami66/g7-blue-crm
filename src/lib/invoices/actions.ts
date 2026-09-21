@@ -5,12 +5,12 @@ import { INVOICE_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { UnauthorizedError, ForbiddenError, AuthDependencyError } from "@/lib/auth/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { consumeRateLimit } from "@/lib/security/rate-limit";
-import { createInvoiceSchema } from "./schemas";
+import { createInvoiceSchema, updateDraftFlexibleInvoiceSchema } from "./schemas";
 import { buildInvoiceSnapshotData } from "./snapshots";
 import { mapRowToQuotationDetail } from "@/lib/quotations/mappers";
-import type { QuotationDetailRow, QuotationItemRow } from "@/lib/quotations/types";
+import type { QuotationDetailRow } from "@/lib/quotations/types";
 import type { CompanySettingsRow } from "@/lib/settings/types";
-import type { CreateInvoiceResult, IssueInvoiceResult } from "./types";
+import type { CreateInvoiceResult, IssueInvoiceResult, UpdateDraftInvoiceResult } from "./types";
 
 function toQuotationDetailRow(row: Record<string, unknown>): QuotationDetailRow {
   const items = Array.isArray(row.quotation_items) ? row.quotation_items : [];
@@ -64,6 +64,7 @@ const QUOTATION_DETAIL_SELECT =
 const RATE_LIMIT_ERROR = "Too many attempts. Please wait a moment and try again.";
 const CREATE_INVOICE_RATE_LIMIT = { limit: 5, windowMs: 60_000 };
 const ISSUE_INVOICE_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
+const UPDATE_DRAFT_INVOICE_RPC = "update_draft_flexible_invoice_atomic";
 
 const RECONCILE_INVOICE_CREATE_MUTATION_RPC = "reconcile_invoice_create_mutation";
 const RECONCILE_INVOICE_CREATE_ROW_KEYS = [
@@ -73,6 +74,7 @@ const RECONCILE_INVOICE_CREATE_ROW_KEYS = [
 ] as const;
 
 const CREATE_INVOICE_ATOMIC_RPC = "create_invoice_atomic";
+const CREATE_FLEXIBLE_INVOICE_RPC = "create_flexible_invoice_atomic";
 const CREATE_INVOICE_ATOMIC_ROW_KEYS = [
   "error_code",
   "invoice_id",
@@ -93,10 +95,13 @@ const CREATE_INVOICE_ATOMIC_ERROR_CODES = [
   "deposit_amount_required",
   "invalid_deposit_amount",
   "deposit_amount_exceeds_remaining",
+  "invalid_flexible_amount",
+  "invoice_amount_exceeds_remaining",
   "service_lifecycle_unavailable",
   "invoice_customer_unavailable",
   "service_not_eligible_for_deposit",
   "service_not_eligible_for_final",
+  "service_not_eligible_for_flexible",
   "quotation_not_found",
   "quotation_not_approved",
   "quotation_service_mismatch",
@@ -104,6 +109,7 @@ const CREATE_INVOICE_ATOMIC_ERROR_CODES = [
   "final_invoice_already_exists",
   "billing_scope_authority_unavailable",
   "billing_scope_inactive",
+  "billing_scope_authority_unavailable",
   "invoice_exposure_unavailable",
   "prior_invoices_exceed_billing_scope_ceiling",
   "prior_invoices_exceed_quotation_total",
@@ -315,7 +321,7 @@ async function reconcileInvoiceMutation(
       p_service_id: serviceId,
       p_quotation_id: quotationId,
       p_invoice_type: invoiceType,
-      p_requested_amount: (invoiceType === "deposit" && requestedAmount !== undefined && requestedAmount !== null
+      p_requested_amount: ((invoiceType === "deposit" || invoiceType === "progress") && requestedAmount !== undefined && requestedAmount !== null
         ? requestedAmount
         : null) as number,
     },
@@ -353,7 +359,7 @@ export async function createInvoiceAction(
       return { success: false, error: "invalid_invoice_input" };
     }
 
-    const { mutationKey, quotationId, serviceId, invoiceType, requestedAmount } = parsed.data;
+    const { mutationKey, quotationId, serviceId, invoiceType, requestedAmount, dueDate } = parsed.data;
 
     // 4. Deterministic logical-intent validation (before reconciliation)
     if (invoiceType === "deposit") {
@@ -379,6 +385,19 @@ export async function createInvoiceAction(
 
     if (invoiceType === "final" && requestedAmount !== undefined && requestedAmount !== null) {
       return { success: false, error: "invalid_invoice_input" };
+    }
+
+    if (invoiceType === "progress") {
+      if (
+        requestedAmount === undefined ||
+        requestedAmount === null ||
+        !Number.isFinite(requestedAmount) ||
+        requestedAmount <= 0 ||
+        requestedAmount.toString().split(".")[1]?.length > 2 ||
+        Number(requestedAmount.toFixed(2)) !== requestedAmount
+      ) {
+        return { success: false, error: "invalid_flexible_amount" };
+      }
     }
 
     const supabase = createAdminClient();
@@ -491,7 +510,9 @@ export async function createInvoiceAction(
         companySettingsRow,
         quotationDetail,
         null,
-        invoiceType === "deposit" ? requestedAmount : undefined,
+        invoiceType === "deposit" || invoiceType === "progress"
+          ? requestedAmount
+          : undefined,
         invoiceType,
       );
 
@@ -516,28 +537,46 @@ export async function createInvoiceAction(
     }
 
     const today = new Date().toISOString().slice(0, 10);
+    const resolvedDueDate = invoiceType === "progress" ? dueDate ?? today : today;
+    if (invoiceType === "progress" && resolvedDueDate < today) {
+      return await handlePreworkFailure("invalid_invoice_input");
+    }
 
     // 7. Atomic create RPC invocation with mutation key
-    const { data: rpcData, error: rpcError } = await supabase.rpc(
-      CREATE_INVOICE_ATOMIC_RPC,
-      {
-        p_service_id: serviceId,
-        p_quotation_id: quotationId,
-        p_invoice_type: invoiceType,
-        p_requested_amount: (invoiceType === "deposit" ? (requestedAmount ?? null) : null) as number,
-        p_actor_clerk_user_id: user.clerk_user_id,
-        p_document_label: snapshotData.document_label,
-        p_vat_mode: snapshotData.vat_mode,
-        p_snapshot_seller: snapshotData.snapshot_seller,
-        p_snapshot_buyer: snapshotData.snapshot_buyer,
-        p_snapshot_quotation: snapshotData.snapshot_quotation,
-        p_snapshot_bank_details: snapshotData.snapshot_bank_details,
-        p_snapshot_document_rules: snapshotData.snapshot_document_rules,
-        p_mutation_key: mutationKey,
-        p_invoice_date: today,
-        p_due_date: today,
-      },
-    );
+    const { data: rpcData, error: rpcError } = invoiceType === "progress"
+      ? await supabase.rpc(CREATE_FLEXIBLE_INVOICE_RPC, {
+          p_service_id: serviceId,
+          p_quotation_id: quotationId,
+          p_requested_amount: requestedAmount as number,
+          p_actor_clerk_user_id: user.clerk_user_id,
+          p_document_label: snapshotData.document_label,
+          p_vat_mode: snapshotData.vat_mode,
+          p_snapshot_seller: snapshotData.snapshot_seller,
+          p_snapshot_buyer: snapshotData.snapshot_buyer,
+          p_snapshot_quotation: snapshotData.snapshot_quotation,
+          p_snapshot_bank_details: snapshotData.snapshot_bank_details,
+           p_snapshot_document_rules: snapshotData.snapshot_document_rules,
+           p_mutation_key: mutationKey,
+           p_invoice_date: today,
+           p_due_date: resolvedDueDate,
+         })
+      : await supabase.rpc(CREATE_INVOICE_ATOMIC_RPC, {
+          p_service_id: serviceId,
+          p_quotation_id: quotationId,
+          p_invoice_type: invoiceType,
+          p_requested_amount: (invoiceType === "deposit" ? (requestedAmount ?? null) : null) as number,
+          p_actor_clerk_user_id: user.clerk_user_id,
+          p_document_label: snapshotData.document_label,
+          p_vat_mode: snapshotData.vat_mode,
+          p_snapshot_seller: snapshotData.snapshot_seller,
+          p_snapshot_buyer: snapshotData.snapshot_buyer,
+          p_snapshot_quotation: snapshotData.snapshot_quotation,
+          p_snapshot_bank_details: snapshotData.snapshot_bank_details,
+           p_snapshot_document_rules: snapshotData.snapshot_document_rules,
+           p_mutation_key: mutationKey,
+           p_invoice_date: today,
+           p_due_date: today,
+         });
 
     if (rpcError) {
       console.error(
@@ -631,6 +670,61 @@ export async function createInvoiceAction(
       `[createInvoiceAction] [${correlationId}] Unexpected error: internal_error`,
     );
     return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export async function updateDraftFlexibleInvoiceAction(
+  input: unknown,
+): Promise<UpdateDraftInvoiceResult> {
+  try {
+    const user = await requirePermission(INVOICE_PERMISSIONS.write);
+    if (!consumeRateLimit("updateDraftFlexibleInvoiceAction", user.clerk_user_id, CREATE_INVOICE_RATE_LIMIT)) {
+      return { success: false, error: RATE_LIMIT_ERROR };
+    }
+
+    const parsed = updateDraftFlexibleInvoiceSchema.safeParse(input);
+    if (!parsed.success) return { success: false, error: "invalid_invoice_input" };
+
+    const { mutationKey, invoiceId, requestedAmount, dueDate } = parsed.data;
+    const amountText = requestedAmount.toString();
+    if (
+      requestedAmount <= 0 ||
+      amountText.split(".")[1]?.length > 2 ||
+      Number(requestedAmount.toFixed(2)) !== requestedAmount
+    ) {
+      return { success: false, error: "invalid_flexible_amount" };
+    }
+
+    const { data, error } = await createAdminClient().rpc(
+      UPDATE_DRAFT_INVOICE_RPC,
+      {
+        p_invoice_id: invoiceId,
+        p_requested_amount: requestedAmount,
+        p_due_date: dueDate,
+        p_actor_clerk_user_id: user.clerk_user_id,
+        p_mutation_key: mutationKey,
+      },
+    );
+    if (error) return { success: false, error: "draft_update_failed" };
+
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!isPlainObject(row)) return { success: false, error: "draft_update_failed" };
+    const errorCode = typeof row.error_code === "string" ? row.error_code : null;
+    if (errorCode) return { success: false, error: errorCode };
+    if (typeof row.invoice_id !== "string" || typeof row.invoice_number !== "string") {
+      return { success: false, error: "draft_update_failed" };
+    }
+    return {
+      success: true,
+      invoiceId: row.invoice_id,
+      invoiceNumber: row.invoice_number,
+    };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
+    if (err instanceof ForbiddenError) return { success: false, error: "Forbidden" };
+    if (err instanceof AuthDependencyError) return { success: false, error: "auth_unavailable" };
+    console.error("[updateDraftFlexibleInvoiceAction] Unexpected error: internal_error");
+    return { success: false, error: "draft_update_failed" };
   }
 }
 

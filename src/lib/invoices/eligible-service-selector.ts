@@ -3,7 +3,7 @@ import { resolveInvoiceControlVisibility } from "./control-visibility.ts";
 import { getServiceInvoiceLifecycleDecision } from "./service-invoice-lifecycle.ts";
 import type { ServiceBillingState } from "./types.ts";
 
-export type InvoiceChooserMode = "deposit" | "final";
+export type InvoiceChooserMode = "deposit" | "progress" | "final";
 export type InvoiceChooserLoadStatus =
   | "loading"
   | "ready"
@@ -21,6 +21,7 @@ export type EligibleInvoiceService = {
   eventStartDate: string | null;
   eventLocation: string | null;
   canCreateDeposit: boolean;
+  canCreateProgress?: boolean;
   canCreateFinal: boolean;
 };
 
@@ -60,6 +61,7 @@ export function getEligibleInvoiceServiceFromState(
     authorityMode: billingState.authorityMode,
     lifecycleDecision,
     canCreateDepositInvoice: billingState.canCreateDepositInvoice,
+    canCreateFlexibleInvoice: billingState.canCreateFlexibleInvoice,
     canCreateFinalInvoice: billingState.canCreateFinalInvoice,
     remainingUninvoicedAmount: billingState.remainingUninvoicedAmount,
   });
@@ -74,6 +76,7 @@ export function getEligibleInvoiceServiceFromState(
     eventStartDate: service.eventStartDate,
     eventLocation: service.eventLocation,
     canCreateDeposit: controls.canCreateDepositInvoice,
+    canCreateProgress: controls.canCreateFlexibleInvoice === true,
     canCreateFinal: controls.canCreateFinalInvoice,
   };
 }
@@ -121,9 +124,9 @@ function isEligibleForMode(
   service: EligibleInvoiceService,
   mode: InvoiceChooserMode,
 ): boolean {
-  return mode === "deposit"
-    ? service.canCreateDeposit
-    : service.canCreateFinal;
+  if (mode === "deposit") return service.canCreateDeposit;
+  if (mode === "progress") return Boolean(service.canCreateProgress);
+  return service.canCreateFinal;
 }
 
 export function getInvoiceSelectorResults({

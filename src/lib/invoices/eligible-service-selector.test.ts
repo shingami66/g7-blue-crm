@@ -105,6 +105,7 @@ test("global list preserves invoices read and exposes only one permission-gated 
 
 test("chooser remains two-step, accessible, and navigation-only", () => {
   assert.match(chooserSource, /chooseMode\("deposit"\)/);
+  assert.match(chooserSource, /chooseMode\("progress"\)/);
   assert.match(chooserSource, /chooseMode\("final"\)/);
   assert.match(chooserSource, /role="dialog"/);
   assert.match(chooserSource, /aria-modal="true"/);
@@ -117,8 +118,10 @@ test("chooser remains two-step, accessible, and navigation-only", () => {
   assert.match(selectorContractSource, /billing\?intent=\$\{mode\}/);
   assert.match(selectorSource, /setCurrentPage\(1\)/);
   assert.match(selectorSource, /noEligibleDeposit/);
+  assert.match(selectorSource, /noEligibleProgress/);
   assert.match(selectorSource, /noEligibleFinal/);
   assert.match(selectorSource, /noMatchingDeposit/);
+  assert.match(selectorSource, /noMatchingProgress/);
   assert.match(selectorSource, /noMatchingFinal/);
   assert.match(selectorSource, /role="status"/);
   assert.match(selectorSource, /aria-live="polite"/);
@@ -154,6 +157,13 @@ const workspaceClientSource = readFileSync(
   ),
   "utf8",
 );
+const billingWorkspacePageSource = readFileSync(
+  new URL(
+    "../../app/(dashboard)/services/[id]/billing/page.tsx",
+    import.meta.url,
+  ),
+  "utf8",
+);
 const costMarginSource = readFileSync(
   new URL(
     "../../app/(dashboard)/services/[id]/billing/ServiceCostMarginSection.tsx",
@@ -181,12 +191,18 @@ test("Service Detail redirects old invoiceAction deep links and renders ServiceB
 
 test("Service Billing Workspace provides intent-driven actions and mode switching links", () => {
   assert.match(billingPanelSource, /invoiceActionIntent === "deposit"/);
+  assert.match(billingPanelSource, /invoiceActionIntent === "progress"/);
   assert.match(billingPanelSource, /invoiceActionIntent === "final"/);
+  assert.match(billingPanelSource, /createProgressInvoiceTitle/);
+  assert.match(billingPanelSource, /data-invoice-action="progress"/);
+  assert.match(billingPanelSource, /data-billing-mode=\{mode\.intent\}/);
+  assert.match(billingPanelSource, /aria-current=\{isCurrent \? "page" : undefined\}/);
   assert.match(billingPanelSource, /panelTitle/);
   assert.match(billingPanelSource, /switchToFinal/);
   assert.match(billingPanelSource, /switchToDeposit/);
-  assert.match(billingPanelSource, /billing\?intent=final/);
-  assert.match(billingPanelSource, /billing\?intent=deposit/);
+  assert.match(billingPanelSource, /intent=\$\{mode\.intent\}/);
+  assert.match(billingWorkspacePageSource, /rawIntent === "deposit" \|\| rawIntent === "progress" \|\| rawIntent === "final"/);
+  assert.match(workspaceClientSource, /intent\?: "deposit" \| "progress" \| "final"/);
   assert.match(workspaceClientSource, /workspacePageTitle/);
   assert.match(workspaceClientSource, /backToInvoices/);
   assert.match(workspaceClientSource, /viewFullService/);
@@ -205,6 +221,8 @@ test("Invoice chooser dictionaries cover distinct English and Arabic Deposit and
   assert.match(dictionarySource, /createInvoice: "Create Invoice"/);
   assert.match(dictionarySource, /createInvoice: "إنشاء فاتورة"/);
   assert.match(dictionarySource, /noEligibleDeposit/);
+  assert.match(dictionarySource, /progressTitle/);
+  assert.match(dictionarySource, /selectProgressServiceDescription/);
   assert.match(dictionarySource, /noEligibleFinal/);
   assert.match(dictionarySource, /noMatchingDeposit/);
   assert.match(dictionarySource, /noMatchingFinal/);
@@ -582,5 +600,9 @@ test("navigation contract encodes only Service ID and invoice action intent", ()
   assert.equal(
     getInvoiceServiceHref("service/with spaces", "final"),
     "/services/service%2Fwith%20spaces/billing?intent=final",
+  );
+  assert.equal(
+    getInvoiceServiceHref("service/with spaces", "progress"),
+    "/services/service%2Fwith%20spaces/billing?intent=progress",
   );
 });

@@ -434,9 +434,9 @@ test("3b. Deposit invoice Arabic glossary: no canonical فاتورة عربون;
 // ---------------------------------------------------------------------------
 // 4-6. Invoice codes, disabled reasons, billing calculations untouched
 // ---------------------------------------------------------------------------
-test("4. Invoice internal types/codes remain deposit|final and schema-stable", () => {
+test("4. Invoice internal types preserve legacy values and add progress classification", () => {
   const schemas = read(INVOICE_SCHEMAS);
-  assert.match(schemas, /invoiceType: z\.enum\(\["deposit", "final"\]/);
+  assert.match(schemas, /invoiceType: z\.enum\(\["deposit", "progress", "final"\]/);
   assert.match(schemas, /requestedAmount/);
   const actions = read(INVOICE_ACTIONS);
   assert.match(actions, /invoiceType === "deposit"/);

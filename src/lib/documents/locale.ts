@@ -41,6 +41,7 @@ export type DocumentDictionary = {
     invoiceNumber: string;
     type: string;
     issueDate: string;
+    dueDate: string;
     relatedQuote: string;
     status: string;
     issued: string;
@@ -97,6 +98,7 @@ export type DocumentDictionary = {
     billedTo: string;
     invoiceDetails: string;
     deposit: string;
+    progress: string;
     final: string;
     invoiceSummary: string;
     depositSummary: string;
@@ -154,6 +156,7 @@ const english: DocumentDictionary = {
     invoiceNumber: "Invoice Number:",
     type: "Type:",
     issueDate: "Issue Date:",
+    dueDate: "Due Date:",
     relatedQuote: "Related Quote:",
     status: "Status:",
     issued: "Issued",
@@ -210,6 +213,7 @@ const english: DocumentDictionary = {
     billedTo: "Billed To",
     invoiceDetails: "Invoice Details",
     deposit: "Deposit",
+    progress: "Progress",
     final: "Final",
     invoiceSummary: "Invoice Summary",
     depositSummary: "Deposit Summary",
@@ -267,6 +271,7 @@ const arabic: DocumentDictionary = {
     invoiceNumber: "رقم الفاتورة:",
     type: "النوع:",
     issueDate: "تاريخ الإصدار:",
+    dueDate: "تاريخ الاستحقاق:",
     relatedQuote: "عرض السعر المرتبط:",
     status: "الحالة:",
     issued: "مصدرة",
@@ -323,6 +328,7 @@ const arabic: DocumentDictionary = {
     billedTo: "مفوتر إلى",
     invoiceDetails: "تفاصيل الفاتورة",
     deposit: "دفعة مقدمة",
+    progress: "مرحلية",
     final: "نهائية",
     invoiceSummary: "ملخص الفاتورة",
     depositSummary: "ملخص الدفعة المقدمة",

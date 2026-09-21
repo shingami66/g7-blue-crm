@@ -641,8 +641,8 @@ test("39. Regression: W5C Petty Cash migration remains before later bounded exte
     "The W5C Petty Cash migration must remain present",
   );
   assert.ok(
-    lastMigration === "20260914112636_w6b_supplier_payments_foundation.sql",
-    "The W6B Supplier Payments migration must be the newest migration",
+    lastMigration === "20260921062559_w7b_flexible_customer_billing.sql",
+    "The W7B flexible billing migration must be the newest migration",
   );
 });
 

@@ -522,9 +522,11 @@ export default async function InvoicePdfPage({
                   <span className="text-on-surface-variant">{dictionary.common.invoiceNumber}</span>
                   <span className="font-semibold text-on-surface tracking-tight" dir="ltr">{invoice.invoice_number}</span>
                   <span className="text-on-surface-variant">{dictionary.common.type}</span>
-                  <span className="text-on-surface uppercase text-[12px] font-medium">{invoice.invoice_type === "deposit" ? dictionary.invoice.deposit : dictionary.invoice.final}</span>
+                  <span className="text-on-surface uppercase text-[12px] font-medium">{invoice.invoice_type === "deposit" ? dictionary.invoice.deposit : invoice.invoice_type === "progress" ? dictionary.invoice.progress : dictionary.invoice.final}</span>
                   <span className="text-on-surface-variant">{dictionary.common.issueDate}</span>
                   <span className="text-on-surface" dir={documentDirection}>{formatDocumentDate(invoice.issued_at || invoice.documentDate, documentLocale)}</span>
+                  <span className="text-on-surface-variant">{dictionary.common.dueDate}</span>
+                  <span className="text-on-surface" dir={documentDirection}>{formatDocumentDate(invoice.documentDueDate, documentLocale)}</span>
                   {relatedQuoteNumber && (
                     <>
                       <span className="text-on-surface-variant">{dictionary.common.relatedQuote}</span>

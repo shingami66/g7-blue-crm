@@ -27,7 +27,9 @@ export default async function ServiceBillingWorkspacePage({
   const resolvedSearchParams = await searchParams;
   const rawIntent = resolvedSearchParams?.intent;
   const intent =
-    rawIntent === "deposit" || rawIntent === "final" ? rawIntent : undefined;
+    rawIntent === "deposit" || rawIntent === "progress" || rawIntent === "final"
+      ? rawIntent
+      : undefined;
 
   try {
     await requirePermission("services:read");

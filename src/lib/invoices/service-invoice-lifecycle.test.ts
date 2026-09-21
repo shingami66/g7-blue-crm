@@ -14,11 +14,13 @@ function assertDecision(
   expected: {
     status: ServiceInvoiceLifecycleDecision["status"];
     deposit: boolean;
+    flexible: boolean;
     final: boolean;
   },
 ) {
   assert.equal(actual.status, expected.status);
   assert.equal(actual.canCreateDeposit, expected.deposit);
+  assert.equal(actual.canCreateFlexible, expected.flexible);
   assert.equal(actual.canCreateFinal, expected.final);
   assert.equal(
     actual.depositDenial,
@@ -31,13 +33,13 @@ function assertDecision(
 }
 
 for (const lifecycleCase of [
-  { status: "Inquiry", deposit: true, final: true },
-  { status: "Quoted", deposit: true, final: true },
-  { status: "Approved", deposit: true, final: true },
-  { status: "Deposit Paid", deposit: false, final: true },
-  { status: "In Progress", deposit: false, final: true },
-  { status: "Completed", deposit: false, final: true },
-  { status: "Cancelled", deposit: false, final: false },
+  { status: "Inquiry", deposit: true, flexible: true, final: true },
+  { status: "Quoted", deposit: true, flexible: true, final: true },
+  { status: "Approved", deposit: true, flexible: true, final: true },
+  { status: "Deposit Paid", deposit: false, flexible: true, final: true },
+  { status: "In Progress", deposit: false, flexible: true, final: true },
+  { status: "Completed", deposit: false, flexible: false, final: true },
+  { status: "Cancelled", deposit: false, flexible: false, final: false },
 ] as const) {
   test(`Service Invoice lifecycle matrix: ${lifecycleCase.status}`, () => {
     assertDecision(decision(lifecycleCase.status), lifecycleCase);
@@ -58,6 +60,7 @@ for (const [name, status] of [
     assert.deepEqual(decision(status), {
       status: null,
       canCreateDeposit: false,
+      canCreateFlexible: false,
       canCreateFinal: false,
       depositDenial: "service_lifecycle_unavailable",
       finalDenial: "service_lifecycle_unavailable",
@@ -69,6 +72,7 @@ test("Service Invoice lifecycle fails closed for deleted Service evidence", () =
   assert.deepEqual(decision("Approved", "2026-07-16T00:00:00.000Z"), {
     status: null,
     canCreateDeposit: false,
+    canCreateFlexible: false,
     canCreateFinal: false,
     depositDenial: "service_lifecycle_unavailable",
     finalDenial: "service_lifecycle_unavailable",
@@ -86,6 +90,7 @@ for (const [name, evidence] of [
     assert.deepEqual(getServiceInvoiceLifecycleDecision(evidence), {
       status: null,
       canCreateDeposit: false,
+      canCreateFlexible: false,
       canCreateFinal: false,
       depositDenial: "service_lifecycle_unavailable",
       finalDenial: "service_lifecycle_unavailable",

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRightLeft } from "lucide-react";
 import type { ServiceBillingState } from "@/lib/invoices/types";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { resolveInvoiceControlVisibility } from "@/lib/invoices/control-visibility";
@@ -11,8 +10,9 @@ import { formatSarAmount } from "@/lib/i18n/formatting";
 import type { ServiceStatus } from "@/types/service";
 import { CreateDepositInvoiceAction } from "./CreateDepositInvoiceAction";
 import { CreateFinalInvoiceAction } from "./CreateFinalInvoiceAction";
+import { CreateFlexibleInvoiceAction } from "./CreateFlexibleInvoiceAction";
 
-type InvoiceActionIntent = "deposit" | "final";
+type InvoiceActionIntent = "deposit" | "progress" | "final";
 
 export default function BillingPanel({
   billingState,
@@ -65,6 +65,7 @@ export default function BillingPanel({
     authorityMode,
     remainingUninvoicedAmount,
     canCreateDepositInvoice,
+    canCreateFlexibleInvoice,
     canCreateFinalInvoice,
     disabledReasons,
   } = billingState;
@@ -78,11 +79,13 @@ export default function BillingPanel({
     authorityMode,
     lifecycleDecision,
     canCreateDepositInvoice,
+    canCreateFlexibleInvoice,
     canCreateFinalInvoice,
     remainingUninvoicedAmount,
   });
   const billingSectionRef = useRef<HTMLElement>(null);
   const depositActionRef = useRef<HTMLDivElement>(null);
+  const flexibleActionRef = useRef<HTMLDivElement>(null);
   const finalActionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -97,9 +100,13 @@ export default function BillingPanel({
         ? invoiceControls.showInvoiceActions && lifecycleDecision.canCreateDeposit
           ? depositActionRef.current
           : null
-        : invoiceControls.showInvoiceActions && lifecycleDecision.canCreateFinal
-          ? finalActionRef.current
-          : null;
+        : invoiceActionIntent === "progress"
+          ? invoiceControls.showInvoiceActions && invoiceControls.canCreateFlexibleInvoice
+            ? flexibleActionRef.current
+            : null
+          : invoiceControls.showInvoiceActions && lifecycleDecision.canCreateFinal
+            ? finalActionRef.current
+            : null;
     const frame = window.requestAnimationFrame(() => {
       const interactiveTarget = actionTarget?.querySelector<HTMLElement>(
         'input:not([disabled]), button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
@@ -114,16 +121,40 @@ export default function BillingPanel({
   }, [
     invoiceActionIntent,
     invoiceControls.showInvoiceActions,
+    invoiceControls.canCreateFlexibleInvoice,
     lifecycleDecision.canCreateDeposit,
     lifecycleDecision.canCreateFinal,
   ]);
 
-  const panelTitle =
-    invoiceActionIntent === "deposit"
-      ? billingDictionary.createDepositInvoiceTitle
-      : invoiceActionIntent === "final"
-        ? billingDictionary.createFinalInvoiceTitle
-        : billingDictionary.selectBillingAction;
+  const panelTitle = invoiceActionIntent
+    ? {
+        deposit: billingDictionary.createDepositInvoiceTitle,
+        progress: billingDictionary.createProgressInvoiceTitle,
+        final: billingDictionary.createFinalInvoiceTitle,
+      }[invoiceActionIntent]
+    : billingDictionary.selectBillingAction;
+
+  const billingModeOptions: Array<{
+    intent: InvoiceActionIntent;
+    label: string;
+    enabled: boolean;
+  }> = [
+    {
+      intent: "progress",
+      label: billingDictionary.cards.progressInvoice,
+      enabled: invoiceControls.canCreateFlexibleInvoice === true,
+    },
+    {
+      intent: "deposit",
+      label: billingDictionary.status.depositInvoice,
+      enabled: invoiceControls.canCreateDepositInvoice,
+    },
+    {
+      intent: "final",
+      label: billingDictionary.status.finalInvoice,
+      enabled: invoiceControls.canCreateFinalInvoice,
+    },
+  ];
 
   return (
     <section
@@ -172,10 +203,49 @@ export default function BillingPanel({
           </div>
         )}
 
-        {/* Primary Action Panel & Mode Switcher */}
-        {invoiceControls.showInvoiceActions ? (
-          <div className="flex flex-col gap-4">
-            {invoiceActionIntent === "deposit" && invoiceControls.canCreateDepositInvoice ? (
+      {/* Primary Action Panel & Mode Switcher */}
+      {invoiceControls.showInvoiceActions ? (
+        <div className="flex flex-col gap-4">
+          <nav
+            aria-label={billingDictionary.selectBillingAction}
+            className="flex flex-col gap-2 rounded-lg border border-outline-variant/60 bg-surface p-3"
+          >
+            <span className="text-xs font-semibold text-on-surface-variant">
+              {billingDictionary.selectBillingAction}
+            </span>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {billingModeOptions
+                .filter((mode) => mode.enabled)
+                .map((mode) => {
+                  const isCurrent = invoiceActionIntent === mode.intent;
+
+                  return (
+                    <Link
+                      key={mode.intent}
+                      href={`/services/${encodeURIComponent(billingState.serviceId)}/billing?intent=${mode.intent}`}
+                      aria-current={isCurrent ? "page" : undefined}
+                      aria-label={
+                        mode.intent === "deposit"
+                          ? billingDictionary.switchToDeposit
+                          : mode.intent === "final"
+                            ? billingDictionary.switchToFinal
+                            : billingDictionary.cards.progressInvoice
+                      }
+                      data-billing-mode={mode.intent}
+                      className={`inline-flex min-w-0 items-center justify-center rounded-lg border px-3 py-2 text-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-sm ${
+                        isCurrent
+                          ? "border-primary bg-primary text-on-primary"
+                          : "border-primary/40 bg-primary-fixed/20 text-primary hover:bg-primary hover:text-on-primary"
+                      }`}
+                    >
+                      <span className="break-words">{mode.label}</span>
+                    </Link>
+                  );
+                })}
+            </div>
+          </nav>
+
+          {invoiceActionIntent === "deposit" && invoiceControls.canCreateDepositInvoice ? (
               <div className="flex flex-col gap-3">
                 <div
                   ref={depositActionRef}
@@ -195,20 +265,6 @@ export default function BillingPanel({
                   />
                 </div>
 
-                {invoiceControls.canCreateFinalInvoice && (
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 rounded-lg border border-outline-variant/60 bg-surface px-3.5 py-2.5 text-xs text-on-surface-variant">
-                    <span className="font-medium">
-                      {billingDictionary.finalAlsoAvailable}
-                    </span>
-                    <Link
-                      href={`/services/${encodeURIComponent(billingState.serviceId)}/billing?intent=final`}
-                      className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
-                    >
-                      <span>{billingDictionary.switchToFinal}</span>
-                      <ArrowRightLeft size={14} aria-hidden="true" />
-                    </Link>
-                  </div>
-                )}
               </div>
             ) : invoiceActionIntent === "final" && invoiceControls.canCreateFinalInvoice ? (
               <div className="flex flex-col gap-3">
@@ -229,20 +285,25 @@ export default function BillingPanel({
                   />
                 </div>
 
-                {invoiceControls.canCreateDepositInvoice && (
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 rounded-lg border border-outline-variant/60 bg-surface px-3.5 py-2.5 text-xs text-on-surface-variant">
-                    <span className="font-medium">
-                      {billingDictionary.depositAlsoAvailable}
-                    </span>
-                    <Link
-                      href={`/services/${encodeURIComponent(billingState.serviceId)}/billing?intent=deposit`}
-                      className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
-                    >
-                      <span>{billingDictionary.switchToDeposit}</span>
-                      <ArrowRightLeft size={14} aria-hidden="true" />
-                    </Link>
-                  </div>
-                )}
+              </div>
+            ) : invoiceActionIntent === "progress" && invoiceControls.canCreateFlexibleInvoice ? (
+              <div className="flex flex-col gap-3">
+                <div
+                  ref={flexibleActionRef}
+                  tabIndex={-1}
+                  data-invoice-action="progress"
+                  className={`rounded-lg transition-colors duration-500 motion-reduce:transition-none outline-none ${
+                    activeHighlight === "progress" ? "bg-primary-fixed/25 p-2" : ""
+                  }`}
+                >
+                  <CreateFlexibleInvoiceAction
+                    serviceId={billingState.serviceId}
+                    quotationId={billingState.approvedQuotation?.id ?? null}
+                    remainingAmount={billingState.remainingUninvoicedAmount}
+                    canCreate={invoiceControls.canCreateFlexibleInvoice === true}
+                    dictionary={billingDictionary.flexibleAction}
+                  />
+                </div>
               </div>
             ) : !invoiceActionIntent ? (
               /* Missing or invalid intent fallback: Compact action selector */
@@ -251,21 +312,16 @@ export default function BillingPanel({
                   {billingDictionary.selectBillingAction}
                 </span>
                 <div className="flex flex-wrap gap-3">
-                  {invoiceControls.canCreateDepositInvoice && (
-                    <Link
-                      href={`/services/${encodeURIComponent(billingState.serviceId)}/billing?intent=deposit`}
-                      className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary-fixed/30 px-4 py-2 font-semibold text-primary hover:bg-primary hover:text-on-primary transition-colors"
-                    >
-                      <span>{billingDictionary.status.depositInvoice}</span>
-                    </Link>
-                  )}
-                  {invoiceControls.canCreateFinalInvoice && (
-                    <Link
-                      href={`/services/${encodeURIComponent(billingState.serviceId)}/billing?intent=final`}
-                      className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary-fixed/30 px-4 py-2 font-semibold text-primary hover:bg-primary hover:text-on-primary transition-colors"
-                    >
-                      <span>{billingDictionary.status.finalInvoice}</span>
-                    </Link>
+                  {invoiceControls.canCreateFlexibleInvoice && (
+                    <div className="w-full rounded-lg border border-primary/30 bg-primary-fixed/10 p-3">
+                      <CreateFlexibleInvoiceAction
+                        serviceId={billingState.serviceId}
+                        quotationId={billingState.approvedQuotation?.id ?? null}
+                        remainingAmount={billingState.remainingUninvoicedAmount}
+                        canCreate={invoiceControls.canCreateFlexibleInvoice === true}
+                        dictionary={billingDictionary.flexibleAction}
+                      />
+                    </div>
                   )}
                 </div>
               </div>

@@ -39,14 +39,20 @@ export default function CreateInvoiceChooser({
   const titleId = useId();
   const descriptionId = useId();
   const chooser = dictionary.list.invoiceChooser;
-  const serviceStepTitle =
-    mode === "deposit"
-      ? chooser.selectDepositServiceTitle
-      : chooser.selectFinalServiceTitle;
-  const serviceStepDescription =
-    mode === "deposit"
-      ? chooser.selectDepositServiceDescription
-      : chooser.selectFinalServiceDescription;
+  const serviceStepTitle = mode
+    ? {
+        deposit: chooser.selectDepositServiceTitle,
+        progress: chooser.selectProgressServiceTitle,
+        final: chooser.selectFinalServiceTitle,
+      }[mode]
+    : chooser.title;
+  const serviceStepDescription = mode
+    ? {
+        deposit: chooser.selectDepositServiceDescription,
+        progress: chooser.selectProgressServiceDescription,
+        final: chooser.selectFinalServiceDescription,
+      }[mode]
+    : chooser.description;
 
   useEffect(() => {
     const opener = triggerRef.current;
@@ -135,6 +141,27 @@ export default function CreateInvoiceChooser({
 
         {step === "type" ? (
           <div className="flex flex-col gap-2.5 p-4 sm:p-5">
+            <button
+              type="button"
+              onClick={() => chooseMode("progress")}
+              className="group flex min-h-[60px] sm:h-[64px] items-center justify-between gap-3 rounded-lg border border-outline-variant/60 bg-surface px-4 py-3 text-start transition-colors hover:border-primary/50 hover:bg-surface-container-lowest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary-fixed/40 text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                  <Receipt size={18} aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-xs font-semibold text-on-surface sm:text-sm group-hover:text-primary transition-colors truncate">
+                    {chooser.progressTitle}
+                  </span>
+                  <span className="block text-[11px] sm:text-xs text-on-surface-variant truncate mt-0.5">
+                    {chooser.progressDescription}
+                  </span>
+                </div>
+              </div>
+              <ChevronRight size={18} className="shrink-0 text-on-surface-variant/60 group-hover:text-primary transition-colors rtl:rotate-180" aria-hidden="true" />
+            </button>
+
             <button
               ref={firstTypeRef}
               type="button"

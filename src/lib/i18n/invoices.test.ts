@@ -88,26 +88,28 @@ test("2. List headings, filters, result count, and row actions localize", () => 
   assert.doesNotMatch(read(LIST_CLIENT), /resetFilters|resetLabel|onReset/);
 });
 
-test("3-6. Type/status labels; codes stable; no new types; filter set preserved", () => {
+test("3-6. Type/status labels; progress classification; filter set preserved", () => {
   assert.equal(getInvoiceTypeLabel("en", "deposit"), "Deposit Invoice");
   assert.equal(getInvoiceTypeLabel("ar", "deposit"), "فاتورة دفعة مقدمة");
   assert.equal(getInvoiceTypeLabel("ar", "final"), "الفاتورة النهائية");
+  assert.equal(getInvoiceTypeLabel("en", "progress"), "Progress Invoice");
+  assert.equal(getInvoiceTypeLabel("ar", "progress"), "فاتورة مرحلية");
   assert.equal(getInvoiceStatusLabel("ar", "draft"), "مسودة");
   assert.equal(getInvoiceStatusLabel("ar", "sent"), "صادرة");
   assert.equal(getInvoiceStatusLabel("ar", "paid"), "مدفوعة");
 
   const en = getInvoicesDictionary("en");
   assert.deepEqual(Object.keys(en.statuses).sort(), [...CANONICAL_STATUSES].sort());
-  assert.deepEqual(Object.keys(en.invoiceTypes).sort(), ["deposit", "final"]);
-  assert.equal(Object.prototype.hasOwnProperty.call(en.invoiceTypes, "progress"), false);
+  assert.deepEqual(Object.keys(en.invoiceTypes).sort(), ["deposit", "final", "progress"]);
+  assert.equal(Object.prototype.hasOwnProperty.call(en.invoiceTypes, "progress"), true);
   assert.equal(Object.prototype.hasOwnProperty.call(en.statuses, "cleared"), false);
 
   const client = read(LIST_CLIENT);
   for (const option of FILTER_OPTIONS) {
     assert.match(client, new RegExp(`value="${option}"`));
   }
-  // No newly invented filter values beyond the existing set
-  assert.doesNotMatch(client, /value="progress"|value="credit"/);
+  // Progress is a display classification, not a new list filter.
+  assert.doesNotMatch(client, /value="credit"/);
 });
 
 test("7. Document-label UI mapping is display-only", () => {
@@ -159,6 +161,8 @@ test("15-16. PDF controls are UI-only; PDF body excluded", () => {
   assert.match(read(DETAIL), /printPdf|Print/);
   // Customer PDF uses transient requested print language, not the invoices-list UI dictionary.
   assert.match(read(PDF), /getDocumentDictionary|formatDocumentDate|formatDocumentAmount/);
+  assert.match(read(PDF), /dictionary\.common\.dueDate/);
+  assert.match(read(PDF), /formatDocumentDate\(invoice\.documentDueDate, documentLocale\)/);
   assert.doesNotMatch(read(PDF), /getInvoicesDictionary|useLocale|getLocale/);
 });
 

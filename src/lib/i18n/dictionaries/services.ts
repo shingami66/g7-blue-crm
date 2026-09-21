@@ -934,6 +934,7 @@ export interface ServicesDictionary {
     depositAlsoAvailable: string;
     selectBillingAction: string;
     createDepositInvoiceTitle: string;
+    createProgressInvoiceTitle: string;
     createFinalInvoiceTitle: string;
     costMarginTitle: string;
     costMarginSubtitle: string;
@@ -949,6 +950,7 @@ export interface ServicesDictionary {
     cards: {
       approvedQuotation: string;
       depositInvoice: string;
+      progressInvoice: string;
       finalInvoice: string;
       billingCalculation: string;
       noApprovedQuotationYet: string;
@@ -1060,6 +1062,40 @@ export interface ServicesDictionary {
         serviceNotEligibleForFinal: string;
         priorInvoicesExceedBillingScopeCeiling: string;
         priorInvoicesExceedQuotationTotal: string;
+        mutationKeyConflict: string;
+      };
+    };
+    flexibleAction: {
+      unavailable: string;
+      amountLabel: string;
+      amountPlaceholder: string;
+      dueDateLabel: string;
+      dueDateHelper: string;
+      create: string;
+      success: string;
+      validation: {
+        validAmount: string;
+        amountGreaterThanZero: string;
+        amountCannotExceedRemaining: string;
+        dueDateRequired: string;
+      };
+      errors: {
+        invalidInvoiceInput: string;
+        invalidFlexibleAmount: string;
+        invoiceAmountExceedsRemaining: string;
+        quotationNotFound: string;
+        quotationNotApproved: string;
+        quotationServiceMismatch: string;
+        companySettingsUnavailable: string;
+        invoiceSnapshotUnavailable: string;
+        invoiceCreationFailed: string;
+        unauthorized: string;
+        forbidden: string;
+        fallback: string;
+        serviceLifecycleUnavailable: string;
+        serviceNotEligibleForFlexible: string;
+        billingScopeInactive: string;
+        billingScopeAuthorityUnavailable: string;
         mutationKeyConflict: string;
       };
     };
@@ -2394,6 +2430,7 @@ const servicesDictionaryEn: ServicesDictionary = {
     depositAlsoAvailable: "Deposit Invoice is also available for this Service.",
     selectBillingAction: "Select a Billing Action",
     createDepositInvoiceTitle: "Create Deposit Invoice",
+    createProgressInvoiceTitle: "Create Progress Invoice",
     createFinalInvoiceTitle: "Create Final Invoice",
     costMarginTitle: "Estimated Cost & Margin",
     costMarginSubtitle: "Read-only operational cost analytics.",
@@ -2409,6 +2446,7 @@ const servicesDictionaryEn: ServicesDictionary = {
     cards: {
       approvedQuotation: "Approved Quotation",
       depositInvoice: "Deposit Invoice",
+      progressInvoice: "Progress Invoice",
       finalInvoice: "Final Invoice",
       billingCalculation: "Billing Summary",
       noApprovedQuotationYet: "No approved quotation yet",
@@ -2521,6 +2559,40 @@ const servicesDictionaryEn: ServicesDictionary = {
         serviceNotEligibleForFinal: "The current service status does not allow a new final invoice.",
         priorInvoicesExceedBillingScopeCeiling: "No remaining billable amount is available under the approved billing scope.",
         priorInvoicesExceedQuotationTotal: "No remaining billable amount is available under the approved quotation ceiling.",
+        mutationKeyConflict: "A conflicting request with this mutation key already exists.",
+      },
+    },
+    flexibleAction: {
+      unavailable: "Progress invoice action is not available.",
+      amountLabel: "Invoice Amount (SAR)",
+      amountPlaceholder: "0.00",
+      dueDateLabel: "Due date",
+      dueDateHelper: "Payment timing is recorded separately from billing eligibility.",
+      create: "Create Progress Invoice",
+      success: "Progress invoice created successfully. Invoice: {invoiceNumber}.",
+      validation: {
+        validAmount: "Please enter a valid numeric amount.",
+        amountGreaterThanZero: "Invoice amount must be greater than 0.",
+        amountCannotExceedRemaining: "Invoice amount cannot exceed the remaining billable amount.",
+        dueDateRequired: "Please select a due date.",
+      },
+      errors: {
+        invalidInvoiceInput: "Invalid input provided.",
+        invalidFlexibleAmount: "Invoice amount must be positive and use no more than two decimals.",
+        invoiceAmountExceedsRemaining: "Invoice amount exceeds the remaining billable amount.",
+        quotationNotFound: "Quotation not found.",
+        quotationNotApproved: "Quotation is not approved.",
+        quotationServiceMismatch: "Quotation does not match the current service.",
+        companySettingsUnavailable: "Company settings are unavailable.",
+        invoiceSnapshotUnavailable: "Unable to generate invoice snapshots.",
+        invoiceCreationFailed: "Unable to create the invoice.",
+        unauthorized: "You are not authorized to perform this action.",
+        forbidden: "You do not have permission to create invoices.",
+        fallback: "Unable to create progress invoice. Please try again.",
+        serviceLifecycleUnavailable: "Service lifecycle is unavailable.",
+        serviceNotEligibleForFlexible: "The current service status does not allow a progress invoice.",
+        billingScopeInactive: "The approved billing authority is no longer active.",
+        billingScopeAuthorityUnavailable: "The current billing authority is unavailable.",
         mutationKeyConflict: "A conflicting request with this mutation key already exists.",
       },
     },
@@ -4064,6 +4136,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     depositAlsoAvailable: "فاتورة الدفعة المقدمة متاحة أيضاً لهذه الخدمة.",
     selectBillingAction: "اختر إجراء الفوترة",
     createDepositInvoiceTitle: "إنشاء فاتورة دفعة مقدمة",
+    createProgressInvoiceTitle: "إنشاء فاتورة مرحلية",
     createFinalInvoiceTitle: "إنشاء الفاتورة النهائية",
     costMarginTitle: "التكلفة والهامش التقديري",
     costMarginSubtitle: "تحليلات تشغيلية للقراءة فقط.",
@@ -4079,6 +4152,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     cards: {
       approvedQuotation: "عرض السعر المعتمد",
       depositInvoice: "فاتورة دفعة مقدمة",
+      progressInvoice: "فاتورة مرحلية",
       finalInvoice: "الفاتورة النهائية",
       billingCalculation: "ملخص الفوترة",
       noApprovedQuotationYet: "لا يوجد عرض سعر معتمد حتى الآن",
@@ -4191,6 +4265,40 @@ const servicesDictionaryAr: ServicesDictionary = {
         serviceNotEligibleForFinal: "حالة الخدمة الحالية لا تسمح بإنشاء فاتورة نهائية جديدة.",
         priorInvoicesExceedBillingScopeCeiling: "لا يوجد مبلغ متبقٍ قابل للفوترة ضمن نطاق الفوترة المعتمد.",
         priorInvoicesExceedQuotationTotal: "لا يوجد مبلغ متبقٍ قابل للفوترة ضمن سقف عرض السعر المعتمد.",
+        mutationKeyConflict: "يوجد طلب متعارض بهذا المفتاح مسبقاً.",
+      },
+    },
+    flexibleAction: {
+      unavailable: "إجراء الفاتورة المرحلية غير متاح.",
+      amountLabel: "مبلغ الفاتورة (ريال سعودي)",
+      amountPlaceholder: "0.00",
+      dueDateLabel: "تاريخ الاستحقاق",
+      dueDateHelper: "يُحفظ توقيت السداد بشكل منفصل عن أهلية الفوترة.",
+      create: "إنشاء فاتورة مرحلية",
+      success: "تم إنشاء الفاتورة المرحلية بنجاح. الفاتورة: {invoiceNumber}.",
+      validation: {
+        validAmount: "يرجى إدخال مبلغ رقمي صحيح.",
+        amountGreaterThanZero: "يجب أن يكون مبلغ الفاتورة أكبر من 0.",
+        amountCannotExceedRemaining: "لا يمكن أن يتجاوز مبلغ الفاتورة المبلغ القابل للفوترة المتبقي.",
+        dueDateRequired: "يرجى اختيار تاريخ الاستحقاق.",
+      },
+      errors: {
+        invalidInvoiceInput: "تم إدخال بيانات غير صحيحة.",
+        invalidFlexibleAmount: "يجب أن يكون مبلغ الفاتورة موجبًا وبحد أقصى منزلتين عشريتين.",
+        invoiceAmountExceedsRemaining: "مبلغ الفاتورة يتجاوز المبلغ القابل للفوترة المتبقي.",
+        quotationNotFound: "تعذر العثور على عرض السعر.",
+        quotationNotApproved: "عرض السعر غير معتمد.",
+        quotationServiceMismatch: "عرض السعر لا يطابق الخدمة الحالية.",
+        companySettingsUnavailable: "إعدادات الشركة غير متاحة.",
+        invoiceSnapshotUnavailable: "تعذر إنشاء لقطات الفاتورة.",
+        invoiceCreationFailed: "تعذر إنشاء الفاتورة.",
+        unauthorized: "يجب تسجيل الدخول لتنفيذ هذا الإجراء.",
+        forbidden: "ليس لديك صلاحية لإنشاء الفواتير.",
+        fallback: "تعذر إنشاء فاتورة مرحلية. يرجى المحاولة مرة أخرى.",
+        serviceLifecycleUnavailable: "دورة حياة الخدمة غير متاحة.",
+        serviceNotEligibleForFlexible: "حالة الخدمة الحالية لا تسمح بإنشاء فاتورة مرحلية.",
+        billingScopeInactive: "لم تعد سلطة الفوترة المعتمدة نشطة.",
+        billingScopeAuthorityUnavailable: "سلطة الفوترة الحالية غير متاحة.",
         mutationKeyConflict: "يوجد طلب متعارض بهذا المفتاح مسبقاً.",
       },
     },

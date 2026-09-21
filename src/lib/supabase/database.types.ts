@@ -3131,6 +3131,30 @@ export type Database = {
           is_replayed: boolean
         }[]
       }
+      create_flexible_invoice_atomic: {
+        Args: {
+          p_actor_clerk_user_id: string
+          p_document_label: string
+          p_due_date?: string
+          p_invoice_date?: string
+          p_mutation_key: string
+          p_quotation_id: string
+          p_requested_amount: number
+          p_service_id: string
+          p_snapshot_bank_details: Json
+          p_snapshot_buyer: Json
+          p_snapshot_document_rules: Json
+          p_snapshot_quotation: Json
+          p_snapshot_seller: Json
+          p_vat_mode: string
+        }
+        Returns: {
+          error_code: string
+          invoice_id: string
+          invoice_number: string
+          is_replayed: boolean
+        }[]
+      }
       create_invoice_atomic_legacy: {
         Args: {
           p_actor_clerk_user_id: string
@@ -3167,6 +3191,20 @@ export type Database = {
           quotation_number: string
           subtotal: number
           vat_amount: number
+        }[]
+      }
+      update_draft_flexible_invoice_atomic: {
+        Args: {
+          p_actor_clerk_user_id: string
+          p_due_date: string
+          p_invoice_id: string
+          p_mutation_key: string
+          p_requested_amount: number
+        }
+        Returns: {
+          error_code: string
+          invoice_id: string
+          invoice_number: string
         }[]
       }
       create_flexible_quotation_with_items: {

@@ -29,6 +29,7 @@ export const statusDictionariesEn: StatusDictionaries = {
   },
   invoiceType: {
     deposit: "Deposit",
+    progress: "Progress",
     final: "Final",
   },
   payment: {

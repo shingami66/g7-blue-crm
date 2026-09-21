@@ -43,6 +43,26 @@ export type FinalInvoiceActionErrorMessages = {
   fallback: string;
 };
 
+export type FlexibleInvoiceActionErrorMessages = {
+  invalidInvoiceInput: string;
+  invalidFlexibleAmount: string;
+  invoiceAmountExceedsRemaining: string;
+  quotationNotFound: string;
+  quotationNotApproved: string;
+  quotationServiceMismatch: string;
+  companySettingsUnavailable: string;
+  invoiceSnapshotUnavailable: string;
+  invoiceCreationFailed: string;
+  unauthorized: string;
+  forbidden: string;
+  fallback: string;
+  serviceLifecycleUnavailable: string;
+  serviceNotEligibleForFlexible: string;
+  billingScopeInactive: string;
+  billingScopeAuthorityUnavailable: string;
+  mutationKeyConflict?: string;
+};
+
 function isExactKnownCode(errorEvidence: unknown): errorEvidence is string {
   return typeof errorEvidence === "string" && errorEvidence.length > 0;
 }
@@ -135,6 +155,49 @@ export function presentFinalInvoiceActionError(
     case "prior_invoices_exceed_quotation_total":
       return messages.priorInvoicesExceedQuotationTotal;
     // Proven create-path insert failure code from createInvoiceAction.
+    case "invoice_insert_failed":
+    case "invoice_creation_failed":
+      return messages.invoiceCreationFailed;
+    case "Unauthorized":
+      return messages.unauthorized;
+    case "Forbidden":
+      return messages.forbidden;
+    default:
+      return messages.fallback;
+  }
+}
+
+export function presentFlexibleInvoiceActionError(
+  errorEvidence: unknown,
+  messages: FlexibleInvoiceActionErrorMessages,
+): string {
+  if (!isExactKnownCode(errorEvidence)) return messages.fallback;
+
+  switch (errorEvidence) {
+    case "invalid_invoice_input":
+      return messages.invalidInvoiceInput;
+    case "invalid_flexible_amount":
+      return messages.invalidFlexibleAmount;
+    case "invoice_amount_exceeds_remaining":
+      return messages.invoiceAmountExceedsRemaining;
+    case "quotation_not_found":
+      return messages.quotationNotFound;
+    case "quotation_not_approved":
+      return messages.quotationNotApproved;
+    case "quotation_service_mismatch":
+      return messages.quotationServiceMismatch;
+    case "company_settings_unavailable":
+      return messages.companySettingsUnavailable;
+    case "invoice_snapshot_unavailable":
+      return messages.invoiceSnapshotUnavailable;
+    case "service_lifecycle_unavailable":
+      return messages.serviceLifecycleUnavailable;
+    case "service_not_eligible_for_flexible":
+      return messages.serviceNotEligibleForFlexible;
+    case "billing_scope_inactive":
+      return messages.billingScopeInactive;
+    case "billing_scope_authority_unavailable":
+      return messages.billingScopeAuthorityUnavailable;
     case "invoice_insert_failed":
     case "invoice_creation_failed":
       return messages.invoiceCreationFailed;

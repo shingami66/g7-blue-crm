@@ -106,12 +106,14 @@ interface SnapshotQuotationItem {
  * Build the quotation snapshot for an invoice.
  *
  * Legacy (no active scope):
- *   Always maps raw quotation items, totals, and metadata exactly as the
- *   original committed behavior — invoiceAmount and invoiceType have no effect.
+ *   Deposit and final invoices preserve the original quotation itemization.
+ *   A partial progress invoice uses one bounded payment line so the customer
+ *   document totals agree with the requested progress amount.
  *
  * Active scope — partial invoice:
- *   Deposits and final invoices retain the accepted/adjusted scope items. Their
- *   settlement amount is stored separately by the authoritative create RPC.
+ *   Deposits and final invoices retain the accepted/adjusted scope items. A
+ *   partial progress invoice uses one bounded payment line while retaining the
+ *   approved scope metadata as the billing authority.
  *
  * Active scope:
  *   Uses only accepted/adjusted scope items regardless of the deposit/final
@@ -125,27 +127,39 @@ export function buildQuotationSnapshot(
   invoiceType?: string
 ): JsonValue | null {
   // ── Legacy path: no active scope ──────────────────────────────────
-  // Exactly mirrors the original committed behavior.
-  // invoiceAmount and invoiceType are intentionally ignored.
-  if (!activeScope) {
-    return {
-      quotation_id: quotation.id,
-      quotation_number: quotation.quotationNumber,
-      service_id: quotation.serviceId,
-      customer_id: quotation.customerId,
-      items: quotation.items.map(item => ({
+  const isProgress =
+    invoiceType === "progress" &&
+    invoiceAmount != null;
+  const legacyItems = isProgress
+    ? [{
+        description: "Progress Payment",
+        details: `For services related to Quotation ${quotation.quotationNumber}`,
+        qty: 1,
+        unit_price: invoiceAmount,
+        vat: 0,
+        total: invoiceAmount,
+      }]
+    : quotation.items.map(item => ({
         description: item.description,
         details: item.details,
         qty: item.qty,
         unit_price: item.unitPrice,
         vat: item.vat,
         total: item.total
-      })),
-      subtotal: quotation.subtotal,
-      discount: quotation.discount,
+      }));
+
+  if (!activeScope) {
+    return {
+      quotation_id: quotation.id,
+      quotation_number: quotation.quotationNumber,
+      service_id: quotation.serviceId,
+      customer_id: quotation.customerId,
+      items: legacyItems,
+      subtotal: isProgress ? invoiceAmount : quotation.subtotal,
+      discount: isProgress ? 0 : quotation.discount,
       vat_rate: quotation.vatRate,
-      vat_amount: quotation.vatAmount,
-      grand_total: quotation.grandTotal,
+      vat_amount: isProgress ? 0 : quotation.vatAmount,
+      grand_total: isProgress ? invoiceAmount : quotation.grandTotal,
       currency: "SAR",
       status: quotation.status,
       created_at: quotation.createdAt,
@@ -154,12 +168,10 @@ export function buildQuotationSnapshot(
   }
 
   // ── Active scope paths ────────────────────────────────────────────
-  // Invoice amount/type are settlement metadata; active ABS snapshots always
-  // retain the approved scope lines and authority totals.
-  void invoiceAmount;
-  void invoiceType;
-
   const scopeCeiling = Number(activeScope.acceptedGrandTotal || 0);
+  const activeProgress =
+    invoiceType === "progress" &&
+    invoiceAmount != null;
   const billableItems = (activeScope.items || [])
     .filter((item) => item.decision === "accepted" || item.decision === "adjusted");
 
@@ -170,18 +182,33 @@ export function buildQuotationSnapshot(
 
   // Map scope items. vat field = per-item VAT amount (matching legacy
   // quotation_items.vat semantics per AGENTS.md rule).
-  const snapshotItems: SnapshotQuotationItem[] = billableItems.map((item) => ({
-    description: item.sourceDescription,
-    details: item.sourceDetails,
-    qty: Number(item.acceptedQty || 0),
-    unit_price: Number(item.acceptedUnitPrice || 0),
-    vat: Number(item.acceptedVatAmount || 0),
-    total: Number(item.acceptedGrandTotal || 0)
-  }));
+  const snapshotItems: SnapshotQuotationItem[] = activeProgress
+    ? [{
+        description: "Progress Payment",
+        details: `For services related to Quotation ${quotation.quotationNumber}`,
+        qty: 1,
+        unit_price: invoiceAmount,
+        vat: 0,
+        total: invoiceAmount,
+      }]
+    : billableItems.map((item) => ({
+        description: item.sourceDescription,
+        details: item.sourceDetails,
+        qty: Number(item.acceptedQty || 0),
+        unit_price: Number(item.acceptedUnitPrice || 0),
+        vat: Number(item.acceptedVatAmount || 0),
+        total: Number(item.acceptedGrandTotal || 0)
+      }));
 
-  const subtotal = Number(activeScope.acceptedSubtotal || 0);
-  const vatAmount = Number(activeScope.acceptedVatAmount || 0);
-  const grandTotal = Number(activeScope.acceptedGrandTotal || 0);
+  const subtotal = activeProgress
+    ? invoiceAmount
+    : Number(activeScope.acceptedSubtotal || 0);
+  const vatAmount = activeProgress
+    ? 0
+    : Number(activeScope.acceptedVatAmount || 0);
+  const grandTotal = activeProgress
+    ? invoiceAmount
+    : Number(activeScope.acceptedGrandTotal || 0);
 
   return {
     quotation_id: quotation.id,
@@ -190,7 +217,7 @@ export function buildQuotationSnapshot(
     customer_id: quotation.customerId,
     items: snapshotItems,
     subtotal: subtotal,
-    discount: Number(activeScope.sourceDiscount || 0),
+    discount: activeProgress ? 0 : Number(activeScope.sourceDiscount || 0),
     vat_rate: Number(activeScope.sourceVatRate || 0),
     vat_amount: vatAmount,
     grand_total: grandTotal,

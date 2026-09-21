@@ -112,10 +112,16 @@ export default function EligibleInvoiceServiceSelector({
     });
   }
 
-  const noEligibleCopy =
-    mode === "deposit" ? chooser.noEligibleDeposit : chooser.noEligibleFinal;
-  const noMatchCopy =
-    mode === "deposit" ? chooser.noMatchingDeposit : chooser.noMatchingFinal;
+  const noEligibleCopy = {
+    deposit: chooser.noEligibleDeposit,
+    progress: chooser.noEligibleProgress,
+    final: chooser.noEligibleFinal,
+  }[mode];
+  const noMatchCopy = {
+    deposit: chooser.noMatchingDeposit,
+    progress: chooser.noMatchingProgress,
+    final: chooser.noMatchingFinal,
+  }[mode];
   const statusCopy = isNavigating
     ? chooser.navigating
     : loadStatus === "loading"

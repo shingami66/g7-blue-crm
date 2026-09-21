@@ -69,6 +69,7 @@ export interface CreateInvoiceInput {
   serviceId: string;
   invoiceType: InvoiceType;
   requestedAmount?: number;
+  dueDate?: string;
 }
 
 export interface CreateInvoiceResult {
@@ -81,6 +82,13 @@ export interface CreateInvoiceResult {
 
 export interface IssueInvoiceResult {
   success: boolean;
+  error?: string;
+}
+
+export interface UpdateDraftInvoiceResult {
+  success: boolean;
+  invoiceId?: string;
+  invoiceNumber?: string;
   error?: string;
 }
 
@@ -131,7 +139,7 @@ export interface InvoiceRow {
 export type BillingInvoiceSummary = {
   id: string;
   invoiceNumber: string;
-  invoiceType: "deposit" | "final";
+  invoiceType: "deposit" | "progress" | "final";
   status: string;
   amount: number | null;
 };
@@ -181,6 +189,7 @@ export type ServiceBillingState = {
    */
   remainingUninvoicedAmount: number | null;
   canCreateDepositInvoice: boolean;
+  canCreateFlexibleInvoice?: boolean;
   canCreateFinalInvoice: boolean;
   disabledReasons: string[];
 };

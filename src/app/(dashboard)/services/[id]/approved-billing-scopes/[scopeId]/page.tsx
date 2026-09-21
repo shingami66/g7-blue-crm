@@ -17,6 +17,7 @@ import type {
   ApprovedBillingScopeLineSafetyStatus,
 } from "@/lib/approved-billing-scopes/types";
 import { getInvoicesByApprovedBillingScopeId } from "@/lib/invoices/queries";
+import { getInvoiceTypeLabel } from "@/lib/i18n/dictionaries/invoices";
 import type { Invoice } from "@/types/invoice";
 import { getServiceById } from "@/lib/services/queries";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
@@ -334,7 +335,7 @@ function InvoiceRow({
     <div className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[14px] sm:grid-cols-5">
         <Field label={dictionary.labels.invoiceNumber} value={invoice.invoice_number} dir="ltr" />
-        <Field label={dictionary.labels.invoiceType} value={dictionary.invoiceTypeLabels[invoice.invoice_type]} />
+        <Field label={dictionary.labels.invoiceType} value={getInvoiceTypeLabel(locale, invoice.invoice_type)} />
         <Field label={dictionary.labels.invoiceStatus} value={dictionary.invoiceStatusLabels[invoice.status]} />
         <Field
           label={dictionary.labels.grandTotal}

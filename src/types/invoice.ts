@@ -3,7 +3,7 @@ import type { QuotationSnapshotSeller, QuotationSnapshotBuyer } from "@/lib/quot
 
 export type InvoiceStatus = "draft" | "sent" | "paid" | "partial" | "overdue" | "cancelled" | "voided";
 
-export type InvoiceType = "deposit" | "final";
+export type InvoiceType = "deposit" | "progress" | "final";
 
 export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
 

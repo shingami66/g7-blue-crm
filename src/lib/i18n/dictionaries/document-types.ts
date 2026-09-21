@@ -7,6 +7,7 @@ export interface DocumentTypeDictionary {
 export const documentTypeDictionaryEn: DocumentTypeDictionary = {
   invoiceType: {
     deposit: "Deposit",
+    progress: "Progress",
     final: "Final",
   },
 };

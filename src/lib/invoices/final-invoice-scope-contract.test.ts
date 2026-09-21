@@ -108,6 +108,28 @@ test("partial final snapshots retain approved scope lines instead of settlement 
   assert.equal(snapshot.approvedBillingScopeAcceptedGrandTotal, 5000);
 });
 
+test("partial progress snapshots use a bounded payment line while retaining authority metadata", () => {
+  const active = buildQuotationSnapshot(createQuotation(), createScope(), 4000, "progress") as SnapshotRecord;
+  const [activeLine] = active.items as SnapshotRecord[];
+  assert.equal(activeLine.description, "Progress Payment");
+  assert.equal(activeLine.unit_price, 4000);
+  assert.equal(activeLine.total, 4000);
+  assert.equal(active.vat_amount, 0);
+  assert.equal(active.grand_total, 4000);
+  assert.equal(active.approvedBillingScopeAcceptedGrandTotal, 5000);
+
+  const legacy = buildQuotationSnapshot(
+    { ...createQuotation(), items: [{ description: "Legacy service", details: null, qty: 1, unitPrice: 5000, vat: 0, total: 5000 }] } as unknown as QuotationFixture,
+    null,
+    4000,
+    "progress",
+  ) as SnapshotRecord;
+  const [legacyLine] = legacy.items as SnapshotRecord[];
+  assert.equal(legacyLine.description, "Progress Payment");
+  assert.equal(legacyLine.unit_price, 4000);
+  assert.equal(legacy.grand_total, 4000);
+});
+
 test("active ABS deposits retain approved scope lines while keeping deposit amount separate", () => {
   const deposit = buildQuotationSnapshot(createQuotation(), createDepositScope(), 1000, "deposit") as SnapshotRecord;
   const [screenLine, soundLine] = deposit.items as SnapshotRecord[];

@@ -443,6 +443,22 @@ test("successful empty Invoice read proves zero exposure", async () => {
   assert.equal(state.canCreateFinalInvoice, true);
 });
 
+test("progress invoices consume cumulative exposure without requiring a schedule", async () => {
+  startScenario({
+    invoices: {
+      data: [invoice(50, "progress", false, 1), invoice(20, "progress", false, 2)],
+      error: null,
+    },
+  });
+
+  const state = await getServiceBillingState("service-1");
+
+  assert.equal(state.billingCeiling, 100);
+  assert.equal(state.activePriorInvoiceTotal, 70);
+  assert.equal(state.remainingUninvoicedAmount, 30);
+  assert.equal(state.canCreateFlexibleInvoice, true);
+});
+
 test("active ABS computes remaining from authoritative ceiling and exposure", async () => {
   startScenario({
     approved_billing_scopes: { data: [approvedScope(50)], error: null },

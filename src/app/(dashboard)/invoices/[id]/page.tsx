@@ -25,6 +25,7 @@ import { getServiceById } from "@/lib/services/queries";
 import type { QuotationItem } from "@/lib/quotations/types";
 import { IssueInvoiceAction } from "../IssueInvoiceAction";
 import { RecordPaymentAction } from "./RecordPaymentAction";
+import { EditDraftProgressInvoiceAction } from "./EditDraftProgressInvoiceAction";
 import RecordNavigationSlot from "@/components/records/RecordNavigationSlot";
 import { RecordNavigationPlaceholder } from "@/components/records/RecordNavigation";
 import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
@@ -634,6 +635,13 @@ export default async function InvoiceDetailPage({
                 <div className="pt-4 border-t border-surface-variant">
                   <IssueInvoiceAction invoiceId={invoice.id} dictionary={dictionary.issueAction} />
                 </div>
+              )}
+              {canIssueInvoice && invoice.status === "draft" && invoice.invoice_type === "progress" && (
+                <EditDraftProgressInvoiceAction
+                  invoiceId={invoice.id}
+                  amount={invoice.grand_total ?? 0}
+                  dueDate={invoice.documentDueDate ?? invoice.documentDate ?? ""}
+                />
               )}
               {canRecordPayment && (
                 <div className="pt-4 border-t border-surface-variant">

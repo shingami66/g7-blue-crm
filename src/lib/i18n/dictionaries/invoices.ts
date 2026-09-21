@@ -22,10 +22,14 @@ export interface InvoicesDictionary {
       description: string;
       depositTitle: string;
       depositDescription: string;
+      progressTitle: string;
+      progressDescription: string;
       finalTitle: string;
       finalDescription: string;
       selectDepositServiceTitle: string;
       selectDepositServiceDescription: string;
+      selectProgressServiceTitle: string;
+      selectProgressServiceDescription: string;
       selectFinalServiceTitle: string;
       selectFinalServiceDescription: string;
       searchPlaceholder: string;
@@ -33,6 +37,7 @@ export interface InvoicesDictionary {
       close: string;
       select: string;
       chooseDepositService: string;
+      chooseProgressService: string;
       chooseFinalService: string;
       navigating: string;
       resultsCount: string;
@@ -44,8 +49,10 @@ export interface InvoicesDictionary {
       eventName: string;
       location: string;
       noEligibleDeposit: string;
+      noEligibleProgress: string;
       noEligibleFinal: string;
       noMatchingDeposit: string;
+      noMatchingProgress: string;
       noMatchingFinal: string;
     };
     filters: {
@@ -266,10 +273,14 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       description: "Choose an invoice type, then select an eligible Service. No invoice is created until the Service Billing action is completed.",
       depositTitle: "Deposit Invoice",
       depositDescription: "Choose a Service that can accept a deposit invoice.",
+      progressTitle: "Progress Invoice",
+      progressDescription: "Choose a Service with remaining billable balance for a progress invoice.",
       finalTitle: "Final Invoice",
       finalDescription: "Choose a Service with remaining billable balance for a final invoice.",
       selectDepositServiceTitle: "Select an eligible Service",
       selectDepositServiceDescription: "Only Services currently eligible for a Deposit Invoice are shown.",
+      selectProgressServiceTitle: "Select an eligible Service",
+      selectProgressServiceDescription: "Only Services currently eligible for a Progress Invoice are shown.",
       selectFinalServiceTitle: "Select an eligible Service",
       selectFinalServiceDescription: "Only Services currently eligible for a Final Invoice are shown.",
       searchPlaceholder: "Search Services, customers, or events",
@@ -277,6 +288,7 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       close: "Close",
       select: "Select",
       chooseDepositService: "Select",
+      chooseProgressService: "Select",
       chooseFinalService: "Select",
       navigating: "Opening Service Billing…",
       resultsCount: "{count} eligible Services",
@@ -288,8 +300,10 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       eventName: "Event",
       location: "Location",
       noEligibleDeposit: "No eligible Services",
+      noEligibleProgress: "No eligible Services",
       noEligibleFinal: "No eligible Services",
       noMatchingDeposit: "No matching Services",
+      noMatchingProgress: "No matching Services",
       noMatchingFinal: "No matching Services",
     },
     filters: {
@@ -438,6 +452,7 @@ const invoicesDictionaryEn: InvoicesDictionary = {
   },
   invoiceTypes: {
     deposit: "Deposit Invoice",
+    progress: "Progress Invoice",
     final: "Final Invoice",
   },
   documentLabels: {
@@ -518,10 +533,14 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       description: "اختر نوع الفاتورة ثم اختر خدمة مؤهلة. لن يتم إنشاء فاتورة حتى يكتمل إجراء الفوترة في الخدمة.",
       depositTitle: "فاتورة دفعة مقدمة",
       depositDescription: "اختر خدمة يمكنها استقبال فاتورة دفعة مقدمة.",
+      progressTitle: "فاتورة مرحلية",
+      progressDescription: "اختر خدمة لديها رصيد قابل للفوترة لإصدار فاتورة مرحلية.",
       finalTitle: "الفاتورة النهائية",
       finalDescription: "اختر خدمة لديها رصيد قابل للفوترة لإصدار فاتورة نهائية.",
       selectDepositServiceTitle: "اختر خدمة مؤهلة",
       selectDepositServiceDescription: "تظهر فقط الخدمات المؤهلة حالياً لفاتورة دفعة مقدمة.",
+      selectProgressServiceTitle: "اختر خدمة مؤهلة",
+      selectProgressServiceDescription: "تظهر فقط الخدمات المؤهلة حالياً لفاتورة مرحلية.",
       selectFinalServiceTitle: "اختر خدمة مؤهلة",
       selectFinalServiceDescription: "تظهر فقط الخدمات المؤهلة حالياً لفاتورة نهائية.",
       searchPlaceholder: "ابحث في الخدمات أو العملاء أو الفعاليات",
@@ -529,6 +548,7 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       close: "إغلاق",
       select: "اختيار",
       chooseDepositService: "اختيار",
+      chooseProgressService: "اختيار",
       chooseFinalService: "اختيار",
       navigating: "جارٍ فتح فوترة الخدمة…",
       resultsCount: "{count} خدمة مؤهلة",
@@ -540,8 +560,10 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       eventName: "الفعالية",
       location: "الموقع",
       noEligibleDeposit: "لا توجد خدمات مؤهلة",
+      noEligibleProgress: "لا توجد خدمات مؤهلة",
       noEligibleFinal: "لا توجد خدمات مؤهلة",
       noMatchingDeposit: "لا توجد خدمات مطابقة",
+      noMatchingProgress: "لا توجد خدمات مطابقة",
       noMatchingFinal: "لا توجد خدمات مطابقة",
     },
     filters: {
@@ -690,6 +712,7 @@ const invoicesDictionaryAr: InvoicesDictionary = {
   },
   invoiceTypes: {
     deposit: "فاتورة دفعة مقدمة",
+    progress: "فاتورة مرحلية",
     final: "الفاتورة النهائية",
   },
   documentLabels: {
