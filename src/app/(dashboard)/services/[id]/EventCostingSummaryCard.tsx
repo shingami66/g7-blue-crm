@@ -33,10 +33,27 @@ export default function EventCostingSummaryCard({ serviceId, workspaceHref, resu
         <p className="p-5 text-[14px] text-error" role="alert">{copy.unavailable}</p>
       ) : (
         <dl className="grid grid-cols-2 gap-x-5 gap-y-5 p-5 sm:grid-cols-4">
-          <Metric label={copy.labels.approvedBudgetCost} value={money(dictionary, data.approvedBudgetCost, copy.unavailable)} />
-          <Metric label={copy.labels.actualCost} value={money(dictionary, data.actualCost, copy.unavailable)} />
-          <Metric label={copy.labels.eac} value={money(dictionary, data.eac, copy.unavailable)} />
-          <Metric label={copy.labels.forecastMargin} value={money(dictionary, data.forecastMargin, copy.unavailable)} accent />
+          <Metric
+            label={copy.labels.approvedBudgetCost}
+            value={money(dictionary, data.approvedBudgetCost, copy.unavailable)}
+            numeric={data.approvedBudgetCost !== null}
+          />
+          <Metric
+            label={copy.labels.actualCost}
+            value={money(dictionary, data.actualCost, copy.unavailable)}
+            numeric={data.actualCost !== null}
+          />
+          <Metric
+            label={copy.labels.eac}
+            value={money(dictionary, data.eac, copy.unavailable)}
+            numeric={data.eac !== null}
+          />
+          <Metric
+            label={copy.labels.forecastMargin}
+            value={money(dictionary, data.forecastMargin, copy.unavailable)}
+            numeric={data.forecastMargin !== null}
+            accent
+          />
           <div className="col-span-2 sm:col-span-4">
             <dt className="text-[12px] font-semibold text-on-surface-variant">{copy.completeness}</dt>
             <dd className="mt-1 text-[13px] font-semibold text-on-surface">
@@ -55,12 +72,18 @@ function money(dictionary: ServicesDictionary, value: number | null, unavailable
     : formatSarAmount(dictionary.locale, value, { isolate: true });
 }
 
-function Metric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+function Metric({ label, value, numeric, accent = false }: { label: string; value: string; numeric: boolean; accent?: boolean }) {
   return (
     <div className="min-w-0">
       <dt className="text-[12px] font-semibold text-on-surface-variant">{label}</dt>
-      <dd dir="ltr" className={`mt-1 break-words font-mono text-[14px] font-semibold tabular-nums ${accent ? "text-primary" : "text-on-surface"}`}>
-        {value}
+      <dd className={`mt-1 break-words font-mono text-[14px] font-semibold tabular-nums ${accent ? "text-primary" : "text-on-surface"}`}>
+        {numeric ? (
+          <span dir="ltr" className="inline-block tabular-nums">
+            {value}
+          </span>
+        ) : (
+          value
+        )}
       </dd>
     </div>
   );
