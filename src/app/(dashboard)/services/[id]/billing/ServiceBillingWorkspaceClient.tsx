@@ -5,7 +5,6 @@ import Link from "next/link";
 import type { Service, ServiceStatus } from "@/types/service";
 import type { ServiceBillingState } from "@/lib/invoices/types";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import type { Locale } from "@/lib/i18n/locales";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { formatSarAmount } from "@/lib/i18n/formatting";
@@ -16,7 +15,6 @@ import { UiDateRangeText, UiDateText } from "@/components/i18n/UiDateText";
 import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import { CalendarDays, MapPin, UserRound, ExternalLink } from "lucide-react";
 import BillingPanel from "../BillingPanel";
-import ServiceCostMarginSection from "./ServiceCostMarginSection";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -35,8 +33,6 @@ export type ServiceBillingWorkspaceClientProps = {
   billingState: ServiceBillingState;
   dictionary: ServicesDictionary;
   canCreateInvoices: boolean;
-  canReadCost: boolean;
-  supplierAllocations: SupplierAllocation[] | null;
   intent?: "deposit" | "progress" | "final";
 };
 
@@ -45,8 +41,6 @@ export default function ServiceBillingWorkspaceClient({
   billingState,
   dictionary,
   canCreateInvoices,
-  canReadCost,
-  supplierAllocations,
   intent,
 }: ServiceBillingWorkspaceClientProps) {
   const billingDict = dictionary.billing;
@@ -194,13 +188,6 @@ export default function ServiceBillingWorkspaceClient({
         invoiceActionIntent={intent}
       />
 
-      {/* Analytical Cost & Margin Section */}
-      <ServiceCostMarginSection
-        billingCeiling={billingState.billingCeiling}
-        supplierAllocations={supplierAllocations}
-        canReadCost={canReadCost}
-        dictionary={dictionary}
-      />
     </div>
   );
 }

@@ -43,7 +43,9 @@ import {
 import type { Service } from "@/types/service";
 import ProcurementSummaryCard from "./ProcurementSummaryCard";
 import CommitmentSummaryCard from "./CommitmentSummaryCard";
+import EventCostingSummaryCard from "./EventCostingSummaryCard";
 import { getApprovedCommitmentsByServiceId } from "@/lib/procurement/commitment-receipt-queries";
+import { getEventCostingResult } from "@/lib/event-costing/queries";
 import RecordNavigationSlot from "@/components/records/RecordNavigationSlot";
 import { RecordNavigationPlaceholder } from "@/components/records/RecordNavigation";
 import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
@@ -350,6 +352,7 @@ export default async function ServiceDetailPage({
             <SecondaryLoadingPanel label={dictionary.relatedQuotations.title} />
             <SecondaryLoadingPanel label={dictionary.procurementSummary.title} />
             <SecondaryLoadingPanel label={dictionary.commitmentSummary.title} />
+            <SecondaryLoadingPanel label={dictionary.eventCosting.title} />
             <SecondaryLoadingPanel label={dictionary.billing.title} />
             <SecondaryLoadingPanel label={dictionary.serviceActivity.title} />
           </div>
@@ -405,6 +408,7 @@ async function ServiceDetailPageSecondary({
     procurementRequirementsResult: Awaited<ReturnType<typeof getProcurementRequirementsByServiceId>> | null;
     supplierQuotationCount: number | null;
     commitmentsResult: Awaited<ReturnType<typeof getApprovedCommitmentsByServiceId>> | null;
+    eventCostingResult: Awaited<ReturnType<typeof getEventCostingResult>> | null;
   };
   try {
     const [
@@ -427,6 +431,7 @@ async function ServiceDetailPageSecondary({
       procurementRequirementsSettled,
       supplierQuotationCountSettled,
       commitmentsSettled,
+      eventCostingSettled,
     ] = await Promise.allSettled([
       canReadQuotations ? getQuotationsByServiceIdResult(service.id) : Promise.resolve(null),
       canReadBillingSummary ? getServiceBillingSummary(service.id) : Promise.resolve(null),
@@ -434,6 +439,7 @@ async function ServiceDetailPageSecondary({
       canReadCost ? getProcurementRequirementsByServiceId(service.id) : Promise.resolve({ requirements: [] }),
       canReadCost ? getSupplierQuotationCountByServiceId(service.id) : Promise.resolve({ count: 0 }),
       canReadCommitments ? getApprovedCommitmentsByServiceId(service.id) : Promise.resolve({ commitments: [] }),
+      canReadCost ? getEventCostingResult(service.id) : Promise.resolve(null),
     ]);
     const relatedQuotationsResult = relatedQuotationsSettled.status === "fulfilled"
       ? relatedQuotationsSettled.value
@@ -459,6 +465,11 @@ async function ServiceDetailPageSecondary({
       : canReadCommitments
         ? { commitments: [], error: "approved_commitments_load_failed" as const }
         : null;
+    const eventCostingResult = eventCostingSettled.status === "fulfilled"
+      ? eventCostingSettled.value
+      : canReadCost
+        ? { status: "error" as const, error: "event_costing_load_failed" }
+        : null;
     loaded = {
       canReadQuotations,
       canReadCost,
@@ -470,6 +481,7 @@ async function ServiceDetailPageSecondary({
       procurementRequirementsResult,
       supplierQuotationCount,
       commitmentsResult,
+      eventCostingResult,
     };
   } catch (error) {
     if (error instanceof UnauthorizedError) redirect("/sign-in");
@@ -492,6 +504,7 @@ async function ServiceDetailPageSecondary({
     procurementRequirementsResult,
     supplierQuotationCount,
     commitmentsResult,
+    eventCostingResult,
   } = loaded;
 
   return (
@@ -521,6 +534,14 @@ async function ServiceDetailPageSecondary({
           commitments={commitmentsResult.commitments}
           loadError={!!commitmentsResult.error}
           returnTo={currentServiceUrl}
+          dictionary={dictionary}
+        />
+      )}
+      {canReadCost && eventCostingResult && (
+        <EventCostingSummaryCard
+          serviceId={service.id}
+          workspaceHref={appendReturnTo(`/services/${service.id}/costing`, currentServiceUrl)}
+          result={eventCostingResult}
           dictionary={dictionary}
         />
       )}

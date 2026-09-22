@@ -843,6 +843,66 @@ export interface ServicesDictionary {
     loadError: string;
     openWorkspace: string;
   };
+  eventCosting: {
+    title: string;
+    subtitle: string;
+    openWorkspace: string;
+    workspaceTitle: string;
+    workspaceSubtitle: string;
+    backToService: string;
+    unavailable: string;
+    permissionDenied: string;
+    completeness: string;
+    partialDisclosure: string;
+    reasonLabels: Record<string, string>;
+    statusLabels: Record<"COMPLETE" | "PARTIAL" | "UNAVAILABLE", string>;
+    labels: {
+      asOfDate: string;
+      baseBudget: string;
+      contingency: string;
+      approvedBudgetCost: string;
+      approvedCommitment: string;
+      acceptedCommitment: string;
+      pendingCommitment: string;
+      openCommitment: string;
+      actualCost: string;
+      paidCost: string;
+      outstandingCost: string;
+      etc: string;
+      eac: string;
+      netApprovedCommercialValue: string;
+      forecastMargin: string;
+    };
+    waterfallTitle: string;
+    drill: {
+      budgetVersions: string;
+      commitments: string;
+      supplierBills: string;
+      eventExpenses: string;
+      supplierPayments: string;
+      advanceAllocations: string;
+      etcVersions: string;
+    };
+    boundedDisclosure: string;
+    forms: {
+      budgetTitle: string;
+      etcTitle: string;
+      baseBudget: string;
+      contingency: string;
+      etcAmount: string;
+      forecastDate: string;
+      reason: string;
+      notes: string;
+      sourceReference: string;
+      version: string;
+      saveBudget: string;
+      saveEtc: string;
+      budgetSaved: string;
+      etcSaved: string;
+      saveError: string;
+      errors: Record<string, string>;
+    };
+  };
   procurementWorkspace: {
     title: string;
     subtitle: string;
@@ -2338,6 +2398,80 @@ const servicesDictionaryEn: ServicesDictionary = {
     unavailable: "Unavailable",
     loadError: "Commitment summary could not be loaded. Please open the workspace to retry.",
     openWorkspace: "Open Commitments Workspace",
+  },
+  eventCosting: {
+    title: "Event Costing & Forecast",
+    subtitle: "Authoritative direct-cost waterfall and remaining-cost forecast.",
+    openWorkspace: "Open Costing Workspace",
+    workspaceTitle: "Event Costing Workspace",
+    workspaceSubtitle: "Managerial event costing; it is not accounting profit.",
+    backToService: "Back to Service",
+    unavailable: "Event Costing is unavailable.",
+    permissionDenied: "You do not have permission to view Event Costing.",
+    completeness: "Source completeness",
+    partialDisclosure: "Partial source disclosure: unavailable sources remain unavailable and are not shown as zero.",
+    reasonLabels: {
+      budget_unavailable: "Approved Budget is unavailable.",
+      etc_unavailable: "ETC is unavailable; EAC and Forecast Margin remain unavailable.",
+      commercial_authority_unavailable: "Net Approved Commercial Value is unavailable.",
+      pending_supplier_bills: "Pending Supplier Bills are excluded from Actual Cost.",
+      pending_event_expenses: "Submitted-only event expenses are excluded from Actual Cost.",
+      permission_denied: "Cost-sensitive source access is restricted.",
+      service_not_found: "The Service was not found.",
+      source_unavailable: "A required source could not be loaded.",
+    },
+    statusLabels: { COMPLETE: "Complete", PARTIAL: "Partial", UNAVAILABLE: "Unavailable" },
+    labels: {
+      asOfDate: "As-of date",
+      baseBudget: "Base Budget",
+      contingency: "Event Contingency",
+      approvedBudgetCost: "Approved Budget Cost",
+      approvedCommitment: "Approved Commitment",
+      acceptedCommitment: "Accepted Commitment",
+      pendingCommitment: "Pending Commitment",
+      openCommitment: "Open Commitment",
+      actualCost: "Actual Cost",
+      paidCost: "Paid Cost",
+      outstandingCost: "Outstanding Cost",
+      etc: "ETC",
+      eac: "EAC",
+      netApprovedCommercialValue: "Net Approved Commercial Value",
+      forecastMargin: "Forecast Margin",
+    },
+    waterfallTitle: "Cost Waterfall",
+    drill: {
+      budgetVersions: "Budget Versions",
+      commitments: "Commitment Drill",
+      supplierBills: "Supplier Bill Drill",
+      eventExpenses: "Direct Event Expense Drill",
+      supplierPayments: "Supplier Payment Drill",
+      advanceAllocations: "Supplier Advance Allocation Drill",
+      etcVersions: "ETC Versions",
+    },
+    boundedDisclosure: "Source drill is bounded to the latest records shown; totals are aggregated server-side",
+    forms: {
+      budgetTitle: "Approve Base Budget & Contingency",
+      etcTitle: "Record ETC Forecast",
+      baseBudget: "Base Budget (SAR)",
+      contingency: "Event Contingency (SAR)",
+      etcAmount: "ETC (SAR)",
+      forecastDate: "Forecast / as-of date",
+      reason: "Reason",
+      notes: "Notes",
+      sourceReference: "Source / evidence reference",
+      version: "Version",
+      saveBudget: "Approve Budget",
+      saveEtc: "Record ETC",
+      budgetSaved: "Budget version approved.",
+      etcSaved: "ETC forecast recorded.",
+      saveError: "The Event Costing change could not be saved.",
+      errors: {
+        event_cost_budget_request_invalid: "Enter valid budget amounts and a reason.",
+        event_cost_etc_request_invalid: "Enter a valid ETC amount, date, and reason.",
+        event_cost_budget_permission_denied: "You do not have permission to approve a budget.",
+        event_cost_etc_permission_denied: "You do not have permission to record ETC.",
+      },
+    },
   },
   procurementWorkspace: {
     title: "Procurement Packages",
@@ -4044,6 +4178,80 @@ const servicesDictionaryAr: ServicesDictionary = {
     unavailable: "غير متاح",
     loadError: "تعذر تحميل ملخص الالتزامات. افتح مساحة الالتزامات للمحاولة مرة أخرى.",
     openWorkspace: "فتح مساحة الالتزامات",
+  },
+  eventCosting: {
+    title: "تكلفة الفعالية والتوقعات",
+    subtitle: "عرض موحد لتكلفة الفعالية المباشرة وتوقع التكلفة المتبقية.",
+    openWorkspace: "فتح مساحة التكاليف",
+    workspaceTitle: "مساحة تكلفة الفعالية",
+    workspaceSubtitle: "تكلفة إدارية للفعالية وليست ربحاً محاسبياً.",
+    backToService: "العودة إلى الخدمة",
+    unavailable: "تكلفة الفعالية غير متاحة.",
+    permissionDenied: "ليست لديك صلاحية عرض تكلفة الفعالية.",
+    completeness: "اكتمال المصادر",
+    partialDisclosure: "إفصاح جزئي عن المصادر: لا تعرض المصادر غير المتاحة كأصفار.",
+    reasonLabels: {
+      budget_unavailable: "الميزانية المعتمدة غير متاحة.",
+      etc_unavailable: "التكلفة المتبقية المتوقعة غير متاحة؛ لذلك يظل التوقع والهامش غير متاحين.",
+      commercial_authority_unavailable: "القيمة التجارية الصافية المعتمدة غير متاحة.",
+      pending_supplier_bills: "تُستبعد فواتير الموردين المعلقة من التكلفة الفعلية.",
+      pending_event_expenses: "تُستبعد مصروفات الفعالية المقدمة فقط من التكلفة الفعلية.",
+      permission_denied: "الوصول إلى مصادر التكلفة الحساسة مقيد.",
+      service_not_found: "لم يتم العثور على الخدمة.",
+      source_unavailable: "تعذر تحميل مصدر مطلوب.",
+    },
+    statusLabels: { COMPLETE: "مكتمل", PARTIAL: "جزئي", UNAVAILABLE: "غير متاح" },
+    labels: {
+      asOfDate: "حتى تاريخ",
+      baseBudget: "الميزانية الأساسية",
+      contingency: "احتياطي الفعالية",
+      approvedBudgetCost: "التكلفة المعتمدة للميزانية",
+      approvedCommitment: "الالتزام المعتمد",
+      acceptedCommitment: "الالتزام المقبول",
+      pendingCommitment: "الالتزام المعلق",
+      openCommitment: "الالتزام المفتوح",
+      actualCost: "التكلفة الفعلية",
+      paidCost: "التكلفة المدفوعة",
+      outstandingCost: "التكلفة المستحقة",
+      etc: "التكلفة المتبقية المتوقعة",
+      eac: "التكلفة المتوقعة عند الإنجاز",
+      netApprovedCommercialValue: "القيمة التجارية الصافية المعتمدة",
+      forecastMargin: "الهامش المتوقع",
+    },
+    waterfallTitle: "تسلسل التكلفة",
+    drill: {
+      budgetVersions: "إصدارات الميزانية",
+      commitments: "تفاصيل الالتزامات",
+      supplierBills: "تفاصيل فواتير الموردين",
+      eventExpenses: "تفاصيل مصروفات الفعالية المباشرة",
+      supplierPayments: "تفاصيل مدفوعات الموردين",
+      advanceAllocations: "تفاصيل تخصيص دفعات الموردين المقدمة",
+      etcVersions: "إصدارات التكلفة المتبقية المتوقعة",
+    },
+    boundedDisclosure: "تفاصيل المصادر محدودة بالسجلات الأحدث المعروضة؛ تُجمع الإجماليات على الخادم",
+    forms: {
+      budgetTitle: "اعتماد الميزانية الأساسية والاحتياطي",
+      etcTitle: "تسجيل توقع التكلفة المتبقية",
+      baseBudget: "الميزانية الأساسية (ر.س)",
+      contingency: "احتياطي الفعالية (ر.س)",
+      etcAmount: "التكلفة المتبقية المتوقعة (ر.س)",
+      forecastDate: "تاريخ التوقع / حتى تاريخ",
+      reason: "السبب",
+      notes: "ملاحظات",
+      sourceReference: "مرجع المصدر / الدليل",
+      version: "الإصدار",
+      saveBudget: "اعتماد الميزانية",
+      saveEtc: "تسجيل التوقع",
+      budgetSaved: "تم اعتماد إصدار الميزانية.",
+      etcSaved: "تم تسجيل توقع التكلفة المتبقية.",
+      saveError: "تعذر حفظ تغيير تكلفة الفعالية.",
+      errors: {
+        event_cost_budget_request_invalid: "أدخل مبالغ ميزانية صحيحة وسبباً.",
+        event_cost_etc_request_invalid: "أدخل مبلغاً وتاريخاً وسبباً صحيحاً للتكلفة المتبقية.",
+        event_cost_budget_permission_denied: "ليست لديك صلاحية اعتماد الميزانية.",
+        event_cost_etc_permission_denied: "ليست لديك صلاحية تسجيل التكلفة المتبقية.",
+      },
+    },
   },
   procurementWorkspace: {
     title: "باقات التوريد",

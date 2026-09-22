@@ -1,6 +1,17 @@
 # G7 BLUE CRM — Deferred Decisions
 
-## CURRENT DELIVERY STATUS — W5 CLOSE / W6A CLOSE / W6B CLOSE — 15 September 2026
+## CURRENT DELIVERY STATUS — W8A EVENT COSTING — 23 September 2026
+
+- **W8A Event Costing & Forecast Foundation:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`.
+  - Costing remains a managerial view separate from accounting profit. The accepted DEV fixture is source-partial and reports unavailable sources explicitly.
+  - Historical event-date and Riyadh-date reconstruction is covered by the previously applied and DEV-verified W8A repair. The browser workspace exposes current As-Of only; it does not add an interactive historical reconstruction control.
+  - Existing W8A DEV migrations were not reapplied and no DEV financial records were mutated during this closeout.
+- **Still deferred / separately gated:** W8B Event Cost Close is `NOT STARTED / NOT AUTHORIZED`; W9 reporting consolidation and W10 accounting remain later waves. GL/journals, revenue recognition, VAT/FATOORA/ZATCA activation, bank integration, deployment, PROD, DEMO, and Layer 2/SaaS remain unactivated.
+- **EXACT NEXT ACTION:** No further W8A work. Require a separate Owner-authorized W8B task before beginning Event Cost Close; this status document grants no implementation or database authority.
+
+> The dated delivery section immediately below preserves its 15 September snapshot and is superseded for current wave status by this section. Older deferral decisions remain unchanged.
+
+## HISTORICAL DELIVERY SNAPSHOT — W5 CLOSE / W6A CLOSE / W6B CLOSE — 15 September 2026 (SUPERSEDED CURRENT STATUS)
 
 - **W5 — Expenses & Cash Advances & Petty Cash:** `CLOSED / COMPLETE`.
   - Expenses workflow, employee reimbursement workflow, Cash Advance workflow, and the Petty Cash workspace/end-to-end lifecycle are complete.
@@ -30,7 +41,7 @@
   - No GL/accounting engine, VAT filing engine, FATOORA/ZATCA activation, bank integration, PROD deployment, or production mutation is authorized by this status.
 - **Next product step:** `W6 residual discovery` covering `Supplier Advance / Deposit` and `Supplier Dispute / governed correction boundaries`. Discovery only; implementation is not authorized by this documentation update.
 
-> Dated delivery and deferral sections below preserve historical snapshots; this current section takes precedence when an older snapshot differs.
+> This section preserves the 15 September delivery snapshot. Current wave status and next action are recorded above; historical delivery and deferral sections below remain unchanged.
 
 ## HISTORICAL DELIVERY AND DEFERRALS — 9 September 2026 (SUPERSEDED CURRENT SNAPSHOT)
 

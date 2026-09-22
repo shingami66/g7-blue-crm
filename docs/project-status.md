@@ -1,6 +1,20 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W5 CLOSE / W6 CLOSE — 19 September 2026
+## CURRENT DELIVERY STATUS — W8A EVENT COSTING — 23 September 2026
+
+- **W7 — Accounts Receivable and flexible billing:** W7B, W7C, and W7D are published. The current repository history records W7B at `799b8a0`, W7C at `41db9ae`, and W7D delivery/presentation at `e2736d7` / `a58ba82`.
+- **W8A — Event Costing & Forecast Foundation:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`.
+  - The Service-centered Event Costing Workspace is managerial costing, not accounting profit. DEV acceptance used `SVC-2026-0001`; its partial-source state is disclosed rather than represented as zero.
+  - Reconciled values: approved budget SAR 14,000; approved/accepted/open commitments SAR 11,000 / 10,000 / 1,000; actual/paid/outstanding cost SAR 10,000.01 / 0.01 / 10,000.00; ETC/EAC SAR 3,000 / 13,000.01; net approved commercial value/forecast margin SAR 5,500 / -7,500.01.
+  - Authenticated browser acceptance covered the Service entry and costing workspace in English and Arabic/RTL, desktop and a 360×800 mobile viewport. No financial form was submitted during this closeout.
+  - Historical event-date reconstruction and Riyadh-date semantics remain covered by the previously DEV-verified W8A read-model repair; current browser workspace displays the current As-Of date and does not expose a historical-date selector.
+  - W8A migrations were already applied and verified in DEV; this closeout did not reapply migrations or mutate DEV data.
+- **Next locked phase:** W8B Event Cost Close remains `NOT STARTED / NOT AUTHORIZED`. W9 reporting consolidation, W10 accounting, GL, revenue recognition, VAT/FATOORA/ZATCA, deployment, PROD, and DEMO remain outside this closeout.
+- **EXACT NEXT ACTION:** No further W8A work. Start W8B only under a separate Owner-authorized task; this closeout does not authorize it.
+
+> The dated delivery section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated sections remain historical records.
+
+## HISTORICAL DELIVERY SNAPSHOT — W5 CLOSE / W6 CLOSE — 19 September 2026 (SUPERSEDED CURRENT STATUS)
 
 - **W5 — Expenses & Cash Advances & Petty Cash:** `CLOSED / COMPLETE`.
   - Expenses, employee reimbursement, Cash Advance, and Petty Cash workflows are complete with Owner acceptance and DEV verification.
@@ -38,7 +52,7 @@
   - Current dependency before W7B billing schedules and credit consumers: `Owner manual acceptance and Controller closeout of W7-P0B; W7B remains gated`.
   - **EXACT NEXT ACTION:** `Mozfer performs bounded authenticated owner acceptance in English/Arabic/RTL/mobile for W7-P0B, then the Controller records the closeout verdict. Do not start W7B until the Controller closeout decision.`
 
-> Dated delivery sections below preserve historical snapshots; this current section takes precedence when an older snapshot differs.
+> This section preserves the 19 September delivery snapshot. Current wave status and next action are recorded above; the historical sections below remain unchanged.
 
 ## HISTORICAL W5B EMPLOYEE EXPENSE SELF-SERVICE DELIVERY — 9 September 2026 (SUPERSEDED CURRENT SNAPSHOT)
 

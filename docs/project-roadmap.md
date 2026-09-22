@@ -1,6 +1,18 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W5 CLOSE / W6 CLOSE — 19 September 2026
+## CURRENT ROADMAP POSITION — W8A EVENT COSTING — 23 September 2026
+
+- **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), and W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`) are published.
+- **W8A Event Costing & Forecast Foundation:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`.
+  - The Service-centered workspace reconciles the DEV costing fixture and discloses partial source completeness; it does not introduce accounting-profit, GL, revenue-recognition, VAT, or tax semantics.
+  - Authenticated English and Arabic/RTL desktop acceptance passed, and the 360×800 mobile presentation was checked. No financial form was submitted in the closeout.
+  - Historical source-event and Riyadh-date behavior remains backed by the previously applied and DEV-verified W8A read-model repair; no migration was reapplied here.
+- **Next locked roadmap task:** W8B Event Cost Close is `NOT STARTED / NOT AUTHORIZED`. W9 Dashboards/Reports consolidation and W10 Accounting remain later locked waves; deployment and PROD/DEMO mutation were not started.
+- **EXACT NEXT ACTION:** No further W8A work. W8B requires a separate Owner-authorized task; do not begin W8B, W9, or W10 in this closeout.
+
+> The dated roadmap section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated roadmap history remains unchanged.
+
+## HISTORICAL ROADMAP SNAPSHOT — W5 CLOSE / W6 CLOSE — 19 September 2026 (SUPERSEDED CURRENT POSITION)
 
 - **W5 — Expenses & Cash Advances & Petty Cash:** `CLOSED / COMPLETE`.
   - Expenses, employee reimbursement, Cash Advance, and Petty Cash workflows are complete with Owner acceptance and DEV verification.
@@ -38,7 +50,7 @@
   - Current dependency before W7B billing schedules and credit consumers: `Owner manual acceptance and Controller closeout of W7-P0B; W7B remains gated`.
   - **EXACT NEXT ACTION:** `Mozfer performs bounded authenticated owner acceptance in English/Arabic/RTL/mobile for W7-P0B, then the Controller records the closeout verdict. Do not start W7B until the Controller closeout decision.`
 
-> Dated roadmap sections below preserve historical snapshots; this current section takes precedence when an older snapshot differs.
+> This section preserves the 19 September roadmap snapshot. Current wave status and next locked task are recorded above; historical roadmap sections below remain unchanged.
 
 ## HISTORICAL W5B EMPLOYEE EXPENSE SELF-SERVICE DELIVERY — 9 September 2026 (SUPERSEDED CURRENT SNAPSHOT)
 
