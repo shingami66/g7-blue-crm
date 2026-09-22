@@ -140,6 +140,7 @@ export interface InvoicesDictionary {
       quotation: string;
       lineItems: string;
       totals: string;
+      creditAdjustments: string;
       settlement: string;
     };
     labels: {
@@ -178,6 +179,12 @@ export interface InvoicesDictionary {
       grandTotal: string;
       amountPaid: string;
       balanceDue: string;
+      grossIssuedAmount: string;
+      creditAdjustments: string;
+      creditApplications: string;
+      netReceivable: string;
+      settledAmount: string;
+      customerCredit: string;
       approvedQuotationTotal: string;
       approvedBillingScopeTotal: string;
       previousInvoices: string;
@@ -391,6 +398,7 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       quotation: "Approved Quotation",
       lineItems: "Line Items",
       totals: "Amounts / Totals",
+      creditAdjustments: "Internal Credit Adjustments",
       settlement: "Payment History",
     },
     labels: {
@@ -429,6 +437,12 @@ const invoicesDictionaryEn: InvoicesDictionary = {
       grandTotal: "Grand Total",
       amountPaid: "Amount Paid",
       balanceDue: "Balance Due",
+      grossIssuedAmount: "Gross Issued Invoice",
+      creditAdjustments: "Internal Credit Adjustments",
+      creditApplications: "Retained Credit Applied",
+      netReceivable: "Net Receivable",
+      settledAmount: "Paid / Settled",
+      customerCredit: "Customer Credit",
       approvedQuotationTotal: "Approved Quotation Total",
       approvedBillingScopeTotal: "Approved Billing Scope Total",
       previousInvoices: "Previous Invoices / Deposits",
@@ -651,6 +665,7 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       quotation: "عرض السعر المعتمد",
       lineItems: "بنود الفاتورة",
       totals: "المبالغ / الإجماليات",
+      creditAdjustments: "التعديلات الدائنة الداخلية",
       settlement: "سجل المدفوعات",
     },
     labels: {
@@ -689,6 +704,12 @@ const invoicesDictionaryAr: InvoicesDictionary = {
       grandTotal: "الإجمالي",
       amountPaid: "المبلغ المسدد",
       balanceDue: "الرصيد المستحق",
+      grossIssuedAmount: "إجمالي الفاتورة الصادرة",
+      creditAdjustments: "التعديلات الدائنة الداخلية",
+      creditApplications: "الرصيد الدائن المطبق",
+      netReceivable: "صافي المبلغ المستحق",
+      settledAmount: "المدفوع / المسوى",
+      customerCredit: "رصيد دائن للعميل",
       approvedQuotationTotal: "إجمالي عرض السعر المعتمد",
       approvedBillingScopeTotal: "إجمالي نطاق الفوترة المعتمد",
       previousInvoices: "الفواتير / الدفعات السابقة",

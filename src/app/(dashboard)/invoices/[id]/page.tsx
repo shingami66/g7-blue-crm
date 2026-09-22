@@ -17,15 +17,22 @@ import {
   getInvoiceTypeLabel,
   getInvoicesDictionary,
 } from "@/lib/i18n/dictionaries/invoices";
+import { getCustomerCreditsDictionary } from "@/lib/i18n/dictionaries/customer-credits";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import type { Locale } from "@/lib/i18n/locales";
 import { UiDateRangeText, UiDateText } from "@/components/i18n/UiDateText";
 import { getInvoiceByIdResult } from "@/lib/invoices/queries";
+import {
+  getCustomerCreditAdjustmentsForInvoice,
+  getCustomerInvoiceReceivableBalance,
+  getEligibleCustomerCreditInvoices,
+} from "@/lib/customer-credits/queries";
 import { getServiceById } from "@/lib/services/queries";
 import type { QuotationItem } from "@/lib/quotations/types";
 import { IssueInvoiceAction } from "../IssueInvoiceAction";
 import { RecordPaymentAction } from "./RecordPaymentAction";
 import { EditDraftProgressInvoiceAction } from "./EditDraftProgressInvoiceAction";
+import CustomerCreditActions from "./CustomerCreditActions";
 import RecordNavigationSlot from "@/components/records/RecordNavigationSlot";
 import { RecordNavigationPlaceholder } from "@/components/records/RecordNavigation";
 import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
@@ -263,6 +270,22 @@ export default async function InvoiceDetailPage({
   }
 
   const { invoice } = invoiceResult;
+  const receivableBalance = invoice.status !== "draft"
+    ? await getCustomerInvoiceReceivableBalance(invoice.id)
+    : null;
+  const creditDictionary = getCustomerCreditsDictionary(locale);
+  const canCreateCredit = invoice.status !== "draft"
+    ? await checkPermission(INVOICE_PERMISSIONS.write)
+    : false;
+  const canSettleCredit = invoice.status !== "draft"
+    ? await checkPermission("payments:write")
+    : false;
+  const creditAdjustments = receivableBalance
+    ? await getCustomerCreditAdjustmentsForInvoice(invoice.id)
+    : [];
+  const eligibleCreditInvoices = receivableBalance && canSettleCredit && receivableBalance.customerCreditAmount > 0
+    ? await getEligibleCustomerCreditInvoices(receivableBalance.customerId, invoice.id)
+    : [];
 
   const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
@@ -273,7 +296,7 @@ export default async function InvoiceDetailPage({
     !["draft", "cancelled", "voided"].includes(invoice.status) &&
     (invoice.balance_due ?? 0) > 0 &&
     invoice.service_id !== null &&
-    (await checkPermission("payments:write"));
+    canSettleCredit;
 
   const buyer = asRecord(invoice.snapshot_buyer);
   const snapshotQuotation = asRecord(invoice.snapshot_quotation);
@@ -414,6 +437,32 @@ export default async function InvoiceDetailPage({
               )}
             </div>
           </section>
+
+          {receivableBalance && (
+            <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex items-center gap-2">
+                <Wallet size={16} className="text-primary" />
+                <h2 className="font-semibold text-primary">{dictionary.detail.sections.creditAdjustments}</h2>
+              </div>
+              <div className="p-6 space-y-4">
+                <Field label={dictionary.detail.labels.grossIssuedAmount} value={formatAmount(locale, receivableBalance.grossIssuedAmount)} dir="ltr" />
+                <Field label={dictionary.detail.labels.creditAdjustments} value={formatAmount(locale, receivableBalance.creditAdjustmentAmount)} dir="ltr" />
+                <Field label={dictionary.detail.labels.creditApplications} value={formatAmount(locale, receivableBalance.creditApplicationAmount)} dir="ltr" />
+                <Field label={dictionary.detail.labels.netReceivable} value={formatAmount(locale, receivableBalance.netReceivableAmount)} dir="ltr" />
+                <Field label={dictionary.detail.labels.settledAmount} value={formatAmount(locale, receivableBalance.settledAmount)} dir="ltr" />
+                <Field label={dictionary.detail.labels.balanceDue} value={formatAmount(locale, receivableBalance.outstandingAmount)} dir="ltr" />
+                <Field label={dictionary.detail.labels.customerCredit} value={formatAmount(locale, receivableBalance.customerCreditAmount)} dir="ltr" />
+                <CustomerCreditActions
+                  invoice={receivableBalance}
+                  creditAdjustments={creditAdjustments}
+                  eligibleInvoices={eligibleCreditInvoices}
+                  canCreateCredit={canCreateCredit}
+                  canSettleCredit={canSettleCredit}
+                  dictionary={creditDictionary}
+                />
+              </div>
+            </section>
+          )}
 
           <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex items-center gap-2">
