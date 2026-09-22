@@ -19,6 +19,7 @@ type Scenario = {
   tableData: Record<string, unknown[]>;
   permissions: Record<string, boolean>;
   maxRowsPerResponse?: number;
+  receivableResponse?: unknown;
 };
 
 let activeScenario: Scenario | null = null;
@@ -192,6 +193,31 @@ mock.module("@/lib/supabase/admin", {
   namedExports: {
     createAdminClient: () => ({
       from: (table: string) => createMockQueryBuilder(table),
+      rpc: (name: string, args: Record<string, unknown>) => {
+        if (name !== "get_accounts_receivable_report") return Promise.resolve({ data: null, error: { message: "Unknown RPC" } });
+        if (scenario().receivableResponse !== undefined) return Promise.resolve({ data: scenario().receivableResponse, error: null });
+        return Promise.resolve({
+          data: [{
+            as_of_date: args.p_as_of_date,
+            period_from: args.p_from_date,
+            period_to: args.p_to_date,
+            billed_amount: 0,
+            collected_cash_amount: 0,
+            total_outstanding: 0,
+            total_overdue: 0,
+            not_due_amount: 0,
+            ageing_1_30_amount: 0,
+            ageing_31_60_amount: 0,
+            ageing_61_90_amount: 0,
+            ageing_91_plus_amount: 0,
+            detail_total_count: 0,
+            detail_rows: [],
+            outstanding_customer_count: 0,
+            outstanding_customer_rows: [],
+          }],
+          error: null,
+        });
+      },
     }),
   },
 });
@@ -205,6 +231,7 @@ const {
   readQuotations,
   readServices,
   readPayments,
+  readAccountsReceivable,
   getReportsCenterData,
   RIYADH_OFFSET,
 } = await import("./queries.ts");
@@ -510,7 +537,63 @@ test("6. readCustomers does not filter by created_at reporting range and returns
   assert.equal(result[1].company, "Newer Customer Co");
 });
 
-test("7. getReportsCenterData returns null metrics when invoice permission is forbidden", async () => {
+test("7. W7D report adapter preserves authoritative reconciliation and redacts unavailable identities", async () => {
+  resetScenario({
+    permissions: { "customers:read": false, "services:read": false },
+    receivableResponse: [{
+      as_of_date: "2026-09-22",
+      period_from: "2026-01-01",
+      period_to: "2026-09-22",
+      billed_amount: "60000.00",
+      collected_cash_amount: "5000.00",
+      total_outstanding: "59000.00",
+      total_overdue: "59000.00",
+      not_due_amount: "0.00",
+      ageing_1_30_amount: "59000.00",
+      ageing_31_60_amount: "0.00",
+      ageing_61_90_amount: "0.00",
+      ageing_91_plus_amount: "0.00",
+      detail_total_count: 1,
+      detail_rows: [{
+        invoice_id: "invoice-24",
+        invoice_number: "INV-2026-0024",
+        customer_id: "customer-1",
+        customer_number: "CUST-1",
+        customer_name: "Hidden Customer",
+        service_id: "service-1",
+        service_number: "SVC-1",
+        service_title: "Hidden Service",
+        issue_date: "2026-09-01",
+        due_date: "2026-09-10",
+        gross_amount: "60000.00",
+        credit_adjustment_amount: "1000.00",
+        credit_application_amount: "0.00",
+        net_receivable_amount: "59000.00",
+        settled_amount: "0.00",
+        outstanding_amount: "59000.00",
+        days_past_due: 12,
+        ageing_bucket: "1_30",
+      }],
+      outstanding_customer_count: 1,
+      outstanding_customer_rows: [{ customer_id: "customer-1", customer_number: "CUST-1", customer_name: "Hidden Customer", amount: "59000.00" }],
+    }],
+  });
+
+  const report = await readAccountsReceivable({ asOf: "2026-09-22", from: "2026-01-01", to: "2026-12-31" });
+
+  assert.equal(report.asOfDate, "2026-09-22");
+  assert.equal(report.totalOutstanding, 59000);
+  assert.equal(report.collectedCashAmount, 5000);
+  assert.equal(report.rows[0].creditAdjustmentAmount, 1000);
+  assert.equal(report.rows[0].netReceivableAmount, 59000);
+  assert.equal(report.rows[0].ageingBucket, "1_30");
+  assert.equal(report.rows[0].customerName, null);
+  assert.equal(report.rows[0].serviceTitle, null);
+  assert.equal(report.outstandingCustomerCount, null);
+  assert.deepEqual(report.outstandingCustomers, []);
+});
+
+test("8. getReportsCenterData returns null metrics when invoice permission is forbidden", async () => {
   resetScenario({
     permissions: {
       "dashboard:read": true,
@@ -556,7 +639,7 @@ test("7. getReportsCenterData returns null metrics when invoice permission is fo
   assert.deepEqual(data.customerOverview.data.highestInvoicedCustomers, []);
 });
 
-test("8. getReportsCenterData computes activeCustomers when all required activity permissions are available", async () => {
+test("9. getReportsCenterData computes activeCustomers when all required activity permissions are available", async () => {
   resetScenario({
     permissions: {
       "dashboard:read": true,
@@ -588,7 +671,7 @@ test("8. getReportsCenterData computes activeCustomers when all required activit
   assert.equal(data.customerOverview.data.activeCustomers, 1);
 });
 
-test("9. getReportsCenterData returns forbidden when all salesBilling permissions are forbidden", async () => {
+test("10. getReportsCenterData returns forbidden when all salesBilling permissions are forbidden", async () => {
   resetScenario({
     permissions: {
       "dashboard:read": true,
@@ -609,7 +692,7 @@ test("9. getReportsCenterData returns forbidden when all salesBilling permission
   assert.equal(data.salesBilling.data.invoicedValue, null);
 });
 
-test("10. supplier cost reads remain isolated for asymmetric permissions", async () => {
+test("11. supplier cost reads remain isolated for asymmetric permissions", async () => {
   const cases = [
     {
       name: "allocation cost only",

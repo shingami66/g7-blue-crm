@@ -35,6 +35,7 @@ export function calculateCustomerOverview(
   periodTransactions?: {
     quotations?: ReportQuotation[] | null;
     services?: ReportService[] | null;
+    authoritativeOutstanding?: { count: number | null; rows: ReportCustomerRanking[] } | null;
   },
 ) {
   const customerById = new Map((customers ?? []).map((customer) => [customer.id, customer]));
@@ -77,7 +78,7 @@ export function calculateCustomerOverview(
 
   const invoiceRows = invoices ?? [];
   const allOutstanding =
-    invoices !== null
+    invoices !== null && customers !== null
       ? Array.from(
           invoiceRows.reduce<Map<string, number>>((totals, invoice) => {
             return totals.set(invoice.customerId, (totals.get(invoice.customerId) ?? 0) + Math.max(invoice.balanceDue, 0));
@@ -87,8 +88,10 @@ export function calculateCustomerOverview(
           .sort((left, right) => right[1] - left[1])
       : null;
 
+  const authoritativeOutstanding = periodTransactions?.authoritativeOutstanding;
+
   const allInvoiced =
-    invoices !== null
+    invoices !== null && customers !== null
       ? Array.from(
           invoiceRows.reduce<Map<string, number>>((totals, invoice) => {
             return totals.set(invoice.customerId, (totals.get(invoice.customerId) ?? 0) + invoice.grandTotal);
@@ -100,9 +103,19 @@ export function calculateCustomerOverview(
 
   return {
     activeCustomers,
-    outstandingCustomersCount: allOutstanding !== null ? allOutstanding.length : null,
+    outstandingCustomersCount:
+      authoritativeOutstanding !== undefined
+        ? authoritativeOutstanding?.count ?? null
+        : allOutstanding !== null
+          ? allOutstanding.length
+          : null,
     highestInvoicedCustomersCount: allInvoiced !== null ? allInvoiced.length : null,
-    outstandingCustomers: allOutstanding !== null ? allOutstanding.slice(0, 10).map(toCustomerRanking) : [],
+    outstandingCustomers:
+      authoritativeOutstanding !== undefined
+        ? authoritativeOutstanding?.rows ?? []
+        : allOutstanding !== null
+          ? allOutstanding.slice(0, 10).map(toCustomerRanking)
+          : [],
     highestInvoicedCustomers: allInvoiced !== null ? allInvoiced.slice(0, 10).map(toCustomerRanking) : [],
     recentPayments: payments !== null ? payments.slice(0, 10) : [],
   };

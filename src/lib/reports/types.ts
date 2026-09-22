@@ -11,7 +11,7 @@ export type ReportsSection<T> = {
   data: T;
 };
 
-export type ReportFilters = { year?: BusinessYear; from?: string; to?: string };
+export type ReportFilters = { year?: BusinessYear; from?: string; to?: string; asOf?: string };
 
 export type ReportQuotation = {
   id: string;
@@ -68,6 +68,46 @@ export type ReportPayment = {
   date: string;
 };
 
+export type ReportReceivableRow = {
+  invoiceId: string;
+  invoiceNumber: string;
+  customerId: string;
+  customerNumber: string | null;
+  customerName: string | null;
+  serviceId: string | null;
+  serviceNumber: string | null;
+  serviceTitle: string | null;
+  issueDate: string;
+  dueDate: string;
+  grossAmount: number;
+  creditAdjustmentAmount: number;
+  creditApplicationAmount: number;
+  netReceivableAmount: number;
+  settledAmount: number;
+  outstandingAmount: number;
+  daysPastDue: number;
+  ageingBucket: "not_due" | "1_30" | "31_60" | "61_90" | "91_plus";
+};
+
+export type ReportAccountsReceivable = {
+  asOfDate: string;
+  periodFrom: string | null;
+  periodTo: string | null;
+  billedAmount: number;
+  collectedCashAmount: number;
+  totalOutstanding: number;
+  totalOverdue: number;
+  notDueAmount: number;
+  ageing1To30Amount: number;
+  ageing31To60Amount: number;
+  ageing61To90Amount: number;
+  ageing91PlusAmount: number;
+  detailTotalCount: number;
+  rows: ReportReceivableRow[];
+  outstandingCustomerCount: number | null;
+  outstandingCustomers: ReportCustomerRanking[];
+};
+
 export type ReportsCenterData = {
   filters: ReportFilters;
   salesBilling: ReportsSection<{
@@ -82,6 +122,7 @@ export type ReportsCenterData = {
     depositInvoiceCount: number | null;
     finalInvoiceCount: number | null;
   }>;
+  accountsReceivable: ReportsSection<ReportAccountsReceivable>;
   serviceOperations: ReportsSection<{
     services: ReportService[];
     statusCounts: Record<ServiceStatus, number>;

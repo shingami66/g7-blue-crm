@@ -3,10 +3,13 @@ import "server-only";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getBusinessYearBounds, getServiceBusinessYearFilter } from "@/lib/business-year";
+import { getCurrentRiyadhDate } from "./filters";
 import type { ServiceStatus } from "@/types/service";
 import { calculateCustomerOverview, calculateSalesBilling, calculateServiceOperations } from "./calculations";
 import type {
+  ReportAccountsReceivable,
   ReportCustomer,
+  ReportCustomerRanking,
   ReportFilters,
   ReportInvoice,
   ReportPayment,
@@ -44,6 +47,7 @@ function loadEmpty<T>(): T {
 }
 
 export const REPORT_PAGE_SIZE = 500;
+export const ACCOUNTS_RECEIVABLE_PAGE_SIZE = 50;
 
 export function getNextCalendarDay(dateStr: string): string {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -60,9 +64,9 @@ export function formatRiyadhTimestampBoundary(dateStr: string, boundary: "start"
 
 export function dateFilter<
   T extends {
-    gte: (column: any, value: any) => T;
-    lte: (column: any, value: any) => T;
-    lt: (column: any, value: any) => T;
+    gte: (column: string, value: string) => T;
+    lte: (column: string, value: string) => T;
+    lt: (column: string, value: string) => T;
   },
 >(query: T, filters: ReportFilters, column = "created_at", includeYear = true) {
   let filtered = query;
@@ -92,9 +96,9 @@ export function dateFilter<
 
 export function serviceDateFilter<
   T extends {
-    gte: (column: any, value: any) => T;
-    lte: (column: any, value: any) => T;
-    or: (filters: any) => T;
+    gte: (column: string, value: string) => T;
+    lte: (column: string, value: string) => T;
+    or: (filters: string) => T;
   },
 >(query: T, filters: ReportFilters) {
   let filtered = query;
@@ -106,8 +110,8 @@ export function serviceDateFilter<
 
 export function applyLiveInvoiceFilter<
   T extends {
-    eq: (column: any, value: any) => T;
-    not: (column: any, operator: any, value: any) => T;
+    eq: (column: string, value: string | boolean) => T;
+    not: (column: string, operator: string, value: string | null) => T;
   },
 >(query: T): T {
   return query
@@ -248,6 +252,91 @@ export async function readPayments(filters: ReportFilters): Promise<ReportPaymen
   }));
 }
 
+function optionalText(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function receivableBucket(value: unknown): ReportAccountsReceivable["rows"][number]["ageingBucket"] {
+  return value === "1_30" || value === "31_60" || value === "61_90" || value === "91_plus" ? value : "not_due";
+}
+
+export async function readAccountsReceivable(filters: ReportFilters): Promise<ReportAccountsReceivable> {
+  const asOf = filters.asOf ?? getCurrentRiyadhDate();
+  const yearBounds = filters.year ? getBusinessYearBounds(filters.year) : null;
+  const periodFrom = filters.from ?? yearBounds?.start ?? null;
+  const periodTo = filters.to ?? yearBounds?.end ?? null;
+  const canReadCustomerIdentity = await checkPermission("customers:read");
+  const canReadServiceIdentity = await checkPermission("services:read");
+  const admin = createAdminClient() as unknown as {
+    rpc: (
+      name: string,
+      args: Record<string, unknown>,
+    ) => PromiseLike<{ data: unknown; error: { message?: string } | null }>;
+  };
+  const { data, error } = await admin.rpc("get_accounts_receivable_report", {
+    p_as_of_date: asOf,
+    p_from_date: periodFrom,
+    p_to_date: periodTo,
+    p_page_size: ACCOUNTS_RECEIVABLE_PAGE_SIZE,
+    p_page_offset: 0,
+  });
+  if (error) throw new Error(error.message ?? "Accounts receivable report failed");
+  const result = Array.isArray(data) ? data[0] : data;
+  if (!result || typeof result !== "object") throw new Error("Accounts receivable report returned no row");
+  const row = result as Record<string, unknown>;
+  if (typeof row.as_of_date !== "string") throw new Error("Accounts receivable report returned no as-of date");
+  const rawDetails = Array.isArray(row.detail_rows) ? row.detail_rows : [];
+  const rows = rawDetails.filter((value): value is Record<string, unknown> => Boolean(value && typeof value === "object")).map((detail) => ({
+    invoiceId: String(detail.invoice_id),
+    invoiceNumber: String(detail.invoice_number),
+    customerId: String(detail.customer_id),
+    customerNumber: canReadCustomerIdentity ? optionalText(detail.customer_number) : null,
+    customerName: canReadCustomerIdentity ? optionalText(detail.customer_name) : null,
+    serviceId: optionalText(detail.service_id),
+    serviceNumber: canReadServiceIdentity ? optionalText(detail.service_number) : null,
+    serviceTitle: canReadServiceIdentity ? optionalText(detail.service_title) : null,
+    issueDate: String(detail.issue_date),
+    dueDate: String(detail.due_date),
+    grossAmount: numberValue(detail.gross_amount),
+    creditAdjustmentAmount: numberValue(detail.credit_adjustment_amount),
+    creditApplicationAmount: numberValue(detail.credit_application_amount),
+    netReceivableAmount: numberValue(detail.net_receivable_amount),
+    settledAmount: numberValue(detail.settled_amount),
+    outstandingAmount: numberValue(detail.outstanding_amount),
+    daysPastDue: numberValue(detail.days_past_due),
+    ageingBucket: receivableBucket(detail.ageing_bucket),
+  }));
+  const rawCustomers = Array.isArray(row.outstanding_customer_rows) ? row.outstanding_customer_rows : [];
+  const outstandingCustomers = canReadCustomerIdentity
+    ? rawCustomers
+        .filter((value): value is Record<string, unknown> => Boolean(value && typeof value === "object"))
+        .map((customer) => ({
+          customerId: String(customer.customer_id),
+          customerNumber: optionalText(customer.customer_number),
+          company: optionalText(customer.customer_name),
+          amount: numberValue(customer.amount),
+        } satisfies ReportCustomerRanking))
+    : [];
+  return {
+    asOfDate: row.as_of_date,
+    periodFrom: optionalText(row.period_from),
+    periodTo: optionalText(row.period_to),
+    billedAmount: numberValue(row.billed_amount),
+    collectedCashAmount: numberValue(row.collected_cash_amount),
+    totalOutstanding: numberValue(row.total_outstanding),
+    totalOverdue: numberValue(row.total_overdue),
+    notDueAmount: numberValue(row.not_due_amount),
+    ageing1To30Amount: numberValue(row.ageing_1_30_amount),
+    ageing31To60Amount: numberValue(row.ageing_31_60_amount),
+    ageing61To90Amount: numberValue(row.ageing_61_90_amount),
+    ageing91PlusAmount: numberValue(row.ageing_91_plus_amount),
+    detailTotalCount: numberValue(row.detail_total_count),
+    rows,
+    outstandingCustomerCount: canReadCustomerIdentity ? numberValue(row.outstanding_customer_count) : null,
+    outstandingCustomers,
+  };
+}
+
 export async function readSupplierOperations(
   filters: ReportFilters,
   canReadAllocationCost: boolean,
@@ -313,10 +402,11 @@ export async function getReportsCenterData(filters: ReportFilters = {}): Promise
     return section;
   })();
 
-  const [supplierSection, quotations, invoices, services, customers, payments] = await Promise.all([
+  const [supplierSection, quotations, invoices, receivables, services, customers, payments] = await Promise.all([
     supplierSectionPromise,
     readSection("quotations:read", () => readQuotations(filters)),
     readSection("invoices:read", () => readInvoices(filters)),
+    readSection("invoices:read", () => readAccountsReceivable(filters)),
     readSection("services:read", () => readServices(filters)),
     readSection("customers:read", () => readCustomers(filters)),
     readSection("payments:read", () => readPayments(filters)),
@@ -324,15 +414,25 @@ export async function getReportsCenterData(filters: ReportFilters = {}): Promise
 
   const quotationRows = quotations.status === "ready" ? quotations.data : null;
   const invoiceRows = invoices.status === "ready" ? invoices.data : null;
+  const receivableData = receivables.status === "ready" ? receivables.data : null;
   const serviceRows = services.status === "ready" ? services.data : null;
   const customerRows = customers.status === "ready" ? customers.data : null;
   const paymentRows = payments.status === "ready" ? payments.data : null;
 
-  const billingSummary = calculateSalesBilling(quotationRows, invoiceRows);
+  const billingSummaryBase = calculateSalesBilling(quotationRows, invoiceRows);
+  const billingSummary = {
+    ...billingSummaryBase,
+    invoicedValue: receivableData?.billedAmount ?? null,
+    collectedValue: receivableData?.collectedCashAmount ?? null,
+    outstandingValue: receivableData?.totalOutstanding ?? null,
+  };
   const operationsSummary = calculateServiceOperations(serviceRows ?? [], new Date().toISOString().slice(0, 10), filters);
   const customerSummary = calculateCustomerOverview(customerRows, invoiceRows, paymentRows, {
     quotations: quotationRows,
     services: serviceRows,
+    authoritativeOutstanding: receivableData
+      ? { count: receivableData.outstandingCustomerCount, rows: receivableData.outstandingCustomers }
+      : null,
   });
   const salesBillingStatus: ReportsSectionStatus =
     quotations.status === "error" && invoices.status === "error"
@@ -362,6 +462,7 @@ export async function getReportsCenterData(filters: ReportFilters = {}): Promise
         invoices: invoiceRows ?? [],
       },
     },
+    accountsReceivable: receivables,
     serviceOperations: {
       status: services.status,
       data: {
