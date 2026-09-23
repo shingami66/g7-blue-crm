@@ -9,6 +9,7 @@ import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedSt
 import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import { safeRecordReturnTo } from "@/lib/record-navigation/queries";
 import EventCostingWorkspace from "./EventCostingWorkspace";
 
 export const dynamic = "force-dynamic";
@@ -18,13 +19,14 @@ export default async function EventCostingPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ result?: string; error?: string }>;
+  searchParams: Promise<{ result?: string; error?: string; returnTo?: string | string[] }>;
 }) {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getServicesDictionary(locale);
   const sharedStates = getSharedUiStates(locale);
   const { id } = await params;
   const query = await searchParams;
+  const returnTo = safeRecordReturnTo(query.returnTo, `/services/${id}`);
 
   try {
     await requirePermission("services:read");
@@ -63,5 +65,5 @@ export default async function EventCostingPage({
       : undefined;
   const errorMessage = query.error ? dictionary.eventCosting.forms.errors[query.error] ?? dictionary.eventCosting.costClose.error : undefined;
 
-  return <EventCostingWorkspace service={service} model={costingResult.data} dictionary={dictionary} resultMessage={resultMessage} errorMessage={errorMessage} closeStatus={closeResult.data} canCloseEventCost={canCloseEventCost} canReopenEventCost={canReopenEventCost} />;
+  return <EventCostingWorkspace service={service} model={costingResult.data} dictionary={dictionary} returnTo={returnTo} resultMessage={resultMessage} errorMessage={errorMessage} closeStatus={closeResult.data} canCloseEventCost={canCloseEventCost} canReopenEventCost={canReopenEventCost} />;
 }

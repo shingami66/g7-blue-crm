@@ -1,17 +1,19 @@
-import Link from "next/link";
-import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import { formatSarAmount, formatUiDate, formatUiNumber } from "@/lib/i18n/formatting";
 import { isolateBidiText, isolateLtrText } from "@/lib/i18n/bidi";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getProcurementCommitmentDictionary } from "@/lib/i18n/dictionaries/procurement-commitments";
 import type { EventCostingModel } from "@/lib/event-costing/types";
 import { approveEventCostBudget, recordEventCostEtc } from "@/lib/event-costing/actions";
 import type { EventCostCloseStatus } from "@/lib/event-cost-close/types";
 import type { Service } from "@/types/service";
+import RecordBackButton from "@/components/navigation/RecordBackButton";
 import EventCostClosePanel from "./EventCostClosePanel";
 
 export default function EventCostingWorkspace({
   service,
   model,
   dictionary,
+  returnTo,
   resultMessage,
   errorMessage,
   closeStatus,
@@ -21,6 +23,7 @@ export default function EventCostingWorkspace({
   service: Service;
   model: EventCostingModel;
   dictionary: ServicesDictionary;
+  returnTo: string;
   resultMessage?: string;
   errorMessage?: string;
   closeStatus: EventCostCloseStatus;
@@ -28,15 +31,44 @@ export default function EventCostingWorkspace({
   canReopenEventCost: boolean;
 }) {
   const copy = dictionary.eventCosting;
+  const commitmentCopy = getProcurementCommitmentDictionary(dictionary.locale);
   const budgetAction = approveEventCostBudget.bind(null, service.id);
   const etcAction = recordEventCostEtc.bind(null, service.id);
+  const formatDate = (value: string) => formatUiDate(dictionary.locale, value, {
+    timeZone: "Asia/Riyadh",
+    year: "numeric",
+    month: dictionary.locale === "ar" ? "long" : "short",
+    day: "numeric",
+  });
+  const dateDetails = (label: string, value: string) => value
+    ? [{ text: `${label}: ${formatDate(value)}` }]
+    : [];
+  const commitmentRows = model.drill.commitments.map((row) => {
+    const sourceLabel = row.commitmentSource ? commitmentCopy.sources[row.commitmentSource] : null;
+    const reference = row.quotationReference ?? row.sourceReference;
+    const statusLabel = row.status in commitmentCopy.statuses
+      ? commitmentCopy.statuses[row.status as keyof typeof commitmentCopy.statuses]
+      : null;
+    const details: DrillMetadataPart[] = [];
+    if (row.supplierName && sourceLabel) details.push({ text: sourceLabel });
+    if (reference) details.push({ text: reference, direction: "ltr" });
+    if (statusLabel) details.push({ text: statusLabel });
+    const contextDate = row.quotationReference ? row.approvedAt : row.quotationDate ?? row.approvedAt;
+    const contextDateLabel = row.quotationDate && !row.quotationReference ? copy.drill.dateLabel : copy.drill.approvedOn;
+    details.push(...dateDetails(contextDateLabel, contextDate));
+    return {
+      label: row.supplierName ?? sourceLabel ?? commitmentCopy.fields.source,
+      metadata: details,
+      value: money(dictionary, row.authorizedAmount, copy.unavailable),
+    };
+  });
 
   return (
     <div dir={dictionary.locale === "ar" ? "rtl" : "ltr"} className="flex min-w-0 max-w-full flex-col gap-5 pb-12">
       <header className="rounded-xl border border-surface-variant bg-surface-container-lowest p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <Link href={`/services/${service.id}`} className="text-xs font-semibold text-primary hover:underline">{copy.backToService}</Link>
+        <div className="flex flex-wrap items-start gap-3">
+          <RecordBackButton href={returnTo} locale={dictionary.locale} ariaLabel={copy.backToService} />
+          <div className="min-w-0 flex-1">
             <h1 className="mt-2 text-xl font-bold text-on-surface">{copy.workspaceTitle}</h1>
             <p className="mt-1 text-sm text-on-surface-variant">{copy.workspaceSubtitle}</p>
           </div>
@@ -110,13 +142,53 @@ export default function EventCostingWorkspace({
         </form>
       </section>}
 
-      <DrillSection title={copy.drill.budgetVersions} locale={dictionary.locale} rows={model.drill.budgetVersions.map((row) => ({ label: `${copy.forms.version} ${row.version}`, value: money(dictionary, row.approvedBudgetCost, copy.unavailable) }))} />
-      <DrillSection title={copy.drill.commitments} locale={dictionary.locale} rows={model.drill.commitments.map((row) => ({ label: row.id, value: money(dictionary, row.authorizedAmount, copy.unavailable), labelDirection: "ltr" as const }))} />
-      <DrillSection title={copy.drill.supplierBills} locale={dictionary.locale} rows={model.drill.supplierBills.map((row) => ({ label: row.billNumber, value: money(dictionary, row.totalAmount, copy.unavailable), labelDirection: "ltr" as const }))} />
-      <DrillSection title={copy.drill.eventExpenses} locale={dictionary.locale} rows={model.drill.eventExpenses.map((row) => ({ label: row.expenseNumber, value: money(dictionary, row.amount, copy.unavailable), labelDirection: "ltr" as const }))} />
-      <DrillSection title={copy.drill.supplierPayments} locale={dictionary.locale} rows={model.drill.supplierPayments.map((row) => ({ label: row.paymentNumber, value: money(dictionary, row.amount, copy.unavailable), labelDirection: "ltr" as const }))} />
-      <DrillSection title={copy.drill.advanceAllocations} locale={dictionary.locale} rows={model.drill.advanceAllocations.map((row) => ({ label: row.allocationNumber, value: money(dictionary, row.amount, copy.unavailable), labelDirection: "ltr" as const }))} />
-      <DrillSection title={copy.drill.etcVersions} locale={dictionary.locale} rows={model.drill.etcVersions.map((row) => ({ label: `${copy.forms.version} ${row.version}`, value: money(dictionary, row.etcAmount, copy.unavailable) }))} />
+      <DrillSection title={copy.drill.budgetVersions} locale={dictionary.locale} emptyLabel={copy.drill.empty} rows={model.drill.budgetVersions.map((row) => ({
+        label: `${copy.forms.version} ${formatUiNumber(dictionary.locale, row.version)}`,
+        metadata: [
+          ...dateDetails(copy.drill.approvedOn, row.approvedAt),
+          ...(row.supersededAt ? dateDetails(copy.drill.supersededOn, row.supersededAt) : []),
+        ],
+        value: money(dictionary, row.approvedBudgetCost, copy.unavailable),
+      }))} />
+      <DrillSection title={copy.drill.commitments} locale={dictionary.locale} emptyLabel={copy.drill.empty} rows={commitmentRows} />
+      <DrillSection title={copy.drill.supplierBills} locale={dictionary.locale} emptyLabel={copy.drill.empty} rows={model.drill.supplierBills.map((row) => ({
+        label: row.billNumber,
+        labelDirection: "ltr" as const,
+        metadata: dateDetails(copy.drill.dateLabel, row.invoiceDate),
+        value: money(dictionary, row.totalAmount, copy.unavailable),
+      }))} />
+      <DrillSection title={copy.drill.eventExpenses} locale={dictionary.locale} emptyLabel={copy.drill.empty} rows={model.drill.eventExpenses.map((row) => ({
+        label: row.expenseNumber,
+        labelDirection: "ltr" as const,
+        metadata: dateDetails(copy.drill.dateLabel, row.expenseDate),
+        value: money(dictionary, row.amount, copy.unavailable),
+      }))} />
+      <DrillSection title={copy.drill.supplierPayments} locale={dictionary.locale} emptyLabel={copy.drill.empty} rows={model.drill.supplierPayments.map((row) => ({
+        label: row.paymentNumber,
+        labelDirection: "ltr" as const,
+        metadata: [
+          ...dateDetails(copy.drill.dateLabel, row.paymentDate),
+          ...(row.reversed ? [{ text: copy.drill.reversed }] : []),
+        ],
+        value: money(dictionary, row.amount, copy.unavailable),
+      }))} />
+      <DrillSection title={copy.drill.advanceAllocations} locale={dictionary.locale} emptyLabel={copy.drill.empty} rows={model.drill.advanceAllocations.map((row) => ({
+        label: row.allocationNumber,
+        labelDirection: "ltr" as const,
+        metadata: [
+          ...dateDetails(copy.drill.dateLabel, row.allocatedAt),
+          ...(row.reversed ? [{ text: copy.drill.reversed }] : []),
+        ],
+        value: money(dictionary, row.amount, copy.unavailable),
+      }))} />
+      <DrillSection title={copy.drill.etcVersions} locale={dictionary.locale} emptyLabel={copy.drill.empty} rows={model.drill.etcVersions.map((row) => ({
+        label: `${copy.forms.version} ${formatUiNumber(dictionary.locale, row.version)}`,
+        metadata: [
+          ...dateDetails(copy.drill.forecastDate, row.forecastDate),
+          ...(row.supersededAt ? dateDetails(copy.drill.supersededOn, row.supersededAt) : []),
+        ],
+        value: money(dictionary, row.etcAmount, copy.unavailable),
+      }))} />
       <p className="text-xs text-on-surface-variant">{copy.boundedDisclosure} {formatUiNumber(dictionary.locale, model.sourceCounts.supplierBillsApproved + model.sourceCounts.eventExpensesApproved)}.</p>
     </div>
   );
@@ -130,7 +202,7 @@ function Metric({ label, value, accent = false }: { label: string; value: string
   return (
     <div className="min-w-0">
       <dt className="text-xs font-semibold text-on-surface-variant">{label}</dt>
-      <dd dir="ltr" className={`mt-1 break-words font-mono text-sm font-semibold tabular-nums ${accent ? "text-primary" : "text-on-surface"}`}>{value}</dd>
+      <dd className={`mt-1 break-words text-start font-mono text-sm font-semibold tabular-nums ${accent ? "text-primary" : "text-on-surface"}`}>{value}</dd>
     </div>
   );
 }
@@ -144,23 +216,40 @@ function Input({ name, label, type = "text", inputMode, defaultValue }: { name: 
   );
 }
 
-function DrillSection({ title, rows, locale }: {
+type DrillMetadataPart = { text: string; direction?: "auto" | "ltr" };
+
+function DrillSection({ title, rows, locale, emptyLabel }: {
   title: string;
-  rows: Array<{ label: string; value: string; labelDirection?: "ltr" | "rtl" }>;
+  rows: Array<{ label: string; value: string; labelDirection?: "ltr" | "rtl"; metadata?: DrillMetadataPart[] }>;
   locale: ServicesDictionary["locale"];
+  emptyLabel: string;
 }) {
   return (
     <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-5">
       <h2 className="font-semibold text-primary">{title}</h2>
-      {rows.length === 0 ? <p className="mt-3 text-sm text-on-surface-variant">—</p> : (
+      {rows.length === 0 ? <p className="mt-3 text-sm text-on-surface-variant">{emptyLabel}</p> : (
         <ul className="mt-3 grid gap-2 text-sm text-on-surface-variant">
           {rows.map((row, index) => (
             <li key={`${index}-${row.label}`} className="rounded-lg border border-outline-variant/60 px-3 py-2">
-              <div dir="ltr" className="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
-                <span dir={row.labelDirection ?? (locale === "ar" ? "rtl" : "ltr")} className={`min-w-0 break-all ${row.labelDirection === "ltr" ? "font-mono" : ""}`}>
+              <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-x-4">
+                <div className="min-w-0">
+                  <span dir={row.labelDirection ?? (locale === "ar" ? "rtl" : "ltr")} className={`block min-w-0 break-words ${row.labelDirection === "ltr" ? "font-mono" : ""}`}>
                   {row.labelDirection === "ltr" ? isolateLtrText(row.label) : row.label}
-                </span>
-                <span dir="ltr" className="shrink-0 whitespace-nowrap font-mono tabular-nums">{row.value}</span>
+                  </span>
+                  {!!row.metadata?.length && (
+                    <p className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-on-surface-variant">
+                      {row.metadata.map((part, partIndex) => (
+                        <span key={`${partIndex}-${part.text}`} className="inline-flex min-w-0 items-baseline gap-1">
+                          {partIndex > 0 && <span aria-hidden="true">·</span>}
+                          <span dir={part.direction ?? "auto"} className={part.direction === "ltr" ? "font-mono break-words" : "break-words"}>
+                            {part.direction === "ltr" ? isolateLtrText(part.text) : part.text}
+                          </span>
+                        </span>
+                      ))}
+                    </p>
+                  )}
+                </div>
+                <span dir="ltr" className="self-start whitespace-nowrap font-mono tabular-nums sm:shrink-0">{row.value}</span>
               </div>
             </li>
           ))}

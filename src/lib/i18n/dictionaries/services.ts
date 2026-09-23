@@ -882,6 +882,12 @@ export interface ServicesDictionary {
       supplierPayments: string;
       advanceAllocations: string;
       etcVersions: string;
+      empty: string;
+      dateLabel: string;
+      approvedOn: string;
+      forecastDate: string;
+      supersededOn: string;
+      reversed: string;
     };
     boundedDisclosure: string;
     costClose: {
@@ -2470,6 +2476,12 @@ const servicesDictionaryEn: ServicesDictionary = {
       supplierPayments: "Supplier Payment Drill",
       advanceAllocations: "Supplier Advance Allocation Drill",
       etcVersions: "ETC Versions",
+      empty: "No records are available.",
+      dateLabel: "Date",
+      approvedOn: "Approved",
+      forecastDate: "Forecast date",
+      supersededOn: "Superseded",
+      reversed: "Reversed",
     },
     boundedDisclosure: "Source drill is bounded to the latest records shown; totals are aggregated server-side",
     costClose: {
@@ -4288,6 +4300,12 @@ const servicesDictionaryAr: ServicesDictionary = {
       supplierPayments: "تفاصيل مدفوعات الموردين",
       advanceAllocations: "تفاصيل تخصيص دفعات الموردين المقدمة",
       etcVersions: "إصدارات التكلفة المتبقية المتوقعة",
+      empty: "لا توجد سجلات متاحة.",
+      dateLabel: "التاريخ",
+      approvedOn: "تاريخ الاعتماد",
+      forecastDate: "تاريخ التوقع",
+      supersededOn: "تاريخ الاستبدال",
+      reversed: "معكوس",
     },
     boundedDisclosure: "تفاصيل المصادر محدودة بالسجلات الأحدث المعروضة؛ تُجمع الإجماليات على الخادم",
     costClose: {

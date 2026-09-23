@@ -1,3 +1,5 @@
+import type { EventCostingCommitmentSource } from "./commitment-metadata";
+
 export type EventCostingCompleteness = "COMPLETE" | "PARTIAL" | "UNAVAILABLE";
 
 export type EventCostingReasonCode =
@@ -30,6 +32,11 @@ export interface EventCostingBudgetVersion {
 
 export interface EventCostingCommitmentDrill {
   id: string;
+  commitmentSource: EventCostingCommitmentSource | null;
+  supplierName: string | null;
+  sourceReference: string | null;
+  quotationReference: string | null;
+  quotationDate: string | null;
   authorizedAmount: number;
   acceptedAmount: number;
   pendingAmount: number;

@@ -4,6 +4,7 @@ import { requirePermission } from "@/lib/auth/permissions";
 import { parseAuthoritativeMoney } from "@/lib/invoices/money";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentRiyadhDate } from "@/lib/reports/filters";
+import { mapEventCostingCommitmentMetadata } from "./commitment-metadata";
 import { getEventCostingUnavailableReason, parseForecastMargin } from "./model";
 import type {
   EventCostingBudgetVersion,
@@ -59,6 +60,34 @@ function rawRows(value: unknown): RawEventCosting[] {
     : [];
 }
 
+async function loadCommitmentPresentationMetadata(
+  client: ReturnType<typeof eventCostingClient>,
+  serviceId: string,
+  commitmentIds: string[],
+) {
+  const ids = Array.from(new Set(commitmentIds.filter(Boolean))).slice(0, 50);
+  if (ids.length === 0) return new Map();
+
+  const { data, error } = await client
+    .from("approved_commitments")
+    .select(`
+      id,
+      commitment_source,
+      source_reference,
+      supplier:suppliers!approved_commitments_supplier_id_fkey(name,legal_name),
+      quotation:supplier_quotations!approved_commitments_supplier_quotation_fkey(supplier_reference,quotation_date)
+    `)
+    .eq("service_id", serviceId)
+    .in("id", ids)
+    .limit(50);
+
+  if (error) {
+    console.error("[getEventCostingResult] Commitment presentation metadata unavailable:", error.message);
+    return new Map();
+  }
+  return mapEventCostingCommitmentMetadata(data);
+}
+
 function mapModel(raw: RawEventCosting): EventCostingModel {
   const budget = typeof raw.budget === "object" && raw.budget !== null
     ? raw.budget as RawEventCosting
@@ -87,6 +116,11 @@ function mapModel(raw: RawEventCosting): EventCostingModel {
   }));
   const commitments: EventCostingCommitmentDrill[] = rawRows(drill.commitments).map((row) => ({
     id: text(row.id),
+    commitmentSource: null,
+    supplierName: null,
+    sourceReference: null,
+    quotationReference: null,
+    quotationDate: null,
     authorizedAmount: requiredMoney(row.authorized_amount, "commitment_authorized"),
     acceptedAmount: requiredMoney(row.accepted_amount, "commitment_accepted"),
     pendingAmount: requiredMoney(row.pending_amount, "commitment_pending"),
@@ -185,7 +219,8 @@ export async function getEventCostingResult(
   await requirePermission("supplier_costing:read");
   if (!serviceId) return { status: "error", error: "event_costing_service_required" };
 
-  const { data, error } = await eventCostingClient().rpc("get_event_costing", {
+  const client = eventCostingClient();
+  const { data, error } = await client.rpc("get_event_costing", {
     p_service_id: serviceId,
     p_as_of_date: asOfDate,
   });
@@ -204,5 +239,15 @@ export async function getEventCostingResult(
   if (model.completeness.reasonCodes.includes("service_not_found")) {
     return { status: "error", error: "service_not_found" };
   }
-  return { status: "success", data: model };
+
+  const commitmentMetadata = await loadCommitmentPresentationMetadata(
+    client,
+    serviceId,
+    model.drill.commitments.map((row) => row.id),
+  );
+  const commitments = model.drill.commitments.map((row) => ({
+    ...row,
+    ...(commitmentMetadata.get(row.id) ?? {}),
+  }));
+  return { status: "success", data: { ...model, drill: { ...model.drill, commitments } } };
 }
