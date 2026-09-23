@@ -1,6 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mapEventCostingCommitmentMetadata } from "./commitment-metadata.ts";
+import {
+  getEventCostingCommitmentDateContext,
+  mapEventCostingCommitmentMetadata,
+} from "./commitment-metadata.ts";
+
+test("commitment drill prefers the quotation date and labels approval-date fallback", () => {
+  assert.deepEqual(
+    getEventCostingCommitmentDateContext("2026-09-18", "2026-09-20"),
+    { date: "2026-09-18", kind: "quotation" },
+  );
+  assert.deepEqual(
+    getEventCostingCommitmentDateContext(null, "2026-09-20"),
+    { date: "2026-09-20", kind: "approval" },
+  );
+});
 
 test("commitment presentation metadata maps supplier and quotation business context", () => {
   const metadata = mapEventCostingCommitmentMetadata([{

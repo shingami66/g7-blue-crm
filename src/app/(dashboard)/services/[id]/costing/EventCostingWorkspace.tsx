@@ -3,6 +3,7 @@ import { isolateBidiText, isolateLtrText } from "@/lib/i18n/bidi";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { getProcurementCommitmentDictionary } from "@/lib/i18n/dictionaries/procurement-commitments";
 import type { EventCostingModel } from "@/lib/event-costing/types";
+import { getEventCostingCommitmentDateContext } from "@/lib/event-costing/commitment-metadata";
 import { approveEventCostBudget, recordEventCostEtc } from "@/lib/event-costing/actions";
 import type { EventCostCloseStatus } from "@/lib/event-cost-close/types";
 import type { Service } from "@/types/service";
@@ -40,7 +41,7 @@ export default function EventCostingWorkspace({
     month: dictionary.locale === "ar" ? "long" : "short",
     day: "numeric",
   });
-  const dateDetails = (label: string, value: string) => value
+  const dateDetails = (label: string, value: string | null) => value
     ? [{ text: `${label}: ${formatDate(value)}` }]
     : [];
   const commitmentRows = model.drill.commitments.map((row) => {
@@ -53,9 +54,9 @@ export default function EventCostingWorkspace({
     if (row.supplierName && sourceLabel) details.push({ text: sourceLabel });
     if (reference) details.push({ text: reference, direction: "ltr" });
     if (statusLabel) details.push({ text: statusLabel });
-    const contextDate = row.quotationReference ? row.approvedAt : row.quotationDate ?? row.approvedAt;
-    const contextDateLabel = row.quotationDate && !row.quotationReference ? copy.drill.dateLabel : copy.drill.approvedOn;
-    details.push(...dateDetails(contextDateLabel, contextDate));
+    const contextDate = getEventCostingCommitmentDateContext(row.quotationDate, row.approvedAt);
+    const contextDateLabel = contextDate.kind === "quotation" ? copy.drill.quotationDate : copy.drill.approvedOn;
+    details.push(...dateDetails(contextDateLabel, contextDate.date));
     return {
       label: row.supplierName ?? sourceLabel ?? commitmentCopy.fields.source,
       metadata: details,

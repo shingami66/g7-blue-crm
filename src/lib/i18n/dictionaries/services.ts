@@ -884,6 +884,7 @@ export interface ServicesDictionary {
       etcVersions: string;
       empty: string;
       dateLabel: string;
+      quotationDate: string;
       approvedOn: string;
       forecastDate: string;
       supersededOn: string;
@@ -2478,6 +2479,7 @@ const servicesDictionaryEn: ServicesDictionary = {
       etcVersions: "ETC Versions",
       empty: "No records are available.",
       dateLabel: "Date",
+      quotationDate: "Quotation date",
       approvedOn: "Approved",
       forecastDate: "Forecast date",
       supersededOn: "Superseded",
@@ -4302,6 +4304,7 @@ const servicesDictionaryAr: ServicesDictionary = {
       etcVersions: "إصدارات التكلفة المتبقية المتوقعة",
       empty: "لا توجد سجلات متاحة.",
       dateLabel: "التاريخ",
+      quotationDate: "تاريخ عرض السعر",
       approvedOn: "تاريخ الاعتماد",
       forecastDate: "تاريخ التوقع",
       supersededOn: "تاريخ الاستبدال",

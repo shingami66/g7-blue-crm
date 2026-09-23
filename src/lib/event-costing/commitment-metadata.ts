@@ -15,6 +15,20 @@ export interface EventCostingCommitmentMetadata {
   quotationDate: string | null;
 }
 
+export type EventCostingCommitmentDateContext = {
+  date: string | null;
+  kind: "quotation" | "approval";
+};
+
+export function getEventCostingCommitmentDateContext(
+  quotationDate: string | null,
+  approvedAt: string | null,
+): EventCostingCommitmentDateContext {
+  return quotationDate
+    ? { date: quotationDate, kind: "quotation" }
+    : { date: approvedAt, kind: "approval" };
+}
+
 type RawMetadataRow = Record<string, unknown>;
 
 function asRecord(value: unknown): RawMetadataRow | null {
