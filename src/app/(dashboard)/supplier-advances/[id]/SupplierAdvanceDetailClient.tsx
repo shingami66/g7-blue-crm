@@ -14,12 +14,13 @@ import {
   createSupplierAdvanceEvidenceUrl,
   recordSupplierAdvancePaymentAction,
   refundSupplierAdvanceAction,
+  releaseSupplierAdvanceAuthorizationAction,
   reverseSupplierAdvancePaymentAction,
 } from "@/lib/supplier-advances/actions";
 import type { SupplierAdvancesDictionary } from "@/lib/i18n/dictionaries/supplier-advances";
 import type { SupplierAdvanceBillOption, SupplierAdvanceDetail, SupplierAdvanceDocument } from "@/lib/supplier-advances/types";
 
-type Panel = "payment" | "allocation" | "refund" | `reverse:${string}` | `correct:${string}`;
+type Panel = "payment" | "allocation" | "refund" | "release" | `reverse:${string}` | `correct:${string}`;
 type Method = "bank_transfer" | "cash" | "cheque";
 
 export default function SupplierAdvanceDetailClient({
@@ -30,6 +31,7 @@ export default function SupplierAdvanceDetailClient({
   canRefund,
   canReverse,
   canCorrect,
+  canRelease,
   dictionary,
 }: {
   advance: SupplierAdvanceDetail;
@@ -39,6 +41,7 @@ export default function SupplierAdvanceDetailClient({
   canRefund: boolean;
   canReverse: boolean;
   canCorrect: boolean;
+  canRelease: boolean;
   dictionary: SupplierAdvancesDictionary;
 }) {
   const router = useRouter();
@@ -128,7 +131,7 @@ export default function SupplierAdvanceDetailClient({
               <span dir="auto">{advance.service_title}</span>
             </div>
           </div>
-          <StatusBadge variant={advance.status === "paid" ? "active" : "pending"}>{dictionary.statuses[advance.status]}</StatusBadge>
+          <StatusBadge variant={advance.status === "paid" || advance.status === "released" ? "active" : "pending"}>{dictionary.statuses[advance.status]}</StatusBadge>
         </div>
       </header>
 
@@ -173,9 +176,10 @@ export default function SupplierAdvanceDetailClient({
       <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-4 sm:p-5" aria-labelledby="supplier-advance-actions-heading">
         <h2 id="supplier-advance-actions-heading" className="text-[15px] font-semibold text-primary">{dictionary.actions.confirm}</h2>
         <div className="mt-3 flex flex-wrap gap-2" role="toolbar" aria-label={dictionary.actions.confirm}>
-          {canPay && advance.authorized_amount > advance.paid_amount && <ActionButton selected={activePanel === "payment"} expanded={activePanel === "payment"} onClick={() => openPanel("payment")}>{dictionary.actions.recordPayment}</ActionButton>}
+          {canPay && advance.status !== "released" && advance.authorized_amount > advance.paid_amount && <ActionButton selected={activePanel === "payment"} expanded={activePanel === "payment"} onClick={() => openPanel("payment")}>{dictionary.actions.recordPayment}</ActionButton>}
           {canAllocate && advance.remaining_unallocated_amount > 0 && eligibleBills.length > 0 && <ActionButton selected={activePanel === "allocation"} expanded={activePanel === "allocation"} onClick={() => openPanel("allocation")}>{dictionary.actions.allocate}</ActionButton>}
           {canRefund && advance.remaining_unallocated_amount > 0 && <ActionButton selected={activePanel === "refund"} expanded={activePanel === "refund"} onClick={() => openPanel("refund")}>{dictionary.actions.refund}</ActionButton>}
+          {canRelease && advance.status === "authorized" && advance.paid_amount === 0 && advance.allocated_amount === 0 && advance.refunded_amount === 0 && <ActionButton selected={activePanel === "release"} expanded={activePanel === "release"} onClick={() => openPanel("release")} secondary>{dictionary.actions.releaseAuthorization}</ActionButton>}
         </div>
         {notice && <p role="status" className="mt-3 rounded-lg border border-success/30 bg-success-container/30 px-3 py-2 text-[12px] text-on-surface">{notice}</p>}
         {visibleError && <p role="alert" className="mt-3 rounded-lg border border-error/30 bg-error-container/30 px-3 py-2 text-[12px] text-error">{visibleError}</p>}
@@ -211,6 +215,16 @@ export default function SupplierAdvanceDetailClient({
             <Field label={dictionary.fields.reference}><input name="reference" type="text" maxLength={200} className={inputClass} /></Field>
             <Field label={dictionary.forms.refundReason}><textarea name="reason" rows={2} minLength={5} maxLength={2000} required className={inputClass} /></Field>
             <Field label={dictionary.forms.refundEvidence}><input name="document" type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" required className={inputClass} /></Field>
+            <PanelButtons pending={pending} onCancel={closePanel} dictionary={dictionary} />
+          </form>}
+          {activePanel === "release" && <form onSubmit={(event) => {
+            event.preventDefault(); const form = new FormData(event.currentTarget);
+            submitInput(releaseSupplierAdvanceAuthorizationAction, { advance_id: advance.supplier_advance_id, reason: form.get("reason"), request_id: requestId }, dictionary.notices.authorizationReleased);
+          }} className="grid gap-3 sm:grid-cols-2">
+            <h3 className="text-[14px] font-semibold text-primary sm:col-span-2">{dictionary.actions.releaseAuthorization}</h3>
+            <p className="text-[11px] text-on-surface-variant sm:col-span-2">{dictionary.notices.authorizationReleased}</p>
+            <Field label={dictionary.fields.reason}><textarea ref={(element) => { firstField.current = element; }} name="reason" rows={3} minLength={5} maxLength={2000} required className={inputClass} /></Field>
+            <input type="hidden" name="request_id" value={requestId} />
             <PanelButtons pending={pending} onCancel={closePanel} dictionary={dictionary} />
           </form>}
           {typeof activePanel === "string" && activePanel.startsWith("reverse:") && (() => {

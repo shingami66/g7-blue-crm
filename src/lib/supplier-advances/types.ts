@@ -1,7 +1,7 @@
 import type { ListPageSize } from "@/lib/pagination";
 import type { SupplierPaymentMethod } from "@/lib/supplier-payments/types";
 
-export type SupplierAdvanceStatus = "authorized" | "partially_paid" | "paid";
+export type SupplierAdvanceStatus = "authorized" | "partially_paid" | "paid" | "released";
 
 export interface SupplierAdvanceBalance {
   supplier_advance_id: string;
@@ -16,6 +16,8 @@ export interface SupplierAdvanceBalance {
   refunded_amount: number;
   reversed_amount: number;
   remaining_unallocated_amount: number;
+  authorization_released?: boolean;
+  released_at?: string | null;
   status: SupplierAdvanceStatus;
 }
 

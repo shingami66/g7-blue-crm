@@ -4,7 +4,9 @@ import { isolateBidiText, isolateLtrText } from "@/lib/i18n/bidi";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import type { EventCostingModel } from "@/lib/event-costing/types";
 import { approveEventCostBudget, recordEventCostEtc } from "@/lib/event-costing/actions";
+import type { EventCostCloseStatus } from "@/lib/event-cost-close/types";
 import type { Service } from "@/types/service";
+import EventCostClosePanel from "./EventCostClosePanel";
 
 export default function EventCostingWorkspace({
   service,
@@ -12,12 +14,18 @@ export default function EventCostingWorkspace({
   dictionary,
   resultMessage,
   errorMessage,
+  closeStatus,
+  canCloseEventCost,
+  canReopenEventCost,
 }: {
   service: Service;
   model: EventCostingModel;
   dictionary: ServicesDictionary;
   resultMessage?: string;
   errorMessage?: string;
+  closeStatus: EventCostCloseStatus;
+  canCloseEventCost: boolean;
+  canReopenEventCost: boolean;
 }) {
   const copy = dictionary.eventCosting;
   const budgetAction = approveEventCostBudget.bind(null, service.id);
@@ -74,7 +82,9 @@ export default function EventCostingWorkspace({
         </dl>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-2">
+      <EventCostClosePanel serviceId={service.id} dictionary={dictionary} status={closeStatus} canClose={canCloseEventCost} canReopen={canReopenEventCost} />
+
+      {!closeStatus.activeClose && <section className="grid gap-5 lg:grid-cols-2">
         <form action={budgetAction} className="rounded-xl border border-surface-variant bg-surface-container-lowest p-5">
           <h2 className="font-semibold text-primary">{copy.forms.budgetTitle}</h2>
           <div className="mt-4 grid gap-3">
@@ -98,7 +108,7 @@ export default function EventCostingWorkspace({
             <button type="submit" className="mt-1 min-h-10 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary-container">{copy.forms.saveEtc}</button>
           </div>
         </form>
-      </section>
+      </section>}
 
       <DrillSection title={copy.drill.budgetVersions} locale={dictionary.locale} rows={model.drill.budgetVersions.map((row) => ({ label: `${copy.forms.version} ${row.version}`, value: money(dictionary, row.approvedBudgetCost, copy.unavailable) }))} />
       <DrillSection title={copy.drill.commitments} locale={dictionary.locale} rows={model.drill.commitments.map((row) => ({ label: row.id, value: money(dictionary, row.authorizedAmount, copy.unavailable), labelDirection: "ltr" as const }))} />

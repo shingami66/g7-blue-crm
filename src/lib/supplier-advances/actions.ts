@@ -19,6 +19,7 @@ import {
   authorizeSupplierAdvanceSchema,
   correctSupplierAdvanceEventSchema,
   recordSupplierAdvancePaymentSchema,
+  releaseSupplierAdvanceAuthorizationSchema,
   refundSupplierAdvanceSchema,
 } from "./schemas";
 import type { SupplierAdvanceActionResult } from "./types";
@@ -361,6 +362,29 @@ export async function correctSupplierAdvanceAllocationAction(input: unknown): Pr
     revalidatePath("/supplier-bills"); revalidatePath(`/supplier-bills/${row.bill_id}`);
     return { success: true, data: { allocation_id: row.allocation_id, advance_id: row.advance_id, bill_id: row.bill_id }, idempotentReplay: row.idempotent_replay === true };
   } catch { return errorResult("supplier_advance_correction_failed"); }
+}
+
+export async function releaseSupplierAdvanceAuthorizationAction(input: unknown): Promise<SupplierAdvanceActionResult<{ release_id: string; advance_id: string }>> {
+  try {
+    const user = await requirePermission(SUPPLIER_ADVANCE_PERMISSIONS.release);
+    const parsed = releaseSupplierAdvanceAuthorizationSchema.safeParse(input);
+    if (!parsed.success) return errorResult("supplier_advance_release_request_invalid");
+    const { data, error } = await db().rpc("release_supplier_advance_authorization", {
+      p_advance_id: parsed.data.advance_id,
+      p_reason: parsed.data.reason,
+      p_request_id: parsed.data.request_id,
+      p_actor_id: user.id,
+      p_actor_role: user.role,
+    });
+    if (error) return errorResult("supplier_advance_release_failed");
+    const row = firstRow(data);
+    if (!row || row.error_code || typeof row.release_id !== "string" || typeof row.advance_id !== "string") {
+      return errorResult(typeof row?.error_code === "string" ? row.error_code : "supplier_advance_release_failed");
+    }
+    revalidatePath("/supplier-advances");
+    revalidatePath(`/supplier-advances/${row.advance_id}`);
+    return { success: true, data: { release_id: row.release_id, advance_id: row.advance_id }, idempotentReplay: row.idempotent_replay === true };
+  } catch { return errorResult("supplier_advance_release_failed"); }
 }
 
 export async function createSupplierAdvanceEvidenceUrl(input: unknown): Promise<SupplierAdvanceActionResult<{ signedUrl: string; expiresInSeconds: number }>> {

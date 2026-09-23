@@ -1,16 +1,17 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W8A EVENT COSTING — 23 September 2026
+## CURRENT DELIVERY STATUS — W8B EVENT COST CLOSE — 23 September 2026
 
-- **W7 — Accounts Receivable and flexible billing:** W7B, W7C, and W7D are published. The current repository history records W7B at `799b8a0`, W7C at `41db9ae`, and W7D delivery/presentation at `e2736d7` / `a58ba82`.
-- **W8A — Event Costing & Forecast Foundation:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`.
-  - The Service-centered Event Costing Workspace is managerial costing, not accounting profit. DEV acceptance used `SVC-2026-0001`; its partial-source state is disclosed rather than represented as zero.
-  - Reconciled values: approved budget SAR 14,000; approved/accepted/open commitments SAR 11,000 / 10,000 / 1,000; actual/paid/outstanding cost SAR 10,000.01 / 0.01 / 10,000.00; ETC/EAC SAR 3,000 / 13,000.01; net approved commercial value/forecast margin SAR 5,500 / -7,500.01.
-  - Authenticated browser acceptance covered the Service entry and costing workspace in English and Arabic/RTL, desktop and a 360×800 mobile viewport. No financial form was submitted during this closeout.
-  - Historical event-date reconstruction and Riyadh-date semantics remain covered by the previously DEV-verified W8A read-model repair; current browser workspace displays the current As-Of date and does not expose a historical-date selector.
-  - W8A migrations were already applied and verified in DEV; this closeout did not reapply migrations or mutate DEV data.
-- **Next locked phase:** W8B Event Cost Close remains `NOT STARTED / NOT AUTHORIZED`. W9 reporting consolidation, W10 accounting, GL, revenue recognition, VAT/FATOORA/ZATCA, deployment, PROD, and DEMO remain outside this closeout.
-- **EXACT NEXT ACTION:** No further W8A work. Start W8B only under a separate Owner-authorized task; this closeout does not authorize it.
+- **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), and W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`) remain published.
+- **W8A — Event Costing & Forecast Foundation:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`. Its managerial costing semantics, partial-source disclosure, and historical event-date/Riyadh-date repair remain unchanged.
+- **W8B — Event Cost Close:** `PUBLISHED / PASS WITH WARN / IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`.
+  - DEV base migration `20260923074541 w8b_event_cost_close` and forward-only ambiguity repair `20260923075521 w8b_event_cost_close_runtime_repair` are applied exactly once. The repair qualifies `close_version` without rewriting the applied foundation migration and preserves the RPC signature, fixed search path, and service-role-only execution.
+  - Rollback-only DEV lifecycle regression passed for readiness, close/reopen/replay/conflict, post-close cost-authority guards, independent AP settlement, and W6C unused-only advance release. All synthetic rows were rolled back; residue is `0`, and protected `SVC-2026-0001` remains not close-ready.
+  - Authenticated browser acceptance verified `SVC-2026-0001` in English and Arabic/RTL on desktop. Partial source completeness and readiness blockers are explicit; the close action remains disabled and no persistent close was recorded.
+  - Bounded warnings: DEV has no already-released supplier advance for the hidden-payment-action browser check; mobile viewport control and live two-session contention testing were unavailable. The rollback-only release guard and UI conditional were reviewed and covered by the targeted regression/reviewer.
+  - This is managerial direct-cost finalization, separate from operational Service close, AP settlement, and any future accounting close. No GL, revenue-recognition, VAT, FATOORA/ZATCA, PROD, or DEMO activation is included.
+- **Next locked phase:** W9 reporting consolidation and W10 accounting remain later, separately gated waves; deployment and PROD/DEMO mutation remain outside this W8B release.
+- **EXACT NEXT ACTION:** No further W8B work. W9 discovery or any later wave requires separate Owner authorization.
 
 > The dated delivery section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated sections remain historical records.
 

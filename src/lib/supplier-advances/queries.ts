@@ -47,7 +47,7 @@ function maskIban(value: string | null): string | null {
 }
 
 function mapBalance(row: Record<string, unknown>): SupplierAdvanceBalance {
-  const status = row.status === "paid" || row.status === "partially_paid" ? row.status : "authorized";
+  const status = row.status === "paid" || row.status === "partially_paid" || row.status === "released" ? row.status : "authorized";
   return {
     supplier_advance_id: text(row.supplier_advance_id) ?? "",
     advance_number: text(row.advance_number) ?? "",
@@ -61,6 +61,8 @@ function mapBalance(row: Record<string, unknown>): SupplierAdvanceBalance {
     refunded_amount: number(row.refunded_amount),
     reversed_amount: number(row.reversed_amount),
     remaining_unallocated_amount: number(row.remaining_unallocated_amount),
+    authorization_released: row.authorization_released === true,
+    released_at: text(row.released_at),
     status,
   };
 }
@@ -204,7 +206,7 @@ export async function getSupplierAdvancesList(
     service_id: text(row.service_id) ?? "",
     currency: text(row.currency)?.trim() ?? "",
     authorized_amount: number(row.authorized_amount),
-    status: row.status === "paid" || row.status === "partially_paid" ? row.status : "authorized",
+    status: row.status === "paid" || row.status === "partially_paid" || row.status === "released" ? row.status : "authorized",
   } satisfies Pick<SupplierAdvanceBalance, "supplier_advance_id" | "advance_number" | "commitment_id" | "supplier_id" | "service_id" | "currency" | "authorized_amount" | "status">));
   const times = new Map(balanceRows.map((row) => [text(row.supplier_advance_id) ?? "", text(row.authorized_at) ?? ""]));
   return { advances: await enrichListItems(supabase, base, times), pagination };

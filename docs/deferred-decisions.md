@@ -1,13 +1,15 @@
 # G7 BLUE CRM — Deferred Decisions
 
-## CURRENT DELIVERY STATUS — W8A EVENT COSTING — 23 September 2026
+## CURRENT DELIVERY STATUS — W8B EVENT COST CLOSE — 23 September 2026
 
-- **W8A Event Costing & Forecast Foundation:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`.
-  - Costing remains a managerial view separate from accounting profit. The accepted DEV fixture is source-partial and reports unavailable sources explicitly.
-  - Historical event-date and Riyadh-date reconstruction is covered by the previously applied and DEV-verified W8A repair. The browser workspace exposes current As-Of only; it does not add an interactive historical reconstruction control.
-  - Existing W8A DEV migrations were not reapplied and no DEV financial records were mutated during this closeout.
-- **Still deferred / separately gated:** W8B Event Cost Close is `NOT STARTED / NOT AUTHORIZED`; W9 reporting consolidation and W10 accounting remain later waves. GL/journals, revenue recognition, VAT/FATOORA/ZATCA activation, bank integration, deployment, PROD, DEMO, and Layer 2/SaaS remain unactivated.
-- **EXACT NEXT ACTION:** No further W8A work. Require a separate Owner-authorized W8B task before beginning Event Cost Close; this status document grants no implementation or database authority.
+- **W8B Event Cost Close:** `PUBLISHED / PASS WITH WARN / IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`.
+  - The feature records versioned managerial direct-cost closes. It remains separate from operational Service close, supplier AP settlement, and future accounting close.
+  - DEV base and forward repair migrations are applied once (`20260923074541`, `20260923075521`). Rollback-only close/reopen/release verification passed with zero synthetic residue; the protected partial-source service remains unchanged and not close-ready.
+  - Read-only browser acceptance on `SVC-2026-0001` passed in English and Arabic/RTL: incomplete sources and exact readiness blockers are visible, and Close Event Cost remains disabled. No persistent Event Cost Close or Supplier Advance release was recorded.
+  - Bounded evidence limitations: no pre-existing released-advance fixture, mobile viewport override, or live two-session contention exercise. No accounting or production semantics are implied.
+- **W8A Event Costing & Forecast Foundation:** remains `IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`; historical event-date/Riyadh-date repair remains in force.
+- **Still deferred / separately gated:** W9 reporting consolidation and W10 accounting remain later waves. GL/journals, revenue recognition, VAT/FATOORA/ZATCA activation, bank integration, deployment, PROD, DEMO, and Layer 2/SaaS remain unactivated.
+- **EXACT NEXT ACTION:** No further W8B work. W9 or later implementation requires separate Owner authorization. This status document grants no additional implementation or database authority.
 
 > The dated delivery section immediately below preserves its 15 September snapshot and is superseded for current wave status by this section. Older deferral decisions remain unchanged.
 

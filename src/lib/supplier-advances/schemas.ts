@@ -51,3 +51,9 @@ export const correctSupplierAdvanceEventSchema = z.object({
   reason: z.string().trim().min(5).max(2000),
   request_id: z.string().uuid(),
 });
+
+export const releaseSupplierAdvanceAuthorizationSchema = z.object({
+  advance_id: z.string().uuid(),
+  reason: z.string().trim().min(5).max(2000),
+  request_id: z.string().uuid(),
+});

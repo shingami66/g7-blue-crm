@@ -10,7 +10,7 @@ import SupplierAdvanceDetailClient from "./SupplierAdvanceDetailClient";
 export const dynamic = "force-dynamic";
 
 export default async function SupplierAdvanceDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const [route, locale, canRead, canPay, canAllocate, canRefund, canReverse, canCorrect] = await Promise.all([
+  const [route, locale, canRead, canPay, canAllocate, canRefund, canReverse, canCorrect, canRelease] = await Promise.all([
     params,
     getCurrentSessionEffectiveLocale(),
     checkPermission(SUPPLIER_ADVANCE_PERMISSIONS.read),
@@ -19,6 +19,7 @@ export default async function SupplierAdvanceDetailPage({ params }: { params: Pr
     checkPermission(SUPPLIER_ADVANCE_PERMISSIONS.refund),
     checkPermission(SUPPLIER_ADVANCE_PERMISSIONS.reverse),
     checkPermission(SUPPLIER_ADVANCE_PERMISSIONS.correct),
+    checkPermission(SUPPLIER_ADVANCE_PERMISSIONS.release),
   ]);
   const dictionary = getSupplierAdvancesDictionary(locale);
   if (!canRead) return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
@@ -49,6 +50,7 @@ export default async function SupplierAdvanceDetailPage({ params }: { params: Pr
     canRefund={canRefund}
     canReverse={canReverse}
     canCorrect={canCorrect}
+    canRelease={canRelease}
     dictionary={dictionary}
   />;
 }

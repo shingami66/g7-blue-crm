@@ -78,6 +78,12 @@ export const SUPPLIER_ADVANCE_PERMISSIONS = {
   refund: "supplier_advances:refund",
   reverse: "supplier_advances:reverse",
   correct: "supplier_advances:correct",
+  release: "supplier_advances:release_authorization",
+} as const;
+
+export const EVENT_COST_CLOSE_PERMISSIONS = {
+  close: "event_cost_close:close",
+  reopen: "event_cost_close:reopen",
 } as const;
 
 export const ROLE_PERMISSIONS = {
@@ -150,6 +156,8 @@ export const ROLE_PERMISSIONS = {
     SUPPLIER_PAYMENT_PERMISSIONS.read,
     SUPPLIER_ADVANCE_PERMISSIONS.read,
     SUPPLIER_ADVANCE_PERMISSIONS.authorize,
+    SUPPLIER_ADVANCE_PERMISSIONS.release,
+    EVENT_COST_CLOSE_PERMISSIONS.close,
     CASH_ADVANCE_PERMISSIONS.readOwn,
     CASH_ADVANCE_PERMISSIONS.submitOwn,
     CASH_ADVANCE_PERMISSIONS.read,

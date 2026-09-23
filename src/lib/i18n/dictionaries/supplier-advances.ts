@@ -75,6 +75,7 @@ export interface SupplierAdvancesDictionary {
     refund: string;
     reversePayment: string;
     correctAllocation: string;
+    releaseAuthorization: string;
     confirm: string;
     openDocument: string;
   };
@@ -106,6 +107,7 @@ export interface SupplierAdvancesDictionary {
     refunded: string;
     reversed: string;
     allocationCorrected: string;
+    authorizationReleased: string;
   };
   errors: Record<string, string>;
 }
@@ -143,6 +145,9 @@ const errorsEn: Record<string, string> = {
   supplier_advance_reversal_failed: "The advance payment could not be reversed.",
   supplier_advance_correction_failed: "The advance allocation could not be corrected.",
   supplier_advance_document_failed: "The private evidence document could not be opened.",
+  supplier_advance_release_not_unused: "Only an authorization with no payment, allocation, reversal, or refund can be released.",
+  supplier_advance_release_failed: "The unused authorization could not be released.",
+  supplier_advance_authorization_released: "This authorization was released and cannot receive financial events.",
 };
 
 const errorsAr: Record<string, string> = {
@@ -178,6 +183,9 @@ const errorsAr: Record<string, string> = {
   supplier_advance_reversal_failed: "تعذر عكس الدفعة المقدمة للمورد.",
   supplier_advance_correction_failed: "تعذر تصحيح تطبيق الدفعة المقدمة.",
   supplier_advance_document_failed: "تعذر فتح مستند التأييد الخاص.",
+  supplier_advance_release_not_unused: "لا يمكن تحرير الاعتماد إلا إذا لم تكن له دفعة أو تطبيق أو عكس أو استرداد.",
+  supplier_advance_release_failed: "تعذر تحرير اعتماد الدفعة المقدمة غير المستخدم.",
+  supplier_advance_authorization_released: "تم تحرير هذا الاعتماد ولا يمكنه تلقي حركات مالية.",
 };
 
 const base: Omit<SupplierAdvancesDictionary, "locale"> = {
@@ -193,12 +201,12 @@ const base: Omit<SupplierAdvancesDictionary, "locale"> = {
   },
   columns: { advance: "Advance", supplier: "Supplier", service: "Event / Service", date: "Authorized", amount: "Authorized Amount", status: "Status", actions: "Actions" },
   methods: { bank_transfer: "Bank transfer", cash: "Cash", cheque: "Cheque" },
-  statuses: { authorized: "Authorized", partially_paid: "Partially paid", paid: "Paid", recorded: "Recorded", reversed: "Reversed", allocated: "Allocated", corrected: "Corrected" },
+  statuses: { authorized: "Authorized", partially_paid: "Partially paid", paid: "Paid", released: "Released", recorded: "Recorded", reversed: "Reversed", allocated: "Allocated", corrected: "Corrected" },
   sources: { purchase_order: "Purchase order", approved_contract: "Approved contract", supplier_quotation: "Supplier quotation", other_authorized: "Other authorized commitment" },
-  actions: { view: "View advance", save: "Save", cancel: "Cancel", recordPayment: "Record Advance Payment", allocate: "Allocate to Bill", refund: "Record Refund", reversePayment: "Reverse Payment", correctAllocation: "Correct Allocation", confirm: "Confirm", openDocument: "Open document" },
+  actions: { view: "View advance", save: "Save", cancel: "Cancel", recordPayment: "Record Advance Payment", allocate: "Allocate to Bill", refund: "Record Refund", reversePayment: "Reverse Payment", correctAllocation: "Correct Allocation", releaseAuthorization: "Release Unused Authorization", confirm: "Confirm", openDocument: "Open document" },
   forms: { selectCommitment: "Select an eligible approved commitment", authorizationEvidence: "Authorization evidence", paymentEvidence: "Payment evidence", refundEvidence: "Refund evidence", selectMethod: "Select payment method", referenceHelp: "Bank transfer and cheque require a reference.", bankDetailsNotice: "Bank transfers use the supplier's stored details; bank details cannot be entered here.", selectBill: "Select an approved Supplier Bill", reversalReason: "Explain why this payment is being reversed.", refundReason: "Describe the supplier refund and its reason." },
   states: { accessDenied: "Access denied", loadError: "Supplier Advances could not be loaded.", empty: "No Supplier Advances recorded yet.", notFound: "Supplier Advance not found.", noCommitments: "No open commitment has remaining authorization capacity.", noBills: "No matching approved Supplier Bills have an outstanding balance.", unknownUser: "Unavailable" },
-  notices: { authorized: "Supplier Advance authorized.", paid: "Advance payment recorded.", allocated: "Advance allocated to Supplier Bill.", refunded: "Supplier refund recorded.", reversed: "Advance payment reversed.", allocationCorrected: "Advance allocation corrected." },
+  notices: { authorized: "Supplier Advance authorized.", paid: "Advance payment recorded.", allocated: "Advance allocated to Supplier Bill.", refunded: "Supplier refund recorded.", reversed: "Advance payment reversed.", allocationCorrected: "Advance allocation corrected.", authorizationReleased: "Unused authorization released; no payment or refund was created." },
   errors: errorsEn,
 };
 
@@ -218,12 +226,12 @@ export const supplierAdvancesDictionaryAr: SupplierAdvancesDictionary = {
   },
   columns: { advance: "الدفعة المقدمة", supplier: "المورد", service: "الفعالية / الخدمة", date: "تاريخ الاعتماد", amount: "المبلغ المعتمد", status: "الحالة", actions: "الإجراءات" },
   methods: { bank_transfer: "تحويل بنكي", cash: "نقدًا", cheque: "شيك" },
-  statuses: { authorized: "معتمدة", partially_paid: "مدفوعة جزئيًا", paid: "مدفوعة", recorded: "مسجلة", reversed: "معكوسة", allocated: "مطبقة", corrected: "مصححة" },
+  statuses: { authorized: "معتمدة", partially_paid: "مدفوعة جزئيًا", paid: "مدفوعة", released: "محررة", recorded: "مسجلة", reversed: "معكوسة", allocated: "مطبقة", corrected: "مصححة" },
   sources: { purchase_order: "أمر شراء", approved_contract: "عقد معتمد", supplier_quotation: "عرض سعر المورد", other_authorized: "التزام معتمد آخر" },
-  actions: { view: "عرض الدفعة المقدمة", save: "حفظ", cancel: "إلغاء", recordPayment: "تسجيل دفعة مقدمة للمورد", allocate: "تطبيق الدفعة المقدمة على فاتورة المورد", refund: "تسجيل استرداد من الدفعة المقدمة", reversePayment: "عكس الدفعة المقدمة للمورد", correctAllocation: "تصحيح تطبيق الدفعة المقدمة", confirm: "تأكيد", openDocument: "فتح المستند" },
+  actions: { view: "عرض الدفعة المقدمة", save: "حفظ", cancel: "إلغاء", recordPayment: "تسجيل دفعة مقدمة للمورد", allocate: "تطبيق الدفعة المقدمة على فاتورة المورد", refund: "تسجيل استرداد من الدفعة المقدمة", reversePayment: "عكس الدفعة المقدمة للمورد", correctAllocation: "تصحيح تطبيق الدفعة المقدمة", releaseAuthorization: "تحرير الاعتماد غير المستخدم", confirm: "تأكيد", openDocument: "فتح المستند" },
   forms: { selectCommitment: "اختر التزامًا معتمدًا مؤهلًا", authorizationEvidence: "مستند تأييد الاعتماد", paymentEvidence: "مستند تأييد الدفع", refundEvidence: "مستند تأييد الاسترداد", selectMethod: "اختر طريقة الدفع", referenceHelp: "يلزم مرجع للتحويل البنكي والشيك.", bankDetailsNotice: "يستخدم التحويل بيانات المورد المحفوظة، ولا يمكن إدخال بيانات البنك هنا.", selectBill: "اختر فاتورة مورد معتمدة", reversalReason: "وضح سبب عكس الدفعة المقدمة.", refundReason: "صف المبلغ المسترد من الدفعة المقدمة للمورد وسببه." },
   states: { accessDenied: "لا توجد صلاحية", loadError: "تعذر تحميل الدفعات المقدمة للموردين.", empty: "لم تُسجل دفعات مقدمة للموردين بعد.", notFound: "لم يتم العثور على الدفعة المقدمة للمورد.", noCommitments: "لا توجد التزامات مفتوحة ذات سعة متبقية لاعتماد دفعة مقدمة.", noBills: "لا توجد فواتير موردين معتمدة مطابقة ذات رصيد مستحق.", unknownUser: "غير متاح" },
-  notices: { authorized: "تم اعتماد الدفعة المقدمة للمورد.", paid: "تم تسجيل دفعة مقدمة للمورد.", allocated: "تم تطبيق الدفعة المقدمة على فاتورة المورد.", refunded: "تم تسجيل المبلغ المسترد من الدفعة المقدمة للمورد.", reversed: "تم عكس الدفعة المقدمة للمورد.", allocationCorrected: "تم تصحيح تطبيق الدفعة المقدمة." },
+  notices: { authorized: "تم اعتماد الدفعة المقدمة للمورد.", paid: "تم تسجيل دفعة مقدمة للمورد.", allocated: "تم تطبيق الدفعة المقدمة على فاتورة المورد.", refunded: "تم تسجيل المبلغ المسترد من الدفعة المقدمة للمورد.", reversed: "تم عكس الدفعة المقدمة للمورد.", allocationCorrected: "تم تصحيح تطبيق الدفعة المقدمة.", authorizationReleased: "تم تحرير الاعتماد غير المستخدم دون إنشاء دفعة أو استرداد." },
   errors: errorsAr,
 };
 

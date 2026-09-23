@@ -884,6 +884,29 @@ export interface ServicesDictionary {
       etcVersions: string;
     };
     boundedDisclosure: string;
+    costClose: {
+      title: string;
+      subtitle: string;
+      readinessReady: string;
+      readinessBlocked: string;
+      blockers: string;
+      warnings: string;
+      noBlockers: string;
+      closeAction: string;
+      reopenAction: string;
+      reason: string;
+      closeHistory: string;
+      activeClose: string;
+      priorClose: string;
+      closedAt: string;
+      reopenedAt: string;
+      finalManagerialEventMargin: string;
+      noActiveClose: string;
+      blockedMutationNotice: string;
+      error: string;
+      blockerLabels: Record<string, string>;
+      warningLabels: Record<string, string>;
+    };
     forms: {
       budgetTitle: string;
       etcTitle: string;
@@ -2449,6 +2472,44 @@ const servicesDictionaryEn: ServicesDictionary = {
       etcVersions: "ETC Versions",
     },
     boundedDisclosure: "Source drill is bounded to the latest records shown; totals are aggregated server-side",
+    costClose: {
+      title: "Event Cost Close",
+      subtitle: "Managerial direct-cost finalization. It is separate from operational close and future accounting close.",
+      readinessReady: "Ready for Event Cost Close",
+      readinessBlocked: "Event Cost Close is blocked",
+      blockers: "Readiness blockers",
+      warnings: "Warnings",
+      noBlockers: "No readiness blockers remain.",
+      closeAction: "Close Event Cost",
+      reopenAction: "Reopen Event Cost",
+      reason: "Reason",
+      closeHistory: "Close history",
+      activeClose: "Active close",
+      priorClose: "Prior close version",
+      closedAt: "Closed at",
+      reopenedAt: "Reopened at",
+      finalManagerialEventMargin: "Final Managerial Event Margin",
+      noActiveClose: "No active Event Cost Close exists.",
+      blockedMutationNotice: "New direct-cost authority requires an Admin reopen. Settlement-only activity remains separate.",
+      error: "Event Cost Close could not be completed. Refresh the readiness view and try again.",
+      blockerLabels: {
+        operational_lifecycle_unavailable: "Operational lifecycle is unavailable.",
+        operational_execution_not_ended: "Operational execution is not ended.",
+        operational_completion_not_confirmed: "Operational completion is not confirmed.",
+        operational_service_not_closed: "Operational Service close is not complete.",
+        event_costing_incomplete: "Event Costing source completeness is not complete.",
+        pending_supplier_bills: "Supplier Bills are still pending.",
+        pending_event_expenses: "Direct Event Expenses are still pending.",
+        pending_commitment_amount: "A commitment has pending amount.",
+        open_commitment_amount: "A commitment remains open.",
+        etc_not_zero: "ETC must be exactly zero.",
+        pending_service_receipts: "Service Receipts are still pending.",
+        unresolved_event_cash_advances: "An Event Cash Advance remains unresolved.",
+        unresolved_supplier_advance_reserve: "A Supplier Advance authorization or deposit remains unresolved.",
+        unresolved_cost_evidence_exception: "A cost evidence exception remains unresolved.",
+      },
+      warningLabels: { approved_cost_outstanding_settlement: "Approved cost has outstanding settlement; it does not block final direct-cost authority." },
+    },
     forms: {
       budgetTitle: "Approve Base Budget & Contingency",
       etcTitle: "Record ETC Forecast",
@@ -4229,6 +4290,44 @@ const servicesDictionaryAr: ServicesDictionary = {
       etcVersions: "إصدارات التكلفة المتبقية المتوقعة",
     },
     boundedDisclosure: "تفاصيل المصادر محدودة بالسجلات الأحدث المعروضة؛ تُجمع الإجماليات على الخادم",
+    costClose: {
+      title: "إقفال تكلفة الفعالية",
+      subtitle: "إقفال إداري للتكلفة المباشرة، وهو منفصل عن الإقفال التشغيلي وعن الإقفال المحاسبي المستقبلي.",
+      readinessReady: "جاهز لإقفال تكلفة الفعالية",
+      readinessBlocked: "إقفال تكلفة الفعالية محجوب",
+      blockers: "معوقات الجاهزية",
+      warnings: "تنبيهات",
+      noBlockers: "لا توجد معوقات جاهزية متبقية.",
+      closeAction: "إقفال تكلفة الفعالية",
+      reopenAction: "إعادة فتح تكلفة الفعالية",
+      reason: "السبب",
+      closeHistory: "سجل الإقفال",
+      activeClose: "الإقفال النشط",
+      priorClose: "إصدار الإقفال السابق",
+      closedAt: "تاريخ الإقفال",
+      reopenedAt: "تاريخ إعادة الفتح",
+      finalManagerialEventMargin: "الهامش الإداري النهائي للفعالية",
+      noActiveClose: "لا يوجد إقفال نشط لتكلفة الفعالية.",
+      blockedMutationNotice: "تتطلب سلطة التكلفة المباشرة الجديدة إعادة فتح بواسطة مسؤول. تبقى أنشطة التسوية منفصلة.",
+      error: "تعذر إكمال إقفال تكلفة الفعالية. حدّث عرض الجاهزية ثم أعد المحاولة.",
+      blockerLabels: {
+        operational_lifecycle_unavailable: "دورة الحياة التشغيلية غير متاحة.",
+        operational_execution_not_ended: "لم ينته التنفيذ التشغيلي.",
+        operational_completion_not_confirmed: "لم يتم تأكيد الإكمال التشغيلي.",
+        operational_service_not_closed: "لم يكتمل الإقفال التشغيلي للخدمة.",
+        event_costing_incomplete: "اكتمال مصادر تكلفة الفعالية غير مكتمل.",
+        pending_supplier_bills: "ما زالت فواتير الموردين معلقة.",
+        pending_event_expenses: "ما زالت مصروفات الفعالية المباشرة معلقة.",
+        pending_commitment_amount: "يوجد مبلغ التزام معلق.",
+        open_commitment_amount: "يوجد التزام مفتوح.",
+        etc_not_zero: "يجب أن تساوي التكلفة المتبقية المتوقعة صفراً تماماً.",
+        pending_service_receipts: "ما زالت استلامات الخدمة معلقة.",
+        unresolved_event_cash_advances: "تبقى سلفة نقدية للفعالية غير مسواة.",
+        unresolved_supplier_advance_reserve: "تبقى صلاحية دفعة مقدمة للمورد أو عربون غير مسوى.",
+        unresolved_cost_evidence_exception: "تبقى حالة استثناء في دليل التكلفة غير محلولة.",
+      },
+      warningLabels: { approved_cost_outstanding_settlement: "توجد تكلفة معتمدة ذات تسوية مستحقة؛ ولا يمنع ذلك سلطة التكلفة المباشرة النهائية." },
+    },
     forms: {
       budgetTitle: "اعتماد الميزانية الأساسية والاحتياطي",
       etcTitle: "تسجيل توقع التكلفة المتبقية",

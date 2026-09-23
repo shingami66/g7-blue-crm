@@ -1,14 +1,15 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W8A EVENT COSTING — 23 September 2026
+## CURRENT ROADMAP POSITION — W8B EVENT COST CLOSE — 23 September 2026
 
-- **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), and W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`) are published.
-- **W8A Event Costing & Forecast Foundation:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`.
-  - The Service-centered workspace reconciles the DEV costing fixture and discloses partial source completeness; it does not introduce accounting-profit, GL, revenue-recognition, VAT, or tax semantics.
-  - Authenticated English and Arabic/RTL desktop acceptance passed, and the 360×800 mobile presentation was checked. No financial form was submitted in the closeout.
-  - Historical source-event and Riyadh-date behavior remains backed by the previously applied and DEV-verified W8A read-model repair; no migration was reapplied here.
-- **Next locked roadmap task:** W8B Event Cost Close is `NOT STARTED / NOT AUTHORIZED`. W9 Dashboards/Reports consolidation and W10 Accounting remain later locked waves; deployment and PROD/DEMO mutation were not started.
-- **EXACT NEXT ACTION:** No further W8A work. W8B requires a separate Owner-authorized task; do not begin W8B, W9, or W10 in this closeout.
+- **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`), W8A Event Costing, and this W8B Event Cost Close release are published/closed.
+- **W8B Event Cost Close:** `PUBLISHED / PASS WITH WARN / IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`.
+  - DEV base migration `20260923074541` and forward runtime repair `20260923075521` are applied once. The repair is additive and leaves the applied base migration unchanged.
+  - Rollback-only lifecycle verification passed with zero residue, including close/reopen, idempotency/conflict, post-close guards, independent supplier-payment settlement, and connected W6C advance release behavior.
+  - Authenticated desktop browser checks passed in English and Arabic/RTL against the read-only partial-source fixture `SVC-2026-0001`; readiness blockers are visible and the close action is correctly disabled. No real close/release event was recorded.
+  - Bounded warnings: there is no pre-existing released advance for browser verification, no mobile viewport override, and no live two-session race exercise. Managerial cost-close remains separate from operational close and accounting.
+- **Next locked roadmap task:** W9 Dashboards/Reports consolidation; W10 Accounting remains later. Neither is authorized by this W8B delivery.
+- **EXACT NEXT ACTION:** No further W8B work. W9 discovery or any later wave requires separate Owner authorization.
 
 > The dated roadmap section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated roadmap history remains unchanged.
 
