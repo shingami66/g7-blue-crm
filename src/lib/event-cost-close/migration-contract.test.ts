@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 
@@ -13,6 +13,18 @@ const runtimeRepairMigration = readFileSync(
 );
 const runtimeRegression = readFileSync(
   join(process.cwd(), "supabase/verification/w8b_event_cost_close_rollback_regression.sql"),
+  "utf8",
+);
+const closeDeleteGuardMigrationNames = readdirSync(join(process.cwd(), "supabase/migrations")).filter((name) =>
+  /^\d{14}_w8b_event_cost_close_delete_guard\.sql$/.test(name),
+);
+if (closeDeleteGuardMigrationNames.length !== 1) {
+  throw new Error(`Expected exactly one W8B forward DELETE-guard migration; found ${closeDeleteGuardMigrationNames.length}`);
+}
+const closeDeleteGuardMigrationName = closeDeleteGuardMigrationNames[0];
+if (!closeDeleteGuardMigrationName) throw new Error("W8B forward DELETE-guard migration name was unavailable");
+const closeDeleteGuardMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations", closeDeleteGuardMigrationName),
   "utf8",
 );
 
@@ -63,6 +75,26 @@ test("W8B post-close database guards cover cost-authority mutations without bloc
   assert.doesNotMatch(migration, /event_cost_close_expense_reimbursement_guard/);
 });
 
+test("W8B forward repair guards DELETE using OLD rows without guarding AP settlement", () => {
+  assert.match(closeDeleteGuardMigration, /CREATE OR REPLACE FUNCTION public\.guard_event_cost_authority_mutation\(\)/);
+  assert.match(closeDeleteGuardMigration, /TG_OP = 'DELETE'/);
+  assert.match(closeDeleteGuardMigration, /TG_OP IN \('UPDATE', 'DELETE'\)/);
+  assert.match(closeDeleteGuardMigration, /to_jsonb\(OLD\)/);
+  assert.match(closeDeleteGuardMigration, /to_jsonb\(NEW\)/);
+  assert.match(closeDeleteGuardMigration, /TG_TABLE_NAME = 'expense_evidence_exceptions'/);
+  assert.match(closeDeleteGuardMigration, /expense_id/);
+  assert.match(closeDeleteGuardMigration, /RETURN OLD/);
+  for (const table of [
+    "event_cost_budgets", "event_cost_etc_forecasts", "approved_commitments", "approved_commitment_amendments",
+    "service_receipts", "service_receipt_corrections", "supplier_bills", "expenses", "employee_cash_advances",
+    "expense_evidence_exceptions", "supplier_advances", "supplier_advance_authorization_releases",
+  ]) {
+    assert.match(closeDeleteGuardMigration, new RegExp(`BEFORE [^;]*DELETE[^;]* ON public\\.${table}`));
+  }
+  assert.doesNotMatch(closeDeleteGuardMigration, /CREATE TRIGGER [^;]+ ON public\.supplier_payments/);
+  assert.doesNotMatch(closeDeleteGuardMigration, /CREATE TRIGGER [^;]+ ON public\.supplier_payment_reversals/);
+});
+
 test("connected W6C release is append-only, unused-only, serialized, and never invents cash", () => {
   assert.match(migration, /CREATE TABLE public\.supplier_advance_authorization_releases/);
   assert.match(migration, /supplier_advance_authorization_releases_immutable/);
@@ -88,4 +120,24 @@ test("W8B has rollback-only DEV behavioral coverage for readiness, close/reopen,
   assert.match(runtimeRegression, /has_function_privilege\(/);
   assert.match(runtimeRegression, /RAISE NOTICE 'W8B_ROLLBACK_REGRESSION_PASS/);
   assert.doesNotMatch(runtimeRegression, /SELECT 'W8B_ROLLBACK_REGRESSION_PASS'/);
+  assert.match(runtimeRegression, /DELETE FROM public\.event_cost_budgets/);
+  assert.match(runtimeRegression, /DELETE FROM public\.supplier_bills/);
+  assert.match(runtimeRegression, /DELETE FROM public\.expenses/);
+  assert.match(runtimeRegression, /DELETE FROM public\.service_receipt_corrections/);
+  assert.match(runtimeRegression, /DELETE FROM public\.supplier_advances/);
+  assert.match(runtimeRegression, /DELETE FROM public\.supplier_advance_authorization_releases/);
+  assert.match(runtimeRegression, /DELETE FROM public\.employee_cash_advances/);
+  assert.match(runtimeRegression, /DELETE FROM public\.expense_evidence_exceptions/);
+  assert.match(runtimeRegression, /unresolved_cost_evidence_exception/);
+  assert.match(runtimeRegression, /UPDATE public\.approved_commitments[\s\S]*SET service_id = v_release_service/);
+  assert.match(runtimeRegression, /SET service_id = v_close_service[\s\S]*WHERE id = v_transfer_commitment_id/);
+  assert.match(runtimeRegression, /company_funds', v_viewer, 'approved', v_admin/);
+  assert.match(runtimeRegression, /add_approved_commitment_amendment\(/);
+  assert.match(runtimeRegression, /create_service_receipt\(/);
+  assert.match(runtimeRegression, /reverse_supplier_payment\(/);
+  assert.match(runtimeRegression, /get_event_costing\(v_existing_service, DATE '2026-09-21'\)/);
+  assert.match(runtimeRegression, /get_event_costing\(v_existing_service, DATE '2026-09-22'\)/);
+  assert.match(runtimeRegression, /2026-09-22 20:59:59\+00/);
+  assert.match(runtimeRegression, /2026-09-22 21:00:00\+00/);
+  assert.match(runtimeRegression, /v_viewer::text, 'viewer'/);
 });

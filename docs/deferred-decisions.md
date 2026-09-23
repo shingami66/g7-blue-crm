@@ -1,15 +1,15 @@
 # G7 BLUE CRM — Deferred Decisions
 
-## CURRENT DELIVERY STATUS — W8B EVENT COST CLOSE — 23 September 2026
+## CURRENT DELIVERY STATUS — W8B EVENT COST CLOSE CORRECTIVE FOLLOW-UP — 23 September 2026
 
-- **W8B Event Cost Close:** `PUBLISHED / PASS WITH WARN / IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`.
-  - The feature records versioned managerial direct-cost closes. It remains separate from operational Service close, supplier AP settlement, and future accounting close.
-  - DEV base and forward repair migrations are applied once (`20260923074541`, `20260923075521`). Rollback-only close/reopen/release verification passed with zero synthetic residue; the protected partial-source service remains unchanged and not close-ready.
-  - Read-only browser acceptance on `SVC-2026-0001` passed in English and Arabic/RTL: incomplete sources and exact readiness blockers are visible, and Close Event Cost remains disabled. No persistent Event Cost Close or Supplier Advance release was recorded.
-  - Bounded evidence limitations: no pre-existing released-advance fixture, mobile viewport override, or live two-session contention exercise. No accounting or production semantics are implied.
+- **W8B Event Cost Close:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / REVIEWER CLEAN / BROWSER VERIFIED WITH WARN`.
+  - The feature records versioned managerial direct-cost closes and remains separate from operational Service close, supplier AP settlement, and future accounting close. Published baseline commit: `55b3df0e0e974b26a0627190d0ba5240a32d9b0d`.
+  - DEV base and ambiguity-repair migrations remain applied once (`20260923074541`, `20260923075521`); the additive delete guard is applied once and recorded as `20260923094259`. The focused rollback-only regression passed and left no synthetic rows; its targeted Reviewer returned CLEAN.
+  - Authenticated desktop browser checks covered the blocked-readiness state on `SVC-2026-0001` in EN and AR/RTL. Positive close/history/reopen passed rollback-only runtime verification but its successful UI state was not browser-exercised. No active DEV service is close-ready, and immutable history cannot be cleaned up; no synthetic browser fixture was created. Mobile and unauthorized-role checks are also unexercised.
+  - No persistent DEV business-data write was made beyond the authorized migration. PROD/DEMO, accounting, GL, revenue recognition, VAT/FATOORA/ZATCA, W9, and Layer 2/SaaS remain unactivated and out of scope.
 - **W8A Event Costing & Forecast Foundation:** remains `IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`; historical event-date/Riyadh-date repair remains in force.
 - **Still deferred / separately gated:** W9 reporting consolidation and W10 accounting remain later waves. GL/journals, revenue recognition, VAT/FATOORA/ZATCA activation, bank integration, deployment, PROD, DEMO, and Layer 2/SaaS remain unactivated.
-- **EXACT NEXT ACTION:** No further W8B work. W9 or later implementation requires separate Owner authorization. This status document grants no additional implementation or database authority.
+- **EXACT NEXT ACTION:** Controller W8 closure reconciliation and determination of whether W9 may be activated. W9 or later implementation remains separately authorized.
 
 > The dated delivery section immediately below preserves its 15 September snapshot and is superseded for current wave status by this section. Older deferral decisions remain unchanged.
 

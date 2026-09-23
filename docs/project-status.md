@@ -1,17 +1,18 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W8B EVENT COST CLOSE — 23 September 2026
+## CURRENT DELIVERY STATUS — W8B EVENT COST CLOSE CORRECTIVE FOLLOW-UP — 23 September 2026
 
 - **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), and W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`) remain published.
 - **W8A — Event Costing & Forecast Foundation:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`. Its managerial costing semantics, partial-source disclosure, and historical event-date/Riyadh-date repair remain unchanged.
-- **W8B — Event Cost Close:** `PUBLISHED / PASS WITH WARN / IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`.
-  - DEV base migration `20260923074541 w8b_event_cost_close` and forward-only ambiguity repair `20260923075521 w8b_event_cost_close_runtime_repair` are applied exactly once. The repair qualifies `close_version` without rewriting the applied foundation migration and preserves the RPC signature, fixed search path, and service-role-only execution.
-  - Rollback-only DEV lifecycle regression passed for readiness, close/reopen/replay/conflict, post-close cost-authority guards, independent AP settlement, and W6C unused-only advance release. All synthetic rows were rolled back; residue is `0`, and protected `SVC-2026-0001` remains not close-ready.
-  - Authenticated browser acceptance verified `SVC-2026-0001` in English and Arabic/RTL on desktop. Partial source completeness and readiness blockers are explicit; the close action remains disabled and no persistent close was recorded.
-  - Bounded warnings: DEV has no already-released supplier advance for the hidden-payment-action browser check; mobile viewport control and live two-session contention testing were unavailable. The rollback-only release guard and UI conditional were reviewed and covered by the targeted regression/reviewer.
+- **W8B — Event Cost Close:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / REVIEWER CLEAN / BROWSER VERIFIED WITH WARN`.
+  - The published baseline remains commit `55b3df0e0e974b26a0627190d0ba5240a32d9b0d`. DEV base and ambiguity-repair migrations remain applied exactly once (`20260923074541`, `20260923075521`). The additive `w8b_event_cost_close_delete_guard` migration is applied once; DEV history records it once as version `20260923094259`. Applied migrations were not rewritten or reapplied.
+  - The delete guard and rollback-only regression were reviewed CLEAN. The focused W8B regression passed, including close/reopen/replay/conflict, post-close cost-authority guards, independent supplier-payment settlement with linked synthetic evidence metadata, and W6C unused-only advance release. The transaction rolled back; synthetic services, bills, evidence, payments, close versions, and reopenings have zero residue.
+  - Authenticated desktop browser checks on `SVC-2026-0001` verified the existing blocked-readiness view in English and Arabic/RTL, including SAR figures, explicit blockers, the outstanding-settlement warning, and disabled Close Event Cost. Positive close/history/reopen is covered by rollback-only DEV runtime verification, but its successful UI state was not browser-exercised.
+  - No active DEV service is close-ready (12 inspected). A browser fixture would leave immutable close/reopen history that the installed database intentionally prevents deleting; no synthetic fixture was created, preserving the zero-residue requirement. Mobile viewport and unauthorized-role browser verification remain unexercised.
+  - No persistent DEV business-data mutation was made beyond the authorized migration. Production, DEMO, W9, accounting, GL, revenue recognition, VAT, and FATOORA/ZATCA remain out of scope.
   - This is managerial direct-cost finalization, separate from operational Service close, AP settlement, and any future accounting close. No GL, revenue-recognition, VAT, FATOORA/ZATCA, PROD, or DEMO activation is included.
-- **Next locked phase:** W9 reporting consolidation and W10 accounting remain later, separately gated waves; deployment and PROD/DEMO mutation remain outside this W8B release.
-- **EXACT NEXT ACTION:** No further W8B work. W9 discovery or any later wave requires separate Owner authorization.
+- **Next locked phase:** W9 Dashboards/Reports consolidation is only a candidate after Controller W8 closure reconciliation; W10 Accounting remains later and separately gated. Deployment and PROD/DEMO mutation remain outside this W8B release.
+- **EXACT NEXT ACTION:** Controller W8 closure reconciliation and determination of whether W9 may be activated; this task does not authorize W9 implementation.
 
 > The dated delivery section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated sections remain historical records.
 
