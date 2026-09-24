@@ -2,50 +2,91 @@ import ExcelJS from "exceljs";
 import type { Locale } from "../i18n/locales.ts";
 import { formatUiNumber, withLatnNumberingSystem } from "../i18n/formatting.ts";
 
+export type ExcelCellValue = string | number | Date | null | undefined;
+export type ExcelCellFormat = "text" | "number" | "currency" | "date" | "datetime";
+export type ExcelCellAlignment = "start" | "end" | "center";
+
 export type ExcelColumn<T> = {
   header: string;
   key: keyof T | string;
   width?: number;
-  value?: (row: T) => string | number | null | undefined;
-  format?: "text" | "number" | "currency" | "date";
+  value?: (row: T) => ExcelCellValue;
+  format?: ExcelCellFormat;
+  align?: ExcelCellAlignment;
 };
 
-/**
- * Localizable workbook chrome (meta/filter rows + defaults).
- * Callers pass locale-specific copy; English defaults preserve prior chrome.
- */
-export type ExcelExportChromeCopy = {
-  filteredView: string;
-  generatedAtLabel: string;
-  generatedByLabel: string;
-  totalRecordsLabel: string;
-  filtersLabel: string;
-  allRecords: string;
-  systemGenerated: string;
-  defaultSheetName: string;
+export type ExcelSummaryColumn = {
+  header: string;
+  width?: number;
+  format?: ExcelCellFormat;
+  align?: ExcelCellAlignment;
 };
 
-export type ExcelReportMetadata = {
-  companyName: string;
+export type ExcelSummaryMetric = {
+  label: string;
+  value: ExcelCellValue;
+  format?: ExcelCellFormat;
+};
+
+export type ExcelSummaryTable = {
+  title: string;
+  columns: ExcelSummaryColumn[];
+  rows: readonly (readonly ExcelCellValue[])[];
+};
+
+type ExcelReportMetadataBase = {
   brandName: string;
   reportTitle: string;
   generatedAt: Date;
-  generatedBy?: string;
   filters?: string[];
   totalRecords: number;
-  sheetName?: string;
   fileName: string;
+};
+
+export type StructuredExcelReportMetadata = ExcelReportMetadataBase & {
+  definition: string;
+  source: string;
+  timeBasis: string;
+  timeZone: string;
+};
+
+export type LegacyExcelReportMetadata = ExcelReportMetadataBase & {
+  companyName: string;
+  generatedBy?: string;
+  sheetName?: string;
+};
+
+export type ExcelReportMetadata = StructuredExcelReportMetadata | LegacyExcelReportMetadata;
+
+export type ExcelExportChromeCopy = {
+  definitionLabel?: string;
+  sourceLabel?: string;
+  timeBasisLabel?: string;
+  timeZoneLabel?: string;
+  generatedAtLabel?: string;
+  filtersLabel?: string;
+  totalRecordsLabel?: string;
+  allRecords?: string;
+  summarySheetName?: string;
+  dataSheetName?: string;
+  filteredView?: string;
+  generatedByLabel?: string;
+  systemGenerated?: string;
+  defaultSheetName?: string;
 };
 
 export type ExcelReportOptions<T> = {
   metadata: ExcelReportMetadata;
   columns: ExcelColumn<T>[];
   rows: T[];
+  summary?: {
+    metrics?: ExcelSummaryMetric[];
+    tables?: ExcelSummaryTable[];
+  };
   locale?: Locale;
   chrome?: ExcelExportChromeCopy;
 };
 
-/** English chrome matching the pre-i18n workbook strings (helper default). */
 export const DEFAULT_EXCEL_EXPORT_CHROME_EN: ExcelExportChromeCopy = {
   filteredView: "Filtered View",
   generatedAtLabel: "Generated At",
@@ -55,6 +96,12 @@ export const DEFAULT_EXCEL_EXPORT_CHROME_EN: ExcelExportChromeCopy = {
   allRecords: "All records",
   systemGenerated: "System Generated",
   defaultSheetName: "Report",
+  definitionLabel: "Definition",
+  sourceLabel: "Source",
+  timeBasisLabel: "Time basis",
+  timeZoneLabel: "Timezone",
+  summarySheetName: "Summary",
+  dataSheetName: "Data",
 };
 
 export const DEFAULT_EXCEL_EXPORT_CHROME_AR: ExcelExportChromeCopy = {
@@ -66,6 +113,12 @@ export const DEFAULT_EXCEL_EXPORT_CHROME_AR: ExcelExportChromeCopy = {
   allRecords: "كل السجلات",
   systemGenerated: "منشأ آلياً",
   defaultSheetName: "تقرير",
+  definitionLabel: "التعريف",
+  sourceLabel: "المصدر",
+  timeBasisLabel: "الأساس الزمني",
+  timeZoneLabel: "المنطقة الزمنية",
+  summarySheetName: "Summary",
+  dataSheetName: "Data",
 };
 
 const EXCEL_DATE_INTL_LOCALE: Record<Locale, string> = {
@@ -73,10 +126,7 @@ const EXCEL_DATE_INTL_LOCALE: Record<Locale, string> = {
   ar: "ar-SA",
 };
 
-/**
- * Export timestamp: Asia/Riyadh, 24h, Western digits.
- * English stays near-equivalent to historical `en-GB` DD/MM/YYYY HH:mm.
- */
+/** Export timestamps are displayed as a Riyadh wall-clock string with Western digits. */
 export function formatExcelExportDateTime(locale: Locale, date: Date): string {
   const formatted = new Intl.DateTimeFormat(
     EXCEL_DATE_INTL_LOCALE[locale],
@@ -102,10 +152,10 @@ export function buildExcelExportMetaLine(options: {
 }): string {
   const { chrome, formattedDate, generatedBy, totalRecordsDisplay } = options;
   return [
-    chrome.filteredView,
-    `${chrome.generatedAtLabel}: ${formattedDate}`,
-    `${chrome.generatedByLabel}: ${generatedBy}`,
-    `${chrome.totalRecordsLabel}: ${totalRecordsDisplay}`,
+    chrome.filteredView ?? "Filtered View",
+    `${chrome.generatedAtLabel ?? "Generated At"}: ${formattedDate}`,
+    `${chrome.generatedByLabel ?? "Generated By"}: ${generatedBy}`,
+    `${chrome.totalRecordsLabel ?? "Total Records"}: ${totalRecordsDisplay}`,
   ].join(" | ");
 }
 
@@ -113,157 +163,372 @@ export function buildExcelExportFiltersLine(options: {
   chrome: ExcelExportChromeCopy;
   filters?: string[];
 }): string {
-  const { chrome, filters } = options;
-  const filtersText =
-    filters && filters.length > 0 ? filters.join(", ") : chrome.allRecords;
-  return `${chrome.filtersLabel}: ${filtersText}`;
+  const filtersText = options.filters?.length ? options.filters.join(", ") : options.chrome.allRecords ?? "All records";
+  return `${options.chrome.filtersLabel ?? "Filters"}: ${filtersText}`;
 }
 
 function safeExcelText(value: string): string {
-  return /^[=+\-@]/.test(value) ? `'${value}` : value;
+  return /^[\t\r\n ]*[=+\-@]/.test(value) ? `'${value}` : value;
 }
 
-export async function buildExcelReportBuffer<T>(options: ExcelReportOptions<T>): Promise<ArrayBuffer> {
-  const { metadata, columns, rows } = options;
-  const locale: Locale = options.locale ?? "en";
-  const chrome = options.chrome ?? DEFAULT_EXCEL_EXPORT_CHROME_EN;
-  const generatedBy =
-    metadata.generatedBy?.trim() || chrome.systemGenerated;
+function excelNumber(value: ExcelCellValue): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
+function excelDateOnly(value: ExcelCellValue): Date | null {
+  if (value === null || value === undefined || value === "") return null;
+  if (value instanceof Date) {
+    if (!Number.isFinite(value.getTime())) return null;
+    return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
+  }
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value));
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+    ? date
+    : null;
+}
+
+function excelRiyadhDateTime(value: ExcelCellValue): Date | null {
+  if (value === null || value === undefined || value === "") return null;
+  const instant = value instanceof Date ? value : new Date(String(value));
+  if (!Number.isFinite(instant.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Riyadh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(instant);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return new Date(Date.UTC(
+    Number(values.year),
+    Number(values.month) - 1,
+    Number(values.day),
+    Number(values.hour),
+    Number(values.minute),
+    Number(values.second),
+  ));
+}
+
+function resolvedHorizontalAlignment(align: ExcelCellAlignment | undefined, locale: Locale): "left" | "right" | "center" {
+  if (align === "center") return "center";
+  if (align === "end") return "right";
+  if (align === "start") return locale === "ar" ? "right" : "left";
+  return locale === "ar" ? "right" : "left";
+}
+
+function setCellValue(
+  cell: ExcelJS.Cell,
+  value: ExcelCellValue,
+  format: ExcelCellFormat | undefined,
+  locale: Locale,
+  align?: ExcelCellAlignment,
+) {
+  if (format === "text") {
+    cell.value = value === null || value === undefined || value === "" ? null : safeExcelText(String(value));
+    cell.numFmt = "@";
+  } else if (format === "number") {
+    cell.value = excelNumber(value);
+    cell.numFmt = "#,##0.##";
+  } else if (format === "currency") {
+    cell.value = excelNumber(value);
+    cell.numFmt = '"SAR" #,##0.00';
+  } else if (format === "date") {
+    cell.value = excelDateOnly(value);
+    cell.numFmt = "dd/mm/yyyy";
+  } else if (format === "datetime") {
+    cell.value = excelRiyadhDateTime(value);
+    cell.numFmt = "dd/mm/yyyy hh:mm";
+  } else if (typeof value === "string") {
+    cell.value = value.length > 0 ? safeExcelText(value) : null;
+  } else {
+    cell.value = value ?? null;
+  }
+
+  const horizontal = resolvedHorizontalAlignment(align, locale);
+  cell.alignment = {
+    horizontal: format === "currency" || format === "number" ? "right" : horizontal,
+    vertical: "middle",
+    wrapText: format === "text" || format === undefined,
+  };
+}
+
+function styleSummaryContextRow(worksheet: ExcelJS.Worksheet, row: ExcelJS.Row, columnCount: number) {
+  const label = row.getCell(1);
+  label.font = { size: 9, bold: true, color: { argb: "FF475569" } };
+  label.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF1F5F9" } };
+  label.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+  const value = row.getCell(2);
+  value.font = { size: 10, color: { argb: "FF0F172A" } };
+  value.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+  if (columnCount > 2) {
+    worksheet.mergeCells(row.number, 2, row.number, columnCount);
+  }
+  row.height = 26;
+}
+
+async function buildStructuredExcelReportBuffer<T>(options: ExcelReportOptions<T> & { metadata: StructuredExcelReportMetadata }): Promise<ArrayBuffer> {
+  const { metadata, columns, rows } = options;
+  const locale = options.locale ?? "en";
+  const isArabic = locale === "ar";
+  const defaults = isArabic ? DEFAULT_EXCEL_EXPORT_CHROME_AR : DEFAULT_EXCEL_EXPORT_CHROME_EN;
+  const chrome = {
+    ...defaults,
+    ...options.chrome,
+    definitionLabel: options.chrome?.definitionLabel ?? defaults.definitionLabel!,
+    sourceLabel: options.chrome?.sourceLabel ?? defaults.sourceLabel!,
+    timeBasisLabel: options.chrome?.timeBasisLabel ?? defaults.timeBasisLabel!,
+    timeZoneLabel: options.chrome?.timeZoneLabel ?? defaults.timeZoneLabel!,
+    generatedAtLabel: options.chrome?.generatedAtLabel ?? defaults.generatedAtLabel!,
+    filtersLabel: options.chrome?.filtersLabel ?? defaults.filtersLabel!,
+    totalRecordsLabel: options.chrome?.totalRecordsLabel ?? defaults.totalRecordsLabel!,
+    allRecords: options.chrome?.allRecords ?? defaults.allRecords!,
+    summarySheetName: options.chrome?.summarySheetName ?? defaults.summarySheetName!,
+    dataSheetName: options.chrome?.dataSheetName ?? defaults.dataSheetName!,
+  };
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = metadata.brandName;
+  workbook.lastModifiedBy = metadata.brandName;
+  workbook.created = metadata.generatedAt;
+  workbook.modified = metadata.generatedAt;
+
+  const summaryColumnCount = Math.max(4, ...(options.summary?.tables?.map((table) => table.columns.length) ?? []));
+  const summarySheet = workbook.addWorksheet(chrome.summarySheetName, {
+    views: [{ rightToLeft: isArabic }],
+  });
+  summarySheet.getColumn(1).width = 26;
+  for (let column = 2; column <= summaryColumnCount; column += 1) {
+    summarySheet.getColumn(column).width = column % 2 === 0 ? 20 : 26;
+  }
+  for (const table of options.summary?.tables ?? []) {
+    table.columns.forEach((column, index) => {
+      const target = summarySheet.getColumn(index + 1);
+      target.width = Math.max(target.width ?? 0, column.width ?? 16);
+    });
+  }
+
+  summarySheet.mergeCells(1, 1, 1, summaryColumnCount);
+  const brand = summarySheet.getCell(1, 1);
+  brand.value = safeExcelText(metadata.brandName);
+  brand.font = { size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+  brand.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F2E52" } };
+  brand.alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle" };
+  summarySheet.getRow(1).height = 23;
+
+  summarySheet.mergeCells(2, 1, 2, summaryColumnCount);
+  const title = summarySheet.getCell(2, 1);
+  title.value = safeExcelText(metadata.reportTitle);
+  title.font = { size: 18, bold: true, color: { argb: "FF0F2E52" } };
+  title.alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle", wrapText: true };
+  summarySheet.getRow(2).height = 31;
+
+  summarySheet.mergeCells(3, 1, 3, summaryColumnCount);
+  const definition = summarySheet.getCell(3, 1);
+  definition.value = safeExcelText(`${chrome.definitionLabel}: ${metadata.definition}`);
+  definition.font = { size: 10, color: { argb: "FF475569" } };
+  definition.alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle", wrapText: true };
+  summarySheet.getRow(3).height = 32;
+
+  const filtersText = metadata.filters?.length ? metadata.filters.join(" · ") : chrome.allRecords;
+  const contextRows: Array<[string, string]> = [
+    [chrome.sourceLabel, metadata.source],
+    [chrome.timeBasisLabel, metadata.timeBasis],
+    [chrome.timeZoneLabel, metadata.timeZone],
+    [chrome.generatedAtLabel, formatExcelExportDateTime(locale, metadata.generatedAt)],
+    [chrome.filtersLabel, filtersText],
+    [chrome.totalRecordsLabel, formatUiNumber(locale, metadata.totalRecords, { useGrouping: true })],
+  ];
+  for (const [label, value] of contextRows) {
+    const row = summarySheet.addRow([safeExcelText(label), safeExcelText(value)]);
+    styleSummaryContextRow(summarySheet, row, summaryColumnCount);
+    row.getCell(1).alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle", wrapText: true };
+    row.getCell(2).alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle", wrapText: true };
+  }
+
+  const metricFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } } as ExcelJS.Fill;
+  const metrics = options.summary?.metrics ?? [];
+  for (let index = 0; index < metrics.length; index += 2) {
+    const metricRow = summarySheet.addRow([]);
+    const left = metrics[index];
+    const right = metrics[index + 1];
+    for (const [labelColumn, valueColumn, metric] of [
+      [1, 2, left],
+      [3, 4, right],
+    ] as const) {
+      if (!metric) continue;
+      const labelCell = metricRow.getCell(labelColumn);
+      labelCell.value = safeExcelText(metric.label);
+      labelCell.font = { size: 9, bold: true, color: { argb: "FF475569" } };
+      labelCell.fill = metricFill;
+      labelCell.alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle", wrapText: true };
+      const valueCell = metricRow.getCell(valueColumn);
+      setCellValue(valueCell, metric.value, metric.format, locale, "end");
+      valueCell.font = { size: 12, bold: true, color: { argb: "FF0F2E52" } };
+      valueCell.fill = metricFill;
+    }
+    metricRow.height = 30;
+  }
+
+  for (const table of options.summary?.tables ?? []) {
+    summarySheet.addRow([]);
+    const titleRow = summarySheet.addRow([safeExcelText(table.title)]);
+    summarySheet.mergeCells(titleRow.number, 1, titleRow.number, summaryColumnCount);
+    titleRow.getCell(1).font = { size: 11, bold: true, color: { argb: "FF0F2E52" } };
+    titleRow.getCell(1).alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle" };
+    titleRow.height = 23;
+
+    const header = summarySheet.addRow(table.columns.map((column) => safeExcelText(column.header)));
+    header.height = 30;
+    table.columns.forEach((column, index) => {
+      const cell = header.getCell(index + 1);
+      cell.font = { size: 9, bold: true, color: { argb: "FF0F2E52" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2E8F0" } };
+      cell.alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle", wrapText: true };
+      if (column.width) summarySheet.getColumn(index + 1).width = Math.max(summarySheet.getColumn(index + 1).width ?? 0, column.width);
+    });
+    for (const values of table.rows) {
+      const row = summarySheet.addRow([]);
+      table.columns.forEach((column, index) => {
+        const cell = row.getCell(index + 1);
+        setCellValue(cell, values[index], column.format, locale, column.align);
+        cell.border = { bottom: { style: "hair", color: { argb: "FFCBD5E1" } } };
+      });
+      row.height = 24;
+    }
+  }
+
+  const dataSheet = workbook.addWorksheet(chrome.dataSheetName, {
+    views: [{ state: "frozen", xSplit: 0, ySplit: 1, rightToLeft: isArabic }],
+  });
+  const header = dataSheet.getRow(1);
+  header.height = 34;
+  columns.forEach((column, index) => {
+    dataSheet.getColumn(index + 1).width = column.width ?? 20;
+    const cell = header.getCell(index + 1);
+    cell.value = safeExcelText(column.header);
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F2E52" } };
+    cell.alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle", wrapText: true };
+    cell.border = { bottom: { style: "medium", color: { argb: "FFB08D57" } } };
+  });
+  if (columns.length > 0) {
+    dataSheet.autoFilter = {
+      from: { row: 1, column: 1 },
+      to: { row: 1, column: columns.length },
+    };
+  }
+
+  rows.forEach((rowData, rowIndex) => {
+    const row = dataSheet.getRow(rowIndex + 2);
+    columns.forEach((column, columnIndex) => {
+      const cell = row.getCell(columnIndex + 1);
+      const value = column.value ? column.value(rowData) : rowData[column.key as keyof T] as ExcelCellValue;
+      setCellValue(cell, value, column.format, locale, column.align);
+      if (rowIndex % 2 === 1) {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
+      }
+      cell.border = { bottom: { style: "hair", color: { argb: "FFE2E8F0" } } };
+    });
+    row.height = 24;
+  });
+
+  return (await workbook.xlsx.writeBuffer()) as ArrayBuffer;
+}
+
+async function buildLegacyExcelReportBuffer<T>(options: ExcelReportOptions<T> & { metadata: LegacyExcelReportMetadata }): Promise<ArrayBuffer> {
+  const { metadata, columns, rows } = options;
+  const locale = options.locale ?? "en";
+  const chrome = options.chrome ?? (locale === "ar" ? DEFAULT_EXCEL_EXPORT_CHROME_AR : DEFAULT_EXCEL_EXPORT_CHROME_EN);
+  const generatedBy = metadata.generatedBy?.trim() || chrome.systemGenerated || "System Generated";
   const workbook = new ExcelJS.Workbook();
   workbook.creator = metadata.brandName;
   workbook.lastModifiedBy = generatedBy;
   workbook.created = metadata.generatedAt;
   workbook.modified = metadata.generatedAt;
 
-  const sheet = workbook.addWorksheet(
-    metadata.sheetName || chrome.defaultSheetName,
-    {
-      views: [{ state: "frozen", xSplit: 0, ySplit: 5 }],
-    },
-  );
-
-  const lastCol = columns.length;
-  const formattedDate = formatExcelExportDateTime(locale, metadata.generatedAt);
-  const totalRecordsDisplay = formatUiNumber(locale, metadata.totalRecords, {
-    useGrouping: true,
+  const sheet = workbook.addWorksheet(metadata.sheetName || chrome.defaultSheetName || "Report", {
+    views: [{ state: "frozen", xSplit: 0, ySplit: 5 }],
   });
-
-  // Shared navy fill for the header band
-  const headerFill: ExcelJS.Fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FF0f172a" }, // Deep navy blue (Tailwind slate-900)
-  };
-
-  // Row 1: Brand
-  sheet.mergeCells(1, 1, 1, lastCol);
-  const row1 = sheet.getCell(1, 1);
-  row1.value = safeExcelText(`${metadata.companyName} - ${metadata.brandName}`);
-  row1.font = { size: 14, bold: true, color: { argb: "FFFFFFFF" } };
-  row1.fill = headerFill;
-  row1.alignment = { horizontal: "center", vertical: "middle" };
-  sheet.getRow(1).height = 25;
-
-  // Row 2: Report Title
-  sheet.mergeCells(2, 1, 2, lastCol);
-  const row2 = sheet.getCell(2, 1);
-  row2.value = safeExcelText(metadata.reportTitle);
-  row2.font = { size: 16, bold: true, color: { argb: "FFFFFFFF" } };
-  row2.fill = headerFill;
-  row2.alignment = { horizontal: "center", vertical: "middle" };
-  sheet.getRow(2).height = 30;
-
-  // Row 3: Meta Info
-  sheet.mergeCells(3, 1, 3, lastCol);
-  const row3 = sheet.getCell(3, 1);
-  row3.value = safeExcelText(buildExcelExportMetaLine({
+  const lastColumn = Math.max(columns.length, 1);
+  const headerFill: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } };
+  const meta = buildExcelExportMetaLine({
     chrome,
-    formattedDate,
+    formattedDate: formatExcelExportDateTime(locale, metadata.generatedAt),
     generatedBy,
-    totalRecordsDisplay,
-  }));
-  row3.font = { size: 10, color: { argb: "FFCCCCCC" } }; // slightly muted white
-  row3.fill = headerFill;
-  row3.alignment = { horizontal: "center", vertical: "middle" };
-  sheet.getRow(3).height = 20;
-
-  // Row 4: Filters
-  sheet.mergeCells(4, 1, 4, lastCol);
-  const row4 = sheet.getCell(4, 1);
-  row4.value = safeExcelText(buildExcelExportFiltersLine({
-    chrome,
-    filters: metadata.filters,
-  }));
-  row4.font = { size: 10, italic: true, color: { argb: "FFCCCCCC" } };
-  row4.fill = headerFill;
-  row4.alignment = { horizontal: "center", vertical: "middle" };
-  sheet.getRow(4).height = 20;
-
-  // 5. Table Headers (Row 5)
-  const headerRowIndex = 5;
-  const headerRow = sheet.getRow(headerRowIndex);
-
-  columns.forEach((col, index) => {
-    const colNumber = index + 1;
-    const cell = headerRow.getCell(colNumber);
-    cell.value = safeExcelText(col.header);
-    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-    cell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF1e293b" }, // slightly lighter navy for column headers
-    };
-    cell.border = {
-      top: { style: "thin", color: { argb: "FF334155" } },
-      left: { style: "thin", color: { argb: "FF334155" } },
-      bottom: { style: "thin", color: { argb: "FF334155" } },
-      right: { style: "thin", color: { argb: "FF334155" } },
-    };
-
-    sheet.getColumn(colNumber).width = col.width || 20;
+    totalRecordsDisplay: formatUiNumber(locale, metadata.totalRecords, { useGrouping: true }),
   });
+  const filterLine = buildExcelExportFiltersLine({ chrome, filters: metadata.filters });
 
-  sheet.autoFilter = {
-    from: { row: headerRowIndex, column: 1 },
-    to: { row: headerRowIndex, column: columns.length },
-  };
+  for (const [rowNumber, value] of [
+    `${metadata.companyName} - ${metadata.brandName}`,
+    metadata.reportTitle,
+    meta,
+    filterLine,
+  ].entries()) {
+    const rowNumberOneBased = rowNumber + 1;
+    sheet.mergeCells(rowNumberOneBased, 1, rowNumberOneBased, lastColumn);
+    const cell = sheet.getCell(rowNumberOneBased, 1);
+    cell.value = safeExcelText(value);
+    cell.fill = headerFill;
+    cell.font = { size: rowNumber === 1 ? 16 : 10, bold: rowNumber < 2, color: { argb: "FFFFFFFF" } };
+    cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+    sheet.getRow(rowNumberOneBased).height = rowNumber < 2 ? 28 : 22;
+  }
 
-  // 6. Rows
+  const headerRow = sheet.getRow(5);
+  headerRow.height = 34;
+  columns.forEach((column, index) => {
+    sheet.getColumn(index + 1).width = column.width ?? 20;
+    const cell = headerRow.getCell(index + 1);
+    cell.value = safeExcelText(column.header);
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E293B" } };
+  });
+  if (columns.length > 0) {
+    sheet.autoFilter = { from: { row: 5, column: 1 }, to: { row: 5, column: columns.length } };
+  }
+
   rows.forEach((rowData, rowIndex) => {
-    const r = sheet.getRow(headerRowIndex + 1 + rowIndex);
-    columns.forEach((col, colIndex) => {
-      const cell = r.getCell(colIndex + 1);
-      const val = col.value ? col.value(rowData) : rowData[col.key as keyof T];
-
-      if (col.format === "text") {
-        cell.value = val === null || val === undefined ? "" : safeExcelText(String(val));
+    const row = sheet.getRow(rowIndex + 6);
+    columns.forEach((column, columnIndex) => {
+      const cell = row.getCell(columnIndex + 1);
+      const value = column.value ? column.value(rowData) : rowData[column.key as keyof T] as ExcelCellValue;
+      if (column.format === "text") {
+        cell.value = value === null || value === undefined || value === "" ? "" : safeExcelText(String(value));
         cell.numFmt = "@";
-        cell.alignment = { horizontal: "left" };
-      } else if (col.format === "number") {
-        cell.value = val !== null && val !== undefined ? Number(val) : "";
-        cell.numFmt = "#,##0";
-      } else if (col.format === "currency") {
-        cell.value = val !== null && val !== undefined ? Number(val) : "";
-        cell.numFmt = "\"SAR\" #,##0.00";
-      } else if (col.format === "date") {
-        // Basic date formatting, more complex Saudi specific could be added
-        cell.value = val ? new Date(val as string | number | Date) : "";
+        cell.alignment = { horizontal: locale === "ar" ? "right" : "left", vertical: "middle", wrapText: true };
+      } else if (column.format === "number" || column.format === "currency") {
+        const numericValue = excelNumber(value);
+        cell.value = numericValue;
+        cell.numFmt = column.format === "currency" ? '"SAR" #,##0.00' : "#,##0.##";
+      } else if (column.format === "date") {
+        const date = value instanceof Date ? value : value ? new Date(String(value)) : null;
+        cell.value = date && Number.isFinite(date.getTime()) ? date : null;
         cell.numFmt = "dd/mm/yyyy hh:mm";
       } else {
-        cell.value = typeof val === "string" ? safeExcelText(val) : val as string | number | null | undefined;
+        cell.value = typeof value === "string" ? safeExcelText(value) : value ?? null;
       }
-
-      cell.border = {
-        top: { style: "thin", color: { argb: "FFEEEEEE" } },
-        left: { style: "thin", color: { argb: "FFEEEEEE" } },
-        bottom: { style: "thin", color: { argb: "FFEEEEEE" } },
-        right: { style: "thin", color: { argb: "FFEEEEEE" } },
-      };
+      cell.border = { bottom: { style: "thin", color: { argb: "FFEEEEEE" } } };
     });
   });
-
   return (await workbook.xlsx.writeBuffer()) as ArrayBuffer;
+}
+
+export async function buildExcelReportBuffer<T>(options: ExcelReportOptions<T>): Promise<ArrayBuffer> {
+  const metadata = options.metadata;
+  if ("definition" in metadata && "source" in metadata && "timeBasis" in metadata && "timeZone" in metadata) {
+    return buildStructuredExcelReportBuffer(options as ExcelReportOptions<T> & { metadata: StructuredExcelReportMetadata });
+  }
+  return buildLegacyExcelReportBuffer(options as ExcelReportOptions<T> & { metadata: LegacyExcelReportMetadata });
 }
 
 export async function generateExcelReport<T>(options: ExcelReportOptions<T>): Promise<void> {

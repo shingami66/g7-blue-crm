@@ -1,13 +1,23 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 import { UiBidiText, UiLtrText, UiMoneyText } from "@/components/i18n/UiValueText";
 import DataTable from "@/components/ui/DataTable";
 import { AuthDependencyError, ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getReportCenterDictionary } from "@/lib/i18n/dictionaries/report-center";
+import type { DataTableColumn } from "@/components/ui/data-table-contract";
 import { getReportDefinitions } from "@/lib/reports/catalog";
 import { getEventEconomicsReport, hasReportData } from "@/lib/reports/reporting";
-import type { ReportDefinition } from "@/lib/reports/types";
+import type { ReportDefinition, ReportEventEconomicsRow } from "@/lib/reports/types";
+import {
+  buildEventEconomicsViewHref,
+  EVENT_ECONOMICS_VIEW_COLUMNS,
+  EVENT_ECONOMICS_VIEW_OPTIONS,
+  resolveEventEconomicsView,
+  type EventEconomicsColumnKey,
+  type EventEconomicsView,
+} from "@/lib/reports/presentation";
 import ReportPagination from "../ReportPagination";
 import ReportState from "../ReportState";
 import ReportWorkspace from "../ReportWorkspace";
@@ -39,6 +49,8 @@ export default async function EventEconomicsReportPage({
     completeness: value(query.completeness) ?? "all",
     closeState: value(query.closeState) ?? "all",
   };
+  const view = resolveEventEconomicsView(value(query.view));
+  const pageValues = { ...values, view };
   const page = Math.max(Number(value(query.page)) || 1, 1);
   const completeness = values.completeness === "COMPLETE" || values.completeness === "PARTIAL" || values.completeness === "UNAVAILABLE" ? values.completeness : "all";
   const closeState = values.closeState === "open" || values.closeState === "closed" ? values.closeState : "all";
@@ -51,7 +63,7 @@ export default async function EventEconomicsReportPage({
     loadFailure = error instanceof ForbiddenError ? "forbidden" : error instanceof AuthDependencyError ? "unavailable" : "error";
   }
   if (loadFailure || !result || !hasReportData(result)) {
-    return <ReportWorkspace definition={definition} dictionary={dictionary} locale={locale} generatedAt={new Date().toISOString()} filterPanel={<EventEconomicsFilters dictionary={dictionary} values={values} />}><ReportState status={loadFailure ?? result?.status ?? "error"} dictionary={dictionary} /></ReportWorkspace>;
+    return <ReportWorkspace definition={definition} dictionary={dictionary} locale={locale} generatedAt={new Date().toISOString()} filterPanel={<EventEconomicsFilters dictionary={dictionary} values={pageValues} />}><ReportState status={loadFailure ?? result?.status ?? "error"} dictionary={dictionary} /></ReportWorkspace>;
   }
   const report = result.data;
   return (
@@ -63,60 +75,124 @@ export default async function EventEconomicsReportPage({
         generatedAt={new Date().toISOString()}
         exportHref={exportQuery(values)}
         stateNote={result.status === "partial" ? <p className="text-sm text-on-surface-variant">{dictionary.workspace.partial}</p> : null}
-        filterPanel={<EventEconomicsFilters dictionary={dictionary} values={values} />}
+        filterPanel={<EventEconomicsFilters dictionary={dictionary} values={pageValues} />}
       >
+        <EventEconomicsViewSelector view={view} filters={values} dictionary={dictionary} />
         <section className="min-w-0 overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-labelledby="event-economics-detail">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-surface-variant px-4 py-4">
-            <div><h2 id="event-economics-detail" className="text-base font-semibold text-primary">{dictionary.event.title}</h2><p className="mt-1 text-xs text-on-surface-variant">{dictionary.event.description}</p></div>
+            <h2 id="event-economics-detail" className="text-base font-semibold text-primary">{dictionary.event.views[view === "cost" ? "costAnalysis" : view === "commercial" ? "commercialClose" : "overview"]}</h2>
             <span className="text-sm text-on-surface-variant">{dictionary.workspace.rows}: <UiLtrText>{report.pagination.total}</UiLtrText></span>
           </div>
           {report.rows.length > 0 ? (
-            <DataTable minWidth="2840px" ariaLabel={dictionary.event.title} columns={[
-              { key: "service", header: dictionary.event.title, kind: "identifier", align: "start", minWidth: 300 },
-              { key: "customer", header: dictionary.ar.customer, kind: "text", align: "start", minWidth: 220 },
-              { key: "budget", header: dictionary.event.approvedBudget, kind: "money", align: "end", minWidth: 180, noWrap: true },
-              { key: "commitment", header: dictionary.event.commitment, kind: "money", align: "end", minWidth: 180, noWrap: true },
-              { key: "actual", header: dictionary.event.actual, kind: "money", align: "end", minWidth: 180, noWrap: true },
-              { key: "paid", header: dictionary.event.paid, kind: "money", align: "end", minWidth: 180, noWrap: true },
-              { key: "outstanding", header: dictionary.event.outstanding, kind: "money", align: "end", minWidth: 180, noWrap: true },
-              { key: "etc", header: dictionary.event.etc, kind: "money", align: "end", minWidth: 180, noWrap: true },
-              { key: "eac", header: dictionary.event.eac, kind: "money", align: "end", minWidth: 180, noWrap: true },
-              { key: "commercial", header: dictionary.event.commercialValue, kind: "money", align: "end", minWidth: 180, noWrap: true },
-              { key: "forecast", header: dictionary.event.forecastMargin, kind: "money", align: "end", minWidth: 180, noWrap: true },
-              { key: "completeness", header: dictionary.event.completeness, kind: "status", align: "center", minWidth: 180, noWrap: true },
-              { key: "close", header: dictionary.event.closeState, kind: "status", align: "center", minWidth: 150, noWrap: true },
-              { key: "finalActual", header: dictionary.event.finalActual, kind: "money", align: "end", minWidth: 180, noWrap: true },
-              { key: "finalMargin", header: dictionary.event.finalMargin, kind: "money", align: "end", minWidth: 180, noWrap: true },
-            ]}>
+            <DataTable minWidth={eventViewMinWidth(view)} ariaLabel={dictionary.event.views[view === "cost" ? "costAnalysis" : view === "commercial" ? "commercialClose" : "overview"]} columns={EVENT_ECONOMICS_VIEW_COLUMNS[view].map((key) => eventColumnDefinition(key, dictionary))}>
               {report.rows.map((row) => (
                 <tr key={row.serviceId}>
-                  <td><Link href={`/services/${row.serviceId}/costing`} className="font-medium text-primary hover:underline"><UiLtrText>{row.serviceNumber}</UiLtrText> <span aria-hidden>·</span> <UiBidiText>{row.serviceTitle}</UiBidiText></Link></td>
-                  <td>{row.customerName ? <Link href={`/customers/${row.customerId}`} className="hover:underline"><UiBidiText>{row.customerName}</UiBidiText></Link> : <span className="text-on-surface-variant">{dictionary.event.noCustomerIdentity}</span>}</td>
-                  <td><UiMoneyText locale={locale} value={row.approvedBudgetCost} /></td>
-                  <td><UiMoneyText locale={locale} value={row.openCommitment} /></td>
-                  <td><UiMoneyText locale={locale} value={row.actualCost} /></td>
-                  <td><UiMoneyText locale={locale} value={row.paidCost} /></td>
-                  <td><UiMoneyText locale={locale} value={row.outstandingCost} /></td>
-                  <td><UiMoneyText locale={locale} value={row.etc} /></td>
-                  <td><UiMoneyText locale={locale} value={row.eac} /></td>
-                  <td><UiMoneyText locale={locale} value={row.netApprovedCommercialValue} /></td>
-                  <td><UiMoneyText locale={locale} value={row.forecastMargin} /></td>
-                  <td><UiBidiText>{row.completenessStatus === "COMPLETE" ? dictionary.event.complete : row.completenessStatus === "PARTIAL" ? dictionary.event.partial : dictionary.event.unavailable}</UiBidiText></td>
-                  <td><UiBidiText>{row.closeState === "closed" ? dictionary.event.closed : dictionary.event.open}</UiBidiText></td>
-                  <td>{row.closeState === "closed" ? <UiMoneyText locale={locale} value={row.finalActualCost} /> : <span aria-label={dictionary.event.noFinalForOpen} title={dictionary.event.noFinalForOpen} className="text-on-surface-variant">—</span>}</td>
-                  <td>{row.closeState === "closed" ? <UiMoneyText locale={locale} value={row.finalManagerialMargin} /> : <span aria-label={dictionary.event.noFinalForOpen} title={dictionary.event.noFinalForOpen} className="text-on-surface-variant">—</span>}</td>
+                  {EVENT_ECONOMICS_VIEW_COLUMNS[view].map((key) => <td key={key}>{renderEventColumn(key, row, locale, dictionary)}</td>)}
                 </tr>
               ))}
             </DataTable>
           ) : <p className="px-4 py-8 text-sm text-on-surface-variant">{dictionary.workspace.noRows}</p>}
-          <ReportPagination pathname="/reports/event-economics" query={values} page={report.pagination.page} totalPages={report.pagination.totalPages} dictionary={dictionary} />
+          <ReportPagination pathname="/reports/event-economics" query={pageValues} page={report.pagination.page} totalPages={report.pagination.totalPages} dictionary={dictionary} />
         </section>
       </ReportWorkspace>
     );
 }
 
+function EventEconomicsViewSelector({ view, filters, dictionary }: {
+  view: EventEconomicsView;
+  filters: { asOf?: string; search?: string; completeness: string; closeState: string };
+  dictionary: ReturnType<typeof getReportCenterDictionary>;
+}) {
+  return (
+    <nav aria-label={dictionary.event.views.selector} className="flex min-w-0 flex-wrap items-center gap-3">
+      <span className="text-xs font-semibold text-on-surface-variant">{dictionary.event.views.selector}</span>
+      <div className="flex min-w-0 flex-wrap rounded-lg border border-outline-variant bg-surface-container-low p-1">
+        {EVENT_ECONOMICS_VIEW_OPTIONS.map(({ key, labelKey }) => {
+          const selected = view === key;
+          return (
+            <Link
+              key={key}
+              href={buildEventEconomicsViewHref(key, filters)}
+              aria-current={selected ? "page" : undefined}
+              className={`inline-flex min-h-9 items-center justify-center rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${selected ? "bg-primary text-white shadow-sm" : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"}`}
+            >
+              {dictionary.event.views[labelKey]}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+function eventColumnDefinition(key: EventEconomicsColumnKey, dictionary: ReturnType<typeof getReportCenterDictionary>): DataTableColumn {
+  const header: Record<EventEconomicsColumnKey, string> = {
+    service: dictionary.event.eventService,
+    customer: dictionary.ar.customer,
+    budget: dictionary.event.approvedBudget,
+    commitment: dictionary.event.commitment,
+    actual: dictionary.event.actual,
+    paid: dictionary.event.paid,
+    outstanding: dictionary.event.outstanding,
+    etc: dictionary.event.etc,
+    eac: dictionary.event.eac,
+    commercialValue: dictionary.event.commercialValue,
+    forecast: dictionary.event.forecastMargin,
+    completeness: dictionary.event.completeness,
+    close: dictionary.event.closeState,
+    finalActual: dictionary.event.finalActual,
+    finalMargin: dictionary.event.finalMargin,
+  };
+  const kind: NonNullable<DataTableColumn["kind"]> = key === "service" ? "identifier" : key === "customer" ? "text" : key === "completeness" || key === "close" ? "status" : "money";
+  const minWidth = key === "service" ? 280 : key === "customer" ? 220 : kind === "status" ? 160 : 150;
+  const align: DataTableColumn["align"] = kind === "money" ? "end" : kind === "status" ? "center" : "start";
+  return { key, header: header[key], kind, align, minWidth, noWrap: kind === "money" || kind === "status" };
+}
+
+function eventViewMinWidth(view: EventEconomicsView) {
+  if (view === "overview") return "1450px";
+  return view === "cost" ? "1320px" : "1260px";
+}
+
+function renderEventColumn(
+  key: EventEconomicsColumnKey,
+  row: ReportEventEconomicsRow,
+  locale: "en" | "ar",
+  dictionary: ReturnType<typeof getReportCenterDictionary>,
+): ReactNode {
+  if (key === "service") {
+    return <Link href={`/services/${row.serviceId}/costing`} className="font-medium text-primary hover:underline"><UiLtrText>{row.serviceNumber}</UiLtrText> <span aria-hidden>·</span> <UiBidiText>{row.serviceTitle}</UiBidiText></Link>;
+  }
+  if (key === "customer") {
+    return row.customerName ? <Link href={`/customers/${row.customerId}`} className="hover:underline"><UiBidiText>{row.customerName}</UiBidiText></Link> : <span className="text-on-surface-variant">{dictionary.event.noCustomerIdentity}</span>;
+  }
+  if (key === "completeness") {
+    return <UiBidiText>{row.completenessStatus === "COMPLETE" ? dictionary.event.complete : row.completenessStatus === "PARTIAL" ? dictionary.event.partial : dictionary.event.unavailable}</UiBidiText>;
+  }
+  if (key === "close") {
+    return <UiBidiText>{row.closeState === "closed" ? dictionary.event.closed : dictionary.event.open}</UiBidiText>;
+  }
+  if (key === "finalActual" || key === "finalMargin") {
+    if (row.closeState !== "closed") return <span aria-label={dictionary.event.noFinalForOpen} title={dictionary.event.noFinalForOpen} className="text-on-surface-variant">—</span>;
+    return <UiMoneyText locale={locale} value={key === "finalActual" ? row.finalActualCost : row.finalManagerialMargin} />;
+  }
+  const value: Record<Exclude<EventEconomicsColumnKey, "service" | "customer" | "completeness" | "close" | "finalActual" | "finalMargin">, number | null> = {
+    budget: row.approvedBudgetCost,
+    commitment: row.openCommitment,
+    actual: row.actualCost,
+    paid: row.paidCost,
+    outstanding: row.outstandingCost,
+    etc: row.etc,
+    eac: row.eac,
+    commercialValue: row.netApprovedCommercialValue,
+    forecast: row.forecastMargin,
+  };
+  return <UiMoneyText locale={locale} value={value[key]} />;
+}
+
 function EventEconomicsFilters({ dictionary, values }: { dictionary: ReturnType<typeof getReportCenterDictionary>; values: Record<string, string | undefined> }) {
   return <form method="get" className="grid min-w-0 grid-cols-1 gap-4 rounded-xl border border-surface-variant bg-surface-container-lowest p-5 sm:grid-cols-2 xl:grid-cols-12">
+    <input type="hidden" name="view" value={values.view ?? "overview"} />
     <label className="flex min-w-0 flex-col gap-2 text-sm text-on-surface-variant xl:col-span-2"><span>{dictionary.workspace.asOf}</span><input name="asOf" type="date" defaultValue={values.asOf} className="h-11 w-full min-w-0 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface" /></label>
     <label className="flex min-w-0 flex-col gap-2 text-sm text-on-surface-variant xl:col-span-4"><span>{dictionary.workspace.search}</span><input name="search" defaultValue={values.search} className="h-11 w-full min-w-0 rounded-md border border-outline-variant bg-surface px-3 text-sm text-on-surface" /></label>
     <label className="flex min-w-0 flex-col gap-2 text-sm text-on-surface-variant xl:col-span-3"><span>{dictionary.event.completeness}</span><select name="completeness" defaultValue={values.completeness} className="h-11 w-full min-w-0 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface"><option value="all">{dictionary.event.allCompleteness}</option><option value="COMPLETE">{dictionary.event.complete}</option><option value="PARTIAL">{dictionary.event.partial}</option><option value="UNAVAILABLE">{dictionary.event.unavailable}</option></select></label>

@@ -102,27 +102,21 @@ export default async function AccountsReceivableReportPage({
               <span className="text-sm text-on-surface-variant">{dictionary.workspace.rows}: <UiLtrText>{report.detailTotalCount}</UiLtrText></span>
             </div>
             {report.rows.length > 0 ? (
-              <DataTable minWidth="1800px" ariaLabel={dictionary.ar.invoice} columns={[
+              <DataTable minWidth="1160px" ariaLabel={dictionary.ar.invoice} columns={[
                 { key: "invoice", header: dictionary.ar.invoice, kind: "identifier", align: "start", minWidth: 160, noWrap: true },
-                { key: "customer", header: dictionary.ar.customer, kind: "text", align: "start", minWidth: 220 },
-                { key: "service", header: dictionary.ar.service, kind: "text", align: "start", minWidth: 280 },
-                { key: "issue", header: dictionary.ar.issueDate, kind: "date", align: "start", minWidth: 140, noWrap: true },
-                { key: "due", header: dictionary.ar.dueDate, kind: "date", align: "start", minWidth: 140, noWrap: true },
-                { key: "gross", header: dictionary.ar.gross, kind: "money", align: "end", minWidth: 168, noWrap: true },
-                { key: "credits", header: dictionary.ar.credits, kind: "money", align: "end", minWidth: 168, noWrap: true },
-                { key: "net", header: dictionary.ar.net, kind: "money", align: "end", minWidth: 168, noWrap: true },
-                { key: "settled", header: dictionary.ar.settled, kind: "money", align: "end", minWidth: 168, noWrap: true },
-                { key: "outstanding", header: dictionary.ar.outstandingColumn, kind: "money", align: "end", minWidth: 168, noWrap: true },
+                { key: "customer", header: dictionary.ar.customer, kind: "text", align: "start", minWidth: 190 },
+                { key: "service", header: dictionary.ar.service, kind: "text", align: "start", minWidth: 230 },
+                { key: "due", header: dictionary.ar.dueDate, kind: "date", align: "start", minWidth: 130, noWrap: true },
+                { key: "net", header: dictionary.ar.net, kind: "money", align: "end", minWidth: 150, noWrap: true },
+                { key: "settled", header: dictionary.ar.settled, kind: "money", align: "end", minWidth: 150, noWrap: true },
+                { key: "outstanding", header: dictionary.ar.outstandingColumn, kind: "money", align: "end", minWidth: 150, noWrap: true },
               ]}>
                 {report.rows.map((row) => (
                   <tr key={row.invoiceId}>
                     <td><Link className="font-medium text-primary hover:underline" href={`/invoices/${row.invoiceId}`}><UiLtrText>{row.invoiceNumber}</UiLtrText></Link></td>
                     <td>{row.customerName ? <Link href={`/customers/${row.customerId}`} className="hover:underline"><UiBidiText>{row.customerName}</UiBidiText></Link> : <span className="text-on-surface-variant">{dictionary.ar.noCustomerIdentity}</span>}</td>
                     <td>{row.serviceTitle && row.serviceId ? <Link href={`/services/${row.serviceId}`} className="hover:underline"><UiBidiText>{row.serviceNumber} · {row.serviceTitle}</UiBidiText></Link> : <span className="text-on-surface-variant">{dictionary.ar.noServiceIdentity}</span>}</td>
-                    <td><UiDateText locale={locale} value={row.issueDate} /></td>
                     <td><UiDateText locale={locale} value={row.dueDate} /></td>
-                    <td><UiMoneyText locale={locale} value={row.grossAmount} /></td>
-                    <td><UiMoneyText locale={locale} value={row.creditAdjustmentAmount + row.creditApplicationAmount} /></td>
                     <td><UiMoneyText locale={locale} value={row.netReceivableAmount} /></td>
                     <td><UiMoneyText locale={locale} value={row.settledAmount} /></td>
                     <td><UiMoneyText locale={locale} value={row.outstandingAmount} /></td>

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import type { ReportNavigationItem } from "@/lib/reports/types";
 import PendingLink from "@/components/ui/PendingLink";
 import {
   navigationDictionaryAr,
@@ -36,6 +37,7 @@ export type NavSectionKey =
   | "billingAndPayments"
   | "expensesAndCosting"
   | "accountsPayable"
+  | "reports"
   | "administration";
 
 interface NavChildItem {
@@ -53,7 +55,8 @@ interface NavSection {
 }
 
 export function getSectionForPathname(pathname: string): NavSectionKey | null {
-  if (pathname === "/dashboard" || pathname === "/reports") return null;
+  if (pathname === "/dashboard") return null;
+  if (pathname === "/reports" || pathname.startsWith("/reports/")) return "reports";
   if (
     pathname === "/customers" ||
     pathname.startsWith("/customers/") ||
@@ -119,6 +122,7 @@ export default function Sidebar({
   canReadSupplierBills = false,
   canReadSupplierPayments = false,
   canReadSupplierAdvances = false,
+  authorizedReports = [],
   shellDirection = "ltr",
   currentPathname,
 }: {
@@ -127,6 +131,7 @@ export default function Sidebar({
   canReadSupplierBills?: boolean;
   canReadSupplierPayments?: boolean;
   canReadSupplierAdvances?: boolean;
+  authorizedReports?: readonly ReportNavigationItem[];
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
 }) {
@@ -137,16 +142,16 @@ export default function Sidebar({
   const pathname = currentPathname ?? routerPathname;
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [lastPathname, setLastPathname] = useState(pathname);
   const [expandedSection, setExpandedSection] = useState<NavSectionKey | null>(() =>
     getSectionForPathname(pathname),
   );
-  const lastPathnameRef = useRef(pathname);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const wasOpenRef = useRef(false);
   const isRtl = shellDirection === "rtl";
 
-  if (lastPathnameRef.current !== pathname) {
-    lastPathnameRef.current = pathname;
+  if (lastPathname !== pathname) {
+    setLastPathname(pathname);
     setExpandedSection(getSectionForPathname(pathname));
   }
 
@@ -243,6 +248,19 @@ export default function Sidebar({
               icon: Coins,
             }] : []),
           ],
+        }]
+      : []),
+    ...(authorizedReports.length > 0
+      ? [{
+          key: "reports" as const,
+          title: dictionary.modules.reports,
+          icon: BarChart3,
+          children: authorizedReports.map((report) => ({
+            key: report.key,
+            label: report.title,
+            href: report.route,
+            icon: BarChart3,
+          })),
         }]
       : []),
     {
@@ -467,30 +485,6 @@ export default function Sidebar({
 
         {/* Functional Domain Accordions */}
         {sections.map(renderSection)}
-
-        {/* Reports Standalone Link */}
-        {(() => {
-          const active = isRouteActive(pathname, "/reports");
-          return (
-            <PendingLink
-              href="/reports"
-              pendingLabel={dictionary.modules.reports}
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${
-                active
-                  ? `${isRtl ? "border-r-2" : "border-l-2"} border-tertiary-fixed text-white bg-on-primary-fixed-variant/10`
-                  : "text-white/70 hover:text-white hover:bg-on-primary-fixed-variant/5"
-              }`}
-            >
-              <BarChart3
-                size={20}
-                className={active ? "opacity-100" : "opacity-70"}
-                aria-hidden="true"
-              />
-              <span>{dictionary.modules.reports}</span>
-            </PendingLink>
-          );
-        })()}
 
         {/* Administration Accordion at Bottom */}
         <div className="mt-auto pt-4 border-t border-white/10">

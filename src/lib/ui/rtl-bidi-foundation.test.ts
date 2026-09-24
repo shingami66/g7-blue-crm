@@ -251,9 +251,8 @@ test("governed tables declare stable keys, semantic kinds, and explicit logical 
     ["src/app/(dashboard)/customers/[id]/Customer360Workspace.tsx", 15],
     ["src/app/(dashboard)/services/[id]/SupplierBookingsPanel.tsx", 7],
     ["src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx", 7],
-    ["src/app/(dashboard)/reports/accounts-receivable/page.tsx", 10],
-    ["src/app/(dashboard)/reports/accounts-payable/page.tsx", 9],
-    ["src/app/(dashboard)/reports/event-economics/page.tsx", 15],
+    ["src/app/(dashboard)/reports/accounts-receivable/page.tsx", 9],
+    ["src/app/(dashboard)/reports/accounts-payable/page.tsx", 8],
   ] as const;
 
   for (const [path, minimumColumns] of cases) {
@@ -261,6 +260,24 @@ test("governed tables declare stable keys, semantic kinds, and explicit logical 
     assert.ok(contracts.length > 0, `${path} must render a DataTable`);
     const columns = contracts.flat(2);
     assert.ok(columns.length >= minimumColumns, `${path} must keep its explicit DataTable column contract`);
+    if (
+      path === "src/app/(dashboard)/reports/accounts-receivable/page.tsx" ||
+      path === "src/app/(dashboard)/reports/accounts-payable/page.tsx"
+    ) {
+      const primaryColumns = contracts[0]?.[0]?.map((column) => {
+        const key = column.properties.find((property) =>
+          ts.isPropertyAssignment(property) &&
+          ts.isIdentifier(property.name) &&
+          property.name.text === "key",
+        );
+        assert.ok(key && ts.isPropertyAssignment(key) && ts.isStringLiteral(key.initializer));
+        return key.initializer.text;
+      });
+      const expectedColumns = path === "src/app/(dashboard)/reports/accounts-receivable/page.tsx"
+        ? ["invoice", "customer", "service", "due", "net", "settled", "outstanding"]
+        : ["bill", "supplier", "service", "dueDate", "status", "payable", "paid", "outstanding"];
+      assert.deepEqual(primaryColumns, expectedColumns);
+    }
     for (const variants of contracts) {
       assert.ok(variants.length > 0, `${path} must have at least one columns variant`);
       for (const contract of variants) {
@@ -308,6 +325,13 @@ test("governed tables declare stable keys, semantic kinds, and explicit logical 
       }
     }
   }
+});
+
+test("Event Economics views resolve stable keys through semantic RTL-aware column definitions", () => {
+  const page = read("src/app/(dashboard)/reports/event-economics/page.tsx");
+  assert.match(page, /EVENT_ECONOMICS_VIEW_COLUMNS\[view\]\.map\(\(key\) => eventColumnDefinition\(key, dictionary\)\)/);
+  assert.match(page, /return \{ key, header: header\[key\], kind, align, minWidth, noWrap:/);
+  assert.match(page, /kind === "money" \? "end" : kind === "status" \? "center" : "start"/);
 });
 
 test("shared semantic values use leaf-level bidi isolation and KPI values inherit locale direction", () => {

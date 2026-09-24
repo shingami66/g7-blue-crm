@@ -2,9 +2,16 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
+import { buildEventEconomicsViewHref, EVENT_ECONOMICS_VIEW_COLUMNS, resolveEventEconomicsView } from "./presentation.ts";
+import { getReportCenterDictionary } from "../i18n/dictionaries/report-center.ts";
 
 const ROOT = join(import.meta.dirname, "../../..");
 const read = (path: string) => readFileSync(join(ROOT, path), "utf8").replace(/\r\n/g, "\n");
+
+test("W9A1 AR outstanding column uses the report's business-facing label in both locales", () => {
+  assert.equal(getReportCenterDictionary("en").ar.outstandingColumn, "Outstanding");
+  assert.equal(getReportCenterDictionary("ar").ar.outstandingColumn, "الرصيد المستحق");
+});
 
 test("W9A1 Reports Center is a report catalog, not a dashboard composition", () => {
   const page = read("src/app/(dashboard)/reports/page.tsx");
@@ -21,15 +28,16 @@ test("W9A1 Reports Center is a report catalog, not a dashboard composition", () 
   ]) {
     assert.match(read(route), /ReportWorkspace/);
     assert.match(read(route), /DataTable/);
-    assert.match(read(route), /<DataTable minWidth="\d+px" ariaLabel=\{/);
+    assert.match(read(route), /<DataTable minWidth=(?:"\d+px"|\{eventViewMinWidth\(view\)\}) ariaLabel=\{/);
   }
 });
 
-test("W9A1 report workspaces have standard back navigation and a responsive context/filter hierarchy", () => {
+test("W9A1 report workspaces demote back navigation and use compact, discoverable report context", () => {
   const workspace = read("src/app/(dashboard)/reports/ReportWorkspace.tsx");
   const dictionary = read("src/lib/i18n/dictionaries/report-center.ts");
-  assert.match(workspace, /RecordBackButton[\s\S]*href="\/reports"[\s\S]*label=\{dictionary\.workspace\.backToReports\}/);
-  assert.match(workspace, /xl:grid-cols-12/);
+  assert.match(workspace, /href="\/reports"/);
+  assert.match(workspace, /About this report|dictionary\.workspace\.definition/);
+  assert.doesNotMatch(workspace, /grid-cols-2[\s\S]*source/);
   assert.match(workspace, /dictionary\.workspace\.source/);
   assert.match(workspace, /dictionary\.workspace\.timeBasis/);
   assert.match(workspace, /dictionary\.workspace\.freshness/);
@@ -44,18 +52,30 @@ test("W9A1 report workspaces have standard back navigation and a responsive cont
   }
 });
 
-test("W9A1 wide report presentation preserves full analytical content and accessible unavailable values", () => {
+test("W9A1 report web tables keep focused AR/AP defaults and URL-addressable Event views", () => {
   const ar = read("src/app/(dashboard)/reports/accounts-receivable/page.tsx");
   const ap = read("src/app/(dashboard)/reports/accounts-payable/page.tsx");
   const event = read("src/app/(dashboard)/reports/event-economics/page.tsx");
   assert.match(ar, /dictionary\.ar\.ageing/);
-  assert.match(ar, /minWidth="1800px" ariaLabel=\{dictionary\.ar\.invoice\}/);
+  assert.match(ar, /minWidth="1160px" ariaLabel=\{dictionary\.ar\.invoice\}/);
+  assert.match(ar, /dictionary\.ar\.net/);
+  assert.doesNotMatch(ar, /key: "gross"|key: "credits"|key: "issue"/);
   assert.match(ar, /minWidth="420px" ariaLabel=\{dictionary\.ar\.customerRanking\}/);
-  assert.match(ap, /minWidth="1540px" ariaLabel=\{dictionary\.ap\.bill\}/);
-  assert.match(event, /minWidth="2840px" ariaLabel=\{dictionary\.event\.title\}/);
-  assert.equal((event.match(/key: "(?:service|customer|budget|commitment|actual|paid|outstanding|etc|eac|commercial|forecast|completeness|close|finalActual|finalMargin)"/g) ?? []).length, 15);
+  assert.match(ap, /minWidth="1240px" ariaLabel=\{dictionary\.ap\.bill\}/);
+  assert.doesNotMatch(ap, /key: "invoiceDate"/);
+  assert.match(event, /EVENT_ECONOMICS_VIEW_COLUMNS\[view\]/);
+  assert.match(event, /aria-current=\{selected \? "page"/);
+  assert.match(event, /name="view" value=\{values\.view/);
   assert.match(event, /aria-label=\{dictionary\.event\.noFinalForOpen\} title=\{dictionary\.event\.noFinalForOpen\}[^>]*>—<\/span>/);
   assert.doesNotMatch(event, /<span[^>]*>\{dictionary\.event\.noFinalForOpen\}<\/span>/);
+  assert.deepEqual(EVENT_ECONOMICS_VIEW_COLUMNS.overview, ["service", "customer", "budget", "actual", "eac", "forecast", "completeness", "close"]);
+  assert.deepEqual(EVENT_ECONOMICS_VIEW_COLUMNS.cost, ["service", "budget", "commitment", "actual", "paid", "outstanding", "etc", "eac"]);
+  assert.deepEqual(EVENT_ECONOMICS_VIEW_COLUMNS.commercial, ["service", "customer", "commercialValue", "forecast", "close", "finalActual", "finalMargin"]);
+  assert.equal(new Set([...EVENT_ECONOMICS_VIEW_COLUMNS.overview, ...EVENT_ECONOMICS_VIEW_COLUMNS.cost, ...EVENT_ECONOMICS_VIEW_COLUMNS.commercial]).size, 15);
+  assert.equal(resolveEventEconomicsView("cost"), "cost");
+  assert.equal(resolveEventEconomicsView("commercial"), "commercial");
+  assert.equal(resolveEventEconomicsView("invalid"), "overview");
+  assert.equal(buildEventEconomicsViewHref("cost", { asOf: "2026-09-24", search: "Riyadh", completeness: "PARTIAL", closeState: "open" }), "/reports/event-economics?view=cost&asOf=2026-09-24&search=Riyadh&completeness=PARTIAL&closeState=open");
 });
 
 test("W9A1 event report preserves English copy and rejects invalid as-of input", () => {

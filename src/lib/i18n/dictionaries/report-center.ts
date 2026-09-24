@@ -40,8 +40,24 @@ export type ReportCenterDictionary = {
     empty: string;
     drill: string;
     rows: string;
+    exportedRows: string;
+    exportLimit: string;
     previous: string;
     next: string;
+  };
+  data: {
+    customerNumber: string;
+    serviceNumber: string;
+    serviceTitle: string;
+    creditAdjustment: string;
+    creditApplication: string;
+    daysPastDue: string;
+    ageingBand: string;
+    advanceAllocated: string;
+    currency: string;
+    closeVersion: string;
+    closeEffectiveDate: string;
+    closedAt: string;
   };
   ar: {
     title: string;
@@ -95,6 +111,7 @@ export type ReportCenterDictionary = {
   event: {
     title: string;
     description: string;
+    eventService: string;
     approvedBudget: string;
     commitment: string;
     actual: string;
@@ -117,6 +134,12 @@ export type ReportCenterDictionary = {
     unavailable: string;
     allCompleteness: string;
     allCloseStates: string;
+    views: {
+      selector: string;
+      overview: string;
+      costAnalysis: string;
+      commercialClose: string;
+    };
   };
 };
 
@@ -160,8 +183,24 @@ const en: ReportCenterDictionary = {
     empty: "No records are available for the selected filters.",
     drill: "Open source record",
     rows: "Rows",
+    exportedRows: "Rows exported",
+    exportLimit: "Export limit",
     previous: "Previous",
     next: "Next",
+  },
+  data: {
+    customerNumber: "Customer number",
+    serviceNumber: "Service number",
+    serviceTitle: "Service title",
+    creditAdjustment: "Credit adjustment",
+    creditApplication: "Credit application",
+    daysPastDue: "Days past due",
+    ageingBand: "Ageing band",
+    advanceAllocated: "Advance allocated",
+    currency: "Currency",
+    closeVersion: "Close version",
+    closeEffectiveDate: "Close effective date",
+    closedAt: "Closed at",
   },
   ar: {
     title: "Accounts Receivable",
@@ -185,7 +224,7 @@ const en: ReportCenterDictionary = {
     credits: "Credits and applications",
     net: "Net due",
     settled: "Settled",
-    outstandingColumn: "Remaining",
+    outstandingColumn: "Outstanding",
     ageing: "Ageing",
     noCustomerIdentity: "Customer identity unavailable",
     noServiceIdentity: "Service identity unavailable",
@@ -215,6 +254,7 @@ const en: ReportCenterDictionary = {
   event: {
     title: "Event economics",
     description: "A managerial view of event cost and forecast; not a P&L or revenue-recognition report.",
+    eventService: "Event / Service",
     approvedBudget: "Approved budget",
     commitment: "Open commitment",
     actual: "Actual cost",
@@ -237,6 +277,12 @@ const en: ReportCenterDictionary = {
     unavailable: "Unavailable",
     allCompleteness: "All completeness levels",
     allCloseStates: "All close states",
+    views: {
+      selector: "Analysis view",
+      overview: "Overview",
+      costAnalysis: "Cost analysis",
+      commercialClose: "Commercial & close",
+    },
   },
 };
 
@@ -282,8 +328,24 @@ const ar: ReportCenterDictionary = {
     empty: "لا توجد سجلات للفلاتر المحددة.",
     drill: "فتح السجل المصدر",
     rows: "السجلات",
+    exportedRows: "السجلات المصدرة",
+    exportLimit: "الحد الأقصى للتصدير",
     previous: "السابق",
     next: "التالي",
+  },
+  data: {
+    customerNumber: "رقم العميل",
+    serviceNumber: "رقم الخدمة",
+    serviceTitle: "عنوان الخدمة",
+    creditAdjustment: "تعديل دائن",
+    creditApplication: "تطبيق رصيد دائن",
+    daysPastDue: "أيام التأخير",
+    ageingBand: "شريحة التقادم",
+    advanceAllocated: "الدفعة المقدمة المخصصة",
+    currency: "العملة",
+    closeVersion: "إصدار الإغلاق",
+    closeEffectiveDate: "تاريخ سريان الإغلاق",
+    closedAt: "وقت الإغلاق",
   },
   ar: {
     ...en.ar,
@@ -308,7 +370,7 @@ const ar: ReportCenterDictionary = {
     credits: "التعديلات والتطبيقات",
     net: "الصافي المستحق",
     settled: "المسدد",
-    outstandingColumn: "المتبقي",
+    outstandingColumn: "الرصيد المستحق",
     ageing: "عمر الرصيد",
     noCustomerIdentity: "هوية العميل غير متاحة",
     noServiceIdentity: "هوية الخدمة غير متاحة",
@@ -340,6 +402,7 @@ const ar: ReportCenterDictionary = {
     ...en.event,
     title: "اقتصاديات الحدث",
     description: "عرض إداري لتكلفة الحدث وتوقعاته؛ ليس قائمة دخل أو اعترافاً بالإيراد.",
+    eventService: "الحدث / الخدمة",
     approvedBudget: "الميزانية المعتمدة",
     commitment: "الالتزام المفتوح",
     actual: "التكلفة الفعلية",
@@ -362,6 +425,12 @@ const ar: ReportCenterDictionary = {
     unavailable: "غير متاح",
     allCompleteness: "كل مستويات الاكتمال",
     allCloseStates: "كل حالات الإغلاق",
+    views: {
+      selector: "طريقة العرض التحليلية",
+      overview: "نظرة عامة",
+      costAnalysis: "تحليل التكاليف",
+      commercialClose: "القيمة التجارية والإغلاق",
+    },
   },
 };
 

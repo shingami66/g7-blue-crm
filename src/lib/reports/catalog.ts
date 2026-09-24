@@ -24,13 +24,13 @@ const DEFINITION_COPY = {
   },
   ar: {
     ar: {
-      title: "حسابات القبض",
+      title: "مستحقات العملاء",
       description: "المفوتر والتحصيل النقدي والأرصدة المستحقة حسب الفاتورة.",
       source: "دالة مستحقات العملاء W7D",
       freshness: "إعادة احتساب من السجلات المعتمدة",
     },
     ap: {
-      title: "حسابات الدفع",
+      title: "الحسابات الدائنة",
       description: "فواتير الموردين المعتمدة والمدفوعات والعكوس والأرصدة المفتوحة.",
       source: "أرصدة فواتير ومدفوعات الموردين W6",
       freshness: "السجلات الحالية للمصدر",
@@ -87,4 +87,13 @@ export function getReportDefinitions(locale: Locale): ReportDefinition[] {
       confidentiality: "internal_costing",
     },
   ];
+}
+
+export function filterAuthorizedReportDefinitions(
+  definitions: readonly ReportDefinition[],
+  effectivePermissions: ReadonlyMap<string, boolean>,
+): ReportDefinition[] {
+  return definitions.filter((definition) =>
+    definition.requiredPermissions.every((permission) => effectivePermissions.get(permission) === true),
+  );
 }

@@ -8,6 +8,8 @@ import {
   navigationDictionaryAr,
   navigationDictionaryEn,
 } from "../../lib/i18n/dictionaries/navigation.ts";
+import { getReportDefinitions } from "../../lib/reports/catalog.ts";
+import type { ReportNavigationItem } from "../../lib/reports/types.ts";
 
 const require = createRequire(import.meta.url);
 const tsUrl = pathToFileURL(require.resolve("typescript")).href;
@@ -124,13 +126,15 @@ function renderSidebar(props: {
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
   locale?: "en" | "ar";
+  authorizedReports?: ReportNavigationItem[];
 } = {}) {
-  const { locale = "en", ...sidebarProps } = props;
+  const { locale = "en", authorizedReports, ...sidebarProps } = props;
+  const reportItems = authorizedReports ?? getReportDefinitions(locale).map(({ key, title, route }) => ({ key, title, route }));
   return renderToStaticMarkup(
     React.createElement(
       TestLocaleProvider,
       { locale },
-      React.createElement(Sidebar, sidebarProps),
+      React.createElement(Sidebar, { ...sidebarProps, authorizedReports: reportItems }),
     ),
   );
 }
@@ -141,6 +145,7 @@ const ALL_SECTION_KEYS = [
   "suppliersAndProcurement",
   "billingAndPayments",
   "expensesAndCosting",
+  "reports",
   "administration",
 ] as const;
 
@@ -191,14 +196,17 @@ test("W5-A11Y-001: mobile sidebar exposes accessible disclosure button, closed-d
   assert.ok(html.includes('href="/invoices"'));
   assert.ok(html.includes('href="/suppliers"'));
   assert.ok(html.includes('href="/payments"'));
-  assert.ok(html.includes('href="/reports"'));
+  assert.ok(html.includes('href="/reports/accounts-receivable"'));
+  assert.ok(html.includes('href="/reports/accounts-payable"'));
+  assert.ok(html.includes('href="/reports/event-economics"'));
+  assert.ok(!html.includes('href="/reports"'));
   assert.ok(html.includes('href="/settings"'));
 
   // Non-admin view must not render admin links
   assert.ok(!html.includes('href="/admin/users"'), "Non-admin view must not render admin links");
 });
 
-test("1. Dashboard and Reports remain standalone links, activate independently, and collapse all accordion sections", () => {
+test("1. Dashboard remains standalone and the Reports section follows report-route state", () => {
   // On /dashboard:
   const dashHtml = renderSidebar({ currentPathname: "/dashboard" });
   for (const key of ALL_SECTION_KEYS) {
@@ -209,15 +217,38 @@ test("1. Dashboard and Reports remain standalone links, activate independently, 
     "Dashboard link must be active on /dashboard",
   );
 
-  // On /reports:
+  // The Reports landing remains reachable through secondary page navigation, not a standalone sidebar item.
   const repHtml = renderSidebar({ currentPathname: "/reports" });
-  for (const key of ALL_SECTION_KEYS) {
-    assert.equal(getSectionExpandedState(repHtml, key), false, `Section ${key} must be collapsed on /reports`);
+  assert.equal(getSectionExpandedState(repHtml, "reports"), true, "Reports accordion must expand on /reports");
+  assert.ok(!repHtml.includes('href="/reports"'), "Reports landing must not replace direct report children");
+  assert.ok(repHtml.includes('href="/reports/accounts-receivable"'));
+});
+
+test("Reports section directly activates each authorized report and hides items absent from server permission results", () => {
+  const definitions = getReportDefinitions("en").map(({ key, title, route }) => ({ key, title, route }));
+  for (const route of ["/reports/accounts-receivable", "/reports/accounts-payable", "/reports/event-economics"]) {
+    const html = renderSidebar({ currentPathname: route, authorizedReports: definitions });
+    assert.equal(getSectionExpandedState(html, "reports"), true);
+    assert.ok(html.includes(`href="${route}"`));
+    assert.match(html, new RegExp(`href="${route}"[^>]*class="[^"]*border-tertiary-fixed`));
   }
-  assert.ok(
-    repHtml.includes('href="/reports"') && repHtml.includes("border-tertiary-fixed"),
-    "Reports link must be active on /reports",
-  );
+
+  const limited = renderSidebar({
+    currentPathname: "/reports/event-economics",
+    authorizedReports: definitions.filter((report) => report.key !== "event_economics"),
+  });
+  assert.ok(!limited.includes('href="/reports/event-economics"'));
+  assert.ok(!limited.includes("Event Economics"));
+  assert.ok(limited.includes('href="/reports/accounts-receivable"'));
+});
+
+test("Reports section title and direct report labels use the active EN/AR catalog locale", () => {
+  const en = renderSidebar({ currentPathname: "/reports/accounts-receivable", locale: "en" });
+  const ar = renderSidebar({ currentPathname: "/reports/accounts-receivable", locale: "ar", shellDirection: "rtl" });
+  assert.ok(en.includes(">Reports<"));
+  assert.ok(en.includes("Accounts Receivable"));
+  assert.ok(ar.includes(">التقارير<"));
+  assert.ok(ar.includes("مستحقات العملاء"));
 });
 
 test("2 & 3. /customers expands Customers & Sales and renders Customers and Quotations underneath", () => {

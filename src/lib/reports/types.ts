@@ -32,6 +32,8 @@ export type ReportDefinition = {
   confidentiality: "financial" | "internal_costing";
 };
 
+export type ReportNavigationItem = Pick<ReportDefinition, "key" | "title" | "route">;
+
 export type ReportPageResult<T> =
   | { status: "ready" | "partial" | "empty"; data: T }
   | { status: Exclude<ReportReadState, "ready" | "partial" | "empty">; error?: string };

@@ -15,6 +15,12 @@ import {
   NavigationFeedbackProvider,
   NavigationFeedbackBoundary,
 } from "@/components/ui/NavigationFeedbackProvider";
+import { filterAuthorizedReportDefinitions, getReportDefinitions } from "@/lib/reports/catalog";
+import type { ReportNavigationItem } from "@/lib/reports/types";
+
+const REPORT_NAVIGATION_PERMISSIONS = Array.from(
+  new Set(getReportDefinitions("en").flatMap((definition) => definition.requiredPermissions)),
+);
 
 export default async function DashboardLayout({
   children,
@@ -27,14 +33,22 @@ export default async function DashboardLayout({
     redirect("/unauthorized");
   }
 
-  const [isAdmin, canReadPettyCash, canReadSupplierBills, canReadSupplierPayments, canReadSupplierAdvances, locale] = await Promise.all([
+  const [isAdmin, canReadPettyCash, canReadSupplierBills, canReadSupplierPayments, canReadSupplierAdvances, locale, reportPermissionValues] = await Promise.all([
     checkPermission("users:manage"),
     checkPermission(PETTY_CASH_PERMISSIONS.read),
     checkPermission(SUPPLIER_BILL_PERMISSIONS.read),
     checkPermission(SUPPLIER_PAYMENT_PERMISSIONS.read),
     checkPermission(SUPPLIER_ADVANCE_PERMISSIONS.read),
     getCurrentSessionEffectiveLocale(),
+    Promise.all(REPORT_NAVIGATION_PERMISSIONS.map((permission) => checkPermission(permission))),
   ]);
+  const effectiveReportPermissions = new Map(
+    REPORT_NAVIGATION_PERMISSIONS.map((permission, index) => [permission, reportPermissionValues[index] === true]),
+  );
+  const authorizedReports: ReportNavigationItem[] = filterAuthorizedReportDefinitions(
+    getReportDefinitions(locale),
+    effectiveReportPermissions,
+  ).map(({ key, route, title }) => ({ key, route, title }));
   const shellDirection = getDirection(locale);
 
   return (
@@ -51,6 +65,7 @@ export default async function DashboardLayout({
                 canReadSupplierBills={canReadSupplierBills}
                 canReadSupplierPayments={canReadSupplierPayments}
                 canReadSupplierAdvances={canReadSupplierAdvances}
+                authorizedReports={authorizedReports}
                 shellDirection={shellDirection}
               />
           </div>

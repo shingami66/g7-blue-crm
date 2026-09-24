@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getReportDefinitions } from "./catalog.ts";
+import { filterAuthorizedReportDefinitions, getReportDefinitions } from "./catalog.ts";
 
 test("W9A1 catalog has exactly the implemented report definitions with stable routes and authority metadata", () => {
   const en = getReportDefinitions("en");
@@ -20,9 +20,25 @@ test("W9A1 catalog has exactly the implemented report definitions with stable ro
   assert.notEqual(en[0].title, ar[0].title);
   assert.notEqual(en[1].title, ar[1].title);
   assert.notEqual(en[2].title, ar[2].title);
+  assert.equal(ar[0].title, "مستحقات العملاء");
+  assert.equal(ar[1].title, "الحسابات الدائنة");
+  assert.equal(ar[2].title, "اقتصاديات الحدث");
   for (const definition of [...en, ...ar]) {
     assert.equal(definition.exportSupported, true);
     assert.ok(definition.sourceDomain.length > 0);
     assert.ok(definition.freshness.length > 0);
   }
+});
+
+test("report navigation includes only definitions whose complete effective permission set is granted", () => {
+  const definitions = getReportDefinitions("en");
+  const accessible = filterAuthorizedReportDefinitions(definitions, new Map([
+    ["invoices:read", true],
+    ["supplier_bills:read", true],
+    ["supplier_payments:read", false],
+    ["services:read", true],
+    ["supplier_costing:read", true],
+  ]));
+
+  assert.deepEqual(accessible.map(({ key }) => key), ["accounts_receivable", "event_economics"]);
 });

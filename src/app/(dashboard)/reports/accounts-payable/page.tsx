@@ -63,7 +63,6 @@ export default async function AccountsPayableReportPage({
       locale={locale}
       generatedAt={new Date().toISOString()}
       exportHref={exportQuery(values)}
-      stateNote={<p className="text-sm text-on-surface-variant">{dictionary.ap.currentOnly} {dictionary.ap.source}.</p>}
       filterPanel={<AccountsPayableFilters dictionary={dictionary} values={values} />}
     >
       <div className="space-y-6">
@@ -79,23 +78,21 @@ export default async function AccountsPayableReportPage({
               <span className="text-sm text-on-surface-variant">{dictionary.workspace.rows}: <UiLtrText>{report.detailTotalCount}</UiLtrText></span>
             </div>
             {report.rows.length > 0 ? (
-              <DataTable minWidth="1540px" ariaLabel={dictionary.ap.bill} columns={[
+              <DataTable minWidth="1240px" ariaLabel={dictionary.ap.bill} columns={[
                 { key: "bill", header: dictionary.ap.bill, kind: "identifier", align: "start", minWidth: 150, noWrap: true },
-                { key: "supplier", header: dictionary.ap.supplier, kind: "text", align: "start", minWidth: 200 },
-                { key: "service", header: dictionary.ap.service, kind: "text", align: "start", minWidth: 260 },
-                { key: "invoiceDate", header: dictionary.ap.invoiceDate, kind: "date", align: "start", minWidth: 140, noWrap: true },
-                { key: "dueDate", header: dictionary.ap.dueDate, kind: "date", align: "start", minWidth: 140, noWrap: true },
-                { key: "status", header: dictionary.ap.status, kind: "status", align: "center", minWidth: 140, noWrap: true },
-                { key: "payable", header: dictionary.ap.payable, kind: "money", align: "end", minWidth: 168, noWrap: true },
-                { key: "paid", header: dictionary.ap.paid, kind: "money", align: "end", minWidth: 168, noWrap: true },
-                { key: "outstanding", header: dictionary.ap.outstanding, kind: "money", align: "end", minWidth: 168, noWrap: true },
+                { key: "supplier", header: dictionary.ap.supplier, kind: "text", align: "start", minWidth: 190 },
+                { key: "service", header: dictionary.ap.service, kind: "text", align: "start", minWidth: 230 },
+                { key: "dueDate", header: dictionary.ap.dueDate, kind: "date", align: "start", minWidth: 130, noWrap: true },
+                { key: "status", header: dictionary.ap.status, kind: "status", align: "center", minWidth: 120, noWrap: true },
+                { key: "payable", header: dictionary.ap.payable, kind: "money", align: "end", minWidth: 150, noWrap: true },
+                { key: "paid", header: dictionary.ap.paid, kind: "money", align: "end", minWidth: 150, noWrap: true },
+                { key: "outstanding", header: dictionary.ap.outstanding, kind: "money", align: "end", minWidth: 150, noWrap: true },
               ]}>
                 {report.rows.map((row) => (
                   <tr key={row.billId}>
                     <td><Link href={`/supplier-bills/${row.billId}`} className="font-medium text-primary hover:underline"><UiLtrText>{row.billNumber}</UiLtrText></Link></td>
                     <td>{row.supplierName ? <UiBidiText>{row.supplierName}</UiBidiText> : <span className="text-on-surface-variant">{dictionary.ap.noSupplierIdentity}</span>}</td>
                     <td>{row.serviceNumber && row.serviceId ? <Link href={`/services/${row.serviceId}`} className="hover:underline"><UiBidiText>{row.serviceNumber} · {row.serviceTitle}</UiBidiText></Link> : <span className="text-on-surface-variant">{dictionary.ap.noServiceIdentity}</span>}</td>
-                    <td><UiDateText locale={locale} value={row.invoiceDate} /></td>
                     <td><UiDateText locale={locale} value={row.dueDate ?? ""} /></td>
                     <td><UiBidiText>{row.status === "paid" ? dictionary.ap.paidStatus : row.status === "partially_paid" ? dictionary.ap.partiallyPaid : dictionary.ap.unpaid}</UiBidiText></td>
                     <td><UiMoneyText locale={locale} value={row.payableAmount} /></td>

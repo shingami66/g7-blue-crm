@@ -1,7 +1,10 @@
 import { AuthDependencyError, ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getReportCenterDictionary } from "@/lib/i18n/dictionaries/report-center";
+import { getReportDefinitions } from "@/lib/reports/catalog";
 import { DEFAULT_EXCEL_EXPORT_CHROME_AR, DEFAULT_EXCEL_EXPORT_CHROME_EN, buildExcelReportBuffer } from "@/lib/reports/exportExcel";
+import { getEventEconomicsExportColumns, getEventEconomicsOverviewSummary } from "@/lib/reports/exportColumns";
+import { getReportTimeBasisLabel } from "@/lib/reports/presentation";
 import { readEventEconomicsExport, MAX_EXPORT_ROWS } from "@/lib/reports/reporting";
 import type { ReportEventEconomicsRow } from "@/lib/reports/types";
 
@@ -16,49 +19,41 @@ export async function GET(request: Request) {
   const closeStateValue = url.searchParams.get("closeState");
   const closeState = closeStateValue === "open" || closeStateValue === "closed" ? closeStateValue : "all";
   try {
-    const asOfValue = url.searchParams.get("asOf");
+    const asOfDate = text(url.searchParams.get("asOf"));
+    const search = text(url.searchParams.get("search"));
     const locale = await getCurrentSessionEffectiveLocale();
     const dictionary = getReportCenterDictionary(locale);
-    const exported = await readEventEconomicsExport({ asOfDate: text(asOfValue), search: text(url.searchParams.get("search")), completeness, closeState });
+    const definition = getReportDefinitions(locale).find((item) => item.key === "event_economics")!;
+    const exported = await readEventEconomicsExport({ asOfDate, search, completeness, closeState });
     const report = exported.data;
+    const generatedAt = new Date();
     const fileName = `event-economics-${report.asOfDate}.xlsx`;
+    const completenessLabel = completeness === "COMPLETE" ? dictionary.event.complete : completeness === "PARTIAL" ? dictionary.event.partial : completeness === "UNAVAILABLE" ? dictionary.event.unavailable : dictionary.event.allCompleteness;
+    const closeStateLabel = closeState === "open" ? dictionary.event.open : closeState === "closed" ? dictionary.event.closed : dictionary.event.allCloseStates;
     const buffer = await buildExcelReportBuffer<ReportEventEconomicsRow>({
       metadata: {
-        companyName: "G7",
-        brandName: "G7 CRM",
-        reportTitle: dictionary.event.title,
-        generatedAt: new Date(),
+        brandName: "G7 BLUE",
+        reportTitle: definition.title,
+        definition: definition.description,
+        source: definition.sourceDomain,
+        timeBasis: getReportTimeBasisLabel(definition, dictionary.workspace),
+        timeZone: "Asia/Riyadh",
+        generatedAt,
         filters: [
           `${dictionary.workspace.asOf}: ${report.asOfDate}`,
-          completeness === "all" ? dictionary.event.allCompleteness : completeness,
-          closeState === "all" ? dictionary.event.allCloseStates : closeState,
-          ...(url.searchParams.get("search") ? [url.searchParams.get("search") as string] : []),
-          exported.truncated ? `${dictionary.workspace.rows}: ${MAX_EXPORT_ROWS} bounded export rows` : `${dictionary.workspace.rows}: ${report.pagination.total}`,
+          `${dictionary.event.completeness}: ${completenessLabel}`,
+          `${dictionary.event.closeState}: ${closeStateLabel}`,
+          ...(search ? [`${dictionary.workspace.search}: ${search}`] : []),
+          ...(exported.truncated ? [`${dictionary.workspace.exportedRows}: ${report.rows.length} (${dictionary.workspace.exportLimit}: ${MAX_EXPORT_ROWS})`] : []),
         ],
         totalRecords: report.pagination.total,
-        sheetName: dictionary.event.title.slice(0, 31),
         fileName,
       },
       locale,
       chrome: locale === "ar" ? DEFAULT_EXCEL_EXPORT_CHROME_AR : DEFAULT_EXCEL_EXPORT_CHROME_EN,
       rows: report.rows,
-      columns: [
-        { header: dictionary.event.title, key: "serviceNumber", format: "text", value: (row) => `${row.serviceNumber} · ${row.serviceTitle}` },
-        { header: dictionary.ar.customer, key: "customerName", format: "text", value: (row) => row.customerName ?? dictionary.event.noCustomerIdentity },
-        { header: dictionary.event.approvedBudget, key: "approvedBudgetCost", format: "currency" },
-        { header: dictionary.event.commitment, key: "openCommitment", format: "currency" },
-        { header: dictionary.event.actual, key: "actualCost", format: "currency" },
-        { header: dictionary.event.paid, key: "paidCost", format: "currency" },
-        { header: dictionary.event.outstanding, key: "outstandingCost", format: "currency" },
-        { header: dictionary.event.etc, key: "etc", format: "currency" },
-        { header: dictionary.event.eac, key: "eac", format: "currency" },
-        { header: dictionary.event.commercialValue, key: "netApprovedCommercialValue", format: "currency" },
-        { header: dictionary.event.forecastMargin, key: "forecastMargin", format: "currency" },
-        { header: dictionary.event.completeness, key: "completenessStatus", format: "text" },
-        { header: dictionary.event.closeState, key: "closeState", format: "text" },
-        { header: dictionary.event.finalActual, key: "finalActualCost", format: "currency" },
-        { header: dictionary.event.finalMargin, key: "finalManagerialMargin", format: "currency" },
-      ],
+      columns: getEventEconomicsExportColumns(dictionary),
+      summary: { tables: [getEventEconomicsOverviewSummary(report.rows, dictionary)] },
     });
     return new Response(buffer, { headers: { "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Content-Disposition": `attachment; filename="${fileName}"`, "Cache-Control": "no-store" } });
   } catch (error) {
