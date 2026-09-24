@@ -21,7 +21,41 @@ test("W9A1 Reports Center is a report catalog, not a dashboard composition", () 
   ]) {
     assert.match(read(route), /ReportWorkspace/);
     assert.match(read(route), /DataTable/);
+    assert.match(read(route), /<DataTable minWidth="\d+px" ariaLabel=\{/);
   }
+});
+
+test("W9A1 report workspaces have standard back navigation and a responsive context/filter hierarchy", () => {
+  const workspace = read("src/app/(dashboard)/reports/ReportWorkspace.tsx");
+  const dictionary = read("src/lib/i18n/dictionaries/report-center.ts");
+  assert.match(workspace, /RecordBackButton[\s\S]*href="\/reports"[\s\S]*label=\{dictionary\.workspace\.backToReports\}/);
+  assert.match(workspace, /xl:grid-cols-12/);
+  assert.match(workspace, /dictionary\.workspace\.source/);
+  assert.match(workspace, /dictionary\.workspace\.timeBasis/);
+  assert.match(workspace, /dictionary\.workspace\.freshness/);
+  assert.match(dictionary, /backToReports: "Back to Reports Center"/);
+  assert.match(dictionary, /backToReports: "العودة إلى مركز التقارير"/);
+  for (const route of [
+    "src/app/(dashboard)/reports/accounts-receivable/page.tsx",
+    "src/app/(dashboard)/reports/accounts-payable/page.tsx",
+    "src/app/(dashboard)/reports/event-economics/page.tsx",
+  ]) {
+    assert.match(read(route), /grid min-w-0 grid-cols-1[\s\S]*?sm:grid-cols-2[\s\S]*?xl:grid-cols-12/);
+  }
+});
+
+test("W9A1 wide report presentation preserves full analytical content and accessible unavailable values", () => {
+  const ar = read("src/app/(dashboard)/reports/accounts-receivable/page.tsx");
+  const ap = read("src/app/(dashboard)/reports/accounts-payable/page.tsx");
+  const event = read("src/app/(dashboard)/reports/event-economics/page.tsx");
+  assert.match(ar, /dictionary\.ar\.ageing/);
+  assert.match(ar, /minWidth="1800px" ariaLabel=\{dictionary\.ar\.invoice\}/);
+  assert.match(ar, /minWidth="420px" ariaLabel=\{dictionary\.ar\.customerRanking\}/);
+  assert.match(ap, /minWidth="1540px" ariaLabel=\{dictionary\.ap\.bill\}/);
+  assert.match(event, /minWidth="2840px" ariaLabel=\{dictionary\.event\.title\}/);
+  assert.equal((event.match(/key: "(?:service|customer|budget|commitment|actual|paid|outstanding|etc|eac|commercial|forecast|completeness|close|finalActual|finalMargin)"/g) ?? []).length, 15);
+  assert.match(event, /aria-label=\{dictionary\.event\.noFinalForOpen\} title=\{dictionary\.event\.noFinalForOpen\}[^>]*>—<\/span>/);
+  assert.doesNotMatch(event, /<span[^>]*>\{dictionary\.event\.noFinalForOpen\}<\/span>/);
 });
 
 test("W9A1 event report preserves English copy and rejects invalid as-of input", () => {

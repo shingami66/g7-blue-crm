@@ -6,6 +6,7 @@ import ts from "typescript";
 
 import {
   getDataTableColumnAlignment,
+  getDataTableColumnCellStyle,
   normalizeDataTableColumns,
 } from "../../components/ui/data-table-contract.ts";
 
@@ -210,26 +211,38 @@ test("legacy table labels never infer action columns or direction from translate
   assert.equal(normalizeDataTableColumns(["Date"], [0])[0]?.align, "center");
 });
 
+test("wide DataTable cells preserve explicit minimum widths and no-wrap financial values", () => {
+  const money = { key: "amount", header: "Amount", align: "end" as const, kind: "money" as const, minWidth: 168, noWrap: true };
+  assert.deepEqual(getDataTableColumnCellStyle(money, "header"), { textAlign: "end", minWidth: 168 });
+  assert.deepEqual(getDataTableColumnCellStyle(money, "body"), { textAlign: "end", minWidth: 168, whiteSpace: "nowrap" });
+  assert.deepEqual(getDataTableColumnCellStyle({ key: "name", header: "Name", align: "start" }, "body"), { textAlign: "start" });
+});
+
 test("every application DataTable consumer is explicitly governed", () => {
   assert.deepEqual(dataTableCallSitePaths(), [
     "src/app/(dashboard)/customers/[id]/Customer360Workspace.tsx",
     "src/app/(dashboard)/payments/PaymentsClient.tsx",
+    "src/app/(dashboard)/reports/accounts-payable/page.tsx",
+    "src/app/(dashboard)/reports/accounts-receivable/page.tsx",
+    "src/app/(dashboard)/reports/event-economics/page.tsx",
     "src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx",
     "src/app/(dashboard)/services/[id]/SupplierBookingsPanel.tsx",
   ]);
 });
 
-test("DataTable shares explicit alignment metadata between headers and body cells", () => {
+test("DataTable shares explicit cell styles between headers and body cells", () => {
   const source = read("src/components/ui/DataTable.tsx");
-  const resolverCalls: ts.CallExpression[] = [];
+  const styleCalls: ts.CallExpression[] = [];
   visit(parseTsx("src/components/ui/DataTable.tsx"), (node) => {
-    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "getDataTableColumnAlignment") resolverCalls.push(node);
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "getDataTableColumnCellStyle") styleCalls.push(node);
   });
 
-  assert.equal(resolverCalls.length, 2);
+  assert.equal(styleCalls.length, 2);
+  assert.match(read("src/components/ui/data-table-contract.ts"), /textAlign: getDataTableColumnAlignment\(column\)/);
   assert.match(source, /column\.kind === "actions"/);
   assert.doesNotMatch(source, /\.includes\(\s*["'`][^"'`]*actions?/i);
   assert.match(source, /data-column-kind=\{column\.kind\}/);
+  assert.match(source, /overflow-x-auto[\s\S]*?role=\{minWidth !== undefined \? "region" : undefined\}[\s\S]*?aria-label=\{minWidth !== undefined \? ariaLabel : undefined\}[\s\S]*?<table[^>]*style=\{minWidth !== undefined \? \{ minWidth \} : undefined\}/);
 });
 
 test("governed tables declare stable keys, semantic kinds, and explicit logical alignment", () => {
@@ -238,6 +251,9 @@ test("governed tables declare stable keys, semantic kinds, and explicit logical 
     ["src/app/(dashboard)/customers/[id]/Customer360Workspace.tsx", 15],
     ["src/app/(dashboard)/services/[id]/SupplierBookingsPanel.tsx", 7],
     ["src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx", 7],
+    ["src/app/(dashboard)/reports/accounts-receivable/page.tsx", 10],
+    ["src/app/(dashboard)/reports/accounts-payable/page.tsx", 9],
+    ["src/app/(dashboard)/reports/event-economics/page.tsx", 15],
   ] as const;
 
   for (const [path, minimumColumns] of cases) {
@@ -319,6 +335,9 @@ test("governed RTL-safe surfaces avoid physical alignment utilities and block-le
     "src/app/(dashboard)/customers/[id]/Customer360Workspace.tsx",
     "src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx",
     "src/app/(dashboard)/services/[id]/SupplierBookingsPanel.tsx",
+    "src/app/(dashboard)/reports/accounts-receivable/page.tsx",
+    "src/app/(dashboard)/reports/accounts-payable/page.tsx",
+    "src/app/(dashboard)/reports/event-economics/page.tsx",
     "src/app/(dashboard)/services/[id]/SupplierAllocationStatusActions.tsx",
     "src/app/(dashboard)/services/[id]/ServiceStatusTimeline.tsx",
   ];

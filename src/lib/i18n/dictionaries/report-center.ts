@@ -17,11 +17,14 @@ export type ReportCenterDictionary = {
     freshness: string;
     timezone: string;
     period: string;
+    fromDate: string;
+    toDate: string;
     asOf: string;
     currentOnly: string;
     historicalAsOf: string;
     periodAndAsOf: string;
     definition: string;
+    backToReports: string;
     export: string;
     generated: string;
     filters: string;
@@ -134,11 +137,14 @@ const en: ReportCenterDictionary = {
     freshness: "Freshness",
     timezone: "Riyadh time",
     period: "Period",
+    fromDate: "From",
+    toDate: "To",
     asOf: "As of",
     currentOnly: "Current records only",
     historicalAsOf: "Historical as-of reconstruction",
     periodAndAsOf: "Period with explicit as-of date",
     definition: "What this report answers",
+    backToReports: "Back to Reports Center",
     export: "Export Excel",
     generated: "Generated",
     filters: "Filters",
@@ -224,7 +230,7 @@ const en: ReportCenterDictionary = {
     closed: "Closed",
     finalActual: "Final actual cost",
     finalMargin: "Final managerial margin",
-    noFinalForOpen: "No final margin is shown for an open event",
+    noFinalForOpen: "No final amount is available for an open event",
     noCustomerIdentity: "Customer identity unavailable",
     complete: "Complete",
     partial: "Partial",
@@ -253,11 +259,14 @@ const ar: ReportCenterDictionary = {
     freshness: "الحداثة",
     timezone: "توقيت الرياض",
     period: "الفترة",
+    fromDate: "من",
+    toDate: "إلى",
     asOf: "حتى تاريخ",
     currentOnly: "السجلات الحالية فقط",
     historicalAsOf: "إعادة بناء تاريخية حتى تاريخ محدد",
     periodAndAsOf: "فترة مع تاريخ محدد للحساب",
     definition: "ما الذي يجيب عنه التقرير",
+    backToReports: "العودة إلى مركز التقارير",
     export: "تصدير Excel",
     generated: "تم الإنشاء",
     filters: "الفلاتر",
@@ -346,7 +355,7 @@ const ar: ReportCenterDictionary = {
     closed: "مغلق",
     finalActual: "التكلفة الفعلية النهائية",
     finalMargin: "الهامش الإداري النهائي",
-    noFinalForOpen: "لا يوجد هامش نهائي لحدث مفتوح",
+    noFinalForOpen: "لا تتوفر قيمة نهائية لحدث مفتوح",
     noCustomerIdentity: "هوية العميل غير متاحة",
     complete: "مكتمل",
     partial: "جزئي",

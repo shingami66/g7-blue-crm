@@ -79,16 +79,16 @@ export default async function AccountsPayableReportPage({
               <span className="text-sm text-on-surface-variant">{dictionary.workspace.rows}: <UiLtrText>{report.detailTotalCount}</UiLtrText></span>
             </div>
             {report.rows.length > 0 ? (
-              <DataTable columns={[
-                { key: "bill", header: dictionary.ap.bill, kind: "identifier", align: "start" },
-                { key: "supplier", header: dictionary.ap.supplier, kind: "text", align: "start" },
-                { key: "service", header: dictionary.ap.service, kind: "text", align: "start" },
-                { key: "invoiceDate", header: dictionary.ap.invoiceDate, kind: "date", align: "start" },
-                { key: "dueDate", header: dictionary.ap.dueDate, kind: "date", align: "start" },
-                { key: "status", header: dictionary.ap.status, kind: "status", align: "start" },
-                { key: "payable", header: dictionary.ap.payable, kind: "money", align: "end" },
-                { key: "paid", header: dictionary.ap.paid, kind: "money", align: "end" },
-                { key: "outstanding", header: dictionary.ap.outstanding, kind: "money", align: "end" },
+              <DataTable minWidth="1540px" ariaLabel={dictionary.ap.bill} columns={[
+                { key: "bill", header: dictionary.ap.bill, kind: "identifier", align: "start", minWidth: 150, noWrap: true },
+                { key: "supplier", header: dictionary.ap.supplier, kind: "text", align: "start", minWidth: 200 },
+                { key: "service", header: dictionary.ap.service, kind: "text", align: "start", minWidth: 260 },
+                { key: "invoiceDate", header: dictionary.ap.invoiceDate, kind: "date", align: "start", minWidth: 140, noWrap: true },
+                { key: "dueDate", header: dictionary.ap.dueDate, kind: "date", align: "start", minWidth: 140, noWrap: true },
+                { key: "status", header: dictionary.ap.status, kind: "status", align: "center", minWidth: 140, noWrap: true },
+                { key: "payable", header: dictionary.ap.payable, kind: "money", align: "end", minWidth: 168, noWrap: true },
+                { key: "paid", header: dictionary.ap.paid, kind: "money", align: "end", minWidth: 168, noWrap: true },
+                { key: "outstanding", header: dictionary.ap.outstanding, kind: "money", align: "end", minWidth: 168, noWrap: true },
               ]}>
                 {report.rows.map((row) => (
                   <tr key={row.billId}>
@@ -113,13 +113,20 @@ export default async function AccountsPayableReportPage({
 }
 
 function AccountsPayableFilters({ dictionary, values }: { dictionary: ReturnType<typeof getReportCenterDictionary>; values: Record<string, string | undefined> }) {
-  return <form method="get" className="flex min-w-0 flex-wrap items-end gap-3 rounded-xl border border-surface-variant bg-surface-container-lowest p-4">
-    <label className="flex min-w-[10rem] flex-col gap-1 text-sm text-on-surface-variant"><span>{dictionary.ap.status}</span><select name="status" defaultValue={values.status} className="h-10 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface"><option value="all">{dictionary.ap.allStatuses}</option><option value="unpaid">{dictionary.ap.unpaid}</option><option value="partially_paid">{dictionary.ap.partiallyPaid}</option><option value="paid">{dictionary.ap.paidStatus}</option></select></label>
-    <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-sm text-on-surface-variant"><span>{dictionary.ap.supplier}</span><input name="supplierSearch" defaultValue={values.supplierSearch} className="h-10 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface" /></label>
-    <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-sm text-on-surface-variant"><span>{dictionary.ap.service}</span><input name="serviceSearch" defaultValue={values.serviceSearch} className="h-10 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface" /></label>
-    <label className="flex min-w-[9rem] flex-col gap-1 text-sm text-on-surface-variant"><span>{dictionary.ap.dueDate}</span><input name="dueFrom" type="date" defaultValue={values.dueFrom} className="h-10 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface" /></label>
-    <label className="flex min-w-[9rem] flex-col gap-1 text-sm text-on-surface-variant"><span aria-hidden>&nbsp;</span><input name="dueTo" type="date" defaultValue={values.dueTo} className="h-10 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface" /></label>
-    <button type="submit" className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-white">{dictionary.workspace.apply}</button>
-    <Link href="/reports/accounts-payable" className="inline-flex h-10 items-center rounded-md border border-outline-variant px-4 text-sm text-on-surface">{dictionary.workspace.clear}</Link>
+  return <form method="get" className="grid min-w-0 grid-cols-1 gap-4 rounded-xl border border-surface-variant bg-surface-container-lowest p-5 sm:grid-cols-2 xl:grid-cols-12">
+    <label className="flex min-w-0 flex-col gap-2 text-sm text-on-surface-variant xl:col-span-2"><span>{dictionary.ap.status}</span><select name="status" defaultValue={values.status} className="h-11 w-full min-w-0 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface"><option value="all">{dictionary.ap.allStatuses}</option><option value="unpaid">{dictionary.ap.unpaid}</option><option value="partially_paid">{dictionary.ap.partiallyPaid}</option><option value="paid">{dictionary.ap.paidStatus}</option></select></label>
+    <label className="flex min-w-0 flex-col gap-2 text-sm text-on-surface-variant xl:col-span-3"><span>{dictionary.ap.supplier}</span><input name="supplierSearch" defaultValue={values.supplierSearch} className="h-11 w-full min-w-0 rounded-md border border-outline-variant bg-surface px-3 text-sm text-on-surface" /></label>
+    <label className="flex min-w-0 flex-col gap-2 text-sm text-on-surface-variant xl:col-span-3"><span>{dictionary.ap.service}</span><input name="serviceSearch" defaultValue={values.serviceSearch} className="h-11 w-full min-w-0 rounded-md border border-outline-variant bg-surface px-3 text-sm text-on-surface" /></label>
+    <fieldset className="min-w-0 sm:col-span-2 xl:col-span-4">
+      <legend className="mb-2 text-sm text-on-surface-variant">{dictionary.ap.dueDate}</legend>
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+        <label className="flex min-w-0 flex-col gap-2 text-sm text-on-surface-variant"><span>{dictionary.workspace.fromDate}</span><input name="dueFrom" type="date" defaultValue={values.dueFrom} className="h-11 w-full min-w-0 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface" /></label>
+        <label className="flex min-w-0 flex-col gap-2 text-sm text-on-surface-variant"><span>{dictionary.workspace.toDate}</span><input name="dueTo" type="date" defaultValue={values.dueTo} className="h-11 w-full min-w-0 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface" /></label>
+      </div>
+    </fieldset>
+    <div className="flex min-w-0 flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-12 xl:justify-end">
+      <button type="submit" className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-5 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{dictionary.workspace.apply}</button>
+      <Link href="/reports/accounts-payable" className="inline-flex h-11 items-center justify-center rounded-md border border-outline-variant px-5 text-sm text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{dictionary.workspace.clear}</Link>
+    </div>
   </form>;
 }

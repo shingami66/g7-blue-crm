@@ -71,22 +71,22 @@ export default async function EventEconomicsReportPage({
             <span className="text-sm text-on-surface-variant">{dictionary.workspace.rows}: <UiLtrText>{report.pagination.total}</UiLtrText></span>
           </div>
           {report.rows.length > 0 ? (
-            <DataTable columns={[
-              { key: "service", header: dictionary.event.title, kind: "identifier", align: "start" },
-              { key: "customer", header: dictionary.ar.customer, kind: "text", align: "start" },
-              { key: "budget", header: dictionary.event.approvedBudget, kind: "money", align: "end" },
-              { key: "commitment", header: dictionary.event.commitment, kind: "money", align: "end" },
-              { key: "actual", header: dictionary.event.actual, kind: "money", align: "end" },
-              { key: "paid", header: dictionary.event.paid, kind: "money", align: "end" },
-              { key: "outstanding", header: dictionary.event.outstanding, kind: "money", align: "end" },
-              { key: "etc", header: dictionary.event.etc, kind: "money", align: "end" },
-              { key: "eac", header: dictionary.event.eac, kind: "money", align: "end" },
-              { key: "commercial", header: dictionary.event.commercialValue, kind: "money", align: "end" },
-              { key: "forecast", header: dictionary.event.forecastMargin, kind: "money", align: "end" },
-              { key: "completeness", header: dictionary.event.completeness, kind: "status", align: "start" },
-              { key: "close", header: dictionary.event.closeState, kind: "status", align: "start" },
-              { key: "finalActual", header: dictionary.event.finalActual, kind: "money", align: "end" },
-              { key: "finalMargin", header: dictionary.event.finalMargin, kind: "money", align: "end" },
+            <DataTable minWidth="2840px" ariaLabel={dictionary.event.title} columns={[
+              { key: "service", header: dictionary.event.title, kind: "identifier", align: "start", minWidth: 300 },
+              { key: "customer", header: dictionary.ar.customer, kind: "text", align: "start", minWidth: 220 },
+              { key: "budget", header: dictionary.event.approvedBudget, kind: "money", align: "end", minWidth: 180, noWrap: true },
+              { key: "commitment", header: dictionary.event.commitment, kind: "money", align: "end", minWidth: 180, noWrap: true },
+              { key: "actual", header: dictionary.event.actual, kind: "money", align: "end", minWidth: 180, noWrap: true },
+              { key: "paid", header: dictionary.event.paid, kind: "money", align: "end", minWidth: 180, noWrap: true },
+              { key: "outstanding", header: dictionary.event.outstanding, kind: "money", align: "end", minWidth: 180, noWrap: true },
+              { key: "etc", header: dictionary.event.etc, kind: "money", align: "end", minWidth: 180, noWrap: true },
+              { key: "eac", header: dictionary.event.eac, kind: "money", align: "end", minWidth: 180, noWrap: true },
+              { key: "commercial", header: dictionary.event.commercialValue, kind: "money", align: "end", minWidth: 180, noWrap: true },
+              { key: "forecast", header: dictionary.event.forecastMargin, kind: "money", align: "end", minWidth: 180, noWrap: true },
+              { key: "completeness", header: dictionary.event.completeness, kind: "status", align: "center", minWidth: 180, noWrap: true },
+              { key: "close", header: dictionary.event.closeState, kind: "status", align: "center", minWidth: 150, noWrap: true },
+              { key: "finalActual", header: dictionary.event.finalActual, kind: "money", align: "end", minWidth: 180, noWrap: true },
+              { key: "finalMargin", header: dictionary.event.finalMargin, kind: "money", align: "end", minWidth: 180, noWrap: true },
             ]}>
               {report.rows.map((row) => (
                 <tr key={row.serviceId}>
@@ -103,8 +103,8 @@ export default async function EventEconomicsReportPage({
                   <td><UiMoneyText locale={locale} value={row.forecastMargin} /></td>
                   <td><UiBidiText>{row.completenessStatus === "COMPLETE" ? dictionary.event.complete : row.completenessStatus === "PARTIAL" ? dictionary.event.partial : dictionary.event.unavailable}</UiBidiText></td>
                   <td><UiBidiText>{row.closeState === "closed" ? dictionary.event.closed : dictionary.event.open}</UiBidiText></td>
-                  <td>{row.closeState === "closed" ? <UiMoneyText locale={locale} value={row.finalActualCost} /> : <span className="text-on-surface-variant">{dictionary.event.noFinalForOpen}</span>}</td>
-                  <td>{row.closeState === "closed" ? <UiMoneyText locale={locale} value={row.finalManagerialMargin} /> : <span className="text-on-surface-variant">{dictionary.event.noFinalForOpen}</span>}</td>
+                  <td>{row.closeState === "closed" ? <UiMoneyText locale={locale} value={row.finalActualCost} /> : <span aria-label={dictionary.event.noFinalForOpen} title={dictionary.event.noFinalForOpen} className="text-on-surface-variant">—</span>}</td>
+                  <td>{row.closeState === "closed" ? <UiMoneyText locale={locale} value={row.finalManagerialMargin} /> : <span aria-label={dictionary.event.noFinalForOpen} title={dictionary.event.noFinalForOpen} className="text-on-surface-variant">—</span>}</td>
                 </tr>
               ))}
             </DataTable>
@@ -116,12 +116,14 @@ export default async function EventEconomicsReportPage({
 }
 
 function EventEconomicsFilters({ dictionary, values }: { dictionary: ReturnType<typeof getReportCenterDictionary>; values: Record<string, string | undefined> }) {
-  return <form method="get" className="flex min-w-0 flex-wrap items-end gap-3 rounded-xl border border-surface-variant bg-surface-container-lowest p-4">
-    <label className="flex min-w-[10rem] flex-col gap-1 text-sm text-on-surface-variant"><span>{dictionary.workspace.asOf}</span><input name="asOf" type="date" defaultValue={values.asOf} className="h-10 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface" /></label>
-    <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-sm text-on-surface-variant"><span>{dictionary.workspace.search}</span><input name="search" defaultValue={values.search} className="h-10 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface" /></label>
-    <label className="flex min-w-[11rem] flex-col gap-1 text-sm text-on-surface-variant"><span>{dictionary.event.completeness}</span><select name="completeness" defaultValue={values.completeness} className="h-10 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface"><option value="all">{dictionary.event.allCompleteness}</option><option value="COMPLETE">{dictionary.event.complete}</option><option value="PARTIAL">{dictionary.event.partial}</option><option value="UNAVAILABLE">{dictionary.event.unavailable}</option></select></label>
-    <label className="flex min-w-[10rem] flex-col gap-1 text-sm text-on-surface-variant"><span>{dictionary.event.closeState}</span><select name="closeState" defaultValue={values.closeState} className="h-10 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface"><option value="all">{dictionary.event.allCloseStates}</option><option value="open">{dictionary.event.open}</option><option value="closed">{dictionary.event.closed}</option></select></label>
-    <button type="submit" className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-white">{dictionary.workspace.apply}</button>
-    <Link href="/reports/event-economics" className="inline-flex h-10 items-center rounded-md border border-outline-variant px-4 text-sm text-on-surface">{dictionary.workspace.clear}</Link>
+  return <form method="get" className="grid min-w-0 grid-cols-1 gap-4 rounded-xl border border-surface-variant bg-surface-container-lowest p-5 sm:grid-cols-2 xl:grid-cols-12">
+    <label className="flex min-w-0 flex-col gap-2 text-sm text-on-surface-variant xl:col-span-2"><span>{dictionary.workspace.asOf}</span><input name="asOf" type="date" defaultValue={values.asOf} className="h-11 w-full min-w-0 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface" /></label>
+    <label className="flex min-w-0 flex-col gap-2 text-sm text-on-surface-variant xl:col-span-4"><span>{dictionary.workspace.search}</span><input name="search" defaultValue={values.search} className="h-11 w-full min-w-0 rounded-md border border-outline-variant bg-surface px-3 text-sm text-on-surface" /></label>
+    <label className="flex min-w-0 flex-col gap-2 text-sm text-on-surface-variant xl:col-span-3"><span>{dictionary.event.completeness}</span><select name="completeness" defaultValue={values.completeness} className="h-11 w-full min-w-0 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface"><option value="all">{dictionary.event.allCompleteness}</option><option value="COMPLETE">{dictionary.event.complete}</option><option value="PARTIAL">{dictionary.event.partial}</option><option value="UNAVAILABLE">{dictionary.event.unavailable}</option></select></label>
+    <label className="flex min-w-0 flex-col gap-2 text-sm text-on-surface-variant xl:col-span-3"><span>{dictionary.event.closeState}</span><select name="closeState" defaultValue={values.closeState} className="h-11 w-full min-w-0 rounded-md border border-outline-variant bg-surface px-2 text-sm text-on-surface"><option value="all">{dictionary.event.allCloseStates}</option><option value="open">{dictionary.event.open}</option><option value="closed">{dictionary.event.closed}</option></select></label>
+    <div className="flex min-w-0 flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-12 xl:justify-end">
+      <button type="submit" className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-5 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{dictionary.workspace.apply}</button>
+      <Link href="/reports/event-economics" className="inline-flex h-11 items-center justify-center rounded-md border border-outline-variant px-5 text-sm text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{dictionary.workspace.clear}</Link>
+    </div>
   </form>;
 }

@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   getDataTableColumnAlignment,
+  getDataTableColumnCellStyle,
   normalizeDataTableColumns,
   type DataTableAlignment,
   type DataTableColumnInput,
@@ -102,7 +103,7 @@ function alignRow(
       {
         style: {
           ...cellElement.props.style,
-          textAlign: alignment,
+          ...getDataTableColumnCellStyle(column, "body"),
         },
       },
       nextChildren,
@@ -112,22 +113,42 @@ function alignRow(
   return cloneElement(rowElement, {}, alignedCells);
 }
 
-export default function DataTable({
-  columns,
-  centeredColumns = [],
-  children,
-}: {
+type DataTableProps = {
   columns: readonly DataTableColumnInput[];
   /** @deprecated Prefer explicit `align` metadata on each column. */
   centeredColumns?: readonly number[];
   children: ReactNode;
-}) {
+} & (
+  | {
+      /** Optional minimum width for analytical tables; scrolling stays inside this table surface. */
+      minWidth: NonNullable<CSSProperties["minWidth"]>;
+      /** Accessible name for the focusable local scroll region. */
+      ariaLabel: string;
+    }
+  | {
+      minWidth?: undefined;
+      ariaLabel?: never;
+    }
+);
+
+export default function DataTable({
+  columns,
+  centeredColumns = [],
+  minWidth,
+  ariaLabel,
+  children,
+}: DataTableProps) {
   const tableColumns = normalizeDataTableColumns(columns, centeredColumns);
   const rows = Children.map(children, (row) => alignRow(row, tableColumns));
 
   return (
-    <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-b-xl border border-surface-variant bg-surface-container-lowest">
-      <table className="w-full border-collapse text-start">
+    <div
+      className="w-full min-w-0 max-w-full overflow-x-auto rounded-b-xl border border-surface-variant bg-surface-container-lowest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      role={minWidth !== undefined ? "region" : undefined}
+      tabIndex={minWidth !== undefined ? 0 : undefined}
+      aria-label={minWidth !== undefined ? ariaLabel : undefined}
+    >
+      <table className="w-full border-collapse text-start" style={minWidth !== undefined ? { minWidth } : undefined}>
         <thead>
           <tr className="border-b border-surface-variant bg-surface-container-low">
             {tableColumns.map((column) => (
@@ -135,7 +156,7 @@ export default function DataTable({
                 key={column.key}
                 data-column-kind={column.kind}
                 className="px-4 py-3 text-[12px] font-semibold uppercase leading-[16px] tracking-[0.05em] text-on-surface-variant"
-                style={{ textAlign: getDataTableColumnAlignment(column) }}
+                style={getDataTableColumnCellStyle(column, "header")}
               >
                 {column.header}
               </th>

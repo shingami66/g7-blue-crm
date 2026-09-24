@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { UiDateText, UiDateTimeText } from "@/components/i18n/UiDateText";
 import { UiLtrText } from "@/components/i18n/UiValueText";
-import PageHeader from "@/components/ui/PageHeader";
+import { RecordBackButton } from "@/components/navigation/RecordBackButton";
 import type { ReportDefinition } from "@/lib/reports/types";
 import type { Locale } from "@/lib/i18n/locales";
 import type { ReportCenterDictionary } from "@/lib/i18n/dictionaries/report-center";
@@ -40,52 +40,68 @@ export default function ReportWorkspace({
 }) {
   return (
     <div className="min-w-0 space-y-6" data-report-key={definition.key}>
-      <PageHeader title={definition.title} subtitle={definition.description}>
+      <header className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <RecordBackButton
+            href="/reports"
+            locale={locale}
+            label={dictionary.workspace.backToReports}
+            ariaLabel={dictionary.workspace.backToReports}
+          />
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-semibold leading-[36px] tracking-[-0.01em] text-primary">
+              {definition.title}
+            </h1>
+            <p className="mt-1 text-[14px] leading-5 text-on-surface-variant">
+              {definition.description}
+            </p>
+          </div>
+        </div>
         {exportHref ? (
           <Link
             href={exportHref}
-            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90"
+            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             {dictionary.workspace.export}
           </Link>
         ) : null}
-      </PageHeader>
+      </header>
 
-      <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-4" aria-label={dictionary.workspace.definition}>
-        <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="min-w-0">
+      <section className="min-w-0 rounded-xl border border-surface-variant bg-surface-container-lowest p-5" aria-label={dictionary.workspace.definition}>
+        <dl className="grid min-w-0 grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 xl:grid-cols-12">
+          <div className="min-w-0 sm:col-span-2 xl:col-span-6">
             <dt className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">{dictionary.workspace.definition}</dt>
-            <dd className="mt-1 text-sm text-on-surface">{definition.description}</dd>
+            <dd className="mt-2 max-w-3xl text-sm leading-6 text-on-surface">{definition.description}</dd>
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 sm:col-span-1 xl:col-span-2">
             <dt className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">{dictionary.workspace.source}</dt>
-            <dd className="mt-1 break-words text-sm text-on-surface"><bdi dir="auto">{definition.sourceDomain}</bdi></dd>
+            <dd className="mt-2 break-words text-sm leading-6 text-on-surface"><bdi dir="auto">{definition.sourceDomain}</bdi></dd>
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 sm:col-span-1 xl:col-span-2">
             <dt className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">{dictionary.workspace.timeBasis}</dt>
-            <dd className="mt-1 text-sm text-on-surface">{timeBasisLabel(definition, dictionary)}</dd>
+            <dd className="mt-2 text-sm leading-6 text-on-surface">{timeBasisLabel(definition, dictionary)}</dd>
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 sm:col-span-1 xl:col-span-2">
             <dt className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">{dictionary.workspace.freshness}</dt>
-            <dd className="mt-1 text-sm text-on-surface">{definition.freshness}</dd>
+            <dd className="mt-2 text-sm leading-6 text-on-surface">{definition.freshness}</dd>
           </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-surface-variant pt-3 text-sm text-on-surface-variant">
-          <span>{dictionary.workspace.timezone}: <UiLtrText>Asia/Riyadh (+03:00)</UiLtrText></span>
+        </dl>
+        <div className="mt-5 flex min-w-0 flex-wrap gap-x-6 gap-y-3 border-t border-surface-variant pt-4 text-sm leading-5 text-on-surface-variant">
+          <span className="min-w-0">{dictionary.workspace.timezone}: <UiLtrText>Asia/Riyadh (+03:00)</UiLtrText></span>
           {periodFrom || periodTo ? (
-            <span>
+            <span className="min-w-0">
               {dictionary.workspace.period}: <UiDateText locale={locale} value={periodFrom ?? periodTo ?? ""} />
               {periodFrom && periodTo ? <> – <UiDateText locale={locale} value={periodTo} /></> : null}
             </span>
           ) : null}
-          {asOfDate ? <span>{dictionary.workspace.asOf}: <UiDateText locale={locale} value={asOfDate} /></span> : null}
-          <span>{dictionary.workspace.generated}: <UiDateTimeText locale={locale} value={generatedAt} options={{ timeZone: "Asia/Riyadh" }} /></span>
+          {asOfDate ? <span className="min-w-0">{dictionary.workspace.asOf}: <UiDateText locale={locale} value={asOfDate} /></span> : null}
+          <span className="min-w-0">{dictionary.workspace.generated}: <UiDateTimeText locale={locale} value={generatedAt} options={{ timeZone: "Asia/Riyadh" }} /></span>
         </div>
       </section>
 
-      {filterPanel ? <section aria-label={dictionary.workspace.filters}>{filterPanel}</section> : null}
-      {stateNote ? <div>{stateNote}</div> : null}
-      {children}
+      {filterPanel ? <section className="min-w-0" aria-label={dictionary.workspace.filters}>{filterPanel}</section> : null}
+      {stateNote ? <div className="min-w-0">{stateNote}</div> : null}
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }
