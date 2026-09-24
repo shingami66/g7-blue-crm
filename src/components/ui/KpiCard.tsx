@@ -43,7 +43,6 @@ export default function KpiCard({
       <div className="mt-4 min-w-0">
         <span
           className="block max-w-full break-words font-bold tracking-[-0.02em] text-on-surface tabular-nums [overflow-wrap:anywhere] text-[clamp(1.25rem,2.8vw,2.25rem)] leading-[1.15]"
-          dir="ltr"
         >
           {value}
         </span>

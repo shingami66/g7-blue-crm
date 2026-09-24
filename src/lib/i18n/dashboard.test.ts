@@ -162,12 +162,15 @@ test("6. SAR amounts use the shared formatter and retain Western digits", () => 
   const moneyEn = formatSarAmount("en", 1_250_000.5);
   const moneyAr = formatSarAmount("ar", 1_250_000.5);
   const page = readFileSync(DASHBOARD_PAGE, "utf8");
+  const sharedValues = readFileSync("src/components/i18n/UiValueText.tsx", "utf8");
 
   assert.equal(moneyEn, "SAR 1,250,000.50");
   assert.equal(moneyAr, "SAR 1,250,000.50");
   assert.doesNotMatch(moneyAr, ARABIC_INDIC);
-  assert.match(page, /formatSarAmount/);
-  assert.match(page, /formatUiNumber/);
+  assert.match(page, /<UiMoneyText locale=\{locale\} value=\{value\} \/>/);
+  assert.match(page, /<UiNumberText locale=\{locale\} value=/);
+  assert.match(sharedValues, /formatSarAmount/);
+  assert.match(sharedValues, /formatUiNumber/);
   assert.doesNotMatch(page, /style:\s*["']currency["']/);
   assert.doesNotMatch(page, /Intl\.NumberFormat/);
 });
@@ -191,8 +194,8 @@ test("8. Quotation/document numbers remain LTR at the Dashboard call site", () =
   assert.match(page, /recentQuotationPrimaryLabel/);
   assert.match(page, /dir:\s*"ltr"/);
   assert.match(page, /quotation\.quotationNumber/);
-  assert.match(page, /dir=\{primary\.dir\}/);
-  assert.match(page, /dir="ltr"/);
+  assert.match(page, /primary\.dir === "ltr" \? <UiLtrText>/);
+  assert.doesNotMatch(page, /dir=\{primary\.dir\}|dir="ltr"/);
 });
 
 test("9. Stored customer, Service, event, and quotation data is not translated", () => {
@@ -213,7 +216,7 @@ test("10. Large KPI amount styling prevents clipping/nowrap regression without c
   assert.match(source, /break-words|overflow-wrap/);
   assert.match(source, /clamp\(/);
   assert.match(source, /tabular-nums/);
-  assert.match(source, /dir="ltr"/);
+  assert.doesNotMatch(source, /dir="ltr"/);
   assert.doesNotMatch(source, /whitespace-nowrap/);
   assert.doesNotMatch(source, /toExponential|scientific|notation:\s*["']compact["']/);
 });
@@ -352,7 +355,7 @@ test("Dashboard final density uses a bounded frame, no obsolete heading, and a b
   assert.match(page, /data-dashboard-section="quick-actions"/);
   assert.doesNotMatch(page, /dictionary\.actions\.title/);
   assert.match(page, /data-dashboard-content-frame="true" className="mx-auto w-full max-w-\[1240px\]"/);
-  assert.match(layout, /<main className="dashboard-main mx-auto w-full min-w-0 max-w-\[1440px\] flex-1 p-4 md:p-6">/);
+  assert.match(layout, /<main className="dashboard-main relative mx-auto w-full min-w-0 max-w-\[1440px\] flex-1 p-4 md:p-6">/);
   assert.match(page, /canCreateCustomer && <Link href="\/customers"/);
   assert.match(page, /canCreateQuotation && <Link href="\/quotations"/);
   assert.match(page, /canCreateInvoice && <Link href="\/invoices"/);
@@ -384,7 +387,7 @@ test("Dashboard final density uses a bounded frame, no obsolete heading, and a b
   assert.match(page, /<div className="mt-4 space-y-6">/);
   assert.match(page, /<DashboardAmount locale=\{locale\} value=\{totalCollected\}/);
   assert.match(page, /whitespace-nowrap/);
-  assert.match(page, /dir="ltr"/);
+  assert.match(page, /primary\.dir === "ltr" \? <UiLtrText>/);
   assert.doesNotMatch(page, /DashboardFocusCard title=\{advancementDictionary\.recentPayments\}/);
   assert.doesNotMatch(page, /data-dashboard-section="operational-snapshot"/);
   assert.doesNotMatch(page, /dictionary\.sections\.operationalSnapshot/);

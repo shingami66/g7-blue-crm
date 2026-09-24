@@ -127,10 +127,11 @@ test("14-16. Sort/pagination/KPI contracts match baseline", () => {
 });
 
 test("17-20. Formatting, Western digits, bidi, stored data", () => {
-  assert.match(read(LIST_CLIENT), /formatSarAmount/);
+  assert.match(read(LIST_CLIENT), /<UiMoneyText/);
   assert.match(read(LIST_CLIENT), /UiDateText|formatUiDate/);
-  assert.match(read(LIST_CLIENT), /formatUiNumber/);
-  assert.match(read(LIST_CLIENT), /isolateBidiText\(payment\.paymentNumber\)/);
+  assert.match(read(LIST_CLIENT), /<UiLtrText>\{payment\.paymentNumber\}<\/UiLtrText>/);
+  assert.match(read(LIST_CLIENT), /<UiBidiText>/);
+  assert.doesNotMatch(read(LIST_CLIENT), /formatSarAmount|formatUiNumber|isolateBidiText/);
   assert.doesNotMatch(read(LIST_CLIENT), /toLocaleString|Intl\.NumberFormat/);
 
   assert.equal(formatSarAmount("ar", 900), "SAR 900.00");
@@ -139,7 +140,7 @@ test("17-20. Formatting, Western digits, bidi, stored data", () => {
   assert.doesNotMatch(formatUiDate("ar", "2026-07-10"), ARABIC_INDIC);
 
   assert.match(read(LIST_CLIENT), /payment\.customerName|payment\.reference/);
-  assert.match(read(LIST_CLIENT), /dir="auto"/);
+  assert.match(read(LIST_CLIENT), /<UiBidiText>/);
   assert.doesNotMatch(read(LIST_CLIENT), /translateStored|localizeCustomer/);
 });
 

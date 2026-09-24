@@ -46,7 +46,7 @@ export default function ServiceStatusTimeline({
         </dl>
 
         <details className="mt-5 rounded-xl border border-surface-variant bg-surface">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-left marker:hidden [&::-webkit-details-marker]:hidden">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-start marker:hidden [&::-webkit-details-marker]:hidden">
             <div>
               <p className="text-[14px] font-semibold text-on-surface">
                 {dictionary.serviceStatusTimeline.historyLabel}

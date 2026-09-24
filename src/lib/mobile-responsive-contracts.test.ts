@@ -220,16 +220,16 @@ test("20. EN/AR behavior remains intact", () => {
   for (const path of [CUSTOMERS_CLIENT, QUOTATIONS_CLIENT, SERVICES_CLIENT, PAYMENTS_CLIENT, SUPPLIER_QUOTATION_HISTORY]) {
     const source = read(path);
     assert.match(source, /dictionary/);
-    assert.match(source, /dir="auto"|dir="ltr"/);
+    assert.match(source, /dir="auto"|dir="ltr"|<Ui(?:Bidi|Ltr|Money|Number)Text/);
   }
 });
 
 test("21. LTR identifier isolation remains intact", () => {
-  // Identifiers and numbers must have explicit dir="ltr"
+  // Identifiers and numbers use the shared leaf-level LTR primitive where migrated.
   assert.match(read(CUSTOMERS_CLIENT), /dir="ltr" className="inline-block font-mono">[\s\S]*?\{customer\.customerNumber\}/);
   assert.match(read(QUOTATIONS_CLIENT), /dir="ltr" className="font-mono font-semibold text-primary text-\[14px\]">[\s\S]*?\{isolateBidiText\(quotation\.quotationNumber\)\}/);
   assert.match(read(SERVICES_CLIENT), /dir="ltr" className="font-mono font-semibold text-primary text-\[14px\]">[\s\S]*?\{isolateBidiText\(service\.serviceNumber\)\}/);
-  assert.match(read(PAYMENTS_CLIENT), /dir="ltr">[\s\S]*?\{isolateBidiText\(payment\.paymentNumber\)\}/);
+  assert.match(read(PAYMENTS_CLIENT), /<UiLtrText>\{payment\.paymentNumber\}<\/UiLtrText>/);
   assert.match(read(SUPPLIER_QUOTATION_HISTORY), /dir="ltr">[\s\S]*?\{isolateLtrText\(quotation\.serviceNumber\)\}/);
 });
 

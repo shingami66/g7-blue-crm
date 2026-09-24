@@ -131,11 +131,11 @@ test("List-shell normalization preserves frozen table contracts", () => {
   assert.match(quotations, /<StatusBadge variant=\{quotation\.status as StatusBadgeVariant\}>/);
 
   assert.match(payments, /columns=\{\[/);
-  assert.match(payments, /formatSarAmount\(locale, payment\.amount\)/);
+  assert.match(payments, /<UiMoneyText locale=\{locale\} value=\{payment\.amount\} \/>/);
   assert.match(payments, /<StatusBadge variant=\{getPaymentStatusBadgeVariant\(payment\.status\)\}>/);
 });
 
-test("Quotation and Invoice tables keep local fixed geometry contracts without changing shared primitives", () => {
+test("Quotation and Invoice tables keep local fixed geometry alongside the shared semantic DataTable", () => {
   const quotations = read("src/app/(dashboard)/quotations/QuotationsClient.tsx");
   const invoices = read("src/app/(dashboard)/invoices/InvoicesListClient.tsx");
   const customers = read("src/app/(dashboard)/customers/CustomersClient.tsx");
@@ -203,7 +203,7 @@ test("Quotation and Invoice tables keep local fixed geometry contracts without c
   }
 
   assert.match(customers, /table-fixed/);
-  assert.match(dataTable, /<table className="w-full border-collapse"/);
+  assert.match(dataTable, /<table className="w-full border-collapse text-start"/);
   assert.doesNotMatch(dataTable, /colgroup|table-fixed/);
   assert.match(paginationFooter, /paginationMode/);
   assert.match(button, /sizeClassNames/);
@@ -222,7 +222,7 @@ test("RecordNavigation uses compact icon-only controls with accessible labels", 
   assert.doesNotMatch(source, /<span[^>]*>\{label\}<\/span>/);
 });
 
-test("Back buttons across detail and form surfaces use LocaleBackIcon and compact 32px sizing", () => {
+test("Back buttons across detail and form surfaces use the locale-aware compact control", () => {
   const files = [
     "src/app/(dashboard)/customers/[id]/page.tsx",
     "src/app/(dashboard)/services/[id]/page.tsx",
@@ -237,10 +237,16 @@ test("Back buttons across detail and form surfaces use LocaleBackIcon and compac
     "src/app/(dashboard)/suppliers/[id]/edit/SupplierEditForm.tsx",
   ];
 
+  const sharedRecordBackButton = read("src/components/navigation/RecordBackButton.tsx");
   for (const file of files) {
     const source = read(file);
-    assert.match(source, /LocaleBackIcon/);
-    assert.match(source, /h-8 w-8/);
+    if (source.includes("RecordBackButton")) {
+      assert.match(sharedRecordBackButton, /LocaleBackIcon/);
+      assert.match(sharedRecordBackButton, /h-8 w-8/);
+    } else {
+      assert.match(source, /LocaleBackIcon/);
+      assert.match(source, /h-8 w-8/);
+    }
   }
 });
 
@@ -262,9 +268,12 @@ test("Quotation detail action hierarchy cleanly separates navigation and mutatio
   assert.match(detailSource, /onlyDraftEditable/);
 
   const asChildButtons = detailSource.match(/<Button asChild[\s\S]*?<\/Button>/g) ?? [];
-  assert.equal(asChildButtons.length, 2);
-  assert.match(asChildButtons[0], /<PendingLink[\s\S]*?<\/PendingLink>/);
-  assert.match(asChildButtons[1], /<Link[\s\S]*?<\/Link>/);
+  const editAsChildButton = asChildButtons.find((button) => button.includes("dictionary.detail.actions.edit"));
+  const printAsChildButton = asChildButtons.find((button) => button.includes("dictionary.detail.actions.printPdf"));
+  assert.ok(editAsChildButton);
+  assert.ok(printAsChildButton);
+  assert.match(editAsChildButton ?? "", /<PendingLink[\s\S]*?<\/PendingLink>/);
+  assert.match(printAsChildButton ?? "", /<Link[\s\S]*?<\/Link>/);
 
   // QuotationApprovalActions uses compact one-line approval actions and an icon-only Delete action
   assert.match(actionsSource, /variant="primary"\s+size="sm"\s+className="h-9 min-h-9 whitespace-nowrap"/);
@@ -324,8 +333,8 @@ test("Quotation detail line items use fixed geometry and logical RTL alignment w
   assert.equal((lineItemsTable.match(/<td[^>]*dir="ltr"/g) ?? []).length, 0);
   assert.equal((lineItemsTable.match(/<span dir="ltr">/g) ?? []).length, 4);
   assert.match(lineItemsTable, /<span dir="ltr">\{formatQuantity\(item\.qty\)\}<\/span>/);
-  assert.match(lineItemsTable, /<span dir="ltr">\{formatMoney\(item\.unitPrice\)\}<\/span>/);
-  assert.match(lineItemsTable, /<span dir="ltr">\{formatMoney\(item\.total\)\}<\/span>/);
+  assert.match(lineItemsTable, /<span dir="ltr">\{item\.commercialRole === "included_component" \|\| \(item\.commercialRole === "optional_add_on" && !item\.isSelected\) \? "—" : formatMoney\(item\.unitPrice\)\}<\/span>/);
+  assert.match(lineItemsTable, /<span dir="ltr">\{item\.commercialRole === "included_component" \|\| \(item\.commercialRole === "optional_add_on" && !item\.isSelected\) \? "—" : formatMoney\(item\.total\)\}<\/span>/);
 
   // Accepted action-density contract remains frozen.
   assert.match(detailSource, /className="h-9 min-h-9 whitespace-nowrap"/);

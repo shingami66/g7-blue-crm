@@ -29,7 +29,7 @@ import {
 } from "@/lib/dashboard/queries";
 import PendingLink from "@/components/ui/PendingLink";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
-import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import { UiBidiText, UiLtrText, UiMoneyText, UiNumberText } from "@/components/i18n/UiValueText";
 import {
   getDashboardDictionary,
 } from "@/lib/i18n/dictionaries/dashboard";
@@ -108,20 +108,8 @@ const DASHBOARD_WIDGETS = {
   },
 } as const satisfies Record<string, DashboardWidgetDefinition>;
 
-function formatDashboardCount(locale: Locale, value: number): string {
-  return formatUiNumber(locale, value);
-}
-
-function formatDashboardAmount(locale: Locale, value: number): string {
-  return formatSarAmount(locale, value);
-}
-
 function DashboardAmount({ locale, value }: { locale: Locale; value: number }) {
-  return (
-    <span dir="ltr" className="inline-block whitespace-nowrap tabular-nums">
-      {formatDashboardAmount(locale, value)}
-    </span>
-  );
+  return <UiMoneyText locale={locale} value={value} />;
 }
 
 async function loadIfAllowed<T>(
@@ -262,7 +250,7 @@ export default async function DashboardPage() {
             label={dictionary.metrics.totalCustomers}
             value={
               customersState.status === "ready"
-                ? formatDashboardCount(locale, customersState.data.totalCount)
+                ? <UiNumberText locale={locale} value={customersState.data.totalCount} />
                 : dictionary.states.unavailable
             }
             trend="flat"
@@ -277,7 +265,7 @@ export default async function DashboardPage() {
             label={dictionary.metrics.totalQuotations}
             value={
               quotationsState.status === "ready"
-                ? formatDashboardCount(locale, quotationsState.data.totalCount)
+                ? <UiNumberText locale={locale} value={quotationsState.data.totalCount} />
                 : dictionary.states.unavailable
             }
             trend="flat"
@@ -292,7 +280,7 @@ export default async function DashboardPage() {
             label={dictionary.metrics.openInvoices}
             value={
               invoicesState.status === "ready"
-                ? formatDashboardCount(locale, openInvoiceCount)
+                ? <UiNumberText locale={locale} value={openInvoiceCount} />
                 : dictionary.states.unavailable
             }
             trend="flat"
@@ -307,7 +295,7 @@ export default async function DashboardPage() {
             label={dictionary.metrics.services}
             value={
               servicesState.status === "ready"
-                ? formatDashboardCount(locale, servicesState.data.totalCount)
+                ? <UiNumberText locale={locale} value={servicesState.data.totalCount} />
                 : dictionary.states.unavailable
             }
             trend="flat"
@@ -360,16 +348,16 @@ export default async function DashboardPage() {
                 empty={advancementDictionary.noAttention}
                 action={hasMoreAttentionInvoices ? <Link href="/invoices" className="shrink-0 text-[12px] font-semibold leading-[16px] tracking-[0.05em] text-primary hover:underline">{dictionary.quotations.viewAll}</Link> : undefined}
               >
-                {attentionInvoices.map((invoice) => <PendingLink key={invoice.id} href={`/invoices/${invoice.id}`} className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><span className="inline-block whitespace-nowrap text-[13px] text-on-surface" dir="ltr">{invoice.invoice_number}</span><DashboardAmount locale={locale} value={Number(invoice.balance_due)} /></PendingLink>)}
+                {attentionInvoices.map((invoice) => <PendingLink key={invoice.id} href={`/invoices/${invoice.id}`} className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><UiLtrText className="whitespace-nowrap text-[13px] text-on-surface">{invoice.invoice_number}</UiLtrText><DashboardAmount locale={locale} value={Number(invoice.balance_due)} /></PendingLink>)}
               </FocusGroup> : null}
               {quotationApprovalState.status === "ready" ? <FocusGroup title={advancementDictionary.pendingQuotationApprovals} empty={advancementDictionary.noPendingQuotationApprovals}>
                 {pendingQuotationApprovals.map((quotation) => {
                   const primary = recentQuotationPrimaryLabel(quotation);
-                  return <PendingLink key={quotation.id} href={`/quotations/${quotation.id}`} className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><span className="min-w-0 flex-1 truncate text-[13px] text-on-surface" dir={primary.dir}>{primary.text}</span><span className="shrink-0 whitespace-nowrap text-[12px] text-primary" dir="ltr">{quotation.quotationNumber}</span></PendingLink>;
+                  return <PendingLink key={quotation.id} href={`/quotations/${quotation.id}`} className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><span className="min-w-0 flex-1 truncate text-[13px] text-on-surface">{primary.dir === "ltr" ? <UiLtrText>{primary.text}</UiLtrText> : <UiBidiText>{primary.text}</UiBidiText>}</span><UiLtrText className="shrink-0 whitespace-nowrap text-[12px] text-primary">{quotation.quotationNumber}</UiLtrText></PendingLink>;
                 })}
               </FocusGroup> : null}
               {readyToStartServicesState.status === "ready" ? <FocusGroup title={advancementDictionary.readyToStart} empty={advancementDictionary.noReadyToStart}>
-                {readyToStartServices.map((service) => <PendingLink key={service.id} href={`/services/${service.id}`} className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><span className="min-w-0 flex-1 truncate text-[13px] text-on-surface" dir="auto">{service.serviceTitle}</span><span className="shrink-0 whitespace-nowrap text-[12px] text-primary" dir="ltr">{service.serviceNumber}</span></PendingLink>)}
+                {readyToStartServices.map((service) => <PendingLink key={service.id} href={`/services/${service.id}`} className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><span className="min-w-0 flex-1 truncate text-[13px] text-on-surface"><UiBidiText>{service.serviceTitle}</UiBidiText></span><UiLtrText className="shrink-0 whitespace-nowrap text-[12px] text-primary">{service.serviceNumber}</UiLtrText></PendingLink>)}
               </FocusGroup> : null}
             </DashboardFocusCard>
 
@@ -381,15 +369,15 @@ export default async function DashboardPage() {
                 </div>
                 <Link href="/services" className="shrink-0 text-[12px] font-semibold leading-[16px] tracking-[0.05em] text-primary hover:underline">{dictionary.workflow.viewServices}</Link>
               </div>
-              {servicesState.status === "ready" ? <div className="mt-4 grid grid-cols-2 gap-3">{WORKFLOW_STAGES.map((stage) => <PendingLink key={stage} href={`/services?status=${encodeURIComponent(stage)}`} className="rounded-lg border border-outline-variant p-3 hover:bg-surface-container-low"><span className="block text-[12px] text-on-surface-variant">{dictionary.workflow.rows[stage].label}</span><span className="mt-1 block text-[22px] font-semibold text-primary tabular-nums" dir="ltr">{formatDashboardCount(locale, servicesData?.workflowCounts[stage] ?? 0)}</span></PendingLink>)}</div> : <p className="mt-4 text-[14px] text-on-surface-variant">{dictionary.states.unavailableForRole}</p>}
+                {servicesState.status === "ready" ? <div className="mt-4 grid grid-cols-2 gap-3">{WORKFLOW_STAGES.map((stage) => <PendingLink key={stage} href={`/services?status=${encodeURIComponent(stage)}`} className="rounded-lg border border-outline-variant p-3 hover:bg-surface-container-low"><span className="block text-[12px] text-on-surface-variant">{dictionary.workflow.rows[stage].label}</span><span className="mt-1 block text-[22px] font-semibold text-primary"><UiNumberText locale={locale} value={servicesData?.workflowCounts[stage] ?? 0} /></span></PendingLink>)}</div> : <p className="mt-4 text-[14px] text-on-surface-variant">{dictionary.states.unavailableForRole}</p>}
             </section>
           </div>
 
           <div data-dashboard-column="right" className="min-w-0 space-y-6 lg:col-span-7">
             <section data-dashboard-section="operations-focus" aria-labelledby="dashboard-operations-focus">
               <DashboardFocusCard headingId="dashboard-operations-focus" title={advancementDictionary.operationsTitle} status={servicesState.status} unavailable={dictionary.states.unavailableForRole}>
-                <FocusGroup title={advancementDictionary.upcoming} empty={advancementDictionary.noUpcoming}>{upcoming.map((service) => <PendingLink key={service.id} href={`/services/${service.id}`} className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><span className="min-w-0 truncate text-[13px] text-on-surface" dir="auto">{service.serviceTitle}</span><span className="shrink-0 whitespace-nowrap text-[12px] text-primary" dir="ltr">{service.serviceNumber}</span></PendingLink>)}</FocusGroup>
-                <div className="grid grid-cols-2 gap-3"><MetricPill label={advancementDictionary.readyToStart} value={formatDashboardCount(locale, readyToStartCount)} /><MetricPill label={advancementDictionary.inProgress} value={formatDashboardCount(locale, inProgressCount)} /></div>
+                <FocusGroup title={advancementDictionary.upcoming} empty={advancementDictionary.noUpcoming}>{upcoming.map((service) => <PendingLink key={service.id} href={`/services/${service.id}`} className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><span className="min-w-0 truncate text-[13px] text-on-surface"><UiBidiText>{service.serviceTitle}</UiBidiText></span><UiLtrText className="shrink-0 whitespace-nowrap text-[12px] text-primary">{service.serviceNumber}</UiLtrText></PendingLink>)}</FocusGroup>
+                <div className="grid grid-cols-2 gap-3"><MetricPill label={advancementDictionary.readyToStart} value={<UiNumberText locale={locale} value={readyToStartCount} />} /><MetricPill label={advancementDictionary.inProgress} value={<UiNumberText locale={locale} value={inProgressCount} />} /></div>
               </DashboardFocusCard>
             </section>
 
@@ -401,7 +389,7 @@ export default async function DashboardPage() {
                     <h4 id="dashboard-recent-quotations" className="text-[14px] font-semibold leading-[20px] text-primary">{dictionary.sections.recentQuotations}</h4>
                     <Link href="/quotations" className="shrink-0 text-[12px] font-semibold leading-[16px] tracking-[0.05em] text-primary hover:underline">{dictionary.quotations.viewAll}</Link>
                   </div>
-                  {quotationsState.status === "unavailable" ? <p className="mt-4 text-[13px] text-on-surface-variant">{dictionary.quotations.unavailableForRole}</p> : recentQuotations.length === 0 ? <p className="mt-4 text-[13px] text-on-surface-variant">{dictionary.quotations.noRecentActivity}</p> : <div className="mt-3 space-y-2" role="list">{recentQuotations.map((quotation) => { const primary = recentQuotationPrimaryLabel(quotation); return <div key={quotation.id} role="listitem" className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low/50"><span className="min-w-0 flex-1 truncate text-[13px] text-on-surface" dir={primary.dir}>{primary.text}</span><div className="flex shrink-0 flex-wrap items-center gap-2"><DashboardAmount locale={locale} value={quotation.grandTotal} /><StatusBadge variant={quotation.status}>{getQuotationStatusLabel(locale, quotation.status)}</StatusBadge></div></div>; })}</div>}
+                  {quotationsState.status === "unavailable" ? <p className="mt-4 text-[13px] text-on-surface-variant">{dictionary.quotations.unavailableForRole}</p> : recentQuotations.length === 0 ? <p className="mt-4 text-[13px] text-on-surface-variant">{dictionary.quotations.noRecentActivity}</p> : <div className="mt-3 space-y-2" role="list">{recentQuotations.map((quotation) => { const primary = recentQuotationPrimaryLabel(quotation); return <div key={quotation.id} role="listitem" className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low/50"><span className="min-w-0 flex-1 truncate text-[13px] text-on-surface">{primary.dir === "ltr" ? <UiLtrText>{primary.text}</UiLtrText> : <UiBidiText>{primary.text}</UiBidiText>}</span><div className="flex shrink-0 flex-wrap items-center gap-2"><DashboardAmount locale={locale} value={quotation.grandTotal} /><StatusBadge variant={quotation.status}>{getQuotationStatusLabel(locale, quotation.status)}</StatusBadge></div></div>; })}</div>}
                 </section>
 
                 <section data-dashboard-section="payments" aria-labelledby="dashboard-recent-payments">
@@ -409,7 +397,7 @@ export default async function DashboardPage() {
                     <h4 id="dashboard-recent-payments" className="text-[14px] font-semibold leading-[20px] text-primary">{dictionary.sections.recentPayments}</h4>
                     <Link href="/payments" className="shrink-0 text-[12px] font-semibold leading-[16px] tracking-[0.05em] text-primary hover:underline">{dictionary.quotations.viewAll}</Link>
                   </div>
-                  {paymentsState.status === "unavailable" ? <p className="mt-4 text-[13px] text-on-surface-variant">{dictionary.states.unavailableForRole}</p> : recentPayments.length === 0 ? <p className="mt-4 text-[13px] text-on-surface-variant">{advancementDictionary.noPayments}</p> : <div className="mt-3 space-y-2" role="list">{recentPayments.map((payment) => <PendingLink key={payment.id} href={`/invoices/${payment.invoiceId}`} role="listitem" className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><span className="inline-block whitespace-nowrap text-[13px] text-on-surface" dir="ltr">{payment.paymentNumber}</span><DashboardAmount locale={locale} value={payment.amount} /></PendingLink>)}</div>}
+                  {paymentsState.status === "unavailable" ? <p className="mt-4 text-[13px] text-on-surface-variant">{dictionary.states.unavailableForRole}</p> : recentPayments.length === 0 ? <p className="mt-4 text-[13px] text-on-surface-variant">{advancementDictionary.noPayments}</p> : <div className="mt-3 space-y-2" role="list">{recentPayments.map((payment) => <PendingLink key={payment.id} href={`/invoices/${payment.invoiceId}`} role="listitem" className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant px-3 py-2 hover:bg-surface-container-low"><UiLtrText className="whitespace-nowrap text-[13px] text-on-surface">{payment.paymentNumber}</UiLtrText><DashboardAmount locale={locale} value={payment.amount} /></PendingLink>)}</div>}
                 </section>
               </div>
             </section>
@@ -429,4 +417,4 @@ function FocusGroup({ title, empty, action, children }: { title: string; empty: 
   return <div><div className="mb-2 flex items-center justify-between gap-3"><h5 className="text-[12px] font-semibold uppercase tracking-wide text-on-surface-variant">{title}</h5>{action}</div>{items && (Array.isArray(items) ? items.length > 0 : true) ? <div className="space-y-2">{children}</div> : <p className="text-[13px] text-on-surface-variant">{empty}</p>}</div>;
 }
 
-function MetricPill({ label, value }: { label: string; value: string }) { return <div className="rounded-lg border border-outline-variant bg-surface p-3"><span className="block text-[11px] text-on-surface-variant">{label}</span><span className="mt-1 block text-[18px] font-semibold text-primary" dir="ltr">{value}</span></div>; }
+function MetricPill({ label, value }: { label: string; value: React.ReactNode }) { return <div className="rounded-lg border border-outline-variant bg-surface p-3"><span className="block text-[11px] text-on-surface-variant">{label}</span><span className="mt-1 block text-[18px] font-semibold text-primary">{value}</span></div>; }

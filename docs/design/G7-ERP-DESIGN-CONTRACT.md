@@ -459,7 +459,7 @@ Names, supplier text, addresses, IDs, product terms, and stored business text ma
 
 ## 102. Dates, Ranges, IDs, and Currency in RTL
 
-Review structured values in Arabic and English for order, separators, punctuation, wrapping, copyability, and screen-reader meaning using the repository's i18n utilities.
+Review structured values in Arabic and English for order, separators, punctuation, wrapping, copyability, and screen-reader meaning using the repository's i18n utilities. Concrete shared-component and table-alignment implementation details are routed through `.agents/skills/g7-rtl-bidi-guard/SKILL.md`; this Contract remains authoritative.
 
 ## 103. Desktop Behavior
 

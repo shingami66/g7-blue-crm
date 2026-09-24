@@ -5,18 +5,18 @@ import Link from "next/link";
 import { Banknote, CheckCircle2, Clock, Search } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import DataTable from "@/components/ui/DataTable";
+import type { DataTableColumn } from "@/components/ui/data-table-contract";
 import StatusBadge from "@/components/ui/StatusBadge";
 import KpiCard from "@/components/ui/KpiCard";
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import ModuleSearchInput from "@/components/ui/ModuleSearchInput";
 import type { PaymentListItem, PaymentStatus, PaymentsListQuery, PaymentsListResult, PaymentsListPagination } from "@/lib/payments/types";
-import { isolateBidiText } from "@/lib/i18n/bidi";
 import {
   getPaymentMethodLabel,
   getPaymentStatusLabel,
   type PaymentsDictionary,
 } from "@/lib/i18n/dictionaries/payments";
-import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import { UiBidiText, UiLtrText, UiMoneyText, UiNumberText } from "@/components/i18n/UiValueText";
 import { UiDateText } from "@/components/i18n/UiDateText";
 import { useListNavigation } from "@/components/ui/useListNavigation";
 import { cleanBusinessYearParam, getCurrentBusinessYear } from "@/lib/business-year";
@@ -124,17 +124,17 @@ export default function PaymentsClient({ payments, pagination, query, error, dic
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <KpiCard
           label={dictionary.stats.confirmedCollected}
-          value={formatSarAmount(locale, stats.confirmedTotal)}
+          value={<UiMoneyText locale={locale} value={stats.confirmedTotal} />}
           icon={CheckCircle2}
         />
         <KpiCard
           label={dictionary.stats.paymentRecords}
-          value={formatUiNumber(locale, stats.paymentCount)}
+          value={<UiNumberText locale={locale} value={stats.paymentCount} />}
           icon={Banknote}
         />
         <KpiCard
           label={dictionary.stats.pendingPayments}
-          value={formatUiNumber(locale, stats.pendingCount)}
+          value={<UiNumberText locale={locale} value={stats.pendingCount} />}
           icon={Clock}
         />
       </div>
@@ -197,46 +197,42 @@ export default function PaymentsClient({ payments, pagination, query, error, dic
             <div className="min-w-[980px]">
               <DataTable
               columns={[
-                dictionary.table.payment,
-                dictionary.table.date,
-                dictionary.table.customer,
-                dictionary.table.invoice,
-                dictionary.table.service,
-                dictionary.table.method,
-                dictionary.table.reference,
-                dictionary.table.amount,
-                dictionary.table.status,
-              ]}
+                { key: "payment", header: dictionary.table.payment, align: "start", kind: "identifier" },
+                { key: "date", header: dictionary.table.date, align: "center", kind: "date" },
+                { key: "customer", header: dictionary.table.customer, align: "start", kind: "text" },
+                { key: "invoice", header: dictionary.table.invoice, align: "start", kind: "identifier" },
+                { key: "service", header: dictionary.table.service, align: "start", kind: "text" },
+                { key: "method", header: dictionary.table.method, align: "start", kind: "text" },
+                { key: "reference", header: dictionary.table.reference, align: "start", kind: "text" },
+                { key: "amount", header: dictionary.table.amount, align: "end", kind: "money" },
+                { key: "status", header: dictionary.table.status, align: "center", kind: "status" },
+              ] satisfies DataTableColumn[]}
             >
               {payments.map((payment) => (
                 <tr key={payment.id} className="hover:bg-surface-container-low/50 transition-colors">
                   <td className="px-4 py-4 font-mono font-semibold text-primary whitespace-nowrap">
-                    <span dir="ltr">{isolateBidiText(payment.paymentNumber)}</span>
+                    <UiLtrText>{payment.paymentNumber}</UiLtrText>
                   </td>
                   <td className="px-4 py-4 text-on-surface-variant whitespace-nowrap">
                     <UiDateText locale={locale} value={payment.date} />
                   </td>
                   <td className="px-4 py-4 font-medium text-on-surface max-w-[180px] truncate" title={payment.customerName}>
-                    <span dir="auto">{payment.customerName}</span>
+                    <UiBidiText>{payment.customerName}</UiBidiText>
                   </td>
                   <td className="px-4 py-4 font-mono text-[12px] text-primary whitespace-nowrap">
-                    <span dir="ltr">
-                      {isolateBidiText(payment.invoiceNumber ?? payment.invoiceId)}
-                    </span>
+                    <UiLtrText>{payment.invoiceNumber ?? "—"}</UiLtrText>
                   </td>
                   <td className="px-4 py-4 text-on-surface-variant max-w-[200px] whitespace-normal break-words" title={payment.serviceLabel ?? undefined}>
-                    <span dir="auto">{payment.serviceLabel ?? "—"}</span>
+                    <UiBidiText>{payment.serviceLabel ?? "—"}</UiBidiText>
                   </td>
                   <td className="px-4 py-4 text-on-surface-variant whitespace-nowrap">
                     {getPaymentMethodLabel(locale, payment.method)}
                   </td>
                   <td className="px-4 py-4 text-on-surface-variant max-w-[150px] truncate" title={payment.reference ?? undefined}>
-                    <span dir="auto">{payment.reference ?? "—"}</span>
+                    <UiBidiText>{payment.reference ?? "—"}</UiBidiText>
                   </td>
                   <td className="px-4 py-4 font-semibold text-on-surface tabular-nums whitespace-nowrap">
-                    <span dir="ltr" className="inline-block whitespace-nowrap">
-                      {formatSarAmount(locale, payment.amount)}
-                    </span>
+                    <UiMoneyText locale={locale} value={payment.amount} />
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
                     <StatusBadge variant={getPaymentStatusBadgeVariant(payment.status)}>
@@ -275,8 +271,8 @@ export default function PaymentsClient({ payments, pagination, query, error, dic
                 <div key={payment.id} className="p-4 space-y-3 transition-colors hover:bg-surface-container-low/40">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="font-mono font-semibold text-primary" dir="ltr">
-                        {isolateBidiText(payment.paymentNumber)}
+                      <div className="font-mono font-semibold text-primary">
+                        <UiLtrText>{payment.paymentNumber}</UiLtrText>
                       </div>
                       <div className="mt-0.5 text-[12px] text-on-surface-variant">
                         <UiDateText locale={locale} value={payment.date} />
@@ -292,23 +288,23 @@ export default function PaymentsClient({ payments, pagination, query, error, dic
                   <div className="space-y-1 text-[13px]">
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="text-on-surface-variant">{dictionary.table.customer}:</span>
-                      <span className="font-medium text-on-surface text-end break-words" dir="auto">
-                        {payment.customerName}
+                      <span className="font-medium text-on-surface text-end break-words">
+                        <UiBidiText>{payment.customerName}</UiBidiText>
                       </span>
                     </div>
-                    {(payment.invoiceNumber || payment.invoiceId) && (
+                    {payment.invoiceNumber && (
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="text-on-surface-variant">{dictionary.table.invoice}:</span>
-                        <span className="font-mono text-[12px] text-primary" dir="ltr">
-                          {isolateBidiText(payment.invoiceNumber ?? payment.invoiceId)}
+                        <span className="font-mono text-[12px] text-primary">
+                          <UiLtrText>{payment.invoiceNumber}</UiLtrText>
                         </span>
                       </div>
                     )}
                     {payment.serviceLabel && (
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="text-on-surface-variant">{dictionary.table.service}:</span>
-                        <span className="text-on-surface text-end break-words" dir="auto">
-                          {payment.serviceLabel}
+                        <span className="text-on-surface text-end break-words">
+                          <UiBidiText>{payment.serviceLabel}</UiBidiText>
                         </span>
                       </div>
                     )}
@@ -321,8 +317,8 @@ export default function PaymentsClient({ payments, pagination, query, error, dic
                     {payment.reference && (
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="text-on-surface-variant">{dictionary.table.reference}:</span>
-                        <span className="text-on-surface text-end truncate max-w-[200px]" dir="auto" title={payment.reference}>
-                          {payment.reference}
+                        <span className="text-on-surface text-end truncate max-w-[200px]" title={payment.reference}>
+                          <UiBidiText>{payment.reference}</UiBidiText>
                         </span>
                       </div>
                     )}
@@ -330,9 +326,7 @@ export default function PaymentsClient({ payments, pagination, query, error, dic
 
                   <div className="flex items-center justify-between border-t border-outline-variant/60 pt-2">
                     <span className="text-[12px] text-on-surface-variant">{dictionary.table.amount}</span>
-                    <span className="font-semibold text-on-surface tabular-nums" dir="ltr">
-                      {formatSarAmount(locale, payment.amount)}
-                    </span>
+                    <span className="font-semibold text-on-surface"><UiMoneyText locale={locale} value={payment.amount} /></span>
                   </div>
                 </div>
               ))

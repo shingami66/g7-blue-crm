@@ -109,7 +109,7 @@ export default function SupplierAllocationStatusActions({
         {action.label}
       </Button>
       {error ? (
-        <p className="max-w-[220px] text-right text-[12px] font-medium text-error">
+        <p className="max-w-[220px] text-end text-[12px] font-medium text-error">
           {error}
         </p>
       ) : null}

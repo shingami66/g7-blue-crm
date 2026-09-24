@@ -2,11 +2,12 @@ import type { ComponentProps } from "react";
 import type { SupplierBooking } from "@/lib/supplier-bookings/types";
 import type { SupplierAllocation } from "@/lib/supplier-allocations/types";
 import DataTable from "@/components/ui/DataTable";
+import type { DataTableColumn } from "@/components/ui/data-table-contract";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { isolateBidiText } from "@/lib/i18n/bidi";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import { UiDateTimeText } from "@/components/i18n/UiDateText";
+import { UiBidiText, UiLtrText, UiMoneyText, UiNumberText } from "@/components/i18n/UiValueText";
 import type { Locale } from "@/lib/i18n/locales";
 import Link from "next/link";
 import SupplierBookingActions, {
@@ -22,6 +23,13 @@ function formatBookingMoney(locale: Locale, value: number | null, currency: stri
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })} ${currency}`;
+}
+
+function BookingMoney({ locale, value, currency }: { locale: Locale; value: number | null; currency: string }) {
+  if (value === null) return "—";
+  return currency === "SAR"
+    ? <UiMoneyText locale={locale} value={value} />
+    : <UiLtrText>{formatBookingMoney(locale, value, currency)}</UiLtrText>;
 }
 
 type SupplierBookingsPanelProps = {
@@ -69,16 +77,20 @@ export default function SupplierBookingsPanel({
   const hasCostColumns = bookings.some(
     (booking) => booking.estimatedUnitCost !== null || booking.estimatedTotalCost !== null
   );
-  const bookingColumns = [
-    panelDictionary.columns.bookingNumber,
-    panelDictionary.columns.status,
-    panelDictionary.columns.supplier,
-    panelDictionary.columns.item,
-    panelDictionary.columns.qty,
-    ...(hasCostColumns ? [panelDictionary.columns.unitCost, panelDictionary.columns.totalCost] : []),
-    panelDictionary.columns.created,
-    panelDictionary.columns.internalDetails,
-    panelDictionary.columns.actions,
+  const bookingCostColumns: DataTableColumn[] = hasCostColumns ? [
+    { key: "unit-cost", header: panelDictionary.columns.unitCost, align: "end", kind: "money" },
+    { key: "total-cost", header: panelDictionary.columns.totalCost, align: "end", kind: "money" },
+  ] : [];
+  const bookingColumns: DataTableColumn[] = [
+    { key: "booking-number", header: panelDictionary.columns.bookingNumber, align: "start", kind: "identifier" },
+    { key: "status", header: panelDictionary.columns.status, align: "center", kind: "status" },
+    { key: "supplier", header: panelDictionary.columns.supplier, align: "start", kind: "text" },
+    { key: "item", header: panelDictionary.columns.item, align: "start", kind: "text" },
+    { key: "quantity", header: panelDictionary.columns.qty, align: "end", kind: "number" },
+    ...bookingCostColumns,
+    { key: "created", header: panelDictionary.columns.created, align: "center", kind: "date" },
+    { key: "internal-details", header: panelDictionary.columns.internalDetails, align: "start", kind: "text" },
+    { key: "actions", header: panelDictionary.columns.actions, align: "end", kind: "actions" },
   ];
 
   return (
@@ -147,8 +159,8 @@ export default function SupplierBookingsPanel({
             <DataTable columns={bookingColumns}>
               {bookings.map((booking) => (
             <tr key={booking.id} className={booking.status === "cancelled" ? "opacity-70" : ""}>
-              <td dir="ltr" className="px-4 py-3 align-top font-mono font-semibold text-primary">
-                {isolateBidiText(booking.bookingNumber)}
+              <td className="px-4 py-3 align-top font-mono font-semibold text-primary">
+                <UiLtrText>{booking.bookingNumber}</UiLtrText>
               </td>
               <td className="px-4 py-3 align-top">
                 <StatusBadge variant={STATUS_VARIANT_MAP[booking.status]}>
@@ -156,30 +168,22 @@ export default function SupplierBookingsPanel({
                 </StatusBadge>
               </td>
               <td className="px-4 py-3 align-top font-medium text-on-surface">
-                <span dir="auto">{isolateBidiText(booking.supplierName || booking.supplierId)}</span>
+                <UiBidiText>{booking.supplierName || "—"}</UiBidiText>
               </td>
               <td className="px-4 py-3 align-top text-on-surface">
-                <span dir="auto" className="block font-medium">{isolateBidiText(booking.itemName)}</span>
-                <span dir="auto" className="block text-[12px] text-on-surface-variant">{isolateBidiText(booking.category)}</span>
+                <UiBidiText className="block font-medium">{booking.itemName}</UiBidiText>
+                <UiBidiText className="block text-[12px] text-on-surface-variant">{booking.category}</UiBidiText>
               </td>
-              <td dir="ltr" className="px-4 py-3 align-top text-on-surface-variant tabular-nums">
-                {`${formatUiNumber(dictionary.locale, booking.quantity)} ${booking.unit}`}
+              <td className="px-4 py-3 align-top text-on-surface-variant">
+                <UiNumberText locale={dictionary.locale} value={booking.quantity} />{" "}<UiBidiText>{booking.unit}</UiBidiText>
               </td>
               {hasCostColumns && (
                 <>
-                  <td dir="ltr" className="px-4 py-3 align-top text-end text-on-surface tabular-nums">
-                    {formatBookingMoney(
-                      dictionary.locale,
-                      booking.estimatedUnitCost,
-                      booking.currency,
-                    )}
+                  <td className="px-4 py-3 align-top text-on-surface">
+                    <BookingMoney locale={dictionary.locale} value={booking.estimatedUnitCost} currency={booking.currency} />
                   </td>
-                  <td dir="ltr" className="px-4 py-3 align-top text-end font-semibold text-on-surface tabular-nums">
-                    {formatBookingMoney(
-                      dictionary.locale,
-                      booking.estimatedTotalCost,
-                      booking.currency,
-                    )}
+                  <td className="px-4 py-3 align-top font-semibold text-on-surface">
+                    <BookingMoney locale={dictionary.locale} value={booking.estimatedTotalCost} currency={booking.currency} />
                   </td>
                 </>
               )}
@@ -193,7 +197,7 @@ export default function SupplierBookingsPanel({
                   locale={dictionary.locale}
                 />
               </td>
-              <td className="px-4 py-3 align-top text-right min-w-[140px]">
+              <td className="px-4 py-3 align-top text-end min-w-[140px]">
                 {canCancel && booking.status === "draft" && (
                   <SupplierBookingActions bookingId={booking.id} dictionary={dictionary.supplierBookings.cancelAction} />
                 )}
@@ -220,11 +224,11 @@ export default function SupplierBookingsPanel({
                   className="flex flex-col gap-3 rounded-lg border border-outline-variant bg-surface-container-lowest p-4 md:flex-row md:items-center md:justify-between"
                 >
                   <div>
-                    <div dir="auto" className="font-medium text-on-surface">
-                      {isolateBidiText(allocation.supplierName || allocation.supplierId)}
+                    <div className="font-medium text-on-surface">
+                      <UiBidiText>{allocation.supplierName || "—"}</UiBidiText>
                     </div>
-                    <div dir="auto" className="text-[13px] text-on-surface-variant">
-                      {isolateBidiText(`${allocation.category} / ${allocation.itemName} / ${allocation.quantity} ${allocation.unit}`)}
+                    <div className="text-[13px] text-on-surface-variant">
+                      <UiBidiText>{allocation.category}</UiBidiText>{" · "}<UiBidiText>{allocation.itemName}</UiBidiText>{" · "}<UiNumberText locale={dictionary.locale} value={allocation.quantity} />{" "}<UiBidiText>{allocation.unit}</UiBidiText>
                     </div>
                   </div>
                   {activeBooking ? (
@@ -233,8 +237,8 @@ export default function SupplierBookingsPanel({
                         {panelDictionary.linkedBooking}
                       </span>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span dir="ltr" className="font-mono font-semibold text-primary">
-                          {isolateBidiText(activeBooking.bookingNumber)}
+                        <span className="font-mono font-semibold text-primary">
+                          <UiLtrText>{activeBooking.bookingNumber}</UiLtrText>
                         </span>
                         <StatusBadge variant={STATUS_VARIANT_MAP[activeBooking.status]}>
                           {panelDictionary.statusLabels[activeBooking.status]}
@@ -274,21 +278,21 @@ function BookingInternalDetails({
   return (
     <div className="max-w-md space-y-1">
       {booking.scopeOfWork && (
-        <p dir="auto">
+        <p>
           <span className="font-semibold text-on-surface">{detailsDictionary.scope}</span>{" "}
-          {isolateBidiText(booking.scopeOfWork)}
+          <UiBidiText>{booking.scopeOfWork}</UiBidiText>
         </p>
       )}
       {booking.internalNotes && (
-        <p dir="auto">
+        <p>
           <span className="font-semibold text-on-surface">{detailsDictionary.notes}</span>{" "}
-          {isolateBidiText(booking.internalNotes)}
+          <UiBidiText>{booking.internalNotes}</UiBidiText>
         </p>
       )}
       {booking.status === "cancelled" && (
-        <p dir="auto">
+        <p>
           <span className="font-semibold text-error">{detailsDictionary.cancelled}</span>{" "}
-          {isolateBidiText(booking.cancelledReason || detailsDictionary.noReason)}{" "}
+          <UiBidiText>{booking.cancelledReason || detailsDictionary.noReason}</UiBidiText>{" "}
           {booking.cancelledAt ? (
             <span>
               (<UiDateTimeText locale={locale} value={booking.cancelledAt} />)
@@ -323,14 +327,14 @@ function MobileBookingCard({
     <article className="rounded-lg border border-outline-variant bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p dir="ltr" className="font-mono font-semibold text-primary">
-            {isolateBidiText(booking.bookingNumber)}
+          <p className="font-mono font-semibold text-primary">
+            <UiLtrText>{booking.bookingNumber}</UiLtrText>
           </p>
-          <p className="mt-1 font-medium text-on-surface" dir="auto">
-            {isolateBidiText(booking.supplierName || booking.supplierId)}
+          <p className="mt-1 font-medium text-on-surface">
+            <UiBidiText>{booking.supplierName || "—"}</UiBidiText>
           </p>
-          <p className="mt-1 text-[12px] text-on-surface-variant" dir="auto">
-            {isolateBidiText(booking.itemName)} · {isolateBidiText(booking.category)}
+          <p className="mt-1 text-[12px] text-on-surface-variant">
+            <UiBidiText>{booking.itemName}</UiBidiText> · <UiBidiText>{booking.category}</UiBidiText>
           </p>
         </div>
         <StatusBadge variant={STATUS_VARIANT_MAP[booking.status]}>
@@ -340,8 +344,8 @@ function MobileBookingCard({
       <dl className="mt-3 grid grid-cols-2 gap-3 text-[12px]">
         <div>
           <dt className="text-on-surface-variant">{dictionary.columns.qty}</dt>
-          <dd className="mt-1 text-on-surface tabular-nums" dir="ltr">
-            {formatUiNumber(locale, booking.quantity)} {booking.unit}
+          <dd className="mt-1 text-on-surface">
+            <UiNumberText locale={locale} value={booking.quantity} />{" "}<UiBidiText>{booking.unit}</UiBidiText>
           </dd>
         </div>
         <div>
@@ -353,8 +357,8 @@ function MobileBookingCard({
         {hasCostColumns && (
           <div>
             <dt className="text-on-surface-variant">{dictionary.columns.totalCost}</dt>
-            <dd className="mt-1 font-semibold text-on-surface tabular-nums" dir="ltr">
-              {formatBookingMoney(locale, booking.estimatedTotalCost, booking.currency)}
+            <dd className="mt-1 font-semibold text-on-surface">
+              <BookingMoney locale={locale} value={booking.estimatedTotalCost} currency={booking.currency} />
             </dd>
           </div>
         )}
