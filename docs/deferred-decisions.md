@@ -1,15 +1,14 @@
 # G7 BLUE CRM — Deferred Decisions
 
-## CURRENT DELIVERY STATUS — W8B EVENT COST CLOSE CORRECTIVE FOLLOW-UP — 23 September 2026
+## CURRENT DELIVERY STATUS — W9A1 REPORTS CENTER FOUNDATION — 24 September 2026
 
-- **W8B Event Cost Close:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / REVIEWER CLEAN / BROWSER VERIFIED WITH WARN`.
-  - The feature records versioned managerial direct-cost closes and remains separate from operational Service close, supplier AP settlement, and future accounting close. Published baseline commit: `55b3df0e0e974b26a0627190d0ba5240a32d9b0d`.
-  - DEV base and ambiguity-repair migrations remain applied once (`20260923074541`, `20260923075521`); the additive delete guard is applied once and recorded as `20260923094259`. The focused rollback-only regression passed and left no synthetic rows; its targeted Reviewer returned CLEAN.
-  - Authenticated desktop browser checks covered the blocked-readiness state on `SVC-2026-0001` in EN and AR/RTL. Positive close/history/reopen passed rollback-only runtime verification but its successful UI state was not browser-exercised. No active DEV service is close-ready, and immutable history cannot be cleaned up; no synthetic browser fixture was created. Mobile and unauthorized-role checks are also unexercised.
-  - No persistent DEV business-data write was made beyond the authorized migration. PROD/DEMO, accounting, GL, revenue recognition, VAT/FATOORA/ZATCA, W9, and Layer 2/SaaS remain unactivated and out of scope.
-- **W8A Event Costing & Forecast Foundation:** remains `IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`; historical event-date/Riyadh-date repair remains in force.
-- **Still deferred / separately gated:** W9 reporting consolidation and W10 accounting remain later waves. GL/journals, revenue recognition, VAT/FATOORA/ZATCA activation, bank integration, deployment, PROD, DEMO, and Layer 2/SaaS remain unactivated.
-- **EXACT NEXT ACTION:** Controller W8 closure reconciliation and determination of whether W9 may be activated. W9 or later implementation remains separately authorized.
+- **W9A1 Reports Center Foundation:** `IMPLEMENTED / CODE VALIDATED / DEV VERIFIED / REVIEW CLEAN / READY FOR CONTROLLER VERDICT`.
+  - Reports remain read-only and bounded: AR uses W7D, AP uses the W6 current balance authority, and Event Economics uses W8 Event Costing plus W8B close history without creating accounting, GL, VAT, or revenue semantics.
+  - The additive DEV migration is applied only to `dpddrqjzqohexixgdqiq` under identity `20260924065440 w9a_reporting_projections`; AP/Event runtime reconciliation and AR EN/AR/RTL browser evidence passed. The browser client blocks direct download navigation, while export links and automated formula-safe export coverage are verified.
+  - The first fresh review finding on completeness boundedness was repaired in the working tree and DEV function body; the required fresh targeted rereview returned explicit `CLEAN`.
+- **W8A/W8B:** remain published and unchanged; their managerial costing and close boundaries are not widened by W9A1.
+- **Still deferred / separately gated:** W9B and W10 accounting. GL/journals, revenue recognition, VAT/FATOORA/ZATCA, bank integration, deployment, PROD, DEMO, and Layer 2/SaaS remain unactivated.
+- **EXACT NEXT ACTION:** Controller/Owner records the final W9A1 publication verdict from the exact staged commit/push evidence; W9B, W10, PROD, and DEMO remain separately gated.
 
 > The dated delivery section immediately below preserves its 15 September snapshot and is superseded for current wave status by this section. Older deferral decisions remain unchanged.
 

@@ -1,18 +1,14 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W8B EVENT COST CLOSE CORRECTIVE FOLLOW-UP — 23 September 2026
+## CURRENT DELIVERY STATUS — W9A1 REPORTS CENTER FOUNDATION — 24 September 2026
 
-- **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), and W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`) remain published.
-- **W8A — Event Costing & Forecast Foundation:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / BROWSER ACCEPTED / REVIEWER CLEAN`. Its managerial costing semantics, partial-source disclosure, and historical event-date/Riyadh-date repair remain unchanged.
-- **W8B — Event Cost Close:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / REVIEWER CLEAN / BROWSER VERIFIED WITH WARN`.
-  - The published baseline remains commit `55b3df0e0e974b26a0627190d0ba5240a32d9b0d`. DEV base and ambiguity-repair migrations remain applied exactly once (`20260923074541`, `20260923075521`). The additive `w8b_event_cost_close_delete_guard` migration is applied once; DEV history records it once as version `20260923094259`. Applied migrations were not rewritten or reapplied.
-  - The delete guard and rollback-only regression were reviewed CLEAN. The focused W8B regression passed, including close/reopen/replay/conflict, post-close cost-authority guards, independent supplier-payment settlement with linked synthetic evidence metadata, and W6C unused-only advance release. The transaction rolled back; synthetic services, bills, evidence, payments, close versions, and reopenings have zero residue.
-  - Authenticated desktop browser checks on `SVC-2026-0001` verified the existing blocked-readiness view in English and Arabic/RTL, including SAR figures, explicit blockers, the outstanding-settlement warning, and disabled Close Event Cost. Positive close/history/reopen is covered by rollback-only DEV runtime verification, but its successful UI state was not browser-exercised.
-  - No active DEV service is close-ready (12 inspected). A browser fixture would leave immutable close/reopen history that the installed database intentionally prevents deleting; no synthetic fixture was created, preserving the zero-residue requirement. Mobile viewport and unauthorized-role browser verification remain unexercised.
-  - No persistent DEV business-data mutation was made beyond the authorized migration. Production, DEMO, W9, accounting, GL, revenue recognition, VAT, and FATOORA/ZATCA remain out of scope.
-  - This is managerial direct-cost finalization, separate from operational Service close, AP settlement, and any future accounting close. No GL, revenue-recognition, VAT, FATOORA/ZATCA, PROD, or DEMO activation is included.
-- **Next locked phase:** W9 Dashboards/Reports consolidation is only a candidate after Controller W8 closure reconciliation; W10 Accounting remains later and separately gated. Deployment and PROD/DEMO mutation remain outside this W8B release.
-- **EXACT NEXT ACTION:** Controller W8 closure reconciliation and determination of whether W9 may be activated; this task does not authorize W9 implementation.
+- **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`), W8A, and W8B remain the published baseline.
+- **W9A1 — Real Reports Center Foundation:** `IMPLEMENTED / CODE VALIDATED / DEV VERIFIED / REVIEW CLEAN / READY FOR CONTROLLER VERDICT`.
+  - The typed catalog, shared Riyadh-time workspace, authoritative AR source, W6 current-only AP projection, W8/W8B managerial Event Economics projection, bounded Excel exports, formula-safe text handling, and EN/AR Bidi presentation are authored in the working tree.
+  - The additive migration `supabase/migrations/20260924090000_w9a_reporting_projections.sql` was applied only to DEV project `dpddrqjzqohexixgdqiq` under DEV identity `20260924065440 w9a_reporting_projections`. AP/Event browser routes rendered real DEV data; AR rendered real DEV data in English and Arabic/RTL. The browser client blocked direct download navigation, while export links and automated formula-safe export coverage remained verified.
+  - The fresh native Reviewer found one bounded-completeness issue; the writer repaired the four guard expressions, applied the required DEV function-body repair without creating a second migration-history row, and the fresh targeted rereview returned explicit `CLEAN`.
+- **W9B and W10:** not implemented and remain out of scope. Accounting, GL, revenue recognition, VAT, FATOORA/ZATCA, PROD, and DEMO remain excluded.
+- **EXACT NEXT ACTION:** Controller/Owner records the final W9A1 publication verdict after the exact staged commit/push evidence; do not start W9B, W10, PROD, or DEMO.
 
 > The dated delivery section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated sections remain historical records.
 

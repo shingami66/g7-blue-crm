@@ -6,18 +6,32 @@ import test from "node:test";
 const ROOT = join(import.meta.dirname, "../../..");
 const read = (path: string) => readFileSync(join(ROOT, path), "utf8").replace(/\r\n/g, "\n");
 
-test("W7D Accounts Receivable owns the receivable summary and keeps Sales/Billing commercial", () => {
+test("W9A1 Reports Center is a report catalog, not a dashboard composition", () => {
   const page = read("src/app/(dashboard)/reports/page.tsx");
-  const billing = page.slice(page.indexOf("function BillingReport"), page.indexOf("function OperationsReport"));
-  const receivables = read("src/app/(dashboard)/reports/ReceivablesReport.tsx");
+  const catalog = read("src/lib/reports/catalog.ts");
+  assert.match(page, /data-reports-center="catalog"/);
+  assert.match(catalog, /accounts_receivable/);
+  assert.match(catalog, /accounts_payable/);
+  assert.match(catalog, /event_economics/);
+  assert.doesNotMatch(page, /getReportsCenterData|BillingReport|OperationsReport/);
+  for (const route of [
+    "src/app/(dashboard)/reports/accounts-receivable/page.tsx",
+    "src/app/(dashboard)/reports/accounts-payable/page.tsx",
+    "src/app/(dashboard)/reports/event-economics/page.tsx",
+  ]) {
+    assert.match(read(route), /ReportWorkspace/);
+    assert.match(read(route), /DataTable/);
+  }
+});
 
-  assert.doesNotMatch(billing, /dictionary\.metrics\.collectedCash/);
-  assert.doesNotMatch(billing, /dictionary\.metrics\.outstanding(?:Receivable)?/);
-  assert.match(billing, /dictionary\.metrics\.billed/);
-  assert.match(receivables, /dictionary\.sections\.receivableSummary/);
-  assert.match(receivables, /dictionary\.sections\.ageing/);
-  assert.match(receivables, /dictionary\.metrics\.collectedCash/);
-  assert.match(receivables, /dictionary\.metrics\.outstandingReceivable/);
+test("W9A1 event report preserves English copy and rejects invalid as-of input", () => {
+  const dictionary = read("src/lib/i18n/dictionaries/report-center.ts");
+  const eventPage = read("src/app/(dashboard)/reports/event-economics/page.tsx");
+  const reporting = read("src/lib/reports/reporting.ts");
+  assert.match(dictionary, /title: "Accounts Payable"/);
+  assert.match(dictionary, /title: "Event economics"/);
+  assert.match(eventPage, /dictionary\.event\.completeness/);
+  assert.match(reporting, /status: "invalid", error: "invalid_as_of"/);
 });
 
 test("W7D primary AR rows use a stable table and accessible contextual details panel", () => {

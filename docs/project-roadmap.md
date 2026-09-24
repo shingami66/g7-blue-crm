@@ -1,14 +1,13 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W8B EVENT COST CLOSE CORRECTIVE FOLLOW-UP — 23 September 2026
+## CURRENT ROADMAP POSITION — W9A1 REPORTS CENTER FOUNDATION — 24 September 2026
 
-- **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`), and W8A Event Costing remain published/closed. W8B baseline commit `55b3df0e0e974b26a0627190d0ba5240a32d9b0d` is published but under a corrective follow-up.
-- **W8B Event Cost Close:** `IMPLEMENTATION COMPLETE / DEV VERIFIED / REVIEWER CLEAN / BROWSER VERIFIED WITH WARN`.
-  - The additive `w8b_event_cost_close_delete_guard` migration is applied exactly once to DEV (history version `20260923094259`); existing W8B migrations remain unchanged. The focused rollback-only regression and validation passed, and no synthetic fixture rows persisted.
-  - One fresh targeted Reviewer returned CLEAN for the repaired rollback evidence fixture. Authenticated desktop browser checks verified the blocked-readiness presentation for `SVC-2026-0001` in EN and AR/RTL. Positive close/history/reopen passed rollback-only runtime verification but its successful UI state was not browser-exercised.
-  - No active DEV service is close-ready (12 inspected), and the installed close-history triggers intentionally prevent deleting successful close/reopen records, so no synthetic browser fixture was created. Mobile viewport and unauthorized-role browser checks remain unexercised. Managerial cost-close remains separate from operational Service close and accounting; PROD, DEMO, W9, GL, revenue recognition, VAT, and FATOORA/ZATCA remain excluded.
-- **Next locked roadmap task:** W9 Dashboards/Reports consolidation may be considered only after Controller W8 closure reconciliation; W10 Accounting remains later. This task does not authorize W9 implementation.
-- **EXACT NEXT ACTION:** Controller W8 closure reconciliation and determination of whether W9 may be activated. W9 discovery or later waves remain separately gated.
+- **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`), W8A Event Costing, and W8B Event Cost Close remain published/closed.
+- **W9A1 Reports Center Foundation:** `IMPLEMENTED / VALIDATED / DEV VERIFIED / REVIEW CLEAN / READY FOR CONTROLLER VERDICT`.
+  - Routes, report contracts, authoritative-source projections, filters, pagination, bounded Excel export, formula escaping, and EN/AR/RTL presentation are implemented. The W9A1 migration is additive and DEV-only by contract.
+  - Runtime AR browser evidence passed in EN and AR/RTL; AP/Event rendered real DEV data with reconciled W6/W8 values. The fresh targeted rereview is `CLEAN`; direct browser download navigation is an environment limitation, with export links and automated formula-safe export coverage verified.
+- **Next locked roadmap task:** Record the Controller verdict for W9A1 after exact publication evidence. W9B and W10 Accounting remain later and separately gated; GL, revenue recognition, VAT, FATOORA/ZATCA, PROD, and DEMO remain excluded.
+- **EXACT NEXT ACTION:** Controller/Owner records the final W9A1 publication verdict from the exact staged commit/push evidence; do not start W9B, W10, PROD, or DEMO.
 
 > The dated roadmap section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated roadmap history remains unchanged.
 

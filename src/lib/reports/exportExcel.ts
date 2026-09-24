@@ -37,6 +37,14 @@ export type ExcelReportMetadata = {
   fileName: string;
 };
 
+export type ExcelReportOptions<T> = {
+  metadata: ExcelReportMetadata;
+  columns: ExcelColumn<T>[];
+  rows: T[];
+  locale?: Locale;
+  chrome?: ExcelExportChromeCopy;
+};
+
 /** English chrome matching the pre-i18n workbook strings (helper default). */
 export const DEFAULT_EXCEL_EXPORT_CHROME_EN: ExcelExportChromeCopy = {
   filteredView: "Filtered View",
@@ -47,6 +55,17 @@ export const DEFAULT_EXCEL_EXPORT_CHROME_EN: ExcelExportChromeCopy = {
   allRecords: "All records",
   systemGenerated: "System Generated",
   defaultSheetName: "Report",
+};
+
+export const DEFAULT_EXCEL_EXPORT_CHROME_AR: ExcelExportChromeCopy = {
+  filteredView: "عرض مفلتر",
+  generatedAtLabel: "تاريخ الإنشاء",
+  generatedByLabel: "أنشأه",
+  totalRecordsLabel: "إجمالي السجلات",
+  filtersLabel: "الفلاتر",
+  allRecords: "كل السجلات",
+  systemGenerated: "منشأ آلياً",
+  defaultSheetName: "تقرير",
 };
 
 const EXCEL_DATE_INTL_LOCALE: Record<Locale, string> = {
@@ -100,15 +119,11 @@ export function buildExcelExportFiltersLine(options: {
   return `${chrome.filtersLabel}: ${filtersText}`;
 }
 
-export async function generateExcelReport<T>(options: {
-  metadata: ExcelReportMetadata;
-  columns: ExcelColumn<T>[];
-  rows: T[];
-  /** Session locale for date/number chrome. Defaults to English for helper compatibility. */
-  locale?: Locale;
-  /** Localizable chrome labels. Defaults to English strings matching prior output. */
-  chrome?: ExcelExportChromeCopy;
-}): Promise<void> {
+function safeExcelText(value: string): string {
+  return /^[=+\-@]/.test(value) ? `'${value}` : value;
+}
+
+export async function buildExcelReportBuffer<T>(options: ExcelReportOptions<T>): Promise<ArrayBuffer> {
   const { metadata, columns, rows } = options;
   const locale: Locale = options.locale ?? "en";
   const chrome = options.chrome ?? DEFAULT_EXCEL_EXPORT_CHROME_EN;
@@ -144,7 +159,7 @@ export async function generateExcelReport<T>(options: {
   // Row 1: Brand
   sheet.mergeCells(1, 1, 1, lastCol);
   const row1 = sheet.getCell(1, 1);
-  row1.value = `${metadata.companyName} - ${metadata.brandName}`;
+  row1.value = safeExcelText(`${metadata.companyName} - ${metadata.brandName}`);
   row1.font = { size: 14, bold: true, color: { argb: "FFFFFFFF" } };
   row1.fill = headerFill;
   row1.alignment = { horizontal: "center", vertical: "middle" };
@@ -153,7 +168,7 @@ export async function generateExcelReport<T>(options: {
   // Row 2: Report Title
   sheet.mergeCells(2, 1, 2, lastCol);
   const row2 = sheet.getCell(2, 1);
-  row2.value = metadata.reportTitle;
+  row2.value = safeExcelText(metadata.reportTitle);
   row2.font = { size: 16, bold: true, color: { argb: "FFFFFFFF" } };
   row2.fill = headerFill;
   row2.alignment = { horizontal: "center", vertical: "middle" };
@@ -162,12 +177,12 @@ export async function generateExcelReport<T>(options: {
   // Row 3: Meta Info
   sheet.mergeCells(3, 1, 3, lastCol);
   const row3 = sheet.getCell(3, 1);
-  row3.value = buildExcelExportMetaLine({
+  row3.value = safeExcelText(buildExcelExportMetaLine({
     chrome,
     formattedDate,
     generatedBy,
     totalRecordsDisplay,
-  });
+  }));
   row3.font = { size: 10, color: { argb: "FFCCCCCC" } }; // slightly muted white
   row3.fill = headerFill;
   row3.alignment = { horizontal: "center", vertical: "middle" };
@@ -176,10 +191,10 @@ export async function generateExcelReport<T>(options: {
   // Row 4: Filters
   sheet.mergeCells(4, 1, 4, lastCol);
   const row4 = sheet.getCell(4, 1);
-  row4.value = buildExcelExportFiltersLine({
+  row4.value = safeExcelText(buildExcelExportFiltersLine({
     chrome,
     filters: metadata.filters,
-  });
+  }));
   row4.font = { size: 10, italic: true, color: { argb: "FFCCCCCC" } };
   row4.fill = headerFill;
   row4.alignment = { horizontal: "center", vertical: "middle" };
@@ -192,7 +207,7 @@ export async function generateExcelReport<T>(options: {
   columns.forEach((col, index) => {
     const colNumber = index + 1;
     const cell = headerRow.getCell(colNumber);
-    cell.value = col.header;
+    cell.value = safeExcelText(col.header);
     cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
     cell.fill = {
       type: "pattern",
@@ -222,7 +237,7 @@ export async function generateExcelReport<T>(options: {
       const val = col.value ? col.value(rowData) : rowData[col.key as keyof T];
 
       if (col.format === "text") {
-        cell.value = val === null || val === undefined ? "" : String(val);
+        cell.value = val === null || val === undefined ? "" : safeExcelText(String(val));
         cell.numFmt = "@";
         cell.alignment = { horizontal: "left" };
       } else if (col.format === "number") {
@@ -236,7 +251,7 @@ export async function generateExcelReport<T>(options: {
         cell.value = val ? new Date(val as string | number | Date) : "";
         cell.numFmt = "dd/mm/yyyy hh:mm";
       } else {
-        cell.value = val as string | number | null | undefined;
+        cell.value = typeof val === "string" ? safeExcelText(val) : val as string | number | null | undefined;
       }
 
       cell.border = {
@@ -248,8 +263,12 @@ export async function generateExcelReport<T>(options: {
     });
   });
 
-  // Write and Download
-  const buffer = await workbook.xlsx.writeBuffer();
+  return (await workbook.xlsx.writeBuffer()) as ArrayBuffer;
+}
+
+export async function generateExcelReport<T>(options: ExcelReportOptions<T>): Promise<void> {
+  const { metadata } = options;
+  const buffer = await buildExcelReportBuffer(options);
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });

@@ -6,6 +6,106 @@ import type { BusinessYear } from "@/lib/business-year";
 
 export type ReportsSectionStatus = "ready" | "forbidden" | "error";
 
+export type ReportReadState =
+  | "ready"
+  | "partial"
+  | "forbidden"
+  | "unavailable"
+  | "empty"
+  | "invalid"
+  | "error";
+
+export type ReportCategory = "financial_operations" | "event_costing";
+export type ReportTimeModel = "current_only" | "historical_as_of" | "period_and_as_of";
+
+export type ReportDefinition = {
+  key: "accounts_receivable" | "accounts_payable" | "event_economics";
+  category: ReportCategory;
+  title: string;
+  description: string;
+  route: string;
+  requiredPermissions: readonly string[];
+  timeModel: ReportTimeModel;
+  sourceDomain: string;
+  freshness: string;
+  exportSupported: boolean;
+  confidentiality: "financial" | "internal_costing";
+};
+
+export type ReportPageResult<T> =
+  | { status: "ready" | "partial" | "empty"; data: T }
+  | { status: Exclude<ReportReadState, "ready" | "partial" | "empty">; error?: string };
+
+export type ReportPagination = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+};
+
+export type ReportAccountsPayableRow = {
+  billId: string;
+  billNumber: string;
+  supplierId: string;
+  supplierName: string | null;
+  serviceId: string | null;
+  serviceNumber: string | null;
+  serviceTitle: string | null;
+  invoiceDate: string;
+  dueDate: string | null;
+  status: "unpaid" | "partially_paid" | "paid";
+  currency: string;
+  payableAmount: number;
+  paidAmount: number;
+  outstandingAmount: number;
+  advanceAllocatedAmount: number;
+};
+
+export type ReportAccountsPayable = {
+  currentOnly: true;
+  source: string;
+  payableAmount: number;
+  paidAmount: number;
+  outstandingAmount: number;
+  openBillCount: number;
+  detailTotalCount: number;
+  rows: ReportAccountsPayableRow[];
+  pagination: ReportPagination;
+};
+
+export type ReportEventEconomicsRow = {
+  serviceId: string;
+  serviceNumber: string;
+  serviceTitle: string;
+  customerId: string;
+  customerNumber: string | null;
+  customerName: string | null;
+  approvedBudgetCost: number | null;
+  openCommitment: number | null;
+  actualCost: number | null;
+  paidCost: number | null;
+  outstandingCost: number | null;
+  etc: number | null;
+  eac: number | null;
+  netApprovedCommercialValue: number | null;
+  forecastMargin: number | null;
+  completenessStatus: "COMPLETE" | "PARTIAL" | "UNAVAILABLE";
+  completenessReasonCodes: string[];
+  closeState: "open" | "closed";
+  closeVersion: number | null;
+  closeEffectiveDate: string | null;
+  finalActualCost: number | null;
+  finalManagerialMargin: number | null;
+  closedAt: string | null;
+};
+
+export type ReportEventEconomics = {
+  asOfDate: string;
+  source: string;
+  rows: ReportEventEconomicsRow[];
+  pagination: ReportPagination;
+};
+
 export type ReportsSection<T> = {
   status: ReportsSectionStatus;
   data: T;

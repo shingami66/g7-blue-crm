@@ -4,6 +4,7 @@ import { getCustomersDictionary } from "../i18n/dictionaries/customers.ts";
 import { formatUiNumber } from "../i18n/formatting.ts";
 import {
   DEFAULT_EXCEL_EXPORT_CHROME_EN,
+  buildExcelReportBuffer,
   buildExcelExportFiltersLine,
   buildExcelExportMetaLine,
   formatExcelExportDateTime,
@@ -85,4 +86,23 @@ test("4. Customers dictionary chrome aligns EN/AR keys; columns remain locale-sp
   assert.equal(ar.columns.customerNumber, "رقم العميل");
   assert.equal(en.title, "Customers Report");
   assert.equal(ar.title, "تقرير العملاء");
+});
+
+test("5. Bounded report workbook escapes formula-like text cells", async () => {
+  const buffer = await buildExcelReportBuffer({
+    metadata: {
+      companyName: "G7",
+      brandName: "G7 CRM",
+      reportTitle: "Safe report",
+      generatedAt: new Date("2026-09-24T00:00:00.000Z"),
+      totalRecords: 1,
+      fileName: "safe.xlsx",
+    },
+    columns: [{ header: "Reference", key: "reference", format: "text" }],
+    rows: [{ reference: "=HYPERLINK(\"https://example.com\")" }],
+  });
+  const ExcelJS = (await import("exceljs")).default;
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer as never);
+  assert.equal(workbook.getWorksheet("Report")?.getCell("A6").value, "'=HYPERLINK(\"https://example.com\")");
 });

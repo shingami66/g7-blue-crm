@@ -49,6 +49,11 @@ function loadEmpty<T>(): T {
 export const REPORT_PAGE_SIZE = 500;
 export const ACCOUNTS_RECEIVABLE_PAGE_SIZE = 50;
 
+export type AccountsReceivablePageOptions = {
+  page?: number;
+  pageSize?: number;
+};
+
 export function getNextCalendarDay(dateStr: string): string {
   const [year, month, day] = dateStr.split("-").map(Number);
   const nextDate = new Date(Date.UTC(year, month - 1, day + 1));
@@ -260,11 +265,16 @@ function receivableBucket(value: unknown): ReportAccountsReceivable["rows"][numb
   return value === "1_30" || value === "31_60" || value === "61_90" || value === "91_plus" ? value : "not_due";
 }
 
-export async function readAccountsReceivable(filters: ReportFilters): Promise<ReportAccountsReceivable> {
+export async function readAccountsReceivable(
+  filters: ReportFilters,
+  options: AccountsReceivablePageOptions = {},
+): Promise<ReportAccountsReceivable> {
   const asOf = filters.asOf ?? getCurrentRiyadhDate();
   const yearBounds = filters.year ? getBusinessYearBounds(filters.year) : null;
   const periodFrom = filters.from ?? yearBounds?.start ?? null;
   const periodTo = filters.to ?? yearBounds?.end ?? null;
+  const pageSize = Math.min(Math.max(options.pageSize ?? ACCOUNTS_RECEIVABLE_PAGE_SIZE, 1), 100);
+  const page = Math.max(options.page ?? 1, 1);
   const canReadCustomerIdentity = await checkPermission("customers:read");
   const canReadServiceIdentity = await checkPermission("services:read");
   const admin = createAdminClient() as unknown as {
@@ -277,8 +287,8 @@ export async function readAccountsReceivable(filters: ReportFilters): Promise<Re
     p_as_of_date: asOf,
     p_from_date: periodFrom,
     p_to_date: periodTo,
-    p_page_size: ACCOUNTS_RECEIVABLE_PAGE_SIZE,
-    p_page_offset: 0,
+    p_page_size: pageSize,
+    p_page_offset: (page - 1) * pageSize,
   });
   if (error) throw new Error(error.message ?? "Accounts receivable report failed");
   const result = Array.isArray(data) ? data[0] : data;
