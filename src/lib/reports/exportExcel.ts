@@ -47,6 +47,7 @@ export type StructuredExcelReportMetadata = ExcelReportMetadataBase & {
   definition: string;
   source: string;
   timeBasis: string;
+  periodAsOf?: string;
   timeZone: string;
 };
 
@@ -59,9 +60,8 @@ export type LegacyExcelReportMetadata = ExcelReportMetadataBase & {
 export type ExcelReportMetadata = StructuredExcelReportMetadata | LegacyExcelReportMetadata;
 
 export type ExcelExportChromeCopy = {
-  definitionLabel?: string;
+  periodAsOfLabel?: string;
   sourceLabel?: string;
-  timeBasisLabel?: string;
   timeZoneLabel?: string;
   generatedAtLabel?: string;
   filtersLabel?: string;
@@ -82,6 +82,7 @@ export type ExcelReportOptions<T> = {
   summary?: {
     metrics?: ExcelSummaryMetric[];
     tables?: ExcelSummaryTable[];
+    notices?: string[];
   };
   locale?: Locale;
   chrome?: ExcelExportChromeCopy;
@@ -96,9 +97,8 @@ export const DEFAULT_EXCEL_EXPORT_CHROME_EN: ExcelExportChromeCopy = {
   allRecords: "All records",
   systemGenerated: "System Generated",
   defaultSheetName: "Report",
-  definitionLabel: "Definition",
-  sourceLabel: "Source",
-  timeBasisLabel: "Time basis",
+  periodAsOfLabel: "Period / As Of",
+  sourceLabel: "Source basis",
   timeZoneLabel: "Timezone",
   summarySheetName: "Summary",
   dataSheetName: "Data",
@@ -113,9 +113,8 @@ export const DEFAULT_EXCEL_EXPORT_CHROME_AR: ExcelExportChromeCopy = {
   allRecords: "كل السجلات",
   systemGenerated: "منشأ آلياً",
   defaultSheetName: "تقرير",
-  definitionLabel: "التعريف",
-  sourceLabel: "المصدر",
-  timeBasisLabel: "الأساس الزمني",
+  periodAsOfLabel: "الفترة / حتى تاريخ",
+  sourceLabel: "أساس المصدر",
   timeZoneLabel: "المنطقة الزمنية",
   summarySheetName: "Summary",
   dataSheetName: "Data",
@@ -262,18 +261,54 @@ function setCellValue(
   };
 }
 
-function styleSummaryContextRow(worksheet: ExcelJS.Worksheet, row: ExcelJS.Row, columnCount: number) {
-  const label = row.getCell(1);
-  label.font = { size: 9, bold: true, color: { argb: "FF475569" } };
-  label.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF1F5F9" } };
-  label.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
-  const value = row.getCell(2);
-  value.font = { size: 10, color: { argb: "FF0F172A" } };
-  value.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
-  if (columnCount > 2) {
-    worksheet.mergeCells(row.number, 2, row.number, columnCount);
+function styleSummaryContextCell(cell: ExcelJS.Cell, isLabel: boolean, locale: Locale) {
+  cell.font = isLabel
+    ? { size: 9, bold: true, color: { argb: "FF475569" } }
+    : { size: 10, color: { argb: "FF0F172A" } };
+  if (isLabel) {
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF1F5F9" } };
   }
-  row.height = 26;
+  cell.alignment = { horizontal: locale === "ar" ? "right" : "left", vertical: "middle", wrapText: true };
+}
+
+function addSummaryContextPairs(
+  worksheet: ExcelJS.Worksheet,
+  columnCount: number,
+  locale: Locale,
+  first: readonly [string, string],
+  second: readonly [string, string],
+) {
+  const row = worksheet.addRow([]);
+  const half = Math.ceil(columnCount / 2);
+  const secondLabelColumn = half + 1;
+  const secondValueColumn = secondLabelColumn + 1;
+  row.getCell(1).value = safeExcelText(first[0]);
+  row.getCell(2).value = safeExcelText(first[1]);
+  row.getCell(secondLabelColumn).value = safeExcelText(second[0]);
+  row.getCell(secondValueColumn).value = safeExcelText(second[1]);
+  if (half > 2) worksheet.mergeCells(row.number, 2, row.number, half);
+  if (columnCount > secondValueColumn) worksheet.mergeCells(row.number, secondValueColumn, row.number, columnCount);
+  styleSummaryContextCell(row.getCell(1), true, locale);
+  styleSummaryContextCell(row.getCell(2), false, locale);
+  styleSummaryContextCell(row.getCell(secondLabelColumn), true, locale);
+  styleSummaryContextCell(row.getCell(secondValueColumn), false, locale);
+  row.height = 32;
+}
+
+function addSummaryContextValue(
+  worksheet: ExcelJS.Worksheet,
+  columnCount: number,
+  locale: Locale,
+  label: string,
+  value: string,
+) {
+  const row = worksheet.addRow([]);
+  row.getCell(1).value = safeExcelText(label);
+  row.getCell(2).value = safeExcelText(value);
+  if (columnCount > 2) worksheet.mergeCells(row.number, 2, row.number, columnCount);
+  styleSummaryContextCell(row.getCell(1), true, locale);
+  styleSummaryContextCell(row.getCell(2), false, locale);
+  row.height = 30;
 }
 
 async function buildStructuredExcelReportBuffer<T>(options: ExcelReportOptions<T> & { metadata: StructuredExcelReportMetadata }): Promise<ArrayBuffer> {
@@ -284,9 +319,8 @@ async function buildStructuredExcelReportBuffer<T>(options: ExcelReportOptions<T
   const chrome = {
     ...defaults,
     ...options.chrome,
-    definitionLabel: options.chrome?.definitionLabel ?? defaults.definitionLabel!,
+    periodAsOfLabel: options.chrome?.periodAsOfLabel ?? defaults.periodAsOfLabel!,
     sourceLabel: options.chrome?.sourceLabel ?? defaults.sourceLabel!,
-    timeBasisLabel: options.chrome?.timeBasisLabel ?? defaults.timeBasisLabel!,
     timeZoneLabel: options.chrome?.timeZoneLabel ?? defaults.timeZoneLabel!,
     generatedAtLabel: options.chrome?.generatedAtLabel ?? defaults.generatedAtLabel!,
     filtersLabel: options.chrome?.filtersLabel ?? defaults.filtersLabel!,
@@ -333,25 +367,30 @@ async function buildStructuredExcelReportBuffer<T>(options: ExcelReportOptions<T
 
   summarySheet.mergeCells(3, 1, 3, summaryColumnCount);
   const definition = summarySheet.getCell(3, 1);
-  definition.value = safeExcelText(`${chrome.definitionLabel}: ${metadata.definition}`);
+  definition.value = safeExcelText(metadata.definition);
   definition.font = { size: 10, color: { argb: "FF475569" } };
   definition.alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle", wrapText: true };
-  summarySheet.getRow(3).height = 32;
+  summarySheet.getRow(3).height = 28;
 
   const filtersText = metadata.filters?.length ? metadata.filters.join(" · ") : chrome.allRecords;
-  const contextRows: Array<[string, string]> = [
-    [chrome.sourceLabel, metadata.source],
-    [chrome.timeBasisLabel, metadata.timeBasis],
-    [chrome.timeZoneLabel, metadata.timeZone],
+  addSummaryContextPairs(summarySheet, summaryColumnCount, locale,
+    [chrome.periodAsOfLabel, metadata.periodAsOf ?? metadata.timeBasis],
+    [chrome.sourceLabel, metadata.source]);
+  addSummaryContextPairs(summarySheet, summaryColumnCount, locale,
     [chrome.generatedAtLabel, formatExcelExportDateTime(locale, metadata.generatedAt)],
-    [chrome.filtersLabel, filtersText],
-    [chrome.totalRecordsLabel, formatUiNumber(locale, metadata.totalRecords, { useGrouping: true })],
-  ];
-  for (const [label, value] of contextRows) {
-    const row = summarySheet.addRow([safeExcelText(label), safeExcelText(value)]);
-    styleSummaryContextRow(summarySheet, row, summaryColumnCount);
-    row.getCell(1).alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle", wrapText: true };
-    row.getCell(2).alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle", wrapText: true };
+    [chrome.timeZoneLabel, metadata.timeZone]);
+  addSummaryContextValue(summarySheet, summaryColumnCount, locale, chrome.filtersLabel, filtersText);
+  addSummaryContextValue(summarySheet, summaryColumnCount, locale, chrome.totalRecordsLabel,
+    formatUiNumber(locale, metadata.totalRecords, { useGrouping: true }));
+
+  for (const notice of options.summary?.notices ?? []) {
+    const noticeRow = summarySheet.addRow([safeExcelText(notice)]);
+    summarySheet.mergeCells(noticeRow.number, 1, noticeRow.number, summaryColumnCount);
+    const cell = noticeRow.getCell(1);
+    cell.font = { size: 10, color: { argb: "FF92400E" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFBEB" } };
+    cell.alignment = { horizontal: isArabic ? "right" : "left", vertical: "middle", wrapText: true };
+    noticeRow.height = 30;
   }
 
   const metricFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } } as ExcelJS.Fill;

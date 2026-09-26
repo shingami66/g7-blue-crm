@@ -22,68 +22,61 @@ test("W9A1 Reports Center is a report catalog, not a dashboard composition", () 
   assert.match(catalog, /event_economics/);
   assert.doesNotMatch(page, /getReportsCenterData|BillingReport|OperationsReport/);
   for (const route of [
-    "src/app/(dashboard)/reports/accounts-receivable/page.tsx",
     "src/app/(dashboard)/reports/accounts-payable/page.tsx",
     "src/app/(dashboard)/reports/event-economics/page.tsx",
   ]) {
     assert.match(read(route), /ReportWorkspace/);
     assert.match(read(route), /DataTable/);
-    assert.match(read(route), /<DataTable minWidth=(?:"\d+px"|\{eventViewMinWidth\(view\)\}) ariaLabel=\{/);
+    assert.match(read(route), /<DataTable minWidth=(?:"100%"|"\d+px"|\{eventViewMinWidth\(view\)\}) ariaLabel=\{/);
   }
+  const receivables = read("src/app/(dashboard)/reports/accounts-receivable/AccountsReceivableReportContent.tsx");
+  assert.match(receivables, /DataTable/);
+  assert.match(receivables, /<DataTable minWidth="100%" ariaLabel=\{/);
 });
 
-test("W9A1 report workspaces demote back navigation and use compact, discoverable report context", () => {
-  const workspace = read("src/app/(dashboard)/reports/ReportWorkspace.tsx");
-  const dictionary = read("src/lib/i18n/dictionaries/report-center.ts");
-  assert.match(workspace, /href="\/reports"/);
-  assert.match(workspace, /About this report|dictionary\.workspace\.definition/);
-  assert.doesNotMatch(workspace, /grid-cols-2[\s\S]*source/);
-  assert.match(workspace, /dictionary\.workspace\.source/);
-  assert.match(workspace, /dictionary\.workspace\.timeBasis/);
-  assert.match(workspace, /dictionary\.workspace\.freshness/);
-  assert.match(dictionary, /backToReports: "Back to Reports Center"/);
-  assert.match(dictionary, /backToReports: "العودة إلى مركز التقارير"/);
+test("W9A1 dedicated report filters retain the responsive form grid", () => {
   for (const route of [
-    "src/app/(dashboard)/reports/accounts-receivable/page.tsx",
+    "src/app/(dashboard)/reports/accounts-receivable/AccountsReceivableFilters.tsx",
     "src/app/(dashboard)/reports/accounts-payable/page.tsx",
     "src/app/(dashboard)/reports/event-economics/page.tsx",
   ]) {
-    assert.match(read(route), /grid min-w-0 grid-cols-1[\s\S]*?sm:grid-cols-2[\s\S]*?xl:grid-cols-12/);
+    assert.match(read(route), /grid min-w-0 grid-cols-1[\s\S]*?sm:grid-cols-2[\s\S]*?xl:grid-cols-(?:12|\[)/);
   }
 });
 
 test("W9A1 report web tables keep focused AR/AP defaults and URL-addressable Event views", () => {
-  const ar = read("src/app/(dashboard)/reports/accounts-receivable/page.tsx");
+  const ar = read("src/app/(dashboard)/reports/accounts-receivable/AccountsReceivableReportContent.tsx");
   const ap = read("src/app/(dashboard)/reports/accounts-payable/page.tsx");
   const event = read("src/app/(dashboard)/reports/event-economics/page.tsx");
   assert.match(ar, /dictionary\.ar\.ageing/);
-  assert.match(ar, /minWidth="1160px" ariaLabel=\{dictionary\.ar\.invoice\}/);
+  assert.match(ar, /minWidth="100%" ariaLabel=\{dictionary\.ar\.invoicesHeading\}/);
   assert.match(ar, /dictionary\.ar\.net/);
   assert.doesNotMatch(ar, /key: "gross"|key: "credits"|key: "issue"/);
-  assert.match(ar, /minWidth="420px" ariaLabel=\{dictionary\.ar\.customerRanking\}/);
-  assert.match(ap, /minWidth="1240px" ariaLabel=\{dictionary\.ap\.bill\}/);
+  assert.match(ar, /dictionary\.ar\.customerRanking/);
+  assert.match(ap, /minWidth="100%" ariaLabel=\{dictionary\.ap\.invoicesHeading\}/);
   assert.doesNotMatch(ap, /key: "invoiceDate"/);
   assert.match(event, /EVENT_ECONOMICS_VIEW_COLUMNS\[view\]/);
   assert.match(event, /aria-current=\{selected \? "page"/);
   assert.match(event, /name="view" value=\{values\.view/);
   assert.match(event, /aria-label=\{dictionary\.event\.noFinalForOpen\} title=\{dictionary\.event\.noFinalForOpen\}[^>]*>—<\/span>/);
   assert.doesNotMatch(event, /<span[^>]*>\{dictionary\.event\.noFinalForOpen\}<\/span>/);
-  assert.deepEqual(EVENT_ECONOMICS_VIEW_COLUMNS.overview, ["service", "customer", "budget", "actual", "eac", "forecast", "completeness", "close"]);
+  assert.deepEqual(EVENT_ECONOMICS_VIEW_COLUMNS.overview, ["service", "budget", "actual", "eac", "forecast", "status"]);
   assert.deepEqual(EVENT_ECONOMICS_VIEW_COLUMNS.cost, ["service", "budget", "commitment", "actual", "paid", "outstanding", "etc", "eac"]);
-  assert.deepEqual(EVENT_ECONOMICS_VIEW_COLUMNS.commercial, ["service", "customer", "commercialValue", "forecast", "close", "finalActual", "finalMargin"]);
-  assert.equal(new Set([...EVENT_ECONOMICS_VIEW_COLUMNS.overview, ...EVENT_ECONOMICS_VIEW_COLUMNS.cost, ...EVENT_ECONOMICS_VIEW_COLUMNS.commercial]).size, 15);
+  assert.deepEqual(EVENT_ECONOMICS_VIEW_COLUMNS.commercial, ["service", "commercialValue", "forecast", "close", "finalActual", "finalMargin"]);
+  assert.equal(new Set([...EVENT_ECONOMICS_VIEW_COLUMNS.overview, ...EVENT_ECONOMICS_VIEW_COLUMNS.cost, ...EVENT_ECONOMICS_VIEW_COLUMNS.commercial]).size, 14);
   assert.equal(resolveEventEconomicsView("cost"), "cost");
   assert.equal(resolveEventEconomicsView("commercial"), "commercial");
   assert.equal(resolveEventEconomicsView("invalid"), "overview");
   assert.equal(buildEventEconomicsViewHref("cost", { asOf: "2026-09-24", search: "Riyadh", completeness: "PARTIAL", closeState: "open" }), "/reports/event-economics?view=cost&asOf=2026-09-24&search=Riyadh&completeness=PARTIAL&closeState=open");
+  assert.equal(buildEventEconomicsViewHref("commercial", { asOf: "2026-09-24", search: "Riyadh", completeness: "PARTIAL", closeState: "open" }, 2), "/reports/event-economics?view=commercial&asOf=2026-09-24&search=Riyadh&completeness=PARTIAL&closeState=open&page=2");
 });
 
 test("W9A1 event report preserves English copy and rejects invalid as-of input", () => {
   const dictionary = read("src/lib/i18n/dictionaries/report-center.ts");
   const eventPage = read("src/app/(dashboard)/reports/event-economics/page.tsx");
   const reporting = read("src/lib/reports/reporting.ts");
-  assert.match(dictionary, /title: "Accounts Payable"/);
-  assert.match(dictionary, /title: "Event economics"/);
+  assert.match(dictionary, /title: "Supplier Payables"/);
+  assert.match(dictionary, /title: "Event Cost & Margin"/);
   assert.match(eventPage, /dictionary\.event\.completeness/);
   assert.match(reporting, /status: "invalid", error: "invalid_as_of"/);
 });

@@ -36,10 +36,10 @@ export async function GET(request: Request) {
         definition: definition.description,
         source: definition.sourceDomain,
         timeBasis: getReportTimeBasisLabel(definition, dictionary.workspace),
+        periodAsOf: dictionary.workspace.currentOnly,
         timeZone: "Asia/Riyadh",
         generatedAt,
         filters: [
-          dictionary.ap.currentOnly,
           `${dictionary.ap.status}: ${statusLabel}`,
           ...(supplierSearch ? [`${dictionary.ap.supplier}: ${supplierSearch}`] : []),
           ...(serviceSearch ? [`${dictionary.ap.service}: ${serviceSearch}`] : []),
@@ -51,12 +51,15 @@ export async function GET(request: Request) {
         fileName,
       },
       locale,
-      chrome: locale === "ar" ? DEFAULT_EXCEL_EXPORT_CHROME_AR : DEFAULT_EXCEL_EXPORT_CHROME_EN,
+      chrome: {
+        ...(locale === "ar" ? DEFAULT_EXCEL_EXPORT_CHROME_AR : DEFAULT_EXCEL_EXPORT_CHROME_EN),
+        periodAsOfLabel: locale === "ar" ? "أساس التقرير" : "Reporting basis",
+      },
       rows: report.rows,
-      columns: getAccountsPayableExportColumns(dictionary),
+      columns: getAccountsPayableExportColumns(dictionary, locale),
       summary: {
         metrics: [
-          { label: dictionary.ap.payable, value: report.payableAmount, format: "currency" },
+          { label: dictionary.ap.summaryPayables, value: report.payableAmount, format: "currency" },
           { label: dictionary.ap.paid, value: report.paidAmount, format: "currency" },
           { label: dictionary.ap.outstanding, value: report.outstandingAmount, format: "currency" },
           { label: dictionary.ap.openBills, value: report.openBillCount, format: "number" },

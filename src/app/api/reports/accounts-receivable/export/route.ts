@@ -1,5 +1,6 @@
 import { AuthDependencyError, ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import { resolveRecordTitle } from "@/lib/i18n/record-title";
 import { getReportCenterDictionary } from "@/lib/i18n/dictionaries/report-center";
 import { getReportDefinitions } from "@/lib/reports/catalog";
 import { DEFAULT_EXCEL_EXPORT_CHROME_AR, DEFAULT_EXCEL_EXPORT_CHROME_EN, buildExcelReportBuffer } from "@/lib/reports/exportExcel";
@@ -34,6 +35,7 @@ export async function GET(request: Request) {
         definition: definition.description,
         source: definition.sourceDomain,
         timeBasis: getReportTimeBasisLabel(definition, dictionary.workspace),
+        periodAsOf: `${dictionary.workspace.period}: ${report.periodFrom} – ${report.periodTo} · ${dictionary.workspace.asOf}: ${report.asOfDate}`,
         timeZone: "Asia/Riyadh",
         generatedAt,
         filters: [
@@ -48,7 +50,7 @@ export async function GET(request: Request) {
       locale,
       chrome: locale === "ar" ? DEFAULT_EXCEL_EXPORT_CHROME_AR : DEFAULT_EXCEL_EXPORT_CHROME_EN,
       rows: report.rows,
-      columns: getAccountsReceivableExportColumns(dictionary),
+      columns: getAccountsReceivableExportColumns(dictionary, locale),
       summary: {
         metrics: [
           { label: dictionary.ar.billed, value: report.billedAmount, format: "currency" },
@@ -75,7 +77,7 @@ export async function GET(request: Request) {
               { header: dictionary.ar.outstandingColumn, format: "currency" as const, width: 18 },
             ],
             rows: report.outstandingCustomers.slice(0, 10).map((customer) => [
-              customer.company && customer.customerNumber ? `${customer.customerNumber} · ${customer.company}` : customer.company ?? customer.customerNumber ?? dictionary.ar.noCustomerIdentity,
+              customer.company ? resolveRecordTitle(locale, customer.company) : dictionary.ar.noCustomerIdentity,
               customer.amount,
             ]),
           }] : []),

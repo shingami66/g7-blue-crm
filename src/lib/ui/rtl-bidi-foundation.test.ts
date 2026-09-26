@@ -9,6 +9,7 @@ import {
   getDataTableColumnCellStyle,
   normalizeDataTableColumns,
 } from "../../components/ui/data-table-contract.ts";
+import { getEventEconomicsColumnAlignment } from "../reports/presentation.ts";
 
 const root = process.cwd();
 
@@ -142,6 +143,36 @@ function componentContainsTag(source: ts.SourceFile, functionName: string, tagNa
   return found;
 }
 
+function jsxOpeningElements(source: ts.SourceFile, functionName: string, tagName: string) {
+  const declaration = functionDeclaration(source, functionName);
+  if (!declaration) return [];
+
+  const elements: Array<ts.JsxOpeningElement | ts.JsxSelfClosingElement> = [];
+  visit(declaration, (node) => {
+    if ((!ts.isJsxOpeningElement(node) && !ts.isJsxSelfClosingElement(node)) || !ts.isIdentifier(node.tagName)) return;
+    if (node.tagName.text === tagName) elements.push(node);
+  });
+  return elements;
+}
+
+function jsxStringAttribute(element: ts.JsxOpeningElement | ts.JsxSelfClosingElement, name: string) {
+  const attribute = element.attributes.properties.find((property) =>
+    ts.isJsxAttribute(property) && ts.isIdentifier(property.name) && property.name.text === name,
+  );
+  return attribute && ts.isJsxAttribute(attribute) && attribute.initializer && ts.isStringLiteral(attribute.initializer)
+    ? attribute.initializer.text
+    : undefined;
+}
+
+function jsxSubtreeContainsTag(subtree: ts.Node, tagName: string) {
+  let found = false;
+  visit(subtree, (node) => {
+    if ((!ts.isJsxOpeningElement(node) && !ts.isJsxSelfClosingElement(node)) || !ts.isIdentifier(node.tagName)) return;
+    if (node.tagName.text === tagName) found = true;
+  });
+  return found;
+}
+
 function jsxTags(source: ts.SourceFile) {
   const tags = new Set<string>();
   visit(source, (node) => {
@@ -223,7 +254,7 @@ test("every application DataTable consumer is explicitly governed", () => {
     "src/app/(dashboard)/customers/[id]/Customer360Workspace.tsx",
     "src/app/(dashboard)/payments/PaymentsClient.tsx",
     "src/app/(dashboard)/reports/accounts-payable/page.tsx",
-    "src/app/(dashboard)/reports/accounts-receivable/page.tsx",
+    "src/app/(dashboard)/reports/accounts-receivable/AccountsReceivableReportContent.tsx",
     "src/app/(dashboard)/reports/event-economics/page.tsx",
     "src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx",
     "src/app/(dashboard)/services/[id]/SupplierBookingsPanel.tsx",
@@ -251,7 +282,7 @@ test("governed tables declare stable keys, semantic kinds, and explicit logical 
     ["src/app/(dashboard)/customers/[id]/Customer360Workspace.tsx", 15],
     ["src/app/(dashboard)/services/[id]/SupplierBookingsPanel.tsx", 7],
     ["src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx", 7],
-    ["src/app/(dashboard)/reports/accounts-receivable/page.tsx", 9],
+    ["src/app/(dashboard)/reports/accounts-receivable/AccountsReceivableReportContent.tsx", 7],
     ["src/app/(dashboard)/reports/accounts-payable/page.tsx", 8],
   ] as const;
 
@@ -261,7 +292,7 @@ test("governed tables declare stable keys, semantic kinds, and explicit logical 
     const columns = contracts.flat(2);
     assert.ok(columns.length >= minimumColumns, `${path} must keep its explicit DataTable column contract`);
     if (
-      path === "src/app/(dashboard)/reports/accounts-receivable/page.tsx" ||
+      path === "src/app/(dashboard)/reports/accounts-receivable/AccountsReceivableReportContent.tsx" ||
       path === "src/app/(dashboard)/reports/accounts-payable/page.tsx"
     ) {
       const primaryColumns = contracts[0]?.[0]?.map((column) => {
@@ -273,7 +304,7 @@ test("governed tables declare stable keys, semantic kinds, and explicit logical 
         assert.ok(key && ts.isPropertyAssignment(key) && ts.isStringLiteral(key.initializer));
         return key.initializer.text;
       });
-      const expectedColumns = path === "src/app/(dashboard)/reports/accounts-receivable/page.tsx"
+      const expectedColumns = path === "src/app/(dashboard)/reports/accounts-receivable/AccountsReceivableReportContent.tsx"
         ? ["invoice", "customer", "service", "due", "net", "settled", "outstanding"]
         : ["bill", "supplier", "service", "dueDate", "status", "payable", "paid", "outstanding"];
       assert.deepEqual(primaryColumns, expectedColumns);
@@ -328,10 +359,74 @@ test("governed tables declare stable keys, semantic kinds, and explicit logical 
 });
 
 test("Event Economics views resolve stable keys through semantic RTL-aware column definitions", () => {
-  const page = read("src/app/(dashboard)/reports/event-economics/page.tsx");
-  assert.match(page, /EVENT_ECONOMICS_VIEW_COLUMNS\[view\]\.map\(\(key\) => eventColumnDefinition\(key, dictionary\)\)/);
-  assert.match(page, /return \{ key, header: header\[key\], kind, align, minWidth, noWrap:/);
-  assert.match(page, /kind === "money" \? "end" : kind === "status" \? "center" : "start"/);
+  const page = parseTsx("src/app/(dashboard)/reports/event-economics/page.tsx");
+  assert.deepEqual({
+    eventIdentity: getEventEconomicsColumnAlignment("service"),
+    combinedStatus: getEventEconomicsColumnAlignment("status"),
+    closeState: getEventEconomicsColumnAlignment("close"),
+    money: getEventEconomicsColumnAlignment("budget"),
+  }, { eventIdentity: "start", combinedStatus: "start", closeState: "center", money: "end" });
+
+  const identityContainer = jsxOpeningElements(page, "renderEventColumn", "div").find((element) => {
+    const classes = jsxStringAttribute(element, "className")?.split(/\s+/) ?? [];
+    return classes.includes("text-start") &&
+      jsxStringAttribute(element, "dir") === undefined &&
+      jsxSubtreeContainsTag(element.parent, "UiBidiText") &&
+      jsxSubtreeContainsTag(element.parent, "UiLtrText");
+  });
+  assert.ok(identityContainer, "event identity uses locale-owned logical start alignment without a direction override");
+  assert.ok(componentContainsTag(page, "renderEventColumn", "UiBidiText"));
+  assert.ok(componentContainsTag(page, "renderEventColumn", "UiLtrText"));
+  assert.deepEqual(directionAttributes(page), [], "mixed values are isolated by leaf bidi primitives, not block direction");
+
+  const identityTitles = jsxOpeningElements(page, "renderEventColumn", "span").filter((element) => {
+    const classes = jsxStringAttribute(element, "className")?.split(/\s+/) ?? [];
+    return classes.includes("truncate") && jsxSubtreeContainsTag(element.parent, "UiBidiText");
+  });
+  assert.ok(identityTitles.length > 0, "the primary event title stays on one readable identity line with its full value available");
+
+  const metadataLine = jsxOpeningElements(page, "renderEventColumn", "div").find((element) => {
+    const classes = jsxStringAttribute(element, "className")?.split(/\s+/) ?? [];
+    return classes.includes("flex") &&
+      jsxSubtreeContainsTag(element.parent, "UiLtrText") &&
+      jsxSubtreeContainsTag(element.parent, "Link");
+  });
+  assert.ok(metadataLine, "service number and customer name share one subordinate metadata line");
+  assert.equal(jsxOpeningElements(page, "renderEventColumn", "Link").length, 2, "identity keeps only the event and customer links");
+
+  const serviceRenderer = functionDeclaration(page, "renderEventColumn");
+  assert.ok(serviceRenderer);
+  let repeatsCustomerPrefix = false;
+  visit(serviceRenderer, (node) => {
+    if (ts.isPropertyAccessExpression(node) && node.getText(page) === "dictionary.ar.customer") repeatsCustomerPrefix = true;
+  });
+  assert.equal(repeatsCustomerPrefix, false, "customer name is not prefixed by a repeated visible Customer label");
+
+  const statusGroup = jsxOpeningElements(page, "renderEventColumn", "div").find((element) => jsxStringAttribute(element, "role") === "group");
+  assert.ok(statusGroup, "the compact overview indicators remain a semantic status group");
+  const statusLabels = jsxOpeningElements(page, "renderEventColumn", "span").filter((element) =>
+    (jsxStringAttribute(element, "className")?.split(/\s+/) ?? []).includes("sr-only"),
+  );
+  assert.equal(statusLabels.length, 2, "completeness and close-state meaning remain available to assistive technology");
+  const hiddenBadges = jsxOpeningElements(page, "renderEventColumn", "EventStatusBadge").filter((element) =>
+    element.attributes.properties.some((property) => ts.isJsxAttribute(property) && ts.isIdentifier(property.name) && property.name.text === "ariaHidden"),
+  );
+  assert.equal(hiddenBadges.length, 2, "visible badge text is paired with explicit assistive status text");
+
+  const summary = functionDeclaration(page, "EventEconomicsSummaryCounts");
+  assert.ok(summary);
+  const summaryLabels = new Set<string>();
+  visit(summary, (node) => {
+    if (ts.isPropertyAccessExpression(node)) summaryLabels.add(node.getText(page));
+  });
+  for (const label of ["dictionary.event.eventsShown", "dictionary.event.complete", "dictionary.event.partial", "dictionary.event.open", "dictionary.event.closed"]) {
+    assert.ok(summaryLabels.has(label), `the summary strip retains ${label}`);
+  }
+  const stackedCount = jsxOpeningElements(page, "EventEconomicsSummaryCounts", "div").some((element) => {
+    const classes = jsxStringAttribute(element, "className")?.split(/\s+/) ?? [];
+    return classes.includes("flex-col") && jsxSubtreeContainsTag(element.parent, "dt") && jsxSubtreeContainsTag(element.parent, "dd");
+  });
+  assert.ok(stackedCount, "each summary label sits above its tabular count in the connected strip");
 });
 
 test("shared semantic values use leaf-level bidi isolation and KPI values inherit locale direction", () => {
@@ -375,6 +470,32 @@ test("governed RTL-safe surfaces avoid physical alignment utilities and block-le
       }
     }
   }
+});
+
+test("Supplier Payables service identity aligns blocks by locale and isolates only value leaves", () => {
+  const source = parseTsx("src/app/(dashboard)/reports/accounts-payable/page.tsx");
+  const serviceLink = jsxOpeningElements(source, "AccountsPayableReportPage", "Link")
+    .find((element) => element.getText(source).includes("/services/"));
+
+  assert.ok(serviceLink, "the AP service identity must link to its Service record");
+  assert.equal(jsxStringAttribute(serviceLink, "dir"), undefined, "the identity block inherits locale direction");
+  assert.match(jsxStringAttribute(serviceLink, "className") ?? "", /\btext-start\b/);
+  const identity = serviceLink.parent;
+  assert.ok(ts.isJsxElement(identity));
+  assert.ok(jsxSubtreeContainsTag(identity, "UiBidiText"), "the human-readable title uses the bidi-aware value primitive");
+  assert.ok(jsxSubtreeContainsTag(identity, "UiLtrText"), "the service number uses the identifier primitive");
+
+  const blocks: Array<{ className: string; subtree: ts.Node }> = [];
+  visit(identity, (node) => {
+    if (!ts.isJsxElement(node) || !ts.isIdentifier(node.openingElement.tagName) || node.openingElement.tagName.text !== "span") return;
+    const className = jsxStringAttribute(node.openingElement, "className") ?? "";
+    if (/\bw-full\b/.test(className) && /\btext-start\b/.test(className)) blocks.push({ className, subtree: node });
+  });
+  assert.equal(blocks.length, 2, "title and number each occupy a full-width logical-start line");
+  assert.match(blocks[0]?.className ?? "", /line-clamp-2/);
+  assert.ok(jsxSubtreeContainsTag(blocks[0]!.subtree, "UiBidiText"));
+  assert.match(blocks[1]?.className ?? "", /text-xs/);
+  assert.ok(jsxSubtreeContainsTag(blocks[1]!.subtree, "UiLtrText"));
 });
 
 test("root direction remains authoritative and Arabic date phrases are not wrapped as LTR blocks", () => {

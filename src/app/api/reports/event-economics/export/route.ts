@@ -37,6 +37,7 @@ export async function GET(request: Request) {
         definition: definition.description,
         source: definition.sourceDomain,
         timeBasis: getReportTimeBasisLabel(definition, dictionary.workspace),
+        periodAsOf: `${dictionary.workspace.asOf}: ${report.asOfDate}`,
         timeZone: "Asia/Riyadh",
         generatedAt,
         filters: [
@@ -50,10 +51,18 @@ export async function GET(request: Request) {
         fileName,
       },
       locale,
-      chrome: locale === "ar" ? DEFAULT_EXCEL_EXPORT_CHROME_AR : DEFAULT_EXCEL_EXPORT_CHROME_EN,
+      chrome: {
+        ...(locale === "ar" ? DEFAULT_EXCEL_EXPORT_CHROME_AR : DEFAULT_EXCEL_EXPORT_CHROME_EN),
+        totalRecordsLabel: dictionary.event.includedEvents,
+      },
       rows: report.rows,
-      columns: getEventEconomicsExportColumns(dictionary),
-      summary: { tables: [getEventEconomicsOverviewSummary(report.rows, dictionary)] },
+      columns: getEventEconomicsExportColumns(dictionary, locale),
+      summary: {
+        tables: [getEventEconomicsOverviewSummary(report.rows, dictionary, locale)],
+        notices: report.rows.some((row) => row.completenessStatus !== "COMPLETE")
+          ? [dictionary.event.incompleteExportWarning]
+          : [],
+      },
     });
     return new Response(buffer, { headers: { "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Content-Disposition": `attachment; filename="${fileName}"`, "Cache-Control": "no-store" } });
   } catch (error) {

@@ -1,4 +1,6 @@
 import type { ReportCenterDictionary } from "../i18n/dictionaries/report-center.ts";
+import type { Locale } from "../i18n/locales.ts";
+import { resolveRecordTitle } from "../i18n/record-title.ts";
 import type {
   ExcelColumn,
   ExcelSummaryColumn,
@@ -12,15 +14,6 @@ import type {
 
 type Dictionary = ReportCenterDictionary;
 
-function customerIdentity(number: string | null, name: string | null, fallback: string): string {
-  if (number && name) return `${number} · ${name}`;
-  return name ?? number ?? fallback;
-}
-
-function serviceIdentity(number: string | null, title: string | null, fallback: string): string {
-  return number && title ? `${number} · ${title}` : fallback;
-}
-
 function ageingLabel(bucket: ReportReceivableRow["ageingBucket"], dictionary: Dictionary): string {
   switch (bucket) {
     case "not_due": return dictionary.ar.notDue;
@@ -33,10 +26,12 @@ function ageingLabel(bucket: ReportReceivableRow["ageingBucket"], dictionary: Di
 
 export function getAccountsReceivableExportColumns(
   dictionary: Dictionary,
+  locale: Locale = "en",
 ): ExcelColumn<ReportReceivableRow>[] {
   return [
     { header: dictionary.ar.invoice, key: "invoiceNumber", format: "text", width: 20 },
-    { header: dictionary.ar.customer, key: "customerName", format: "text", width: 32, value: (row) => customerIdentity(row.customerNumber, row.customerName, dictionary.ar.noCustomerIdentity) },
+    { header: dictionary.ar.customer, key: "customerName", format: "text", width: 32, value: (row) => row.customerName ? resolveRecordTitle(locale, row.customerName) : dictionary.ar.noCustomerIdentity },
+    { header: dictionary.data.customerNumber, key: "customerNumber", format: "text", width: 18, value: (row) => row.customerNumber ?? "" },
     { header: dictionary.data.serviceNumber, key: "serviceNumber", format: "text", width: 18, value: (row) => row.serviceNumber ?? "" },
     { header: dictionary.data.serviceTitle, key: "serviceTitle", format: "text", width: 34, value: (row) => row.serviceTitle ?? dictionary.ar.noServiceIdentity },
     { header: dictionary.ar.issueDate, key: "issueDate", format: "date", width: 14 },
@@ -54,10 +49,11 @@ export function getAccountsReceivableExportColumns(
 
 export function getAccountsPayableExportColumns(
   dictionary: Dictionary,
+  locale: Locale = "en",
 ): ExcelColumn<ReportAccountsPayableRow>[] {
   return [
     { header: dictionary.ap.bill, key: "billNumber", format: "text", width: 20 },
-    { header: dictionary.ap.supplier, key: "supplierName", format: "text", width: 32, value: (row) => customerIdentity(null, row.supplierName, dictionary.ap.noSupplierIdentity) },
+    { header: dictionary.ap.supplier, key: "supplierName", format: "text", width: 32, value: (row) => row.supplierName ? resolveRecordTitle(locale, row.supplierName) : dictionary.ap.noSupplierIdentity },
     { header: dictionary.data.serviceNumber, key: "serviceNumber", format: "text", width: 18, value: (row) => row.serviceNumber ?? "" },
     { header: dictionary.data.serviceTitle, key: "serviceTitle", format: "text", width: 34, value: (row) => row.serviceTitle ?? dictionary.ap.noServiceIdentity },
     { header: dictionary.ap.invoiceDate, key: "invoiceDate", format: "date", width: 14 },
@@ -73,10 +69,13 @@ export function getAccountsPayableExportColumns(
 
 export function getEventEconomicsExportColumns(
   dictionary: Dictionary,
+  locale: Locale = "en",
 ): ExcelColumn<ReportEventEconomicsRow>[] {
   return [
-    { header: dictionary.event.eventService, key: "serviceNumber", format: "text", width: 34, value: (row) => serviceIdentity(row.serviceNumber, row.serviceTitle, row.serviceNumber) },
-    { header: dictionary.ar.customer, key: "customerName", format: "text", width: 32, value: (row) => customerIdentity(row.customerNumber, row.customerName, dictionary.event.noCustomerIdentity) },
+    { header: dictionary.event.eventService, key: "serviceTitle", format: "text", width: 34, value: (row) => resolveRecordTitle(locale, row.serviceTitle) },
+    { header: dictionary.data.serviceNumber, key: "serviceNumber", format: "text", width: 18 },
+    { header: dictionary.data.customerNumber, key: "customerNumber", format: "text", width: 18, value: (row) => row.customerNumber ?? "" },
+    { header: dictionary.ar.customer, key: "customerName", format: "text", width: 32, value: (row) => row.customerName ? resolveRecordTitle(locale, row.customerName) : dictionary.event.noCustomerIdentity },
     { header: dictionary.event.approvedBudget, key: "approvedBudgetCost", format: "currency", width: 19 },
     { header: dictionary.event.commitment, key: "openCommitment", format: "currency", width: 19 },
     { header: dictionary.event.actual, key: "actualCost", format: "currency", width: 19 },
@@ -99,10 +98,11 @@ export function getEventEconomicsExportColumns(
 export function getEventEconomicsOverviewSummary(
   rows: readonly ReportEventEconomicsRow[],
   dictionary: Dictionary,
+  locale: Locale = "en",
 ): ExcelSummaryTable {
   const columns: ExcelSummaryColumn[] = [
-    { header: dictionary.event.eventService, format: "text", width: 34 },
-    { header: dictionary.ar.customer, format: "text", width: 32 },
+    { header: dictionary.event.eventService, format: "text", width: 28 },
+    { header: dictionary.ar.customer, format: "text", width: 24 },
     { header: dictionary.event.approvedBudget, format: "currency", width: 19 },
     { header: dictionary.event.actual, format: "currency", width: 19 },
     { header: dictionary.event.eac, format: "currency", width: 19 },
@@ -111,8 +111,8 @@ export function getEventEconomicsOverviewSummary(
     { header: dictionary.event.closeState, format: "text", width: 16 },
   ];
   const tableRows = rows.map((row) => [
-    serviceIdentity(row.serviceNumber, row.serviceTitle, row.serviceNumber),
-    customerIdentity(row.customerNumber, row.customerName, dictionary.event.noCustomerIdentity),
+    resolveRecordTitle(locale, row.serviceTitle) || row.serviceNumber,
+    row.customerName ? resolveRecordTitle(locale, row.customerName) : dictionary.event.noCustomerIdentity,
     row.approvedBudgetCost,
     row.actualCost,
     row.eac,

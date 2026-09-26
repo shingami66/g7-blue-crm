@@ -16,10 +16,13 @@ type QueryCall = {
 
 type Scenario = {
   calls: QueryCall[];
+  rpcCalls: Array<{ name: string; args: Record<string, unknown> }>;
   tableData: Record<string, unknown[]>;
   permissions: Record<string, boolean>;
   maxRowsPerResponse?: number;
   receivableResponse?: unknown;
+  payableResponse?: unknown;
+  eventResponse?: unknown;
 };
 
 let activeScenario: Scenario | null = null;
@@ -49,6 +52,12 @@ mock.module("server-only", { namedExports: {} });
 function scenario(): Scenario {
   if (!activeScenario) throw new Error("Scenario not configured");
   return activeScenario;
+}
+
+function resolveRpcResponse(response: unknown, args: Record<string, unknown>): unknown {
+  return typeof response === "function"
+    ? (response as (args: Record<string, unknown>) => unknown)(args)
+    : response;
 }
 
 mock.module("@/lib/auth/permissions", {
@@ -194,8 +203,18 @@ mock.module("@/lib/supabase/admin", {
     createAdminClient: () => ({
       from: (table: string) => createMockQueryBuilder(table),
       rpc: (name: string, args: Record<string, unknown>) => {
+        const current = scenario();
+        current.rpcCalls.push({ name, args });
+        if (name === "get_accounts_payable_report" && current.payableResponse !== undefined) {
+          return Promise.resolve({ data: resolveRpcResponse(current.payableResponse, args), error: null });
+        }
+        if (name === "get_event_economics_report" && current.eventResponse !== undefined) {
+          return Promise.resolve({ data: resolveRpcResponse(current.eventResponse, args), error: null });
+        }
         if (name !== "get_accounts_receivable_report") return Promise.resolve({ data: null, error: { message: "Unknown RPC" } });
-        if (scenario().receivableResponse !== undefined) return Promise.resolve({ data: scenario().receivableResponse, error: null });
+        if (current.receivableResponse !== undefined) {
+          return Promise.resolve({ data: resolveRpcResponse(current.receivableResponse, args), error: null });
+        }
         return Promise.resolve({
           data: [{
             as_of_date: args.p_as_of_date,
@@ -236,9 +255,17 @@ const {
   RIYADH_OFFSET,
 } = await import("./queries.ts");
 
+const {
+  getAccountsPayableReport,
+  getEventEconomicsReport,
+  readAccountsPayableExport,
+  readEventEconomicsExport,
+} = await import("./reporting.ts");
+
 function resetScenario(overrides: Partial<Scenario> = {}): Scenario {
   activeScenario = {
     calls: [],
+    rpcCalls: [],
     tableData: {},
     permissions: {},
     ...overrides,
@@ -757,5 +784,541 @@ test("11. supplier cost reads remain isolated for asymmetric permissions", async
     assert.ok(bookingCall, testCase.name);
     assert.equal(allocationCall.selectColumns?.includes("estimated_total_cost"), testCase.allocationIncludesCost, testCase.name);
     assert.equal(bookingCall.selectColumns?.includes("estimated_total_cost"), testCase.bookingIncludesCost, testCase.name);
+  }
+});
+
+test("12. AR report pages keep authoritative whole-result summary and the final partial slice", async () => {
+  const detailRows = Array.from({ length: 25 }, (_, index) => ({
+    invoice_id: `invoice-${String(index + 1).padStart(2, "0")}`,
+    invoice_number: `INV-${String(index + 1).padStart(2, "0")}`,
+    customer_id: "customer-1",
+    customer_number: "CUST-001",
+    customer_name: "Filtered customer",
+    service_id: "service-1",
+    service_number: "SVC-001",
+    service_title: "Filtered service",
+    issue_date: "2026-09-15",
+    due_date: "2026-10-15",
+    gross_amount: "100.00",
+    credit_adjustment_amount: "5.00",
+    credit_application_amount: "10.00",
+    net_receivable_amount: "85.00",
+    settled_amount: "15.00",
+    outstanding_amount: "70.00",
+    days_past_due: 0,
+    ageing_bucket: "not_due",
+  }));
+  const scenarioState = resetScenario({
+    receivableResponse: (args: Record<string, unknown>) => [{
+      as_of_date: args.p_as_of_date,
+      period_from: args.p_from_date,
+      period_to: args.p_to_date,
+      billed_amount: "2500.00",
+      collected_cash_amount: "500.00",
+      total_outstanding: "1750.00",
+      total_overdue: "125.00",
+      not_due_amount: "1200.00",
+      ageing_1_30_amount: "250.00",
+      ageing_31_60_amount: "150.00",
+      ageing_61_90_amount: "100.00",
+      ageing_91_plus_amount: "50.00",
+      detail_total_count: 25,
+      detail_rows: detailRows.slice(Number(args.p_page_offset), Number(args.p_page_offset) + Number(args.p_page_size)),
+      outstanding_customer_count: 2,
+      outstanding_customer_rows: [{ customer_id: "customer-1", customer_number: "CUST-001", customer_name: "Filtered customer", amount: "1200.00" }],
+    }],
+  });
+  const filters: ReportFilters = { from: "2026-09-01", to: "2026-09-30", asOf: "2026-09-30" };
+
+  const first = await readAccountsReceivable(filters, { page: 1, pageSize: 20 });
+  const second = await readAccountsReceivable(filters, { page: 2, pageSize: 20 });
+  const summary = (report: typeof first) => ({
+    billedAmount: report.billedAmount,
+    collectedCashAmount: report.collectedCashAmount,
+    totalOutstanding: report.totalOutstanding,
+    totalOverdue: report.totalOverdue,
+    ageing: [report.notDueAmount, report.ageing1To30Amount, report.ageing31To60Amount, report.ageing61To90Amount, report.ageing91PlusAmount],
+    detailTotalCount: report.detailTotalCount,
+    outstandingCustomerCount: report.outstandingCustomerCount,
+    outstandingCustomers: report.outstandingCustomers,
+  });
+
+  assert.equal(first.rows.length, 20);
+  assert.equal(second.rows.length, 5);
+  assert.notEqual(first.rows[0].invoiceId, second.rows[0].invoiceId);
+  assert.equal(first.detailTotalCount, 25);
+  assert.equal(Math.ceil(first.detailTotalCount / 20), 2);
+  assert.deepEqual(summary(first), summary(second));
+  assert.deepEqual(scenarioState.rpcCalls.map(({ args }) => ({
+    asOf: args.p_as_of_date,
+    from: args.p_from_date,
+    to: args.p_to_date,
+    pageSize: args.p_page_size,
+  })), [
+    { asOf: "2026-09-30", from: "2026-09-01", to: "2026-09-30", pageSize: 20 },
+    { asOf: "2026-09-30", from: "2026-09-01", to: "2026-09-30", pageSize: 20 },
+  ]);
+  assert.deepEqual(scenarioState.rpcCalls.map(({ args }) => args.p_page_offset), [0, 20]);
+});
+
+test("13. AP report filters share three paginated slices and whole-result totals", async () => {
+  const billRows = Array.from({ length: 45 }, (_, index) => ({
+    supplier_bill_id: `bill-${String(index + 1).padStart(2, "0")}`,
+    bill_number: `BILL-${String(index + 1).padStart(2, "0")}`,
+    supplier_id: "supplier-1",
+    supplier_name_snapshot: "Acme Supplies",
+    service_id: null,
+    currency: "SAR",
+    payable_amount: "100.00",
+    paid_amount: "20.00",
+    outstanding_amount: "80.00",
+    payment_status: "unpaid",
+    advance_allocated_amount: "0.00",
+    invoice_date: "2026-09-24",
+    due_date: "2026-10-10",
+  }));
+  const scenarioState = resetScenario({
+    payableResponse: (args: Record<string, unknown>) => ({
+      payable_amount: "4500.00",
+      paid_amount: "900.00",
+      outstanding_amount: "3600.00",
+      open_bill_count: 45,
+      detail_total_count: 45,
+      detail_rows: billRows.slice(Number(args.p_page_offset), Number(args.p_page_offset) + Number(args.p_page_size)),
+    }),
+  });
+  const filters = {
+    status: "unpaid" as const,
+    supplierSearch: "Acme",
+    serviceSearch: "SVC-2026",
+    dueFrom: "2026-10-01",
+    dueTo: "2026-10-31",
+  };
+
+  const pages = await Promise.all([1, 2, 3].map((page) => getAccountsPayableReport({ ...filters, page, pageSize: 20 })));
+  const reports = pages.map((result) => {
+    assert.equal(result.status, "ready");
+    if (result.status !== "ready") throw new Error("AP fixture did not return report data");
+    return result.data;
+  });
+
+  assert.deepEqual(reports.map((report) => report.rows.length), [20, 20, 5]);
+  assert.notEqual(reports[0].rows[0].billId, reports[1].rows[0].billId);
+  assert.notEqual(reports[1].rows[0].billId, reports[2].rows[0].billId);
+  assert.deepEqual(reports.map(({ payableAmount, paidAmount, outstandingAmount, openBillCount, pagination }) => ({
+    payableAmount,
+    paidAmount,
+    outstandingAmount,
+    openBillCount,
+    total: pagination.total,
+    totalPages: pagination.totalPages,
+  })), Array.from({ length: 3 }, () => ({
+    payableAmount: 4500,
+    paidAmount: 900,
+    outstandingAmount: 3600,
+    openBillCount: 45,
+    total: 45,
+    totalPages: 3,
+  })));
+  assert.deepEqual(scenarioState.rpcCalls.map(({ args }) => ({
+    status: args.p_status,
+    supplier: args.p_supplier_search,
+    service: args.p_service_search,
+    dueFrom: args.p_due_from,
+    dueTo: args.p_due_to,
+    pageSize: args.p_page_size,
+  })), Array.from({ length: 3 }, () => ({
+    status: "unpaid",
+    supplier: "Acme",
+    service: "SVC-2026",
+    dueFrom: "2026-10-01",
+    dueTo: "2026-10-31",
+    pageSize: 20,
+  })));
+  assert.deepEqual(scenarioState.rpcCalls.map(({ args }) => args.p_page_offset), [0, 20, 40]);
+});
+
+test("AP service filters require services:read without blocking legitimate AP-only reads", async () => {
+  const payableResponse = {
+    payable_amount: "100.00",
+    paid_amount: "20.00",
+    outstanding_amount: "80.00",
+    open_bill_count: 1,
+    detail_total_count: 1,
+    detail_rows: [{
+      supplier_bill_id: "bill-1",
+      bill_number: "BILL-1",
+      supplier_id: "supplier-1",
+      supplier_name_snapshot: "Acme Supplies",
+      service_id: null,
+      currency: "SAR",
+      payable_amount: "100.00",
+      paid_amount: "20.00",
+      outstanding_amount: "80.00",
+      payment_status: "unpaid",
+      advance_allocated_amount: "0.00",
+      invoice_date: "2026-09-24",
+      due_date: "2026-10-10",
+    }],
+  };
+  const apOnly = resetScenario({ permissions: { "services:read": false }, payableResponse });
+  const ordinaryRead = await getAccountsPayableReport({ status: "unpaid" });
+  assert.equal(ordinaryRead.status, "ready");
+  assert.equal(apOnly.rpcCalls[0]?.args.p_service_search, null);
+  assert.equal(apOnly.rpcCalls[0]?.args.p_service_id, null);
+  assert.equal(apOnly.calls.some(({ table }) => table === "services"), false);
+
+  for (const serviceFilter of [{ serviceSearch: "Festival" }, { serviceId: "service-1" }]) {
+    const denied = resetScenario({ permissions: { "services:read": false }, payableResponse });
+    await assert.rejects(
+      getAccountsPayableReport(serviceFilter),
+      (error: unknown) => error instanceof Error && error.name === "ForbiddenError",
+    );
+    assert.equal(denied.rpcCalls.length, 0, "unauthorized service filters must not reach the AP RPC");
+  }
+
+  const authorized = resetScenario({ permissions: { "services:read": true }, payableResponse });
+  await getAccountsPayableReport({ serviceSearch: "Festival", serviceId: "service-1" });
+  assert.equal(authorized.rpcCalls[0]?.args.p_service_search, "Festival");
+  assert.equal(authorized.rpcCalls[0]?.args.p_service_id, "service-1");
+});
+
+test("14. Event 53-row pages preserve authoritative whole-filter summary metadata", async () => {
+  const eventRows = Array.from({ length: 53 }, (_, index) => ({
+    service_id: `service-${String(index + 1).padStart(2, "0")}`,
+    service_number: `SVC-${String(index + 1).padStart(4, "0")}`,
+    service_title: `Event ${index + 1}`,
+    customer_id: null,
+    approved_budget_cost: "100.00",
+    open_commitment: "10.00",
+    actual_cost: "20.00",
+    paid_cost: "15.00",
+    outstanding_cost: "5.00",
+    etc: "80.00",
+    eac: "100.00",
+    net_approved_commercial_value: "150.00",
+    forecast_margin: "50.00",
+    completeness_status: index < 20 ? "COMPLETE" : index < 48 ? "PARTIAL" : "UNAVAILABLE",
+    completeness_reason_codes: [],
+    close_state: index < 41 ? "open" : "closed",
+    close_version: index < 41 ? null : 1,
+    close_effective_date: index < 41 ? null : "2026-09-01",
+    final_actual_cost: "20.00",
+    final_managerial_margin: "130.00",
+    closed_at: index < 41 ? null : "2026-09-01T12:00:00+03:00",
+  }));
+  const scenarioState = resetScenario({
+    eventResponse: (args: Record<string, unknown>) => ({
+      report_state: "ready",
+      as_of_date: args.p_as_of_date,
+      detail_total_count: 53,
+      open_count: 41,
+      closed_count: 12,
+      completeness_summary_state: "available",
+      complete_count: 20,
+      partial_count: 28,
+      unavailable_count: 5,
+      detail_rows: eventRows.slice(Number(args.p_page_offset), Number(args.p_page_offset) + Number(args.p_page_size)),
+    }),
+  });
+  const filters = { asOfDate: "2026-09-25", search: "Riyadh", completeness: "all" as const, closeState: "all" as const };
+
+  const pages = await Promise.all([1, 2, 3].map((page) => getEventEconomicsReport({ ...filters, page, pageSize: 20 })));
+  const reports = pages.map((result) => {
+    assert.equal(result.status, "partial");
+    if (result.status !== "partial") throw new Error("Event fixture did not return whole-result incomplete status");
+    return result.data;
+  });
+
+  assert.deepEqual(reports.map((report) => report.rows.length), [20, 20, 13]);
+  assert.deepEqual(reports.map((report) => report.pagination.page), [1, 2, 3]);
+  assert.deepEqual(reports.map((report) => report.pagination.total), [53, 53, 53]);
+  assert.deepEqual(reports.map((report) => report.pagination.totalPages), [3, 3, 3]);
+  assert.notEqual(reports[0].rows[0].serviceId, reports[1].rows[0].serviceId);
+  assert.notEqual(reports[1].rows[0].serviceId, reports[2].rows[0].serviceId);
+  assert.deepEqual(reports.map((report) => report.summary), Array.from({ length: 3 }, () => ({
+    completenessSummaryState: "available",
+    completeCount: 20,
+    partialCount: 28,
+    unavailableCount: 5,
+    openCount: 41,
+    closedCount: 12,
+  })));
+  assert.deepEqual(scenarioState.rpcCalls.map(({ args }) => ({
+    asOf: args.p_as_of_date,
+    search: args.p_search,
+    completeness: args.p_completeness,
+    closeState: args.p_close_state,
+  })), Array.from({ length: 3 }, () => ({
+    asOf: "2026-09-25",
+    search: "Riyadh",
+    completeness: null,
+    closeState: null,
+  })));
+  assert.deepEqual(scenarioState.rpcCalls.map(({ args }) => args.p_page_offset), [0, 20, 40]);
+});
+
+test("15. Event scopes above 500 keep exact total/open/closed counts and unavailable completeness counts", async () => {
+  const eventRows = Array.from({ length: 20 }, (_, index) => ({
+    service_id: `service-${index + 1}`,
+    service_number: `SVC-${String(index + 1).padStart(4, "0")}`,
+    service_title: `Event ${index + 1}`,
+    customer_id: null,
+    completeness_status: "PARTIAL",
+    completeness_reason_codes: [],
+    close_state: "open",
+  }));
+  const scenarioState = resetScenario({
+    eventResponse: (args: Record<string, unknown>) => ({
+      report_state: "ready",
+      as_of_date: args.p_as_of_date,
+      detail_total_count: 1000,
+      open_count: 720,
+      closed_count: 280,
+      completeness_summary_state: "unavailable",
+      complete_count: null,
+      partial_count: null,
+      unavailable_count: null,
+      detail_rows: eventRows,
+    }),
+  });
+  const result = await getEventEconomicsReport({ asOfDate: "2026-09-25", search: "Riyadh", page: 2, pageSize: 20 });
+
+  assert.equal(result.status, "ready");
+  if (result.status !== "ready") throw new Error("Large Event fixture did not remain available");
+  assert.equal(result.data.rows.length, 20);
+  assert.deepEqual(result.data.summary, {
+    completenessSummaryState: "unavailable",
+    completeCount: null,
+    partialCount: null,
+    unavailableCount: null,
+    openCount: 720,
+    closedCount: 280,
+  });
+  assert.equal(result.data.pagination.total, 1000);
+  assert.equal(result.data.pagination.page, 2);
+  assert.deepEqual(scenarioState.rpcCalls.map(({ args }) => [args.p_search, args.p_page_size, args.p_page_offset]), [["Riyadh", 20, 20]]);
+});
+
+test("16. Event completeness filter stays unavailable above 500 candidates", async () => {
+  const scenarioState = resetScenario({
+    eventResponse: (args: Record<string, unknown>) => ({
+      report_state: "unavailable",
+      error: "event_completeness_filter_bounded",
+      as_of_date: args.p_as_of_date,
+      detail_total_count: null,
+      open_count: null,
+      closed_count: null,
+      completeness_summary_state: "unavailable",
+      complete_count: null,
+      partial_count: null,
+      unavailable_count: null,
+      detail_rows: [],
+    }),
+  });
+  const result = await getEventEconomicsReport({ asOfDate: "2026-09-25", completeness: "PARTIAL", page: 1, pageSize: 20 });
+
+  assert.deepEqual(result, { status: "unavailable", error: "event_completeness_filter_bounded" });
+  assert.deepEqual(scenarioState.rpcCalls.map(({ args }) => [args.p_completeness, args.p_page_size, args.p_page_offset]), [["PARTIAL", 20, 0]]);
+});
+
+test("17. Event completeness filter below 500 returns summary counts after the filter", async () => {
+  const matchingRows = Array.from({ length: 28 }, (_, index) => ({
+    service_id: `service-${index + 21}`,
+    service_number: `SVC-${String(index + 21).padStart(4, "0")}`,
+    service_title: `Partial event ${index + 1}`,
+    customer_id: null,
+    completeness_status: "PARTIAL",
+    completeness_reason_codes: [],
+    close_state: index < 21 ? "open" : "closed",
+  }));
+  const scenarioState = resetScenario({
+    eventResponse: (args: Record<string, unknown>) => ({
+      report_state: "ready",
+      as_of_date: args.p_as_of_date,
+      detail_total_count: 28,
+      open_count: 21,
+      closed_count: 7,
+      completeness_summary_state: "available",
+      complete_count: 0,
+      partial_count: 28,
+      unavailable_count: 0,
+      detail_rows: matchingRows.slice(Number(args.p_page_offset), Number(args.p_page_offset) + Number(args.p_page_size)),
+    }),
+  });
+  const result = await getEventEconomicsReport({ asOfDate: "2026-09-25", completeness: "PARTIAL", page: 2, pageSize: 20 });
+
+  assert.equal(result.status, "partial");
+  if (result.status !== "partial") throw new Error("Filtered Event fixture did not preserve its authoritative incomplete state");
+  assert.equal(result.data.rows.length, 8);
+  assert.deepEqual(result.data.summary, {
+    completenessSummaryState: "available",
+    completeCount: 0,
+    partialCount: 28,
+    unavailableCount: 0,
+    openCount: 21,
+    closedCount: 7,
+  });
+  assert.deepEqual(scenarioState.rpcCalls.map(({ args }) => [args.p_completeness, args.p_page_offset]), [["PARTIAL", 20]]);
+});
+
+test("18. AP and Event exports fetch 50-row pages independently through the 500-row cap", async () => {
+  const totals = [0, 1, 20, 50, 51, 99, 100, 499, 500, 501];
+  const payableRows = Array.from({ length: 501 }, (_, index) => ({
+    supplier_bill_id: `bill-${String(index + 1).padStart(4, "0")}`,
+    bill_number: `BILL-${String(index + 1).padStart(4, "0")}`,
+    supplier_id: "supplier-1",
+    supplier_name_snapshot: "Acme Supplies",
+    service_id: null,
+    currency: "SAR",
+    payable_amount: "100.00",
+    paid_amount: "20.00",
+    outstanding_amount: "80.00",
+    payment_status: "unpaid",
+    advance_allocated_amount: "0.00",
+    invoice_date: "2026-09-24",
+    due_date: "2026-10-10",
+  }));
+  const eventRows = Array.from({ length: 501 }, (_, index) => ({
+    service_id: `service-${String(index + 1).padStart(4, "0")}`,
+    service_number: `SVC-${String(index + 1).padStart(4, "0")}`,
+    service_title: `Event ${index + 1}`,
+    customer_id: null,
+    approved_budget_cost: "100.00",
+    open_commitment: "10.00",
+    actual_cost: "20.00",
+    paid_cost: "15.00",
+    outstanding_cost: "5.00",
+    etc: "80.00",
+    eac: "100.00",
+    net_approved_commercial_value: "150.00",
+    forecast_margin: "50.00",
+    completeness_status: "COMPLETE",
+    completeness_reason_codes: [],
+    close_state: "open",
+  }));
+  const expectedPageOffsets = (total: number) => Array.from(
+    { length: Math.min(Math.max(1, Math.ceil(total / 50)), 10) },
+    (_, index) => index * 50,
+  );
+
+  for (const total of totals) {
+    const apScenario = resetScenario({
+      payableResponse: (args: Record<string, unknown>) => ({
+        payable_amount: String(total * 100),
+        paid_amount: String(total * 20),
+        outstanding_amount: String(total * 80),
+        open_bill_count: total,
+        detail_total_count: total,
+        detail_rows: payableRows.slice(Number(args.p_page_offset), Math.min(total, Number(args.p_page_offset) + Number(args.p_page_size))),
+      }),
+    });
+    const apExport = await readAccountsPayableExport({
+      status: "unpaid",
+      supplierSearch: "Acme",
+      dueFrom: "2026-10-01",
+      page: 7,
+      pageSize: 20,
+    });
+    assert.equal(apExport.data.rows.length, Math.min(total, 500), `AP exported rows for total ${total}`);
+    assert.equal(apExport.truncated, total > 500, `AP truncation for total ${total}`);
+    assert.deepEqual(apScenario.rpcCalls.map(({ args }) => [args.p_page_size, args.p_page_offset]), expectedPageOffsets(total).map((offset) => [50, offset]));
+    assert.ok(apScenario.rpcCalls.every(({ args }) => args.p_status === "unpaid" && args.p_supplier_search === "Acme" && args.p_due_from === "2026-10-01"));
+
+    const eventScenario = resetScenario({
+      eventResponse: (args: Record<string, unknown>) => ({
+        report_state: "ready",
+        as_of_date: args.p_as_of_date,
+        detail_total_count: total,
+        open_count: total,
+        closed_count: 0,
+        completeness_summary_state: total <= 500 ? "available" : "unavailable",
+        complete_count: total <= 500 ? total : null,
+        partial_count: total <= 500 ? 0 : null,
+        unavailable_count: total <= 500 ? 0 : null,
+        detail_rows: eventRows.slice(Number(args.p_page_offset), Math.min(total, Number(args.p_page_offset) + Number(args.p_page_size))),
+      }),
+    });
+    const eventExport = await readEventEconomicsExport({
+      asOfDate: "2026-09-25",
+      search: "Riyadh",
+      closeState: "open",
+      page: 7,
+      pageSize: 20,
+    });
+    assert.equal(eventExport.data.rows.length, Math.min(total, 500), `Event exported rows for total ${total}`);
+    assert.equal(eventExport.truncated, total > 500, `Event truncation for total ${total}`);
+    assert.deepEqual(eventScenario.rpcCalls.map(({ args }) => [args.p_page_size, args.p_page_offset]), expectedPageOffsets(total).map((offset) => [50, offset]));
+    assert.ok(eventScenario.rpcCalls.every(({ args }) => args.p_as_of_date === "2026-09-25" && args.p_search === "Riyadh" && args.p_close_state === "open"));
+  }
+});
+
+test("AP and Event exports reject a failed later page and an early empty page", async () => {
+  const payableRows = Array.from({ length: 50 }, (_, index) => ({
+    supplier_bill_id: `bill-${index + 1}`,
+    bill_number: `BILL-${index + 1}`,
+    supplier_id: "supplier-1",
+    supplier_name_snapshot: "Acme Supplies",
+    service_id: null,
+    currency: "SAR",
+    payable_amount: "100.00",
+    paid_amount: "20.00",
+    outstanding_amount: "80.00",
+    payment_status: "unpaid",
+    advance_allocated_amount: "0.00",
+    invoice_date: "2026-09-24",
+    due_date: "2026-10-10",
+  }));
+  const eventRows = Array.from({ length: 50 }, (_, index) => ({
+    service_id: `service-${index + 1}`,
+    service_number: `SVC-${index + 1}`,
+    service_title: `Event ${index + 1}`,
+    customer_id: null,
+    completeness_status: "COMPLETE",
+    completeness_reason_codes: [],
+    close_state: "open",
+  }));
+
+  for (const laterPage of ["unavailable", "empty"] as const) {
+    const apScenario = resetScenario({
+      permissions: { "services:read": false },
+      payableResponse: (args: Record<string, unknown>) => Number(args.p_page_offset) === 0
+        ? {
+          payable_amount: "5100.00", paid_amount: "1020.00", outstanding_amount: "4080.00",
+          open_bill_count: 51, detail_total_count: 51, detail_rows: payableRows,
+        }
+        : laterPage === "unavailable"
+          ? null
+          : {
+            payable_amount: "0.00", paid_amount: "0.00", outstanding_amount: "0.00",
+            open_bill_count: 0, detail_total_count: 0, detail_rows: [],
+          },
+    });
+    await assert.rejects(
+      readAccountsPayableExport(),
+      new RegExp(laterPage === "unavailable" ? "accounts_payable_unavailable" : "accounts_payable_export_incomplete"),
+    );
+    assert.deepEqual(apScenario.rpcCalls.map(({ args }) => args.p_page_offset), [0, 50]);
+
+    const eventScenario = resetScenario({
+      eventResponse: (args: Record<string, unknown>) => Number(args.p_page_offset) === 0
+        ? {
+          report_state: "ready", as_of_date: "2026-09-25", detail_total_count: 51,
+          open_count: 51, closed_count: 0, completeness_summary_state: "available",
+          complete_count: 51, partial_count: 0, unavailable_count: 0, detail_rows: eventRows,
+        }
+        : laterPage === "unavailable"
+          ? { report_state: "unavailable", error: "event_later_page_unavailable" }
+          : {
+            report_state: "ready", as_of_date: "2026-09-25", detail_total_count: 0,
+            open_count: 0, closed_count: 0, completeness_summary_state: "available",
+            complete_count: 0, partial_count: 0, unavailable_count: 0, detail_rows: [],
+          },
+    });
+    await assert.rejects(
+      readEventEconomicsExport({ asOfDate: "2026-09-25" }),
+      new RegExp(laterPage === "unavailable" ? "event_later_page_unavailable" : "event_economics_export_incomplete"),
+    );
+    assert.deepEqual(eventScenario.rpcCalls.map(({ args }) => args.p_page_offset), [0, 50]);
   }
 });

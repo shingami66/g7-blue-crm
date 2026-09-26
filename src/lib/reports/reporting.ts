@@ -1,10 +1,12 @@
 import "server-only";
 
+import { ForbiddenError } from "@/lib/auth/errors";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { SUPPLIER_BILL_PERMISSIONS, SUPPLIER_PAYMENT_PERMISSIONS } from "@/lib/auth/role-permissions";
-import { normalizeListPage, normalizeListPageSize, type ListPageSize } from "@/lib/pagination";
+import { normalizeListPageSize, type ListPageSize } from "@/lib/pagination";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentRiyadhDate, isReportDate } from "./filters";
+import { normalizeReportPage } from "./pagination";
 import { readAccountsReceivable, type AccountsReceivablePageOptions } from "./queries";
 import type {
   ReportAccountsPayable,
@@ -18,6 +20,7 @@ import type {
 
 const DEFAULT_PAGE_SIZE: ListPageSize = 20;
 const MAX_EXPORT_ROWS = 500;
+const EXPORT_PAGE_SIZE: ListPageSize = 50;
 
 type RawRow = Record<string, unknown>;
 
@@ -52,6 +55,12 @@ function numberOrZero(value: unknown): number {
   return numberOrNull(value) ?? 0;
 }
 
+function reportCount(value: unknown): number | null {
+  if (typeof value !== "number" && (typeof value !== "string" || !/^\d+$/.test(value.trim()))) return null;
+  const count = Number(value);
+  return count !== null && Number.isSafeInteger(count) && count >= 0 ? count : null;
+}
+
 function pagination(total: number, page: number, pageSize: number): ReportPagination {
   return {
     page,
@@ -63,7 +72,7 @@ function pagination(total: number, page: number, pageSize: number): ReportPagina
 
 function pageInputs(pageValue: unknown, pageSizeValue: unknown) {
   const pageSize = normalizeListPageSize(pageSizeValue ?? DEFAULT_PAGE_SIZE);
-  const page = normalizeListPage(pageValue);
+  const page = normalizeReportPage(pageValue, pageSize);
   return { page, pageSize };
 }
 
@@ -103,8 +112,8 @@ function mapPayableStatus(value: unknown): ReportAccountsPayableRow["status"] {
   return value === "paid" || value === "partially_paid" ? value : "unpaid";
 }
 
-async function loadServiceIdentity(serviceIds: string[]): Promise<Map<string, { number: string; title: string }>> {
-  if (!(await checkPermission("services:read")) || serviceIds.length === 0) return new Map();
+async function loadServiceIdentity(serviceIds: string[], canReadServices: boolean): Promise<Map<string, { number: string; title: string }>> {
+  if (!canReadServices || serviceIds.length === 0) return new Map();
   const { data, error } = await reportClient()
     .from("services")
     .select("id,service_number,service_title")
@@ -128,6 +137,11 @@ export async function getAccountsPayableReport(
   const dueFrom = isReportDate(options.dueFrom) ? options.dueFrom : null;
   const dueTo = isReportDate(options.dueTo) ? options.dueTo : null;
   const canReadServices = await checkPermission("services:read");
+  const serviceSearch = text(options.serviceSearch);
+  const serviceId = text(options.serviceId);
+  if (!canReadServices && (serviceSearch !== null || serviceId !== null)) {
+    throw new ForbiddenError();
+  }
   if (dueFrom && dueTo && dueFrom > dueTo) {
     return { status: "error", error: "reversed_due_range" };
   }
@@ -135,9 +149,9 @@ export async function getAccountsPayableReport(
   const { data, error } = await reportClient().rpc("get_accounts_payable_report", {
     p_status: options.status && options.status !== "all" ? options.status : null,
     p_supplier_search: text(options.supplierSearch),
-    p_service_search: canReadServices ? text(options.serviceSearch) : null,
+    p_service_search: serviceSearch,
     p_supplier_id: options.supplierId || null,
-    p_service_id: options.serviceId || null,
+    p_service_id: serviceId,
     p_due_from: dueFrom,
     p_due_to: dueTo,
     p_page_size: pageSize,
@@ -152,7 +166,7 @@ export async function getAccountsPayableReport(
   const report = result as RawRow;
   const rawRows = rows(report.detail_rows);
   const serviceIds = Array.from(new Set(rawRows.map((row) => text(row.service_id)).filter((id): id is string => Boolean(id))));
-  const services = await loadServiceIdentity(serviceIds);
+  const services = await loadServiceIdentity(serviceIds, canReadServices);
   const mappedRows: ReportAccountsPayableRow[] = rawRows.map((row) => {
     const serviceId = text(row.service_id);
     const service = serviceId ? services.get(serviceId) : undefined;
@@ -242,6 +256,26 @@ export async function getEventEconomicsReport(
   if (report.report_state === "unavailable") {
     return { status: "unavailable", error: text(report.error) ?? "event_economics_filter_bounded" };
   }
+  if (report.report_state !== "ready") {
+    return { status: "unavailable", error: "event_economics_unavailable" };
+  }
+  const detailTotalCount = reportCount(report.detail_total_count);
+  const openCount = reportCount(report.open_count);
+  const closedCount = reportCount(report.closed_count);
+  const completenessSummaryState = report.completeness_summary_state;
+  const completeCount = reportCount(report.complete_count);
+  const partialCount = reportCount(report.partial_count);
+  const unavailableCount = reportCount(report.unavailable_count);
+  if (
+    detailTotalCount === null
+    || openCount === null
+    || closedCount === null
+    || (completenessSummaryState !== "available" && completenessSummaryState !== "unavailable")
+    || (completenessSummaryState === "available" && (completeCount === null || partialCount === null || unavailableCount === null))
+    || (completenessSummaryState === "unavailable" && (completeCount !== null || partialCount !== null || unavailableCount !== null))
+  ) {
+    return { status: "unavailable", error: "event_economics_summary_unavailable" };
+  }
   const rawRows = rows(report.detail_rows);
   const customerIds = Array.from(new Set(rawRows.map((row) => text(row.customer_id)).filter((id): id is string => Boolean(id))));
   const customers = await loadCustomerIdentity(customerIds);
@@ -279,15 +313,23 @@ export async function getEventEconomicsReport(
       closedAt: text(row.closed_at),
     };
   });
-  const detailTotalCount = numberOrZero(report.detail_total_count);
   const output: ReportEventEconomics = {
     asOfDate: text(report.as_of_date) ?? asOfDate,
     source: "get_event_costing + event_cost_close_versions",
+    summary: {
+      completenessSummaryState,
+      completeCount,
+      partialCount,
+      unavailableCount,
+      openCount,
+      closedCount,
+    },
     rows: mappedRows,
     pagination: pagination(detailTotalCount, page, pageSize),
   };
-  const hasIncomplete = mappedRows.some((row) => row.completenessStatus !== "COMPLETE");
   if (detailTotalCount === 0) return { status: "empty", data: output };
+  const hasIncomplete = completenessSummaryState === "available"
+    && ((partialCount !== null && partialCount > 0) || (unavailableCount !== null && unavailableCount > 0));
   return hasIncomplete ? { status: "partial", data: output } : { status: "ready", data: output };
 }
 
@@ -307,38 +349,52 @@ export async function readAccountsReceivableExport(filters: ReportFilters): Prom
 }
 
 export async function readAccountsPayableExport(options: AccountsPayableReportOptions = {}) {
-  const first = await getAccountsPayableReport({ ...options, page: 1, pageSize: 100 });
+  const first = await getAccountsPayableReport({ ...options, page: 1, pageSize: EXPORT_PAGE_SIZE });
   if (!hasReportData(first)) {
     throw new Error(first.error ?? "accounts_payable_unavailable");
   }
   const rows = [...first.data.rows];
-  const pages = Math.min(first.data.pagination.totalPages, Math.ceil(MAX_EXPORT_ROWS / 100));
+  const pages = Math.min(first.data.pagination.totalPages, Math.ceil(MAX_EXPORT_ROWS / EXPORT_PAGE_SIZE));
   for (let page = 2; page <= pages; page += 1) {
-    const next = await getAccountsPayableReport({ ...options, page, pageSize: 100 });
-    if (!hasReportData(next)) break;
+    const next = await getAccountsPayableReport({ ...options, page, pageSize: EXPORT_PAGE_SIZE });
+    if (!hasReportData(next)) {
+      throw new Error(next.error ?? "accounts_payable_export_page_unavailable");
+    }
     rows.push(...next.data.rows);
   }
+  const expectedRows = Math.min(first.data.pagination.total, MAX_EXPORT_ROWS);
+  const exportedRows = rows.slice(0, MAX_EXPORT_ROWS);
+  if (exportedRows.length !== expectedRows) {
+    throw new Error("accounts_payable_export_incomplete");
+  }
   return {
-    data: { ...first.data, rows: rows.slice(0, MAX_EXPORT_ROWS) },
+    data: { ...first.data, rows: exportedRows },
     truncated: first.data.pagination.total > MAX_EXPORT_ROWS,
   };
 }
 
 export async function readEventEconomicsExport(options: EventEconomicsReportOptions = {}) {
-  const first = await getEventEconomicsReport({ ...options, page: 1, pageSize: 100 });
+  const first = await getEventEconomicsReport({ ...options, page: 1, pageSize: EXPORT_PAGE_SIZE });
   if (!hasReportData(first)) {
     if (first.status === "invalid") throw new Error("invalid_as_of");
     throw new Error(first.error ?? "event_economics_unavailable");
   }
   const rows = [...first.data.rows];
-  const pages = Math.min(first.data.pagination.totalPages, Math.ceil(MAX_EXPORT_ROWS / 100));
+  const pages = Math.min(first.data.pagination.totalPages, Math.ceil(MAX_EXPORT_ROWS / EXPORT_PAGE_SIZE));
   for (let page = 2; page <= pages; page += 1) {
-    const next = await getEventEconomicsReport({ ...options, page, pageSize: 100 });
-    if (!hasReportData(next)) break;
+    const next = await getEventEconomicsReport({ ...options, page, pageSize: EXPORT_PAGE_SIZE });
+    if (!hasReportData(next)) {
+      throw new Error(next.error ?? "event_economics_export_page_unavailable");
+    }
     rows.push(...next.data.rows);
   }
+  const expectedRows = Math.min(first.data.pagination.total, MAX_EXPORT_ROWS);
+  const exportedRows = rows.slice(0, MAX_EXPORT_ROWS);
+  if (exportedRows.length !== expectedRows) {
+    throw new Error("event_economics_export_incomplete");
+  }
   return {
-    data: { ...first.data, rows: rows.slice(0, MAX_EXPORT_ROWS) },
+    data: { ...first.data, rows: exportedRows },
     truncated: first.data.pagination.total > MAX_EXPORT_ROWS,
   };
 }

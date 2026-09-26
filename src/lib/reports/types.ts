@@ -101,9 +101,19 @@ export type ReportEventEconomicsRow = {
   closedAt: string | null;
 };
 
+export type ReportEventEconomicsSummary = {
+  completenessSummaryState: "available" | "unavailable";
+  completeCount: number | null;
+  partialCount: number | null;
+  unavailableCount: number | null;
+  openCount: number;
+  closedCount: number;
+};
+
 export type ReportEventEconomics = {
   asOfDate: string;
   source: string;
+  summary: ReportEventEconomicsSummary;
   rows: ReportEventEconomicsRow[];
   pagination: ReportPagination;
 };

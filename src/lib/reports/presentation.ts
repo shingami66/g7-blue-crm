@@ -5,7 +5,6 @@ export type EventEconomicsView = "overview" | "cost" | "commercial";
 
 export type EventEconomicsColumnKey =
   | "service"
-  | "customer"
   | "budget"
   | "commitment"
   | "actual"
@@ -15,16 +14,28 @@ export type EventEconomicsColumnKey =
   | "eac"
   | "commercialValue"
   | "forecast"
-  | "completeness"
+  | "status"
   | "close"
   | "finalActual"
   | "finalMargin";
 
 export const EVENT_ECONOMICS_VIEW_COLUMNS = {
-  overview: ["service", "customer", "budget", "actual", "eac", "forecast", "completeness", "close"],
+  overview: ["service", "budget", "actual", "eac", "forecast", "status"],
   cost: ["service", "budget", "commitment", "actual", "paid", "outstanding", "etc", "eac"],
-  commercial: ["service", "customer", "commercialValue", "forecast", "close", "finalActual", "finalMargin"],
+  commercial: ["service", "commercialValue", "forecast", "close", "finalActual", "finalMargin"],
 } as const satisfies Record<EventEconomicsView, readonly EventEconomicsColumnKey[]>;
+
+export function getEventEconomicsColumnAlignment(key: EventEconomicsColumnKey): "start" | "end" | "center" {
+  if (key === "service" || key === "status") return "start";
+  if (key === "close") return "center";
+  return "end";
+}
+
+export function getEventAmountTone(amount: number | null): "unavailable" | "zero" | "meaningful" {
+  if (amount === null) return "unavailable";
+  if (amount === 0) return "zero";
+  return "meaningful";
+}
 
 export const EVENT_ECONOMICS_VIEW_OPTIONS = [
   { key: "overview", labelKey: "overview" },
@@ -39,6 +50,7 @@ export function resolveEventEconomicsView(value: string | undefined): EventEcono
 export function buildEventEconomicsViewHref(
   view: EventEconomicsView,
   filters: Partial<Record<"asOf" | "search" | "completeness" | "closeState", string>>,
+  page = 1,
 ): string {
   const params = new URLSearchParams();
   params.set("view", view);
@@ -46,6 +58,7 @@ export function buildEventEconomicsViewHref(
     const value = filters[key];
     if (value) params.set(key, value);
   }
+  if (Number.isSafeInteger(page) && page > 1) params.set("page", String(page));
   return `/reports/event-economics?${params.toString()}`;
 }
 

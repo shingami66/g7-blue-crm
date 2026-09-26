@@ -4,20 +4,20 @@ import type { ReportDefinition } from "./types";
 const DEFINITION_COPY = {
   en: {
     ar: {
-      title: "Accounts Receivable",
-      description: "Billed, collected cash, and outstanding customer balances by invoice.",
+      title: "Customer Receivables",
+      description: "Invoices, customer collections, and outstanding balances for the selected period.",
       source: "W7D Accounts Receivable RPC",
       freshness: "Recomputed from authoritative records",
     },
     ap: {
-      title: "Accounts Payable",
-      description: "Approved supplier bills, payments, reversals, and open payable balances.",
+      title: "Supplier Payables",
+      description: "Supplier bills, payments, and remaining balances from current records.",
       source: "W6 supplier bill payment balances",
       freshness: "Current source records",
     },
     event: {
-      title: "Event Economics",
-      description: "Managerial event cost, commitment, forecast, and close-state visibility.",
+      title: "Event Cost & Margin",
+      description: "A managerial view of event costs, commitments, forecasts, and margins.",
       source: "W8 Event Costing and Event Cost Close",
       freshness: "Recomputed as of the selected date",
     },
@@ -30,14 +30,14 @@ const DEFINITION_COPY = {
       freshness: "إعادة احتساب من السجلات المعتمدة",
     },
     ap: {
-      title: "الحسابات الدائنة",
-      description: "فواتير الموردين المعتمدة والمدفوعات والعكوس والأرصدة المفتوحة.",
+      title: "مستحقات الموردين",
+      description: "فواتير الموردين ومدفوعاتهم والأرصدة المتبقية من السجلات الحالية.",
       source: "أرصدة فواتير ومدفوعات الموردين W6",
       freshness: "السجلات الحالية للمصدر",
     },
     event: {
-      title: "اقتصاديات الحدث",
-      description: "رؤية إدارية لتكلفة الحدث والالتزامات والتوقعات وحالة الإغلاق.",
+      title: "تكاليف وهوامش الفعاليات",
+      description: "عرض إداري لتكاليف الفعاليات والالتزامات والتوقعات والهوامش.",
       source: "تكلفة الحدث وإغلاق التكلفة W8",
       freshness: "إعادة احتساب حتى التاريخ المحدد",
     },

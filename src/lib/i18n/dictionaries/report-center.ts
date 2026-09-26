@@ -24,7 +24,6 @@ export type ReportCenterDictionary = {
     historicalAsOf: string;
     periodAndAsOf: string;
     definition: string;
-    backToReports: string;
     export: string;
     generated: string;
     filters: string;
@@ -62,6 +61,12 @@ export type ReportCenterDictionary = {
   ar: {
     title: string;
     description: string;
+    presentationDescription: string;
+    historicalLabel: string;
+    reportDetails: string;
+    invoicesHeading: string;
+    invoiceCountSingular: string;
+    invoiceCountPlural: string;
     billed: string;
     collectedCash: string;
     outstanding: string;
@@ -89,13 +94,21 @@ export type ReportCenterDictionary = {
   ap: {
     title: string;
     description: string;
+    reportDetails: string;
     payable: string;
+    summaryPayables: string;
     paid: string;
     outstanding: string;
     openBills: string;
+    currentOnlyLabel: string;
     currentOnly: string;
+    updated: string;
+    generatedAt: string;
     source: string;
     bill: string;
+    invoicesHeading: string;
+    billCountSingular: string;
+    billCountPlural: string;
     supplier: string;
     service: string;
     invoiceDate: string;
@@ -122,6 +135,7 @@ export type ReportCenterDictionary = {
     commercialValue: string;
     forecastMargin: string;
     completeness: string;
+    status: string;
     closeState: string;
     open: string;
     closed: string;
@@ -134,6 +148,14 @@ export type ReportCenterDictionary = {
     unavailable: string;
     allCompleteness: string;
     allCloseStates: string;
+    includedEvents: string;
+    eventsShown: string;
+    summaryCounts: string;
+    historicalLabel: string;
+    reportDetails: string;
+    incompleteSourceWarning: string;
+    completenessSummaryUnavailable: string;
+    incompleteExportWarning: string;
     views: {
       selector: string;
       overview: string;
@@ -167,8 +189,7 @@ const en: ReportCenterDictionary = {
     historicalAsOf: "Historical as-of reconstruction",
     periodAndAsOf: "Period with explicit as-of date",
     definition: "What this report answers",
-    backToReports: "Back to Reports Center",
-    export: "Export Excel",
+    export: "Export",
     generated: "Generated",
     filters: "Filters",
     apply: "Apply",
@@ -203,10 +224,16 @@ const en: ReportCenterDictionary = {
     closedAt: "Closed at",
   },
   ar: {
-    title: "Accounts Receivable",
+    title: "Customer Receivables",
     description: "Invoices, collections, and balances returned by the authoritative accounts receivable source.",
+    presentationDescription: "Invoices, payments, and what customers still owe.",
+    historicalLabel: "Historical",
+    reportDetails: "Report details",
+    invoicesHeading: "Invoices",
+    invoiceCountSingular: "invoice",
+    invoiceCountPlural: "invoices",
     billed: "Billed",
-    collectedCash: "Collected cash",
+    collectedCash: "Collected Cash",
     outstanding: "Outstanding",
     overdue: "Overdue",
     notDue: "Not due",
@@ -230,15 +257,23 @@ const en: ReportCenterDictionary = {
     noServiceIdentity: "Service identity unavailable",
   },
   ap: {
-    title: "Accounts Payable",
-    description: "Approved bills, payments, and open balances from the supplier bill payment balance source.",
-    payable: "Approved payable",
+    title: "Supplier Payables",
+    description: "Supplier bills, payments, and remaining balances.",
+    reportDetails: "Report details",
+    payable: "Payable",
+    summaryPayables: "Supplier Payables",
     paid: "Paid",
     outstanding: "Outstanding",
-    openBills: "Open bills",
-    currentOnly: "Current data only; no authoritative historical source exists for this report.",
+    openBills: "Open Bills",
+    currentOnlyLabel: "Current Only",
+    currentOnly: "Current-only report. Historical AP reconstruction is unavailable from an authoritative source.",
+    updated: "Updated",
+    generatedAt: "Generated At",
     source: "Supplier bill payment balances with reversals and allocations",
     bill: "Bill",
+    invoicesHeading: "Invoices",
+    billCountSingular: "bill",
+    billCountPlural: "bills",
     supplier: "Supplier",
     service: "Service",
     invoiceDate: "Invoice date",
@@ -252,24 +287,25 @@ const en: ReportCenterDictionary = {
     paidStatus: "Paid",
   },
   event: {
-    title: "Event economics",
-    description: "A managerial view of event cost and forecast; not a P&L or revenue-recognition report.",
-    eventService: "Event / Service",
-    approvedBudget: "Approved budget",
-    commitment: "Open commitment",
-    actual: "Actual cost",
-    paid: "Paid cost",
-    outstanding: "Outstanding cost",
-    etc: "Estimate to complete",
-    eac: "Estimate at completion",
-    commercialValue: "Approved commercial value",
-    forecastMargin: "Forecast margin",
-    completeness: "Source completeness",
-    closeState: "Close state",
+    title: "Event Cost & Margin",
+    description: "A managerial view of event costs, commitments, forecasts, and margins.",
+    eventService: "Event",
+    approvedBudget: "Approved Budget",
+    commitment: "Open Commitment",
+    actual: "Actual Cost",
+    paid: "Paid",
+    outstanding: "Outstanding",
+    etc: "Estimate to Complete (ETC)",
+    eac: "Estimate at Completion (EAC)",
+    commercialValue: "Approved Commercial Value",
+    forecastMargin: "Forecast Margin",
+    completeness: "Completeness",
+    status: "Status",
+    closeState: "Close State",
     open: "Open",
     closed: "Closed",
-    finalActual: "Final actual cost",
-    finalMargin: "Final managerial margin",
+    finalActual: "Final Actual Cost",
+    finalMargin: "Final Managerial Margin",
     noFinalForOpen: "No final amount is available for an open event",
     noCustomerIdentity: "Customer identity unavailable",
     complete: "Complete",
@@ -277,11 +313,19 @@ const en: ReportCenterDictionary = {
     unavailable: "Unavailable",
     allCompleteness: "All completeness levels",
     allCloseStates: "All close states",
+    includedEvents: "Included Events",
+    eventsShown: "Events shown",
+    summaryCounts: "Event counts",
+    historicalLabel: "Historical",
+    reportDetails: "Report details",
+    incompleteSourceWarning: "Some events have incomplete source data. Available amounts remain authoritative; missing amounts are unavailable, not zero.",
+    completenessSummaryUnavailable: "Whole-result completeness summary is unavailable at this result size. Row-level costing remains authoritative.",
+    incompleteExportWarning: "Some exported events have incomplete source data.",
     views: {
       selector: "Analysis view",
       overview: "Overview",
-      costAnalysis: "Cost analysis",
-      commercialClose: "Commercial & close",
+      costAnalysis: "Cost Analysis",
+      commercialClose: "Commercial & Close",
     },
   },
 };
@@ -312,8 +356,7 @@ const ar: ReportCenterDictionary = {
     historicalAsOf: "إعادة بناء تاريخية حتى تاريخ محدد",
     periodAndAsOf: "فترة مع تاريخ محدد للحساب",
     definition: "ما الذي يجيب عنه التقرير",
-    backToReports: "العودة إلى مركز التقارير",
-    export: "تصدير Excel",
+    export: "تصدير",
     generated: "تم الإنشاء",
     filters: "الفلاتر",
     apply: "تطبيق",
@@ -351,6 +394,12 @@ const ar: ReportCenterDictionary = {
     ...en.ar,
     title: "مستحقات العملاء",
     description: "الفواتير والتحصيل والأرصدة المستحقة كما يعيدها مصدر مستحقات العملاء المعتمد.",
+    presentationDescription: "الفواتير والمدفوعات والأرصدة المتبقية على العملاء.",
+    historicalLabel: "تاريخي",
+    reportDetails: "تفاصيل التقرير",
+    invoicesHeading: "الفواتير",
+    invoiceCountSingular: "فاتورة",
+    invoiceCountPlural: "فواتير",
     billed: "المفوتر",
     collectedCash: "التحصيل النقدي",
     outstanding: "الرصيد المستحق",
@@ -377,15 +426,23 @@ const ar: ReportCenterDictionary = {
   },
   ap: {
     ...en.ap,
-    title: "الحسابات الدائنة",
-    description: "الفواتير المعتمدة والمدفوعات والأرصدة المفتوحة من مصدر أرصدة فواتير الموردين.",
-    payable: "المستحق المعتمد",
+    title: "مستحقات الموردين",
+    description: "فواتير الموردين والمبالغ المسددة والمتبقية.",
+    reportDetails: "تفاصيل التقرير",
+    payable: "المستحق",
+    summaryPayables: "إجمالي مستحقات الموردين",
     paid: "المدفوع",
-    outstanding: "المتبقي",
+    outstanding: "المتبقي للدفع",
     openBills: "الفواتير المفتوحة",
-    currentOnly: "بيانات حالية فقط؛ لا يوجد مصدر تاريخي معتمد لهذا التقرير.",
+    currentOnlyLabel: "السجلات الحالية فقط",
+    currentOnly: "تقرير للسجلات الحالية فقط. لا تتوفر بيانات معتمدة لإعادة بناء مستحقات الموردين تاريخياً.",
+    updated: "آخر تحديث",
+    generatedAt: "تاريخ ووقت الإنشاء",
     source: "أرصدة فواتير الموردين والمدفوعات والعكس والتخصيصات المقدمة",
     bill: "الفاتورة",
+    invoicesHeading: "الفواتير",
+    billCountSingular: "فاتورة",
+    billCountPlural: "فواتير",
     supplier: "المورد",
     service: "الخدمة",
     invoiceDate: "تاريخ الفاتورة",
@@ -400,19 +457,20 @@ const ar: ReportCenterDictionary = {
   },
   event: {
     ...en.event,
-    title: "اقتصاديات الحدث",
-    description: "عرض إداري لتكلفة الحدث وتوقعاته؛ ليس قائمة دخل أو اعترافاً بالإيراد.",
-    eventService: "الحدث / الخدمة",
+    title: "تكاليف وهوامش الفعاليات",
+    description: "عرض إداري لتكاليف الفعاليات والالتزامات والتوقعات والهوامش.",
+    eventService: "الفعالية",
     approvedBudget: "الميزانية المعتمدة",
     commitment: "الالتزام المفتوح",
     actual: "التكلفة الفعلية",
-    paid: "التكلفة المدفوعة",
-    outstanding: "التكلفة المتبقية",
-    etc: "التكلفة المتبقية المتوقعة",
-    eac: "التكلفة المتوقعة عند الإتمام",
+    paid: "المدفوع",
+    outstanding: "المتبقي",
+    etc: "المتبقي المتوقع (ETC)",
+    eac: "عند الإتمام (EAC)",
     commercialValue: "القيمة التجارية المعتمدة",
     forecastMargin: "الهامش المتوقع",
-    completeness: "اكتمال المصدر",
+    completeness: "اكتمال البيانات",
+    status: "الحالة",
     closeState: "حالة الإغلاق",
     open: "مفتوح",
     closed: "مغلق",
@@ -425,6 +483,14 @@ const ar: ReportCenterDictionary = {
     unavailable: "غير متاح",
     allCompleteness: "كل مستويات الاكتمال",
     allCloseStates: "كل حالات الإغلاق",
+    includedEvents: "الفعاليات المدرجة",
+    eventsShown: "الفعاليات المعروضة",
+    summaryCounts: "ملخص الفعاليات",
+    historicalLabel: "تاريخي",
+    reportDetails: "تفاصيل التقرير",
+    incompleteSourceWarning: "تحتوي بعض الفعاليات على بيانات مصدر غير مكتملة. المبالغ المتاحة معتمدة، وتظل القيم المفقودة غير متاحة ولا تُعرض كأصفار.",
+    completenessSummaryUnavailable: "ملخص اكتمال النتائج الكاملة غير متاح عند هذا الحجم. وتظل بيانات التكلفة على مستوى كل فعالية هي المرجع المعتمد.",
+    incompleteExportWarning: "تتضمن الفعاليات المصدرة بيانات مصدر غير مكتملة.",
     views: {
       selector: "طريقة العرض التحليلية",
       overview: "نظرة عامة",

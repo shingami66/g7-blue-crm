@@ -7,10 +7,11 @@ async function loadWorkbook(locale: "en" | "ar" = "en") {
   const buffer = await buildExcelReportBuffer({
     metadata: {
       brandName: "G7 BLUE",
-      reportTitle: locale === "ar" ? "مستحقات العملاء" : "Accounts Receivable",
+      reportTitle: locale === "ar" ? "مستحقات العملاء" : "Customer Receivables",
       definition: locale === "ar" ? "الفواتير والتحصيل والأرصدة" : "Invoice balances from the approved receivables source.",
       source: "W7D AR Authority",
       timeBasis: locale === "ar" ? "إعادة بناء تاريخية حتى تاريخ محدد" : "Historical as-of reconstruction",
+      periodAsOf: locale === "ar" ? "حتى تاريخ: 2026-09-23" : "As of: 2026-09-23",
       timeZone: "Asia/Riyadh",
       generatedAt: new Date("2026-09-24T08:15:00.000Z"),
       filters: [locale === "ar" ? "حتى تاريخ: 2026-09-23" : "As of: 2026-09-23"],
@@ -32,7 +33,7 @@ async function loadWorkbook(locale: "en" | "ar" = "en") {
   return workbook;
 }
 
-test("workbook contains concise Summary and full Data sheets with context and numeric metrics", async () => {
+test("workbook contains a compact management Summary and full Data sheets with numeric metrics", async () => {
   const workbook = await loadWorkbook();
   assert.deepEqual(workbook.worksheets.map((sheet) => sheet.name), ["Summary", "Data"]);
   const summary = workbook.getWorksheet("Summary");
@@ -40,14 +41,20 @@ test("workbook contains concise Summary and full Data sheets with context and nu
   assert.ok(summary);
   assert.ok(data);
   assert.equal(summary.getCell("A1").value, "G7 BLUE");
-  assert.equal(summary.getCell("A2").value, "Accounts Receivable");
-  assert.equal(summary.getCell("A3").value, "Definition: Invoice balances from the approved receivables source.");
-  assert.ok(summary.getCell("A4").value === "Source");
-  assert.ok(summary.getCell("B4").value === "W7D AR Authority");
-  assert.ok(summary.getCell("A8").value === "Filters");
-  assert.equal(summary.getCell("A10").value, "Outstanding");
-  assert.equal(summary.getCell("B10").value, 22);
-  assert.equal(summary.getCell("B10").numFmt, '"SAR" #,##0.00');
+  assert.equal(summary.getCell("A2").value, "Customer Receivables");
+  assert.equal(summary.getCell("A3").value, "Invoice balances from the approved receivables source.");
+  assert.equal(summary.getCell("A4").value, "Period / As Of");
+  assert.equal(summary.getCell("B4").value, "As of: 2026-09-23");
+  assert.equal(summary.getCell("C4").value, "Source basis");
+  assert.equal(summary.getCell("D4").value, "W7D AR Authority");
+  assert.equal(summary.getCell("A5").value, "Generated At");
+  assert.equal(summary.getCell("C5").value, "Timezone");
+  assert.equal(summary.getCell("A6").value, "Filters");
+  assert.equal(summary.getCell("A7").value, "Total Records");
+  assert.equal(summary.getCell("B7").value, "1");
+  assert.equal(summary.getCell("A8").value, "Outstanding");
+  assert.equal(summary.getCell("B8").value, 22);
+  assert.equal(summary.getCell("B8").numFmt, '"SAR" #,##0.00');
   assert.equal(data.getCell("A2").value, "INV-2041");
   assert.equal(data.getCell("C2").value, 22);
   assert.equal(data.getCell("C2").numFmt, '"SAR" #,##0.00');
@@ -133,6 +140,7 @@ test("Arabic workbook applies real RTL worksheet views and Arabic headers", asyn
   const workbook = await loadWorkbook("ar");
   assert.equal(workbook.getWorksheet("Summary")?.views[0]?.rightToLeft, true);
   assert.equal(workbook.getWorksheet("Data")?.views[0]?.rightToLeft, true);
+  assert.equal(workbook.getWorksheet("Summary")?.getCell("A2").value, "مستحقات العملاء");
   assert.equal(workbook.getWorksheet("Data")?.getCell("A1").value, "الفاتورة");
   assert.equal(workbook.getWorksheet("Data")?.getCell("A2").value, "INV-2041");
   assert.equal(DEFAULT_EXCEL_EXPORT_CHROME_EN.summarySheetName, "Summary");

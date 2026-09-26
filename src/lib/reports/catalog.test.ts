@@ -20,9 +20,12 @@ test("W9A1 catalog has exactly the implemented report definitions with stable ro
   assert.notEqual(en[0].title, ar[0].title);
   assert.notEqual(en[1].title, ar[1].title);
   assert.notEqual(en[2].title, ar[2].title);
+  assert.equal(en[0].title, "Customer Receivables");
+  assert.equal(en[1].title, "Supplier Payables");
+  assert.equal(en[2].title, "Event Cost & Margin");
   assert.equal(ar[0].title, "مستحقات العملاء");
-  assert.equal(ar[1].title, "الحسابات الدائنة");
-  assert.equal(ar[2].title, "اقتصاديات الحدث");
+  assert.equal(ar[1].title, "مستحقات الموردين");
+  assert.equal(ar[2].title, "تكاليف وهوامش الفعاليات");
   for (const definition of [...en, ...ar]) {
     assert.equal(definition.exportSupported, true);
     assert.ok(definition.sourceDomain.length > 0);

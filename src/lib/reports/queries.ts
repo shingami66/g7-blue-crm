@@ -4,6 +4,7 @@ import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getBusinessYearBounds, getServiceBusinessYearFilter } from "@/lib/business-year";
 import { getCurrentRiyadhDate } from "./filters";
+import { normalizeReportPage } from "./pagination";
 import type { ServiceStatus } from "@/types/service";
 import { calculateCustomerOverview, calculateSalesBilling, calculateServiceOperations } from "./calculations";
 import type {
@@ -274,7 +275,7 @@ export async function readAccountsReceivable(
   const periodFrom = filters.from ?? yearBounds?.start ?? null;
   const periodTo = filters.to ?? yearBounds?.end ?? null;
   const pageSize = Math.min(Math.max(options.pageSize ?? ACCOUNTS_RECEIVABLE_PAGE_SIZE, 1), 100);
-  const page = Math.max(options.page ?? 1, 1);
+  const page = normalizeReportPage(options.page, pageSize);
   const canReadCustomerIdentity = await checkPermission("customers:read");
   const canReadServiceIdentity = await checkPermission("services:read");
   const admin = createAdminClient() as unknown as {

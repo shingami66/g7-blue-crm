@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReportCenterDictionary } from "@/lib/i18n/dictionaries/report-center";
 import { UiLtrText } from "@/components/i18n/UiValueText";
+import { buildReportPageHref } from "@/lib/reports/pagination";
 
 export default function ReportPagination({
   pathname,
@@ -16,13 +17,7 @@ export default function ReportPagination({
   dictionary: ReportCenterDictionary;
 }) {
   if (totalPages <= 1) return null;
-  const hrefFor = (nextPage: number) => {
-    const params = new URLSearchParams();
-    Object.entries({ ...query, page: String(nextPage) }).forEach(([key, value]) => {
-      if (value) params.set(key, value);
-    });
-    return `${pathname}?${params.toString()}`;
-  };
+  const hrefFor = (nextPage: number) => buildReportPageHref(pathname, query, nextPage);
   return (
     <nav className="flex flex-wrap items-center justify-between gap-3 border-t border-surface-variant bg-surface-container-lowest px-4 py-3" aria-label={`${dictionary.workspace.rows} pagination`}>
       {page > 1 ? <Link href={hrefFor(page - 1)} className="rounded-md border border-outline-variant px-3 py-2 text-sm text-on-surface hover:bg-surface-container-low">{dictionary.workspace.previous}</Link> : <span />}

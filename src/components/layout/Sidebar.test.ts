@@ -238,7 +238,7 @@ test("Reports section directly activates each authorized report and hides items 
     authorizedReports: definitions.filter((report) => report.key !== "event_economics"),
   });
   assert.ok(!limited.includes('href="/reports/event-economics"'));
-  assert.ok(!limited.includes("Event Economics"));
+  assert.ok(!limited.includes("Event Cost & Margin"));
   assert.ok(limited.includes('href="/reports/accounts-receivable"'));
 });
 
@@ -246,9 +246,11 @@ test("Reports section title and direct report labels use the active EN/AR catalo
   const en = renderSidebar({ currentPathname: "/reports/accounts-receivable", locale: "en" });
   const ar = renderSidebar({ currentPathname: "/reports/accounts-receivable", locale: "ar", shellDirection: "rtl" });
   assert.ok(en.includes(">Reports<"));
-  assert.ok(en.includes("Accounts Receivable"));
+  for (const label of ["Customer Receivables", "Supplier Payables", "Event Cost &amp; Margin"]) assert.ok(en.includes(label));
   assert.ok(ar.includes(">التقارير<"));
   assert.ok(ar.includes("مستحقات العملاء"));
+  assert.ok(ar.includes("مستحقات الموردين"));
+  assert.ok(ar.includes("تكاليف وهوامش الفعاليات"));
 });
 
 test("2 & 3. /customers expands Customers & Sales and renders Customers and Quotations underneath", () => {

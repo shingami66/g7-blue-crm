@@ -12,10 +12,10 @@ import type { ReportAccountsPayableRow, ReportEventEconomicsRow, ReportReceivabl
 const eventRow: ReportEventEconomicsRow = {
   serviceId: "internal-service-uuid",
   serviceNumber: "SVC-2041",
-  serviceTitle: "Riyadh Summit",
+  serviceTitle: "Riyadh Summit | قمة الرياض",
   customerId: "internal-customer-uuid",
   customerNumber: "CUS-2041",
-  customerName: "Riyadh Company",
+  customerName: "Riyadh Company | شركة الرياض",
   approvedBudgetCost: null,
   openCommitment: null,
   actualCost: null,
@@ -60,8 +60,8 @@ test("Event export and overview expose localized user-facing statuses, not RPC e
   const summary = getEventEconomicsOverviewSummary([eventRow], dictionary);
   assert.equal(summary.rows.length, 1);
   assert.deepEqual(summary.rows[0], [
-    "SVC-2041 · Riyadh Summit",
-    "CUS-2041 · Riyadh Company",
+    "Riyadh Summit",
+    "Riyadh Company",
     null,
     null,
     null,
@@ -69,6 +69,8 @@ test("Event export and overview expose localized user-facing statuses, not RPC e
     dictionary.event.partial,
     dictionary.event.open,
   ]);
+  const arabicSummary = getEventEconomicsOverviewSummary([eventRow], dictionary, "ar");
+  assert.deepEqual(arabicSummary.rows[0]?.slice(0, 2), ["قمة الرياض", "شركة الرياض"]);
   assert.doesNotMatch(JSON.stringify(summary), /PARTIAL|COMPLETE|UNAVAILABLE|open|closed/);
 });
 
@@ -79,7 +81,7 @@ test("AR and AP exports retain full authorized detail fields without internal UU
   const arKeys = arColumns.map((column) => column.key);
   const apKeys = apColumns.map((column) => column.key);
   assert.deepEqual(arKeys, [
-    "invoiceNumber", "customerName", "serviceNumber", "serviceTitle", "issueDate", "dueDate",
+    "invoiceNumber", "customerName", "customerNumber", "serviceNumber", "serviceTitle", "issueDate", "dueDate",
     "grossAmount", "creditAdjustmentAmount", "creditApplicationAmount", "netReceivableAmount",
     "settledAmount", "outstandingAmount", "daysPastDue", "ageingBucket",
   ]);
@@ -104,4 +106,6 @@ test("AR and AP exports retain full authorized detail fields without internal UU
     outstandingAmount: 90, daysPastDue: 0, ageingBucket: "not_due",
   };
   assert.equal(arColumns.find((column) => column.key === "ageingBucket")?.value?.(arRow), dictionary.ar.notDue);
+  assert.equal(arColumns.find((column) => column.key === "customerName")?.value?.(arRow), "Customer A");
+  assert.equal(arColumns.find((column) => column.key === "customerNumber")?.value?.(arRow), "CUS-2041");
 });
