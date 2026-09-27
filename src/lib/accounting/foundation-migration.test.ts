@@ -54,6 +54,33 @@ test("W10A1 creates only its five authorized accounting tables and five public R
   assert.doesNotMatch(migration, /CREATE TABLE public\.accounting_(?:accounts|periods|journals)\b/i);
 });
 
+test("profile version checks preserve reason validation and uniquely name evidence_ref", () => {
+  const profileVersionsTable = migration.match(
+    /CREATE TABLE public\.accounting_profile_versions \(([\s\S]*?)\n\);/,
+  );
+  assert.ok(profileVersionsTable, "accounting_profile_versions definition is present");
+  const definition = profileVersionsTable[1];
+
+  assert.match(
+    definition,
+    /reason text NOT NULL CHECK \(length\(btrim\(reason\)\) BETWEEN 1 AND 2000\)/,
+  );
+  assert.match(
+    definition,
+    /CONSTRAINT accounting_profile_versions_evidence_ref_check\s+CHECK \(evidence_ref IS NULL OR length\(btrim\(evidence_ref\)\) BETWEEN 1 AND 2000\)/,
+  );
+  assert.doesNotMatch(definition, /CONSTRAINT accounting_profile_versions_reason_check\b/);
+
+  const explicitConstraintNames = [
+    ...definition.matchAll(/\bCONSTRAINT\s+([a-zA-Z_][a-zA-Z0-9_]*)\b/g),
+  ].map(([, name]) => name);
+  assert.equal(
+    new Set(explicitConstraintNames).size,
+    explicitConstraintNames.length,
+    `duplicate explicit constraint names: ${explicitConstraintNames.join(", ")}`,
+  );
+});
+
 test("W10A1 catalog is fixed, with only view and profile management grantable", () => {
   const seed = migration.slice(0, migration.indexOf("CREATE FUNCTION public.get_accounting_capability"));
   const seedRows = [...seed.matchAll(/^\s*\('accounting:[^\n]+/gm)].map((match) => match[0].trim());

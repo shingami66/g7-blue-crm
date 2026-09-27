@@ -144,7 +144,7 @@ CREATE TABLE public.accounting_profile_versions (
       AND fatoora_state='INACTIVE'
     )
   ),
-  CONSTRAINT accounting_profile_versions_reason_check
+  CONSTRAINT accounting_profile_versions_evidence_ref_check
     CHECK (evidence_ref IS NULL OR length(btrim(evidence_ref)) BETWEEN 1 AND 2000)
 );
 
