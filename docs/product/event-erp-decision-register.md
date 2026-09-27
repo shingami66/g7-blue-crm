@@ -12,6 +12,8 @@
 - Strategic expansion authority: [G7 BLUE Event ERP Future Expansion Master](G7_BLUE_Event_ERP_Future_Expansion_Master_Handover.md).
 - A locked decision or roadmap is not implementation, database, deployment, production, publication or Layer 2 authority.
 
+> Current accounting authority addendum: [G7-OD-28](#20-current-owner-decision--g7-od-28--27-september-2026) qualifies the historical professional prerequisites below for G7's proof-lab only. All historical register decisions remain preserved.
+
 ## 2. Decision Classes
 
 - **OWNER DECISION:** an explicit Owner choice; none remains open in this closure.
@@ -186,3 +188,14 @@ Register version 0.1 dated 2 August 2026 recorded 26 `LOCKED`, 16 `DIRECTIONALLY
 ## 19. Exact Next Action
 
 W4 final engineering closeout completed; ready for Controller final W4 verdict. Migration `20260906120000_w4_architecture_remediation.sql` is applied to DEV project `dpddrqjzqohexixgdqiq` under migration identity `20260907085656 w4_architecture_remediation`. DEV transactional smoke PASS (zero residue). W4 is **CLOSED / COMPLETED**; W5 remains **LOCKED / UNSTARTED**. Residual Layer 1 delivery obligations remain tracked in technical master plan Section 15.1; bounded W2/W3 acceptance does not close that residual scope.
+
+## 20. Current Owner Decision — G7-OD-28 — 27 September 2026
+
+- **Owner decision:** professional accounting review is no longer a prerequisite for G7's current proof-lab technical accounting blueprint, separately authorized bounded DEV implementation or non-production accounting validation.
+- **Narrow supersession:** the professional pre-DEV prerequisites in historical ACC-04/Section 17 and older planning documents are superseded only for that scope. Their historical text remains preserved. Financial truth, immutable history, source authority, permissions and separate mutation/publication gates remain binding.
+- **Deferred mandatory gate:** qualified professional validation remains required before production/live accounting activation, statutory financial-statement use, external accounting/compliance claims, VAT/tax or ZATCA/FATOORA activation, regulatory filing or irreversible production cutover. It is **DEFERRED / NOT COMPLETED**; later validation may require policy and implementation changes.
+- **Provisional Owner baseline:** Saudi-endorsed IFRS for SMEs, 2025 edition aware; calendar fiscal year; working SAR functional/operating currency and SAR-only first implementation; VAT not registered/inactive and ZATCA/FATOORA inactive. Eligibility, legal fiscal evidence and final professional conclusions remain pending without blocking DEV design.
+- **Economic boundaries:** normal G7 direct contracts use Principal with supplier subcontractors; Agent requires materially different facts. Invoice != Cash != Revenue; recognition follows evidenced promised performance. Commitment != receipt != accrual != bill != payment. Advances, reimbursements, petty cash, corrections and bank reconciliation retain distinct facts. Accounting dates, immutable balanced journals, evidenced inception and explicit close/lock/reopen authority are required; App Admin has no automatic accounting-close authority.
+- **Protected Product Truth:** W8/W8B managerial authority remains separate from accounting profit/period close; Service/Event is the first analytic dimension. W9 remains CLOSED / COMPLETE / OWNER-ACCEPTED / PUBLISHED. One product/codebase with bounded accounting configuration seams; no Layer 2, tenancy, multi-company architecture, generic policy engine, subscriptions or tax/integration activation.
+- **Current delivery:** [W10 policy](w10-accounting-policy.md) and [technical blueprint](w10-accounting-technical-blueprint.md) are documentation candidates: **W10 POLICY / TECHNICAL BLUEPRINT — ACTIVE; W10 RUNTIME IMPLEMENTATION — NOT STARTED**. The current task grants documentation writes in five exact paths only, no code/database/migration/DEV mutation/deployment/staging/commit/push authority.
+- **Current next action (supersedes historical Section 19 next action):** Controller review of the five-file documentation diff and independent Reviewer findings. Any proposed W10A implementation requires separate exact Owner authorization.

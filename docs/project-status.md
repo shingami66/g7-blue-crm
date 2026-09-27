@@ -11,8 +11,9 @@
 - **W9 — CLOSED / COMPLETE / OWNER-ACCEPTED / PUBLISHED.** The current Dashboards/Reports lane is satisfied by W9A1 and W9B; no additional current W9 implementation slice is listed.
 - **Deferred W9B queues:** supplier bill/payment/advance and Event Cost Close queues remain deferred where no safe bounded eligibility source exists; these deferrals do not reopen W9B.
 - **W9B database/deployment boundary:** no migration or database mutation was required or performed; no deployment occurred.
-- **W10 — NOT STARTED.** Accounting remains behind professional gates; generic/future accounting boundaries remain preserved.
-- **EXACT NEXT ACTION:** Return to the Controller/Owner for the next separately authorized roadmap task. Do not start W10 automatically.
+- **W10 POLICY / TECHNICAL BLUEPRINT — ACTIVE.** The [provisional accounting policy](product/w10-accounting-policy.md) and [technical blueprint](product/w10-accounting-technical-blueprint.md) are documentation candidates for Controller review under [G7-OD-28](product/event-erp-decision-register.md#20-current-owner-decision--g7-od-28--27-september-2026).
+- **W10 RUNTIME IMPLEMENTATION — NOT STARTED.** G7-OD-28 permits separately authorized bounded DEV accounting work without prerequisite professional review; this documentation task grants no code/database/migration/deployment/publication authority. Professional validation is deferred, not completed, and remains mandatory before production/live accounting, statutory/external accounting claims, VAT/tax or ZATCA/FATOORA activation, regulatory filing or irreversible production cutover. VAT/ZATCA remain inactive; Layer 2 remains deferred.
+- **EXACT NEXT ACTION:** Controller review of the five-file W10 documentation diff and independent Reviewer findings. Any W10A implementation requires a separate exact Owner authorization; do not start it automatically.
 
 > The dated delivery section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated sections remain historical records.
 

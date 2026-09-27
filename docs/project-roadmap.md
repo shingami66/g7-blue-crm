@@ -9,8 +9,9 @@
   - Supplier bill/payment/advance and Event Cost Close action queues remain deferred where no safe bounded eligibility source exists; these deferrals do not reopen W9B.
 - **W9 — CLOSED / COMPLETE / OWNER-ACCEPTED / PUBLISHED.** The current Dashboards/Reports lane is satisfied by W9A1 and W9B; no additional current W9 implementation slice is listed. Future SaaS activation gates remain deferred and are not current W9 delivery work.
 - **W9B database/deployment boundary:** no migration or database mutation was required or performed; no deployment occurred.
-- **W10 — NOT STARTED.** Accounting remains behind professional gates; GL, revenue recognition, VAT, FATOORA/ZATCA, production deployment, and database mutation are not authorized by these closeouts.
-- **EXACT NEXT ACTION:** Return to the Controller/Owner for the next separately authorized roadmap task. Do not start W10 automatically.
+- **W10 POLICY / TECHNICAL BLUEPRINT — ACTIVE.** The [provisional policy](product/w10-accounting-policy.md) and [technical blueprint / proposed slices](product/w10-accounting-technical-blueprint.md#23-proposed-implementation-slices) are documentation candidates under [G7-OD-28](product/event-erp-decision-register.md#20-current-owner-decision--g7-od-28--27-september-2026).
+- **W10 RUNTIME IMPLEMENTATION — NOT STARTED.** Professional review is deferred from the proof-lab blueprint/separately authorized DEV prerequisites to pre-production/live activation, statutory/external accounting claims, VAT/tax or ZATCA/FATOORA activation, regulatory filing and irreversible production cutover; it is not completed. Proposed W10A–I slices each require fresh exact Owner authority, independent review, DEV evidence and Owner acceptance. This documentation task grants no runtime/database/migration/deployment/publication authority. VAT/ZATCA remain inactive and Layer 2 remains deferred.
+- **EXACT NEXT ACTION:** Controller review of the five-file W10 documentation diff and independent Reviewer findings. Do not begin proposed W10A automatically.
 
 > The dated roadmap section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated roadmap history remains unchanged.
 
