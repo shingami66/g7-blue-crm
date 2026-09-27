@@ -16,6 +16,13 @@ const rollbackFixture = readFileSync(
   ),
   "utf8",
 );
+const correctiveMigration = readFileSync(
+  new URL(
+    "../../../supabase/migrations/20260927190322_w10a1_update_accounting_profile_jsonb_key_count.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 const expectedTables = [
   "accounting_profiles",
@@ -52,6 +59,33 @@ test("W10A1 creates only its five authorized accounting tables and five public R
   );
   assert.doesNotMatch(migration, /CREATE\s+(?:OR REPLACE\s+)?VIEW\b/i);
   assert.doesNotMatch(migration, /CREATE TABLE public\.accounting_(?:accounts|periods|journals)\b/i);
+});
+
+test("W10A1 correction changes only the invalid JSONB object-key count", () => {
+  const originalFunction = migration.match(
+    /CREATE FUNCTION public\.update_accounting_profile\([\s\S]*?\$update_profile\$;/,
+  )?.[0];
+  const correctedFunction = correctiveMigration.match(
+    /CREATE OR REPLACE FUNCTION public\.update_accounting_profile\([\s\S]*?\$update_profile\$;/,
+  )?.[0];
+  assert.ok(originalFunction, "applied W10A1 update_accounting_profile definition is present");
+  assert.ok(correctedFunction, "corrective update_accounting_profile definition is present");
+
+  const normalize = (sql: string) => sql.replace(/\r\n/g, "\n");
+  const expectedCorrection = originalFunction
+    .replace(/^CREATE FUNCTION/m, "CREATE OR REPLACE FUNCTION")
+    .replace(
+      "jsonb_object_length(p_profile)<>20",
+      "(SELECT count(*) FROM jsonb_object_keys(p_profile)) <> 20",
+    );
+
+  assert.equal(normalize(correctedFunction), normalize(expectedCorrection));
+  assert.match(correctedFunction, /\(SELECT count\(\*\) FROM jsonb_object_keys\(p_profile\)\) <> 20/);
+  assert.doesNotMatch(correctedFunction, /jsonb_object_length\s*\(/i);
+  assert.match(correctedFunction, /NOT \(p_profile \?& v_keys\)/);
+
+  const migrationEnvelope = normalize(correctiveMigration.replace(correctedFunction, "")).trim();
+  assert.match(migrationEnvelope, /^--[^\n]+\nBEGIN;\s*COMMIT;$/);
 });
 
 test("profile version checks preserve reason validation and uniquely name evidence_ref", () => {
