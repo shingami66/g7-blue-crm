@@ -205,9 +205,6 @@ CREATE TABLE public.accounting_capability_events (
   CONSTRAINT accounting_capability_events_revision_key
     UNIQUE (profile_id,target_user_id,capability,revision),
   CONSTRAINT accounting_capability_events_event_key UNIQUE (foundation_event_id),
-  CONSTRAINT accounting_capability_events_allow_catalog_check CHECK (
-    effect <> 'ALLOW' OR capability <> 'accounting:manage_authority'
-  ),
   CONSTRAINT accounting_capability_events_expiry_check CHECK (
     expires_at IS NULL OR expires_at > created_at
   )

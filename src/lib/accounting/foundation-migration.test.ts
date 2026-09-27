@@ -66,6 +66,32 @@ test("W10A1 catalog is fixed, with only view and profile management grantable", 
   assert.doesNotMatch(seed, /INSERT INTO public\.accounting_(?:profiles|profile_versions|capability_events|foundation_events)\b/i);
 });
 
+test("manage_authority bootstrap is storable by owner while runtime ALLOW remains prohibited", () => {
+  const capabilityEvents = migration.slice(
+    migration.indexOf("CREATE TABLE public.accounting_capability_events"),
+    migration.indexOf("INSERT INTO public.accounting_capability_catalog"),
+  );
+  assert.match(capabilityEvents, /effect text NOT NULL CHECK \(effect IN \('ALLOW','DENY','REVOKE'\)\)/);
+  assert.doesNotMatch(capabilityEvents, /accounting_capability_events_allow_catalog_check/);
+  assert.doesNotMatch(capabilityEvents, /effect\s*<>\s*'ALLOW'[\s\S]*?capability\s*<>\s*'accounting:manage_authority'/);
+  assert.match(migration, /\('accounting:manage_authority',true,false,'W10A1'\)/);
+
+  const ownerBootstrap = rollbackFixture.slice(
+    rollbackFixture.indexOf("-- Owner-only synthetic bootstrap"),
+    rollbackFixture.indexOf("SET LOCAL ROLE service_role;"),
+  );
+  assert.match(ownerBootstrap, /INSERT INTO public\.accounting_capability_events\([\s\S]*?accounting:manage_authority',1,'ALLOW'/);
+
+  const setFunction = migration.slice(
+    migration.indexOf("CREATE FUNCTION public.set_accounting_capability"),
+    migration.indexOf("CREATE FUNCTION public.update_accounting_profile"),
+  );
+  assert.match(
+    setFunction,
+    /p_effect='ALLOW' AND \(NOT v_catalog\.enabled OR NOT v_catalog\.runtime_allow_grantable\s+OR p_capability='accounting:manage_authority'\)[\s\S]*?capability_not_grantable/,
+  );
+});
+
 test("all five tables enable RLS and deny direct application-role table access", () => {
   for (const table of expectedTables) {
     assert.match(migration, new RegExp(`ALTER TABLE public\\.${table} ENABLE ROW LEVEL SECURITY;`));
