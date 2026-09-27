@@ -239,6 +239,36 @@ test("foundation events, request fingerprints, audit mirrors, and migration pref
   assert.doesNotMatch(migration, /ALTER TABLE public\.audit_logs/i);
 });
 
+test("capability audit mirror assertion matches request IDs from audit details", () => {
+  const setFunction = migration.slice(
+    migration.indexOf("CREATE FUNCTION public.set_accounting_capability"),
+    migration.indexOf("CREATE FUNCTION public.update_accounting_profile"),
+  );
+  const capabilityAuditInsert = setFunction.slice(
+    setFunction.indexOf("INSERT INTO public.audit_logs("),
+  );
+  assert.match(
+    capabilityAuditInsert,
+    /VALUES \('create','accounting_capability_event',v_capability_event_id,[\s\S]*?'request_id',p_request_id\)/,
+  );
+
+  const capabilityAuditAssertion = rollbackFixture.match(
+    /SELECT count\(\*\) INTO v_count FROM public\.audit_logs\s+WHERE entity_type='accounting_capability_event'[\s\S]*?IF v_count<>4 THEN RAISE EXCEPTION 'accounting capability audit mirror missing or duplicated';/,
+  )?.[0];
+  assert.ok(capabilityAuditAssertion, "four-row capability audit mirror assertion is present");
+  assert.match(capabilityAuditAssertion, /details->>'request_id'\s+IN\s*\(/);
+  assert.doesNotMatch(capabilityAuditAssertion, /entity_id/);
+  assert.deepEqual(
+    [...capabilityAuditAssertion.matchAll(/'00000000-0000-4000-8000-00000000a41[1-4]'/g)].map(([id]) => id),
+    [
+      "'00000000-0000-4000-8000-00000000a411'",
+      "'00000000-0000-4000-8000-00000000a412'",
+      "'00000000-0000-4000-8000-00000000a413'",
+      "'00000000-0000-4000-8000-00000000a414'",
+    ],
+  );
+});
+
 test("DEV regression fixture is rollback-scoped and includes post-rollback residue assertions", () => {
   assert.match(rollbackFixture, /^--[\s\S]*?\nBEGIN;/);
   assert.match(rollbackFixture, /SET LOCAL ROLE service_role;/);

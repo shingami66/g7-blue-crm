@@ -246,7 +246,7 @@ DECLARE v_count integer;
 BEGIN
   SELECT count(*) INTO v_count FROM public.audit_logs
   WHERE entity_type='accounting_capability_event'
-    AND entity_id IN (
+    AND details->>'request_id' IN (
       '00000000-0000-4000-8000-00000000a411','00000000-0000-4000-8000-00000000a412',
       '00000000-0000-4000-8000-00000000a413','00000000-0000-4000-8000-00000000a414'
     );
