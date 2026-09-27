@@ -24,8 +24,12 @@ registerHooks({
 });
 
 const {
+  accountingAccountVersionSchema,
   accountingCapabilitySchema,
+  accountingPeriodVersionSchema,
   accountingProfileInputSchema,
+  saveAccountingAccountInputSchema,
+  saveAccountingPeriodInputSchema,
   setAccountingCapabilityInputSchema,
 } = await import("./schemas.ts");
 
@@ -135,5 +139,117 @@ test("authority request schema requires revisions, request identity, and no expi
   assert.equal(
     setAccountingCapabilityInputSchema.safeParse({ ...base, unexpected_actor_id: "browser-controlled" }).success,
     false,
+  );
+});
+
+
+const chartAccount = {
+  account_code: "TEMP-001",
+  name_en: "Synthetic control heading",
+  name_ar: "رأس اصطناعي",
+  account_type: "ASSET",
+  category: "synthetic",
+  normal_balance: "DEBIT",
+  account_kind: "NON_POSTING",
+  parent_account_id: null,
+  is_active: true,
+  is_protected: true,
+  control_classification: "CASH_ACCOUNTABILITY",
+} as const;
+
+test("account save schema preserves versioned identity and protected control classification", () => {
+  const create = {
+    account_id: null,
+    expected_version: 0,
+    account: chartAccount,
+    reason: "Synthetic chart regression",
+    evidence_ref: null,
+    request_id: "00000000-0000-4000-8000-00000000a551",
+  };
+  assert.equal(saveAccountingAccountInputSchema.safeParse(create).success, true);
+  assert.equal(
+    saveAccountingAccountInputSchema.safeParse({ ...create, account_id: "00000000-0000-4000-8000-00000000a552" }).success,
+    false,
+  );
+  assert.equal(
+    saveAccountingAccountInputSchema.safeParse({
+      ...create,
+      account: { ...chartAccount, is_protected: false },
+    }).success,
+    false,
+  );
+  assert.equal(
+    saveAccountingAccountInputSchema.safeParse({
+      ...create,
+      account: { ...chartAccount, parent_account_id: "not-a-uuid" },
+    }).success,
+    false,
+  );
+  assert.equal(
+    accountingAccountVersionSchema.safeParse({
+      ...chartAccount,
+      account_id: "00000000-0000-4000-8000-00000000a553",
+      profile_id: "00000000-0000-4000-8000-00000000a554",
+      version: 1,
+      is_current: true,
+      previous_version: null,
+      effective_from: "2026-09-27T00:00:00Z",
+      reason: "Synthetic chart regression",
+      evidence_ref: null,
+      created_by: "00000000-0000-4000-8000-00000000a555",
+      created_at: "2026-09-27T00:00:00Z",
+    }).success,
+    true,
+  );
+});
+
+test("period schema supports arbitrary OPEN boundaries and rejects invalid, reversed, or close-state input", () => {
+  const create = {
+    period_id: null,
+    expected_version: 0,
+    period: { start_date: "2026-10-03", end_date: "2026-10-19", status: "OPEN" },
+    reason: "Synthetic period regression",
+    evidence_ref: null,
+    request_id: "00000000-0000-4000-8000-00000000a561",
+  };
+  assert.equal(saveAccountingPeriodInputSchema.safeParse(create).success, true);
+  assert.equal(
+    saveAccountingPeriodInputSchema.safeParse({
+      ...create,
+      period: { start_date: "2026-10-20", end_date: "2026-10-19", status: "OPEN" },
+    }).success,
+    false,
+  );
+  assert.equal(
+    saveAccountingPeriodInputSchema.safeParse({
+      ...create,
+      period: { start_date: "2026-02-29", end_date: "2026-03-02", status: "OPEN" },
+    }).success,
+    false,
+  );
+  assert.equal(
+    saveAccountingPeriodInputSchema.safeParse({
+      ...create,
+      period: { start_date: "2026-10-03", end_date: "2026-10-19", status: "CLOSED" },
+    }).success,
+    false,
+  );
+  assert.equal(
+    accountingPeriodVersionSchema.safeParse({
+      period_id: "00000000-0000-4000-8000-00000000a562",
+      profile_id: "00000000-0000-4000-8000-00000000a554",
+      version: 1,
+      is_current: true,
+      previous_version: null,
+      start_date: "2026-10-03",
+      end_date: "2026-10-19",
+      status: "OPEN",
+      effective_from: "2026-09-27T00:00:00Z",
+      reason: "Synthetic period regression",
+      evidence_ref: null,
+      created_by: "00000000-0000-4000-8000-00000000a555",
+      created_at: "2026-09-27T00:00:00Z",
+    }).success,
+    true,
   );
 });

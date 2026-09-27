@@ -139,3 +139,153 @@ export const updateAccountingProfileInputSchema = z
 export const listAccountingCapabilityAssignmentsInputSchema = z
   .object({ target_user_id: z.string().uuid() })
   .strict();
+
+
+const accountingAccountInputSchema = z
+  .object({
+    account_code: boundedText(40),
+    name_en: boundedText(160),
+    name_ar: boundedText(160),
+    account_type: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]),
+    category: boundedText(80),
+    normal_balance: z.enum(["DEBIT", "CREDIT"]),
+    account_kind: z.enum(["POSTING", "NON_POSTING"]),
+    parent_account_id: z.string().uuid().nullable(),
+    is_active: z.boolean(),
+    is_protected: z.boolean(),
+    control_classification: z.enum([
+      "NONE",
+      "ACCOUNTS_RECEIVABLE",
+      "ACCOUNTS_PAYABLE",
+      "CUSTOMER_ADVANCE",
+      "SUPPLIER_ADVANCE",
+      "CONTRACT_LIABILITY",
+      "CASH_ACCOUNTABILITY",
+      "EMPLOYEE_ADVANCE",
+    ]),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.control_classification !== "NONE" && !value.is_protected) {
+      context.addIssue({
+        code: "custom",
+        path: ["is_protected"],
+        message: "Control accounts must be protected",
+      });
+    }
+  });
+
+export const saveAccountingAccountInputSchema = z
+  .object({
+    account_id: z.string().uuid().nullable(),
+    expected_version: z.number().int().nonnegative(),
+    account: accountingAccountInputSchema,
+    reason: boundedText(2000),
+    evidence_ref: optionalEvidence,
+    request_id: z.string().uuid(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if ((value.account_id === null) !== (value.expected_version === 0)) {
+      context.addIssue({
+        code: "custom",
+        path: ["expected_version"],
+        message: "Create uses version 0 with no identity; revisions require an identity and positive version",
+      });
+    }
+  });
+
+const accountingPeriodInputSchema = z
+  .object({
+    start_date: validDate,
+    end_date: validDate,
+    status: z.literal("OPEN"),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.end_date < value.start_date) {
+      context.addIssue({
+        code: "custom",
+        path: ["end_date"],
+        message: "Period end date must not precede its start date",
+      });
+    }
+  });
+
+export const saveAccountingPeriodInputSchema = z
+  .object({
+    period_id: z.string().uuid().nullable(),
+    expected_version: z.number().int().nonnegative(),
+    period: accountingPeriodInputSchema,
+    reason: boundedText(2000),
+    evidence_ref: optionalEvidence,
+    request_id: z.string().uuid(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if ((value.period_id === null) !== (value.expected_version === 0)) {
+      context.addIssue({
+        code: "custom",
+        path: ["expected_version"],
+        message: "Create uses version 0 with no identity; revisions require an identity and positive version",
+      });
+    }
+  });
+
+export const accountingAccountVersionSchema = z
+  .object({
+    account_id: z.string().uuid(),
+    profile_id: z.string().uuid(),
+    version: z.number().int().positive(),
+    is_current: z.boolean(),
+    previous_version: z.number().int().positive().nullable(),
+    account_code: boundedText(40),
+    name_en: boundedText(160),
+    name_ar: boundedText(160),
+    account_type: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]),
+    category: boundedText(80),
+    normal_balance: z.enum(["DEBIT", "CREDIT"]),
+    account_kind: z.enum(["POSTING", "NON_POSTING"]),
+    parent_account_id: z.string().uuid().nullable(),
+    is_active: z.boolean(),
+    is_protected: z.boolean(),
+    control_classification: z.enum([
+      "NONE",
+      "ACCOUNTS_RECEIVABLE",
+      "ACCOUNTS_PAYABLE",
+      "CUSTOMER_ADVANCE",
+      "SUPPLIER_ADVANCE",
+      "CONTRACT_LIABILITY",
+      "CASH_ACCOUNTABILITY",
+      "EMPLOYEE_ADVANCE",
+    ]),
+    effective_from: z.string(),
+    reason: boundedText(2000),
+    evidence_ref: nullableEvidence,
+    created_by: z.string().uuid(),
+    created_at: z.string(),
+  })
+  .strict();
+
+export const accountingPeriodVersionSchema = z
+  .object({
+    period_id: z.string().uuid(),
+    profile_id: z.string().uuid(),
+    version: z.number().int().positive(),
+    is_current: z.boolean(),
+    previous_version: z.number().int().positive().nullable(),
+    start_date: validDate,
+    end_date: validDate,
+    status: z.literal("OPEN"),
+    effective_from: z.string(),
+    reason: boundedText(2000),
+    evidence_ref: nullableEvidence,
+    created_by: z.string().uuid(),
+    created_at: z.string(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.end_date < value.start_date) {
+      context.addIssue({ code: "custom", path: ["end_date"], message: "Invalid period range" });
+    }
+  });

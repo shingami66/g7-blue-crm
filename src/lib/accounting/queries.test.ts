@@ -60,7 +60,7 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { getAccountingProfile, listAccountingCapabilityAssignments } = await import("./queries.ts");
+const { getAccountingProfile, listAccountingAccounts, listAccountingCapabilityAssignments, listAccountingPeriods } = await import("./queries.ts");
 const { AuthDependencyError } = await import("../auth/errors.ts");
 
 function resetState(rpc: QueryState["rpc"]) {
@@ -118,4 +118,74 @@ test("query dependency and malformed responses fail closed without exposing data
 
   resetState(async () => ({ data: null, error: { code: "57P01" } }));
   await assert.rejects(() => listAccountingCapabilityAssignments({ target_user_id: "9f09e715-9698-4804-a72b-331ebc776b8d" }), AuthDependencyError);
+});
+
+
+test("chart and period reads use the existing explicit accounting capability resolver and validate history", async () => {
+  const accountRow = {
+    account_id: "00000000-0000-4000-8000-00000000a591",
+    profile_id: "00000000-0000-4000-8000-00000000a592",
+    version: 1,
+    is_current: true,
+    previous_version: null,
+    account_code: "TEMP-001",
+    name_en: "Synthetic account",
+    name_ar: "حساب اصطناعي",
+    account_type: "ASSET",
+    category: "synthetic",
+    normal_balance: "DEBIT",
+    account_kind: "POSTING",
+    parent_account_id: null,
+    is_active: true,
+    is_protected: false,
+    control_classification: "NONE",
+    effective_from: "2026-09-27T00:00:00Z",
+    reason: "Synthetic chart read",
+    evidence_ref: null,
+    created_by: "00000000-0000-4000-8000-00000000a593",
+    created_at: "2026-09-27T00:00:00Z",
+  };
+  const periodRow = {
+    period_id: "00000000-0000-4000-8000-00000000a594",
+    profile_id: "00000000-0000-4000-8000-00000000a592",
+    version: 1,
+    is_current: true,
+    previous_version: null,
+    start_date: "2026-10-03",
+    end_date: "2026-10-19",
+    status: "OPEN",
+    effective_from: "2026-09-27T00:00:00Z",
+    reason: "Synthetic period read",
+    evidence_ref: null,
+    created_by: "00000000-0000-4000-8000-00000000a593",
+    created_at: "2026-09-27T00:00:00Z",
+  };
+  resetState(async (name, args) => {
+    if (name === "get_accounting_capability") {
+      return {
+        data: args.p_capability === "accounting:manage_chart" || args.p_capability === "accounting:manage_periods",
+        error: null,
+      };
+    }
+    if (name === "list_accounting_accounts") return { data: [accountRow], error: null };
+    if (name === "list_accounting_periods") return { data: [periodRow], error: null };
+    return { data: null, error: null };
+  });
+
+  assert.deepEqual(await listAccountingAccounts(), [accountRow]);
+  assert.deepEqual(await listAccountingPeriods(), [periodRow]);
+  const capabilityCalls = state.calls.filter(({ name }) => name === "get_accounting_capability");
+  assert.deepEqual(
+    capabilityCalls.map(({ args }) => args.p_capability),
+    ["accounting:view", "accounting:manage_chart", "accounting:view", "accounting:manage_periods"],
+  );
+  assert.equal(state.calls.find(({ name }) => name === "list_accounting_accounts")?.args.p_actor_user_id,
+    "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f");
+  assert.equal("p_actor_role" in (state.calls.find(({ name }) => name === "list_accounting_periods")?.args ?? {}), false);
+});
+
+test("chart and period reads fail closed when explicit accounting grants are absent", async () => {
+  resetState(async () => ({ data: false, error: null }));
+  await assert.rejects(() => listAccountingAccounts(), /Accounting capability required/);
+  assert.equal(state.calls.some(({ name }) => name === "list_accounting_accounts"), false);
 });

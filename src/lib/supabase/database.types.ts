@@ -3471,6 +3471,84 @@ export type Database = {
           version: number | null
         }[]
       }
+      list_accounting_accounts: {
+        Args: { p_actor_user_id: string }
+        Returns: {
+          account_id: string
+          account_kind: string
+          account_code: string
+          account_type: string
+          category: string
+          control_classification: string
+          created_at: string
+          created_by: string
+          effective_from: string
+          evidence_ref: string | null
+          is_active: boolean
+          is_current: boolean
+          is_protected: boolean
+          name_ar: string
+          name_en: string
+          normal_balance: string
+          parent_account_id: string | null
+          previous_version: number | null
+          profile_id: string
+          reason: string
+          version: number
+        }[]
+      }
+      list_accounting_periods: {
+        Args: { p_actor_user_id: string }
+        Returns: {
+          created_at: string
+          created_by: string
+          effective_from: string
+          end_date: string
+          evidence_ref: string | null
+          is_current: boolean
+          period_id: string
+          previous_version: number | null
+          profile_id: string
+          reason: string
+          start_date: string
+          status: string
+          version: number
+        }[]
+      }
+      save_accounting_account: {
+        Args: {
+          p_account: Json
+          p_account_id: string | null
+          p_actor_user_id: string
+          p_evidence_ref: string | null
+          p_expected_version: number
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          account_id: string | null
+          error_code: string | null
+          idempotent_replay: boolean
+          version: number | null
+        }[]
+      }
+      save_accounting_period: {
+        Args: {
+          p_actor_user_id: string
+          p_evidence_ref: string | null
+          p_expected_version: number
+          p_period: Json
+          p_period_id: string | null
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          idempotent_replay: boolean
+          period_id: string | null
+          version: number | null
+        }[]
+      }
       start_service_execution: {
         Args: { p_actor_id: string; p_actor_role: string; p_service_id: string }
         Returns: {

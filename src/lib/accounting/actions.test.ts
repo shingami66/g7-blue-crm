@@ -59,7 +59,7 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { setAccountingCapability, updateAccountingProfile } = await import("./actions.ts");
+const { saveAccountingAccount, saveAccountingPeriod, setAccountingCapability, updateAccountingProfile } = await import("./actions.ts");
 const { AuthDependencyError } = await import("../auth/errors.ts");
 
 const actorId = "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f";
@@ -201,4 +201,84 @@ test("profile action rejects unsupported production and tax states and maps comp
   });
   assert.equal(state.permission, "accounting:manage_profile");
   assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+});
+
+
+test("chart and period actions use only trusted actor IDs and their explicit accounting capabilities", async () => {
+  const account = {
+    account_code: "TEMP-001",
+    name_en: "Synthetic heading",
+    name_ar: "رأس اصطناعي",
+    account_type: "ASSET",
+    category: "synthetic",
+    normal_balance: "DEBIT",
+    account_kind: "NON_POSTING",
+    parent_account_id: null,
+    is_active: true,
+    is_protected: false,
+    control_classification: "NONE",
+  };
+  resetState(async () => ({
+    data: [{ error_code: null, account_id: "00000000-0000-4000-8000-00000000a571", version: 1, idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await saveAccountingAccount({
+    account_id: null,
+    expected_version: 0,
+    account,
+    reason: "Synthetic account",
+    evidence_ref: null,
+    request_id: "00000000-0000-4000-8000-00000000a572",
+  }), {
+    ok: true,
+    value: { account_id: "00000000-0000-4000-8000-00000000a571", version: 1 },
+    idempotentReplay: false,
+  });
+  assert.equal(state.permission, "accounting:manage_chart");
+  assert.equal(state.calls[0].name, "save_accounting_account");
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+  assert.deepEqual(state.calls[0].args.p_account, account);
+  assert.equal("p_actor_role" in state.calls[0].args, false);
+
+  resetState(async () => ({
+    data: [{ error_code: null, period_id: "00000000-0000-4000-8000-00000000a573", version: 1, idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await saveAccountingPeriod({
+    period_id: null,
+    expected_version: 0,
+    period: { start_date: "2026-10-03", end_date: "2026-10-19", status: "OPEN" },
+    reason: "Synthetic period",
+    evidence_ref: null,
+    request_id: "00000000-0000-4000-8000-00000000a574",
+  }), {
+    ok: true,
+    value: { period_id: "00000000-0000-4000-8000-00000000a573", version: 1 },
+    idempotentReplay: false,
+  });
+  assert.equal(state.permission, "accounting:manage_periods");
+  assert.equal(state.calls[0].name, "save_accounting_period");
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+  assert.equal("p_actor_role" in state.calls[0].args, false);
+});
+
+test("chart and period actions reject invalid revisions and non-OPEN period input before RPC", async () => {
+  resetState(async () => ({ data: [], error: null }));
+  assert.deepEqual(await saveAccountingAccount({
+    account_id: null,
+    expected_version: 2,
+    account: {},
+    reason: "Invalid",
+    evidence_ref: null,
+    request_id: "00000000-0000-4000-8000-00000000a581",
+  }), { ok: false, code: "invalid_input" });
+  assert.deepEqual(await saveAccountingPeriod({
+    period_id: null,
+    expected_version: 0,
+    period: { start_date: "2026-10-03", end_date: "2026-10-19", status: "CLOSED" },
+    reason: "Invalid",
+    evidence_ref: null,
+    request_id: "00000000-0000-4000-8000-00000000a582",
+  }), { ok: false, code: "invalid_input" });
+  assert.equal(state.calls.length, 0);
 });

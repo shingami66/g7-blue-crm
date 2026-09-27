@@ -82,8 +82,85 @@ export type AccountingActionErrorCode =
   | "unsupported_profile_value"
   | "profile_incomplete"
   | "company_settings_mismatch"
+  | "invalid_period_boundary"
+  | "account_not_found"
+  | "period_not_found"
+  | "account_code_conflict"
+  | "parent_not_found"
+  | "parent_must_be_non_posting"
+  | "account_cycle"
+  | "account_has_children"
+  | "protected_account_invariant"
+  | "period_overlap"
   | "dependency_failure";
 
 export type AccountingActionResult<T> =
   | { ok: true; value: T; idempotentReplay?: boolean }
   | { ok: false; code: AccountingActionErrorCode };
+
+export type AccountingAccountType = "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE";
+export type AccountingNormalBalance = "DEBIT" | "CREDIT";
+export type AccountingAccountKind = "POSTING" | "NON_POSTING";
+export type AccountingControlClassification =
+  | "NONE"
+  | "ACCOUNTS_RECEIVABLE"
+  | "ACCOUNTS_PAYABLE"
+  | "CUSTOMER_ADVANCE"
+  | "SUPPLIER_ADVANCE"
+  | "CONTRACT_LIABILITY"
+  | "CASH_ACCOUNTABILITY"
+  | "EMPLOYEE_ADVANCE";
+
+export type AccountingAccountInput = {
+  account_code: string;
+  name_en: string;
+  name_ar: string;
+  account_type: AccountingAccountType;
+  category: string;
+  normal_balance: AccountingNormalBalance;
+  account_kind: AccountingAccountKind;
+  parent_account_id: string | null;
+  is_active: boolean;
+  is_protected: boolean;
+  control_classification: AccountingControlClassification;
+};
+
+export type AccountingAccountVersion = AccountingAccountInput & {
+  account_id: string;
+  profile_id: string;
+  version: number;
+  is_current: boolean;
+  previous_version: number | null;
+  effective_from: string;
+  reason: string;
+  evidence_ref: string | null;
+  created_by: string;
+  created_at: string;
+};
+
+export type AccountingPeriodStatus = "OPEN";
+
+export type AccountingPeriodInput = {
+  start_date: string;
+  end_date: string;
+  status: AccountingPeriodStatus;
+};
+
+export type AccountingPeriodVersion = AccountingPeriodInput & {
+  period_id: string;
+  profile_id: string;
+  version: number;
+  is_current: boolean;
+  previous_version: number | null;
+  effective_from: string;
+  reason: string;
+  evidence_ref: string | null;
+  created_by: string;
+  created_at: string;
+};
+
+export type AccountingVersionResult = {
+  account_id?: string;
+  period_id?: string;
+  version: number;
+};

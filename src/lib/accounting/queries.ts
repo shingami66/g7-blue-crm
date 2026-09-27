@@ -4,12 +4,18 @@ import { ForbiddenError, AuthDependencyError } from "@/lib/auth/errors";
 import { requirePermission, requireUser } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+  accountingAccountVersionSchema,
   accountingCapabilityAssignmentSchema,
+  accountingPeriodVersionSchema,
   accountingProfileResultSchema,
   listAccountingCapabilityAssignmentsInputSchema,
 } from "./schemas";
 import { resolveAccountingCapability } from "./permissions";
-import type { AccountingCapabilityAssignment } from "./types";
+import type {
+  AccountingAccountVersion,
+  AccountingCapabilityAssignment,
+  AccountingPeriodVersion,
+} from "./types";
 
 function throwSafeRpcError(error: { code?: string } | null): never {
   if (error?.code === "42501") {
@@ -76,4 +82,67 @@ export async function listAccountingCapabilityAssignments(input: unknown) {
     assignments.push(parsedRow.data);
   }
   return assignments;
+}
+
+
+async function requireAccountingReadCapability(actorId: string, managerCapability: "accounting:manage_chart" | "accounting:manage_periods") {
+  const canView = await resolveAccountingCapability(actorId, "accounting:view");
+  const canManage = canView ? false : await resolveAccountingCapability(actorId, managerCapability);
+  if (!canView && !canManage) {
+    throw new ForbiddenError("Accounting capability required");
+  }
+}
+
+export async function listAccountingAccounts(): Promise<AccountingAccountVersion[]> {
+  const actor = await requireUser();
+  await requireAccountingReadCapability(actor.id, "accounting:manage_chart");
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("list_accounting_accounts", {
+      p_actor_user_id: actor.id,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting chart dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  if (!Array.isArray(result.data)) {
+    throw new AuthDependencyError("Accounting chart response was invalid");
+  }
+  const versions: AccountingAccountVersion[] = [];
+  for (const row of result.data) {
+    const parsed = accountingAccountVersionSchema.safeParse(row);
+    if (!parsed.success) {
+      throw new AuthDependencyError("Accounting chart response was invalid");
+    }
+    versions.push(parsed.data);
+  }
+  return versions;
+}
+
+export async function listAccountingPeriods(): Promise<AccountingPeriodVersion[]> {
+  const actor = await requireUser();
+  await requireAccountingReadCapability(actor.id, "accounting:manage_periods");
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("list_accounting_periods", {
+      p_actor_user_id: actor.id,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting periods dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  if (!Array.isArray(result.data)) {
+    throw new AuthDependencyError("Accounting periods response was invalid");
+  }
+  const versions: AccountingPeriodVersion[] = [];
+  for (const row of result.data) {
+    const parsed = accountingPeriodVersionSchema.safeParse(row);
+    if (!parsed.success) {
+      throw new AuthDependencyError("Accounting periods response was invalid");
+    }
+    versions.push(parsed.data);
+  }
+  return versions;
 }
