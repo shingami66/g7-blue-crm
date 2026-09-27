@@ -10,6 +10,10 @@ const identityGuardCorrection = readFileSync(
   new URL("../../../supabase/migrations/20260927232926_w10b_identity_guard_field_scope.sql", import.meta.url),
   "utf8",
 );
+const postingRuleAuditCorrection = readFileSync(
+  new URL("../../../supabase/migrations/20260927233953_w10b_posting_rule_audit_action.sql", import.meta.url),
+  "utf8",
+);
 const rollbackFixture = readFileSync(
   new URL("../../../supabase/verification/w10b_journal_core_rollback_regression.sql", import.meta.url),
   "utf8",
@@ -121,4 +125,33 @@ test("W10B correction scopes shared identity-trigger fields to the matching tabl
   assert.match(identityGuardCorrection, /ELSIF TG_TABLE_NAME='accounting_journals' THEN\s+IF OLD\.correction_group_id IS DISTINCT FROM NEW\.correction_group_id\s+OR OLD\.reversal_of_journal_id IS DISTINCT FROM NEW\.reversal_of_journal_id THEN/);
   assert.doesNotMatch(identityGuardCorrection, /TG_TABLE_NAME='accounting_journals'\s+AND\s+\(OLD\.correction_group_id/);
   assert.match(identityGuardCorrection, /REVOKE ALL ON FUNCTION public\.guard_accounting_w10b_identity\(\)\s+FROM PUBLIC,anon,authenticated,service_role/);
+});
+
+test("W10B rule audit correction uses the permitted create/update action vocabulary", () => {
+  assert.match(postingRuleAuditCorrection, /CREATE OR REPLACE FUNCTION public\.save_accounting_posting_rule\(/);
+  assert.match(postingRuleAuditCorrection, /VALUES\(CASE WHEN v_new_version=1 THEN 'create' ELSE 'update' END,/);
+  assert.doesNotMatch(postingRuleAuditCorrection, /VALUES\('save','accounting_posting_rule'/);
+  assert.match(postingRuleAuditCorrection, /REVOKE ALL ON FUNCTION public\.save_accounting_posting_rule\(/);
+  assert.match(postingRuleAuditCorrection, /GRANT EXECUTE ON FUNCTION public\.save_accounting_posting_rule\(/);
+  assert.match(rollbackFixture, /posting rule create audit action not captured/);
+  assert.match(rollbackFixture, /posting rule update audit action not captured/);
+  const originalRuleFunctionStart = migration.indexOf("CREATE FUNCTION public.save_accounting_posting_rule(");
+  const originalRuleFunctionEnd = migration.indexOf("$save_rule$;", originalRuleFunctionStart) + "$save_rule$;".length;
+  const correctedRuleFunctionStart = postingRuleAuditCorrection.indexOf("CREATE OR REPLACE FUNCTION public.save_accounting_posting_rule(");
+  const correctedRuleFunctionEnd = postingRuleAuditCorrection.indexOf("$save_rule$;", correctedRuleFunctionStart) + "$save_rule$;".length;
+  const originalRuleFunction = migration.slice(originalRuleFunctionStart, originalRuleFunctionEnd);
+  const correctedRuleFunction = postingRuleAuditCorrection.slice(correctedRuleFunctionStart, correctedRuleFunctionEnd);
+  assert.ok(originalRuleFunctionStart >= 0 && correctedRuleFunctionStart >= 0);
+  assert.equal(
+    correctedRuleFunction,
+    originalRuleFunction
+      .replace(
+        "CREATE FUNCTION public.save_accounting_posting_rule(",
+        "CREATE OR REPLACE FUNCTION public.save_accounting_posting_rule(",
+      )
+      .replace(
+        "VALUES('save','accounting_posting_rule',v_rule_id,p_actor_user_id::text,",
+        "VALUES(CASE WHEN v_new_version=1 THEN 'create' ELSE 'update' END,\n    'accounting_posting_rule',v_rule_id,p_actor_user_id::text,",
+      ),
+  );
 });

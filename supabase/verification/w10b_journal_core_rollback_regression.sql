@@ -273,9 +273,26 @@ BEGIN
       jsonb_build_object('mapping_key','service_required_credit','account_id',v_credit,'account_version',1,'allowed_side','CREDIT','service_requirement','REQUIRED')));
   SELECT * INTO v_result FROM public.save_accounting_posting_rule(
     '00000000-0000-4000-8000-00000000b811',NULL,0,v_rule,'Create synthetic manual rule',NULL,'00000000-0000-4000-8000-00000000b852');
-  IF v_result.error_code IS NOT NULL THEN RAISE EXCEPTION 'valid posting rule creation failed'; END IF;
+  IF v_result.error_code IS NOT NULL THEN RAISE EXCEPTION 'valid posting rule creation failed: %',v_result.error_code; END IF;
   v_rule_id:=v_result.posting_rule_id;
   v_rule_version:=1;
+  IF NOT EXISTS (SELECT 1 FROM public.audit_logs
+      WHERE entity_type='accounting_posting_rule' AND entity_id=v_rule_id
+        AND action='create' AND details->>'request_id'='00000000-0000-4000-8000-00000000b852') THEN
+    RAISE EXCEPTION 'posting rule create audit action not captured';
+  END IF;
+  v_rule:=jsonb_set(v_rule,'{name_en}',to_jsonb('Synthetic manual rule revision'::text),false);
+  SELECT * INTO v_result FROM public.save_accounting_posting_rule(
+    '00000000-0000-4000-8000-00000000b811',v_rule_id,1,v_rule,'Update synthetic manual rule',NULL,'00000000-0000-4000-8000-00000000b8f0');
+  IF v_result.error_code IS NOT NULL OR v_result.version<>2 THEN
+    RAISE EXCEPTION 'valid posting rule update failed: %',v_result.error_code;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.audit_logs
+      WHERE entity_type='accounting_posting_rule' AND entity_id=v_rule_id
+        AND action='update' AND details->>'request_id'='00000000-0000-4000-8000-00000000b8f0') THEN
+    RAISE EXCEPTION 'posting rule update audit action not captured';
+  END IF;
+  v_rule_version:=2;
 
   v_lines:=jsonb_build_array(
     jsonb_build_object('mapping_key','asset_debit','side','DEBIT','amount_halalah','2500','service_id',NULL,'description_en','Synthetic debit','description_ar','مدين اصطناعي'),
@@ -331,9 +348,9 @@ BEGIN
 
   v_rule:=jsonb_set(v_rule,'{mappings,0,account_version}',to_jsonb(v_stale_account_version),false);
   SELECT * INTO v_result FROM public.save_accounting_posting_rule(
-    '00000000-0000-4000-8000-00000000b811',v_rule_id,1,v_rule,'Pin revised account version',NULL,'00000000-0000-4000-8000-00000000b859');
-  IF v_result.error_code IS NOT NULL OR v_result.version<>2 THEN RAISE EXCEPTION 'posting rule revision failed'; END IF;
-  v_rule_version:=2;
+    '00000000-0000-4000-8000-00000000b811',v_rule_id,2,v_rule,'Pin revised account version',NULL,'00000000-0000-4000-8000-00000000b859');
+  IF v_result.error_code IS NOT NULL OR v_result.version<>3 THEN RAISE EXCEPTION 'posting rule revision failed'; END IF;
+  v_rule_version:=3;
 
   v_journal:=jsonb_set(v_journal,'{posting_rule_id}',to_jsonb(v_rule_id),false);
   v_journal:=jsonb_set(v_journal,'{rule_version}',to_jsonb(v_rule_version),false);
@@ -348,9 +365,9 @@ BEGIN
   v_rule:=jsonb_set(v_rule,'{name_en}',to_jsonb('Synthetic manual rule v3'::text),false);
   v_rule:=jsonb_set(v_rule,'{name_ar}',to_jsonb('قاعدة يدوية اصطناعية ٣'::text),false);
   SELECT * INTO v_result FROM public.save_accounting_posting_rule(
-    '00000000-0000-4000-8000-00000000b811',v_rule_id,2,v_rule,'Change rule after draft',NULL,'00000000-0000-4000-8000-00000000b85b');
-  IF v_result.error_code IS NOT NULL OR v_result.version<>3 THEN RAISE EXCEPTION 'posting rule third version failed'; END IF;
-  v_rule_version:=3;
+    '00000000-0000-4000-8000-00000000b811',v_rule_id,3,v_rule,'Change rule after draft',NULL,'00000000-0000-4000-8000-00000000b85b');
+  IF v_result.error_code IS NOT NULL OR v_result.version<>4 THEN RAISE EXCEPTION 'posting rule fourth version failed'; END IF;
+  v_rule_version:=4;
   SELECT * INTO v_result FROM public.post_accounting_journal(
     '00000000-0000-4000-8000-00000000b811',v_stale_rule_id,1,'00000000-0000-4000-8000-00000000b85c');
   IF v_result.error_code IS DISTINCT FROM 'posting_rule_changed' THEN RAISE EXCEPTION 'post-time rule version change was not rejected'; END IF;
