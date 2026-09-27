@@ -6,6 +6,10 @@ const migration = readFileSync(
   new URL("../../../supabase/migrations/20260927220412_w10b_balanced_journal_gl_trial_balance.sql", import.meta.url),
   "utf8",
 );
+const identityGuardCorrection = readFileSync(
+  new URL("../../../supabase/migrations/20260927232926_w10b_identity_guard_field_scope.sql", import.meta.url),
+  "utf8",
+);
 const rollbackFixture = readFileSync(
   new URL("../../../supabase/verification/w10b_journal_core_rollback_regression.sql", import.meta.url),
   "utf8",
@@ -109,4 +113,12 @@ test("rollback fixture exercises W10B invariants and checks all synthetic eviden
   assert.match(rollbackFixture, /accounting_journal_events/);
   assert.match(rollbackFixture, /W10B rollback fixture residue detected/);
   assert.doesNotMatch(rollbackFixture, /^\s*(?:COMMIT|DROP|TRUNCATE)\b/im);
+});
+
+test("W10B correction scopes shared identity-trigger fields to the matching table", () => {
+  assert.match(identityGuardCorrection, /CREATE OR REPLACE FUNCTION public\.guard_accounting_w10b_identity\(\)/);
+  assert.match(identityGuardCorrection, /IF TG_TABLE_NAME='accounting_posting_rules' THEN\s+IF OLD\.rule_code IS DISTINCT FROM NEW\.rule_code THEN/);
+  assert.match(identityGuardCorrection, /ELSIF TG_TABLE_NAME='accounting_journals' THEN\s+IF OLD\.correction_group_id IS DISTINCT FROM NEW\.correction_group_id\s+OR OLD\.reversal_of_journal_id IS DISTINCT FROM NEW\.reversal_of_journal_id THEN/);
+  assert.doesNotMatch(identityGuardCorrection, /TG_TABLE_NAME='accounting_journals'\s+AND\s+\(OLD\.correction_group_id/);
+  assert.match(identityGuardCorrection, /REVOKE ALL ON FUNCTION public\.guard_accounting_w10b_identity\(\)\s+FROM PUBLIC,anon,authenticated,service_role/);
 });
