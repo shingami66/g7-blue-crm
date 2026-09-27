@@ -27,6 +27,9 @@ const {
   accountingAccountVersionSchema,
   accountingCapabilitySchema,
   accountingPeriodVersionSchema,
+  accountingGeneralLedgerInputSchema,
+  accountingTrialBalanceInputSchema,
+  prepareAccountingJournalInputSchema,
   accountingProfileInputSchema,
   saveAccountingAccountInputSchema,
   saveAccountingPeriodInputSchema,
@@ -201,6 +204,75 @@ test("account save schema preserves versioned identity and protected control cla
     }).success,
     true,
   );
+});
+
+test("W10B journal and report schemas preserve versioned evidence and bounded cutoff inputs", () => {
+  const journal = {
+    accounting_date: "2301-01-15",
+    period_id: "00000000-0000-4000-8000-00000000b903",
+    period_version: 1,
+    posting_rule_id: "00000000-0000-4000-8000-00000000b904",
+    rule_version: 1,
+    source_record_key: "synthetic-source-1",
+    economic_event_key: "synthetic-event-1",
+    posting_purpose: "manual-correction",
+    description_en: "Synthetic journal",
+    description_ar: "قيد اصطناعي",
+    lines: [
+      { mapping_key: "debit", side: "DEBIT", amount_halalah: "2500", service_id: null, description_en: "Debit", description_ar: "مدين" },
+      { mapping_key: "credit", side: "CREDIT", amount_halalah: "2500", service_id: null, description_en: "Credit", description_ar: "دائن" },
+    ],
+  };
+  const request = {
+    journal_id: null,
+    expected_version: 0,
+    journal,
+    reason: "Synthetic regression",
+    evidence_ref: null,
+    request_id: "00000000-0000-4000-8000-00000000b905",
+  };
+  assert.equal(prepareAccountingJournalInputSchema.safeParse(request).success, true);
+  assert.equal(prepareAccountingJournalInputSchema.safeParse({ ...request, journal: { ...journal, lines: journal.lines.slice(0, 1) } }).success, false);
+  assert.equal(prepareAccountingJournalInputSchema.safeParse({ ...request, actor_user_id: "browser-controlled" }).success, false);
+  assert.equal(prepareAccountingJournalInputSchema.safeParse({ ...request, expected_version: 1 }).success, false);
+
+  const ledgerInput = {
+    from_date: "2301-01-01",
+    through_date: "2301-01-31",
+    recorded_at_cutoff: "2301-02-01T00:00:00Z",
+    account_id: null,
+    service_id: null,
+    offset: 0,
+    limit: 100,
+  };
+  assert.equal(accountingGeneralLedgerInputSchema.safeParse(ledgerInput).success, true);
+  assert.equal(accountingGeneralLedgerInputSchema.safeParse({ ...ledgerInput, through_date: "2300-12-31" }).success, false);
+  assert.equal(accountingGeneralLedgerInputSchema.safeParse({ ...ledgerInput, limit: 501 }).success, false);
+  assert.equal(accountingTrialBalanceInputSchema.safeParse({
+    as_of_date: "2301-01-31",
+    recorded_at_cutoff: null,
+    service_id: null,
+    offset: 0,
+    limit: 100,
+  }).success, true);
+
+  const closedPeriod = {
+    period_id: "00000000-0000-4000-8000-00000000b906",
+    profile_id: "00000000-0000-4000-8000-00000000b907",
+    version: 2,
+    is_current: true,
+    previous_version: 1,
+    start_date: "2301-01-01",
+    end_date: "2301-01-31",
+    status: "CLOSED",
+    effective_from: "2301-02-01T00:00:00Z",
+    reason: "Synthetic period-state seam",
+    evidence_ref: null,
+    created_by: "00000000-0000-4000-8000-00000000b908",
+    created_at: "2301-02-01T00:00:00Z",
+  };
+  assert.equal(accountingPeriodVersionSchema.safeParse(closedPeriod).success, true);
+  assert.equal(accountingPeriodVersionSchema.safeParse({ ...closedPeriod, status: "LOCKED" }).success, true);
 });
 
 test("period schema supports arbitrary OPEN boundaries and rejects invalid, reversed, or close-state input", () => {

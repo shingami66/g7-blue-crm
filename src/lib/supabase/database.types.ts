@@ -3549,6 +3549,130 @@ export type Database = {
           version: number | null
         }[]
       }
+      save_accounting_posting_rule: {
+        Args: {
+          p_actor_user_id: string
+          p_evidence_ref: string | null
+          p_expected_version: number
+          p_posting_rule_id: string | null
+          p_reason: string
+          p_request_id: string
+          p_rule: Json
+        }
+        Returns: {
+          error_code: string | null
+          idempotent_replay: boolean
+          posting_rule_id: string | null
+          version: number | null
+        }[]
+      }
+      list_accounting_posting_rules: {
+        Args: { p_actor_user_id: string }
+        Returns: {
+          created_at: string
+          created_by: string
+          effective_from: string
+          evidence_ref: string | null
+          is_active: boolean
+          is_current: boolean
+          mappings: Json
+          name_ar: string
+          name_en: string
+          posting_rule_id: string
+          previous_version: number | null
+          profile_id: string
+          reason: string
+          rule_code: string
+          version: number
+        }[]
+      }
+      prepare_accounting_journal: {
+        Args: {
+          p_actor_user_id: string
+          p_evidence_ref: string | null
+          p_expected_version: number
+          p_journal: Json
+          p_journal_id: string | null
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          idempotent_replay: boolean
+          journal_id: string | null
+          status: string | null
+          version: number | null
+        }[]
+      }
+      post_accounting_journal: {
+        Args: {
+          p_actor_user_id: string
+          p_expected_version: number
+          p_journal_id: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          idempotent_replay: boolean
+          journal_id: string | null
+          status: string | null
+          version: number | null
+        }[]
+      }
+      reverse_accounting_journal: {
+        Args: {
+          p_accounting_date: string
+          p_actor_user_id: string
+          p_evidence_ref: string | null
+          p_original_journal_id: string
+          p_period_id: string
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          idempotent_replay: boolean
+          journal_id: string | null
+          original_journal_id: string | null
+          version: number | null
+        }[]
+      }
+      get_accounting_journal: {
+        Args: { p_actor_user_id: string; p_journal_id: string }
+        Returns: Json
+      }
+      get_accounting_general_ledger: {
+        Args: {
+          p_account_id: string | null
+          p_actor_user_id: string
+          p_from_date: string
+          p_limit: number
+          p_offset: number
+          p_recorded_at_cutoff: string | null
+          p_service_id: string | null
+          p_through_date: string
+        }
+        Returns: {
+          generated_at: string
+          is_complete: boolean
+          report: Json
+        }[]
+      }
+      get_accounting_trial_balance: {
+        Args: {
+          p_actor_user_id: string
+          p_as_of_date: string
+          p_limit: number
+          p_offset: number
+          p_recorded_at_cutoff: string | null
+          p_service_id: string | null
+        }
+        Returns: {
+          generated_at: string
+          is_complete: boolean
+          report: Json
+        }[]
+      }
       start_service_execution: {
         Args: { p_actor_id: string; p_actor_role: string; p_service_id: string }
         Returns: {

@@ -7,6 +7,10 @@ import type { Json } from "@/lib/supabase/database.types";
 import {
   saveAccountingAccountInputSchema,
   saveAccountingPeriodInputSchema,
+  saveAccountingPostingRuleInputSchema,
+  prepareAccountingJournalInputSchema,
+  postAccountingJournalInputSchema,
+  reverseAccountingJournalInputSchema,
   setAccountingCapabilityInputSchema,
   updateAccountingProfileInputSchema,
 } from "./schemas";
@@ -39,6 +43,26 @@ const SAFE_ERROR_CODES = new Set([
   "invalid_period_boundary",
   "period_overlap",
   "company_settings_mismatch",
+  "profile_not_active",
+  "posting_rule_not_found",
+  "source_identity_immutable",
+  "mapping_conflict",
+  "mapping_invalid",
+  "posting_rule_unavailable",
+  "posting_rule_changed",
+  "journal_not_found",
+  "journal_not_draft",
+  "journal_not_posted",
+  "journal_unbalanced",
+  "economic_effect_conflict",
+  "period_not_open",
+  "period_version_changed",
+  "period_date_mismatch",
+  "profile_version_changed",
+  "account_not_posting",
+  "service_dimension_invalid",
+  "service_not_found",
+  "already_reversed",
 ]);
 
 function safeCode(code: string | null | undefined) {
@@ -197,6 +221,151 @@ export async function saveAccountingPeriod(
   return {
     ok: true,
     value: { period_id: row.period_id, version: row.version },
+    idempotentReplay: row.idempotent_replay,
+  };
+}
+
+export async function saveAccountingPostingRule(
+  input: unknown,
+): Promise<AccountingActionResult<{ posting_rule_id: string; version: number }>> {
+  const actor = await requirePermission("accounting:manage_chart");
+  const parsed = saveAccountingPostingRuleInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, code: "invalid_input" };
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("save_accounting_posting_rule", {
+      p_actor_user_id: actor.id,
+      p_posting_rule_id: parsed.data.posting_rule_id,
+      p_expected_version: parsed.data.expected_version,
+      p_rule: parsed.data.rule as Json,
+      p_reason: parsed.data.reason,
+      p_evidence_ref: parsed.data.evidence_ref ?? null,
+      p_request_id: parsed.data.request_id,
+    });
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof AuthDependencyError) throw error;
+    throw new AuthDependencyError("Accounting mutation dependency failed");
+  }
+  if (result.error) return safeFailure(result.error);
+  const row = result.data?.[0];
+  if (!row) throw new AuthDependencyError("Accounting response was invalid");
+  if (row.error_code) return { ok: false, code: safeCode(row.error_code) };
+  if (!row.posting_rule_id || row.version == null) {
+    throw new AuthDependencyError("Accounting response was invalid");
+  }
+  return {
+    ok: true,
+    value: { posting_rule_id: row.posting_rule_id, version: row.version },
+    idempotentReplay: row.idempotent_replay,
+  };
+}
+
+export async function prepareAccountingJournal(
+  input: unknown,
+): Promise<AccountingActionResult<{ journal_id: string; version: number; status: "DRAFT" | "POSTED" }>> {
+  const actor = await requirePermission("accounting:prepare_journal");
+  const parsed = prepareAccountingJournalInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, code: "invalid_input" };
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("prepare_accounting_journal", {
+      p_actor_user_id: actor.id,
+      p_journal_id: parsed.data.journal_id,
+      p_expected_version: parsed.data.expected_version,
+      p_journal: parsed.data.journal as Json,
+      p_reason: parsed.data.reason,
+      p_evidence_ref: parsed.data.evidence_ref ?? null,
+      p_request_id: parsed.data.request_id,
+    });
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof AuthDependencyError) throw error;
+    throw new AuthDependencyError("Accounting mutation dependency failed");
+  }
+  if (result.error) return safeFailure(result.error);
+  const row = result.data?.[0];
+  if (!row) throw new AuthDependencyError("Accounting response was invalid");
+  if (row.error_code) return { ok: false, code: safeCode(row.error_code) };
+  if (!row.journal_id || row.version == null || (row.status !== "DRAFT" && row.status !== "POSTED")) {
+    throw new AuthDependencyError("Accounting response was invalid");
+  }
+  return {
+    ok: true,
+    value: { journal_id: row.journal_id, version: row.version, status: row.status },
+    idempotentReplay: row.idempotent_replay,
+  };
+}
+
+export async function postAccountingJournal(
+  input: unknown,
+): Promise<AccountingActionResult<{ journal_id: string; version: number; status: "POSTED" }>> {
+  const actor = await requirePermission("accounting:post_journal");
+  const parsed = postAccountingJournalInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, code: "invalid_input" };
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("post_accounting_journal", {
+      p_actor_user_id: actor.id,
+      p_journal_id: parsed.data.journal_id,
+      p_expected_version: parsed.data.expected_version,
+      p_request_id: parsed.data.request_id,
+    });
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof AuthDependencyError) throw error;
+    throw new AuthDependencyError("Accounting mutation dependency failed");
+  }
+  if (result.error) return safeFailure(result.error);
+  const row = result.data?.[0];
+  if (!row) throw new AuthDependencyError("Accounting response was invalid");
+  if (row.error_code) return { ok: false, code: safeCode(row.error_code) };
+  if (!row.journal_id || row.version == null || row.status !== "POSTED") {
+    throw new AuthDependencyError("Accounting response was invalid");
+  }
+  return {
+    ok: true,
+    value: { journal_id: row.journal_id, version: row.version, status: "POSTED" },
+    idempotentReplay: row.idempotent_replay,
+  };
+}
+
+export async function reverseAccountingJournal(
+  input: unknown,
+): Promise<AccountingActionResult<{ journal_id: string; version: number; original_journal_id: string }>> {
+  const actor = await requirePermission("accounting:reverse_journal");
+  const parsed = reverseAccountingJournalInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, code: "invalid_input" };
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("reverse_accounting_journal", {
+      p_actor_user_id: actor.id,
+      p_original_journal_id: parsed.data.original_journal_id,
+      p_period_id: parsed.data.period_id,
+      p_accounting_date: parsed.data.accounting_date,
+      p_reason: parsed.data.reason,
+      p_evidence_ref: parsed.data.evidence_ref ?? null,
+      p_request_id: parsed.data.request_id,
+    });
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof AuthDependencyError) throw error;
+    throw new AuthDependencyError("Accounting mutation dependency failed");
+  }
+  if (result.error) return safeFailure(result.error);
+  const row = result.data?.[0];
+  if (!row) throw new AuthDependencyError("Accounting response was invalid");
+  if (row.error_code) return { ok: false, code: safeCode(row.error_code) };
+  if (!row.journal_id || row.version == null || !row.original_journal_id) {
+    throw new AuthDependencyError("Accounting response was invalid");
+  }
+  return {
+    ok: true,
+    value: {
+      journal_id: row.journal_id,
+      version: row.version,
+      original_journal_id: row.original_journal_id,
+    },
     idempotentReplay: row.idempotent_replay,
   };
 }

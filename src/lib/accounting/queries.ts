@@ -6,15 +6,24 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   accountingAccountVersionSchema,
   accountingCapabilityAssignmentSchema,
+  accountingGeneralLedgerInputSchema,
+  accountingGeneralLedgerResultSchema,
+  accountingJournalDetailSchema,
+  accountingJournalIdSchema,
   accountingPeriodVersionSchema,
+  accountingPostingRuleVersionSchema,
   accountingProfileResultSchema,
+  accountingTrialBalanceInputSchema,
+  accountingTrialBalanceResultSchema,
   listAccountingCapabilityAssignmentsInputSchema,
 } from "./schemas";
 import { resolveAccountingCapability } from "./permissions";
 import type {
   AccountingAccountVersion,
   AccountingCapabilityAssignment,
+  AccountingJournalDetail,
   AccountingPeriodVersion,
+  AccountingPostingRuleVersion,
 } from "./types";
 
 function throwSafeRpcError(error: { code?: string } | null): never {
@@ -145,4 +154,108 @@ export async function listAccountingPeriods(): Promise<AccountingPeriodVersion[]
     versions.push(parsed.data);
   }
   return versions;
+}
+
+export async function listAccountingPostingRules(): Promise<AccountingPostingRuleVersion[]> {
+  const actor = await requireUser();
+  await requireAccountingReadCapability(actor.id, "accounting:manage_chart");
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("list_accounting_posting_rules", {
+      p_actor_user_id: actor.id,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting posting rules dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  if (!Array.isArray(result.data)) {
+    throw new AuthDependencyError("Accounting posting rules response was invalid");
+  }
+  const versions: AccountingPostingRuleVersion[] = [];
+  for (const row of result.data) {
+    const parsed = accountingPostingRuleVersionSchema.safeParse(row);
+    if (!parsed.success) {
+      throw new AuthDependencyError("Accounting posting rules response was invalid");
+    }
+    versions.push(parsed.data);
+  }
+  return versions;
+}
+
+export async function getAccountingJournal(journalId: string): Promise<AccountingJournalDetail | null> {
+  const actor = await requirePermission("accounting:view");
+  const parsedId = accountingJournalIdSchema.safeParse(journalId);
+  if (!parsedId.success) throw new AuthDependencyError("Accounting journal request was invalid");
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("get_accounting_journal", {
+      p_actor_user_id: actor.id,
+      p_journal_id: parsedId.data,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting journal dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  if (result.data === null) return null;
+  const parsed = accountingJournalDetailSchema.safeParse(result.data);
+  if (!parsed.success) throw new AuthDependencyError("Accounting journal response was invalid");
+  return parsed.data;
+}
+
+export async function getAccountingGeneralLedger(input: unknown) {
+  const actor = await requirePermission("accounting:view");
+  const parsedInput = accountingGeneralLedgerInputSchema.safeParse(input);
+  if (!parsedInput.success) throw new AuthDependencyError("Accounting ledger request was invalid");
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("get_accounting_general_ledger", {
+      p_actor_user_id: actor.id,
+      p_from_date: parsedInput.data.from_date,
+      p_through_date: parsedInput.data.through_date,
+      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff,
+      p_account_id: parsedInput.data.account_id,
+      p_service_id: parsedInput.data.service_id,
+      p_offset: parsedInput.data.offset,
+      p_limit: parsedInput.data.limit,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting ledger dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  if (!Array.isArray(result.data) || result.data.length !== 1) {
+    throw new AuthDependencyError("Accounting ledger response was invalid");
+  }
+  const parsed = accountingGeneralLedgerResultSchema.safeParse(result.data[0]);
+  if (!parsed.success) throw new AuthDependencyError("Accounting ledger response was invalid");
+  return parsed.data;
+}
+
+export async function getAccountingTrialBalance(input: unknown) {
+  const actor = await requirePermission("accounting:view");
+  const parsedInput = accountingTrialBalanceInputSchema.safeParse(input);
+  if (!parsedInput.success) throw new AuthDependencyError("Accounting Trial Balance request was invalid");
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("get_accounting_trial_balance", {
+      p_actor_user_id: actor.id,
+      p_as_of_date: parsedInput.data.as_of_date,
+      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff,
+      p_service_id: parsedInput.data.service_id,
+      p_offset: parsedInput.data.offset,
+      p_limit: parsedInput.data.limit,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting Trial Balance dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  if (!Array.isArray(result.data) || result.data.length !== 1) {
+    throw new AuthDependencyError("Accounting Trial Balance response was invalid");
+  }
+  const parsed = accountingTrialBalanceResultSchema.safeParse(result.data[0]);
+  if (!parsed.success) throw new AuthDependencyError("Accounting Trial Balance response was invalid");
+  return parsed.data;
 }

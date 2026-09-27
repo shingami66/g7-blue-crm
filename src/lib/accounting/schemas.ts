@@ -276,7 +276,7 @@ export const accountingPeriodVersionSchema = z
     previous_version: z.number().int().positive().nullable(),
     start_date: validDate,
     end_date: validDate,
-    status: z.literal("OPEN"),
+    status: z.enum(["OPEN", "CLOSED", "LOCKED"]),
     effective_from: z.string(),
     reason: boundedText(2000),
     evidence_ref: nullableEvidence,
@@ -289,3 +289,304 @@ export const accountingPeriodVersionSchema = z
       context.addIssue({ code: "custom", path: ["end_date"], message: "Invalid period range" });
     }
   });
+
+export const accountingJournalIdSchema = z.string().uuid();
+
+const accountingPostingRuleMappingSchema = z
+  .object({
+    mapping_key: z.string().regex(/^[a-z][a-z0-9_]{0,39}$/),
+    account_id: z.string().uuid(),
+    account_version: z.number().int().positive(),
+    allowed_side: z.enum(["DEBIT", "CREDIT", "EITHER"]),
+    service_requirement: z.enum(["REQUIRED", "OPTIONAL", "FORBIDDEN"]),
+  })
+  .strict();
+
+const accountingPostingRuleInputSchema = z
+  .object({
+    rule_code: z.string().regex(/^[A-Z][A-Z0-9_]{1,39}$/),
+    name_en: boundedText(160),
+    name_ar: boundedText(160),
+    is_active: z.boolean(),
+    mappings: z.array(accountingPostingRuleMappingSchema).min(2).max(200),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const keys = value.mappings.map((mapping) => mapping.mapping_key);
+    if (new Set(keys).size !== keys.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["mappings"],
+        message: "Mapping keys must be unique within a rule version",
+      });
+    }
+  });
+
+export const saveAccountingPostingRuleInputSchema = z
+  .object({
+    posting_rule_id: z.string().uuid().nullable(),
+    expected_version: z.number().int().nonnegative(),
+    rule: accountingPostingRuleInputSchema,
+    reason: boundedText(2000),
+    evidence_ref: optionalEvidence,
+    request_id: z.string().uuid(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if ((value.posting_rule_id === null) !== (value.expected_version === 0)) {
+      context.addIssue({
+        code: "custom",
+        path: ["expected_version"],
+        message: "Create uses version 0 with no identity; revisions require an identity and positive version",
+      });
+    }
+  });
+
+export const accountingPostingRuleVersionSchema = z
+  .object({
+    posting_rule_id: z.string().uuid(),
+    profile_id: z.string().uuid(),
+    version: z.number().int().positive(),
+    is_current: z.boolean(),
+    previous_version: z.number().int().positive().nullable(),
+    rule_code: z.string().regex(/^[A-Z][A-Z0-9_]{1,39}$/),
+    name_en: boundedText(160),
+    name_ar: boundedText(160),
+    is_active: z.boolean(),
+    effective_from: z.string(),
+    reason: boundedText(2000),
+    evidence_ref: nullableEvidence,
+    created_by: z.string().uuid(),
+    created_at: z.string(),
+    mappings: z.array(accountingPostingRuleMappingSchema),
+  })
+  .strict();
+
+const accountingJournalLineInputSchema = z
+  .object({
+    mapping_key: z.string().regex(/^[a-z][a-z0-9_]{0,39}$/),
+    side: z.enum(["DEBIT", "CREDIT"]),
+    amount_halalah: z.string().regex(/^[1-9][0-9]{0,18}$/),
+    service_id: z.string().uuid().nullable(),
+    description_en: boundedText(500),
+    description_ar: boundedText(500),
+  })
+  .strict();
+
+const accountingJournalInputSchema = z
+  .object({
+    accounting_date: validDate,
+    period_id: z.string().uuid(),
+    period_version: z.number().int().positive(),
+    posting_rule_id: z.string().uuid(),
+    rule_version: z.number().int().positive(),
+    source_record_key: boundedText(200),
+    economic_event_key: boundedText(200),
+    posting_purpose: boundedText(80),
+    description_en: boundedText(500),
+    description_ar: boundedText(500),
+    lines: z.array(accountingJournalLineInputSchema).min(2).max(200),
+  })
+  .strict();
+
+export const prepareAccountingJournalInputSchema = z
+  .object({
+    journal_id: z.string().uuid().nullable(),
+    expected_version: z.number().int().nonnegative(),
+    journal: accountingJournalInputSchema,
+    reason: boundedText(2000),
+    evidence_ref: optionalEvidence,
+    request_id: z.string().uuid(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if ((value.journal_id === null) !== (value.expected_version === 0)) {
+      context.addIssue({
+        code: "custom",
+        path: ["expected_version"],
+        message: "Create uses version 0 with no identity; revisions require an identity and positive version",
+      });
+    }
+  });
+
+export const postAccountingJournalInputSchema = z
+  .object({
+    journal_id: z.string().uuid(),
+    expected_version: z.number().int().positive(),
+    request_id: z.string().uuid(),
+  })
+  .strict();
+
+export const reverseAccountingJournalInputSchema = z
+  .object({
+    original_journal_id: z.string().uuid(),
+    period_id: z.string().uuid(),
+    accounting_date: validDate,
+    reason: boundedText(2000),
+    evidence_ref: optionalEvidence,
+    request_id: z.string().uuid(),
+  })
+  .strict();
+
+export const accountingJournalMutationResultSchema = z
+  .object({
+    error_code: z.string().nullable(),
+    journal_id: z.string().uuid().nullable(),
+    version: z.number().int().positive().nullable(),
+    status: z.enum(["DRAFT", "POSTED"]).nullable(),
+    idempotent_replay: z.boolean(),
+  })
+  .strict();
+
+const accountingJournalLineVersionSchema = accountingJournalLineInputSchema
+  .extend({
+    line_number: z.number().int().positive(),
+    account_id: z.string().uuid(),
+    account_version: z.number().int().positive(),
+    account_code: boundedText(40),
+    name_en: boundedText(160),
+    name_ar: boundedText(160),
+    account_type: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]),
+    normal_balance: z.enum(["DEBIT", "CREDIT"]),
+    service_number: z.string().nullable(),
+    event_name: z.string().nullable(),
+    event_type: z.string().nullable(),
+    event_start_date: validDate.nullable(),
+    event_end_date: validDate.nullable(),
+  })
+  .strict();
+
+const accountingJournalVersionSchema = z
+  .object({
+    version: z.number().int().positive(),
+    previous_version: z.number().int().positive().nullable(),
+    status: z.enum(["DRAFT", "POSTED"]),
+    profile_version: z.number().int().positive(),
+    period_id: z.string().uuid(),
+    period_version: z.number().int().positive(),
+    accounting_date: validDate,
+    posting_rule_id: z.string().uuid(),
+    rule_version: z.number().int().positive(),
+    source_domain: z.literal("CONTROLLED_MANUAL"),
+    source_record_key: boundedText(200),
+    economic_event_key: boundedText(200),
+    posting_purpose: boundedText(80),
+    description_en: boundedText(500),
+    description_ar: boundedText(500),
+    currency: z.literal("SAR"),
+    reason: boundedText(2000),
+    evidence_ref: nullableEvidence,
+    prepared_by: z.string().uuid(),
+    prepared_at: z.string(),
+    posted_by: z.string().uuid().nullable(),
+    posted_at: z.string().nullable(),
+    lines: z.array(accountingJournalLineVersionSchema),
+  })
+  .strict();
+
+export const accountingJournalDetailSchema = z
+  .object({
+    journal_id: z.string().uuid(),
+    profile_id: z.string().uuid(),
+    correction_group_id: z.string().uuid(),
+    reversal_of_journal_id: z.string().uuid().nullable(),
+    current_version: z.number().int().positive(),
+    versions: z.array(accountingJournalVersionSchema),
+  })
+  .strict();
+
+export const accountingGeneralLedgerInputSchema = z
+  .object({
+    from_date: validDate,
+    through_date: validDate,
+    recorded_at_cutoff: z.string().datetime({ offset: true }).nullable(),
+    account_id: z.string().uuid().nullable(),
+    service_id: z.string().uuid().nullable(),
+    offset: z.number().int().nonnegative().max(50000),
+    limit: z.number().int().min(1).max(500),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.through_date < value.from_date) {
+      context.addIssue({ code: "custom", path: ["through_date"], message: "Invalid ledger date range" });
+    }
+  });
+
+export const accountingTrialBalanceInputSchema = z
+  .object({
+    as_of_date: validDate,
+    recorded_at_cutoff: z.string().datetime({ offset: true }).nullable(),
+    service_id: z.string().uuid().nullable(),
+    offset: z.number().int().nonnegative().max(50000),
+    limit: z.number().int().min(1).max(500),
+  })
+  .strict();
+
+export const accountingGeneralLedgerEntrySchema = z
+  .object({
+    journal_id: z.string().uuid(),
+    journal_version: z.number().int().positive(),
+    accounting_date: validDate,
+    posted_at: z.string(),
+    posted_by: z.string().uuid(),
+    reversal_of_journal_id: z.string().uuid().nullable(),
+    correction_group_id: z.string().uuid(),
+    account_id: z.string().uuid(),
+    account_version: z.number().int().positive(),
+    account_code: boundedText(40),
+    account_name_en: boundedText(160),
+    account_name_ar: boundedText(160),
+    side: z.enum(["DEBIT", "CREDIT"]),
+    amount_halalah: z.string().regex(/^[1-9][0-9]{0,18}$/),
+    service_id: z.string().uuid().nullable(),
+    service_number: z.string().nullable(),
+    event_name: z.string().nullable(),
+    event_type: z.string().nullable(),
+    event_start_date: validDate.nullable(),
+    event_end_date: validDate.nullable(),
+    line_number: z.number().int().positive(),
+    description_en: boundedText(500),
+    description_ar: boundedText(500),
+  })
+  .strict();
+
+export const accountingGeneralLedgerResultSchema = z
+  .object({
+    report: z.object({
+      entries: z.array(accountingGeneralLedgerEntrySchema),
+      from_date: validDate,
+      through_date: validDate,
+      recorded_at_cutoff: z.string().nullable(),
+    }),
+    is_complete: z.boolean(),
+    generated_at: z.string(),
+  })
+  .strict();
+
+export const accountingTrialBalanceResultSchema = z
+  .object({
+    report: z.object({
+      as_of_date: validDate,
+      recorded_at_cutoff: z.string().nullable(),
+      service_id: z.string().uuid().nullable(),
+      accounts: z.array(z.object({
+        account_id: z.string().uuid(),
+        account_code: boundedText(40),
+        account_name_en: boundedText(160),
+        account_name_ar: boundedText(160),
+        account_type: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]),
+        normal_balance: z.enum(["DEBIT", "CREDIT"]),
+        debit_activity_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+        credit_activity_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+        debit_balance_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+        credit_balance_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+      }).strict()),
+      debit_balance_total_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+      credit_balance_total_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+      debits_equal_credits: z.boolean(),
+      account_count: z.number().int().nonnegative(),
+    }),
+    is_complete: z.boolean(),
+    generated_at: z.string(),
+  })
+  .strict();

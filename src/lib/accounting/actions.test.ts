@@ -59,7 +59,7 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { saveAccountingAccount, saveAccountingPeriod, setAccountingCapability, updateAccountingProfile } = await import("./actions.ts");
+const { saveAccountingAccount, saveAccountingPeriod, setAccountingCapability, updateAccountingProfile, saveAccountingPostingRule, prepareAccountingJournal, postAccountingJournal, reverseAccountingJournal } = await import("./actions.ts");
 const { AuthDependencyError } = await import("../auth/errors.ts");
 
 const actorId = "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f";
@@ -260,6 +260,103 @@ test("chart and period actions use only trusted actor IDs and their explicit acc
   assert.equal(state.calls[0].name, "save_accounting_period");
   assert.equal(state.calls[0].args.p_actor_user_id, actorId);
   assert.equal("p_actor_role" in state.calls[0].args, false);
+});
+
+test("W10B mutations derive actors, require each explicit capability, and call its RPC", async () => {
+  const ruleId = "00000000-0000-4000-8000-00000000b920";
+  const journalId = "00000000-0000-4000-8000-00000000b921";
+  const originalId = "00000000-0000-4000-8000-00000000b922";
+  const periodId = "00000000-0000-4000-8000-00000000b923";
+  const rule = {
+    rule_code: "SYNTHETIC_MANUAL",
+    name_en: "Synthetic manual rule",
+    name_ar: "قاعدة اصطناعية",
+    is_active: true,
+    mappings: [
+      { mapping_key: "debit", account_id: "00000000-0000-4000-8000-00000000b924", account_version: 1, allowed_side: "DEBIT", service_requirement: "FORBIDDEN" },
+      { mapping_key: "credit", account_id: "00000000-0000-4000-8000-00000000b925", account_version: 1, allowed_side: "CREDIT", service_requirement: "OPTIONAL" },
+    ],
+  };
+  const journal = {
+    accounting_date: "2301-01-15",
+    period_id: periodId,
+    period_version: 1,
+    posting_rule_id: ruleId,
+    rule_version: 1,
+    source_record_key: "synthetic-source-1",
+    economic_event_key: "synthetic-event-1",
+    posting_purpose: "manual-correction",
+    description_en: "Synthetic journal",
+    description_ar: "قيد اصطناعي",
+    lines: [
+      { mapping_key: "debit", side: "DEBIT", amount_halalah: "2500", service_id: null, description_en: "Debit", description_ar: "مدين" },
+      { mapping_key: "credit", side: "CREDIT", amount_halalah: "2500", service_id: null, description_en: "Credit", description_ar: "دائن" },
+    ],
+  };
+  const common = { reason: "Synthetic journal action", evidence_ref: null, request_id: "00000000-0000-4000-8000-00000000b926" };
+
+  resetState(async () => ({
+    data: [{ error_code: null, posting_rule_id: ruleId, version: 1, idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await saveAccountingPostingRule({
+    posting_rule_id: null, expected_version: 0, rule, ...common,
+  }), { ok: true, value: { posting_rule_id: ruleId, version: 1 }, idempotentReplay: false });
+  assert.equal(state.permission, "accounting:manage_chart");
+  assert.equal(state.calls[0].name, "save_accounting_posting_rule");
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+  assert.equal("p_actor_role" in state.calls[0].args, false);
+
+  resetState(async () => ({
+    data: [{ error_code: null, journal_id: journalId, version: 1, status: "DRAFT", idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await prepareAccountingJournal({
+    journal_id: null, expected_version: 0, journal, ...common,
+  }), { ok: true, value: { journal_id: journalId, version: 1, status: "DRAFT" }, idempotentReplay: false });
+  assert.equal(state.permission, "accounting:prepare_journal");
+  assert.equal(state.calls[0].name, "prepare_accounting_journal");
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+
+  resetState(async () => ({
+    data: [{ error_code: null, journal_id: journalId, version: 2, status: "POSTED", idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await postAccountingJournal({
+    journal_id: journalId, expected_version: 1, request_id: "00000000-0000-4000-8000-00000000b927",
+  }), { ok: true, value: { journal_id: journalId, version: 2, status: "POSTED" }, idempotentReplay: false });
+  assert.equal(state.permission, "accounting:post_journal");
+  assert.equal(state.calls[0].name, "post_accounting_journal");
+  resetState(async () => ({
+    data: [{ error_code: "revision_conflict", journal_id: journalId, version: 2, status: "POSTED", idempotent_replay: false }],
+    error: null,
+  }));
+  const retryRequestId = "00000000-0000-4000-8000-00000000b92a";
+  assert.deepEqual(await postAccountingJournal({
+    journal_id: journalId, expected_version: 1, request_id: retryRequestId,
+  }), { ok: false, code: "revision_conflict" });
+  assert.equal(state.calls[0].args.p_request_id, retryRequestId);
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+
+  resetState(async () => ({
+    data: [{ error_code: null, journal_id: "00000000-0000-4000-8000-00000000b928", version: 2, original_journal_id: originalId, idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await reverseAccountingJournal({
+    original_journal_id: originalId,
+    period_id: periodId,
+    accounting_date: "2301-01-16",
+    reason: "Synthetic reversal",
+    evidence_ref: null,
+    request_id: "00000000-0000-4000-8000-00000000b929",
+  }), {
+    ok: true,
+    value: { journal_id: "00000000-0000-4000-8000-00000000b928", version: 2, original_journal_id: originalId },
+    idempotentReplay: false,
+  });
+  assert.equal(state.permission, "accounting:reverse_journal");
+  assert.equal(state.calls[0].name, "reverse_accounting_journal");
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
 });
 
 test("chart and period actions reject invalid revisions and non-OPEN period input before RPC", async () => {
