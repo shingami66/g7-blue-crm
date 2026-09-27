@@ -1,14 +1,16 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W9A1 REPORTS CENTER FOUNDATION — 24 September 2026
+## CURRENT DELIVERY STATUS — W9B DASHBOARD / ACTION CENTER — 27 September 2026
 
 - **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`), W8A, and W8B remain the published baseline.
-- **W9A1 — Real Reports Center Foundation:** `IMPLEMENTED / CODE VALIDATED / DEV VERIFIED / REVIEW CLEAN / READY FOR CONTROLLER VERDICT`.
-  - The typed catalog, shared Riyadh-time workspace, authoritative AR source, W6 current-only AP projection, W8/W8B managerial Event Economics projection, bounded Excel exports, formula-safe text handling, and EN/AR Bidi presentation are authored in the working tree.
-  - The additive migration `supabase/migrations/20260924065440_w9a_reporting_projections.sql` (originally authored as `supabase/migrations/20260924090000_w9a_reporting_projections.sql`) was applied only to DEV project `dpddrqjzqohexixgdqiq` under DEV identity `20260924065440 w9a_reporting_projections`. AP/Event browser routes rendered real DEV data; AR rendered real DEV data in English and Arabic/RTL. The browser client blocked direct download navigation, while export links and automated formula-safe export coverage remained verified.
-  - The fresh native Reviewer found one bounded-completeness issue; the writer repaired the four guard expressions, applied the required DEV function-body repair without creating a second migration-history row, and the fresh targeted rereview returned explicit `CLEAN`.
-- **W9B and W10:** not implemented and remain out of scope. Accounting, GL, revenue recognition, VAT, FATOORA/ZATCA, PROD, and DEMO remain excluded.
-- **EXACT NEXT ACTION:** Controller/Owner records the final W9A1 publication verdict after the exact staged commit/push evidence; do not start W9B, W10, PROD, or DEMO.
+- **W9A1 — Real Reports Center Foundation:** `CLOSED / COMPLETE / PUBLISHED`; its reviewed Reports Center, DEV verification, and publication remain closed.
+  - The typed catalog, shared Riyadh-time workspace, authoritative AR source, W6 current-only AP projection, W8/W8B managerial Event Economics projection, bounded Excel exports, formula-safe text handling, and EN/AR Bidi presentation remain delivered.
+  - The additive migration `supabase/migrations/20260924065440_w9a_reporting_projections.sql` (originally authored as `supabase/migrations/20260924090000_w9a_reporting_projections.sql`) was applied only to DEV project `dpddrqjzqohexixgdqiq` under DEV identity `20260924065440 w9a_reporting_projections`; the bounded-completeness repair was applied without creating a second migration-history row, and its targeted rereview returned `CLEAN`.
+- **W9B — Permission / Responsibility-Aware Dashboard + Action Center:** `CLOSED / COMPLETE / OWNER-ACCEPTED`. Permission-aware composition, truthful unavailable/denied/empty states, the six-card Business Snapshot, authoritative AR/AP/Event contexts, W3 lifecycle Service Operations, source-derived bounded action queues, Operations Focus, Recent Activity, and Arabic RTL / English LTR are delivered. This commit is the W9B publication closeout.
+- **Deferred W9B queues:** supplier bill/payment/advance and Event Cost Close queues remain unimplemented until a safe bounded eligibility source is established.
+- **Database and accounting boundary:** no database migration was required; no database mutation occurred. No W10 or accounting implementation occurred; generic/future accounting boundaries remain preserved.
+- **W10:** `NOT STARTED`.
+- **EXACT NEXT ACTION:** Verify the W9B publication commit on `origin/main`; do not start W10 or mutate a database.
 
 > The dated delivery section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated sections remain historical records.
 

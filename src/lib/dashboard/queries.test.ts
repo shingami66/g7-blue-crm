@@ -23,6 +23,7 @@ type Scenario = {
 };
 
 let activeScenario: Scenario | null = null;
+const reportCalls: Array<{ source: string; options: unknown }> = [];
 
 const testModuleLoader = `
 export async function resolve(specifier, context, nextResolve) {
@@ -196,6 +197,84 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
+mock.module("@/lib/reports/filters", {
+  namedExports: { getCurrentRiyadhDate: () => "2026-09-26" },
+});
+
+mock.module("@/lib/reports/reporting", {
+  namedExports: {
+    getAccountsReceivableReport: async (options: unknown) => {
+      reportCalls.push({ source: "ar", options });
+      if (scenario().simulatedError?.reports) throw new Error(scenario().simulatedError?.reports);
+      return {
+        status: "ready",
+        data: {
+          asOfDate: "2026-09-26",
+          periodFrom: null,
+          periodTo: null,
+          billedAmount: 900,
+          collectedCashAmount: 500,
+          totalOutstanding: 400,
+          totalOverdue: 100,
+          notDueAmount: 300,
+          ageing1To30Amount: 100,
+          ageing31To60Amount: 0,
+          ageing61To90Amount: 0,
+          ageing91PlusAmount: 0,
+          detailTotalCount: 3,
+          outstandingCustomerCount: null,
+          outstandingCustomers: [],
+          rows: [
+            { invoiceId: "inv-1", invoiceNumber: "INV-1", outstandingAmount: 250 },
+            { invoiceId: "inv-2", invoiceNumber: "INV-2", outstandingAmount: 150 },
+            { invoiceId: "inv-settled", invoiceNumber: "INV-SETTLED", outstandingAmount: 0 },
+          ],
+        },
+      };
+    },
+    getAccountsPayableReport: async (options: unknown) => {
+      reportCalls.push({ source: "ap", options });
+      if (scenario().simulatedError?.reports) return { status: "unavailable", error: "unavailable" };
+      return {
+        status: "ready",
+        data: {
+          currentOnly: true,
+          source: "supplier_bill_payment_balances",
+          payableAmount: 900,
+          paidAmount: 400,
+          outstandingAmount: 500,
+          openBillCount: 3,
+          detailTotalCount: 3,
+          rows: [],
+          pagination: { page: 1, pageSize: 1, total: 3, totalPages: 3 },
+        },
+      };
+    },
+    getEventEconomicsReport: async (options: unknown) => {
+      reportCalls.push({ source: "event", options });
+      if (scenario().simulatedError?.reports) return { status: "unavailable", error: "unavailable" };
+      return {
+        status: "partial",
+        data: {
+          asOfDate: "2026-09-26",
+          source: "get_event_costing + event_cost_close_versions",
+          summary: {
+            completenessSummaryState: "unavailable",
+            completeCount: null,
+            partialCount: null,
+            unavailableCount: null,
+            openCount: 4,
+            closedCount: 2,
+          },
+          rows: [],
+          pagination: { page: 1, pageSize: 1, total: 6, totalPages: 6 },
+        },
+      };
+    },
+    hasReportData: (result: { status: string }) => ["ready", "partial", "empty"].includes(result.status),
+  },
+});
+
 mock.module("@/lib/payments/queries", {
   namedExports: {
     getPaymentsList: async (opts?: { pageSize?: number }) => {
@@ -220,9 +299,13 @@ const {
   getDashboardCustomersData,
   getDashboardQuotationsData,
   getDashboardQuotationApprovalData,
-  getDashboardInvoicesData,
+  getDashboardReceivablesData,
+  getDashboardPayablesData,
+  getDashboardEventEconomicsData,
   getDashboardServicesData,
-  getDashboardReadyToStartServicesData,
+  getDashboardServiceLifecycleData,
+  getDashboardExpenseFinanceReviewData,
+  getDashboardCashAdvanceIssueData,
   getDashboardPaymentsData,
 } = await import("./queries.ts");
 
@@ -346,50 +429,67 @@ test("getDashboardQuotationApprovalData derives bounded pending work from the qu
   await assert.rejects(() => getDashboardQuotationApprovalData(), /Pending approval error/);
 });
 
-test("getDashboardInvoicesData uses limit(6) for attention invoices without any full-table aggregate reads", async () => {
-  const invoices = [
-    { id: "inv-1", invoice_number: "INV-0001", balance_due: 100, is_deleted: false, created_at: "2026-08-01T10:00:00Z" },
-    { id: "inv-2", invoice_number: "INV-0002", balance_due: 200, is_deleted: false, created_at: "2026-08-02T10:00:00Z" },
-    { id: "inv-3", invoice_number: "INV-0003", balance_due: 300, is_deleted: false, created_at: "2026-08-03T10:00:00Z" },
-    { id: "inv-4", invoice_number: "INV-0004", balance_due: 400, is_deleted: false, created_at: "2026-08-04T10:00:00Z" },
-    { id: "inv-5", invoice_number: "INV-0005", balance_due: 500, is_deleted: false, created_at: "2026-08-05T10:00:00Z" },
-    { id: "inv-6", invoice_number: "INV-0006", balance_due: 600, is_deleted: false, created_at: "2026-08-06T10:00:00Z" },
-    { id: "inv-7", invoice_number: "INV-0007", balance_due: 700, is_deleted: false, created_at: "2026-08-07T10:00:00Z" },
-    { id: "inv-8", invoice_number: "INV-0008", balance_due: 0, is_deleted: false, created_at: "2026-08-08T10:00:00Z" },
-  ];
+test("Dashboard AR uses one canonical as-of report for snapshot and outstanding invoice attention", async () => {
+  activeScenario = { calls: [], permissions: { "invoices:read": true }, tableData: {} };
+  reportCalls.length = 0;
 
-  activeScenario = {
-    calls: [],
-    permissions: { "invoices:read": true },
-    tableData: { invoices },
-  };
-
-  const result = await getDashboardInvoicesData();
-  assert.equal(result.openInvoiceCount, 7);
-  assert.equal(result.attentionInvoices.length, 6);
-  assert.equal(result.hasMoreAttentionInvoices, true);
-
-  // Financial aggregates are explicitly null/unavailable without DB-side view/RPC
-  assert.equal(result.totalCollected, null);
-  assert.equal(result.pendingBalance, null);
-
-  // Assert exactly 1 bounded query was executed on invoices and NO full-table read was done
-  assert.equal(activeScenario.calls.length, 1);
-  const attentionCall = activeScenario.calls[0];
-  assert.equal(attentionCall.table, "invoices");
-  assert.equal(attentionCall.limitCount, 6);
-  assert.equal(attentionCall.selectColumns, "id, invoice_number, balance_due");
-  assert.deepEqual(attentionCall.filters, [
-    { op: "eq", args: ["is_deleted", false] },
-    { op: "gt", args: ["balance_due", 0] },
+  const result = await getDashboardReceivablesData("2026-09-26");
+  assert.equal(result.asOfDate, "2026-09-26");
+  assert.equal(result.collectedCashAmount, 500);
+  assert.equal(result.totalOutstanding, 400);
+  assert.equal(result.totalOverdue, 100);
+  assert.equal(result.detailTotalCount, 3);
+  assert.deepEqual(result.attentionInvoices, [
+    { id: "inv-1", invoiceNumber: "INV-1", outstandingAmount: 250 },
+    { id: "inv-2", invoiceNumber: "INV-2", outstandingAmount: 150 },
   ]);
+  assert.equal(result.hasMoreAttentionInvoices, false);
+  assert.equal(reportCalls.length, 1);
+  assert.deepEqual(reportCalls[0], {
+    source: "ar",
+    options: { filters: { asOf: "2026-09-26" }, page: 1, pageSize: 10 },
+  });
 
-  // Error propagation
-  activeScenario.simulatedError = { invoices: "Invoice DB error" };
-  await assert.rejects(() => getDashboardInvoicesData(), /Attention error/);
+  activeScenario.simulatedError = { reports: "AR unavailable" };
+  await assert.rejects(() => getDashboardReceivablesData("2026-09-26"), /AR unavailable/);
 });
 
-test("getDashboardServicesData uses bounded database-side counts for all workflow statuses without memory aggregation", async () => {
+test("Dashboard AP and Event metrics preserve canonical source and temporal/completeness contracts", async () => {
+  activeScenario = { calls: [], permissions: {}, tableData: {} };
+  reportCalls.length = 0;
+
+  const payables = await getDashboardPayablesData();
+  assert.deepEqual(payables, {
+    currentOnly: true,
+    detailTotalCount: 3,
+    payableAmount: 900,
+    paidAmount: 400,
+    outstandingAmount: 500,
+    openBillCount: 3,
+  });
+  const event = await getDashboardEventEconomicsData("2026-09-26");
+  assert.deepEqual(event, {
+    asOfDate: "2026-09-26",
+    status: "partial",
+    detailTotalCount: 6,
+    openCount: 4,
+    closedCount: 2,
+    completenessSummaryState: "unavailable",
+    completeCount: null,
+    partialCount: null,
+    unavailableCount: null,
+  });
+  assert.deepEqual(reportCalls, [
+    { source: "ap", options: { page: 1, pageSize: 1 } },
+    { source: "event", options: { asOfDate: "2026-09-26", page: 1, pageSize: 1 } },
+  ]);
+
+  activeScenario.simulatedError = { reports: "Report source unavailable" };
+  await assert.rejects(() => getDashboardPayablesData(), /Report unavailable/);
+  await assert.rejects(() => getDashboardEventEconomicsData("2026-09-26"), /Report unavailable/);
+});
+
+test("getDashboardServicesData uses the Riyadh date for bounded upcoming Services and no legacy status groups", async () => {
   activeScenario = {
     calls: [],
     permissions: { "services:read": true },
@@ -408,86 +508,126 @@ test("getDashboardServicesData uses bounded database-side counts for all workflo
   assert.equal(result.totalCount, 5);
   assert.equal(result.upcomingServices.length, 4);
   assert.equal(result.upcomingServices[0].serviceNumber, "SVC-2026-0005");
-  assert.equal(result.readyToStartCount, 1);
-  assert.equal(result.inProgressCount, 1);
-  assert.deepEqual(result.workflowCounts, {
-    Inquiry: 1,
-    Quoted: 1,
-    Approved: 1,
-    "Deposit Paid": 1,
-  });
-
-  // Verify that all status counts used head count queries with exact filters
-  const inquiryCall = activeScenario.calls.find((c) => c.filters.some((f) => f.op === "eq" && f.args[0] === "status" && f.args[1] === "Inquiry"));
-  assert.ok(inquiryCall);
-  assert.deepEqual(inquiryCall.selectOptions, { count: "exact", head: true });
-
-  const depositPaidCall = activeScenario.calls.find((c) => c.filters.some((f) => f.op === "eq" && f.args[0] === "status" && f.args[1] === "Deposit Paid"));
-  assert.ok(depositPaidCall);
-  assert.deepEqual(depositPaidCall.selectOptions, { count: "exact", head: true });
-
-  const inProgressCall = activeScenario.calls.find((c) => c.filters.some((f) => f.op === "eq" && f.args[0] === "status" && f.args[1] === "In Progress"));
-  assert.ok(inProgressCall);
-  assert.deepEqual(inProgressCall.selectOptions, { count: "exact", head: true });
+  assert.equal(activeScenario.calls.length, 2);
+  const upcoming = activeScenario.calls.find((call) => call.limitCount === 6);
+  assert.ok(upcoming);
+  assert.ok(upcoming.filters.some((filter) => filter.op === "gte" && filter.args[0] === "event_start_date" && filter.args[1] === "2026-08-11"));
+  assert.ok(!upcoming.filters.some((filter) => filter.args[0] === "status"));
 
   activeScenario.simulatedError = { services: "Service DB error" };
-  await assert.rejects(() => getDashboardServicesData("2026-08-11"), /Count error|Upcoming error|Inquiry count error/);
+  await assert.rejects(() => getDashboardServicesData("2026-08-11"), /Count error|Upcoming error/);
 });
 
-test("getDashboardReadyToStartServicesData uses the existing transition evidence and fails closed for blocked Services", async () => {
+test("Dashboard Service start queue uses W3 projection eligibility and excludes legacy-status inference", async () => {
   activeScenario = {
     calls: [],
-    permissions: { "services:update_status": true },
+    permissions: { "services:read": true, "services:update_status": true },
     tableData: {
-      services: [
-        { id: "s-ready", service_number: "SVC-2026-0001", service_title: "Ready Launch", status: "Deposit Paid", deleted_at: null },
-        { id: "s-blocked", service_number: "SVC-2026-0002", service_title: "Blocked Launch", status: "Deposit Paid", deleted_at: null },
-        { id: "s-inquiry", service_number: "SVC-2026-0003", service_title: "Not Ready", status: "Inquiry", deleted_at: null },
-        { id: "s-deleted", service_number: "SVC-2026-0004", service_title: "Deleted Launch", status: "Deposit Paid", deleted_at: "2026-08-01T00:00:00Z" },
-      ],
-      quotations: [],
-      invoices: [
-        { id: "inv-ready", service_id: "s-ready", invoice_type: "deposit", status: "paid", grand_total: 100, balance_due: 0, voided_at: null, is_deleted: false },
-        { id: "inv-blocked", service_id: "s-blocked", invoice_type: "deposit", status: "paid", grand_total: 100, balance_due: 25, voided_at: null, is_deleted: false },
+      service_lifecycle_states: [
+        { service_id: "s-ready", commercial_state: "approved", payment_state: "settled", readiness_state: "ready", execution_state: "not_started", start_gate_basis: "settled_payment", services: { id: "s-ready", service_number: "SVC-2026-0001", service_title: "Ready Launch", deleted_at: null } },
+        { service_id: "s-credit", commercial_state: "approved", payment_state: "settled", readiness_state: "ready", execution_state: "not_started", start_gate_basis: "authorized_credit", services: { id: "s-credit", service_number: "SVC-2026-0002", service_title: "Credit Gate", deleted_at: null } },
+        { service_id: "s-unpaid", commercial_state: "approved", payment_state: "unpaid", readiness_state: "ready", execution_state: "not_started", start_gate_basis: "settled_payment", services: { id: "s-unpaid", service_number: "SVC-2026-0003", service_title: "Unpaid", deleted_at: null } },
+        { service_id: "s-blocked", commercial_state: "approved", payment_state: "settled", readiness_state: "blocked", execution_state: "not_started", start_gate_basis: "settled_payment", services: { id: "s-blocked", service_number: "SVC-2026-0004", service_title: "Blocked", deleted_at: null } },
+        { service_id: "s-running", commercial_state: "approved", payment_state: "settled", readiness_state: "ready", execution_state: "in_progress", start_gate_basis: "settled_payment", services: { id: "s-running", service_number: "SVC-2026-0005", service_title: "Running", deleted_at: null } },
+        { service_id: "s-deleted", commercial_state: "approved", payment_state: "settled", readiness_state: "ready", execution_state: "not_started", start_gate_basis: "settled_payment", services: { id: "s-deleted", service_number: "SVC-2026-0006", service_title: "Deleted", deleted_at: "2026-09-01T00:00:00Z" } },
+        { service_id: "s-deleted-running", commercial_state: "approved", payment_state: "settled", readiness_state: "ready", execution_state: "in_progress", start_gate_basis: "settled_payment", services: { id: "s-deleted-running", service_number: "SVC-2026-0007", service_title: "Deleted running", deleted_at: "2026-09-01T00:00:00Z" } },
       ],
     },
   };
 
-  const result = await getDashboardReadyToStartServicesData("en");
+  const result = await getDashboardServiceLifecycleData(true);
+  assert.equal(result.readyToStartCount, 1);
+  assert.equal(result.inProgressCount, 1);
   assert.deepEqual(result.readyToStartServices, [
     { id: "s-ready", serviceNumber: "SVC-2026-0001", serviceTitle: "Ready Launch" },
   ]);
 
-  const serviceCall = activeScenario.calls.find((call) => call.table === "services");
+  const serviceCall = activeScenario.calls.find((call) => call.table === "service_lifecycle_states" && call.limitCount !== undefined);
   assert.ok(serviceCall);
-  assert.equal(serviceCall.selectColumns, "id, service_number, service_title, status");
+  assert.match(serviceCall.selectColumns ?? "", /services!inner/);
   assert.deepEqual(serviceCall.filters, [
-    { op: "is", args: ["deleted_at", null] },
-    { op: "eq", args: ["status", "Deposit Paid"] },
+    { op: "eq", args: ["commercial_state", "approved"] },
+    { op: "eq", args: ["readiness_state", "ready"] },
+    { op: "eq", args: ["execution_state", "not_started"] },
+    { op: "eq", args: ["payment_state", "settled"] },
+    { op: "eq", args: ["start_gate_basis", "settled_payment"] },
+    { op: "is", args: ["services.deleted_at", null] },
   ]);
-  assert.deepEqual(serviceCall.orders, [
-    { column: "service_number", options: { ascending: true } },
-    { column: "id", options: { ascending: true } },
-  ]);
+  assert.deepEqual(serviceCall.orders, [{ column: "service_id", options: { ascending: true } }]);
   assert.equal(serviceCall.limitCount, 6);
-
-  activeScenario.simulatedError = { services: "Service DB error" };
-  await assert.rejects(() => getDashboardReadyToStartServicesData("en"), /Ready-to-start error/);
 
   activeScenario = {
     calls: [],
-    permissions: { "services:update_status": true },
+    permissions: { "services:read": true, "services:update_status": false },
     tableData: {
-      services: [
-        { id: "s-evidence-failure", service_number: "SVC-2026-0010", service_title: "Evidence Failure", status: "Deposit Paid", deleted_at: null },
+      service_lifecycle_states: [
+        { service_id: "s-ready", commercial_state: "approved", payment_state: "settled", readiness_state: "ready", execution_state: "not_started", start_gate_basis: "settled_payment", services: { deleted_at: null } },
+        { service_id: "s-deleted", commercial_state: "approved", payment_state: "settled", readiness_state: "ready", execution_state: "not_started", start_gate_basis: "settled_payment", services: { deleted_at: "2026-09-01T00:00:00Z" } },
+        { service_id: "s-running", execution_state: "in_progress", services: { deleted_at: null } },
+        { service_id: "s-deleted-running", execution_state: "in_progress", services: { deleted_at: "2026-09-01T00:00:00Z" } },
       ],
-      quotations: [],
-      invoices: [],
     },
-    simulatedError: { invoices: "Invoice evidence unavailable" },
   };
-  const unavailable = await getDashboardReadyToStartServicesData("en");
-  assert.deepEqual(unavailable.readyToStartServices, []);
+  const readOnly = await getDashboardServiceLifecycleData(false);
+  assert.equal(readOnly.readyToStartCount, 1);
+  assert.equal(readOnly.inProgressCount, 1);
+  assert.deepEqual(readOnly.readyToStartServices, []);
+  assert.equal(activeScenario.calls.length, 2);
+  assert.ok(activeScenario.calls.every((call) => {
+    assert.match(call.selectColumns ?? "", /services!inner/);
+    assert.ok(call.selectOptions && (call.selectOptions as { head?: boolean }).head === true);
+    return call.filters.some((filter) => filter.op === "is" && filter.args[0] === "services.deleted_at" && filter.args[1] === null);
+  }));
+});
+
+test("Expense finance-review queue is permission-gated, source-filtered, and bounded", async () => {
+  activeScenario = {
+    calls: [],
+    permissions: { "expenses:read": true, "expenses:finance_review": true },
+    tableData: {
+      expense_accountability_summaries: [
+        { id: "e-pending", expense_number: "EXP-001", description: "Travel", status: "submitted", finance_reviewed_at: null, submitted_at: "2026-09-01T09:00:00Z" },
+        { id: "e-reviewed", expense_number: "EXP-002", description: "Venue", status: "submitted", finance_reviewed_at: "2026-09-02T09:00:00Z", submitted_at: "2026-09-02T09:00:00Z" },
+        { id: "e-approved", expense_number: "EXP-003", description: "Meal", status: "approved", finance_reviewed_at: null, submitted_at: "2026-09-03T09:00:00Z" },
+      ],
+    },
+  };
+
+  const result = await getDashboardExpenseFinanceReviewData();
+  assert.deepEqual(result, [{ id: "e-pending", expenseNumber: "EXP-001", description: "Travel" }]);
+  assert.equal(activeScenario.calls.length, 1);
+  assert.equal(activeScenario.calls[0].table, "expense_accountability_summaries");
+  assert.deepEqual(activeScenario.calls[0].filters, [
+    { op: "eq", args: ["status", "submitted"] },
+    { op: "is", args: ["finance_reviewed_at", null] },
+  ]);
+  assert.equal(activeScenario.calls[0].limitCount, 6);
+
+  activeScenario.permissions["expenses:finance_review"] = false;
+  await assert.rejects(() => getDashboardExpenseFinanceReviewData(), ForbiddenError);
+});
+
+test("Cash-advance issue queue exposes only approved records and requires read plus issue permissions", async () => {
+  activeScenario = {
+    calls: [],
+    permissions: { "cash_advances:read": true, "cash_advances:issue": true },
+    tableData: {
+      employee_cash_advances: [
+        { id: "a-approved", advance_number: "ADV-001", status: "approved", approved_at: "2026-09-01T09:00:00Z" },
+        { id: "a-issued", advance_number: "ADV-002", status: "issued", approved_at: "2026-09-02T09:00:00Z" },
+      ],
+    },
+  };
+
+  const result = await getDashboardCashAdvanceIssueData();
+  assert.deepEqual(result, [{ id: "a-approved", advanceNumber: "ADV-001" }]);
+  assert.equal(activeScenario.calls.length, 1);
+  assert.equal(activeScenario.calls[0].table, "employee_cash_advances");
+  assert.deepEqual(activeScenario.calls[0].filters, [{ op: "eq", args: ["status", "approved"] }]);
+  assert.equal(activeScenario.calls[0].limitCount, 6);
+
+  activeScenario.permissions["cash_advances:issue"] = false;
+  await assert.rejects(() => getDashboardCashAdvanceIssueData(), ForbiddenError);
 });
 
 test("getDashboardPaymentsData loads payments with limit and propagates errors", async () => {
@@ -515,6 +655,10 @@ test("dashboard query loaders reject with ForbiddenError when required permissio
       "invoices:read": false,
       "services:read": false,
       "services:update_status": false,
+      "expenses:read": false,
+      "expenses:finance_review": false,
+      "cash_advances:read": false,
+      "cash_advances:issue": false,
       "payments:read": false,
     },
     tableData: {},
@@ -523,8 +667,9 @@ test("dashboard query loaders reject with ForbiddenError when required permissio
   await assert.rejects(() => getDashboardCustomersData(), ForbiddenError);
   await assert.rejects(() => getDashboardQuotationsData(), ForbiddenError);
   await assert.rejects(() => getDashboardQuotationApprovalData(), ForbiddenError);
-  await assert.rejects(() => getDashboardInvoicesData(), ForbiddenError);
   await assert.rejects(() => getDashboardServicesData(), ForbiddenError);
-  await assert.rejects(() => getDashboardReadyToStartServicesData(), ForbiddenError);
+  await assert.rejects(() => getDashboardServiceLifecycleData(false), ForbiddenError);
+  await assert.rejects(() => getDashboardExpenseFinanceReviewData(), ForbiddenError);
+  await assert.rejects(() => getDashboardCashAdvanceIssueData(), ForbiddenError);
   await assert.rejects(() => getDashboardPaymentsData(), ForbiddenError);
 });

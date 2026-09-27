@@ -1,10 +1,16 @@
 import "server-only";
 
 import { requirePermission } from "@/lib/auth/permissions";
+import { CASH_ADVANCE_PERMISSIONS, EXPENSE_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { QuotationStatus } from "@/types/quotation";
-import { getServiceStatusTransitionState } from "@/lib/services/status-transitions";
-import type { Locale } from "@/lib/i18n/locales";
+import { getCurrentRiyadhDate } from "@/lib/reports/filters";
+import {
+  getAccountsPayableReport,
+  getAccountsReceivableReport,
+  getEventEconomicsReport,
+  hasReportData,
+} from "@/lib/reports/reporting";
 
 export type DashboardCustomersData = {
   totalCount: number;
@@ -40,16 +46,39 @@ export type DashboardQuotationApprovalData = {
 
 export type DashboardAttentionInvoice = {
   id: string;
-  invoice_number: string;
-  balance_due: number | string;
+  invoiceNumber: string;
+  outstandingAmount: number;
 };
 
-export type DashboardInvoicesData = {
-  openInvoiceCount: number;
-  totalCollected: number | null;
-  pendingBalance: number | null;
+export type DashboardReceivablesData = {
+  asOfDate: string;
+  detailTotalCount: number;
+  collectedCashAmount: number;
+  totalOutstanding: number;
+  totalOverdue: number;
   attentionInvoices: DashboardAttentionInvoice[];
   hasMoreAttentionInvoices: boolean;
+};
+
+export type DashboardPayablesData = {
+  currentOnly: true;
+  detailTotalCount: number;
+  payableAmount: number;
+  paidAmount: number;
+  outstandingAmount: number;
+  openBillCount: number;
+};
+
+export type DashboardEventEconomicsData = {
+  asOfDate: string;
+  status: "ready" | "partial";
+  detailTotalCount: number;
+  openCount: number;
+  closedCount: number;
+  completenessSummaryState: "available" | "unavailable";
+  completeCount: number | null;
+  partialCount: number | null;
+  unavailableCount: number | null;
 };
 
 export type DashboardUpcomingService = {
@@ -62,19 +91,46 @@ export type DashboardUpcomingService = {
 export type DashboardServicesData = {
   totalCount: number;
   upcomingServices: DashboardUpcomingService[];
-  workflowCounts: Record<string, number>;
+};
+
+export type DashboardServiceLifecycleData = {
   readyToStartCount: number;
   inProgressCount: number;
+  readyToStartServices: Array<Pick<DashboardUpcomingService, "id" | "serviceNumber" | "serviceTitle">>;
 };
 
-export type DashboardReadyToStartService = Pick<
-  DashboardUpcomingService,
-  "id" | "serviceNumber" | "serviceTitle"
->;
-
-export type DashboardReadyToStartServicesData = {
-  readyToStartServices: DashboardReadyToStartService[];
+export type DashboardExpenseFinanceReviewItem = {
+  id: string;
+  expenseNumber: string;
+  description: string;
 };
+
+export type DashboardCashAdvanceIssueItem = {
+  id: string;
+  advanceNumber: string;
+};
+
+type DashboardQueueResult = {
+  data: unknown[] | null;
+  error: { message: string } | null;
+};
+
+type DashboardQueueQuery = PromiseLike<DashboardQueueResult> & {
+  select(columns: string): DashboardQueueQuery;
+  eq(column: string, value: string): DashboardQueueQuery;
+  is(column: string, value: null): DashboardQueueQuery;
+  order(column: string, options: { ascending: boolean }): DashboardQueueQuery;
+  limit(count: number): DashboardQueueQuery;
+};
+
+function dashboardQueueClient(): { from(relation: string): DashboardQueueQuery } {
+  return createAdminClient() as unknown as { from(relation: string): DashboardQueueQuery };
+}
+
+function exactDashboardCount(count: number | null, source: string): number {
+  if (count === null) throw new Error(`[${source}] Exact count unavailable`);
+  return count;
+}
 
 export async function getDashboardCustomersData(): Promise<DashboardCustomersData> {
   await requirePermission("customers:read");
@@ -90,7 +146,7 @@ export async function getDashboardCustomersData(): Promise<DashboardCustomersDat
   }
 
   return {
-    totalCount: result.count ?? 0,
+    totalCount: exactDashboardCount(result.count, "getDashboardCustomersData"),
   };
 }
 
@@ -119,7 +175,7 @@ export async function getDashboardQuotationsData(): Promise<DashboardQuotationsD
     throw new Error(`[getDashboardQuotationsData] Recent error: ${recentResult.error.message}`);
   }
 
-  const totalCount = countResult.count ?? 0;
+  const totalCount = exactDashboardCount(countResult.count, "getDashboardQuotationsData");
   const rawQuotations = (recentResult.data ?? []) as unknown as Array<{
     id: string;
     quotation_number: string;
@@ -148,6 +204,7 @@ export async function getDashboardQuotationsData(): Promise<DashboardQuotationsD
 }
 
 export async function getDashboardQuotationApprovalData(): Promise<DashboardQuotationApprovalData> {
+  await requirePermission("quotations:read");
   await requirePermission("quotations:approve");
 
   const supabase = createAdminClient();
@@ -191,59 +248,83 @@ export async function getDashboardQuotationApprovalData(): Promise<DashboardQuot
   return { pendingQuotationApprovals };
 }
 
-export async function getDashboardInvoicesData(): Promise<DashboardInvoicesData> {
-  await requirePermission("invoices:read");
-
-  const supabase = createAdminClient();
-  const attentionResult = await supabase
-    .from("invoices")
-    .select("id, invoice_number, balance_due", { count: "exact" })
-    .eq("is_deleted", false)
-    .gt("balance_due", 0)
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(6);
-
-  if (attentionResult.error) {
-    throw new Error(`[getDashboardInvoicesData] Attention error: ${attentionResult.error.message}`);
+export async function getDashboardReceivablesData(
+  asOfDate = getCurrentRiyadhDate(),
+): Promise<DashboardReceivablesData> {
+  const result = await getAccountsReceivableReport({
+    filters: { asOf: asOfDate },
+    page: 1,
+    pageSize: 10,
+  });
+  if (!hasReportData(result)) {
+    throw new Error(`[getDashboardReceivablesData] Report unavailable: ${result.error ?? result.status}`);
   }
 
-  const openInvoiceCount = attentionResult.count ?? 0;
-  const rawAttention = (attentionResult.data ?? []) as unknown as Array<{
-    id: string;
-    invoice_number: string;
-    balance_due: number | string;
-  }>;
-  const attentionInvoices: DashboardAttentionInvoice[] = rawAttention.map((row) => ({
-    id: row.id,
-    invoice_number: row.invoice_number,
-    balance_due: row.balance_due,
+  const data = result.data;
+  const outstandingRows = data.rows.filter((row) => row.outstandingAmount > 0);
+  const attentionInvoices = outstandingRows.slice(0, 6).map((row) => ({
+    id: row.invoiceId,
+    invoiceNumber: row.invoiceNumber,
+    outstandingAmount: row.outstandingAmount,
   }));
-  const hasMoreAttentionInvoices = openInvoiceCount > attentionInvoices.length;
 
   return {
-    openInvoiceCount,
-    totalCollected: null,
-    pendingBalance: null,
+    asOfDate: data.asOfDate,
+    detailTotalCount: data.detailTotalCount,
+    collectedCashAmount: data.collectedCashAmount,
+    totalOutstanding: data.totalOutstanding,
+    totalOverdue: data.totalOverdue,
     attentionInvoices,
-    hasMoreAttentionInvoices,
+    hasMoreAttentionInvoices: outstandingRows.length > attentionInvoices.length,
   };
 }
 
-export async function getDashboardServicesData(todayOverride?: string): Promise<DashboardServicesData> {
+export async function getDashboardPayablesData(): Promise<DashboardPayablesData> {
+  const result = await getAccountsPayableReport({ page: 1, pageSize: 1 });
+  if (!hasReportData(result)) {
+    throw new Error(`[getDashboardPayablesData] Report unavailable: ${result.error ?? result.status}`);
+  }
+
+  if (!result.data.currentOnly) {
+    throw new Error("[getDashboardPayablesData] Expected current-only payable semantics");
+  }
+
+  return {
+    currentOnly: true,
+    detailTotalCount: result.data.detailTotalCount,
+    payableAmount: result.data.payableAmount,
+    paidAmount: result.data.paidAmount,
+    outstandingAmount: result.data.outstandingAmount,
+    openBillCount: result.data.openBillCount,
+  };
+}
+
+export async function getDashboardEventEconomicsData(
+  asOfDate = getCurrentRiyadhDate(),
+): Promise<DashboardEventEconomicsData> {
+  const result = await getEventEconomicsReport({ asOfDate, page: 1, pageSize: 1 });
+  if (!hasReportData(result)) {
+    throw new Error(`[getDashboardEventEconomicsData] Report unavailable: ${result.error ?? result.status}`);
+  }
+
+  return {
+    asOfDate: result.data.asOfDate,
+    status: result.status === "partial" ? "partial" : "ready",
+    detailTotalCount: result.data.pagination.total,
+    openCount: result.data.summary.openCount,
+    closedCount: result.data.summary.closedCount,
+    completenessSummaryState: result.data.summary.completenessSummaryState,
+    completeCount: result.data.summary.completeCount,
+    partialCount: result.data.summary.partialCount,
+    unavailableCount: result.data.summary.unavailableCount,
+  };
+}
+
+export async function getDashboardServicesData(todayOverride = getCurrentRiyadhDate()): Promise<DashboardServicesData> {
   await requirePermission("services:read");
-  const today = todayOverride ?? new Date().toISOString().slice(0, 10);
 
   const supabase = createAdminClient();
-  const [
-    countResult,
-    upcomingResult,
-    inquiryCountResult,
-    quotedCountResult,
-    approvedCountResult,
-    depositPaidCountResult,
-    inProgressCountResult,
-  ] = await Promise.all([
+  const [countResult, upcomingResult] = await Promise.all([
     supabase
       .from("services")
       .select("id", { count: "exact", head: true })
@@ -252,37 +333,11 @@ export async function getDashboardServicesData(todayOverride?: string): Promise<
       .from("services")
       .select("id, service_number, service_title, event_start_date")
       .is("deleted_at", null)
-      .not("event_start_date", "is", null)
-      .gte("event_start_date", today)
+      .gte("event_start_date", todayOverride)
       .order("event_start_date", { ascending: true })
       .order("service_number", { ascending: true })
       .order("id", { ascending: true })
       .limit(6),
-    supabase
-      .from("services")
-      .select("id", { count: "exact", head: true })
-      .is("deleted_at", null)
-      .eq("status", "Inquiry"),
-    supabase
-      .from("services")
-      .select("id", { count: "exact", head: true })
-      .is("deleted_at", null)
-      .eq("status", "Quoted"),
-    supabase
-      .from("services")
-      .select("id", { count: "exact", head: true })
-      .is("deleted_at", null)
-      .eq("status", "Approved"),
-    supabase
-      .from("services")
-      .select("id", { count: "exact", head: true })
-      .is("deleted_at", null)
-      .eq("status", "Deposit Paid"),
-    supabase
-      .from("services")
-      .select("id", { count: "exact", head: true })
-      .is("deleted_at", null)
-      .eq("status", "In Progress"),
   ]);
 
   if (countResult.error) {
@@ -291,23 +346,7 @@ export async function getDashboardServicesData(todayOverride?: string): Promise<
   if (upcomingResult.error) {
     throw new Error(`[getDashboardServicesData] Upcoming error: ${upcomingResult.error.message}`);
   }
-  if (inquiryCountResult.error) {
-    throw new Error(`[getDashboardServicesData] Inquiry count error: ${inquiryCountResult.error.message}`);
-  }
-  if (quotedCountResult.error) {
-    throw new Error(`[getDashboardServicesData] Quoted count error: ${quotedCountResult.error.message}`);
-  }
-  if (approvedCountResult.error) {
-    throw new Error(`[getDashboardServicesData] Approved count error: ${approvedCountResult.error.message}`);
-  }
-  if (depositPaidCountResult.error) {
-    throw new Error(`[getDashboardServicesData] Deposit Paid count error: ${depositPaidCountResult.error.message}`);
-  }
-  if (inProgressCountResult.error) {
-    throw new Error(`[getDashboardServicesData] In Progress count error: ${inProgressCountResult.error.message}`);
-  }
-
-  const totalCount = countResult.count ?? 0;
+  const totalCount = exactDashboardCount(countResult.count, "getDashboardServicesData");
   const rawUpcoming = (upcomingResult.data ?? []) as unknown as Array<{
     id: string;
     service_number: string;
@@ -321,77 +360,128 @@ export async function getDashboardServicesData(todayOverride?: string): Promise<
     eventStartDate: row.event_start_date,
   }));
 
-  const workflowCounts: Record<string, number> = {
-    Inquiry: inquiryCountResult.count ?? 0,
-    Quoted: quotedCountResult.count ?? 0,
-    Approved: approvedCountResult.count ?? 0,
-    "Deposit Paid": depositPaidCountResult.count ?? 0,
-  };
-
   return {
     totalCount,
     upcomingServices,
-    workflowCounts,
-    readyToStartCount: depositPaidCountResult.count ?? 0,
-    inProgressCount: inProgressCountResult.count ?? 0,
   };
 }
 
-/**
- * Returns only the bounded set of Services whose persisted lifecycle state is
- * ready for the existing start-execution transition. The transition helper
- * remains the source of readiness evidence; this loader never mutates state.
- */
-export async function getDashboardReadyToStartServicesData(
-  locale: Locale = "en",
-): Promise<DashboardReadyToStartServicesData> {
-  await requirePermission("services:update_status");
-
+export async function getDashboardServiceLifecycleData(
+  includeReadyToStartActions: boolean,
+): Promise<DashboardServiceLifecycleData> {
+  await requirePermission("services:read");
+  if (includeReadyToStartActions) await requirePermission("services:update_status");
   const supabase = createAdminClient();
-  const result = await supabase
-    .from("services")
-    .select("id, service_number, service_title, status")
-    .is("deleted_at", null)
-    .eq("status", "Deposit Paid")
-    .order("service_number", { ascending: true })
+  const [readyResult, inProgressResult] = await Promise.all([
+    includeReadyToStartActions
+      ? supabase
+        .from("service_lifecycle_states")
+        .select("service_id, start_gate_basis, payment_state, services!inner(id, service_number, service_title)", { count: "exact" })
+        .eq("commercial_state", "approved")
+        .eq("readiness_state", "ready")
+        .eq("execution_state", "not_started")
+        .eq("payment_state", "settled")
+        .eq("start_gate_basis", "settled_payment")
+        .is("services.deleted_at", null)
+        .order("service_id", { ascending: true })
+        .limit(6)
+      : supabase
+        .from("service_lifecycle_states")
+        .select("service_id, services!inner(deleted_at)", { count: "exact", head: true })
+        .eq("commercial_state", "approved")
+        .eq("readiness_state", "ready")
+        .eq("execution_state", "not_started")
+        .eq("payment_state", "settled")
+        .eq("start_gate_basis", "settled_payment")
+        .is("services.deleted_at", null),
+    supabase
+      .from("service_lifecycle_states")
+      .select("service_id, services!inner(deleted_at)", { count: "exact", head: true })
+      .eq("execution_state", "in_progress")
+      .is("services.deleted_at", null),
+  ]);
+
+  if (readyResult.error) {
+    throw new Error(`[getDashboardServiceLifecycleData] Ready-to-start projection unavailable: ${readyResult.error.message}`);
+  }
+  if (inProgressResult.error) {
+    throw new Error(`[getDashboardServiceLifecycleData] In-progress projection unavailable: ${inProgressResult.error.message}`);
+  }
+  const readyToStartCount = exactDashboardCount(readyResult.count, "getDashboardServiceLifecycleData");
+  const inProgressCount = exactDashboardCount(inProgressResult.count, "getDashboardServiceLifecycleData");
+
+  const rawServices = (readyResult.data ?? []) as unknown as Array<{
+    service_id: string;
+    services: {
+      id: string;
+      service_number: string;
+      service_title: string;
+    } | null;
+  }>;
+
+  return {
+    readyToStartCount,
+    inProgressCount,
+    readyToStartServices: includeReadyToStartActions
+      ? rawServices.flatMap((row) => row.services ? [{
+        id: row.services.id,
+        serviceNumber: row.services.service_number,
+        serviceTitle: row.services.service_title,
+      }] : [])
+      : [],
+  };
+}
+
+export async function getDashboardExpenseFinanceReviewData(): Promise<DashboardExpenseFinanceReviewItem[]> {
+  await requirePermission(EXPENSE_PERMISSIONS.read);
+  await requirePermission(EXPENSE_PERMISSIONS.financeReview);
+  const { data, error } = await dashboardQueueClient()
+    .from("expense_accountability_summaries")
+    .select("id, expense_number, description, submitted_at")
+    .eq("status", "submitted")
+    .is("finance_reviewed_at", null)
+    .order("submitted_at", { ascending: true })
     .order("id", { ascending: true })
     .limit(6);
 
-  if (result.error) {
-    throw new Error(`[getDashboardReadyToStartServicesData] Ready-to-start error: ${result.error.message}`);
+  if (error) {
+    throw new Error(`[getDashboardExpenseFinanceReviewData] Queue unavailable: ${error.message}`);
   }
 
-  const rawServices = (result.data ?? []) as unknown as Array<{
+  return ((data ?? []) as unknown as Array<{
     id: string;
-    service_number: string;
-    service_title: string;
-    status: "Deposit Paid";
-  }>;
-  const transitionResults = await Promise.all(
-    rawServices.map(async (service) => ({
-      service,
-      transitionState: await getServiceStatusTransitionState(
-        supabase,
-        service.id,
-        service.status,
-        locale,
-      ),
-    })),
-  );
-  const readyToStartServices: DashboardReadyToStartService[] = transitionResults
-    .filter(({ transitionState }) => {
-      const startAction = transitionState.actions.find(
-        (action) => action.status === "In Progress",
-      );
-      return Boolean(startAction && startAction.blockedReason === null);
-    })
-    .map(({ service }) => ({
-      id: service.id,
-      serviceNumber: service.service_number,
-      serviceTitle: service.service_title,
-    }));
+    expense_number: string;
+    description: string;
+  }>).map((row) => ({
+    id: row.id,
+    expenseNumber: row.expense_number,
+    description: row.description,
+  }));
+}
 
-  return { readyToStartServices };
+export async function getDashboardCashAdvanceIssueData(): Promise<DashboardCashAdvanceIssueItem[]> {
+  await requirePermission(CASH_ADVANCE_PERMISSIONS.read);
+  await requirePermission(CASH_ADVANCE_PERMISSIONS.issue);
+  const { data, error } = await dashboardQueueClient()
+    .from("employee_cash_advances")
+    .select("id, advance_number, status")
+    .eq("status", "approved")
+    .order("approved_at", { ascending: true })
+    .order("id", { ascending: true })
+    .limit(6);
+
+  if (error) {
+    throw new Error(`[getDashboardCashAdvanceIssueData] Queue unavailable: ${error.message}`);
+  }
+
+  return ((data ?? []) as unknown as Array<{
+    id: string;
+    advance_number: string;
+    status: "approved";
+  }>).map((row) => ({
+    id: row.id,
+    advanceNumber: row.advance_number,
+  }));
 }
 
 export async function getDashboardPaymentsData() {

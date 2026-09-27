@@ -10,7 +10,6 @@ export interface DashboardDictionary {
     genericError: string;
     loadError: string;
     unavailable: string;
-    unavailableForRole: string;
   };
   header: {
     title: string;
@@ -47,7 +46,6 @@ export interface DashboardDictionary {
     value: string;
     status: string;
     noRecentActivity: string;
-    unavailableForRole: string;
     /** Display labels only — internal status codes remain unchanged. */
     statuses: Record<QuotationStatus, string>;
   };
@@ -68,7 +66,6 @@ const dashboardDictionaryEn: DashboardDictionary = {
     genericError: "Something went wrong",
     loadError: "We could not load the dashboard at this time. Please try again later.",
     unavailable: "Unavailable",
-    unavailableForRole: "Unavailable for this role",
   },
   header: {
     title: "Dashboard",
@@ -105,7 +102,6 @@ const dashboardDictionaryEn: DashboardDictionary = {
     value: "Amount",
     status: "Status",
     noRecentActivity: "No recent quotations",
-    unavailableForRole: "Recent quotations unavailable for this role.",
     statuses: {
       draft: "Draft",
       sent: "Sent",
@@ -140,7 +136,6 @@ const dashboardDictionaryAr: DashboardDictionary = {
     genericError: "حدث خطأ ما",
     loadError: "تعذر تحميل لوحة التحكم في الوقت الحالي. يرجى المحاولة مرة أخرى لاحقًا.",
     unavailable: "غير متاح",
-    unavailableForRole: "غير متاح لهذا الدور",
   },
   header: {
     title: "لوحة التحكم",
@@ -177,7 +172,6 @@ const dashboardDictionaryAr: DashboardDictionary = {
     value: "المبلغ",
     status: "الحالة",
     noRecentActivity: "لا توجد عروض أسعار حديثة",
-    unavailableForRole: "عروض الأسعار الحديثة غير متاحة لهذا الدور.",
     statuses: {
       draft: "مسودة",
       sent: "مرسل",

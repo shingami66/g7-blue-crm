@@ -87,11 +87,13 @@ test("Business Year scope is limited to temporal list routes and persists throug
 
 test("Dashboard remains global and does not consume or propagate Business Year", () => {
   const dashboard = read("src/app/(dashboard)/dashboard/page.tsx");
+  const queries = read("src/lib/dashboard/queries.ts");
   assert.doesNotMatch(dashboard, /parseBusinessYear|cleanBusinessYearParam|yearQuery|selectedYear/);
-  assert.match(dashboard, /scope: "global"/);
-  assert.match(dashboard, /yearScoped: false/);
+  assert.doesNotMatch(queries, /getBusinessYearBounds|businessYear/);
+  assert.match(queries, /getCurrentRiyadhDate/);
   assert.match(dashboard, /getDashboardQuotationsData/);
-  assert.match(dashboard, /getDashboardInvoicesData/);
+  assert.match(dashboard, /getDashboardReceivablesData/);
+  assert.match(dashboard, /getDashboardPayablesData/);
   assert.match(dashboard, /getDashboardServicesData/);
   assert.match(dashboard, /getDashboardPaymentsData/);
 });
@@ -136,16 +138,20 @@ test("Dashboard separates financial activity from attention and Customer 360 avo
   const dashboard = read("src/app/(dashboard)/dashboard/page.tsx");
   const customerQueries = read("src/lib/customer-360/queries.ts");
   assert.match(dashboard, /data-dashboard-section="recent-activity"/);
-  assert.doesNotMatch(dashboard.slice(dashboard.indexOf("data-dashboard-section=\"priority-work\""), dashboard.indexOf("data-dashboard-section=\"quotations\"")), /recentPayments/);
+  assert.match(dashboard, /data-dashboard-section="action-center"/);
+  assert.match(dashboard, /data-dashboard-section="recent-activity"/);
   assert.doesNotMatch(customerQueries, /payment=\$\{encodeURIComponent\(payment\.id\)\}/);
 });
 
 test("Dashboard widget definitions carry future role-ready composition metadata", () => {
+  const metadata = read("src/lib/dashboard/composition.ts");
   const dashboard = read("src/app/(dashboard)/dashboard/page.tsx");
-  for (const field of ["id", "readPermission", "scope", "sensitivity", "displayPriority", "emptyState", "destination", "yearScoped"]) {
-    assert.match(dashboard, new RegExp(`\\b${field}:`));
+  for (const field of ["id", "requiredEffectivePermissions", "sensitivity", "displayPriority", "destination", "sourceDomain", "timeSemantics"]) {
+    assert.match(metadata, new RegExp(`\\b${field}:`));
   }
-  assert.match(dashboard, /as const satisfies Record<string, DashboardWidgetDefinition>/);
+  assert.match(metadata, /as const satisfies readonly DashboardWidgetDefinition\[\]/);
+  assert.match(dashboard, /composeDashboard\(/);
+  assert.doesNotMatch(dashboard, /currentUser\.role|user\.role/);
 });
 
 test("Reports do not select supplier cost fields without the existing cost permission", () => {
