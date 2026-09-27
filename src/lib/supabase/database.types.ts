@@ -3417,6 +3417,60 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_accounting_capability: {
+        Args: { p_actor_user_id: string; p_capability: string }
+        Returns: boolean
+      }
+      get_accounting_profile: {
+        Args: { p_actor_user_id: string }
+        Returns: Json
+      }
+      list_accounting_capability_assignments: {
+        Args: { p_actor_user_id: string; p_target_user_id: string }
+        Returns: {
+          actor_user_id: string
+          capability: string
+          created_at: string
+          effect: string
+          expires_at: string | null
+          revision: number
+        }[]
+      }
+      set_accounting_capability: {
+        Args: {
+          p_actor_user_id: string
+          p_capability: string
+          p_effect: string
+          p_evidence_ref: string | null
+          p_expected_revision: number
+          p_expires_at: string | null
+          p_reason: string
+          p_request_id: string
+          p_target_user_id: string
+        }
+        Returns: {
+          capability_event_id: string | null
+          error_code: string | null
+          idempotent_replay: boolean
+          revision: number | null
+        }[]
+      }
+      update_accounting_profile: {
+        Args: {
+          p_actor_user_id: string
+          p_evidence_ref: string | null
+          p_expected_version: number
+          p_profile: Json
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          idempotent_replay: boolean
+          profile_id: string | null
+          version: number | null
+        }[]
+      }
       start_service_execution: {
         Args: { p_actor_id: string; p_actor_role: string; p_service_id: string }
         Returns: {

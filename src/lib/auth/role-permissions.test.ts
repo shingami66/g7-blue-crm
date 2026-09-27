@@ -220,3 +220,12 @@ test("Supplier Allocation and Booking operations remain limited to Admin and Man
     }
   }
 });
+
+test("accounting namespace never uses CRM role grants or the Admin wildcard", () => {
+  assert.equal(hasPermissionForRole("admin", "accounting:view"), false);
+  assert.equal(hasPermissionForRole("admin", "accounting:close_period"), false);
+  assert.equal(hasPermissionForRole("accountant", "accounting:view"), false);
+  assert.equal(hasPermissionForRole("viewer", "accounting:view"), false);
+  assert.equal(hasPermissionForRole("admin", "accounting:future_capability"), false);
+  assert.equal(hasPermissionForRole("admin", INVOICE_PERMISSIONS.write), true);
+});

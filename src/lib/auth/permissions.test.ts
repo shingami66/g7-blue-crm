@@ -54,6 +54,10 @@ type AuthState = {
   permissionOverrideError: { code?: string; message?: string } | null;
   permissionOverrideThrows: Error | null;
   permissionOverrideFilters: Array<{ column: string; value: unknown }>;
+  accountingCapabilityResult: boolean | null;
+  accountingCapabilityError: { code?: string; message?: string } | null;
+  accountingCapabilityThrows: Error | null;
+  accountingCapabilityCalls: Array<{ name: string; args: Record<string, unknown> }>;
 };
 
 let currentAuthState: AuthState = {
@@ -66,6 +70,10 @@ let currentAuthState: AuthState = {
   permissionOverrideError: null,
   permissionOverrideThrows: null,
   permissionOverrideFilters: [],
+  accountingCapabilityResult: null,
+  accountingCapabilityError: null,
+  accountingCapabilityThrows: null,
+  accountingCapabilityCalls: [],
 };
 
 function resetAuthState(overrides: Partial<AuthState> = {}) {
@@ -79,6 +87,10 @@ function resetAuthState(overrides: Partial<AuthState> = {}) {
     permissionOverrideError: null,
     permissionOverrideThrows: null,
     permissionOverrideFilters: [],
+    accountingCapabilityResult: null,
+    accountingCapabilityError: null,
+    accountingCapabilityThrows: null,
+    accountingCapabilityCalls: [],
     ...overrides,
   };
 }
@@ -105,6 +117,16 @@ mock.module("@/lib/supabase/admin", {
   namedExports: {
     createAdminClient: () => {
       return {
+        rpc: async (name: string, args: Record<string, unknown>) => {
+          currentAuthState.accountingCapabilityCalls.push({ name, args });
+          if (currentAuthState.accountingCapabilityThrows) {
+            throw currentAuthState.accountingCapabilityThrows;
+          }
+          return {
+            data: currentAuthState.accountingCapabilityResult,
+            error: currentAuthState.accountingCapabilityError,
+          };
+        },
         from: (table: string) => {
           if (table === "app_user_permission_overrides") {
             return {
@@ -443,6 +465,51 @@ test("quotations:approve override dependency failures remain fail-closed", async
     },
   );
   assertOverrideFilters("u1");
+});
+
+test("accounting permissions bypass CRM roles and use only explicit capability resolution", async () => {
+  const roles = ["admin", "accountant", "viewer"] as const;
+  for (const role of roles) {
+    resetAuthState({
+      authResult: { userId: "clerk_123" },
+      dbResult: { id: `u-${role}`, role, is_active: true },
+      accountingCapabilityResult: false,
+    });
+    assert.equal(await checkPermission("accounting:view"), false);
+    assert.deepEqual(currentAuthState.accountingCapabilityCalls, [
+      {
+        name: "get_accounting_capability",
+        args: { p_actor_user_id: `u-${role}`, p_capability: "accounting:view" },
+      },
+    ]);
+  }
+
+  resetAuthState({
+    authResult: { userId: "clerk_123" },
+    dbResult: { id: "viewer-1", role: "viewer", is_active: true },
+    accountingCapabilityResult: true,
+  });
+  assert.equal(await checkPermission("accounting:view"), true);
+});
+
+test("inactive users skip accounting resolution and accounting dependency failures fail closed", async () => {
+  resetAuthState({
+    authResult: { userId: "clerk_123" },
+    dbResult: { id: "u1", role: "admin", is_active: false },
+    accountingCapabilityResult: true,
+  });
+  assert.equal(await checkPermission("accounting:view"), false);
+  assert.equal(currentAuthState.accountingCapabilityCalls.length, 0);
+
+  resetAuthState({
+    authResult: { userId: "clerk_123" },
+    dbResult: { id: "u1", role: "admin", is_active: true },
+    accountingCapabilityError: { code: "57P01", message: "database unavailable" },
+  });
+  await assert.rejects(
+    () => checkPermission("accounting:view"),
+    (error: unknown) => error instanceof AuthDependencyError,
+  );
 });
 
 test("W5A/W5B-1A Permissions: Admin wildcard satisfies all W5 permissions; non-admin roles follow exact authority contract", async () => {

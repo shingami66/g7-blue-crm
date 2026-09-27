@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizePersistedLocale, type Locale } from "@/lib/i18n/locales";
 import { hasPermissionForRole } from "./role-permissions";
 import { UnauthorizedError, ForbiddenError, AuthDependencyError } from "./errors";
+import { resolveAccountingCapability } from "@/lib/accounting/permissions";
 
 export { ROLE_PERMISSIONS } from "./role-permissions";
 export { UnauthorizedError, ForbiddenError, AuthDependencyError } from "./errors";
@@ -63,6 +64,10 @@ async function hasEffectivePermission(
   role: unknown,
   permission: string,
 ): Promise<boolean> {
+  if (permission.startsWith("accounting:")) {
+    return resolveAccountingCapability(userId, permission);
+  }
+
   const roleAllows = hasPermissionForRole(role, permission);
   const override = await getPermissionOverride(userId, permission);
 

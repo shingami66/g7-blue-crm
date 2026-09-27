@@ -257,6 +257,10 @@ export function hasPermissionForRole(
   role: unknown,
   permission: string,
 ): boolean {
+  if (permission.startsWith("accounting:")) {
+    return false;
+  }
+
   if (typeof role !== "string") {
     return false;
   }
