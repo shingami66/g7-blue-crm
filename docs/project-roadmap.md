@@ -1,13 +1,16 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W9A1 REPORTS CENTER FOUNDATION — 24 September 2026
+## CURRENT ROADMAP POSITION — W9 DASHBOARDS / REPORTS CLOSEOUT — 27 September 2026
 
 - **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`), W8A Event Costing, and W8B Event Cost Close remain published/closed.
-- **W9A1 Reports Center Foundation:** `IMPLEMENTED / VALIDATED / DEV VERIFIED / REVIEW CLEAN / READY FOR CONTROLLER VERDICT`.
-  - Routes, report contracts, authoritative-source projections, filters, pagination, bounded Excel export, formula escaping, and EN/AR/RTL presentation are implemented. The W9A1 migration is additive and DEV-only by contract.
-  - Runtime AR browser evidence passed in EN and AR/RTL; AP/Event rendered real DEV data with reconciled W6/W8 values. The fresh targeted rereview is `CLEAN`; direct browser download navigation is an environment limitation, with export links and automated formula-safe export coverage verified.
-- **Next locked roadmap task:** Record the Controller verdict for W9A1 after exact publication evidence. W9B and W10 Accounting remain later and separately gated; GL, revenue recognition, VAT, FATOORA/ZATCA, PROD, and DEMO remain excluded.
-- **EXACT NEXT ACTION:** Controller/Owner records the final W9A1 publication verdict from the exact staged commit/push evidence; do not start W9B, W10, PROD, or DEMO.
+- **W9A1 — Real Reports Center:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV VERIFIED / PUBLISHED` — commit `fd5f77fb3ea6d9a574dbfc96ebb03263bf7b339c`.
+- **W9B — Permission / Responsibility-Aware Dashboard + Action Center:** `CLOSED / COMPLETE / OWNER-ACCEPTED / VERIFIED / PUBLISHED` — commit `a6a02f866a48ef92c8fbc4c05ed625e5eb1de3e9`.
+  - Delivered permission-aware Dashboard composition, truthful denied/unavailable/empty states, the six-card Business Snapshot, authoritative AR/AP/Event contexts, W3 lifecycle Service Operations, bounded source-derived Action Center queues, Operations Focus, Recent Activity, responsive EN/AR RTL/LTR presentation, and the Owner-accepted visual direction.
+  - Supplier bill/payment/advance and Event Cost Close action queues remain deferred where no safe bounded eligibility source exists; these deferrals do not reopen W9B.
+- **W9 — CLOSED / COMPLETE / OWNER-ACCEPTED / PUBLISHED.** The current Dashboards/Reports lane is satisfied by W9A1 and W9B; no additional current W9 implementation slice is listed. Future SaaS activation gates remain deferred and are not current W9 delivery work.
+- **W9B database/deployment boundary:** no migration or database mutation was required or performed; no deployment occurred.
+- **W10 — NOT STARTED.** Accounting remains behind professional gates; GL, revenue recognition, VAT, FATOORA/ZATCA, production deployment, and database mutation are not authorized by these closeouts.
+- **EXACT NEXT ACTION:** Return to the Controller/Owner for the next separately authorized roadmap task. Do not start W10 automatically.
 
 > The dated roadmap section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated roadmap history remains unchanged.
 

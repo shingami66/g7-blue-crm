@@ -1,16 +1,18 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W9B DASHBOARD / ACTION CENTER — 27 September 2026
+## CURRENT DELIVERY STATUS — W9 DASHBOARDS / REPORTS CLOSEOUT — 27 September 2026
 
 - **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`), W8A, and W8B remain the published baseline.
-- **W9A1 — Real Reports Center Foundation:** `CLOSED / COMPLETE / PUBLISHED`; its reviewed Reports Center, DEV verification, and publication remain closed.
+- **W9A1 — Real Reports Center:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV VERIFIED / PUBLISHED` — commit `fd5f77fb3ea6d9a574dbfc96ebb03263bf7b339c`.
   - The typed catalog, shared Riyadh-time workspace, authoritative AR source, W6 current-only AP projection, W8/W8B managerial Event Economics projection, bounded Excel exports, formula-safe text handling, and EN/AR Bidi presentation remain delivered.
   - The additive migration `supabase/migrations/20260924065440_w9a_reporting_projections.sql` (originally authored as `supabase/migrations/20260924090000_w9a_reporting_projections.sql`) was applied only to DEV project `dpddrqjzqohexixgdqiq` under DEV identity `20260924065440 w9a_reporting_projections`; the bounded-completeness repair was applied without creating a second migration-history row, and its targeted rereview returned `CLEAN`.
-- **W9B — Permission / Responsibility-Aware Dashboard + Action Center:** `CLOSED / COMPLETE / OWNER-ACCEPTED`. Permission-aware composition, truthful unavailable/denied/empty states, the six-card Business Snapshot, authoritative AR/AP/Event contexts, W3 lifecycle Service Operations, source-derived bounded action queues, Operations Focus, Recent Activity, and Arabic RTL / English LTR are delivered. This commit is the W9B publication closeout.
-- **Deferred W9B queues:** supplier bill/payment/advance and Event Cost Close queues remain unimplemented until a safe bounded eligibility source is established.
-- **Database and accounting boundary:** no database migration was required; no database mutation occurred. No W10 or accounting implementation occurred; generic/future accounting boundaries remain preserved.
-- **W10:** `NOT STARTED`.
-- **EXACT NEXT ACTION:** Verify the W9B publication commit on `origin/main`; do not start W10 or mutate a database.
+- **W9B — Permission / Responsibility-Aware Dashboard + Action Center:** `CLOSED / COMPLETE / OWNER-ACCEPTED / VERIFIED / PUBLISHED` — commit `a6a02f866a48ef92c8fbc4c05ed625e5eb1de3e9`.
+  - Delivered effective-permission-driven composition without role-specific Dashboard branches, permission-aware Quick Actions, truthful denied/unavailable/empty states, six-card Business Snapshot, authoritative AR/AP/Event contexts, W3 lifecycle Service Operations, bounded source-derived queues, Operations Focus, Recent Activity, responsive Arabic RTL / English LTR, and Owner-accepted Stitch-informed presentation.
+- **W9 — CLOSED / COMPLETE / OWNER-ACCEPTED / PUBLISHED.** The current Dashboards/Reports lane is satisfied by W9A1 and W9B; no additional current W9 implementation slice is listed.
+- **Deferred W9B queues:** supplier bill/payment/advance and Event Cost Close queues remain deferred where no safe bounded eligibility source exists; these deferrals do not reopen W9B.
+- **W9B database/deployment boundary:** no migration or database mutation was required or performed; no deployment occurred.
+- **W10 — NOT STARTED.** Accounting remains behind professional gates; generic/future accounting boundaries remain preserved.
+- **EXACT NEXT ACTION:** Return to the Controller/Owner for the next separately authorized roadmap task. Do not start W10 automatically.
 
 > The dated delivery section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated sections remain historical records.
 
