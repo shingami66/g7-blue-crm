@@ -305,9 +305,10 @@ BEGIN
      OR v_event.entity_id IS DISTINCT FROM NEW.account_id
      OR v_event.entity_version IS DISTINCT FROM NEW.version
      OR v_event.actor_user_id IS DISTINCT FROM NEW.created_by
-     OR v_event.event_type IS DISTINCT FROM CASE
-       WHEN NEW.version=1 THEN 'accounting_account_created'
-       ELSE 'accounting_account_updated' END THEN
+     OR (NEW.version IS DISTINCT FROM 1
+         AND v_event.event_type IS DISTINCT FROM 'accounting_account_updated')
+     OR (NEW.version=1
+         AND v_event.event_type IS DISTINCT FROM 'accounting_account_created') THEN
     RAISE EXCEPTION USING ERRCODE='23514',MESSAGE='ACCOUNTING_ACCOUNT_EVENT_MISMATCH';
   END IF;
   RETURN NEW;
@@ -367,9 +368,10 @@ BEGIN
      OR v_event.entity_id IS DISTINCT FROM NEW.period_id
      OR v_event.entity_version IS DISTINCT FROM NEW.version
      OR v_event.actor_user_id IS DISTINCT FROM NEW.created_by
-     OR v_event.event_type IS DISTINCT FROM CASE
-       WHEN NEW.version=1 THEN 'accounting_period_created'
-       ELSE 'accounting_period_updated' END THEN
+     OR (NEW.version IS DISTINCT FROM 1
+         AND v_event.event_type IS DISTINCT FROM 'accounting_period_updated')
+     OR (NEW.version=1
+         AND v_event.event_type IS DISTINCT FROM 'accounting_period_created') THEN
     RAISE EXCEPTION USING ERRCODE='23514',MESSAGE='ACCOUNTING_PERIOD_EVENT_MISMATCH';
   END IF;
   RETURN NEW;

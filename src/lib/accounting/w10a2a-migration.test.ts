@@ -104,6 +104,11 @@ test("all new tables are RPC-only and event history binds to the resulting ident
   ]);
   assert.match(migration, /ACCOUNTING_ACCOUNT_EVENT_MISMATCH/);
   assert.match(migration, /ACCOUNTING_PERIOD_EVENT_MISMATCH/);
+  assert.doesNotMatch(migration, /v_event\.event_type IS DISTINCT FROM CASE/i);
+  assert.match(migration, /NEW\.version IS DISTINCT FROM 1\s+AND v_event\.event_type IS DISTINCT FROM 'accounting_account_updated'/);
+  assert.match(migration, /NEW\.version=1\s+AND v_event\.event_type IS DISTINCT FROM 'accounting_account_created'/);
+  assert.match(migration, /NEW\.version IS DISTINCT FROM 1\s+AND v_event\.event_type IS DISTINCT FROM 'accounting_period_updated'/);
+  assert.match(migration, /NEW\.version=1\s+AND v_event\.event_type IS DISTINCT FROM 'accounting_period_created'/);
   assert.match(migration, /'accounting_account_created','accounting_account_updated'/);
   assert.match(migration, /'accounting_period_created','accounting_period_updated'/);
 });
