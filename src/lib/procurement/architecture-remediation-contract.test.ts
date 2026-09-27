@@ -5,7 +5,7 @@ import test from "node:test";
 
 const root = join(import.meta.dirname, "../../..");
 const read = (path: string) => readFileSync(join(root, path), "utf8");
-const sql = read("supabase/migrations/20260906120000_w4_architecture_remediation.sql");
+const sql = read("supabase/migrations/20260907085656_w4_architecture_remediation.sql");
 const executable = (text: string) => text.replace(/--.*$/gm, "").replace(/\s+/g, " ").trim();
 function body(source: string, name: string) {
   const start = source.indexOf(`FUNCTION public.${name}(`);

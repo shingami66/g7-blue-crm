@@ -4,15 +4,15 @@ import { join } from "node:path";
 import test from "node:test";
 
 const migration = readFileSync(
-  join(process.cwd(), "supabase/migrations/20260922180000_w8a_event_costing_foundation.sql"),
+  join(process.cwd(), "supabase/migrations/20260922120938_w8a_event_costing_foundation.sql"),
   "utf8",
 );
 const correctiveMigration = readFileSync(
-  join(process.cwd(), "supabase/migrations/20260922200000_w8a_event_costing_rpc_ambiguity_repair.sql"),
+  join(process.cwd(), "supabase/migrations/20260922121651_w8a_event_costing_rpc_ambiguity_repair.sql"),
   "utf8",
 );
 const historicalSemanticsMigration = readFileSync(
-  join(process.cwd(), "supabase/migrations/20260922210000_w8a_historical_costing_semantics_repair.sql"),
+  join(process.cwd(), "supabase/migrations/20260922193231_w8a_historical_costing_semantics_repair.sql"),
   "utf8",
 );
 const historicalCostingFunction = historicalSemanticsMigration.slice(

@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const migration = readFileSync(
-  join(process.cwd(), "supabase/migrations/20260919075451_w7a_customer_receipt_allocation_foundation.sql"),
+  join(process.cwd(), "supabase/migrations/20260919084739_w7a_customer_receipt_allocation_foundation.sql"),
   "utf8",
 );
 const actions = readFileSync(join(process.cwd(), "src/lib/customer-receipts/actions.ts"), "utf8");

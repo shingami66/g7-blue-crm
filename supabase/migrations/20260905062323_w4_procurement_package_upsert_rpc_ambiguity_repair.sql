@@ -1,14 +1,4 @@
--- W4 corrective migration: qualify the procurement package create-path RETURNING list.
--- The original W4 foundation migration is already applied and is intentionally unchanged.
 BEGIN;
-
-DO $$
-BEGIN
-    IF to_regprocedure('public.upsert_procurement_package(uuid,uuid,text,text,text,uuid,text,text)') IS NULL THEN
-        RAISE EXCEPTION 'W4 package ambiguity repair preflight: upsert_procurement_package RPC is missing';
-    END IF;
-END;
-$$;
 
 CREATE OR REPLACE FUNCTION public.upsert_procurement_package(
     p_package_id uuid,

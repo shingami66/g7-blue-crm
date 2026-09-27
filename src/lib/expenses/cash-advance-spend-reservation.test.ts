@@ -93,19 +93,19 @@ const MIGRATION_W5B2C_PATH = path.join(
   process.cwd(),
   "supabase",
   "migrations",
-  "20260910100000_w5b2c_cash_advance_spend_reservation_integrity.sql",
+  "20260909082304_w5b2c_cash_advance_spend_reservation_integrity.sql",
 );
 const MIGRATION_W5B2_PATH = path.join(
   process.cwd(),
   "supabase",
   "migrations",
-  "20260909100000_w5b2_cash_advance_numbering_and_integrity.sql",
+  "20260908232758_w5b2_cash_advance_numbering_and_integrity.sql",
 );
 const MIGRATION_W5A_PATH = path.join(
   process.cwd(),
   "supabase",
   "migrations",
-  "20260907150000_w5a_expense_cash_foundation.sql",
+  "20260907133406_w5a_expense_cash_foundation.sql",
 );
 const ACTIONS_PATH = path.join(process.cwd(), "src", "lib", "expenses", "actions.ts");
 const QUERIES_PATH = path.join(process.cwd(), "src", "lib", "expenses", "queries.ts");
@@ -1029,7 +1029,7 @@ test("9.4 Error Safety: Behavioral test verifying Postgres table/column leaks ar
 test("9.5 Compatibility: Migration preserves canonical pre-W5B-2C non-CA error codes", () => {
   const newSql = fs.readFileSync(MIGRATION_W5B2C_PATH, "utf8");
   const baseSql = fs.readFileSync(
-    path.join(process.cwd(), "supabase", "migrations", "20260908100000_w5b1_expense_document_numbering.sql"),
+    path.join(process.cwd(), "supabase", "migrations", "20260908052104_w5b1_expense_document_numbering.sql"),
     "utf8",
   );
 

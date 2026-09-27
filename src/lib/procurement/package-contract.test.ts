@@ -20,7 +20,7 @@ import {
 
 const REPO_ROOT = join(import.meta.dirname, "../../..");
 const migrationSource = readFileSync(
-  join(REPO_ROOT, "supabase/migrations/20260904100000_w4_procurement_package_foundation.sql"),
+  join(REPO_ROOT, "supabase/migrations/20260905062018_w4_procurement_package_foundation.sql"),
   "utf8",
 );
 const legacyW4Migration = readFileSync(
@@ -28,11 +28,11 @@ const legacyW4Migration = readFileSync(
   "utf8",
 );
 const quotationMigration = readFileSync(
-  join(REPO_ROOT, "supabase/migrations/20260902090000_w4_first_class_supplier_quotations.sql"),
+  join(REPO_ROOT, "supabase/migrations/20260902062807_w4_first_class_supplier_quotations.sql"),
   "utf8",
 );
 const commitmentMigration = readFileSync(
-  join(REPO_ROOT, "supabase/migrations/20260902110000_l1_d07_commitment_receipt.sql"),
+  join(REPO_ROOT, "supabase/migrations/20260902112824_l1_d07_commitment_receipt.sql"),
   "utf8",
 );
 

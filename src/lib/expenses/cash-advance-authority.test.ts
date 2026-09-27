@@ -89,13 +89,13 @@ const MIGRATION_PATH = path.join(
   process.cwd(),
   "supabase",
   "migrations",
-  "20260909100000_w5b2_cash_advance_numbering_and_integrity.sql",
+  "20260908232758_w5b2_cash_advance_numbering_and_integrity.sql",
 );
 const APPROVAL_REPAIR_MIGRATION_PATH = path.join(
   process.cwd(),
   "supabase",
   "migrations",
-  "20260911100000_w5b2c_cash_advance_approval_authority_repair.sql",
+  "20260909110445_w5b2c_cash_advance_approval_authority_repair.sql",
 );
 const ACTIONS_PATH = path.join(process.cwd(), "src", "lib", "expenses", "actions.ts");
 const QUERIES_PATH = path.join(process.cwd(), "src", "lib", "expenses", "queries.ts");

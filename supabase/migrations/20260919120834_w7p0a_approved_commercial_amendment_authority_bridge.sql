@@ -13,8 +13,6 @@ BEGIN
         OR to_regclass('public.invoices') IS NULL
         OR to_regclass('public.audit_logs') IS NULL
         OR to_regprocedure('public._abs_get_service_invoice_exposure(uuid)') IS NULL
-        OR to_regprocedure('public._abs_get_service_payment_history_count(uuid)') IS NULL
-        OR to_regprocedure('public._abs_service_has_historical_authority(uuid)') IS NULL
         OR to_regprocedure('public._abs_validate_scope_items(uuid)') IS NULL
     THEN
         RAISE EXCEPTION USING MESSAGE = 'w7p0a_preflight_required_schema_or_abs_helper_missing';
@@ -146,7 +144,6 @@ SET search_path = pg_catalog, public
 AS $$
 DECLARE
     v_allowed_source text;
-    v_successor public.quotations%ROWTYPE;
 BEGIN
     IF TG_OP = 'DELETE' THEN
         IF OLD.status = 'approved' THEN
@@ -160,21 +157,6 @@ BEGIN
     END IF;
 
     v_allowed_source := current_setting('g7.w7p0a_allow_quotation_supersession', true);
-    IF v_allowed_source IS NOT NULL AND v_allowed_source = OLD.id::text THEN
-        SELECT q.*
-        INTO v_successor
-        FROM public.quotations q
-        WHERE q.id = NEW.superseded_by_quotation_id
-          AND q.service_id = OLD.service_id
-        FOR SHARE;
-        IF NOT FOUND
-            OR v_successor.quotation_family_id IS DISTINCT FROM OLD.quotation_family_id
-            OR v_successor.revision_of_quotation_id IS DISTINCT FROM OLD.id
-            OR COALESCE(v_successor.is_deleted, false)
-        THEN
-            RAISE EXCEPTION USING MESSAGE = 'approved_quotation_immutable';
-        END IF;
-    END IF;
     IF v_allowed_source IS NULL
         OR v_allowed_source <> OLD.id::text
         OR NEW.status IS DISTINCT FROM OLD.status
@@ -323,10 +305,6 @@ BEGIN
                 RAISE EXCEPTION USING MESSAGE = 'scope_already_superseded';
             END IF;
         END IF;
-    END IF;
-
-    IF NEW.status = 'approved' AND v_service_status IN ('Completed', 'Cancelled') THEN
-        RAISE EXCEPTION USING MESSAGE = 'scope_service_lifecycle_ineligible';
     END IF;
 
     IF NEW.status = 'voided' THEN
@@ -561,6 +539,19 @@ BEGIN
         error_code := 'invalid_input'; RETURN NEXT; RETURN;
     END IF;
 
+    SELECT q.service_id INTO v_service_id
+    FROM public.quotations q WHERE q.id = p_source_quotation_id;
+    IF NOT FOUND THEN
+        error_code := 'quotation_not_found'; RETURN NEXT; RETURN;
+    END IF;
+
+    SELECT s.status, s.deleted_at INTO v_service_status, v_service_deleted_at
+    FROM public.services s WHERE s.id = v_service_id FOR UPDATE;
+    service_id := v_service_id;
+    IF NOT FOUND OR v_service_deleted_at IS NOT NULL OR v_service_status IN ('Completed', 'Cancelled') THEN
+        error_code := 'quotation_service_lifecycle_ineligible'; RETURN NEXT; RETURN;
+    END IF;
+
     v_payload := jsonb_build_object(
         'operation', 'approved_commercial_amendment_creation',
         'source_quotation_id', p_source_quotation_id,
@@ -588,19 +579,6 @@ BEGIN
             RETURN NEXT; RETURN;
         END IF;
         error_code := 'mutation_key_conflict'; RETURN NEXT; RETURN;
-    END IF;
-
-    SELECT q.service_id INTO v_service_id
-    FROM public.quotations q WHERE q.id = p_source_quotation_id;
-    IF NOT FOUND THEN
-        error_code := 'quotation_not_found'; RETURN NEXT; RETURN;
-    END IF;
-
-    SELECT s.status, s.deleted_at INTO v_service_status, v_service_deleted_at
-    FROM public.services s WHERE s.id = v_service_id FOR UPDATE;
-    service_id := v_service_id;
-    IF NOT FOUND OR v_service_deleted_at IS NOT NULL OR v_service_status IN ('Completed', 'Cancelled') THEN
-        error_code := 'quotation_service_lifecycle_ineligible'; RETURN NEXT; RETURN;
     END IF;
 
     PERFORM q.id
@@ -832,6 +810,15 @@ BEGIN
         error_code := 'invalid_input'; RETURN NEXT; RETURN;
     END IF;
 
+    SELECT q.service_id INTO v_service_id FROM public.quotations q WHERE q.id = p_source_quotation_id;
+    IF NOT FOUND THEN error_code := 'quotation_not_found'; RETURN NEXT; RETURN; END IF;
+    SELECT s.status, s.deleted_at INTO v_service_status, v_service_deleted_at
+    FROM public.services s WHERE s.id = v_service_id FOR UPDATE;
+    service_id := v_service_id;
+    IF NOT FOUND OR v_service_deleted_at IS NOT NULL OR v_service_status IN ('Completed', 'Cancelled') THEN
+        error_code := 'quotation_service_lifecycle_ineligible'; RETURN NEXT; RETURN;
+    END IF;
+
     v_payload := jsonb_build_object(
         'operation', 'approved_commercial_amendment_approval',
         'source_quotation_id', p_source_quotation_id,
@@ -845,8 +832,6 @@ BEGIN
         IF v_existing.amendment_approval_payload IS DISTINCT FROM v_payload THEN
             error_code := 'mutation_key_conflict'; RETURN NEXT; RETURN;
         END IF;
-        v_service_id := v_existing.service_id;
-        service_id := v_service_id;
         SELECT q.* INTO v_successor FROM public.quotations q WHERE q.id = p_successor_quotation_id;
         SELECT q.* INTO v_source FROM public.quotations q WHERE q.id = p_source_quotation_id;
         IF v_existing.id = p_successor_quotation_id
@@ -870,15 +855,6 @@ BEGIN
             END IF;
         END IF;
         error_code := 'quotation_amendment_approval_incomplete'; RETURN NEXT; RETURN;
-    END IF;
-
-    SELECT q.service_id INTO v_service_id FROM public.quotations q WHERE q.id = p_source_quotation_id;
-    IF NOT FOUND THEN error_code := 'quotation_not_found'; RETURN NEXT; RETURN; END IF;
-    SELECT s.status, s.deleted_at INTO v_service_status, v_service_deleted_at
-    FROM public.services s WHERE s.id = v_service_id FOR UPDATE;
-    service_id := v_service_id;
-    IF NOT FOUND OR v_service_deleted_at IS NOT NULL OR v_service_status IN ('Completed', 'Cancelled') THEN
-        error_code := 'quotation_service_lifecycle_ineligible'; RETURN NEXT; RETURN;
     END IF;
 
     PERFORM q.id FROM public.quotations q

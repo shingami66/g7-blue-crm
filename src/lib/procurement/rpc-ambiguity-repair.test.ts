@@ -17,7 +17,7 @@ const candidateCorrectiveMigration = readFileSync(
   "utf8",
 );
 const documentAttachmentCorrectiveMigration = readFileSync(
-  join(REPO_ROOT, "supabase/migrations/20260901173000_w4_supplier_quotation_document_attachment_rpc_ambiguity_repair.sql"),
+  join(REPO_ROOT, "supabase/migrations/20260901122500_w4_supplier_quotation_document_attachment_rpc_ambiguity_repair.sql"),
   "utf8",
 );
 
@@ -118,7 +118,7 @@ test("the candidate corrective replacement preserves the W4 RPC boundary", () =>
 test("document attachment repair qualifies the conflict target and preserves attach replay outcomes", () => {
   const originalRpc = functionSection(
     readFileSync(
-      join(REPO_ROOT, "supabase/migrations/20260901170000_w4_supplier_quotation_history.sql"),
+      join(REPO_ROOT, "supabase/migrations/20260901121001_w4_supplier_quotation_history.sql"),
       "utf8",
     ),
     "attach_service_procurement_candidate_document",

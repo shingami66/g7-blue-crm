@@ -7,7 +7,7 @@ const MIGRATION_PATH = path.join(
   process.cwd(),
   "supabase",
   "migrations",
-  "20260907150000_w5a_expense_cash_foundation.sql",
+  "20260907133406_w5a_expense_cash_foundation.sql",
 );
 
 const CORRECTIVE_MIGRATION_PATH = path.join(
@@ -204,7 +204,7 @@ test("W5A Contract: All 16 transactional RPCs defined with security definer and 
   const securityDefinerCount = (sql.match(/SECURITY DEFINER/g) || []).length;
   assert.equal(securityDefinerCount, 16, "All 16 RPCs must be SECURITY DEFINER");
 
-  const searchPathCount = (sql.match(/SET search_path = pg_catalog, public/g) || []).length;
+  const searchPathCount = (sql.match(/SET\s+search_path\s*=\s*pg_catalog\s*,\s*public/g) || []).length;
   assert.equal(searchPathCount, 16, "All 16 RPCs must set search_path = pg_catalog, public");
 });
 
@@ -415,7 +415,7 @@ const W5B1_MIGRATION_PATH = path.join(
   process.cwd(),
   "supabase",
   "migrations",
-  "20260907223000_w5b1_expense_finance_review_access.sql",
+  "20260907195718_w5b1_expense_finance_review_access.sql",
 );
 
 const W5B1_SMOKE_PATH = path.join(
@@ -491,7 +491,7 @@ const W5B1B0_MIGRATION_PATH = path.join(
   process.cwd(),
   "supabase",
   "migrations",
-  "20260908100000_w5b1_expense_document_numbering.sql",
+  "20260908052104_w5b1_expense_document_numbering.sql",
 );
 
 const W5B1B0_SMOKE_PATH = path.join(

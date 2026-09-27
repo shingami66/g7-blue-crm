@@ -147,7 +147,7 @@ test("W5C one-click Petty Cash completion composes the governed Expense and ledg
   const actions = read("src/lib/expenses/actions.ts");
   const schemas = read("src/lib/expenses/schemas.ts");
   const dictionary = read("src/lib/i18n/dictionaries/petty-cash.ts");
-  const migration = read("supabase/migrations/20260913110000_w5c_petty_cash_approve_and_disburse.sql");
+  const migration = read("supabase/migrations/20260913112017_w5c_petty_cash_approve_and_disburse.sql");
 
   assert.match(detail, /approveAndDisbursePettyCashExpenseAction/);
   assert.match(detail, /dictionary\.actions\.approveAndDisburse/);

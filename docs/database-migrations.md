@@ -59,27 +59,27 @@ DO UPDATE SET
 
 The following 14 local migrations represent the W4 Procurement & Commitments schema foundation and architecture remediation delivered in reconstructed local history.
 
-- All exact local migration filenames are preserved without modification, reordering, rewriting, or squashing.
+- The 2026-09-27 read-only reconciliation canonicalized repository migration versions to DEV's 109 applied identities and recovered six required historical SQL payloads exactly. DEV history was unchanged; W10A1 remains the only local-only version.
 - Known local-to-DEV identity mappings are recorded based on canonical evidence from DEV project `dpddrqjzqohexixgdqiq`.
-- Migrations where DEV identity remains unproven from current canonical evidence are recorded as `UNKNOWN` rather than inventing an unverified mapping.
-- Local remediation migration `20260906120000_w4_architecture_remediation.sql` was applied to DEV under remote identity `20260907085656`.
+- Earlier `UNKNOWN` entries were resolved by the 2026-09-27 read-only reconciliation; all 109 DEV-applied migration versions are now represented locally, with W10A1 as the only local-only version.
+- Local remediation migration `20260907085656_w4_architecture_remediation.sql` was applied to DEV under remote identity `20260907085656`.
 
 | Local Migration Filename | DEV Project Migration Identity | Scope & Description |
 |---|---|---|
-| `20260901061855_w4_procurement_requirement_sourcing.sql` | `UNKNOWN` | Foundation for service procurement requirements and sourcing compatibility (`service_procurement_requirements`, `service_procurement_candidates`). |
-| `20260901065813_w4_procurement_requirement_rpc_ambiguity_repair.sql` | `UNKNOWN` | RPC parameter qualification repair for procurement requirement functions. |
-| `20260901071504_w4_procurement_candidate_rpc_ambiguity_repair.sql` | `UNKNOWN` | RPC parameter qualification repair for procurement candidate functions. |
-| `20260901150000_shared_business_document_storage_foundation.sql` | `UNKNOWN` | Private business-evidence bucket foundation, metadata tables (`business_documents`, `business_document_links`), and RLS. |
-| `20260901170000_w4_supplier_quotation_history.sql` | `20260901121001` | Supplier quotation history foundation and attachment linking (`supplier_quotations`, `create_supplier_quotation`). |
-| `20260901173000_w4_supplier_quotation_document_attachment_rpc_ambiguity_repair.sql` | `20260901122500` | RPC repair for `attach_document_to_supplier_quotation` parameter qualification. |
-| `20260902090000_w4_first_class_supplier_quotations.sql` | `20260902062807` | First-class supplier quotations schema extensions, status, and numbering (`QUO-SUP-`). |
-| `20260902110000_l1_d07_commitment_receipt.sql` | `20260902112824` | Approved commitments (`approved_commitments`, `approved_commitment_amendments`) and service receipts (`service_receipts`) schema foundation. |
-| `20260902120000_l1_d07_audit_action_compatibility.sql` | `20260902115725` | Compatibility trigger and audit log action updates for commitment and receipt lifecycle events. |
-| `20260904100000_w4_procurement_package_foundation.sql` | `20260905062018` | Procurement package foundation (`service_procurement_packages`, `service_procurement_package_requirements`, `upsert_procurement_package`, `select_procurement_package_supplier`). |
+| `20260901061855_w4_procurement_requirement_sourcing.sql` | `20260901061855` | Foundation for service procurement requirements and sourcing compatibility (`service_procurement_requirements`, `service_procurement_candidates`). |
+| `20260901065813_w4_procurement_requirement_rpc_ambiguity_repair.sql` | `20260901065813` | RPC parameter qualification repair for procurement requirement functions. |
+| `20260901071504_w4_procurement_candidate_rpc_ambiguity_repair.sql` | `20260901071504` | RPC parameter qualification repair for procurement candidate functions. |
+| `20260901102533_shared_business_document_storage_foundation.sql` | `20260901102533` | Private business-evidence bucket foundation, metadata tables (`business_documents`, `business_document_links`), and RLS. |
+| `20260901121001_w4_supplier_quotation_history.sql` | `20260901121001` | Supplier quotation history foundation and attachment linking (`supplier_quotations`, `create_supplier_quotation`). |
+| `20260901122500_w4_supplier_quotation_document_attachment_rpc_ambiguity_repair.sql` | `20260901122500` | RPC repair for `attach_document_to_supplier_quotation` parameter qualification. |
+| `20260902062807_w4_first_class_supplier_quotations.sql` | `20260902062807` | First-class supplier quotations schema extensions, status, and numbering (`QUO-SUP-`). |
+| `20260902112824_l1_d07_commitment_receipt.sql` | `20260902112824` | Approved commitments (`approved_commitments`, `approved_commitment_amendments`) and service receipts (`service_receipts`) schema foundation. |
+| `20260902115725_l1_d07_audit_action_compatibility.sql` | `20260902115725` | Compatibility trigger and audit log action updates for commitment and receipt lifecycle events. |
+| `20260905062018_w4_procurement_package_foundation.sql` | `20260905062018` | Procurement package foundation (`service_procurement_packages`, `service_procurement_package_requirements`, `upsert_procurement_package`, `select_procurement_package_supplier`). |
 | `20260905062323_w4_procurement_package_upsert_rpc_ambiguity_repair.sql` | `20260905062323` | RPC parameter qualification repair for `upsert_procurement_package`. |
 | `20260905062540_w4_procurement_package_audit_action_compatibility.sql` | `20260905062540` | Audit action enum compatibility for procurement package lifecycle events. |
-| `20260905140000_w4_supplier_quotation_line_items.sql` | `20260905114939` | Detailed supplier quotation line items (`supplier_quotation_lines`), pricing modes (`total_only`, `line_items`), and package requirement linkage. |
-| `20260906120000_w4_architecture_remediation.sql` | `20260907085656` | W4 architecture remediation foundation (F01–F06): stable procurement package requirement identity, retirement columns, ON DELETE RESTRICT FK, service receipt submitter/reviewer separation, cancellation obligation guard, governed commitment reopening, audit close evidence, correction replay. |
+| `20260905114939_w4_supplier_quotation_line_items.sql` | `20260905114939` | Detailed supplier quotation line items (`supplier_quotation_lines`), pricing modes (`total_only`, `line_items`), and package requirement linkage. |
+| `20260907085656_w4_architecture_remediation.sql` | `20260907085656` | W4 architecture remediation foundation (F01–F06): stable procurement package requirement identity, retirement columns, ON DELETE RESTRICT FK, service receipt submitter/reviewer separation, cancellation obligation guard, governed commitment reopening, audit close evidence, correction replay. |
 
 ## W5A Expense & Cash Foundation Migration Ledger — 7 September 2026
 
@@ -87,7 +87,7 @@ The following migrations establish the W5A Expense & Cash Accountability Foundat
 
 | Local Migration Filename | DEV Project Migration Identity | Scope & Description |
 |---|---|---|
-| `20260907150000_w5a_expense_cash_foundation.sql` | `20260907133406` | W5A core domain schema: 9 domain tables (`employee_cash_advances`, `cash_advance_returns`, `petty_cash_funds`, `expenses`, `cash_advance_expense_settlements`, `expense_reimbursement_settlements`, `expense_evidence_exceptions`, `expense_documents`, `petty_cash_transactions`), 1 audit compatibility index, 1 authoritative accountability view (`public.expense_accountability_summaries`), 16 transactional RPCs, and strict Segregation of Duties (SoD) table constraints and RPC guards. |
+| `20260907133406_w5a_expense_cash_foundation.sql` | `20260907133406` | W5A core domain schema: 9 domain tables (`employee_cash_advances`, `cash_advance_returns`, `petty_cash_funds`, `expenses`, `cash_advance_expense_settlements`, `expense_reimbursement_settlements`, `expense_evidence_exceptions`, `expense_documents`, `petty_cash_transactions`), 1 audit compatibility index, 1 authoritative accountability view (`public.expense_accountability_summaries`), 16 transactional RPCs, and strict Segregation of Duties (SoD) table constraints and RPC guards. |
 | `20260907164500_w5a_rpc_output_ambiguity_repair.sql` | `20260907164500` | Corrective migration repairing PL/pgSQL `RETURNS TABLE` output-column collision in `attach_expense_document` (`ed.expense_id`, `ed.document_id`) and relation column qualification/syntax in `cancel_expense` (`ers.expense_id`, `caes.expense_id`, `pct.expense_id`). |
 
 ### Workflow Deviation Record (Bounded WARN)
@@ -106,7 +106,7 @@ The following migrations support the W5B Employee Expense Self-Service delivery.
 
 | Local Migration Filename | DEV Project Migration Identity | Scope & Description |
 |---|---|---|
-| `20260907223000_w5b1_expense_finance_review_access.sql` | `UNMAPPED` | Adds `expenses:review` permission to finance reviewer roles (`accountant`, `admin`), establishes Finance review access gate, and validates role-based read/review boundary. Live remote migration history contains remote-only timestamp `20260907195718`; remote identity remains conservatively unmapped without verified pairing. |
-| `20260908100000_w5b1_expense_document_numbering.sql` | `UNMAPPED` | Authoritative Expense document numbering using `generate_document_number('expense')` and `EXP-YYYY-NNNN` sequence formatting; aligns `number_sequences` constraint. Live remote migration history contains remote-only timestamp `20260908052104`; remote identity remains conservatively unmapped without verified pairing. |
+| `20260907195718_w5b1_expense_finance_review_access.sql` | `20260907195718` | Adds `expenses:review` permission to finance reviewer roles (`accountant`, `admin`), establishes Finance review access gate, and validates role-based read/review boundary. The canonical local filename uses the verified DEV identity `20260907195718`. |
+| `20260908052104_w5b1_expense_document_numbering.sql` | `20260908052104` | Authoritative Expense document numbering using `generate_document_number('expense')` and `EXP-YYYY-NNNN` sequence formatting; aligns `number_sequences` constraint. The canonical local filename uses the verified DEV identity `20260908052104`. |
 
 - **Governance & Verification**: Migration history was read-only inspected (`npx supabase migration list`); no migration history was repaired, marked, or altered. No database apply was performed in this closeout.

@@ -7,11 +7,11 @@ import {
 } from "./navigation.ts";
 
 const migration = readFileSync(
-  new URL("../../../supabase/migrations/20260913120000_w6a_supplier_bills_foundation.sql", import.meta.url),
+  new URL("../../../supabase/migrations/20260913161341_w6a_supplier_bills_foundation.sql", import.meta.url),
   "utf8",
 );
 const correctiveMigration = readFileSync(
-  new URL("../../../supabase/migrations/20260914051846_w6a_supplier_bill_admin_self_approval.sql", import.meta.url),
+  new URL("../../../supabase/migrations/20260914061451_w6a_supplier_bill_admin_self_approval.sql", import.meta.url),
   "utf8",
 );
 const sidebar = readFileSync(new URL("../../components/layout/Sidebar.tsx", import.meta.url), "utf8");

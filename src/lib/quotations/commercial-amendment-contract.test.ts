@@ -134,19 +134,19 @@ test("approval contract exposes a bounded successful authority result and replay
 
 test("migration preserves the locked authority bridge and security boundaries", () => {
   const migration = readFileSync(
-    new URL("../../../supabase/migrations/20260919113218_w7p0a_approved_commercial_amendment_authority_bridge.sql", import.meta.url),
+    new URL("../../../supabase/migrations/20260919120834_w7p0a_approved_commercial_amendment_authority_bridge.sql", import.meta.url),
     "utf8",
   );
   const repairMigration = readFileSync(
-    new URL("../../../supabase/migrations/20260919131500_w7p0a_approved_commercial_amendment_creation_ambiguity_repair.sql", import.meta.url),
+    new URL("../../../supabase/migrations/20260919122807_w7p0a_approved_commercial_amendment_creation_ambiguity_repair.sql", import.meta.url),
     "utf8",
   );
   const reviewSourceRecoveryMigration = readFileSync(
-    new URL("../../../supabase/migrations/20260920052403_w7p0a_approved_commercial_amendment_review_source_recovery.sql", import.meta.url),
+    new URL("../../../supabase/migrations/20260919123842_w7p0a_approved_commercial_amendment_review_repair.sql", import.meta.url),
     "utf8",
   );
   const absMetadataRecoveryMigration = readFileSync(
-    new URL("../../../supabase/migrations/20260919160000_w7p0a_approved_commercial_amendment_abs_metadata_repair.sql", import.meta.url),
+    new URL("../../../supabase/migrations/20260919124742_w7p0a_approved_commercial_amendment_abs_metadata_repair.sql", import.meta.url),
     "utf8",
   );
 

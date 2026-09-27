@@ -554,7 +554,7 @@ test("server-only storage boundary contains no client credential or public URL p
 
 test("migration and provisioning manifest keep the bucket private and application-owned", () => {
   const migrationSource = readFileSync(
-    new URL("../../../supabase/migrations/20260901150000_shared_business_document_storage_foundation.sql", import.meta.url),
+    new URL("../../../supabase/migrations/20260901102533_shared_business_document_storage_foundation.sql", import.meta.url),
     "utf8",
   );
   const manifest = JSON.parse(readFileSync(

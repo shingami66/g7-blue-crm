@@ -10,8 +10,8 @@ import { supplierAdvancesHref, supplierAdvancesQueryMatchesPagination } from "./
 
 const root = new URL("../../../", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), "utf8");
-const migration = read("supabase/migrations/20260915070149_w6c_supplier_advances_foundation.sql");
-const correctiveMigration = read("supabase/migrations/20260919053011_w6c_supplier_advance_rpc_output_ambiguity_repair.sql");
+const migration = read("supabase/migrations/20260915084847_w6c_supplier_advances_foundation.sql");
+const correctiveMigration = read("supabase/migrations/20260919064622_w6c_supplier_advance_rpc_output_ambiguity_repair.sql");
 const permissions = read("src/lib/auth/role-permissions.ts");
 const layout = read("src/app/(dashboard)/layout.tsx");
 const sidebar = read("src/components/layout/Sidebar.tsx");

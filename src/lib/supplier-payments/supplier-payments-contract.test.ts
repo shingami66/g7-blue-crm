@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { supplierPaymentsHref, supplierPaymentsQueryMatchesPagination } from "./navigation.ts";
 
-const migration = readFileSync(new URL("../../../supabase/migrations/20260914112636_w6b_supplier_payments_foundation.sql", import.meta.url), "utf8");
+const migration = readFileSync(new URL("../../../supabase/migrations/20260915045431_w6b_supplier_payments_foundation.sql", import.meta.url), "utf8");
 const permissions = readFileSync(new URL("../auth/role-permissions.ts", import.meta.url), "utf8");
 const navigation = readFileSync(new URL("../i18n/dictionaries/navigation.ts", import.meta.url), "utf8");
 const sidebar = readFileSync(new URL("../../components/layout/Sidebar.tsx", import.meta.url), "utf8");

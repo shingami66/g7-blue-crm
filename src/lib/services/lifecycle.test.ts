@@ -4,7 +4,7 @@ import test from "node:test";
 import { mapLegacyServiceStatus } from "./lifecycle.ts";
 
 const MIGRATION = readFileSync(
-  new URL("../../../supabase/migrations/20260901110000_w3_event_lifecycle_compatibility.sql", import.meta.url),
+  new URL("../../../supabase/migrations/20260901045957_w3_event_lifecycle_compatibility.sql", import.meta.url),
   "utf8",
 );
 

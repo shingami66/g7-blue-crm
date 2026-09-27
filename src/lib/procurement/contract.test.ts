@@ -10,7 +10,7 @@ const migration = readFileSync(
   "utf8",
 );
 const quotationMigration = readFileSync(
-  join(REPO_ROOT, "supabase/migrations/20260902090000_w4_first_class_supplier_quotations.sql"),
+  join(REPO_ROOT, "supabase/migrations/20260902062807_w4_first_class_supplier_quotations.sql"),
   "utf8",
 );
 

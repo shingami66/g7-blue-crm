@@ -6,7 +6,7 @@ import test from "node:test";
 const REPO_ROOT = join(import.meta.dirname, "../../..");
 const MIGRATION_PATH = join(
   REPO_ROOT,
-  "supabase/migrations/20260912100000_w5b3_expense_self_approval_authority_repair.sql",
+  "supabase/migrations/20260909124353_w5b3_expense_self_approval_authority_repair.sql",
 );
 const PAGE_PATH = join(REPO_ROOT, "src/app/(dashboard)/expenses/page.tsx");
 const CLIENT_PATH = join(REPO_ROOT, "src/app/(dashboard)/expenses/ExpensesClient.tsx");

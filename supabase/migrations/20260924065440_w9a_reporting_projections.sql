@@ -219,26 +219,26 @@ SELECT jsonb_build_object(
     'as_of_date', (SELECT as_of_date FROM params),
     'report_state', CASE
         WHEN (SELECT completeness FROM params) IS NOT NULL
-         AND (SELECT count(*) FROM completeness_scope) > (SELECT completeness_scan_limit FROM params)
+         AND (SELECT count(*) FROM close_filtered) > (SELECT completeness_scan_limit FROM params)
         THEN 'unavailable'
         ELSE 'ready'
     END,
     'error', CASE
         WHEN (SELECT completeness FROM params) IS NOT NULL
-         AND (SELECT count(*) FROM completeness_scope) > (SELECT completeness_scan_limit FROM params)
+         AND (SELECT count(*) FROM close_filtered) > (SELECT completeness_scan_limit FROM params)
         THEN 'event_completeness_filter_bounded'
         ELSE NULL
     END,
     'detail_total_count', CASE
         WHEN (SELECT completeness FROM params) IS NOT NULL
-         AND (SELECT count(*) FROM completeness_scope) > (SELECT completeness_scan_limit FROM params)
+         AND (SELECT count(*) FROM close_filtered) > (SELECT completeness_scan_limit FROM params)
         THEN NULL
         WHEN (SELECT completeness FROM params) IS NULL THEN (SELECT count(*) FROM close_filtered)
         ELSE (SELECT count(*) FROM filtered)
     END,
     'detail_rows', COALESCE(
         CASE WHEN (SELECT completeness FROM params) IS NOT NULL
-         AND (SELECT count(*) FROM completeness_scope) > (SELECT completeness_scan_limit FROM params)
+                  AND (SELECT count(*) FROM close_filtered) > (SELECT completeness_scan_limit FROM params)
              THEN NULL
              ELSE (SELECT jsonb_agg(
             jsonb_build_object(

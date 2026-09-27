@@ -635,14 +635,16 @@ test("39. Regression: W5C Petty Cash migration remains before later bounded exte
   const migrationsDir = path.join(process.cwd(), "supabase/migrations");
   const files = fs.readdirSync(migrationsDir);
   const migrationFiles = files.filter((f) => f.endsWith(".sql")).sort();
-  const lastMigration = migrationFiles[migrationFiles.length - 1];
+  const w5cMigration = "20260913112017_w5c_petty_cash_approve_and_disburse.sql";
+  const laterW7bMigration = "20260921172146_w7b_flexible_customer_billing_runtime_parity.sql";
   assert.ok(
-    files.includes("20260913110000_w5c_petty_cash_approve_and_disburse.sql"),
+    files.includes(w5cMigration),
     "The W5C Petty Cash migration must remain present",
   );
+  assert.ok(files.includes(laterW7bMigration), "The later W7B bounded extension must remain present");
   assert.ok(
-    lastMigration === "20260921062559_w7b_flexible_customer_billing.sql",
-    "The W7B flexible billing migration must be the newest migration",
+    migrationFiles.indexOf(w5cMigration) < migrationFiles.indexOf(laterW7bMigration),
+    "The W5C Petty Cash migration must precede the later W7B bounded extension",
   );
 });
 
@@ -876,15 +878,15 @@ test("54. Approval repair: corrective migration exists without changing applied 
   const migrationsDir = path.join(process.cwd(), "supabase/migrations");
   const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith(".sql")).sort();
   assert.ok(
-    files.includes("20260907150000_w5a_expense_cash_foundation.sql"),
+    files.includes("20260907133406_w5a_expense_cash_foundation.sql"),
     "The applied W5A migration must remain present",
   );
   assert.ok(
-    files.includes("20260910100000_w5b2c_cash_advance_spend_reservation_integrity.sql"),
+    files.includes("20260909082304_w5b2c_cash_advance_spend_reservation_integrity.sql"),
     "The applied W5B-2C spend migration must remain present",
   );
   assert.ok(
-    files.includes("20260911100000_w5b2c_cash_advance_approval_authority_repair.sql"),
+    files.includes("20260909110445_w5b2c_cash_advance_approval_authority_repair.sql"),
     "The new approval-authority corrective migration must be present",
   );
 });
@@ -1229,7 +1231,7 @@ test("71. Regression: dashboard layout and authority changes stay scoped to W5C"
   assert.ok(layoutSource.includes("PETTY_CASH_PERMISSIONS"));
   const permissionsSource = fs.readFileSync(path.join(process.cwd(), "src/lib/auth/role-permissions.ts"), "utf8");
   assert.ok(permissionsSource.includes("EXPENSE_PERMISSIONS.approve"));
-  const migrationPath = path.join(process.cwd(), "supabase/migrations/20260913100000_w5c_petty_cash_governed_workspace_foundation.sql");
+  const migrationPath = path.join(process.cwd(), "supabase/migrations/20260909194644_w5c_petty_cash_governed_workspace_foundation.sql");
   assert.ok(fs.existsSync(migrationPath));
   const migrationSource = fs.readFileSync(migrationPath, "utf8");
   assert.doesNotMatch(migrationSource, /DROP TABLE/i);

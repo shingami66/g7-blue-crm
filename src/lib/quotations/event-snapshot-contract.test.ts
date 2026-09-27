@@ -7,11 +7,11 @@ const migration = readFileSync(
   "utf8",
 );
 const w2bMigration = readFileSync(
-  new URL("../../../supabase/migrations/20260831120000_w2b_quotation_revision_lineage.sql", import.meta.url),
+  new URL("../../../supabase/migrations/20260831113234_w2b_quotation_revision_lineage.sql", import.meta.url),
   "utf8",
 );
 const amendmentMigration = readFileSync(
-  new URL("../../../supabase/migrations/20260919152000_w7p0a_approved_commercial_amendment_creation_ambiguity_recovery.sql", import.meta.url),
+  new URL("../../../supabase/migrations/20260919124225_w7p0a_approved_commercial_amendment_creation_ambiguity_recovery.sql", import.meta.url),
   "utf8",
 );
 

@@ -4,11 +4,11 @@ import { join } from "node:path";
 import test from "node:test";
 
 const migration = readFileSync(
-  join(process.cwd(), "supabase/migrations/20260923100000_w8b_event_cost_close.sql"),
+  join(process.cwd(), "supabase/migrations/20260923074541_w8b_event_cost_close.sql"),
   "utf8",
 );
 const runtimeRepairMigration = readFileSync(
-  join(process.cwd(), "supabase/migrations/20260923104803_w8b_event_cost_close_runtime_repair.sql"),
+  join(process.cwd(), "supabase/migrations/20260923075521_w8b_event_cost_close_runtime_repair.sql"),
   "utf8",
 );
 const runtimeRegression = readFileSync(

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const migration = readFileSync(
-  new URL("../../../supabase/migrations/20260901100000_w2c_deterministic_discount_allocation.sql", import.meta.url),
+  new URL("../../../supabase/migrations/20260831230756_w2c_deterministic_discount_allocation.sql", import.meta.url),
   "utf8",
 );
 

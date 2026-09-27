@@ -5,7 +5,7 @@ import test from "node:test";
 
 const REPO_ROOT = join(import.meta.dirname, "../../..");
 const migration = readFileSync(
-  join(REPO_ROOT, "supabase/migrations/20260902120000_l1_d07_audit_action_compatibility.sql"),
+  join(REPO_ROOT, "supabase/migrations/20260902115725_l1_d07_audit_action_compatibility.sql"),
   "utf8",
 );
 

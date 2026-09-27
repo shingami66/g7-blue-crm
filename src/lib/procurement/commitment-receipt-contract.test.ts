@@ -4,7 +4,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 const REPO_ROOT = join(import.meta.dirname, "../../..");
-const migration = readFileSync(join(REPO_ROOT, "supabase/migrations/20260902110000_l1_d07_commitment_receipt.sql"), "utf8");
+const migration = readFileSync(join(REPO_ROOT, "supabase/migrations/20260902112824_l1_d07_commitment_receipt.sql"), "utf8");
 
 function executableSql(source: string) {
   return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/--.*$/gm, "");

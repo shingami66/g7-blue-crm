@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const migration = readFileSync(
-  new URL("../../../supabase/migrations/20260831120000_w2b_quotation_revision_lineage.sql", import.meta.url),
+  new URL("../../../supabase/migrations/20260831113234_w2b_quotation_revision_lineage.sql", import.meta.url),
   "utf8",
 );
 const actions = readFileSync(new URL("./actions.ts", import.meta.url), "utf8");

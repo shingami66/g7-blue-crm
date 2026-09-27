@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 
-const migration = fs.readFileSync(path.join(process.cwd(), "supabase/migrations/20260913100000_w5c_petty_cash_governed_workspace_foundation.sql"), "utf8");
+const migration = fs.readFileSync(path.join(process.cwd(), "supabase/migrations/20260909194644_w5c_petty_cash_governed_workspace_foundation.sql"), "utf8");
 const actions = fs.readFileSync(path.join(process.cwd(), "src/lib/expenses/actions.ts"), "utf8");
 
 test("W5C migration is authored as a bounded unapplied extension", () => {

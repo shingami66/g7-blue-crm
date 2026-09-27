@@ -31,7 +31,7 @@ test("W9A1 SQL exposes bounded filters and deterministic row ordering", () => {
 });
 
 test("W9A1 AR and AP summaries aggregate the filtered result separately from the detail page", () => {
-  const ar = read("supabase/migrations/20260922170000_w7d_accounts_receivable_reporting_runtime_repair.sql");
+  const ar = read("supabase/migrations/20260922093913_w7d_accounts_receivable_reporting_runtime_repair.sql");
   const ap = read("supabase/migrations/20260924065440_w9a_reporting_projections.sql");
   const apFiltered = ap.match(/filtered AS \(([\s\S]*?)\), page AS \(/)?.[1];
   const apProjection = ap.slice(ap.indexOf("SELECT jsonb_build_object("));

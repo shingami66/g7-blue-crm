@@ -5,8 +5,8 @@ import test from "node:test";
 import { getProcurementCommitmentDictionary } from "../i18n/dictionaries/procurement-commitments.ts";
 
 const ROOT = join(import.meta.dirname, "../../..");
-const previousMigrationPath = "supabase/migrations/20260906120000_w4_architecture_remediation.sql";
-const correctiveMigrationPath = "supabase/migrations/20260913170214_allow_admin_service_receipt_self_review.sql";
+const previousMigrationPath = "supabase/migrations/20260907085656_w4_architecture_remediation.sql";
+const correctiveMigrationPath = "supabase/migrations/20260913172212_allow_admin_service_receipt_self_review.sql";
 
 function read(path: string) {
   return readFileSync(join(ROOT, path), "utf8");

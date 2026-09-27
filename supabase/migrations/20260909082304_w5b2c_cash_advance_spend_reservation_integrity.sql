@@ -83,7 +83,6 @@ DECLARE
     v_reserved_unsettled_spend numeric;
     v_available_uncommitted_balance numeric;
 BEGIN
-    -- A. Validate basic required request fields
     IF NULLIF(btrim(p_actor_id), '') IS NULL OR p_request_id IS NULL THEN
         RETURN QUERY SELECT 'request_invalid'::text, NULL::uuid, false;
         RETURN;
@@ -96,7 +95,6 @@ BEGIN
         RETURN;
     END;
 
-    -- Store caller intent: record NULL if expense_number is blank/null
     v_effective_expense_number := NULLIF(btrim(p_expense_number), '');
 
     v_new_payload := jsonb_build_object(
@@ -114,10 +112,8 @@ BEGIN
         'claimant_id', p_claimant_id
     );
 
-    -- B. Acquire request-id idempotency protection
     PERFORM pg_advisory_xact_lock(hashtextextended('w5a:expense_submit:' || p_request_id::text, 0));
 
-    -- C. Inspect existing row for request_id
     SELECT a.entity_id, a.details -> 'payload'
     INTO v_existing_id, v_existing_payload
     FROM public.audit_logs a
@@ -126,7 +122,6 @@ BEGIN
       AND a.details ->> 'request_id' = p_request_id::text
     LIMIT 1;
 
-    -- D. & E. Replay vs conflict check before mutable current-state financial validation
     IF FOUND THEN
         IF v_existing_payload IS DISTINCT FROM v_new_payload THEN
             RETURN QUERY SELECT 'expense_submit_request_conflict'::text, v_existing_id, false;
@@ -136,7 +131,6 @@ BEGIN
         RETURN;
     END IF;
 
-    -- F. Funding path exclusivity validations (preserved canonical legacy contracts)
     IF p_origin_type = 'employee_paid' AND p_payment_method != 'personal_funds' THEN
         RETURN QUERY SELECT 'employee_paid_requires_personal_funds'::text, NULL::uuid, false;
         RETURN;
@@ -157,7 +151,6 @@ BEGIN
         RETURN;
     END IF;
 
-    -- Context validations (preserved canonical legacy contracts)
     IF p_context_type = 'event' AND p_service_id IS NULL THEN
         RETURN QUERY SELECT 'event_requires_service_id'::text, NULL::uuid, false;
         RETURN;
@@ -168,7 +161,6 @@ BEGIN
         RETURN;
     END IF;
 
-    -- Claimant validations (preserved canonical legacy contracts)
     IF p_origin_type = 'employee_paid' AND p_claimant_id IS NULL THEN
         RETURN QUERY SELECT 'employee_paid_requires_claimant'::text, NULL::uuid, false;
         RETURN;
@@ -179,9 +171,7 @@ BEGIN
         RETURN;
     END IF;
 
-    -- G. Cash Advance specific structural and financial hardening
     IF p_payment_method = 'cash_advance' THEN
-        -- Row lock on employee_cash_advances before reservation calculation
         SELECT status, context_type, service_id, remaining_balance
         INTO v_adv_status, v_adv_context, v_adv_service_id, v_adv_remaining_balance
         FROM public.employee_cash_advances
@@ -198,7 +188,6 @@ BEGIN
             RETURN;
         END IF;
 
-        -- Context and Service integrity validation
         IF v_adv_context IS DISTINCT FROM p_context_type THEN
             RETURN QUERY SELECT 'service_context_mismatch'::text, NULL::uuid, false;
             RETURN;
@@ -216,10 +205,6 @@ BEGIN
             END IF;
         END IF;
 
-        -- Transactional calculation of reserved unsettled spend
-        -- settled_amount = SUM(cash_advance_expense_settlements.amount for that expense)
-        -- unsettled_amount = GREATEST(expense.amount - settled_amount, 0)
-        -- reserved_unsettled_spend = SUM(unsettled_amount) for active linked expenses status IN ('submitted', 'approved')
         SELECT COALESCE(SUM(
             GREATEST(
                 e.amount - COALESCE((
@@ -243,7 +228,6 @@ BEGIN
         END IF;
     END IF;
 
-    -- Only generate document number for genuinely new request when not provided by caller
     IF v_effective_expense_number IS NULL THEN
         v_effective_expense_number := public.generate_document_number('expense');
         IF v_effective_expense_number IS NULL OR btrim(v_effective_expense_number) = '' THEN
@@ -291,10 +275,6 @@ GRANT EXECUTE ON FUNCTION public.submit_expense(
     text, text, uuid, text, text, numeric, date, text, text, uuid, uuid, uuid, uuid, text, text
 ) TO service_role;
 
-
--- ----------------------------------------------------------------------------
--- 3. Canonical record_cash_advance_return RPC (Hardened for Reserved Spend)
--- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.record_cash_advance_return(
     p_advance_id uuid,
     p_amount numeric,
@@ -330,7 +310,6 @@ DECLARE
     v_reserved_unsettled_spend numeric;
     v_available_uncommitted_balance numeric;
 BEGIN
-    -- A. Validate basic required request fields
     IF p_advance_id IS NULL OR p_request_id IS NULL OR p_amount IS NULL OR p_amount <= 0
        OR NULLIF(btrim(p_actor_id), '') IS NULL THEN
         RETURN QUERY SELECT 'return_request_invalid'::text, NULL::uuid, false;
@@ -342,18 +321,15 @@ BEGIN
     EXCEPTION WHEN OTHERS THEN
         RETURN QUERY SELECT 'invalid_actor_id'::text, NULL::uuid, false;
         RETURN;
-    END IF;
+    END;
 
-    -- B. Acquire request-id idempotency protection
     PERFORM pg_advisory_xact_lock(hashtextextended('w5a:advance_return:' || p_request_id::text, 0));
 
-    -- C. Inspect existing row for request_id
     SELECT id, cash_advance_id, amount, receipt_reference, notes
     INTO v_existing_id, v_existing_advance_id, v_existing_amount, v_existing_ref, v_existing_notes
     FROM public.cash_advance_returns
     WHERE request_id = p_request_id;
 
-    -- D. & E. Replay vs conflict check before mutable current-state financial validation
     IF FOUND THEN
         IF v_existing_advance_id IS DISTINCT FROM p_advance_id
            OR v_existing_amount IS DISTINCT FROM p_amount
@@ -366,7 +342,6 @@ BEGIN
         RETURN;
     END IF;
 
-    -- F. Genuinely new request: lock Cash Advance row
     SELECT status, amount_issued, amount_spent_settled, amount_returned, remaining_balance
     INTO v_status, v_amount_issued, v_spent_settled, v_returned, v_remaining_balance
     FROM public.employee_cash_advances
@@ -383,7 +358,6 @@ BEGIN
         RETURN;
     END IF;
 
-    -- Transactional calculation of reserved unsettled spend
     SELECT COALESCE(SUM(
         GREATEST(
             e.amount - COALESCE((
@@ -401,7 +375,6 @@ BEGIN
 
     v_available_uncommitted_balance := v_remaining_balance - v_reserved_unsettled_spend;
 
-    -- Bound: Return cannot consume cash reserved by active in-flight spend
     IF p_amount > v_available_uncommitted_balance THEN
         RETURN QUERY SELECT 'return_amount_exceeds_available_balance'::text, NULL::uuid, false;
         RETURN;
@@ -414,7 +387,6 @@ BEGIN
     )
     RETURNING id INTO v_id;
 
-    -- Authoritatively reconcile aggregate on employee_cash_advances
     UPDATE public.employee_cash_advances
     SET amount_returned = amount_returned + p_amount,
         status = CASE WHEN (amount_spent_settled + amount_returned + p_amount) = amount_issued THEN 'settled' ELSE status END,
@@ -452,10 +424,6 @@ GRANT EXECUTE ON FUNCTION public.record_cash_advance_return(
     uuid, numeric, text, text, uuid, text, text
 ) TO service_role;
 
-
--- ----------------------------------------------------------------------------
--- 4. Canonical get_cash_advance_balance_summary RPC (Read Model)
--- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.get_cash_advance_balance_summary(p_advance_id uuid)
 RETURNS TABLE(
     advance_id uuid,
@@ -523,10 +491,6 @@ $$;
 REVOKE ALL ON FUNCTION public.get_cash_advance_balance_summary(uuid) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_cash_advance_balance_summary(uuid) TO service_role;
 
-
--- ----------------------------------------------------------------------------
--- 5. Canonical get_linked_cash_advance_expenses RPC (Read Model)
--- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.get_linked_cash_advance_expenses(p_advance_id uuid)
 RETURNS TABLE(
     expense_id uuid,

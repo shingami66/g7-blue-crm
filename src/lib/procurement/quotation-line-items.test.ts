@@ -12,7 +12,7 @@ import type { SupplierQuotationHistoryRecord, SupplierQuotationLineItem } from "
 
 const REPO_ROOT = join(import.meta.dirname, "../../..");
 const migrationSource = readFileSync(
-  join(REPO_ROOT, "supabase/migrations/20260905140000_w4_supplier_quotation_line_items.sql"),
+  join(REPO_ROOT, "supabase/migrations/20260905114939_w4_supplier_quotation_line_items.sql"),
   "utf8",
 );
 
