@@ -3,12 +3,12 @@
 ## CURRENT ROADMAP POSITION — W10B ACCOUNTING JOURNAL CORE — 28 September 2026
 
 - **W10A1 and W10A2a foundations:** published and DEV-verified on `dpddrqjzqohexixgdqiq`; no real accounting profile, chart, period, or grant was bootstrapped.
-- **W10B — Balanced Journal Core and Minimal GL / Trial Balance:** `IMPLEMENTED / PUBLISHED / DEV-VERIFIED — CONTROLLER/OWNER ACCEPTANCE PENDING` — current published commit `d2faaff8caa4cefb9d2e7c4d706ef3fadd9f5227`.
+- **W10B — Balanced Journal Core and Minimal GL / Trial Balance:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` — implementation commit `d2faaff8caa4cefb9d2e7c4d706ef3fadd9f5227`.
   - The DEV migration chain is applied through `20260928010730_w10b_reverse_effect_status_qualifier` (eight W10B migrations). The rollback-clean fixture passed with zero synthetic residue, and the final fresh native read-only Reviewer returned CLEAN.
   - Balanced SAR posting and reversal, governed journal preparation, idempotent posting effects, posting rules, and posted-only General Ledger / Trial Balance reads are delivered. Prepare/post/reverse capabilities are enabled through the existing authority engine; close/reopen remain disabled.
 - **W10B validation:** 84/84 focused accounting/auth tests passed; TypeScript, scoped ESLint, production build, source checks, and diff checks passed. OCR LLM verdict was unavailable because no endpoint is configured.
-- **Deferred boundaries:** no W10C or later work, real openings/chart seeds, persistent periods/grants, close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, or deployment. Professional validation remains incomplete and is required before live/production accounting or statutory/external accounting claims.
-- **EXACT NEXT ACTION:** Controller/Owner review and acceptance of the W10B implementation and DEV evidence; obtain separate fresh exact Owner authorization before W10C.
+- **Deferred boundaries:** no W10C implementation or later work, real openings/chart seeds, persistent periods/grants, close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, or deployment. Professional validation remains incomplete and is required before live/production accounting or statutory/external accounting claims.
+- **EXACT NEXT ACTION:** Read-only W10C discovery. Do not begin W10C implementation without separate fresh exact Owner authorization.
 
 > The dated roadmap section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated roadmap history remains unchanged.
 

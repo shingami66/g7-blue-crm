@@ -3,15 +3,15 @@
 ## CURRENT DELIVERY STATUS — W10B ACCOUNTING JOURNAL CORE — 28 September 2026
 
 - **Published baseline:** W7–W9 remain published. W10A1 accounting authority/profile and W10A2a chart/period foundations are published and DEV-verified on project `dpddrqjzqohexixgdqiq`; no real profiles, charts, periods, or accounting grants were bootstrapped.
-- **W10B — Balanced Journal Core and Minimal GL / Trial Balance:** `IMPLEMENTED / PUBLISHED / DEV-VERIFIED — CONTROLLER/OWNER ACCEPTANCE PENDING`. The published implementation is at `d2faaff8caa4cefb9d2e7c4d706ef3fadd9f5227`.
+- **W10B — Balanced Journal Core and Minimal GL / Trial Balance:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` — implementation commit `d2faaff8caa4cefb9d2e7c4d706ef3fadd9f5227`.
   - Delivers versioned posting rules and journal headers/lines; governed DRAFT preparation, balanced SAR posting and reversal; idempotent source-effect handling; and posted-only General Ledger and Trial Balance reads with bounded cutoffs.
   - Eight W10B migrations are applied to DEV through `20260928010730_w10b_reverse_effect_status_qualifier`: `20260927220412`, `20260927232926`, `20260927233953`, `20260928000819`, `20260928002513`, `20260928003507`, `20260928005718`, and `20260928010730`.
   - `accounting:prepare_journal`, `accounting:post_journal`, and `accounting:reverse_journal` are enabled through the existing authority engine. Period close/reopen remain disabled.
   - The committed rollback-clean fixture passed on DEV and post-run synthetic residue was zero. Persistent accounting profile, chart, period, posting-rule, journal, and grant counts remain zero.
   - Eight W10B tables have RLS and no direct application-role DML grants. Eight W10B RPCs are service-role-only. The final fresh native read-only Reviewer returned CLEAN.
 - **Validation:** 84/84 focused accounting/auth tests passed; TypeScript, scoped ESLint, production build, migration/source checks, and `git diff --check` passed. OCR delegate preview/rule completed; an OCR LLM verdict was unavailable because no endpoint is configured.
-- **Boundaries:** W10C and later work, real opening balances or chart seeds, persistent periods or real-user grants, close/reopen, VAT/ZATCA/FATOORA, DEMO, PROD, and deployment remain out of scope. Professional validation is not complete and remains required before live/production accounting or statutory/external accounting claims.
-- **EXACT NEXT ACTION:** Controller/Owner review and acceptance of the published W10B implementation and DEV evidence. Any W10C work requires separate fresh exact Owner authorization.
+- **Boundaries:** W10C implementation and later work, real opening balances or chart seeds, persistent periods or real-user grants, close/reopen, VAT/ZATCA/FATOORA, DEMO, PROD, and deployment remain out of scope. Professional validation is not complete and remains required before live/production accounting or statutory/external accounting claims.
+- **EXACT NEXT ACTION:** Read-only W10C discovery. Do not begin W10C implementation without separate fresh exact Owner authorization.
 
 > The dated delivery section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated sections remain historical records.
 
