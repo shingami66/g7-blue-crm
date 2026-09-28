@@ -116,6 +116,7 @@ test("W10D DEV fixture covers the bounded source classes and verifies explicit r
     "same request payload was not idempotent",
     "same request identity accepted changed payload",
     "protected AR control bypass was accepted",
+    "held W10D event created a journal or source effect",
     "accounting-date cutoff included a future entry",
     "recorded-at cutoff included a future event",
     "AR party reconciliation is not balanced",
@@ -134,6 +135,16 @@ test("W10D DEV fixture covers the bounded source classes and verifies explicit r
   ]) {
     assert.ok(rollbackFixture.includes(`FROM public.${reversalTable}`), `residue check omits ${reversalTable}`);
   }
+
+  const heldEventHelper = rollbackFixture.match(
+    /CREATE FUNCTION pg_temp\.w10d_fixture_hold\([\s\S]*?\$w10d_fixture_hold\$;/,
+  )?.[0];
+  assert.ok(heldEventHelper, "W10D held-event verification helper is missing");
+  assert.match(heldEventHelper, /v_prepare\.error_code IS DISTINCT FROM 'unsupported_classification'/);
+  assert.match(heldEventHelper, /public\.accounting_ar_bridge_journal_links/);
+  assert.match(heldEventHelper, /public\.accounting_journal_versions jv[\s\S]*?jv\.source_domain='AR_BRIDGE'/);
+  assert.match(heldEventHelper, /public\.accounting_source_effects se[\s\S]*?se\.source_domain='AR_BRIDGE'/);
+  assert.doesNotMatch(heldEventHelper, /v_prepare\.journal_id IS NOT NULL/);
 });
 
 

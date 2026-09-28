@@ -138,8 +138,21 @@ BEGIN
   SELECT * INTO v_prepare FROM public.prepare_accounting_ar_bridge_event(
     v_context.operator_id,v_saved.event_id,v_saved.version,v_context.period_id,v_context.period_version,
     v_context.rule_id,v_context.rule_version,'Reject held W10D event',pg_temp.w10d_req(54528+p_sequence));
-  IF v_prepare.error_code IS DISTINCT FROM 'unsupported_classification' OR v_prepare.journal_id IS NOT NULL THEN
-    RAISE EXCEPTION 'held W10D event was prepared';
+  IF v_prepare.error_code IS DISTINCT FROM 'unsupported_classification'
+     OR EXISTS (SELECT 1 FROM public.accounting_ar_bridge_journal_links jl
+       WHERE jl.profile_id=v_context.profile_id AND jl.event_id=v_saved.event_id
+         AND jl.event_version=v_saved.version)
+     OR EXISTS (SELECT 1 FROM public.accounting_journal_versions jv
+       WHERE jv.profile_id=v_context.profile_id AND jv.source_domain='AR_BRIDGE'
+         AND jv.source_record_key='W7/'||p_source_type||'/'||p_source_id::text
+         AND jv.economic_event_key='W7/'||p_source_type||'/'||p_source_id::text||'/AR_EFFECT'
+         AND jv.posting_purpose='ar_bridge')
+     OR EXISTS (SELECT 1 FROM public.accounting_source_effects se
+       WHERE se.profile_id=v_context.profile_id AND se.source_domain='AR_BRIDGE'
+         AND se.source_record_key='W7/'||p_source_type||'/'||p_source_id::text
+         AND se.economic_event_key='W7/'||p_source_type||'/'||p_source_id::text||'/AR_EFFECT'
+         AND se.posting_purpose='ar_bridge') THEN
+    RAISE EXCEPTION 'held W10D event created a journal or source effect';
   END IF;
   RETURN QUERY SELECT v_saved.event_id,v_saved.version,held_code;
 END;
