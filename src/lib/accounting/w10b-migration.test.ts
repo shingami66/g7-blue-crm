@@ -18,6 +18,10 @@ const journalAuditCorrection = readFileSync(
   new URL("../../../supabase/migrations/20260928000819_w10b_journal_audit_actions.sql", import.meta.url),
   "utf8",
 );
+const economicEffectCorrection = readFileSync(
+  new URL("../../../supabase/migrations/20260928002513_w10b_economic_effect_retry_fingerprint.sql", import.meta.url),
+  "utf8",
+);
 const rollbackFixture = readFileSync(
   new URL("../../../supabase/verification/w10b_journal_core_rollback_regression.sql", import.meta.url),
   "utf8",
@@ -170,4 +174,16 @@ test("W10B scopes journal lifecycle audit actions to journal entities", () => {
   assert.match(rollbackFixture, /journal prepare audit action not captured/);
   assert.match(rollbackFixture, /journal post audit action not captured/);
   assert.match(rollbackFixture, /journal reversal audit action not captured/);
+});
+
+test("W10B economic-effect retries ignore reason while request retries retain it", () => {
+  assert.match(economicEffectCorrection, /v_old_fragment CONSTANT text := \$old\$'journal',p_journal,'reason',btrim\(p_reason\),\$old\$/);
+  assert.match(economicEffectCorrection, /v_new_fragment CONSTANT text := \$new\$'journal',p_journal,\$new\$/);
+  assert.match(economicEffectCorrection, /v_request_fingerprint:=/);
+  assert.match(economicEffectCorrection, /length\(v_source\) - length\(replace\(v_source, v_reason_fragment, ''\)\) <> 2 \* length\(v_reason_fragment\)/);
+  assert.match(economicEffectCorrection, /v_repaired := replace\(v_source, v_old_fragment, v_new_fragment\)/);
+  assert.match(economicEffectCorrection, /length\(v_repaired\) - length\(replace\(v_repaired, v_reason_fragment, ''\)\) <> length\(v_reason_fragment\)/);
+  assert.match(rollbackFixture, /'Stale account regression'[\s\S]*'Source effect retry'/);
+  assert.match(rollbackFixture, /identical economic effect retry was not idempotent/);
+  assert.match(rollbackFixture, /duplicate economic effect with changed payload was accepted/);
 });
