@@ -1439,20 +1439,10 @@ BEGIN
   SELECT p.prosrc INTO v_source FROM pg_catalog.pg_proc p
     WHERE p.oid=v_function AND p.prosecdef AND p.provolatile='v'
       AND p.proconfig @> ARRAY['search_path=pg_catalog, public'];
-  v_old:=$keys$
-      OR (SELECT count(*) FROM jsonb_object_keys(p_journal))<>11
-      OR NOT (p_journal ?& ARRAY['accounting_date','period_id','period_version',
-        'posting_rule_id','rule_version','source_record_key','economic_event_key',
-        'posting_purpose','description_en','description_ar','lines'])
-  $keys$;
-  v_new:=$keys$
-      OR (SELECT count(*) FROM jsonb_object_keys(p_journal)) NOT IN (11,12)
-      OR NOT (p_journal ?& ARRAY['accounting_date','period_id','period_version',
-        'posting_rule_id','rule_version','source_record_key','economic_event_key',
-        'posting_purpose','description_en','description_ar','lines'])
+  v_old:=$keys$(SELECT count(*) FROM jsonb_object_keys(p_journal))<>11$keys$;
+  v_new:=$keys$(SELECT count(*) FROM jsonb_object_keys(p_journal)) NOT IN (11,12)
       OR ((SELECT count(*) FROM jsonb_object_keys(p_journal))=11 AND p_journal ? 'source_domain')
-      OR ((SELECT count(*) FROM jsonb_object_keys(p_journal))=12 AND p_journal->>'source_domain'<>'INCEPTION')
-  $keys$;
+      OR ((SELECT count(*) FROM jsonb_object_keys(p_journal))=12 AND p_journal->>'source_domain' IS DISTINCT FROM 'INCEPTION')$keys$;
   IF v_source IS NULL OR length(v_source)-length(replace(v_source,v_old,''))<>length(v_old) THEN
     RAISE EXCEPTION 'W10C preflight: journal prepare key validation source differs';
   END IF;

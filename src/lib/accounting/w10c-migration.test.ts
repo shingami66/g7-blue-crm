@@ -139,6 +139,8 @@ test("W10C preserves immutable package and coverage lineage and gates protected 
   assert.match(migration, /accounting_inception_journal_link_authorized/);
   assert.match(migration, /v_original\.source_domain=''INCEPTION''/);
   assert.match(migration, /v_source_domain<>'INCEPTION' AND EXISTS/);
+  assert.match(migration, /p_journal->>'source_domain' IS DISTINCT FROM 'INCEPTION'/);
+  assert.match(rollbackFixture, /unsupported W10C source-domain key/);
   assert.match(migration, /'RECONSTRUCTED_HISTORY','OPENING_BALANCE','POST_CUTOVER_SOURCE','UNRESOLVED'/);
 });
 

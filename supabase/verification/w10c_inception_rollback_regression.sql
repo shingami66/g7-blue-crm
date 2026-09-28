@@ -377,6 +377,13 @@ BEGIN
       jsonb_build_object('mapping_key','debit','side','DEBIT','amount_halalah','100000','service_id',NULL,'description_en','Cash','description_ar','نقد'),
       jsonb_build_object('mapping_key','credit','side','CREDIT','amount_halalah','100000','service_id',NULL,'description_en','Loan','description_ar','قرض')));
   SELECT * INTO v_result FROM public.prepare_accounting_journal(
+    '00000000-0000-4000-8000-00000000c811',NULL,0,
+    v_journal||jsonb_build_object('unsupported_w10c_key',true),
+    'Reject unsupported W10C source-domain key',NULL,'00000000-0000-4000-8000-00000000c88b');
+  IF v_result.error_code IS DISTINCT FROM 'invalid_input' THEN
+    RAISE EXCEPTION 'manual journal accepted an unsupported W10C source-domain key: %',v_result.error_code;
+  END IF;
+  SELECT * INTO v_result FROM public.prepare_accounting_journal(
     '00000000-0000-4000-8000-00000000c811',NULL,0,v_journal,
     'Opening source replay probe',NULL,'00000000-0000-4000-8000-00000000c888');
   IF v_result.error_code IS DISTINCT FROM 'economic_effect_conflict' THEN
