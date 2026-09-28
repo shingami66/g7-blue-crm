@@ -10,6 +10,10 @@ const mappingCompatibilityMigration = readFileSync(
   new URL("../../../supabase/migrations/20260928141020_w10d_posting_mapping_key_compatibility.sql", import.meta.url),
   "utf8",
 );
+const auditCompatibilityMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260928160000_w10d_audit_action_compatibility.sql", import.meta.url),
+  "utf8",
+);
 const rollbackFixture = readFileSync(
   new URL("../../../supabase/verification/w10d_accounts_receivable_bridge_rollback_regression.sql", import.meta.url),
   "utf8",
@@ -192,4 +196,49 @@ test("W10D adapts uppercase accounting roles to W10B lowercase posting-rule keys
   assert.ok(serviceRoleSection, "W10D fixture service-role verification section is missing");
   assert.doesNotMatch(serviceRoleSection, /accounting_capability_catalog/);
   assert.match(rollbackFixture.slice(0, rollbackFixture.indexOf("SET LOCAL ROLE service_role;")), /accounting_capability_catalog/);
+});
+
+test("W10D audit compatibility scopes classify and hold actions to bridge events", () => {
+  assert.match(auditCompatibilityMigration, /b29578d02f5c940c4a2b60be53707d49/);
+
+  const existingGenericActions = [
+    "create", "update", "delete", "restore", "status_change", "payment_recorded", "correction",
+    "procurement_package_created", "procurement_package_updated", "procurement_package_requirements_set",
+    "procurement_package_supplier_selected", "procurement_package_supplier_cleared", "expense_submitted",
+    "expense_approved", "expense_rejected", "expense_cancelled", "expense_evidence_exception_recorded",
+    "expense_evidence_exception_disposed", "expense_document_attached", "expense_reimbursement_settled",
+    "cash_advance_requested", "cash_advance_approved", "cash_advance_rejected", "cash_advance_cancelled",
+    "cash_advance_issued", "cash_advance_expense_settled", "cash_advance_returned",
+    "petty_cash_transaction_recorded", "expense_finance_reviewed", "supplier_bill_recorded",
+    "supplier_bill_updated", "supplier_bill_documents_attached", "supplier_bill_approved",
+    "supplier_payment_recorded", "supplier_payment_reversed", "supplier_advance_authorized",
+    "supplier_advance_payment_recorded", "supplier_advance_payment_reversed", "supplier_advance_allocated",
+    "supplier_advance_allocation_corrected", "supplier_advance_refund_recorded",
+    "customer_receipt_recorded", "customer_receipt_allocated", "customer_receipt_allocation_reversed",
+    "customer_receipt_reversed",
+  ];
+  const actionCheck = auditCompatibilityMigration.match(
+    /ADD CONSTRAINT audit_logs_action_check CHECK \(([\s\S]*?)\n\);/,
+  )?.[1];
+  assert.ok(actionCheck, "W10D audit action compatibility constraint is missing");
+
+  const genericActions = actionCheck.match(/action = ANY \(ARRAY\[([\s\S]*?)\]\)\s+OR\s+\(/)?.[1];
+  assert.ok(genericActions, "existing generic audit action array is missing");
+  assert.deepEqual(
+    [...genericActions.matchAll(/'([^']+)'::text/g)].map(([, action]) => action),
+    existingGenericActions,
+  );
+
+  const scopedActions = [...actionCheck.matchAll(
+    /\(\s*entity_type='([^']+)'\s+AND\s+action = ANY \(ARRAY\[([^\]]+)\]\)\s*\)/g,
+  )].map(([, entityType, actions]) => [
+    entityType,
+    [...actions.matchAll(/'([^']+)'::text/g)].map(([, action]) => action),
+  ]);
+  assert.deepEqual(scopedActions, [
+    ["accounting_journal", ["prepare", "post", "reverse"]],
+    ["accounting_inception_package", ["save", "approve", "reject", "prepare", "accept"]],
+    ["accounting_ar_bridge_event", ["classify", "hold"]],
+  ]);
+  assert.match(migration, /CASE WHEN v_status='HELD' THEN 'hold' ELSE 'classify' END/);
 });
