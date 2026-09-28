@@ -30,6 +30,10 @@ const reversalRequestCorrection = readFileSync(
   new URL("../../../supabase/migrations/20260928005718_w10b_reverse_foundation_request_identity.sql", import.meta.url),
   "utf8",
 );
+const reversalStatusCorrection = readFileSync(
+  new URL("../../../supabase/migrations/20260928010730_w10b_reverse_effect_status_qualifier.sql", import.meta.url),
+  "utf8",
+);
 const rollbackFixture = readFileSync(
   new URL("../../../supabase/verification/w10b_journal_core_rollback_regression.sql", import.meta.url),
   "utf8",
@@ -221,6 +225,16 @@ test("W10B reversal uses an internal identity for its prepared foundation versio
   assert.match(rollbackFixture, /full journal reversal failed: error_code %/);
   assert.match(rollbackFixture, /identical reversal retry was not idempotent/);
   assert.match(rollbackFixture, /Duplicate reversal probe/);
+});
+
+test("W10B reversal correction qualifies its source-effect status predicate", () => {
+  assert.match(reversalStatusCorrection, /v_expected_source_md5 CONSTANT text := 'cd78ba012a55a491898ec2fc4fc53178'/);
+  assert.match(reversalStatusCorrection, /v_old_fragment CONSTANT text := \$old\$WHERE profile_id=v_profile_id AND journal_id=v_reversal_id AND status='PREPARED';\$old\$/);
+  assert.match(reversalStatusCorrection, /v_new_fragment CONSTANT text := \$new\$WHERE public\.accounting_source_effects\.profile_id=v_profile_id AND public\.accounting_source_effects\.journal_id=v_reversal_id AND public\.accounting_source_effects\.status='PREPARED';\$new\$/);
+  assert.match(reversalStatusCorrection, /md5\(v_source\) <> v_expected_source_md5/);
+  assert.match(reversalStatusCorrection, /CREATE OR REPLACE FUNCTION public\.reverse_accounting_journal\(/);
+  assert.match(rollbackFixture, /full journal reversal failed: error_code %/);
+  assert.match(rollbackFixture, /journal reversal audit action not captured/);
 });
 
 test("rollback fixture reads the protected event table through a scoped definer helper", () => {
