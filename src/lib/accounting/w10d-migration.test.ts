@@ -18,6 +18,10 @@ const paymentSnapshotFixMigration = readFileSync(
   new URL("../../../supabase/migrations/20260928163327_w10d_payment_invoice_snapshot_fix.sql", import.meta.url),
   "utf8",
 );
+const reconciliationInventoryAliasFixMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260928175327_w10d_reconciliation_inventory_alias_fix.sql", import.meta.url),
+  "utf8",
+);
 const rollbackFixture = readFileSync(
   new URL("../../../supabase/verification/w10d_accounts_receivable_bridge_rollback_regression.sql", import.meta.url),
   "utf8",
@@ -121,6 +125,55 @@ test("W10D payment snapshot correction changes only the invalid invoice identity
   assert.match(paymentSnapshotFixMigration, /v_after_acl IS DISTINCT FROM v_before_acl/);
   assert.match(paymentSnapshotFixMigration, /v_after_config IS DISTINCT FROM v_before_config/);
   assert.match(migration, /SELECT p\.customer_id,i\.service_id,i\.invoice_id,p\.amount,p\.date,p\.created_at,p\.created_at/);
+});
+
+test("W10D reconciliation correction aliases the scalar inventory output without changing behavior", () => {
+  assert.match(migration, /CREATE FUNCTION public\.accounting_ar_bridge_source_inventory[\s\S]*?RETURNS SETOF jsonb/);
+  assert.match(reconciliationInventoryAliasFixMigration, /pg_catalog\.md5\(v_source\)<>'ae4852a8ca75db89004670ddb4d4485c'/);
+  for (const contract of [
+    "v_owner IS DISTINCT FROM 'postgres'::regrole::oid",
+    "v_acl::text IS DISTINCT FROM '{postgres=X/postgres,service_role=X/postgres}'",
+    "v_argument_defaults IS DISTINCT FROM 1",
+    "v_default_expression IS DISTINCT FROM '200'",
+    "v_arguments IS DISTINCT FROM 'p_actor_user_id uuid, p_as_of_date date, p_recorded_at_cutoff timestamp with time zone, p_limit integer DEFAULT 200'",
+    "v_volatility<>'s'",
+    "v_parallel<>'u'",
+    "v_cost<>100",
+    "v_rows<>0",
+    "v_strict",
+    "v_leakproof",
+    "NOT v_security",
+    "v_config IS DISTINCT FROM ARRAY['search_path=pg_catalog, public']",
+    "v_after_argument_defaults IS DISTINCT FROM v_argument_defaults",
+    "v_after_default_expression IS DISTINCT FROM v_default_expression",
+    "v_after_arguments IS DISTINCT FROM v_arguments",
+    "v_after_volatility IS DISTINCT FROM v_volatility",
+    "v_after_parallel IS DISTINCT FROM v_parallel",
+    "v_after_cost IS DISTINCT FROM v_cost",
+    "v_after_rows IS DISTINCT FROM v_rows",
+    "v_after_strict IS DISTINCT FROM v_strict",
+    "v_after_leakproof IS DISTINCT FROM v_leakproof",
+    "v_after_security IS DISTINCT FROM v_security",
+    "v_after_config IS DISTINCT FROM v_config",
+  ]) {
+    assert.ok(reconciliationInventoryAliasFixMigration.includes(contract), `corrective migration omits ${contract}`);
+  }
+  assert.match(
+    reconciliationInventoryAliasFixMigration,
+    /v_old:='SELECT item FROM public\.accounting_ar_bridge_source_inventory\(p_as_of_date,p_recorded_at_cutoff,p_limit\+1\)'/,
+  );
+  assert.match(
+    reconciliationInventoryAliasFixMigration,
+    /v_new:='SELECT inventory\.item FROM public\.accounting_ar_bridge_source_inventory\(p_as_of_date,p_recorded_at_cutoff,p_limit\+1\) AS inventory\(item\)'/,
+  );
+  assert.match(reconciliationInventoryAliasFixMigration, /v_repaired:=replace\(v_source,v_old,v_new\)/);
+  assert.match(reconciliationInventoryAliasFixMigration, /v_after_source IS DISTINCT FROM v_repaired/);
+  assert.match(reconciliationInventoryAliasFixMigration, /v_after_owner IS DISTINCT FROM v_owner OR v_after_acl IS DISTINCT FROM v_acl/);
+  assert.match(reconciliationInventoryAliasFixMigration, /v_after_config IS DISTINCT FROM v_config/);
+  assert.match(
+    reconciliationInventoryAliasFixMigration,
+    /EXECUTE format\(\$ddl\$CREATE OR REPLACE FUNCTION public\.get_accounting_ar_bridge_reconciliation/,
+  );
 });
 
 test("W10D DEV fixture covers the bounded source classes and verifies explicit rollback with no residue", () => {
