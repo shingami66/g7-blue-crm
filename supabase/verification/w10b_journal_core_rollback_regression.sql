@@ -91,6 +91,11 @@ BEGIN
       RAISE EXCEPTION 'W10B rollback fixture requires a DEV_PROVISIONAL profile';
     END IF;
   END IF;
+  IF EXISTS (SELECT 1 FROM public.accounting_capability_catalog
+       WHERE capability IN ('accounting:close_period','accounting:reopen_period')
+         AND (enabled OR runtime_allow_grantable)) THEN
+    RAISE EXCEPTION 'W10B unexpectedly enabled close/reopen workflow';
+  END IF;
 END;
 $preflight$;
 
@@ -526,11 +531,6 @@ BEGIN
     RAISE EXCEPTION 'service_role unexpectedly wrote journal identity directly';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  IF EXISTS (SELECT 1 FROM public.accounting_capability_catalog
-       WHERE capability IN ('accounting:close_period','accounting:reopen_period')
-         AND (enabled OR runtime_allow_grantable)) THEN
-    RAISE EXCEPTION 'W10B unexpectedly enabled close/reopen workflow';
-  END IF;
 END;
 $rpc_regression$;
 RESET ROLE;

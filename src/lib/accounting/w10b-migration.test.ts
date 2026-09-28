@@ -237,6 +237,14 @@ test("W10B reversal correction qualifies its source-effect status predicate", ()
   assert.match(rollbackFixture, /journal reversal audit action not captured/);
 });
 
+test("rollback fixture checks close and reopen capability state before switching to service_role", () => {
+  const roleSwitch = rollbackFixture.indexOf("SET LOCAL ROLE service_role;");
+  const capabilityCheck = rollbackFixture.indexOf("public.accounting_capability_catalog");
+  assert.ok(capabilityCheck >= 0 && capabilityCheck < roleSwitch);
+  assert.doesNotMatch(rollbackFixture.slice(roleSwitch), /public\.accounting_capability_catalog/);
+  assert.match(rollbackFixture, /W10B unexpectedly enabled close\/reopen workflow/);
+});
+
 test("rollback fixture reads the protected event table through a scoped definer helper", () => {
   assert.match(
     rollbackFixture,
