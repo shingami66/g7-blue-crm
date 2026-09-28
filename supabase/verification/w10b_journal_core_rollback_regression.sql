@@ -47,6 +47,16 @@ END;
 $fixture_close$;
 GRANT EXECUTE ON FUNCTION pg_temp.w10b_fixture_mark_period_closed(uuid,uuid,uuid,uuid,uuid) TO service_role;
 
+CREATE FUNCTION pg_temp.w10b_fixture_false_post_event_recorded()
+RETURNS boolean LANGUAGE sql SECURITY DEFINER
+SET search_path=pg_catalog,public AS $fixture_event$
+  SELECT EXISTS (
+    SELECT 1 FROM public.accounting_journal_events
+    WHERE request_id='00000000-0000-4000-8000-00000000b8fe' AND operation='POST'
+  );
+$fixture_event$;
+GRANT EXECUTE ON FUNCTION pg_temp.w10b_fixture_false_post_event_recorded() TO service_role;
+
 DO $preflight$
 DECLARE v_profile_version integer; v_activation text;
 BEGIN
@@ -420,8 +430,7 @@ BEGIN
      OR v_result.version<>2 OR v_result.status<>'POSTED' OR v_result.idempotent_replay THEN
     RAISE EXCEPTION 'fresh post request did not preserve posted revision conflict';
   END IF;
-  IF EXISTS (SELECT 1 FROM public.accounting_journal_events
-      WHERE request_id='00000000-0000-4000-8000-00000000b8fe' AND operation='POST') THEN
+  IF pg_temp.w10b_fixture_false_post_event_recorded() THEN
     RAISE EXCEPTION 'fresh post conflict recorded a false replay event';
   END IF;
 
@@ -443,7 +452,8 @@ BEGIN
     '00000000-0000-4000-8000-00000000b811',v_posted_id,v_period_next,'2301-02-13',
     'Synthetic full reversal','W10B rollback fixture','00000000-0000-4000-8000-00000000b863');
   IF v_result.error_code IS NOT NULL OR v_result.original_journal_id<>v_posted_id OR v_result.version<>2 THEN
-    RAISE EXCEPTION 'full journal reversal failed';
+    RAISE EXCEPTION 'full journal reversal failed: error_code %, original %, version %',
+      v_result.error_code,v_result.original_journal_id,v_result.version;
   END IF;
   v_reversal_id:=v_result.journal_id;
   IF NOT EXISTS (SELECT 1 FROM public.audit_logs

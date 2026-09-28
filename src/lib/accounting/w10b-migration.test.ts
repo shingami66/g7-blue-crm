@@ -26,6 +26,10 @@ const postingEffectStatusCorrection = readFileSync(
   new URL("../../../supabase/migrations/20260928003507_w10b_posting_effect_status_qualifier.sql", import.meta.url),
   "utf8",
 );
+const reversalRequestCorrection = readFileSync(
+  new URL("../../../supabase/migrations/20260928005718_w10b_reverse_foundation_request_identity.sql", import.meta.url),
+  "utf8",
+);
 const rollbackFixture = readFileSync(
   new URL("../../../supabase/verification/w10b_journal_core_rollback_regression.sql", import.meta.url),
   "utf8",
@@ -205,4 +209,28 @@ test("W10B posting correction qualifies the source-effect status predicate", () 
   assert.match(postingEffectStatusCorrection, /length\(v_source\) - length\(replace\(v_source, v_old_fragment, ''\)\) <> length\(v_old_fragment\)/);
   assert.match(postingEffectStatusCorrection, /length\(v_repaired\) - length\(replace\(v_repaired, v_new_fragment, ''\)\) <> length\(v_new_fragment\)/);
   assert.match(rollbackFixture, /balanced journal posting failed/);
+});
+
+test("W10B reversal uses an internal identity for its prepared foundation version", () => {
+  assert.match(reversalRequestCorrection, /v_expected_source_md5 CONSTANT text := '247316c5bc3458d39d74bd948779f3f4'/);
+  assert.match(reversalRequestCorrection, /v_old_fragment CONSTANT text := \$old\$v_reversal_id,1,p_actor_user_id,p_request_id,btrim\(p_reason\),\$old\$/);
+  assert.match(reversalRequestCorrection, /v_new_fragment CONSTANT text := \$new\$v_reversal_id,1,p_actor_user_id,v_v1_event,btrim\(p_reason\),\$new\$/);
+  assert.match(reversalRequestCorrection, /md5\(v_source\) <> v_expected_source_md5/);
+  assert.match(reversalRequestCorrection, /NOT has_function_privilege\('authenticated', p\.oid, 'EXECUTE'\)/);
+  assert.match(reversalRequestCorrection, /CREATE OR REPLACE FUNCTION public\.reverse_accounting_journal\(/);
+  assert.match(rollbackFixture, /full journal reversal failed: error_code %/);
+  assert.match(rollbackFixture, /identical reversal retry was not idempotent/);
+  assert.match(rollbackFixture, /Duplicate reversal probe/);
+});
+
+test("rollback fixture reads the protected event table through a scoped definer helper", () => {
+  assert.match(
+    rollbackFixture,
+    /CREATE FUNCTION pg_temp\.w10b_fixture_false_post_event_recorded\(\)\s+RETURNS boolean LANGUAGE sql SECURITY DEFINER\s+SET search_path=pg_catalog,public[\s\S]*?FROM public\.accounting_journal_events[\s\S]*?GRANT EXECUTE ON FUNCTION pg_temp\.w10b_fixture_false_post_event_recorded\(\) TO service_role;/,
+  );
+  assert.match(rollbackFixture, /IF pg_temp\.w10b_fixture_false_post_event_recorded\(\) THEN/);
+  assert.doesNotMatch(
+    rollbackFixture,
+    /IF EXISTS \(SELECT 1 FROM public\.accounting_journal_events\s+WHERE request_id='00000000-0000-4000-8000-00000000b8fe'/,
+  );
 });
