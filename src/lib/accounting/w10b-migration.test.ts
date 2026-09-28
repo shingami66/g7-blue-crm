@@ -22,6 +22,10 @@ const economicEffectCorrection = readFileSync(
   new URL("../../../supabase/migrations/20260928002513_w10b_economic_effect_retry_fingerprint.sql", import.meta.url),
   "utf8",
 );
+const postingEffectStatusCorrection = readFileSync(
+  new URL("../../../supabase/migrations/20260928003507_w10b_posting_effect_status_qualifier.sql", import.meta.url),
+  "utf8",
+);
 const rollbackFixture = readFileSync(
   new URL("../../../supabase/verification/w10b_journal_core_rollback_regression.sql", import.meta.url),
   "utf8",
@@ -186,4 +190,19 @@ test("W10B economic-effect retries ignore reason while request retries retain it
   assert.match(rollbackFixture, /'Stale account regression'[\s\S]*'Source effect retry'/);
   assert.match(rollbackFixture, /identical economic effect retry was not idempotent/);
   assert.match(rollbackFixture, /duplicate economic effect with changed payload was accepted/);
+});
+
+test("W10B posting correction qualifies the source-effect status predicate", () => {
+  assert.match(postingEffectStatusCorrection, /CREATE OR REPLACE FUNCTION public\.post_accounting_journal\(/);
+  assert.match(postingEffectStatusCorrection, /v_expected_source_md5 CONSTANT text := 'c60505360d431ba42a0df1b73f04950e'/);
+  assert.match(postingEffectStatusCorrection, /md5\(v_source\) <> v_expected_source_md5/);
+  assert.match(postingEffectStatusCorrection, /p\.proowner = 'postgres'::regrole/);
+  assert.match(postingEffectStatusCorrection, /has_function_privilege\('service_role', p\.oid, 'EXECUTE'\)/);
+  assert.match(postingEffectStatusCorrection, /NOT has_function_privilege\('authenticated', p\.oid, 'EXECUTE'\)/);
+  assert.match(postingEffectStatusCorrection, /aclexplode\(p\.proacl\)/);
+  assert.match(postingEffectStatusCorrection, /v_old_fragment CONSTANT text := \$old\$AND status='PREPARED';\$old\$/);
+  assert.match(postingEffectStatusCorrection, /v_new_fragment CONSTANT text := \$new\$AND public\.accounting_source_effects\.status='PREPARED';\$new\$/);
+  assert.match(postingEffectStatusCorrection, /length\(v_source\) - length\(replace\(v_source, v_old_fragment, ''\)\) <> length\(v_old_fragment\)/);
+  assert.match(postingEffectStatusCorrection, /length\(v_repaired\) - length\(replace\(v_repaired, v_new_fragment, ''\)\) <> length\(v_new_fragment\)/);
+  assert.match(rollbackFixture, /balanced journal posting failed/);
 });
