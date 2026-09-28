@@ -457,10 +457,6 @@ BEGIN
      OR public.get_accounting_capability(v_context.admin_id,'accounting:view') IS NOT FALSE THEN
     RAISE EXCEPTION 'CRM Admin wildcard leaked into W10D accounting authority';
   END IF;
-  IF (SELECT count(*) FROM public.accounting_capability_catalog
-      WHERE capability='accounting:manage_ar_bridge' AND enabled AND runtime_allow_grantable AND owner_slice='W10D')<>1 THEN
-    RAISE EXCEPTION 'W10D capability catalog state is invalid';
-  END IF;
   FOR v_table IN SELECT unnest(ARRAY[
     'accounting_ar_bridge_events','accounting_ar_bridge_event_versions',
     'accounting_ar_bridge_journal_links','accounting_ar_bridge_journal_lines']) LOOP

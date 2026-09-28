@@ -188,4 +188,8 @@ test("W10D adapts uppercase accounting roles to W10B lowercase posting-rule keys
   assert.match(mappingCompatibilityMigration, /CASE upper\(v_line\.mapping_key\)/);
   assert.match(rollbackFixture, /'mapping_key',lower\(a\.mapping_key\)/);
   assert.match(rollbackFixture, /'mapping_key','ar_control'[\s\S]*?'mapping_key','contract_liability'/);
+  const serviceRoleSection = rollbackFixture.match(/SET LOCAL ROLE service_role;([\s\S]*?)RESET ROLE;/)?.[1];
+  assert.ok(serviceRoleSection, "W10D fixture service-role verification section is missing");
+  assert.doesNotMatch(serviceRoleSection, /accounting_capability_catalog/);
+  assert.match(rollbackFixture.slice(0, rollbackFixture.indexOf("SET LOCAL ROLE service_role;")), /accounting_capability_catalog/);
 });
