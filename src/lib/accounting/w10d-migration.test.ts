@@ -148,6 +148,15 @@ test("W10D DEV fixture covers the bounded source classes and verifies explicit r
     assert.ok(rollbackFixture.includes(invariant), `fixture is missing assertion: ${invariant}`);
   }
   assert.match(rollbackFixture, /ROLLBACK;/);
+  assert.match(
+    rollbackFixture,
+    /v_context\.customer_id,20,CURRENT_DATE,'bank_transfer','W10D synthetic independent receipt'/,
+  );
+  assert.match(
+    rollbackFixture,
+    /v_receipt_id,v_invoice_receipt,10,'w10d-rollback-operator',pg_temp\.w10d_req\(54275\)\);[\s\S]*?v_result\.receipt_unapplied_amount<>10[\s\S]*?v_receipt_id,v_invoice_target,10,'w10d-rollback-operator',pg_temp\.w10d_req\(54276\)\);[\s\S]*?v_result\.receipt_unapplied_amount<>0/,
+    "separate receipt allocations must target distinct invoices and exhaust the receipt",
+  );
   assert.match(rollbackFixture, /synthetic residue/i);
   for (const reversalTable of [
     "customer_receipt_reversals",

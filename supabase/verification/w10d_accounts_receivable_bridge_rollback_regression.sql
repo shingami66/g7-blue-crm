@@ -554,7 +554,7 @@ BEGIN
   END IF;
 
   SELECT * INTO v_result FROM public.record_customer_receipt(
-    v_context.customer_id,30,CURRENT_DATE,'bank_transfer','W10D synthetic independent receipt',
+    v_context.customer_id,20,CURRENT_DATE,'bank_transfer','W10D synthetic independent receipt',
     'W10D rollback fixture','w10d-rollback-operator',pg_temp.w10d_req(54274));
   IF v_result.error_code IS NOT NULL OR v_result.payment_id IS NULL THEN
     RAISE EXCEPTION 'W10D independent receipt source creation failed: %',v_result.error_code;
@@ -564,14 +564,14 @@ BEGIN
     'RECEIPT',v_receipt_id,'CUSTOMER_ADVANCE',CURRENT_DATE,8);
   SELECT * INTO v_result FROM public.allocate_customer_receipt(
     v_receipt_id,v_invoice_receipt,10,'w10d-rollback-operator',pg_temp.w10d_req(54275));
-  IF v_result.error_code IS NOT NULL OR v_result.allocation_id IS NULL OR v_result.receipt_unapplied_amount<>20 THEN
+  IF v_result.error_code IS NOT NULL OR v_result.allocation_id IS NULL OR v_result.receipt_unapplied_amount<>10 THEN
     RAISE EXCEPTION 'partial independent receipt allocation failed: %',v_result.error_code;
   END IF;
   v_allocation_one:=v_result.allocation_id;
   SELECT * INTO v_bridge FROM pg_temp.w10d_fixture_post(
     'ALLOCATION',v_allocation_one,'SETTLEMENT',CURRENT_DATE,9);
   SELECT * INTO v_result FROM public.allocate_customer_receipt(
-    v_receipt_id,v_invoice_receipt,20,'w10d-rollback-operator',pg_temp.w10d_req(54276));
+    v_receipt_id,v_invoice_target,10,'w10d-rollback-operator',pg_temp.w10d_req(54276));
   IF v_result.error_code IS NOT NULL OR v_result.allocation_id IS NULL OR v_result.receipt_unapplied_amount<>0 THEN
     RAISE EXCEPTION 'full independent receipt allocation failed: %',v_result.error_code;
   END IF;
