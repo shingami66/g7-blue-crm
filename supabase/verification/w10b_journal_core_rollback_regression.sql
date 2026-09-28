@@ -314,8 +314,13 @@ BEGIN
 
   SELECT * INTO v_result FROM public.prepare_accounting_journal(
     '00000000-0000-4000-8000-00000000b811',NULL,0,v_journal,'Stale account regression',NULL,'00000000-0000-4000-8000-00000000b854');
-  IF v_result.error_code IS NOT NULL OR v_result.version<>1 OR v_result.status<>'DRAFT' THEN RAISE EXCEPTION 'balanced draft preparation failed'; END IF;
+  IF v_result.error_code IS NOT NULL OR v_result.version<>1 OR v_result.status<>'DRAFT' THEN RAISE EXCEPTION 'balanced draft preparation failed: %',v_result.error_code; END IF;
   v_stale_account_id:=v_result.journal_id;
+  IF NOT EXISTS (SELECT 1 FROM public.audit_logs
+      WHERE entity_type='accounting_journal' AND entity_id=v_stale_account_id
+        AND action='prepare' AND details->>'request_id'='00000000-0000-4000-8000-00000000b854') THEN
+    RAISE EXCEPTION 'journal prepare audit action not captured';
+  END IF;
   SELECT * INTO v_result FROM public.prepare_accounting_journal(
     '00000000-0000-4000-8000-00000000b811',NULL,0,v_journal,'Stale account regression',NULL,'00000000-0000-4000-8000-00000000b854');
   IF v_result.error_code IS NOT NULL OR v_result.journal_id<>v_stale_account_id OR NOT v_result.idempotent_replay THEN
@@ -401,6 +406,11 @@ BEGIN
   SELECT * INTO v_result FROM public.post_accounting_journal(
     '00000000-0000-4000-8000-00000000b811',v_posted_id,1,'00000000-0000-4000-8000-00000000b862');
   IF v_result.error_code IS NOT NULL OR v_result.version<>2 OR v_result.status<>'POSTED' THEN RAISE EXCEPTION 'balanced journal posting failed'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.audit_logs
+      WHERE entity_type='accounting_journal' AND entity_id=v_posted_id
+        AND action='post' AND details->>'request_id'='00000000-0000-4000-8000-00000000b862') THEN
+    RAISE EXCEPTION 'journal post audit action not captured';
+  END IF;
   SELECT * INTO v_result FROM public.post_accounting_journal(
     '00000000-0000-4000-8000-00000000b811',v_posted_id,1,'00000000-0000-4000-8000-00000000b862');
   IF v_result.error_code IS NOT NULL OR NOT v_result.idempotent_replay THEN RAISE EXCEPTION 'post retry was not idempotent'; END IF;
@@ -436,6 +446,11 @@ BEGIN
     RAISE EXCEPTION 'full journal reversal failed';
   END IF;
   v_reversal_id:=v_result.journal_id;
+  IF NOT EXISTS (SELECT 1 FROM public.audit_logs
+      WHERE entity_type='accounting_journal' AND entity_id=v_reversal_id
+        AND action='reverse' AND details->>'request_id'='00000000-0000-4000-8000-00000000b863') THEN
+    RAISE EXCEPTION 'journal reversal audit action not captured';
+  END IF;
   SELECT * INTO v_result FROM public.reverse_accounting_journal(
     '00000000-0000-4000-8000-00000000b811',v_posted_id,v_period_next,'2301-02-13',
     'Synthetic full reversal','W10B rollback fixture','00000000-0000-4000-8000-00000000b863');

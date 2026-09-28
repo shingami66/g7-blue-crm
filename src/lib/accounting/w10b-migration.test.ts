@@ -14,6 +14,10 @@ const postingRuleAuditCorrection = readFileSync(
   new URL("../../../supabase/migrations/20260927233953_w10b_posting_rule_audit_action.sql", import.meta.url),
   "utf8",
 );
+const journalAuditCorrection = readFileSync(
+  new URL("../../../supabase/migrations/20260928000819_w10b_journal_audit_actions.sql", import.meta.url),
+  "utf8",
+);
 const rollbackFixture = readFileSync(
   new URL("../../../supabase/verification/w10b_journal_core_rollback_regression.sql", import.meta.url),
   "utf8",
@@ -154,4 +158,16 @@ test("W10B rule audit correction uses the permitted create/update action vocabul
         "VALUES(CASE WHEN v_new_version=1 THEN 'create' ELSE 'update' END,\n    'accounting_posting_rule',v_rule_id,p_actor_user_id::text,",
       ),
   );
+});
+
+test("W10B scopes journal lifecycle audit actions to journal entities", () => {
+  assert.match(journalAuditCorrection, /DROP CONSTRAINT audit_logs_action_check/);
+  assert.match(journalAuditCorrection, /'customer_receipt_reversed'::text/);
+  assert.match(
+    journalAuditCorrection,
+    /OR \(\s*entity_type='accounting_journal'\s+AND action = ANY \(ARRAY\['prepare'::text, 'post'::text, 'reverse'::text\]\)\s*\)/,
+  );
+  assert.match(rollbackFixture, /journal prepare audit action not captured/);
+  assert.match(rollbackFixture, /journal post audit action not captured/);
+  assert.match(rollbackFixture, /journal reversal audit action not captured/);
 });
