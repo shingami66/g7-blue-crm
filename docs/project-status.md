@@ -1,19 +1,17 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W9 DASHBOARDS / REPORTS CLOSEOUT — 27 September 2026
+## CURRENT DELIVERY STATUS — W10B ACCOUNTING JOURNAL CORE — 28 September 2026
 
-- **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`), W8A, and W8B remain the published baseline.
-- **W9A1 — Real Reports Center:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV VERIFIED / PUBLISHED` — commit `fd5f77fb3ea6d9a574dbfc96ebb03263bf7b339c`.
-  - The typed catalog, shared Riyadh-time workspace, authoritative AR source, W6 current-only AP projection, W8/W8B managerial Event Economics projection, bounded Excel exports, formula-safe text handling, and EN/AR Bidi presentation remain delivered.
-  - The additive migration `supabase/migrations/20260924065440_w9a_reporting_projections.sql` (originally authored as `supabase/migrations/20260924090000_w9a_reporting_projections.sql`) was applied only to DEV project `dpddrqjzqohexixgdqiq` under DEV identity `20260924065440 w9a_reporting_projections`; the bounded-completeness repair was applied without creating a second migration-history row, and its targeted rereview returned `CLEAN`.
-- **W9B — Permission / Responsibility-Aware Dashboard + Action Center:** `CLOSED / COMPLETE / OWNER-ACCEPTED / VERIFIED / PUBLISHED` — commit `a6a02f866a48ef92c8fbc4c05ed625e5eb1de3e9`.
-  - Delivered effective-permission-driven composition without role-specific Dashboard branches, permission-aware Quick Actions, truthful denied/unavailable/empty states, six-card Business Snapshot, authoritative AR/AP/Event contexts, W3 lifecycle Service Operations, bounded source-derived queues, Operations Focus, Recent Activity, responsive Arabic RTL / English LTR, and Owner-accepted Stitch-informed presentation.
-- **W9 — CLOSED / COMPLETE / OWNER-ACCEPTED / PUBLISHED.** The current Dashboards/Reports lane is satisfied by W9A1 and W9B; no additional current W9 implementation slice is listed.
-- **Deferred W9B queues:** supplier bill/payment/advance and Event Cost Close queues remain deferred where no safe bounded eligibility source exists; these deferrals do not reopen W9B.
-- **W9B database/deployment boundary:** no migration or database mutation was required or performed; no deployment occurred.
-- **W10 POLICY / TECHNICAL BLUEPRINT — ACTIVE.** The [provisional accounting policy](product/w10-accounting-policy.md) and [technical blueprint](product/w10-accounting-technical-blueprint.md) are documentation candidates for Controller review under [G7-OD-28](product/event-erp-decision-register.md#20-current-owner-decision--g7-od-28--27-september-2026).
-- **W10 RUNTIME IMPLEMENTATION — NOT STARTED.** G7-OD-28 permits separately authorized bounded DEV accounting work without prerequisite professional review; this documentation task grants no code/database/migration/deployment/publication authority. Professional validation is deferred, not completed, and remains mandatory before production/live accounting, statutory/external accounting claims, VAT/tax or ZATCA/FATOORA activation, regulatory filing or irreversible production cutover. VAT/ZATCA remain inactive; Layer 2 remains deferred.
-- **EXACT NEXT ACTION:** Controller review of the five-file W10 documentation diff and independent Reviewer findings. Any W10A implementation requires a separate exact Owner authorization; do not start it automatically.
+- **Published baseline:** W7–W9 remain published. W10A1 accounting authority/profile and W10A2a chart/period foundations are published and DEV-verified on project `dpddrqjzqohexixgdqiq`; no real profiles, charts, periods, or accounting grants were bootstrapped.
+- **W10B — Balanced Journal Core and Minimal GL / Trial Balance:** `IMPLEMENTED / PUBLISHED / DEV-VERIFIED — CONTROLLER/OWNER ACCEPTANCE PENDING`. The published implementation is at `d2faaff8caa4cefb9d2e7c4d706ef3fadd9f5227`.
+  - Delivers versioned posting rules and journal headers/lines; governed DRAFT preparation, balanced SAR posting and reversal; idempotent source-effect handling; and posted-only General Ledger and Trial Balance reads with bounded cutoffs.
+  - Eight W10B migrations are applied to DEV through `20260928010730_w10b_reverse_effect_status_qualifier`: `20260927220412`, `20260927232926`, `20260927233953`, `20260928000819`, `20260928002513`, `20260928003507`, `20260928005718`, and `20260928010730`.
+  - `accounting:prepare_journal`, `accounting:post_journal`, and `accounting:reverse_journal` are enabled through the existing authority engine. Period close/reopen remain disabled.
+  - The committed rollback-clean fixture passed on DEV and post-run synthetic residue was zero. Persistent accounting profile, chart, period, posting-rule, journal, and grant counts remain zero.
+  - Eight W10B tables have RLS and no direct application-role DML grants. Eight W10B RPCs are service-role-only. The final fresh native read-only Reviewer returned CLEAN.
+- **Validation:** 84/84 focused accounting/auth tests passed; TypeScript, scoped ESLint, production build, migration/source checks, and `git diff --check` passed. OCR delegate preview/rule completed; an OCR LLM verdict was unavailable because no endpoint is configured.
+- **Boundaries:** W10C and later work, real opening balances or chart seeds, persistent periods or real-user grants, close/reopen, VAT/ZATCA/FATOORA, DEMO, PROD, and deployment remain out of scope. Professional validation is not complete and remains required before live/production accounting or statutory/external accounting claims.
+- **EXACT NEXT ACTION:** Controller/Owner review and acceptance of the published W10B implementation and DEV evidence. Any W10C work requires separate fresh exact Owner authorization.
 
 > The dated delivery section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated sections remain historical records.
 

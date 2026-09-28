@@ -1,17 +1,14 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W9 DASHBOARDS / REPORTS CLOSEOUT — 27 September 2026
+## CURRENT ROADMAP POSITION — W10B ACCOUNTING JOURNAL CORE — 28 September 2026
 
-- **Published dependency waves:** W7B Flexible Billing (`799b8a0`), W7C Customer Credits (`41db9ae`), W7D Accounts Receivable Reporting (`e2736d7`, presentation refinement `a58ba82`), W8A Event Costing, and W8B Event Cost Close remain published/closed.
-- **W9A1 — Real Reports Center:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV VERIFIED / PUBLISHED` — commit `fd5f77fb3ea6d9a574dbfc96ebb03263bf7b339c`.
-- **W9B — Permission / Responsibility-Aware Dashboard + Action Center:** `CLOSED / COMPLETE / OWNER-ACCEPTED / VERIFIED / PUBLISHED` — commit `a6a02f866a48ef92c8fbc4c05ed625e5eb1de3e9`.
-  - Delivered permission-aware Dashboard composition, truthful denied/unavailable/empty states, the six-card Business Snapshot, authoritative AR/AP/Event contexts, W3 lifecycle Service Operations, bounded source-derived Action Center queues, Operations Focus, Recent Activity, responsive EN/AR RTL/LTR presentation, and the Owner-accepted visual direction.
-  - Supplier bill/payment/advance and Event Cost Close action queues remain deferred where no safe bounded eligibility source exists; these deferrals do not reopen W9B.
-- **W9 — CLOSED / COMPLETE / OWNER-ACCEPTED / PUBLISHED.** The current Dashboards/Reports lane is satisfied by W9A1 and W9B; no additional current W9 implementation slice is listed. Future SaaS activation gates remain deferred and are not current W9 delivery work.
-- **W9B database/deployment boundary:** no migration or database mutation was required or performed; no deployment occurred.
-- **W10 POLICY / TECHNICAL BLUEPRINT — ACTIVE.** The [provisional policy](product/w10-accounting-policy.md) and [technical blueprint / proposed slices](product/w10-accounting-technical-blueprint.md#23-proposed-implementation-slices) are documentation candidates under [G7-OD-28](product/event-erp-decision-register.md#20-current-owner-decision--g7-od-28--27-september-2026).
-- **W10 RUNTIME IMPLEMENTATION — NOT STARTED.** Professional review is deferred from the proof-lab blueprint/separately authorized DEV prerequisites to pre-production/live activation, statutory/external accounting claims, VAT/tax or ZATCA/FATOORA activation, regulatory filing and irreversible production cutover; it is not completed. Proposed W10A–I slices each require fresh exact Owner authority, independent review, DEV evidence and Owner acceptance. This documentation task grants no runtime/database/migration/deployment/publication authority. VAT/ZATCA remain inactive and Layer 2 remains deferred.
-- **EXACT NEXT ACTION:** Controller review of the five-file W10 documentation diff and independent Reviewer findings. Do not begin proposed W10A automatically.
+- **W10A1 and W10A2a foundations:** published and DEV-verified on `dpddrqjzqohexixgdqiq`; no real accounting profile, chart, period, or grant was bootstrapped.
+- **W10B — Balanced Journal Core and Minimal GL / Trial Balance:** `IMPLEMENTED / PUBLISHED / DEV-VERIFIED — CONTROLLER/OWNER ACCEPTANCE PENDING` — current published commit `d2faaff8caa4cefb9d2e7c4d706ef3fadd9f5227`.
+  - The DEV migration chain is applied through `20260928010730_w10b_reverse_effect_status_qualifier` (eight W10B migrations). The rollback-clean fixture passed with zero synthetic residue, and the final fresh native read-only Reviewer returned CLEAN.
+  - Balanced SAR posting and reversal, governed journal preparation, idempotent posting effects, posting rules, and posted-only General Ledger / Trial Balance reads are delivered. Prepare/post/reverse capabilities are enabled through the existing authority engine; close/reopen remain disabled.
+- **W10B validation:** 84/84 focused accounting/auth tests passed; TypeScript, scoped ESLint, production build, source checks, and diff checks passed. OCR LLM verdict was unavailable because no endpoint is configured.
+- **Deferred boundaries:** no W10C or later work, real openings/chart seeds, persistent periods/grants, close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, or deployment. Professional validation remains incomplete and is required before live/production accounting or statutory/external accounting claims.
+- **EXACT NEXT ACTION:** Controller/Owner review and acceptance of the W10B implementation and DEV evidence; obtain separate fresh exact Owner authorization before W10C.
 
 > The dated roadmap section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated roadmap history remains unchanged.
 
