@@ -1,6 +1,16 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W10B ACCOUNTING JOURNAL CORE — 28 September 2026
+## CURRENT ROADMAP POSITION — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026
+
+- **W10C — Inception Reconstruction, Coverage, and First Trial Balance:** `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED` on current `main` at `8ec0fd4c3a3e94874575283d014d0585ca317f0b`.
+- The W10C DEV migration chain is applied through `20260928090027_w10c_inception_rule_name_precedence`; the committed rollback-clean fixture passed with zero synthetic residue.
+- Versioned inception evidence and coverage, package review separation, mapping authorization, governed inception journals, and first Trial Balance acceptance are delivered using the existing accounting authority and journal foundations.
+- The W10C correction migration changes only the English/Arabic rule-name JSON extraction precedence and preserves the deployed function signature, security, owner, ACL, and planner configuration.
+- **Validation:** focused Accounting/Auth tests passed 62/62; focused W10C tests passed 7/7; TypeScript, scoped ESLint, production build, migration/source assertions, and diff checks passed.
+- **Deferred boundaries:** no W10D implementation or later work, real opening balances or chart seeds, persistent real profiles/charts/periods/grants, close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, or deployment. Professional validation remains incomplete before live/production accounting or statutory/external accounting claims.
+- **EXACT NEXT ACTION:** Read-only W10D discovery. Do not begin W10D implementation without separate fresh exact Owner authorization.
+
+## HISTORICAL ROADMAP SNAPSHOT — W10B ACCOUNTING JOURNAL CORE — 28 September 2026 (SUPERSEDED CURRENT POSITION)
 
 - **W10A1 and W10A2a foundations:** published and DEV-verified on `dpddrqjzqohexixgdqiq`; no real accounting profile, chart, period, or grant was bootstrapped.
 - **W10B — Balanced Journal Core and Minimal GL / Trial Balance:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` — implementation commit `d2faaff8caa4cefb9d2e7c4d706ef3fadd9f5227`.
@@ -10,7 +20,7 @@
 - **Deferred boundaries:** no W10C implementation or later work, real openings/chart seeds, persistent periods/grants, close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, or deployment. Professional validation remains incomplete and is required before live/production accounting or statutory/external accounting claims.
 - **EXACT NEXT ACTION:** Read-only W10C discovery. Do not begin W10C implementation without separate fresh exact Owner authorization.
 
-> The dated roadmap section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated roadmap history remains unchanged.
+> This W10B roadmap snapshot preserves the 28 September 2026 closeout evidence. Its former next action, read-only W10C discovery, is superseded by the current W10C position above; older dated roadmap history remains unchanged.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W5 CLOSE / W6 CLOSE — 19 September 2026 (SUPERSEDED CURRENT POSITION)
 

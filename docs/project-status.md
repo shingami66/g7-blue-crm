@@ -1,6 +1,18 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W10B ACCOUNTING JOURNAL CORE — 28 September 2026
+## CURRENT DELIVERY STATUS — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026
+
+- **Published baseline:** W7–W9 remain published. W10A1 authority/profile, W10A2a chart/period, and W10B journal/GL foundations remain published; W10A1, W10A2a, W10B, and W10C are DEV-verified on `dpddrqjzqohexixgdqiq`.
+- **W10C — Inception Reconstruction, Coverage, and First Trial Balance:** `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED` — core implementation commit `c249a77`; runtime correction commit `cf13903`; final fixture correction commit `8ec0fd4`.
+  - Delivers versioned evidence inventory and coverage, reconstruction classifications, reviewer separation, mapping authorization, item-linked inception journals, and acceptance tied to the first posted Trial Balance, reusing the W10A2a and W10B accounting foundation.
+  - DEV migrations applied: `20260928051314` (W10C inception foundation), `20260928073049` (inception audit actions), and `20260928090027` (rule-name precedence correction). The additive correction preserves the deployed RPC contract and changes only the English/Arabic JSON description extraction precedence.
+  - The committed rollback-clean W10C fixture passed on DEV. Independent post-run residue counts were zero for synthetic users, profile, accounts, periods, rules, journals, source effects, inception records, authority events, and audit rows.
+  - No W10D implementation was included.
+- **Validation:** 62/62 focused accounting/auth tests passed; the focused W10C suite passed 7/7. TypeScript, scoped ESLint, production build, migration/source assertions, and `git diff --check` passed. OCR deterministic delegation rules were retrieved.
+- **Boundaries:** No real opening balances, persistent real accounting profile/chart/period/account/grants, W10D implementation, period close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, or deployment. Professional validation remains incomplete and is required before live/production accounting or statutory/external accounting claims.
+- **EXACT NEXT ACTION:** Read-only W10D discovery. Do not begin W10D implementation without separate fresh exact Owner authorization.
+
+## HISTORICAL DELIVERY SNAPSHOT — W10B ACCOUNTING JOURNAL CORE — 28 September 2026 (SUPERSEDED CURRENT STATUS)
 
 - **Published baseline:** W7–W9 remain published. W10A1 accounting authority/profile and W10A2a chart/period foundations are published and DEV-verified on project `dpddrqjzqohexixgdqiq`; no real profiles, charts, periods, or accounting grants were bootstrapped.
 - **W10B — Balanced Journal Core and Minimal GL / Trial Balance:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` — implementation commit `d2faaff8caa4cefb9d2e7c4d706ef3fadd9f5227`.
@@ -13,7 +25,7 @@
 - **Boundaries:** W10C implementation and later work, real opening balances or chart seeds, persistent periods or real-user grants, close/reopen, VAT/ZATCA/FATOORA, DEMO, PROD, and deployment remain out of scope. Professional validation is not complete and remains required before live/production accounting or statutory/external accounting claims.
 - **EXACT NEXT ACTION:** Read-only W10C discovery. Do not begin W10C implementation without separate fresh exact Owner authorization.
 
-> The dated delivery section immediately below preserves its 19 September snapshot; its then-current W7 status and next-action statements are superseded by this section. Older dated sections remain historical records.
+> This W10B snapshot preserves the 28 September 2026 closeout evidence. The 19 September W5/W6 snapshot immediately below remains historical; its then-current W7 status and next-action statements are superseded by the current W10C section above.
 
 ## HISTORICAL DELIVERY SNAPSHOT — W5 CLOSE / W6 CLOSE — 19 September 2026 (SUPERSEDED CURRENT STATUS)
 
