@@ -144,6 +144,7 @@ DECLARE
   v_expense uuid; v_ap uuid; v_employee uuid; v_fixed uuid; v_prepaid uuid;
   v_debit_account uuid; v_credit_account uuid; v_debit_version integer; v_credit_version integer;
   v_manual_rule_id uuid; v_item_id uuid; v_journal_id uuid; v_detail jsonb; v_tb record;
+  v_journal_row record;
   v_version_row record; v_line jsonb; v_account_row jsonb; v_cutoff timestamptz;
   v_index integer; v_debits numeric:=0; v_credits numeric:=0;
   v_report_debits numeric:=0; v_report_credits numeric:=0; v_mismatch integer;
@@ -427,13 +428,13 @@ BEGIN
     RAISE EXCEPTION 'package changed after an inception journal was linked';
   END IF;
 
-  FOR v_spec IN SELECT * FROM pg_temp.w10c_fixture_journals ORDER BY item_id LOOP
+  FOR v_journal_row IN SELECT * FROM pg_temp.w10c_fixture_journals ORDER BY item_id LOOP
     SELECT * INTO v_result FROM public.post_accounting_inception_journal(
-      '00000000-0000-4000-8000-00000000c812',v_spec.journal_id,v_spec.prepared_version,gen_random_uuid());
+      '00000000-0000-4000-8000-00000000c812',v_journal_row.journal_id,v_journal_row.prepared_version,gen_random_uuid());
     IF v_result.error_code IS NOT NULL OR v_result.status<>'POSTED' OR v_result.version<>2 THEN
-      RAISE EXCEPTION 'reviewer posting failed for journal %: %',v_spec.journal_id,v_result.error_code;
+      RAISE EXCEPTION 'reviewer posting failed for journal %: %',v_journal_row.journal_id,v_result.error_code;
     END IF;
-    v_detail:=public.get_accounting_journal('00000000-0000-4000-8000-00000000c812',v_spec.journal_id);
+    v_detail:=public.get_accounting_journal('00000000-0000-4000-8000-00000000c812',v_journal_row.journal_id);
     FOR v_version_row IN SELECT value FROM jsonb_array_elements(v_detail->'versions')
       WHERE (value->>'version')::integer=(v_detail->>'current_version')::integer LOOP
       IF v_version_row.value->>'status'<>'POSTED'
