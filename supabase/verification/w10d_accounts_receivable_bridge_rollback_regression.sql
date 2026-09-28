@@ -386,7 +386,7 @@ BEGIN
   UPDATE pg_temp.w10d_fixture_context SET period_id=v_result.period_id,period_version=v_result.version;
 
   SELECT jsonb_agg(jsonb_build_object(
-    'mapping_key',a.mapping_key,'account_id',a.account_id,'account_version',1,
+    'mapping_key',lower(a.mapping_key),'account_id',a.account_id,'account_version',1,
     'allowed_side','EITHER','service_requirement','OPTIONAL') ORDER BY a.mapping_key)
   INTO v_mappings FROM pg_temp.w10d_fixture_accounts a;
   v_rule:=jsonb_build_object('rule_code','W10D_SYN_AR_BRIDGE','name_en','Synthetic W10D AR bridge',
@@ -729,9 +729,9 @@ BEGIN
     'posting_purpose','w10d-protected-account-bypass-probe',
     'description_en','Synthetic manual protected AR probe','description_ar','اختبار ذمم يدوي اصطناعي',
     'lines',jsonb_build_array(
-      jsonb_build_object('mapping_key','AR_CONTROL','side','DEBIT','amount_halalah','1000','service_id',NULL,
+      jsonb_build_object('mapping_key','ar_control','side','DEBIT','amount_halalah','1000','service_id',NULL,
         'description_en','Protected AR debit','description_ar','مدين ذمم محمي'),
-      jsonb_build_object('mapping_key','CONTRACT_LIABILITY','side','CREDIT','amount_halalah','1000','service_id',NULL,
+      jsonb_build_object('mapping_key','contract_liability','side','CREDIT','amount_halalah','1000','service_id',NULL,
         'description_en','Contract liability credit','description_ar','دائن التزام عقد')));
   SELECT * INTO v_result FROM public.prepare_accounting_journal(
     v_context.operator_id,NULL,0,v_manual_journal,'W10D manual AR bypass probe',NULL,pg_temp.w10d_req(54800));

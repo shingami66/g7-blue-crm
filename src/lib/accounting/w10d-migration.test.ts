@@ -6,6 +6,10 @@ const migration = readFileSync(
   new URL("../../../supabase/migrations/20260928105910_w10d_accounts_receivable_accounting_bridge.sql", import.meta.url),
   "utf8",
 );
+const mappingCompatibilityMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260928141020_w10d_posting_mapping_key_compatibility.sql", import.meta.url),
+  "utf8",
+);
 const rollbackFixture = readFileSync(
   new URL("../../../supabase/verification/w10d_accounts_receivable_bridge_rollback_regression.sql", import.meta.url),
   "utf8",
@@ -171,4 +175,17 @@ test("W10D bounds source inventory before snapshot reads and guards allocation o
     rollbackFixture.includes("bounded W10D reconciliation limit was not enforced"),
     "fixture is missing the bounded reconciliation assertion",
   );
+});
+
+test("W10D adapts uppercase accounting roles to W10B lowercase posting-rule keys", () => {
+  const postingSpec = mappingCompatibilityMigration.match(
+    /CREATE OR REPLACE FUNCTION public\.accounting_ar_bridge_posting_spec\([\s\S]*?\$w10d_posting_spec_v2\$;/,
+  )?.[0];
+  assert.ok(postingSpec, "W10D lowercase-key posting spec replacement is missing");
+  assert.doesNotMatch(postingSpec, /'(?:debit_key|credit_key)','[A-Z_]+/);
+  assert.match(postingSpec, /'debit_role','AR_CONTROL'/);
+  assert.match(mappingCompatibilityMigration, /CASE upper\(p_mapping_key\)/);
+  assert.match(mappingCompatibilityMigration, /CASE upper\(v_line\.mapping_key\)/);
+  assert.match(rollbackFixture, /'mapping_key',lower\(a\.mapping_key\)/);
+  assert.match(rollbackFixture, /'mapping_key','ar_control'[\s\S]*?'mapping_key','contract_liability'/);
 });
