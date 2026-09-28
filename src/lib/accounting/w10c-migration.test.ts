@@ -274,6 +274,10 @@ test("W10C package detail schema exposes every immutable package, coverage, and 
 
 test("W10C rollback fixture covers SoD, unresolved blocking, source replay, first TB, and residue", () => {
   assert.match(rollbackFixture, /^-- W10C synthetic DEV regression only\.[\s\S]*?\nBEGIN;/);
+  assert.match(
+    rollbackFixture,
+    /'00000000-0000-4000-8000-00000000c812'::uuid,'accounting:prepare_journal','00000000-0000-4000-8000-00000000c841'::uuid/,
+  );
   for (const invariant of [
     "unresolved_material_evidence",
     "separation_required",
