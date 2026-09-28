@@ -34,6 +34,8 @@ const {
   saveAccountingAccountInputSchema,
   saveAccountingPeriodInputSchema,
   setAccountingCapabilityInputSchema,
+  saveAccountingArBridgeEventInputSchema,
+  accountingArBridgeReconciliationSchema,
 } = await import("./schemas.ts");
 
 const inactiveProfile = {
@@ -204,6 +206,91 @@ test("account save schema preserves versioned identity and protected control cla
     }).success,
     true,
   );
+});
+
+test("W10D event schema pairs classification evidence and requires accounting dates only for ready treatments", () => {
+  const base = {
+    source_type: "RECEIPT",
+    source_record_id: "00000000-0000-4000-8000-00000000d701",
+    expected_version: 0,
+    classification: "CUSTOMER_ADVANCE",
+    accounting_date: "2026-09-28",
+    evidence_ref: "synthetic://w10d/receipt-cash-account",
+    evidence_sha256: "a".repeat(64),
+    reason: "Synthetic receipt classification",
+    request_id: "00000000-0000-4000-8000-00000000d702",
+  };
+  assert.equal(saveAccountingArBridgeEventInputSchema.safeParse(base).success, true);
+  assert.equal(
+    saveAccountingArBridgeEventInputSchema.safeParse({ ...base, evidence_sha256: null }).success,
+    false,
+  );
+  assert.equal(
+    saveAccountingArBridgeEventInputSchema.safeParse({ ...base, accounting_date: null }).success,
+    false,
+  );
+  assert.equal(
+    saveAccountingArBridgeEventInputSchema.safeParse({
+      ...base,
+      classification: "HELD_REVENUE_CORRECTION",
+      accounting_date: null,
+      evidence_ref: null,
+      evidence_sha256: null,
+    }).success,
+    true,
+  );
+});
+
+test("W10D reconciliation schema carries held, duplicate, party, and source/accounting date differences", () => {
+  const id = "00000000-0000-4000-8000-00000000d711";
+  const reconciliation = {
+    state: "READY",
+    as_of_date: "2026-09-28",
+    recorded_at_cutoff: "2026-09-28T12:00:00Z",
+    source_event_count: 2,
+    posted_effect_count: 1,
+    held_unresolved_count: 1,
+    inception_covered_count: 0,
+    missing_effect_count: 0,
+    duplicate_conflict_count: 0,
+    party_difference_count: 1,
+    timing_difference_count: 1,
+    truncated: false,
+    events: [{
+      source_type: "INVOICE",
+      source_record_id: id,
+      source_record_key: `W7/INVOICE/${id}`,
+      economic_event_key: `W7/INVOICE/${id}/AR_EFFECT`,
+      reconciliation_status: "DUPLICATE_CONFLICT",
+      event_id: null,
+      event_version: null,
+      classification: null,
+      customer_id: id,
+      service_id: id,
+      invoice_id: id,
+      amount_halalah: "12500",
+      source_business_date: "2026-09-27",
+      source_recorded_at: "2026-09-27T08:00:00Z",
+      accounting_date: null,
+      posted_accounting_date: null,
+      posted_at: null,
+      journal_id: null,
+      held_code: null,
+      expected_ar_delta_halalah: "12500",
+      posted_ar_delta_halalah: "0",
+      source_snapshot_sha256: null,
+    }],
+    party_balances: [{
+      customer_id: id,
+      service_id: id,
+      invoice_id: id,
+      source_ar_delta_halalah: "12500",
+      posted_ar_delta_halalah: "0",
+      difference_halalah: "12500",
+    }],
+  };
+  assert.equal(accountingArBridgeReconciliationSchema.safeParse(reconciliation).success, true);
+  assert.equal(accountingArBridgeReconciliationSchema.safeParse({ ...reconciliation, source_event_count: -1 }).success, false);
 });
 
 test("W10B journal and report schemas preserve versioned evidence and bounded cutoff inputs", () => {

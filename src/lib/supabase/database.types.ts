@@ -3767,6 +3767,71 @@ export type Database = {
           package_id: string
         }[]
       }
+      save_accounting_ar_bridge_event: {
+        Args: {
+          p_actor_user_id: string
+          p_source_type: string
+          p_source_record_id: string
+          p_expected_version: number
+          p_classification: string
+          p_accounting_date: string | null
+          p_evidence_ref: string | null
+          p_evidence_sha256: string | null
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          event_id: string | null
+          version: number | null
+          status: string | null
+          idempotent_replay: boolean
+        }[]
+      }
+      prepare_accounting_ar_bridge_event: {
+        Args: {
+          p_actor_user_id: string
+          p_event_id: string
+          p_event_version: number
+          p_period_id: string
+          p_period_version: number
+          p_posting_rule_id: string
+          p_rule_version: number
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          journal_id: string | null
+          version: number | null
+          status: string | null
+          idempotent_replay: boolean
+        }[]
+      }
+      post_accounting_ar_bridge_journal: {
+        Args: {
+          p_actor_user_id: string
+          p_journal_id: string
+          p_expected_version: number
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          journal_id: string | null
+          version: number | null
+          status: string | null
+          idempotent_replay: boolean
+        }[]
+      }
+      get_accounting_ar_bridge_reconciliation: {
+        Args: {
+          p_actor_user_id: string
+          p_as_of_date: string
+          p_recorded_at_cutoff: string
+          p_limit?: number
+        }
+        Returns: Json
+      }
       start_service_execution: {
         Args: { p_actor_id: string; p_actor_role: string; p_service_id: string }
         Returns: {

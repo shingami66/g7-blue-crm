@@ -467,7 +467,7 @@ const accountingJournalVersionSchema = z
     accounting_date: validDate,
     posting_rule_id: z.string().uuid(),
     rule_version: z.number().int().positive(),
-    source_domain: z.literal("CONTROLLED_MANUAL"),
+  source_domain: z.enum(["CONTROLLED_MANUAL", "INCEPTION", "AR_BRIDGE"]),
     source_record_key: boundedText(200),
     economic_event_key: boundedText(200),
     posting_purpose: boundedText(80),
@@ -851,3 +851,121 @@ export const accountingInceptionPackageDetailSchema = z.object({
     trial_balance: inceptionTrialBalanceSchema,
   }).strict().nullable(),
 }).strict();
+
+const accountingArBridgeSourceTypeSchema = z.enum([
+  "INVOICE", "PAYMENT", "RECEIPT", "ALLOCATION", "RECEIPT_REVERSAL",
+  "ALLOCATION_REVERSAL", "CREDIT_ADJUSTMENT", "CREDIT_ADJUSTMENT_REVERSAL",
+  "CREDIT_APPLICATION", "CREDIT_APPLICATION_REVERSAL", "REFUND", "REFUND_REVERSAL",
+]);
+const accountingArBridgeClassificationSchema = z.enum([
+  "UNCONDITIONAL_CONTRACT_LIABILITY", "UNCONDITIONAL_CONTRACT_ASSET",
+  "CUSTOMER_ADVANCE", "SETTLEMENT", "REVERSAL", "CUSTOMER_LIABILITY",
+  "CUSTOMER_LIABILITY_REFUND", "HELD_UNSUPPORTED_ENTITLEMENT", "HELD_UNSUPPORTED_CASH",
+  "HELD_REVENUE_CORRECTION", "HELD_UNSUPPORTED_TREATMENT",
+]);
+const heldArBridgeClassificationSchema = z.enum([
+  "HELD_UNSUPPORTED_ENTITLEMENT", "HELD_UNSUPPORTED_CASH",
+  "HELD_REVENUE_CORRECTION", "HELD_UNSUPPORTED_TREATMENT",
+]);
+export const saveAccountingArBridgeEventInputSchema = z.object({
+  source_type: accountingArBridgeSourceTypeSchema,
+  source_record_id: z.string().uuid(),
+  expected_version: z.number().int().nonnegative(),
+  classification: accountingArBridgeClassificationSchema,
+  accounting_date: validDate.nullable(),
+  evidence_ref: nullableEvidence,
+  evidence_sha256: z.string().regex(/^[0-9a-f]{64}$/).nullable(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict().superRefine((value, context) => {
+  if ((value.evidence_ref === null) !== (value.evidence_sha256 === null)) {
+    context.addIssue({ code: "custom", path: ["evidence_sha256"], message: "Evidence reference and SHA-256 must be supplied together" });
+  }
+  if (!heldArBridgeClassificationSchema.safeParse(value.classification).success && value.accounting_date === null) {
+    context.addIssue({ code: "custom", path: ["accounting_date"], message: "Ready classifications require an accounting date" });
+  }
+});
+export const prepareAccountingArBridgeEventInputSchema = z.object({
+  event_id: z.string().uuid(),
+  event_version: z.number().int().positive(),
+  period_id: z.string().uuid(),
+  period_version: z.number().int().positive(),
+  posting_rule_id: z.string().uuid(),
+  rule_version: z.number().int().positive(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict();
+export const postAccountingArBridgeJournalInputSchema = z.object({
+  journal_id: z.string().uuid(),
+  expected_version: z.number().int().positive(),
+  request_id: z.string().uuid(),
+}).strict();
+export const accountingArBridgeReconciliationInputSchema = z.object({
+  as_of_date: validDate,
+  recorded_at_cutoff: z.string().datetime({ offset: true }),
+  limit: z.number().int().min(1).max(500).default(200),
+}).strict();
+export const accountingArBridgeEventMutationResultSchema = z.object({
+  error_code: z.string().nullable(),
+  event_id: z.string().uuid().nullable(),
+  version: z.number().int().positive().nullable(),
+  status: z.enum(["READY", "HELD"]).nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+export const accountingArBridgeJournalMutationResultSchema = z.object({
+  error_code: z.string().nullable(),
+  journal_id: z.string().uuid().nullable(),
+  version: z.number().int().positive().nullable(),
+  status: z.enum(["DRAFT", "POSTED"]).nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+const accountingArBridgeReconciliationEventSchema = z.object({
+  source_type: accountingArBridgeSourceTypeSchema,
+  source_record_id: z.string().uuid(),
+  source_record_key: boundedText(200),
+  economic_event_key: boundedText(200),
+  reconciliation_status: z.enum(["POSTED", "PREPARED", "HELD", "INCEPTION_COVERED", "MISSING_EFFECT", "DUPLICATE_CONFLICT"]),
+  event_id: z.string().uuid().nullable(),
+  event_version: z.number().int().positive().nullable(),
+  classification: accountingArBridgeClassificationSchema.nullable(),
+  customer_id: z.string().uuid(),
+  service_id: z.string().uuid().nullable(),
+  invoice_id: z.string().uuid().nullable(),
+  amount_halalah: z.string().regex(/^[1-9][0-9]*$/),
+  source_business_date: validDate.nullable(),
+  source_recorded_at: z.string(),
+  accounting_date: validDate.nullable(),
+  posted_accounting_date: validDate.nullable(),
+  posted_at: z.string().nullable(),
+  journal_id: z.string().uuid().nullable(),
+  held_code: z.string().nullable(),
+  expected_ar_delta_halalah: z.string().regex(/^(0|-?[1-9][0-9]*)$/),
+  posted_ar_delta_halalah: z.string().regex(/^(0|-?[1-9][0-9]*)$/),
+  source_snapshot_sha256: z.string().regex(/^[0-9a-f]{64}$/).nullable(),
+}).strict();
+export const accountingArBridgeReconciliationSchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("NOT_INITIALIZED") }).strict(),
+  z.object({
+    state: z.literal("READY"),
+    as_of_date: validDate,
+    recorded_at_cutoff: z.string(),
+    source_event_count: z.number().int().nonnegative(),
+    posted_effect_count: z.number().int().nonnegative(),
+    held_unresolved_count: z.number().int().nonnegative(),
+    inception_covered_count: z.number().int().nonnegative(),
+    missing_effect_count: z.number().int().nonnegative(),
+    duplicate_conflict_count: z.number().int().nonnegative(),
+    party_difference_count: z.number().int().nonnegative(),
+    timing_difference_count: z.number().int().nonnegative(),
+    truncated: z.boolean(),
+    events: z.array(accountingArBridgeReconciliationEventSchema),
+    party_balances: z.array(z.object({
+      customer_id: z.string().uuid(),
+      service_id: z.string().uuid().nullable(),
+      invoice_id: z.string().uuid().nullable(),
+      source_ar_delta_halalah: z.string().regex(/^(0|-?[1-9][0-9]*)$/),
+      posted_ar_delta_halalah: z.string().regex(/^(0|-?[1-9][0-9]*)$/),
+      difference_halalah: z.string().regex(/^(0|-?[1-9][0-9]*)$/),
+    }).strict()),
+  }).strict(),
+]);

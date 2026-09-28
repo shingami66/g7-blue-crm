@@ -8,6 +8,7 @@ export const ACCOUNTING_CAPABILITIES = [
   "accounting:post_journal",
   "accounting:reverse_journal",
   "accounting:manage_inception",
+  "accounting:manage_ar_bridge",
   "accounting:reconcile_bank",
   "accounting:close_period",
   "accounting:reopen_period",
@@ -123,6 +124,12 @@ export type AccountingActionErrorCode =
   | "review_required"
   | "separation_required"
   | "trial_balance_incomplete"
+  | "source_payload_conflict"
+  | "original_effect_missing"
+  | "cash_account_evidence_missing"
+  | "classification_evidence_missing"
+  | "revenue_correction_required"
+  | "unsupported_source_treatment"
   | "dependency_failure";
 
 export type AccountingActionResult<T> =
@@ -286,7 +293,7 @@ export type AccountingJournalVersion = {
   accounting_date: string;
   posting_rule_id: string;
   rule_version: number;
-  source_domain: "CONTROLLED_MANUAL";
+  source_domain: "CONTROLLED_MANUAL" | "INCEPTION" | "AR_BRIDGE";
   source_record_key: string;
   economic_event_key: string;
   posting_purpose: string;
@@ -573,3 +580,118 @@ export type AccountingInceptionPackageDetail = {
     trial_balance: AccountingInceptionAcceptanceResult["trial_balance"];
   };
 };
+
+export type AccountingArBridgeSourceType =
+  | "INVOICE"
+  | "PAYMENT"
+  | "RECEIPT"
+  | "ALLOCATION"
+  | "RECEIPT_REVERSAL"
+  | "ALLOCATION_REVERSAL"
+  | "CREDIT_ADJUSTMENT"
+  | "CREDIT_ADJUSTMENT_REVERSAL"
+  | "CREDIT_APPLICATION"
+  | "CREDIT_APPLICATION_REVERSAL"
+  | "REFUND"
+  | "REFUND_REVERSAL";
+
+export type AccountingArBridgeClassification =
+  | "UNCONDITIONAL_CONTRACT_LIABILITY"
+  | "UNCONDITIONAL_CONTRACT_ASSET"
+  | "CUSTOMER_ADVANCE"
+  | "SETTLEMENT"
+  | "REVERSAL"
+  | "CUSTOMER_LIABILITY"
+  | "CUSTOMER_LIABILITY_REFUND"
+  | "HELD_UNSUPPORTED_ENTITLEMENT"
+  | "HELD_UNSUPPORTED_CASH"
+  | "HELD_REVENUE_CORRECTION"
+  | "HELD_UNSUPPORTED_TREATMENT";
+
+export type SaveAccountingArBridgeEventInput = {
+  source_type: AccountingArBridgeSourceType;
+  source_record_id: string;
+  expected_version: number;
+  classification: AccountingArBridgeClassification;
+  accounting_date: string | null;
+  evidence_ref: string | null;
+  evidence_sha256: string | null;
+  reason: string;
+  request_id: string;
+};
+
+export type AccountingArBridgeEventMutationResult = {
+  event_id: string;
+  version: number;
+  status: "READY" | "HELD";
+};
+
+export type PrepareAccountingArBridgeEventInput = {
+  event_id: string;
+  event_version: number;
+  period_id: string;
+  period_version: number;
+  posting_rule_id: string;
+  rule_version: number;
+  reason: string;
+  request_id: string;
+};
+
+export type PostAccountingArBridgeJournalInput = {
+  journal_id: string;
+  expected_version: number;
+  request_id: string;
+};
+
+export type AccountingArBridgeReconciliationEvent = {
+  source_type: AccountingArBridgeSourceType;
+  source_record_id: string;
+  source_record_key: string;
+  economic_event_key: string;
+  reconciliation_status: "POSTED" | "PREPARED" | "HELD" | "INCEPTION_COVERED" | "MISSING_EFFECT" | "DUPLICATE_CONFLICT";
+  event_id: string | null;
+  event_version: number | null;
+  classification: AccountingArBridgeClassification | null;
+  customer_id: string;
+  service_id: string | null;
+  invoice_id: string | null;
+  amount_halalah: string;
+  source_business_date: string | null;
+  source_recorded_at: string;
+  accounting_date: string | null;
+  posted_accounting_date: string | null;
+  posted_at: string | null;
+  journal_id: string | null;
+  held_code: string | null;
+  expected_ar_delta_halalah: string;
+  posted_ar_delta_halalah: string;
+  source_snapshot_sha256: string | null;
+};
+
+export type AccountingArBridgePartyBalance = {
+  customer_id: string;
+  service_id: string | null;
+  invoice_id: string | null;
+  source_ar_delta_halalah: string;
+  posted_ar_delta_halalah: string;
+  difference_halalah: string;
+};
+
+export type AccountingArBridgeReconciliation =
+  | { state: "NOT_INITIALIZED" }
+  | {
+      state: "READY";
+      as_of_date: string;
+      recorded_at_cutoff: string;
+      source_event_count: number;
+      posted_effect_count: number;
+      held_unresolved_count: number;
+      inception_covered_count: number;
+      missing_effect_count: number;
+      duplicate_conflict_count: number;
+      party_difference_count: number;
+      timing_difference_count: number;
+      truncated: boolean;
+      events: AccountingArBridgeReconciliationEvent[];
+      party_balances: AccountingArBridgePartyBalance[];
+    };

@@ -53,6 +53,7 @@ mock.module("@/lib/supabase/admin", {
   namedExports: {
     createAdminClient: () => ({
       rpc: async (name: string, args: Record<string, unknown>) => {
+        if (name === "get_accounting_capability") return { data: true, error: null };
         state.calls.push({ name, args });
         return state.rpc(name, args);
       },
@@ -60,7 +61,7 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { saveAccountingAccount, saveAccountingPeriod, setAccountingCapability, updateAccountingProfile, saveAccountingPostingRule, prepareAccountingJournal, postAccountingJournal, reverseAccountingJournal } = await import("./actions.ts");
+const { saveAccountingAccount, saveAccountingPeriod, setAccountingCapability, updateAccountingProfile, saveAccountingPostingRule, prepareAccountingJournal, postAccountingJournal, reverseAccountingJournal, saveAccountingArBridgeEvent, prepareAccountingArBridgeEvent, postAccountingArBridgeJournal } = await import("./actions.ts");
 const { AuthDependencyError } = await import("../auth/errors.ts");
 
 const actorId = "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f";
@@ -378,5 +379,95 @@ test("chart and period actions reject invalid revisions and non-OPEN period inpu
     evidence_ref: null,
     request_id: "00000000-0000-4000-8000-00000000a582",
   }), { ok: false, code: "invalid_input" });
+  assert.equal(state.calls.length, 0);
+});
+
+test("W10D actions derive the actor, require the bridge capability, and map only the AR bridge RPCs", async () => {
+  const eventId = "00000000-0000-4000-8000-00000000d901";
+  const journalId = "00000000-0000-4000-8000-00000000d902";
+  const base = {
+    source_type: "INVOICE",
+    source_record_id: "00000000-0000-4000-8000-00000000d903",
+    expected_version: 0,
+    classification: "UNCONDITIONAL_CONTRACT_LIABILITY",
+    accounting_date: "2026-09-27",
+    evidence_ref: "synthetic://w10d/invoice-classification",
+    evidence_sha256: "a".repeat(64),
+    reason: "Synthetic AR bridge classification",
+    request_id: "00000000-0000-4000-8000-00000000d904",
+  };
+
+  resetState(async () => ({
+    data: [{ error_code: null, event_id: eventId, version: 1, status: "READY", idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await saveAccountingArBridgeEvent(base), {
+    ok: true,
+    value: { event_id: eventId, version: 1, status: "READY" },
+    idempotentReplay: false,
+  });
+  assert.equal(state.calls[0].name, "save_accounting_ar_bridge_event");
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+  assert.equal(state.calls[0].args.p_source_record_id, base.source_record_id);
+  assert.equal(state.calls[0].args.p_evidence_sha256, base.evidence_sha256);
+  assert.equal("p_actor_role" in state.calls[0].args, false);
+
+  resetState(async () => ({
+    data: [{ error_code: null, journal_id: journalId, version: 1, status: "DRAFT", idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await prepareAccountingArBridgeEvent({
+    event_id: eventId,
+    event_version: 1,
+    period_id: "00000000-0000-4000-8000-00000000d905",
+    period_version: 1,
+    posting_rule_id: "00000000-0000-4000-8000-00000000d906",
+    rule_version: 1,
+    reason: "Synthetic AR bridge preparation",
+    request_id: "00000000-0000-4000-8000-00000000d907",
+  }), {
+    ok: true,
+    value: { journal_id: journalId, version: 1, status: "DRAFT" },
+    idempotentReplay: false,
+  });
+  assert.equal(state.calls[0].name, "prepare_accounting_ar_bridge_event");
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+
+  resetState(async () => ({
+    data: [{ error_code: "duplicate_coverage", journal_id: null, version: null, status: null, idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await prepareAccountingArBridgeEvent({
+    event_id: eventId,
+    event_version: 1,
+    period_id: "00000000-0000-4000-8000-00000000d905",
+    period_version: 1,
+    posting_rule_id: "00000000-0000-4000-8000-00000000d906",
+    rule_version: 1,
+    reason: "Synthetic covered event",
+    request_id: "00000000-0000-4000-8000-00000000d908",
+  }), { ok: false, code: "duplicate_coverage" });
+
+  resetState(async () => ({
+    data: [{ error_code: null, journal_id: journalId, version: 2, status: "POSTED", idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await postAccountingArBridgeJournal({
+    journal_id: journalId,
+    expected_version: 1,
+    request_id: "00000000-0000-4000-8000-00000000d909",
+  }), {
+    ok: true,
+    value: { journal_id: journalId, version: 2, status: "POSTED" },
+    idempotentReplay: false,
+  });
+  assert.equal(state.calls[0].name, "post_accounting_ar_bridge_journal");
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+
+  resetState(async () => ({ data: [], error: null }));
+  assert.deepEqual(await saveAccountingArBridgeEvent({ ...base, evidence_sha256: null }), {
+    ok: false,
+    code: "invalid_input",
+  });
   assert.equal(state.calls.length, 0);
 });

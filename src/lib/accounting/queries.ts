@@ -18,6 +18,8 @@ import {
   accountingTrialBalanceResultSchema,
   accountingInceptionPackageDetailSchema,
   accountingInceptionPackageSummarySchema,
+  accountingArBridgeReconciliationInputSchema,
+  accountingArBridgeReconciliationSchema,
   listAccountingCapabilityAssignmentsInputSchema,
 } from "./schemas";
 import { resolveAccountingCapability } from "./permissions";
@@ -29,6 +31,7 @@ import type {
   AccountingPostingRuleVersion,
   AccountingInceptionPackageDetail,
   AccountingInceptionPackageSummary,
+  AccountingArBridgeReconciliation,
 } from "./types";
 
 function throwSafeRpcError(error: { code?: string } | null): never {
@@ -310,5 +313,33 @@ export async function listAccountingInceptionPackages(): Promise<AccountingIncep
   if (result.error) throwSafeRpcError(result.error);
   const parsed = z.array(accountingInceptionPackageSummarySchema).safeParse(result.data);
   if (!parsed.success) throw new AuthDependencyError("Accounting inception package list was invalid");
+  return parsed.data;
+}
+
+export async function getAccountingArBridgeReconciliation(
+  input: unknown,
+): Promise<AccountingArBridgeReconciliation> {
+  const actor = await requireUser();
+  const [canView, canManage] = await Promise.all([
+    resolveAccountingCapability(actor.id, "accounting:view"),
+    resolveAccountingCapability(actor.id, "accounting:manage_ar_bridge"),
+  ]);
+  if (!canView && !canManage) throw new ForbiddenError("Accounting capability required");
+  const parsedInput = accountingArBridgeReconciliationInputSchema.safeParse(input);
+  if (!parsedInput.success) throw new AuthDependencyError("Accounting AR reconciliation request was invalid");
+  let result;
+  try {
+    result = await createAdminClient().rpc("get_accounting_ar_bridge_reconciliation", {
+      p_actor_user_id: actor.id,
+      p_as_of_date: parsedInput.data.as_of_date,
+      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff,
+      p_limit: parsedInput.data.limit,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting AR reconciliation dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  const parsed = accountingArBridgeReconciliationSchema.safeParse(result.data);
+  if (!parsed.success) throw new AuthDependencyError("Accounting AR reconciliation response was invalid");
   return parsed.data;
 }
