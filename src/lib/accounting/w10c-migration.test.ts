@@ -35,6 +35,14 @@ const rollbackFixture = readFileSync(
   new URL("../../../supabase/verification/w10c_inception_rollback_regression.sql", import.meta.url),
   "utf8",
 );
+const auditActionCorrection = readFileSync(
+  new URL("../../../supabase/migrations/20260928073049_w10c_inception_audit_actions.sql", import.meta.url),
+  "utf8",
+);
+const auditActionBaseline = readFileSync(
+  new URL("../../../supabase/migrations/20260928000819_w10b_journal_audit_actions.sql", import.meta.url),
+  "utf8",
+);
 
 const evidenceId = "00000000-0000-4000-8000-00000000c861";
 const itemId = "00000000-0000-4000-8000-00000000c851";
@@ -118,6 +126,35 @@ test("W10C adds only the inception package, coverage, review, authorization, jou
   const schemaBootstrap = migration.slice(0, migration.indexOf("CREATE FUNCTION public.guard_accounting_inception_identity"));
   assert.doesNotMatch(schemaBootstrap, /INSERT INTO public\.(?:accounting_profiles|accounting_accounts|accounting_periods|accounting_journals|accounting_inception_packages)\b/i);
   assert.doesNotMatch(migration, /(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+public\.(?:customers|services|quotations|invoices|payments|supplier_bills|customer_receipts)\b/i);
+});
+
+test("W10C audit actions are narrowly scoped and preserve the existing journal action contract", () => {
+  const actionValues = (source: string, clauseMarker: string) => {
+    const clauseStart = source.indexOf(clauseMarker);
+    assert.notEqual(clauseStart, -1, `Missing audit action clause: ${clauseMarker}`);
+    const actionStart = source.indexOf("action = ANY (ARRAY[", clauseStart);
+    const clauseEnd = source.indexOf("])", actionStart);
+    assert.notEqual(actionStart, -1);
+    assert.notEqual(clauseEnd, -1);
+    return [...source.slice(actionStart, clauseEnd).matchAll(/'([^']+)'::text/g)].map((match) => match[1]);
+  };
+
+  assert.deepEqual(
+    actionValues(auditActionCorrection, "action = ANY (ARRAY["),
+    actionValues(auditActionBaseline, "action = ANY (ARRAY["),
+  );
+  assert.deepEqual(
+    actionValues(auditActionCorrection, "entity_type='accounting_journal'"),
+    actionValues(auditActionBaseline, "entity_type='accounting_journal'"),
+  );
+  assert.match(
+    auditActionCorrection,
+    /md5\(regexp_replace\(v_definition,'\[\[:space:\]\]','','g'\)\)\s+IS DISTINCT FROM '3d79f812e33f92cd4750630a4e060e06'/,
+  );
+  assert.match(
+    auditActionCorrection,
+    /entity_type='accounting_inception_package'\s+AND action = ANY \(ARRAY\['save'::text, 'approve'::text, 'reject'::text, 'prepare'::text, 'accept'::text\]\)/,
+  );
 });
 
 test("W10C preserves immutable package and coverage lineage and gates protected inception posting", () => {
