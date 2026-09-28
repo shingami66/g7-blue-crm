@@ -1,14 +1,25 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026
+## CURRENT ROADMAP POSITION — W10D ACCOUNTS RECEIVABLE ACCOUNTING BRIDGE — 28 September 2026
 
-- **W10C — Inception Reconstruction, Coverage, and First Trial Balance:** `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED` on current `main` at `8ec0fd4c3a3e94874575283d014d0585ca317f0b`.
-- The W10C DEV migration chain is applied through `20260928090027_w10c_inception_rule_name_precedence`; the committed rollback-clean fixture passed with zero synthetic residue.
-- Versioned inception evidence and coverage, package review separation, mapping authorization, governed inception journals, and first Trial Balance acceptance are delivered using the existing accounting authority and journal foundations.
-- The W10C correction migration changes only the English/Arabic rule-name JSON extraction precedence and preserves the deployed function signature, security, owner, ACL, and planner configuration.
+- **W10D — Accounts Receivable Accounting Bridge:** `ENGINEERING COMPLETE / DEV-VERIFIED / PUBLISHED / CONTROLLER REVIEW AND OWNER ACCEPTANCE PENDING` on `main`; implementation and bounded corrective source chain published through `fe72d546365d5241df03bd648ac3e9b00f2d9046`.
+- The W10D DEV migration chain is applied through `20260928175327_w10d_reconciliation_inventory_alias_fix`; all local and remote migration identities are synchronized, and Supabase dry-run reports no pending migrations.
+- W10D reuses W7 source lineage, W10B posting/source-effect infrastructure, W10C inception coverage, and the existing accounting authority. Unsupported revenue treatment is held; settlement/reclassification does not invent cash or revenue.
+- The complete committed rollback-clean W10D fixture passed on DEV, with independent zero-synthetic-residue verification. The four bridge tables retain RLS/no direct app-role table access, the four bridge RPCs are service-role-only, and `accounting:manage_ar_bridge` is enabled through the existing authority engine. No persistent accounting bootstrap data was created.
+- **Validation:** focused Accounting/Auth tests passed 105/105; focused W10D tests passed 11/11; TypeScript, scoped ESLint, production build, migration/source checks, and diff checks passed.
+- **Deferred boundaries:** no real chart/profile/grant seeds, accounting postings or bulk backfill, W10E1/W10E2, W10F/W10G/W10H/W10I, period close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, deployment, or professional/statutory accounting activation. W10D Owner acceptance remains pending.
+- **EXACT NEXT ACTION:** Controller reviews the W10D engineering closeout; W10D Owner acceptance remains a separate pending decision. W10E1 or any later slice requires fresh exact Owner authorization.
+
+## HISTORICAL ROADMAP SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT POSITION)
+
+- **W10C — Inception Reconstruction, Coverage, and First Trial Balance:** `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED` on the then-current `main` at `8ec0fd4c3a3e94874575283d014d0585ca317f0b`.
+- The W10C DEV migration chain was applied through `20260928090027`; its committed rollback-clean fixture passed with zero synthetic residue.
+- Versioned inception evidence and coverage, package review separation, mapping authorization, governed inception journals, and first Trial Balance acceptance were delivered using the existing accounting authority and journal foundations.
+- The W10C correction migration changed only the English/Arabic rule-name JSON extraction precedence and preserved the deployed function signature, security, owner, ACL, and planner configuration.
 - **Validation:** focused Accounting/Auth tests passed 62/62; focused W10C tests passed 7/7; TypeScript, scoped ESLint, production build, migration/source assertions, and diff checks passed.
-- **Deferred boundaries:** no W10D implementation or later work, real opening balances or chart seeds, persistent real profiles/charts/periods/grants, close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, or deployment. Professional validation remains incomplete before live/production accounting or statutory/external accounting claims.
-- **EXACT NEXT ACTION:** Read-only W10D discovery. Do not begin W10D implementation without separate fresh exact Owner authorization.
+- **Deferred boundaries:** no W10D implementation or later work, real opening balances or chart seeds, persistent real profiles/charts/periods/grants, close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, or deployment. Professional validation remained incomplete before live/production accounting or statutory/external accounting claims.
+- **Former next action at this snapshot:** Read-only W10D discovery; superseded by the current W10D roadmap position above. W10D implementation required separate fresh exact Owner authorization.
+
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10B ACCOUNTING JOURNAL CORE — 28 September 2026 (SUPERSEDED CURRENT POSITION)
 
@@ -18,9 +29,9 @@
   - Balanced SAR posting and reversal, governed journal preparation, idempotent posting effects, posting rules, and posted-only General Ledger / Trial Balance reads are delivered. Prepare/post/reverse capabilities are enabled through the existing authority engine; close/reopen remain disabled.
 - **W10B validation:** 84/84 focused accounting/auth tests passed; TypeScript, scoped ESLint, production build, source checks, and diff checks passed. OCR LLM verdict was unavailable because no endpoint is configured.
 - **Deferred boundaries:** no W10C implementation or later work, real openings/chart seeds, persistent periods/grants, close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, or deployment. Professional validation remains incomplete and is required before live/production accounting or statutory/external accounting claims.
-- **EXACT NEXT ACTION:** Read-only W10C discovery. Do not begin W10C implementation without separate fresh exact Owner authorization.
+- **Former next action at this snapshot:** Read-only W10C discovery; superseded by the current W10D roadmap position above. W10C implementation had already required separate fresh exact Owner authorization.
 
-> This W10B roadmap snapshot preserves the 28 September 2026 closeout evidence. Its former next action, read-only W10C discovery, is superseded by the current W10C position above; older dated roadmap history remains unchanged.
+> This W10B roadmap snapshot preserves the 28 September 2026 closeout evidence. Its former next action, read-only W10C discovery, is superseded by the current W10D position above; older dated roadmap history remains unchanged.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W5 CLOSE / W6 CLOSE — 19 September 2026 (SUPERSEDED CURRENT POSITION)
 
