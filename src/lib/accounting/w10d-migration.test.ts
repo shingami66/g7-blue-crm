@@ -14,6 +14,10 @@ const auditCompatibilityMigration = readFileSync(
   new URL("../../../supabase/migrations/20260928160000_w10d_audit_action_compatibility.sql", import.meta.url),
   "utf8",
 );
+const paymentSnapshotFixMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260928163327_w10d_payment_invoice_snapshot_fix.sql", import.meta.url),
+  "utf8",
+);
 const rollbackFixture = readFileSync(
   new URL("../../../supabase/verification/w10d_accounts_receivable_bridge_rollback_regression.sql", import.meta.url),
   "utf8",
@@ -98,6 +102,25 @@ test("W10D receipt reversal preserves the immutable receipt source snapshot and 
   )?.[1];
   assert.ok(receiptSnapshotBranch, "W10D receipt source snapshot branch is missing");
   assert.doesNotMatch(receiptSnapshotBranch, /p\.status/);
+});
+
+test("W10D payment snapshot correction changes only the invalid invoice identity reference", () => {
+  assert.match(paymentSnapshotFixMigration, /54913518430ebe040422e71e5924bf2e/);
+  assert.match(paymentSnapshotFixMigration, /5a76e26417a0a4e1d90c9830271649d5/);
+  assert.match(
+    paymentSnapshotFixMigration,
+    /v_old:='SELECT p\.customer_id,i\.service_id,i\.invoice_id,p\.amount,p\.date,p\.created_at,p\.created_at,';/,
+  );
+  assert.match(
+    paymentSnapshotFixMigration,
+    /v_new:='SELECT p\.customer_id,i\.service_id,p\.invoice_id,p\.amount,p\.date,p\.created_at,p\.created_at,';/,
+  );
+  assert.match(paymentSnapshotFixMigration, /CREATE OR REPLACE FUNCTION public\.accounting_ar_bridge_source_snapshot/);
+  assert.match(paymentSnapshotFixMigration, /v_after_source IS DISTINCT FROM v_fixed_source/);
+  assert.match(paymentSnapshotFixMigration, /v_after_owner IS DISTINCT FROM v_before_owner/);
+  assert.match(paymentSnapshotFixMigration, /v_after_acl IS DISTINCT FROM v_before_acl/);
+  assert.match(paymentSnapshotFixMigration, /v_after_config IS DISTINCT FROM v_before_config/);
+  assert.match(migration, /SELECT p\.customer_id,i\.service_id,i\.invoice_id,p\.amount,p\.date,p\.created_at,p\.created_at/);
 });
 
 test("W10D DEV fixture covers the bounded source classes and verifies explicit rollback with no residue", () => {
