@@ -158,6 +158,43 @@ test("W10D DEV fixture covers the bounded source classes and verifies explicit r
     "separate receipt allocations must target distinct invoices and exhaust the receipt",
   );
   assert.match(rollbackFixture, /synthetic residue/i);
+  const manualJournal = rollbackFixture.match(
+    /v_manual_journal:=jsonb_build_object\(([\s\S]*?)\);\n  SELECT \* INTO v_result FROM public\.prepare_accounting_journal/,
+  )?.[1];
+  assert.ok(manualJournal, "W10D generic-manual journal payload is missing");
+  assert.match(manualJournal, /^'accounting_date',CURRENT_DATE,/);
+  const manualJournalArgs: string[] = [];
+  let nesting = 0;
+  let inString = false;
+  let argumentStart = 0;
+  for (let index = 0; index < manualJournal.length; index += 1) {
+    const current = manualJournal[index];
+    if (current === "'" && inString && manualJournal[index + 1] === "'") {
+      index += 1;
+      continue;
+    }
+    if (current === "'") inString = !inString;
+    else if (!inString && current === "(") nesting += 1;
+    else if (!inString && current === ")") nesting -= 1;
+    else if (!inString && current === "," && nesting === 0) {
+      manualJournalArgs.push(manualJournal.slice(argumentStart, index).trim());
+      argumentStart = index + 1;
+    }
+  }
+  manualJournalArgs.push(manualJournal.slice(argumentStart).trim());
+  assert.equal(nesting, 0, "generic-manual journal payload parentheses are unbalanced");
+  assert.equal(inString, false, "generic-manual journal payload SQL string is unclosed");
+  assert.equal(manualJournalArgs.length, 22, "generic-manual journal payload must contain exactly 11 key-value pairs");
+  const manualJournalKeys = manualJournalArgs.filter((_, index) => index % 2 === 0);
+  assert.ok(manualJournalKeys.every((key) => /^'[^']+'$/.test(key)), "generic-manual payload keys must be SQL string literals");
+  assert.deepEqual(
+    manualJournalKeys.map((key) => key.slice(1, -1)),
+    [
+      "accounting_date", "period_id", "period_version", "posting_rule_id", "rule_version",
+      "source_record_key", "economic_event_key", "posting_purpose", "description_en", "description_ar", "lines",
+    ],
+    "generic controlled-manual payload must use the W10B/W10C 11-key contract",
+  );
   for (const reversalTable of [
     "customer_receipt_reversals",
     "customer_receipt_allocation_reversals",

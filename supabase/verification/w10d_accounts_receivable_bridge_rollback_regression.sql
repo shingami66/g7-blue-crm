@@ -731,7 +731,7 @@ BEGIN
     RAISE EXCEPTION 'inception-covered event was not rejected';
   END IF;
 
-  v_manual_journal:=jsonb_build_object('source_domain','CONTROLLED_MANUAL','accounting_date',CURRENT_DATE,
+  v_manual_journal:=jsonb_build_object('accounting_date',CURRENT_DATE,
     'period_id',v_context.period_id,'period_version',v_context.period_version,
     'posting_rule_id',v_context.rule_id,'rule_version',v_context.rule_version,
     'source_record_key','W10D-SYN-MANUAL-AR-BYPASS','economic_event_key','W10D-SYN-MANUAL-AR-BYPASS/EFFECT',
