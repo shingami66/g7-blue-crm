@@ -43,6 +43,10 @@ const auditActionBaseline = readFileSync(
   new URL("../../../supabase/migrations/20260928000819_w10b_journal_audit_actions.sql", import.meta.url),
   "utf8",
 );
+const inceptionRuleNameCorrection = readFileSync(
+  new URL("../../../supabase/migrations/20260928090027_w10c_inception_rule_name_precedence.sql", import.meta.url),
+  "utf8",
+);
 
 const evidenceId = "00000000-0000-4000-8000-00000000c861";
 const itemId = "00000000-0000-4000-8000-00000000c851";
@@ -155,6 +159,27 @@ test("W10C audit actions are narrowly scoped and preserve the existing journal a
     auditActionCorrection,
     /entity_type='accounting_inception_package'\s+AND action = ANY \(ARRAY\['save'::text, 'approve'::text, 'reject'::text, 'prepare'::text, 'accept'::text\]\)/,
   );
+});
+
+test("W10C rule-name correction pins the applied source and preserves its function contract", () => {
+  const occurrences = (source: string, value: string) => source.split(value).length - 1;
+  const englishOld = "left('Inception: '||v_item->'journal'->>'description_en',160)";
+  const englishNew = "left('Inception: '||(v_item->'journal'->>'description_en'),160)";
+  const arabicOld = "left('افتتاح: '||v_item->'journal'->>'description_ar',160)";
+  const arabicNew = "left('افتتاح: '||(v_item->'journal'->>'description_ar'),160)";
+
+  assert.equal(occurrences(migration, englishOld), 1);
+  assert.equal(occurrences(migration, arabicOld), 1);
+  assert.equal(occurrences(inceptionRuleNameCorrection, englishOld), 1);
+  assert.equal(occurrences(inceptionRuleNameCorrection, arabicOld), 1);
+  assert.equal(occurrences(inceptionRuleNameCorrection, englishNew), 1);
+  assert.equal(occurrences(inceptionRuleNameCorrection, arabicNew), 1);
+  assert.match(inceptionRuleNameCorrection, /md5\(v_old_source\) IS DISTINCT FROM '3c01ce111aec7efe68d1bbe8eba0421e'/);
+  assert.match(inceptionRuleNameCorrection, /prosecdef IS TRUE AND p\.proleakproof IS FALSE AND p\.proisstrict IS FALSE/);
+  assert.match(inceptionRuleNameCorrection, /p\.provolatile='v' AND p\.proparallel='u' AND p\.procost=100 AND p\.prorows=1000/);
+  assert.match(inceptionRuleNameCorrection, /CALLED ON NULL INPUT VOLATILE NOT LEAKPROOF SECURITY DEFINER[\s\S]*PARALLEL UNSAFE COST 100 ROWS 1000 SET search_path=pg_catalog, public/);
+  assert.match(inceptionRuleNameCorrection, /v_new_contract IS DISTINCT FROM v_old_contract OR v_new_source IS DISTINCT FROM v_expected_source/);
+  assert.doesNotMatch(inceptionRuleNameCorrection, /CREATE TABLE|\bGRANT\b|\bREVOKE\b/i);
 });
 
 test("W10C preserves immutable package and coverage lineage and gates protected inception posting", () => {
