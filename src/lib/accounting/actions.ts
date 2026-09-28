@@ -1,9 +1,10 @@
 "use server";
 
 import { AuthDependencyError, ForbiddenError } from "@/lib/auth/errors";
-import { requirePermission } from "@/lib/auth/permissions";
+import { requirePermission, requireUser } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/database.types";
+import { resolveAccountingCapability } from "./permissions";
 import {
   saveAccountingAccountInputSchema,
   saveAccountingPeriodInputSchema,
@@ -11,10 +12,22 @@ import {
   prepareAccountingJournalInputSchema,
   postAccountingJournalInputSchema,
   reverseAccountingJournalInputSchema,
+  saveAccountingInceptionPackageInputSchema,
+  reviewAccountingInceptionPackageInputSchema,
+  prepareAccountingInceptionJournalInputSchema,
+  postAccountingInceptionJournalInputSchema,
+  acceptAccountingInceptionPackageInputSchema,
+  accountingInceptionAcceptanceResultSchema,
+  accountingInceptionJournalMutationResultSchema,
+  accountingInceptionReviewResultSchema,
   setAccountingCapabilityInputSchema,
   updateAccountingProfileInputSchema,
 } from "./schemas";
-import type { AccountingActionErrorCode, AccountingActionResult } from "./types";
+import type {
+  AccountingActionErrorCode,
+  AccountingActionResult,
+  AccountingInceptionAcceptanceResult,
+} from "./types";
 
 const SAFE_ERROR_CODES = new Set([
   "invalid_input",
@@ -63,6 +76,16 @@ const SAFE_ERROR_CODES = new Set([
   "service_dimension_invalid",
   "service_not_found",
   "already_reversed",
+  "package_not_found",
+  "duplicate_coverage",
+  "unsupported_classification",
+  "unsupported_source",
+  "evidence_required",
+  "unresolved_material_evidence",
+  "incomplete_coverage",
+  "review_required",
+  "separation_required",
+  "trial_balance_incomplete",
 ]);
 
 function safeCode(code: string | null | undefined) {
@@ -367,5 +390,122 @@ export async function reverseAccountingJournal(
       original_journal_id: row.original_journal_id,
     },
     idempotentReplay: row.idempotent_replay,
+  };
+}
+
+async function requireAccountingCapabilities(
+  actorId: string,
+  capabilities: Array<"accounting:manage_inception" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view">,
+) {
+  const allowed = await Promise.all(capabilities.map((capability) =>
+    resolveAccountingCapability(actorId, capability)));
+  if (allowed.some((value) => !value)) throw new ForbiddenError("Accounting capability required");
+}
+
+async function callInceptionRpc<T extends { error_code: string | null }>(
+  call: () => PromiseLike<{ data: T[] | null; error: { code?: string } | null }>,
+): Promise<{ row: T } | { failure: Extract<AccountingActionResult<never>, { ok: false }> }> {
+  let result: { data: T[] | null; error: { code?: string } | null };
+  try {
+    result = await call();
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof AuthDependencyError) throw error;
+    throw new AuthDependencyError("Accounting mutation dependency failed");
+  }
+  if (result.error) return { failure: safeFailure(result.error) as Extract<AccountingActionResult<never>, { ok: false }> };
+  const row = result.data?.[0];
+  if (!row) throw new AuthDependencyError("Accounting response was invalid");
+  return { row };
+}
+
+export async function saveAccountingInceptionPackage(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_inception"]);
+  const parsed = saveAccountingInceptionPackageInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callInceptionRpc(() => createAdminClient().rpc("save_accounting_inception_package", {
+    p_actor_user_id: actor.id, p_package_id: parsed.data.package_id,
+    p_expected_version: parsed.data.expected_version, p_package: parsed.data.package as Json,
+    p_reason: parsed.data.reason, p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = result.row;
+  if (row.error_code) return { ok: false as const, code: safeCode(row.error_code) };
+  if (!row.package_id || row.version == null) throw new AuthDependencyError("Accounting response was invalid");
+  return { ok: true as const, value: { package_id: row.package_id, version: row.version }, idempotentReplay: row.idempotent_replay };
+}
+
+export async function reviewAccountingInceptionPackage(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_inception"]);
+  const parsed = reviewAccountingInceptionPackageInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callInceptionRpc(() => createAdminClient().rpc("review_accounting_inception_package", {
+    p_actor_user_id: actor.id, p_package_id: parsed.data.package_id,
+    p_package_version: parsed.data.package_version, p_approve: parsed.data.approve,
+    p_reason: parsed.data.reason, p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const parsedRow = accountingInceptionReviewResultSchema.safeParse(result.row);
+  if (!parsedRow.success) throw new AuthDependencyError("Accounting response was invalid");
+  if (parsedRow.data.error_code) return { ok: false as const, code: safeCode(parsedRow.data.error_code) };
+  if (!parsedRow.data.review_id || !parsedRow.data.decision) throw new AuthDependencyError("Accounting response was invalid");
+  return { ok: true as const, value: { review_id: parsedRow.data.review_id, decision: parsedRow.data.decision }, idempotentReplay: parsedRow.data.idempotent_replay };
+}
+
+export async function prepareAccountingInceptionJournal(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_inception", "accounting:prepare_journal"]);
+  const parsed = prepareAccountingInceptionJournalInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callInceptionRpc(() => createAdminClient().rpc("prepare_accounting_inception_journal", {
+    p_actor_user_id: actor.id, p_package_id: parsed.data.package_id,
+    p_package_version: parsed.data.package_version, p_item_id: parsed.data.item_id,
+    p_reason: parsed.data.reason, p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const parsedRow = accountingInceptionJournalMutationResultSchema.safeParse(result.row);
+  if (!parsedRow.success) throw new AuthDependencyError("Accounting response was invalid");
+  if (parsedRow.data.error_code) return { ok: false as const, code: safeCode(parsedRow.data.error_code) };
+  if (!parsedRow.data.journal_id || parsedRow.data.version == null || !parsedRow.data.status) throw new AuthDependencyError("Accounting response was invalid");
+  return { ok: true as const, value: { journal_id: parsedRow.data.journal_id, version: parsedRow.data.version, status: parsedRow.data.status }, idempotentReplay: parsedRow.data.idempotent_replay };
+}
+
+export async function postAccountingInceptionJournal(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_inception", "accounting:post_journal"]);
+  const parsed = postAccountingInceptionJournalInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callInceptionRpc(() => createAdminClient().rpc("post_accounting_inception_journal", {
+    p_actor_user_id: actor.id, p_journal_id: parsed.data.journal_id,
+    p_expected_version: parsed.data.expected_version, p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const parsedRow = accountingInceptionJournalMutationResultSchema.safeParse(result.row);
+  if (!parsedRow.success) throw new AuthDependencyError("Accounting response was invalid");
+  if (parsedRow.data.error_code) return { ok: false as const, code: safeCode(parsedRow.data.error_code) };
+  if (!parsedRow.data.journal_id || parsedRow.data.version == null || parsedRow.data.status !== "POSTED") throw new AuthDependencyError("Accounting response was invalid");
+  return { ok: true as const, value: { journal_id: parsedRow.data.journal_id, version: parsedRow.data.version, status: "POSTED" as const }, idempotentReplay: parsedRow.data.idempotent_replay };
+}
+
+export async function acceptAccountingInceptionPackage(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_inception", "accounting:view"]);
+  const parsed = acceptAccountingInceptionPackageInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callInceptionRpc(() => createAdminClient().rpc("accept_accounting_inception_package", {
+    p_actor_user_id: actor.id, p_package_id: parsed.data.package_id,
+    p_package_version: parsed.data.package_version, p_reason: parsed.data.reason,
+    p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const parsedRow = accountingInceptionAcceptanceResultSchema.safeParse(result.row);
+  if (!parsedRow.success) throw new AuthDependencyError("Accounting response was invalid");
+  if (parsedRow.data.error_code) return { ok: false as const, code: safeCode(parsedRow.data.error_code) };
+  if (!parsedRow.data.acceptance_id || !parsedRow.data.trial_balance) throw new AuthDependencyError("Accounting response was invalid");
+  return {
+    ok: true as const,
+    value: { acceptance_id: parsedRow.data.acceptance_id, trial_balance: parsedRow.data.trial_balance } satisfies AccountingInceptionAcceptanceResult,
+    idempotentReplay: parsedRow.data.idempotent_replay,
   };
 }

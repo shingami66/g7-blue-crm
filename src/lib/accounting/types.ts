@@ -7,6 +7,7 @@ export const ACCOUNTING_CAPABILITIES = [
   "accounting:prepare_journal",
   "accounting:post_journal",
   "accounting:reverse_journal",
+  "accounting:manage_inception",
   "accounting:reconcile_bank",
   "accounting:close_period",
   "accounting:reopen_period",
@@ -112,6 +113,16 @@ export type AccountingActionErrorCode =
   | "service_dimension_invalid"
   | "service_not_found"
   | "already_reversed"
+  | "package_not_found"
+  | "duplicate_coverage"
+  | "unsupported_classification"
+  | "unsupported_source"
+  | "evidence_required"
+  | "unresolved_material_evidence"
+  | "incomplete_coverage"
+  | "review_required"
+  | "separation_required"
+  | "trial_balance_incomplete"
   | "dependency_failure";
 
 export type AccountingActionResult<T> =
@@ -337,4 +348,228 @@ export type AccountingTrialBalanceAccount = {
   credit_activity_halalah: string;
   debit_balance_halalah: string;
   credit_balance_halalah: string;
+};
+
+export type AccountingInceptionClassification =
+  | "RECONSTRUCTED_HISTORY"
+  | "OPENING_BALANCE"
+  | "POST_CUTOVER_SOURCE"
+  | "UNRESOLVED";
+export type AccountingInceptionResolution = "RESOLVED" | "UNRESOLVED";
+export type AccountingInceptionParty =
+  | "NONE"
+  | "CUSTOMER"
+  | "SUPPLIER"
+  | "EMPLOYEE"
+  | "FOUNDER"
+  | "BANK"
+  | "CASH";
+export type AccountingInceptionReconciliationCategory =
+  | "ACCOUNTS_RECEIVABLE"
+  | "ACCOUNTS_PAYABLE"
+  | "EMPLOYEE_ACCOUNTABILITY"
+  | "FOUNDER_SOURCE"
+  | "BANK_CASH"
+  | "ASSET"
+  | "LIABILITY"
+  | "EXPENSE"
+  | "OTHER";
+export type AccountingInceptionEvidenceType =
+  | "BANK_STATEMENT"
+  | "BANK_CONFIRMATION"
+  | "RECEIVABLE_DETAIL"
+  | "PAYABLE_DETAIL"
+  | "EMPLOYEE_ACCOUNTABILITY"
+  | "FOUNDER_AGREEMENT"
+  | "FIXED_ASSET_SUPPORT"
+  | "PREPAYMENT_SUPPORT"
+  | "EXPENSE_SUPPORT"
+  | "OTHER";
+export type AccountingInceptionEvidence = {
+  evidence_id: string;
+  version: number;
+  evidence_type: AccountingInceptionEvidenceType;
+  evidence_ref: string;
+  sha256: string;
+};
+export type AccountingInceptionEvidenceReference = {
+  evidence_id: string;
+  version: number;
+};
+export type AccountingInceptionJournalLine = {
+  account_id: string;
+  account_version: number;
+  side: "DEBIT" | "CREDIT";
+  amount_halalah: string;
+  description_en: string;
+  description_ar: string;
+};
+export type AccountingInceptionJournalPlan = {
+  accounting_date: string;
+  period_id: string;
+  period_version: number;
+  description_en: string;
+  description_ar: string;
+  lines: AccountingInceptionJournalLine[];
+};
+export type AccountingInceptionItem = {
+  item_id: string;
+  source_domain: string;
+  source_record_key: string;
+  economic_event_key: string;
+  classification: AccountingInceptionClassification;
+  resolution_state: AccountingInceptionResolution;
+  is_material: boolean;
+  reconciliation_category: AccountingInceptionReconciliationCategory;
+  reconciliation_reference: string | null;
+  party_type: AccountingInceptionParty;
+  party_reference: string | null;
+  evidence_refs: AccountingInceptionEvidenceReference[];
+  journal: AccountingInceptionJournalPlan | null;
+};
+export type AccountingInceptionPayload = {
+  accounting_start_date: string;
+  cutover_boundary_date: string;
+  evidence_inventory: AccountingInceptionEvidence[];
+  items: AccountingInceptionItem[];
+  reconciliation_references: Array<{
+    category: AccountingInceptionReconciliationCategory;
+    reference: string;
+  }>;
+};
+export type SaveAccountingInceptionPackageInput = {
+  package_id: string | null;
+  expected_version: number;
+  package: AccountingInceptionPayload;
+  reason: string;
+  request_id: string;
+};
+export type ReviewAccountingInceptionPackageInput = {
+  package_id: string;
+  package_version: number;
+  approve: boolean;
+  reason: string;
+  request_id: string;
+};
+export type PrepareAccountingInceptionJournalInput = {
+  package_id: string;
+  package_version: number;
+  item_id: string;
+  reason: string;
+  request_id: string;
+};
+export type PostAccountingInceptionJournalInput = {
+  journal_id: string;
+  expected_version: number;
+  request_id: string;
+};
+export type AcceptAccountingInceptionPackageInput = {
+  package_id: string;
+  package_version: number;
+  reason: string;
+  request_id: string;
+};
+export type AccountingInceptionJournalMutation = {
+  journal_id: string;
+  version: number;
+  status: "DRAFT" | "POSTED";
+};
+export type AccountingInceptionReviewResult = {
+  review_id: string;
+  decision: "APPROVE" | "REJECT";
+};
+export type AccountingInceptionAcceptanceResult = {
+  acceptance_id: string;
+  trial_balance: {
+    as_of_date: string;
+    recorded_at_cutoff: string;
+    service_id: null;
+    accounts: AccountingTrialBalanceAccount[];
+    debit_balance_total_halalah: string;
+    credit_balance_total_halalah: string;
+    debits_equal_credits: true;
+    account_count: number;
+  };
+};
+export type AccountingInceptionPackageSummary = {
+  package_id: string;
+  current_version: number;
+  accounting_start_date: string;
+  cutover_boundary_date: string;
+  created_at: string;
+  accepted: boolean;
+};
+export type AccountingInceptionPackageVersion = {
+  version: number;
+  previous_version: number | null;
+  accounting_start_date: string;
+  cutover_boundary_date: string;
+  payload: AccountingInceptionPayload;
+  payload_fingerprint: string;
+  created_by: string;
+  created_at: string;
+};
+export type AccountingInceptionCoverageVersion = {
+  coverage_id: string;
+  source_domain: string;
+  source_record_key: string;
+  economic_event_key: string;
+  version: number;
+  previous_version: number | null;
+  package_version: number;
+  item_id: string;
+  classification: AccountingInceptionClassification;
+  resolution_state: AccountingInceptionResolution;
+  is_material: boolean;
+  reconciliation_category: AccountingInceptionReconciliationCategory;
+  party_type: AccountingInceptionParty;
+  party_reference: string | null;
+  reconciliation_reference: string | null;
+  evidence_count: number;
+  payload_fingerprint: string;
+  created_by: string;
+  created_at: string;
+};
+export type AccountingInceptionReviewHistory = {
+  review_id: string;
+  package_version: number;
+  decision: "APPROVE" | "REJECT";
+  reviewer_user_id: string;
+  reason: string;
+  reviewed_at: string;
+};
+export type AccountingInceptionPackageDetail = {
+  package_id: string;
+  profile_id: string;
+  current_version: number;
+  created_at: string;
+  version: AccountingInceptionPackageVersion;
+  versions: AccountingInceptionPackageVersion[];
+  coverage_history: AccountingInceptionCoverageVersion[];
+  review_history: AccountingInceptionReviewHistory[];
+  coverage: Array<{
+    coverage_id: string;
+    source_domain: string;
+    source_record_key: string;
+    economic_event_key: string;
+    version: number;
+    item_id: string;
+    classification: AccountingInceptionClassification;
+    resolution_state: AccountingInceptionResolution;
+    is_material: boolean;
+    reconciliation_category: AccountingInceptionReconciliationCategory;
+    party_type: AccountingInceptionParty;
+    party_reference: string | null;
+    reconciliation_reference: string | null;
+    evidence_count: number;
+  }>;
+  review: null | Omit<AccountingInceptionReviewHistory, "package_version">;
+  acceptance: null | {
+    acceptance_id: string;
+    accepted_by: string;
+    accepted_at: string;
+    as_of_date: string;
+    recorded_at_cutoff: string;
+    trial_balance: AccountingInceptionAcceptanceResult["trial_balance"];
+  };
 };

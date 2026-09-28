@@ -3673,6 +3673,100 @@ export type Database = {
           report: Json
         }[]
       }
+      save_accounting_inception_package: {
+        Args: {
+          p_actor_user_id: string
+          p_expected_version: number
+          p_package: Json
+          p_package_id: string | null
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          idempotent_replay: boolean
+          package_id: string | null
+          version: number | null
+        }[]
+      }
+      review_accounting_inception_package: {
+        Args: {
+          p_actor_user_id: string
+          p_approve: boolean
+          p_package_id: string
+          p_package_version: number
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          decision: string | null
+          error_code: string | null
+          idempotent_replay: boolean
+          review_id: string | null
+        }[]
+      }
+      prepare_accounting_inception_journal: {
+        Args: {
+          p_actor_user_id: string
+          p_item_id: string
+          p_package_id: string
+          p_package_version: number
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          idempotent_replay: boolean
+          journal_id: string | null
+          status: string | null
+          version: number | null
+        }[]
+      }
+      post_accounting_inception_journal: {
+        Args: {
+          p_actor_user_id: string
+          p_expected_version: number
+          p_journal_id: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          idempotent_replay: boolean
+          journal_id: string | null
+          status: string | null
+          version: number | null
+        }[]
+      }
+      accept_accounting_inception_package: {
+        Args: {
+          p_actor_user_id: string
+          p_package_id: string
+          p_package_version: number
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          acceptance_id: string | null
+          error_code: string | null
+          idempotent_replay: boolean
+          trial_balance: Json | null
+        }[]
+      }
+      get_accounting_inception_package: {
+        Args: { p_actor_user_id: string; p_package_id: string }
+        Returns: Json
+      }
+      list_accounting_inception_packages: {
+        Args: { p_actor_user_id: string }
+        Returns: {
+          accepted: boolean
+          accounting_start_date: string
+          created_at: string
+          cutover_boundary_date: string
+          current_version: number
+          package_id: string
+        }[]
+      }
       start_service_execution: {
         Args: { p_actor_id: string; p_actor_role: string; p_service_id: string }
         Returns: {

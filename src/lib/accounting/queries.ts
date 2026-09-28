@@ -1,5 +1,6 @@
 import "server-only";
 
+import { z } from "zod";
 import { ForbiddenError, AuthDependencyError } from "@/lib/auth/errors";
 import { requirePermission, requireUser } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,6 +16,8 @@ import {
   accountingProfileResultSchema,
   accountingTrialBalanceInputSchema,
   accountingTrialBalanceResultSchema,
+  accountingInceptionPackageDetailSchema,
+  accountingInceptionPackageSummarySchema,
   listAccountingCapabilityAssignmentsInputSchema,
 } from "./schemas";
 import { resolveAccountingCapability } from "./permissions";
@@ -24,6 +27,8 @@ import type {
   AccountingJournalDetail,
   AccountingPeriodVersion,
   AccountingPostingRuleVersion,
+  AccountingInceptionPackageDetail,
+  AccountingInceptionPackageSummary,
 } from "./types";
 
 function throwSafeRpcError(error: { code?: string } | null): never {
@@ -257,5 +262,53 @@ export async function getAccountingTrialBalance(input: unknown) {
   }
   const parsed = accountingTrialBalanceResultSchema.safeParse(result.data[0]);
   if (!parsed.success) throw new AuthDependencyError("Accounting Trial Balance response was invalid");
+  return parsed.data;
+}
+
+async function requireInceptionReadCapability(actorId: string) {
+  const [canView, canManage] = await Promise.all([
+    resolveAccountingCapability(actorId, "accounting:view"),
+    resolveAccountingCapability(actorId, "accounting:manage_inception"),
+  ]);
+  if (!canView && !canManage) throw new ForbiddenError("Accounting capability required");
+}
+
+export async function getAccountingInceptionPackage(
+  packageId: unknown,
+): Promise<AccountingInceptionPackageDetail | null> {
+  const actor = await requireUser();
+  await requireInceptionReadCapability(actor.id);
+  const parsedId = accountingJournalIdSchema.safeParse(packageId);
+  if (!parsedId.success) throw new AuthDependencyError("Accounting inception package id was invalid");
+  let result;
+  try {
+    result = await createAdminClient().rpc("get_accounting_inception_package", {
+      p_actor_user_id: actor.id,
+      p_package_id: parsedId.data,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting inception query dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  if (result.data === null) return null;
+  const parsed = accountingInceptionPackageDetailSchema.safeParse(result.data);
+  if (!parsed.success) throw new AuthDependencyError("Accounting inception package response was invalid");
+  return parsed.data;
+}
+
+export async function listAccountingInceptionPackages(): Promise<AccountingInceptionPackageSummary[]> {
+  const actor = await requireUser();
+  await requireInceptionReadCapability(actor.id);
+  let result;
+  try {
+    result = await createAdminClient().rpc("list_accounting_inception_packages", {
+      p_actor_user_id: actor.id,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting inception query dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  const parsed = z.array(accountingInceptionPackageSummarySchema).safeParse(result.data);
+  if (!parsed.success) throw new AuthDependencyError("Accounting inception package list was invalid");
   return parsed.data;
 }

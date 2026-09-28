@@ -45,6 +45,7 @@ mock.module("@/lib/auth/permissions", {
       state.permission = permission;
       return { id: "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f", role: "viewer", is_active: true };
     },
+    requireUser: async () => ({ id: "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f", role: "viewer", is_active: true }),
   },
 });
 

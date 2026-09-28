@@ -590,3 +590,264 @@ export const accountingTrialBalanceResultSchema = z
     generated_at: z.string(),
   })
   .strict();
+
+const inceptionClassificationSchema = z.enum([
+  "RECONSTRUCTED_HISTORY",
+  "OPENING_BALANCE",
+  "POST_CUTOVER_SOURCE",
+  "UNRESOLVED",
+]);
+const inceptionPartySchema = z.enum([
+  "NONE",
+  "CUSTOMER",
+  "SUPPLIER",
+  "EMPLOYEE",
+  "FOUNDER",
+  "BANK",
+  "CASH",
+]);
+const inceptionReconciliationCategorySchema = z.enum([
+  "ACCOUNTS_RECEIVABLE",
+  "ACCOUNTS_PAYABLE",
+  "EMPLOYEE_ACCOUNTABILITY",
+  "FOUNDER_SOURCE",
+  "BANK_CASH",
+  "ASSET",
+  "LIABILITY",
+  "EXPENSE",
+  "OTHER",
+]);
+export const accountingInceptionEvidenceSchema = z.object({
+  evidence_id: z.string().uuid(),
+  version: z.number().int().positive(),
+  evidence_type: z.enum([
+    "BANK_STATEMENT",
+    "BANK_CONFIRMATION",
+    "RECEIVABLE_DETAIL",
+    "PAYABLE_DETAIL",
+    "EMPLOYEE_ACCOUNTABILITY",
+    "FOUNDER_AGREEMENT",
+    "FIXED_ASSET_SUPPORT",
+    "PREPAYMENT_SUPPORT",
+    "EXPENSE_SUPPORT",
+    "OTHER",
+  ]),
+  evidence_ref: boundedText(2000),
+  sha256: z.string().regex(/^[0-9a-f]{64}$/),
+}).strict();
+export const accountingInceptionEvidenceReferenceSchema = z.object({
+  evidence_id: z.string().uuid(),
+  version: z.number().int().positive(),
+}).strict();
+export const accountingInceptionJournalLineSchema = z.object({
+  account_id: z.string().uuid(),
+  account_version: z.number().int().positive(),
+  side: z.enum(["DEBIT", "CREDIT"]),
+  amount_halalah: z.string().regex(/^[1-9][0-9]{0,18}$/),
+  description_en: boundedText(500),
+  description_ar: boundedText(500),
+}).strict();
+export const accountingInceptionJournalPlanSchema = z.object({
+  accounting_date: validDate,
+  period_id: z.string().uuid(),
+  period_version: z.number().int().positive(),
+  description_en: boundedText(500),
+  description_ar: boundedText(500),
+  lines: z.array(accountingInceptionJournalLineSchema).min(2).max(200),
+}).strict();
+export const accountingInceptionItemSchema = z.object({
+  item_id: z.string().uuid(),
+  source_domain: z.string().regex(/^[A-Z][A-Z0-9_]{0,39}$/)
+    .refine((value) => value !== "CONTROLLED_MANUAL" && value !== "INCEPTION"),
+  source_record_key: boundedText(200),
+  economic_event_key: boundedText(200),
+  classification: inceptionClassificationSchema,
+  resolution_state: z.enum(["RESOLVED", "UNRESOLVED"]),
+  is_material: z.boolean(),
+  reconciliation_category: inceptionReconciliationCategorySchema,
+  reconciliation_reference: boundedText(2000).nullable(),
+  party_type: inceptionPartySchema,
+  party_reference: boundedText(200).nullable(),
+  evidence_refs: z.array(accountingInceptionEvidenceReferenceSchema).max(500),
+  journal: accountingInceptionJournalPlanSchema.nullable(),
+}).strict();
+export const accountingInceptionPayloadSchema = z.object({
+  accounting_start_date: validDate,
+  cutover_boundary_date: validDate,
+  evidence_inventory: z.array(accountingInceptionEvidenceSchema).max(500),
+  items: z.array(accountingInceptionItemSchema).min(1).max(500),
+  reconciliation_references: z.array(z.object({
+    category: inceptionReconciliationCategorySchema,
+    reference: boundedText(2000),
+  }).strict()).max(500),
+}).strict().superRefine((value, context) => {
+  if (value.cutover_boundary_date < value.accounting_start_date) {
+    context.addIssue({ code: "custom", path: ["cutover_boundary_date"], message: "Cutover precedes accounting start" });
+  }
+  const itemIds = new Set<string>();
+  const sourceKeys = new Set<string>();
+  for (const [index, item] of value.items.entries()) {
+    const sourceKey = JSON.stringify([item.source_domain, item.source_record_key, item.economic_event_key]);
+    if (itemIds.has(item.item_id) || sourceKeys.has(sourceKey)) {
+      context.addIssue({ code: "custom", path: ["items", index], message: "Duplicate inception item or economic coverage" });
+    }
+    itemIds.add(item.item_id);
+    sourceKeys.add(sourceKey);
+    const shouldHaveJournal = item.classification === "RECONSTRUCTED_HISTORY" || item.classification === "OPENING_BALANCE";
+    if (shouldHaveJournal !== (item.journal !== null)) {
+      context.addIssue({ code: "custom", path: ["items", index, "journal"], message: "Journal plan does not match coverage classification" });
+    }
+    if ((item.classification === "UNRESOLVED") !== (item.resolution_state === "UNRESOLVED")) {
+      context.addIssue({ code: "custom", path: ["items", index, "resolution_state"], message: "Resolution does not match classification" });
+    }
+  }
+});
+export const saveAccountingInceptionPackageInputSchema = z.object({
+  package_id: z.string().uuid().nullable(),
+  expected_version: z.number().int().nonnegative(),
+  package: accountingInceptionPayloadSchema,
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict().superRefine((value, context) => {
+  if ((value.package_id === null && value.expected_version !== 0)
+    || (value.package_id !== null && value.expected_version === 0)) {
+    context.addIssue({ code: "custom", path: ["expected_version"], message: "Expected version does not match package identity" });
+  }
+});
+export const reviewAccountingInceptionPackageInputSchema = z.object({
+  package_id: z.string().uuid(),
+  package_version: z.number().int().positive(),
+  approve: z.boolean(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict();
+export const prepareAccountingInceptionJournalInputSchema = z.object({
+  package_id: z.string().uuid(),
+  package_version: z.number().int().positive(),
+  item_id: z.string().uuid(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict();
+export const postAccountingInceptionJournalInputSchema = z.object({
+  journal_id: z.string().uuid(),
+  expected_version: z.number().int().positive(),
+  request_id: z.string().uuid(),
+}).strict();
+export const acceptAccountingInceptionPackageInputSchema = z.object({
+  package_id: z.string().uuid(),
+  package_version: z.number().int().positive(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict();
+
+const inceptionTrialBalanceSchema = z.object({
+  as_of_date: validDate,
+  recorded_at_cutoff: z.string(),
+  service_id: z.null(),
+  accounts: accountingTrialBalanceResultSchema.shape.report.shape.accounts,
+  debit_balance_total_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+  credit_balance_total_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+  debits_equal_credits: z.literal(true),
+  account_count: z.number().int().nonnegative(),
+}).strict();
+export const accountingInceptionReviewResultSchema = z.object({
+  error_code: z.string().nullable(),
+  review_id: z.string().uuid().nullable(),
+  decision: z.enum(["APPROVE", "REJECT"]).nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+export const accountingInceptionJournalMutationResultSchema = z.object({
+  error_code: z.string().nullable(),
+  journal_id: z.string().uuid().nullable(),
+  version: z.number().int().positive().nullable(),
+  status: z.enum(["DRAFT", "POSTED"]).nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+export const accountingInceptionAcceptanceResultSchema = z.object({
+  error_code: z.string().nullable(),
+  acceptance_id: z.string().uuid().nullable(),
+  trial_balance: inceptionTrialBalanceSchema.nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+export const accountingInceptionPackageSummarySchema = z.object({
+  package_id: z.string().uuid(),
+  current_version: z.number().int().positive(),
+  accounting_start_date: validDate,
+  cutover_boundary_date: validDate,
+  created_at: z.string(),
+  accepted: z.boolean(),
+}).strict();
+const accountingInceptionPackageVersionSchema = z.object({
+  version: z.number().int().positive(),
+  previous_version: z.number().int().positive().nullable(),
+  accounting_start_date: validDate,
+  cutover_boundary_date: validDate,
+  payload: accountingInceptionPayloadSchema,
+  payload_fingerprint: z.string().regex(/^[0-9a-f]{64}$/),
+  created_by: z.string().uuid(),
+  created_at: z.string(),
+}).strict();
+const accountingInceptionCoverageHistorySchema = z.object({
+  coverage_id: z.string().uuid(),
+  source_domain: z.string(),
+  source_record_key: boundedText(200),
+  economic_event_key: boundedText(200),
+  version: z.number().int().positive(),
+  previous_version: z.number().int().positive().nullable(),
+  package_version: z.number().int().positive(),
+  item_id: z.string().uuid(),
+  classification: inceptionClassificationSchema,
+  resolution_state: z.enum(["RESOLVED", "UNRESOLVED"]),
+  is_material: z.boolean(),
+  reconciliation_category: inceptionReconciliationCategorySchema,
+  party_type: inceptionPartySchema,
+  party_reference: boundedText(200).nullable(),
+  reconciliation_reference: boundedText(2000).nullable(),
+  evidence_count: z.number().int().nonnegative(),
+  payload_fingerprint: z.string().regex(/^[0-9a-f]{64}$/),
+  created_by: z.string().uuid(),
+  created_at: z.string(),
+}).strict();
+const accountingInceptionReviewHistorySchema = z.object({
+  review_id: z.string().uuid(),
+  package_version: z.number().int().positive(),
+  decision: z.enum(["APPROVE", "REJECT"]),
+  reviewer_user_id: z.string().uuid(),
+  reason: boundedText(2000),
+  reviewed_at: z.string(),
+}).strict();
+export const accountingInceptionPackageDetailSchema = z.object({
+  package_id: z.string().uuid(),
+  profile_id: z.string().uuid(),
+  current_version: z.number().int().positive(),
+  created_at: z.string(),
+  version: accountingInceptionPackageVersionSchema,
+  versions: z.array(accountingInceptionPackageVersionSchema),
+  coverage_history: z.array(accountingInceptionCoverageHistorySchema),
+  review_history: z.array(accountingInceptionReviewHistorySchema),
+  coverage: z.array(z.object({
+    coverage_id: z.string().uuid(),
+    source_domain: z.string(),
+    source_record_key: boundedText(200),
+    economic_event_key: boundedText(200),
+    version: z.number().int().positive(),
+    item_id: z.string().uuid(),
+    classification: inceptionClassificationSchema,
+    resolution_state: z.enum(["RESOLVED", "UNRESOLVED"]),
+    is_material: z.boolean(),
+    reconciliation_category: inceptionReconciliationCategorySchema,
+    party_type: inceptionPartySchema,
+    party_reference: boundedText(200).nullable(),
+    reconciliation_reference: boundedText(2000).nullable(),
+    evidence_count: z.number().int().nonnegative(),
+  }).strict()),
+  review: accountingInceptionReviewHistorySchema.omit({ package_version: true }).nullable(),
+  acceptance: z.object({
+    acceptance_id: z.string().uuid(),
+    accepted_by: z.string().uuid(),
+    accepted_at: z.string(),
+    as_of_date: validDate,
+    recorded_at_cutoff: z.string(),
+    trial_balance: inceptionTrialBalanceSchema,
+  }).strict().nullable(),
+}).strict();
