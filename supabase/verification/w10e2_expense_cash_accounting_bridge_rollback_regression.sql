@@ -756,7 +756,9 @@ BEGIN
 
   e15:=pg_temp.w10e2_make_expense(15,20,'employee_paid','personal_funds',NULL,NULL);
   INSERT INTO pg_temp.w10e2_ids(label,entity_id) VALUES('record_cutoff_expense',e15);
-  record_cutoff:=clock_timestamp();
+  -- Pin the cutoff to the persisted source timestamp so the source remains visible
+  -- while the bridge classification, created afterward, stays outside the cutoff.
+  record_cutoff:=(public.accounting_expense_bridge_source_snapshot('EXPENSE',e15)->>'source_recorded_at')::timestamptz;
   contract:=pg_temp.w10e2_contract('EXPENSE',e15,'EMPLOYEE_PAID_EXPENSE','DIRECT_EXPENSE',CURRENT_DATE-1,
     'employee_reimbursement_liability',false,false,NULL,false,NULL,true);
   SELECT * INTO saved FROM public.save_accounting_expense_bridge_event(c.operator_id,'EXPENSE',e15,0,contract,
