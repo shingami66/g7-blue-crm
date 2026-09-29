@@ -17,6 +17,7 @@ DECLARE
   v_old_anchor text := 'SELECT item FROM public.accounting_expense_bridge_source_inventory(p_as_of,p_cutoff,p_limit+1)';
   v_new_anchor text := 'SELECT item FROM public.accounting_expense_bridge_source_inventory(p_as_of,p_cutoff,p_limit+1) AS source_inventory(item)';
   v_identity text := 'p_actor uuid, p_as_of date, p_cutoff timestamp with time zone, p_limit integer';
+  v_arguments text := 'p_actor uuid, p_as_of date, p_cutoff timestamp with time zone, p_limit integer DEFAULT 200';
   v_result text := 'jsonb';
 BEGIN
   SELECT p.proowner,p.prolang,l.lanname AS language_name,p.prokind,p.probin,p.pronargdefaults,
@@ -27,6 +28,7 @@ BEGIN
   WHERE p.oid=v_function;
 
   IF pg_catalog.pg_get_function_identity_arguments(v_function) IS DISTINCT FROM v_identity
+     OR pg_catalog.pg_get_function_arguments(v_function) IS DISTINCT FROM v_arguments
      OR pg_catalog.pg_get_function_result(v_function) IS DISTINCT FROM v_result
      OR pg_catalog.pg_get_userbyid(v_before.proowner) IS DISTINCT FROM 'postgres'
      OR v_before.language_name IS DISTINCT FROM 'plpgsql'
@@ -67,17 +69,19 @@ BEGIN
   v_definition:=pg_catalog.pg_get_functiondef(v_function);
 
   IF ROW(v_before.proowner,v_before.prolang,v_before.language_name,v_before.prokind,v_before.probin,
-       v_before.pronargdefaults,v_before.proargdefaults_text,v_before.prosqlbody_text,v_before.prosecdef,
+       v_before.pronargdefaults,v_before.prosqlbody_text,v_before.prosecdef,
        v_before.provolatile,v_before.proparallel,v_before.procost,v_before.prorows,v_before.proisstrict,
        v_before.proleakproof,v_before.proconfig,v_before.proacl)
        IS DISTINCT FROM
      ROW(v_after.proowner,v_after.prolang,v_after.language_name,v_after.prokind,v_after.probin,
-       v_after.pronargdefaults,v_after.proargdefaults_text,v_after.prosqlbody_text,v_after.prosecdef,
+       v_after.pronargdefaults,v_after.prosqlbody_text,v_after.prosecdef,
        v_after.provolatile,v_after.proparallel,v_after.procost,v_after.prorows,v_after.proisstrict,
        v_after.proleakproof,v_after.proconfig,v_after.proacl)
      OR v_after.prosrc IS DISTINCT FROM v_expected_source
+     OR v_after.proargdefaults_text IS NULL
      OR v_after.proacl::text IS DISTINCT FROM '{postgres=X/postgres,service_role=X/postgres}'
      OR pg_catalog.pg_get_function_identity_arguments(v_function) IS DISTINCT FROM v_identity
+     OR pg_catalog.pg_get_function_arguments(v_function) IS DISTINCT FROM v_arguments
      OR pg_catalog.pg_get_function_result(v_function) IS DISTINCT FROM v_result
      OR position(v_old_anchor IN v_definition)>0
      OR (length(v_definition)-length(replace(v_definition,v_new_anchor,'')))/length(v_new_anchor)<>1 THEN

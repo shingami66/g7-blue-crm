@@ -69,6 +69,8 @@ test("W10E2 reconciliation correction aliases the SETOF jsonb inventory column w
   assert.doesNotMatch(reconciliationInventoryAliasFix, /LOCK TABLE pg_catalog\.pg_proc/);
   assert.match(reconciliationInventoryAliasFix, /pg_catalog\.md5\(v_before\.prosrc\) IS DISTINCT FROM '40f52408bd586b0cebf579c166770641'/);
   assert.match(reconciliationInventoryAliasFix, /v_identity text := 'p_actor uuid, p_as_of date, p_cutoff timestamp with time zone, p_limit integer'/);
+  assert.match(reconciliationInventoryAliasFix, /v_arguments text := 'p_actor uuid, p_as_of date, p_cutoff timestamp with time zone, p_limit integer DEFAULT 200'/);
+  assert.equal([...reconciliationInventoryAliasFix.matchAll(/pg_catalog\.pg_get_function_arguments\(v_function\) IS DISTINCT FROM v_arguments/g)].length, 2);
   assert.match(reconciliationInventoryAliasFix, /v_old_anchor text := 'SELECT item FROM public\.accounting_expense_bridge_source_inventory\(p_as_of,p_cutoff,p_limit\+1\)'/);
   assert.match(reconciliationInventoryAliasFix, /v_new_anchor text := 'SELECT item FROM public\.accounting_expense_bridge_source_inventory\(p_as_of,p_cutoff,p_limit\+1\) AS source_inventory\(item\)'/);
   assert.match(reconciliationInventoryAliasFix, /v_before\.language_name IS DISTINCT FROM 'plpgsql'/);
