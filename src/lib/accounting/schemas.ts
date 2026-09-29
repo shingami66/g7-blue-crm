@@ -163,6 +163,7 @@ const accountingAccountInputSchema = z
       "CONTRACT_LIABILITY",
       "CASH_ACCOUNTABILITY",
       "EMPLOYEE_ADVANCE",
+      "EMPLOYEE_REIMBURSEMENT_LIABILITY",
     ]),
   })
   .strict()
@@ -260,6 +261,7 @@ export const accountingAccountVersionSchema = z
       "CONTRACT_LIABILITY",
       "CASH_ACCOUNTABILITY",
       "EMPLOYEE_ADVANCE",
+      "EMPLOYEE_REIMBURSEMENT_LIABILITY",
     ]),
     effective_from: z.string(),
     reason: boundedText(2000),
@@ -469,7 +471,7 @@ const accountingJournalVersionSchema = z
     accounting_date: validDate,
     posting_rule_id: z.string().uuid(),
     rule_version: z.number().int().positive(),
-    source_domain: z.enum(["CONTROLLED_MANUAL", "INCEPTION", "AR_BRIDGE", "AP_BRIDGE"]),
+    source_domain: z.enum(["CONTROLLED_MANUAL", "INCEPTION", "AR_BRIDGE", "AP_BRIDGE", "EXPENSE_BRIDGE"]),
     source_record_key: boundedText(200),
     economic_event_key: boundedText(200),
     posting_purpose: boundedText(80),
@@ -1117,5 +1119,305 @@ export const accountingApBridgeReconciliationSchema = z.discriminatedUnion("stat
     }).strict()),
     truncated: z.boolean(),
     events: z.array(accountingApBridgeReconciliationEventSchema),
+  }).strict(),
+]);
+
+const accountingExpenseBridgeSourceTypeSchema = z.enum([
+  "EXPENSE",
+  "EXPENSE_REIMBURSEMENT_SETTLEMENT",
+  "CASH_ADVANCE_ISSUE",
+  "CASH_ADVANCE_EXPENSE_SETTLEMENT",
+  "CASH_ADVANCE_RETURN",
+  "PETTY_CASH_TRANSACTION",
+  "CASH_ADVANCE_GOVERNANCE_EVENT",
+  "PETTY_CASH_FUND_GOVERNANCE_EVENT",
+]);
+const accountingExpenseBridgeClassificationSchema = z.enum([
+  "EMPLOYEE_PAID_EXPENSE",
+  "COMPANY_DIRECT_EXPENSE",
+  "REIMBURSEMENT_CASH",
+  "REIMBURSEMENT_ADVANCE_OFFSET",
+  "CASH_ADVANCE_ISSUE",
+  "CASH_ADVANCE_EXPENSE_SETTLEMENT",
+  "CASH_ADVANCE_RETURN",
+  "PETTY_REPLENISHMENT",
+  "PETTY_EXPENSE_DISBURSEMENT",
+  "PETTY_TREASURY_WITHDRAWAL",
+  "PETTY_RETURN_TO_TREASURY",
+  "PETTY_RETURN_FROM_TREASURY",
+  "NO_MONETARY_EFFECT",
+  "HELD_UNSUPPORTED_TREATMENT",
+]);
+const accountingExpenseBridgeDirectClassificationSchema = z.enum([
+  "DIRECT_EXPENSE",
+  "CAPITAL_ASSET",
+  "PREPAID_EXPENSE",
+]);
+
+export const saveAccountingExpenseBridgeEventInputSchema = z.object({
+  source_type: accountingExpenseBridgeSourceTypeSchema,
+  source_record_id: z.string().uuid(),
+  expected_version: z.number().int().nonnegative(),
+  classification: accountingExpenseBridgeClassificationSchema,
+  direct_classification: accountingExpenseBridgeDirectClassificationSchema.nullable(),
+  accounting_date: validDate.nullable(),
+  service_attribution: z.enum(["SERVICE", "OVERHEAD"]),
+  expense_account_id: z.string().uuid().nullable(),
+  expense_account_version: z.number().int().positive().nullable(),
+  control_account_id: z.string().uuid().nullable(),
+  control_account_version: z.number().int().positive().nullable(), advance_account_id: z.string().uuid().nullable(), advance_account_version: z.number().int().positive().nullable(),
+  cash_account_id: z.string().uuid().nullable(),
+  cash_account_version: z.number().int().positive().nullable(),
+  cash_binding_evidence_ref: nullableEvidence,
+  cash_binding_evidence_sha256: z.string().regex(/^[0-9a-f]{64}$/).nullable(),
+  evidence_ref: nullableEvidence,
+  evidence_sha256: z.string().regex(/^[0-9a-f]{64}$/).nullable(),
+  related_advance_id: z.string().uuid().nullable(),
+  advance_provenance_evidence_ref: nullableEvidence,
+  advance_provenance_evidence_sha256: z.string().regex(/^[0-9a-f]{64}$/).nullable(),
+  return_direction: z.enum(["TO_TREASURY", "FROM_TREASURY"]).nullable(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict().superRefine((value, context) => {
+  for (const [refKey, hashKey] of [
+    ["evidence_ref", "evidence_sha256"],
+    ["cash_binding_evidence_ref", "cash_binding_evidence_sha256"],
+    ["advance_provenance_evidence_ref", "advance_provenance_evidence_sha256"],
+  ] as const) {
+    if ((value[refKey] === null) !== (value[hashKey] === null)) {
+      context.addIssue({ code: "custom", path: [hashKey], message: "Evidence reference and SHA-256 must be supplied together" });
+    }
+  }
+  for (const [idKey, versionKey] of [
+    ["expense_account_id", "expense_account_version"],
+    ["control_account_id", "control_account_version"],
+    ["advance_account_id", "advance_account_version"], ["cash_account_id", "cash_account_version"],
+  ] as const) {
+    if ((value[idKey] === null) !== (value[versionKey] === null)) {
+      context.addIssue({ code: "custom", path: [versionKey], message: "Account identity and version must be supplied together" });
+    }
+  }
+  if (
+    value.classification !== "HELD_UNSUPPORTED_TREATMENT"
+    && value.classification !== "NO_MONETARY_EFFECT"
+    && value.accounting_date === null
+  ) {
+    context.addIssue({ code: "custom", path: ["accounting_date"], message: "Accounting classifications require an accounting date" });
+  }
+  if (
+    value.source_type !== "EXPENSE_REIMBURSEMENT_SETTLEMENT"
+    && (value.related_advance_id !== null
+      || value.advance_provenance_evidence_ref !== null
+      || value.advance_provenance_evidence_sha256 !== null)
+  ) {
+    context.addIssue({ code: "custom", path: ["related_advance_id"], message: "Advance offset provenance is valid only for reimbursement settlements" });
+  }
+  if (value.source_type !== "PETTY_CASH_TRANSACTION" && value.return_direction !== null) {
+    context.addIssue({ code: "custom", path: ["return_direction"], message: "Return direction is valid only for Petty Cash transactions" });
+  }
+});
+
+export const prepareAccountingExpenseBridgeEventInputSchema = z.object({
+  event_id: z.string().uuid(),
+  event_version: z.number().int().positive(),
+  period_id: z.string().uuid(),
+  period_version: z.number().int().positive(),
+  posting_rule_id: z.string().uuid(),
+  rule_version: z.number().int().positive(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict();
+
+export const postAccountingExpenseBridgeJournalInputSchema = z.object({
+  journal_id: z.string().uuid(),
+  expected_version: z.number().int().positive(),
+  request_id: z.string().uuid(),
+}).strict();
+
+export const accountingExpenseBridgeReconciliationInputSchema = z.object({
+  as_of_date: validDate,
+  recorded_at_cutoff: z.string().datetime({ offset: true }),
+  limit: z.number().int().min(1).max(500).default(200),
+}).strict();
+
+export const accountingExpenseBridgeEventMutationResultSchema = z.object({
+  error_code: z.string().nullable(),
+  event_id: z.string().uuid().nullable(),
+  version: z.number().int().positive().nullable(),
+  status: z.enum(["READY", "HELD", "NO_EFFECT"]).nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+
+export const accountingExpenseBridgeJournalMutationResultSchema = z.object({
+  error_code: z.string().nullable(),
+  journal_id: z.string().uuid().nullable(),
+  version: z.number().int().positive().nullable(),
+  status: z.enum(["DRAFT", "POSTED"]).nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+
+const accountingExpenseBridgeReconciliationEventSchema = z.object({
+  source_type: accountingExpenseBridgeSourceTypeSchema,
+  source_record_id: z.string().uuid(),
+  source_record_key: boundedText(200),
+  economic_event_key: boundedText(200),
+  reconciliation_status: z.enum([
+    "POSTED",
+    "PREPARED",
+    "HELD",
+    "NO_EFFECT",
+    "INCEPTION_COVERED",
+    "MISSING_EFFECT",
+    "MISSING_CLASSIFICATION",
+    "ACCOUNTING_DATE_AFTER_CUTOFF",
+    "SOURCE_PAYLOAD_CONFLICT",
+  ]),
+  event_id: z.string().uuid().nullable(),
+  event_version: z.number().int().positive().nullable(),
+  classification: accountingExpenseBridgeClassificationSchema.nullable(),
+  employee_id: z.string().uuid().nullable(),
+  service_id: z.string().uuid().nullable(),
+  expense_id: z.string().uuid().nullable(),
+  advance_id: z.string().uuid().nullable(),
+  fund_id: z.string().uuid().nullable(),
+  amount_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+  source_business_date: validDate.nullable(),
+  source_recorded_at: z.string(),
+  accounting_date: validDate.nullable(),
+  posted_at: z.string().nullable(),
+  journal_id: z.string().uuid().nullable(),
+  held_code: z.string().nullable(),
+  post_cutover_covered: z.boolean(),
+  inception_conflict: z.boolean(),
+  source_conflict: z.boolean(),
+}).strict();
+
+const accountingExpenseBridgeControlBalanceSchema = z.object({
+  party_role: z.enum(["EMPLOYEE_REIMBURSEMENT_LIABILITY", "EMPLOYEE_ADVANCE", "CASH_ACCOUNTABILITY"]),
+  subledger_halalah: accountingSignedHalalahSchema,
+  ledger_halalah: accountingSignedHalalahSchema,
+  difference_halalah: accountingSignedHalalahSchema,
+}).strict();
+
+export const accountingExpenseBridgeReconciliationSchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("NOT_INITIALIZED") }).strict(),
+  z.object({
+    state: z.literal("READY"),
+    as_of_date: validDate,
+    recorded_at_cutoff: z.string(),
+    cutover_boundary_date: validDate.nullable(),
+    bank_reconciled: z.literal(false),
+    source_event_count_partial: z.literal(false),
+    source_event_count: z.number().int().nonnegative(),
+    posted_effect_count: z.number().int().nonnegative(),
+    held_count: z.number().int().nonnegative(),
+    no_effect_count: z.number().int().nonnegative(),
+    missing_effect_count: z.number().int().nonnegative(),
+    inception_conflict_count: z.number().int().nonnegative(),
+    expected_effect_count: z.number().int().nonnegative(),
+    source_payload_conflict_count: z.number().int().nonnegative(),
+    duplicate_conflict_count: z.number().int().nonnegative(),
+    control_difference_count: z.number().int().nonnegative(),
+    employee_difference_count: z.number().int().nonnegative(),
+    fund_difference_count: z.number().int().nonnegative(),
+    service_difference_count: z.number().int().nonnegative(),
+    recognized_expense_asset_halalah: accountingSignedHalalahSchema,
+    employee_reimbursement_liability_halalah: accountingSignedHalalahSchema,
+    employee_advance_balance_halalah: accountingSignedHalalahSchema,
+    petty_cash_accountability_halalah: accountingSignedHalalahSchema,
+    reimbursements_paid_halalah: accountingSignedHalalahSchema,
+    reimbursement_advance_offsets_halalah: accountingSignedHalalahSchema,
+    advance_settlements_halalah: accountingSignedHalalahSchema,
+    advance_returns_halalah: accountingSignedHalalahSchema,
+    petty_replenishments_halalah: accountingSignedHalalahSchema,
+    petty_disbursements_halalah: accountingSignedHalalahSchema,
+    petty_treasury_transfers_halalah: accountingSignedHalalahSchema,
+    control_balances: z.array(accountingExpenseBridgeControlBalanceSchema),
+    employee_balances: z.array(z.object({
+      employee_id: z.string().uuid(),
+      reimbursement_liability_halalah: accountingSignedHalalahSchema,
+      reimbursement_liability_expected_halalah: accountingSignedHalalahSchema,
+      reimbursement_liability_difference_halalah: accountingSignedHalalahSchema,
+      advance_balance_halalah: accountingSignedHalalahSchema,
+      advance_balance_expected_halalah: accountingSignedHalalahSchema,
+      advance_balance_difference_halalah: accountingSignedHalalahSchema,
+      difference_halalah: accountingSignedHalalahSchema,
+    }).strict()),
+    fund_balances: z.array(z.object({
+      fund_id: z.string().uuid(),
+      petty_cash_halalah: accountingSignedHalalahSchema,
+      petty_cash_expected_halalah: accountingSignedHalalahSchema,
+      difference_halalah: accountingSignedHalalahSchema,
+    }).strict()),
+    service_balances: z.array(z.object({
+      service_id: z.string().uuid(),
+      recognized_expense_asset_halalah: accountingSignedHalalahSchema,
+      recognized_expense_asset_expected_halalah: accountingSignedHalalahSchema,
+      reimbursement_liability_halalah: accountingSignedHalalahSchema,
+      reimbursement_liability_expected_halalah: accountingSignedHalalahSchema,
+      employee_advance_halalah: accountingSignedHalalahSchema,
+      employee_advance_expected_halalah: accountingSignedHalalahSchema,
+      petty_cash_halalah: accountingSignedHalalahSchema,
+      petty_cash_expected_halalah: accountingSignedHalalahSchema,
+      difference_halalah: accountingSignedHalalahSchema,
+    }).strict()),
+    timing_difference_count: z.number().int().nonnegative(),
+    timing_differences: z.array(z.object({
+      source_type: accountingExpenseBridgeSourceTypeSchema,
+      source_record_id: z.string().uuid(),
+      source_business_date: validDate.nullable(),
+      accounting_date: validDate,
+      days_difference: z.number().int(),
+      amount_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+    }).strict()),
+    truncated: z.literal(false),
+    events: z.array(accountingExpenseBridgeReconciliationEventSchema),
+  }).strict(),
+  z.object({
+    state: z.literal("TRUNCATED"),
+    as_of_date: validDate,
+    recorded_at_cutoff: z.string(),
+    cutover_boundary_date: validDate.nullable(),
+    bank_reconciled: z.literal(false),
+    source_event_count_partial: z.literal(true),
+    source_event_count: z.number().int().nonnegative(),
+    posted_effect_count: z.number().int().nonnegative(),
+    held_count: z.number().int().nonnegative(),
+    no_effect_count: z.number().int().nonnegative(),
+    missing_effect_count: z.number().int().nonnegative(),
+    inception_conflict_count: z.number().int().nonnegative(),
+    expected_effect_count: z.number().int().nonnegative(),
+    source_payload_conflict_count: z.number().int().nonnegative(),
+    duplicate_conflict_count: z.number().int().nonnegative(),
+    control_difference_count: z.null(),
+    employee_difference_count: z.null(),
+    fund_difference_count: z.null(),
+    service_difference_count: z.null(),
+    recognized_expense_asset_halalah: accountingSignedHalalahSchema,
+    employee_reimbursement_liability_halalah: accountingSignedHalalahSchema,
+    employee_advance_balance_halalah: accountingSignedHalalahSchema,
+    petty_cash_accountability_halalah: accountingSignedHalalahSchema,
+    reimbursements_paid_halalah: accountingSignedHalalahSchema,
+    reimbursement_advance_offsets_halalah: accountingSignedHalalahSchema,
+    advance_settlements_halalah: accountingSignedHalalahSchema,
+    advance_returns_halalah: accountingSignedHalalahSchema,
+    petty_replenishments_halalah: accountingSignedHalalahSchema,
+    petty_disbursements_halalah: accountingSignedHalalahSchema,
+    petty_treasury_transfers_halalah: accountingSignedHalalahSchema,
+    control_balances: z.null(),
+    employee_balances: z.null(),
+    fund_balances: z.null(),
+    service_balances: z.null(),
+    timing_difference_count: z.number().int().nonnegative(),
+    timing_differences: z.array(z.object({
+      source_type: accountingExpenseBridgeSourceTypeSchema,
+      source_record_id: z.string().uuid(),
+      source_business_date: validDate.nullable(),
+      accounting_date: validDate,
+      days_difference: z.number().int(),
+      amount_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+    }).strict()),
+    truncated: z.literal(true),
+    events: z.array(accountingExpenseBridgeReconciliationEventSchema),
   }).strict(),
 ]);

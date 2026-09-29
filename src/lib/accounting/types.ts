@@ -10,6 +10,7 @@ export const ACCOUNTING_CAPABILITIES = [
   "accounting:manage_inception",
   "accounting:manage_ar_bridge",
   "accounting:manage_ap_bridge",
+  "accounting:manage_expense_bridge",
   "accounting:reconcile_bank",
   "accounting:close_period",
   "accounting:reopen_period",
@@ -138,6 +139,15 @@ export type AccountingActionErrorCode =
   | "payable_balance_insufficient"
   | "supplier_advance_balance_insufficient"
   | "advance_authorization_exceeded"
+  | "source_not_eligible"
+  | "reimbursement_ceiling_exceeded"
+  | "cash_advance_effect_missing"
+  | "advance_balance_exceeded"
+  | "expense_settlement_exceeds_expense"
+  | "petty_cash_balance_insufficient"
+  | "ADVANCE_OFFSET_PROVENANCE_REQUIRED"
+  | "PETTY_CASH_RETURN_PROVENANCE_REQUIRED"
+  | "inception_coverage_conflict"
   | "dependency_failure";
 
 export type AccountingActionResult<T> =
@@ -156,7 +166,7 @@ export type AccountingControlClassification =
   | "SUPPLIER_ADVANCE"
   | "CONTRACT_LIABILITY"
   | "CASH_ACCOUNTABILITY"
-  | "EMPLOYEE_ADVANCE";
+  | "EMPLOYEE_ADVANCE" | "EMPLOYEE_REIMBURSEMENT_LIABILITY";
 
 export type AccountingAccountInput = {
   account_code: string;
@@ -302,7 +312,7 @@ export type AccountingJournalVersion = {
   accounting_date: string;
   posting_rule_id: string;
   rule_version: number;
-  source_domain: "CONTROLLED_MANUAL" | "INCEPTION" | "AR_BRIDGE" | "AP_BRIDGE";
+  source_domain: "CONTROLLED_MANUAL" | "INCEPTION" | "AR_BRIDGE" | "AP_BRIDGE" | "EXPENSE_BRIDGE";
   source_record_key: string;
   economic_event_key: string;
   posting_purpose: string;
@@ -838,4 +848,176 @@ export type AccountingApBridgeReconciliation =
       }>;
       truncated: boolean;
       events: AccountingApBridgeReconciliationEvent[];
+    };
+
+export type AccountingExpenseBridgeSourceType =
+  | "EXPENSE"
+  | "EXPENSE_REIMBURSEMENT_SETTLEMENT"
+  | "CASH_ADVANCE_ISSUE"
+  | "CASH_ADVANCE_EXPENSE_SETTLEMENT"
+  | "CASH_ADVANCE_RETURN"
+  | "PETTY_CASH_TRANSACTION"
+  | "CASH_ADVANCE_GOVERNANCE_EVENT"
+  | "PETTY_CASH_FUND_GOVERNANCE_EVENT";
+
+export type AccountingExpenseBridgeClassification =
+  | "EMPLOYEE_PAID_EXPENSE"
+  | "COMPANY_DIRECT_EXPENSE"
+  | "REIMBURSEMENT_CASH"
+  | "REIMBURSEMENT_ADVANCE_OFFSET"
+  | "CASH_ADVANCE_ISSUE"
+  | "CASH_ADVANCE_EXPENSE_SETTLEMENT"
+  | "CASH_ADVANCE_RETURN"
+  | "PETTY_REPLENISHMENT"
+  | "PETTY_EXPENSE_DISBURSEMENT"
+  | "PETTY_TREASURY_WITHDRAWAL"
+  | "PETTY_RETURN_TO_TREASURY"
+  | "PETTY_RETURN_FROM_TREASURY"
+  | "NO_MONETARY_EFFECT"
+  | "HELD_UNSUPPORTED_TREATMENT";
+
+export type AccountingExpenseBridgeDirectClassification =
+  | "DIRECT_EXPENSE"
+  | "CAPITAL_ASSET"
+  | "PREPAID_EXPENSE";
+
+export type AccountingExpenseBridgeEventInput = {
+  source_type: AccountingExpenseBridgeSourceType;
+  source_record_id: string;
+  expected_version: number;
+  classification: AccountingExpenseBridgeClassification;
+  direct_classification: AccountingExpenseBridgeDirectClassification | null;
+  accounting_date: string | null;
+  service_attribution: "SERVICE" | "OVERHEAD";
+  expense_account_id: string | null;
+  expense_account_version: number | null;
+  control_account_id: string | null;
+  control_account_version: number | null; advance_account_id: string | null; advance_account_version: number | null;
+  cash_account_id: string | null;
+  cash_account_version: number | null;
+  cash_binding_evidence_ref: string | null;
+  cash_binding_evidence_sha256: string | null;
+  evidence_ref: string | null;
+  evidence_sha256: string | null;
+  related_advance_id: string | null;
+  advance_provenance_evidence_ref: string | null;
+  advance_provenance_evidence_sha256: string | null;
+  return_direction: "TO_TREASURY" | "FROM_TREASURY" | null;
+  reason: string;
+  request_id: string;
+};
+
+export type AccountingExpenseBridgeReconciliationEvent = {
+  source_type: AccountingExpenseBridgeSourceType;
+  source_record_id: string;
+  source_record_key: string;
+  economic_event_key: string;
+  reconciliation_status:
+    | "POSTED"
+    | "PREPARED"
+    | "HELD"
+    | "NO_EFFECT"
+    | "INCEPTION_COVERED"
+    | "MISSING_EFFECT"
+    | "MISSING_CLASSIFICATION"
+    | "ACCOUNTING_DATE_AFTER_CUTOFF"
+    | "SOURCE_PAYLOAD_CONFLICT";
+  event_id: string | null;
+  event_version: number | null;
+  classification: AccountingExpenseBridgeClassification | null;
+  employee_id: string | null;
+  service_id: string | null;
+  expense_id: string | null;
+  advance_id: string | null;
+  fund_id: string | null;
+  amount_halalah: string;
+  source_business_date: string | null;
+  source_recorded_at: string;
+  accounting_date: string | null;
+  posted_at: string | null;
+  journal_id: string | null;
+  held_code: string | null;
+  post_cutover_covered: boolean;
+  inception_conflict: boolean;
+  source_conflict: boolean;
+};
+
+export type AccountingExpenseBridgeReconciliation =
+  | { state: "NOT_INITIALIZED" }
+  | {
+      state: "READY" | "TRUNCATED";
+      as_of_date: string;
+      recorded_at_cutoff: string;
+      cutover_boundary_date: string | null;
+      bank_reconciled: false;
+      source_event_count_partial: boolean;
+      source_event_count: number;
+      posted_effect_count: number;
+      held_count: number;
+      no_effect_count: number;
+      missing_effect_count: number;
+      inception_conflict_count: number;
+      expected_effect_count: number;
+      source_payload_conflict_count: number;
+      duplicate_conflict_count: number;
+      control_difference_count: number | null;
+      employee_difference_count: number | null;
+      fund_difference_count: number | null;
+      service_difference_count: number | null;
+      recognized_expense_asset_halalah: string;
+      employee_reimbursement_liability_halalah: string;
+      employee_advance_balance_halalah: string;
+      petty_cash_accountability_halalah: string;
+      reimbursements_paid_halalah: string;
+      reimbursement_advance_offsets_halalah: string;
+      advance_settlements_halalah: string;
+      advance_returns_halalah: string;
+      petty_replenishments_halalah: string;
+      petty_disbursements_halalah: string;
+      petty_treasury_transfers_halalah: string;
+      control_balances: Array<{
+        party_role: "EMPLOYEE_REIMBURSEMENT_LIABILITY" | "EMPLOYEE_ADVANCE" | "CASH_ACCOUNTABILITY";
+        subledger_halalah: string;
+        ledger_halalah: string;
+        difference_halalah: string;
+      }> | null;
+      employee_balances: Array<{
+        employee_id: string;
+        reimbursement_liability_halalah: string;
+        reimbursement_liability_expected_halalah: string;
+        reimbursement_liability_difference_halalah: string;
+        advance_balance_halalah: string;
+        advance_balance_expected_halalah: string;
+        advance_balance_difference_halalah: string;
+        difference_halalah: string;
+      }> | null;
+      fund_balances: Array<{
+        fund_id: string;
+        petty_cash_halalah: string;
+        petty_cash_expected_halalah: string;
+        difference_halalah: string;
+      }> | null;
+      service_balances: Array<{
+        service_id: string;
+        recognized_expense_asset_halalah: string;
+        recognized_expense_asset_expected_halalah: string;
+        reimbursement_liability_halalah: string;
+        reimbursement_liability_expected_halalah: string;
+        employee_advance_halalah: string;
+        employee_advance_expected_halalah: string;
+        petty_cash_halalah: string;
+        petty_cash_expected_halalah: string;
+        difference_halalah: string;
+      }> | null;
+      timing_difference_count: number;
+      timing_differences: Array<{
+        source_type: AccountingExpenseBridgeSourceType;
+        source_record_id: string;
+        source_business_date: string | null;
+        accounting_date: string;
+        days_difference: number;
+        amount_halalah: string;
+      }>;
+      truncated: boolean;
+      events: AccountingExpenseBridgeReconciliationEvent[];
     };

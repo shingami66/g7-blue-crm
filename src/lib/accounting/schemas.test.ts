@@ -37,6 +37,8 @@ const {
   saveAccountingArBridgeEventInputSchema,
   saveAccountingApBridgeEventInputSchema,
   accountingArBridgeReconciliationSchema,
+  saveAccountingExpenseBridgeEventInputSchema,
+  accountingExpenseBridgeReconciliationSchema,
 } = await import("./schemas.ts");
 
 const inactiveProfile = {
@@ -469,4 +471,50 @@ test("period schema supports arbitrary OPEN boundaries and rejects invalid, reve
     }).success,
     true,
   );
+});
+
+
+test("W10E2 accepts explicit missing-provenance candidates for fail-closed database holds", () => {
+  const base = {
+    source_type: "EXPENSE_REIMBURSEMENT_SETTLEMENT",
+    source_record_id: "00000000-0000-4000-8000-00000000e401",
+    expected_version: 0,
+    classification: "REIMBURSEMENT_ADVANCE_OFFSET",
+    direct_classification: null,
+    accounting_date: "2026-09-29",
+    service_attribution: "SERVICE",
+    expense_account_id: null,
+    expense_account_version: null,
+    control_account_id: null,
+    control_account_version: null, advance_account_id: null, advance_account_version: null,
+    cash_account_id: null,
+    cash_account_version: null,
+    cash_binding_evidence_ref: null,
+    cash_binding_evidence_sha256: null,
+    evidence_ref: null,
+    evidence_sha256: null,
+    related_advance_id: null,
+    advance_provenance_evidence_ref: null,
+    advance_provenance_evidence_sha256: null,
+    return_direction: null,
+    reason: "Missing structured advance provenance is held by the accounting bridge",
+    request_id: "00000000-0000-4000-8000-00000000e402",
+  };
+
+  assert.equal(saveAccountingExpenseBridgeEventInputSchema.safeParse(base).success, true);
+  assert.equal(saveAccountingExpenseBridgeEventInputSchema.safeParse({
+    ...base,
+    source_type: "PETTY_CASH_TRANSACTION",
+    source_record_id: "00000000-0000-4000-8000-00000000e403",
+    classification: "PETTY_RETURN_TO_TREASURY",
+  }).success, true);
+  assert.equal(saveAccountingExpenseBridgeEventInputSchema.safeParse({
+    ...base,
+    classification: "expense_category",
+  }).success, false);
+  assert.equal(saveAccountingExpenseBridgeEventInputSchema.safeParse({
+    ...base,
+    evidence_ref: "synthetic://w10e2/unhashed",
+  }).success, false);
+  assert.equal(accountingExpenseBridgeReconciliationSchema.safeParse({ state: "NOT_INITIALIZED" }).success, true);
 });

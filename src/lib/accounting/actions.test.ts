@@ -61,7 +61,7 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { saveAccountingAccount, saveAccountingPeriod, setAccountingCapability, updateAccountingProfile, saveAccountingPostingRule, prepareAccountingJournal, postAccountingJournal, reverseAccountingJournal, saveAccountingArBridgeEvent, prepareAccountingArBridgeEvent, postAccountingArBridgeJournal, saveAccountingApBridgeEvent, prepareAccountingApBridgeEvent, postAccountingApBridgeJournal } = await import("./actions.ts");
+const { saveAccountingAccount, saveAccountingPeriod, setAccountingCapability, updateAccountingProfile, saveAccountingPostingRule, prepareAccountingJournal, postAccountingJournal, reverseAccountingJournal, saveAccountingArBridgeEvent, prepareAccountingArBridgeEvent, postAccountingArBridgeJournal, saveAccountingApBridgeEvent, prepareAccountingApBridgeEvent, postAccountingApBridgeJournal, saveAccountingExpenseBridgeEvent, prepareAccountingExpenseBridgeEvent, postAccountingExpenseBridgeJournal } = await import("./actions.ts");
 const { AuthDependencyError } = await import("../auth/errors.ts");
 
 const actorId = "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f";
@@ -549,6 +549,121 @@ test("W10E1 AP actions derive the actor and map only the AP bridge RPCs", async 
 
   resetState(async () => ({ data: [], error: null }));
   assert.deepEqual(await saveAccountingApBridgeEvent({ ...base, amount_halalah: "10000" }), {
+    ok: false,
+    code: "invalid_input",
+  });
+  assert.equal(state.calls.length, 0);
+});
+
+
+test("W10E2 expense bridge actions derive the actor and map only the governed bridge RPCs", async () => {
+  const eventId = "00000000-0000-4000-8000-00000000e301";
+  const journalId = "00000000-0000-4000-8000-00000000e302";
+  const base = {
+    source_type: "EXPENSE",
+    source_record_id: "00000000-0000-4000-8000-00000000e303",
+    expected_version: 0,
+    classification: "EMPLOYEE_PAID_EXPENSE",
+    direct_classification: "DIRECT_EXPENSE",
+    accounting_date: "2026-09-29",
+    service_attribution: "SERVICE",
+    expense_account_id: "00000000-0000-4000-8000-00000000e304",
+    expense_account_version: 1,
+    control_account_id: "00000000-0000-4000-8000-00000000e305",
+    control_account_version: 1, advance_account_id: null, advance_account_version: null,
+    cash_account_id: null,
+    cash_account_version: null,
+    cash_binding_evidence_ref: null,
+    cash_binding_evidence_sha256: null,
+    evidence_ref: "synthetic://w10e2/expense-evidence",
+    evidence_sha256: "a".repeat(64),
+    related_advance_id: null,
+    advance_provenance_evidence_ref: null,
+    advance_provenance_evidence_sha256: null,
+    return_direction: null,
+    reason: "Synthetic W10E2 Expense recognition",
+    request_id: "00000000-0000-4000-8000-00000000e306",
+  };
+
+  resetState(async () => ({
+    data: [{ error_code: null, event_id: eventId, version: 1, status: "READY", idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await saveAccountingExpenseBridgeEvent(base), {
+    ok: true,
+    value: { event_id: eventId, version: 1, status: "READY" },
+    idempotentReplay: false,
+  });
+  assert.equal(state.calls[0].name, "save_accounting_expense_bridge_event");
+  assert.equal(state.calls[0].args.p_actor, actorId);
+  assert.equal(state.calls[0].args.p_type, "EXPENSE");
+  assert.equal(state.calls[0].args.p_source_id, base.source_record_id);
+  assert.equal(state.calls[0].args.p_expected, 0);
+  assert.deepEqual(state.calls[0].args.p_contract, {
+    classification: "EMPLOYEE_PAID_EXPENSE",
+    direct_classification: "DIRECT_EXPENSE",
+    accounting_date: "2026-09-29",
+    service_attribution: "SERVICE",
+    expense_account_id: base.expense_account_id,
+    expense_account_version: 1,
+    control_account_id: base.control_account_id,
+    control_account_version: 1, advance_account_id: null, advance_account_version: null,
+    cash_account_id: null,
+    cash_account_version: null,
+    cash_binding_evidence_ref: null,
+    cash_binding_evidence_sha256: null,
+    evidence_ref: base.evidence_ref,
+    evidence_sha256: base.evidence_sha256,
+    related_advance_id: null,
+    advance_provenance_evidence_ref: null,
+    advance_provenance_evidence_sha256: null,
+    return_direction: null,
+  });
+  assert.equal(state.permission, null);
+
+  resetState(async () => ({
+    data: [{ error_code: null, journal_id: journalId, version: 1, status: "DRAFT", idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await prepareAccountingExpenseBridgeEvent({
+    event_id: eventId,
+    event_version: 1,
+    period_id: "00000000-0000-4000-8000-00000000e307",
+    period_version: 1,
+    posting_rule_id: "00000000-0000-4000-8000-00000000e308",
+    rule_version: 1,
+    reason: "Synthetic W10E2 preparation",
+    request_id: "00000000-0000-4000-8000-00000000e309",
+  }), {
+    ok: true,
+    value: { journal_id: journalId, version: 1, status: "DRAFT" },
+    idempotentReplay: false,
+  });
+  assert.equal(state.calls[0].name, "prepare_accounting_expense_bridge_event");
+  assert.equal(state.calls[0].args.p_actor, actorId);
+  assert.equal(state.calls[0].args.p_event_id, eventId);
+  assert.equal(state.calls[0].args.p_period, "00000000-0000-4000-8000-00000000e307");
+  assert.equal(state.calls[0].args.p_rule, "00000000-0000-4000-8000-00000000e308");
+
+  resetState(async () => ({
+    data: [{ error_code: null, journal_id: journalId, version: 2, status: "POSTED", idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await postAccountingExpenseBridgeJournal({
+    journal_id: journalId,
+    expected_version: 1,
+    request_id: "00000000-0000-4000-8000-00000000e310",
+  }), {
+    ok: true,
+    value: { journal_id: journalId, version: 2, status: "POSTED" },
+    idempotentReplay: false,
+  });
+  assert.equal(state.calls[0].name, "post_accounting_expense_bridge_journal");
+  assert.equal(state.calls[0].args.p_actor, actorId);
+  assert.equal(state.calls[0].args.p_journal, journalId);
+
+  resetState(async () => ({ data: [], error: null }));
+  assert.deepEqual(await saveAccountingExpenseBridgeEvent({ ...base, cash_account_id: targetId }), {
     ok: false,
     code: "invalid_input",
   });

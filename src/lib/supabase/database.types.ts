@@ -3904,6 +3904,69 @@ export type Database = {
         }
         Returns: Json
       }
+
+      save_accounting_expense_bridge_event: {
+        Args: {
+          p_actor: string
+          p_type: string
+          p_source_id: string
+          p_expected: number
+          p_contract: Json
+          p_reason: string
+          p_request: string
+        }
+        Returns: {
+          error_code: string | null
+          event_id: string | null
+          version: number | null
+          status: string | null
+          idempotent_replay: boolean
+        }[]
+      }
+      prepare_accounting_expense_bridge_event: {
+        Args: {
+          p_actor: string
+          p_event_id: string
+          p_event_version: number
+          p_period: string
+          p_period_version: number
+          p_rule: string
+          p_rule_version: number
+          p_reason: string
+          p_request: string
+        }
+        Returns: {
+          error_code: string | null
+          journal_id: string | null
+          version: number | null
+          status: string | null
+          idempotent_replay: boolean
+        }[]
+      }
+      post_accounting_expense_bridge_journal: {
+        Args: {
+          p_actor: string
+          p_journal: string
+          p_expected: number
+          p_request: string
+        }
+        Returns: {
+          error_code: string | null
+          journal_id: string | null
+          version: number | null
+          status: string | null
+          idempotent_replay: boolean
+        }[]
+      }
+      get_accounting_expense_bridge_reconciliation: {
+        Args: {
+          p_actor: string
+          p_as_of: string
+          p_cutoff: string
+          p_limit?: number
+        }
+        Returns: Json
+      }
       start_service_execution: {
         Args: { p_actor_id: string; p_actor_role: string; p_service_id: string }
         Returns: {

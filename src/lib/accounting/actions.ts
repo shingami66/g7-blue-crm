@@ -30,6 +30,11 @@ import {
   postAccountingApBridgeJournalInputSchema,
   accountingApBridgeEventMutationResultSchema,
   accountingApBridgeJournalMutationResultSchema,
+  saveAccountingExpenseBridgeEventInputSchema,
+  prepareAccountingExpenseBridgeEventInputSchema,
+  postAccountingExpenseBridgeJournalInputSchema,
+  accountingExpenseBridgeEventMutationResultSchema,
+  accountingExpenseBridgeJournalMutationResultSchema,
   setAccountingCapabilityInputSchema,
   updateAccountingProfileInputSchema,
 } from "./schemas";
@@ -109,6 +114,14 @@ const SAFE_ERROR_CODES = new Set([
   "payable_balance_insufficient",
   "supplier_advance_balance_insufficient",
   "advance_authorization_exceeded",
+  "source_not_eligible",
+  "reimbursement_ceiling_exceeded",
+  "cash_advance_effect_missing",
+  "advance_balance_exceeded",
+  "expense_settlement_exceeds_expense",
+  "petty_cash_balance_insufficient",
+  "ADVANCE_OFFSET_PROVENANCE_REQUIRED",
+  "PETTY_CASH_RETURN_PROVENANCE_REQUIRED",
 ]);
 
 function safeCode(code: string | null | undefined) {
@@ -418,7 +431,7 @@ export async function reverseAccountingJournal(
 
 async function requireAccountingCapabilities(
   actorId: string,
-  capabilities: Array<"accounting:manage_inception" | "accounting:manage_ar_bridge" | "accounting:manage_ap_bridge" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view">,
+  capabilities: Array<"accounting:manage_inception" | "accounting:manage_ar_bridge" | "accounting:manage_ap_bridge" | "accounting:manage_expense_bridge" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view">,
 ) {
   const allowed = await Promise.all(capabilities.map((capability) =>
     resolveAccountingCapability(actorId, capability)));
@@ -720,6 +733,90 @@ export async function postAccountingApBridgeJournal(input: unknown) {
   if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
   if (!row.data.journal_id || row.data.version == null || row.data.status !== "POSTED") {
     throw new AuthDependencyError("Accounting AP bridge response was invalid");
+  }
+  return {
+    ok: true as const,
+    value: { journal_id: row.data.journal_id, version: row.data.version, status: "POSTED" as const },
+    idempotentReplay: row.data.idempotent_replay,
+  };
+}
+
+export async function saveAccountingExpenseBridgeEvent(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_expense_bridge"]);
+  const parsed = saveAccountingExpenseBridgeEventInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const { source_type, source_record_id, expected_version, reason, request_id, ...contract } = parsed.data;
+  const result = await callArBridgeRpc(() => createAdminClient().rpc("save_accounting_expense_bridge_event", {
+    p_actor: actor.id,
+    p_type: source_type,
+    p_source_id: source_record_id,
+    p_expected: expected_version,
+    p_contract: contract as Json,
+    p_reason: reason,
+    p_request: request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingExpenseBridgeEventMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting expense bridge response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.event_id || row.data.version == null || !row.data.status) {
+    throw new AuthDependencyError("Accounting expense bridge response was invalid");
+  }
+  return {
+    ok: true as const,
+    value: { event_id: row.data.event_id, version: row.data.version, status: row.data.status },
+    idempotentReplay: row.data.idempotent_replay,
+  };
+}
+
+export async function prepareAccountingExpenseBridgeEvent(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_expense_bridge"]);
+  const parsed = prepareAccountingExpenseBridgeEventInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callArBridgeRpc(() => createAdminClient().rpc("prepare_accounting_expense_bridge_event", {
+    p_actor: actor.id,
+    p_event_id: parsed.data.event_id,
+    p_event_version: parsed.data.event_version,
+    p_period: parsed.data.period_id,
+    p_period_version: parsed.data.period_version,
+    p_rule: parsed.data.posting_rule_id,
+    p_rule_version: parsed.data.rule_version,
+    p_reason: parsed.data.reason,
+    p_request: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingExpenseBridgeJournalMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting expense bridge response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.journal_id || row.data.version == null || !row.data.status) {
+    throw new AuthDependencyError("Accounting expense bridge response was invalid");
+  }
+  return {
+    ok: true as const,
+    value: { journal_id: row.data.journal_id, version: row.data.version, status: row.data.status },
+    idempotentReplay: row.data.idempotent_replay,
+  };
+}
+
+export async function postAccountingExpenseBridgeJournal(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_expense_bridge"]);
+  const parsed = postAccountingExpenseBridgeJournalInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callArBridgeRpc(() => createAdminClient().rpc("post_accounting_expense_bridge_journal", {
+    p_actor: actor.id,
+    p_journal: parsed.data.journal_id,
+    p_expected: parsed.data.expected_version,
+    p_request: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingExpenseBridgeJournalMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting expense bridge response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.journal_id || row.data.version == null || row.data.status !== "POSTED") {
+    throw new AuthDependencyError("Accounting expense bridge response was invalid");
   }
   return {
     ok: true as const,

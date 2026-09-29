@@ -1,0 +1,104 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+
+const root = new URL("../../../", import.meta.url);
+const read = (path: string) => readFileSync(new URL(path, root), "utf8");
+const migration = read("supabase/migrations/20260929120000_w10e2_expense_cash_accounting_bridge.sql");
+const fixture = read("supabase/verification/w10e2_expense_cash_accounting_bridge_rollback_regression.sql");
+const types = read("src/lib/accounting/types.ts");
+const schemas = read("src/lib/accounting/schemas.ts");
+const actions = read("src/lib/accounting/actions.ts");
+const queries = read("src/lib/accounting/queries.ts");
+const databaseTypes = read("src/lib/supabase/database.types.ts");
+
+test("W10E2 creates append-only bridge records, protected controls, and governed RPC grants", () => {
+  assert.match(migration, /^-- W10E2:[^\n]+\n[\s\S]*?\nBEGIN;/);
+  assert.match(migration, /COMMIT;\s*$/);
+  assert.deepEqual([...migration.matchAll(/CREATE TABLE public\.(accounting_expense_bridge_[a-z_]+)/g)].map(([, n]) => n), [
+    "accounting_expense_bridge_events", "accounting_expense_bridge_event_versions",
+    "accounting_expense_bridge_journal_links", "accounting_expense_bridge_journal_lines",
+  ]);
+  for (const rpc of ["save_accounting_expense_bridge_event", "prepare_accounting_expense_bridge_event",
+    "post_accounting_expense_bridge_journal", "get_accounting_expense_bridge_reconciliation"]) {
+    assert.match(migration, new RegExp("GRANT EXECUTE ON FUNCTION public\\." + rpc + "\\("));
+    assert.match(migration, new RegExp("REVOKE ALL ON FUNCTION public\\." + rpc + "\\("));
+  }
+  assert.match(migration, /accounting:manage_expense_bridge/);
+  assert.match(migration, /'EXPENSE_BRIDGE'/);
+  assert.match(migration, /'EMPLOYEE_REIMBURSEMENT_LIABILITY'/);
+  assert.match(migration, /ENABLE ROW LEVEL SECURITY;[^]*FORCE ROW LEVEL SECURITY/);
+  assert.match(migration, /accounting_expense_bridge_(versions|links|lines)_immutable/);
+});
+
+test("W10E2 snapshots lifecycle and transaction facts without current-balance summary authority", () => {
+  const snapshot = migration.match(/CREATE FUNCTION public\.accounting_expense_bridge_source_snapshot[\s\S]*?\$snapshot\$;/)?.[0];
+  const inventory = migration.match(/CREATE FUNCTION public\.accounting_expense_bridge_source_inventory[\s\S]*?\$inventory\$;/)?.[0];
+  assert.ok(snapshot && inventory);
+  for (const source of ["EXPENSE", "EXPENSE_REIMBURSEMENT_SETTLEMENT", "CASH_ADVANCE_ISSUE",
+    "CASH_ADVANCE_EXPENSE_SETTLEMENT", "CASH_ADVANCE_RETURN", "PETTY_CASH_TRANSACTION",
+    "CASH_ADVANCE_GOVERNANCE_EVENT", "PETTY_CASH_FUND_GOVERNANCE_EVENT"]) {
+    assert.ok(snapshot.includes("WHEN '" + source + "'"), "snapshot omits " + source);
+  }
+  for (const field of ["attached_documents", "evidence_exceptions", "accountable_owner_id", "audit_lineage"]) {
+    assert.ok(snapshot.includes(field), "snapshot omits " + field);
+  }
+  assert.match(snapshot, /balance_before_after_excluded_from_historical_truth/);
+  assert.match(snapshot, /mutable_balance_summaries_excluded/);
+  assert.doesNotMatch(migration, /expense_accountability_summaries|employee_cash_advances\.(remaining_balance|amount_spent_settled|amount_returned)|petty_cash_funds\.current_balance/);
+  assert.match(inventory, /expense_approved/);
+});
+
+test("W10E2 fails closed for missing provenance and caps effects from posted bridge lineage", () => {
+  for (const code of ["ADVANCE_OFFSET_PROVENANCE_REQUIRED", "PETTY_CASH_RETURN_PROVENANCE_REQUIRED",
+    "reimbursement_ceiling_exceeded", "cash_advance_effect_missing", "advance_balance_exceeded",
+    "expense_settlement_exceeds_expense", "petty_cash_balance_insufficient", "inception_coverage_conflict"]) {
+    assert.ok(migration.includes(code), "migration omits " + code);
+  }
+  assert.match(migration, /direction IS DISTINCT FROM 'FROM_TREASURY'/);
+  assert.match(migration, /snapshot->>'payment_method' IN \('petty_cash','cash_advance'\)[\s\S]*?NO_EFFECT/);
+  assert.match(migration, /POST_CUTOVER_SOURCE/);
+  assert.match(migration, /status IN \('PREPARED','POSTED'\)/);
+  assert.match(migration, /economic_effect_conflict/);
+});
+
+test("W10E2 reconciliation keeps both cutoffs and source/account dimensions without claiming bank clearance", () => {
+  const recon = migration.match(/CREATE FUNCTION public\.get_accounting_expense_bridge_reconciliation[\s\S]*?\$reconcile\$;/)?.[0];
+  assert.ok(recon);
+  for (const field of ["as_of_date", "recorded_at_cutoff", "held_count", "missing_effect_count",
+    "inception_conflict_count", "duplicate_conflict_count", "control_balances", "employee_balances",
+    "fund_balances", "service_balances", "timing_differences"]) assert.ok(recon.includes("'" + field + "'"));
+  assert.match(recon, /ACCOUNTING_DATE_AFTER_CUTOFF/);
+  assert.match(recon, /source_record_key=i\.item->>'source_record_key'[\s\S]*?se\.created_at<=p_cutoff/);
+  assert.match(recon, /'bank_reconciled',false/);
+  assert.match(recon, /LIMIT p_limit/);
+});
+
+test("W10E2 typed actions, queries, schemas, and generated database RPCs are bounded", () => {
+  assert.match(types, /"accounting:manage_expense_bridge"/);
+  assert.match(types, /"EXPENSE_BRIDGE"/);
+  assert.match(types, /AccountingExpenseBridgeReconciliation/);
+  assert.match(schemas, /saveAccountingExpenseBridgeEventInputSchema/);
+  assert.match(schemas, /accountingExpenseBridgeReconciliationSchema/);
+  assert.match(actions, /requireAccountingCapabilities\(actor\.id, \["accounting:manage_expense_bridge"\]\)/);
+  assert.match(queries, /resolveAccountingCapability\(actor\.id, "accounting:manage_expense_bridge"\)/);
+  for (const rpc of ["save_accounting_expense_bridge_event", "prepare_accounting_expense_bridge_event",
+    "post_accounting_expense_bridge_journal", "get_accounting_expense_bridge_reconciliation"]) assert.ok(databaseTypes.includes(rpc));
+});
+
+test("W10E2 rollback campaign asserts 40 named cases, rollback, and zero residue", () => {
+  assert.match(fixture, /^-- W10E2 synthetic DEV regression only\.[\s\S]*?\nBEGIN;/);
+  assert.match(fixture, /ROLLBACK;[\s\S]*DO \$residue_assertion\$/);
+  for (let n = 1; n <= 40; n++) assert.ok(fixture.includes("(" + n + ","), "missing case " + n);
+  for (const name of ["unsupported Expense classification held", "accepted evidence exception remains accounting-held",
+    "partial employee reimbursement", "advance offset requires structured provenance", "Cash Advance return",
+    "linked Petty Cash Expense has one effect", "generic Petty Cash return provenance held",
+    "ordinary manual protected-account bypass rejection", "W10C inception replay protection",
+    "employee reconciliation", "advance reconciliation", "Petty Cash fund reconciliation",
+    "Service reconciliation", "balanced GL and trial balance", "explicit rollback", "zero synthetic residue"]) {
+    assert.ok(fixture.toLowerCase().includes(name.toLowerCase()), "missing scenario " + name);
+  }
+  assert.match(fixture, /mutable W5 summary/i);
+  assert.match(fixture, /SELECT count\(\*\) INTO v_case_count FROM pg_temp\.w10e2_case_results/);
+  assert.match(fixture, /<>40/);
+});
