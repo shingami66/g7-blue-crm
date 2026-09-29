@@ -10,6 +10,10 @@ const fixture = readFileSync(
   new URL("../../../supabase/verification/w10f_revenue_recognition_rollback_regression.sql", import.meta.url),
   "utf8",
 );
+const correctiveMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930000000_w10f_reconciliation_unit_total_arrangement_alias_fix.sql", import.meta.url),
+  "utf8",
+);
 
 const tables = [
   "accounting_revenue_arrangements",
@@ -99,6 +103,21 @@ test("W10F does not broaden W10B function metadata or generic journal reversal a
   assert.match(migration, /header\.source_domain<>'REVENUE_RECOGNITION'[\s\S]{0,400}accounting_revenue_recognition_journal_link_authorized/);
   assert.doesNotMatch(migration, /v_original\.source_domain='REVENUE_RECOGNITION'/);
   assert.match(migration, /source_identity_immutable/);
+});
+
+test("W10F post-apply reconciliation repair is additive, exact-source guarded, and metadata-preserving", () => {
+  assert.match(correctiveMigration, /^-- W10F additive correction:[\s\S]*?\nBEGIN;/);
+  assert.match(correctiveMigration, /md5\(src\) IS DISTINCT FROM '9a072554114044cfc52ad4ca3de420e4'/);
+  assert.match(correctiveMigration, /old_text:=\$old\$unit_totals AS \([\s\S]*?WHERE a\.rn=1 GROUP BY a\.id\s+\)\$old\$/);
+  assert.match(correctiveMigration, /new_text:=\$new\$unit_totals AS \([\s\S]*?WHERE a\.rn=1 GROUP BY a\.arrangement_id\s+\)\$new\$/);
+  assert.match(correctiveMigration, /CREATE OR REPLACE FUNCTION public\.get_accounting_revenue_recognition_reconciliation/);
+  assert.match(correctiveMigration, /p\.proargnames,p\.proargdefaults::text,pg_catalog\.pg_get_function_arguments\(p\.oid\)/);
+  assert.match(correctiveMigration, /arg_names IS DISTINCT FROM ARRAY\['p_actor','p_as_of','p_cutoff','p_limit'\]/);
+  assert.match(correctiveMigration, /signature IS DISTINCT FROM 'p_actor uuid, p_as_of date, p_cutoff timestamp with time zone, p_limit integer DEFAULT 200'/);
+  assert.match(correctiveMigration, /p_limit integer DEFAULT 200/);
+  assert.match(correctiveMigration, /after_arg_names IS DISTINCT FROM arg_names[\s\S]*?after_arg_defaults IS DISTINCT FROM arg_defaults[\s\S]*?after_signature IS DISTINCT FROM signature/);
+  assert.match(correctiveMigration, /postflight: function metadata changed/);
+  assert.match(correctiveMigration, /COMMIT;\s*$/);
 });
 
 test("W10F DEV proof is synthetic, rollback-only, and covers independent performance and contract authority", () => {
