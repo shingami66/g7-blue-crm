@@ -3,14 +3,15 @@
 ## CURRENT DELIVERY STATUS — W10D ACCOUNTS RECEIVABLE ACCOUNTING BRIDGE — 28 September 2026
 
 - **Published baseline:** W7–W9 remain published. W10A1 authority/profile, W10A2a chart/period, W10B journal/GL, and W10C inception foundations remain published and DEV-verified; W10D is published and DEV-verified on `dpddrqjzqohexixgdqiq`.
-- **W10D — Accounts Receivable Accounting Bridge:** `ENGINEERING COMPLETE / DEV-VERIFIED / PUBLISHED / CONTROLLER REVIEW AND OWNER ACCEPTANCE PENDING` — the W10D implementation and bounded correction chain is published through `fe72d546365d5241df03bd648ac3e9b00f2d9046`.
+- **W10D — Accounts Receivable Accounting Bridge:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` — the W10D implementation and bounded correction chain is published through `fe72d546365d5241df03bd648ac3e9b00f2d9046`.
   - Bridges authoritative W7 customer financial events into the existing W10 accounting authority, journal/source-effect, and W10C inception-coverage foundations. Unsupported revenue treatment remains held; allocation/application events do not create cash or revenue effects.
   - DEV migrations applied: `20260928105910` (W10D bridge foundation), `20260928141020` (posting-mapping key compatibility), `20260928160000` (audit-action compatibility), `20260928163327` (payment invoice snapshot correction), and `20260928175327` (reconciliation inventory output alias correction). Applied migrations were not edited and migration history was not repaired.
   - `accounting:manage_ar_bridge` is enabled through the existing authority engine. The four bridge tables retain RLS and no direct application-role table access; the four bridge RPCs are service-role-only. No persistent profile, chart, period, posting rule, journal, bridge event, source effect, or grant was bootstrapped.
   - The complete committed rollback-clean W10D fixture passed on DEV. It covered the governed source-event, hold, replay, duplicate-effect, as-of, inception-coverage, reconciliation, and protected-account cases; independent post-run residue verification found zero synthetic residue.
 - **Validation:** 105/105 focused Accounting/Auth tests and 11/11 W10D tests passed; TypeScript, scoped ESLint, production build, migration/source checks, and `git diff --check` passed.
-- **Boundaries:** No real chart/profile/grant seed, real accounting posting, bulk operational-history backfill, W10E1/W10E2, W10F/W10G/W10H/W10I, period close/reopen, VAT/ZATCA/FATOORA, DEMO/PROD mutation, deployment, or professional/statutory accounting activation is included. W10D Owner acceptance remains pending.
-- **EXACT NEXT ACTION:** Controller reviews the published and DEV-verified W10D engineering closeout. W10D Owner acceptance remains pending as a separate decision. Do not start W10E1 or another later slice without fresh exact Owner authorization.
+- **Controller verdict:** `PASS WITH WARN`. The non-green full `pnpm test:all` result remains preserved as historical evidence and does not block W10D closure.
+- **Boundaries:** No real chart/profile/grant seed, real accounting posting, bulk operational-history backfill, W10E1/W10E2, W10F/W10G/W10H/W10I, period close/reopen, VAT/ZATCA/FATOORA, DEMO/PROD mutation, deployment, or professional/statutory accounting activation is included.
+- **EXACT NEXT ACTION:** Read-only W10E1 discovery. Do not begin W10E1 implementation without separate fresh exact Owner authorization.
 
 ## HISTORICAL DELIVERY SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT STATUS)
 

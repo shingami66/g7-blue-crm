@@ -2,13 +2,14 @@
 
 ## CURRENT ROADMAP POSITION — W10D ACCOUNTS RECEIVABLE ACCOUNTING BRIDGE — 28 September 2026
 
-- **W10D — Accounts Receivable Accounting Bridge:** `ENGINEERING COMPLETE / DEV-VERIFIED / PUBLISHED / CONTROLLER REVIEW AND OWNER ACCEPTANCE PENDING` on `main`; implementation and bounded corrective source chain published through `fe72d546365d5241df03bd648ac3e9b00f2d9046`.
+- **W10D — Accounts Receivable Accounting Bridge:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` on `main`; implementation and bounded corrective source chain published through `fe72d546365d5241df03bd648ac3e9b00f2d9046`.
 - The W10D DEV migration chain is applied through `20260928175327_w10d_reconciliation_inventory_alias_fix`; all local and remote migration identities are synchronized, and Supabase dry-run reports no pending migrations.
 - W10D reuses W7 source lineage, W10B posting/source-effect infrastructure, W10C inception coverage, and the existing accounting authority. Unsupported revenue treatment is held; settlement/reclassification does not invent cash or revenue.
 - The complete committed rollback-clean W10D fixture passed on DEV, with independent zero-synthetic-residue verification. The four bridge tables retain RLS/no direct app-role table access, the four bridge RPCs are service-role-only, and `accounting:manage_ar_bridge` is enabled through the existing authority engine. No persistent accounting bootstrap data was created.
 - **Validation:** focused Accounting/Auth tests passed 105/105; focused W10D tests passed 11/11; TypeScript, scoped ESLint, production build, migration/source checks, and diff checks passed.
-- **Deferred boundaries:** no real chart/profile/grant seeds, accounting postings or bulk backfill, W10E1/W10E2, W10F/W10G/W10H/W10I, period close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, deployment, or professional/statutory accounting activation. W10D Owner acceptance remains pending.
-- **EXACT NEXT ACTION:** Controller reviews the W10D engineering closeout; W10D Owner acceptance remains a separate pending decision. W10E1 or any later slice requires fresh exact Owner authorization.
+- **Controller verdict:** `PASS WITH WARN`. The non-green full `pnpm test:all` result remains preserved as historical evidence and does not block W10D closure.
+- **Deferred boundaries:** no real chart/profile/grant seeds, accounting postings or bulk backfill, W10E1/W10E2, W10F/W10G/W10H/W10I, period close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, deployment, or professional/statutory accounting activation.
+- **EXACT NEXT ACTION:** Read-only W10E1 discovery. Do not begin W10E1 implementation without separate fresh exact Owner authorization.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT POSITION)
 
