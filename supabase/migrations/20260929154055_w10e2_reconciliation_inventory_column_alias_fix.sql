@@ -97,9 +97,8 @@ BEGIN
   IF pg_catalog.pg_get_function_result(v_function) IS DISTINCT FROM v_result THEN
     RAISE EXCEPTION 'W10E2 reconciliation correction changed the function result ABI';
   END IF;
-  IF position(v_old_anchor IN v_definition)>0 THEN
-    RAISE EXCEPTION 'W10E2 reconciliation correction left the ambiguous inventory anchor';
-  END IF;
+  -- The unaliased text is a prefix of v_new_anchor; exact prosrc equality and
+  -- the singleton new-anchor check below prove the intended replacement.
   IF (length(v_definition)-length(replace(v_definition,v_new_anchor,'')))/length(v_new_anchor)<>1 THEN
     RAISE EXCEPTION 'W10E2 reconciliation correction failed the singleton alias anchor check';
   END IF;
