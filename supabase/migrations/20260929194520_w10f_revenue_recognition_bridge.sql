@@ -564,16 +564,18 @@ BEGIN
       ORDER BY i.display_order,i.id) FROM public.approved_billing_scope_items i WHERE i.approved_billing_scope_id=s.id),'[]'::jsonb))
     INTO snapshot;
   snapshot_hash:=encode(extensions.digest(convert_to(snapshot::text,'UTF8'),'sha256'),'hex');
-  SELECT coalesce(sum(round((i.accepted_subtotal-i.source_discount_allocated)*100,0)),0)::bigint,
-    bool_or(i.accepted_vat_amount<>0 OR i.accepted_grand_total<>i.accepted_subtotal-i.source_discount_allocated
-      OR i.source_discount_allocated<0 OR i.source_commercial_role NOT IN ('authority_line','included_component','optional_add_on')
-      OR (i.source_commercial_role='included_component' AND i.accepted_grand_total<>0)
-      OR (i.source_commercial_role='optional_add_on' AND i.source_is_selected IS DISTINCT FROM true AND i.accepted_grand_total<>0))
-      OR s.accepted_vat_amount<>0 OR s.source_vat_rate<>0 OR upper(s.source_currency)<>'SAR',false)
-    INTO amount,unsupported
+  SELECT coalesce(sum(round((i.accepted_subtotal-i.source_discount_allocated)*100,0)),0)::bigint
+    INTO amount
     FROM public.approved_billing_scope_items i WHERE i.approved_billing_scope_id=s.id
       AND i.decision IN ('accepted','adjusted') AND (i.source_commercial_role='authority_line'
         OR (i.source_commercial_role='optional_add_on' AND i.source_is_selected IS TRUE));
+  SELECT coalesce(bool_or(i.accepted_vat_amount<>0 OR i.accepted_grand_total<>i.accepted_subtotal-i.source_discount_allocated
+      OR i.source_discount_allocated<0 OR i.source_commercial_role NOT IN ('authority_line','included_component','optional_add_on')
+      OR (i.source_commercial_role='included_component' AND i.accepted_grand_total<>0)
+      OR (i.source_commercial_role='optional_add_on' AND i.source_is_selected IS DISTINCT FROM true AND i.accepted_grand_total<>0)),false)
+    OR s.accepted_vat_amount<>0 OR s.source_vat_rate<>0 OR upper(s.source_currency)<>'SAR'
+    INTO unsupported
+    FROM public.approved_billing_scope_items i WHERE i.approved_billing_scope_id=s.id AND i.decision IN ('accepted','adjusted');
   IF coalesce(s.status,'')<>'approved' OR s.approved_at IS NULL OR s.line_safety_status<>'safe'
      OR s.superseded_at IS NOT NULL OR s.voided_at IS NOT NULL THEN held:=coalesce(held,'STALE_OR_UNAPPROVED_COMMERCIAL_AUTHORITY');END IF;
   IF coalesce(upper(s.source_currency),'')<>'SAR' THEN held:=coalesce(held,'NON_SAR_CONSIDERATION_UNSUPPORTED');END IF;

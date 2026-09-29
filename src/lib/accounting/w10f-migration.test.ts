@@ -56,6 +56,8 @@ test("W10F adds only its immutable revenue evidence tables and seven RPC grants"
 
 test("W10F keeps commercial authority separate from performance evidence and holds unsupported treatments", () => {
   assert.match(migration, /approved_billing_scope_items i[\s\S]*?i\.accepted_subtotal-i\.source_discount_allocated/);
+  assert.match(migration, /SELECT coalesce\(sum\(round\(\(i\.accepted_subtotal-i\.source_discount_allocated\)\*100,0\)\),0\)::bigint\s+INTO amount[\s\S]*?i\.decision IN \('accepted','adjusted'\) AND \(i\.source_commercial_role='authority_line'/);
+  assert.match(migration, /SELECT coalesce\(bool_or\(i\.accepted_vat_amount<>0[\s\S]*?\),false\)\s+OR s\.accepted_vat_amount<>0 OR s\.source_vat_rate<>0 OR upper\(s\.source_currency\)<>'SAR'\s+INTO unsupported\s+FROM public\.approved_billing_scope_items i WHERE i\.approved_billing_scope_id=s\.id AND i\.decision IN \('accepted','adjusted'\);/);
   assert.match(migration, /source_snapshot_sha256/);
   assert.match(migration, /satisfaction_method text NOT NULL CHECK\(satisfaction_method IN \('POINT_IN_TIME','OVER_TIME'\)\)/);
   assert.match(migration, /u->>'satisfaction_method'='POINT_IN_TIME' AND u->>'required_evidence_basis' NOT IN \('CUSTOMER_ACCEPTANCE','TRANSFER_OF_CONTROL'\)/);
