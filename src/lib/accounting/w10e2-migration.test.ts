@@ -77,7 +77,9 @@ test("W10E2 reconciliation keeps both cutoffs and source/account dimensions with
 test("W10E2 rollback fixture follows W5 evidence and Finance Review gates before approval", () => {
   const makeExpense = fixture.match(/CREATE FUNCTION pg_temp\.w10e2_make_expense[\s\S]*?\$w10e2_make_expense\$;/)?.[0];
   assert.ok(makeExpense);
+  assert.ok(makeExpense.includes("document_id::text||'.pdf','w10e2-evidence-'||p_sequence::text||'.pdf',\n      'application/pdf',128,'expense_receipt'"));
   assert.match(fixture, /w10e2-rollback-finance-reviewer[^\n]*'accountant'/);
+  assert.match(makeExpense, /object_path[\s\S]*?'business-documents\/'\|\|document_id::text\|\|'\.pdf'/);
   assert.match(makeExpense, /INSERT INTO public\.business_documents[\s\S]*?public\.attach_expense_document[\s\S]*?public\.review_expense_finance[\s\S]*?public\.approve_expense/);
   assert.match(makeExpense, /public\.record_expense_evidence_exception[\s\S]*?public\.dispose_expense_evidence_exception[\s\S]*?public\.review_expense_finance/);
   assert.match(makeExpense, /public\.review_expense_finance\(expense_id,[\s\S]*?c\.finance_reviewer_id::text,'accountant'[\s\S]*?public\.approve_expense\(expense_id,[\s\S]*?c\.admin_id::text,'admin'/);

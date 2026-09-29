@@ -61,7 +61,7 @@ BEGIN
   ELSE
     document_id:=pg_temp.w10e2_req(830000+p_sequence);
     INSERT INTO public.business_documents(id,object_path,original_filename,mime_type,file_size,document_type,purpose,uploaded_by)
-    VALUES(document_id,'business-documents/w10e2/'||p_sequence::text||'.pdf','w10e2-evidence-'||p_sequence::text||'.pdf',
+    VALUES(document_id,'business-documents/'||document_id::text||'.pdf','w10e2-evidence-'||p_sequence::text||'.pdf',
       'application/pdf',128,'expense_receipt','Expense evidence',c.operator_id);
     SELECT * INTO evidence FROM public.attach_expense_document(expense_id,document_id,
       pg_temp.w10e2_req(860000+p_sequence),c.operator_id::text,'admin');
