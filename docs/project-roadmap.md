@@ -1,16 +1,16 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W10E1 PROCUREMENT / ACCOUNTS PAYABLE ACCOUNTING BRIDGE — 29 September 2026
+## CURRENT ROADMAP POSITION — W10E2 EXPENSES, EMPLOYEE CASH ACCOUNTABILITY, REIMBURSEMENTS & PETTY CASH ACCOUNTING BRIDGE — 29 September 2026
 
-- **W10E1 — Procurement / Accounts Payable Accounting Bridge:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` on `main` and DEV project `dpddrqjzqohexixgdqiq`; Owner acceptance is recorded under the W10E2 task authority, with W10E1 engineering evidence unchanged.
-- The W10E1 DEV migration chain is applied through `20260929114000_w10e1_reconciliation_inventory_item_alias`; all four local and remote migration identities are synchronized, and Supabase dry-run reports no pending migrations.
-- W10E1 adds the source-bound AP bridge and typed action/schema surface on the W10B journal/source-effect and W10C inception-coverage foundations. Receipt valuation and unsupported classifications fail closed; bill/accrual matching avoids duplicate cost; payments require evidenced cash/bank binding; advance allocation creates no cash or cost.
-- The 33-case rollback-clean DEV fixture passed, including W10C replay protection, historical cutoffs, READY supplier/AP/accrual/advance reconciliation, balanced GL/TB, explicit rollback, and zero residue. The as-of reconciliation does not use current-only W9 AP balances as historical truth.
-- DEV verification confirmed RLS on all four bridge tables with no direct `service_role` reads; the four governed RPCs use the expected definer security and search path and grant execute to `service_role`. `accounting:manage_ap_bridge` is enabled in the capability catalog with no persistent grant created.
-- **Validation:** 117/117 focused Accounting/Auth tests and 58/58 directly affected W4/W6 tests passed; W10E1 migration/source tests, TypeScript, scoped ESLint, production build, and diff checks passed. Full `pnpm test:all` remains warned: an earlier run completed 2,172/2,195 with 23 unrelated failures; this rerun timed out at 120 seconds.
-- **Controller verdict:** `PASS WITH WARN`.
-- **Deferred boundaries:** no real profile/chart/grant seed, real posting or historical backfill, VAT/ZATCA/FATOORA, W10E2+, W10F/W10G/W10H/W10I, DEMO/PROD mutation, deployment, or professional/statutory accounting activation.
-- **EXACT NEXT ACTION:** Continue directly with W10E2 implementation under the separate exact Owner authority in this task.
+- **W10E2 — Expenses, Employee Cash Accountability, Reimbursements, and Petty Cash Accounting Bridge:** `ENGINEERING COMPLETE / PUBLISHED / DEV-VERIFIED / OWNER ACCEPTANCE PENDING` on `main` and DEV project `dpddrqjzqohexixgdqiq`.
+- The W10E2 DEV migration chain is applied through `20260929163000`; all five W10E2 migration identities are synchronized, and Supabase dry-run reports no pending migrations.
+- W10E2 adds the source-bound expense, reimbursement, Cash Advance, and Petty Cash bridge on W10B journals/source effects and W10C inception coverage. W5 remains operational authority; unsupported evidence and unproven cash or advance provenance fail closed.
+- The 40-case rollback-clean DEV fixture passed with W10C replay protection, FI-012 cutoffs, employee/advance/fund/service reconciliation, balanced GL/TB, explicit rollback, and zero residue. Employee balance output excludes zero-only fund custodians; mutable W5 balances are not historical accounting truth.
+- DEV verification confirmed forced RLS on all four bridge tables with no direct `service_role` reads; all four governed RPCs are `SECURITY DEFINER` with the expected owner, search path, and execute grants. `accounting:manage_expense_bridge` is enabled without a persistent grant being created.
+- **Validation:** 392/392 focused Accounting/Auth/Expenses tests passed; TypeScript, scoped ESLint, production build, migration/source assertions, and diff checks passed. Full `pnpm test:all` remains warned: a prior attempt reported 2,172/2,195 with 23 unrelated failures; the later run timed out at 120 seconds.
+- **Reviewer verdict:** `CLEAN` on the final read-only gate. Owner acceptance remains pending.
+- **Deferred boundaries:** no real accounting posting/backfill, tax or statutory accounting activation, VAT/ZATCA/FATOORA, W10F/W10G/W10H/W10I, DEMO/PROD mutation, deployment, or W10E2 Owner acceptance.
+- **EXACT NEXT ACTION:** Mozfer performs bounded W10E2 Owner acceptance on the published DEV slice; do not start W10F before that acceptance.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT POSITION)
 
