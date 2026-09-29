@@ -765,7 +765,10 @@ BEGIN
     'W10E2 synthetic record cutoff classification',pg_temp.w10e2_req(10032));
   report:=public.get_accounting_expense_bridge_reconciliation(c.operator_id,CURRENT_DATE+10,record_cutoff,500);
   SELECT x INTO event FROM jsonb_array_elements(report->'events') q(x) WHERE x->>'source_record_id'=e15::text;
-  PERFORM pg_temp.w10e2_assert(32,'recorded-at cutoff (saved='||coalesce(saved.status,'NULL')
+  PERFORM pg_temp.w10e2_assert(32,'recorded-at cutoff (error='||coalesce(saved.error_code,'NULL')
+    ||'; saved='||coalesce(saved.status,'NULL')
+    ||'; source_eligible='||coalesce(public.accounting_expense_bridge_source_snapshot('EXPENSE',e15)->>'eligible','NULL')
+    ||'; source_recorded_at='||coalesce(public.accounting_expense_bridge_source_snapshot('EXPENSE',e15)->>'source_recorded_at','NULL')
     ||'; reconciliation='||coalesce(event->>'reconciliation_status','NULL')
     ||'; event_version='||coalesce(event->>'event_version','NULL')||')',saved.status='READY' AND event IS NOT NULL
     AND event->>'reconciliation_status'='MISSING_CLASSIFICATION' AND event->>'event_version' IS NULL);
