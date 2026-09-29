@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(new URL(path, root), "utf8");
 const migration = read("supabase/migrations/20260929120000_w10e2_expense_cash_accounting_bridge.sql");
 const prepareEventVersionFix = read("supabase/migrations/20260929143100_w10e2_prepare_event_version_alias_fix.sql");
 const postEventJournalIdFix = read("supabase/migrations/20260929145412_w10e2_post_event_journal_id_alias_fix.sql");
+const reconciliationInventoryAliasFix = read("supabase/migrations/20260929154055_w10e2_reconciliation_inventory_column_alias_fix.sql");
 const fixture = read("supabase/verification/w10e2_expense_cash_accounting_bridge_rollback_regression.sql");
 const types = read("src/lib/accounting/types.ts");
 const schemas = read("src/lib/accounting/schemas.ts");
@@ -63,6 +64,22 @@ test("W10E2 post correction qualifies journal id and serializes exact PL/pgSQL r
   assert.match(postEventJournalIdFix, /EXECUTE v_updated/);
 });
 
+test("W10E2 reconciliation correction aliases the SETOF jsonb inventory column with identity guards", () => {
+  assert.match(reconciliationInventoryAliasFix, /^-- W10E2 additive correction:[^\n]+\nBEGIN;\s*-- Serialize cooperating retries[^\n]*\nSELECT pg_catalog\.pg_advisory_xact_lock\(pg_catalog\.hashtextextended\([\s\S]*?'g7:w10e2:get_accounting_expense_bridge_reconciliation_inventory_alias', 0[\s\S]*?\);[\s\S]*COMMIT;\s*$/);
+  assert.doesNotMatch(reconciliationInventoryAliasFix, /LOCK TABLE pg_catalog\.pg_proc/);
+  assert.match(reconciliationInventoryAliasFix, /pg_catalog\.md5\(v_before\.prosrc\) IS DISTINCT FROM '40f52408bd586b0cebf579c166770641'/);
+  assert.match(reconciliationInventoryAliasFix, /v_identity text := 'p_actor uuid, p_as_of date, p_cutoff timestamp with time zone, p_limit integer'/);
+  assert.match(reconciliationInventoryAliasFix, /v_old_anchor text := 'SELECT item FROM public\.accounting_expense_bridge_source_inventory\(p_as_of,p_cutoff,p_limit\+1\)'/);
+  assert.match(reconciliationInventoryAliasFix, /v_new_anchor text := 'SELECT item FROM public\.accounting_expense_bridge_source_inventory\(p_as_of,p_cutoff,p_limit\+1\) AS source_inventory\(item\)'/);
+  assert.match(reconciliationInventoryAliasFix, /v_before\.language_name IS DISTINCT FROM 'plpgsql'/);
+  assert.match(reconciliationInventoryAliasFix, /v_before\.proargdefaults_text IS NULL/);
+  assert.match(reconciliationInventoryAliasFix, /v_before\.pronargdefaults IS DISTINCT FROM 1/);
+  assert.match(reconciliationInventoryAliasFix, /v_before\.proacl::text IS DISTINCT FROM '\{postgres=X\/postgres,service_role=X\/postgres\}'/);
+  assert.match(reconciliationInventoryAliasFix, /v_after\.proacl::text IS DISTINCT FROM '\{postgres=X\/postgres,service_role=X\/postgres\}'/);
+  assert.match(reconciliationInventoryAliasFix, /v_after\.prosrc IS DISTINCT FROM v_expected_source/);
+  assert.match(reconciliationInventoryAliasFix, /EXECUTE v_updated/);
+});
+
 test("W10E2 snapshots lifecycle and transaction facts without current-balance summary authority", () => {
   const snapshot = migration.match(/CREATE FUNCTION public\.accounting_expense_bridge_source_snapshot[\s\S]*?\$snapshot\$;/)?.[0];
   const inventory = migration.match(/CREATE FUNCTION public\.accounting_expense_bridge_source_inventory[\s\S]*?\$inventory\$;/)?.[0];
@@ -116,6 +133,8 @@ test("W10E2 rollback fixture follows W5 evidence and Finance Review gates before
   assert.match(makeExpense, /public\.record_expense_evidence_exception[\s\S]*?public\.dispose_expense_evidence_exception[\s\S]*?public\.review_expense_finance/);
   assert.match(makeExpense, /public\.review_expense_finance\(expense_id,[\s\S]*?c\.finance_reviewer_id::text,'accountant'[\s\S]*?public\.approve_expense\(expense_id,[\s\S]*?c\.admin_id::text,'admin'/);
   assert.match(fixture, /w10e2_make_expense\(3,75,'employee_paid','personal_funds',NULL,NULL,true\)/);
+  assert.match(fixture, /e7:=pg_temp\.w10e2_make_expense\(7,50,'company_direct','cash_advance',advance1,NULL\)/);
+  assert.match(fixture, /e8:=pg_temp\.w10e2_make_expense\(8,15,'company_direct','cash_advance',advance1,NULL\)/);
 });
 
 test("W10E2 typed actions, queries, schemas, and generated database RPCs are bounded", () => {

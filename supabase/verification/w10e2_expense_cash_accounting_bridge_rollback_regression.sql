@@ -488,8 +488,8 @@ BEGIN
   case_count:=0;
   FOR result IN SELECT l.id FROM public.audit_logs l
     WHERE l.entity_type='employee_cash_advance'
-      AND ((l.entity_id=advance1::text AND l.action IN ('cash_advance_requested','cash_advance_approved'))
-        OR (l.entity_id=advance_rejected::text AND l.action='cash_advance_rejected'))
+      AND ((l.entity_id=advance1 AND l.action IN ('cash_advance_requested','cash_advance_approved'))
+        OR (l.entity_id=advance_rejected AND l.action='cash_advance_rejected'))
     ORDER BY l.timestamp,l.id LOOP
     contract:=pg_temp.w10e2_contract('CASH_ADVANCE_GOVERNANCE_EVENT',result.id,'NO_MONETARY_EFFECT',NULL,NULL,NULL,
       false,false,NULL,false,NULL,false);
@@ -514,7 +514,7 @@ BEGIN
     AND EXISTS(SELECT 1 FROM public.accounting_expense_bridge_journal_lines l WHERE l.event_id=result.event_id
       AND l.party_role='DIRECT_EXPENSE' AND l.side='DEBIT' AND l.amount_halalah=10000));
 
-  e7:=pg_temp.w10e2_make_expense(7,120,'company_direct','cash_advance',advance1,NULL);
+  e7:=pg_temp.w10e2_make_expense(7,50,'company_direct','cash_advance',advance1,NULL);
   INSERT INTO pg_temp.w10e2_ids(label,entity_id) VALUES('cash_advance_expense_7',e7);
   SELECT * INTO w5 FROM public.settle_cash_advance_spend(advance1,e7,40,'Synthetic partial settlement',
     pg_temp.w10e2_req(75007),c.operator_id::text,'admin');
@@ -527,7 +527,7 @@ BEGIN
     AND EXISTS(SELECT 1 FROM public.accounting_expense_bridge_journal_lines l WHERE l.event_id=result.event_id
       AND l.party_role='EMPLOYEE_ADVANCE' AND l.side='CREDIT' AND l.amount_halalah=4000));
 
-  e8:=pg_temp.w10e2_make_expense(8,500,'company_direct','cash_advance',advance1,NULL);
+  e8:=pg_temp.w10e2_make_expense(8,15,'company_direct','cash_advance',advance1,NULL);
   INSERT INTO pg_temp.w10e2_ids(label,entity_id) VALUES('cash_advance_expense_8',e8);
   SELECT * INTO w5 FROM public.settle_cash_advance_spend(advance1,e8,400,'Synthetic over remaining advance',
     pg_temp.w10e2_req(75008),c.operator_id::text,'admin');
@@ -801,7 +801,7 @@ BEGIN
   SELECT * INTO w5 FROM public.set_petty_cash_fund_status(fund_id,'suspended',pg_temp.w10e2_req(76002),c.operator_id::text,'admin');
   IF w5.error_code IS NOT NULL THEN RAISE EXCEPTION 'W10E2 Petty Cash fund status update failed: %',w5.error_code; END IF;
   case_count:=0;
-  FOR result IN SELECT l.id FROM public.audit_logs l WHERE l.entity_type='petty_cash_fund' AND l.entity_id=fund_id::text
+  FOR result IN SELECT l.id FROM public.audit_logs l WHERE l.entity_type='petty_cash_fund' AND l.entity_id=fund_id
     AND l.action IN ('create','update','status_change') ORDER BY l.timestamp,l.id LOOP
     contract:=pg_temp.w10e2_contract('PETTY_CASH_FUND_GOVERNANCE_EVENT',result.id,'NO_MONETARY_EFFECT',NULL,NULL,NULL,
       false,false,NULL,false,NULL,false);
