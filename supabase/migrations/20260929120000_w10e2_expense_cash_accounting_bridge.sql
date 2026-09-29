@@ -214,21 +214,21 @@ BEGIN
     coalesce(ap.t,x.approved_at,x.submitted_at),x.context_type,x.origin_type,x.payment_method,NULL::text,
     coalesce((SELECT CASE l.action WHEN 'expense_submitted' THEN 'submitted' WHEN 'expense_approved' THEN 'approved'
       WHEN 'expense_rejected' THEN 'rejected' WHEN 'expense_cancelled' THEN 'cancelled' END
-      FROM public.audit_logs l WHERE l.entity_type='expense' AND l.entity_id=x.id::text
+      FROM public.audit_logs l WHERE l.entity_type='expense' AND l.entity_id=x.id
        AND l.action IN ('expense_submitted','expense_approved','expense_rejected','expense_cancelled')
        AND (p_cutoff IS NULL OR l.timestamp<=p_cutoff) ORDER BY l.timestamp DESC,l.id DESC LIMIT 1),'unknown'),
    ap.t IS NOT NULL AND (p_cutoff IS NULL OR ap.t<=p_cutoff) AND NOT EXISTS(SELECT 1 FROM public.audit_logs c
-    WHERE c.entity_type='expense' AND c.entity_id=x.id::text AND c.action='expense_cancelled' AND (p_cutoff IS NULL OR c.timestamp<=p_cutoff)),
+     WHERE c.entity_type='expense' AND c.entity_id=x.id AND c.action='expense_cancelled' AND (p_cutoff IS NULL OR c.timestamp<=p_cutoff)),
    jsonb_build_object('expense_number',x.expense_number,'expense_category_text_excluded_from_account_authority',x.expense_category,
      'approval_audit_present',ap.t IS NOT NULL,'payment_reference_excluded_from_account_selection',true)
   INTO e,a,who,fund,svc,amt,bd,occurred,recorded,ctx,origin,method,subtype,src_status,eligible,attrs
   FROM public.expenses x LEFT JOIN LATERAL(SELECT min(l.timestamp) t FROM public.audit_logs l WHERE l.entity_type='expense'
-    AND l.entity_id=x.id::text AND l.action='expense_approved') ap ON true WHERE x.id=p_source_record_id;
+     AND l.entity_id=x.id AND l.action='expense_approved') ap ON true WHERE x.id=p_source_record_id;
  WHEN 'EXPENSE_REIMBURSEMENT_SETTLEMENT' THEN
   SELECT s.expense_id,NULL::uuid,x.claimant_id,NULL::uuid,x.service_id,s.amount,(s.settled_at AT TIME ZONE 'Asia/Riyadh')::date,
     s.settled_at,s.settled_at,x.context_type,x.origin_type,x.payment_method,s.settlement_method,'settled',
     x.origin_type='employee_paid' AND x.payment_method='personal_funds'
-     AND EXISTS(SELECT 1 FROM public.audit_logs l WHERE l.entity_type='expense' AND l.entity_id=x.id::text AND l.action='expense_approved' AND l.timestamp<=s.settled_at)
+      AND EXISTS(SELECT 1 FROM public.audit_logs l WHERE l.entity_type='expense' AND l.entity_id=x.id AND l.action='expense_approved' AND l.timestamp<=s.settled_at)
      AND (p_cutoff IS NULL OR s.settled_at<=p_cutoff),
    jsonb_build_object('settlement_id',s.id,'payment_reference_excluded_from_account_selection',true)
   INTO e,a,who,fund,svc,amt,bd,occurred,recorded,ctx,origin,method,subtype,src_status,eligible,attrs
@@ -241,7 +241,7 @@ BEGIN
      'payment_reference_excluded_from_account_selection',true)
   INTO e,a,who,fund,svc,amt,bd,occurred,recorded,ctx,origin,method,subtype,src_status,eligible,attrs
   FROM public.employee_cash_advances x LEFT JOIN LATERAL(SELECT min(l.timestamp) t FROM public.audit_logs l
-   WHERE l.entity_type='employee_cash_advance' AND l.entity_id=x.id::text AND l.action='cash_advance_issued') i ON true
+   WHERE l.entity_type='employee_cash_advance' AND l.entity_id=x.id AND l.action='cash_advance_issued') i ON true
    WHERE x.id=p_source_record_id;
  WHEN 'CASH_ADVANCE_EXPENSE_SETTLEMENT' THEN
    SELECT s.expense_id,s.cash_advance_id,a.recipient_id,NULL::uuid,x.service_id,s.amount,(s.settled_at AT TIME ZONE 'Asia/Riyadh')::date,
@@ -250,8 +250,8 @@ BEGIN
        AND x.context_type=a.context_type AND x.service_id IS NOT DISTINCT FROM a.service_id
       AND a.issued_at<=s.settled_at
       AND EXISTS(SELECT 1 FROM public.audit_logs i WHERE i.entity_type='employee_cash_advance'
-       AND i.entity_id=a.id::text AND i.action='cash_advance_issued' AND i.timestamp<=s.settled_at)
-     AND EXISTS(SELECT 1 FROM public.audit_logs l WHERE l.entity_type='expense' AND l.entity_id=x.id::text AND l.action='expense_approved' AND l.timestamp<=s.settled_at)
+        AND i.entity_id=a.id AND i.action='cash_advance_issued' AND i.timestamp<=s.settled_at)
+      AND EXISTS(SELECT 1 FROM public.audit_logs l WHERE l.entity_type='expense' AND l.entity_id=x.id AND l.action='expense_approved' AND l.timestamp<=s.settled_at)
      AND (p_cutoff IS NULL OR s.settled_at<=p_cutoff),jsonb_build_object('settlement_id',s.id,'expense_id',s.expense_id)
   INTO e,a,who,fund,svc,amt,bd,occurred,recorded,ctx,origin,method,subtype,src_status,eligible,attrs
   FROM public.cash_advance_expense_settlements s JOIN public.employee_cash_advances a ON a.id=s.cash_advance_id
@@ -260,7 +260,7 @@ BEGIN
   SELECT NULL::uuid,r.cash_advance_id,a.recipient_id,NULL::uuid,a.service_id,r.amount,(r.returned_at AT TIME ZONE 'Asia/Riyadh')::date,
     r.returned_at,r.returned_at,a.context_type,NULL::text,NULL::text,NULL::text,'returned',
     a.issued_at<=r.returned_at AND EXISTS(SELECT 1 FROM public.audit_logs i WHERE i.entity_type='employee_cash_advance'
-      AND i.entity_id=a.id::text AND i.action='cash_advance_issued' AND i.timestamp<=r.returned_at)
+       AND i.entity_id=a.id AND i.action='cash_advance_issued' AND i.timestamp<=r.returned_at)
       AND (p_cutoff IS NULL OR r.returned_at<=p_cutoff),
    jsonb_build_object('return_id',r.id,'receipt_reference_excluded_from_account_selection',true,'mutable_balance_summaries_excluded',true)
   INTO e,a,who,fund,svc,amt,bd,occurred,recorded,ctx,origin,method,subtype,src_status,eligible,attrs
@@ -271,7 +271,7 @@ BEGIN
     x.payment_method,t.transaction_type,CASE WHEN t.transaction_type='disbursement' THEN 'expense_approved_at_disbursement' ELSE t.transaction_type END,
     (t.transaction_type<>'disbursement' OR (x.origin_type='company_direct' AND x.payment_method='petty_cash'
      AND x.petty_cash_fund_id=t.fund_id AND EXISTS(SELECT 1 FROM public.audit_logs l WHERE l.entity_type='expense'
-       AND l.entity_id=x.id::text AND l.action='expense_approved' AND l.timestamp<=t.recorded_at)))
+       AND l.entity_id=x.id AND l.action='expense_approved' AND l.timestamp<=t.recorded_at)))
      AND (p_cutoff IS NULL OR t.recorded_at<=p_cutoff),
    jsonb_build_object('transaction_id',t.id,'reference_excluded_from_account_selection',true,
      'balance_before_after_excluded_from_historical_truth',true,'mutable_fund_balance_excluded',true)
@@ -304,7 +304,7 @@ BEGIN
    'evidence_exceptions',coalesce((SELECT jsonb_agg(jsonb_build_object('exception_id',x.id,'reason',x.reason,'accountable_owner_id',x.accountable_owner_id,
     'review_before',x.review_before,'created_by',x.created_by,'created_at',x.created_at,
     'audit_lineage',coalesce((SELECT jsonb_agg(jsonb_build_object('action',l.action,'details',l.details,'recorded_at',l.timestamp)
-    ORDER BY l.timestamp) FROM public.audit_logs l WHERE l.entity_type='expense_evidence_exception' AND l.entity_id=x.id::text
+     ORDER BY l.timestamp) FROM public.audit_logs l WHERE l.entity_type='expense_evidence_exception' AND l.entity_id=x.id
       AND (p_cutoff IS NULL OR l.timestamp<=p_cutoff)),'[]'::jsonb)) ORDER BY x.created_at,x.id)
    FROM public.expense_evidence_exceptions x WHERE x.expense_id=e AND (p_cutoff IS NULL OR x.created_at<=p_cutoff)),'[]'::jsonb));END IF;
  RETURN jsonb_build_object('source_type',p_source_type,'source_record_id',p_source_record_id,
@@ -366,9 +366,9 @@ CREATE FUNCTION public.accounting_expense_bridge_source_inventory(d date,c times
 RETURNS SETOF jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,public AS $inventory$
  SELECT q.item FROM (
    SELECT public.accounting_expense_bridge_source_snapshot('EXPENSE',e.id,c) item FROM public.expenses e WHERE e.expense_date<=d
-    AND EXISTS(SELECT 1 FROM public.audit_logs a WHERE a.entity_type='expense' AND a.entity_id=e.id::text
+    AND EXISTS(SELECT 1 FROM public.audit_logs a WHERE a.entity_type='expense' AND a.entity_id=e.id
       AND a.action='expense_approved' AND a.timestamp<=coalesce(c,'infinity'::timestamptz))
-    AND (NOT EXISTS(SELECT 1 FROM public.audit_logs a WHERE a.entity_type='expense' AND a.entity_id=e.id::text
+    AND (NOT EXISTS(SELECT 1 FROM public.audit_logs a WHERE a.entity_type='expense' AND a.entity_id=e.id
        AND a.action='expense_cancelled' AND a.timestamp<=coalesce(c,'infinity'::timestamptz))
       OR EXISTS(SELECT 1 FROM public.accounting_expense_bridge_events b WHERE b.source_type='EXPENSE' AND b.source_record_id=e.id
        AND b.created_at<=coalesce(c,'infinity'::timestamptz)))
@@ -540,7 +540,7 @@ BEGIN
    class:='REIMBURSEMENT_ADVANCE_OFFSET';
     IF related IS NULL OR adv_ref IS NULL OR adv_hash IS NULL OR adv_hash!~'^[0-9a-f]{64}$' OR
       NOT EXISTS(SELECT 1 FROM public.employee_cash_advances a JOIN public.audit_logs i
-       ON i.entity_type='employee_cash_advance' AND i.entity_id=a.id::text AND i.action='cash_advance_issued'
+        ON i.entity_type='employee_cash_advance' AND i.entity_id=a.id AND i.action='cash_advance_issued'
        WHERE a.id=related AND a.recipient_id=nullif(snapshot->>'employee_id','')::uuid
         AND a.context_type=snapshot->>'context_type' AND a.service_id IS NOT DISTINCT FROM nullif(snapshot->>'service_id','')::uuid
         AND a.issued_at<=nullif(snapshot->>'source_occurred_at','')::timestamptz
