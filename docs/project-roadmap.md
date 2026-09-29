@@ -2,7 +2,7 @@
 
 ## CURRENT ROADMAP POSITION — W10E1 PROCUREMENT / ACCOUNTS PAYABLE ACCOUNTING BRIDGE — 29 September 2026
 
-- **W10E1 — Procurement / Accounts Payable Accounting Bridge:** `IMPLEMENTED / DEV-VERIFIED / PUBLISHED / OWNER ACCEPTANCE PENDING` on `main` and DEV project `dpddrqjzqohexixgdqiq`; Owner acceptance is not claimed.
+- **W10E1 — Procurement / Accounts Payable Accounting Bridge:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` on `main` and DEV project `dpddrqjzqohexixgdqiq`; Owner acceptance is recorded under the W10E2 task authority, with W10E1 engineering evidence unchanged.
 - The W10E1 DEV migration chain is applied through `20260929114000_w10e1_reconciliation_inventory_item_alias`; all four local and remote migration identities are synchronized, and Supabase dry-run reports no pending migrations.
 - W10E1 adds the source-bound AP bridge and typed action/schema surface on the W10B journal/source-effect and W10C inception-coverage foundations. Receipt valuation and unsupported classifications fail closed; bill/accrual matching avoids duplicate cost; payments require evidenced cash/bank binding; advance allocation creates no cash or cost.
 - The 33-case rollback-clean DEV fixture passed, including W10C replay protection, historical cutoffs, READY supplier/AP/accrual/advance reconciliation, balanced GL/TB, explicit rollback, and zero residue. The as-of reconciliation does not use current-only W9 AP balances as historical truth.
@@ -10,7 +10,7 @@
 - **Validation:** 117/117 focused Accounting/Auth tests and 58/58 directly affected W4/W6 tests passed; W10E1 migration/source tests, TypeScript, scoped ESLint, production build, and diff checks passed. Full `pnpm test:all` remains warned: an earlier run completed 2,172/2,195 with 23 unrelated failures; this rerun timed out at 120 seconds.
 - **Controller verdict:** `PASS WITH WARN`.
 - **Deferred boundaries:** no real profile/chart/grant seed, real posting or historical backfill, VAT/ZATCA/FATOORA, W10E2+, W10F/W10G/W10H/W10I, DEMO/PROD mutation, deployment, or professional/statutory accounting activation.
-- **EXACT NEXT ACTION:** Owner reviews the bounded W10E1 DEV closeout and records acceptance; W10E2 needs separate fresh exact Owner authorization.
+- **EXACT NEXT ACTION:** Continue directly with W10E2 implementation under the separate exact Owner authority in this task.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT POSITION)
 
