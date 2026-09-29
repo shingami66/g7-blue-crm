@@ -220,11 +220,11 @@ CREATE TABLE public.accounting_revenue_recognition_events(
   FOREIGN KEY(profile_id,evidence_id,evidence_version) REFERENCES public.accounting_revenue_performance_evidence_versions(profile_id,evidence_id,version) ON DELETE RESTRICT,
   FOREIGN KEY(profile_id,correction_of_recognition_event_id) REFERENCES public.accounting_revenue_recognition_events(profile_id,id) ON DELETE RESTRICT);
 CREATE TABLE public.accounting_revenue_recognition_journal_links(
-  profile_id uuid NOT NULL,recognition_event_id uuid NOT NULL,journal_id uuid NOT NULL,prepared_version integer NOT NULL,source_effect_id uuid NOT NULL,
+  profile_id uuid NOT NULL,recognition_event_id uuid NOT NULL,journal_id uuid NOT NULL,prepared_version integer NOT NULL,
+  source_effect_id uuid NOT NULL REFERENCES public.accounting_source_effects(id) ON DELETE RESTRICT,
   created_at timestamptz NOT NULL DEFAULT clock_timestamp(),PRIMARY KEY(profile_id,recognition_event_id),UNIQUE(profile_id,journal_id),UNIQUE(source_effect_id),
   FOREIGN KEY(profile_id,recognition_event_id) REFERENCES public.accounting_revenue_recognition_events(profile_id,id) ON DELETE RESTRICT,
-  FOREIGN KEY(profile_id,journal_id) REFERENCES public.accounting_journals(profile_id,id) ON DELETE RESTRICT,
-  FOREIGN KEY(profile_id,source_effect_id) REFERENCES public.accounting_source_effects(profile_id,id) ON DELETE RESTRICT);
+  FOREIGN KEY(profile_id,journal_id) REFERENCES public.accounting_journals(profile_id,id) ON DELETE RESTRICT);
 CREATE TABLE public.accounting_revenue_recognition_journal_lines(
   profile_id uuid NOT NULL,recognition_event_id uuid NOT NULL,journal_id uuid NOT NULL,journal_version integer NOT NULL,line_number integer NOT NULL,
   mapping_key text NOT NULL,party_role text NOT NULL CHECK(party_role IN ('CONTRACT_ASSET','CONTRACT_LIABILITY','REVENUE')),
