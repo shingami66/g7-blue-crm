@@ -762,16 +762,17 @@ BEGIN
   contract:=pg_temp.w10e2_contract('EXPENSE',e15,'EMPLOYEE_PAID_EXPENSE','DIRECT_EXPENSE',CURRENT_DATE-1,
     'employee_reimbursement_liability',false,false,NULL,false,NULL,true);
   SELECT * INTO saved FROM public.save_accounting_expense_bridge_event(c.operator_id,'EXPENSE',e15,0,contract,
-    'W10E2 synthetic record cutoff classification',pg_temp.w10e2_req(10032));
+    'W10E2 synthetic record cutoff classification',pg_temp.w10e2_req(900032));
   report:=public.get_accounting_expense_bridge_reconciliation(c.operator_id,CURRENT_DATE+10,record_cutoff,500);
   SELECT x INTO event FROM jsonb_array_elements(report->'events') q(x) WHERE x->>'source_record_id'=e15::text;
-  PERFORM pg_temp.w10e2_assert(32,'recorded-at cutoff (error='||coalesce(saved.error_code,'NULL')
-    ||'; saved='||coalesce(saved.status,'NULL')
-    ||'; source_eligible='||coalesce(public.accounting_expense_bridge_source_snapshot('EXPENSE',e15)->>'eligible','NULL')
-    ||'; source_recorded_at='||coalesce(public.accounting_expense_bridge_source_snapshot('EXPENSE',e15)->>'source_recorded_at','NULL')
-    ||'; reconciliation='||coalesce(event->>'reconciliation_status','NULL')
-    ||'; event_version='||coalesce(event->>'event_version','NULL')||')',saved.status='READY' AND event IS NOT NULL
-    AND event->>'reconciliation_status'='MISSING_CLASSIFICATION' AND event->>'event_version' IS NULL);
+  IF (saved.status='READY' AND event IS NOT NULL AND event->>'reconciliation_status'='MISSING_CLASSIFICATION'
+      AND event->>'event_version' IS NULL) IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'W10E2 case 32 failed: recorded-at cutoff (error=%; saved=%; source_eligible=%; source_recorded_at=%; reconciliation=%; event_version=%)',
+      saved.error_code,saved.status,public.accounting_expense_bridge_source_snapshot('EXPENSE',e15)->>'eligible',
+      public.accounting_expense_bridge_source_snapshot('EXPENSE',e15)->>'source_recorded_at',
+      event->>'reconciliation_status',event->>'event_version';
+  END IF;
+  PERFORM pg_temp.w10e2_assert(32,'recorded-at cutoff',true);
   contract:=pg_temp.w10e2_contract('EXPENSE',e15,'EMPLOYEE_PAID_EXPENSE','DIRECT_EXPENSE',CURRENT_DATE-1,
     'employee_reimbursement_liability',false,false,NULL,false,NULL,true);
   SELECT * INTO result FROM pg_temp.w10e2_post('EXPENSE',e15,contract,33);

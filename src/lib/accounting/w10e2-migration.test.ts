@@ -145,7 +145,8 @@ test("W10E2 rollback fixture follows W5 evidence and Finance Review gates before
   assert.match(fixture, /e7:=pg_temp\.w10e2_make_expense\(7,50,'company_direct','cash_advance',advance1,NULL\)/);
   assert.match(fixture, /e8:=pg_temp\.w10e2_make_expense\(8,15,'company_direct','cash_advance',advance1,NULL\)/);
   assert.match(fixture, /record_cutoff:=\(public\.accounting_expense_bridge_source_snapshot\('EXPENSE',e15\)->>'source_recorded_at'\)::timestamptz/);
-  assert.match(fixture, /recorded-at cutoff \(error=/);
+  assert.match(fixture, /recorded-at cutoff \(error=%; saved=%/);
+  assert.match(fixture, /'W10E2 synthetic record cutoff classification',pg_temp\.w10e2_req\(900032\)/);
 });
 
 test("W10E2 typed actions, queries, schemas, and generated database RPCs are bounded", () => {
