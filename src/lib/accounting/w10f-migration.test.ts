@@ -14,6 +14,10 @@ const correctiveMigration = readFileSync(
   new URL("../../../supabase/migrations/20260930000000_w10f_reconciliation_unit_total_arrangement_alias_fix.sql", import.meta.url),
   "utf8",
 );
+const revenueAliasMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930010000_w10f_reconciliation_revenue_alias_fix.sql", import.meta.url),
+  "utf8",
+);
 
 const tables = [
   "accounting_revenue_arrangements",
@@ -118,6 +122,18 @@ test("W10F post-apply reconciliation repair is additive, exact-source guarded, a
   assert.match(correctiveMigration, /after_arg_names IS DISTINCT FROM arg_names[\s\S]*?after_arg_defaults IS DISTINCT FROM arg_defaults[\s\S]*?after_signature IS DISTINCT FROM signature/);
   assert.match(correctiveMigration, /postflight: function metadata changed/);
   assert.match(correctiveMigration, /COMMIT;\s*$/);
+});
+
+test("W10F Revenue balance repair qualifies the CTE output and preserves the function interface", () => {
+  assert.match(revenueAliasMigration, /^-- W10F additive correction:[\s\S]*?\nBEGIN;/);
+  assert.match(revenueAliasMigration, /md5\(src\) IS DISTINCT FROM '9902defb4dfbb6059428bdc6162300e4'/);
+  assert.match(revenueAliasMigration, /old_text:=\$old\$SELECT contract_asset,contract_liability,revenue INTO asset,liability,revenue FROM balances\$old\$/);
+  assert.match(revenueAliasMigration, /new_text:=\$new\$SELECT b\.contract_asset,b\.contract_liability,b\.revenue INTO asset,liability,revenue FROM balances b\$new\$/);
+  assert.match(revenueAliasMigration, /arg_names IS DISTINCT FROM ARRAY\['p_actor','p_as_of','p_cutoff','p_limit'\]/);
+  assert.match(revenueAliasMigration, /signature IS DISTINCT FROM 'p_actor uuid, p_as_of date, p_cutoff timestamp with time zone, p_limit integer DEFAULT 200'/);
+  assert.match(revenueAliasMigration, /after_arg_names IS DISTINCT FROM arg_names[\s\S]*?after_arg_defaults IS DISTINCT FROM arg_defaults[\s\S]*?after_signature IS DISTINCT FROM signature/);
+  assert.match(revenueAliasMigration, /postflight: function metadata changed/);
+  assert.match(revenueAliasMigration, /COMMIT;\s*$/);
 });
 
 test("W10F DEV proof is synthetic, rollback-only, and covers independent performance and contract authority", () => {
