@@ -8,6 +8,7 @@ const migration = read("supabase/migrations/20260929120000_w10e2_expense_cash_ac
 const prepareEventVersionFix = read("supabase/migrations/20260929143100_w10e2_prepare_event_version_alias_fix.sql");
 const postEventJournalIdFix = read("supabase/migrations/20260929145412_w10e2_post_event_journal_id_alias_fix.sql");
 const reconciliationInventoryAliasFix = read("supabase/migrations/20260929154055_w10e2_reconciliation_inventory_column_alias_fix.sql");
+const reconciliationEmployeeScopeFix = read("supabase/migrations/20260929163000_w10e2_reconciliation_employee_balance_scope_fix.sql");
 const fixture = read("supabase/verification/w10e2_expense_cash_accounting_bridge_rollback_regression.sql");
 const types = read("src/lib/accounting/types.ts");
 const schemas = read("src/lib/accounting/schemas.ts");
@@ -87,6 +88,18 @@ test("W10E2 reconciliation correction aliases the SETOF jsonb inventory column w
   assert.match(reconciliationInventoryAliasFix, /W10E2 reconciliation correction lost the function default expression/);
   assert.match(reconciliationInventoryAliasFix, /W10E2 reconciliation correction changed the function execute ACL/);
   assert.match(reconciliationInventoryAliasFix, /EXECUTE v_updated/);
+});
+
+test("W10E2 reconciliation scopes employee balances to employee liabilities and advances", () => {
+  assert.match(reconciliationEmployeeScopeFix, /^-- W10E2 additive correction:[^\n]+\nBEGIN;\s*-- Serialize cooperating retries[^\n]*\nSELECT pg_catalog\.pg_advisory_xact_lock\(pg_catalog\.hashtextextended\([\s\S]*?'g7:w10e2:get_accounting_expense_bridge_reconciliation_employee_scope', 0[\s\S]*?\);[\s\S]*COMMIT;\s*$/);
+  assert.doesNotMatch(reconciliationEmployeeScopeFix, /LOCK TABLE pg_catalog\.pg_proc/);
+  assert.match(reconciliationEmployeeScopeFix, /pg_catalog\.md5\(v_before\.prosrc\) IS DISTINCT FROM '8a1ae70dbcffda77bcde655153c3da09'/);
+  assert.match(reconciliationEmployeeScopeFix, /v_old_anchor text := 'WHERE employee_id IS NOT NULL'/);
+  assert.match(reconciliationEmployeeScopeFix, /v_new_anchor text := 'WHERE employee_id IS NOT NULL AND party_role IN \(''EMPLOYEE_REIMBURSEMENT_LIABILITY'',''EMPLOYEE_ADVANCE''\)'/);
+  assert.match(reconciliationEmployeeScopeFix, /<>2/);
+  assert.match(reconciliationEmployeeScopeFix, /v_after\.prosrc IS DISTINCT FROM v_expected_source/);
+  assert.match(reconciliationEmployeeScopeFix, /pg_catalog\.pg_get_function_arguments\(v_function\) IS DISTINCT FROM v_arguments/);
+  assert.match(reconciliationEmployeeScopeFix, /v_after\.proacl::text IS DISTINCT FROM '\{postgres=X\/postgres,service_role=X\/postgres\}'/);
 });
 
 test("W10E2 snapshots lifecycle and transaction facts without current-balance summary authority", () => {

@@ -1,0 +1,112 @@
+-- W10E2 additive correction: omit zero-only Petty Cash custodians from employee balances.
+BEGIN;
+
+-- Serialize cooperating retries of this controlled W10E2 correction.
+SELECT pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
+  'g7:w10e2:get_accounting_expense_bridge_reconciliation_employee_scope', 0
+));
+
+DO $w10e2_reconciliation_employee_scope$
+DECLARE
+  v_function oid := 'public.get_accounting_expense_bridge_reconciliation(uuid,date,timestamptz,integer)'::regprocedure;
+  v_before record;
+  v_after record;
+  v_definition text;
+  v_updated text;
+  v_expected_source text;
+  v_old_anchor text := 'WHERE employee_id IS NOT NULL';
+  v_new_anchor text := 'WHERE employee_id IS NOT NULL AND party_role IN (''EMPLOYEE_REIMBURSEMENT_LIABILITY'',''EMPLOYEE_ADVANCE'')';
+  v_identity text := 'p_actor uuid, p_as_of date, p_cutoff timestamp with time zone, p_limit integer';
+  v_arguments text := 'p_actor uuid, p_as_of date, p_cutoff timestamp with time zone, p_limit integer DEFAULT 200';
+  v_result text := 'jsonb';
+BEGIN
+  SELECT p.proowner,p.prolang,l.lanname AS language_name,p.prokind,p.probin,p.pronargdefaults,
+    p.proargdefaults::text AS proargdefaults_text,p.prosqlbody::text AS prosqlbody_text,
+    p.prosecdef,p.provolatile,p.proparallel,p.procost,p.prorows,p.proisstrict,p.proleakproof,
+    p.proconfig,p.proacl,p.prosrc
+  INTO v_before FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_language l ON l.oid=p.prolang
+  WHERE p.oid=v_function;
+
+  IF pg_catalog.pg_get_function_identity_arguments(v_function) IS DISTINCT FROM v_identity
+     OR pg_catalog.pg_get_function_arguments(v_function) IS DISTINCT FROM v_arguments
+     OR pg_catalog.pg_get_function_result(v_function) IS DISTINCT FROM v_result
+     OR pg_catalog.pg_get_userbyid(v_before.proowner) IS DISTINCT FROM 'postgres'
+     OR v_before.language_name IS DISTINCT FROM 'plpgsql'
+     OR v_before.prokind IS DISTINCT FROM 'f'
+     OR v_before.probin IS NOT NULL
+     OR v_before.pronargdefaults IS DISTINCT FROM 1
+     OR v_before.proargdefaults_text IS NULL
+     OR v_before.prosqlbody_text IS NOT NULL
+     OR v_before.prosecdef IS DISTINCT FROM true
+     OR v_before.provolatile IS DISTINCT FROM 's'
+     OR v_before.proparallel IS DISTINCT FROM 'u'
+     OR v_before.procost IS DISTINCT FROM 100
+     OR v_before.prorows IS DISTINCT FROM 0
+     OR v_before.proisstrict IS DISTINCT FROM false
+     OR v_before.proleakproof IS DISTINCT FROM false
+     OR v_before.proconfig IS DISTINCT FROM ARRAY['search_path=pg_catalog, public']::text[]
+     OR v_before.proacl::text IS DISTINCT FROM '{postgres=X/postgres,service_role=X/postgres}'
+     OR pg_catalog.md5(v_before.prosrc) IS DISTINCT FROM '8a1ae70dbcffda77bcde655153c3da09' THEN
+    RAISE EXCEPTION 'W10E2 reconciliation function deployed metadata or source differs from reviewed employee-scope contract';
+  END IF;
+
+  IF (length(v_before.prosrc)-length(replace(v_before.prosrc,v_old_anchor,'')))/length(v_old_anchor)<>2
+     OR position(v_new_anchor IN v_before.prosrc)>0 THEN
+    RAISE EXCEPTION 'W10E2 reconciliation employee-scope source anchors differ from reviewed correction contract';
+  END IF;
+
+  v_definition:=pg_catalog.pg_get_functiondef(v_function);
+  IF (length(v_definition)-length(replace(v_definition,v_old_anchor,'')))/length(v_old_anchor)<>2
+     OR position(v_new_anchor IN v_definition)>0 THEN
+    RAISE EXCEPTION 'W10E2 reconciliation employee-scope definition anchors differ from reviewed correction contract';
+  END IF;
+
+  v_expected_source:=replace(v_before.prosrc,v_old_anchor,v_new_anchor);
+  v_updated:=replace(v_definition,v_old_anchor,v_new_anchor);
+  EXECUTE v_updated;
+
+  SELECT p.proowner,p.prolang,l.lanname AS language_name,p.prokind,p.probin,p.pronargdefaults,
+    p.proargdefaults::text AS proargdefaults_text,p.prosqlbody::text AS prosqlbody_text,
+    p.prosecdef,p.provolatile,p.proparallel,p.procost,p.prorows,p.proisstrict,p.proleakproof,
+    p.proconfig,p.proacl,p.prosrc
+  INTO v_after FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_language l ON l.oid=p.prolang
+  WHERE p.oid=v_function;
+  v_definition:=pg_catalog.pg_get_functiondef(v_function);
+
+  IF ROW(v_before.proowner,v_before.prolang,v_before.language_name,v_before.prokind,v_before.probin,
+       v_before.pronargdefaults,v_before.prosqlbody_text,v_before.prosecdef,
+       v_before.provolatile,v_before.proparallel,v_before.procost,v_before.prorows,v_before.proisstrict,
+       v_before.proleakproof,v_before.proconfig,v_before.proacl)
+       IS DISTINCT FROM
+     ROW(v_after.proowner,v_after.prolang,v_after.language_name,v_after.prokind,v_after.probin,
+       v_after.pronargdefaults,v_after.prosqlbody_text,v_after.prosecdef,
+       v_after.provolatile,v_after.proparallel,v_after.procost,v_after.prorows,v_after.proisstrict,
+       v_after.proleakproof,v_after.proconfig,v_after.proacl) THEN
+    RAISE EXCEPTION 'W10E2 reconciliation employee-scope correction changed function properties';
+  END IF;
+  IF v_after.prosrc IS DISTINCT FROM v_expected_source THEN
+    RAISE EXCEPTION 'W10E2 reconciliation employee-scope source differs from the exact expected replacement';
+  END IF;
+  IF v_after.proargdefaults_text IS NULL THEN
+    RAISE EXCEPTION 'W10E2 reconciliation employee-scope correction lost the function default expression';
+  END IF;
+  IF v_after.proacl::text IS DISTINCT FROM '{postgres=X/postgres,service_role=X/postgres}' THEN
+    RAISE EXCEPTION 'W10E2 reconciliation employee-scope correction changed the function execute ACL';
+  END IF;
+  IF pg_catalog.pg_get_function_identity_arguments(v_function) IS DISTINCT FROM v_identity THEN
+    RAISE EXCEPTION 'W10E2 reconciliation employee-scope correction changed function identity arguments';
+  END IF;
+  IF pg_catalog.pg_get_function_arguments(v_function) IS DISTINCT FROM v_arguments THEN
+    RAISE EXCEPTION 'W10E2 reconciliation employee-scope correction changed exposed function arguments or defaults';
+  END IF;
+  IF pg_catalog.pg_get_function_result(v_function) IS DISTINCT FROM v_result THEN
+    RAISE EXCEPTION 'W10E2 reconciliation employee-scope correction changed the function result ABI';
+  END IF;
+  -- The old text is a prefix of the new anchor; exact prosrc equality and the new-anchor cardinality prove replacement.
+  IF (length(v_definition)-length(replace(v_definition,v_new_anchor,'')))/length(v_new_anchor)<>2 THEN
+    RAISE EXCEPTION 'W10E2 reconciliation employee-scope correction failed the two-anchor postflight';
+  END IF;
+END;
+$w10e2_reconciliation_employee_scope$;
+
+COMMIT;
