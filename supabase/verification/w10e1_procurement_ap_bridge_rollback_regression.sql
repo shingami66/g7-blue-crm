@@ -536,7 +536,16 @@ BEGIN
     profile_id,package_id,version,previous_version,accounting_start_date,cutover_boundary_date,payload,
     payload_fingerprint,created_by,foundation_event_id
   ) VALUES(v_context.profile_id,v_pkg,1,NULL,'2000-01-01',CURRENT_DATE,
-    jsonb_build_object('synthetic',true),repeat('c',64),v_context.operator_id,'00000000-0000-4000-8000-00000000e8a2');
+    jsonb_build_object('synthetic',true,'accounting_start_date','2000-01-01','cutover_boundary_date',CURRENT_DATE,
+      'items',jsonb_build_array(jsonb_build_object(
+        'item_id','00000000-0000-4000-8000-00000000e8a4','source_domain','AP_BRIDGE',
+        'source_record_key','W6/SUPPLIER_BILL/00000000-0000-4000-8000-00000000e856',
+        'economic_event_key','W6/SUPPLIER_BILL/00000000-0000-4000-8000-00000000e856/AP_EFFECT',
+        'classification','RECONSTRUCTED_HISTORY','resolution_state','RESOLVED','is_material',true,
+        'reconciliation_category','ACCOUNTS_PAYABLE','party_type','SUPPLIER',
+        'party_reference',v_context.supplier_id::text,'reconciliation_reference','Synthetic W10C historical payable coverage',
+        'evidence_refs',jsonb_build_array('synthetic://w10e1/w10c-evidence')))),
+    repeat('c',64),v_context.operator_id,'00000000-0000-4000-8000-00000000e8a2');
   UPDATE public.accounting_inception_packages SET current_version=1 WHERE profile_id=v_context.profile_id AND id=v_pkg;
   INSERT INTO public.accounting_inception_coverage(
     id,profile_id,source_domain,source_record_key,economic_event_key,current_version
@@ -546,13 +555,28 @@ BEGIN
     id,profile_id,event_type,entity_type,entity_id,entity_version,actor_user_id,request_id,reason,
     evidence_ref,payload_fingerprint,result_reference,occurred_at
   ) VALUES('00000000-0000-4000-8000-00000000e8a3',v_context.profile_id,'accounting_inception_package_updated',
-    'accounting_inception_package',v_pkg,1,v_context.operator_id,pg_temp.w10e1_req(1027),
-    'Synthetic W10C coverage item',NULL,repeat('d',64),'accounting_inception_coverage/'||v_cov::text||'/1',clock_timestamp());
+    'accounting_inception_package',v_pkg,2,v_context.operator_id,pg_temp.w10e1_req(1027),
+    'Synthetic W10C coverage item',NULL,repeat('d',64),'accounting_inception_packages/'||v_pkg::text||'/2',clock_timestamp());
+  INSERT INTO public.accounting_inception_package_versions(
+    profile_id,package_id,version,previous_version,accounting_start_date,cutover_boundary_date,payload,
+    payload_fingerprint,created_by,foundation_event_id
+  ) VALUES(v_context.profile_id,v_pkg,2,1,'2000-01-01',CURRENT_DATE,
+    jsonb_build_object('synthetic',true,'accounting_start_date','2000-01-01','cutover_boundary_date',CURRENT_DATE,
+      'items',jsonb_build_array(jsonb_build_object(
+        'item_id','00000000-0000-4000-8000-00000000e8a4','source_domain','AP_BRIDGE',
+        'source_record_key','W6/SUPPLIER_BILL/00000000-0000-4000-8000-00000000e856',
+        'economic_event_key','W6/SUPPLIER_BILL/00000000-0000-4000-8000-00000000e856/AP_EFFECT',
+        'classification','RECONSTRUCTED_HISTORY','resolution_state','RESOLVED','is_material',true,
+        'reconciliation_category','ACCOUNTS_PAYABLE','party_type','SUPPLIER',
+        'party_reference',v_context.supplier_id::text,'reconciliation_reference','Synthetic W10C historical payable coverage',
+        'evidence_refs',jsonb_build_array('synthetic://w10e1/w10c-evidence')))),
+    repeat('d',64),v_context.operator_id,'00000000-0000-4000-8000-00000000e8a3');
+  UPDATE public.accounting_inception_packages SET current_version=2 WHERE profile_id=v_context.profile_id AND id=v_pkg;
   INSERT INTO public.accounting_inception_coverage_versions(
     profile_id,coverage_id,version,previous_version,package_id,package_version,item_id,classification,
     resolution_state,is_material,reconciliation_category,party_type,party_reference,reconciliation_reference,
     evidence_count,payload_fingerprint,created_by,foundation_event_id
-  ) VALUES(v_context.profile_id,v_cov,1,NULL,v_pkg,1,'00000000-0000-4000-8000-00000000e8a4',
+  ) VALUES(v_context.profile_id,v_cov,1,NULL,v_pkg,2,'00000000-0000-4000-8000-00000000e8a4',
     'RECONSTRUCTED_HISTORY','RESOLVED',true,'ACCOUNTS_PAYABLE','SUPPLIER',v_context.supplier_id::text,
     'Synthetic W10C historical payable coverage',1,repeat('d',64),v_context.operator_id,'00000000-0000-4000-8000-00000000e8a3');
   UPDATE public.accounting_inception_coverage SET current_version=1 WHERE profile_id=v_context.profile_id AND id=v_cov;

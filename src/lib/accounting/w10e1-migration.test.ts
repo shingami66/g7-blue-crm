@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(new URL(path, root), "utf8");
 const migration = read("supabase/migrations/20260929053102_w10e1_procurement_ap_accounting_bridge.sql");
 const correction = read("supabase/migrations/20260929105800_w10e1_receipt_match_snapshot_path_correction.sql");
 const allocationCorrection = read("supabase/migrations/20260929111600_w10e1_advance_allocation_reversal_snapshot_join.sql");
+const reconciliationCorrection = read("supabase/migrations/20260929114000_w10e1_reconciliation_inventory_item_alias.sql");
 const fixture = read("supabase/verification/w10e1_procurement_ap_bridge_rollback_regression.sql");
 const types = read("src/lib/accounting/types.ts");
 const schemas = read("src/lib/accounting/schemas.ts");
@@ -82,6 +83,15 @@ test("W10E1 additive correction joins the advance for allocation reversal snapsh
   assert.match(allocationCorrection, /EXECUTE v_updated/);
   assert.match(allocationCorrection, /IS DISTINCT FROM[\s\S]*v_after\.proacl/);
   assert.match(allocationCorrection, /COMMIT;\s*$/);
+});
+
+test("W10E1 additive correction names the reconciliation source inventory JSON column", () => {
+  assert.match(reconciliationCorrection, /^-- W10E1 additive correction:[^\n]+\nBEGIN;/);
+  assert.match(reconciliationCorrection, /p_limit\+1\) AS source\(item\)\),/);
+  assert.match(reconciliationCorrection, /pg_catalog\.pg_get_functiondef\(v_function\)/);
+  assert.match(reconciliationCorrection, /EXECUTE v_updated/);
+  assert.match(reconciliationCorrection, /IS DISTINCT FROM[\s\S]*v_after\.proacl/);
+  assert.match(reconciliationCorrection, /COMMIT;\s*$/);
 });
 
 test("receipt and bill journal rules require evidence, preserve identity, and enforce accrual coverage", () => {
@@ -160,6 +170,8 @@ test("rollback campaign names and asserts all 33 required scenarios", () => {
   assert.match(fixture, /SELECT count\(\*\) INTO v_event_count FROM pg_temp\.w10e1_case_results/);
   assert.match(fixture, /<>33/);
   assert.match(fixture, /w10e1_post\('SUPPLIER_ADVANCE_PAYMENT','00000000-0000-4000-8000-00000000e864'/);
+  assert.match(fixture, /'accounting_start_date','2000-01-01','cutover_boundary_date',CURRENT_DATE/);
+  assert.match(fixture, /'item_id','00000000-0000-4000-8000-00000000e8a4','source_domain','AP_BRIDGE'/);
   for (const description of [
     "accepted receipt with supported expense valuation", "accepted receipt with unsupported valuation held",
     "partial Supplier Bill matching", "multiple bills against one eligible accrual",
