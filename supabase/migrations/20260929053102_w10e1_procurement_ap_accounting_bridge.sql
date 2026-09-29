@@ -1207,13 +1207,13 @@ BEGIN
   SELECT p.prosrc,p.proowner,p.proacl,p.proconfig,p.provolatile,p.proparallel,p.procost,p.prorows,p.proisstrict,p.proleakproof,p.prosecdef
     INTO v_source,v_owner,v_acl,v_config,v_volatility,v_parallel,v_cost,v_rows,v_strict,v_leakproof,v_security FROM pg_catalog.pg_proc p WHERE p.oid=v_function;
   IF v_function IS NULL OR v_source IS NULL OR NOT v_security OR v_volatility<>'v' OR v_parallel<>'u' OR v_cost<>100 OR v_rows<>1000 OR v_strict OR v_leakproof
-     OR v_config IS DISTINCT FROM ARRAY['search_path=pg_catalog, public'] THEN RAISE EXCEPTION 'W10E1 preflight: account save RPC contract differs'; END IF;
+     OR v_config IS DISTINCT FROM ARRAY['search_path=pg_catalog, public, extensions'] THEN RAISE EXCEPTION 'W10E1 preflight: account save RPC contract differs'; END IF;
   v_old:='''ACCOUNTS_PAYABLE'',''CUSTOMER_ADVANCE''';
   v_new:='''ACCOUNTS_PAYABLE'',''ACCRUED_LIABILITY'',''CUSTOMER_ADVANCE''';
   IF position(v_old in v_source)=0 OR length(v_source)-length(replace(v_source,v_old,''))<>length(v_old) THEN RAISE EXCEPTION 'W10E1 preflight: account classification allowlist differs'; END IF;
   v_repaired:=replace(v_source,v_old,v_new);
   EXECUTE format($ddl$CREATE OR REPLACE FUNCTION public.save_accounting_account(p_actor_user_id uuid,p_account_id uuid,p_expected_version integer,p_account jsonb,p_reason text,p_evidence_ref text,p_request_id uuid)
-    RETURNS TABLE(error_code text,account_id uuid,version integer,idempotent_replay boolean) LANGUAGE plpgsql CALLED ON NULL INPUT VOLATILE NOT LEAKPROOF SECURITY DEFINER PARALLEL UNSAFE COST 100 ROWS 1000 SET search_path=pg_catalog, public AS %L$ddl$,v_repaired);
+    RETURNS TABLE(error_code text,account_id uuid,version integer,idempotent_replay boolean) LANGUAGE plpgsql CALLED ON NULL INPUT VOLATILE NOT LEAKPROOF SECURITY DEFINER PARALLEL UNSAFE COST 100 ROWS 1000 SET search_path=pg_catalog, public, extensions AS %L$ddl$,v_repaired);
   SELECT p.proowner,p.proacl,p.proconfig INTO v_after_owner,v_after_acl,v_after_config FROM pg_catalog.pg_proc p WHERE p.oid=v_function;
   IF v_after_owner IS DISTINCT FROM v_owner OR v_after_acl IS DISTINCT FROM v_acl OR v_after_config IS DISTINCT FROM v_config THEN RAISE EXCEPTION 'W10E1 postflight: account save ACL or configuration changed'; END IF;
 

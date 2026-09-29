@@ -36,6 +36,10 @@ test("W10E1 adds only the four versioned AP bridge records and grants only gover
   }
   assert.match(migration, /accounting:manage_ap_bridge/);
   assert.match(migration, /IS DISTINCT FROM '9e1b901c370c6ffb7d776dacb5ba54c6'/);
+  const accountSaveExtension = migration.match(/v_function:=to_regprocedure\('public\.save_accounting_account\([\s\S]*?v_function:=to_regprocedure\('public\.validate_accounting_posting_rule_mapping\(\)'\);/)?.[0];
+  assert.ok(accountSaveExtension);
+  assert.match(accountSaveExtension, /v_config IS DISTINCT FROM ARRAY\['search_path=pg_catalog, public, extensions'\]/);
+  assert.match(accountSaveExtension, /SET search_path=pg_catalog, public, extensions AS %L/);
   assert.match(migration, /'AP_BRIDGE'/);
   assert.match(migration, /'ACCRUED_LIABILITY'/);
   assert.match(migration, /accounting_ap_bridge_event_versions ENABLE ROW LEVEL SECURITY/);
