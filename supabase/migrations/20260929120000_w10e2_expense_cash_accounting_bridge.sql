@@ -594,7 +594,6 @@ BEGIN
   END IF;
   IF cash IS NOT NULL AND NOT public.accounting_expense_bridge_account_authorized(profile,'cash_account',cash,cashver)
     THEN state:='HELD';held:='cash_account_evidence_missing';END IF;
- END IF;
  IF state='READY' AND p_type='EXPENSE_REIMBURSEMENT_SETTLEMENT' AND snapshot->>'source_subtype'='advance_offset'
    AND (related IS NULL OR adv_ref IS NULL OR adv_hash IS NULL) THEN state:='HELD';held:='ADVANCE_OFFSET_PROVENANCE_REQUIRED';END IF;
   IF state='READY' AND p_type='PETTY_CASH_TRANSACTION' AND snapshot->>'source_subtype'='return'
