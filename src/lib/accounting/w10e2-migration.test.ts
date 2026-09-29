@@ -6,6 +6,7 @@ const root = new URL("../../../", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), "utf8");
 const migration = read("supabase/migrations/20260929120000_w10e2_expense_cash_accounting_bridge.sql");
 const prepareEventVersionFix = read("supabase/migrations/20260929143100_w10e2_prepare_event_version_alias_fix.sql");
+const postEventJournalIdFix = read("supabase/migrations/20260929145412_w10e2_post_event_journal_id_alias_fix.sql");
 const fixture = read("supabase/verification/w10e2_expense_cash_accounting_bridge_rollback_regression.sql");
 const types = read("src/lib/accounting/types.ts");
 const schemas = read("src/lib/accounting/schemas.ts");
@@ -42,6 +43,23 @@ test("W10E2 additive correction qualifies the return-column conflict and guards 
   assert.match(prepareEventVersionFix, /v_after\.proacl::text IS DISTINCT FROM '\{postgres=X\/postgres,service_role=X\/postgres\}'/);
   assert.match(prepareEventVersionFix, /v_after\.prosrc IS DISTINCT FROM v_expected_source/);
   assert.match(prepareEventVersionFix, /EXECUTE v_updated/);
+});
+
+test("W10E2 post correction qualifies journal id and serializes exact PL/pgSQL replacement", () => {
+  assert.match(postEventJournalIdFix, /^-- W10E2 additive correction:[^\n]+\nBEGIN;\s*LOCK TABLE pg_catalog\.pg_proc IN SHARE ROW EXCLUSIVE MODE;[\s\S]*COMMIT;\s*$/);
+  assert.match(postEventJournalIdFix, /pg_catalog\.pg_language l ON l\.oid=p\.prolang/);
+  assert.match(postEventJournalIdFix, /v_before\.language_name IS DISTINCT FROM 'plpgsql'/);
+  assert.match(postEventJournalIdFix, /v_before\.probin IS NOT NULL/);
+  assert.match(postEventJournalIdFix, /v_before\.pronargdefaults IS DISTINCT FROM 0/);
+  assert.match(postEventJournalIdFix, /v_before\.proargdefaults_text IS NOT NULL/);
+  assert.match(postEventJournalIdFix, /v_before\.prosqlbody_text IS NOT NULL/);
+  assert.match(postEventJournalIdFix, /pg_catalog\.md5\(v_before\.prosrc\) IS DISTINCT FROM 'f26b19c03eec9b34550e4ab8b8dea3d6'/);
+  assert.match(postEventJournalIdFix, /v_old_anchor text := '[^']*accounting_expense_bridge_journal_links WHERE profile_id=profile AND journal_id=p_journal;'/);
+  assert.match(postEventJournalIdFix, /v_new_anchor text := '[^']*accounting_expense_bridge_journal_links AS link WHERE link\.profile_id=profile AND link\.journal_id=p_journal;'/);
+  assert.match(postEventJournalIdFix, /v_before\.proacl::text IS DISTINCT FROM '\{postgres=X\/postgres,service_role=X\/postgres\}'/);
+  assert.match(postEventJournalIdFix, /v_after\.proacl::text IS DISTINCT FROM '\{postgres=X\/postgres,service_role=X\/postgres\}'/);
+  assert.match(postEventJournalIdFix, /v_after\.prosrc IS DISTINCT FROM v_expected_source/);
+  assert.match(postEventJournalIdFix, /EXECUTE v_updated/);
 });
 
 test("W10E2 snapshots lifecycle and transaction facts without current-balance summary authority", () => {
