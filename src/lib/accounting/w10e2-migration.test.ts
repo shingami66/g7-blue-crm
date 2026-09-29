@@ -5,6 +5,7 @@ import test from "node:test";
 const root = new URL("../../../", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), "utf8");
 const migration = read("supabase/migrations/20260929120000_w10e2_expense_cash_accounting_bridge.sql");
+const prepareEventVersionFix = read("supabase/migrations/20260929143100_w10e2_prepare_event_version_alias_fix.sql");
 const fixture = read("supabase/verification/w10e2_expense_cash_accounting_bridge_rollback_regression.sql");
 const types = read("src/lib/accounting/types.ts");
 const schemas = read("src/lib/accounting/schemas.ts");
@@ -29,6 +30,18 @@ test("W10E2 creates append-only bridge records, protected controls, and governed
   assert.match(migration, /'EMPLOYEE_REIMBURSEMENT_LIABILITY'/);
   assert.match(migration, /ENABLE ROW LEVEL SECURITY;[^]*FORCE ROW LEVEL SECURITY/);
   assert.match(migration, /accounting_expense_bridge_(versions|links|lines)_immutable/);
+});
+
+test("W10E2 additive correction qualifies the return-column conflict and guards deployed identity", () => {
+  assert.match(prepareEventVersionFix, /^-- W10E2 additive correction:[^\n]+\nBEGIN;[\s\S]*COMMIT;\s*$/);
+  assert.match(prepareEventVersionFix, /md5\(v_before\.prosrc\)<>'9174ae9e235ce6354d5870267816194e'/);
+  assert.match(prepareEventVersionFix, /v_old_anchor text := '[^']*event_id=e\.id AND version=p_event_version;'/);
+  assert.match(prepareEventVersionFix, /v_new_anchor text := '[^']*event_id=e\.id AND ev\.version=p_event_version;'/);
+  assert.match(prepareEventVersionFix, /pg_get_function_identity_arguments\(v_function\)[\s\S]*?pg_get_function_result\(v_function\)/);
+  assert.match(prepareEventVersionFix, /v_before\.proacl::text IS DISTINCT FROM '\{postgres=X\/postgres,service_role=X\/postgres\}'/);
+  assert.match(prepareEventVersionFix, /v_after\.proacl::text IS DISTINCT FROM '\{postgres=X\/postgres,service_role=X\/postgres\}'/);
+  assert.match(prepareEventVersionFix, /v_after\.prosrc IS DISTINCT FROM v_expected_source/);
+  assert.match(prepareEventVersionFix, /EXECUTE v_updated/);
 });
 
 test("W10E2 snapshots lifecycle and transaction facts without current-balance summary authority", () => {
