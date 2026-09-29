@@ -765,7 +765,9 @@ BEGIN
     'W10E2 synthetic record cutoff classification',pg_temp.w10e2_req(10032));
   report:=public.get_accounting_expense_bridge_reconciliation(c.operator_id,CURRENT_DATE+10,record_cutoff,500);
   SELECT x INTO event FROM jsonb_array_elements(report->'events') q(x) WHERE x->>'source_record_id'=e15::text;
-  PERFORM pg_temp.w10e2_assert(32,'recorded-at cutoff',saved.status='READY' AND event IS NOT NULL
+  PERFORM pg_temp.w10e2_assert(32,'recorded-at cutoff (saved='||coalesce(saved.status,'NULL')
+    ||'; reconciliation='||coalesce(event->>'reconciliation_status','NULL')
+    ||'; event_version='||coalesce(event->>'event_version','NULL')||')',saved.status='READY' AND event IS NOT NULL
     AND event->>'reconciliation_status'='MISSING_CLASSIFICATION' AND event->>'event_version' IS NULL);
   contract:=pg_temp.w10e2_contract('EXPENSE',e15,'EMPLOYEE_PAID_EXPENSE','DIRECT_EXPENSE',CURRENT_DATE-1,
     'employee_reimbursement_liability',false,false,NULL,false,NULL,true);
