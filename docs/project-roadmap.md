@@ -1,15 +1,16 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W10D ACCOUNTS RECEIVABLE ACCOUNTING BRIDGE — 28 September 2026
+## CURRENT ROADMAP POSITION — W10E1 PROCUREMENT / ACCOUNTS PAYABLE ACCOUNTING BRIDGE — 29 September 2026
 
-- **W10D — Accounts Receivable Accounting Bridge:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` on `main`; implementation and bounded corrective source chain published through `fe72d546365d5241df03bd648ac3e9b00f2d9046`.
-- The W10D DEV migration chain is applied through `20260928175327_w10d_reconciliation_inventory_alias_fix`; all local and remote migration identities are synchronized, and Supabase dry-run reports no pending migrations.
-- W10D reuses W7 source lineage, W10B posting/source-effect infrastructure, W10C inception coverage, and the existing accounting authority. Unsupported revenue treatment is held; settlement/reclassification does not invent cash or revenue.
-- The complete committed rollback-clean W10D fixture passed on DEV, with independent zero-synthetic-residue verification. The four bridge tables retain RLS/no direct app-role table access, the four bridge RPCs are service-role-only, and `accounting:manage_ar_bridge` is enabled through the existing authority engine. No persistent accounting bootstrap data was created.
-- **Validation:** focused Accounting/Auth tests passed 105/105; focused W10D tests passed 11/11; TypeScript, scoped ESLint, production build, migration/source checks, and diff checks passed.
-- **Controller verdict:** `PASS WITH WARN`. The non-green full `pnpm test:all` result remains preserved as historical evidence and does not block W10D closure.
-- **Deferred boundaries:** no real chart/profile/grant seeds, accounting postings or bulk backfill, W10E1/W10E2, W10F/W10G/W10H/W10I, period close/reopen, VAT/ZATCA/FATOORA activation, DEMO/PROD mutation, deployment, or professional/statutory accounting activation.
-- **EXACT NEXT ACTION:** Read-only W10E1 discovery. Do not begin W10E1 implementation without separate fresh exact Owner authorization.
+- **W10E1 — Procurement / Accounts Payable Accounting Bridge:** `IMPLEMENTED / DEV-VERIFIED / PUBLISHED / OWNER ACCEPTANCE PENDING` on `main` and DEV project `dpddrqjzqohexixgdqiq`; Owner acceptance is not claimed.
+- The W10E1 DEV migration chain is applied through `20260929114000_w10e1_reconciliation_inventory_item_alias`; all four local and remote migration identities are synchronized, and Supabase dry-run reports no pending migrations.
+- W10E1 adds the source-bound AP bridge and typed action/schema surface on the W10B journal/source-effect and W10C inception-coverage foundations. Receipt valuation and unsupported classifications fail closed; bill/accrual matching avoids duplicate cost; payments require evidenced cash/bank binding; advance allocation creates no cash or cost.
+- The 33-case rollback-clean DEV fixture passed, including W10C replay protection, historical cutoffs, READY supplier/AP/accrual/advance reconciliation, balanced GL/TB, explicit rollback, and zero residue. The as-of reconciliation does not use current-only W9 AP balances as historical truth.
+- DEV verification confirmed RLS on all four bridge tables with no direct `service_role` reads; the four governed RPCs use the expected definer security and search path and grant execute to `service_role`. `accounting:manage_ap_bridge` is enabled in the capability catalog with no persistent grant created.
+- **Validation:** 117/117 focused Accounting/Auth tests and 58/58 directly affected W4/W6 tests passed; W10E1 migration/source tests, TypeScript, scoped ESLint, production build, and diff checks passed. Full `pnpm test:all` remains warned: an earlier run completed 2,172/2,195 with 23 unrelated failures; this rerun timed out at 120 seconds.
+- **Controller verdict:** `PASS WITH WARN`.
+- **Deferred boundaries:** no real profile/chart/grant seed, real posting or historical backfill, VAT/ZATCA/FATOORA, W10E2+, W10F/W10G/W10H/W10I, DEMO/PROD mutation, deployment, or professional/statutory accounting activation.
+- **EXACT NEXT ACTION:** Owner reviews the bounded W10E1 DEV closeout and records acceptance; W10E2 needs separate fresh exact Owner authorization.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT POSITION)
 

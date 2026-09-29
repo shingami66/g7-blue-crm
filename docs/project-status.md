@@ -1,17 +1,18 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W10D ACCOUNTS RECEIVABLE ACCOUNTING BRIDGE — 28 September 2026
+## CURRENT DELIVERY STATUS — W10E1 PROCUREMENT / ACCOUNTS PAYABLE ACCOUNTING BRIDGE — 29 September 2026
 
-- **Published baseline:** W7–W9 remain published. W10A1 authority/profile, W10A2a chart/period, W10B journal/GL, and W10C inception foundations remain published and DEV-verified; W10D is published and DEV-verified on `dpddrqjzqohexixgdqiq`.
-- **W10D — Accounts Receivable Accounting Bridge:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` — the W10D implementation and bounded correction chain is published through `fe72d546365d5241df03bd648ac3e9b00f2d9046`.
-  - Bridges authoritative W7 customer financial events into the existing W10 accounting authority, journal/source-effect, and W10C inception-coverage foundations. Unsupported revenue treatment remains held; allocation/application events do not create cash or revenue effects.
-  - DEV migrations applied: `20260928105910` (W10D bridge foundation), `20260928141020` (posting-mapping key compatibility), `20260928160000` (audit-action compatibility), `20260928163327` (payment invoice snapshot correction), and `20260928175327` (reconciliation inventory output alias correction). Applied migrations were not edited and migration history was not repaired.
-  - `accounting:manage_ar_bridge` is enabled through the existing authority engine. The four bridge tables retain RLS and no direct application-role table access; the four bridge RPCs are service-role-only. No persistent profile, chart, period, posting rule, journal, bridge event, source effect, or grant was bootstrapped.
-  - The complete committed rollback-clean W10D fixture passed on DEV. It covered the governed source-event, hold, replay, duplicate-effect, as-of, inception-coverage, reconciliation, and protected-account cases; independent post-run residue verification found zero synthetic residue.
-- **Validation:** 105/105 focused Accounting/Auth tests and 11/11 W10D tests passed; TypeScript, scoped ESLint, production build, migration/source checks, and `git diff --check` passed.
-- **Controller verdict:** `PASS WITH WARN`. The non-green full `pnpm test:all` result remains preserved as historical evidence and does not block W10D closure.
-- **Boundaries:** No real chart/profile/grant seed, real accounting posting, bulk operational-history backfill, W10E1/W10E2, W10F/W10G/W10H/W10I, period close/reopen, VAT/ZATCA/FATOORA, DEMO/PROD mutation, deployment, or professional/statutory accounting activation is included.
-- **EXACT NEXT ACTION:** Read-only W10E1 discovery. Do not begin W10E1 implementation without separate fresh exact Owner authorization.
+- **Published baseline:** W7–W9 and W10A1–W10D remain published and DEV-verified; W10D remains Owner-accepted. W10E1 is published on `main` and DEV-verified in project `dpddrqjzqohexixgdqiq`.
+- **W10E1 — Procurement / Accounts Payable Accounting Bridge:** `IMPLEMENTED / DEV-VERIFIED / PUBLISHED / OWNER ACCEPTANCE PENDING`.
+  - Adds `AP_BRIDGE`, protected `ACCRUED_LIABILITY`, `accounting:manage_ap_bridge`, four versioned bridge tables/RPCs, and typed server actions/schemas. W4/W6 source snapshots cover receipt/correction, bill, payment/reversal, advance payment/reversal, allocation/reversal, and refund; authorization remains trace-only.
+  - Evidence-gated receipt valuation and residual bill classification fail closed; bills match eligible accrual without double cost; payments require explicit cash/bank binding; allocation creates no cash or cost. Unsupported refund reversal and VAT/ZATCA/FATOORA remain inactive.
+  - DEV migrations applied: `20260929053102`, `20260929105800`, `20260929111600`, and `20260929114000`. Applied migrations remain immutable; additive corrections repair receipt identity lookup, the advance allocation-reversal join, and the reconciliation source-inventory alias.
+  - DEV verification found bridge-table RLS enabled with no direct `service_role` reads; the four governed RPCs are `SECURITY DEFINER`, owned by `postgres`, use `search_path=pg_catalog, public`, and grant execute to `service_role`. The capability catalog is enabled; no persistent W10E1 grant was bootstrapped.
+  - The 33-case transactional fixture passed and rolled back cleanly. W10C replay protection, accounting-date and recorded-at cutoffs, READY reconciliation (AP 20,300; accrued 23,000; advances 800; no bank-reconciliation claim), balanced GL/TB, and zero synthetic residue passed. Current-only W9 AP balances were not used as historical accounting truth.
+- **Validation:** 117/117 focused Accounting/Auth tests and 58/58 directly affected W4/W6 regression tests passed; focused W10E1 migration/source contracts, TypeScript, scoped ESLint, production build, and `git diff --check` passed. Full `pnpm test:all` remains warned: the previous completed run was 2,172/2,195 with 23 unrelated failures; this rerun timed out at 120 seconds.
+- **Controller verdict:** `PASS WITH WARN`.
+- **Boundaries:** No real chart/profile/grant seed, real accounting posting or backfill, VAT/ZATCA/FATOORA, W10E2+, W10F–W10I, DEMO/PROD mutation, deployment, or professional/statutory accounting activation. Owner acceptance is pending.
+- **EXACT NEXT ACTION:** Owner reviews this bounded DEV closeout and records acceptance; W10E2 requires separate fresh exact Owner authorization.
 
 ## HISTORICAL DELIVERY SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT STATUS)
 

@@ -297,7 +297,7 @@ INSERT INTO public.supplier_advance_payments(
  ('00000000-0000-4000-8000-00000000e864','SPAY-'||to_char(CURRENT_DATE,'YYYY')||'-9004','00000000-0000-4000-8000-00000000e882','00000000-0000-4000-8000-00000000e820','00000000-0000-4000-8000-00000000e811',CURRENT_DATE-2,10,'cash','00000000-0000-4000-8000-00000000e802',transaction_timestamp()-interval '2 days','00000000-0000-4000-8000-00000000e864');
 INSERT INTO public.supplier_advance_payment_reversals(id,supplier_advance_payment_id,reason,reversed_by,reversed_at,reversal_request_id)
 VALUES('00000000-0000-4000-8000-00000000e872','00000000-0000-4000-8000-00000000e863',
-  'Synthetic advance payment correction','00000000-0000-4000-8000-00000000e802',transaction_timestamp()+interval '2 days',
+  'Synthetic advance payment correction','00000000-0000-4000-8000-00000000e802',transaction_timestamp(),
   '00000000-0000-4000-8000-00000000e872');
 INSERT INTO public.supplier_advance_allocations(
   id,allocation_number,supplier_advance_id,supplier_bill_id,amount,allocated_by,allocated_at,allocation_request_id
@@ -308,7 +308,7 @@ INSERT INTO public.supplier_advance_allocation_reversals(
   id,supplier_advance_allocation_id,reason,corrected_by,corrected_at,correction_request_id
 ) VALUES('00000000-0000-4000-8000-00000000e873','00000000-0000-4000-8000-00000000e891',
   'Synthetic advance allocation correction','00000000-0000-4000-8000-00000000e802',
-  transaction_timestamp()+interval '3 days','00000000-0000-4000-8000-00000000e873');
+  transaction_timestamp(),'00000000-0000-4000-8000-00000000e873');
 INSERT INTO public.supplier_advance_refunds(
   id,refund_number,supplier_advance_id,business_date,amount,reason,evidence_sha256,recorded_by,recorded_at,record_request_id
 ) VALUES('00000000-0000-4000-8000-00000000e892','W10E1-REFUND-01','00000000-0000-4000-8000-00000000e882',
@@ -612,7 +612,7 @@ BEGIN
   PERFORM pg_temp.w10e1_assert(30,'supplier/AP/accrual/advance reconciliation',v_report->>'state'='READY'
     AND v_report->>'bank_reconciled'='false' AND v_report->>'control_difference_count'='0'
     AND v_report->>'supplier_difference_count'='0' AND v_report->>'service_difference_count'='0'
-    AND v_report->>'accounts_payable_halalah'='22300' AND v_report->>'accrued_unbilled_halalah'='23000'
+    AND v_report->>'accounts_payable_halalah'='20300' AND v_report->>'accrued_unbilled_halalah'='23000'
     AND v_report->>'supplier_advance_halalah'='800');
   -- W9 supplier_bill_payment_balances is current-only; it does not provide a historical cutoff.
   SELECT b.outstanding_amount INTO v_balance FROM public.supplier_bill_payment_balances b
