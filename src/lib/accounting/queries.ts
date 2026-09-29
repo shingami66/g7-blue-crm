@@ -24,6 +24,8 @@ import {
   accountingApBridgeReconciliationSchema,
   accountingExpenseBridgeReconciliationInputSchema,
   accountingExpenseBridgeReconciliationSchema,
+  accountingRevenueReconciliationInputSchema,
+  accountingRevenueReconciliationSchema,
   listAccountingCapabilityAssignmentsInputSchema,
 } from "./schemas";
 import { resolveAccountingCapability } from "./permissions";
@@ -38,6 +40,7 @@ import type {
   AccountingArBridgeReconciliation,
   AccountingApBridgeReconciliation,
   AccountingExpenseBridgeReconciliation,
+  AccountingRevenueReconciliation,
 } from "./types";
 
 function throwSafeRpcError(error: { code?: string } | null): never {
@@ -403,5 +406,33 @@ export async function getAccountingExpenseBridgeReconciliation(
   if (result.error) throwSafeRpcError(result.error);
   const parsed = accountingExpenseBridgeReconciliationSchema.safeParse(result.data);
   if (!parsed.success) throw new AuthDependencyError("Accounting expense reconciliation response was invalid");
+  return parsed.data;
+}
+
+export async function getAccountingRevenueReconciliation(
+  input: unknown,
+): Promise<AccountingRevenueReconciliation> {
+  const actor = await requireUser();
+  const [canView, canManage] = await Promise.all([
+    resolveAccountingCapability(actor.id, "accounting:view"),
+    resolveAccountingCapability(actor.id, "accounting:manage_revenue_recognition"),
+  ]);
+  if (!canView && !canManage) throw new ForbiddenError("Accounting capability required");
+  const parsedInput = accountingRevenueReconciliationInputSchema.safeParse(input);
+  if (!parsedInput.success) throw new AuthDependencyError("Accounting revenue reconciliation request was invalid");
+  let result;
+  try {
+    result = await createAdminClient().rpc("get_accounting_revenue_recognition_reconciliation", {
+      p_actor: actor.id,
+      p_as_of: parsedInput.data.as_of_date,
+      p_cutoff: parsedInput.data.recorded_at_cutoff,
+      p_limit: parsedInput.data.limit,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting revenue reconciliation dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  const parsed = accountingRevenueReconciliationSchema.safeParse(result.data);
+  if (!parsed.success) throw new AuthDependencyError("Accounting revenue reconciliation response was invalid");
   return parsed.data;
 }

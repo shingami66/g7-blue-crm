@@ -7,6 +7,8 @@ type ResolveContext = { parentURL?: string };
 type ActionState = {
   rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { code?: string } | null }>;
   calls: Array<{ name: string; args: Record<string, unknown> }>;
+  capabilityChecks: string[];
+  allowedCapabilities: Set<string> | null;
   permission: string | null;
 };
 
@@ -36,6 +38,8 @@ registerHooks({
 let state: ActionState = {
   rpc: async () => ({ data: null, error: null }),
   calls: [],
+  capabilityChecks: [],
+  allowedCapabilities: null,
   permission: null,
 };
 
@@ -53,7 +57,11 @@ mock.module("@/lib/supabase/admin", {
   namedExports: {
     createAdminClient: () => ({
       rpc: async (name: string, args: Record<string, unknown>) => {
-        if (name === "get_accounting_capability") return { data: true, error: null };
+        if (name === "get_accounting_capability") {
+          const capability = String(args.p_capability);
+          state.capabilityChecks.push(capability);
+          return { data: state.allowedCapabilities === null || state.allowedCapabilities.has(capability), error: null };
+        }
         state.calls.push({ name, args });
         return state.rpc(name, args);
       },
@@ -61,14 +69,14 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { saveAccountingAccount, saveAccountingPeriod, setAccountingCapability, updateAccountingProfile, saveAccountingPostingRule, prepareAccountingJournal, postAccountingJournal, reverseAccountingJournal, saveAccountingArBridgeEvent, prepareAccountingArBridgeEvent, postAccountingArBridgeJournal, saveAccountingApBridgeEvent, prepareAccountingApBridgeEvent, postAccountingApBridgeJournal, saveAccountingExpenseBridgeEvent, prepareAccountingExpenseBridgeEvent, postAccountingExpenseBridgeJournal } = await import("./actions.ts");
+const { saveAccountingAccount, saveAccountingPeriod, setAccountingCapability, updateAccountingProfile, saveAccountingPostingRule, prepareAccountingJournal, postAccountingJournal, reverseAccountingJournal, saveAccountingArBridgeEvent, prepareAccountingArBridgeEvent, postAccountingArBridgeJournal, saveAccountingApBridgeEvent, prepareAccountingApBridgeEvent, postAccountingApBridgeJournal, saveAccountingExpenseBridgeEvent, prepareAccountingExpenseBridgeEvent, postAccountingExpenseBridgeJournal, saveAccountingRevenueArrangement, reviewAccountingRevenueArrangement, saveAccountingRevenuePerformanceEvidence, reviewAccountingRevenuePerformanceEvidence, prepareAccountingRevenueRecognition, postAccountingRevenueRecognitionJournal } = await import("./actions.ts");
 const { AuthDependencyError } = await import("../auth/errors.ts");
 
 const actorId = "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f";
 const targetId = "9f09e715-9698-4804-a72b-331ebc776b8d";
 
 function resetState(rpc: ActionState["rpc"]) {
-  state = { rpc, calls: [], permission: null };
+  state = { rpc, calls: [], capabilityChecks: [], allowedCapabilities: null, permission: null };
 }
 
 const assignment = {
@@ -122,6 +130,113 @@ test("self assignment and browser actor injection are rejected before RPC", asyn
     code: "invalid_input",
   });
   assert.equal(state.calls.length, 0);
+});
+
+test("W10F actions keep revenue authority server-side and send exact halalah strings", async () => {
+  const arrangementId = "00000000-0000-4000-8000-00000000f101";
+  const unitId = "00000000-0000-4000-8000-00000000f102";
+  const evidenceId = "00000000-0000-4000-8000-00000000f103";
+  const journalId = "00000000-0000-4000-8000-00000000f104";
+  const sourceItemId = "00000000-0000-4000-8000-00000000f105";
+  const base = {
+    service_id: "00000000-0000-4000-8000-00000000f107",
+    abs_id: "00000000-0000-4000-8000-00000000f108",
+    expected_version: 0,
+    units: [{
+      unit_key: "ceremony",
+      promised_output: "Delivered ceremony and customer acceptance",
+      satisfaction_method: "POINT_IN_TIME",
+      required_evidence_basis: "CUSTOMER_ACCEPTANCE",
+      allocations: [{ source_item_id: sourceItemId, amount_halalah: "9007199254740993" }],
+    }],
+    principal_agent_basis: "PRINCIPAL",
+    policy_version: "W10F-1",
+    modification_evidence_ref: null,
+    modification_evidence_sha256: null,
+    reason: "Synthetic W10F action test",
+    request_id: "00000000-0000-4000-8000-00000000f109",
+  } as const;
+  resetState(async (name) => ({
+    data: name === "save_accounting_revenue_arrangement"
+      ? [{ error_code: null, arrangement_id: arrangementId, version: 1, status: "PREPARED", held_code: null, consideration_halalah: "9007199254740993", idempotent_replay: false }]
+      : name.includes("review_accounting_revenue")
+        ? [{ error_code: null, review_id: "00000000-0000-4000-8000-00000000f110", decision: "APPROVED", idempotent_replay: false }]
+        : name === "save_accounting_revenue_performance_evidence"
+          ? [{ error_code: null, evidence_id: evidenceId, version: 1, status: "SUBMITTED", held_code: null, idempotent_replay: false }]
+          : name === "prepare_accounting_revenue_recognition"
+            ? [{ error_code: null, journal_id: journalId, version: 1, status: "DRAFT", idempotent_replay: false }]
+            : [{ error_code: null, journal_id: journalId, version: 2, status: "POSTED", idempotent_replay: false }],
+    error: null,
+  }));
+  state.allowedCapabilities = new Set(["accounting:manage_revenue_recognition"]);
+
+  assert.deepEqual(await saveAccountingRevenueArrangement(base), {
+    ok: true,
+    value: { arrangement_id: arrangementId, version: 1, status: "PREPARED", held_code: null, consideration_halalah: "9007199254740993" },
+    idempotentReplay: false,
+  });
+  assert.equal(state.calls[0].name, "save_accounting_revenue_arrangement");
+  assert.equal(state.calls[0].args.p_actor, actorId);
+  assert.deepEqual(state.calls[0].args.p_units, base.units);
+
+  assert.deepEqual(await reviewAccountingRevenueArrangement({
+    arrangement_id: arrangementId, arrangement_version: 1, approve: true,
+    reason: "Independent synthetic approval", request_id: "00000000-0000-4000-8000-00000000f111",
+  }), {
+    ok: true,
+    value: { review_id: "00000000-0000-4000-8000-00000000f110", decision: "APPROVED" },
+    idempotentReplay: false,
+  });
+  assert.equal(state.calls[1].args.p_actor, actorId);
+
+  assert.deepEqual(await saveAccountingRevenuePerformanceEvidence({
+    unit_id: unitId, evidence_key: "acceptance-v1", expected_version: 0, evidence_basis: "CUSTOMER_ACCEPTANCE",
+    performance_from: "2026-09-29", performance_through: "2026-09-29", evidence_ref: "synthetic://w10f/acceptance",
+    evidence_sha256: "a".repeat(64), recognized_to_date_halalah: "9007199254740993",
+    correction_of_recognition_event_id: null, correction_amount_halalah: null, rationale: "Synthetic signed acceptance evidence",
+    request_id: "00000000-0000-4000-8000-00000000f112",
+  }), {
+    ok: true,
+    value: { evidence_id: evidenceId, version: 1, status: "SUBMITTED", held_code: null },
+    idempotentReplay: false,
+  });
+  assert.equal(state.calls[2].args.p_recognized_to_date_halalah, "9007199254740993");
+  assert.equal(state.calls[2].args.p_actor, actorId);
+
+  assert.deepEqual(await reviewAccountingRevenuePerformanceEvidence({
+    evidence_id: evidenceId, evidence_version: 1, approve: true,
+    reason: "Independent synthetic evidence approval", request_id: "00000000-0000-4000-8000-00000000f113",
+  }), {
+    ok: true,
+    value: { review_id: "00000000-0000-4000-8000-00000000f110", decision: "APPROVED" },
+    idempotentReplay: false,
+  });
+
+  assert.deepEqual(await prepareAccountingRevenueRecognition({
+    evidence_id: evidenceId, evidence_version: 1,
+    period_id: "00000000-0000-4000-8000-00000000f114", period_version: 1,
+    posting_rule_id: "00000000-0000-4000-8000-00000000f115", rule_version: 1,
+    accounting_date: "2026-09-29", reason: "Synthetic W10F preparation", request_id: "00000000-0000-4000-8000-00000000f116",
+  }), {
+    ok: true, value: { journal_id: journalId, version: 1, status: "DRAFT" }, idempotentReplay: false,
+  });
+  assert.deepEqual(await postAccountingRevenueRecognitionJournal({
+    journal_id: journalId, expected_version: 1, request_id: "00000000-0000-4000-8000-00000000f117",
+  }), {
+    ok: true, value: { journal_id: journalId, version: 2, status: "POSTED" }, idempotentReplay: false,
+  });
+  assert.deepEqual(state.calls.map(({ name }) => name), [
+    "save_accounting_revenue_arrangement",
+    "review_accounting_revenue_arrangement",
+    "save_accounting_revenue_performance_evidence",
+    "review_accounting_revenue_performance_evidence",
+    "prepare_accounting_revenue_recognition",
+    "post_accounting_revenue_recognition_journal",
+  ]);
+  assert.deepEqual(state.capabilityChecks, Array(6).fill("accounting:manage_revenue_recognition"));
+  assert.equal(state.permission, null);
+  assert.equal(await saveAccountingRevenueArrangement({ ...base, unexpected: true }).then((result) => result.ok), false);
+  assert.equal(state.calls.length, 6);
 });
 
 test("safe SQL result codes are preserved while database internals are hidden", async () => {

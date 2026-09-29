@@ -39,6 +39,9 @@ const {
   accountingArBridgeReconciliationSchema,
   saveAccountingExpenseBridgeEventInputSchema,
   accountingExpenseBridgeReconciliationSchema,
+  saveAccountingRevenueArrangementInputSchema,
+  saveAccountingRevenuePerformanceEvidenceInputSchema,
+  accountingRevenueReconciliationSchema,
 } = await import("./schemas.ts");
 
 const inactiveProfile = {
@@ -517,4 +520,103 @@ test("W10E2 accepts explicit missing-provenance candidates for fail-closed datab
     evidence_ref: "synthetic://w10e2/unhashed",
   }).success, false);
   assert.equal(accountingExpenseBridgeReconciliationSchema.safeParse({ state: "NOT_INITIALIZED" }).success, true);
+});
+
+test("W10F keeps performance allocations and cumulative amounts exact in halalah", () => {
+  const arrangement = {
+    service_id: "00000000-0000-4000-8000-00000000f201",
+    abs_id: "00000000-0000-4000-8000-00000000f202",
+    expected_version: 0,
+    units: [{
+      unit_key: "delivery",
+      promised_output: "Customer accepted the delivered service",
+      satisfaction_method: "POINT_IN_TIME",
+      required_evidence_basis: "CUSTOMER_ACCEPTANCE",
+      allocations: [{ source_item_id: "00000000-0000-4000-8000-00000000f203", amount_halalah: "9007199254740993" }],
+    }],
+    principal_agent_basis: "PRINCIPAL",
+    policy_version: "W10F-1",
+    modification_evidence_ref: null,
+    modification_evidence_sha256: null,
+    reason: "Synthetic arrangement input",
+    request_id: "00000000-0000-4000-8000-00000000f204",
+  };
+  assert.equal(saveAccountingRevenueArrangementInputSchema.safeParse(arrangement).success, true);
+  assert.equal(saveAccountingRevenueArrangementInputSchema.safeParse({
+    ...arrangement,
+    units: [{ ...arrangement.units[0], allocations: [{ ...arrangement.units[0].allocations[0], amount_halalah: 9007199254740993 }] }],
+  }).success, false);
+  assert.equal(saveAccountingRevenueArrangementInputSchema.safeParse({
+    ...arrangement,
+    modification_evidence_ref: "synthetic://w10f/modification",
+  }).success, false);
+
+  const evidence = {
+    unit_id: "00000000-0000-4000-8000-00000000f205",
+    evidence_key: "acceptance-1",
+    expected_version: 0,
+    evidence_basis: "CUSTOMER_ACCEPTANCE",
+    performance_from: "2026-09-29",
+    performance_through: "2026-09-29",
+    evidence_ref: "synthetic://w10f/customer-acceptance",
+    evidence_sha256: "a".repeat(64),
+    recognized_to_date_halalah: "9007199254740993",
+    correction_of_recognition_event_id: null,
+    correction_amount_halalah: null,
+    rationale: "Synthetic signed acceptance",
+    request_id: "00000000-0000-4000-8000-00000000f206",
+  };
+  assert.equal(saveAccountingRevenuePerformanceEvidenceInputSchema.safeParse(evidence).success, true);
+  assert.equal(saveAccountingRevenuePerformanceEvidenceInputSchema.safeParse({
+    ...evidence,
+    performance_through: "2026-09-28",
+  }).success, false);
+  assert.equal(saveAccountingRevenuePerformanceEvidenceInputSchema.safeParse({
+    ...evidence,
+    recognized_to_date_halalah: "1.5",
+  }).success, false);
+  assert.equal(saveAccountingRevenuePerformanceEvidenceInputSchema.safeParse({
+    ...evidence,
+    correction_of_recognition_event_id: "00000000-0000-4000-8000-00000000f207",
+    correction_amount_halalah: null,
+    recognized_to_date_halalah: null,
+  }).success, false);
+});
+
+test("W10F reconciliation response schema distinguishes uninitialized from a bounded reconciliation", () => {
+  assert.equal(accountingRevenueReconciliationSchema.safeParse({ state: "NOT_INITIALIZED", bank_reconciled: false }).success, true);
+  assert.equal(accountingRevenueReconciliationSchema.safeParse({ state: "NOT_INITIALIZED" }).success, false);
+  const ready = {
+    state: "READY",
+    as_of_date: "2026-09-29",
+    recorded_at_cutoff: "2026-09-29T12:00:00Z",
+    bank_reconciled: false,
+    authoritative_consideration_halalah: "10000",
+    performance_unit_allocations_halalah: "10000",
+    unallocated_consideration_halalah: "0",
+    recognized_to_date_halalah: "2500",
+    remaining_unrecognized_consideration_halalah: "7500",
+    revenue_posted_halalah: "2500",
+    contract_asset_balance_halalah: "2500",
+    contract_liability_balance_halalah: "0",
+    contract_balance_difference_count: 0,
+    arrangement_count: 1,
+    held_evidence_count: 0,
+    contract_balances: [{
+      service_id: "00000000-0000-4000-8000-00000000f208", control: "CONTRACT_ASSET",
+      subledger_halalah: "2500", ledger_halalah: "2500", difference_halalah: "0",
+    }],
+    recognition_event_count: 0,
+    recognition_events: [],
+    held_evidence: [],
+    superseded_or_stale_authority_count: 0,
+    service_customer_difference_count: 0,
+    credits_refunds_requiring_revenue_review_count: 0,
+    inception_covered_count: 0,
+    fi012_timing_difference_count: 0,
+    truncated: false,
+    arrangements: [],
+  };
+  assert.equal(accountingRevenueReconciliationSchema.safeParse(ready).success, true);
+  assert.equal(accountingRevenueReconciliationSchema.safeParse({ ...ready, bank_reconciled: true }).success, false);
 });

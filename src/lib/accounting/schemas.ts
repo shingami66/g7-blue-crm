@@ -164,6 +164,7 @@ const accountingAccountInputSchema = z
       "CASH_ACCOUNTABILITY",
       "EMPLOYEE_ADVANCE",
       "EMPLOYEE_REIMBURSEMENT_LIABILITY",
+      "CONTRACT_ASSET",
     ]),
   })
   .strict()
@@ -262,6 +263,7 @@ export const accountingAccountVersionSchema = z
       "CASH_ACCOUNTABILITY",
       "EMPLOYEE_ADVANCE",
       "EMPLOYEE_REIMBURSEMENT_LIABILITY",
+      "CONTRACT_ASSET",
     ]),
     effective_from: z.string(),
     reason: boundedText(2000),
@@ -471,7 +473,7 @@ const accountingJournalVersionSchema = z
     accounting_date: validDate,
     posting_rule_id: z.string().uuid(),
     rule_version: z.number().int().positive(),
-    source_domain: z.enum(["CONTROLLED_MANUAL", "INCEPTION", "AR_BRIDGE", "AP_BRIDGE", "EXPENSE_BRIDGE"]),
+    source_domain: z.enum(["CONTROLLED_MANUAL", "INCEPTION", "AR_BRIDGE", "AP_BRIDGE", "EXPENSE_BRIDGE", "REVENUE_RECOGNITION"]),
     source_record_key: boundedText(200),
     economic_event_key: boundedText(200),
     posting_purpose: boundedText(80),
@@ -972,6 +974,220 @@ export const accountingArBridgeReconciliationSchema = z.discriminatedUnion("stat
       difference_halalah: z.string().regex(/^(0|-?[1-9][0-9]*)$/),
     }).strict()),
   }).strict(),
+]);
+
+const accountingRevenueEvidenceBasisSchema = z.enum(["CUSTOMER_ACCEPTANCE", "TRANSFER_OF_CONTROL", "MEASURED_OUTPUT"]);
+const accountingRevenueUnitInputSchema = z.object({
+  unit_key: boundedText(120),
+  promised_output: boundedText(2000),
+  satisfaction_method: z.enum(["POINT_IN_TIME", "OVER_TIME"]),
+  required_evidence_basis: accountingRevenueEvidenceBasisSchema,
+  allocations: z.array(z.object({
+    source_item_id: z.string().uuid(),
+    amount_halalah: z.string().regex(/^[1-9][0-9]*$/),
+  }).strict()).min(1).max(500),
+}).strict();
+
+export const saveAccountingRevenueArrangementInputSchema = z.object({
+  service_id: z.string().uuid(),
+  abs_id: z.string().uuid(),
+  expected_version: z.number().int().nonnegative(),
+  units: z.array(accountingRevenueUnitInputSchema).max(100),
+  principal_agent_basis: z.enum(["PRINCIPAL", "AGENT"]),
+  policy_version: boundedText(100),
+  modification_evidence_ref: nullableEvidence,
+  modification_evidence_sha256: z.string().regex(/^[0-9a-f]{64}$/).nullable(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict().superRefine((value, context) => {
+  if ((value.modification_evidence_ref === null) !== (value.modification_evidence_sha256 === null)) {
+    context.addIssue({ code: "custom", path: ["modification_evidence_sha256"], message: "Modification evidence reference and hash must be paired" });
+  }
+});
+
+export const reviewAccountingRevenueArrangementInputSchema = z.object({
+  arrangement_id: z.string().uuid(),
+  arrangement_version: z.number().int().positive(),
+  approve: z.boolean(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict();
+
+export const saveAccountingRevenuePerformanceEvidenceInputSchema = z.object({
+  unit_id: z.string().uuid(),
+  evidence_key: boundedText(160),
+  expected_version: z.number().int().nonnegative(),
+  evidence_basis: accountingRevenueEvidenceBasisSchema,
+  performance_from: validDate,
+  performance_through: validDate,
+  evidence_ref: boundedText(2000),
+  evidence_sha256: z.string().regex(/^[0-9a-f]{64}$/),
+  recognized_to_date_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/).nullable(),
+  correction_of_recognition_event_id: z.string().uuid().nullable(),
+  correction_amount_halalah: z.string().regex(/^[1-9][0-9]*$/).nullable(),
+  rationale: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict().superRefine((value, context) => {
+  if (value.performance_from > value.performance_through) {
+    context.addIssue({ code: "custom", path: ["performance_through"], message: "Performance interval must be ordered" });
+  }
+  const isCorrection = value.correction_of_recognition_event_id !== null;
+  if (isCorrection !== (value.correction_amount_halalah !== null)
+    || isCorrection !== (value.recognized_to_date_halalah === null)) {
+    context.addIssue({ code: "custom", path: ["correction_of_recognition_event_id"], message: "Correction lineage and amount must replace cumulative recognition" });
+  }
+});
+
+export const reviewAccountingRevenuePerformanceEvidenceInputSchema = z.object({
+  evidence_id: z.string().uuid(),
+  evidence_version: z.number().int().positive(),
+  approve: z.boolean(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict();
+
+export const prepareAccountingRevenueRecognitionInputSchema = z.object({
+  evidence_id: z.string().uuid(),
+  evidence_version: z.number().int().positive(),
+  period_id: z.string().uuid(),
+  period_version: z.number().int().positive(),
+  posting_rule_id: z.string().uuid(),
+  rule_version: z.number().int().positive(),
+  accounting_date: validDate,
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict();
+
+export const postAccountingRevenueRecognitionJournalInputSchema = postAccountingJournalInputSchema;
+export const accountingRevenueReconciliationInputSchema = z.object({
+  as_of_date: validDate,
+  recorded_at_cutoff: z.string().datetime({ offset: true }),
+  limit: z.number().int().min(1).max(500),
+}).strict();
+
+export const accountingRevenueArrangementMutationResultSchema = z.object({
+  error_code: z.string().nullable(),
+  arrangement_id: z.string().uuid().nullable(),
+  version: z.number().int().positive().nullable(),
+  status: z.enum(["PREPARED", "HELD"]).nullable(),
+  held_code: z.string().nullable(),
+  consideration_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/).nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+export const accountingRevenueReviewResultSchema = z.object({
+  error_code: z.string().nullable(),
+  review_id: z.string().uuid().nullable(),
+  decision: z.enum(["APPROVED", "HELD"]).nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+export const accountingRevenueEvidenceMutationResultSchema = z.object({
+  error_code: z.string().nullable(),
+  evidence_id: z.string().uuid().nullable(),
+  version: z.number().int().positive().nullable(),
+  status: z.enum(["SUBMITTED", "HELD"]).nullable(),
+  held_code: z.string().nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+export const accountingRevenueJournalMutationResultSchema = z.object({
+  error_code: z.string().nullable(),
+  journal_id: z.string().uuid().nullable(),
+  version: z.number().int().positive().nullable(),
+  status: z.enum(["DRAFT", "POSTED"]).nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+
+const accountingRevenueAmountSchema = z.string().regex(/^(0|-?[1-9][0-9]*)$/);
+const accountingRevenueUnitSnapshotSchema = accountingRevenueUnitInputSchema;
+const accountingRevenueArrangementReconciliationSchema = z.object({
+  arrangement_id: z.string().uuid(),
+  service_id: z.string().uuid(),
+  customer_id: z.string().uuid(),
+  approved_billing_scope_id: z.string().uuid(),
+  version: z.number().int().positive(),
+  status: z.enum(["PREPARED", "HELD"]),
+  held_code: z.string().nullable(),
+  consideration_halalah: accountingRevenueAmountSchema,
+  allocated_halalah: accountingRevenueAmountSchema,
+  unallocated_halalah: accountingRevenueAmountSchema,
+  recognized_to_date_halalah: accountingRevenueAmountSchema,
+  remaining_unrecognized_halalah: accountingRevenueAmountSchema,
+  supersedes_arrangement_id: z.string().uuid().nullable(),
+  stale_authority: z.boolean(),
+  service_customer_difference: z.boolean(),
+  source_snapshot_sha256: z.string().regex(/^[0-9a-f]{64}$/),
+  source_snapshot: z.record(z.string(), z.unknown()),
+  units: z.array(accountingRevenueUnitSnapshotSchema),
+  arrangement_review: z.enum(["APPROVED", "HELD"]).nullable(),
+  unit_count: z.number().int().nonnegative(),
+}).strict();
+const accountingRevenueReconciliationBodySchema = z.object({
+  state: z.enum(["READY", "TRUNCATED"]),
+  as_of_date: validDate,
+  recorded_at_cutoff: z.string(),
+  bank_reconciled: z.literal(false),
+  authoritative_consideration_halalah: accountingRevenueAmountSchema,
+  performance_unit_allocations_halalah: accountingRevenueAmountSchema,
+  unallocated_consideration_halalah: accountingRevenueAmountSchema,
+  recognized_to_date_halalah: accountingRevenueAmountSchema,
+  remaining_unrecognized_consideration_halalah: accountingRevenueAmountSchema,
+  revenue_posted_halalah: accountingRevenueAmountSchema,
+  contract_asset_balance_halalah: accountingRevenueAmountSchema,
+  contract_liability_balance_halalah: accountingRevenueAmountSchema,
+  contract_balance_difference_count: z.number().int().nonnegative(),
+  arrangement_count: z.number().int().nonnegative(),
+  held_evidence_count: z.number().int().nonnegative(),
+  contract_balances: z.array(z.object({
+    service_id: z.string().uuid(),
+    control: z.enum(["CONTRACT_ASSET", "CONTRACT_LIABILITY"]),
+    subledger_halalah: accountingRevenueAmountSchema,
+    ledger_halalah: accountingRevenueAmountSchema,
+    difference_halalah: accountingRevenueAmountSchema,
+  }).strict()),
+  recognition_event_count: z.number().int().nonnegative(),
+  recognition_events: z.array(z.object({
+    recognition_event_id: z.string().uuid(),
+    arrangement_id: z.string().uuid(),
+    arrangement_version: z.number().int().positive(),
+    unit_id: z.string().uuid(),
+    evidence_id: z.string().uuid(),
+    evidence_version: z.number().int().positive(),
+    service_id: z.string().uuid(),
+    customer_id: z.string().uuid(),
+    accounting_date: validDate,
+    performance_from: validDate,
+    performance_through: validDate,
+    signed_delta_halalah: z.string().regex(/^-?(?:0|[1-9][0-9]*)$/),
+    correction_of_recognition_event_id: z.string().uuid().nullable(),
+    journal_id: z.string().uuid().nullable(),
+    journal_status: z.string(),
+    posted_at: z.string().nullable(),
+    source_snapshot_sha256: z.string().regex(/^[0-9a-f]{64}$/),
+  }).strict()),
+  held_evidence: z.array(z.object({
+    evidence_id: z.string().uuid(),
+    unit_id: z.string().uuid(),
+    arrangement_id: z.string().uuid(),
+    evidence_version: z.number().int().positive(),
+    status: z.enum(["SUBMITTED", "HELD"]),
+    held_code: z.string().nullable(),
+    evidence_basis: accountingRevenueEvidenceBasisSchema,
+    performance_from: validDate,
+    performance_through: validDate,
+    evidence_ref: z.string(),
+    created_at: z.string(),
+    review_decision: z.enum(["APPROVED", "HELD"]).nullable(),
+  }).strict()),
+  superseded_or_stale_authority_count: z.number().int().nonnegative(),
+  service_customer_difference_count: z.number().int().nonnegative(),
+  credits_refunds_requiring_revenue_review_count: z.number().int().nonnegative(),
+  inception_covered_count: z.number().int().nonnegative(),
+  fi012_timing_difference_count: z.number().int().nonnegative(),
+  truncated: z.boolean(),
+  arrangements: z.array(accountingRevenueArrangementReconciliationSchema),
+}).strict();
+export const accountingRevenueReconciliationSchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("NOT_INITIALIZED"), bank_reconciled: z.literal(false) }).strict(),
+  accountingRevenueReconciliationBodySchema,
 ]);
 
 const accountingApBridgeSourceTypeSchema = z.enum([

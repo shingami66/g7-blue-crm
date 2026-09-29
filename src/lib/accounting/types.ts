@@ -11,6 +11,7 @@ export const ACCOUNTING_CAPABILITIES = [
   "accounting:manage_ar_bridge",
   "accounting:manage_ap_bridge",
   "accounting:manage_expense_bridge",
+  "accounting:manage_revenue_recognition",
   "accounting:reconcile_bank",
   "accounting:close_period",
   "accounting:reopen_period",
@@ -147,6 +148,22 @@ export type AccountingActionErrorCode =
   | "petty_cash_balance_insufficient"
   | "ADVANCE_OFFSET_PROVENANCE_REQUIRED"
   | "PETTY_CASH_RETURN_PROVENANCE_REQUIRED"
+  | "source_customer_missing"
+  | "review_exists"
+  | "independent_review_required"
+  | "stale_commercial_authority"
+  | "unsupported_evidence"
+  | "evidence_not_approved"
+  | "arrangement_not_approved"
+  | "point_in_time_evidence_incomplete"
+  | "negative_delta_requires_correction"
+  | "no_new_recognition_delta"
+  | "recognition_before_performance"
+  | "source_identity_immutable"
+  | "recognition_ceiling_exceeded"
+  | "revenue_correction_lineage_invalid"
+  | "revenue_correction_ceiling_exceeded"
+  | "revenue_correction_evidence_required"
   | "inception_coverage_conflict"
   | "dependency_failure";
 
@@ -166,7 +183,8 @@ export type AccountingControlClassification =
   | "SUPPLIER_ADVANCE"
   | "CONTRACT_LIABILITY"
   | "CASH_ACCOUNTABILITY"
-  | "EMPLOYEE_ADVANCE" | "EMPLOYEE_REIMBURSEMENT_LIABILITY";
+  | "EMPLOYEE_ADVANCE" | "EMPLOYEE_REIMBURSEMENT_LIABILITY"
+  | "CONTRACT_ASSET";
 
 export type AccountingAccountInput = {
   account_code: string;
@@ -312,7 +330,7 @@ export type AccountingJournalVersion = {
   accounting_date: string;
   posting_rule_id: string;
   rule_version: number;
-  source_domain: "CONTROLLED_MANUAL" | "INCEPTION" | "AR_BRIDGE" | "AP_BRIDGE" | "EXPENSE_BRIDGE";
+  source_domain: "CONTROLLED_MANUAL" | "INCEPTION" | "AR_BRIDGE" | "AP_BRIDGE" | "EXPENSE_BRIDGE" | "REVENUE_RECOGNITION";
   source_record_key: string;
   economic_event_key: string;
   posting_purpose: string;
@@ -1020,4 +1038,167 @@ export type AccountingExpenseBridgeReconciliation =
       }>;
       truncated: boolean;
       events: AccountingExpenseBridgeReconciliationEvent[];
+    };
+
+export type AccountingRevenueEvidenceBasis = "CUSTOMER_ACCEPTANCE" | "TRANSFER_OF_CONTROL" | "MEASURED_OUTPUT";
+export type AccountingRevenueSatisfactionMethod = "POINT_IN_TIME" | "OVER_TIME";
+export type AccountingRevenuePrincipalAgentBasis = "PRINCIPAL" | "AGENT";
+export type AccountingRevenueUnitAllocation = { source_item_id: string; amount_halalah: string };
+export type AccountingRevenuePerformanceUnitInput = {
+  unit_key: string;
+  promised_output: string;
+  satisfaction_method: AccountingRevenueSatisfactionMethod;
+  required_evidence_basis: AccountingRevenueEvidenceBasis;
+  allocations: AccountingRevenueUnitAllocation[];
+};
+export type SaveAccountingRevenueArrangementInput = {
+  service_id: string;
+  abs_id: string;
+  expected_version: number;
+  units: AccountingRevenuePerformanceUnitInput[];
+  principal_agent_basis: AccountingRevenuePrincipalAgentBasis;
+  policy_version: string;
+  modification_evidence_ref: string | null;
+  modification_evidence_sha256: string | null;
+  reason: string;
+  request_id: string;
+};
+export type ReviewAccountingRevenueArrangementInput = {
+  arrangement_id: string;
+  arrangement_version: number;
+  approve: boolean;
+  reason: string;
+  request_id: string;
+};
+export type SaveAccountingRevenuePerformanceEvidenceInput = {
+  unit_id: string;
+  evidence_key: string;
+  expected_version: number;
+  evidence_basis: AccountingRevenueEvidenceBasis;
+  performance_from: string;
+  performance_through: string;
+  evidence_ref: string;
+  evidence_sha256: string;
+  recognized_to_date_halalah: string | null;
+  correction_of_recognition_event_id: string | null;
+  correction_amount_halalah: string | null;
+  rationale: string;
+  request_id: string;
+};
+export type ReviewAccountingRevenuePerformanceEvidenceInput = {
+  evidence_id: string;
+  evidence_version: number;
+  approve: boolean;
+  reason: string;
+  request_id: string;
+};
+export type PrepareAccountingRevenueRecognitionInput = {
+  evidence_id: string;
+  evidence_version: number;
+  period_id: string;
+  period_version: number;
+  posting_rule_id: string;
+  rule_version: number;
+  accounting_date: string;
+  reason: string;
+  request_id: string;
+};
+export type PostAccountingRevenueRecognitionJournalInput = {
+  journal_id: string;
+  expected_version: number;
+  request_id: string;
+};
+export type AccountingRevenueReconciliationInput = {
+  as_of_date: string;
+  recorded_at_cutoff: string;
+  limit: number;
+};
+export type AccountingRevenueReconciliationArrangement = {
+  arrangement_id: string;
+  service_id: string;
+  customer_id: string;
+  approved_billing_scope_id: string;
+  version: number;
+  status: "PREPARED" | "HELD";
+  held_code: string | null;
+  consideration_halalah: string;
+  allocated_halalah: string;
+  unallocated_halalah: string;
+  recognized_to_date_halalah: string;
+  remaining_unrecognized_halalah: string;
+  supersedes_arrangement_id: string | null;
+  stale_authority: boolean;
+  service_customer_difference: boolean;
+  source_snapshot_sha256: string;
+  source_snapshot: Record<string, unknown>;
+  units: AccountingRevenuePerformanceUnitInput[];
+  arrangement_review: "APPROVED" | "HELD" | null;
+  unit_count: number;
+};
+export type AccountingRevenueReconciliation =
+  | { state: "NOT_INITIALIZED"; bank_reconciled: false }
+  | {
+      state: "READY" | "TRUNCATED";
+      as_of_date: string;
+      recorded_at_cutoff: string;
+      bank_reconciled: false;
+      authoritative_consideration_halalah: string;
+      performance_unit_allocations_halalah: string;
+      unallocated_consideration_halalah: string;
+      recognized_to_date_halalah: string;
+      remaining_unrecognized_consideration_halalah: string;
+      revenue_posted_halalah: string;
+      contract_asset_balance_halalah: string;
+      contract_liability_balance_halalah: string;
+      contract_balance_difference_count: number;
+      arrangement_count: number;
+      held_evidence_count: number;
+      contract_balances: Array<{
+        service_id: string;
+        control: "CONTRACT_ASSET" | "CONTRACT_LIABILITY";
+        subledger_halalah: string;
+        ledger_halalah: string;
+        difference_halalah: string;
+      }>;
+      recognition_event_count: number;
+      recognition_events: Array<{
+        recognition_event_id: string;
+        arrangement_id: string;
+        arrangement_version: number;
+        unit_id: string;
+        evidence_id: string;
+        evidence_version: number;
+        service_id: string;
+        customer_id: string;
+        accounting_date: string;
+        performance_from: string;
+        performance_through: string;
+        signed_delta_halalah: string;
+        correction_of_recognition_event_id: string | null;
+        journal_id: string | null;
+        journal_status: string;
+        posted_at: string | null;
+        source_snapshot_sha256: string;
+      }>;
+      held_evidence: Array<{
+        evidence_id: string;
+        unit_id: string;
+        arrangement_id: string;
+        evidence_version: number;
+        status: "SUBMITTED" | "HELD";
+        held_code: string | null;
+        evidence_basis: AccountingRevenueEvidenceBasis;
+        performance_from: string;
+        performance_through: string;
+        evidence_ref: string;
+        created_at: string;
+        review_decision: "APPROVED" | "HELD" | null;
+      }>;
+      superseded_or_stale_authority_count: number;
+      service_customer_difference_count: number;
+      credits_refunds_requiring_revenue_review_count: number;
+      inception_covered_count: number;
+      fi012_timing_difference_count: number;
+      truncated: boolean;
+      arrangements: AccountingRevenueReconciliationArrangement[];
     };

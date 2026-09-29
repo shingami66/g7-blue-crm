@@ -374,7 +374,7 @@ BEGIN
     ('CUSTOMER_ADVANCE','W10D-SYN-ADVANCE','Synthetic customer advance','دفعات عميل اصطناعية','LIABILITY','CREDIT',true,'CUSTOMER_ADVANCE'),
     ('CONTRACT_LIABILITY','W10D-SYN-CONTRACT-LIABILITY','Synthetic contract liability','التزام عقد اصطناعي','LIABILITY','CREDIT',true,'CONTRACT_LIABILITY'),
     ('CASH_ACCOUNT','W10D-SYN-CASH','Synthetic cash account','حساب نقد اصطناعي','ASSET','DEBIT',true,'CASH_ACCOUNTABILITY'),
-    ('CONTRACT_ASSET','W10D-SYN-CONTRACT-ASSET','Synthetic contract asset','أصل عقد اصطناعي','ASSET','DEBIT',false,'NONE')
+    ('CONTRACT_ASSET','W10D-SYN-CONTRACT-ASSET','Synthetic contract asset','أصل عقد اصطناعي','ASSET','DEBIT',true,'CONTRACT_ASSET')
   ) AS a(mapping_key,account_code,name_en,name_ar,account_type,normal_balance,is_protected,control_classification) LOOP
     v_account:=jsonb_build_object('account_code',v_spec.account_code,'name_en',v_spec.name_en,
       'name_ar',v_spec.name_ar,'account_type',v_spec.account_type,'category','synthetic',

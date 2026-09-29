@@ -35,6 +35,16 @@ import {
   postAccountingExpenseBridgeJournalInputSchema,
   accountingExpenseBridgeEventMutationResultSchema,
   accountingExpenseBridgeJournalMutationResultSchema,
+  saveAccountingRevenueArrangementInputSchema,
+  reviewAccountingRevenueArrangementInputSchema,
+  saveAccountingRevenuePerformanceEvidenceInputSchema,
+  reviewAccountingRevenuePerformanceEvidenceInputSchema,
+  prepareAccountingRevenueRecognitionInputSchema,
+  postAccountingRevenueRecognitionJournalInputSchema,
+  accountingRevenueArrangementMutationResultSchema,
+  accountingRevenueReviewResultSchema,
+  accountingRevenueEvidenceMutationResultSchema,
+  accountingRevenueJournalMutationResultSchema,
   setAccountingCapabilityInputSchema,
   updateAccountingProfileInputSchema,
 } from "./schemas";
@@ -122,6 +132,22 @@ const SAFE_ERROR_CODES = new Set([
   "petty_cash_balance_insufficient",
   "ADVANCE_OFFSET_PROVENANCE_REQUIRED",
   "PETTY_CASH_RETURN_PROVENANCE_REQUIRED",
+  "source_customer_missing",
+  "review_exists",
+  "independent_review_required",
+  "stale_commercial_authority",
+  "unsupported_evidence",
+  "evidence_not_approved",
+  "arrangement_not_approved",
+  "point_in_time_evidence_incomplete",
+  "negative_delta_requires_correction",
+  "no_new_recognition_delta",
+  "recognition_before_performance",
+  "source_identity_immutable",
+  "recognition_ceiling_exceeded",
+  "revenue_correction_lineage_invalid",
+  "revenue_correction_ceiling_exceeded",
+  "revenue_correction_evidence_required",
 ]);
 
 function safeCode(code: string | null | undefined) {
@@ -431,7 +457,7 @@ export async function reverseAccountingJournal(
 
 async function requireAccountingCapabilities(
   actorId: string,
-  capabilities: Array<"accounting:manage_inception" | "accounting:manage_ar_bridge" | "accounting:manage_ap_bridge" | "accounting:manage_expense_bridge" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view">,
+  capabilities: Array<"accounting:manage_inception" | "accounting:manage_ar_bridge" | "accounting:manage_ap_bridge" | "accounting:manage_expense_bridge" | "accounting:manage_revenue_recognition" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view">,
 ) {
   const allowed = await Promise.all(capabilities.map((capability) =>
     resolveAccountingCapability(actorId, capability)));
@@ -817,6 +843,185 @@ export async function postAccountingExpenseBridgeJournal(input: unknown) {
   if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
   if (!row.data.journal_id || row.data.version == null || row.data.status !== "POSTED") {
     throw new AuthDependencyError("Accounting expense bridge response was invalid");
+  }
+  return {
+    ok: true as const,
+    value: { journal_id: row.data.journal_id, version: row.data.version, status: "POSTED" as const },
+    idempotentReplay: row.data.idempotent_replay,
+  };
+}
+
+export async function saveAccountingRevenueArrangement(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_revenue_recognition"]);
+  const parsed = saveAccountingRevenueArrangementInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callArBridgeRpc(() => createAdminClient().rpc("save_accounting_revenue_arrangement", {
+    p_actor: actor.id,
+    p_service_id: parsed.data.service_id,
+    p_abs_id: parsed.data.abs_id,
+    p_expected_version: parsed.data.expected_version,
+    p_units: parsed.data.units as Json,
+    p_principal_agent_basis: parsed.data.principal_agent_basis,
+    p_policy_version: parsed.data.policy_version,
+    p_modification_evidence_ref: parsed.data.modification_evidence_ref,
+    p_modification_evidence_sha256: parsed.data.modification_evidence_sha256,
+    p_reason: parsed.data.reason,
+    p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingRevenueArrangementMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting revenue arrangement response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.arrangement_id || row.data.version == null || !row.data.status || row.data.consideration_halalah === null) {
+    throw new AuthDependencyError("Accounting revenue arrangement response was invalid");
+  }
+  return {
+    ok: true as const,
+    value: {
+      arrangement_id: row.data.arrangement_id,
+      version: row.data.version,
+      status: row.data.status,
+      held_code: row.data.held_code,
+      consideration_halalah: row.data.consideration_halalah,
+    },
+    idempotentReplay: row.data.idempotent_replay,
+  };
+}
+
+export async function reviewAccountingRevenueArrangement(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_revenue_recognition"]);
+  const parsed = reviewAccountingRevenueArrangementInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callArBridgeRpc(() => createAdminClient().rpc("review_accounting_revenue_arrangement", {
+    p_actor: actor.id,
+    p_arrangement_id: parsed.data.arrangement_id,
+    p_arrangement_version: parsed.data.arrangement_version,
+    p_approve: parsed.data.approve,
+    p_reason: parsed.data.reason,
+    p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingRevenueReviewResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting revenue review response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.review_id || !row.data.decision) throw new AuthDependencyError("Accounting revenue review response was invalid");
+  return {
+    ok: true as const,
+    value: { review_id: row.data.review_id, decision: row.data.decision },
+    idempotentReplay: row.data.idempotent_replay,
+  };
+}
+
+export async function saveAccountingRevenuePerformanceEvidence(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_revenue_recognition"]);
+  const parsed = saveAccountingRevenuePerformanceEvidenceInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callArBridgeRpc(() => createAdminClient().rpc("save_accounting_revenue_performance_evidence", {
+    p_actor: actor.id,
+    p_unit_id: parsed.data.unit_id,
+    p_evidence_key: parsed.data.evidence_key,
+    p_expected_version: parsed.data.expected_version,
+    p_evidence_basis: parsed.data.evidence_basis,
+    p_performance_from: parsed.data.performance_from,
+    p_performance_through: parsed.data.performance_through,
+    p_evidence_ref: parsed.data.evidence_ref,
+    p_evidence_sha256: parsed.data.evidence_sha256,
+    p_recognized_to_date_halalah: parsed.data.recognized_to_date_halalah,
+    p_correction_of_recognition_event_id: parsed.data.correction_of_recognition_event_id,
+    p_correction_amount_halalah: parsed.data.correction_amount_halalah,
+    p_rationale: parsed.data.rationale,
+    p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingRevenueEvidenceMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting revenue evidence response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.evidence_id || row.data.version == null || !row.data.status) {
+    throw new AuthDependencyError("Accounting revenue evidence response was invalid");
+  }
+  return {
+    ok: true as const,
+    value: { evidence_id: row.data.evidence_id, version: row.data.version, status: row.data.status, held_code: row.data.held_code },
+    idempotentReplay: row.data.idempotent_replay,
+  };
+}
+
+export async function reviewAccountingRevenuePerformanceEvidence(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_revenue_recognition"]);
+  const parsed = reviewAccountingRevenuePerformanceEvidenceInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callArBridgeRpc(() => createAdminClient().rpc("review_accounting_revenue_performance_evidence", {
+    p_actor: actor.id,
+    p_evidence_id: parsed.data.evidence_id,
+    p_evidence_version: parsed.data.evidence_version,
+    p_approve: parsed.data.approve,
+    p_reason: parsed.data.reason,
+    p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingRevenueReviewResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting revenue evidence review response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.review_id || !row.data.decision) throw new AuthDependencyError("Accounting revenue evidence review response was invalid");
+  return {
+    ok: true as const,
+    value: { review_id: row.data.review_id, decision: row.data.decision },
+    idempotentReplay: row.data.idempotent_replay,
+  };
+}
+
+export async function prepareAccountingRevenueRecognition(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_revenue_recognition"]);
+  const parsed = prepareAccountingRevenueRecognitionInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callArBridgeRpc(() => createAdminClient().rpc("prepare_accounting_revenue_recognition", {
+    p_actor: actor.id,
+    p_evidence_id: parsed.data.evidence_id,
+    p_evidence_version: parsed.data.evidence_version,
+    p_period_id: parsed.data.period_id,
+    p_period_version: parsed.data.period_version,
+    p_posting_rule_id: parsed.data.posting_rule_id,
+    p_rule_version: parsed.data.rule_version,
+    p_accounting_date: parsed.data.accounting_date,
+    p_reason: parsed.data.reason,
+    p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingRevenueJournalMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting revenue journal response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.journal_id || row.data.version == null || !row.data.status) {
+    throw new AuthDependencyError("Accounting revenue journal response was invalid");
+  }
+  return {
+    ok: true as const,
+    value: { journal_id: row.data.journal_id, version: row.data.version, status: row.data.status },
+    idempotentReplay: row.data.idempotent_replay,
+  };
+}
+
+export async function postAccountingRevenueRecognitionJournal(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_revenue_recognition"]);
+  const parsed = postAccountingRevenueRecognitionJournalInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callArBridgeRpc(() => createAdminClient().rpc("post_accounting_revenue_recognition_journal", {
+    p_actor: actor.id,
+    p_journal_id: parsed.data.journal_id,
+    p_expected_version: parsed.data.expected_version,
+    p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingRevenueJournalMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting revenue journal response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.journal_id || row.data.version == null || row.data.status !== "POSTED") {
+    throw new AuthDependencyError("Accounting revenue journal response was invalid");
   }
   return {
     ok: true as const,

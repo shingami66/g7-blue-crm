@@ -60,7 +60,7 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { getAccountingProfile, listAccountingAccounts, listAccountingCapabilityAssignments, listAccountingPeriods, listAccountingPostingRules, getAccountingJournal, getAccountingGeneralLedger, getAccountingTrialBalance } = await import("./queries.ts");
+const { getAccountingProfile, listAccountingAccounts, listAccountingCapabilityAssignments, listAccountingPeriods, listAccountingPostingRules, getAccountingJournal, getAccountingGeneralLedger, getAccountingTrialBalance, getAccountingRevenueReconciliation } = await import("./queries.ts");
 const { AuthDependencyError } = await import("../auth/errors.ts");
 const actorId = "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f";
 
@@ -370,4 +370,66 @@ test("chart and period reads fail closed when explicit accounting grants are abs
   resetState(async () => ({ data: false, error: null }));
   await assert.rejects(() => listAccountingAccounts(), /Accounting capability required/);
   assert.equal(state.calls.some(({ name }) => name === "list_accounting_accounts"), false);
+});
+
+test("W10F reconciliation requires an explicit accounting grant and preserves cutoff boundaries", async () => {
+  const cutoff = "2026-09-29T12:00:00Z";
+  resetState(async (name, args) => {
+    if (name === "get_accounting_capability") {
+      return { data: args.p_capability === "accounting:view", error: null };
+    }
+    return {
+      data: {
+        state: "READY",
+        as_of_date: "2026-09-29",
+        recorded_at_cutoff: cutoff,
+        bank_reconciled: false,
+        authoritative_consideration_halalah: "10000",
+        performance_unit_allocations_halalah: "10000",
+        unallocated_consideration_halalah: "0",
+        recognized_to_date_halalah: "2500",
+        remaining_unrecognized_consideration_halalah: "7500",
+        revenue_posted_halalah: "2500",
+        contract_asset_balance_halalah: "2500",
+        contract_liability_balance_halalah: "0",
+        contract_balance_difference_count: 0,
+        arrangement_count: 1,
+        held_evidence_count: 0,
+        contract_balances: [],
+        recognition_event_count: 0,
+        recognition_events: [],
+        held_evidence: [],
+        superseded_or_stale_authority_count: 0,
+        service_customer_difference_count: 0,
+        credits_refunds_requiring_revenue_review_count: 0,
+        inception_covered_count: 0,
+        fi012_timing_difference_count: 0,
+        truncated: false,
+        arrangements: [],
+      },
+      error: null,
+    };
+  });
+  const result = await getAccountingRevenueReconciliation({
+    as_of_date: "2026-09-29", recorded_at_cutoff: cutoff, limit: 50,
+  });
+  assert.equal(result.state, "READY");
+  assert.equal(result.bank_reconciled, false);
+  assert.equal(state.calls.at(-1)?.name, "get_accounting_revenue_recognition_reconciliation");
+  assert.equal(state.calls.at(-1)?.args.p_actor, actorId);
+  assert.equal(state.calls.at(-1)?.args.p_as_of, "2026-09-29");
+  assert.equal(state.calls.at(-1)?.args.p_cutoff, cutoff);
+  assert.deepEqual(state.calls.filter(({ name }) => name === "get_accounting_capability").map(({ args }) => args.p_capability), [
+    "accounting:view", "accounting:manage_revenue_recognition",
+  ]);
+
+  resetState(async () => ({ data: false, error: null }));
+  await assert.rejects(() => getAccountingRevenueReconciliation({
+    as_of_date: "2026-09-29", recorded_at_cutoff: cutoff, limit: 50,
+  }), /Accounting capability required/);
+  assert.equal(state.calls.some(({ name }) => name === "get_accounting_revenue_recognition_reconciliation"), false);
+  resetState(async () => ({ data: true, error: null }));
+  await assert.rejects(() => getAccountingRevenueReconciliation({
+    as_of_date: "2026-02-30", recorded_at_cutoff: cutoff, limit: 501,
+  }), AuthDependencyError);
 });
