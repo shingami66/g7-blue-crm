@@ -89,6 +89,7 @@ test("W10E2 typed actions, queries, schemas, and generated database RPCs are bou
 test("W10E2 rollback campaign asserts 40 named cases, rollback, and zero residue", () => {
   assert.match(fixture, /^-- W10E2 synthetic DEV regression only\.[\s\S]*?\nBEGIN;/);
   assert.match(fixture, /ROLLBACK;[\s\S]*DO \$residue_assertion\$/);
+  assert.match(fixture, /SELECT \('00000000-0000-4000-8000-'\|\|lpad\(to_hex\(p_tag\),12,'0'\)\)::uuid/);
   for (let n = 1; n <= 40; n++) assert.ok(fixture.includes("(" + n + ","), "missing case " + n);
   for (const name of ["unsupported Expense classification held", "accepted evidence exception remains accounting-held",
     "partial employee reimbursement", "advance offset requires structured provenance", "Cash Advance return",

@@ -23,7 +23,7 @@ GRANT SELECT,INSERT ON w10e2_ids TO service_role;
 
 CREATE FUNCTION pg_temp.w10e2_req(p_tag integer) RETURNS uuid
 LANGUAGE sql IMMUTABLE SET search_path=pg_catalog
-AS $w10e2_req$ SELECT ('00000000-0000-4000-8000-00000000e'||lpad(to_hex(p_tag),11,'0'))::uuid $w10e2_req$;
+AS $w10e2_req$ SELECT ('00000000-0000-4000-8000-'||lpad(to_hex(p_tag),12,'0'))::uuid $w10e2_req$;
 CREATE FUNCTION pg_temp.w10e2_assert(p_case integer,p_description text,p_passed boolean) RETURNS void
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $w10e2_assert$
 BEGIN
