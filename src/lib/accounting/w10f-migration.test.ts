@@ -45,6 +45,7 @@ test("W10F adds only its immutable revenue evidence tables and seven RPC grants"
   assert.match(migration, /ALTER TABLE public\.%I FORCE ROW LEVEL SECURITY/);
   assert.match(migration, /REVOKE ALL ON public\.%I FROM PUBLIC,anon,authenticated,service_role/);
   assert.match(migration, /source_effect_id uuid NOT NULL REFERENCES public\.accounting_source_effects\(id\) ON DELETE RESTRICT/);
+  assert.match(migration, /old_text:=\$old\$ IF v_header\.status='POSTED' THEN\$old\$/);
   assert.match(migration, /BEFORE UPDATE OR DELETE ON public\.%I/);
   assert.match(migration, /'accounting:manage_revenue_recognition'[\s\S]{0,160}'W10F'/);
   assert.match(migration, /ADD CONSTRAINT accounting_journal_versions_source_domain_check[\s\S]{0,180}CHECK\(source_domain IN \('CONTROLLED_MANUAL','INCEPTION','AR_BRIDGE','AP_BRIDGE','EXPENSE_BRIDGE','REVENUE_RECOGNITION'\)\)/);
