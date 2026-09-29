@@ -46,7 +46,8 @@ test("W10E2 additive correction qualifies the return-column conflict and guards 
 });
 
 test("W10E2 post correction qualifies journal id and serializes exact PL/pgSQL replacement", () => {
-  assert.match(postEventJournalIdFix, /^-- W10E2 additive correction:[^\n]+\nBEGIN;\s*LOCK TABLE pg_catalog\.pg_proc IN SHARE ROW EXCLUSIVE MODE;[\s\S]*COMMIT;\s*$/);
+  assert.match(postEventJournalIdFix, /^-- W10E2 additive correction:[^\n]+\nBEGIN;\s*-- Serialize cooperating retries[^\n]*\nSELECT pg_catalog\.pg_advisory_xact_lock\(pg_catalog\.hashtextextended\([\s\S]*?'g7:w10e2:post_accounting_expense_bridge_journal', 0[\s\S]*?\);[\s\S]*COMMIT;\s*$/);
+  assert.doesNotMatch(postEventJournalIdFix, /LOCK TABLE pg_catalog\.pg_proc/);
   assert.match(postEventJournalIdFix, /pg_catalog\.pg_language l ON l\.oid=p\.prolang/);
   assert.match(postEventJournalIdFix, /v_before\.language_name IS DISTINCT FROM 'plpgsql'/);
   assert.match(postEventJournalIdFix, /v_before\.probin IS NOT NULL/);

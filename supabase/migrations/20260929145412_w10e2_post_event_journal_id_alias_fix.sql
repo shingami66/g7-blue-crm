@@ -1,7 +1,10 @@
 -- W10E2 additive correction: qualify journal id against RETURNS TABLE output.
 BEGIN;
 
-LOCK TABLE pg_catalog.pg_proc IN SHARE ROW EXCLUSIVE MODE;
+-- Serialize cooperating retries of this controlled W10E2 correction.
+SELECT pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
+  'g7:w10e2:post_accounting_expense_bridge_journal', 0
+));
 
 DO $w10e2_post_journal_id_alias$
 DECLARE
