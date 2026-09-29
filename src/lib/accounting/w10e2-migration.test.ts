@@ -79,6 +79,10 @@ test("W10E2 reconciliation correction aliases the SETOF jsonb inventory column w
   assert.match(reconciliationInventoryAliasFix, /v_before\.proacl::text IS DISTINCT FROM '\{postgres=X\/postgres,service_role=X\/postgres\}'/);
   assert.match(reconciliationInventoryAliasFix, /v_after\.proacl::text IS DISTINCT FROM '\{postgres=X\/postgres,service_role=X\/postgres\}'/);
   assert.match(reconciliationInventoryAliasFix, /v_after\.prosrc IS DISTINCT FROM v_expected_source/);
+  assert.match(reconciliationInventoryAliasFix, /W10E2 reconciliation correction changed function properties/);
+  assert.match(reconciliationInventoryAliasFix, /W10E2 reconciliation correction source differs from the exact expected replacement/);
+  assert.match(reconciliationInventoryAliasFix, /W10E2 reconciliation correction lost the function default expression/);
+  assert.match(reconciliationInventoryAliasFix, /W10E2 reconciliation correction changed the function execute ACL/);
   assert.match(reconciliationInventoryAliasFix, /EXECUTE v_updated/);
 });
 
