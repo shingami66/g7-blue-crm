@@ -5,6 +5,7 @@ import test from "node:test";
 const root = new URL("../../../", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), "utf8");
 const migration = read("supabase/migrations/20260929053102_w10e1_procurement_ap_accounting_bridge.sql");
+const correction = read("supabase/migrations/20260929105800_w10e1_receipt_match_snapshot_path_correction.sql");
 const fixture = read("supabase/verification/w10e1_procurement_ap_bridge_rollback_regression.sql");
 const types = read("src/lib/accounting/types.ts");
 const schemas = read("src/lib/accounting/schemas.ts");
@@ -62,6 +63,15 @@ test("W10E1 snapshots every supported W6 source and never creates an authorizati
   assert.doesNotMatch(snapshot, /round\(r\.received_amount/);
   assert.doesNotMatch(migration, /SUPPLIER_ADVANCE_REFUND_REVERSAL/);
   assert.doesNotMatch(inventory, /approved_commitment_amendments|supplier_advances a\s+WHERE/);
+});
+
+test("W10E1 additive correction matches receipt identity at the source snapshot root", () => {
+  assert.match(correction, /^-- W10E1 corrective migration:[^\n]+\nBEGIN;/);
+  assert.ok(correction.includes("v_old:='e.source_record_id=nullif(v_snapshot->''attributes''->>''receipt_id'','''')::uuid';"));
+  assert.ok(correction.includes("v_new:='e.source_record_id=nullif(v_snapshot->>''receipt_id'','''')::uuid';"));
+  assert.match(correction, /v_after_owner IS DISTINCT FROM v_owner OR v_after_acl IS DISTINCT FROM v_acl/);
+  assert.match(correction, /v_after_config IS DISTINCT FROM v_config OR v_source IS DISTINCT FROM v_repaired/);
+  assert.match(correction, /COMMIT;\s*$/);
 });
 
 test("receipt and bill journal rules require evidence, preserve identity, and enforce accrual coverage", () => {
@@ -133,6 +143,10 @@ test("rollback campaign names and asserts all 33 required scenarios", () => {
     assert.ok(fixture.includes(`(${caseNumber},`), `rollback fixture is missing scenario ${caseNumber}`);
   }
   assert.match(fixture, /w10e1_case_results/);
+  assert.match(fixture, /FROM pg_temp\.w10e1_fixture_accounts a WHERE a\.mapping_key<>'cash_account_alt'/);
+  assert.match(fixture, /\$setup_accounting\$;\s+-- Seed W6 source facts and inspect rollback-only accounting rows as the fixture owner\.\s+RESET ROLE;[\s\S]*?DO \$w10e1_campaign\$/);
+  assert.match(fixture, /has_function_privilege\('service_role','public\.get_accounting_ap_bridge_reconciliation/);
+  assert.match(fixture, /has_table_privilege\('service_role',table_name,'SELECT'\)/);
   assert.match(fixture, /SELECT count\(\*\) INTO v_event_count FROM pg_temp\.w10e1_case_results/);
   assert.match(fixture, /<>33/);
   for (const description of [

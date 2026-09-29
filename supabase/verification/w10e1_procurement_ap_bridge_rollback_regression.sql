@@ -100,6 +100,16 @@ BEGIN
       WHERE capability='accounting:manage_ap_bridge' AND enabled AND runtime_allow_grantable AND owner_slice='W10E') THEN
     RAISE EXCEPTION 'W10E1 bridge capability is not enabled by the migration';
   END IF;
+  IF NOT has_function_privilege('service_role','public.save_accounting_ap_bridge_event(uuid,text,uuid,integer,text,bigint,bigint,text,date,text,text,text,text,uuid,integer,text,uuid)','EXECUTE')
+     OR NOT has_function_privilege('service_role','public.prepare_accounting_ap_bridge_event(uuid,uuid,integer,uuid,integer,uuid,integer,text,uuid)','EXECUTE')
+     OR NOT has_function_privilege('service_role','public.post_accounting_ap_bridge_journal(uuid,uuid,integer,uuid)','EXECUTE')
+     OR NOT has_function_privilege('service_role','public.get_accounting_ap_bridge_reconciliation(uuid,date,timestamptz,integer)','EXECUTE')
+     OR EXISTS(SELECT 1 FROM (VALUES
+       ('public.accounting_ap_bridge_events'),('public.accounting_ap_bridge_event_versions'),
+       ('public.accounting_ap_bridge_journal_links'),('public.accounting_ap_bridge_journal_lines')
+     ) AS t(table_name) WHERE has_table_privilege('service_role',table_name,'SELECT')) THEN
+    RAISE EXCEPTION 'W10E1 service_role RPC/table grant contract differs';
+  END IF;
 END;
 $preflight$;
 
@@ -206,7 +216,7 @@ BEGIN
 
   SELECT jsonb_agg(jsonb_build_object('mapping_key',a.mapping_key,'account_id',a.account_id,
     'account_version',1,'allowed_side','EITHER','service_requirement','OPTIONAL') ORDER BY a.mapping_key)
-    INTO v_mappings FROM pg_temp.w10e1_fixture_accounts a;
+    INTO v_mappings FROM pg_temp.w10e1_fixture_accounts a WHERE a.mapping_key<>'cash_account_alt';
   v_rule:=jsonb_build_object('rule_code','W10E1_SYN_AP_BRIDGE','name_en','Synthetic W10E1 AP bridge',
     'name_ar','قاعدة جسر الذمم الدائنة الاصطناعية','is_active',true,'mappings',v_mappings);
   SELECT * INTO v_result FROM public.save_accounting_posting_rule(
@@ -215,6 +225,9 @@ BEGIN
   UPDATE pg_temp.w10e1_fixture_context SET rule_id=v_result.posting_rule_id,rule_version=v_result.version;
 END;
 $setup_accounting$;
+
+-- Seed W6 source facts and inspect rollback-only accounting rows as the fixture owner.
+RESET ROLE;
 
 INSERT INTO public.approved_commitments(
   id,service_id,supplier_id,commitment_source,source_reference,original_approved_amount,currency,status,
