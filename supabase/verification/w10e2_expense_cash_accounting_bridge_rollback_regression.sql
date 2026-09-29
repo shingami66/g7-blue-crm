@@ -831,8 +831,12 @@ BEGIN
 
   report:=public.get_accounting_expense_bridge_reconciliation(c.operator_id,CURRENT_DATE+10,
     transaction_timestamp()+interval '3 days',500);
-  PERFORM pg_temp.w10e2_assert(34,'employee reconciliation',report->>'state'='READY'
-    AND report->>'employee_difference_count'='0' AND jsonb_array_length(report->'employee_balances')=1);
+  IF (report->>'state'='READY' AND report->>'employee_difference_count'='0'
+      AND jsonb_array_length(report->'employee_balances')=1) IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'W10E2 case 34 failed: employee reconciliation (state=%; difference_count=%; balances=%; controls=%)',
+      report->>'state',report->>'employee_difference_count',report->'employee_balances',report->'control_balances';
+  END IF;
+  PERFORM pg_temp.w10e2_assert(34,'employee reconciliation',true);
   PERFORM pg_temp.w10e2_assert(35,'advance reconciliation',report->>'state'='READY'
     AND report->>'control_difference_count'='0' AND report->>'employee_advance_balance_halalah'='17500');
   PERFORM pg_temp.w10e2_assert(36,'Petty Cash fund reconciliation',report->>'fund_difference_count'='0'
