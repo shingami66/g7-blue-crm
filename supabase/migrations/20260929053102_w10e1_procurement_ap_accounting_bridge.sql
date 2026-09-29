@@ -97,7 +97,7 @@ BEGIN
   FROM pg_catalog.pg_constraint c
   WHERE c.conrelid='public.audit_logs'::regclass AND c.conname='audit_logs_action_check';
   IF v_definition IS NULL OR md5(regexp_replace(v_definition,'[[:space:]]','','g'))
-      IS DISTINCT FROM 'b29578d02f5c940c4a2b60be53707d49' THEN
+      IS DISTINCT FROM '9e1b901c370c6ffb7d776dacb5ba54c6' THEN
     RAISE EXCEPTION 'W10E1 preflight: audit action baseline differs';
   END IF;
 END;
