@@ -157,6 +157,7 @@ const accountingAccountInputSchema = z
       "NONE",
       "ACCOUNTS_RECEIVABLE",
       "ACCOUNTS_PAYABLE",
+      "ACCRUED_LIABILITY",
       "CUSTOMER_ADVANCE",
       "SUPPLIER_ADVANCE",
       "CONTRACT_LIABILITY",
@@ -253,6 +254,7 @@ export const accountingAccountVersionSchema = z
       "NONE",
       "ACCOUNTS_RECEIVABLE",
       "ACCOUNTS_PAYABLE",
+      "ACCRUED_LIABILITY",
       "CUSTOMER_ADVANCE",
       "SUPPLIER_ADVANCE",
       "CONTRACT_LIABILITY",
@@ -467,7 +469,7 @@ const accountingJournalVersionSchema = z
     accounting_date: validDate,
     posting_rule_id: z.string().uuid(),
     rule_version: z.number().int().positive(),
-  source_domain: z.enum(["CONTROLLED_MANUAL", "INCEPTION", "AR_BRIDGE"]),
+    source_domain: z.enum(["CONTROLLED_MANUAL", "INCEPTION", "AR_BRIDGE", "AP_BRIDGE"]),
     source_record_key: boundedText(200),
     economic_event_key: boundedText(200),
     posting_purpose: boundedText(80),
@@ -967,5 +969,153 @@ export const accountingArBridgeReconciliationSchema = z.discriminatedUnion("stat
       posted_ar_delta_halalah: z.string().regex(/^(0|-?[1-9][0-9]*)$/),
       difference_halalah: z.string().regex(/^(0|-?[1-9][0-9]*)$/),
     }).strict()),
+  }).strict(),
+]);
+
+const accountingApBridgeSourceTypeSchema = z.enum([
+  "SERVICE_RECEIPT", "SERVICE_RECEIPT_CORRECTION", "SUPPLIER_BILL", "SUPPLIER_PAYMENT",
+  "SUPPLIER_PAYMENT_REVERSAL", "SUPPLIER_ADVANCE_PAYMENT", "SUPPLIER_ADVANCE_PAYMENT_REVERSAL",
+  "SUPPLIER_ADVANCE_ALLOCATION", "SUPPLIER_ADVANCE_ALLOCATION_REVERSAL", "SUPPLIER_ADVANCE_REFUND",
+]);
+const accountingApBridgeClassificationSchema = z.enum([
+  "RECEIPT_ACCRUAL", "RECEIPT_CORRECTION_DECREASE", "RECEIPT_CORRECTION_INCREASE", "SUPPLIER_BILL",
+  "SUPPLIER_PAYMENT", "SUPPLIER_PAYMENT_REVERSAL", "SUPPLIER_ADVANCE_PAYMENT",
+  "SUPPLIER_ADVANCE_PAYMENT_REVERSAL", "SUPPLIER_ADVANCE_ALLOCATION",
+  "SUPPLIER_ADVANCE_ALLOCATION_REVERSAL", "SUPPLIER_ADVANCE_REFUND", "HELD_UNSUPPORTED_TREATMENT",
+]);
+const accountingApBridgeDirectClassificationSchema = z.enum(["DIRECT_EXPENSE", "CAPITAL_ASSET", "PREPAID_EXPENSE"]);
+const accountingApCashSourceTypes = new Set([
+  "SUPPLIER_PAYMENT", "SUPPLIER_PAYMENT_REVERSAL", "SUPPLIER_ADVANCE_PAYMENT",
+  "SUPPLIER_ADVANCE_PAYMENT_REVERSAL", "SUPPLIER_ADVANCE_REFUND",
+]);
+export const saveAccountingApBridgeEventInputSchema = z.object({
+  source_type: accountingApBridgeSourceTypeSchema,
+  source_record_id: z.string().uuid(),
+  expected_version: z.number().int().nonnegative(),
+  classification: accountingApBridgeClassificationSchema,
+  amount_halalah: z.string().regex(/^[1-9][0-9]{0,18}$/).nullable(),
+  matched_receipt_halalah: z.string().regex(/^(0|[1-9][0-9]{0,18})$/),
+  direct_classification: accountingApBridgeDirectClassificationSchema.nullable(),
+  accounting_date: validDate,
+  evidence_ref: nullableEvidence,
+  evidence_sha256: z.string().regex(/^[0-9a-f]{64}$/).nullable(),
+  cash_binding_evidence_ref: nullableEvidence,
+  cash_binding_evidence_sha256: z.string().regex(/^[0-9a-f]{64}$/).nullable(),
+  cash_account_id: z.string().uuid().nullable(),
+  cash_account_version: z.number().int().positive().nullable(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict().superRefine((value, context) => {
+  if ((value.evidence_ref === null) !== (value.evidence_sha256 === null)) {
+    context.addIssue({ code: "custom", path: ["evidence_sha256"], message: "Evidence reference and SHA-256 must be supplied together" });
+  }
+  if ((value.cash_binding_evidence_ref === null) !== (value.cash_binding_evidence_sha256 === null)) {
+    context.addIssue({ code: "custom", path: ["cash_binding_evidence_sha256"], message: "Cash binding evidence and SHA-256 must be supplied together" });
+  }
+  if ((value.cash_account_id === null) !== (value.cash_account_version === null)) {
+    context.addIssue({ code: "custom", path: ["cash_account_version"], message: "Cash account identity and version must be supplied together" });
+  }
+  if (!["SERVICE_RECEIPT", "SERVICE_RECEIPT_CORRECTION"].includes(value.source_type)
+    && value.amount_halalah !== null) {
+    context.addIssue({ code: "custom", path: ["amount_halalah"], message: "Only receipt valuations accept an externally evidenced amount" });
+  }
+  if (accountingApCashSourceTypes.has(value.source_type)
+    && (value.cash_binding_evidence_ref === null || value.cash_account_id === null)) {
+    context.addIssue({ code: "custom", path: ["cash_binding_evidence_ref"], message: "Cash movement requires explicit account binding evidence" });
+  }
+  if (!accountingApCashSourceTypes.has(value.source_type)
+    && (value.cash_binding_evidence_ref !== null || value.cash_account_id !== null)) {
+    context.addIssue({ code: "custom", path: ["cash_account_id"], message: "Non-cash events cannot bind a cash account" });
+  }
+  if (value.source_type !== "SUPPLIER_BILL" && value.matched_receipt_halalah !== "0") {
+    context.addIssue({ code: "custom", path: ["matched_receipt_halalah"], message: "Only supplier bills can match receipt accruals" });
+  }
+});
+export const prepareAccountingApBridgeEventInputSchema = prepareAccountingArBridgeEventInputSchema;
+export const postAccountingApBridgeJournalInputSchema = postAccountingArBridgeJournalInputSchema;
+export const accountingApBridgeReconciliationInputSchema = accountingArBridgeReconciliationInputSchema;
+export const accountingApBridgeEventMutationResultSchema = accountingArBridgeEventMutationResultSchema;
+export const accountingApBridgeJournalMutationResultSchema = accountingArBridgeJournalMutationResultSchema;
+const accountingApBridgeReconciliationEventSchema = z.object({
+  source_type: accountingApBridgeSourceTypeSchema,
+  source_record_id: z.string().uuid(),
+  source_record_key: boundedText(200),
+  economic_event_key: boundedText(200),
+  reconciliation_status: z.enum(["POSTED", "PREPARED", "HELD", "INCEPTION_COVERED", "MISSING_EFFECT", "MISSING_CLASSIFICATION", "ACCOUNTING_DATE_AFTER_CUTOFF"]),
+  event_id: z.string().uuid().nullable(),
+  event_version: z.number().int().positive().nullable(),
+  classification: accountingApBridgeClassificationSchema.nullable(),
+  supplier_id: z.string().uuid(),
+  service_id: z.string().uuid().nullable(),
+  receipt_id: z.string().uuid().nullable(),
+  bill_id: z.string().uuid().nullable(),
+  advance_id: z.string().uuid().nullable(),
+  amount_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+  matched_receipt_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/).nullable(),
+  source_business_date: validDate.nullable(),
+  source_recorded_at: z.string(),
+  accounting_date: validDate.nullable(),
+  posted_accounting_date: validDate.nullable(),
+  posted_at: z.string().nullable(),
+  journal_id: z.string().uuid().nullable(),
+  held_code: z.string().nullable(),
+  post_cutover_covered: z.boolean(),
+  inception_conflict: z.boolean(),
+}).strict();
+const accountingSignedHalalahSchema = z.string().regex(/^(0|-?[1-9][0-9]*)$/);
+const accountingApBridgeControlBalanceSchema = z.object({
+  party_role: z.enum(["ACCOUNTS_PAYABLE", "ACCRUED_LIABILITY", "SUPPLIER_ADVANCE"]),
+  subledger_halalah: accountingSignedHalalahSchema,
+  ledger_halalah: accountingSignedHalalahSchema,
+  difference_halalah: accountingSignedHalalahSchema,
+}).strict();
+const accountingApBridgePartyBalanceSchema = z.object({
+  accounts_payable_halalah: accountingSignedHalalahSchema,
+  accrued_unbilled_halalah: accountingSignedHalalahSchema,
+  supplier_advance_halalah: accountingSignedHalalahSchema,
+  difference_halalah: accountingSignedHalalahSchema,
+}).strict();
+export const accountingApBridgeReconciliationSchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("NOT_INITIALIZED") }).strict(),
+  z.object({
+    state: z.literal("READY"),
+    as_of_date: validDate,
+    recorded_at_cutoff: z.string(),
+    cutover_boundary_date: validDate.nullable(),
+    bank_reconciled: z.literal(false),
+    source_event_count: z.number().int().nonnegative(),
+    posted_effect_count: z.number().int().nonnegative(),
+    held_count: z.number().int().nonnegative(),
+    missing_effect_count: z.number().int().nonnegative(),
+    inception_conflict_count: z.number().int().nonnegative(),
+    expected_effect_count: z.number().int().nonnegative(),
+    duplicate_conflict_count: z.number().int().nonnegative(),
+    control_difference_count: z.number().int().nonnegative(),
+    supplier_difference_count: z.number().int().nonnegative(),
+    service_difference_count: z.number().int().nonnegative(),
+    accrued_unbilled_halalah: accountingSignedHalalahSchema,
+    accounts_payable_halalah: accountingSignedHalalahSchema,
+    supplier_advance_halalah: accountingSignedHalalahSchema,
+    control_balances: z.array(accountingApBridgeControlBalanceSchema),
+    supplier_balances: z.array(accountingApBridgePartyBalanceSchema.extend({ supplier_id: z.string().uuid() }).strict()),
+    service_balances: z.array(accountingApBridgePartyBalanceSchema.extend({ service_id: z.string().uuid() }).strict()),
+    matching_coverage: z.object({
+      bill_amount_halalah: accountingSignedHalalahSchema,
+      matched_receipt_halalah: accountingSignedHalalahSchema,
+      direct_residual_halalah: accountingSignedHalalahSchema,
+    }).strict(),
+    timing_difference_count: z.number().int().nonnegative(),
+    timing_differences: z.array(z.object({
+      source_type: accountingApBridgeSourceTypeSchema,
+      source_record_id: z.string().uuid(),
+      supplier_id: z.string().uuid(),
+      service_id: z.string().uuid().nullable(),
+      source_business_date: validDate,
+      accounting_date: validDate,
+      days_difference: z.number().int(),
+      amount_halalah: z.string().regex(/^(0|[1-9][0-9]*)$/),
+    }).strict()),
+    truncated: z.boolean(),
+    events: z.array(accountingApBridgeReconciliationEventSchema),
   }).strict(),
 ]);

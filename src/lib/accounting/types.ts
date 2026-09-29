@@ -9,6 +9,7 @@ export const ACCOUNTING_CAPABILITIES = [
   "accounting:reverse_journal",
   "accounting:manage_inception",
   "accounting:manage_ar_bridge",
+  "accounting:manage_ap_bridge",
   "accounting:reconcile_bank",
   "accounting:close_period",
   "accounting:reopen_period",
@@ -130,6 +131,13 @@ export type AccountingActionErrorCode =
   | "classification_evidence_missing"
   | "revenue_correction_required"
   | "unsupported_source_treatment"
+  | "vat_not_supported"
+  | "receipt_accrual_missing"
+  | "receipt_match_exceeds_accrual"
+  | "direct_residual_evidence_missing"
+  | "payable_balance_insufficient"
+  | "supplier_advance_balance_insufficient"
+  | "advance_authorization_exceeded"
   | "dependency_failure";
 
 export type AccountingActionResult<T> =
@@ -143,6 +151,7 @@ export type AccountingControlClassification =
   | "NONE"
   | "ACCOUNTS_RECEIVABLE"
   | "ACCOUNTS_PAYABLE"
+  | "ACCRUED_LIABILITY"
   | "CUSTOMER_ADVANCE"
   | "SUPPLIER_ADVANCE"
   | "CONTRACT_LIABILITY"
@@ -293,7 +302,7 @@ export type AccountingJournalVersion = {
   accounting_date: string;
   posting_rule_id: string;
   rule_version: number;
-  source_domain: "CONTROLLED_MANUAL" | "INCEPTION" | "AR_BRIDGE";
+  source_domain: "CONTROLLED_MANUAL" | "INCEPTION" | "AR_BRIDGE" | "AP_BRIDGE";
   source_record_key: string;
   economic_event_key: string;
   posting_purpose: string;
@@ -694,4 +703,139 @@ export type AccountingArBridgeReconciliation =
       truncated: boolean;
       events: AccountingArBridgeReconciliationEvent[];
       party_balances: AccountingArBridgePartyBalance[];
+    };
+
+export type AccountingApBridgeSourceType =
+  | "SERVICE_RECEIPT"
+  | "SERVICE_RECEIPT_CORRECTION"
+  | "SUPPLIER_BILL"
+  | "SUPPLIER_PAYMENT"
+  | "SUPPLIER_PAYMENT_REVERSAL"
+  | "SUPPLIER_ADVANCE_PAYMENT"
+  | "SUPPLIER_ADVANCE_PAYMENT_REVERSAL"
+  | "SUPPLIER_ADVANCE_ALLOCATION"
+  | "SUPPLIER_ADVANCE_ALLOCATION_REVERSAL"
+  | "SUPPLIER_ADVANCE_REFUND";
+
+export type AccountingApBridgeClassification =
+  | "RECEIPT_ACCRUAL"
+  | "RECEIPT_CORRECTION_DECREASE"
+  | "RECEIPT_CORRECTION_INCREASE"
+  | "SUPPLIER_BILL"
+  | "SUPPLIER_PAYMENT"
+  | "SUPPLIER_PAYMENT_REVERSAL"
+  | "SUPPLIER_ADVANCE_PAYMENT"
+  | "SUPPLIER_ADVANCE_PAYMENT_REVERSAL"
+  | "SUPPLIER_ADVANCE_ALLOCATION"
+  | "SUPPLIER_ADVANCE_ALLOCATION_REVERSAL"
+  | "SUPPLIER_ADVANCE_REFUND"
+  | "HELD_UNSUPPORTED_TREATMENT";
+
+export type AccountingApBridgeDirectClassification = "DIRECT_EXPENSE" | "CAPITAL_ASSET" | "PREPAID_EXPENSE";
+
+export type AccountingApBridgeEventInput = {
+  source_type: AccountingApBridgeSourceType;
+  source_record_id: string;
+  expected_version: number;
+  classification: AccountingApBridgeClassification;
+  amount_halalah: string | null;
+  matched_receipt_halalah: string;
+  direct_classification: AccountingApBridgeDirectClassification | null;
+  accounting_date: string;
+  evidence_ref: string | null;
+  evidence_sha256: string | null;
+  cash_binding_evidence_ref: string | null;
+  cash_binding_evidence_sha256: string | null;
+  cash_account_id: string | null;
+  cash_account_version: number | null;
+  reason: string;
+  request_id: string;
+};
+
+export type AccountingApBridgeReconciliationEvent = {
+  source_type: AccountingApBridgeSourceType;
+  source_record_id: string;
+  source_record_key: string;
+  economic_event_key: string;
+  reconciliation_status: "POSTED" | "PREPARED" | "HELD" | "INCEPTION_COVERED" | "MISSING_EFFECT" | "MISSING_CLASSIFICATION" | "ACCOUNTING_DATE_AFTER_CUTOFF";
+  event_id: string | null;
+  event_version: number | null;
+  classification: AccountingApBridgeClassification | null;
+  supplier_id: string;
+  service_id: string | null;
+  receipt_id: string | null;
+  bill_id: string | null;
+  advance_id: string | null;
+  amount_halalah: string;
+  matched_receipt_halalah: string | null;
+  source_business_date: string | null;
+  source_recorded_at: string;
+  accounting_date: string | null;
+  posted_accounting_date: string | null;
+  posted_at: string | null;
+  journal_id: string | null;
+  held_code: string | null;
+  post_cutover_covered: boolean;
+  inception_conflict: boolean;
+};
+
+export type AccountingApBridgeReconciliation =
+  | { state: "NOT_INITIALIZED" }
+  | {
+      state: "READY";
+      as_of_date: string;
+      recorded_at_cutoff: string;
+      cutover_boundary_date: string | null;
+      bank_reconciled: false;
+      source_event_count: number;
+      posted_effect_count: number;
+      held_count: number;
+      missing_effect_count: number;
+      inception_conflict_count: number;
+      expected_effect_count: number;
+      duplicate_conflict_count: number;
+      control_difference_count: number;
+      supplier_difference_count: number;
+      service_difference_count: number;
+      accrued_unbilled_halalah: string;
+      accounts_payable_halalah: string;
+      supplier_advance_halalah: string;
+      control_balances: Array<{
+        party_role: "ACCOUNTS_PAYABLE" | "ACCRUED_LIABILITY" | "SUPPLIER_ADVANCE";
+        subledger_halalah: string;
+        ledger_halalah: string;
+        difference_halalah: string;
+      }>;
+      supplier_balances: Array<{
+        supplier_id: string;
+        accounts_payable_halalah: string;
+        accrued_unbilled_halalah: string;
+        supplier_advance_halalah: string;
+        difference_halalah: string;
+      }>;
+      service_balances: Array<{
+        service_id: string;
+        accounts_payable_halalah: string;
+        accrued_unbilled_halalah: string;
+        supplier_advance_halalah: string;
+        difference_halalah: string;
+      }>;
+      matching_coverage: {
+        bill_amount_halalah: string;
+        matched_receipt_halalah: string;
+        direct_residual_halalah: string;
+      };
+      timing_difference_count: number;
+      timing_differences: Array<{
+        source_type: AccountingApBridgeSourceType;
+        source_record_id: string;
+        supplier_id: string;
+        service_id: string | null;
+        source_business_date: string;
+        accounting_date: string;
+        days_difference: number;
+        amount_halalah: string;
+      }>;
+      truncated: boolean;
+      events: AccountingApBridgeReconciliationEvent[];
     };

@@ -35,6 +35,7 @@ const {
   saveAccountingPeriodInputSchema,
   setAccountingCapabilityInputSchema,
   saveAccountingArBridgeEventInputSchema,
+  saveAccountingApBridgeEventInputSchema,
   accountingArBridgeReconciliationSchema,
 } = await import("./schemas.ts");
 
@@ -239,6 +240,63 @@ test("W10D event schema pairs classification evidence and requires accounting da
     }).success,
     true,
   );
+});
+
+test("W10E1 AP schema keeps receipt valuation explicit and binds only evidenced cash movements", () => {
+  const base = {
+    source_type: "SERVICE_RECEIPT",
+    source_record_id: "00000000-0000-4000-8000-00000000e101",
+    expected_version: 0,
+    classification: "RECEIPT_ACCRUAL",
+    amount_halalah: null,
+    matched_receipt_halalah: "0",
+    direct_classification: null,
+    accounting_date: "2026-09-29",
+    evidence_ref: null,
+    evidence_sha256: null,
+    cash_binding_evidence_ref: null,
+    cash_binding_evidence_sha256: null,
+    cash_account_id: null,
+    cash_account_version: null,
+    reason: "Accepted receipt without accounting valuation",
+    request_id: "00000000-0000-4000-8000-00000000e102",
+  };
+
+  assert.equal(saveAccountingApBridgeEventInputSchema.safeParse(base).success, true);
+  assert.equal(saveAccountingApBridgeEventInputSchema.safeParse({
+    ...base,
+    source_type: "SUPPLIER_BILL",
+    amount_halalah: "1000",
+  }).success, false);
+  assert.equal(saveAccountingApBridgeEventInputSchema.safeParse({
+    ...base,
+    source_type: "SUPPLIER_PAYMENT",
+    classification: "SUPPLIER_PAYMENT",
+    amount_halalah: null,
+    cash_binding_evidence_ref: "synthetic://w10e1/cash-binding",
+    cash_binding_evidence_sha256: "a".repeat(64),
+    cash_account_id: "00000000-0000-4000-8000-00000000e103",
+    cash_account_version: 1,
+  }).success, true);
+  assert.equal(saveAccountingApBridgeEventInputSchema.safeParse({
+    ...base,
+    source_type: "SUPPLIER_BILL",
+    cash_binding_evidence_ref: "synthetic://w10e1/not-cash",
+    cash_binding_evidence_sha256: "a".repeat(64),
+    cash_account_id: "00000000-0000-4000-8000-00000000e103",
+    cash_account_version: 1,
+  }).success, false);
+  assert.equal(saveAccountingApBridgeEventInputSchema.safeParse({
+    ...base,
+    source_type: "SUPPLIER_BILL",
+    matched_receipt_halalah: "1",
+  }).success, true);
+  assert.equal(saveAccountingApBridgeEventInputSchema.safeParse({
+    ...base,
+    source_type: "SUPPLIER_ADVANCE_ALLOCATION",
+    classification: "SUPPLIER_ADVANCE_ALLOCATION",
+    matched_receipt_halalah: "1",
+  }).success, false);
 });
 
 test("W10D reconciliation schema carries held, duplicate, party, and source/accounting date differences", () => {

@@ -25,6 +25,11 @@ import {
   postAccountingArBridgeJournalInputSchema,
   accountingArBridgeEventMutationResultSchema,
   accountingArBridgeJournalMutationResultSchema,
+  saveAccountingApBridgeEventInputSchema,
+  prepareAccountingApBridgeEventInputSchema,
+  postAccountingApBridgeJournalInputSchema,
+  accountingApBridgeEventMutationResultSchema,
+  accountingApBridgeJournalMutationResultSchema,
   setAccountingCapabilityInputSchema,
   updateAccountingProfileInputSchema,
 } from "./schemas";
@@ -97,6 +102,13 @@ const SAFE_ERROR_CODES = new Set([
   "classification_evidence_missing",
   "revenue_correction_required",
   "unsupported_source_treatment",
+  "vat_not_supported",
+  "receipt_accrual_missing",
+  "receipt_match_exceeds_accrual",
+  "direct_residual_evidence_missing",
+  "payable_balance_insufficient",
+  "supplier_advance_balance_insufficient",
+  "advance_authorization_exceeded",
 ]);
 
 function safeCode(code: string | null | undefined) {
@@ -406,7 +418,7 @@ export async function reverseAccountingJournal(
 
 async function requireAccountingCapabilities(
   actorId: string,
-  capabilities: Array<"accounting:manage_inception" | "accounting:manage_ar_bridge" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view">,
+  capabilities: Array<"accounting:manage_inception" | "accounting:manage_ar_bridge" | "accounting:manage_ap_bridge" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view">,
 ) {
   const allowed = await Promise.all(capabilities.map((capability) =>
     resolveAccountingCapability(actorId, capability)));
@@ -615,6 +627,99 @@ export async function postAccountingArBridgeJournal(input: unknown) {
   if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
   if (!row.data.journal_id || row.data.version == null || row.data.status !== "POSTED") {
     throw new AuthDependencyError("Accounting AR bridge response was invalid");
+  }
+  return {
+    ok: true as const,
+    value: { journal_id: row.data.journal_id, version: row.data.version, status: "POSTED" as const },
+    idempotentReplay: row.data.idempotent_replay,
+  };
+}
+
+export async function saveAccountingApBridgeEvent(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_ap_bridge"]);
+  const parsed = saveAccountingApBridgeEventInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callArBridgeRpc(() => createAdminClient().rpc("save_accounting_ap_bridge_event", {
+    p_actor_user_id: actor.id,
+    p_source_type: parsed.data.source_type,
+    p_source_record_id: parsed.data.source_record_id,
+    p_expected_version: parsed.data.expected_version,
+    p_classification: parsed.data.classification,
+    p_amount_halalah: parsed.data.amount_halalah,
+    p_matched_receipt_halalah: parsed.data.matched_receipt_halalah,
+    p_direct_classification: parsed.data.direct_classification,
+    p_accounting_date: parsed.data.accounting_date,
+    p_evidence_ref: parsed.data.evidence_ref,
+    p_evidence_sha256: parsed.data.evidence_sha256,
+    p_cash_binding_evidence_ref: parsed.data.cash_binding_evidence_ref,
+    p_cash_binding_evidence_sha256: parsed.data.cash_binding_evidence_sha256,
+    p_cash_account_id: parsed.data.cash_account_id,
+    p_cash_account_version: parsed.data.cash_account_version,
+    p_reason: parsed.data.reason,
+    p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingApBridgeEventMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting AP bridge response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.event_id || row.data.version == null || !row.data.status) {
+    throw new AuthDependencyError("Accounting AP bridge response was invalid");
+  }
+  return {
+    ok: true as const,
+    value: { event_id: row.data.event_id, version: row.data.version, status: row.data.status },
+    idempotentReplay: row.data.idempotent_replay,
+  };
+}
+
+export async function prepareAccountingApBridgeEvent(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_ap_bridge"]);
+  const parsed = prepareAccountingApBridgeEventInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callArBridgeRpc(() => createAdminClient().rpc("prepare_accounting_ap_bridge_event", {
+    p_actor_user_id: actor.id,
+    p_event_id: parsed.data.event_id,
+    p_event_version: parsed.data.event_version,
+    p_period_id: parsed.data.period_id,
+    p_period_version: parsed.data.period_version,
+    p_posting_rule_id: parsed.data.posting_rule_id,
+    p_rule_version: parsed.data.rule_version,
+    p_reason: parsed.data.reason,
+    p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingApBridgeJournalMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting AP bridge response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.journal_id || row.data.version == null || !row.data.status) {
+    throw new AuthDependencyError("Accounting AP bridge response was invalid");
+  }
+  return {
+    ok: true as const,
+    value: { journal_id: row.data.journal_id, version: row.data.version, status: row.data.status },
+    idempotentReplay: row.data.idempotent_replay,
+  };
+}
+
+export async function postAccountingApBridgeJournal(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_ap_bridge"]);
+  const parsed = postAccountingApBridgeJournalInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callArBridgeRpc(() => createAdminClient().rpc("post_accounting_ap_bridge_journal", {
+    p_actor_user_id: actor.id,
+    p_journal_id: parsed.data.journal_id,
+    p_expected_version: parsed.data.expected_version,
+    p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingApBridgeJournalMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting AP bridge response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.journal_id || row.data.version == null || row.data.status !== "POSTED") {
+    throw new AuthDependencyError("Accounting AP bridge response was invalid");
   }
   return {
     ok: true as const,

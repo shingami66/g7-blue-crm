@@ -61,7 +61,7 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { saveAccountingAccount, saveAccountingPeriod, setAccountingCapability, updateAccountingProfile, saveAccountingPostingRule, prepareAccountingJournal, postAccountingJournal, reverseAccountingJournal, saveAccountingArBridgeEvent, prepareAccountingArBridgeEvent, postAccountingArBridgeJournal } = await import("./actions.ts");
+const { saveAccountingAccount, saveAccountingPeriod, setAccountingCapability, updateAccountingProfile, saveAccountingPostingRule, prepareAccountingJournal, postAccountingJournal, reverseAccountingJournal, saveAccountingArBridgeEvent, prepareAccountingArBridgeEvent, postAccountingArBridgeJournal, saveAccountingApBridgeEvent, prepareAccountingApBridgeEvent, postAccountingApBridgeJournal } = await import("./actions.ts");
 const { AuthDependencyError } = await import("../auth/errors.ts");
 
 const actorId = "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f";
@@ -466,6 +466,89 @@ test("W10D actions derive the actor, require the bridge capability, and map only
 
   resetState(async () => ({ data: [], error: null }));
   assert.deepEqual(await saveAccountingArBridgeEvent({ ...base, evidence_sha256: null }), {
+    ok: false,
+    code: "invalid_input",
+  });
+  assert.equal(state.calls.length, 0);
+});
+
+test("W10E1 AP actions derive the actor and map only the AP bridge RPCs", async () => {
+  const eventId = "00000000-0000-4000-8000-00000000e201";
+  const journalId = "00000000-0000-4000-8000-00000000e202";
+  const base = {
+    source_type: "SUPPLIER_BILL",
+    source_record_id: "00000000-0000-4000-8000-00000000e203",
+    expected_version: 0,
+    classification: "SUPPLIER_BILL",
+    amount_halalah: null,
+    matched_receipt_halalah: "10000",
+    direct_classification: null,
+    accounting_date: "2026-09-29",
+    evidence_ref: null,
+    evidence_sha256: null,
+    cash_binding_evidence_ref: null,
+    cash_binding_evidence_sha256: null,
+    cash_account_id: null,
+    cash_account_version: null,
+    reason: "Synthetic AP bill classification",
+    request_id: "00000000-0000-4000-8000-00000000e204",
+  };
+
+  resetState(async () => ({
+    data: [{ error_code: null, event_id: eventId, version: 1, status: "READY", idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await saveAccountingApBridgeEvent(base), {
+    ok: true,
+    value: { event_id: eventId, version: 1, status: "READY" },
+    idempotentReplay: false,
+  });
+  assert.equal(state.calls[0].name, "save_accounting_ap_bridge_event");
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+  assert.equal(state.calls[0].args.p_source_record_id, base.source_record_id);
+  assert.equal(state.calls[0].args.p_amount_halalah, null);
+  assert.equal(state.calls[0].args.p_matched_receipt_halalah, "10000");
+  assert.equal("p_actor_role" in state.calls[0].args, false);
+
+  resetState(async () => ({
+    data: [{ error_code: null, journal_id: journalId, version: 1, status: "DRAFT", idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await prepareAccountingApBridgeEvent({
+    event_id: eventId,
+    event_version: 1,
+    period_id: "00000000-0000-4000-8000-00000000e205",
+    period_version: 1,
+    posting_rule_id: "00000000-0000-4000-8000-00000000e206",
+    rule_version: 1,
+    reason: "Synthetic AP bridge preparation",
+    request_id: "00000000-0000-4000-8000-00000000e207",
+  }), {
+    ok: true,
+    value: { journal_id: journalId, version: 1, status: "DRAFT" },
+    idempotentReplay: false,
+  });
+  assert.equal(state.calls[0].name, "prepare_accounting_ap_bridge_event");
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+
+  resetState(async () => ({
+    data: [{ error_code: null, journal_id: journalId, version: 2, status: "POSTED", idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await postAccountingApBridgeJournal({
+    journal_id: journalId,
+    expected_version: 1,
+    request_id: "00000000-0000-4000-8000-00000000e208",
+  }), {
+    ok: true,
+    value: { journal_id: journalId, version: 2, status: "POSTED" },
+    idempotentReplay: false,
+  });
+  assert.equal(state.calls[0].name, "post_accounting_ap_bridge_journal");
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+
+  resetState(async () => ({ data: [], error: null }));
+  assert.deepEqual(await saveAccountingApBridgeEvent({ ...base, amount_halalah: "10000" }), {
     ok: false,
     code: "invalid_input",
   });
