@@ -427,8 +427,12 @@ BEGIN
     AND EXISTS(SELECT 1 FROM public.supplier_advances WHERE id='00000000-0000-4000-8000-00000000e881'));
   SELECT * INTO v_result FROM pg_temp.w10e1_post('SUPPLIER_ADVANCE_PAYMENT','00000000-0000-4000-8000-00000000e863',
     'SUPPLIER_ADVANCE_PAYMENT',NULL,0,NULL,CURRENT_DATE-2,13,true,true);
-  PERFORM pg_temp.w10e1_assert(15,'advance payment',v_result.status='POSTED' AND EXISTS(
+  SELECT * INTO v_retry FROM pg_temp.w10e1_post('SUPPLIER_ADVANCE_PAYMENT','00000000-0000-4000-8000-00000000e864',
+    'SUPPLIER_ADVANCE_PAYMENT',NULL,0,NULL,CURRENT_DATE-2,20,true,true);
+  PERFORM pg_temp.w10e1_assert(15,'advance payments for allocation and correction paths',v_result.status='POSTED' AND v_retry.status='POSTED' AND EXISTS(
     SELECT 1 FROM public.accounting_ap_bridge_journal_lines l WHERE l.event_id=v_result.event_id
+      AND l.party_role='SUPPLIER_ADVANCE' AND l.side='DEBIT' AND l.amount_halalah=1000) AND EXISTS(
+    SELECT 1 FROM public.accounting_ap_bridge_journal_lines l WHERE l.event_id=v_retry.event_id
       AND l.party_role='SUPPLIER_ADVANCE' AND l.side='DEBIT' AND l.amount_halalah=1000));
    SELECT * INTO v_saved FROM public.save_accounting_ap_bridge_event(
      v_context.operator_id,'SUPPLIER_ADVANCE_PAYMENT_REVERSAL','00000000-0000-4000-8000-00000000e872',0,
