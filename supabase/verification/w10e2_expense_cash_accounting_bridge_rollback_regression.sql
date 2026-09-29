@@ -3,14 +3,15 @@ BEGIN;
 
 CREATE TEMP TABLE w10e2_fixture_context (
   profile_id uuid NOT NULL, authority_id uuid NOT NULL, operator_id uuid NOT NULL,
-  admin_id uuid NOT NULL, employee_id uuid NOT NULL, customer_id uuid NOT NULL,
+  admin_id uuid NOT NULL, employee_id uuid NOT NULL, finance_reviewer_id uuid NOT NULL, customer_id uuid NOT NULL,
   service_id uuid NOT NULL, period_id uuid, period_version integer,
   rule_id uuid, rule_version integer
 );
-INSERT INTO w10e2_fixture_context(profile_id,authority_id,operator_id,admin_id,employee_id,customer_id,service_id)
+INSERT INTO w10e2_fixture_context(profile_id,authority_id,operator_id,admin_id,employee_id,finance_reviewer_id,customer_id,service_id)
 VALUES('00000000-0000-4000-8000-00000000e900','00000000-0000-4000-8000-00000000e901',
   '00000000-0000-4000-8000-00000000e902','00000000-0000-4000-8000-00000000e903',
-  '00000000-0000-4000-8000-00000000e904','00000000-0000-4000-8000-00000000e910',
+  '00000000-0000-4000-8000-00000000e904','00000000-0000-4000-8000-00000000e905',
+  '00000000-0000-4000-8000-00000000e910',
   '00000000-0000-4000-8000-00000000e911');
 GRANT SELECT,UPDATE ON w10e2_fixture_context TO service_role;
 
@@ -34,9 +35,11 @@ $w10e2_assert$;
 GRANT EXECUTE ON FUNCTION pg_temp.w10e2_assert(integer,text,boolean) TO service_role;
 
 CREATE FUNCTION pg_temp.w10e2_make_expense(
-  p_sequence integer,p_amount numeric,p_origin text,p_payment text,p_advance uuid,p_fund uuid
+  p_sequence integer,p_amount numeric,p_origin text,p_payment text,p_advance uuid,p_fund uuid,
+  p_evidence_exception boolean DEFAULT false
 ) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $w10e2_make_expense$
-DECLARE c pg_temp.w10e2_fixture_context%ROWTYPE; submitted record; approved record; expense_id uuid;
+DECLARE c pg_temp.w10e2_fixture_context%ROWTYPE; submitted record; evidence record; exception_disposition record;
+  finance_review record; approved record; expense_id uuid; document_id uuid;
 BEGIN
   SELECT * INTO STRICT c FROM pg_temp.w10e2_fixture_context;
   SELECT * INTO submitted FROM public.submit_expense(
@@ -45,12 +48,36 @@ BEGIN
     CASE WHEN p_origin='employee_paid' THEN c.employee_id END,pg_temp.w10e2_req(40000+p_sequence),c.operator_id::text,'admin');
   IF submitted.error_code IS NOT NULL THEN RAISE EXCEPTION 'W10E2 Expense submit failed (%): %',p_sequence,submitted.error_code; END IF;
   expense_id:=submitted.expense_id;
+  IF p_evidence_exception THEN
+    SELECT * INTO evidence FROM public.record_expense_evidence_exception(expense_id,
+      'Synthetic receipt evidence unavailable for accounting test',c.employee_id,CURRENT_DATE+30,
+      pg_temp.w10e2_req(840000+p_sequence),c.operator_id::text,'admin');
+    IF evidence.error_code IS NOT NULL THEN RAISE EXCEPTION 'W10E2 evidence exception failed (%): %',p_sequence,evidence.error_code; END IF;
+    SELECT * INTO exception_disposition FROM public.dispose_expense_evidence_exception(evidence.exception_id,'accepted',
+      'Accepted operationally for synthetic scenario',pg_temp.w10e2_req(850000+p_sequence),c.admin_id::text,'admin');
+    IF exception_disposition.error_code IS NOT NULL THEN
+      RAISE EXCEPTION 'W10E2 evidence exception disposition failed (%): %',p_sequence,exception_disposition.error_code;
+    END IF;
+  ELSE
+    document_id:=pg_temp.w10e2_req(830000+p_sequence);
+    INSERT INTO public.business_documents(id,object_path,original_filename,mime_type,file_size,document_type,purpose,uploaded_by)
+    VALUES(document_id,'business-documents/w10e2/'||p_sequence::text||'.pdf','w10e2-evidence-'||p_sequence::text||'.pdf',
+      'application/pdf',128,'expense_receipt','Expense evidence',c.operator_id);
+    SELECT * INTO evidence FROM public.attach_expense_document(expense_id,document_id,
+      pg_temp.w10e2_req(860000+p_sequence),c.operator_id::text,'admin');
+    IF evidence.error_code IS NOT NULL THEN RAISE EXCEPTION 'W10E2 evidence attachment failed (%): %',p_sequence,evidence.error_code; END IF;
+  END IF;
+  SELECT * INTO finance_review FROM public.review_expense_finance(expense_id,
+    pg_temp.w10e2_req(870000+p_sequence),c.finance_reviewer_id::text,'accountant');
+  IF finance_review.error_code IS NOT NULL THEN
+    RAISE EXCEPTION 'W10E2 Finance Review failed (%): %',p_sequence,finance_review.error_code;
+  END IF;
   SELECT * INTO approved FROM public.approve_expense(expense_id,pg_temp.w10e2_req(50000+p_sequence),c.admin_id::text,'admin');
   IF approved.error_code IS NOT NULL THEN RAISE EXCEPTION 'W10E2 Expense approve failed (%): %',p_sequence,approved.error_code; END IF;
   RETURN expense_id;
 END;
 $w10e2_make_expense$;
-GRANT EXECUTE ON FUNCTION pg_temp.w10e2_make_expense(integer,numeric,text,text,uuid,uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION pg_temp.w10e2_make_expense(integer,numeric,text,text,uuid,uuid,boolean) TO service_role;
 
 CREATE FUNCTION pg_temp.w10e2_contract(
   p_source_type text,p_source_id uuid,p_classification text,p_direct text,p_date date,
@@ -210,7 +237,8 @@ INSERT INTO public.app_users(id,clerk_user_id,email,name,role,is_active) VALUES
  ('00000000-0000-4000-8000-00000000e901','w10e2-rollback-authority','w10e2-authority@example.invalid','Synthetic W10E2 authority','admin',true),
  ('00000000-0000-4000-8000-00000000e902','w10e2-rollback-operator','w10e2-operator@example.invalid','Synthetic W10E2 operator','admin',true),
  ('00000000-0000-4000-8000-00000000e903','w10e2-rollback-approver','w10e2-approver@example.invalid','Synthetic W10E2 approver','admin',true),
- ('00000000-0000-4000-8000-00000000e904','w10e2-rollback-employee','w10e2-employee@example.invalid','Synthetic W10E2 employee','viewer',true);
+ ('00000000-0000-4000-8000-00000000e904','w10e2-rollback-employee','w10e2-employee@example.invalid','Synthetic W10E2 employee','viewer',true),
+ ('00000000-0000-4000-8000-00000000e905','w10e2-rollback-finance-reviewer','w10e2-finance-reviewer@example.invalid','Synthetic W10E2 finance reviewer','accountant',true);
 INSERT INTO public.accounting_profiles(id,singleton_key,company_settings_id,current_version)
 SELECT '00000000-0000-4000-8000-00000000e900','g7',s.id,0 FROM public.company_settings s WHERE s.setting_key='default';
 INSERT INTO public.accounting_foundation_events(id,profile_id,event_type,entity_type,entity_id,entity_version,
@@ -297,29 +325,17 @@ END;
 $setup_accounting$;
 RESET ROLE;
 
--- Attached-document evidence and accepted evidence-exception history are created through W5 RPCs.
+-- Expense documents and the accepted evidence exception are created through W5 RPCs before Finance Review.
 SET LOCAL ROLE service_role;
 DO $seed_evidence$
-DECLARE c pg_temp.w10e2_fixture_context%ROWTYPE; expense_id uuid; result record; document_id uuid:='00000000-0000-4000-8000-00000000e920';
+DECLARE expense_id uuid;
 BEGIN
-  SELECT * INTO STRICT c FROM pg_temp.w10e2_fixture_context;
   expense_id:=pg_temp.w10e2_make_expense(1,100,'employee_paid','personal_funds',NULL,NULL);
   INSERT INTO pg_temp.w10e2_ids(label,entity_id) VALUES('employee_expense_1',expense_id);
-  INSERT INTO public.business_documents(id,object_path,original_filename,mime_type,file_size,document_type,purpose,uploaded_by)
-  VALUES(document_id,'business-documents/00000000-0000-4000-8000-00000000e920.pdf','w10e2-evidence.pdf',
-    'application/pdf',128,'expense_receipt','Expense evidence','00000000-0000-4000-8000-00000000e902');
-  SELECT * INTO result FROM public.attach_expense_document(expense_id,document_id,pg_temp.w10e2_req(6001),c.operator_id::text,'admin');
-  IF result.error_code IS NOT NULL THEN RAISE EXCEPTION 'W10E2 evidence attachment failed: %',result.error_code; END IF;
   expense_id:=pg_temp.w10e2_make_expense(2,50,'employee_paid','personal_funds',NULL,NULL);
   INSERT INTO pg_temp.w10e2_ids(label,entity_id) VALUES('employee_expense_2',expense_id);
-  expense_id:=pg_temp.w10e2_make_expense(3,75,'employee_paid','personal_funds',NULL,NULL);
+  expense_id:=pg_temp.w10e2_make_expense(3,75,'employee_paid','personal_funds',NULL,NULL,true);
   INSERT INTO pg_temp.w10e2_ids(label,entity_id) VALUES('employee_expense_3',expense_id);
-  SELECT * INTO result FROM public.record_expense_evidence_exception(expense_id,
-    'Synthetic receipt evidence unavailable for accounting test',c.employee_id,CURRENT_DATE+30,pg_temp.w10e2_req(6002),c.operator_id::text,'admin');
-  IF result.error_code IS NOT NULL THEN RAISE EXCEPTION 'W10E2 evidence exception failed: %',result.error_code; END IF;
-  SELECT * INTO result FROM public.dispose_expense_evidence_exception(result.exception_id,'accepted',
-    'Accepted operationally for synthetic scenario',pg_temp.w10e2_req(6003),c.admin_id::text,'admin');
-  IF result.error_code IS NOT NULL THEN RAISE EXCEPTION 'W10E2 evidence exception disposition failed: %',result.error_code; END IF;
 END;
 $seed_evidence$;
 RESET ROLE;
