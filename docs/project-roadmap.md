@@ -1,15 +1,15 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W10G BANK RECONCILIATION — 30 September 2026
+## CURRENT ROADMAP POSITION — W10-INTEGRITY-R1 ACCOUNTING INTEGRITY REPAIRS — 30 September 2026
 
-- **W10G — Bank Reconciliation:** `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED` on DEV project `dpddrqjzqohexixgdqiq`. W10F remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`; W10E2, W10D, and W10E1 retain their prior closeout states.
-- W10G delivers versioned bank bindings, statement evidence, governed matching and review, cutoff reconciliation, bounded reads, unmatch/rematch, and reversal-impact evidence. Reconciliation creates no accounting journal or new journal source domain.
-- DEV applied migrations are `20260930065506_w10g_bank_reconciliation_foundation`, `20260930071124_w10g_reconciliation_event_identity_repair`, `20260930072210_w10g_reversal_helper_acl_repair`, and `20260930073518_w10g_reversal_helper_predecessor_guard`, with exact matching local source identities. The additive repairs preserve deployed RPC contracts, separate review/unmatch event identities, guard reversal impact to posted journals, make the trigger helper owner-only, and fail closed on predecessor drift.
-- The rollback-only fixture passed with 50 named categories, actual `reverse_accounting_journal` impact-review evidence, distinct event versions, cutoff/coverage guards, balanced-ledger invariants, no-journal behavior, and zero residue after rollback.
-- **Validation:** W10G source tests 7/7 and the required mocked accounting rerun 21/21 passed; TypeScript, scoped ESLint, production build, and staged diff checks passed. The initial combined accounting invocation's three Node 22 module-mock harness failures were resolved by the required test flag.
-- **Reviewer verdict:** `CLEAN` on the required fresh same-session native read-only gate.
-- **Deferred boundaries:** no real bank binding or statement import, persistent accounting seed, journal posting, bank integration, tax/statutory activation, VAT/ZATCA/FATOORA, W10H–W10I, DEMO/PROD mutation, or deployment.
-- **EXACT NEXT ACTION:** Obtain fresh exact Owner authorization before beginning W10H; keep W10G bounded to governed reconciliation evidence and corrections.
+- **W10G — Bank Reconciliation:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` on DEV project `dpddrqjzqohexixgdqiq`. W10F remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`; W10E2, W10D, and W10E1 retain their prior closeout states.
+- **W10-INTEGRITY-R1:** `IMPLEMENTED / REVIEWED / DEV-VERIFIED / PUBLISHED / OWNER ACCEPTANCE PENDING`. The five bounded repairs guard generic AR_BRIDGE reversal, untyped CONTROLLED_MANUAL Revenue posting, missing evidence on CONTROLLED_MANUAL preparation and generic reversal, and AP FI-012 cutover metadata at the recorded-at cutoff.
+- DEV migration `20260930104338_w10_integrity_r1_accounting_guards` is applied with the exact local filename. Its predecessor guards preserve the deployed function contracts and metadata; no applied migration or migration history was edited.
+- The rollback-only W10F fixture passed with the new rejection and lineage cases and the two-cutoff FI-012 profile-version case. Independent post-run residue verification returned zero across synthetic identity, accounting, event, effect, and audit rows.
+- **Validation:** W10-INTEGRITY-R1/W10F focused source tests passed 22/22; scoped ESLint and diff checks passed. The full accounting migration-source suite passed 100/100 before final SQL/fixture-only corrections; TypeScript and production build passed before those corrections.
+- **Reviewer verdict:** `CLEAN` from the required same-session native read-only Reviewer on the final diff after DEV fixture success.
+- **Deferred boundaries:** DEV only; no persistent accounting seed, PROD mutation, tax/statutory activation, or W10H implementation.
+- **EXACT NEXT ACTION:** Mozfer reviews and accepts W10-INTEGRITY-R1 closeout. W10H needs separate fresh exact Owner authorization; do not begin W10H.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT POSITION)
 

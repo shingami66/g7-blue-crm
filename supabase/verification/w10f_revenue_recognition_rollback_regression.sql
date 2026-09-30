@@ -248,10 +248,14 @@ BEGIN
       WHERE owner_slice='W10F' AND capability<>'accounting:manage_revenue_recognition') THEN
     RAISE EXCEPTION 'W10F owns an unrelated accounting capability';
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.accounting_capability_catalog
+      WHERE capability='accounting:reconcile_bank' AND enabled AND runtime_allow_grantable AND owner_slice='W10G') THEN
+    RAISE EXCEPTION 'W10G bank-reconciliation capability was not preserved by the migration';
+  END IF;
   IF EXISTS (SELECT 1 FROM public.accounting_capability_catalog
-      WHERE capability IN ('accounting:reconcile_bank','accounting:close_period','accounting:reopen_period')
+      WHERE capability IN ('accounting:close_period','accounting:reopen_period')
         AND (enabled OR runtime_allow_grantable)) THEN
-    RAISE EXCEPTION 'W10F enabled a later accounting capability';
+    RAISE EXCEPTION 'W10I period capability was enabled during the integrity repair';
   END IF;
 END;
 $preflight$;
@@ -282,10 +286,38 @@ INSERT INTO public.accounting_profile_versions(
   reason,evidence_ref,created_by,created_at,foundation_event_id
 ) VALUES('00000000-0000-4000-8000-00000000f800',1,NULL,'SA_IFRS_FOR_SMES',2025,'W10 provisional policy',
   'Synthetic W10F rollback fixture','DEFERRED',NULL,'SAR',1,1,12,31,'Asia/Riyadh',
-  '2000-01-01','2000-12-31',true,NULL,'not_registered','INACTIVE','INACTIVE','DEV_PROVISIONAL',
+   '2000-01-01','2000-12-31',true,NULL,'not_registered','INACTIVE','INACTIVE','INACTIVE',
   transaction_timestamp(),'Synthetic W10F profile',NULL,'00000000-0000-4000-8000-00000000f801',
   transaction_timestamp(),'00000000-0000-4000-8000-00000000f840');
 UPDATE public.accounting_profiles SET current_version=1 WHERE id='00000000-0000-4000-8000-00000000f800';
+
+CREATE TEMP TABLE w10f_profile_cutover(v1_cutoff timestamptz NOT NULL,v2_effective timestamptz NOT NULL) ON COMMIT DROP;
+INSERT INTO w10f_profile_cutover(v1_cutoff,v2_effective)
+VALUES(transaction_timestamp(),transaction_timestamp()+INTERVAL '1 hour');
+GRANT SELECT ON w10f_profile_cutover TO service_role;
+INSERT INTO public.accounting_foundation_events(
+  id,profile_id,event_type,entity_type,entity_id,entity_version,actor_user_id,
+  request_id,reason,evidence_ref,payload_fingerprint,result_reference,occurred_at
+) VALUES('00000000-0000-4000-8000-00000000f84a','00000000-0000-4000-8000-00000000f800',
+  'accounting_profile_updated','accounting_profile','00000000-0000-4000-8000-00000000f800',2,
+  '00000000-0000-4000-8000-00000000f801','00000000-0000-4000-8000-00000000f84b',
+  'Synthetic W10F FI-012 profile cutoff version',NULL,repeat('c',64),
+  'accounting_profiles/00000000-0000-4000-8000-00000000f800/2',
+  (SELECT v2_effective FROM w10f_profile_cutover));
+INSERT INTO public.accounting_profile_versions(
+  profile_id,version,previous_version,framework_key,framework_edition,policy_version,
+  endorsement_context,professional_validation_state,professional_validation_evidence_ref,
+  functional_currency,fiscal_start_month,fiscal_start_day,fiscal_end_month,fiscal_end_day,
+  fiscal_timezone,accounting_start_date,cutover_boundary_date,legal_fiscal_evidence_pending,
+  legal_fiscal_evidence_ref,vat_mode,zatca_state,fatoora_state,activation_state,effective_from,
+  reason,evidence_ref,created_by,created_at,foundation_event_id
+) VALUES('00000000-0000-4000-8000-00000000f800',2,1,'SA_IFRS_FOR_SMES',2025,'W10 provisional policy v2',
+  'Synthetic W10F FI-012 cutoff version','DEFERRED',NULL,'SAR',1,1,12,31,'Asia/Riyadh',
+  '2000-01-01','2001-12-31',true,NULL,'not_registered','INACTIVE','INACTIVE','DEV_PROVISIONAL',
+  (SELECT v2_effective FROM w10f_profile_cutover),'Synthetic W10F FI-012 cutoff version',NULL,
+  '00000000-0000-4000-8000-00000000f801',(SELECT v2_effective FROM w10f_profile_cutover),
+  '00000000-0000-4000-8000-00000000f84a');
+UPDATE public.accounting_profiles SET current_version=2 WHERE id='00000000-0000-4000-8000-00000000f800';
 
 INSERT INTO public.accounting_foundation_events(
   id,profile_id,event_type,entity_type,entity_id,entity_version,actor_user_id,
@@ -382,7 +414,7 @@ BEGIN
   END IF;
   FOR v_grant IN SELECT * FROM (VALUES
     ('accounting:manage_chart'),('accounting:manage_periods'),('accounting:manage_ar_bridge'),
-    ('accounting:manage_inception'),('accounting:view'),('accounting:prepare_journal'),('accounting:manage_revenue_recognition'),
+    ('accounting:manage_inception'),('accounting:view'),('accounting:prepare_journal'),('accounting:post_journal'),('accounting:manage_revenue_recognition'),
     ('accounting:reverse_journal')
   ) AS g(capability) LOOP
     v_request:=v_request+1;
@@ -411,6 +443,8 @@ BEGIN
     ('CONTRACT_LIABILITY','W10F-SYN-CONTRACT-LIABILITY','Synthetic contract liability','التزام عقد اصطناعي','LIABILITY','CREDIT',true,'CONTRACT_LIABILITY'),
     ('CASH_ACCOUNT','W10F-SYN-CASH','Synthetic cash account','حساب نقد اصطناعي','ASSET','DEBIT',true,'CASH_ACCOUNTABILITY'),
     ('CONTRACT_ASSET','W10F-SYN-CONTRACT-ASSET','Synthetic contract asset','أصل عقد اصطناعي','ASSET','DEBIT',true,'CONTRACT_ASSET'),
+    ('MANUAL_ASSET','W10F-SYN-MANUAL-ASSET','Synthetic manual asset','أصل يدوي اصطناعي','ASSET','DEBIT',false,'NONE'),
+    ('MANUAL_LIABILITY','W10F-SYN-MANUAL-LIABILITY','Synthetic manual liability','التزام يدوي اصطناعي','LIABILITY','CREDIT',false,'NONE'),
     ('REVENUE','W10F-SYN-REVENUE','Synthetic revenue','إيراد اصطناعي','REVENUE','CREDIT',false,'NONE')
   ) AS a(mapping_key,account_code,name_en,name_ar,account_type,normal_balance,is_protected,control_classification) LOOP
     v_account:=jsonb_build_object('account_code',v_spec.account_code,'name_en',v_spec.name_en,
@@ -670,11 +704,23 @@ DECLARE c pg_temp.w10f_fixture_context%ROWTYPE; r record; review_result record; 
   covered_arrangement uuid; covered_unit uuid;
   event_one record; event_two record; event_three record; generic_reversal record; correction_event uuid; before_cutoff timestamptz;
   before_report jsonb; historical_report jsonb; current_report jsonb; date_report jsonb; event_row jsonb;
+  ap_report jsonb; ap_v1_cutoff timestamptz; ap_v2_cutoff timestamptz;
   coverage_payload jsonb; coverage_result record; readiness jsonb; service_result record; credit_result record; w10f_business_date date;
   evidence_result record; prepared_result record; mod_units jsonb; mod_result record; successor record;
+  manual_payload jsonb; manual_result record; manual_posted record; manual_journal uuid;
 BEGIN
   SELECT * INTO STRICT c FROM pg_temp.w10f_fixture_context;
   w10f_business_date:=(timezone('Asia/Riyadh',transaction_timestamp()))::date;
+  SELECT v1_cutoff+INTERVAL '30 minutes',v2_effective+INTERVAL '30 minutes'
+    INTO ap_v1_cutoff,ap_v2_cutoff FROM pg_temp.w10f_profile_cutover;
+  ap_report:=public.get_accounting_ap_bridge_reconciliation(c.operator_id,CURRENT_DATE,ap_v1_cutoff,200);
+  IF ap_report->>'state' IS DISTINCT FROM 'READY' OR ap_report->>'cutover_boundary_date' IS DISTINCT FROM '2000-12-31' THEN
+    RAISE EXCEPTION 'W10-INTEGRITY-R1 FI-012 earlier cutoff selected the wrong profile version: %',ap_report;
+  END IF;
+  ap_report:=public.get_accounting_ap_bridge_reconciliation(c.operator_id,CURRENT_DATE,ap_v2_cutoff,200);
+  IF ap_report->>'state' IS DISTINCT FROM 'READY' OR ap_report->>'cutover_boundary_date' IS DISTINCT FROM '2001-12-31' THEN
+    RAISE EXCEPTION 'W10-INTEGRITY-R1 FI-012 later cutoff did not select the valid profile version: %',ap_report;
+  END IF;
   IF public.get_accounting_capability(c.admin_id,'accounting:manage_revenue_recognition') IS NOT FALSE THEN
     RAISE EXCEPTION 'CRM Admin wildcard leaked into W10F accounting authority';
   END IF;
@@ -755,7 +801,7 @@ BEGIN
 
   SELECT id INTO STRICT covered_scope FROM public.approved_billing_scopes
   WHERE source_quotation_id='00000000-0000-4000-8000-00000000f825' AND status='approved';
-  coverage_payload:=jsonb_build_object('accounting_start_date','2000-01-01','cutover_boundary_date','2000-12-31',
+  coverage_payload:=jsonb_build_object('accounting_start_date','2000-01-01','cutover_boundary_date','2001-12-31',
     'evidence_inventory','[]'::jsonb,'reconciliation_references','[]'::jsonb,'items',jsonb_build_array(
       jsonb_build_object('item_id','00000000-0000-4000-8000-00000000f842','source_domain','REVENUE_RECOGNITION',
         'source_record_key','ABS/'||asset_scope::text,'economic_event_key','ABS/'||asset_scope::text||'/REVENUE',
@@ -954,6 +1000,37 @@ BEGIN
   IF current_report->>'revenue_posted_halalah'<>'0' OR current_report->>'recognition_event_count'<>'0' THEN
     RAISE EXCEPTION 'Payment alone changed W10F Revenue';
   END IF;
+
+  SELECT * INTO generic_reversal FROM public.reverse_accounting_journal(
+    c.operator_id,bridge.journal_id,c.period_id,CURRENT_DATE,'Attempt generic AR bridge reversal',
+    'synthetic://w10f/ar-generic-reversal',pg_temp.w10f_req(64240));
+  IF generic_reversal.error_code IS DISTINCT FROM 'journal_not_posted' OR generic_reversal.journal_id IS NOT NULL THEN
+    RAISE EXCEPTION 'W10-INTEGRITY-R1 generic AR reversal bypassed the governed AR correction path: %',generic_reversal.error_code;
+  END IF;
+
+  manual_payload:=jsonb_build_object('accounting_date',CURRENT_DATE,'period_id',c.period_id,'period_version',c.period_version,
+    'posting_rule_id',c.rule_id,'rule_version',c.rule_version,'source_record_key','W10I-MANUAL-1',
+    'economic_event_key','W10I-MANUAL-1','posting_purpose','manual-adjustment','description_en','Manual integrity probe',
+    'description_ar','اختبار قيد يدوي','lines',jsonb_build_array(
+      jsonb_build_object('mapping_key','manual_asset','side','DEBIT','amount_halalah','100','service_id',NULL,'description_en','Asset','description_ar','أصل'),
+      jsonb_build_object('mapping_key','manual_liability','side','CREDIT','amount_halalah','100','service_id',NULL,'description_en','Liability','description_ar','التزام')));
+  SELECT * INTO manual_result FROM public.prepare_accounting_journal(c.operator_id,NULL,0,manual_payload,'Missing manual evidence',NULL,pg_temp.w10f_req(64242));
+  IF manual_result.error_code IS DISTINCT FROM 'invalid_input' THEN RAISE EXCEPTION 'W10-INTEGRITY-R1 accepted manual preparation without evidence'; END IF;
+  SELECT * INTO manual_result FROM public.prepare_accounting_journal(c.operator_id,NULL,0,
+    jsonb_set(manual_payload,'{lines,1,mapping_key}',to_jsonb('revenue'::text)),
+    'Manual revenue bypass probe','synthetic://w10i/manual-revenue',pg_temp.w10f_req(64243));
+  IF manual_result.error_code IS DISTINCT FROM 'account_not_posting' THEN RAISE EXCEPTION 'W10-INTEGRITY-R1 accepted direct manual Revenue posting: %',manual_result.error_code; END IF;
+  SELECT * INTO manual_result FROM public.prepare_accounting_journal(c.operator_id,NULL,0,manual_payload,'Prepare manual integrity journal','synthetic://w10i/manual',pg_temp.w10f_req(64244));
+  IF manual_result.error_code IS NOT NULL OR manual_result.status<>'DRAFT' THEN RAISE EXCEPTION 'W10-INTEGRITY-R1 valid manual journal failed: %',manual_result.error_code; END IF;
+  manual_journal:=manual_result.journal_id;
+  SELECT * INTO manual_posted FROM public.post_accounting_journal(c.operator_id,manual_journal,manual_result.version,pg_temp.w10f_req(64245));
+  IF manual_posted.error_code IS NOT NULL OR manual_posted.status<>'POSTED' THEN RAISE EXCEPTION 'W10-INTEGRITY-R1 manual post failed: %',manual_posted.error_code; END IF;
+  SELECT * INTO manual_result FROM public.reverse_accounting_journal(c.operator_id,manual_journal,c.period_id,CURRENT_DATE,'Missing reversal evidence',NULL,pg_temp.w10f_req(64246));
+  IF manual_result.error_code IS DISTINCT FROM 'invalid_input' THEN RAISE EXCEPTION 'W10-INTEGRITY-R1 accepted reversal without evidence'; END IF;
+  SELECT * INTO manual_result FROM public.reverse_accounting_journal(c.operator_id,manual_journal,c.period_id,CURRENT_DATE,'Blank reversal evidence','   ',pg_temp.w10f_req(64247));
+  IF manual_result.error_code IS DISTINCT FROM 'invalid_input' THEN RAISE EXCEPTION 'W10-INTEGRITY-R1 accepted blank reversal evidence'; END IF;
+  SELECT * INTO manual_result FROM public.reverse_accounting_journal(c.operator_id,manual_journal,c.period_id,CURRENT_DATE,'Evidenced manual reversal','synthetic://w10i/manual-reversal',pg_temp.w10f_req(64248));
+  IF manual_result.error_code IS NOT NULL OR manual_result.original_journal_id IS DISTINCT FROM manual_journal THEN RAISE EXCEPTION 'W10-INTEGRITY-R1 evidenced manual reversal failed: %',manual_result.error_code; END IF;
 
   SELECT * INTO STRICT item FROM pg_temp.w10f_scope_item('00000000-0000-4000-8000-00000000f811');
   IF item.net_halalah<>5000 THEN RAISE EXCEPTION 'Invoice-first consideration differs from fixture';END IF;
