@@ -524,6 +524,9 @@ BEGIN
   LEFT JOIN public.quotation_items parent ON parent.id=qi.parent_authority_line_id
   WHERE q.id=successor_quotation_id
   GROUP BY q.updated_at,q.event,q.date,q.valid_until;
+  -- The W7 draft RPC keeps these temp work tables until transaction end; this fixture invokes it twice.
+  DROP TABLE IF EXISTS pg_temp.w7p0b_draft_line_map;
+  DROP TABLE IF EXISTS pg_temp.w7p0b_draft_lines;
   SELECT * INTO updated FROM public.update_approved_commercial_amendment_draft(
     successor_quotation_id,quotation_payload,line_payload,draft_updated_at,'w10f-rollback-admin');
   IF updated.error_code IS NOT NULL THEN RAISE EXCEPTION 'W10F synthetic amendment update failed: %',updated.error_code;END IF;
@@ -602,8 +605,10 @@ BEGIN
   IF posted_retry.error_code IS NOT NULL OR NOT posted_retry.idempotent_replay THEN
     RAISE EXCEPTION 'W10F post retry was not idempotent';
   END IF;
-  SELECT id,signed_delta_halalah INTO v_event,v_delta FROM public.accounting_revenue_recognition_events
-    WHERE profile_id=c.profile_id AND evidence_id=saved.evidence_id AND evidence_version=saved.version;
+  SELECT recognition_event.id,recognition_event.signed_delta_halalah INTO v_event,v_delta
+    FROM public.accounting_revenue_recognition_events AS recognition_event
+    WHERE recognition_event.profile_id=c.profile_id AND recognition_event.evidence_id=saved.evidence_id
+      AND recognition_event.evidence_version=saved.version;
   RETURN QUERY SELECT v_event,saved.evidence_id,prepared.journal_id,v_delta;
 END;
 $w10f_fixture_recognize$;
@@ -630,8 +635,9 @@ BEGIN
   SELECT * INTO posted FROM public.post_accounting_revenue_recognition_journal(
     c.operator_id,prepared.journal_id,prepared.version,pg_temp.w10f_req(63203));
   IF posted.error_code IS NOT NULL OR posted.status<>'POSTED' THEN RAISE EXCEPTION 'W10F correction post failed: %',posted.error_code;END IF;
-  SELECT id INTO v_event FROM public.accounting_revenue_recognition_events
-    WHERE profile_id=c.profile_id AND evidence_id=saved.evidence_id AND evidence_version=saved.version;
+  SELECT recognition_event.id INTO v_event FROM public.accounting_revenue_recognition_events AS recognition_event
+    WHERE recognition_event.profile_id=c.profile_id AND recognition_event.evidence_id=saved.evidence_id
+      AND recognition_event.evidence_version=saved.version;
   RETURN v_event;
 END;
 $w10f_fixture_correct$;
@@ -927,9 +933,9 @@ BEGIN
   SELECT * INTO prepared_result FROM public.prepare_accounting_revenue_recognition(c.operator_id,evidence_result.evidence_id,
     evidence_result.version,c.period_id,c.period_version,c.rule_id,c.rule_version,CURRENT_DATE,
     'Reject W10C inception-covered Revenue replay',pg_temp.w10f_req(64224));
+  before_report:=public.get_accounting_revenue_recognition_reconciliation(c.operator_id,CURRENT_DATE,clock_timestamp(),500);
   IF prepared_result.error_code IS DISTINCT FROM 'duplicate_coverage'
-     OR EXISTS(SELECT 1 FROM public.accounting_revenue_recognition_events WHERE profile_id=c.profile_id
-       AND evidence_id=evidence_result.evidence_id) THEN
+     OR before_report->>'recognition_event_count'<>'0' THEN
     RAISE EXCEPTION 'W10C coverage did not block replay before Revenue journal creation: %',prepared_result.error_code;
   END IF;
 
@@ -940,7 +946,7 @@ BEGIN
      OR before_report->>'contract_liability_balance_halalah'<>'5000' THEN
     RAISE EXCEPTION 'Invoice alone created Revenue or did not create Contract Liability';
   END IF;
-  SELECT * INTO r FROM public.record_invoice_payment(invoice_first,1,CURRENT_DATE,'bank_transfer',
+  SELECT * INTO r FROM public.record_invoice_payment(invoice_first,50,CURRENT_DATE,'bank_transfer',
     'Synthetic W10F payment without performance evidence','w10f-rollback-operator',pg_temp.w10f_req(64010));
   IF r.error_code IS NOT NULL OR r.payment_id IS NULL THEN RAISE EXCEPTION 'W10F payment-only probe failed: %',r.error_code;END IF;
   current_report:=public.get_accounting_revenue_recognition_reconciliation(c.operator_id,CURRENT_DATE,clock_timestamp(),500);
@@ -974,8 +980,8 @@ BEGIN
     'synthetic://w10f/performance/over-ceiling',repeat('e',64),'5001',NULL,NULL,
     'Synthetic unit ceiling control',pg_temp.w10f_req(64237));
   IF evidence_result.error_code IS NOT NULL OR evidence_result.status<>'HELD'
-     OR evidence_result.held_code IS DISTINCT FROM 'RECOGNITION_AMOUNT_OUTSIDE_UNIT_CEILING' THEN
-    RAISE EXCEPTION 'W10F unit recognition ceiling was not held: % / %',evidence_result.error_code,evidence_result.held_code;
+     OR evidence_result.held_code IS DISTINCT FROM 'POINT_IN_TIME_TRANSFER_AMOUNT_MISMATCH' THEN
+    RAISE EXCEPTION 'W10F point-in-time transfer mismatch was not held: % / %',evidence_result.error_code,evidence_result.held_code;
   END IF;
   SELECT * INTO review_result FROM public.review_accounting_revenue_performance_evidence(c.reviewer_id,
     evidence_result.evidence_id,evidence_result.version,true,'Hold evidence above its performance unit allocation',pg_temp.w10f_req(64238));
@@ -1024,6 +1030,19 @@ BEGIN
     'Independent synthetic arrangement review',pg_temp.w10f_req(64017));
   unit_pit:=pg_temp.w10f_unit_id(arrangement_id,'delivery-pit');
   unit_ot:=pg_temp.w10f_unit_id(arrangement_id,'delivery-ot');
+  SELECT * INTO evidence_result FROM public.save_accounting_revenue_performance_evidence(c.operator_id,unit_ot,
+    'ot-over-ceiling',0,'MEASURED_OUTPUT',CURRENT_DATE-2,CURRENT_DATE,
+    'synthetic://w10f/performance/ot-over-ceiling',repeat('e',64),'4001',NULL,NULL,
+    'Synthetic over-time unit ceiling control',pg_temp.w10f_req(64239));
+  IF evidence_result.error_code IS NOT NULL OR evidence_result.status<>'HELD'
+     OR evidence_result.held_code IS DISTINCT FROM 'RECOGNITION_AMOUNT_OUTSIDE_UNIT_CEILING' THEN
+    RAISE EXCEPTION 'W10F over-time unit recognition ceiling was not held: % / %',evidence_result.error_code,evidence_result.held_code;
+  END IF;
+  SELECT * INTO review_result FROM public.review_accounting_revenue_performance_evidence(c.reviewer_id,
+    evidence_result.evidence_id,evidence_result.version,true,'Hold over-time evidence above its unit allocation',pg_temp.w10f_req(64240));
+  IF review_result.error_code IS NOT NULL OR review_result.decision<>'HELD' THEN
+    RAISE EXCEPTION 'W10F above-ceiling over-time evidence was not reviewed HELD';
+  END IF;
   SELECT * INTO event_two FROM pg_temp.w10f_fixture_recognize(unit_pit,'pit-delivery','CUSTOMER_ACCEPTANCE','5000',2);
   SELECT * INTO event_two FROM pg_temp.w10f_fixture_recognize(unit_ot,'ot-output-1','MEASURED_OUTPUT','2000',3);
   SELECT * INTO event_two FROM pg_temp.w10f_fixture_recognize(unit_ot,'ot-output-2','MEASURED_OUTPUT','3000',4);
@@ -1053,14 +1072,17 @@ BEGIN
   SELECT * INTO bridge FROM pg_temp.w10f_fixture_post('INVOICE',asset_invoice,'UNCONDITIONAL_CONTRACT_ASSET',CURRENT_DATE,2);
   current_report:=public.get_accounting_revenue_recognition_reconciliation(c.operator_id,CURRENT_DATE,clock_timestamp(),500);
   IF current_report->>'authoritative_consideration_halalah'<>'33000'
-     OR current_report->>'performance_unit_allocations_halalah'<>'17500'
+     OR current_report->>'performance_unit_allocations_halalah'<>'14500'
      OR current_report->>'recognized_to_date_halalah'<>'13000'
      OR current_report->>'revenue_posted_halalah'<>'13000'
      OR current_report->>'contract_asset_balance_halalah'<>'0'
      OR current_report->>'contract_liability_balance_halalah'<>'1000'
      OR current_report->>'contract_balance_difference_count'<>'0'
      OR current_report->>'recognition_event_count'<>'6'
-     OR current_report->>'truncated'<>'false' THEN RAISE EXCEPTION 'W10F reconciliation or W10D Contract Asset clearing differs';END IF;
+     OR current_report->>'truncated'<>'false' THEN
+    RAISE EXCEPTION 'W10F reconciliation or W10D Contract Asset clearing differs: %',
+      current_report - 'arrangements' - 'recognition_events' - 'contract_balance_differences' - 'held_evidence';
+  END IF;
   IF jsonb_array_length(current_report->'recognition_events')<>6 OR current_report->>'fi012_timing_difference_count'<>'0' THEN
     RAISE EXCEPTION 'W10F recognition event or FI-012 result differs';
   END IF;
@@ -1101,7 +1123,8 @@ BEGIN
 
   current_report:=public.get_accounting_revenue_recognition_reconciliation(c.operator_id,CURRENT_DATE,clock_timestamp(),500);
   SELECT * INTO credit_result FROM public.record_customer_internal_credit_adjustment(
-    c.customer_id,asset_service,asset_invoice,1.00,'invoice_correction','Synthetic W10F customer invoice correction',CURRENT_DATE,
+    c.customer_id,(SELECT service_id FROM public.invoices WHERE id=invoice_first),invoice_first,1.00,
+    'invoice_correction','Synthetic W10F customer invoice correction',CURRENT_DATE,
     pg_temp.w10f_req(64320),'w10f-rollback-operator',NULL,NULL);
   IF credit_result.error_code IS NOT NULL OR credit_result.credit_adjustment_id IS NULL THEN
     RAISE EXCEPTION 'W10F customer credit adjustment control failed: %',credit_result.error_code;
@@ -1123,7 +1146,9 @@ BEGIN
   IF date_report->>'revenue_posted_halalah' IS DISTINCT FROM current_report->>'revenue_posted_halalah'
      OR date_report->>'recognition_event_count' IS DISTINCT FROM current_report->>'recognition_event_count'
      OR date_report->>'credits_refunds_requiring_revenue_review_count'<>'2' THEN
-    RAISE EXCEPTION 'W10F customer credit/refund changed posted Revenue';
+     RAISE EXCEPTION 'W10F customer credit/refund changed posted Revenue: before %, after %',
+       current_report - 'arrangements' - 'recognition_events' - 'contract_balance_differences' - 'held_evidence',
+       date_report - 'arrangements' - 'recognition_events' - 'contract_balance_differences' - 'held_evidence';
   END IF;
 
   SELECT * INTO successor FROM pg_temp.w10f_fixture_amendment(asset_positive_quote,105,10,4);
@@ -1168,7 +1193,7 @@ BEGIN
 
   current_report:=public.get_accounting_revenue_recognition_reconciliation(c.operator_id,CURRENT_DATE,clock_timestamp(),500);
   IF current_report->>'authoritative_consideration_halalah'<>'33500'
-     OR current_report->>'performance_unit_allocations_halalah'<>'27500'
+     OR current_report->>'performance_unit_allocations_halalah'<>'5500'
      OR current_report->>'recognized_to_date_halalah'<>'14000'
      OR current_report->>'revenue_posted_halalah'<>'14000'
      OR current_report->>'contract_asset_balance_halalah'<>'1000'
@@ -1180,7 +1205,10 @@ BEGIN
      OR current_report->>'inception_covered_count'<>'1'
      OR current_report->>'fi012_timing_difference_count'<>'0'
      OR current_report->>'truncated'<>'false' THEN
-    RAISE EXCEPTION 'W10F final reconciliation after commercial, credit, and refund controls differs';
+     RAISE EXCEPTION 'W10F final reconciliation after commercial, credit, and refund controls differs: %, arrangements %',
+       current_report - 'arrangements' - 'recognition_events' - 'contract_balance_differences' - 'held_evidence',
+       (SELECT jsonb_agg(jsonb_build_object('allocated',x->>'allocated_halalah','consideration',x->>'consideration_halalah',
+         'stale',x->>'stale_authority','status',x->>'status')) FROM jsonb_array_elements(current_report->'arrangements') x);
   END IF;
   IF jsonb_array_length(current_report->'recognition_events')<>7 THEN
     RAISE EXCEPTION 'W10F final recognition event detail count differs';

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const migration = readFileSync(
-  new URL("../../../supabase/migrations/20260929194520_w10f_revenue_recognition_bridge.sql", import.meta.url),
+  new URL("../../../supabase/migrations/20260929225404_w10f_revenue_recognition_bridge.sql", import.meta.url),
   "utf8",
 );
 const fixture = readFileSync(
@@ -11,15 +11,59 @@ const fixture = readFileSync(
   "utf8",
 );
 const correctiveMigration = readFileSync(
-  new URL("../../../supabase/migrations/20260930000000_w10f_reconciliation_unit_total_arrangement_alias_fix.sql", import.meta.url),
+  new URL("../../../supabase/migrations/20260929231146_w10f_reconciliation_unit_total_arrangement_alias_fix.sql", import.meta.url),
   "utf8",
 );
 const revenueAliasMigration = readFileSync(
-  new URL("../../../supabase/migrations/20260930010000_w10f_reconciliation_revenue_alias_fix.sql", import.meta.url),
+  new URL("../../../supabase/migrations/20260929231709_w10f_reconciliation_revenue_alias_fix.sql", import.meta.url),
   "utf8",
 );
 const arrangementAliasMigration = readFileSync(
-  new URL("../../../supabase/migrations/20260930020000_w10f_revenue_arrangement_unit_alias_fix.sql", import.meta.url),
+  new URL("../../../supabase/migrations/20260930000554_w10f_revenue_arrangement_unit_alias_fix.sql", import.meta.url),
+  "utf8",
+);
+const arrangementOutputAliasMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930001247_w10f_revenue_arrangement_output_alias_fix.sql", import.meta.url),
+  "utf8",
+);
+const revenueReviewIdentityMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930003003_w10f_revenue_review_foundation_identity_fix.sql", import.meta.url),
+  "utf8",
+);
+const arrangementModificationAmountMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930003552_w10f_revenue_arrangement_modification_amount_alias_fix.sql", import.meta.url),
+  "utf8",
+);
+const revenueEvidenceVersionAliasMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930005321_w10f_revenue_evidence_version_alias_fix.sql", import.meta.url),
+  "utf8",
+);
+const revenueEvidenceReviewIdentityMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930010251_w10f_revenue_evidence_review_identity_fix.sql", import.meta.url),
+  "utf8",
+);
+const revenuePrepareVersionAliasMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930044913_w10f_revenue_prepare_version_alias_fix.sql", import.meta.url),
+  "utf8",
+);
+const revenueJournalRequestIdentityMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930045836_w10f_revenue_journal_request_identity_fix.sql", import.meta.url),
+  "utf8",
+);
+const revenueMappingKeyContractMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930050329_w10f_revenue_mapping_key_contract_fix.sql", import.meta.url),
+  "utf8",
+);
+const revenuePostJournalAliasMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930050514_w10f_revenue_post_journal_alias_fix.sql", import.meta.url),
+  "utf8",
+);
+const evidenceHoldAuditActionMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930050750_w10f_evidence_hold_audit_action_fix.sql", import.meta.url),
+  "utf8",
+);
+const heldArReviewCutoffMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930051554_w10f_held_ar_review_cutoff_fix.sql", import.meta.url),
   "utf8",
 );
 
@@ -164,6 +208,148 @@ test("W10F arrangement alias repair is additive, exact-source guarded, and prese
   assert.doesNotMatch(arrangementAliasMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
 });
 
+test("W10F arrangement output alias repair guards predecessor and performance-unit references", () => {
+  assert.match(arrangementOutputAliasMigration, /^-- W10F additive correction:[\s\S]*?\nBEGIN;/);
+  assert.match(arrangementOutputAliasMigration, /md5\(src\) IS DISTINCT FROM '88c6e6101cc334f1ec7c673a5ca6e430'/);
+  assert.match(arrangementOutputAliasMigration, /pg_get_constraintdef\(c\.oid\)='UNIQUE \(profile_id, arrangement_id, unit_key\)'/);
+  assert.match(arrangementOutputAliasMigration, /ON CONFLICT ON CONSTRAINT accounting_revenue_performanc_profile_id_arrangement_id_uni_key DO NOTHING/);
+  assert.match(arrangementOutputAliasMigration, /prior_version\.arrangement_id=predecessor[\s\S]*?ORDER BY prior_version\.version DESC/);
+  assert.match(arrangementOutputAliasMigration, /performance_unit\.arrangement_id=arr_id/);
+  assert.match(arrangementOutputAliasMigration, /pg_get_function_result\(p\.oid\)/);
+  assert.match(arrangementOutputAliasMigration, /proallargtypes::regtype\[\]::text/);
+  assert.match(arrangementOutputAliasMigration, /proargmodes::text/);
+  assert.match(arrangementOutputAliasMigration, /after_src IS DISTINCT FROM next_src/);
+  assert.match(arrangementOutputAliasMigration, /after_result_signature IS DISTINCT FROM result_signature[\s\S]*?after_all_arg_types IS DISTINCT FROM all_arg_types OR after_arg_modes IS DISTINCT FROM arg_modes/);
+  assert.match(arrangementOutputAliasMigration, /COMMIT;\s*$/);
+  assert.doesNotMatch(arrangementOutputAliasMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
+});
+
+test("W10F review foundation events use distinct immutable review identities", () => {
+  assert.match(revenueReviewIdentityMigration, /^-- W10F additive correction:[\s\S]*?\nBEGIN;/);
+  assert.match(revenueReviewIdentityMigration, /md5\(src\) IS DISTINCT FROM '1e7e7f85f6327b936c049438f5da57af'/);
+  assert.match(revenueReviewIdentityMigration, /accounting_revenue_arrangement_review/);
+  assert.match(revenueReviewIdentityMigration, /replay\.entity_type IS DISTINCT FROM 'accounting_revenue_arrangement_review'/);
+  assert.match(revenueReviewIdentityMigration, /rid:=gen_random_uuid\(\);[\s\S]*?accounting_revenue_arrangement_review',rid,1,p_actor/);
+  assert.match(revenueReviewIdentityMigration, /accounting_revenue_arrangement_reviews\(id,profile_id,arrangement_id,arrangement_version/);
+  assert.match(revenueReviewIdentityMigration, /accounting_foundation_events_entity_type_check/);
+  assert.match(revenueReviewIdentityMigration, /pg_get_function_result\(p\.oid\)/);
+  assert.match(revenueReviewIdentityMigration, /proallargtypes::regtype\[\]::text/);
+  assert.match(revenueReviewIdentityMigration, /proargmodes::text/);
+  assert.match(revenueReviewIdentityMigration, /after_src IS DISTINCT FROM next_src/);
+  assert.match(revenueReviewIdentityMigration, /after_entity_check IS DISTINCT FROM next_entity_check/);
+  assert.match(revenueReviewIdentityMigration, /COMMIT;\s*$/);
+  assert.doesNotMatch(revenueReviewIdentityMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
+});
+
+test("W10F modification allocation CTEs qualify amounts against the local total", () => {
+  assert.match(arrangementModificationAmountMigration, /^-- W10F additive correction:[\s\S]*?\nBEGIN;/);
+  assert.match(arrangementModificationAmountMigration, /md5\(src\) IS DISTINCT FROM '67e423c42816c163701c15b11cd5b69a'/);
+  assert.match(arrangementModificationAmountMigration, /old_base\.amount/);
+  assert.match(arrangementModificationAmountMigration, /old_walk\.amount/);
+  assert.match(arrangementModificationAmountMigration, /new_base\.amount/);
+  assert.match(arrangementModificationAmountMigration, /new_walk\.amount/);
+  assert.match(arrangementModificationAmountMigration, /sum\(old_resolved\.amount\)/);
+  assert.match(arrangementModificationAmountMigration, /sum\(new_resolved\.amount\)/);
+  assert.match(arrangementModificationAmountMigration, /pg_get_function_result\(p\.oid\)/);
+  assert.match(arrangementModificationAmountMigration, /proallargtypes::regtype\[\]::text/);
+  assert.match(arrangementModificationAmountMigration, /proargmodes::text/);
+  assert.match(arrangementModificationAmountMigration, /after_src IS DISTINCT FROM next_src/);
+  assert.match(arrangementModificationAmountMigration, /COMMIT;\s*$/);
+  assert.doesNotMatch(arrangementModificationAmountMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
+});
+
+test("W10F evidence save qualifies arrangement and performance-unit version columns", () => {
+  assert.match(revenueEvidenceVersionAliasMigration, /^-- W10F additive correction:[\s\S]*?\nBEGIN;/);
+  assert.match(revenueEvidenceVersionAliasMigration, /md5\(src\) IS DISTINCT FROM 'e95736581d0c8f585a8abea330aab300'/);
+  assert.match(revenueEvidenceVersionAliasMigration, /arrangement_version\.version=arr\.current_version/);
+  assert.match(revenueEvidenceVersionAliasMigration, /performance_unit_version\.version=unitrow\.current_version/);
+  assert.match(revenueEvidenceVersionAliasMigration, /pg_get_function_result\(p\.oid\)/);
+  assert.match(revenueEvidenceVersionAliasMigration, /proallargtypes::regtype\[\]::text/);
+  assert.match(revenueEvidenceVersionAliasMigration, /proargmodes::text/);
+  assert.match(revenueEvidenceVersionAliasMigration, /after_src IS DISTINCT FROM next_src/);
+  assert.match(revenueEvidenceVersionAliasMigration, /after_result_signature IS DISTINCT FROM result_signature[\s\S]*?after_all_arg_types IS DISTINCT FROM all_arg_types OR after_arg_modes IS DISTINCT FROM arg_modes/);
+  assert.match(revenueEvidenceVersionAliasMigration, /COMMIT;\s*$/);
+  assert.doesNotMatch(revenueEvidenceVersionAliasMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
+});
+
+test("W10F evidence review uses a distinct immutable foundation identity", () => {
+  assert.match(revenueEvidenceReviewIdentityMigration, /^-- W10F additive correction:[\s\S]*?\nBEGIN;/);
+  assert.match(revenueEvidenceReviewIdentityMigration, /md5\(src\) IS DISTINCT FROM '3b288c5299524185ee0c8c4d66b0b963'/);
+  assert.match(revenueEvidenceReviewIdentityMigration, /accounting_revenue_performance_evidence_review/);
+  assert.match(revenueEvidenceReviewIdentityMigration, /replay\.entity_type IS DISTINCT FROM 'accounting_revenue_performance_evidence_review'/);
+  assert.match(revenueEvidenceReviewIdentityMigration, /rid:=gen_random_uuid\(\);[\s\S]*?accounting_revenue_performance_evidence_review',\s*rid,1,p_actor/);
+  assert.match(revenueEvidenceReviewIdentityMigration, /accounting_revenue_performance_evidence_reviews\(id,profile_id,evidence_id,evidence_version/);
+  assert.match(revenueEvidenceReviewIdentityMigration, /accounting_foundation_events_entity_type_check/);
+  assert.match(revenueEvidenceReviewIdentityMigration, /pg_get_function_result\(p\.oid\)/);
+  assert.match(revenueEvidenceReviewIdentityMigration, /proallargtypes::regtype\[\]::text/);
+  assert.match(revenueEvidenceReviewIdentityMigration, /proargmodes::text/);
+  assert.match(revenueEvidenceReviewIdentityMigration, /after_src IS DISTINCT FROM next_src/);
+  assert.match(revenueEvidenceReviewIdentityMigration, /after_entity_check IS DISTINCT FROM next_entity_check/);
+  assert.match(revenueEvidenceReviewIdentityMigration, /COMMIT;\s*$/);
+  assert.doesNotMatch(revenueEvidenceReviewIdentityMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
+});
+
+test("W10F revenue preparation qualifies version lookups and preserves the RPC contract", () => {
+  assert.match(revenuePrepareVersionAliasMigration, /^-- W10F additive correction:[\s\S]*?\nBEGIN;/);
+  assert.match(revenuePrepareVersionAliasMigration, /md5\(src\) IS DISTINCT FROM 'a3c483a782a8039e29f4111ca961d055'/);
+  assert.match(revenuePrepareVersionAliasMigration, /evidence_version\.version=p_evidence_version/);
+  assert.match(revenuePrepareVersionAliasMigration, /performance_unit_version\.version=unitrow\.current_version/);
+  assert.match(revenuePrepareVersionAliasMigration, /arrangement_version\.version=evv\.arrangement_version/);
+  assert.match(revenuePrepareVersionAliasMigration, /result_signature IS DISTINCT FROM 'TABLE\(error_code text, journal_id uuid, version integer, status text, idempotent_replay boolean\)'/);
+  assert.match(revenuePrepareVersionAliasMigration, /proallargtypes::regtype\[\]::text/);
+  assert.match(revenuePrepareVersionAliasMigration, /proargmodes::text/);
+  assert.match(revenuePrepareVersionAliasMigration, /after_src IS DISTINCT FROM next_src/);
+  assert.match(revenuePrepareVersionAliasMigration, /after_result_signature IS DISTINCT FROM result_signature[\s\S]*?after_all_arg_types IS DISTINCT FROM all_arg_types OR after_arg_modes IS DISTINCT FROM arg_modes/);
+  assert.match(revenuePrepareVersionAliasMigration, /COMMIT;\s*$/);
+  assert.doesNotMatch(revenuePrepareVersionAliasMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
+});
+
+test("W10F revenue and journal preparations have distinct request identities", () => {
+  assert.match(revenueJournalRequestIdentityMigration, /^-- W10F additive correction:[\s\S]*?\nBEGIN;/);
+  assert.match(revenueJournalRequestIdentityMigration, /md5\(src\) IS DISTINCT FROM '6bd5e58c0d64bb58231d1359f7ee8c95'/);
+  assert.match(revenueJournalRequestIdentityMigration, /accounting_revenue_journal_request_identity_fix|w10f-revenue-journal:/);
+  assert.match(revenueJournalRequestIdentityMigration, /old_text:=\$old\$  SELECT \* INTO result FROM public\.prepare_accounting_journal\(p_actor,NULL,0,payload,btrim\(p_reason\),evv\.evidence_ref,p_request_id\);\$old\$/);
+  assert.match(revenueJournalRequestIdentityMigration, /md5\('w10f-revenue-journal:'\|\|p_request_id::text\)::uuid/);
+  assert.match(revenueJournalRequestIdentityMigration, /after_src IS DISTINCT FROM next_src/);
+  assert.match(revenueJournalRequestIdentityMigration, /after_result_signature IS DISTINCT FROM result_signature[\s\S]*?after_all_arg_types IS DISTINCT FROM all_arg_types OR after_arg_modes IS DISTINCT FROM arg_modes/);
+  assert.match(revenueJournalRequestIdentityMigration, /COMMIT;\s*$/);
+  assert.doesNotMatch(revenueJournalRequestIdentityMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
+});
+
+test("W10F Revenue mapping keys comply with the W10B posting rule contract", () => {
+  assert.match(revenueMappingKeyContractMigration, /^-- W10F additive correction:[\s\S]*?\nBEGIN;/);
+  assert.match(revenueMappingKeyContractMigration, /md5\(src\) IS DISTINCT FROM '9337bffaec03bfe457396f6205500cbe'/);
+  assert.match(revenueMappingKeyContractMigration, /md5\(src\) IS DISTINCT FROM '2f2607299b75d846c28a2dbc5eaaa8d6'/);
+  assert.match(revenueMappingKeyContractMigration, /jsonb_build_object\('mapping_key','contract_liability','party_role'/);
+  assert.match(revenueMappingKeyContractMigration, /jsonb_build_object\('mapping_key','contract_asset','party_role'/);
+  assert.match(revenueMappingKeyContractMigration, /jsonb_build_object\('mapping_key','revenue','party_role'/);
+  assert.match(revenueMappingKeyContractMigration, /AND CASE upper\(p_mapping_key\)/);
+  assert.match(revenueMappingKeyContractMigration, /after_meta IS DISTINCT FROM before_meta/);
+  assert.match(revenueMappingKeyContractMigration, /COMMIT;\s*$/);
+  assert.doesNotMatch(revenueMappingKeyContractMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
+});
+
+test("W10F posting and held evidence fixes preserve the deployed RPC contracts", () => {
+  assert.match(revenuePostJournalAliasMigration, /md5\(src\) IS DISTINCT FROM '0ae4946c17e66302f1bc9753a50941ba'/);
+  assert.match(revenuePostJournalAliasMigration, /revenue_link\.journal_id=p_journal_id/);
+  assert.match(evidenceHoldAuditActionMigration, /md5\(src\) IS DISTINCT FROM 'cae0be0df890dea206f4f9f3228c4519'/);
+  assert.match(evidenceHoldAuditActionMigration, /WHEN held IS NULL THEN 'submit' ELSE 'hold'/);
+  for (const sql of [revenuePostJournalAliasMigration, evidenceHoldAuditActionMigration]) {
+    assert.match(sql, /after_meta IS DISTINCT FROM before_meta/);
+    assert.match(sql, /COMMIT;\s*$/);
+    assert.doesNotMatch(sql, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
+  }
+});
+
+test("W10F reconciliation includes held credit and refund sources at the date cutoff", () => {
+  assert.match(heldArReviewCutoffMigration, /md5\(src\) IS DISTINCT FROM 'c90c2fcbaa0ff117773f4eaad602321c'/);
+  assert.match(heldArReviewCutoffMigration, /coalesce\(v\.accounting_date,v\.source_business_date,/);
+  assert.match(heldArReviewCutoffMigration, /v\.source_recorded_at AT TIME ZONE 'Asia\/Riyadh'/);
+  assert.match(heldArReviewCutoffMigration, /after_meta IS DISTINCT FROM before_meta/);
+  assert.match(heldArReviewCutoffMigration, /COMMIT;\s*$/);
+  assert.doesNotMatch(heldArReviewCutoffMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
+});
+
 test("W10F DEV proof is synthetic, rollback-only, and covers independent performance and contract authority", () => {
   assert.match(fixture, /public\.approve_event_cost_budget\([\s\S]{0,240}pg_temp\.w10f_req\(64201\)[\s\S]{0,80}c\.admin_id::text,'admin'\)/);
   assert.match(fixture, /public\.record_event_cost_etc\([\s\S]{0,240}pg_temp\.w10f_req\(64202\)[\s\S]{0,80}c\.admin_id::text,'admin'\)/);
@@ -172,6 +358,9 @@ test("W10F DEV proof is synthetic, rollback-only, and covers independent perform
   assert.match(fixture, /record_event_cost_etc\([\s\S]{0,120}w10f_business_date/);
   assert.match(fixture, /get_event_cost_close_readiness\('00000000-0000-4000-8000-00000000f814',w10f_business_date\)/);
   assert.match(fixture, /reconcile_quotation_discount_allocations\(asset_original_quote\);[\s\S]{0,200}approve_quotation_and_activate_internal_abs\(asset_original_quote/);
+  assert.match(fixture, /DROP TABLE IF EXISTS pg_temp\.w7p0b_draft_line_map;[\s\S]{0,120}DROP TABLE IF EXISTS pg_temp\.w7p0b_draft_lines;/);
+  assert.match(fixture, /'Reject W10C inception-covered Revenue replay'[\s\S]{0,180}before_report:=public\.get_accounting_revenue_recognition_reconciliation\([\s\S]{0,160}prepared_result\.error_code IS DISTINCT FROM 'duplicate_coverage'[\s\S]{0,120}before_report->>'recognition_event_count'<>'0'/);
+  assert.doesNotMatch(fixture, /OR EXISTS\(SELECT 1 FROM public\.accounting_revenue_recognition_events WHERE profile_id=c\.profile_id/);
   assert.match(fixture, /^-- W10F synthetic DEV regression only\.[\s\S]*?\nBEGIN;/);
   assert.match(fixture, /ROLLBACK;\s+DO \$w10f_residue_assertion\$/);
   assert.match(fixture, /capability='accounting:manage_ar_bridge' AND enabled AND runtime_allow_grantable AND owner_slice='W10D'/);

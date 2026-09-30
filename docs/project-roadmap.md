@@ -1,17 +1,16 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W10E2 EXPENSES, EMPLOYEE CASH ACCOUNTABILITY, REIMBURSEMENTS & PETTY CASH ACCOUNTING BRIDGE — 29 September 2026
+## CURRENT ROADMAP POSITION — W10F REVENUE RECOGNITION — 30 September 2026
 
-- **W10E2 — Expenses, Employee Cash Accountability, Reimbursements, and Petty Cash Accounting Bridge:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` on `main` and DEV project `dpddrqjzqohexixgdqiq`.
-- The W10E2 DEV migration chain is applied through `20260929163000`; all five W10E2 migration identities are synchronized, and Supabase dry-run reports no pending migrations.
-- W10E2 adds the source-bound expense, reimbursement, Cash Advance, and Petty Cash bridge on W10B journals/source effects and W10C inception coverage. W5 remains operational authority; unsupported evidence and unproven cash or advance provenance fail closed.
-- The 40-case rollback-clean DEV fixture passed with W10C replay protection, FI-012 cutoffs, employee/advance/fund/service reconciliation, balanced GL/TB, explicit rollback, and zero residue. Employee balance output excludes zero-only fund custodians; mutable W5 balances are not historical accounting truth.
-- DEV verification confirmed forced RLS on all four bridge tables with no direct `service_role` reads; all four governed RPCs are `SECURITY DEFINER` with the expected owner, search path, and execute grants. `accounting:manage_expense_bridge` is enabled without a persistent grant being created.
-- **Validation:** 392/392 focused Accounting/Auth/Expenses tests passed; TypeScript, scoped ESLint, production build, migration/source assertions, and diff checks passed. Full `pnpm test:all` remains warned: a prior attempt reported 2,172/2,195 with 23 unrelated failures; the later run timed out at 120 seconds.
-- **Controller verdict:** `PASS WITH WARN`; the full-suite warning above remains part of the W10E2 closeout history.
-- **Reviewer verdict:** `CLEAN` on the final read-only gate.
-- **Deferred boundaries:** no real accounting posting/backfill, tax or statutory accounting activation, VAT/ZATCA/FATOORA, W10G/W10H/W10I, DEMO/PROD mutation, deployment, or W10F Owner acceptance.
-- **EXACT NEXT ACTION:** Continue W10F Revenue Recognition implementation under this task authority; do not start W10G without separate fresh exact Owner authorization.
+- **W10F — Revenue Recognition:** `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED` on DEV project `dpddrqjzqohexixgdqiq`. W10E2 remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`; W10D and W10E1 retain their Owner acceptance.
+- W10F provides source-bound arrangements, performance-unit and evidence reviews, explicit recognition and correction, W10C inception-coverage protection, W10B journal/GL effects, and bounded as-of/FI-012 reconciliation. Invoice, payment, Service completion, and Event Cost Close alone do not create Revenue.
+- All 15 DEV-applied W10F migrations through `20260930051554` have exact matching local identities and source text. The local `20260930035807` identity was not applied; its SQL was already present under applied version `20260930010251`. No applied DEV migration was rewritten or history repaired.
+- The synthetic DEV fixture passed and rolled back with zero residue, covering W2C allocation, W7 commercial amendments and credit/refund controls, W10C duplicate coverage, W10D Contract Asset/Liability, independent evidence, corrections, cutoff reconciliation, and balanced GL/TB. No real W10F arrangement or recognition event was created.
+- **Validation:** focused W10F tests 18/18, TypeScript, scoped ESLint, and diff check passed; prior cross-slice 112/112 and production build passed. Full `pnpm test:all` remains warned: prior W10E2 evidence was 2,172/2,195 with 23 unrelated failures; the later run timed out at 120 seconds. W10E2's `PASS WITH WARN` history remains intact.
+- **Controller verdict:** `PASS WITH WARN`; the full-suite warning above remains visible.
+- **Reviewer verdict:** `CLEAN` on the final fresh native read-only gate, with no blocking, material, or minor findings.
+- **Deferred boundaries:** no real accounting posting/backfill, bank reconciliation, tax/statutory activation, VAT/ZATCA/FATOORA, W10G–W10I, DEMO/PROD mutation, deployment, or W10F Owner acceptance.
+- **EXACT NEXT ACTION:** Obtain separate fresh exact Owner authorization before any W10G work.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT POSITION)
 

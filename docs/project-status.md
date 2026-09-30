@@ -1,19 +1,16 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W10E2 EXPENSE, EMPLOYEE CASH ACCOUNTABILITY, REIMBURSEMENT & PETTY CASH ACCOUNTING BRIDGE — 29 September 2026
+## CURRENT DELIVERY STATUS — W10F REVENUE RECOGNITION — 30 September 2026
 
-- **Published baseline:** W7–W9 and W10A1–W10E2 remain published and DEV-verified; W10D, W10E1, and W10E2 are Owner-accepted in DEV project `dpddrqjzqohexixgdqiq`.
-- **W10E2 — Expenses, Employee Cash Accountability, Reimbursements, and Petty Cash Accounting Bridge:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`.
-  - Adds source-linked, versioned `EXPENSE_BRIDGE` events and journal lineage for expenses, employee reimbursements, Cash Advances, and Petty Cash. W5 remains the operational authority; accounting snapshots preserve evidence and audit lineage without treating mutable balance summaries as historical truth.
-  - Classification and posting fail closed for unsupported evidence, missing cash binding, missing advance/return provenance, source conflicts, duplicate effects, and inception coverage. Employee reconciliation reports only reimbursement liabilities and advances; fund accountability remains in fund balances. VAT/ZATCA/FATOORA and bank-reconciliation claims remain inactive.
-  - DEV migrations applied: `20260929120000`, `20260929143100`, `20260929145412`, `20260929154055`, and `20260929163000`. Corrections are additive; applied migrations remain immutable.
-  - DEV verification confirmed all four bridge tables have RLS enabled and forced with no direct `service_role` reads; all four governed RPCs are `SECURITY DEFINER`, owned by `postgres`, use `search_path=pg_catalog, public`, and grant execute to `service_role`. `accounting:manage_expense_bridge` is enabled and runtime-grantable; no persistent grant or real profile/chart seed was created.
-  - The 40-case transactional fixture passed and rolled back cleanly. W10C replay protection, FI-012 accounting-date/recorded-at/future-settlement cutoffs, employee/advance/fund/service reconciliation, balanced GL/TB, explicit rollback, and zero synthetic residue passed.
-- **Validation:** 392/392 focused Accounting/Auth/Expenses tests passed; TypeScript, scoped ESLint, production build, focused migration/source contracts, and `git diff --check` passed. The full `pnpm test:all` remains warned: the prior attempt reported 2,172/2,195 with 23 unrelated failures and the later run timed out at 120 seconds.
-- **Controller verdict:** `PASS WITH WARN`; the full-suite warning above remains part of the W10E2 closeout history.
-- **Reviewer verdict:** `CLEAN` on the final read-only gate. DEV fixture evidence is synthetic and rollback-only.
-- **Boundaries:** No real accounting posting/backfill, tax or statutory accounting activation, VAT/ZATCA/FATOORA, W10G–W10I, DEMO/PROD mutation, deployment, or W10F Owner acceptance is claimed.
-- **EXACT NEXT ACTION:** Continue W10F Revenue Recognition implementation under this task authority; do not start W10G without separate fresh exact Owner authorization.
+- **W10F — Revenue Recognition:** `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED` on DEV project `dpddrqjzqohexixgdqiq`. The prior W10E2 bridge remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`; W10D and W10E1 also retain Owner acceptance.
+- **Delivered scope:** Versioned Approved Billing Scope arrangement and performance-unit evidence, independent reviews, explicit point-in-time and over-time recognition, governed correction evidence, W10C inception coverage protection, source-bound balanced W10B journal effects, and bounded FI-012/as-of reconciliation. Invoice, payment, Service completion, and Event Cost Close alone do not create Revenue. Unsupported tax, Agent, variable consideration, stale authority, and unsupported corrections fail closed.
+- **DEV migration identity:** All 15 W10F applied versions through `20260930051554` have exact matching local migration names and source text. The former local-only `20260930035807` filename contained SQL already applied under DEV identity `20260930010251`; it was never separately applied. Applied DEV migration source was not edited and migration-history repair was not used.
+- **DEV proof:** The full synthetic fixture passed inside `BEGIN`/`ROLLBACK`, including W2C allocation, W7 commercial successor and credit/refund boundaries, W10C duplicate coverage, W10D Contract Asset/Liability, point-in-time and over-time evidence, correction, cutoffs, balanced GL/TB, and zero post-rollback synthetic users, profile, arrangements, recognition events, or Revenue journals. DEV has no real W10F arrangements or recognition events.
+- **Validation:** W10F source/fixture tests passed 18/18; TypeScript, scoped ESLint, and `git diff --check` passed. Earlier cross-slice checks passed 112/112 and production build passed. The full `pnpm test:all` warning remains: prior W10E2 evidence reported 2,172/2,195 with 23 unrelated failures, and a later run timed out at 120 seconds. W10E2's `PASS WITH WARN` history is preserved.
+- **Controller verdict:** `PASS WITH WARN`; the full-suite warning above remains visible.
+- **Reviewer verdict:** `CLEAN` on the final fresh native read-only gate, with no blocking, material, or minor findings.
+- **Boundaries:** No real accounting posting or backfill, persistent real profile/chart/grant seed, bank reconciliation, VAT/ZATCA/FATOORA, DEMO/PROD mutation, deployment, or W10F Owner acceptance is claimed.
+- **EXACT NEXT ACTION:** Obtain separate fresh exact Owner authorization before any W10G work.
 
 ## HISTORICAL DELIVERY SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT STATUS)
 
