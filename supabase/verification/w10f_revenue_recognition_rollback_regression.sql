@@ -382,7 +382,8 @@ BEGIN
   END IF;
   FOR v_grant IN SELECT * FROM (VALUES
     ('accounting:manage_chart'),('accounting:manage_periods'),('accounting:manage_ar_bridge'),
-    ('accounting:manage_inception'),('accounting:view'),('accounting:prepare_journal'),('accounting:manage_revenue_recognition')
+    ('accounting:manage_inception'),('accounting:view'),('accounting:prepare_journal'),('accounting:manage_revenue_recognition'),
+    ('accounting:reverse_journal')
   ) AS g(capability) LOOP
     v_request:=v_request+1;
     SELECT * INTO v_result FROM public.set_accounting_capability(
@@ -667,7 +668,7 @@ DECLARE c pg_temp.w10f_fixture_context%ROWTYPE; r record; review_result record; 
   item record; agent_item record; units jsonb; arrangement_id uuid; unit_pit uuid; unit_ot uuid;
   asset_positive_arrangement uuid; application_arrangement uuid; allocation_arrangement uuid;
   covered_arrangement uuid; covered_unit uuid;
-  event_one record; event_two record; event_three record; correction_event uuid; before_cutoff timestamptz;
+  event_one record; event_two record; event_three record; generic_reversal record; correction_event uuid; before_cutoff timestamptz;
   before_report jsonb; historical_report jsonb; current_report jsonb; date_report jsonb; event_row jsonb;
   coverage_payload jsonb; coverage_result record; readiness jsonb; service_result record; credit_result record; w10f_business_date date;
   evidence_result record; prepared_result record; mod_units jsonb; mod_result record; successor record;
@@ -968,6 +969,12 @@ BEGIN
   IF review_result.error_code IS NOT NULL OR review_result.decision<>'APPROVED' THEN RAISE EXCEPTION 'W10F arrangement review failed';END IF;
   unit_pit:=pg_temp.w10f_unit_id(arrangement_id,'acceptance');
   SELECT * INTO event_one FROM pg_temp.w10f_fixture_recognize(unit_pit,'pit-acceptance','CUSTOMER_ACCEPTANCE','5000',1);
+  SELECT * INTO generic_reversal FROM public.reverse_accounting_journal(
+    c.operator_id,event_one.journal_id,c.period_id,CURRENT_DATE,'Attempt generic Revenue reversal',
+    'synthetic://w10f/generic-reversal',pg_temp.w10f_req(64241));
+  IF generic_reversal.error_code IS DISTINCT FROM 'journal_not_posted' OR generic_reversal.journal_id IS NOT NULL THEN
+    RAISE EXCEPTION 'W10F generic reversal bypassed governed Revenue correction lineage: %',generic_reversal.error_code;
+  END IF;
   SELECT * INTO evidence_result FROM public.save_accounting_revenue_performance_evidence(c.operator_id,unit_pit,
     'pit-acceptance',1,'CUSTOMER_ACCEPTANCE',CURRENT_DATE-2,CURRENT_DATE,
     'synthetic://w10f/performance/pit-acceptance',repeat('a',64),'5000',NULL,NULL,

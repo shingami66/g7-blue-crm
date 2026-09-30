@@ -66,6 +66,10 @@ const heldArReviewCutoffMigration = readFileSync(
   new URL("../../../supabase/migrations/20260930051554_w10f_held_ar_review_cutoff_fix.sql", import.meta.url),
   "utf8",
 );
+const genericRevenueReversalMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930053317_w10f_block_generic_revenue_reversal.sql", import.meta.url),
+  "utf8",
+);
 
 const tables = [
   "accounting_revenue_arrangements",
@@ -350,6 +354,16 @@ test("W10F reconciliation includes held credit and refund sources at the date cu
   assert.doesNotMatch(heldArReviewCutoffMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
 });
 
+test("W10F blocks generic Revenue reversal and keeps correction lineage governed", () => {
+  assert.match(genericRevenueReversalMigration, /^-- W10F additive correction:[\s\S]*?\nBEGIN;/);
+  assert.match(genericRevenueReversalMigration, /md5\(src\) IS DISTINCT FROM '34a6187e9e9b0443ca576daa63f6f146'/);
+  assert.match(genericRevenueReversalMigration, /v_original\.source_domain='EXPENSE_BRIDGE' OR v_original\.source_domain='REVENUE_RECOGNITION'/);
+  assert.match(genericRevenueReversalMigration, /after_src IS DISTINCT FROM next_src/);
+  assert.match(genericRevenueReversalMigration, /after_result_signature IS DISTINCT FROM result_signature[\s\S]*?after_all_arg_types IS DISTINCT FROM all_arg_types OR after_arg_modes IS DISTINCT FROM arg_modes/);
+  assert.match(genericRevenueReversalMigration, /COMMIT;\s*$/);
+  assert.doesNotMatch(genericRevenueReversalMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
+});
+
 test("W10F DEV proof is synthetic, rollback-only, and covers independent performance and contract authority", () => {
   assert.match(fixture, /public\.approve_event_cost_budget\([\s\S]{0,240}pg_temp\.w10f_req\(64201\)[\s\S]{0,80}c\.admin_id::text,'admin'\)/);
   assert.match(fixture, /public\.record_event_cost_etc\([\s\S]{0,240}pg_temp\.w10f_req\(64202\)[\s\S]{0,80}c\.admin_id::text,'admin'\)/);
@@ -363,6 +377,9 @@ test("W10F DEV proof is synthetic, rollback-only, and covers independent perform
   assert.doesNotMatch(fixture, /OR EXISTS\(SELECT 1 FROM public\.accounting_revenue_recognition_events WHERE profile_id=c\.profile_id/);
   assert.match(fixture, /^-- W10F synthetic DEV regression only\.[\s\S]*?\nBEGIN;/);
   assert.match(fixture, /ROLLBACK;\s+DO \$w10f_residue_assertion\$/);
+  assert.match(fixture, /public\.reverse_accounting_journal\([\s\S]{0,240}generic Revenue reversal[\s\S]{0,180}generic_reversal\.error_code IS DISTINCT FROM 'journal_not_posted'/);
+  assert.match(fixture, /correction_event:=pg_temp\.w10f_fixture_correct\(unit_pit,event_one\.event_id\);/);
+  assert.match(fixture, /event_row->>'signed_delta_halalah'<>'-1000'[\s\S]{0,180}event_row->>'correction_of_recognition_event_id' IS DISTINCT FROM event_one\.event_id::text/);
   assert.match(fixture, /capability='accounting:manage_ar_bridge' AND enabled AND runtime_allow_grantable AND owner_slice='W10D'/);
   assert.match(fixture, /capability='accounting:manage_revenue_recognition' AND enabled AND runtime_allow_grantable AND owner_slice='W10F'/);
   assert.match(fixture, /owner_slice='W10F' AND capability<>'accounting:manage_revenue_recognition'/);
