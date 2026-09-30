@@ -18,6 +18,10 @@ const revenueAliasMigration = readFileSync(
   new URL("../../../supabase/migrations/20260930010000_w10f_reconciliation_revenue_alias_fix.sql", import.meta.url),
   "utf8",
 );
+const arrangementAliasMigration = readFileSync(
+  new URL("../../../supabase/migrations/20260930020000_w10f_revenue_arrangement_unit_alias_fix.sql", import.meta.url),
+  "utf8",
+);
 
 const tables = [
   "accounting_revenue_arrangements",
@@ -136,7 +140,38 @@ test("W10F Revenue balance repair qualifies the CTE output and preserves the fun
   assert.match(revenueAliasMigration, /COMMIT;\s*$/);
 });
 
+test("W10F arrangement alias repair is additive, exact-source guarded, and preserves the complete RPC contract", () => {
+  assert.match(arrangementAliasMigration, /^-- W10F additive correction:[\s\S]*?\nBEGIN;/);
+  assert.match(arrangementAliasMigration, /md5\(src\) IS DISTINCT FROM 'cd1f1648a5bf072b81e66a9610c53980'/);
+  assert.match(arrangementAliasMigration, /old_text:=\$old\$[\s\S]*?jsonb_array_elements\(p_units\) u[\s\S]*?PERFORMANCE_UNIT_ALLOCATION_DOES_NOT_RECONCILE/);
+  const replacement = arrangementAliasMigration.match(/new_text:=\$new\$([\s\S]*?)\$new\$/)?.[1];
+  assert.ok(replacement, "missing W10F arrangement alias replacement");
+  assert.doesNotMatch(replacement, /jsonb_array_elements\(p_units\) u\b/);
+  assert.match(replacement, /AS unit_json\(value\)/);
+  assert.match(replacement, /AS allocation_json\(value\)/);
+  assert.match(replacement, /unit_json\.value[\s\S]*allocation_json\.value/);
+  assert.match(arrangementAliasMigration, /pg_get_function_result\(p\.oid\)/);
+  assert.match(arrangementAliasMigration, /proallargtypes::regtype\[\]::text/);
+  assert.match(arrangementAliasMigration, /proargmodes::text/);
+  assert.match(arrangementAliasMigration, /result_signature IS DISTINCT FROM 'TABLE\(error_code text, arrangement_id uuid, version integer, status text, held_code text, consideration_halalah text, idempotent_replay boolean\)'/);
+  assert.match(arrangementAliasMigration, /all_arg_types IS DISTINCT FROM '\{uuid,uuid,uuid,integer,jsonb,text,text,text,text,text,uuid,text,uuid,integer,text,text,text,boolean\}'/);
+  assert.match(arrangementAliasMigration, /arg_modes IS DISTINCT FROM '\{i,i,i,i,i,i,i,i,i,i,i,t,t,t,t,t,t,t\}'/);
+  assert.match(arrangementAliasMigration, /after_src IS DISTINCT FROM next_src/);
+  assert.match(arrangementAliasMigration, /after_result_signature IS DISTINCT FROM result_signature[\s\S]*?after_all_arg_types IS DISTINCT FROM all_arg_types OR after_arg_modes IS DISTINCT FROM arg_modes/);
+  assert.match(arrangementAliasMigration, /after_arg_names IS DISTINCT FROM arg_names OR after_arg_defaults IS DISTINCT FROM arg_defaults[\s\S]*?after_signature IS DISTINCT FROM signature/);
+  assert.match(arrangementAliasMigration, /CREATE OR REPLACE FUNCTION public\.save_accounting_revenue_arrangement/);
+  assert.match(arrangementAliasMigration, /COMMIT;\s*$/);
+  assert.doesNotMatch(arrangementAliasMigration, /CREATE TABLE|CREATE POLICY|\bGRANT\b|\bREVOKE\b/i);
+});
+
 test("W10F DEV proof is synthetic, rollback-only, and covers independent performance and contract authority", () => {
+  assert.match(fixture, /public\.approve_event_cost_budget\([\s\S]{0,240}pg_temp\.w10f_req\(64201\)[\s\S]{0,80}c\.admin_id::text,'admin'\)/);
+  assert.match(fixture, /public\.record_event_cost_etc\([\s\S]{0,240}pg_temp\.w10f_req\(64202\)[\s\S]{0,80}c\.admin_id::text,'admin'\)/);
+  assert.doesNotMatch(fixture, /INSERT INTO public\.event_cost_(?:budgets|etc_forecasts)/);
+  assert.match(fixture, /w10f_business_date:=\(timezone\('Asia\/Riyadh',transaction_timestamp\(\)\)\)::date;/);
+  assert.match(fixture, /record_event_cost_etc\([\s\S]{0,120}w10f_business_date/);
+  assert.match(fixture, /get_event_cost_close_readiness\('00000000-0000-4000-8000-00000000f814',w10f_business_date\)/);
+  assert.match(fixture, /reconcile_quotation_discount_allocations\(asset_original_quote\);[\s\S]{0,200}approve_quotation_and_activate_internal_abs\(asset_original_quote/);
   assert.match(fixture, /^-- W10F synthetic DEV regression only\.[\s\S]*?\nBEGIN;/);
   assert.match(fixture, /ROLLBACK;\s+DO \$w10f_residue_assertion\$/);
   assert.match(fixture, /capability='accounting:manage_ar_bridge' AND enabled AND runtime_allow_grantable AND owner_slice='W10D'/);

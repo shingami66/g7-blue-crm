@@ -663,10 +663,11 @@ DECLARE c pg_temp.w10f_fixture_context%ROWTYPE; r record; review_result record; 
   covered_arrangement uuid; covered_unit uuid;
   event_one record; event_two record; event_three record; correction_event uuid; before_cutoff timestamptz;
   before_report jsonb; historical_report jsonb; current_report jsonb; date_report jsonb; event_row jsonb;
-  coverage_payload jsonb; coverage_result record; readiness jsonb; service_result record; credit_result record;
+  coverage_payload jsonb; coverage_result record; readiness jsonb; service_result record; credit_result record; w10f_business_date date;
   evidence_result record; prepared_result record; mod_units jsonb; mod_result record; successor record;
 BEGIN
   SELECT * INTO STRICT c FROM pg_temp.w10f_fixture_context;
+  w10f_business_date:=(timezone('Asia/Riyadh',transaction_timestamp()))::date;
   IF public.get_accounting_capability(c.admin_id,'accounting:manage_revenue_recognition') IS NOT FALSE THEN
     RAISE EXCEPTION 'CRM Admin wildcard leaked into W10F accounting authority';
   END IF;
@@ -709,15 +710,19 @@ BEGIN
   ) VALUES('00000000-0000-4000-8000-00000000f814','Completed','approved','unassessed','not_applicable','ended','confirmed','closed')
   ON CONFLICT(service_id) DO UPDATE SET legacy_status='Completed',commercial_state='approved',payment_state='unassessed',
     readiness_state='not_applicable',execution_state='ended',completion_state='confirmed',close_state='closed',updated_at=clock_timestamp();
-  INSERT INTO public.event_cost_budgets(
-    service_id,budget_version,base_budget_amount,contingency_amount,reason,approved_by,approved_at,request_id
-  ) VALUES('00000000-0000-4000-8000-00000000f814',1,0,0,'W10F synthetic Event Cost Close budget',
-    'w10f-rollback-admin',clock_timestamp(),pg_temp.w10f_req(64201));
-  INSERT INTO public.event_cost_etc_forecasts(
-    service_id,forecast_version,etc_amount,forecast_date,reason,recorded_by,recorded_at,request_id
-  ) VALUES('00000000-0000-4000-8000-00000000f814',1,0,CURRENT_DATE,'W10F synthetic Event Cost Close ETC',
-    'w10f-rollback-admin',clock_timestamp(),pg_temp.w10f_req(64202));
-  readiness:=public.get_event_cost_close_readiness('00000000-0000-4000-8000-00000000f814',CURRENT_DATE);
+  SELECT * INTO service_result FROM public.approve_event_cost_budget(
+    '00000000-0000-4000-8000-00000000f814',0,0,'W10F synthetic Event Cost Close budget',
+    NULL,NULL,pg_temp.w10f_req(64201),c.admin_id::text,'admin');
+  IF service_result.error_code IS NOT NULL OR service_result.budget_id IS NULL THEN
+    RAISE EXCEPTION 'W10F synthetic Event Cost Close budget setup failed: %',service_result.error_code;
+  END IF;
+  SELECT * INTO service_result FROM public.record_event_cost_etc(
+    '00000000-0000-4000-8000-00000000f814',0,w10f_business_date,'W10F synthetic Event Cost Close ETC',
+    NULL,pg_temp.w10f_req(64202),c.admin_id::text,'admin');
+  IF service_result.error_code IS NOT NULL OR service_result.forecast_id IS NULL THEN
+    RAISE EXCEPTION 'W10F synthetic Event Cost Close ETC setup failed: %',service_result.error_code;
+  END IF;
+  readiness:=public.get_event_cost_close_readiness('00000000-0000-4000-8000-00000000f814',w10f_business_date);
   IF COALESCE((readiness->>'ready')::boolean,false) IS NOT TRUE THEN
     RAISE EXCEPTION 'W10F synthetic Event Cost Close fixture is not ready: %',readiness->'blockers';
   END IF;
@@ -733,6 +738,7 @@ BEGIN
 
   SELECT quotation_id,service_id INTO asset_original_quote,asset_service
   FROM pg_temp.w10f_fixture_invoice_map WHERE label='performance_asset';
+  PERFORM public.reconcile_quotation_discount_allocations(asset_original_quote);
   SELECT * INTO r FROM public.approve_quotation_and_activate_internal_abs(asset_original_quote,'w10f-rollback-operator','admin');
   IF r.error_code IS NOT NULL OR r.approved_billing_scope_id IS NULL THEN
     RAISE EXCEPTION 'W10F asset ABS approval failed: %',r.error_code;
