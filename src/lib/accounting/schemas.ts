@@ -1065,6 +1065,218 @@ export const accountingRevenueReconciliationInputSchema = z.object({
   limit: z.number().int().min(1).max(500),
 }).strict();
 
+const accountingBankSha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
+const accountingBankAmountSchema = z.union([
+  z.string().regex(/^-?[0-9]+$/),
+  z.number().int().refine((value) => Number.isSafeInteger(value), "Halalah amount exceeds the safe numeric range"),
+]).transform(String);
+const accountingBankAllocationSchema = z.object({
+  statement_line_id: z.string().uuid(),
+  statement_line_version: z.number().int().positive(),
+  ledger_journal_id: z.string().uuid(),
+  ledger_journal_version: z.number().int().positive(),
+  ledger_line_number: z.number().int().min(1).max(200),
+  statement_allocated_halalah: z.number().int().refine((value) => value !== 0),
+  ledger_allocated_halalah: z.number().int().refine((value) => value !== 0),
+  rationale: boundedText(2000).optional(),
+}).strict();
+
+export const saveAccountingBankBindingInputSchema = z.object({
+  binding_id: z.string().uuid().nullable().optional(),
+  expected_version: z.number().int().nonnegative(),
+  account_id: z.string().uuid(),
+  account_version: z.number().int().positive(),
+  bank_identity_ref: boundedText(2000),
+  bank_identity_sha256: accountingBankSha256Schema,
+  effective_from: validDate,
+  effective_through: validDate.nullable(),
+  masked_display_identity: boundedText(200),
+  evidence_ref: boundedText(2000),
+  evidence_sha256: accountingBankSha256Schema,
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict();
+
+export const reviewAccountingBankBindingInputSchema = z.object({
+  binding_id: z.string().uuid(),
+  binding_version: z.number().int().positive(),
+  approve: z.boolean(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict();
+
+export const saveAccountingBankStatementBatchInputSchema = z.object({
+  batch_id: z.string().uuid().nullable().optional(),
+  expected_version: z.number().int().nonnegative(),
+  binding_id: z.string().uuid(),
+  binding_version: z.number().int().positive(),
+  source_document_ref: boundedText(2000),
+  evidence_sha256: accountingBankSha256Schema,
+  evidence_identity: boundedText(300),
+  coverage_start: validDate,
+  coverage_end: validDate,
+  opening_balance_halalah: z.number().int(),
+  closing_balance_halalah: z.number().int(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict().superRefine((value, context) => {
+  if (value.coverage_end < value.coverage_start) {
+    context.addIssue({ code: "custom", path: ["coverage_end"], message: "Coverage interval must be ordered" });
+  }
+});
+
+export const saveAccountingBankStatementLineInputSchema = z.object({
+  line_id: z.string().uuid().nullable().optional(),
+  expected_version: z.number().int().nonnegative(),
+  batch_id: z.string().uuid(),
+  batch_version: z.number().int().positive(),
+  stable_line_identity: boundedText(300),
+  transaction_date: validDate,
+  value_date: validDate.nullable(),
+  signed_amount_halalah: z.number().int().refine((value) => value !== 0),
+  reference: z.string().trim().max(500).nullable(),
+  description: z.string().trim().max(2000).nullable(),
+  source_row_identity: boundedText(300),
+  duplicate_fingerprint: accountingBankSha256Schema,
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict().superRefine((value, context) => {
+  if (value.value_date !== null && value.value_date < value.transaction_date) {
+    context.addIssue({ code: "custom", path: ["value_date"], message: "Value date must not precede transaction date" });
+  }
+});
+
+export const prepareAccountingBankReconciliationInputSchema = z.object({
+  group_id: z.string().uuid().nullable().optional(),
+  expected_version: z.number().int().nonnegative(),
+  binding_id: z.string().uuid(),
+  binding_version: z.number().int().positive(),
+  as_of_date: validDate,
+  recorded_at_cutoff: z.string().datetime({ offset: true }),
+  allocations: z.array(accountingBankAllocationSchema).min(1).max(500),
+  rationale: boundedText(2000),
+  evidence_ref: boundedText(2000).nullable(),
+  request_id: z.string().uuid(),
+}).strict();
+
+export const reviewAccountingBankReconciliationInputSchema = z.object({
+  group_id: z.string().uuid(),
+  group_version: z.number().int().positive(),
+  approve: z.boolean(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict();
+
+export const unmatchAccountingBankReconciliationInputSchema = z.object({
+  group_id: z.string().uuid(),
+  group_version: z.number().int().positive(),
+  reason: boundedText(2000),
+  request_id: z.string().uuid(),
+}).strict();
+
+export const accountingBankReconciliationInputSchema = z.object({
+  binding_id: z.string().uuid(),
+  as_of_date: validDate,
+  recorded_at_cutoff: z.string().datetime({ offset: true }),
+  limit: z.number().int().min(1).max(500),
+}).strict();
+
+const accountingBankReadRowMoneyKeys = [
+  "signed_amount_halalah", "amount_halalah", "signed_amount",
+  "statement_allocated_halalah", "ledger_allocated_halalah",
+  "opening_balance_halalah", "closing_balance_halalah",
+] as const;
+const accountingBankReadRowSchema = z.record(z.string(), z.unknown()).superRefine((row, context) => {
+  for (const key of accountingBankReadRowMoneyKeys) {
+    const value = row[key];
+    if (value === undefined || value === null) continue;
+    if (typeof value === "number" && Number.isSafeInteger(value)) continue;
+    if (typeof value === "string" && /^-?[0-9]+$/.test(value)) continue;
+    context.addIssue({ code: "custom", path: [key], message: "Halalah row amount must be an integer string or safe integer" });
+  }
+}).transform((row) => Object.fromEntries(
+  Object.entries(row).map(([key, value]) => [
+    key,
+    typeof value === "number" && accountingBankReadRowMoneyKeys.includes(key as (typeof accountingBankReadRowMoneyKeys)[number])
+      ? String(value)
+      : value,
+  ]),
+));
+export const accountingBankBindingMutationResultSchema = z.object({
+  error_code: z.string().nullable(),
+  binding_id: z.string().uuid().nullable(),
+  version: z.number().int().positive().nullable(),
+  status: z.enum(["PREPARED", "APPROVED", "REJECTED", "RETIRED"]).nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+export const accountingBankBatchMutationResultSchema = z.object({
+  error_code: z.string().nullable(),
+  batch_id: z.string().uuid().nullable(),
+  version: z.number().int().positive().nullable(),
+  status: z.enum(["RECORDED", "REJECTED"]).nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+export const accountingBankLineMutationResultSchema = z.object({
+  error_code: z.string().nullable(),
+  line_id: z.string().uuid().nullable(),
+  version: z.number().int().positive().nullable(),
+  status: z.literal("RECORDED").nullable(),
+  duplicate_candidate: z.boolean(),
+  idempotent_replay: z.boolean(),
+}).strict();
+export const accountingBankReconciliationMutationResultSchema = z.object({
+  error_code: z.string().nullable(),
+  group_id: z.string().uuid().nullable(),
+  version: z.number().int().positive().nullable(),
+  status: z.literal("PREPARED").nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+export const accountingBankReviewResultSchema = z.object({
+  error_code: z.string().nullable(),
+  group_id: z.string().uuid().nullable(),
+  group_version: z.number().int().positive().nullable(),
+  decision: z.enum(["APPROVED", "REJECTED", "UNMATCHED", "IMPACT_REVIEW_REQUIRED"]).nullable(),
+  idempotent_replay: z.boolean(),
+}).strict();
+export const accountingBankReconciliationSchema = z.union([
+  z.object({
+    state: z.literal("NOT_INITIALIZED"),
+    binding_id: z.string().uuid(),
+    bank_reconciled: z.literal(false),
+  }).passthrough(),
+  z.object({
+    state: z.enum(["READY", "TRUNCATED"]),
+    binding_id: z.string().uuid(),
+    binding_version: z.number().int().positive().optional(),
+    account_id: z.string().uuid().optional(),
+    account_version: z.number().int().positive().optional(),
+    currency: z.literal("SAR").optional(),
+    as_of_date: validDate.optional(),
+    recorded_at_cutoff: z.string().datetime({ offset: true }).optional(),
+    statement_opening_balance_halalah: accountingBankAmountSchema.optional(),
+    statement_closing_balance_halalah: accountingBankAmountSchema.optional(),
+    ledger_opening_balance_halalah: accountingBankAmountSchema.optional(),
+    ledger_closing_balance_halalah: accountingBankAmountSchema.optional(),
+    statement_inflows_halalah: accountingBankAmountSchema.optional(),
+    statement_outflows_halalah: accountingBankAmountSchema.optional(),
+    ledger_inflows_halalah: accountingBankAmountSchema.optional(),
+    ledger_outflows_halalah: accountingBankAmountSchema.optional(),
+    matched_amount_halalah: accountingBankAmountSchema.optional(),
+    partially_matched_amount_halalah: accountingBankAmountSchema.optional(),
+    unmatched_statement_amount_halalah: accountingBankAmountSchema.optional(),
+    unmatched_ledger_amount_halalah: accountingBankAmountSchema.optional(),
+    duplicate_statement_candidates: z.number().int().nonnegative().optional(),
+    timing_difference_halalah: accountingBankAmountSchema.optional(),
+    impact_review_required_count: z.number().int().nonnegative().optional(),
+    unexplained_difference_halalah: accountingBankAmountSchema.optional(),
+    preparation_review_status: z.string().optional(),
+    evidence_cutoff: z.string().datetime({ offset: true }).optional(),
+    adjustment_required_statement_items: z.array(accountingBankReadRowSchema),
+    statement_lines: z.array(accountingBankReadRowSchema),
+    ledger_cash_lines: z.array(accountingBankReadRowSchema),
+  }).passthrough(),
+]);
+
 export const accountingRevenueArrangementMutationResultSchema = z.object({
   error_code: z.string().nullable(),
   arrangement_id: z.string().uuid().nullable(),

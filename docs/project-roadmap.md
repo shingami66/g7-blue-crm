@@ -1,16 +1,15 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W10F REVENUE RECOGNITION — 30 September 2026
+## CURRENT ROADMAP POSITION — W10G BANK RECONCILIATION — 30 September 2026
 
-- **W10F — Revenue Recognition:** `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED` on DEV project `dpddrqjzqohexixgdqiq`, including the bounded generic-Revenue-reversal correction. W10E2 remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`; W10D and W10E1 retain their Owner acceptance.
-- W10F provides source-bound arrangements, performance-unit and evidence reviews, explicit recognition and correction, W10C inception-coverage protection, W10B journal/GL effects, and bounded as-of/FI-012 reconciliation. Invoice, payment, Service completion, and Event Cost Close alone do not create Revenue.
-- All 16 DEV-applied W10F migrations through `20260930053317_w10f_block_generic_revenue_reversal` have exact matching local identities and source text. The additive repair extends `reverse_accounting_journal()` to reject `REVENUE_RECOGNITION` while preserving the existing unrelated-domain guards. The local `20260930035807` identity was not applied; its SQL was already present under applied version `20260930010251`. No applied DEV migration was rewritten or history repaired.
-- The synthetic DEV fixture passed and rolled back with zero residue, covering W2C allocation, W7 commercial amendments and credit/refund controls, W10C duplicate coverage, W10D Contract Asset/Liability, independent evidence, generic Revenue reversal rejection with `journal_not_posted`, governed negative-recognition correction lineage, cutoff reconciliation, and balanced GL/TB. No real W10F arrangement or recognition event was created.
-- **Validation:** focused W10F tests 19/19, TypeScript, scoped ESLint, and diff check passed; prior cross-slice 112/112 and production build passed. Full `pnpm test:all` remains warned: prior W10E2 evidence was 2,172/2,195 with 23 unrelated failures; the later run timed out at 120 seconds. W10E2's `PASS WITH WARN` history remains intact.
-- **Controller verdict:** `PASS WITH WARN`; the full-suite warning above remains visible.
-- **Reviewer verdict:** `CLEAN` on the final fresh native read-only gate, with no blocking, material, or minor findings.
-- **Deferred boundaries:** no real accounting posting/backfill, bank reconciliation, tax/statutory activation, VAT/ZATCA/FATOORA, W10G–W10I, DEMO/PROD mutation, deployment, or W10F Owner acceptance.
-- **EXACT NEXT ACTION:** Obtain separate fresh exact Owner authorization before any W10G work.
+- **W10G — Bank Reconciliation:** `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED` on DEV project `dpddrqjzqohexixgdqiq`. W10F remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`; W10E2, W10D, and W10E1 retain their prior closeout states.
+- W10G delivers versioned bank bindings, statement evidence, governed matching and review, cutoff reconciliation, bounded reads, unmatch/rematch, and reversal-impact evidence. Reconciliation creates no accounting journal or new journal source domain.
+- DEV applied migrations are `20260930065506_w10g_bank_reconciliation_foundation`, `20260930071124_w10g_reconciliation_event_identity_repair`, `20260930072210_w10g_reversal_helper_acl_repair`, and `20260930073518_w10g_reversal_helper_predecessor_guard`, with exact matching local source identities. The additive repairs preserve deployed RPC contracts, separate review/unmatch event identities, guard reversal impact to posted journals, make the trigger helper owner-only, and fail closed on predecessor drift.
+- The rollback-only fixture passed with 50 named categories, actual `reverse_accounting_journal` impact-review evidence, distinct event versions, cutoff/coverage guards, balanced-ledger invariants, no-journal behavior, and zero residue after rollback.
+- **Validation:** W10G source tests 7/7 and the required mocked accounting rerun 21/21 passed; TypeScript, scoped ESLint, production build, and staged diff checks passed. The initial combined accounting invocation's three Node 22 module-mock harness failures were resolved by the required test flag.
+- **Reviewer verdict:** `CLEAN` on the required fresh same-session native read-only gate.
+- **Deferred boundaries:** no real bank binding or statement import, persistent accounting seed, journal posting, bank integration, tax/statutory activation, VAT/ZATCA/FATOORA, W10H–W10I, DEMO/PROD mutation, or deployment.
+- **EXACT NEXT ACTION:** Obtain fresh exact Owner authorization before beginning W10H; keep W10G bounded to governed reconciliation evidence and corrections.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT POSITION)
 

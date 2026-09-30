@@ -26,6 +26,8 @@ import {
   accountingExpenseBridgeReconciliationSchema,
   accountingRevenueReconciliationInputSchema,
   accountingRevenueReconciliationSchema,
+  accountingBankReconciliationInputSchema,
+  accountingBankReconciliationSchema,
   listAccountingCapabilityAssignmentsInputSchema,
 } from "./schemas";
 import { resolveAccountingCapability } from "./permissions";
@@ -41,6 +43,7 @@ import type {
   AccountingApBridgeReconciliation,
   AccountingExpenseBridgeReconciliation,
   AccountingRevenueReconciliation,
+  AccountingBankReconciliation,
 } from "./types";
 
 function throwSafeRpcError(error: { code?: string } | null): never {
@@ -434,5 +437,34 @@ export async function getAccountingRevenueReconciliation(
   if (result.error) throwSafeRpcError(result.error);
   const parsed = accountingRevenueReconciliationSchema.safeParse(result.data);
   if (!parsed.success) throw new AuthDependencyError("Accounting revenue reconciliation response was invalid");
+  return parsed.data;
+}
+
+export async function getAccountingBankReconciliation(
+  input: unknown,
+): Promise<AccountingBankReconciliation> {
+  const actor = await requireUser();
+  const [canView, canReconcile] = await Promise.all([
+    resolveAccountingCapability(actor.id, "accounting:view"),
+    resolveAccountingCapability(actor.id, "accounting:reconcile_bank"),
+  ]);
+  if (!canView && !canReconcile) throw new ForbiddenError("Accounting capability required");
+  const parsedInput = accountingBankReconciliationInputSchema.safeParse(input);
+  if (!parsedInput.success) throw new AuthDependencyError("Accounting bank reconciliation request was invalid");
+  let result;
+  try {
+    result = await createAdminClient().rpc("get_accounting_bank_reconciliation", {
+      p_actor_user_id: actor.id,
+      p_binding_id: parsedInput.data.binding_id,
+      p_as_of_date: parsedInput.data.as_of_date,
+      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff,
+      p_limit: parsedInput.data.limit,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting bank reconciliation dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  const parsed = accountingBankReconciliationSchema.safeParse(result.data);
+  if (!parsed.success) throw new AuthDependencyError("Accounting bank reconciliation response was invalid");
   return parsed.data;
 }

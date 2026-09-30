@@ -4094,6 +4094,165 @@ export type Database = {
         }
         Returns: Json
       }
+      save_accounting_bank_binding: {
+        Args: {
+          p_actor_user_id: string
+          p_binding_id: string | null
+          p_expected_version: number
+          p_account_id: string
+          p_account_version: number
+          p_bank_identity_ref: string
+          p_bank_identity_sha256: string
+          p_effective_from: string
+          p_effective_through: string | null
+          p_masked_display_identity: string
+          p_evidence_ref: string
+          p_evidence_sha256: string
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          binding_id: string | null
+          version: number | null
+          status: string | null
+          idempotent_replay: boolean
+        }[]
+      }
+      review_accounting_bank_binding: {
+        Args: {
+          p_actor_user_id: string
+          p_binding_id: string
+          p_binding_version: number
+          p_approve: boolean
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          binding_id: string | null
+          version: number | null
+          status: string | null
+          idempotent_replay: boolean
+        }[]
+      }
+      save_accounting_bank_statement_batch: {
+        Args: {
+          p_actor_user_id: string
+          p_batch_id: string | null
+          p_expected_version: number
+          p_binding_id: string
+          p_binding_version: number
+          p_source_document_ref: string
+          p_evidence_sha256: string
+          p_evidence_identity: string
+          p_coverage_start: string
+          p_coverage_end: string
+          p_opening_balance_halalah: number
+          p_closing_balance_halalah: number
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          batch_id: string | null
+          version: number | null
+          status: string | null
+          idempotent_replay: boolean
+        }[]
+      }
+      save_accounting_bank_statement_line: {
+        Args: {
+          p_actor_user_id: string
+          p_line_id: string | null
+          p_expected_version: number
+          p_batch_id: string
+          p_batch_version: number
+          p_stable_line_identity: string
+          p_transaction_date: string
+          p_value_date: string | null
+          p_signed_amount_halalah: number
+          p_reference: string | null
+          p_description: string | null
+          p_source_row_identity: string
+          p_duplicate_fingerprint: string
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          line_id: string | null
+          version: number | null
+          status: string | null
+          duplicate_candidate: boolean
+          idempotent_replay: boolean
+        }[]
+      }
+      prepare_accounting_bank_reconciliation: {
+        Args: {
+          p_actor_user_id: string
+          p_group_id: string | null
+          p_expected_version: number
+          p_binding_id: string
+          p_binding_version: number
+          p_as_of_date: string
+          p_recorded_at_cutoff: string
+          p_allocations: Json
+          p_rationale: string
+          p_evidence_ref: string | null
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          group_id: string | null
+          version: number | null
+          status: string | null
+          idempotent_replay: boolean
+        }[]
+      }
+      review_accounting_bank_reconciliation: {
+        Args: {
+          p_actor_user_id: string
+          p_group_id: string
+          p_group_version: number
+          p_approve: boolean
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          group_id: string | null
+          group_version: number | null
+          decision: string | null
+          idempotent_replay: boolean
+        }[]
+      }
+      unmatch_accounting_bank_reconciliation: {
+        Args: {
+          p_actor_user_id: string
+          p_group_id: string
+          p_group_version: number
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          group_id: string | null
+          group_version: number | null
+          decision: string | null
+          idempotent_replay: boolean
+        }[]
+      }
+      get_accounting_bank_reconciliation: {
+        Args: {
+          p_actor_user_id: string
+          p_binding_id: string
+          p_as_of_date: string
+          p_recorded_at_cutoff: string
+          p_limit?: number
+        }
+        Returns: Json
+      }
       start_service_execution: {
         Args: { p_actor_id: string; p_actor_role: string; p_service_id: string }
         Returns: {

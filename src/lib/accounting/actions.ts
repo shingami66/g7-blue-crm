@@ -45,6 +45,18 @@ import {
   accountingRevenueReviewResultSchema,
   accountingRevenueEvidenceMutationResultSchema,
   accountingRevenueJournalMutationResultSchema,
+  saveAccountingBankBindingInputSchema,
+  reviewAccountingBankBindingInputSchema,
+  saveAccountingBankStatementBatchInputSchema,
+  saveAccountingBankStatementLineInputSchema,
+  prepareAccountingBankReconciliationInputSchema,
+  reviewAccountingBankReconciliationInputSchema,
+  unmatchAccountingBankReconciliationInputSchema,
+  accountingBankBindingMutationResultSchema,
+  accountingBankBatchMutationResultSchema,
+  accountingBankLineMutationResultSchema,
+  accountingBankReconciliationMutationResultSchema,
+  accountingBankReviewResultSchema,
   setAccountingCapabilityInputSchema,
   updateAccountingProfileInputSchema,
 } from "./schemas";
@@ -148,6 +160,17 @@ const SAFE_ERROR_CODES = new Set([
   "revenue_correction_lineage_invalid",
   "revenue_correction_ceiling_exceeded",
   "revenue_correction_evidence_required",
+  "bank_account_not_eligible",
+  "bank_binding_conflict",
+  "binding_version_unavailable",
+  "binding_not_approved",
+  "duplicate_statement_evidence",
+  "statement_batch_not_found",
+  "reconciliation_not_found",
+  "reconciliation_not_approved",
+  "mismatched_allocation_totals",
+  "bank_coverage_exceeded",
+  "unmatched_adjustment_required",
 ]);
 
 function safeCode(code: string | null | undefined) {
@@ -457,7 +480,7 @@ export async function reverseAccountingJournal(
 
 async function requireAccountingCapabilities(
   actorId: string,
-  capabilities: Array<"accounting:manage_inception" | "accounting:manage_ar_bridge" | "accounting:manage_ap_bridge" | "accounting:manage_expense_bridge" | "accounting:manage_revenue_recognition" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view">,
+  capabilities: Array<"accounting:manage_inception" | "accounting:manage_ar_bridge" | "accounting:manage_ap_bridge" | "accounting:manage_expense_bridge" | "accounting:manage_revenue_recognition" | "accounting:reconcile_bank" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view">,
 ) {
   const allowed = await Promise.all(capabilities.map((capability) =>
     resolveAccountingCapability(actorId, capability)));
@@ -1028,4 +1051,157 @@ export async function postAccountingRevenueRecognitionJournal(input: unknown) {
     value: { journal_id: row.data.journal_id, version: row.data.version, status: "POSTED" as const },
     idempotentReplay: row.data.idempotent_replay,
   };
+}
+
+async function callBankRpc<T extends { error_code: string | null }>(
+  call: () => PromiseLike<{ data: T[] | null; error: { code?: string } | null }>,
+): Promise<{ row: T } | { failure: Extract<AccountingActionResult<never>, { ok: false }> }> {
+  let result: { data: T[] | null; error: { code?: string } | null };
+  try {
+    result = await call();
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof AuthDependencyError) throw error;
+    throw new AuthDependencyError("Accounting bank reconciliation dependency failed");
+  }
+  if (result.error) return { failure: safeFailure(result.error) as Extract<AccountingActionResult<never>, { ok: false }> };
+  const row = result.data?.[0];
+  if (!row) throw new AuthDependencyError("Accounting bank reconciliation response was invalid");
+  return { row };
+}
+
+export async function saveAccountingBankBinding(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:reconcile_bank"]);
+  const parsed = saveAccountingBankBindingInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callBankRpc(() => createAdminClient().rpc("save_accounting_bank_binding", {
+    p_actor_user_id: actor.id, p_binding_id: parsed.data.binding_id ?? null,
+    p_expected_version: parsed.data.expected_version, p_account_id: parsed.data.account_id,
+    p_account_version: parsed.data.account_version, p_bank_identity_ref: parsed.data.bank_identity_ref,
+    p_bank_identity_sha256: parsed.data.bank_identity_sha256, p_effective_from: parsed.data.effective_from,
+    p_effective_through: parsed.data.effective_through, p_masked_display_identity: parsed.data.masked_display_identity,
+    p_evidence_ref: parsed.data.evidence_ref, p_evidence_sha256: parsed.data.evidence_sha256,
+    p_reason: parsed.data.reason, p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingBankBindingMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting bank binding response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.binding_id || row.data.version == null || !row.data.status) throw new AuthDependencyError("Accounting bank binding response was invalid");
+  return { ok: true as const, value: { binding_id: row.data.binding_id, version: row.data.version, status: row.data.status }, idempotentReplay: row.data.idempotent_replay };
+}
+
+export async function reviewAccountingBankBinding(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:reconcile_bank"]);
+  const parsed = reviewAccountingBankBindingInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callBankRpc(() => createAdminClient().rpc("review_accounting_bank_binding", {
+    p_actor_user_id: actor.id, p_binding_id: parsed.data.binding_id, p_binding_version: parsed.data.binding_version,
+    p_approve: parsed.data.approve, p_reason: parsed.data.reason, p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingBankBindingMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting bank binding review response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.binding_id || row.data.version == null || !row.data.status) throw new AuthDependencyError("Accounting bank binding review response was invalid");
+  return { ok: true as const, value: { binding_id: row.data.binding_id, version: row.data.version, status: row.data.status }, idempotentReplay: row.data.idempotent_replay };
+}
+
+export async function saveAccountingBankStatementBatch(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:reconcile_bank"]);
+  const parsed = saveAccountingBankStatementBatchInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callBankRpc(() => createAdminClient().rpc("save_accounting_bank_statement_batch", {
+    p_actor_user_id: actor.id, p_batch_id: parsed.data.batch_id ?? null, p_expected_version: parsed.data.expected_version,
+    p_binding_id: parsed.data.binding_id, p_binding_version: parsed.data.binding_version,
+    p_source_document_ref: parsed.data.source_document_ref, p_evidence_sha256: parsed.data.evidence_sha256,
+    p_evidence_identity: parsed.data.evidence_identity, p_coverage_start: parsed.data.coverage_start,
+    p_coverage_end: parsed.data.coverage_end, p_opening_balance_halalah: parsed.data.opening_balance_halalah,
+    p_closing_balance_halalah: parsed.data.closing_balance_halalah, p_reason: parsed.data.reason,
+    p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingBankBatchMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting bank statement batch response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.batch_id || row.data.version == null || !row.data.status) throw new AuthDependencyError("Accounting bank statement batch response was invalid");
+  return { ok: true as const, value: { batch_id: row.data.batch_id, version: row.data.version, status: row.data.status }, idempotentReplay: row.data.idempotent_replay };
+}
+
+export async function saveAccountingBankStatementLine(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:reconcile_bank"]);
+  const parsed = saveAccountingBankStatementLineInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callBankRpc(() => createAdminClient().rpc("save_accounting_bank_statement_line", {
+    p_actor_user_id: actor.id, p_line_id: parsed.data.line_id ?? null, p_expected_version: parsed.data.expected_version,
+    p_batch_id: parsed.data.batch_id, p_batch_version: parsed.data.batch_version,
+    p_stable_line_identity: parsed.data.stable_line_identity, p_transaction_date: parsed.data.transaction_date,
+    p_value_date: parsed.data.value_date, p_signed_amount_halalah: parsed.data.signed_amount_halalah,
+    p_reference: parsed.data.reference, p_description: parsed.data.description,
+    p_source_row_identity: parsed.data.source_row_identity, p_duplicate_fingerprint: parsed.data.duplicate_fingerprint,
+    p_reason: parsed.data.reason, p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingBankLineMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting bank statement line response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.line_id || row.data.version == null || row.data.status !== "RECORDED") throw new AuthDependencyError("Accounting bank statement line response was invalid");
+  return { ok: true as const, value: { line_id: row.data.line_id, version: row.data.version, duplicate_candidate: row.data.duplicate_candidate }, idempotentReplay: row.data.idempotent_replay };
+}
+
+export async function prepareAccountingBankReconciliation(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:reconcile_bank"]);
+  const parsed = prepareAccountingBankReconciliationInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callBankRpc(() => createAdminClient().rpc("prepare_accounting_bank_reconciliation", {
+    p_actor_user_id: actor.id, p_group_id: parsed.data.group_id ?? null, p_expected_version: parsed.data.expected_version,
+    p_binding_id: parsed.data.binding_id, p_binding_version: parsed.data.binding_version,
+    p_as_of_date: parsed.data.as_of_date, p_recorded_at_cutoff: parsed.data.recorded_at_cutoff,
+    p_allocations: parsed.data.allocations as unknown as Json, p_rationale: parsed.data.rationale,
+    p_evidence_ref: parsed.data.evidence_ref, p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingBankReconciliationMutationResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting bank reconciliation response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.group_id || row.data.version == null || row.data.status !== "PREPARED") throw new AuthDependencyError("Accounting bank reconciliation response was invalid");
+  return { ok: true as const, value: { group_id: row.data.group_id, version: row.data.version, status: row.data.status }, idempotentReplay: row.data.idempotent_replay };
+}
+
+export async function reviewAccountingBankReconciliation(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:reconcile_bank"]);
+  const parsed = reviewAccountingBankReconciliationInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callBankRpc(() => createAdminClient().rpc("review_accounting_bank_reconciliation", {
+    p_actor_user_id: actor.id, p_group_id: parsed.data.group_id, p_group_version: parsed.data.group_version,
+    p_approve: parsed.data.approve, p_reason: parsed.data.reason, p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingBankReviewResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting bank reconciliation review response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.group_id || row.data.group_version == null || !row.data.decision) throw new AuthDependencyError("Accounting bank reconciliation review response was invalid");
+  return { ok: true as const, value: { group_id: row.data.group_id, group_version: row.data.group_version, decision: row.data.decision }, idempotentReplay: row.data.idempotent_replay };
+}
+
+export async function unmatchAccountingBankReconciliation(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:reconcile_bank"]);
+  const parsed = unmatchAccountingBankReconciliationInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+  const result = await callBankRpc(() => createAdminClient().rpc("unmatch_accounting_bank_reconciliation", {
+    p_actor_user_id: actor.id, p_group_id: parsed.data.group_id, p_group_version: parsed.data.group_version,
+    p_reason: parsed.data.reason, p_request_id: parsed.data.request_id,
+  }));
+  if ("failure" in result) return result.failure;
+  const row = accountingBankReviewResultSchema.safeParse(result.row);
+  if (!row.success) throw new AuthDependencyError("Accounting bank reconciliation unmatch response was invalid");
+  if (row.data.error_code) return { ok: false as const, code: safeCode(row.data.error_code) };
+  if (!row.data.group_id || row.data.group_version == null || row.data.decision !== "UNMATCHED") throw new AuthDependencyError("Accounting bank reconciliation unmatch response was invalid");
+  return { ok: true as const, value: { group_id: row.data.group_id, group_version: row.data.group_version, decision: row.data.decision }, idempotentReplay: row.data.idempotent_replay };
 }

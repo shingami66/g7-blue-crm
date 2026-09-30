@@ -165,11 +165,154 @@ export type AccountingActionErrorCode =
   | "revenue_correction_ceiling_exceeded"
   | "revenue_correction_evidence_required"
   | "inception_coverage_conflict"
+  | "bank_account_not_eligible"
+  | "bank_binding_conflict"
+  | "binding_version_unavailable"
+  | "binding_not_approved"
+  | "duplicate_statement_evidence"
+  | "statement_batch_not_found"
+  | "reconciliation_not_found"
+  | "reconciliation_not_approved"
+  | "mismatched_allocation_totals"
+  | "bank_coverage_exceeded"
+  | "unmatched_adjustment_required"
   | "dependency_failure";
 
 export type AccountingActionResult<T> =
   | { ok: true; value: T; idempotentReplay?: boolean }
   | { ok: false; code: AccountingActionErrorCode };
+
+export type AccountingBankBindingInput = {
+  binding_id?: string | null;
+  expected_version: number;
+  account_id: string;
+  account_version: number;
+  bank_identity_ref: string;
+  bank_identity_sha256: string;
+  effective_from: string;
+  effective_through: string | null;
+  masked_display_identity: string;
+  evidence_ref: string;
+  evidence_sha256: string;
+  reason: string;
+  request_id: string;
+};
+
+export type AccountingBankStatementBatchInput = {
+  batch_id?: string | null;
+  expected_version: number;
+  binding_id: string;
+  binding_version: number;
+  source_document_ref: string;
+  evidence_sha256: string;
+  evidence_identity: string;
+  coverage_start: string;
+  coverage_end: string;
+  opening_balance_halalah: number;
+  closing_balance_halalah: number;
+  reason: string;
+  request_id: string;
+};
+
+export type AccountingBankStatementLineInput = {
+  line_id?: string | null;
+  expected_version: number;
+  batch_id: string;
+  batch_version: number;
+  stable_line_identity: string;
+  transaction_date: string;
+  value_date: string | null;
+  signed_amount_halalah: number;
+  reference: string | null;
+  description: string | null;
+  source_row_identity: string;
+  duplicate_fingerprint: string;
+  reason: string;
+  request_id: string;
+};
+
+export type AccountingBankAllocation = {
+  statement_line_id: string;
+  statement_line_version: number;
+  ledger_journal_id: string;
+  ledger_journal_version: number;
+  ledger_line_number: number;
+  statement_allocated_halalah: number;
+  ledger_allocated_halalah: number;
+  rationale?: string;
+};
+
+export type AccountingBankReconciliationInput = {
+  group_id?: string | null;
+  expected_version: number;
+  binding_id: string;
+  binding_version: number;
+  as_of_date: string;
+  recorded_at_cutoff: string;
+  allocations: AccountingBankAllocation[];
+  rationale: string;
+  evidence_ref: string | null;
+  request_id: string;
+};
+
+export type AccountingBankMutationResult = {
+  error_code: string | null;
+  binding_id?: string | null;
+  batch_id?: string | null;
+  line_id?: string | null;
+  group_id?: string | null;
+  version?: number | null;
+  group_version?: number | null;
+  status?: string | null;
+  decision?: string | null;
+  duplicate_candidate?: boolean;
+  idempotent_replay: boolean;
+};
+
+export type AccountingBankReconciliationRow = Record<string, unknown> & Partial<Record<
+  | "signed_amount_halalah"
+  | "amount_halalah"
+  | "signed_amount"
+  | "statement_allocated_halalah"
+  | "ledger_allocated_halalah"
+  | "opening_balance_halalah"
+  | "closing_balance_halalah",
+  string
+>>;
+
+export type AccountingBankReconciliation =
+  | { state: "NOT_INITIALIZED"; binding_id: string; bank_reconciled: false }
+  | {
+      state: "READY" | "TRUNCATED";
+      binding_id: string;
+      binding_version?: number;
+      account_id?: string;
+      account_version?: number;
+      currency?: "SAR";
+      as_of_date?: string;
+      recorded_at_cutoff?: string;
+      statement_opening_balance_halalah?: string;
+      statement_closing_balance_halalah?: string;
+      ledger_opening_balance_halalah?: string;
+      ledger_closing_balance_halalah?: string;
+      statement_inflows_halalah?: string;
+      statement_outflows_halalah?: string;
+      ledger_inflows_halalah?: string;
+      ledger_outflows_halalah?: string;
+      matched_amount_halalah?: string;
+      partially_matched_amount_halalah?: string;
+      unmatched_statement_amount_halalah?: string;
+      unmatched_ledger_amount_halalah?: string;
+      duplicate_statement_candidates?: number;
+      timing_difference_halalah?: string;
+      impact_review_required_count?: number;
+      unexplained_difference_halalah?: string;
+      preparation_review_status?: string;
+      evidence_cutoff?: string;
+      adjustment_required_statement_items: AccountingBankReconciliationRow[];
+      statement_lines: AccountingBankReconciliationRow[];
+      ledger_cash_lines: AccountingBankReconciliationRow[];
+    };
 
 export type AccountingAccountType = "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE";
 export type AccountingNormalBalance = "DEBIT" | "CREDIT";
