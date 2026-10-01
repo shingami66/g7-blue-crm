@@ -3549,6 +3549,52 @@ export type Database = {
           version: number | null
         }[]
       }
+      prepare_accounting_period_close: {
+        Args: {
+          p_actor_user_id: string
+          p_evidence_ref: string
+          p_expected_period_version: number
+          p_package_kind: string
+          p_period_id: string
+          p_reason: string
+          p_recorded_at_cutoff: string
+          p_request_id: string
+        }
+        Returns: {
+          error_code: string | null
+          evidence_snapshot: Json | null
+          idempotent_replay: boolean
+          package_id: string | null
+          package_state: string | null
+          package_version: number | null
+        }[]
+      }
+      review_accounting_period_close: {
+        Args: {
+          p_actor_user_id: string
+          p_approve: boolean
+          p_package_id: string
+          p_package_version: number
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          decision: string | null
+          error_code: string | null
+          idempotent_replay: boolean
+          package_id: string | null
+          package_version: number | null
+          resulting_period_version: number | null
+        }[]
+      }
+      get_accounting_period_close_evidence: {
+        Args: {
+          p_actor_user_id: string
+          p_period_id: string
+          p_recorded_at_cutoff: string
+        }
+        Returns: Json
+      }
       save_accounting_posting_rule: {
         Args: {
           p_actor_user_id: string

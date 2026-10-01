@@ -176,11 +176,64 @@ export type AccountingActionErrorCode =
   | "mismatched_allocation_totals"
   | "bank_coverage_exceeded"
   | "unmatched_adjustment_required"
+  | "period_not_finalized"
+  | "period_not_closed"
+  | "earlier_period_open"
+  | "earlier_period_not_locked"
+  | "later_finalized_period_exists"
+  | "close_package_not_found"
+  | "close_package_stale"
+  | "close_evidence_incomplete"
+  | "year_end_result_treatment_pending"
+  | "review_exists"
+  | "period_transition_required"
   | "dependency_failure";
 
 export type AccountingActionResult<T> =
   | { ok: true; value: T; idempotentReplay?: boolean }
   | { ok: false; code: AccountingActionErrorCode };
+
+export type AccountingPeriodClosePackageKind = "CLOSE" | "LOCK" | "REOPEN";
+
+export type PrepareAccountingPeriodCloseInput = {
+  period_id: string;
+  expected_period_version: number;
+  package_kind: AccountingPeriodClosePackageKind;
+  reason: string;
+  evidence_ref: string;
+  recorded_at_cutoff: string;
+  request_id: string;
+};
+
+export type ReviewAccountingPeriodCloseInput = {
+  package_id: string;
+  package_version: number;
+  approve: boolean;
+  reason: string;
+  request_id: string;
+};
+
+export type AccountingPeriodClosePreparation = {
+  package_id: string;
+  package_version: number;
+  package_state: "PREPARED";
+  evidence_snapshot: Record<string, unknown>;
+};
+
+export type AccountingPeriodCloseReview = {
+  package_id: string;
+  package_version: number;
+  decision: "APPROVED" | "REJECTED" | "STALE";
+  resulting_period_version: number | null;
+};
+
+export type AccountingPeriodCloseReadModel = {
+  state: "NOT_INITIALIZED" | "NOT_FOUND" | "READY";
+  period?: Record<string, unknown>;
+  current_period?: Record<string, unknown>;
+  packages?: Array<Record<string, unknown>>;
+  recorded_at_cutoff?: string;
+};
 
 export type AccountingBankBindingInput = {
   binding_id?: string | null;

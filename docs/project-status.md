@@ -1,16 +1,27 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W10H ACCOUNTING STATEMENT REPORTING — 1 October 2026
+## CURRENT DELIVERY STATUS — W10I ACCOUNTING PERIOD CLOSE / LOCK / REOPEN — 1 October 2026
 
-- **W10H — GL, Trial Balance, Profit & Loss, and Balance Sheet:** `IMPLEMENTED / REVIEWED / DEV-VERIFIED / PUBLISHED / OWNER ACCEPTANCE PENDING` on DEV project `dpddrqjzqohexixgdqiq`. Published implementation commit: `0d3f517bd1f9ee884e48e2ad181479acc549dc42`.
+- **W10I:** `COMPLETE / DEV-VERIFIED / PUBLISHED / OWNER-ACCEPTANCE PENDING` on DEV project `dpddrqjzqohexixgdqiq`. W10H remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` as explicitly confirmed by Mozfer.
+- **DEV migrations:** W10I migrations `20261001072553`, `20261001074513`, `20261001075335`, `20261001082334`, `20261001102032`, and `20261001115425` are applied with exact matching local sources. The additive Balance Sheet boundary migration SHA-256 is `424255de24038ad99235bb98d713decd4741f7dad3e0476f1526ee55a6d8bab8`; applied migration history was not repaired or edited.
+- **Boundary repair:** `accounting_period_close_capture()` now keeps Trial Balance and P&L `from_date` at period start and validates Balance Sheet `from_date` against the W10H fiscal-year start derived from the selected FI-012 profile version. Report through dates, recorded-at cutoffs, completeness checks, function signature, owner, security, search path, and ACL remain preserved.
+- **DEV fixture:** The complete W10I rollback fixture passed, including first- and later-fiscal-period closes, FI-012 historical behavior, January close/lock/reopen, February missing-coverage block, controlled-manual draft preservation, and chronology guards. Independent residue verification and synthetic capability-event counts are zero.
+- **Validation:** `PASS WITH WARN`. Focused W10A2a–W10I accounting migration tests passed 92/92; W10I migration tests passed 12/12. TypeScript, scoped ESLint, production build, and `git diff --check` passed. The single `pnpm test:all` run timed out at 120 seconds and reported failures in unrelated UI, i18n, and invoice test files; it was not rerun.
+- **Reviewer verdict:** `CLEAN` from the required fresh same-session native read-only Reviewer.
+- **Boundaries:** DEV only. W10I Owner acceptance remains pending; no W11, production mutation, persistent accounting grants, or statutory/tax activation is claimed.
+- **EXACT NEXT ACTION:** Obtain Mozfer's explicit W10I Owner acceptance. Do not start W11.
+
+## HISTORICAL DELIVERY SNAPSHOT — W10H ACCOUNTING STATEMENT REPORTING — 1 October 2026 (SUPERSEDED CURRENT STATUS)
+
+- **W10H — GL, Trial Balance, Profit & Loss, and Balance Sheet:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` on DEV project `dpddrqjzqohexixgdqiq`. Mozfer explicitly accepted W10H in the W10I authorization. Published implementation commit: `0d3f517bd1f9ee884e48e2ad181479acc549dc42`.
 - **DEV migrations:** `20260930141934_w10h_accounting_statement_reporting` (SHA-256 `9c668fd5db6a6ccc99987d2fec896d5aeb3094583e8eced66cae915bd9390cb4`) and additive `20261001045524_w10h_balance_sheet_current_result_sign` (SHA-256 `9b0f811d48cb84f553e4741620727c67c4925951cb08f25f161d33e6863d5a7b`) are applied with exact matching local sources. The additive repair corrects the current-year result sign; no applied migration or migration history was edited.
 - **Reporting and mapping contracts:** `get_w10h_accounting_report` serves GL/TB/P&L/Balance Sheet under accounting-date and recorded-at boundaries with explicit completeness. `accounting_statement_mapping_sets`, `accounting_statement_mapping_versions`, and `accounting_statement_mapping_entries` preserve versioned historical presentation through `save_accounting_statement_mapping`. Halalah values, including nested journal evidence, are validated as exact integer strings; XLSX preserves exact SAR values.
 - **Capability:** `accounting:view_statements` is enabled and runtime-grantable for W10H. DEV has zero persistent assignment events for it; no real accounting grants or chart/mapping seeds were added.
 - **DEV fixture:** The committed W10H rollback-only fixture passed against both applied migrations, including the Balance Sheet equation/current-result cases. Independent post-run residue verification returned zero for all synthetic identities and accounting rows.
 - **Validation:** W10H focused migration/source tests passed 5/5; accounting tests passed 144/144; Reports Center tests passed 77/77. After the nested-evidence repair, schema tests passed 14/14 and query tests 9/9, including rejection of unsafe numeric journal-evidence amounts. TypeScript, scoped ESLint, production build, and `git diff --check` passed.
 - **Reviewer verdict:** The full read-only review found the nested-evidence precision gap; the same Writer repaired it, and the fresh targeted read-only rereview returned `CLEAN`.
-- **Boundaries:** Provisional internal accounting output only; not statutory or audited statements. Owner acceptance remains pending. DEV only; no persistent accounting seed, PROD mutation, VAT/ZATCA/FATOORA activation, or W10I close/lock/reopen implementation. Professional validation remains required before live or statutory use.
-- **EXACT NEXT ACTION:** Mozfer reviews and accepts W10H closeout. Do not begin W10I.
+- **Boundaries:** Provisional internal accounting output only; not statutory or audited statements. DEV only; no persistent accounting seed, PROD mutation, VAT/ZATCA/FATOORA activation, or W11 implementation. Professional validation remains required before live or statutory use.
+- **Former next action at this snapshot:** Execute the bounded W10I Accounting Period workflow under fresh Owner authorization; superseded by the current W10I status above. Do not start W11.
 
 ## HISTORICAL DELIVERY SNAPSHOT — W10-INTEGRITY-R1 ACCOUNTING INTEGRITY REPAIRS — 30 September 2026 (SUPERSEDED CURRENT STATUS)
 

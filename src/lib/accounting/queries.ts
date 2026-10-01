@@ -12,6 +12,8 @@ import {
   accountingJournalDetailSchema,
   accountingJournalIdSchema,
   accountingPeriodVersionSchema,
+  accountingPeriodCloseReadModelSchema,
+  getAccountingPeriodCloseEvidenceInputSchema,
   accountingPostingRuleVersionSchema,
   accountingProfileResultSchema,
   accountingTrialBalanceInputSchema,
@@ -38,6 +40,7 @@ import type {
   AccountingCapabilityAssignment,
   AccountingJournalDetail,
   AccountingPeriodVersion,
+  AccountingPeriodCloseReadModel,
   AccountingPostingRuleVersion,
   AccountingInceptionPackageDetail,
   AccountingInceptionPackageSummary,
@@ -496,5 +499,30 @@ export async function getAccountingBankReconciliation(
   if (result.error) throwSafeRpcError(result.error);
   const parsed = accountingBankReconciliationSchema.safeParse(result.data);
   if (!parsed.success) throw new AuthDependencyError("Accounting bank reconciliation response was invalid");
+  return parsed.data;
+}
+
+export async function getAccountingPeriodCloseEvidence(
+  input: unknown,
+): Promise<AccountingPeriodCloseReadModel> {
+  const actor = await requireUser();
+  if (!await resolveAccountingCapability(actor.id, "accounting:view")) {
+    throw new ForbiddenError("Accounting capability required");
+  }
+  const parsedInput = getAccountingPeriodCloseEvidenceInputSchema.safeParse(input);
+  if (!parsedInput.success) throw new AuthDependencyError("Accounting close evidence request was invalid");
+  let result;
+  try {
+    result = await createAdminClient().rpc("get_accounting_period_close_evidence", {
+      p_actor_user_id: actor.id,
+      p_period_id: parsedInput.data.period_id,
+      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting close evidence dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  const parsed = accountingPeriodCloseReadModelSchema.safeParse(result.data);
+  if (!parsed.success) throw new AuthDependencyError("Accounting close evidence response was invalid");
   return parsed.data;
 }

@@ -1,14 +1,25 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W10H ACCOUNTING STATEMENT REPORTING — 1 October 2026
+## CURRENT ROADMAP POSITION — W10I ACCOUNTING PERIOD CLOSE / LOCK / REOPEN — 1 October 2026
 
-- **W10H:** `IMPLEMENTED / REVIEWED / DEV-VERIFIED / PUBLISHED / OWNER ACCEPTANCE PENDING`. The published implementation commit is `0d3f517bd1f9ee884e48e2ad181479acc549dc42`.
+- **W10I:** `COMPLETE / DEV-VERIFIED / PUBLISHED / OWNER-ACCEPTANCE PENDING` on DEV project `dpddrqjzqohexixgdqiq`. W10H remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` by explicit Owner confirmation.
+- DEV W10I migrations `20261001072553`, `20261001074513`, `20261001075335`, `20261001082334`, `20261001102032`, and `20261001115425` have exact local source parity. The new fiscal-year boundary migration SHA-256 is `424255de24038ad99235bb98d713decd4741f7dad3e0476f1526ee55a6d8bab8`.
+- Close preparation now validates Balance Sheet `from_date` against the selected profile version's fiscal-year start at the same FI-012 boundary. Trial Balance/P&L period-start rules, through dates, recorded-at cutoffs, all other evidence checks, and deployed function security metadata are preserved.
+- The full rollback-only W10I fixture passed; independent synthetic residue and capability-grant-event counts are zero. Focused W10A2a–W10I migration tests passed 92/92; TypeScript, scoped ESLint, production build, and diff checks passed.
+- **Validation:** `PASS WITH WARN`. The one `pnpm test:all` attempt timed out at 120 seconds and reported failures in unrelated UI, i18n, and invoice test files; no second run was made.
+- **Reviewer verdict:** `CLEAN` from the required fresh same-session native read-only Reviewer.
+- **Deferred boundaries:** W10I Owner acceptance is pending. DEV only; no W11, production mutation, persistent accounting grants, tax/statutory activation, or audited-statement claim.
+- **EXACT NEXT ACTION:** Obtain Mozfer's explicit W10I Owner acceptance. Do not start W11.
+
+## HISTORICAL ROADMAP SNAPSHOT — W10H ACCOUNTING STATEMENT REPORTING — 1 October 2026 (SUPERSEDED CURRENT POSITION)
+
+- **W10H:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`. Mozfer explicitly accepted W10H in the W10I authorization; implementation commit `0d3f517bd1f9ee884e48e2ad181479acc549dc42` is published.
 - DEV applies the exact W10H reporting migration `20260930141934` (SHA-256 `9c668fd5db6a6ccc99987d2fec896d5aeb3094583e8eced66cae915bd9390cb4`) and additive Balance Sheet current-result sign repair `20261001045524` (SHA-256 `9b0f811d48cb84f553e4741620727c67c4925951cb08f25f161d33e6863d5a7b`). Applied migration sources remain immutable.
 - The four reports use posted-journal evidence, versioned statement mappings, FI-012 accounting-date/recorded-at boundaries, recursive exact-halalah response validation, and precision-safe XLSX export. `accounting:view_statements` is enabled/grantable for W10H with zero persistent assignment events.
 - The rollback-only W10H fixture and independent zero-residue verification passed. TypeScript, scoped ESLint, production build, diff checks, focused W10H migration/source tests (5/5), accounting tests (144/144), Reports Center tests (77/77), schema tests (14/14), and query tests (9/9) passed.
 - The full read-only review's nested evidence precision finding was repaired by the Writer; one fresh targeted read-only rereview returned `CLEAN`.
-- **Deferred boundaries:** Owner acceptance pending; provisional internal reports only, no statutory/audit claim, no real grants or accounting seed, DEV only, no PROD/tax activation, no W10I, and professional validation required before live/statutory use.
-- **EXACT NEXT ACTION:** Mozfer reviews and accepts W10H closeout. Do not begin W10I.
+- **Deferred boundaries:** Provisional internal reports only, no statutory/audit claim, no real grants or accounting seed, DEV only, no PROD/tax activation, no W11, and professional validation required before live/statutory use.
+- **Former next action at this snapshot:** Implement the bounded W10I Accounting Period workflow under fresh Owner authorization; superseded by the current W10I roadmap position above. Do not start W11.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10-INTEGRITY-R1 ACCOUNTING INTEGRITY REPAIRS — 30 September 2026 (SUPERSEDED CURRENT POSITION)
 

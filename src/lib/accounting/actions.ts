@@ -57,6 +57,10 @@ import {
   accountingBankLineMutationResultSchema,
   accountingBankReconciliationMutationResultSchema,
   accountingBankReviewResultSchema,
+  prepareAccountingPeriodCloseInputSchema,
+  reviewAccountingPeriodCloseInputSchema,
+  accountingPeriodClosePreparationResultSchema,
+  accountingPeriodCloseReviewResultSchema,
   setAccountingCapabilityInputSchema,
   updateAccountingProfileInputSchema,
 } from "./schemas";
@@ -64,6 +68,8 @@ import type {
   AccountingActionErrorCode,
   AccountingActionResult,
   AccountingInceptionAcceptanceResult,
+  AccountingPeriodClosePreparation,
+  AccountingPeriodCloseReview,
 } from "./types";
 
 const SAFE_ERROR_CODES = new Set([
@@ -171,6 +177,17 @@ const SAFE_ERROR_CODES = new Set([
   "mismatched_allocation_totals",
   "bank_coverage_exceeded",
   "unmatched_adjustment_required",
+  "period_not_finalized",
+  "period_not_closed",
+  "earlier_period_open",
+  "earlier_period_not_locked",
+  "later_finalized_period_exists",
+  "close_package_not_found",
+  "close_package_stale",
+  "close_evidence_incomplete",
+  "year_end_result_treatment_pending",
+  "review_exists",
+  "period_transition_required",
 ]);
 
 function safeCode(code: string | null | undefined) {
@@ -333,6 +350,98 @@ export async function saveAccountingPeriod(
   };
 }
 
+export async function prepareAccountingPeriodClose(
+  input: unknown,
+): Promise<AccountingActionResult<AccountingPeriodClosePreparation>> {
+  const actor = await requireUser();
+  const parsed = prepareAccountingPeriodCloseInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, code: "invalid_input" };
+  await requireAccountingCapabilities(actor.id, [
+    parsed.data.package_kind === "REOPEN" ? "accounting:reopen_period" : "accounting:close_period",
+  ]);
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("prepare_accounting_period_close", {
+      p_actor_user_id: actor.id,
+      p_period_id: parsed.data.period_id,
+      p_expected_period_version: parsed.data.expected_period_version,
+      p_package_kind: parsed.data.package_kind,
+      p_reason: parsed.data.reason,
+      p_evidence_ref: parsed.data.evidence_ref,
+      p_recorded_at_cutoff: parsed.data.recorded_at_cutoff,
+      p_request_id: parsed.data.request_id,
+    });
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof AuthDependencyError) throw error;
+    throw new AuthDependencyError("Accounting close preparation dependency failed");
+  }
+  if (result.error) return safeFailure(result.error);
+  const row = result.data?.[0];
+  const parsedRow = accountingPeriodClosePreparationResultSchema.safeParse(row);
+  if (!parsedRow.success) throw new AuthDependencyError("Accounting close preparation response was invalid");
+  if (parsedRow.data.error_code) return { ok: false, code: safeCode(parsedRow.data.error_code) };
+  if (!parsedRow.data.package_id || parsedRow.data.package_version == null
+      || !parsedRow.data.package_state || !parsedRow.data.evidence_snapshot) {
+    throw new AuthDependencyError("Accounting close preparation response was invalid");
+  }
+  return {
+    ok: true,
+    value: {
+      package_id: parsedRow.data.package_id,
+      package_version: parsedRow.data.package_version,
+      package_state: parsedRow.data.package_state,
+      evidence_snapshot: parsedRow.data.evidence_snapshot,
+    },
+    idempotentReplay: parsedRow.data.idempotent_replay,
+  };
+}
+
+export async function reviewAccountingPeriodClose(
+  input: unknown,
+): Promise<AccountingActionResult<AccountingPeriodCloseReview>> {
+  const actor = await requireUser();
+  const parsed = reviewAccountingPeriodCloseInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, code: "invalid_input" };
+  const [canClose, canReopen] = await Promise.all([
+    resolveAccountingCapability(actor.id, "accounting:close_period"),
+    resolveAccountingCapability(actor.id, "accounting:reopen_period"),
+  ]);
+  if (!canClose && !canReopen) throw new ForbiddenError("Accounting capability required");
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("review_accounting_period_close", {
+      p_actor_user_id: actor.id,
+      p_package_id: parsed.data.package_id,
+      p_package_version: parsed.data.package_version,
+      p_approve: parsed.data.approve,
+      p_reason: parsed.data.reason,
+      p_request_id: parsed.data.request_id,
+    });
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof AuthDependencyError) throw error;
+    throw new AuthDependencyError("Accounting close review dependency failed");
+  }
+  if (result.error) return safeFailure(result.error);
+  const parsedRow = accountingPeriodCloseReviewResultSchema.safeParse(result.data?.[0]);
+  if (!parsedRow.success) throw new AuthDependencyError("Accounting close review response was invalid");
+  if (parsedRow.data.error_code) return { ok: false, code: safeCode(parsedRow.data.error_code) };
+  if (!parsedRow.data.package_id || parsedRow.data.package_version == null || !parsedRow.data.decision) {
+    throw new AuthDependencyError("Accounting close review response was invalid");
+  }
+  return {
+    ok: true,
+    value: {
+      package_id: parsedRow.data.package_id,
+      package_version: parsedRow.data.package_version,
+      decision: parsedRow.data.decision,
+      resulting_period_version: parsedRow.data.resulting_period_version,
+    },
+    idempotentReplay: parsedRow.data.idempotent_replay,
+  };
+}
+
 export async function saveAccountingPostingRule(
   input: unknown,
 ): Promise<AccountingActionResult<{ posting_rule_id: string; version: number }>> {
@@ -480,7 +589,7 @@ export async function reverseAccountingJournal(
 
 async function requireAccountingCapabilities(
   actorId: string,
-  capabilities: Array<"accounting:manage_inception" | "accounting:manage_ar_bridge" | "accounting:manage_ap_bridge" | "accounting:manage_expense_bridge" | "accounting:manage_revenue_recognition" | "accounting:reconcile_bank" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view">,
+  capabilities: Array<"accounting:manage_inception" | "accounting:manage_ar_bridge" | "accounting:manage_ap_bridge" | "accounting:manage_expense_bridge" | "accounting:manage_revenue_recognition" | "accounting:reconcile_bank" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view" | "accounting:close_period" | "accounting:reopen_period">,
 ) {
   const allowed = await Promise.all(capabilities.map((capability) =>
     resolveAccountingCapability(actorId, capability)));

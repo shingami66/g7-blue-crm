@@ -296,6 +296,78 @@ export const accountingPeriodVersionSchema = z
     }
   });
 
+export const accountingPeriodClosePackageKindSchema = z.enum(["CLOSE", "LOCK", "REOPEN"]);
+
+export const prepareAccountingPeriodCloseInputSchema = z
+  .object({
+    period_id: z.string().uuid(),
+    expected_period_version: z.number().int().positive(),
+    package_kind: accountingPeriodClosePackageKindSchema,
+    reason: boundedText(2000),
+    evidence_ref: boundedText(2000),
+    recorded_at_cutoff: z.string().datetime({ offset: true }),
+    request_id: z.string().uuid(),
+  })
+  .strict();
+
+export const reviewAccountingPeriodCloseInputSchema = z
+  .object({
+    package_id: z.string().uuid(),
+    package_version: z.number().int().positive(),
+    approve: z.boolean(),
+    reason: boundedText(2000),
+    request_id: z.string().uuid(),
+  })
+  .strict();
+
+export const getAccountingPeriodCloseEvidenceInputSchema = z
+  .object({
+    period_id: z.string().uuid(),
+    recorded_at_cutoff: z.string().datetime({ offset: true }),
+  })
+  .strict();
+
+export const accountingPeriodClosePreparationResultSchema = z
+  .object({
+    error_code: z.string().nullable(),
+    package_id: z.string().uuid().nullable(),
+    package_version: z.number().int().positive().nullable(),
+    package_state: z.literal("PREPARED").nullable(),
+    evidence_snapshot: z.record(z.string(), z.unknown()).nullable(),
+    idempotent_replay: z.boolean(),
+  })
+  .strict();
+
+export const accountingPeriodCloseReviewResultSchema = z
+  .object({
+    error_code: z.string().nullable(),
+    package_id: z.string().uuid().nullable(),
+    package_version: z.number().int().positive().nullable(),
+    decision: z.enum(["APPROVED", "REJECTED", "STALE"]).nullable(),
+    resulting_period_version: z.number().int().positive().nullable(),
+    idempotent_replay: z.boolean(),
+  })
+  .strict();
+
+export const accountingPeriodCloseReadModelSchema = z
+  .object({
+    state: z.enum(["NOT_INITIALIZED", "NOT_FOUND", "READY"]),
+    period: z.record(z.string(), z.unknown()).optional(),
+    current_period: z.record(z.string(), z.unknown()).optional(),
+    packages: z.array(z.record(z.string(), z.unknown())).optional(),
+    recorded_at_cutoff: z.string().optional(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.state === "READY" && (!value.period || !value.current_period || !value.packages || !value.recorded_at_cutoff)) {
+      context.addIssue({
+        code: "custom",
+        path: ["period"],
+        message: "A ready accounting close read model requires period and package history",
+      });
+    }
+  });
+
 export const accountingJournalIdSchema = z.string().uuid();
 
 const accountingPostingRuleMappingSchema = z
