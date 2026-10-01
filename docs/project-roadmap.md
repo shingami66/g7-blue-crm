@@ -1,15 +1,25 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W10-INTEGRITY-R1 ACCOUNTING INTEGRITY REPAIRS — 30 September 2026
+## CURRENT ROADMAP POSITION — W10H ACCOUNTING STATEMENT REPORTING — 1 October 2026
+
+- **W10H:** `IMPLEMENTED / REVIEWED / DEV-VERIFIED / PUBLISHED / OWNER ACCEPTANCE PENDING`. The published implementation commit is `0d3f517bd1f9ee884e48e2ad181479acc549dc42`.
+- DEV applies the exact W10H reporting migration `20260930141934` (SHA-256 `9c668fd5db6a6ccc99987d2fec896d5aeb3094583e8eced66cae915bd9390cb4`) and additive Balance Sheet current-result sign repair `20261001045524` (SHA-256 `9b0f811d48cb84f553e4741620727c67c4925951cb08f25f161d33e6863d5a7b`). Applied migration sources remain immutable.
+- The four reports use posted-journal evidence, versioned statement mappings, FI-012 accounting-date/recorded-at boundaries, recursive exact-halalah response validation, and precision-safe XLSX export. `accounting:view_statements` is enabled/grantable for W10H with zero persistent assignment events.
+- The rollback-only W10H fixture and independent zero-residue verification passed. TypeScript, scoped ESLint, production build, diff checks, focused W10H migration/source tests (5/5), accounting tests (144/144), Reports Center tests (77/77), schema tests (14/14), and query tests (9/9) passed.
+- The full read-only review's nested evidence precision finding was repaired by the Writer; one fresh targeted read-only rereview returned `CLEAN`.
+- **Deferred boundaries:** Owner acceptance pending; provisional internal reports only, no statutory/audit claim, no real grants or accounting seed, DEV only, no PROD/tax activation, no W10I, and professional validation required before live/statutory use.
+- **EXACT NEXT ACTION:** Mozfer reviews and accepts W10H closeout. Do not begin W10I.
+
+## HISTORICAL ROADMAP SNAPSHOT — W10-INTEGRITY-R1 ACCOUNTING INTEGRITY REPAIRS — 30 September 2026 (SUPERSEDED CURRENT POSITION)
 
 - **W10G — Bank Reconciliation:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` on DEV project `dpddrqjzqohexixgdqiq`. W10F remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`; W10E2, W10D, and W10E1 retain their prior closeout states.
-- **W10-INTEGRITY-R1:** `IMPLEMENTED / REVIEWED / DEV-VERIFIED / PUBLISHED / OWNER ACCEPTANCE PENDING`. The five bounded repairs guard generic AR_BRIDGE reversal, untyped CONTROLLED_MANUAL Revenue posting, missing evidence on CONTROLLED_MANUAL preparation and generic reversal, and AP FI-012 cutover metadata at the recorded-at cutoff.
+- **W10-INTEGRITY-R1:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`. Mozfer explicitly accepted this integrity closeout in the W10H authorization. The five bounded repairs guard generic AR_BRIDGE reversal, untyped CONTROLLED_MANUAL Revenue posting, missing evidence on CONTROLLED_MANUAL preparation and generic reversal, and AP FI-012 cutover metadata at the recorded-at cutoff.
 - DEV migration `20260930104338_w10_integrity_r1_accounting_guards` is applied with the exact local filename. Its predecessor guards preserve the deployed function contracts and metadata; no applied migration or migration history was edited.
 - The rollback-only W10F fixture passed with the new rejection and lineage cases and the two-cutoff FI-012 profile-version case. Independent post-run residue verification returned zero across synthetic identity, accounting, event, effect, and audit rows.
 - **Validation:** W10-INTEGRITY-R1/W10F focused source tests passed 22/22; scoped ESLint and diff checks passed. The full accounting migration-source suite passed 100/100 before final SQL/fixture-only corrections; TypeScript and production build passed before those corrections.
 - **Reviewer verdict:** `CLEAN` from the required same-session native read-only Reviewer on the final diff after DEV fixture success.
-- **Deferred boundaries:** DEV only; no persistent accounting seed, PROD mutation, tax/statutory activation, or W10H implementation.
-- **EXACT NEXT ACTION:** Mozfer reviews and accepts W10-INTEGRITY-R1 closeout. W10H needs separate fresh exact Owner authorization; do not begin W10H.
+- **Deferred boundaries:** DEV only; no persistent accounting seed, PROD mutation, tax/statutory activation, or W10I close/lock/reopen implementation.
+- **EXACT NEXT ACTION:** Execute the bounded W10H reporting implementation under this fresh Owner authorization. Do not begin W10I close/lock/reopen.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT POSITION)
 

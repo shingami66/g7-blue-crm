@@ -1,15 +1,27 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W10-INTEGRITY-R1 ACCOUNTING INTEGRITY REPAIRS — 30 September 2026
+## CURRENT DELIVERY STATUS — W10H ACCOUNTING STATEMENT REPORTING — 1 October 2026
+
+- **W10H — GL, Trial Balance, Profit & Loss, and Balance Sheet:** `IMPLEMENTED / REVIEWED / DEV-VERIFIED / PUBLISHED / OWNER ACCEPTANCE PENDING` on DEV project `dpddrqjzqohexixgdqiq`. Published implementation commit: `0d3f517bd1f9ee884e48e2ad181479acc549dc42`.
+- **DEV migrations:** `20260930141934_w10h_accounting_statement_reporting` (SHA-256 `9c668fd5db6a6ccc99987d2fec896d5aeb3094583e8eced66cae915bd9390cb4`) and additive `20261001045524_w10h_balance_sheet_current_result_sign` (SHA-256 `9b0f811d48cb84f553e4741620727c67c4925951cb08f25f161d33e6863d5a7b`) are applied with exact matching local sources. The additive repair corrects the current-year result sign; no applied migration or migration history was edited.
+- **Reporting and mapping contracts:** `get_w10h_accounting_report` serves GL/TB/P&L/Balance Sheet under accounting-date and recorded-at boundaries with explicit completeness. `accounting_statement_mapping_sets`, `accounting_statement_mapping_versions`, and `accounting_statement_mapping_entries` preserve versioned historical presentation through `save_accounting_statement_mapping`. Halalah values, including nested journal evidence, are validated as exact integer strings; XLSX preserves exact SAR values.
+- **Capability:** `accounting:view_statements` is enabled and runtime-grantable for W10H. DEV has zero persistent assignment events for it; no real accounting grants or chart/mapping seeds were added.
+- **DEV fixture:** The committed W10H rollback-only fixture passed against both applied migrations, including the Balance Sheet equation/current-result cases. Independent post-run residue verification returned zero for all synthetic identities and accounting rows.
+- **Validation:** W10H focused migration/source tests passed 5/5; accounting tests passed 144/144; Reports Center tests passed 77/77. After the nested-evidence repair, schema tests passed 14/14 and query tests 9/9, including rejection of unsafe numeric journal-evidence amounts. TypeScript, scoped ESLint, production build, and `git diff --check` passed.
+- **Reviewer verdict:** The full read-only review found the nested-evidence precision gap; the same Writer repaired it, and the fresh targeted read-only rereview returned `CLEAN`.
+- **Boundaries:** Provisional internal accounting output only; not statutory or audited statements. Owner acceptance remains pending. DEV only; no persistent accounting seed, PROD mutation, VAT/ZATCA/FATOORA activation, or W10I close/lock/reopen implementation. Professional validation remains required before live or statutory use.
+- **EXACT NEXT ACTION:** Mozfer reviews and accepts W10H closeout. Do not begin W10I.
+
+## HISTORICAL DELIVERY SNAPSHOT — W10-INTEGRITY-R1 ACCOUNTING INTEGRITY REPAIRS — 30 September 2026 (SUPERSEDED CURRENT STATUS)
 
 - **W10G — Bank Reconciliation:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` on DEV project `dpddrqjzqohexixgdqiq`. Its four applied migrations and 50-category rollback-only fixture remain recorded in this closeout history. W10F remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`; W10E2, W10D, and W10E1 retain their prior closeout states.
-- **W10-INTEGRITY-R1:** `IMPLEMENTED / REVIEWED / DEV-VERIFIED / PUBLISHED / OWNER ACCEPTANCE PENDING`. The bounded repairs block generic AR_BRIDGE reversal, prevent CONTROLLED_MANUAL from posting directly to Revenue, require evidence on manual preparation and generic reversal, and select AP profile cutover metadata valid at the recorded-at cutoff.
+- **W10-INTEGRITY-R1:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`. Mozfer explicitly accepted this integrity closeout in the W10H authorization. The bounded repairs block generic AR_BRIDGE reversal, prevent CONTROLLED_MANUAL from posting directly to Revenue, require evidence on manual preparation and generic reversal, and select AP profile cutover metadata valid at the recorded-at cutoff.
 - **DEV migration identity:** `20260930104338_w10_integrity_r1_accounting_guards` is applied and has an exact matching local source filename. It uses exact deployed-source guards and preserves function owner, ACL, search path, volatility, parallel mode, cost/row estimates, and security-definer settings. The earlier failed apply attempt recorded no migration or function change; no applied migration was edited and migration history was not repaired.
 - **DEV proof:** The W10F rollback-only fixture passed, including the new AR reversal, manual Revenue/evidence, generic reversal evidence, governed Revenue correction lineage, and FI-012 earlier/later profile-cutoff cases. Independent post-run counts are zero for fixture users, customers, services, quotations, invoices, profiles, accounts, Revenue evidence/events/effects, foundation/journal/capability events, and audit rows.
 - **Validation:** W10-INTEGRITY-R1 and W10F source tests passed 22/22; scoped ESLint and `git diff --check` passed. The full accounting migration-source suite passed 100/100 before the final syntax-only DDL and fixture corrections; TypeScript and production build also passed before those SQL/fixture-only adjustments.
 - **Reviewer verdict:** `CLEAN` from the required same-session native read-only Reviewer on the final diff after the successful DEV rollback fixture.
-- **Boundaries:** DEV only. No synthetic residue remains; no persistent accounting seed, PROD mutation, tax/statutory activation, or W10H implementation is claimed.
-- **EXACT NEXT ACTION:** Mozfer reviews and accepts W10-INTEGRITY-R1 closeout. W10H requires separate fresh exact Owner authorization; do not begin W10H.
+- **Boundaries:** DEV only. No synthetic residue remains; no persistent accounting seed, PROD mutation, tax/statutory activation, or W10I close/lock/reopen implementation is claimed.
+- **EXACT NEXT ACTION:** Execute the bounded W10H reporting implementation under this fresh Owner authorization. Do not begin W10I close/lock/reopen.
 
 ## HISTORICAL DELIVERY SNAPSHOT — W10C INCEPTION RECONSTRUCTION & FIRST TRIAL BALANCE — 28 September 2026 (SUPERSEDED CURRENT STATUS)
 
