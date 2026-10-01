@@ -3673,6 +3673,34 @@ export type Database = {
           report: Json
         }[]
       }
+      get_w10h_accounting_report: {
+        Args: {
+          p_actor_user_id: string
+          p_report_type: string
+          p_from_date: string
+          p_through_date: string
+          p_recorded_at_cutoff: string | null
+          p_account_id: string | null
+          p_service_id: string | null
+          p_offset: number
+          p_limit: number
+        }
+        Returns: Json
+      }
+      save_accounting_statement_mapping: {
+        Args: {
+          p_actor_user_id: string
+          p_profile_id: string
+          p_mapping_set_id: string | null
+          p_expected_version: number
+          p_effective_from: string
+          p_reason: string
+          p_evidence_ref: string
+          p_entries: Json
+          p_request_id: string
+        }
+        Returns: Json
+      }
       save_accounting_inception_package: {
         Args: {
           p_actor_user_id: string

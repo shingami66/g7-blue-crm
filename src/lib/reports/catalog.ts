@@ -21,6 +21,10 @@ const DEFINITION_COPY = {
       source: "W8 Event Costing and Event Cost Close",
       freshness: "Recomputed as of the selected date",
     },
+    gl: { title: "General Ledger", description: "Posted journal detail and account balances under accounting-date and recorded-at cutoffs." },
+    tb: { title: "Trial Balance", description: "Opening, period, and ending debit and credit balances from posted journals." },
+    pnl: { title: "Profit & Loss", description: "Mapped Revenue and Expense activity from posted accounting journals." },
+    bs: { title: "Balance Sheet", description: "Mapped Assets, Liabilities, Equity, and the presentation-only current-year result." },
   },
   ar: {
     ar: {
@@ -41,6 +45,10 @@ const DEFINITION_COPY = {
       source: "تكلفة الحدث وإغلاق التكلفة W8",
       freshness: "إعادة احتساب حتى التاريخ المحدد",
     },
+    gl: { title: "دفتر الأستاذ العام", description: "تفاصيل القيود المرحلة وأرصدة الحسابات حسب تاريخ المحاسبة ووقت التسجيل." },
+    tb: { title: "ميزان المراجعة", description: "الأرصدة الافتتاحية وحركة الفترة والأرصدة الختامية المدينة والدائنة من القيود المرحلة." },
+    pnl: { title: "الأرباح والخسائر", description: "حركة الإيرادات والمصروفات المصنفة من القيود المحاسبية المرحلة." },
+    bs: { title: "الميزانية العمومية", description: "الأصول والالتزامات وحقوق الملكية والنتيجة الحالية للسنة لأغراض العرض فقط." },
   },
 } as const;
 
@@ -86,6 +94,24 @@ export function getReportDefinitions(locale: Locale): ReportDefinition[] {
       exportSupported: true,
       confidentiality: "internal_costing",
     },
+    ...([
+      { key: "general_ledger", copy: copy.gl, route: "/reports/general-ledger", permission: "accounting:view", source: "W10H posted journal report", timeModel: "period_and_as_of" },
+      { key: "trial_balance", copy: copy.tb, route: "/reports/trial-balance", permission: "accounting:view", source: "W10H posted journal report", timeModel: "period_and_as_of" },
+      { key: "profit_and_loss", copy: copy.pnl, route: "/reports/profit-and-loss", permission: "accounting:view_statements", source: "W10H statement mappings and posted journals", timeModel: "period_and_as_of" },
+      { key: "balance_sheet", copy: copy.bs, route: "/reports/balance-sheet", permission: "accounting:view_statements", source: "W10H statement mappings and posted journals", timeModel: "historical_as_of" },
+    ] as const).map(({ key, copy: item, route, permission, source, timeModel }) => ({
+      key,
+      category: "financial_operations" as const,
+      title: item.title,
+      description: item.description,
+      route,
+      requiredPermissions: [permission],
+      timeModel,
+      sourceDomain: source,
+      freshness: locale === "ar" ? "تقرير محاسبي داخلي مؤقت" : "Provisional internal accounting report",
+      exportSupported: true,
+      confidentiality: "financial" as const,
+    })),
   ];
 }
 

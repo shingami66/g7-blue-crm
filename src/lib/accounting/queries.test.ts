@@ -60,7 +60,7 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { getAccountingProfile, listAccountingAccounts, listAccountingCapabilityAssignments, listAccountingPeriods, listAccountingPostingRules, getAccountingJournal, getAccountingGeneralLedger, getAccountingTrialBalance, getAccountingRevenueReconciliation } = await import("./queries.ts");
+const { getAccountingProfile, listAccountingAccounts, listAccountingCapabilityAssignments, listAccountingPeriods, listAccountingPostingRules, getAccountingJournal, getAccountingGeneralLedger, getAccountingTrialBalance, getAccountingRevenueReconciliation, getAccountingW10HReport } = await import("./queries.ts");
 const { AuthDependencyError } = await import("../auth/errors.ts");
 const actorId = "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f";
 
@@ -119,6 +119,96 @@ test("query dependency and malformed responses fail closed without exposing data
 
   resetState(async () => ({ data: null, error: { code: "57P01" } }));
   await assert.rejects(() => listAccountingCapabilityAssignments({ target_user_id: "9f09e715-9698-4804-a72b-331ebc776b8d" }), AuthDependencyError);
+});
+
+test("W10H report reads pass the authenticated actor to the database gate and preserve exact RPC strings", async () => {
+  const report = {
+    report_type: "PROFIT_AND_LOSS",
+    state: "PARTIAL",
+    reason_codes: ["SOURCE_RECONCILIATION_NOT_BOUNDARY_VERIFIED"],
+    from_date: "2026-01-01",
+    through_date: "2026-09-30",
+    recorded_at_cutoff: "2026-09-30T11:00:00+03:00",
+    generated_at: "2026-09-30T11:01:00+03:00",
+    mapping_version: 2,
+    total_count: 1,
+    has_more: false,
+    rows: [{
+      amount_halalah: "9007199254740993",
+      journal_evidence: [{
+        journal_id: "00000000-0000-4000-8000-00000000f001",
+        journal_version: 1,
+        source_domain: "CONTROLLED_MANUAL",
+        accounting_date: "2026-09-30",
+        posted_at: "2026-09-30T11:00:00+03:00",
+        reversal_of_journal_id: null,
+        correction_group_id: "00000000-0000-4000-8000-00000000f002",
+        service_id: null,
+        service_number: null,
+        event_name: null,
+        event_type: null,
+        line_number: 1,
+        side: "CREDIT",
+        amount_halalah: "9007199254740993",
+      }],
+    }],
+    line_totals: [],
+    totals: { revenue_halalah: "9007199254740993", expense_halalah: "0", profit_loss_halalah: "9007199254740993" },
+    service_id: null,
+    account_id: null,
+  };
+  resetState(async (name) => ({ data: name === "get_w10h_accounting_report" ? report : false, error: null }));
+  const result = await getAccountingW10HReport({
+    report_type: "PROFIT_AND_LOSS", from_date: "2026-01-01", through_date: "2026-09-30",
+    recorded_at_cutoff: "2026-09-30T11:00:00+03:00", account_id: null, service_id: null, offset: 0, limit: 50,
+  });
+  assert.equal(state.permission, null);
+  assert.equal(result.rows[0]?.amount_halalah, "9007199254740993");
+  assert.equal(result.rows[0]?.journal_evidence?.[0]?.amount_halalah, "9007199254740993");
+  assert.deepEqual(state.calls[0], {
+    name: "get_w10h_accounting_report",
+    args: {
+      p_actor_user_id: actorId,
+      p_report_type: "PROFIT_AND_LOSS",
+      p_from_date: "2026-01-01",
+      p_through_date: "2026-09-30",
+      p_recorded_at_cutoff: "2026-09-30T11:00:00+03:00",
+      p_account_id: null,
+      p_service_id: null,
+      p_offset: 0,
+      p_limit: 50,
+    },
+  });
+
+  const unsafeNestedReport = {
+    ...report,
+    rows: [{
+      ...report.rows[0],
+      journal_evidence: [{ ...report.rows[0].journal_evidence[0], amount_halalah: 9007199254740993 }],
+    }],
+  };
+  resetState(async (name) => ({
+    data: name === "get_w10h_accounting_report" ? unsafeNestedReport : false,
+    error: null,
+  }));
+  await assert.rejects(
+    () => getAccountingW10HReport({
+      report_type: "PROFIT_AND_LOSS", from_date: "2026-01-01", through_date: "2026-09-30",
+      recorded_at_cutoff: "2026-09-30T11:00:00+03:00", account_id: null, service_id: null, offset: 0, limit: 50,
+    }),
+    (error: unknown) => error instanceof AuthDependencyError
+      && error.message === "Accounting report response was invalid",
+  );
+});
+
+test("W10H initialized-report capability denials are enforced by the database RPC", async () => {
+  resetState(async () => ({ data: null, error: { code: "42501" } }));
+  await assert.rejects(() => getAccountingW10HReport({
+    report_type: "PROFIT_AND_LOSS", from_date: "2026-01-01", through_date: "2026-09-30",
+    recorded_at_cutoff: null, account_id: null, service_id: null, offset: 0, limit: 50,
+  }), /Accounting capability required/);
+  assert.equal(state.permission, null);
+  assert.equal(state.calls[0]?.args.p_actor_user_id, actorId);
 });
 
 

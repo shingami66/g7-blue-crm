@@ -16,6 +16,8 @@ import {
   accountingProfileResultSchema,
   accountingTrialBalanceInputSchema,
   accountingTrialBalanceResultSchema,
+  accountingW10HReportInputSchema,
+  accountingW10HReportResultSchema,
   accountingInceptionPackageDetailSchema,
   accountingInceptionPackageSummarySchema,
   accountingArBridgeReconciliationInputSchema,
@@ -277,6 +279,34 @@ export async function getAccountingTrialBalance(input: unknown) {
   }
   const parsed = accountingTrialBalanceResultSchema.safeParse(result.data[0]);
   if (!parsed.success) throw new AuthDependencyError("Accounting Trial Balance response was invalid");
+  return parsed.data;
+}
+
+export async function getAccountingW10HReport(input: unknown) {
+  const parsedInput = accountingW10HReportInputSchema.safeParse(input);
+  if (!parsedInput.success) throw new AuthDependencyError("Accounting report request was invalid");
+  // The RPC repeats capability authorization. A verified active user may receive only
+  // the empty NOT_INITIALIZED result before any accounting profile exists.
+  const actor = await requireUser();
+  let result;
+  try {
+    result = await createAdminClient().rpc("get_w10h_accounting_report", {
+      p_actor_user_id: actor.id,
+      p_report_type: parsedInput.data.report_type,
+      p_from_date: parsedInput.data.from_date,
+      p_through_date: parsedInput.data.through_date,
+      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff,
+      p_account_id: parsedInput.data.account_id,
+      p_service_id: parsedInput.data.service_id,
+      p_offset: parsedInput.data.offset,
+      p_limit: parsedInput.data.limit,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting report dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  const parsed = accountingW10HReportResultSchema.safeParse(result.data);
+  if (!parsed.success) throw new AuthDependencyError("Accounting report response was invalid");
   return parsed.data;
 }
 

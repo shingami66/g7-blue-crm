@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import ExcelJS from "exceljs";
+import { formatHalalahForExcel } from "../accounting/exact-money.ts";
 import { DEFAULT_EXCEL_EXPORT_CHROME_EN, buildExcelReportBuffer } from "./exportExcel.ts";
 
 async function loadWorkbook(locale: "en" | "ar" = "en") {
@@ -95,6 +96,31 @@ test("formula-like text remains escaped in the actual generated XLSX cell", asyn
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer as never);
   assert.equal(workbook.getWorksheet("Data")?.getCell("A2").value, "'=HYPERLINK(\"https://example.com\")");
+});
+
+test("accounting amounts above Number.MAX_SAFE_INTEGER remain exact text in XLSX", async () => {
+  const exact = formatHalalahForExcel("9007199254740993");
+  const buffer = await buildExcelReportBuffer({
+    metadata: {
+      brandName: "G7 BLUE",
+      reportTitle: "General Ledger",
+      definition: "Provisional internal accounting output.",
+      source: "W10H posted journal report",
+      timeBasis: "Accounting date and recorded-at cutoff",
+      timeZone: "Asia/Riyadh",
+      generatedAt: new Date("2026-09-30T09:00:00.000Z"),
+      totalRecords: 1,
+      fileName: "w10h-exact.xlsx",
+    },
+    columns: [{ header: "Amount (SAR)", key: "amount", format: "text" }],
+    rows: [{ amount: exact }],
+  });
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer as never);
+  const cell = workbook.getWorksheet("Data")?.getCell("A2");
+  assert.equal(cell?.value, "SAR 90,071,992,547,409.93");
+  assert.equal(cell?.type, ExcelJS.ValueType.String);
+  assert.equal(cell?.numFmt, "@");
 });
 
 test("legacy single-sheet customer exports retain their established workbook contract", async () => {

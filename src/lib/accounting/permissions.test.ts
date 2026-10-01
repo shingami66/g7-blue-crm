@@ -63,6 +63,15 @@ test("resolver queries only the explicit accounting capability RPC", async () =>
   }]);
 });
 
+test("W10H statements still require their explicit persisted capability", async () => {
+  reset({ data: false });
+  assert.equal(await resolveAccountingCapability("admin-user-uuid", "accounting:view_statements"), false);
+  assert.deepEqual(state.calls, [{
+    name: "get_accounting_capability",
+    args: { p_actor_user_id: "admin-user-uuid", p_capability: "accounting:view_statements" },
+  }]);
+});
+
 test("resolver returns the persisted deny and fails closed for unknown future keys", async () => {
   reset({ data: false });
   assert.equal(await resolveAccountingCapability("actor-uuid", "accounting:manage_authority"), false);

@@ -19,7 +19,8 @@ export type ReportCategory = "financial_operations" | "event_costing";
 export type ReportTimeModel = "current_only" | "historical_as_of" | "period_and_as_of";
 
 export type ReportDefinition = {
-  key: "accounts_receivable" | "accounts_payable" | "event_economics";
+  key: "accounts_receivable" | "accounts_payable" | "event_economics"
+    | "general_ledger" | "trial_balance" | "profit_and_loss" | "balance_sheet";
   category: ReportCategory;
   title: string;
   description: string;

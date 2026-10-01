@@ -528,6 +528,98 @@ export const accountingTrialBalanceInputSchema = z
   })
   .strict();
 
+export const accountingW10HReportInputSchema = z
+  .object({
+    report_type: z.enum(["GENERAL_LEDGER", "TRIAL_BALANCE", "PROFIT_AND_LOSS", "BALANCE_SHEET"]),
+    from_date: validDate,
+    through_date: validDate,
+    recorded_at_cutoff: z.string().datetime({ offset: true }).nullable(),
+    account_id: z.string().uuid().nullable(),
+    service_id: z.string().uuid().nullable(),
+    offset: z.number().int().nonnegative().max(50000),
+    limit: z.number().int().min(1).max(500),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.through_date < value.from_date) {
+      context.addIssue({ code: "custom", path: ["through_date"], message: "Invalid accounting report date range" });
+    }
+  });
+
+const exactReportMoneyFields = (
+  value: unknown,
+  context: z.RefinementCtx,
+  path: Array<string | number> = [],
+): void => {
+  if (Array.isArray(value)) {
+    value.forEach((nested, index) => exactReportMoneyFields(nested, context, [...path, index]));
+    return;
+  }
+  if (value === null || typeof value !== "object") return;
+  for (const [key, nested] of Object.entries(value)) {
+    const nestedPath = [...path, key];
+    if (key.endsWith("_halalah")) {
+      if (typeof nested !== "string" || !/^-?(0|[1-9][0-9]*)$/.test(nested)) {
+        context.addIssue({
+          code: "custom",
+          path: nestedPath,
+          message: "Accounting halalah values must remain exact integer strings",
+        });
+      }
+    } else {
+      exactReportMoneyFields(nested, context, nestedPath);
+    }
+  }
+};
+
+const accountingReportJournalEvidenceSchema = z
+  .object({
+    journal_id: z.string().uuid(),
+    journal_version: z.number().int().positive(),
+    source_domain: boundedText(40),
+    accounting_date: validDate,
+    posted_at: boundedText(100),
+    reversal_of_journal_id: z.string().uuid().nullable(),
+    correction_group_id: z.string().uuid(),
+    service_id: z.string().uuid().nullable(),
+    service_number: z.string().nullable().optional(),
+    event_name: z.string().nullable().optional(),
+    event_type: z.string().nullable().optional(),
+    line_number: z.number().int().positive(),
+    side: z.enum(["DEBIT", "CREDIT"]),
+    amount_halalah: z.string().regex(/^-?(0|[1-9][0-9]*)$/),
+  })
+  .passthrough()
+  .superRefine((value, context) => exactReportMoneyFields(value, context));
+
+const accountingReportFlatRowSchema = z
+  .object({ journal_evidence: z.array(accountingReportJournalEvidenceSchema).optional() })
+  .passthrough()
+  .superRefine((row, context) => exactReportMoneyFields(row, context));
+const accountingReportTotalsSchema = z.record(z.string(), z.unknown()).superRefine((totals, context) => {
+  exactReportMoneyFields(totals, context);
+});
+export const accountingW10HReportResultSchema = z
+  .object({
+    report_type: z.enum(["GENERAL_LEDGER", "TRIAL_BALANCE", "PROFIT_AND_LOSS", "BALANCE_SHEET"]),
+    state: z.enum(["READY", "PARTIAL", "NOT_INITIALIZED", "MAPPING_REQUIRED", "UNAVAILABLE"]),
+    reason_codes: z.array(boundedText(100)),
+    from_date: validDate,
+    through_date: validDate,
+    recorded_at_cutoff: z.string(),
+    generated_at: z.string(),
+    mapping_version: z.number().int().positive().nullable(),
+    total_count: z.number().int().nonnegative(),
+    has_more: z.boolean().optional(),
+    rows: z.array(accountingReportFlatRowSchema),
+    accounts: z.array(accountingReportFlatRowSchema).optional(),
+    line_totals: z.array(accountingReportFlatRowSchema).optional(),
+    totals: accountingReportTotalsSchema.nullable().optional(),
+    service_id: z.string().uuid().nullable(),
+    account_id: z.string().uuid().nullable().optional(),
+  })
+  .passthrough();
+
 export const accountingGeneralLedgerEntrySchema = z
   .object({
     journal_id: z.string().uuid(),

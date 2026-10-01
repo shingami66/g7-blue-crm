@@ -29,6 +29,8 @@ const {
   accountingPeriodVersionSchema,
   accountingGeneralLedgerInputSchema,
   accountingTrialBalanceInputSchema,
+  accountingW10HReportInputSchema,
+  accountingW10HReportResultSchema,
   prepareAccountingJournalInputSchema,
   accountingProfileInputSchema,
   saveAccountingAccountInputSchema,
@@ -619,4 +621,80 @@ test("W10F reconciliation response schema distinguishes uninitialized from a bou
   };
   assert.equal(accountingRevenueReconciliationSchema.safeParse(ready).success, true);
   assert.equal(accountingRevenueReconciliationSchema.safeParse({ ...ready, bank_reconciled: true }).success, false);
+});
+
+test("W10H request and response schemas keep report dates and halalah exact", () => {
+  const input = {
+    report_type: "GENERAL_LEDGER",
+    from_date: "2026-01-01",
+    through_date: "2026-09-30",
+    recorded_at_cutoff: "2026-09-30T11:00:00+03:00",
+    account_id: null,
+    service_id: null,
+    offset: 0,
+    limit: 50,
+  };
+  assert.equal(accountingW10HReportInputSchema.safeParse(input).success, true);
+  const report = {
+    report_type: "GENERAL_LEDGER",
+    state: "READY",
+    reason_codes: [],
+    from_date: input.from_date,
+    through_date: input.through_date,
+    recorded_at_cutoff: input.recorded_at_cutoff,
+    generated_at: input.recorded_at_cutoff,
+    mapping_version: null,
+    total_count: 1,
+    rows: [{
+      amount_halalah: "9007199254740993",
+      journal_evidence: [{
+        journal_id: "00000000-0000-4000-8000-00000000f001",
+        journal_version: 1,
+        source_domain: "CONTROLLED_MANUAL",
+        accounting_date: "2026-09-30",
+        posted_at: "2026-09-30T11:00:00+03:00",
+        reversal_of_journal_id: null,
+        correction_group_id: "00000000-0000-4000-8000-00000000f002",
+        service_id: null,
+        service_number: null,
+        event_name: null,
+        event_type: null,
+        line_number: 1,
+        side: "CREDIT",
+        amount_halalah: "9007199254740993",
+      }],
+    }],
+    service_id: null,
+  };
+  assert.equal(accountingW10HReportResultSchema.safeParse(report).success, true);
+  assert.equal(accountingW10HReportResultSchema.safeParse({
+    ...report,
+    rows: [{ amount_halalah: 9007199254740992 }],
+  }).success, false);
+  assert.equal(accountingW10HReportResultSchema.safeParse({
+    ...report,
+    rows: [{
+      ...report.rows[0],
+      journal_evidence: [{ ...report.rows[0].journal_evidence[0], amount_halalah: 9007199254740992 }],
+    }],
+  }).success, false);
+  assert.equal(accountingW10HReportResultSchema.safeParse({
+    ...report,
+    rows: [{
+      ...report.rows[0],
+      journal_evidence: [{
+        ...report.rows[0].journal_evidence[0],
+        source_metadata: { nested_amount_halalah: 9007199254740992 },
+      }],
+    }],
+  }).success, false);
+  assert.equal(accountingW10HReportResultSchema.safeParse({
+    ...report,
+    state: "NOT_INITIALIZED",
+    reason_codes: ["PROFILE_NOT_INITIALIZED"],
+    total_count: 0,
+    has_more: false,
+    rows: [],
+    totals: null,
+  }).success, true);
 });
