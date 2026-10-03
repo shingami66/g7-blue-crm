@@ -4,6 +4,7 @@ import { AuthDependencyError, ForbiddenError } from "@/lib/auth/errors";
 import { requirePermission, requireUser } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/database.types";
+import type { RpcArgument } from "@/lib/supabase/rpc-argument";
 import { resolveAccountingCapability } from "./permissions";
 import {
   saveAccountingAccountInputSchema,
@@ -219,10 +220,10 @@ export async function setAccountingCapability(
       p_target_user_id: parsed.data.target_user_id,
       p_capability: parsed.data.capability,
       p_effect: parsed.data.effect,
-      p_expires_at: parsed.data.expires_at ?? null,
+      p_expires_at: (parsed.data.expires_at ?? null) as RpcArgument<"set_accounting_capability", "p_expires_at">,
       p_expected_revision: parsed.data.expected_revision,
       p_reason: parsed.data.reason,
-      p_evidence_ref: parsed.data.evidence_ref ?? null,
+      p_evidence_ref: (parsed.data.evidence_ref ?? null) as RpcArgument<"set_accounting_capability", "p_evidence_ref">,
       p_request_id: parsed.data.request_id,
     });
   } catch (error) {
@@ -257,7 +258,7 @@ export async function updateAccountingProfile(
       p_expected_version: parsed.data.expected_version,
       p_profile: parsed.data.profile as Json,
       p_reason: parsed.data.reason,
-      p_evidence_ref: parsed.data.evidence_ref ?? null,
+      p_evidence_ref: (parsed.data.evidence_ref ?? null) as RpcArgument<"update_accounting_profile", "p_evidence_ref">,
       p_request_id: parsed.data.request_id,
     });
   } catch (error) {
@@ -289,11 +290,11 @@ export async function saveAccountingAccount(
   try {
     result = await createAdminClient().rpc("save_accounting_account", {
       p_actor_user_id: actor.id,
-      p_account_id: parsed.data.account_id,
+      p_account_id: parsed.data.account_id as RpcArgument<"save_accounting_account", "p_account_id">,
       p_expected_version: parsed.data.expected_version,
       p_account: parsed.data.account as Json,
       p_reason: parsed.data.reason,
-      p_evidence_ref: parsed.data.evidence_ref ?? null,
+      p_evidence_ref: (parsed.data.evidence_ref ?? null) as RpcArgument<"save_accounting_account", "p_evidence_ref">,
       p_request_id: parsed.data.request_id,
     });
   } catch (error) {
@@ -325,11 +326,11 @@ export async function saveAccountingPeriod(
   try {
     result = await createAdminClient().rpc("save_accounting_period", {
       p_actor_user_id: actor.id,
-      p_period_id: parsed.data.period_id,
+      p_period_id: parsed.data.period_id as RpcArgument<"save_accounting_period", "p_period_id">,
       p_expected_version: parsed.data.expected_version,
       p_period: parsed.data.period as Json,
       p_reason: parsed.data.reason,
-      p_evidence_ref: parsed.data.evidence_ref ?? null,
+      p_evidence_ref: (parsed.data.evidence_ref ?? null) as RpcArgument<"save_accounting_period", "p_evidence_ref">,
       p_request_id: parsed.data.request_id,
     });
   } catch (error) {
@@ -453,11 +454,11 @@ export async function saveAccountingPostingRule(
   try {
     result = await createAdminClient().rpc("save_accounting_posting_rule", {
       p_actor_user_id: actor.id,
-      p_posting_rule_id: parsed.data.posting_rule_id,
+      p_posting_rule_id: parsed.data.posting_rule_id as RpcArgument<"save_accounting_posting_rule", "p_posting_rule_id">,
       p_expected_version: parsed.data.expected_version,
       p_rule: parsed.data.rule as Json,
       p_reason: parsed.data.reason,
-      p_evidence_ref: parsed.data.evidence_ref ?? null,
+      p_evidence_ref: (parsed.data.evidence_ref ?? null) as RpcArgument<"save_accounting_posting_rule", "p_evidence_ref">,
       p_request_id: parsed.data.request_id,
     });
   } catch (error) {
@@ -489,11 +490,11 @@ export async function prepareAccountingJournal(
   try {
     result = await createAdminClient().rpc("prepare_accounting_journal", {
       p_actor_user_id: actor.id,
-      p_journal_id: parsed.data.journal_id,
+      p_journal_id: parsed.data.journal_id as RpcArgument<"prepare_accounting_journal", "p_journal_id">,
       p_expected_version: parsed.data.expected_version,
       p_journal: parsed.data.journal as Json,
       p_reason: parsed.data.reason,
-      p_evidence_ref: parsed.data.evidence_ref ?? null,
+      p_evidence_ref: (parsed.data.evidence_ref ?? null) as RpcArgument<"prepare_accounting_journal", "p_evidence_ref">,
       p_request_id: parsed.data.request_id,
     });
   } catch (error) {
@@ -562,7 +563,7 @@ export async function reverseAccountingJournal(
       p_period_id: parsed.data.period_id,
       p_accounting_date: parsed.data.accounting_date,
       p_reason: parsed.data.reason,
-      p_evidence_ref: parsed.data.evidence_ref ?? null,
+      p_evidence_ref: (parsed.data.evidence_ref ?? null) as RpcArgument<"reverse_accounting_journal", "p_evidence_ref">,
       p_request_id: parsed.data.request_id,
     });
   } catch (error) {
@@ -618,7 +619,7 @@ export async function saveAccountingInceptionPackage(input: unknown) {
   const parsed = saveAccountingInceptionPackageInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
   const result = await callInceptionRpc(() => createAdminClient().rpc("save_accounting_inception_package", {
-    p_actor_user_id: actor.id, p_package_id: parsed.data.package_id,
+    p_actor_user_id: actor.id, p_package_id: parsed.data.package_id as RpcArgument<"save_accounting_inception_package", "p_package_id">,
     p_expected_version: parsed.data.expected_version, p_package: parsed.data.package as Json,
     p_reason: parsed.data.reason, p_request_id: parsed.data.request_id,
   }));
@@ -731,9 +732,9 @@ export async function saveAccountingArBridgeEvent(input: unknown) {
     p_source_record_id: parsed.data.source_record_id,
     p_expected_version: parsed.data.expected_version,
     p_classification: parsed.data.classification,
-    p_accounting_date: parsed.data.accounting_date,
-    p_evidence_ref: parsed.data.evidence_ref,
-    p_evidence_sha256: parsed.data.evidence_sha256,
+    p_accounting_date: parsed.data.accounting_date as RpcArgument<"save_accounting_ar_bridge_event", "p_accounting_date">,
+    p_evidence_ref: parsed.data.evidence_ref as RpcArgument<"save_accounting_ar_bridge_event", "p_evidence_ref">,
+    p_evidence_sha256: parsed.data.evidence_sha256 as RpcArgument<"save_accounting_ar_bridge_event", "p_evidence_sha256">,
     p_reason: parsed.data.reason,
     p_request_id: parsed.data.request_id,
   }));
@@ -817,16 +818,17 @@ export async function saveAccountingApBridgeEvent(input: unknown) {
     p_source_record_id: parsed.data.source_record_id,
     p_expected_version: parsed.data.expected_version,
     p_classification: parsed.data.classification,
-    p_amount_halalah: parsed.data.amount_halalah,
-    p_matched_receipt_halalah: parsed.data.matched_receipt_halalah,
-    p_direct_classification: parsed.data.direct_classification,
+    // Keep PostgreSQL bigint amounts as decimal strings; JS numbers can round halalah values.
+    p_amount_halalah: parsed.data.amount_halalah as unknown as RpcArgument<"save_accounting_ap_bridge_event", "p_amount_halalah">,
+    p_matched_receipt_halalah: parsed.data.matched_receipt_halalah as unknown as RpcArgument<"save_accounting_ap_bridge_event", "p_matched_receipt_halalah">,
+    p_direct_classification: parsed.data.direct_classification as RpcArgument<"save_accounting_ap_bridge_event", "p_direct_classification">,
     p_accounting_date: parsed.data.accounting_date,
-    p_evidence_ref: parsed.data.evidence_ref,
-    p_evidence_sha256: parsed.data.evidence_sha256,
-    p_cash_binding_evidence_ref: parsed.data.cash_binding_evidence_ref,
-    p_cash_binding_evidence_sha256: parsed.data.cash_binding_evidence_sha256,
-    p_cash_account_id: parsed.data.cash_account_id,
-    p_cash_account_version: parsed.data.cash_account_version,
+    p_evidence_ref: parsed.data.evidence_ref as RpcArgument<"save_accounting_ap_bridge_event", "p_evidence_ref">,
+    p_evidence_sha256: parsed.data.evidence_sha256 as RpcArgument<"save_accounting_ap_bridge_event", "p_evidence_sha256">,
+    p_cash_binding_evidence_ref: parsed.data.cash_binding_evidence_ref as RpcArgument<"save_accounting_ap_bridge_event", "p_cash_binding_evidence_ref">,
+    p_cash_binding_evidence_sha256: parsed.data.cash_binding_evidence_sha256 as RpcArgument<"save_accounting_ap_bridge_event", "p_cash_binding_evidence_sha256">,
+    p_cash_account_id: parsed.data.cash_account_id as RpcArgument<"save_accounting_ap_bridge_event", "p_cash_account_id">,
+    p_cash_account_version: parsed.data.cash_account_version as RpcArgument<"save_accounting_ap_bridge_event", "p_cash_account_version">,
     p_reason: parsed.data.reason,
     p_request_id: parsed.data.request_id,
   }));
@@ -996,8 +998,8 @@ export async function saveAccountingRevenueArrangement(input: unknown) {
     p_units: parsed.data.units as Json,
     p_principal_agent_basis: parsed.data.principal_agent_basis,
     p_policy_version: parsed.data.policy_version,
-    p_modification_evidence_ref: parsed.data.modification_evidence_ref,
-    p_modification_evidence_sha256: parsed.data.modification_evidence_sha256,
+    p_modification_evidence_ref: parsed.data.modification_evidence_ref as RpcArgument<"save_accounting_revenue_arrangement", "p_modification_evidence_ref">,
+    p_modification_evidence_sha256: parsed.data.modification_evidence_sha256 as RpcArgument<"save_accounting_revenue_arrangement", "p_modification_evidence_sha256">,
     p_reason: parsed.data.reason,
     p_request_id: parsed.data.request_id,
   }));
@@ -1061,9 +1063,9 @@ export async function saveAccountingRevenuePerformanceEvidence(input: unknown) {
     p_performance_through: parsed.data.performance_through,
     p_evidence_ref: parsed.data.evidence_ref,
     p_evidence_sha256: parsed.data.evidence_sha256,
-    p_recognized_to_date_halalah: parsed.data.recognized_to_date_halalah,
-    p_correction_of_recognition_event_id: parsed.data.correction_of_recognition_event_id,
-    p_correction_amount_halalah: parsed.data.correction_amount_halalah,
+    p_recognized_to_date_halalah: parsed.data.recognized_to_date_halalah as RpcArgument<"save_accounting_revenue_performance_evidence", "p_recognized_to_date_halalah">,
+    p_correction_of_recognition_event_id: parsed.data.correction_of_recognition_event_id as RpcArgument<"save_accounting_revenue_performance_evidence", "p_correction_of_recognition_event_id">,
+    p_correction_amount_halalah: parsed.data.correction_amount_halalah as RpcArgument<"save_accounting_revenue_performance_evidence", "p_correction_amount_halalah">,
     p_rationale: parsed.data.rationale,
     p_request_id: parsed.data.request_id,
   }));
@@ -1184,11 +1186,11 @@ export async function saveAccountingBankBinding(input: unknown) {
   const parsed = saveAccountingBankBindingInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
   const result = await callBankRpc(() => createAdminClient().rpc("save_accounting_bank_binding", {
-    p_actor_user_id: actor.id, p_binding_id: parsed.data.binding_id ?? null,
+    p_actor_user_id: actor.id, p_binding_id: (parsed.data.binding_id ?? null) as RpcArgument<"save_accounting_bank_binding", "p_binding_id">,
     p_expected_version: parsed.data.expected_version, p_account_id: parsed.data.account_id,
     p_account_version: parsed.data.account_version, p_bank_identity_ref: parsed.data.bank_identity_ref,
     p_bank_identity_sha256: parsed.data.bank_identity_sha256, p_effective_from: parsed.data.effective_from,
-    p_effective_through: parsed.data.effective_through, p_masked_display_identity: parsed.data.masked_display_identity,
+    p_effective_through: parsed.data.effective_through as RpcArgument<"save_accounting_bank_binding", "p_effective_through">, p_masked_display_identity: parsed.data.masked_display_identity,
     p_evidence_ref: parsed.data.evidence_ref, p_evidence_sha256: parsed.data.evidence_sha256,
     p_reason: parsed.data.reason, p_request_id: parsed.data.request_id,
   }));
@@ -1223,7 +1225,7 @@ export async function saveAccountingBankStatementBatch(input: unknown) {
   const parsed = saveAccountingBankStatementBatchInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
   const result = await callBankRpc(() => createAdminClient().rpc("save_accounting_bank_statement_batch", {
-    p_actor_user_id: actor.id, p_batch_id: parsed.data.batch_id ?? null, p_expected_version: parsed.data.expected_version,
+    p_actor_user_id: actor.id, p_batch_id: (parsed.data.batch_id ?? null) as RpcArgument<"save_accounting_bank_statement_batch", "p_batch_id">, p_expected_version: parsed.data.expected_version,
     p_binding_id: parsed.data.binding_id, p_binding_version: parsed.data.binding_version,
     p_source_document_ref: parsed.data.source_document_ref, p_evidence_sha256: parsed.data.evidence_sha256,
     p_evidence_identity: parsed.data.evidence_identity, p_coverage_start: parsed.data.coverage_start,
@@ -1245,11 +1247,11 @@ export async function saveAccountingBankStatementLine(input: unknown) {
   const parsed = saveAccountingBankStatementLineInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
   const result = await callBankRpc(() => createAdminClient().rpc("save_accounting_bank_statement_line", {
-    p_actor_user_id: actor.id, p_line_id: parsed.data.line_id ?? null, p_expected_version: parsed.data.expected_version,
+    p_actor_user_id: actor.id, p_line_id: (parsed.data.line_id ?? null) as RpcArgument<"save_accounting_bank_statement_line", "p_line_id">, p_expected_version: parsed.data.expected_version,
     p_batch_id: parsed.data.batch_id, p_batch_version: parsed.data.batch_version,
     p_stable_line_identity: parsed.data.stable_line_identity, p_transaction_date: parsed.data.transaction_date,
-    p_value_date: parsed.data.value_date, p_signed_amount_halalah: parsed.data.signed_amount_halalah,
-    p_reference: parsed.data.reference, p_description: parsed.data.description,
+    p_value_date: parsed.data.value_date as RpcArgument<"save_accounting_bank_statement_line", "p_value_date">, p_signed_amount_halalah: parsed.data.signed_amount_halalah,
+    p_reference: parsed.data.reference as RpcArgument<"save_accounting_bank_statement_line", "p_reference">, p_description: parsed.data.description as RpcArgument<"save_accounting_bank_statement_line", "p_description">,
     p_source_row_identity: parsed.data.source_row_identity, p_duplicate_fingerprint: parsed.data.duplicate_fingerprint,
     p_reason: parsed.data.reason, p_request_id: parsed.data.request_id,
   }));
@@ -1267,11 +1269,11 @@ export async function prepareAccountingBankReconciliation(input: unknown) {
   const parsed = prepareAccountingBankReconciliationInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
   const result = await callBankRpc(() => createAdminClient().rpc("prepare_accounting_bank_reconciliation", {
-    p_actor_user_id: actor.id, p_group_id: parsed.data.group_id ?? null, p_expected_version: parsed.data.expected_version,
+    p_actor_user_id: actor.id, p_group_id: (parsed.data.group_id ?? null) as RpcArgument<"prepare_accounting_bank_reconciliation", "p_group_id">, p_expected_version: parsed.data.expected_version,
     p_binding_id: parsed.data.binding_id, p_binding_version: parsed.data.binding_version,
     p_as_of_date: parsed.data.as_of_date, p_recorded_at_cutoff: parsed.data.recorded_at_cutoff,
     p_allocations: parsed.data.allocations as unknown as Json, p_rationale: parsed.data.rationale,
-    p_evidence_ref: parsed.data.evidence_ref, p_request_id: parsed.data.request_id,
+    p_evidence_ref: parsed.data.evidence_ref as RpcArgument<"prepare_accounting_bank_reconciliation", "p_evidence_ref">, p_request_id: parsed.data.request_id,
   }));
   if ("failure" in result) return result.failure;
   const row = accountingBankReconciliationMutationResultSchema.safeParse(result.row);

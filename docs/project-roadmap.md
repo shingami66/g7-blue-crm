@@ -1,15 +1,23 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W10I ACCOUNTING PERIOD CLOSE / LOCK / REOPEN — 1 October 2026
+## CURRENT ROADMAP POSITION — DB-002 DEV SUPABASE TYPE CONTRACT REFRESH — 3 October 2026
 
-- **W10I:** `COMPLETE / DEV-VERIFIED / PUBLISHED / OWNER-ACCEPTANCE PENDING` on DEV project `dpddrqjzqohexixgdqiq`. W10H remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` by explicit Owner confirmation.
+- **DB-002:** `COMPLETE / DEV-SCHEMA-VERIFIED` on DEV project `dpddrqjzqohexixgdqiq`.
+- The checked-in generated Supabase contract matches the current DEV `public` schema: 140 tables, 11 views, and 212 functions. Directly caused application typing repairs preserve deployed nullable RPC inputs and exact decimal-string amounts.
+- No schema, grants, RLS, functions, or migration history were mutated; DEMO and PROD were not accessed.
+- **W10I:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`; Mozfer explicitly accepted W10I. **DB-001:** `CLOSED / DEV-VERIFIED / PUBLISHED`.
+- **EXACT NEXT ACTION:** Do not start W11; any further work requires a separate authorized task.
+
+## HISTORICAL ROADMAP SNAPSHOT — W10I ACCOUNTING PERIOD CLOSE / LOCK / REOPEN — 1 October 2026 (SUPERSEDED CURRENT POSITION)
+
+- **W10I:** `COMPLETE / DEV-VERIFIED / PUBLISHED / OWNER-ACCEPTED` on DEV project `dpddrqjzqohexixgdqiq`. W10H remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` by explicit Owner confirmation.
 - DEV W10I migrations `20261001072553`, `20261001074513`, `20261001075335`, `20261001082334`, `20261001102032`, and `20261001115425` have exact local source parity. The new fiscal-year boundary migration SHA-256 is `424255de24038ad99235bb98d713decd4741f7dad3e0476f1526ee55a6d8bab8`.
 - Close preparation now validates Balance Sheet `from_date` against the selected profile version's fiscal-year start at the same FI-012 boundary. Trial Balance/P&L period-start rules, through dates, recorded-at cutoffs, all other evidence checks, and deployed function security metadata are preserved.
 - The full rollback-only W10I fixture passed; independent synthetic residue and capability-grant-event counts are zero. Focused W10A2a–W10I migration tests passed 92/92; TypeScript, scoped ESLint, production build, and diff checks passed.
 - **Validation:** `PASS WITH WARN`. The one `pnpm test:all` attempt timed out at 120 seconds and reported failures in unrelated UI, i18n, and invoice test files; no second run was made.
 - **Reviewer verdict:** `CLEAN` from the required fresh same-session native read-only Reviewer.
-- **Deferred boundaries:** W10I Owner acceptance is pending. DEV only; no W11, production mutation, persistent accounting grants, tax/statutory activation, or audited-statement claim.
-- **EXACT NEXT ACTION:** Obtain Mozfer's explicit W10I Owner acceptance. Do not start W11.
+- **Deferred boundaries:** W10I is Owner-accepted. DEV only; no W11, production mutation, persistent accounting grants, tax/statutory activation, or audited-statement claim.
+- **Former exact next action at this snapshot:** Obtain Mozfer's explicit W10I Owner acceptance; superseded by that acceptance and the current DB-002 closeout. Do not start W11.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10H ACCOUNTING STATEMENT REPORTING — 1 October 2026 (SUPERSEDED CURRENT POSITION)
 

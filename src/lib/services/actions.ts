@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/database.types";
+import type { RpcArgument } from "@/lib/supabase/rpc-argument";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { createServiceSchema, updateServiceSchema } from "./schemas";
@@ -584,9 +585,9 @@ export async function transitionServiceLifecycle(
       p_action: parsedAction.data,
       p_actor_id: user.clerk_user_id,
       p_actor_role: user.role,
-      p_gate_basis: parsedGateBasis.data ?? null,
+      p_gate_basis: (parsedGateBasis.data ?? null) as RpcArgument<"transition_service_lifecycle", "p_gate_basis">,
       p_reason: parsedReason.data,
-      p_request_id: parsedRequestId.data,
+      p_request_id: parsedRequestId.data as RpcArgument<"transition_service_lifecycle", "p_request_id">,
       p_service_id: serviceId,
     });
 

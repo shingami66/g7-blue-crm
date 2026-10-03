@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { RpcArgument } from "@/lib/supabase/rpc-argument";
 import {
   cleanupUploadedPrivateBusinessDocument,
   createPrivateBusinessDocumentUrlForService,
@@ -107,8 +108,8 @@ async function executeProcurementCandidateUpsert(
     p_supplier_id: value.supplierId,
     p_offer_summary: value.offerSummary,
     p_evidence_ref: value.evidenceRef,
-    p_quoted_amount: quotedAmount,
-    p_comparison_notes: comparisonNotes,
+    p_quoted_amount: quotedAmount as RpcArgument<"upsert_service_procurement_candidate", "p_quoted_amount">,
+    p_comparison_notes: comparisonNotes as RpcArgument<"upsert_service_procurement_candidate", "p_comparison_notes">,
     p_request_id: value.requestId,
     p_actor_id: user.clerk_user_id,
     p_actor_role: user.role,
@@ -141,7 +142,7 @@ async function executeSupplierQuotationCreate(
     p_service_id: value.serviceId,
     p_supplier_reference: value.supplierReference,
     p_quotation_date: value.quotationDate,
-    p_package_total: value.packageTotal ?? null,
+    p_package_total: (value.packageTotal ?? null) as RpcArgument<"create_supplier_quotation", "p_package_total">,
     p_requirements: (value.requirements ?? []).map((line) => ({
       requirement_id: line.requirementId,
       line_summary: line.lineSummary,
@@ -191,7 +192,7 @@ export async function upsertProcurementRequirement(
 
     const value: ProcurementRequirementInput = parsed.data;
     const { data, error } = await createAdminClient().rpc("upsert_service_procurement_requirement", {
-      p_requirement_id: value.requirementId ?? null,
+      p_requirement_id: (value.requirementId ?? null) as RpcArgument<"upsert_service_procurement_requirement", "p_requirement_id">,
       p_service_id: value.serviceId,
       p_requirement: value.requirement,
       p_sourcing_path: value.sourcingPath,

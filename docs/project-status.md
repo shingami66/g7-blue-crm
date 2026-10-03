@@ -1,16 +1,25 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W10I ACCOUNTING PERIOD CLOSE / LOCK / REOPEN — 1 October 2026
+## CURRENT DELIVERY STATUS — DB-002 DEV SUPABASE TYPE CONTRACT REFRESH — 3 October 2026
 
-- **W10I:** `COMPLETE / DEV-VERIFIED / PUBLISHED / OWNER-ACCEPTANCE PENDING` on DEV project `dpddrqjzqohexixgdqiq`. W10H remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` as explicitly confirmed by Mozfer.
+- **DB-002:** `COMPLETE / DEV-SCHEMA-VERIFIED` on DEV project `dpddrqjzqohexixgdqiq`.
+- **Generated contract:** `src/lib/supabase/database.types.ts` now matches the current DEV `public` schema: 140 tables, 11 views, and 212 functions. The checked-in TypeScript call sites preserve deployed nullable RPC inputs and exact decimal-string amounts.
+- **Database boundary:** Schema, grants, RLS, functions, and migration history were not mutated. No applied migration was rewritten; DEMO and PROD were not accessed.
+- **W10I:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`; Mozfer explicitly accepted W10I.
+- **DB-001:** `CLOSED / DEV-VERIFIED / PUBLISHED`; at DB-001 close, DB-002 and W11 had not started.
+- **EXACT NEXT ACTION:** Do not start W11; any further work requires a separate authorized task.
+
+## HISTORICAL DELIVERY SNAPSHOT — W10I ACCOUNTING PERIOD CLOSE / LOCK / REOPEN — 1 October 2026 (SUPERSEDED CURRENT STATUS)
+
+- **W10I:** `COMPLETE / DEV-VERIFIED / PUBLISHED / OWNER-ACCEPTED` on DEV project `dpddrqjzqohexixgdqiq`. W10H remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED` as explicitly confirmed by Mozfer.
 - **DEV migrations:** W10I migrations `20261001072553`, `20261001074513`, `20261001075335`, `20261001082334`, `20261001102032`, and `20261001115425` are applied with exact matching local sources. The additive Balance Sheet boundary migration SHA-256 is `424255de24038ad99235bb98d713decd4741f7dad3e0476f1526ee55a6d8bab8`; applied migration history was not repaired or edited.
 - **Boundary repair:** `accounting_period_close_capture()` now keeps Trial Balance and P&L `from_date` at period start and validates Balance Sheet `from_date` against the W10H fiscal-year start derived from the selected FI-012 profile version. Report through dates, recorded-at cutoffs, completeness checks, function signature, owner, security, search path, and ACL remain preserved.
 - **DEV fixture:** The complete W10I rollback fixture passed, including first- and later-fiscal-period closes, FI-012 historical behavior, January close/lock/reopen, February missing-coverage block, controlled-manual draft preservation, and chronology guards. Independent residue verification and synthetic capability-event counts are zero.
 - **Validation:** `PASS WITH WARN`. Focused W10A2a–W10I accounting migration tests passed 92/92; W10I migration tests passed 12/12. TypeScript, scoped ESLint, production build, and `git diff --check` passed. The single `pnpm test:all` run timed out at 120 seconds and reported failures in unrelated UI, i18n, and invoice test files; it was not rerun.
 - **Reviewer verdict:** `CLEAN` from the required fresh same-session native read-only Reviewer.
-- **Boundaries:** DEV only. W10I Owner acceptance remains pending; no W11, production mutation, persistent accounting grants, or statutory/tax activation is claimed.
-- **DB-001 pre-W11 security repair:** Additive migration `20261003084600_db_001_procurement_package_rpc_execute_acl_repair.sql` is applied to DEV under migration identity `20261003085231`. The three vulnerable Procurement Package RPCs now deny execution to `PUBLIC`, `anon`, and `authenticated`; `service_role` retains execution, and `set_procurement_package_requirements` remains correctly restricted. Live verification confirmed unchanged function definitions. DB-002 and W11 have not started.
-- **EXACT NEXT ACTION:** Obtain Mozfer's explicit W10I Owner acceptance. Do not start W11.
+- **Boundaries:** DEV only. W10I is Owner-accepted; no W11, production mutation, persistent accounting grants, or statutory/tax activation is claimed.
+- **DB-001 pre-W11 security repair:** Additive migration `20261003084600_db_001_procurement_package_rpc_execute_acl_repair.sql` is applied to DEV under migration identity `20261003085231`. The three vulnerable Procurement Package RPCs now deny execution to `PUBLIC`, `anon`, and `authenticated`; `service_role` retains execution, and `set_procurement_package_requirements` remains correctly restricted. Live verification confirmed unchanged function definitions. At DB-001 close, DB-002 and W11 had not started.
+- **Former exact next action at this snapshot:** Obtain Mozfer's explicit W10I Owner acceptance; superseded by that acceptance and the current DB-002 closeout. Do not start W11.
 
 ## HISTORICAL DELIVERY SNAPSHOT — W10H ACCOUNTING STATEMENT REPORTING — 1 October 2026 (SUPERSEDED CURRENT STATUS)
 

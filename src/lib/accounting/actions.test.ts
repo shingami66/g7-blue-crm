@@ -596,7 +596,7 @@ test("W10E1 AP actions derive the actor and map only the AP bridge RPCs", async 
     expected_version: 0,
     classification: "SUPPLIER_BILL",
     amount_halalah: null,
-    matched_receipt_halalah: "10000",
+    matched_receipt_halalah: "9007199254740993",
     direct_classification: null,
     accounting_date: "2026-09-29",
     evidence_ref: null,
@@ -622,7 +622,7 @@ test("W10E1 AP actions derive the actor and map only the AP bridge RPCs", async 
   assert.equal(state.calls[0].args.p_actor_user_id, actorId);
   assert.equal(state.calls[0].args.p_source_record_id, base.source_record_id);
   assert.equal(state.calls[0].args.p_amount_halalah, null);
-  assert.equal(state.calls[0].args.p_matched_receipt_halalah, "10000");
+  assert.equal(state.calls[0].args.p_matched_receipt_halalah, "9007199254740993");
   assert.equal("p_actor_role" in state.calls[0].args, false);
 
   resetState(async () => ({

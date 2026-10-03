@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { requirePermission } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { RpcArgument } from "@/lib/supabase/rpc-argument";
 import type { ProcurementActionResult } from "./actions";
 import {
   clearProcurementPackageSupplierSchema,
@@ -59,11 +60,11 @@ export async function createProcurementPackage(
     const admin = createAdminClient();
 
     const { data: pkgData, error: pkgError } = await admin.rpc("upsert_procurement_package", {
-      p_package_id: null,
+      p_package_id: null as unknown as RpcArgument<"upsert_procurement_package", "p_package_id">,
       p_service_id: value.serviceId,
       p_name: value.name,
-      p_description: value.description ?? null,
-      p_procurement_method: value.procurementMethod ?? null,
+      p_description: (value.description ?? null) as RpcArgument<"upsert_procurement_package", "p_description">,
+      p_procurement_method: (value.procurementMethod ?? null) as RpcArgument<"upsert_procurement_package", "p_procurement_method">,
       p_request_id: value.requestId,
       p_actor_id: user.clerk_user_id,
       p_actor_role: user.role,
@@ -128,8 +129,8 @@ export async function updateProcurementPackageMetadata(
       p_package_id: value.packageId,
       p_service_id: value.serviceId,
       p_name: value.name,
-      p_description: value.description ?? null,
-      p_procurement_method: value.procurementMethod ?? null,
+      p_description: (value.description ?? null) as RpcArgument<"upsert_procurement_package", "p_description">,
+      p_procurement_method: (value.procurementMethod ?? null) as RpcArgument<"upsert_procurement_package", "p_procurement_method">,
       p_request_id: value.requestId,
       p_actor_id: user.clerk_user_id,
       p_actor_role: user.role,
@@ -216,9 +217,9 @@ export async function selectProcurementPackageSupplier(
       p_package_id: value.packageId,
       p_service_id: value.serviceId,
       p_supplier_id: value.supplierId,
-      p_supplier_quotation_id: value.supplierQuotationId ?? null,
-      p_selection_reason: value.selectionReason ?? null,
-      p_selection_evidence: value.selectionEvidence ?? null,
+      p_supplier_quotation_id: (value.supplierQuotationId ?? null) as RpcArgument<"select_procurement_package_supplier", "p_supplier_quotation_id">,
+      p_selection_reason: (value.selectionReason ?? null) as RpcArgument<"select_procurement_package_supplier", "p_selection_reason">,
+      p_selection_evidence: (value.selectionEvidence ?? null) as RpcArgument<"select_procurement_package_supplier", "p_selection_evidence">,
       p_request_id: value.requestId,
       p_actor_id: user.clerk_user_id,
       p_actor_role: user.role,

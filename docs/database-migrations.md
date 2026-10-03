@@ -41,6 +41,16 @@ DO UPDATE SET
 - Use `text` instead of `uuid` for all user ID relations to accommodate Clerk.
 - Manually run `.sql` files in the Supabase SQL Editor until automated CLI migrations are fully integrated.
 
+## Supabase TypeScript Contract
+
+Regenerate `src/lib/supabase/database.types.ts` from the current authorized DEV project's `public` schema with the Supabase CLI:
+
+```sh
+supabase gen types typescript --project-id dpddrqjzqohexixgdqiq --schema public > src/lib/supabase/database.types.ts
+```
+
+Treat this output as generated database truth; validate affected callers rather than hand-editing the generated contract.
+
 ## DEV/DEMO Application Record
 
 ### One Active Deposit per Service — 2026-07-23

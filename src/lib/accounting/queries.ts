@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ForbiddenError, AuthDependencyError } from "@/lib/auth/errors";
 import { requirePermission, requireUser } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { RpcArgument } from "@/lib/supabase/rpc-argument";
 import {
   accountingAccountVersionSchema,
   accountingCapabilityAssignmentSchema,
@@ -240,9 +241,9 @@ export async function getAccountingGeneralLedger(input: unknown) {
       p_actor_user_id: actor.id,
       p_from_date: parsedInput.data.from_date,
       p_through_date: parsedInput.data.through_date,
-      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff,
-      p_account_id: parsedInput.data.account_id,
-      p_service_id: parsedInput.data.service_id,
+      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff as RpcArgument<"get_accounting_general_ledger", "p_recorded_at_cutoff">,
+      p_account_id: parsedInput.data.account_id as RpcArgument<"get_accounting_general_ledger", "p_account_id">,
+      p_service_id: parsedInput.data.service_id as RpcArgument<"get_accounting_general_ledger", "p_service_id">,
       p_offset: parsedInput.data.offset,
       p_limit: parsedInput.data.limit,
     });
@@ -268,8 +269,8 @@ export async function getAccountingTrialBalance(input: unknown) {
     result = await createAdminClient().rpc("get_accounting_trial_balance", {
       p_actor_user_id: actor.id,
       p_as_of_date: parsedInput.data.as_of_date,
-      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff,
-      p_service_id: parsedInput.data.service_id,
+      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff as RpcArgument<"get_accounting_trial_balance", "p_recorded_at_cutoff">,
+      p_service_id: parsedInput.data.service_id as RpcArgument<"get_accounting_trial_balance", "p_service_id">,
       p_offset: parsedInput.data.offset,
       p_limit: parsedInput.data.limit,
     });
@@ -298,9 +299,9 @@ export async function getAccountingW10HReport(input: unknown) {
       p_report_type: parsedInput.data.report_type,
       p_from_date: parsedInput.data.from_date,
       p_through_date: parsedInput.data.through_date,
-      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff,
-      p_account_id: parsedInput.data.account_id,
-      p_service_id: parsedInput.data.service_id,
+      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff as RpcArgument<"get_w10h_accounting_report", "p_recorded_at_cutoff">,
+      p_account_id: parsedInput.data.account_id as RpcArgument<"get_w10h_accounting_report", "p_account_id">,
+      p_service_id: parsedInput.data.service_id as RpcArgument<"get_w10h_accounting_report", "p_service_id">,
       p_offset: parsedInput.data.offset,
       p_limit: parsedInput.data.limit,
     });
