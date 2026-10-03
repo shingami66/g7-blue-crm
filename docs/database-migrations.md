@@ -55,6 +55,14 @@ DO UPDATE SET
 - Pre-apply duplicate aggregate was clean: `0` affected Services and `0` active Deposit rows.
 - Repository migration history was not repaired or marked. This record does not claim that migration history contains version `20260722120000`.
 
+### DB-001 Procurement Package RPC EXECUTE ACL Repair — 3 October 2026
+
+| Local Migration Filename | DEV Project Migration Identity | Scope & Description |
+|---|---|---|
+| `20261003084600_db_001_procurement_package_rpc_execute_acl_repair.sql` | `20261003085231` | Revokes `EXECUTE` from `PUBLIC`, `anon`, and `authenticated` for `upsert_procurement_package`, `select_procurement_package_supplier`, and `clear_procurement_package_supplier`; retains `service_role` execution. `set_procurement_package_requirements` remains service-role-only. Live catalog verification confirmed the application-role ACLs and unchanged function definitions. |
+
+- The additive source SHA-256 is `CC6EA88C3AE0ECEB09EDAEC7E27A602BCDDBF4826EE157F6B8B80D9CD1C9AC76`. No historical migration was rewritten, and no synthetic rows or fixtures were created.
+
 ## W4 Procurement & Commitments Migration Ledger — 6 September 2026
 
 The following 14 local migrations represent the W4 Procurement & Commitments schema foundation and architecture remediation delivered in reconstructed local history.

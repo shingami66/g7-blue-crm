@@ -9,6 +9,7 @@
 - **Validation:** `PASS WITH WARN`. Focused W10A2a–W10I accounting migration tests passed 92/92; W10I migration tests passed 12/12. TypeScript, scoped ESLint, production build, and `git diff --check` passed. The single `pnpm test:all` run timed out at 120 seconds and reported failures in unrelated UI, i18n, and invoice test files; it was not rerun.
 - **Reviewer verdict:** `CLEAN` from the required fresh same-session native read-only Reviewer.
 - **Boundaries:** DEV only. W10I Owner acceptance remains pending; no W11, production mutation, persistent accounting grants, or statutory/tax activation is claimed.
+- **DB-001 pre-W11 security repair:** Additive migration `20261003084600_db_001_procurement_package_rpc_execute_acl_repair.sql` is applied to DEV under migration identity `20261003085231`. The three vulnerable Procurement Package RPCs now deny execution to `PUBLIC`, `anon`, and `authenticated`; `service_role` retains execution, and `set_procurement_package_requirements` remains correctly restricted. Live verification confirmed unchanged function definitions. DB-002 and W11 have not started.
 - **EXACT NEXT ACTION:** Obtain Mozfer's explicit W10I Owner acceptance. Do not start W11.
 
 ## HISTORICAL DELIVERY SNAPSHOT — W10H ACCOUNTING STATEMENT REPORTING — 1 October 2026 (SUPERSEDED CURRENT STATUS)
