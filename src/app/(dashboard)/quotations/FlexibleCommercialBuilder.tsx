@@ -1,12 +1,14 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { QuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
+import { parseCommercialAmendmentUnitPriceDraft } from "@/lib/quotations/commercial-amendment-client-validation";
 import type { CommercialAmendmentDraftLine } from "@/lib/quotations/commercial-amendment-view-model";
 
 type FlexibleCommercialBuilderProps = {
   lines: CommercialAmendmentDraftLine[];
   onChange: (lines: CommercialAmendmentDraftLine[]) => void;
+  onUnitPriceValidityChange: (isValid: boolean) => void;
   dictionary: QuotationsDictionary;
   disabled?: boolean;
 };
@@ -34,11 +36,13 @@ function newLine(
 export default function FlexibleCommercialBuilder({
   lines,
   onChange,
+  onUnitPriceValidityChange,
   dictionary,
   disabled = false,
 }: FlexibleCommercialBuilderProps) {
   const amendment = dictionary.amendment;
   const nextKey = useRef(1);
+  const [unitPriceDrafts, setUnitPriceDrafts] = useState<Record<string, string>>({});
 
   function nextLineKey() {
     let candidate = "";
@@ -52,6 +56,34 @@ export default function FlexibleCommercialBuilder({
     onChange(lines.map((line) => (line.line_key === lineKey ? { ...line, ...update } : line)));
   }
 
+  function areUnitPriceDraftsValid(drafts: Record<string, string>, currentLines = lines) {
+    return currentLines.every((line) => {
+      const draft = drafts[line.line_key];
+      return draft === undefined || parseCommercialAmendmentUnitPriceDraft(draft) !== null;
+    });
+  }
+
+  function updateUnitPriceDraft(lineKey: string, value: string) {
+    const nextDrafts = { ...unitPriceDrafts, [lineKey]: value };
+    setUnitPriceDrafts(nextDrafts);
+    onUnitPriceValidityChange(areUnitPriceDraftsValid(nextDrafts));
+    const parsed = parseCommercialAmendmentUnitPriceDraft(value);
+    if (parsed !== null) updateLine(lineKey, { unit_price: parsed });
+  }
+
+  function finishUnitPriceDraft(lineKey: string, value: string) {
+    const parsed = parseCommercialAmendmentUnitPriceDraft(value);
+    if (parsed === null) {
+      onUnitPriceValidityChange(false);
+      return;
+    }
+    const nextDrafts = { ...unitPriceDrafts };
+    delete nextDrafts[lineKey];
+    setUnitPriceDrafts(nextDrafts);
+    onUnitPriceValidityChange(areUnitPriceDraftsValid(nextDrafts));
+    updateLine(lineKey, { unit_price: parsed });
+  }
+
   function addAuthorityLine() {
     onChange([...lines, newLine(nextLineKey(), null, "authority_line")]);
   }
@@ -61,7 +93,14 @@ export default function FlexibleCommercialBuilder({
   }
 
   function removeLine(lineKey: string) {
-    onChange(lines.filter((line) => line.line_key !== lineKey && line.parent_line_key !== lineKey));
+    const nextLines = lines.filter((line) => line.line_key !== lineKey && line.parent_line_key !== lineKey);
+    const remainingKeys = new Set(nextLines.map((line) => line.line_key));
+    const nextDrafts = Object.fromEntries(
+      Object.entries(unitPriceDrafts).filter(([key]) => remainingKeys.has(key)),
+    );
+    setUnitPriceDrafts(nextDrafts);
+    onUnitPriceValidityChange(areUnitPriceDraftsValid(nextDrafts, nextLines));
+    onChange(nextLines);
   }
 
   const roots = lines.filter((line) => line.parent_line_key === null);
@@ -97,8 +136,16 @@ export default function FlexibleCommercialBuilder({
       </div>
 
       <div className="mt-5 flex flex-col gap-4">
-        {orderedLines.map((line) => {
+        {orderedLines.map((line, index) => {
           const isChild = line.parent_line_key !== null;
+          const invalidDescription = !line.description.trim();
+          const descriptionErrorId = "amendment-line-description-error-" + index;
+          const unitPriceErrorId = "amendment-unit-price-error-" + index;
+          const unitPriceDraft = unitPriceDrafts[line.line_key];
+          const invalidUnitPrice =
+            line.commercial_role !== "included_component" &&
+            unitPriceDraft !== undefined &&
+            parseCommercialAmendmentUnitPriceDraft(unitPriceDraft) === null;
           return (
             <div
               key={line.line_key}
@@ -114,7 +161,7 @@ export default function FlexibleCommercialBuilder({
                         : amendment.optional}
                   </span>
                   {line.commercial_role === "optional_add_on" && (
-                    <span className="rounded-full bg-surface-container-high px-2 py-1 normal-case">
+                    <span id={"amendment-optional-state-" + index} className="rounded-full bg-surface-container-high px-2 py-1 normal-case">
                       {line.is_selected ? amendment.selected : amendment.notSelected}
                     </span>
                   )}
@@ -153,14 +200,22 @@ export default function FlexibleCommercialBuilder({
 
               <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                 <label className="text-xs font-semibold text-on-surface-variant">
-                  {dictionary.detail.labels.service}
+                  {amendment.lineItemLabel}
                   <input
                     value={line.description}
                     onChange={(event) => updateLine(line.line_key, { description: event.target.value })}
                     disabled={disabled}
                     dir="auto"
+                    required
+                    aria-invalid={invalidDescription}
+                    aria-describedby={invalidDescription ? descriptionErrorId : undefined}
                     className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface disabled:opacity-60"
                   />
+                  {invalidDescription && (
+                    <span id={descriptionErrorId} className="mt-1 block font-normal text-error" aria-live="polite">
+                      {amendment.lineDescriptionRequired}
+                    </span>
+                  )}
                 </label>
                 <label className="text-xs font-semibold text-on-surface-variant">
                   {amendment.descriptionAr}
@@ -221,13 +276,21 @@ export default function FlexibleCommercialBuilder({
                     type="number"
                     min="0"
                     step="0.01"
-                    value={line.commercial_role === "included_component" ? 0 : line.unit_price}
+                    value={line.commercial_role === "included_component" ? 0 : unitPriceDraft ?? String(line.unit_price)}
                     readOnly={line.commercial_role === "included_component"}
-                    onChange={(event) => updateLine(line.line_key, { unit_price: Number(event.target.value) || 0 })}
+                    onChange={(event) => updateUnitPriceDraft(line.line_key, event.target.value)}
+                    onBlur={(event) => finishUnitPriceDraft(line.line_key, event.target.value)}
                     disabled={disabled}
                     dir="ltr"
+                    aria-invalid={invalidUnitPrice}
+                    aria-describedby={invalidUnitPrice ? unitPriceErrorId : undefined}
                     className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface read-only:bg-surface-container-low read-only:text-on-surface-variant disabled:opacity-60"
                   />
+                  {invalidUnitPrice && (
+                    <span id={unitPriceErrorId} className="mt-1 block font-normal text-error" aria-live="polite">
+                      {amendment.unitPriceInvalid}
+                    </span>
+                  )}
                 </label>
                 {line.commercial_role === "optional_add_on" && (
                   <label className="flex items-end gap-2 pb-2 text-sm font-semibold text-on-surface">
@@ -236,8 +299,9 @@ export default function FlexibleCommercialBuilder({
                       checked={line.is_selected}
                       onChange={(event) => updateLine(line.line_key, { is_selected: event.target.checked })}
                       disabled={disabled}
+                      aria-describedby={"amendment-optional-state-" + index}
                     />
-                    {line.is_selected ? amendment.selected : amendment.notSelected}
+                    {amendment.includeInQuotation}
                   </label>
                 )}
               </div>

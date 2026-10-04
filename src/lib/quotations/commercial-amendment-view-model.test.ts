@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   buildCommercialAmendmentChangeSummary,
   commercialAmendmentPreviewGrandTotal,
+  commercialAmendmentPreviewSubtotal,
   deriveCommercialAmendmentMode,
   toCommercialAmendmentDraftLines,
 } from "./commercial-amendment-view-model.ts";
@@ -55,4 +56,36 @@ test("summary counts structural and optional changes even when totals are unchan
 test("dirty preview total includes the established proportional VAT basis", () => {
   const lines = toCommercialAmendmentDraftLines([item({ id: "a", description: "A", total: 100 })]);
   assert.equal(commercialAmendmentPreviewGrandTotal(lines, 10, 15), 103.5);
+});
+
+test("optional line selection controls its preview price while included components remain zero-price", () => {
+  const lines = toCommercialAmendmentDraftLines([
+    item({ id: "main", description: "Main item", total: 100 }),
+    item({
+      id: "included",
+      description: "Included component",
+      total: 0,
+      commercialRole: "included_component",
+      parentAuthorityLineId: "main",
+      unitPrice: 0,
+    }),
+    item({
+      id: "optional",
+      description: "Optional item",
+      total: 0,
+      commercialRole: "optional_add_on",
+      parentAuthorityLineId: "main",
+      unitPrice: 25,
+      isSelected: false,
+    }),
+  ]);
+
+  assert.equal(commercialAmendmentPreviewSubtotal(lines), 100);
+  assert.equal(
+    commercialAmendmentPreviewSubtotal(
+      lines.map((line) => line.commercial_role === "optional_add_on" ? { ...line, is_selected: true } : line),
+    ),
+    125,
+  );
+  assert.equal(lines.find((line) => line.commercial_role === "included_component")?.unit_price, 0);
 });

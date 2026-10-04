@@ -69,6 +69,7 @@ export default function QuotationForm({ service, initialData, dictionary: dictio
   const isEdit = Boolean(initialData);
   const [mutationKey] = useState(generateMutationKey);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [unitPricesValid, setUnitPricesValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [event, setEvent] = useState(initialData?.event || service.eventName || service.serviceTitle);
   const [date] = useState(initialData?.date || new Date().toISOString().split("T")[0]);
@@ -118,6 +119,7 @@ export default function QuotationForm({ service, initialData, dictionary: dictio
     if (!validUntil) return setError(dictionary.form.validation.validUntilRequired);
     if (validUntil < date) return setError(dictionary.form.validation.validUntilBeforeIssueDate);
     if (validUntilExceedsServiceStart) return setError(dictionary.form.validation.validUntilAfterServiceStart);
+    if (!unitPricesValid) return setError(dictionary.amendment.unitPriceInvalid);
     if (hasInvalidLines) return setError(dictionary.form.validation.invalidItems);
     if (discountExceedsSubtotal) return setError(dictionary.form.validation.discountExceedsSubtotal);
 
@@ -202,7 +204,12 @@ export default function QuotationForm({ service, initialData, dictionary: dictio
           </div>
         </div>
 
-        <FlexibleCommercialBuilder lines={lines} onChange={handleLinesChange} dictionary={dictionary} />
+        <FlexibleCommercialBuilder
+          lines={lines}
+          onChange={handleLinesChange}
+          onUnitPriceValidityChange={setUnitPricesValid}
+          dictionary={dictionary}
+        />
 
         <div className="flex flex-col gap-4 rounded-xl border border-surface-variant bg-surface-container-lowest p-6">
           <div className="flex items-center gap-2 rounded border border-outline-variant/50 bg-surface-container-low p-2 text-[12px] font-mono text-on-surface-variant"><AlertCircle size={14} className="text-primary" />{dictionary.form.previewOnly}</div>
@@ -211,7 +218,7 @@ export default function QuotationForm({ service, initialData, dictionary: dictio
             <div className="flex w-72 justify-between gap-4 text-error"><span className="text-on-surface-variant">{dictionary.form.discount}:</span><span dir="ltr" className="tabular-nums">- {formatSarAmount(dictionary.locale, parsedDiscount)}</span></div>
             <div className={`flex w-72 justify-between gap-4 border-t border-outline-variant pt-2 text-[16px] font-semibold ${discountExceedsSubtotal ? "text-error" : "text-primary"}`}><span>{dictionary.form.grandTotal}:</span><span dir="ltr" className="tabular-nums">{formatSarAmount(dictionary.locale, grandTotal)}</span></div>
           </div>
-          <div className="mt-4 flex justify-end"><Button type="submit" loading={isSubmitting} size="sm" disabled={discountExceedsSubtotal || validUntilExceedsServiceStart || serviceStartedBeforeIssueDate}><Save size={16} />{isEdit ? dictionary.form.saveChanges : dictionary.form.createQuotation}</Button></div>
+          <div className="mt-4 flex justify-end"><Button type="submit" loading={isSubmitting} size="sm" disabled={!unitPricesValid || discountExceedsSubtotal || validUntilExceedsServiceStart || serviceStartedBeforeIssueDate}><Save size={16} />{isEdit ? dictionary.form.saveChanges : dictionary.form.createQuotation}</Button></div>
         </div>
       </form>
     </div>

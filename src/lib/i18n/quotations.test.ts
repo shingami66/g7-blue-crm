@@ -22,6 +22,8 @@ const APPROVAL = join(
 const PERMISSIONS = join(REPO_ROOT, "src/lib/auth/role-permissions.ts");
 const ACTIONS = join(REPO_ROOT, "src/lib/quotations/actions.ts");
 const SCHEMAS = join(REPO_ROOT, "src/lib/quotations/schemas.ts");
+const AMENDMENT_BUILDER = join(REPO_ROOT, "src/app/(dashboard)/quotations/FlexibleCommercialBuilder.tsx");
+const AMENDMENT_WORKSPACE = join(REPO_ROOT, "src/app/(dashboard)/quotations/[id]/amendment/CommercialAmendmentWorkspace.tsx");
 
 const ARABIC_INDIC = /[٠-٩]/;
 const CANONICAL_STATUSES = ["draft", "sent", "approved", "rejected", "expired"] as const;
@@ -290,6 +292,70 @@ test("31. No hardcoded English shells on source-proven Quotations Arabic UI surf
   assert.match(read(EDIT), /getCurrentSessionEffectiveLocale/);
   assert.match(read(LIST_CLIENT), /useLocale/);
   assert.match(read(FORM), /useLocale/);
+});
+
+test("Commercial Amendment builder copy is customer-facing and preserves internal roles", () => {
+  const en = getQuotationsDictionary("en").amendment;
+  const ar = getQuotationsDictionary("ar").amendment;
+  const builder = read(AMENDMENT_BUILDER);
+  const form = read(FORM);
+
+  assert.equal(en.lineItemLabel, "Line item");
+  assert.equal(ar.lineItemLabel, "بند عرض السعر");
+  assert.equal(en.authorityLine, "Main item");
+  assert.equal(ar.authorityLine, "البند الرئيسي");
+  assert.equal(en.addAuthorityLine, "Add main item");
+  assert.equal(ar.addAuthorityLine, "إضافة بند رئيسي");
+  assert.equal(en.addIncluded, "Add included component");
+  assert.equal(ar.addOptional, "إضافة بند اختياري");
+  assert.equal(en.modeItemized, "Standalone items");
+  assert.equal(en.modeMixed, "Mixed items");
+  assert.equal(en.includeInQuotation, "Include in quotation");
+  assert.equal(ar.includeInQuotation, "إدراج في عرض السعر");
+  assert.equal(ar.selected, "مشمول في عرض السعر");
+  assert.equal(ar.notSelected, "غير مشمول في عرض السعر");
+  assert.doesNotMatch(builder, /dictionary\.detail\.labels\.service/);
+  assert.doesNotMatch(builder, /Authority Line/);
+  assert.match(builder, /amendment\.lineItemLabel/);
+  assert.match(builder, /"authority_line"/);
+  assert.match(builder, /"included_component"/);
+  assert.match(builder, /"optional_add_on"/);
+  assert.match(builder, /amendment\.includeInQuotation/);
+  assert.match(builder, /onBlur=\{\(event\) => finishUnitPriceDraft/);
+  assert.match(builder, /unitPriceDraft \?\? String\(line\.unit_price\)/);
+  assert.match(form, /onUnitPriceValidityChange=\{setUnitPricesValid\}/);
+  assert.match(form, /if \(!unitPricesValid\) return setError\(dictionary\.amendment\.unitPriceInvalid\)/);
+});
+
+test("Commercial Amendment validation and domain errors are localized before save", () => {
+  const ar = getQuotationsDictionary("ar").amendment;
+  const builder = read(AMENDMENT_BUILDER);
+  const workspace = read(AMENDMENT_WORKSPACE);
+
+  assert.equal(ar.validUntilBeforeIssueDate, "يجب أن يكون تاريخ «صالح حتى» في تاريخ الإصدار أو بعده.");
+  assert.match(builder, /aria-invalid=\{invalidDescription\}/);
+  assert.match(builder, /amendment\.lineDescriptionRequired/);
+  assert.match(builder, /amendment\.unitPriceInvalid/);
+  assert.match(workspace, /quotation\.eventSnapshot\?\.eventStartDate/);
+  assert.match(workspace, /validateCommercialAmendmentValidityWindow/);
+  assert.match(workspace, /max=\{serviceStartDate \?\? undefined\}/);
+  assert.match(workspace, /disabled=\{pending \|\| !dirty \|\| hasDraftValidationErrors\}/);
+  assert.match(workspace, /amendment\.domainErrors/);
+  assert.doesNotMatch(workspace, /result\.error/);
+  const domainErrorCodes = [
+    "invalid_validity_window",
+    "invalid_input",
+    "quotation_amendment_draft_ineligible",
+    "quotation_amendment_draft_concurrency_conflict",
+    "quotation_not_current_approved",
+    "quotation_service_lifecycle_ineligible",
+    "invalid_commercial_hierarchy",
+    "discount_exceeds_subtotal",
+    "commercial_draft_update_failed",
+  ] as const;
+  for (const code of domainErrorCodes) {
+    assert.notEqual(ar.domainErrors[code], "");
+  }
 });
 
 test("Locale authority and soft-delete guards remain", () => {

@@ -258,11 +258,13 @@ export interface QuotationsDictionary {
     modeItemized: string;
     modePackage: string;
     modeMixed: string;
+    lineItemLabel: string;
     authorityLine: string;
     included: string;
     optional: string;
     selected: string;
     notSelected: string;
+    includeInQuotation: string;
     addAuthorityLine: string;
     addIncluded: string;
     addOptional: string;
@@ -270,6 +272,26 @@ export interface QuotationsDictionary {
     descriptionAr: string;
     unit: string;
     unitPrice: string;
+    validityHintWithServiceStart: string;
+    validityHintWithoutServiceStart: string;
+    validUntilBeforeIssueDate: string;
+    validUntilAfterServiceStart: string;
+    issueDateRequired: string;
+    issueDateAfterServiceStart: string;
+    lineDescriptionRequired: string;
+    unitPriceInvalid: string;
+    validationRequired: string;
+    domainErrors: {
+      invalid_validity_window: string;
+      invalid_input: string;
+      quotation_amendment_draft_ineligible: string;
+      quotation_amendment_draft_concurrency_conflict: string;
+      quotation_not_current_approved: string;
+      quotation_service_lifecycle_ineligible: string;
+      invalid_commercial_hierarchy: string;
+      discount_exceeds_subtotal: string;
+      commercial_draft_update_failed: string;
+    };
     saveDraft: string;
     savingDraft: string;
     savedDraft: string;
@@ -551,21 +573,43 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     workspaceTitle: "Commercial Amendment Workspace",
     workspaceSubtitle: "Edit the complete proposed commercial snapshot, review the change summary, then confirm customer approval.",
     builderTitle: "Proposed commercial structure",
-    modeItemized: "Itemized",
+    modeItemized: "Standalone items",
     modePackage: "Package",
-    modeMixed: "Mixed / Hybrid",
-    authorityLine: "Authority Line",
+    modeMixed: "Mixed items",
+    lineItemLabel: "Line item",
+    authorityLine: "Main item",
     included: "Included",
     optional: "Optional",
-    selected: "Selected",
-    notSelected: "Not selected",
-    addAuthorityLine: "Add Authority Line",
-    addIncluded: "Add Included Component",
-    addOptional: "Add Optional Add-on",
+    selected: "Included in quotation",
+    notSelected: "Not included in quotation",
+    includeInQuotation: "Include in quotation",
+    addAuthorityLine: "Add main item",
+    addIncluded: "Add included component",
+    addOptional: "Add optional item",
     removeLine: "Remove line",
     descriptionAr: "Arabic description",
     unit: "Unit",
     unitPrice: "Unit price (SAR)",
+    validityHintWithServiceStart: "Valid Until must be on or after Issue Date and no later than the Service start date recorded for this quotation.",
+    validityHintWithoutServiceStart: "Valid Until must be on or after Issue Date. The server will validate any Service date restriction.",
+    validUntilBeforeIssueDate: "Valid Until must be on or after Issue Date.",
+    validUntilAfterServiceStart: "Valid Until cannot be after the recorded Service start date.",
+    issueDateRequired: "Choose an Issue Date.",
+    issueDateAfterServiceStart: "Issue Date cannot be after the recorded Service start date.",
+    lineDescriptionRequired: "Enter a description for this item before saving the Draft.",
+    unitPriceInvalid: "Enter a valid unit price of zero or more.",
+    validationRequired: "Correct the highlighted fields before saving the Draft.",
+    domainErrors: {
+      invalid_validity_window: "The quotation validity dates are not allowed for this Service.",
+      invalid_input: "Some amendment details are invalid. Review the fields and try again.",
+      quotation_amendment_draft_ineligible: "This amendment Draft is no longer eligible for editing.",
+      quotation_amendment_draft_concurrency_conflict: "This Draft changed elsewhere. Reload the workspace before saving.",
+      quotation_not_current_approved: "The original quotation is no longer the current approved authority.",
+      quotation_service_lifecycle_ineligible: "This Service is no longer eligible for a Commercial Amendment.",
+      invalid_commercial_hierarchy: "The commercial structure is invalid. Check the main items and their components.",
+      discount_exceeds_subtotal: "The discount cannot exceed the proposed subtotal.",
+      commercial_draft_update_failed: "The amendment Draft could not be saved. No changes were made.",
+    },
     saveDraft: "Save Draft",
     savingDraft: "Saving…",
     savedDraft: "Draft saved",
@@ -847,21 +891,43 @@ const quotationsDictionaryAr: QuotationsDictionary = {
     workspaceTitle: "مساحة عمل التعديل التجاري",
     workspaceSubtitle: "عدّل اللقطة التجارية المقترحة كاملة، ثم راجع ملخص التغيير وأكد اعتماد العميل.",
     builderTitle: "الهيكل التجاري المقترح",
-    modeItemized: "بنود مفصلة",
+    modeItemized: "بنود مستقلة",
     modePackage: "حزمة",
-    modeMixed: "مختلط / هجين",
-    authorityLine: "بند مرجعي",
+    modeMixed: "بنود مختلطة",
+    lineItemLabel: "بند عرض السعر",
+    authorityLine: "البند الرئيسي",
     included: "مشمول",
     optional: "اختياري",
-    selected: "محدد",
-    notSelected: "غير محدد",
-    addAuthorityLine: "إضافة بند مرجعي",
-    addIncluded: "إضافة مكوّن مشمول",
-    addOptional: "إضافة إضافة اختيارية",
+    selected: "مشمول في عرض السعر",
+    notSelected: "غير مشمول في عرض السعر",
+    includeInQuotation: "إدراج في عرض السعر",
+    addAuthorityLine: "إضافة بند رئيسي",
+    addIncluded: "إضافة مكوّن مشمول في البند الرئيسي",
+    addOptional: "إضافة بند اختياري",
     removeLine: "إزالة البند",
     descriptionAr: "الوصف بالعربية",
     unit: "الوحدة",
     unitPrice: "سعر الوحدة (SAR)",
+    validityHintWithServiceStart: "يجب أن يكون تاريخ «صالح حتى» في تاريخ الإصدار أو بعده، وألا يتجاوز تاريخ بدء الخدمة المسجل.",
+    validityHintWithoutServiceStart: "يجب أن يكون تاريخ «صالح حتى» في تاريخ الإصدار أو بعده. يتحقق الخادم من أي قيد مرتبط بتاريخ الخدمة.",
+    validUntilBeforeIssueDate: "يجب أن يكون تاريخ «صالح حتى» في تاريخ الإصدار أو بعده.",
+    validUntilAfterServiceStart: "لا يجوز أن يتجاوز تاريخ «صالح حتى» تاريخ بدء الخدمة المسجل.",
+    issueDateRequired: "اختر تاريخ الإصدار.",
+    issueDateAfterServiceStart: "لا يمكن أن يكون تاريخ الإصدار بعد تاريخ بدء الخدمة المسجل.",
+    lineDescriptionRequired: "أدخل وصفًا لهذا البند قبل حفظ المسودة.",
+    unitPriceInvalid: "أدخل سعر وحدة صالحًا يساوي صفرًا أو أكثر.",
+    validationRequired: "صحح الحقول المحددة قبل حفظ المسودة.",
+    domainErrors: {
+      invalid_validity_window: "تواريخ صلاحية عرض السعر غير مسموح بها لهذه الخدمة.",
+      invalid_input: "بعض تفاصيل التعديل غير صالحة. راجع الحقول وحاول مرة أخرى.",
+      quotation_amendment_draft_ineligible: "لم تعد مسودة التعديل مؤهلة للتحرير.",
+      quotation_amendment_draft_concurrency_conflict: "تم تغيير هذه المسودة في مكان آخر. أعد تحميل مساحة العمل قبل الحفظ.",
+      quotation_not_current_approved: "لم يعد عرض السعر الأصلي هو المرجعية المعتمدة الحالية.",
+      quotation_service_lifecycle_ineligible: "لم تعد هذه الخدمة مؤهلة لتعديل تجاري.",
+      invalid_commercial_hierarchy: "الهيكل التجاري غير صالح. راجع البنود الرئيسية ومكوناتها.",
+      discount_exceeds_subtotal: "لا يجوز أن يتجاوز الخصم المجموع الفرعي المقترح.",
+      commercial_draft_update_failed: "تعذر حفظ مسودة التعديل. لم يتم إجراء أي تغييرات.",
+    },
     saveDraft: "حفظ المسودة",
     savingDraft: "جارٍ الحفظ…",
     savedDraft: "تم حفظ المسودة",

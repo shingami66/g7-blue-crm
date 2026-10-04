@@ -7,6 +7,10 @@ import type { QuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import type { QuotationDetail } from "@/lib/quotations/types";
 import {
+  isDateOnlyValue,
+  validateCommercialAmendmentValidityWindow,
+} from "@/lib/quotations/commercial-amendment-client-validation";
+import {
   buildCommercialAmendmentChangeSummary,
   commercialAmendmentPreviewGrandTotal,
   commercialAmendmentPreviewSubtotal,
@@ -23,6 +27,15 @@ function serializeDraft(input: {
   lines: CommercialAmendmentDraftLine[];
 }) {
   return JSON.stringify(input);
+}
+
+function localizedDomainError<T extends object>(
+  code: string | undefined,
+  messages: T,
+  fallback: string,
+) {
+  const message = Object.entries(messages).find(([domainCode]) => domainCode === code)?.[1];
+  return typeof message === "string" ? message : fallback;
 }
 
 export default function CommercialAmendmentWorkspace({
@@ -68,9 +81,34 @@ export default function CommercialAmendmentWorkspace({
   const [approvalOpen, setApprovalOpen] = useState(false);
   const [approvalPending, setApprovalPending] = useState(false);
   const [approvalKey, setApprovalKey] = useState<string | null>(null);
+  const [unitPricesValid, setUnitPricesValid] = useState(true);
 
   const currentSnapshot = serializeDraft({ event, date, validUntil, discount, lines });
-  const dirty = currentSnapshot !== savedSnapshot;
+  const dirty = currentSnapshot !== savedSnapshot || !unitPricesValid;
+  const serviceStartDateEvidence = quotation.eventSnapshot?.eventStartDate;
+  const serviceStartDate = isDateOnlyValue(serviceStartDateEvidence) ? serviceStartDateEvidence : null;
+  const validityError = validateCommercialAmendmentValidityWindow({
+    issueDate: date,
+    validUntil,
+    serviceStartDate,
+  });
+  const validityErrorMessage =
+    validityError === "issue_date_required"
+      ? amendment.issueDateRequired
+      : validityError === "issue_date_after_service_start"
+      ? amendment.issueDateAfterServiceStart
+      : validityError === "valid_until_before_issue_date"
+        ? amendment.validUntilBeforeIssueDate
+        : validityError === "valid_until_after_service_start"
+          ? amendment.validUntilAfterServiceStart
+          : null;
+  const issueDateInvalid =
+    validityError === "issue_date_required" || validityError === "issue_date_after_service_start";
+  const validUntilInvalid =
+    validityError === "valid_until_before_issue_date" ||
+    validityError === "valid_until_after_service_start";
+  const invalidLineDescription = lines.some((line) => !line.description.trim());
+  const hasDraftValidationErrors = Boolean(validityError || invalidLineDescription || !unitPricesValid);
   const previewSubtotal = commercialAmendmentPreviewSubtotal(lines);
   const previewGrandTotal = commercialAmendmentPreviewGrandTotal(lines, discount, quotation.vatRate);
   const summary = buildCommercialAmendmentChangeSummary({
@@ -100,6 +138,10 @@ export default function CommercialAmendmentWorkspace({
 
   async function saveDraft() {
     if (!canWrite || pending || !dirty) return;
+    if (hasDraftValidationErrors) {
+      setError(amendment.validationRequired);
+      return;
+    }
     setPending(true);
     setSaveMessage(null);
     setError(null);
@@ -114,7 +156,11 @@ export default function CommercialAmendmentWorkspace({
     });
     setPending(false);
     if (!result.success || !result.data) {
-      setError(result.domainErrorCode === "quotation_amendment_draft_concurrency_conflict" ? amendment.reloadRequired : result.error ?? amendment.saveFailed);
+      setError(
+        result.domainErrorCode === "quotation_amendment_draft_concurrency_conflict"
+          ? amendment.reloadRequired
+          : localizedDomainError(result.domainErrorCode, amendment.domainErrors, amendment.saveFailed),
+      );
       return;
     }
     setUpdatedAt(result.data.updated_at);
@@ -142,7 +188,11 @@ export default function CommercialAmendmentWorkspace({
     setApprovalPending(false);
     if (!result.success) {
       setApprovalOpen(false);
-      setError(result.domainErrorCode === "scope_successor_ceiling_below_invoiced" ? amendment.belowExposure : result.error ?? amendment.approvalFailed);
+      setError(
+        result.domainErrorCode === "scope_successor_ceiling_below_invoiced"
+          ? amendment.belowExposure
+          : localizedDomainError(result.domainErrorCode, amendment.domainErrors, amendment.approvalFailed),
+      );
       return;
     }
     router.push(`/quotations/${quotation.id}`);
@@ -167,18 +217,38 @@ export default function CommercialAmendmentWorkspace({
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="flex min-w-0 flex-col gap-6">
           <fieldset disabled={!canWrite} className="contents">
-            <FlexibleCommercialBuilder lines={lines} onChange={handleLinesChange} dictionary={dictionary} disabled={!canWrite} />
+            <FlexibleCommercialBuilder
+              lines={lines}
+              onChange={handleLinesChange}
+              onUnitPriceValidityChange={setUnitPricesValid}
+              dictionary={dictionary}
+              disabled={!canWrite}
+            />
             <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-5">
               <h2 className="text-lg font-semibold text-primary">{amendment.workspaceTitle}</h2>
+              <p id="amendment-validity-hint" className="mt-2 text-sm leading-6 text-on-surface-variant">
+                {serviceStartDate ? amendment.validityHintWithServiceStart : amendment.validityHintWithoutServiceStart}
+              </p>
               <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <label className="text-sm font-semibold text-on-surface">{dictionary.form.quotationEventLabel}<input value={event} onChange={(inputEvent) => setEvent(inputEvent.target.value)} dir="auto" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
-                <label className="text-sm font-semibold text-on-surface">{dictionary.form.issueDate}<input type="date" value={date} onChange={(inputEvent) => setDate(inputEvent.target.value)} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
-                <label className="text-sm font-semibold text-on-surface">{dictionary.form.validUntil}<input type="date" value={validUntil} onChange={(inputEvent) => setValidUntil(inputEvent.target.value)} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
+                <label className="text-sm font-semibold text-on-surface">{dictionary.form.issueDate}<input type="date" value={date} max={serviceStartDate ?? undefined} aria-invalid={issueDateInvalid} aria-describedby={"amendment-validity-hint" + (issueDateInvalid ? " amendment-validity-error" : "")} onChange={(inputEvent) => { setDate(inputEvent.target.value); setError(null); }} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
+                <label className="text-sm font-semibold text-on-surface">{dictionary.form.validUntil}<input type="date" value={validUntil} min={date || undefined} max={serviceStartDate ?? undefined} aria-invalid={validUntilInvalid} aria-describedby={"amendment-validity-hint" + (validUntilInvalid ? " amendment-validity-error" : "")} onChange={(inputEvent) => { setValidUntil(inputEvent.target.value); setError(null); }} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
                 <label className="text-sm font-semibold text-on-surface">{dictionary.form.discountSar}<input type="number" min="0" step="0.01" value={discount} onChange={(inputEvent) => setDiscount(Number(inputEvent.target.value) || 0)} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
               </div>
+              {validityErrorMessage && (
+                <p id="amendment-validity-error" className="mt-3 text-sm text-error" role="alert">
+                  {validityErrorMessage}
+                </p>
+              )}
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-surface-variant pt-4">
-                <div className="text-sm text-on-surface-variant">{dirty ? amendment.unsavedChanges : saveMessage ?? ""}</div>
-                {canWrite && <button type="button" onClick={saveDraft} disabled={pending || !dirty} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">{pending ? amendment.savingDraft : amendment.saveDraft}</button>}
+                <div className="text-sm text-on-surface-variant" aria-live="polite">
+                  {hasDraftValidationErrors
+                    ? amendment.validationRequired
+                    : dirty
+                      ? amendment.unsavedChanges
+                      : saveMessage ?? ""}
+                </div>
+                {canWrite && <button type="button" onClick={saveDraft} disabled={pending || !dirty || hasDraftValidationErrors} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">{pending ? amendment.savingDraft : amendment.saveDraft}</button>}
               </div>
               {error && <p className="mt-3 text-sm text-error" role="alert">{error}</p>}
             </section>
