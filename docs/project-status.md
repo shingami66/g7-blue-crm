@@ -1,15 +1,30 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W11A-CORRECTION-01 — 4 October 2026
+## CURRENT DELIVERY STATUS — W11 R02/R03 OWNER ACCEPTANCE — 4 October 2026
 
-- **W11A-CORRECTION-01:** Corrected the current W7 reconciliation in the [readiness and proof contract](product/w11-cutover-readiness-proof-contract.md); W11 cutover, rehearsal, and Layer 1 real-use proof remain **NO-GO**.
-- **Prior W11A DEV evidence:** Read-only reconciliation found project `dpddrqjzqohexixgdqiq` `ACTIVE_HEALTHY`, with generated types matching checked-in `public` types (140 tables, 11 views, 212 functions) and W7-P0A migration metadata present. No business rows or protected logs were read; this correction did not query or mutate DEV.
-- **W7 current Controller state:** `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED`. Current `main` includes W7B `799b8a0ba18b64917f464d9feafd049df65dcd63`, W7C `41db9aee590e69ca7c2620b7863c64ae095e0f77`, and W7D `e2736d7d560c0d4ed36572a7f1710ce15ffddf4d` as direct ancestors; see the contract for their delivered scope.
-- **Owner-acceptance evidence:** The non-historical status/roadmap sections reviewed contain no explicit current acceptance record for R02/R03. W7 implementation and Controller closure do not establish Owner acceptance; the 19 September P0B-pending wording is historical. Current acceptance evidence is **UNVERIFIED**, not asserted pending or accepted.
-- **Layer 1 gates:** R01 and R04–R08 remain open on capability evidence. R02/R03 implementations are delivered and W7 is Controller-closed, but their required Owner-acceptance and W11 lineage evidence remain unverified; W11 is **NO-GO**.
-- **Prior closures:** DB-002 remains `COMPLETE / DEV-SCHEMA-VERIFIED`; DB-001 remains `CLOSED / DEV-VERIFIED / PUBLISHED`; W10I remains `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`.
-- **Boundaries:** No database/schema/grant/RLS/function/data mutation, rehearsal, migration, backfill, deployment, production/DEMO access, accounting activation, or tax/ZATCA activation occurred.
-- **EXACT NEXT ACTION:** Do not reopen W7 or repeat W11A discovery. Link explicit Owner-acceptance evidence for R02/R03 if it exists; otherwise keep those gates open until required acceptance is recorded. The Owner must separately select and authorize one remaining capability gate among R01 and R04–R08. No W11 execution is authorized by this correction.
+- **Current repository / acceptance-evidence baseline:** `ecd4a7af3b637f70b927896545a0e9aec517c763`. The original W11A DEV reconciliation remains tied to its historical baseline `8e70e21b69837f2b67134533e941432b90a4cedc`; this evidence synchronization did not repeat it.
+- **L1-R02 — Change Orders / post-approval commercial correction:** `PROVEN CLOSED / OWNER-ACCEPTED` for the bounded delivered workflow.
+- **L1-R03 — ABS supersession / reapproval:** `PROVEN CLOSED / OWNER-ACCEPTED` for the bounded delivered workflow.
+- **Owner acceptance:** Mozfer completed authenticated Arabic manual acceptance on 4 October 2026. The [W11 readiness and proof contract](product/w11-cutover-readiness-proof-contract.md) records the predecessor/successor amounts and lineage, billing ceiling and invoice exposure, untouched Draft no-op summary, and real unsaved-change result.
+- **Published implementation / repair SHAs:** `767a5118f9a992068775cfc5f6d0a487994d420b`, `1dbdbb66bc51da7bad0152fe2b7bf2c7cce83734`, and `ecd4a7af3b637f70b927896545a0e9aec517c763`.
+- **Chained amendment:** `QT-2026-0018 → QT-2026-0019 Draft` (revision 3). QT-2026-0019 remains intentionally unapproved.
+- **W7:** `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED`; do not reopen it. R02/R03 Owner acceptance is separate from W7 Controller closure.
+- **W11 readiness:** **NO-GO**. R01 and R04–R08 are the remaining open Layer 1 capability gates; this bounded R02/R03 acceptance does not establish overall W11, production, professional, statutory, or broad Event ERP acceptance.
+- **Boundaries:** No database or environment mutation, DEV query, migration, deployment, rehearsal, or cutover occurred in this evidence-recording task.
+- **EXACT NEXT ACTION:** The Owner selects and separately authorizes one remaining open capability gate from R01, R04, R05, R06, R07, or R08. Do not auto-select a gate, repeat R02/R03 discovery or acceptance, or begin W11 cutover.
+
+## HISTORICAL DELIVERY SNAPSHOT — W11A-CORRECTION-01 — 4 October 2026 (SUPERSEDED CURRENT STATUS)
+
+> This snapshot records the state before the 4 October R02/R03 manual acceptance evidence was synchronized. Its unverified classification and former next action are historical, not current.
+
+- **W11A-CORRECTION-01:** Corrected the current W7 reconciliation in the readiness and proof contract; W11 cutover, rehearsal, and Layer 1 real-use proof remained **NO-GO**.
+- **Prior W11A DEV evidence:** Read-only reconciliation found project `dpddrqjzqohexixgdqiq` `ACTIVE_HEALTHY`, with generated types matching checked-in `public` types (140 tables, 11 views, 212 functions) and W7-P0A migration metadata present. No business rows or protected logs were read; the correction did not query or mutate DEV.
+- **W7 Controller state:** `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED`; current `main` included W7B `799b8a0ba18b64917f464d9feafd049df65dcd63`, W7C `41db9aee590e69ca7c2620b7863c64ae095e0f77`, and W7D `e2736d7d560c0d4ed36572a7f1710ce15ffddf4d` as ancestors.
+- **Owner-acceptance evidence at this snapshot:** R02/R03 acceptance was **UNVERIFIED** in the then-current documentation; implementation and W7 Controller closure were not treated as acceptance. This was superseded by the authenticated Owner acceptance recorded above.
+- **Layer 1 gates at this snapshot:** R01 and R04–R08 were open; R02/R03 were delivered but not yet documented as Owner-accepted; W11 was **NO-GO**.
+- **Prior closures:** DB-002 `COMPLETE / DEV-SCHEMA-VERIFIED`; DB-001 `CLOSED / DEV-VERIFIED / PUBLISHED`; W10I `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`.
+- **Boundaries:** No database/schema/grant/RLS/function/data mutation, rehearsal, migration, backfill, deployment, production/DEMO access, accounting activation, or tax/ZATCA activation occurred in that correction.
+- **Former exact next action:** Link explicit R02/R03 Owner-acceptance evidence if it existed, then require separate Owner selection and authorization of a remaining capability gate; no W11 execution was authorized by that correction.
 
 ## HISTORICAL DELIVERY SNAPSHOT — W10I ACCOUNTING PERIOD CLOSE / LOCK / REOPEN — 1 October 2026 (SUPERSEDED CURRENT STATUS)
 
