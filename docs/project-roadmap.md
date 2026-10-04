@@ -1,12 +1,13 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — DB-002 DEV SUPABASE TYPE CONTRACT REFRESH — 3 October 2026
+## CURRENT ROADMAP POSITION — W11A CUTOVER READINESS & G7 PROOF CONTRACT — 4 October 2026
 
-- **DB-002:** `COMPLETE / DEV-SCHEMA-VERIFIED` on DEV project `dpddrqjzqohexixgdqiq`.
-- The checked-in generated Supabase contract matches the current DEV `public` schema: 140 tables, 11 views, and 212 functions. Directly caused application typing repairs preserve deployed nullable RPC inputs and exact decimal-string amounts.
-- No schema, grants, RLS, functions, or migration history were mutated; DEMO and PROD were not accessed.
-- **W10I:** `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`; Mozfer explicitly accepted W10I. **DB-001:** `CLOSED / DEV-VERIFIED / PUBLISHED`.
-- **EXACT NEXT ACTION:** Do not start W11; any further work requires a separate authorized task.
+- **W11A:** `COMPLETE / READ-ONLY RECONCILIATION / PUBLISHED`; W11 cutover, rehearsal, and Layer 1 real-use proof are **NO-GO**. See the [readiness and proof contract](product/w11-cutover-readiness-proof-contract.md).
+- DEV `dpddrqjzqohexixgdqiq` is `ACTIVE_HEALTHY`; fresh generated public types exactly match the checked-in contract (140 tables, 11 views, 212 functions). W7-P0A migration metadata was reconciled read-only; no business rows or protected logs were read.
+- **L1-R01–R08:** all remain `OPEN`. R02/R03 have W7-P0A/P0B implementation evidence, with W7-P0B Owner manual acceptance and Controller closeout still pending. W7B has not started.
+- **Prior closures:** DB-002 is `COMPLETE / DEV-SCHEMA-VERIFIED`; DB-001 is `CLOSED / DEV-VERIFIED / PUBLISHED`; W10I is `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`.
+- No database/schema/grant/RLS/function/data mutation, rehearsal, migration, backfill, deployment, DEMO/PROD access, accounting activation, or tax/ZATCA activation occurred.
+- **EXACT NEXT ACTION:** Mozfer's authenticated W7-P0B English/Arabic/RTL/mobile Owner acceptance, followed by Controller closeout. This does not authorize W7B or W11 execution/cutover; those require separate authority.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10I ACCOUNTING PERIOD CLOSE / LOCK / REOPEN — 1 October 2026 (SUPERSEDED CURRENT POSITION)
 
