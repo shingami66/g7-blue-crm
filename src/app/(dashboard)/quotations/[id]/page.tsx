@@ -26,6 +26,7 @@ import { RecordNavigationPlaceholder } from "@/components/records/RecordNavigati
 import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
 import { getQuotationRecordNavigation, safeRecordReturnTo } from "@/lib/record-navigation/queries";
 import CommercialAmendmentCreateDialog from "./CommercialAmendmentCreateDialog";
+import { resolveCommercialAmendmentDetailAction } from "@/lib/quotations/commercial-amendment-detail-action";
 
 type StatusBadgeVariant = ComponentProps<typeof StatusBadge>["variant"];
 
@@ -155,6 +156,14 @@ export default async function QuotationDetailPage({
     checkPermission("quotations:approve"),
     checkPermission("quotations:write"),
   ]);
+  const commercialAmendmentAction = resolveCommercialAmendmentDetailAction({
+    status: quotation.status,
+    revisionOfQuotationId: quotation.revisionOfQuotationId,
+    supersededAt: quotation.supersededAt,
+    successor: quotation.successor,
+    canWrite,
+    canApprove,
+  });
 
   const formatMoney = (val: number | null | undefined) =>
     formatSarAmount(locale, val ?? 0);
@@ -220,15 +229,15 @@ export default async function QuotationDetailPage({
               listDictionary={dictionary.list}
             />
           )}
-          {quotation.status === "approved" && quotation.revisionOfQuotationId === null && !quotation.supersededAt && quotation.successor && (canWrite || canApprove) && (
+          {(commercialAmendmentAction === "open-successor-draft" || commercialAmendmentAction === "open-successor-detail") && quotation.successor && (
             <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
-              <Link href={quotation.successor.status === "draft" ? `/quotations/${quotation.successor.id}/amendment` : `/quotations/${quotation.successor.id}`}>{dictionary.amendment.openAction}</Link>
+              <Link href={commercialAmendmentAction === "open-successor-draft" ? `/quotations/${quotation.successor.id}/amendment` : `/quotations/${quotation.successor.id}`}>{dictionary.amendment.openAction}</Link>
             </Button>
           )}
-          {quotation.status === "approved" && quotation.revisionOfQuotationId === null && !quotation.supersededAt && !quotation.successor && canWrite && (
+          {commercialAmendmentAction === "create" && (
             <CommercialAmendmentCreateDialog sourceQuotationId={quotation.id} dictionary={dictionary.amendment} />
           )}
-          {quotation.status === "draft" && quotation.revisionOfQuotationId && canWrite && (
+          {commercialAmendmentAction === "open-draft-workspace" && (
             <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
               <Link href={`/quotations/${quotation.id}/amendment`}>{dictionary.amendment.openAction}</Link>
             </Button>
