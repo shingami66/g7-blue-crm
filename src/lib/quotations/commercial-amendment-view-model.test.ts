@@ -41,24 +41,176 @@ test("mode is derived from roots and children without a persisted mode field", (
   assert.equal(deriveCommercialAmendmentMode(mixedLines), "mixed");
 });
 
-test("summary counts structural and optional changes even when totals are unchanged", () => {
+function summary(predecessorItems: QuotationItem[], proposedLines = toCommercialAmendmentDraftLines(predecessorItems)) {
+  return buildCommercialAmendmentChangeSummary({
+    predecessorItems,
+    proposedLines,
+    currentTotal: commercialAmendmentPreviewGrandTotal(toCommercialAmendmentDraftLines(predecessorItems), 0, 0),
+    discount: 0,
+    vatRate: 0,
+  });
+}
+
+test("an exact clone with unique descriptions is a no-op", () => {
   const predecessor = [
-    item({ id: "a", description: "A", total: 100 }),
-    item({ id: "b", description: "Optional B", total: 0, commercialRole: "optional_add_on", parentAuthorityLineId: "a", unitPrice: 25, isSelected: false }),
+    item({ id: "main", description: "Main item", total: 100 }),
+    item({ id: "optional", description: "Optional item", total: 25, commercialRole: "optional_add_on", unitPrice: 25 }),
   ];
-  const proposed = toCommercialAmendmentDraftLines(predecessor).map((line) => line.description === "Optional B" ? { ...line, is_selected: true, unit_price: 0 } : line);
-  const summary = buildCommercialAmendmentChangeSummary({ predecessorItems: predecessor, proposedLines: proposed, currentTotal: 100, discount: 0, vatRate: 0, proposedPersistedTotal: 100 });
-  assert.equal(summary.hasChanges, true);
-  assert.equal(summary.optionalChanges, 1);
-  assert.equal(summary.delta, 0);
+
+  assert.deepEqual(summary(predecessor), {
+    hasChanges: false,
+    addedLines: 0,
+    removedLines: 0,
+    changedLines: 0,
+    optionalChanges: 0,
+    currentTotal: 125,
+    proposedTotal: 125,
+    delta: 0,
+  });
 });
 
-test("dirty preview total includes the established proportional VAT basis", () => {
-  const lines = toCommercialAmendmentDraftLines([item({ id: "a", description: "A", total: 100 })]);
-  assert.equal(commercialAmendmentPreviewGrandTotal(lines, 10, 15), 103.5);
+function duplicateDescriptionFixture() {
+  return [
+    item({ id: "main", description: "W7B controlled billable authority", total: 100000 }),
+    item({
+      id: "optional",
+      description: "W7B controlled billable authority",
+      total: 10000,
+      commercialRole: "optional_add_on",
+      parentAuthorityLineId: "main",
+      unitPrice: 10000,
+      isSelected: true,
+    }),
+  ];
+}
+
+test("an exact clone with duplicate descriptions across roles is a no-op", () => {
+  const predecessor = duplicateDescriptionFixture();
+  const proposed = toCommercialAmendmentDraftLines(predecessor).reverse();
+
+  assert.deepEqual(summary(predecessor, proposed), {
+    hasChanges: false,
+    addedLines: 0,
+    removedLines: 0,
+    changedLines: 0,
+    optionalChanges: 0,
+    currentTotal: 110000,
+    proposedTotal: 110000,
+    delta: 0,
+  });
 });
 
-test("optional line selection controls its preview price while included components remain zero-price", () => {
+test("a price change to one duplicate-description line is changed without added or removed lines", () => {
+  const predecessor = duplicateDescriptionFixture();
+  const proposed = toCommercialAmendmentDraftLines(predecessor).map((line) => (
+    line.commercial_role === "optional_add_on" ? { ...line, unit_price: 12000 } : line
+  ));
+  const changeSummary = summary(predecessor, proposed);
+
+  assert.equal(changeSummary.hasChanges, true);
+  assert.equal(changeSummary.addedLines, 0);
+  assert.equal(changeSummary.removedLines, 0);
+  assert.equal(changeSummary.changedLines, 1);
+  assert.equal(changeSummary.optionalChanges, 0);
+});
+
+test("an optional selection change stays a changed line and counts as one optional change", () => {
+  const predecessor = duplicateDescriptionFixture();
+  const proposed = toCommercialAmendmentDraftLines(predecessor).map((line) => (
+    line.commercial_role === "optional_add_on" ? { ...line, is_selected: false } : line
+  ));
+  const changeSummary = summary(predecessor, proposed);
+
+  assert.equal(changeSummary.hasChanges, true);
+  assert.equal(changeSummary.addedLines, 0);
+  assert.equal(changeSummary.removedLines, 0);
+  assert.equal(changeSummary.changedLines, 1);
+  assert.equal(changeSummary.optionalChanges, 1);
+});
+
+test("same child descriptions under different main-parent contexts do not collide", () => {
+  const predecessor = [
+    item({ id: "main-a", description: "Main A", total: 100 }),
+    item({ id: "child-a", description: "Shared child", total: 10, commercialRole: "optional_add_on", parentAuthorityLineId: "main-a", unitPrice: 10 }),
+    item({ id: "main-b", description: "Main B", total: 200 }),
+    item({ id: "child-b", description: "Shared child", total: 0, commercialRole: "optional_add_on", parentAuthorityLineId: "main-b", unitPrice: 20, isSelected: false }),
+  ];
+  const changeSummary = summary(predecessor, toCommercialAmendmentDraftLines(predecessor).reverse());
+
+  assert.equal(changeSummary.hasChanges, false);
+  assert.equal(changeSummary.addedLines, 0);
+  assert.equal(changeSummary.removedLines, 0);
+  assert.equal(changeSummary.changedLines, 0);
+  assert.equal(changeSummary.optionalChanges, 0);
+
+  const movedChild = summary(predecessor, toCommercialAmendmentDraftLines(predecessor).map((line) => (
+    line.line_key === "line-2" ? { ...line, parent_line_key: "line-3" } : line
+  )));
+  assert.equal(movedChild.addedLines, 0);
+  assert.equal(movedChild.removedLines, 0);
+  assert.equal(movedChild.changedLines, 1);
+});
+
+test("a child moved between same-label parents with distinct semantic attributes is changed", () => {
+  const predecessor = [
+    item({ id: "main-a", description: "Authority line", descriptionAr: "خط أ", category: "A", total: 100 }),
+    item({ id: "child", description: "Shared child", total: 0, commercialRole: "included_component", parentAuthorityLineId: "main-a", unitPrice: 500 }),
+    item({ id: "main-b", description: "Authority line", descriptionAr: "خط ب", category: "B", total: 200 }),
+  ];
+  const movedChild = summary(predecessor, toCommercialAmendmentDraftLines(predecessor).map((line) => (
+    line.line_key === "line-2" ? { ...line, parent_line_key: "line-3" } : line
+  )));
+
+  assert.equal(movedChild.hasChanges, true);
+  assert.equal(movedChild.addedLines, 0);
+  assert.equal(movedChild.removedLines, 0);
+  assert.equal(movedChild.changedLines, 1);
+
+  const changedParent = summary(predecessor, toCommercialAmendmentDraftLines(predecessor).map((line) => (
+    line.line_key === "line-1" ? { ...line, category: "A updated" } : line
+  )));
+  assert.equal(changedParent.changedLines, 1);
+});
+
+test("a genuinely new line is added", () => {
+  const predecessor = [item({ id: "main", description: "Main item", total: 100 })];
+  const proposed = [
+    ...toCommercialAmendmentDraftLines(predecessor),
+    {
+      line_key: "new-line",
+      parent_line_key: null,
+      commercial_role: "authority_line" as const,
+      description: "New item",
+      description_ar: null,
+      details: null,
+      category: "",
+      qty: 1,
+      unit: "unit",
+      unit_price: 25,
+      is_selected: true,
+    },
+  ];
+  const changeSummary = summary(predecessor, proposed);
+
+  assert.equal(changeSummary.addedLines, 1);
+  assert.equal(changeSummary.removedLines, 0);
+  assert.equal(changeSummary.changedLines, 0);
+});
+
+test("a genuinely removed line is removed", () => {
+  const predecessor = [
+    item({ id: "main", description: "Main item", total: 100 }),
+    item({ id: "removed", description: "Removed item", total: 25 }),
+  ];
+  const proposed = toCommercialAmendmentDraftLines(predecessor).filter((line) => line.line_key !== "line-2");
+  const changeSummary = summary(predecessor, proposed);
+
+  assert.equal(changeSummary.addedLines, 0);
+  assert.equal(changeSummary.removedLines, 1);
+  assert.equal(changeSummary.changedLines, 0);
+});
+
+test("preview keeps optional selection, included-component, VAT, and discount behavior", () => {
   const lines = toCommercialAmendmentDraftLines([
     item({ id: "main", description: "Main item", total: 100 }),
     item({
@@ -67,7 +219,7 @@ test("optional line selection controls its preview price while included componen
       total: 0,
       commercialRole: "included_component",
       parentAuthorityLineId: "main",
-      unitPrice: 0,
+      unitPrice: 500,
     }),
     item({
       id: "optional",
@@ -76,16 +228,16 @@ test("optional line selection controls its preview price while included componen
       commercialRole: "optional_add_on",
       parentAuthorityLineId: "main",
       unitPrice: 25,
-      isSelected: false,
+      isSelected: true,
     }),
   ]);
 
-  assert.equal(commercialAmendmentPreviewSubtotal(lines), 100);
+  assert.equal(commercialAmendmentPreviewSubtotal(lines), 125);
   assert.equal(
     commercialAmendmentPreviewSubtotal(
-      lines.map((line) => line.commercial_role === "optional_add_on" ? { ...line, is_selected: true } : line),
+      lines.map((line) => line.commercial_role === "optional_add_on" ? { ...line, is_selected: false } : line),
     ),
-    125,
+    100,
   );
-  assert.equal(lines.find((line) => line.commercial_role === "included_component")?.unit_price, 0);
+  assert.equal(commercialAmendmentPreviewGrandTotal(lines, 10, 15), 132.25);
 });

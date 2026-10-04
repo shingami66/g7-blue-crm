@@ -78,29 +78,90 @@ function comparableLine(line: CommercialAmendmentDraftLine, parentDescription: s
   ].join("|");
 }
 
+type ComparableCommercialLine = {
+  key: string;
+  selfKey: string;
+  lineKey: string;
+  parentLineKey: string | null;
+  role: CommercialAmendmentDraftLine["commercial_role"];
+  description: string;
+  parentContext: string;
+  isSelected: boolean;
+};
+
+function lineParentContext(line: CommercialAmendmentDraftLine) {
+  return comparableLine(line, null);
+}
+
+function toComparableLines(lines: CommercialAmendmentDraftLine[]): ComparableCommercialLine[] {
+  const parents = new Map(lines.map((line) => [line.line_key, lineParentContext(line)]));
+  return lines.map((line) => {
+    const parentContext = line.parent_line_key ? parents.get(line.parent_line_key) ?? "" : "";
+    return {
+      key: comparableLine(line, parentContext),
+      selfKey: comparableLine(line, null),
+      lineKey: line.line_key,
+      parentLineKey: line.parent_line_key,
+      role: line.commercial_role,
+      description: line.description.trim(),
+      parentContext,
+      isSelected: line.is_selected,
+    };
+  });
+}
+
 function comparableItems(items: QuotationItem[]) {
-  const roots = new Map(items.map((item) => [item.id, item.description.trim()]));
-  return items.map((item) => ({
-    key: comparableLine(
-      {
-        line_key: item.id,
-        parent_line_key: item.parentAuthorityLineId ?? null,
-        commercial_role: item.commercialRole ?? "authority_line",
-        description: item.description,
-        description_ar: item.descriptionAr ?? null,
-        details: item.details,
-        category: item.category,
-        qty: item.qty,
-        unit: item.unit ?? "unit",
-        unit_price: item.unitPrice,
-        is_selected: item.isSelected ?? true,
-      },
-      item.parentAuthorityLineId ? roots.get(item.parentAuthorityLineId) ?? null : null,
-    ),
-    role: item.commercialRole ?? "authority_line",
-    description: item.description.trim(),
-    isSelected: item.isSelected ?? true,
-  }));
+  return toComparableLines(items.map((item) => ({
+    line_key: item.id,
+    parent_line_key: item.parentAuthorityLineId ?? null,
+    commercial_role: item.commercialRole ?? "authority_line",
+    description: item.description,
+    description_ar: item.descriptionAr ?? null,
+    details: item.details,
+    category: item.category,
+    qty: item.qty,
+    unit: item.unit ?? "unit",
+    unit_price: item.unitPrice,
+    is_selected: item.isSelected ?? true,
+  })));
+}
+
+function stableComparableOrder(left: ComparableCommercialLine, right: ComparableCommercialLine) {
+  const leftKey = [left.description, left.parentContext, left.role, left.key].join("\u0000");
+  const rightKey = [right.description, right.parentContext, right.role, right.key].join("\u0000");
+  return leftKey === rightKey ? 0 : leftKey < rightKey ? -1 : 1;
+}
+
+function matchComparableLines(
+  predecessor: ComparableCommercialLine[],
+  proposed: ComparableCommercialLine[],
+) {
+  const unmatchedPredecessor = [...predecessor].sort(stableComparableOrder);
+  const unmatchedProposed = [...proposed].sort(stableComparableOrder);
+  const matches: Array<{ predecessor: ComparableCommercialLine; proposed: ComparableCommercialLine }> = [];
+
+  const matchBy = (keyFor: (line: ComparableCommercialLine) => string) => {
+    for (let proposedIndex = 0; proposedIndex < unmatchedProposed.length; proposedIndex += 1) {
+      const proposedLine = unmatchedProposed[proposedIndex];
+      const predecessorIndex = unmatchedPredecessor.findIndex(
+        (predecessorLine) => keyFor(predecessorLine) === keyFor(proposedLine),
+      );
+      if (predecessorIndex === -1) continue;
+
+      const [predecessorLine] = unmatchedPredecessor.splice(predecessorIndex, 1);
+      const [matchedProposedLine] = unmatchedProposed.splice(proposedIndex, 1);
+      matches.push({ predecessor: predecessorLine, proposed: matchedProposedLine });
+      proposedIndex -= 1;
+    }
+  };
+
+  matchBy((line) => line.key);
+  matchBy((line) => [line.description, line.role, line.parentContext].join("|"));
+  matchBy((line) => [line.description, line.parentContext].join("|"));
+  matchBy((line) => [line.description, line.role].join("|"));
+  matchBy((line) => line.description);
+
+  return { matches, unmatchedPredecessor, unmatchedProposed };
 }
 
 export function buildCommercialAmendmentChangeSummary(input: {
@@ -112,29 +173,24 @@ export function buildCommercialAmendmentChangeSummary(input: {
   proposedPersistedTotal?: number;
 }): CommercialAmendmentChangeSummary {
   const predecessor = comparableItems(input.predecessorItems);
-  const proposedRoots = new Map(input.proposedLines.map((line) => [line.line_key, line.description.trim()]));
-  const proposed = input.proposedLines.map((line) => ({
-    key: comparableLine(
-      line,
-      line.parent_line_key ? proposedRoots.get(line.parent_line_key) ?? null : null,
-    ),
-    role: line.commercial_role,
-    description: line.description.trim(),
-    isSelected: line.is_selected,
-  }));
-  const predecessorByDescription = new Map(predecessor.map((line) => [line.description, line]));
-  const proposedByDescription = new Map(proposed.map((line) => [line.description, line]));
-  const addedLines = proposed.filter((line) => !predecessorByDescription.has(line.description)).length;
-  const removedLines = predecessor.filter((line) => !proposedByDescription.has(line.description)).length;
-  const changedLines = proposed.filter((line) => {
-    const previous = predecessorByDescription.get(line.description);
-    return previous && previous.key !== line.key;
+  const proposed = toComparableLines(input.proposedLines);
+  const { matches, unmatchedPredecessor, unmatchedProposed } = matchComparableLines(predecessor, proposed);
+  const matchedLineKeys = new Map(matches.map(({ predecessor: previous, proposed: line }) => [
+    previous.lineKey,
+    line.lineKey,
+  ]));
+  const addedLines = unmatchedProposed.length;
+  const removedLines = unmatchedPredecessor.length;
+  const changedLines = matches.filter(({ predecessor: previous, proposed: line }) => {
+    if (previous.key === line.key) return false;
+    const retainedParent = previous.parentLineKey !== null
+      && line.parentLineKey !== null
+      && matchedLineKeys.get(previous.parentLineKey) === line.parentLineKey;
+    return !(retainedParent && previous.selfKey === line.selfKey);
   }).length;
-  const optionalChanges = proposed.filter((line) => {
-    if (line.role !== "optional_add_on") return false;
-    const previous = predecessorByDescription.get(line.description);
-    return previous && previous.isSelected !== line.isSelected;
-  }).length;
+  const optionalChanges = matches.filter(({ predecessor: previous, proposed: line }) => (
+    line.role === "optional_add_on" && previous.isSelected !== line.isSelected
+  )).length;
   const proposedTotal = input.proposedPersistedTotal ?? commercialAmendmentPreviewGrandTotal(
     input.proposedLines,
     input.discount,
