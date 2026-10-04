@@ -1,13 +1,15 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W11A CUTOVER READINESS & G7 PROOF CONTRACT — 4 October 2026
+## CURRENT ROADMAP POSITION — W11A-CORRECTION-01 — 4 October 2026
 
-- **W11A:** `COMPLETE / READ-ONLY RECONCILIATION / PUBLISHED`; W11 cutover, rehearsal, and Layer 1 real-use proof are **NO-GO**. See the [readiness and proof contract](product/w11-cutover-readiness-proof-contract.md).
-- DEV `dpddrqjzqohexixgdqiq` is `ACTIVE_HEALTHY`; fresh generated public types exactly match the checked-in contract (140 tables, 11 views, 212 functions). W7-P0A migration metadata was reconciled read-only; no business rows or protected logs were read.
-- **L1-R01–R08:** all remain `OPEN`. R02/R03 have W7-P0A/P0B implementation evidence, with W7-P0B Owner manual acceptance and Controller closeout still pending. W7B has not started.
+- **W11A-CORRECTION-01:** Corrected the current W7 reconciliation in the [readiness and proof contract](product/w11-cutover-readiness-proof-contract.md); W11 cutover, rehearsal, and Layer 1 real-use proof remain **NO-GO**.
+- Prior W11A read-only reconciliation found DEV `dpddrqjzqohexixgdqiq` `ACTIVE_HEALTHY`, with generated public types matching the checked-in contract (140 tables, 11 views, 212 functions) and W7-P0A migration metadata present. No business rows or protected logs were read; this correction did not query or mutate DEV.
+- **W7:** current Controller state is `CLOSED / COMPLETE / DEV-VERIFIED / PUBLISHED`; W7B/W7C/W7D are published ancestors of current `main`. The contract records their exact commits and delivered scope.
+- **Owner acceptance:** Current non-historical status/roadmap evidence for R02/R03 acceptance was not found. The old 19 September P0B-pending wording is historical; acceptance remains **UNVERIFIED**, not inferred from implementation or W7 closure.
+- **L1-R01–R08:** R01 and R04–R08 remain open on capability evidence. R02/R03 are delivered with W7 Controller closure but remain open until required Owner-acceptance and W11 lineage proof is documented.
 - **Prior closures:** DB-002 is `COMPLETE / DEV-SCHEMA-VERIFIED`; DB-001 is `CLOSED / DEV-VERIFIED / PUBLISHED`; W10I is `CLOSED / COMPLETE / OWNER-ACCEPTED / DEV-VERIFIED / PUBLISHED`.
 - No database/schema/grant/RLS/function/data mutation, rehearsal, migration, backfill, deployment, DEMO/PROD access, accounting activation, or tax/ZATCA activation occurred.
-- **EXACT NEXT ACTION:** Mozfer's authenticated W7-P0B English/Arabic/RTL/mobile Owner acceptance, followed by Controller closeout. This does not authorize W7B or W11 execution/cutover; those require separate authority.
+- **EXACT NEXT ACTION:** Do not reopen W7 or repeat W11A discovery. Link explicit Owner-acceptance evidence for R02/R03 if it exists; otherwise keep those gates open until required acceptance is recorded. The Owner must separately select and authorize one remaining capability gate among R01 and R04–R08. No W11 execution is authorized by this correction.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W10I ACCOUNTING PERIOD CLOSE / LOCK / REOPEN — 1 October 2026 (SUPERSEDED CURRENT POSITION)
 
@@ -217,7 +219,7 @@
 - **Scope boundary:** no task/resource system, procurement, costing, AP/AR, accounting, broad dashboard, or app-user-permission-override expansion was introduced. Authorized-credit start remains a separate role-based gate.
 - **Historical next locked roadmap task (as of W3 closeout):** W4 Procurement & Commitments is CLOSED / COMPLETED; W5A Expense & Cash Accountability Foundation is CLOSED / COMPLETED; W5B Employee Expense Self-Service is DELIVERED / OWNER-ACCEPTED for the bounded expense slice; remaining W5 Cash Advance and Petty Cash workspaces remain unstarted future slices.
 
-## 0. CURRENT RECONCILED ROADMAP — 9 September 2026
+## HISTORICAL RECONCILED ROADMAP CHECKPOINT — 9 September 2026 (SUPERSEDED CURRENT POSITION)
 
 - **Decision closure:** all 11 Layer 1 Event ERP domains are closed at Product Truth level; Domain 11 — Dashboards & Reporting is closed without a new Owner Decision Packet. Exact classifications, conflicts and deferrals are in `docs/product/event-erp-decision-register.md` and `docs/product/g7-layer1-technical-master-plan.md`.
 - **Single delivery lane:** W0 protected truth synchronization → W1 Authority Foundation → W2 Commercial Authority → W3 Event Operations → W4 Procurement & Commitments (CLOSED / COMPLETED) → W5A Expenses & Cash Accountability Foundation (CLOSED / COMPLETED) → W5B Employee Expense Self-Service (DELIVERED / OWNER-ACCEPTED BOUNDED SLICE) → W5 Remaining Cash Advance & Petty Cash Workspaces (UNSTARTED / FUTURE SLICES) → W6 AP → W7 AR Expansion → W8 Event Costing → W9 Dashboards/Reports → W10 Accounting behind professional gates → W11 Cutover and G7 proof.
