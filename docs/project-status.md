@@ -1,6 +1,14 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — W11 R02/R03 OWNER ACCEPTANCE — 4 October 2026
+## CURRENT DELIVERY STATUS — R04-B EVENT BRIEF IMPLEMENTED — 5 October 2026
+
+- **L1-R04 — Event Brief:** `IMPLEMENTED / OWNER ACCEPTANCE PENDING`. The bounded Service-detail view consolidates current Service, Customer, event, status, and lifecycle context; it adds no persistence, quotation dependency, permission, lifecycle mutation, budget expansion, or post-approval correction path.
+- **Validation:** focused Service/detail/action/schema/i18n tests, TypeScript, scoped ESLint, and the production build passed. Mozfer's manual English/Arabic/RTL/responsive acceptance remains pending.
+- **W11 readiness:** **NO-GO**. R01 and R05–R08 remain **OPEN**; R04 requires Owner acceptance before final closure.
+- **Boundaries:** No Supabase access, database/environment mutation, migration, deployment, rehearsal, or cutover occurred.
+- **EXACT NEXT ACTION:** Controller publishes the bounded R04-B slice, then Mozfer performs the Event Brief English/Arabic/RTL/responsive acceptance. Do not begin W11 cutover.
+
+## HISTORICAL DELIVERY SNAPSHOT — W11 R02/R03 OWNER ACCEPTANCE — 4 October 2026 (SUPERSEDED CURRENT STATUS)
 
 - **Current repository / acceptance-evidence baseline:** `ecd4a7af3b637f70b927896545a0e9aec517c763`. The original W11A DEV reconciliation remains tied to its historical baseline `8e70e21b69837f2b67134533e941432b90a4cedc`; this evidence synchronization did not repeat it.
 - **L1-R02 — Change Orders / post-approval commercial correction:** `PROVEN CLOSED / OWNER-ACCEPTED` for the bounded delivered workflow.

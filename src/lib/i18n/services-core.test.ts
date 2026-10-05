@@ -17,6 +17,7 @@ const SERVICES_CLIENT = join(
   "src/app/(dashboard)/services/ServicesClient.tsx",
 );
 const SERVICE_DETAIL = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/page.tsx");
+const EVENT_BRIEF = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/EventBrief.tsx");
 const RELATED_QUOTATIONS = join(
   REPO_ROOT,
   "src/app/(dashboard)/services/[id]/RelatedQuotationsCard.tsx",
@@ -240,12 +241,12 @@ test("15-17. Service/quotation numbers LTR; dates and SAR use shared formatters"
 
 test("18. Stored customer/event/location/description data is not translated", () => {
   const client = readFileSync(SERVICES_CLIENT, "utf8");
-  const detail = readFileSync(SERVICE_DETAIL, "utf8");
+  const eventBrief = readFileSync(EVENT_BRIEF, "utf8");
   assert.match(client, /service\.serviceTitle/);
   assert.match(client, /service\.eventName/);
   assert.match(client, /service\.customer\?\.company/);
-  assert.match(detail, /service\.description/);
-  assert.match(detail, /service\.eventLocation/);
+  assert.match(eventBrief, /service\.description/);
+  assert.match(eventBrief, /service\.eventLocation/);
   assert.doesNotMatch(client, /translateStored|localizeEvent/);
 });
 

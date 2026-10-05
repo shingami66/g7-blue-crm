@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { Suspense, type ComponentProps, type ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import {
   INVOICE_PERMISSIONS,
@@ -14,22 +14,17 @@ import { getQuotationsByServiceIdResult } from "@/lib/quotations/queries";
 import { getServiceBillingSummary } from "@/lib/invoices";
 import { listServiceActivity } from "@/lib/services/activity-queries";
 import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedStatePanel";
-import StatusBadge from "@/components/ui/StatusBadge";
 import PendingLink from "@/components/ui/PendingLink";
-import { isolateBidiText, isolateLtrText } from "@/lib/i18n/bidi";
 import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 import {
   getServicesDictionary,
-  getServiceStatusLabel,
-  getServiceEventTypeLabel,
   type ServicesDictionary,
 } from "@/lib/i18n/dictionaries/services";
-import { resolveRecordTitle } from "@/lib/i18n/record-title";
 import { formatSarAmount } from "@/lib/i18n/formatting";
-import { UiDateRangeText, UiDateText, UiDateTimeText } from "@/components/i18n/UiDateText";
+import { UiDateTimeText } from "@/components/i18n/UiDateText";
 import type { Locale } from "@/lib/i18n/locales";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
-import { CalendarDays, Edit, FileText, MapPin, UserRound } from "lucide-react";
+import { Edit, FileText } from "lucide-react";
 import Link from "next/link";
 import RelatedQuotationsCard from "./RelatedQuotationsCard";
 import ServiceBillingSummaryCard from "./ServiceBillingSummaryCard";
@@ -51,22 +46,12 @@ import { RecordNavigationPlaceholder } from "@/components/records/RecordNavigati
 import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
 import { getServiceRecordNavigation, safeRecordReturnTo, appendReturnTo } from "@/lib/record-navigation/queries";
 import { RecordBackButton } from "@/components/navigation/RecordBackButton";
+import EventBrief from "./EventBrief";
+import { canEditEventBrief as isEventBriefEditable } from "@/lib/services/event-brief";
 
 export const dynamic = "force-dynamic";
 
 // ApprovedBillingScopesCard remains available only on the nested technical evidence surface.
-
-type StatusBadgeVariant = NonNullable<ComponentProps<typeof StatusBadge>["variant"]>;
-
-const STATUS_VARIANT_MAP: Record<Service["status"], StatusBadgeVariant> = {
-  Inquiry: "inquiry",
-  Quoted: "quoted",
-  Approved: "approved",
-  "Deposit Paid": "deposit-paid",
-  "In Progress": "in-progress",
-  Completed: "completed",
-  Cancelled: "cancelled",
-};
 
 interface ServiceDetailPageProps {
   params: Promise<{ id: string }>;
@@ -155,55 +140,18 @@ export default async function ServiceDetailPage({
   ]);
 
   const canModifyService = service.status !== "Completed" && service.status !== "Cancelled";
+  const canEditEventBrief = isEventBriefEditable(service.status, canEditService);
 
   const today = new Date().toISOString().split("T")[0];
   const serviceStarted = !!service.eventStartDate && service.eventStartDate < today;
   const quotationDisabledReason = serviceStarted
     ? dictionary.detail.quotationDisabledReasonStarted
     : undefined;
-  const displayTitle = resolveRecordTitle(locale, service.serviceTitle, service.eventName);
-
   return (
     <div data-p2-detail-primary-ready="true" dir={locale === "ar" ? "rtl" : "ltr"} className="flex w-full min-w-0 max-w-full flex-col gap-6 pb-12">
       <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <RecordBackButton href={returnTo} locale={locale} />
-          <div className="min-w-0 space-y-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 dir="ltr" className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight">
-                {isolateLtrText(service.serviceNumber)}
-              </h2>
-              <StatusBadge variant={STATUS_VARIANT_MAP[service.status]}>
-                {getServiceStatusLabel(dictionary.locale, service.status)}
-              </StatusBadge>
-            </div>
-            <div>
-              <h1 dir="auto" className="text-[24px] leading-[32px] font-semibold text-on-surface">
-                {isolateBidiText(displayTitle)}
-              </h1>
-              <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-[14px] leading-[20px] text-on-surface-variant">
-                <PendingLink
-                  href={`/customers/${service.customerId}`}
-                  pendingLabel={dictionary.list.actions.opening}
-                  className="inline-flex items-center gap-2 text-primary hover:underline"
-                  dir="auto"
-                >
-                  <UserRound size={16} />
-                  {formatCustomerName(service, dictionary)}
-                </PendingLink>
-                <span dir="ltr" className="inline-flex items-center gap-2 tabular-nums">
-                  <CalendarDays size={16} />
-                  {formatServiceSchedule(locale, service, dictionary)}
-                </span>
-                {service.eventLocation && (
-                  <span dir="auto" className="inline-flex items-center gap-2">
-                    <MapPin size={16} />
-                    {isolateBidiText(service.eventLocation)}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -244,7 +192,7 @@ export default async function ServiceDetailPage({
               </Link>
             )
           )}
-          {canEditService && canModifyService && (
+          {canEditEventBrief && (
             <PendingLink
               href={`/services/${service.id}/edit`}
               className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors"
@@ -256,6 +204,8 @@ export default async function ServiceDetailPage({
         </div>
       </div>
 
+      <EventBrief service={service} lifecycle={lifecycle} locale={locale} dictionary={dictionary} />
+
       {canUpdateServiceStatus && (
         <ServiceLifecycleActions
           serviceId={service.id}
@@ -266,57 +216,8 @@ export default async function ServiceDetailPage({
         />
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
-          <SectionHeader title={dictionary.detail.sections.serviceSchedule} />
-          <dl className="p-6 grid grid-cols-1 gap-5">
-            <DetailItem label={dictionary.detail.labels.eventName}>{formatNullable(service.eventName, "auto", dictionary)}</DetailItem>
-            <DetailItem label={dictionary.detail.labels.eventType}>{formatNullable(getServiceEventTypeLabel(locale, service.eventType), "auto", dictionary)}</DetailItem>
-            <DetailItem label={dictionary.detail.labels.startDate}>
-              {service.eventStartDate ? (
-                <UiDateText locale={locale} value={service.eventStartDate} />
-              ) : (
-                dictionary.detail.fallbacks.empty
-              )}
-            </DetailItem>
-            <DetailItem label={dictionary.detail.labels.endDate}>
-              {service.eventEndDate ? (
-                <UiDateText locale={locale} value={service.eventEndDate} />
-              ) : (
-                dictionary.detail.fallbacks.empty
-              )}
-            </DetailItem>
-            <DetailItem label={dictionary.detail.labels.location}>{formatNullable(service.eventLocation, "auto", dictionary)}</DetailItem>
-          </dl>
-        </section>
-
-        <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
-          <SectionHeader title={dictionary.detail.sections.customerSummary} />
-          <dl className="p-6 grid grid-cols-1 gap-5">
-            <DetailItem label={dictionary.detail.labels.customer}>
-              <PendingLink
-                href={`/customers/${service.customerId}`}
-                pendingLabel={dictionary.list.actions.opening}
-                className="text-primary hover:underline"
-                dir="auto"
-              >
-                {formatCustomerName(service, dictionary)}
-              </PendingLink>
-            </DetailItem>
-            <DetailItem label={dictionary.detail.labels.primaryContact}>
-              {formatNullable(service.customer?.contact, "auto", dictionary)}
-            </DetailItem>
-            <DetailItem label={dictionary.detail.labels.customerRef}>
-              <span dir="ltr" className="font-mono text-[13px]">
-                {service.customer?.customerNumber
-                  ? isolateBidiText(service.customer.customerNumber)
-                  : dictionary.detail.fallbacks.customerReferenceUnavailable}
-              </span>
-            </DetailItem>
-          </dl>
-        </section>
-
-        <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
+      <div className="grid grid-cols-1 gap-6">
+        <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
           <SectionHeader title={dictionary.detail.sections.operationalDetails} />
           <dl className="p-6 grid grid-cols-1 gap-5">
             <DetailItem label={dictionary.detail.labels.estimatedBudget}>{formatBudget(locale, service, dictionary)}</DetailItem>
@@ -330,21 +231,9 @@ export default async function ServiceDetailPage({
                 <UiDateTimeText locale={locale} value={service.updatedAt} />
               </span>
             </DetailItem>
-            <DetailItem label={dictionary.detail.labels.status}>
-              {getServiceStatusLabel(dictionary.locale, service.status)}
-            </DetailItem>
           </dl>
         </section>
       </div>
-
-      <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright flex justify-between items-center">
-          <h3 className="font-semibold text-primary">{dictionary.detail.sections.descriptionNotes}</h3>
-        </div>
-        <div dir="auto" className="p-6 text-[14px] leading-[22px] text-on-surface whitespace-pre-wrap">
-          {service.description ? isolateBidiText(service.description) : dictionary.detail.fallbacks.empty}
-        </div>
-      </section>
 
       <Suspense
         fallback={
@@ -608,54 +497,6 @@ function DetailItem({
   );
 }
 
-function formatCustomerName(service: Service, dictionary: ServicesDictionary) {
-  const company = service.customer?.company;
-  const contact = service.customer?.contact;
-
-  if (company && contact) {
-    return isolateBidiText(`${company} (${contact})`);
-  }
-
-  return isolateBidiText(company || contact || dictionary.detail.fallbacks.customerProfile);
-}
-
-function formatServiceSchedule(
-  locale: Locale,
-  service: Service,
-  dictionary: ServicesDictionary,
-) {
-  if (service.eventStartDate && service.eventEndDate) {
-    return (
-      <UiDateRangeText
-        locale={locale}
-        start={service.eventStartDate}
-        end={service.eventEndDate}
-      />
-    );
-  }
-
-  if (service.eventStartDate) {
-    return <UiDateText locale={locale} value={service.eventStartDate} />;
-  }
-
-  if (service.eventEndDate) {
-    return <UiDateText locale={locale} value={service.eventEndDate} />;
-  }
-
-  return dictionary.detail.fallbacks.scheduleNotSet;
-}
-
-function formatNullable(
-  value: string | null | undefined,
-  dir: "auto" | "ltr",
-  dictionary: ServicesDictionary,
-) {
-  if (!value) {
-    return dictionary.detail.fallbacks.empty;
-  }
-
-  return <span dir={dir}>{isolateBidiText(value)}</span>;
-}
 
 function formatBudget(
   locale: Locale,

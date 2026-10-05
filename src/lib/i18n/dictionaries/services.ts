@@ -120,6 +120,7 @@ export interface ServicesDictionary {
     edit: string;
     quotationDisabledReasonStarted: string;
     sections: {
+      eventBrief: string;
       serviceSchedule: string;
       customerSummary: string;
       operationalDetails: string;
@@ -1340,6 +1341,7 @@ const servicesDictionaryEn: ServicesDictionary = {
     edit: "Edit",
     quotationDisabledReasonStarted: "Cannot create a quotation because the service has already started.",
     sections: {
+      eventBrief: "Event Brief",
       serviceSchedule: "Service Schedule",
       customerSummary: "Customer Summary",
       operationalDetails: "Operational Details",
@@ -3176,6 +3178,7 @@ const servicesDictionaryAr: ServicesDictionary = {
     edit: "تعديل",
     quotationDisabledReasonStarted: "لا يمكن إنشاء عرض سعر لأن الخدمة بدأت بالفعل.",
     sections: {
+      eventBrief: "موجز الفعالية",
       serviceSchedule: "الجدول الزمني",
       customerSummary: "ملخص العميل",
       operationalDetails: "التفاصيل التشغيلية",

@@ -90,15 +90,20 @@ test("D07 labels preserve the locked English and Arabic workflow language", () =
 
 test("Service Detail enforces the compact operational summary visual hierarchy", () => {
   const servicePage = read("src/app/(dashboard)/services/[id]/page.tsx");
+  const eventBrief = read("src/app/(dashboard)/services/[id]/EventBrief.tsx");
   const lifecycleActions = read("src/app/(dashboard)/services/[id]/ServiceLifecycleActions.tsx");
   const commitmentCard = read("src/app/(dashboard)/services/[id]/CommitmentSummaryCard.tsx");
 
   // Verify visual hierarchy order in page:
-  // Lifecycle Summary -> Key Facts -> Related Quotations -> Procurement -> Commitments -> Billing -> Activity -> Advanced Actions
+  // Event Brief -> Lifecycle controls -> Operational details -> Related Quotations -> Procurement -> Commitments -> Billing -> Activity
   assert.match(
     servicePage,
-    /<ServiceLifecycleActions[\s\S]*?<SectionHeader title=\{dictionary\.detail\.sections\.serviceSchedule\}[\s\S]*?<RelatedQuotationsCard[\s\S]*?<ProcurementSummaryCard[\s\S]*?<CommitmentSummaryCard[\s\S]*?<ServiceBillingSummaryCard[\s\S]*?<ServiceActivityHistory[\s\S]*?<ServiceCancellationActions/,
+    /<EventBrief[\s\S]*?<ServiceLifecycleActions[\s\S]*?<SectionHeader title=\{dictionary\.detail\.sections\.operationalDetails\}[\s\S]*?<RelatedQuotationsCard[\s\S]*?<ProcurementSummaryCard[\s\S]*?<CommitmentSummaryCard[\s\S]*?<ServiceBillingSummaryCard[\s\S]*?<ServiceActivityHistory[\s\S]*?<ServiceCancellationActions/,
   );
+  assert.doesNotMatch(servicePage, /dictionary\.detail\.sections\.serviceSchedule/);
+  assert.match(eventBrief, /service\.eventName[\s\S]*?service\.eventLocation[\s\S]*?service\.description/);
+  assert.match(eventBrief, /lifecycle\.commercialState/);
+  assert.doesNotMatch(eventBrief, /event_snapshot|getQuotationsByServiceIdResult|estimatedBudget/);
 
   // Verify lifecycle compaction and secondary collapsible mutation
   assert.match(lifecycleActions, /grid-cols-2 sm:grid-cols-3 lg:grid-cols-6/);

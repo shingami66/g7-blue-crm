@@ -1,6 +1,13 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — W11 R02/R03 OWNER ACCEPTANCE — 4 October 2026
+## CURRENT ROADMAP POSITION — R04-B EVENT BRIEF IMPLEMENTED — 5 October 2026
+
+- **L1-R04 — Event Brief:** `IMPLEMENTED / OWNER ACCEPTANCE PENDING`. R04-B delivers the bounded Service-detail Event Brief over current Service, linked Customer, and lifecycle sources without a new entity, persistence, quotation dependency, permission, or lifecycle authority.
+- **Remaining Layer 1 gates:** R01 and R05–R08 remain **OPEN**. R04 remains pending Owner English/Arabic/RTL/responsive acceptance.
+- **W11:** cutover, rehearsal, production, and overall real-use proof remain **NO-GO**.
+- **EXACT NEXT ACTION:** Controller publishes the bounded R04-B slice, then Mozfer completes Owner acceptance; do not begin W11 cutover.
+
+## HISTORICAL ROADMAP SNAPSHOT — W11 R02/R03 OWNER ACCEPTANCE — 4 October 2026 (SUPERSEDED CURRENT POSITION)
 
 - **L1-R02 — Change Orders / post-approval commercial correction:** `CLOSED / OWNER-ACCEPTED` for the bounded workflow proven in the [W11 readiness and proof contract](product/w11-cutover-readiness-proof-contract.md).
 - **L1-R03 — ABS supersession / reapproval:** `CLOSED / OWNER-ACCEPTED` for the bounded workflow proven in the readiness and proof contract.
