@@ -204,7 +204,7 @@ export default async function ServiceDetailPage({
         </div>
       </div>
 
-      <EventBrief service={service} lifecycle={lifecycle} locale={locale} dictionary={dictionary} />
+      <EventBrief service={service} locale={locale} dictionary={dictionary} />
 
       {canUpdateServiceStatus && (
         <ServiceLifecycleActions
@@ -219,7 +219,7 @@ export default async function ServiceDetailPage({
       <div className="grid grid-cols-1 gap-6">
         <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
           <SectionHeader title={dictionary.detail.sections.operationalDetails} />
-          <dl className="p-6 grid grid-cols-1 gap-5">
+          <dl className="p-6 grid grid-cols-1 gap-5 md:grid-cols-3">
             <DetailItem label={dictionary.detail.labels.estimatedBudget}>{formatBudget(locale, service, dictionary)}</DetailItem>
             <DetailItem label={dictionary.detail.labels.createdAt}>
               <span dir="ltr" className="tabular-nums">

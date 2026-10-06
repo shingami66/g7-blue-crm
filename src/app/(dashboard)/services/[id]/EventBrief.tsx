@@ -9,7 +9,6 @@ import {
   type ServicesDictionary,
 } from "@/lib/i18n/dictionaries/services";
 import { eventBriefValue } from "@/lib/services/event-brief";
-import type { ServiceLifecycleState } from "@/lib/services/lifecycle";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Service } from "@/types/service";
 
@@ -25,21 +24,11 @@ const STATUS_VARIANTS = {
 
 interface EventBriefProps {
   service: Service;
-  lifecycle: ServiceLifecycleState;
   locale: Locale;
   dictionary: ServicesDictionary;
 }
 
-export default function EventBrief({ service, lifecycle, locale, dictionary }: EventBriefProps) {
-  const lifecycleItems = [
-    ["commercial", lifecycle.commercialState],
-    ["payment", lifecycle.paymentState],
-    ["readiness", lifecycle.readinessState],
-    ["execution", lifecycle.executionState],
-    ["completion", lifecycle.completionState],
-    ["close", lifecycle.closeState],
-  ] as const;
-
+export default function EventBrief({ service, locale, dictionary }: EventBriefProps) {
   return (
     <section aria-labelledby="event-brief-title" className="min-w-0 overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
       <div className="border-b border-surface-variant bg-surface-bright px-6 py-5">
@@ -95,16 +84,6 @@ export default function EventBrief({ service, lifecycle, locale, dictionary }: E
         </BriefItem>
         <BriefItem label={dictionary.detail.labels.endDate}>
           {service.eventEndDate ? <UiDateText locale={locale} value={service.eventEndDate} /> : dictionary.detail.fallbacks.empty}
-        </BriefItem>
-        <BriefItem label={dictionary.serviceLifecycle.title} className="sm:col-span-2 xl:col-span-3">
-          <ul className="flex min-w-0 flex-wrap gap-x-4 gap-y-2 text-[13px] text-on-surface-variant">
-            {lifecycleItems.map(([dimension, state]) => (
-              <li key={dimension} className="min-w-0">
-                <span className="font-semibold text-on-surface">{dictionary.serviceLifecycle.dimensions[dimension]}: </span>
-                <span>{dictionary.serviceLifecycle.states[state]}</span>
-              </li>
-            ))}
-          </ul>
         </BriefItem>
         <BriefItem label={dictionary.detail.sections.descriptionNotes} className="sm:col-span-2 xl:col-span-3">
           <BidiValue value={eventBriefValue(service.description, dictionary.detail.fallbacks.empty)} preserveWhitespace />

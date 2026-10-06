@@ -102,7 +102,7 @@ test("Service Detail enforces the compact operational summary visual hierarchy",
   );
   assert.doesNotMatch(servicePage, /dictionary\.detail\.sections\.serviceSchedule/);
   assert.match(eventBrief, /service\.eventName[\s\S]*?service\.eventLocation[\s\S]*?service\.description/);
-  assert.match(eventBrief, /lifecycle\.commercialState/);
+  assert.doesNotMatch(eventBrief, /lifecycle/i);
   assert.doesNotMatch(eventBrief, /event_snapshot|getQuotationsByServiceIdResult|estimatedBudget/);
 
   // Verify lifecycle compaction and secondary collapsible mutation
