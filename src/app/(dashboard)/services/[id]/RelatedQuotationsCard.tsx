@@ -87,8 +87,78 @@ export default function RelatedQuotationsCard({
         ) : quotations.length === 0 ? (
           <EmptyMessage message={dictionary.states.noRelatedQuotations} />
         ) : (
-          <div className="min-w-0 max-w-full overflow-x-auto">
-            <table className="w-full min-w-[720px] table-fixed border-collapse text-start">
+          <div className="min-w-0 max-w-full md:overflow-x-auto">
+            <ul className="grid min-w-0 gap-3 md:hidden">
+              {quotations.map((quotation) => (
+                <li
+                  key={quotation.id}
+                  className="min-w-0 rounded-lg border border-surface-variant bg-surface p-4"
+                >
+                  <div className="grid min-w-0 grid-cols-2 gap-3">
+                    <dl className="min-w-0">
+                      <dt className="text-[12px] leading-[18px] text-on-surface-variant">
+                        {dictionary.relatedQuotations.table.quotation}
+                      </dt>
+                      <dd className="mt-1 min-w-0 font-mono font-semibold text-start">
+                        <Link
+                          href={`/quotations/${quotation.id}`}
+                          className="text-primary hover:underline"
+                        >
+                          <span dir="ltr" className="inline-block max-w-full break-all">
+                            {isolateBidiText(quotation.quotationNumber)}
+                          </span>
+                        </Link>
+                      </dd>
+                    </dl>
+                    <dl className="min-w-0">
+                      <dt className="text-[12px] leading-[18px] text-on-surface-variant">
+                        {dictionary.relatedQuotations.table.status}
+                      </dt>
+                      <dd className="mt-1 min-w-0">
+                        <StatusBadge variant={QUOTATION_STATUS_VARIANTS[quotation.status]}>
+                          {getQuotationStatusLabel(dictionary.locale, quotation.status)}
+                        </StatusBadge>
+                      </dd>
+                    </dl>
+                  </div>
+
+                  <dl className="mt-3 grid min-w-0 gap-2 text-[13px] leading-[18px]">
+                    <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                      <dt className="text-on-surface-variant">
+                        {dictionary.relatedQuotations.table.issueDate}
+                      </dt>
+                      <dd className="min-w-0 max-w-full text-end text-on-surface-variant">
+                        <UiDateText locale={dictionary.locale} value={quotation.date} />
+                      </dd>
+                    </div>
+                    <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                      <dt className="text-on-surface-variant">
+                        {dictionary.relatedQuotations.table.validUntil}
+                      </dt>
+                      <dd className="min-w-0 max-w-full text-end text-on-surface-variant">
+                        {quotation.validUntil ? (
+                          <UiDateText locale={dictionary.locale} value={quotation.validUntil} />
+                        ) : (
+                          "—"
+                        )}
+                      </dd>
+                    </div>
+                    <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                      <dt className="text-on-surface-variant">
+                        {dictionary.relatedQuotations.table.grandTotal}
+                      </dt>
+                      <dd className="min-w-0 max-w-full text-end font-semibold text-on-surface tabular-nums">
+                        <span dir="ltr" className="inline-block max-w-full [overflow-wrap:anywhere]">
+                          {formatSarAmount(dictionary.locale, quotation.grandTotal, { isolate: true })}
+                        </span>
+                      </dd>
+                    </div>
+                  </dl>
+                </li>
+              ))}
+            </ul>
+
+            <table className="hidden w-full min-w-[720px] table-fixed border-collapse text-start md:table">
               <thead>
                 <tr className="border-b border-surface-variant text-[12px] uppercase text-on-surface-variant">
                   <th className="py-3 pe-6 w-[22%] font-semibold text-start">

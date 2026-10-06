@@ -90,13 +90,30 @@ test("filter and search icons use logical inline positioning", () => {
   assert.match(read(SUPPLIERS), /ModuleSearchControl/);
 });
 
-test("related quotations header stacks on mobile; table-local overflow preserved", () => {
+test("related quotations uses scroll-free mobile cards and a responsive desktop table", () => {
   const source = read(RELATED);
   assert.match(source, /flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between/);
   assert.match(source, /flex flex-wrap items-center gap-3/);
   assert.match(source, /relatedQuotations\.createQuotation/);
-  assert.match(source, /min-w-0 max-w-full overflow-x-auto/);
-  assert.match(source, /min-w-\[720px\]/);
+  const mobileStart = source.indexOf('<ul className="grid min-w-0 gap-3 md:hidden">');
+  const mobileEnd = source.indexOf("</ul>", mobileStart);
+  const mobileList = source.slice(mobileStart, mobileEnd + "</ul>".length);
+  assert.ok(mobileStart >= 0 && mobileEnd >= mobileStart, "expected a mobile-only quotation list");
+  assert.ok(!mobileList.includes("overflow-x-auto"));
+  assert.ok(!mobileList.includes("min-w-[720px]"));
+  assert.ok(mobileList.includes("quotation.quotationNumber"));
+  assert.ok(mobileList.includes("dictionary.relatedQuotations.table.issueDate"));
+  assert.ok(mobileList.includes("dictionary.relatedQuotations.table.validUntil"));
+  assert.ok(mobileList.includes("dictionary.relatedQuotations.table.grandTotal"));
+  assert.ok(mobileList.includes("getQuotationStatusLabel("));
+  assert.ok(mobileList.includes("<UiDateText"));
+  assert.ok(mobileList.includes("formatSarAmount("));
+  assert.ok(mobileList.includes("isolateBidiText("));
+  assert.ok(mobileList.includes('href={`/quotations/${quotation.id}`}'));
+  assert.ok(source.includes("min-w-[720px]"));
+  assert.ok(source.includes("min-w-0 max-w-full md:overflow-x-auto"));
+  assert.ok(source.includes('className="hidden w-full min-w-[720px] table-fixed border-collapse text-start md:table"'));
+  assert.ok(source.includes("<table"));
 });
 
 test("dashboard shell constrains flex main column so wide tables do not expand body width", () => {

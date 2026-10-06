@@ -9,6 +9,7 @@ import ReactDOMServer from "react-dom/server";
 import ts from "typescript";
 
 import { getServicesDictionary } from "../i18n/dictionaries/services.ts";
+import { formatSarAmount } from "../i18n/formatting.ts";
 
 const require = createRequire(import.meta.url);
 const reactResolvedUrl = "file:///" + require.resolve("react").replace(/\\/g, "/");
@@ -208,7 +209,7 @@ test("Runtime rendering: ServiceLifecycleActions renders mutation controls when 
   assert.ok(htmlAr.includes(dictAr.serviceLifecycle.actions.startExecution), "Start action rendered when expanded in Arabic");
 });
 
-test("Runtime rendering: RelatedQuotationsCard renders localized headings and table in both locales", async () => {
+test("Runtime rendering: RelatedQuotationsCard preserves mobile facts and desktop table in both locales", async () => {
   const RelatedQuotationsCard = await loadTranspiledComponent<React.ComponentType<Record<string, unknown>>>(
     "src/app/(dashboard)/services/[id]/RelatedQuotationsCard.tsx",
   );
@@ -225,7 +226,22 @@ test("Runtime rendering: RelatedQuotationsCard renders localized headings and ta
       validUntil: "2026-07-16",
       grandTotal: 17250,
     },
+    {
+      id: "q-2",
+      quotationNumber: "Q-2026-002",
+      status: "draft",
+      date: "2026-06-18",
+      validUntil: null,
+      grandTotal: 8750,
+    },
   ];
+
+  const mobileListFor = (html: string) => {
+    const start = html.indexOf('<ul class="grid min-w-0 gap-3 md:hidden">');
+    const end = html.indexOf("</ul>", start);
+    assert.ok(start >= 0 && end >= start, "expected mobile quotation records");
+    return html.slice(start, end + "</ul>".length);
+  };
 
   // English
   const htmlEn = ReactDOMServer.renderToStaticMarkup(
@@ -240,6 +256,7 @@ test("Runtime rendering: RelatedQuotationsCard renders localized headings and ta
   assert.ok(htmlEn.includes(dictEn.relatedQuotations.title), "Renders English quotations title");
   assert.ok(htmlEn.includes(dictEn.relatedQuotations.table.quotation), "Renders English table header quotation");
   assert.ok(htmlEn.includes("Q-2026-001"), "Renders quotation number");
+  assert.ok(htmlEn.includes('href="/quotations/new?serviceId=srv-test"'), "Preserves the enabled Create Quotation link");
 
   // Arabic
   const htmlAr = ReactDOMServer.renderToStaticMarkup(
@@ -251,10 +268,119 @@ test("Runtime rendering: RelatedQuotationsCard renders localized headings and ta
     }),
   );
 
+  for (const [html, dictionary] of [[htmlEn, dictEn], [htmlAr, dictAr]] as const) {
+    const mobileList = mobileListFor(html);
+    const records = mobileList.split("</li>").filter((record) => record.includes("<li"));
+    assert.equal(records.length, quotations.length, "renders one mobile record per quotation");
+
+    const firstRecord = records[0] ?? "";
+    const labels = [
+      dictionary.relatedQuotations.table.quotation,
+      dictionary.relatedQuotations.table.status,
+      dictionary.relatedQuotations.table.issueDate,
+      dictionary.relatedQuotations.table.validUntil,
+      dictionary.relatedQuotations.table.grandTotal,
+    ];
+    for (const label of labels) {
+      assert.ok(firstRecord.includes(label), "mobile record includes a dictionary label");
+    }
+
+    assert.ok(firstRecord.includes('href="/quotations/q-1"'), "mobile quotation number links to the same detail route");
+    assert.ok(firstRecord.includes("Q-2026-001"), "mobile quotation number remains visible");
+    assert.ok(firstRecord.includes('data-variant="approved">approved</span>'), "mobile status uses the existing badge");
+    assert.ok(firstRecord.includes("2026-06-16"), "mobile issue date renders through UiDateText");
+    assert.ok(firstRecord.includes("2026-07-16"), "mobile valid-until date renders through UiDateText");
+    assert.ok(
+      firstRecord.includes(formatSarAmount(dictionary.locale, 17250, { isolate: true })),
+      "mobile grand total uses the existing SAR formatter",
+    );
+    assert.ok(firstRecord.includes('dir="ltr"'), "mobile identifiers and money are direction-isolated");
+
+    const secondRecord = records[1] ?? "";
+    assert.ok(secondRecord.includes("Q-2026-002"), "renders the second mobile quotation");
+    assert.ok(secondRecord.includes("—"), "preserves the missing-valid-until fallback");
+    assert.ok(!mobileList.includes("overflow-x-auto"), "mobile quotation records do not require horizontal scrolling");
+
+    const tableStart = html.indexOf('<table class="hidden w-full min-w-[720px] table-fixed border-collapse text-start md:table">');
+    const tableEnd = html.indexOf("</table>", tableStart);
+    assert.ok(tableStart >= 0 && tableEnd > tableStart, "retains the desktop quotation table");
+    const table = html.slice(tableStart, tableEnd);
+    const tableHeaders = labels.map((label) => table.indexOf(label));
+    assert.ok(tableHeaders.every((position) => position >= 0), "desktop table retains all five column headers");
+    assert.deepEqual(
+      tableHeaders,
+      [...tableHeaders].sort((left, right) => left - right),
+      "desktop table preserves column order",
+    );
+    assert.ok(html.includes("min-w-0 max-w-full md:overflow-x-auto"), "table overflow is limited to tablet/desktop");
+  }
+
   assert.ok(htmlAr.includes(dictAr.relatedQuotations.title), "Renders Arabic quotations title (عروض الأسعار المرتبطة)");
   assert.ok(htmlAr.includes(dictAr.relatedQuotations.table.quotation), "Renders Arabic table header (رقم عرض السعر)");
   assert.ok(htmlAr.includes(dictAr.relatedQuotations.table.grandTotal), "Renders Arabic table header (قيمة عرض السعر)");
   assert.ok(htmlAr.includes("text-start"), "Table headers and cells use logical text-start for RTL alignment");
+});
+
+test("Runtime rendering: RelatedQuotationsCard preserves permission, error, and empty states", async () => {
+  const RelatedQuotationsCard = await loadTranspiledComponent<React.ComponentType<Record<string, unknown>>>(
+    "src/app/(dashboard)/services/[id]/RelatedQuotationsCard.tsx",
+  );
+  const dictionary = getServicesDictionary("en");
+  const createLabel = dictionary.relatedQuotations.createQuotation;
+  const scenarios = [
+    {
+      quotations: null,
+      canCreateQuotation: false,
+      loadError: false,
+      disabledReason: undefined,
+      message: dictionary.states.noPermissionToViewQuotations,
+      createAction: "hidden",
+    },
+    {
+      quotations: [],
+      canCreateQuotation: true,
+      loadError: true,
+      disabledReason: "Approval required",
+      message: dictionary.states.genericError,
+      createAction: "disabled",
+    },
+    {
+      quotations: [],
+      canCreateQuotation: true,
+      loadError: false,
+      disabledReason: undefined,
+      message: dictionary.states.noRelatedQuotations,
+      createAction: "enabled",
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    const html = ReactDOMServer.renderToStaticMarkup(
+      React.createElement(RelatedQuotationsCard, {
+        quotations: scenario.quotations,
+        serviceId: "srv-test",
+        canCreateQuotation: scenario.canCreateQuotation,
+        dictionary,
+        loadError: scenario.loadError,
+        disabledReason: scenario.disabledReason,
+      }),
+    );
+
+    assert.ok(html.includes(scenario.message), "preserves the scenario-specific state message");
+    assert.ok(!html.includes("<ul"), "does not render records for an unavailable or empty state");
+    assert.ok(!html.includes("<table"), "does not render a table for an unavailable or empty state");
+
+    if (scenario.createAction === "hidden") {
+      assert.ok(!html.includes(createLabel), "permission-denied state keeps Create Quotation hidden");
+    } else if (scenario.createAction === "disabled") {
+      assert.ok(html.includes(createLabel), "disabled Create Quotation remains visible");
+      assert.ok(html.includes('title="Approval required"'), "preserves the disabled reason");
+      assert.ok(!html.includes('href="/quotations/new'), "disabled Create Quotation is not linked");
+    } else {
+      assert.ok(html.includes(createLabel), "empty state keeps permitted Create Quotation visible");
+      assert.ok(html.includes('href="/quotations/new?serviceId=srv-test"'), "empty state keeps the Service-scoped route");
+    }
+  }
 });
 
 test("Runtime rendering: ProcurementSummaryCard preserves natural RTL layout without block dir=ltr", async () => {
