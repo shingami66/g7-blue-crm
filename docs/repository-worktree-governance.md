@@ -50,8 +50,9 @@ A clear bounded Owner task authorizes predictable ordinary in-scope work: discov
 **Approval Rules:**
 
 - Do not infer authority beyond the stated task boundary. A separate plan ritual is not required for a clear bounded task.
-- Path changes, worktree creation, database work, commits, pushes, dependency changes, migrations, financial mutations, destructive recovery, and production actions require explicit task authorization.
-- Implementation, review, commit, and push may be covered by one clear task only when that task expressly authorizes each action; otherwise their normal boundaries remain separate.
+- Path or checkout changes (including worktree creation or switching), dependency changes, database work or mutations, migrations, financial mutations, destructive recovery, deployment or production actions, and cleanup or removal operations require explicit task authorization.
+- Ordinary implementation authorization does not generally imply Git mutation authority. For an already-authorized bounded task in this G7 repository, after required validation, a fresh independent CLEAN review, and the Controller publication gate pass with isolated exact scope and unchanged expected remote `main`, G7-OD-12/G7-OD-27 provide standing authority for exact staging, one bounded task-scoped commit, a remote race check, normal fast-forward push to `origin/main`, and remote verification without redundant Owner commit/push confirmation.
+- Outside that qualifying G7 publication path, applicable Git actions require separate exact authorization. Other repositories, branches outside the G7 `main` path, non-fast-forward publication, PR/merge where separately required, destructive Git, force push or history rewrite, database/environment/deployment operations, and scope widening remain separately gated.
 - No agent may silently create a worktree, silently switch checkouts, continue work in an unexpected path, or treat a temporary worktree as permanent without an approved decision.
 - Task prompts cannot weaken the preserved product, security, database, Git, deployment, or destructive-operation safeguards.
 
@@ -69,7 +70,8 @@ This is a bounded transition rule, not general cleanup authority. It does not au
 ## 5. Execution, Acceptance, and Safety Boundaries
 
 - Canonical operation labels remain defined by `.agents/skills/g7-crm-agent-control/SKILL.md`; they are optional descriptors, not a prerequisite for ordinary bounded work.
-- Implementation, review, staging, commit, and push require the authority stated in the task. A label such as `COMMIT_ONLY` or `PUSH_ONLY` narrows authority when used; it does not replace explicit authorization.
+- Ordinary implementation authority does not generally authorize staging, commit, or push. For an already-authorized bounded task in this G7 repository, the G7-OD-12/G7-OD-27 standing Controller-gated path permits exact staging, one bounded task-scoped commit, remote race check, normal fast-forward push to `origin/main`, and remote verification after all required gates pass, without redundant Owner commit/push confirmation. Nonqualifying Git operations remain separately gated.
+- Operation labels such as `COMMIT_ONLY` or `PUSH_ONLY` are optional scope refinements and do not waive applicable gates. Path/worktree changes, dependency changes, migrations, database or financial mutations, destructive recovery, deployment/production actions, force push/history rewrite, and cleanup/removal remain separately authorized operations.
 - Mozfer retains exclusive manual/browser, visual, Arabic/RTL, mobile, and workflow acceptance authority. Automated checks must not be reported as owner acceptance.
 - No force push, hard reset, or clean operation is permitted for recovery work.
 - No SQL, migrations, dependency changes, production changes, Supabase action, or secrets/environment-file access is authorized by this document.

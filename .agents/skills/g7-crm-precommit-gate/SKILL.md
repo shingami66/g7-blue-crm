@@ -10,7 +10,7 @@ Use this skill before staging, committing, pushing, opening PRs, or merging.
 ## Precommit Exact-Slice Checks
 
 Before staging:
-- Verify the task explicitly authorizes staging and committing on the intended branch.
+- Determine the applicable Git authority before staging. For a qualifying bounded G7 task that passes required validation, CLEAN independent review, and the Controller publication gate with isolated exact scope and unchanged expected remote `main`, G7-OD-12/G7-OD-27 provide standing authority for exact staging and one task-scoped commit; no separate Owner commit confirmation is required. Outside that qualifying path, verify explicit task authorization for staging and committing on the intended branch.
 - Record known inherited dirty and untracked work; preserve it without requiring whole-worktree cleanliness.
 - Verify the exact approved staged file group and intended commit count.
 - Verify the prescribed subject exactly when the task supplies one; otherwise use a concise, accurate subject within the authorized scope.
@@ -44,7 +44,8 @@ Required HOLD reasons:
 ## Commit / Push / PR
 
 - Commit only after all exact plan checks are satisfied.
-- Push and PR actions require explicit task authorization and remain distinct from an ordinary commit authorization.
+- PR/merge operations where separately required remain separately authorized. Standing publication covers a normal fast-forward push to `origin/main` only for a qualifying bounded G7 task that passes required validation, CLEAN independent review, and the Controller publication gate with isolated exact scope and unchanged expected remote `main`; it includes the remote race check and remote verification without separate Owner push confirmation.
+- Other repositories, branches outside the G7 `main` path, non-fast-forward publication, destructive Git, force push or history rewrite, database/environment/deployment operations, and scope widening are not covered by standing publication and remain separately gated under their applicable exact authorization.
 
 ## Required Final Report
 
