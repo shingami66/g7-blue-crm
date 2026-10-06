@@ -1,24 +1,45 @@
 # R04-A — Event Brief Contract and Minimal Implementation Gap Proof
 
-- **Status:** Discovery contract and implementation-gap proposal; R04-A grants no implementation authority.
-- **Evidence baseline:** `main` at `64cf29dd903e4ce737f460cad2631e5d9272ef96`.
-- **Current gate:** L1-R04 is **IMPLEMENTED / OWNER ACCEPTANCE PENDING**; this document does not close R04 or W11.
+- **Document origin:** R04-A discovery contract and implementation-gap proposal; that historical task granted no implementation authority.
+- **R04-A evidence baseline (historical):** `main` at `64cf29dd903e4ce737f460cad2631e5d9272ef96`.
+- **Current gate:** L1-R04 is **PROVEN CLOSED / OWNER-ACCEPTED** for the bounded first Event Brief slice; W11 remains **NO-GO**.
 
 This R04-A contract follows the current [Layer 1 Event ERP Decision Register](event-erp-decision-register.md), [Technical Master Plan](g7-layer1-technical-master-plan.md), and [W11 readiness reconciliation](w11-cutover-readiness-proof-contract.md). It records a bounded recommendation from repository evidence. R04-A grants no runtime, schema, migration, environment, deployment, or publication authority.
 
-## R04-B Owner Acceptance and Bounded Implementation Authority
+## R04-B Initial Owner Boundary Acceptance and Bounded Implementation Authority — 5 October 2026
 
 On 5 October 2026, Mozfer explicitly accepted the R04-B first-slice boundary: a Service-authoritative Event Brief using the documented existing-field minimum; ordinary brief edits only through the existing Inquiry and Quoted Service write boundary; lifecycle/readiness remaining separate from ordinary brief edits; and no post-approval correction workflow in this slice. This acceptance keeps R05 through R08 as separate work and does not add requirements, tasks, milestones, issues, resources, supplier obligations/bookings, people/team roles, incidents, evidence, budget authority, commercial authority, billing, cost, or accounting to R04-B.
 
 The separate R04-B task authorizes the bounded Service-detail implementation described by this contract. It does not authorize a new Event entity, persistent Event Brief storage, a schema or migration change, a new permission, a field-level audit claim, quotation-snapshot mutation, budget-surface expansion, or a later-status correction path. The R04-A evidence, including snapshot provenance, fallback, successor, and legacy-compatibility caveats, remains controlling.
 
-L1-R04 is **IMPLEMENTED / OWNER ACCEPTANCE PENDING**. This bounded implementation does not close R04, make W11 ready, or change the W11 **NO-GO** position.
+At this 5 October boundary-acceptance checkpoint, L1-R04 remained **OPEN / OWNER ACCEPTANCE PENDING** for final completion. The later 6 October Owner acceptance below closes the bounded first slice; W11 remains **NO-GO**.
 
-## R04-B Implementation Evidence — 5 October 2026
+## R04-B Implementation Evidence — 5 October 2026 (Historical checkpoint)
 
 The Service detail route now renders one localized, responsive Event Brief from the current Service, linked Customer, and lifecycle sources. It consolidates Service number/title, linked Customer context, event name/type/dates/location, description, current status, and lifecycle context without a quotation read or new persistence. The existing Edit control is visible only with `services:write` while the Service status is Inquiry or Quoted; `updateService` and lifecycle authority are unchanged. Estimated Budget and timestamps remain outside the Brief in Operational Details.
 
-Focused Service/detail/action/schema/i18n tests, TypeScript, scoped ESLint, and a production build passed. Controller publication is next; Mozfer's manual English/Arabic/RTL/responsive acceptance remains pending. R01 and R05–R08 remain **OPEN**.
+At this implementation checkpoint, focused Service/detail/action/schema/i18n tests, TypeScript, scoped ESLint, and a production build passed. Controller publication and Mozfer's manual English/Arabic/RTL/responsive acceptance were still pending then. R01 and R05–R08 were **OPEN**. The later publication and Owner acceptance are recorded below.
+
+## Final Owner Acceptance / Closeout — 6 October 2026
+
+Mozfer completed authenticated representative manual acceptance of the delivered R04 Service/Event Brief surface on 6 October 2026. L1-R04 is **PROVEN CLOSED / OWNER-ACCEPTED** for this bounded first slice.
+
+**Published implementation and acceptance-repair evidence:**
+
+- R04-B implementation: `49384f941ea6305e6d067c9d0bbe3d179d45d92b`.
+- R04-B-UX1 acceptance repair: `58604e125a052be5f867d1485b2954ca46fbd2d3`; removed duplicated lifecycle dimensions from the Event Brief, retained the ordinary Service status badge and separate Event Lifecycle section, and made Operational Details responsive.
+- R04-B-UX2 acceptance repair: `c561da67eef204b5a666e954a3c284b844efa1a3`; retained the desktop quotation table and added readable mobile quotation records without horizontal scrolling, preserving quotation facts, navigation, formatting, permissions, and EN/AR/RTL behavior.
+
+**Owner-accepted behavior:**
+
+- On a Quoted Service, the Event Brief remained editable through the existing permitted edit control. On an Approved Service, its data remained visible and the ordinary Edit action was absent.
+- The Service-authoritative Event Brief showed Service identity, linked Customer and primary contact, Customer reference, Service status, event name/type/location, start/end dates, and description/notes. It did not duplicate the six detailed Event Lifecycle dimensions.
+- The dedicated Event Lifecycle section remained separate and visible, with Commercial, Payment, Readiness, Execution, Completion, and Operational close dimensions.
+- Operational Details showed Estimated Budget, Created At, and Updated At horizontally on desktop/tablet and stacked on narrow/mobile without page-level horizontal overflow.
+- Mozfer visually exercised the Service detail surface on desktop in English and Arabic. English desktop and Arabic RTL desktop were accepted; bidi-sensitive identifiers, dates, amounts, and mixed Arabic/English content remained readable.
+- For Related Quotations, Mozfer confirmed the Arabic mobile records are readable and require no horizontal scrolling. Quotations remain quotation-owned data and authority.
+
+This acceptance is bounded to the delivered R04 first slice; it does not accept a broader Event Operations system or authorize W11, another residual gate, or new product capability. R02/R03 remain **PROVEN CLOSED / OWNER-ACCEPTED**; exactly R01 and R05–R08 remain **OPEN**. W11 remains **NO-GO**. No database/environment mutation or deployment occurred.
 
 ## A. Current R04 Evidence
 
@@ -76,14 +97,14 @@ Where populated, `event_snapshot` is immutable and contains event name/type/date
 - Use the existing Service detail route as the contextual surface. Do not add a standalone Event route, dashboard, duplicate event list, or new navigation surface.
 - R04-B presents Service identity, current Customer link, event name/type/date/location, description, current status, and lifecycle context in one coherent Event Brief section; former duplicate schedule/customer/notes presentation is removed.
 - Keep lifecycle state and links to quotation, procurement/commitment, billing, costing, and activity as separate source-owned sections. Respect each section’s existing authorization and redaction.
-- Provide explicit loading, unavailable, denied, error, and unset-value states. Preserve keyboard access and semantic labels. English/Arabic parity, natural RTL layout, bidi-safe Service IDs/dates, and narrow-screen stacking are acceptance requirements, not evidence already passed.
-- R04-B reuses the current Service edit path and its server checks only for Inquiry and Quoted Services. A Service field edit does not update a quotation snapshot. Mozfer’s manual EN/AR/RTL/responsive workflow acceptance remains pending.
+- Provide explicit loading, unavailable, denied, error, and unset-value states. Preserve keyboard access and semantic labels. English/Arabic parity, natural RTL layout, bidi-safe Service IDs/dates, and narrow-screen stacking were visually accepted for this bounded slice; see the dated closeout above.
+- R04-B reuses the current Service edit path and its server checks only for Inquiry and Quoted Services. A Service field edit does not update a quotation snapshot. Acceptance of this bounded workflow does not establish a later-status correction path.
 
 ## G. Implementation Delta
 
 R04-A changed no runtime or database files. R04-B implements the Service-detail presentation refactor over existing fields and sources. No schema migration, RPC, new permission, or new Event entity was introduced.
 
-That presentation alone does not prove the broader R04 gate complete. Mozfer accepted the existing field set as an adequate first Event Brief and the existing byline/timestamp correction record as sufficient for the bounded R04-B first slice on 5 October 2026. New persistent facts, field-level history, and any post-approval correction workflow remain out of scope and require a separate reviewed data contract and explicit authority.
+The 6 October Owner acceptance closes L1-R04 only for this bounded first slice. It does not establish a broader Event Operations system or authorize new persistent facts, field-level history, or a post-approval correction workflow; those remain out of scope and require a separate reviewed data contract and explicit authority.
 
 ## H. Risks and Open Questions
 
@@ -94,8 +115,8 @@ That presentation alone does not prove the broader R04 gate complete. Mozfer acc
 
 ## I. Historical R04-A Recommendation (Superseded)
 
-The 5 October 2026 Owner acceptance and separate R04-B task recorded above supersede the historical pre-implementation prerequisite in this section. The authorized next work was the bounded R04-B Service-detail implementation; R04 then remained **OPEN / OWNER ACCEPTANCE PENDING** for final completion, and W11 remained **NO-GO**.
+The 5 October 2026 Owner boundary acceptance and separate R04-B task recorded above superseded the historical pre-implementation prerequisite in this section. At that historical checkpoint, the authorized next work was the bounded R04-B Service-detail implementation; R04 remained **OPEN / OWNER ACCEPTANCE PENDING** for final completion, and W11 remained **NO-GO**. The 6 October closeout above records the subsequent bounded acceptance.
 
 **R04-B — Owner-gated Service Event Brief implementation.** The historical R04-A recommendation was to obtain Owner acceptance of this Service-authoritative model, the existing-field minimum, and the change-history/correction boundary before authorizing one bounded Service-detail-only slice. The 5 October 2026 R04-B acceptance recorded above superseded that prerequisite and authorized the slice to consolidate the current fields into a non-duplicated Event Brief section, reuse existing server permissions/validation, test snapshot provenance/immutability including quotation-event-name fallback and legacy compatibility behavior, cover empty states, and complete manual EN/AR/RTL/responsive acceptance. Newly required facts, new audit persistence, and later-status correction workflow remained outside that historical recommendation pending separate contract and authority.
 
-This R04-A artifact does not update W11 readiness status, close R04, or authorize W9/W11 implementation.
+At its historical checkpoint, this R04-A artifact did not update W11 readiness, close R04, or authorize W9/W11 implementation. Current R04 status is recorded in the final closeout above; W11 remains **NO-GO**.

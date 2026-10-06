@@ -1,12 +1,19 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — R04-B EVENT BRIEF IMPLEMENTED — 5 October 2026
+## CURRENT DELIVERY STATUS — L1-R04 EVENT BRIEF OWNER-ACCEPTED — 6 October 2026
 
-- **L1-R04 — Event Brief:** `IMPLEMENTED / OWNER ACCEPTANCE PENDING`. The bounded Service-detail view consolidates current Service, Customer, event, status, and lifecycle context; it adds no persistence, quotation dependency, permission, lifecycle mutation, budget expansion, or post-approval correction path.
-- **Validation:** focused Service/detail/action/schema/i18n tests, TypeScript, scoped ESLint, and the production build passed. Mozfer's manual English/Arabic/RTL/responsive acceptance remains pending.
-- **W11 readiness:** **NO-GO**. R01 and R05–R08 remain **OPEN**; R04 requires Owner acceptance before final closure.
-- **Boundaries:** No Supabase access, database/environment mutation, migration, deployment, rehearsal, or cutover occurred.
-- **EXACT NEXT ACTION:** Controller publishes the bounded R04-B slice, then Mozfer performs the Event Brief English/Arabic/RTL/responsive acceptance. Do not begin W11 cutover.
+- **L1-R04 — Event Brief:** `PROVEN CLOSED / OWNER-ACCEPTED` for the bounded first slice. Published chain: R04-B `49384f941ea6305e6d067c9d0bbe3d179d45d92b`, UX1 `58604e125a052be5f867d1485b2954ca46fbd2d3`, and UX2 `c561da67eef204b5a666e954a3c284b844efa1a3`.
+- **Owner acceptance:** On 6 October 2026, Mozfer completed authenticated representative EN/AR/RTL/responsive manual acceptance, including Quoted edit and Approved read-only behavior, the consolidated Event Brief, separate lifecycle, responsive Operational Details, and Arabic mobile Related Quotations without horizontal scrolling.
+- **Layer 1 / W11:** R02/R03/R04 are **PROVEN CLOSED / OWNER-ACCEPTED** for their bounded workflows. Exactly R01 and R05–R08 remain **OPEN**; W11 remains **NO-GO**.
+- **Boundaries:** No database/environment mutation or deployment occurred for this closeout. No W11 cutover, rehearsal, residual-gate implementation, or overall Layer 1 proof is claimed.
+- **EXACT NEXT ACTION:** Return control to the Controller to select the smallest safe next residual gate from R01 and R05–R08 based on dependency and current repository evidence. This closeout selects or authorizes no implementation.
+
+## HISTORICAL DELIVERY SNAPSHOT — R04-B IMPLEMENTED / OWNER ACCEPTANCE PENDING — 5 October 2026 (SUPERSEDED CURRENT STATUS)
+
+- At this checkpoint, L1-R04 was `IMPLEMENTED / OWNER ACCEPTANCE PENDING`; the bounded Service-detail view consolidated current Service, Customer, event, status, and lifecycle context without persistence, quotation dependency, permission, lifecycle mutation, budget expansion, or a post-approval correction path.
+- Focused Service/detail/action/schema/i18n tests, TypeScript, scoped ESLint, and the production build had passed. Manual EN/AR/RTL/responsive Owner acceptance and Controller publication were still pending then.
+- W11 remained **NO-GO**. R01 and R05–R08 were **OPEN**; no database/environment mutation, migration, deployment, rehearsal, or cutover occurred.
+- **Former exact next action at this snapshot:** Controller publishes the bounded R04-B slice, then Mozfer performs Event Brief EN/AR/RTL/responsive acceptance. This was superseded by the 6 October Owner acceptance above.
 
 ## HISTORICAL DELIVERY SNAPSHOT — W11 R02/R03 OWNER ACCEPTANCE — 4 October 2026 (SUPERSEDED CURRENT STATUS)
 

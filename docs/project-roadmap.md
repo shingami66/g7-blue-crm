@@ -1,11 +1,18 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — R04-B EVENT BRIEF IMPLEMENTED — 5 October 2026
+## CURRENT ROADMAP POSITION — L1-R04 EVENT BRIEF OWNER-ACCEPTED — 6 October 2026
 
-- **L1-R04 — Event Brief:** `IMPLEMENTED / OWNER ACCEPTANCE PENDING`. R04-B delivers the bounded Service-detail Event Brief over current Service, linked Customer, and lifecycle sources without a new entity, persistence, quotation dependency, permission, or lifecycle authority.
-- **Remaining Layer 1 gates:** R01 and R05–R08 remain **OPEN**. R04 remains pending Owner English/Arabic/RTL/responsive acceptance.
+- **L1-R04 — Event Brief:** `PROVEN CLOSED / OWNER-ACCEPTED` for the bounded first slice. Published R04-B implementation and UX1/UX2 acceptance repairs: `49384f941ea6305e6d067c9d0bbe3d179d45d92b`, `58604e125a052be5f867d1485b2954ca46fbd2d3`, and `c561da67eef204b5a666e954a3c284b844efa1a3`.
+- On 6 October 2026, Mozfer completed authenticated representative EN/AR/RTL/responsive manual acceptance, including the edit boundary, separate lifecycle, responsive Operational Details, and Arabic mobile Related Quotations without horizontal scrolling.
+- **Remaining Layer 1 gates:** R01, R05, R06, R07, and R08 remain **OPEN**. R02/R03/R04 are **PROVEN CLOSED / OWNER-ACCEPTED** for their bounded workflows.
 - **W11:** cutover, rehearsal, production, and overall real-use proof remain **NO-GO**.
-- **EXACT NEXT ACTION:** Controller publishes the bounded R04-B slice, then Mozfer completes Owner acceptance; do not begin W11 cutover.
+- **EXACT NEXT ACTION:** Return control to the Controller to select the smallest safe next residual gate from R01 and R05–R08 based on dependency and current repository evidence. Do not auto-select or implement a gate here; do not begin W11 cutover.
+
+## HISTORICAL ROADMAP SNAPSHOT — R04-B IMPLEMENTED / OWNER ACCEPTANCE PENDING — 5 October 2026 (SUPERSEDED CURRENT POSITION)
+
+- At this checkpoint, L1-R04 was `IMPLEMENTED / OWNER ACCEPTANCE PENDING`; R04-B delivered the bounded Service-detail Event Brief over current Service, linked Customer, and lifecycle sources without a new entity, persistence, quotation dependency, permission, or lifecycle authority.
+- The remaining Layer 1 gates were R01 and R05–R08; W11 remained **NO-GO**.
+- **Former exact next action at this snapshot:** Controller publishes the bounded R04-B slice, then Mozfer completes Owner acceptance. This was superseded by the 6 October acceptance above.
 
 ## HISTORICAL ROADMAP SNAPSHOT — W11 R02/R03 OWNER ACCEPTANCE — 4 October 2026 (SUPERSEDED CURRENT POSITION)
 
