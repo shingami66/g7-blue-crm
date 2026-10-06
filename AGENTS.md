@@ -12,21 +12,30 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## G7 Delegated Writer Execution
 
-For bounded G7 application work, the Controller assigns one logical Writer lane in the active coding harness. The normal lifecycle is:
+For an already-authorized bounded G7 task, the Controller assigns one logical Writer lane in the active coding harness. The normal lifecycle separates the Writer inner loop from the governed publication phase:
 
-Owner request
+Owner-authorized bounded task
 → Controller
 → one Writer
-→ Writer bounded inner loop: inspect → edit → task-authorized focused validation → diagnose → repair → repeat until locally green → report
-→ independent read-only Reviewer after implementation and validation
-→ logical Writer-lane repair for confirmed in-scope findings
-→ Controller revalidation and bounded rereview.
+→ Writer inner loop: inspect → implement → task-authorized focused validation → diagnose/repair → repeat until locally green → report (no staging, commit, or push in this loop)
+→ exactly one fresh independent native read-only/findings-only Reviewer under G7-OD-26 using Open Code Review delegation
+→ if repair is needed, the same Writer repairs confirmed in-scope findings, revalidates, and returns the repaired scope for one fresh targeted OCR-assisted Reviewer
+→ Controller independent final validation, publication gate, and final authority reconciliation
+→ exact task-owned staging
+→ one bounded task-scoped commit
+→ remote race check
+→ normal fast-forward push to origin/main
+→ remote verification
+→ smallest required status/documentation synchronization
+→ final Controller Task Verdict and task report.
+
+Qualifying publication requires complete implementation, passing required validation, CLEAN independent review, no unresolved BLOCKING or MATERIAL issue, isolated exact task scope, no unrelated staged or worktree mutation, the expected remote main still in place, a normal fast-forward, and no excluded authority. G7-OD-12 and G7-OD-27 provide standing publication authority for that qualifying path; no additional Owner commit/push confirmation is required. Mandatory stop conditions remain controlling.
 
 The canonical repository workflow is coding-harness-neutral. Either supported coding harness (Codex or Antigravity) executes the complete workflow independently within its own native Writer and independent Reviewer contexts. Codex does not launch Antigravity; Antigravity does not launch Codex. No cross-provider switching or automatic failover is part of the default workflow. Optional cross-provider tooling under `.agents/skills/agy-delegate/` remains a future optional capability and is not invoked by or required for the everyday workflow.
 
 The Controller owns routine discovery and compiles compact evidence capsules plus task-specific delta prompts; standing repository law remains here and in the agent-control skill rather than being repeated in every routine prompt.
 
-The delegated Writer (or the current coding harness Writer) may inspect and modify directly affected files inside the task-authorized working boundary, including relevant tests, local types/contracts, and direct callers/consumers required to complete the task. Exact-file allowlists remain binding when the task explicitly specifies them or when governance-sensitive, database/schema/RLS/RPC/migration, security, financial-authority, protected-infrastructure, or other materially high-risk work makes a broader envelope unsafe. A directly affected local file inside the authorized boundary is not by itself a HOLD or new Owner-approval condition; stop before a protected, materially excluded, destructive, database, deployment, production, or genuinely scope-expanding mutation. The Writer may run only task-authorized local focused tests, TypeScript, lint, or related validation inside that boundary; it is not the independent validator or final reviewer. The Writer never stages, commits, pushes, applies SQL, deploys, or changes production. The Controller owns independent validation, evidence, and the final verdict. A same logical Writer does not require the same provider conversation: prefer resumption, but after a classified authentication, session, transport, or comparable environment failure, preserve work, avoid repeated discovery, ensure no prior mutating Writer remains active when checkable, and start one fresh bounded session with a Recovery Capsule. Never run two mutating Writers concurrently. Do not make `--dangerously-skip-permissions` a default; it requires explicit Owner authorization for the affected task only. Never expose authentication material or substitute an unapproved implementer. The model is selected by the task or current coding harness configuration; this standing file does not freeze a model version.
+The delegated Writer (or the current coding harness Writer) may inspect and modify directly affected files inside the task-authorized working boundary, including relevant tests, local types/contracts, and direct callers/consumers required to complete the task. Exact-file allowlists remain binding when the task explicitly specifies them or when governance-sensitive, database/schema/RLS/RPC/migration, security, financial-authority, protected-infrastructure, or other materially high-risk work makes a broader envelope unsafe. A directly affected local file inside the authorized boundary is not by itself a HOLD or new Owner-approval condition; stop before a protected, materially excluded, destructive, database, deployment, production, or genuinely scope-expanding mutation. The Writer may run only task-authorized local focused tests, TypeScript, lint, or related validation inside that boundary; it is not the independent validator or final reviewer. The Writer does not stage, commit, or push during the implementation inner loop. After required validation passes, the independent Reviewer returns CLEAN, and the Controller publication gate passes, G7-OD-12 and G7-OD-27 permit exact staging, one task-scoped commit, a remote race check, a normal fast-forward push to origin/main, and remote verification for qualifying already-authorized bounded G7 tasks without another Owner confirmation. Stop for unexpected remote movement, non-fast-forward or history-rewrite requirements, destructive Git recovery, unresolved BLOCKING or MATERIAL findings, failed required validation, scope contamination or widening, authority ambiguity, or any separately gated operation. The Writer never applies SQL, deploys, or changes production. The Controller owns independent final validation and evidence, final authority reconciliation, the publication gate, and the final verdict. A same logical Writer does not require the same provider conversation: prefer resumption, but after a classified authentication, session, transport, or comparable environment failure, preserve work, avoid repeated discovery, ensure no prior mutating Writer remains active when checkable, and start one fresh bounded session with a Recovery Capsule. Never run two mutating Writers concurrently. Do not make `--dangerously-skip-permissions` a default; it requires explicit Owner authorization for the affected task only. Never expose authentication material or substitute an unapproved implementer. The model is selected by the task or current coding harness configuration; this standing file does not freeze a model version.
 
 ## GOVERNANCE PRECEDENCE AND SAFETY
 
