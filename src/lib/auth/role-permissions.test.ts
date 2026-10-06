@@ -45,6 +45,7 @@ const {
   ROLE_PERMISSIONS,
   SERVICE_RECEIPT_PERMISSIONS,
   SERVICE_BILLING_SUMMARY_PERMISSIONS,
+  SERVICE_TASK_PERMISSIONS,
   SUPPLIER_PAYMENT_PERMISSIONS,
   hasPermissionForRole,
 } = await import("./role-permissions.ts");
@@ -87,6 +88,19 @@ test("Service Billing Summary defaults are distinct from Invoice visibility", ()
     hasPermissionForRole("viewer", INVOICE_PERMISSIONS.read),
     true,
   );
+});
+
+test("R05 Service Task writes follow the approved role boundary", () => {
+  assert.equal(SERVICE_TASK_PERMISSIONS.write, "service_tasks:write");
+  assert.equal(ROLE_PERMISSIONS.admin.includes("*"), true);
+
+  for (const role of ["admin", "manager", "operations"] as const) {
+    assert.equal(hasPermissionForRole(role, SERVICE_TASK_PERMISSIONS.write), true);
+  }
+
+  for (const role of ["sales", "accountant", "viewer"] as const) {
+    assert.equal(hasPermissionForRole(role, SERVICE_TASK_PERMISSIONS.write), false);
+  }
 });
 
 const absMutationPermissions = [

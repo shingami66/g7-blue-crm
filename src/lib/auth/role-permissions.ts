@@ -13,6 +13,10 @@ export const SERVICE_BILLING_SUMMARY_PERMISSIONS = {
   read: "services:read_billing_summary",
 } as const;
 
+export const SERVICE_TASK_PERMISSIONS = {
+  write: "service_tasks:write",
+} as const;
+
 export const BUSINESS_DOCUMENT_PERMISSIONS = {
   read: "documents:read",
   write: "documents:write",
@@ -116,6 +120,7 @@ export const ROLE_PERMISSIONS = {
     "services:read",
     SERVICE_BILLING_SUMMARY_PERMISSIONS.read,
     "services:write",
+    SERVICE_TASK_PERMISSIONS.write,
     "services:update_status",
     "services:authorize_execution_credit",
     "services:reopen",
@@ -185,6 +190,7 @@ export const ROLE_PERMISSIONS = {
     "quotations:read",
     "services:read",
     SERVICE_BILLING_SUMMARY_PERMISSIONS.read,
+    SERVICE_TASK_PERMISSIONS.write,
     "services:update_status",
     "projects:read",
     "projects:write",
