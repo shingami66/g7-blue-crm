@@ -1,13 +1,13 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — L1-R04 OWNER-ACCEPTED / R05 FOUNDATION APPLIED TO DEV — 7 October 2026
+## CURRENT DELIVERY STATUS — L1-R04 OWNER-ACCEPTED / R05 RUNTIME IMPLEMENTED, OWNER ACCEPTANCE PENDING — 7 October 2026
 
 - **L1-R04 — Event Brief:** `PROVEN CLOSED / OWNER-ACCEPTED` for the bounded first slice. Published chain: R04-B `49384f941ea6305e6d067c9d0bbe3d179d45d92b`, UX1 `58604e125a052be5f867d1485b2954ca46fbd2d3`, and UX2 `c561da67eef204b5a666e954a3c284b844efa1a3`.
 - **Owner acceptance:** On 6 October 2026, Mozfer completed authenticated representative EN/AR/RTL/responsive manual acceptance, including Quoted edit and Approved read-only behavior, the consolidated Event Brief, separate lifecycle, responsive Operational Details, and Arabic mobile Related Quotations without horizontal scrolling.
-- **R05 — Service Event Tasks:** Foundation applied to DEV project `dpddrqjzqohexixgdqiq` under migration identity `20261007063746_service_tasks`; repository identity reconciled from original authored timestamp `20261006092707` with unchanged SQL and verified schema/security. R05 remains **OPEN** pending R05-C3 runtime queries/actions/UI and real business-data acceptance; no acceptance journey was run.
+- **R05 — Service Event Tasks:** The DEV foundation remains applied and verified under migration identity `20261007063746_service_tasks`. The bounded R05 runtime delivers Service-scoped task reads, bounded server-searchable active-assignee choices, atomic task actions, and responsive EN/AR Service-detail UI. Owner business-data and manual presentation acceptance remain pending; R05 remains **OPEN** and no acceptance journey has occurred.
 - **Layer 1 / W11:** R02/R03/R04 remain **PROVEN CLOSED / OWNER-ACCEPTED** for their bounded workflows. Exactly R01 and R05–R08 remain **OPEN**; W11 remains **NO-GO**.
-- **Boundaries:** C2A applied the foundation to DEV; C2B made no database/environment mutation. No DEMO/PROD apply or business-data acceptance occurred. No W11 cutover, rehearsal, or overall Layer 1 proof is claimed.
-- **EXACT NEXT ACTION:** Return control to the Controller for R05-C3: implement the bounded runtime Service Event Task query/action/UI slice against the verified DEV foundation. Do not begin it automatically.
+- **Boundaries:** C2A applied the foundation to DEV; C2B, C3, and C3R made no database, environment, or business-data mutation. No DEMO/PROD apply or acceptance journey occurred. No W11 cutover, rehearsal, or overall Layer 1 proof is claimed.
+- **EXACT NEXT ACTION:** R05-C4 requires separate explicit Owner authorization for the named Service, permitted active assignee IDs, task/audit data creation, and EN/AR/RTL/mobile acceptance. Do not begin C4 automatically.
 
 ## HISTORICAL DELIVERY SNAPSHOT — R04-B IMPLEMENTED / OWNER ACCEPTANCE PENDING — 5 October 2026 (SUPERSEDED CURRENT STATUS)
 

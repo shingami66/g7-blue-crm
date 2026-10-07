@@ -5,6 +5,7 @@ import {
   INVOICE_PERMISSIONS,
   PROCUREMENT_COMMITMENT_PERMISSIONS,
   SERVICE_BILLING_SUMMARY_PERMISSIONS,
+  SERVICE_TASK_PERMISSIONS,
 } from "@/lib/auth/role-permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceByIdResult } from "@/lib/services/queries";
@@ -48,6 +49,8 @@ import { getServiceRecordNavigation, safeRecordReturnTo, appendReturnTo } from "
 import { RecordBackButton } from "@/components/navigation/RecordBackButton";
 import EventBrief from "./EventBrief";
 import { canEditEventBrief as isEventBriefEditable } from "@/lib/services/event-brief";
+import { getServiceTasks } from "@/lib/services/service-task-queries";
+import ServiceTasksCard from "./ServiceTasksCard";
 
 export const dynamic = "force-dynamic";
 
@@ -243,6 +246,7 @@ export default async function ServiceDetailPage({
             <SecondaryLoadingPanel label={dictionary.commitmentSummary.title} />
             <SecondaryLoadingPanel label={dictionary.eventCosting.title} />
             <SecondaryLoadingPanel label={dictionary.billing.title} />
+            <SecondaryLoadingPanel label={dictionary.eventTasks.loading} />
             <SecondaryLoadingPanel label={dictionary.serviceActivity.title} />
           </div>
         }
@@ -291,6 +295,7 @@ async function ServiceDetailPageSecondary({
     canReadCost: boolean;
     canReadCommitments: boolean;
     canReadInvoices: boolean;
+    canWriteServiceTasks: boolean;
     relatedQuotationsResult: Awaited<ReturnType<typeof getQuotationsByServiceIdResult>> | null;
     billingSummary: Awaited<ReturnType<typeof getServiceBillingSummary>> | null;
     activity: Awaited<ReturnType<typeof listServiceActivity>>;
@@ -298,6 +303,7 @@ async function ServiceDetailPageSecondary({
     supplierQuotationCount: number | null;
     commitmentsResult: Awaited<ReturnType<typeof getApprovedCommitmentsByServiceId>> | null;
     eventCostingResult: Awaited<ReturnType<typeof getEventCostingResult>> | null;
+    serviceTasksResult: Awaited<ReturnType<typeof getServiceTasks>>;
   };
   try {
     const [
@@ -306,12 +312,14 @@ async function ServiceDetailPageSecondary({
       canReadCommitments,
       canReadInvoices,
       canReadBillingSummary,
+      canWriteServiceTasks,
     ] = await Promise.all([
       checkPermission("quotations:read"),
       checkPermission("supplier_costing:read"),
       checkPermission(PROCUREMENT_COMMITMENT_PERMISSIONS.read),
       checkPermission(INVOICE_PERMISSIONS.read),
       checkPermission(SERVICE_BILLING_SUMMARY_PERMISSIONS.read),
+      checkPermission(SERVICE_TASK_PERMISSIONS.write).catch(() => false),
     ]);
     const [
       relatedQuotationsSettled,
@@ -321,6 +329,7 @@ async function ServiceDetailPageSecondary({
       supplierQuotationCountSettled,
       commitmentsSettled,
       eventCostingSettled,
+      serviceTasksSettled,
     ] = await Promise.allSettled([
       canReadQuotations ? getQuotationsByServiceIdResult(service.id) : Promise.resolve(null),
       canReadBillingSummary ? getServiceBillingSummary(service.id) : Promise.resolve(null),
@@ -329,6 +338,7 @@ async function ServiceDetailPageSecondary({
       canReadCost ? getSupplierQuotationCountByServiceId(service.id) : Promise.resolve({ count: 0 }),
       canReadCommitments ? getApprovedCommitmentsByServiceId(service.id) : Promise.resolve({ commitments: [] }),
       canReadCost ? getEventCostingResult(service.id) : Promise.resolve(null),
+      getServiceTasks(service.id),
     ]);
     const relatedQuotationsResult = relatedQuotationsSettled.status === "fulfilled"
       ? relatedQuotationsSettled.value
@@ -359,11 +369,15 @@ async function ServiceDetailPageSecondary({
       : canReadCost
         ? { status: "error" as const, error: "event_costing_load_failed" }
         : null;
+    const serviceTasksResult = serviceTasksSettled.status === "fulfilled"
+      ? serviceTasksSettled.value
+      : { status: "error" as const, tasks: [] as [] };
     loaded = {
       canReadQuotations,
       canReadCost,
       canReadCommitments,
       canReadInvoices,
+      canWriteServiceTasks,
       relatedQuotationsResult,
       billingSummary,
       activity,
@@ -371,6 +385,7 @@ async function ServiceDetailPageSecondary({
       supplierQuotationCount,
       commitmentsResult,
       eventCostingResult,
+      serviceTasksResult,
     };
   } catch (error) {
     if (error instanceof UnauthorizedError) redirect("/sign-in");
@@ -387,6 +402,7 @@ async function ServiceDetailPageSecondary({
     canReadCost,
     canReadCommitments,
     canReadInvoices,
+    canWriteServiceTasks,
     relatedQuotationsResult,
     billingSummary,
     activity,
@@ -394,10 +410,20 @@ async function ServiceDetailPageSecondary({
     supplierQuotationCount,
     commitmentsResult,
     eventCostingResult,
+    serviceTasksResult,
   } = loaded;
 
   return (
     <div data-p2-detail-secondary-complete="true" className="contents">
+      <ServiceTasksCard
+        serviceId={service.id}
+        serviceStatus={service.status}
+        tasks={serviceTasksResult.tasks}
+        canWrite={canWriteServiceTasks}
+        loadError={serviceTasksResult.status === "error"}
+        dictionary={dictionary.eventTasks}
+        locale={locale}
+      />
       <RelatedQuotationsCard
         quotations={relatedQuotationsResult?.quotations ?? null}
         loadError={!!relatedQuotationsResult?.error}

@@ -1,6 +1,7 @@
 import type { Locale } from "../locales";
 import type { ServiceStatus } from "../../../types/service";
 import type { QuotationStatus } from "../../quotations/types";
+import type { ServiceTaskErrorCode, ServiceTaskStatus } from "../../services/service-task-contract";
 import { resolveDictionaryValue } from "../fallback.ts";
 
 export interface ServicesDictionary {
@@ -356,6 +357,49 @@ export interface ServicesDictionary {
     systemActor: string;
     userActor: string;
     unknownActor: string;
+  };
+  eventTasks: {
+    title: string;
+    subtitle: string;
+    loading: string;
+    loadError: string;
+    empty: string;
+    createTask: string;
+    editTask: string;
+    titleLabel: string;
+    descriptionLabel: string;
+    assigneeLabel: string;
+    searchAssignees: string;
+    noMatchingAssignee: string;
+    assigneeSearchLoading: string;
+    dueDateLabel: string;
+    statusLabel: string;
+    unassigned: string;
+    unknownAssignee: string;
+    inactiveAssignee: string;
+    noDueDate: string;
+    readOnly: string;
+    permissionReadOnly: string;
+    serviceClosed: string;
+    activeAssigneeRequired: string;
+    assigneeOptionsUnavailable: string;
+    statuses: Record<ServiceTaskStatus, string>;
+    buttons: {
+      create: string;
+      save: string;
+      edit: string;
+      cancel: string;
+      start: string;
+      complete: string;
+      saving: string;
+    };
+    messages: {
+      created: string;
+      updated: string;
+      transitioned: string;
+      noChanges: string;
+    };
+    errors: Record<ServiceTaskErrorCode, string>;
   };
   serviceStatusTimeline: {
     title: string;
@@ -1824,6 +1868,71 @@ const servicesDictionaryEn: ServicesDictionary = {
     systemActor: "System",
     userActor: "User",
     unknownActor: "Unknown user",
+  },
+  eventTasks: {
+    title: "Event Tasks",
+    subtitle: "Operational tasks recorded for this Service.",
+    loading: "Loading Event Tasks…",
+    loadError: "Event Tasks could not be loaded. Please try again.",
+    empty: "No Event Tasks have been recorded for this Service.",
+    createTask: "Create task",
+    editTask: "Edit task",
+    titleLabel: "Task title",
+    descriptionLabel: "Description",
+    assigneeLabel: "Assignee",
+    searchAssignees: "Search active assignees",
+    noMatchingAssignee: "No active assignees match your search.",
+    assigneeSearchLoading: "Searching active assignees…",
+    dueDateLabel: "Due date",
+    statusLabel: "Status",
+    unassigned: "Unassigned",
+    unknownAssignee: "Name unavailable",
+    inactiveAssignee: "Inactive",
+    noDueDate: "No due date",
+    readOnly: "Tasks are read-only.",
+    permissionReadOnly: "You can view these tasks but do not have permission to change them.",
+    serviceClosed: "Tasks are read-only because this Service is closed.",
+    activeAssigneeRequired: "Assign an active user before starting or completing this task.",
+    assigneeOptionsUnavailable: "Active assignee choices are unavailable. Try again later.",
+    statuses: {
+      open: "Open",
+      in_progress: "In progress",
+      completed: "Completed",
+    },
+    buttons: {
+      create: "Create task",
+      save: "Save changes",
+      edit: "Edit",
+      cancel: "Cancel",
+      start: "Start",
+      complete: "Complete",
+      saving: "Saving…",
+    },
+    messages: {
+      created: "Task created.",
+      updated: "Task updated.",
+      transitioned: "Task status updated.",
+      noChanges: "There are no changes to save.",
+    },
+    errors: {
+      INVALID_INPUT: "Check the task details and try again.",
+      UNAUTHORIZED: "Sign in to change Event Tasks.",
+      FORBIDDEN: "You do not have permission to change Event Tasks.",
+      SERVICE_NOT_FOUND: "This Service could not be found.",
+      SERVICE_CLOSED: "Tasks cannot be changed because this Service is closed.",
+      TITLE_REQUIRED: "Enter a task title.",
+      TITLE_INVALID: "Enter a valid task title.",
+      ASSIGNEE_INVALID: "Choose a valid assignee.",
+      ASSIGNEE_UNAVAILABLE: "Choose an active assignee.",
+      TASK_CHANGES_INVALID: "Choose at least one valid change.",
+      DUE_DATE_INVALID: "Enter a valid due date.",
+      TASK_NOT_FOUND: "This task could not be found.",
+      TASK_READ_ONLY: "Completed tasks are read-only.",
+      INVALID_TRANSITION: "That task status change is not available.",
+      ACTIVE_ASSIGNEE_REQUIRED: "Assign an active user before starting or completing this task.",
+      TASK_CONFLICT: "This task changed. Refresh the page and try again.",
+      GENERIC_FAILURE: "The task could not be saved. Please try again.",
+    },
   },
   serviceStatusTimeline: {
     title: "Status Timeline",
@@ -3657,6 +3766,71 @@ const servicesDictionaryAr: ServicesDictionary = {
     systemActor: "النظام",
     userActor: "مستخدم",
     unknownActor: "مستخدم غير معروف",
+  },
+  eventTasks: {
+    title: "مهام الفعالية",
+    subtitle: "المهام التشغيلية المسجلة لهذه الخدمة.",
+    loading: "جارٍ تحميل مهام الفعالية…",
+    loadError: "تعذر تحميل مهام الفعالية. يرجى المحاولة مرة أخرى.",
+    empty: "لم يتم تسجيل مهام لهذه الخدمة حتى الآن.",
+    createTask: "إنشاء مهمة",
+    editTask: "تعديل المهمة",
+    titleLabel: "عنوان المهمة",
+    descriptionLabel: "الوصف",
+    assigneeLabel: "المسؤول",
+    searchAssignees: "ابحث عن مسؤول نشط",
+    noMatchingAssignee: "لا يوجد مسؤول نشط مطابق لبحثك.",
+    assigneeSearchLoading: "جارٍ البحث عن المسؤولين النشطين…",
+    dueDateLabel: "تاريخ الاستحقاق",
+    statusLabel: "الحالة",
+    unassigned: "غير مسندة",
+    unknownAssignee: "الاسم غير متاح",
+    inactiveAssignee: "غير نشط",
+    noDueDate: "لا يوجد تاريخ استحقاق",
+    readOnly: "المهام للعرض فقط.",
+    permissionReadOnly: "يمكنك عرض هذه المهام، لكن ليست لديك صلاحية لتعديلها.",
+    serviceClosed: "المهام للعرض فقط لأن الخدمة مغلقة.",
+    activeAssigneeRequired: "أسند المهمة إلى مستخدم نشط قبل بدء العمل عليها أو إكمالها.",
+    assigneeOptionsUnavailable: "خيارات المسؤولين النشطين غير متاحة حاليًا. حاول لاحقًا.",
+    statuses: {
+      open: "مفتوحة",
+      in_progress: "قيد التنفيذ",
+      completed: "مكتملة",
+    },
+    buttons: {
+      create: "إنشاء المهمة",
+      save: "حفظ التغييرات",
+      edit: "تعديل",
+      cancel: "إلغاء",
+      start: "بدء",
+      complete: "إكمال",
+      saving: "جارٍ الحفظ…",
+    },
+    messages: {
+      created: "تم إنشاء المهمة.",
+      updated: "تم تحديث المهمة.",
+      transitioned: "تم تحديث حالة المهمة.",
+      noChanges: "لا توجد تغييرات لحفظها.",
+    },
+    errors: {
+      INVALID_INPUT: "راجع تفاصيل المهمة ثم حاول مرة أخرى.",
+      UNAUTHORIZED: "سجّل الدخول لتعديل مهام الفعالية.",
+      FORBIDDEN: "ليست لديك صلاحية لتعديل مهام الفعالية.",
+      SERVICE_NOT_FOUND: "تعذر العثور على هذه الخدمة.",
+      SERVICE_CLOSED: "لا يمكن تعديل المهام لأن الخدمة مغلقة.",
+      TITLE_REQUIRED: "أدخل عنوان المهمة.",
+      TITLE_INVALID: "أدخل عنوانًا صالحًا للمهمة.",
+      ASSIGNEE_INVALID: "اختر مسؤولًا صالحًا.",
+      ASSIGNEE_UNAVAILABLE: "اختر مسؤولًا نشطًا.",
+      TASK_CHANGES_INVALID: "أدخل تغييرًا صالحًا واحدًا على الأقل.",
+      DUE_DATE_INVALID: "أدخل تاريخ استحقاق صالحًا.",
+      TASK_NOT_FOUND: "تعذر العثور على هذه المهمة.",
+      TASK_READ_ONLY: "المهام المكتملة للعرض فقط.",
+      INVALID_TRANSITION: "تغيير حالة المهمة هذا غير متاح.",
+      ACTIVE_ASSIGNEE_REQUIRED: "أسند المهمة إلى مستخدم نشط قبل بدء العمل عليها أو إكمالها.",
+      TASK_CONFLICT: "تم تحديث هذه المهمة. حدّث الصفحة ثم حاول مرة أخرى.",
+      GENERIC_FAILURE: "تعذر حفظ المهمة. يرجى المحاولة مرة أخرى.",
+    },
   },
   serviceStatusTimeline: {
     title: "مسار حالة الخدمة",

@@ -9152,6 +9152,63 @@ export type Database = {
           },
         ]
       }
+      service_tasks: {
+        Row: {
+          assignee_user_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          service_id: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          assignee_user_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          service_id: string
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          assignee_user_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          service_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_tasks_assignee_user_id_fkey"
+            columns: ["assignee_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_tasks_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           cancellation_reason: string | null
@@ -12444,6 +12501,35 @@ export type Database = {
           supplier_id: string
         }[]
       }
+      create_service_task_atomic: {
+        Args: {
+          p_actor_id: string
+          p_assignee_user_id: string
+          p_description: string
+          p_due_date: string
+          p_service_id: string
+          p_title: string
+        }
+        Returns: {
+          assignee_user_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          service_id: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_tasks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_supplier_bill: {
         Args: {
           p_actor_id: string
@@ -14344,6 +14430,33 @@ export type Database = {
           state_version: number
         }[]
       }
+      transition_service_task_status_atomic: {
+        Args: {
+          p_actor_id: string
+          p_service_id: string
+          p_task_id: string
+          p_to_status: string
+        }
+        Returns: {
+          assignee_user_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          service_id: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_tasks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       unmatch_accounting_bank_reconciliation: {
         Args: {
           p_actor_user_id: string
@@ -14474,6 +14587,33 @@ export type Database = {
           subtotal: number
           vat_amount: number
         }[]
+      }
+      update_service_task_fields_atomic: {
+        Args: {
+          p_actor_id: string
+          p_changes: Json
+          p_service_id: string
+          p_task_id: string
+        }
+        Returns: {
+          assignee_user_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          service_id: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_tasks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       update_supplier_bill: {
         Args: {
