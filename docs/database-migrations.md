@@ -73,6 +73,12 @@ Treat this output as generated database truth; validate affected callers rather 
 
 - The additive source SHA-256 is `CC6EA88C3AE0ECEB09EDAEC7E27A602BCDDBF4826EE157F6B8B80D9CD1C9AC76`. No historical migration was rewritten, and no synthetic rows or fixtures were created.
 
+## R05 Service Event Tasks Foundation — 7 October 2026
+
+| Current Repository Filename | DEV Project Migration Identity | Scope & Description |
+|---|---|---|
+| `20261007063746_service_tasks.sql` | `20261007063746` | Service-scoped Event Tasks persistence and server-mediated mutation authority. The exact published SQL was applied to DEV project `dpddrqjzqohexixgdqiq`; the repository identity was reconciled from original authored timestamp `20261006092707`. SQL content remained byte-for-byte unchanged; no migration-history repair occurred; no business data was created. DEV only; no DEMO/PROD mutation. |
+
 ## W4 Procurement & Commitments Migration Ledger — 6 September 2026
 
 The following 14 local migrations represent the W4 Procurement & Commitments schema foundation and architecture remediation delivered in reconstructed local history.

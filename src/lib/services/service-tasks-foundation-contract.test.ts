@@ -4,7 +4,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 const migration = readFileSync(
-  join(process.cwd(), "supabase/migrations/20261006092707_service_tasks.sql"),
+  join(process.cwd(), "supabase/migrations/20261007063746_service_tasks.sql"),
   "utf8",
 );
 

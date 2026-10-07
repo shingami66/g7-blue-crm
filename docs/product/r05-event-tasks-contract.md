@@ -2,7 +2,7 @@
 
 ## Current state
 
-**FOUNDATION AUTHORED / DEV APPLY PENDING.** This document and the repository migration describe the proposed first-class Service Task source. The migration has not been applied to DEV, DEMO, or PROD; runtime Event Task queries and UI are not included. R05 remains open until schema/security reconciliation and the authorized real G7 task journey are complete. W11 remains NO-GO.
+**FOUNDATION APPLIED TO DEV / RUNTIME IMPLEMENTATION PENDING.** The exact published Service Event Tasks SQL was applied to DEV project `dpddrqjzqohexixgdqiq` under native migration identity `20261007063746_service_tasks`. The repository filename was reconciled from original authored timestamp `20261006092707` to that identity; SQL content was byte-for-byte unchanged and migration history was not manually repaired or edited. Schema/security reconciliation passed. No business-data acceptance journey was run, and no DEMO or PROD apply occurred. Runtime Event Task queries, actions, and UI remain pending; R05 remains open. W11 remains NO-GO.
 
 ## Root gap and authority
 
@@ -64,10 +64,10 @@ Task views require `services:read`; task writes require `service_tasks:write`. T
 - **R06:** no milestones, schedules, gates, or milestone progress.
 - **R07:** no issues, incidents, severity, escalation, or resolution workflow.
 - **R08:** no team roster, capacity, availability, shifts, multi-resource assignment, or resource planning. One assignee is only responsible for one task.
-- No Action Center projection, no `project_tasks` reuse/change, and no runtime Event Task queries, actions, forms, or Service-page UI before DEV apply and schema reconciliation.
+- No Action Center projection or `project_tasks` reuse/change is included. The applied foundation does not deliver runtime Event Task queries, actions, forms, or Service-page UI; those remain pending for R05-C3.
 
 ## Database apply and acceptance boundary
 
-Authoring and publishing this migration does not apply it. A separate authorized task must identify the nonproduction target and migration hash, perform the governed DEV apply, and reconcile table shape, constraints, FK behavior, index, RLS, grants, and function execution rights. No DEMO or PROD apply is implied.
+**COMPLETED — DEV foundation apply and schema/security reconciliation:** The exact published SQL in `supabase/migrations/20261007063746_service_tasks.sql` was applied to DEV project `dpddrqjzqohexixgdqiq` as `20261007063746_service_tasks`. Its original authored repository timestamp was `20261006092707`; the repository filename was reconciled to the DEV identity after apply. SQL content is byte-for-byte unchanged, schema/security reconciliation passed, and migration history was not manually repaired or edited. No DEMO or PROD apply occurred.
 
-Real G7 acceptance also requires separate authorization for the named Service, permitted active assignee IDs, and task/audit data creation. The future Owner journey is: create a task, verify it after refresh, progress it, edit/reassign it, complete it, inspect its task-scoped audit history, and confirm unrelated Service lifecycle and commercial/financial records did not change. Verify unauthorized-role rejection, closed-Service behavior, and the implemented language/layout states. No such journey has been run by this foundation-authoring slice.
+**PENDING — runtime and real G7 acceptance:** R05-C3 runtime query/action/UI implementation and a separately authorized business-data acceptance journey remain pending. Acceptance requires authorization for the named Service, permitted active assignee IDs, and task/audit data creation. The future Owner journey is: create a task, verify it after refresh, progress it, edit/reassign it, complete it, inspect its task-scoped audit history, and confirm unrelated Service lifecycle and commercial/financial records did not change. Verify unauthorized-role rejection, closed-Service behavior, and the implemented language/layout states. No such journey has been run.
