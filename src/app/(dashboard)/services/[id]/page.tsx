@@ -51,6 +51,7 @@ import EventBrief from "./EventBrief";
 import { canEditEventBrief as isEventBriefEditable } from "@/lib/services/event-brief";
 import { getServiceTasks } from "@/lib/services/service-task-queries";
 import ServiceTasksCard from "./ServiceTasksCard";
+import ServiceDetailTabs from "./ServiceDetailTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -207,63 +208,102 @@ export default async function ServiceDetailPage({
         </div>
       </div>
 
-      <EventBrief service={service} locale={locale} dictionary={dictionary} />
+      <ServiceDetailTabs
+        labels={dictionary.detail.tabs}
+        isRtl={locale === "ar"}
+        overview={
+          <div className="min-w-0 space-y-6">
+            <EventBrief service={service} locale={locale} dictionary={dictionary} />
 
-      {canUpdateServiceStatus && (
-        <ServiceLifecycleActions
-          serviceId={service.id}
-          lifecycle={lifecycle}
-          canAuthorizeCredit={canAuthorizeCredit}
-          canReopen={canReopen}
-          dictionary={dictionary}
-        />
-      )}
+            {canUpdateServiceStatus && (
+              <ServiceLifecycleActions
+                serviceId={service.id}
+                lifecycle={lifecycle}
+                canAuthorizeCredit={canAuthorizeCredit}
+                canReopen={canReopen}
+                dictionary={dictionary}
+              />
+            )}
 
-      <div className="grid grid-cols-1 gap-6">
-        <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
-          <SectionHeader title={dictionary.detail.sections.operationalDetails} />
-          <dl className="p-6 grid grid-cols-1 gap-5 md:grid-cols-3">
-            <DetailItem label={dictionary.detail.labels.estimatedBudget}>{formatBudget(locale, service, dictionary)}</DetailItem>
-            <DetailItem label={dictionary.detail.labels.createdAt}>
-              <span dir="ltr" className="tabular-nums">
-                <UiDateTimeText locale={locale} value={service.createdAt} />
-              </span>
-            </DetailItem>
-            <DetailItem label={dictionary.detail.labels.updatedAt}>
-              <span dir="ltr" className="tabular-nums">
-                <UiDateTimeText locale={locale} value={service.updatedAt} />
-              </span>
-            </DetailItem>
-          </dl>
-        </section>
-      </div>
+            <div className="grid min-w-0 grid-cols-1 gap-6">
+              <section className="min-w-0 overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
+                <SectionHeader title={dictionary.detail.sections.operationalDetails} />
+                <dl className="grid grid-cols-1 gap-5 p-6 md:grid-cols-3">
+                  <DetailItem label={dictionary.detail.labels.estimatedBudget}>{formatBudget(locale, service, dictionary)}</DetailItem>
+                  <DetailItem label={dictionary.detail.labels.createdAt}>
+                    <span dir="ltr" className="tabular-nums">
+                      <UiDateTimeText locale={locale} value={service.createdAt} />
+                    </span>
+                  </DetailItem>
+                  <DetailItem label={dictionary.detail.labels.updatedAt}>
+                    <span dir="ltr" className="tabular-nums">
+                      <UiDateTimeText locale={locale} value={service.updatedAt} />
+                    </span>
+                  </DetailItem>
+                </dl>
+              </section>
+            </div>
 
-      <Suspense
-        fallback={
-          <div className="space-y-6">
-            <SecondaryLoadingPanel label={dictionary.relatedQuotations.title} />
-            <SecondaryLoadingPanel label={dictionary.procurementSummary.title} />
-            <SecondaryLoadingPanel label={dictionary.commitmentSummary.title} />
-            <SecondaryLoadingPanel label={dictionary.eventCosting.title} />
-            <SecondaryLoadingPanel label={dictionary.billing.title} />
-            <SecondaryLoadingPanel label={dictionary.eventTasks.loading} />
-            <SecondaryLoadingPanel label={dictionary.serviceActivity.title} />
+            <Suspense
+              fallback={
+                <div className="space-y-6">
+                  <SecondaryLoadingPanel label={dictionary.relatedQuotations.title} />
+                  <SecondaryLoadingPanel label={dictionary.procurementSummary.title} />
+                  <SecondaryLoadingPanel label={dictionary.commitmentSummary.title} />
+                  <SecondaryLoadingPanel label={dictionary.eventCosting.title} />
+                  <SecondaryLoadingPanel label={dictionary.billing.title} />
+                  <SecondaryLoadingPanel label={dictionary.serviceActivity.title} />
+                </div>
+              }
+            >
+              <ServiceDetailPageSecondary
+                service={service}
+                locale={locale}
+                currentServiceUrl={currentServiceUrl}
+                canCreateQuotation={canCreateQuotation}
+                quotationDisabledReason={quotationDisabledReason}
+                canUpdateServiceStatus={canUpdateServiceStatus}
+                lifecycle={lifecycle}
+                dictionary={dictionary}
+                sharedStates={sharedStates}
+              />
+            </Suspense>
           </div>
         }
-      >
-        <ServiceDetailPageSecondary
-          service={service}
-          locale={locale}
-          currentServiceUrl={currentServiceUrl}
-          canCreateQuotation={canCreateQuotation}
-          quotationDisabledReason={quotationDisabledReason}
-          canUpdateServiceStatus={canUpdateServiceStatus}
-          lifecycle={lifecycle}
-          dictionary={dictionary}
-          sharedStates={sharedStates}
-        />
-      </Suspense>
+        eventTasks={
+          <Suspense fallback={<SecondaryLoadingPanel label={dictionary.eventTasks.loading} />}>
+            <ServiceDetailPageTasks service={service} locale={locale} dictionary={dictionary} />
+          </Suspense>
+        }
+      />
     </div>
+  );
+}
+
+async function ServiceDetailPageTasks({
+  service,
+  locale,
+  dictionary,
+}: {
+  service: Service;
+  locale: Locale;
+  dictionary: ServicesDictionary;
+}) {
+  const [canWriteServiceTasks, serviceTasksResult] = await Promise.all([
+    checkPermission(SERVICE_TASK_PERMISSIONS.write).catch(() => false),
+    getServiceTasks(service.id).catch(() => ({ status: "error" as const, tasks: [] as [] })),
+  ]);
+
+  return (
+    <ServiceTasksCard
+      serviceId={service.id}
+      serviceStatus={service.status}
+      tasks={serviceTasksResult.tasks}
+      canWrite={canWriteServiceTasks}
+      loadError={serviceTasksResult.status === "error"}
+      dictionary={dictionary.eventTasks}
+      locale={locale}
+    />
   );
 }
 
@@ -295,7 +335,6 @@ async function ServiceDetailPageSecondary({
     canReadCost: boolean;
     canReadCommitments: boolean;
     canReadInvoices: boolean;
-    canWriteServiceTasks: boolean;
     relatedQuotationsResult: Awaited<ReturnType<typeof getQuotationsByServiceIdResult>> | null;
     billingSummary: Awaited<ReturnType<typeof getServiceBillingSummary>> | null;
     activity: Awaited<ReturnType<typeof listServiceActivity>>;
@@ -303,7 +342,6 @@ async function ServiceDetailPageSecondary({
     supplierQuotationCount: number | null;
     commitmentsResult: Awaited<ReturnType<typeof getApprovedCommitmentsByServiceId>> | null;
     eventCostingResult: Awaited<ReturnType<typeof getEventCostingResult>> | null;
-    serviceTasksResult: Awaited<ReturnType<typeof getServiceTasks>>;
   };
   try {
     const [
@@ -312,14 +350,12 @@ async function ServiceDetailPageSecondary({
       canReadCommitments,
       canReadInvoices,
       canReadBillingSummary,
-      canWriteServiceTasks,
     ] = await Promise.all([
       checkPermission("quotations:read"),
       checkPermission("supplier_costing:read"),
       checkPermission(PROCUREMENT_COMMITMENT_PERMISSIONS.read),
       checkPermission(INVOICE_PERMISSIONS.read),
       checkPermission(SERVICE_BILLING_SUMMARY_PERMISSIONS.read),
-      checkPermission(SERVICE_TASK_PERMISSIONS.write).catch(() => false),
     ]);
     const [
       relatedQuotationsSettled,
@@ -329,7 +365,6 @@ async function ServiceDetailPageSecondary({
       supplierQuotationCountSettled,
       commitmentsSettled,
       eventCostingSettled,
-      serviceTasksSettled,
     ] = await Promise.allSettled([
       canReadQuotations ? getQuotationsByServiceIdResult(service.id) : Promise.resolve(null),
       canReadBillingSummary ? getServiceBillingSummary(service.id) : Promise.resolve(null),
@@ -338,7 +373,6 @@ async function ServiceDetailPageSecondary({
       canReadCost ? getSupplierQuotationCountByServiceId(service.id) : Promise.resolve({ count: 0 }),
       canReadCommitments ? getApprovedCommitmentsByServiceId(service.id) : Promise.resolve({ commitments: [] }),
       canReadCost ? getEventCostingResult(service.id) : Promise.resolve(null),
-      getServiceTasks(service.id),
     ]);
     const relatedQuotationsResult = relatedQuotationsSettled.status === "fulfilled"
       ? relatedQuotationsSettled.value
@@ -369,15 +403,11 @@ async function ServiceDetailPageSecondary({
       : canReadCost
         ? { status: "error" as const, error: "event_costing_load_failed" }
         : null;
-    const serviceTasksResult = serviceTasksSettled.status === "fulfilled"
-      ? serviceTasksSettled.value
-      : { status: "error" as const, tasks: [] as [] };
     loaded = {
       canReadQuotations,
       canReadCost,
       canReadCommitments,
       canReadInvoices,
-      canWriteServiceTasks,
       relatedQuotationsResult,
       billingSummary,
       activity,
@@ -385,7 +415,6 @@ async function ServiceDetailPageSecondary({
       supplierQuotationCount,
       commitmentsResult,
       eventCostingResult,
-      serviceTasksResult,
     };
   } catch (error) {
     if (error instanceof UnauthorizedError) redirect("/sign-in");
@@ -402,7 +431,6 @@ async function ServiceDetailPageSecondary({
     canReadCost,
     canReadCommitments,
     canReadInvoices,
-    canWriteServiceTasks,
     relatedQuotationsResult,
     billingSummary,
     activity,
@@ -410,20 +438,10 @@ async function ServiceDetailPageSecondary({
     supplierQuotationCount,
     commitmentsResult,
     eventCostingResult,
-    serviceTasksResult,
   } = loaded;
 
   return (
     <div data-p2-detail-secondary-complete="true" className="contents">
-      <ServiceTasksCard
-        serviceId={service.id}
-        serviceStatus={service.status}
-        tasks={serviceTasksResult.tasks}
-        canWrite={canWriteServiceTasks}
-        loadError={serviceTasksResult.status === "error"}
-        dictionary={dictionary.eventTasks}
-        locale={locale}
-      />
       <RelatedQuotationsCard
         quotations={relatedQuotationsResult?.quotations ?? null}
         loadError={!!relatedQuotationsResult?.error}

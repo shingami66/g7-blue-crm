@@ -1,13 +1,13 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT DELIVERY STATUS — L1-R04 OWNER-ACCEPTED / R05 RUNTIME IMPLEMENTED, OWNER ACCEPTANCE PENDING — 7 October 2026
+## CURRENT DELIVERY STATUS — L1-R04 OWNER-ACCEPTED / R05 UX REFINED, OWNER FINAL ACCEPTANCE PENDING — 7 October 2026
 
 - **L1-R04 — Event Brief:** `PROVEN CLOSED / OWNER-ACCEPTED` for the bounded first slice. Published chain: R04-B `49384f941ea6305e6d067c9d0bbe3d179d45d92b`, UX1 `58604e125a052be5f867d1485b2954ca46fbd2d3`, and UX2 `c561da67eef204b5a666e954a3c284b844efa1a3`.
 - **Owner acceptance:** On 6 October 2026, Mozfer completed authenticated representative EN/AR/RTL/responsive manual acceptance, including Quoted edit and Approved read-only behavior, the consolidated Event Brief, separate lifecycle, responsive Operational Details, and Arabic mobile Related Quotations without horizontal scrolling.
-- **R05 — Service Event Tasks:** The DEV foundation remains applied and verified under migration identity `20261007063746_service_tasks`. The bounded R05 runtime delivers Service-scoped task reads, bounded server-searchable active-assignee choices, atomic task actions, and responsive EN/AR Service-detail UI. Owner business-data and manual presentation acceptance remain pending; R05 remains **OPEN** and no acceptance journey has occurred.
+- **R05 — Service Event Tasks:** The DEV foundation remains applied and verified under migration identity `20261007063746_service_tasks`. The R05 runtime delivers Service-scoped task reads, bounded server-searchable active-assignee choices, and atomic task actions. Real DEV acceptance on `SVC-2026-0008` verified task creation, refresh, assignment/edit, start, completion, and task-scoped audit; its task remains completed and the Service remains Quoted. C5 refines the Owner-rejected task placement/density with local Overview/Event Tasks tabs, a create dialog, and compact cards. R05 remains **OPEN** pending Mozfer's final visual acceptance after publication.
 - **Layer 1 / W11:** R02/R03/R04 remain **PROVEN CLOSED / OWNER-ACCEPTED** for their bounded workflows. Exactly R01 and R05–R08 remain **OPEN**; W11 remains **NO-GO**.
-- **Boundaries:** C2A applied the foundation to DEV; C2B, C3, and C3R made no database, environment, or business-data mutation. No DEMO/PROD apply or acceptance journey occurred. No W11 cutover, rehearsal, or overall Layer 1 proof is claimed.
-- **EXACT NEXT ACTION:** R05-C4 requires separate explicit Owner authorization for the named Service, permitted active assignee IDs, task/audit data creation, and EN/AR/RTL/mobile acceptance. Do not begin C4 automatically.
+- **Boundaries:** C2A applied the foundation to DEV; C5 changes repository UX/docs only and makes no database or business-data mutation. The C4C mobile viewport check was held because available controls could not produce a narrow viewport; viewer live-negative and closed-Service live checks remain environmental acceptance gaps. No DEMO/PROD apply occurred. W11 remains **NO-GO**; no cutover, rehearsal, or overall Layer 1 proof is claimed.
+- **EXACT NEXT ACTION:** After C5 publication, R05-C6 is Mozfer's final EN/AR/RTL/mobile visual acceptance using the existing completed DEV task; no new business-data mutation is needed. Do not start C6 automatically.
 
 ## HISTORICAL DELIVERY SNAPSHOT — R04-B IMPLEMENTED / OWNER ACCEPTANCE PENDING — 5 October 2026 (SUPERSEDED CURRENT STATUS)
 

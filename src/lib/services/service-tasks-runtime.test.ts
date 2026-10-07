@@ -32,6 +32,7 @@ type Scenario = {
 const REPO_ROOT = join(import.meta.dirname, "../../..");
 const CARD_PATH = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/ServiceTasksCard.tsx");
 const DETAIL_PATH = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/page.tsx");
+const TABS_PATH = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/ServiceDetailTabs.tsx");
 const GENERATED_TYPES_PATH = join(REPO_ROOT, "src/lib/supabase/database.types.ts");
 
 let activeScenario: Scenario;
@@ -462,9 +463,78 @@ test("R05 Event Tasks UI is read-only for closed Services, unauthorized writers,
   assert.match(page, /dictionary\.eventTasks\.loading/);
 });
 
+test("R05 C5 separates the Service overview and Event Tasks into local accessible tabs", () => {
+  const page = readFileSync(DETAIL_PATH, "utf8");
+  const tabs = readFileSync(TABS_PATH, "utf8");
+  const secondaryOverview = page.slice(page.indexOf("async function ServiceDetailPageSecondary("));
+
+  assert.match(page, /overview=\{/);
+  assert.match(page, /eventTasks=\{/);
+  assert.match(page, /<ServiceDetailPageTasks service=\{service\}/);
+  assert.match(page, /getServiceTasks\(service\.id\)\.catch/);
+  assert.doesNotMatch(secondaryOverview, /ServiceTasksCard/);
+  assert.doesNotMatch(page, /href=["']\/tasks/);
+
+  for (const workflow of [
+    "<EventBrief",
+    "<ServiceLifecycleActions",
+    "<SectionHeader title={dictionary.detail.sections.operationalDetails}",
+    "<RelatedQuotationsCard",
+    "<ProcurementSummaryCard",
+    "<CommitmentSummaryCard",
+    "<EventCostingSummaryCard",
+    "<ServiceBillingSummaryCard",
+    "<ServiceActivityHistory",
+    "<ServiceCancellationActions",
+  ]) {
+    assert.ok(page.includes(workflow), `Service Overview must retain ${workflow}`);
+  }
+
+  assert.match(tabs, /useState<ServiceDetailTab>\("overview"\)/);
+  assert.match(tabs, /role="tablist"/);
+  assert.match(tabs, /role="tab"/);
+  assert.match(tabs, /aria-selected=\{selected\}/);
+  assert.match(tabs, /aria-controls=\{panelIds\[tab\]\}/);
+  assert.match(tabs, /role="tabpanel"/);
+  assert.match(tabs, /event\.key === \(isRtl \? "ArrowLeft" : "ArrowRight"\)/);
+  assert.match(tabs, /flex-wrap/);
+  assert.match(tabs, /min-w-0 max-w-full/);
+});
+
+test("R05 C5 keeps creation closed until requested and lets users dismiss without mutation", () => {
+  const card = readFileSync(CARD_PATH, "utf8");
+  const closeHandler = card.match(/function closeCreateDialog\(\) \{([\s\S]*?)\n  \}/)?.[1] ?? "";
+
+  assert.match(card, /const \[createDialogOpen, setCreateDialogOpen\] = useState\(false\)/);
+  assert.match(card, /if \(createDialogOpen && !dialog\.open\) dialog\.showModal\(\)/);
+  assert.match(card, /aria-haspopup="dialog"/);
+  assert.match(card, /onClick=\{\(\) => \{[\s\S]*?setCreateDialogOpen\(true\)/);
+  assert.match(card, /<dialog[\s\S]*?aria-labelledby=\{createDialogTitleId\}/);
+  assert.match(card, /<h3 id=\{createDialogTitleId\}/);
+  assert.match(card, /max-h-\[calc\(100dvh-2rem\)\][\s\S]*?overflow-y-auto/);
+  assert.match(card, /onCancel=\{\(event\) => \{[\s\S]*?event\.preventDefault\(\)/);
+  assert.ok(closeHandler.length > 0, "Create dialog has an explicit close handler");
+  assert.doesNotMatch(closeHandler, /createServiceTask|updateServiceTaskFields|transitionServiceTaskStatus/);
+  assert.match(card, /if \(result\.success\) \{[\s\S]*?setCreateDialogOpen\(false\)/);
+  assert.match(card, /createServiceTask\(/);
+  assert.match(card, /updateServiceTaskFields\(/);
+  assert.match(card, /transitionServiceTaskStatus\(/);
+  assert.match(card, /<bdi dir="auto">\{task\.title\}<\/bdi>/);
+  assert.match(card, /dictionary\.summary\.total/);
+  assert.match(card, /dictionary\.summary\.completed/);
+});
+
 test("R05 EN/AR labels, inactive assignment display, generated types, and scope firewall are present", () => {
   const english = getServicesDictionary("en").eventTasks;
   const arabic = getServicesDictionary("ar").eventTasks;
+  const englishDetail = getServicesDictionary("en").detail;
+  const arabicDetail = getServicesDictionary("ar").detail;
+  assert.equal(englishDetail.tabs.overview, "Overview");
+  assert.equal(englishDetail.tabs.eventTasks, "Event Tasks");
+  assert.equal(arabicDetail.tabs.overview, "نظرة عامة");
+  assert.equal(arabicDetail.tabs.eventTasks, "مهام الفعالية");
+  assert.equal(english.summary.total, "Total tasks");
+  assert.equal(arabic.summary.total, "إجمالي المهام");
   assert.equal(english.statuses.open, "Open");
   assert.equal(english.statuses.in_progress, "In progress");
   assert.equal(english.statuses.completed, "Completed");

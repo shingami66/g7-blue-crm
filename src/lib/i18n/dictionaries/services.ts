@@ -119,6 +119,11 @@ export interface ServicesDictionary {
     backToServices: string;
     createQuotation: string;
     edit: string;
+    tabs: {
+      navigationLabel: string;
+      overview: string;
+      eventTasks: string;
+    };
     quotationDisabledReasonStarted: string;
     sections: {
       eventBrief: string;
@@ -361,6 +366,10 @@ export interface ServicesDictionary {
   eventTasks: {
     title: string;
     subtitle: string;
+    summary: {
+      total: string;
+      completed: string;
+    };
     loading: string;
     loadError: string;
     empty: string;
@@ -1383,6 +1392,11 @@ const servicesDictionaryEn: ServicesDictionary = {
     backToServices: "Back to services",
     createQuotation: "Create Quotation",
     edit: "Edit",
+    tabs: {
+      navigationLabel: "Service sections",
+      overview: "Overview",
+      eventTasks: "Event Tasks",
+    },
     quotationDisabledReasonStarted: "Cannot create a quotation because the service has already started.",
     sections: {
       eventBrief: "Event Brief",
@@ -1872,6 +1886,10 @@ const servicesDictionaryEn: ServicesDictionary = {
   eventTasks: {
     title: "Event Tasks",
     subtitle: "Operational tasks recorded for this Service.",
+    summary: {
+      total: "Total tasks",
+      completed: "Completed tasks",
+    },
     loading: "Loading Event Tasks…",
     loadError: "Event Tasks could not be loaded. Please try again.",
     empty: "No Event Tasks have been recorded for this Service.",
@@ -3285,6 +3303,11 @@ const servicesDictionaryAr: ServicesDictionary = {
     backToServices: "العودة إلى الخدمات",
     createQuotation: "إنشاء عرض سعر",
     edit: "تعديل",
+    tabs: {
+      navigationLabel: "أقسام الخدمة",
+      overview: "نظرة عامة",
+      eventTasks: "مهام الفعالية",
+    },
     quotationDisabledReasonStarted: "لا يمكن إنشاء عرض سعر لأن الخدمة بدأت بالفعل.",
     sections: {
       eventBrief: "موجز الفعالية",
@@ -3770,6 +3793,10 @@ const servicesDictionaryAr: ServicesDictionary = {
   eventTasks: {
     title: "مهام الفعالية",
     subtitle: "المهام التشغيلية المسجلة لهذه الخدمة.",
+    summary: {
+      total: "إجمالي المهام",
+      completed: "المهام المكتملة",
+    },
     loading: "جارٍ تحميل مهام الفعالية…",
     loadError: "تعذر تحميل مهام الفعالية. يرجى المحاولة مرة أخرى.",
     empty: "لم يتم تسجيل مهام لهذه الخدمة حتى الآن.",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, useTransition, type FormEvent } from "react";
 import {
   createServiceTask,
   searchServiceTaskAssignees,
@@ -195,12 +195,34 @@ export default function ServiceTasksCard({
 }: ServiceTasksCardProps) {
   const [pending, startTransition] = useTransition();
   const [createForm, setCreateForm] = useState<TaskFormValues>(EMPTY_FORM);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<TaskFormValues>(EMPTY_FORM);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const createDialogRef = useRef<HTMLDialogElement>(null);
+  const createDialogTitleId = useId();
 
   const serviceClosed = isClosedServiceStatus(serviceStatus);
   const canMutate = canWrite && !serviceClosed && !loadError;
+
+  useEffect(() => {
+    const dialog = createDialogRef.current;
+    if (!dialog) return;
+
+    if (createDialogOpen && !dialog.open) dialog.showModal();
+    if (!createDialogOpen && dialog.open) dialog.close();
+  }, [createDialogOpen]);
+
+  function closeCreateDialog() {
+    if (pending) return;
+    setCreateDialogOpen(false);
+    setCreateForm(EMPTY_FORM);
+  }
+
+  function handleCreateDialogClose() {
+    setCreateDialogOpen(false);
+    setCreateForm(EMPTY_FORM);
+  }
 
   function showResult(
     result: { success: true } | { success: false; code: ServiceTaskErrorCode },
@@ -225,7 +247,10 @@ export default function ServiceTasksCard({
         dueDate: createForm.dueDate || null,
       });
       showResult(result, dictionary.messages.created);
-      if (result.success) setCreateForm(EMPTY_FORM);
+      if (result.success) {
+        setCreateForm(EMPTY_FORM);
+        setCreateDialogOpen(false);
+      }
     });
   }
 
@@ -287,11 +312,33 @@ export default function ServiceTasksCard({
 
   return (
     <section className="min-w-0 max-w-full overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
-      <div className="border-b border-surface-variant bg-surface-bright px-5 py-4 sm:px-6">
-        <h2 className="font-semibold text-primary">{dictionary.title}</h2>
-        <p className="mt-1 break-words text-sm text-on-surface-variant">{dictionary.subtitle}</p>
+      <div className="flex min-w-0 flex-col gap-3 border-b border-surface-variant bg-surface-bright px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5">
+        <div className="min-w-0">
+          <h2 className="font-semibold text-primary">{dictionary.title}</h2>
+          <p className="mt-1 break-words text-sm text-on-surface-variant">{dictionary.subtitle}</p>
+          {!loadError && (
+            <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-on-surface-variant">
+              <span>{dictionary.summary.total}: <bdi>{tasks.length}</bdi></span>
+              <span>{dictionary.summary.completed}: <bdi>{tasks.filter((task) => task.status === "completed").length}</bdi></span>
+            </div>
+          )}
+        </div>
+        {canMutate && (
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            disabled={pending}
+            onClick={() => {
+              setFeedback(null);
+              setCreateDialogOpen(true);
+            }}
+            className="w-full shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          >
+            + {dictionary.createTask}
+          </button>
+        )}
       </div>
-      <div className="min-w-0 space-y-4 p-4 sm:p-6">
+      <div className="min-w-0 space-y-3 p-3 sm:p-4">
         {serviceClosed && (
           <p className="rounded-lg bg-surface-container-low px-3 py-2 text-sm text-on-surface-variant">
             {dictionary.serviceClosed}
@@ -328,59 +375,93 @@ export default function ServiceTasksCard({
             )}
 
             {canMutate && (
-              <form onSubmit={submitCreate} className="min-w-0 space-y-3 rounded-lg border border-outline-variant p-4">
-                <h3 className="font-medium text-on-surface">{dictionary.createTask}</h3>
-                <label className="block min-w-0 space-y-1 text-sm">
-                  <span>{dictionary.titleLabel}</span>
-                  <input
-                    required
-                    value={createForm.title}
-                    onChange={(event) => updateCreateForm("title", event.target.value)}
-                    className="min-w-0 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2"
-                  />
-                </label>
-                <label className="block min-w-0 space-y-1 text-sm">
-                  <span>{dictionary.descriptionLabel}</span>
-                  <textarea
-                    value={createForm.description}
-                    onChange={(event) => updateCreateForm("description", event.target.value)}
-                    rows={2}
-                    className="min-w-0 w-full resize-y rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2"
-                  />
-                </label>
-                <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="block min-w-0 space-y-1 text-sm">
-                    <span>{dictionary.assigneeLabel}</span>
-                    <AssigneeSelect
-                      value={createForm.assigneeUserId}
-                      dictionary={dictionary}
+              <dialog
+                ref={createDialogRef}
+                aria-labelledby={createDialogTitleId}
+                onClose={handleCreateDialogClose}
+                onCancel={(event) => {
+                  if (pending) event.preventDefault();
+                }}
+                className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-xl border border-outline-variant bg-surface-container-lowest p-0 text-on-surface shadow-xl backdrop:bg-black/50"
+              >
+                <div className="min-w-0 space-y-4 p-4 sm:p-6">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <h3 id={createDialogTitleId} className="min-w-0 break-words font-semibold text-on-surface">
+                      {dictionary.createTask}
+                    </h3>
+                    <button
+                      type="button"
                       disabled={pending}
-                      onChange={(value) => updateCreateForm("assigneeUserId", value)}
-                    />
+                      onClick={closeCreateDialog}
+                      className="shrink-0 rounded-lg border border-outline-variant px-3 py-2 text-sm font-semibold text-on-surface disabled:opacity-60"
+                    >
+                      {dictionary.buttons.cancel}
+                    </button>
                   </div>
-                  <label className="block min-w-0 space-y-1 text-sm">
-                    <span>{dictionary.dueDateLabel}</span>
-                    <input
-                      type="date"
-                      dir="ltr"
-                      value={createForm.dueDate}
-                      onChange={(event) => updateCreateForm("dueDate", event.target.value)}
-                      className="min-w-0 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2"
-                    />
-                  </label>
+                  {feedback && (
+                    <p
+                      role={feedback.kind === "error" ? "alert" : "status"}
+                      className={feedback.kind === "error"
+                        ? "rounded-lg border border-error/30 bg-error-container px-4 py-3 text-sm text-on-error-container"
+                        : "rounded-lg bg-surface-container-low px-4 py-3 text-sm text-on-surface"}
+                    >
+                      {feedback.message}
+                    </p>
+                  )}
+                  <form onSubmit={submitCreate} className="min-w-0 space-y-3">
+                    <label className="block min-w-0 space-y-1 text-sm">
+                      <span>{dictionary.titleLabel}</span>
+                      <input
+                        required
+                        value={createForm.title}
+                        onChange={(event) => updateCreateForm("title", event.target.value)}
+                        className="min-w-0 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2"
+                      />
+                    </label>
+                    <label className="block min-w-0 space-y-1 text-sm">
+                      <span>{dictionary.descriptionLabel}</span>
+                      <textarea
+                        value={createForm.description}
+                        onChange={(event) => updateCreateForm("description", event.target.value)}
+                        rows={2}
+                        className="min-w-0 w-full resize-y rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2"
+                      />
+                    </label>
+                    <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="block min-w-0 space-y-1 text-sm">
+                        <span>{dictionary.assigneeLabel}</span>
+                        <AssigneeSelect
+                          value={createForm.assigneeUserId}
+                          dictionary={dictionary}
+                          disabled={pending}
+                          onChange={(value) => updateCreateForm("assigneeUserId", value)}
+                        />
+                      </div>
+                      <label className="block min-w-0 space-y-1 text-sm">
+                        <span>{dictionary.dueDateLabel}</span>
+                        <input
+                          type="date"
+                          dir="ltr"
+                          value={createForm.dueDate}
+                          onChange={(event) => updateCreateForm("dueDate", event.target.value)}
+                          className="min-w-0 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2"
+                        />
+                      </label>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={pending || !createForm.title.trim()}
+                      className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                    >
+                      {pending ? dictionary.buttons.saving : dictionary.buttons.create}
+                    </button>
+                  </form>
                 </div>
-                <button
-                  type="submit"
-                  disabled={pending || !createForm.title.trim()}
-                  className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                >
-                  {pending ? dictionary.buttons.saving : dictionary.buttons.create}
-                </button>
-              </form>
+              </dialog>
             )}
 
             {tasks.length > 0 && (
-              <ul className="grid min-w-0 grid-cols-1 gap-3">
+              <ul className="grid min-w-0 grid-cols-1 gap-2">
                 {tasks.map((task) => {
                   const isEditing =
                     canMutate && task.status !== "completed" && editingTaskId === task.id;
@@ -391,7 +472,7 @@ export default function ServiceTasksCard({
 
                   return (
                     <li key={task.id} className="min-w-0">
-                      <article className="min-w-0 rounded-lg border border-outline-variant p-4">
+                      <article className="min-w-0 rounded-lg border border-outline-variant p-3 sm:p-4">
                         {isEditing ? (
                           <form onSubmit={(event) => submitEdit(event, task)} className="min-w-0 space-y-3">
                             <h3 className="font-medium text-on-surface">{dictionary.editTask}</h3>
@@ -462,10 +543,10 @@ export default function ServiceTasksCard({
                           <>
                             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                               <div className="min-w-0">
-                                <h3 className="break-words font-semibold text-on-surface">{task.title}</h3>
+                                <h3 className="break-words font-semibold text-on-surface"><bdi dir="auto">{task.title}</bdi></h3>
                                 {task.description && (
                                   <p className="mt-1 break-words text-sm text-on-surface-variant">
-                                    {task.description}
+                                    <bdi dir="auto">{task.description}</bdi>
                                   </p>
                                 )}
                               </div>
@@ -477,7 +558,7 @@ export default function ServiceTasksCard({
                               <div className="min-w-0">
                                 <dt className="text-xs text-on-surface-variant">{dictionary.assigneeLabel}</dt>
                                 <dd className="mt-1 min-w-0 break-words text-on-surface">
-                                  {assigneeLabel}
+                                  <bdi dir="auto">{assigneeLabel}</bdi>
                                   {task.assignee && !task.assignee.isActive && (
                                     <span className="ms-2 rounded bg-surface-container-high px-2 py-0.5 text-xs">
                                       {dictionary.inactiveAssignee}
@@ -487,7 +568,7 @@ export default function ServiceTasksCard({
                               </div>
                               <div className="min-w-0">
                                 <dt className="text-xs text-on-surface-variant">{dictionary.dueDateLabel}</dt>
-                                <dd className="mt-1 text-on-surface">
+                                <dd className="mt-1 break-words text-on-surface">
                                   {task.dueDate ? (
                                     <time dir="ltr" dateTime={task.dueDate}>
                                       {formatDueDate(locale, task.dueDate)}
