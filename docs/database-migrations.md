@@ -69,7 +69,7 @@ Treat this output as generated database truth; validate affected callers rather 
 
 | Local Migration Filename | DEV Project Migration Identity | Scope & Description |
 |---|---|---|
-| `20261003084600_db_001_procurement_package_rpc_execute_acl_repair.sql` | `20261003085231` | Revokes `EXECUTE` from `PUBLIC`, `anon`, and `authenticated` for `upsert_procurement_package`, `select_procurement_package_supplier`, and `clear_procurement_package_supplier`; retains `service_role` execution. `set_procurement_package_requirements` remains service-role-only. Live catalog verification confirmed the application-role ACLs and unchanged function definitions. |
+| `20261003085231_db_001_procurement_package_rpc_execute_acl_repair.sql` | `20261003085231` | Revokes `EXECUTE` from `PUBLIC`, `anon`, and `authenticated` for `upsert_procurement_package`, `select_procurement_package_supplier`, and `clear_procurement_package_supplier`; retains `service_role` execution. `set_procurement_package_requirements` remains service-role-only. Live catalog verification confirmed the application-role ACLs and unchanged function definitions. The repository filename was later reconciled from the original local timestamp `20261003084600` to the DEV-recorded migration identity `20261003085231`; migration SQL content was unchanged and no DEV migration-history mutation was performed. |
 
 - The additive source SHA-256 is `CC6EA88C3AE0ECEB09EDAEC7E27A602BCDDBF4826EE157F6B8B80D9CD1C9AC76`. No historical migration was rewritten, and no synthetic rows or fixtures were created.
 

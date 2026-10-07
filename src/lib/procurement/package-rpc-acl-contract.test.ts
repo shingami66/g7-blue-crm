@@ -9,7 +9,7 @@ const normalize = (source: string) =>
   source.replace(/--.*$/gm, "").replace(/\s+/g, " ").trim().toLowerCase();
 
 const repairPath =
-  "supabase/migrations/20261003084600_db_001_procurement_package_rpc_execute_acl_repair.sql";
+  "supabase/migrations/20261003085231_db_001_procurement_package_rpc_execute_acl_repair.sql";
 const repair = normalize(read(repairPath));
 const requirementsAcl = normalize(
   read("supabase/migrations/20260907085656_w4_architecture_remediation.sql"),
