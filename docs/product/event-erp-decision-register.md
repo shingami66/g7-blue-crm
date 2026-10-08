@@ -12,7 +12,7 @@
 - Strategic expansion authority: [G7 BLUE Event ERP Future Expansion Master](G7_BLUE_Event_ERP_Future_Expansion_Master_Handover.md).
 - A locked decision or roadmap is not implementation, database, deployment, production, publication or Layer 2 authority.
 
-> Current accounting authority addendum: [G7-OD-28](#20-current-owner-decision--g7-od-28--27-september-2026) qualifies the historical professional prerequisites below for G7's proof-lab only. All historical register decisions remain preserved.
+> Current Owner Decision addenda: [G7-OD-28](#20-current-owner-decision--g7-od-28--27-september-2026) qualifies the historical professional prerequisites below for G7's proof-lab only; [G7-OD-29](#21-current-owner-decision--g7-od-29) defers active Service Event Tasks from the first G7 Product MVP while preserving implementation. The later decision changes first-MVP activation only; historical register decisions remain preserved.
 
 ## 2. Decision Classes
 
@@ -199,3 +199,14 @@ W4 final engineering closeout completed; ready for Controller final W4 verdict. 
 - **Protected Product Truth:** W8/W8B managerial authority remains separate from accounting profit/period close; Service/Event is the first analytic dimension. W9 remains CLOSED / COMPLETE / OWNER-ACCEPTED / PUBLISHED. One product/codebase with bounded accounting configuration seams; no Layer 2, tenancy, multi-company architecture, generic policy engine, subscriptions or tax/integration activation.
 - **Current delivery:** [W10 policy](w10-accounting-policy.md) and [technical blueprint](w10-accounting-technical-blueprint.md) are documentation candidates: **W10 POLICY / TECHNICAL BLUEPRINT — ACTIVE; W10 RUNTIME IMPLEMENTATION — NOT STARTED**. The current task grants documentation writes in five exact paths only, no code/database/migration/DEV mutation/deployment/staging/commit/push authority.
 - **Current next action (supersedes historical Section 19 next action):** Controller review of the five-file documentation diff and independent Reviewer findings. Any proposed W10A implementation requires separate exact Owner authorization.
+
+## 21. Current Owner Decision — G7-OD-29
+
+- **Decision:** `G7-OD-29 — Service Event Tasks deferred from the first G7 Product MVP` is **APPROVED**. The first Product MVP does not require Service Event Tasks as an active user-facing capability.
+- **Domain product truth vs first-MVP activation:** OPS-04 remains unchanged. Task, Milestone, Issue, Resource, and related Event Operations concepts remain distinct; Task remains a valid future domain concept. This decision narrows first-MVP activation and does not rewrite the broader Event Operations model.
+- **Native workflow authority:** Native ERP records remain authoritative for their own workflow transactions, including Service lifecycle, quotations, procurement, expense/costing, invoices, payments, and approvals. A separate Service Task must not duplicate that source work or transition.
+- **R05 disposition:** R05 is **DEFERRED FROM FIRST G7 PRODUCT MVP / IMPLEMENTATION PRESERVED**, not failed, proven closed, or Owner-accepted as an active MVP feature. `service_tasks`, migration `20261007063746_service_tasks`, the three RPCs, runtime/actions/queries, tests, historical DEV acceptance task, audit evidence, and implementation history remain preserved. No deletion or database rollback is authorized.
+- **Evidence basis:** C4 proved the primary real-DEV runtime journey and C5's UX refinement was published. Product reassessment found no verified current operating need for repeated non-transactional Service follow-ups that need a distinct owner, due date, and pending/completed state.
+- **C6 and future activation:** C6 is cancelled. User-facing deactivation remains a separately authorized R05-P3 implementation task. Consider future activation only after a fresh Owner scope decision supported by real evidence of repeated non-transactional follow-ups not adequately represented by authoritative native ERP workflows.
+- **W11 and Generic Core:** R01 and R06–R08 remain open first-MVP residual gates; R05 is deferred; W11 remains **NO-GO** pending separate residual-gate reconciliation. G7-OD-29 does not change the Generic Product MVP, Generic Core boundary/invariants, Core Protocol `v0.1.0-alpha.1`, the exactly five Core specifications, exact `built_from_head()`, Authority Schema, or Task Verdict vocabulary.
+- **Audit/history:** Improving workflow-specific audit/history visibility remains a separate product concern; this decision does not claim that work complete.
