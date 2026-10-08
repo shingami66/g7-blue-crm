@@ -1,13 +1,13 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — L1-R04 OWNER-ACCEPTED / R05 DEFERRED FROM FIRST G7 PRODUCT MVP, IMPLEMENTATION PRESERVED — 8 October 2026
+## CURRENT ROADMAP POSITION — L1-R04 OWNER-ACCEPTED / R05-P3 PUBLISHED, FIRST-MVP SURFACE DEACTIVATED — 8 October 2026
 
 - **L1-R04 — Event Brief:** `PROVEN CLOSED / OWNER-ACCEPTED` for the bounded first slice. Published R04-B implementation and UX1/UX2 acceptance repairs: `49384f941ea6305e6d067c9d0bbe3d179d45d92b`, `58604e125a052be5f867d1485b2954ca46fbd2d3`, and `c561da67eef204b5a666e954a3c284b844efa1a3`.
 - On 6 October 2026, Mozfer completed authenticated representative EN/AR/RTL/responsive manual acceptance, including the edit boundary, separate lifecycle, responsive Operational Details, and Arabic mobile Related Quotations without horizontal scrolling.
 - **Remaining first-MVP gates:** R01, R06, R07, and R08 remain **OPEN**. R02/R03/R04 are **PROVEN CLOSED / OWNER-ACCEPTED** for their bounded workflows.
-- **R05 — Service Event Tasks:** G7-OD-29 (APPROVED) defers Event Tasks from first-MVP acceptance after no verified repeated non-transactional task-only operating need was demonstrated. The implementation and historical DEV evidence remain preserved; C6 is cancelled. User-facing deactivation awaits separate R05-P3.
+- **R05 — Service Event Tasks:** G7-OD-29 (APPROVED) defers Event Tasks from first-MVP acceptance after no verified repeated non-transactional task-only operating need was demonstrated. The implementation and historical DEV evidence remain preserved; C6 is cancelled. R05-P3 is **IMPLEMENTED / PUBLISHED**: Service detail no longer exposes Event Tasks or loads task/assignee data; the underlying implementation and historical DEV evidence remain preserved.
 - **W11:** cutover, rehearsal, production, and overall real-use proof remain **NO-GO**. G7-OD-29's effect on residual gate accounting requires separate reconciliation.
-- **EXACT NEXT ACTION:** R05-P3 — deactivate Event Tasks from the first-MVP user experience while preserving the existing database/runtime foundation and historical DEV evidence. Do not start P3 automatically.
+- **EXACT NEXT ACTION:** Return control to the Controller to select the smallest safe next residual gate from R01, R06, R07, and R08. Do not start another gate automatically.
 
 ## HISTORICAL ROADMAP SNAPSHOT — R04-B IMPLEMENTED / OWNER ACCEPTANCE PENDING — 5 October 2026 (SUPERSEDED CURRENT POSITION)
 

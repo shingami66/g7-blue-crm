@@ -5,7 +5,6 @@ import {
   INVOICE_PERMISSIONS,
   PROCUREMENT_COMMITMENT_PERMISSIONS,
   SERVICE_BILLING_SUMMARY_PERMISSIONS,
-  SERVICE_TASK_PERMISSIONS,
 } from "@/lib/auth/role-permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceByIdResult } from "@/lib/services/queries";
@@ -49,9 +48,6 @@ import { getServiceRecordNavigation, safeRecordReturnTo, appendReturnTo } from "
 import { RecordBackButton } from "@/components/navigation/RecordBackButton";
 import EventBrief from "./EventBrief";
 import { canEditEventBrief as isEventBriefEditable } from "@/lib/services/event-brief";
-import { getServiceTasks } from "@/lib/services/service-task-queries";
-import ServiceTasksCard from "./ServiceTasksCard";
-import ServiceDetailTabs from "./ServiceDetailTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -208,102 +204,64 @@ export default async function ServiceDetailPage({
         </div>
       </div>
 
-      <ServiceDetailTabs
-        labels={dictionary.detail.tabs}
-        isRtl={locale === "ar"}
-        overview={
-          <div className="min-w-0 space-y-6">
-            <EventBrief service={service} locale={locale} dictionary={dictionary} />
+      <div className="min-w-0 max-w-full space-y-6">
+        <EventBrief service={service} locale={locale} dictionary={dictionary} />
 
-            {canUpdateServiceStatus && (
-              <ServiceLifecycleActions
-                serviceId={service.id}
-                lifecycle={lifecycle}
-                canAuthorizeCredit={canAuthorizeCredit}
-                canReopen={canReopen}
-                dictionary={dictionary}
-              />
-            )}
+        {canUpdateServiceStatus && (
+          <ServiceLifecycleActions
+            serviceId={service.id}
+            lifecycle={lifecycle}
+            canAuthorizeCredit={canAuthorizeCredit}
+            canReopen={canReopen}
+            dictionary={dictionary}
+          />
+        )}
 
-            <div className="grid min-w-0 grid-cols-1 gap-6">
-              <section className="min-w-0 overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
-                <SectionHeader title={dictionary.detail.sections.operationalDetails} />
-                <dl className="grid grid-cols-1 gap-5 p-6 md:grid-cols-3">
-                  <DetailItem label={dictionary.detail.labels.estimatedBudget}>{formatBudget(locale, service, dictionary)}</DetailItem>
-                  <DetailItem label={dictionary.detail.labels.createdAt}>
-                    <span dir="ltr" className="tabular-nums">
-                      <UiDateTimeText locale={locale} value={service.createdAt} />
-                    </span>
-                  </DetailItem>
-                  <DetailItem label={dictionary.detail.labels.updatedAt}>
-                    <span dir="ltr" className="tabular-nums">
-                      <UiDateTimeText locale={locale} value={service.updatedAt} />
-                    </span>
-                  </DetailItem>
-                </dl>
-              </section>
+        <div className="grid min-w-0 grid-cols-1 gap-6">
+          <section className="min-w-0 overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
+            <SectionHeader title={dictionary.detail.sections.operationalDetails} />
+            <dl className="grid grid-cols-1 gap-5 p-6 md:grid-cols-3">
+              <DetailItem label={dictionary.detail.labels.estimatedBudget}>{formatBudget(locale, service, dictionary)}</DetailItem>
+              <DetailItem label={dictionary.detail.labels.createdAt}>
+                <span dir="ltr" className="tabular-nums">
+                  <UiDateTimeText locale={locale} value={service.createdAt} />
+                </span>
+              </DetailItem>
+              <DetailItem label={dictionary.detail.labels.updatedAt}>
+                <span dir="ltr" className="tabular-nums">
+                  <UiDateTimeText locale={locale} value={service.updatedAt} />
+                </span>
+              </DetailItem>
+            </dl>
+          </section>
+        </div>
+
+        <Suspense
+          fallback={
+            <div className="space-y-6">
+              <SecondaryLoadingPanel label={dictionary.relatedQuotations.title} />
+              <SecondaryLoadingPanel label={dictionary.procurementSummary.title} />
+              <SecondaryLoadingPanel label={dictionary.commitmentSummary.title} />
+              <SecondaryLoadingPanel label={dictionary.eventCosting.title} />
+              <SecondaryLoadingPanel label={dictionary.billing.title} />
+              <SecondaryLoadingPanel label={dictionary.serviceActivity.title} />
             </div>
-
-            <Suspense
-              fallback={
-                <div className="space-y-6">
-                  <SecondaryLoadingPanel label={dictionary.relatedQuotations.title} />
-                  <SecondaryLoadingPanel label={dictionary.procurementSummary.title} />
-                  <SecondaryLoadingPanel label={dictionary.commitmentSummary.title} />
-                  <SecondaryLoadingPanel label={dictionary.eventCosting.title} />
-                  <SecondaryLoadingPanel label={dictionary.billing.title} />
-                  <SecondaryLoadingPanel label={dictionary.serviceActivity.title} />
-                </div>
-              }
-            >
-              <ServiceDetailPageSecondary
-                service={service}
-                locale={locale}
-                currentServiceUrl={currentServiceUrl}
-                canCreateQuotation={canCreateQuotation}
-                quotationDisabledReason={quotationDisabledReason}
-                canUpdateServiceStatus={canUpdateServiceStatus}
-                lifecycle={lifecycle}
-                dictionary={dictionary}
-                sharedStates={sharedStates}
-              />
-            </Suspense>
-          </div>
-        }
-        eventTasks={
-          <Suspense fallback={<SecondaryLoadingPanel label={dictionary.eventTasks.loading} />}>
-            <ServiceDetailPageTasks service={service} locale={locale} dictionary={dictionary} />
-          </Suspense>
-        }
-      />
+          }
+        >
+          <ServiceDetailPageSecondary
+            service={service}
+            locale={locale}
+            currentServiceUrl={currentServiceUrl}
+            canCreateQuotation={canCreateQuotation}
+            quotationDisabledReason={quotationDisabledReason}
+            canUpdateServiceStatus={canUpdateServiceStatus}
+            lifecycle={lifecycle}
+            dictionary={dictionary}
+            sharedStates={sharedStates}
+          />
+        </Suspense>
+      </div>
     </div>
-  );
-}
-
-async function ServiceDetailPageTasks({
-  service,
-  locale,
-  dictionary,
-}: {
-  service: Service;
-  locale: Locale;
-  dictionary: ServicesDictionary;
-}) {
-  const [canWriteServiceTasks, serviceTasksResult] = await Promise.all([
-    checkPermission(SERVICE_TASK_PERMISSIONS.write).catch(() => false),
-    getServiceTasks(service.id).catch(() => ({ status: "error" as const, tasks: [] as [] })),
-  ]);
-
-  return (
-    <ServiceTasksCard
-      serviceId={service.id}
-      serviceStatus={service.status}
-      tasks={serviceTasksResult.tasks}
-      canWrite={canWriteServiceTasks}
-      loadError={serviceTasksResult.status === "error"}
-      dictionary={dictionary.eventTasks}
-      locale={locale}
-    />
   );
 }
 

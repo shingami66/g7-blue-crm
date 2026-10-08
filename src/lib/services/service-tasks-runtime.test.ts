@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { register } from "node:module";
 import test, { mock } from "node:test";
@@ -33,6 +33,12 @@ const REPO_ROOT = join(import.meta.dirname, "../../..");
 const CARD_PATH = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/ServiceTasksCard.tsx");
 const DETAIL_PATH = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/page.tsx");
 const TABS_PATH = join(REPO_ROOT, "src/app/(dashboard)/services/[id]/ServiceDetailTabs.tsx");
+const SERVICE_TASK_ACTIONS_PATH = join(REPO_ROOT, "src/lib/services/service-task-actions.ts");
+const SERVICE_TASK_QUERIES_PATH = join(REPO_ROOT, "src/lib/services/service-task-queries.ts");
+const SERVICE_TASK_CONTRACT_PATH = join(REPO_ROOT, "src/lib/services/service-task-contract.ts");
+const SERVICE_TASK_RUNTIME_TEST_PATH = join(REPO_ROOT, "src/lib/services/service-tasks-runtime.test.ts");
+const SERVICE_TASK_FOUNDATION_TEST_PATH = join(REPO_ROOT, "src/lib/services/service-tasks-foundation-contract.test.ts");
+const SERVICE_TASK_MIGRATION_PATH = join(REPO_ROOT, "supabase/migrations/20261007063746_service_tasks.sql");
 const GENERATED_TYPES_PATH = join(REPO_ROOT, "src/lib/supabase/database.types.ts");
 
 let activeScenario: Scenario;
@@ -441,9 +447,8 @@ test("R05 mutation actions do not report success when the RPC response is missin
   assert.equal(activeScenario.revalidatedPaths.length, 0);
 });
 
-test("R05 Event Tasks UI is read-only for closed Services, unauthorized writers, and completed tasks", () => {
+test("R05 dormant Event Tasks card remains read-only for closed Services, unauthorized writers, and completed tasks", () => {
   const card = readFileSync(CARD_PATH, "utf8");
-  const page = readFileSync(DETAIL_PATH, "utf8");
 
   assert.match(card, /const canMutate = canWrite && !serviceClosed && !loadError/);
   assert.match(card, /searchServiceTaskAssignees\(search\)/);
@@ -455,26 +460,20 @@ test("R05 Event Tasks UI is read-only for closed Services, unauthorized writers,
   assert.match(card, /task\.status !== "completed"/);
   assert.match(card, /dictionary\.statuses\[task\.status\]/);
   assert.match(card, /task\.assignee\.isActive/);
-  assert.match(page, /serviceStatus=\{service\.status\}/);
-  assert.match(page, /canWrite=\{canWriteServiceTasks\}/);
-  assert.match(page, /Promise\.allSettled/);
-  assert.doesNotMatch(page, /getActiveServiceTaskAssignees|searchActiveServiceTaskAssignees|assigneesResult/);
-  assert.doesNotMatch(page, /users:manage/);
-  assert.match(page, /dictionary\.eventTasks\.loading/);
 });
 
-test("R05 C5 separates the Service overview and Event Tasks into local accessible tabs", () => {
+test("R05-P3 removes Event Tasks from Service detail and preserves the dormant foundation", () => {
   const page = readFileSync(DETAIL_PATH, "utf8");
-  const tabs = readFileSync(TABS_PATH, "utf8");
-  const secondaryOverview = page.slice(page.indexOf("async function ServiceDetailPageSecondary("));
 
-  assert.match(page, /overview=\{/);
-  assert.match(page, /eventTasks=\{/);
-  assert.match(page, /<ServiceDetailPageTasks service=\{service\}/);
-  assert.match(page, /getServiceTasks\(service\.id\)\.catch/);
-  assert.doesNotMatch(secondaryOverview, /ServiceTasksCard/);
-  assert.doesNotMatch(page, /href=["']\/tasks/);
+  assert.doesNotMatch(
+    page,
+    /ServiceDetailTabs|ServiceTasksCard|ServiceDetailPageTasks|getServiceTasks|SERVICE_TASK_PERMISSIONS|searchActiveServiceTaskAssignees|searchServiceTaskAssignees|service-task-queries|dictionary\.detail\.tabs|dictionary\.eventTasks|service_tasks|Event Tasks|eventTasks/,
+  );
+  assert.doesNotMatch(page, /\/tasks(?:["'/?#]|$)/);
 
+  assert.match(page, /<div className="min-w-0 max-w-full space-y-6">/);
+  assert.match(page, /<RecordBackButton/);
+  assert.match(page, /<RecordNavigationSlot/);
   for (const workflow of [
     "<EventBrief",
     "<ServiceLifecycleActions",
@@ -487,18 +486,39 @@ test("R05 C5 separates the Service overview and Event Tasks into local accessibl
     "<ServiceActivityHistory",
     "<ServiceCancellationActions",
   ]) {
-    assert.ok(page.includes(workflow), `Service Overview must retain ${workflow}`);
+    assert.ok(page.includes(workflow), "Service detail must retain " + workflow);
   }
 
-  assert.match(tabs, /useState<ServiceDetailTab>\("overview"\)/);
-  assert.match(tabs, /role="tablist"/);
-  assert.match(tabs, /role="tab"/);
-  assert.match(tabs, /aria-selected=\{selected\}/);
-  assert.match(tabs, /aria-controls=\{panelIds\[tab\]\}/);
-  assert.match(tabs, /role="tabpanel"/);
-  assert.match(tabs, /event\.key === \(isRtl \? "ArrowLeft" : "ArrowRight"\)/);
-  assert.match(tabs, /flex-wrap/);
-  assert.match(tabs, /min-w-0 max-w-full/);
+  const overviewIndex = page.indexOf("<EventBrief");
+  const secondaryComponentIndex = page.indexOf("async function ServiceDetailPageSecondary(");
+  assert.ok(overviewIndex >= 0 && overviewIndex < secondaryComponentIndex);
+
+  for (const filePath of [
+    CARD_PATH,
+    TABS_PATH,
+    SERVICE_TASK_ACTIONS_PATH,
+    SERVICE_TASK_QUERIES_PATH,
+    SERVICE_TASK_CONTRACT_PATH,
+    SERVICE_TASK_RUNTIME_TEST_PATH,
+    SERVICE_TASK_FOUNDATION_TEST_PATH,
+    SERVICE_TASK_MIGRATION_PATH,
+    GENERATED_TYPES_PATH,
+  ]) {
+    assert.ok(existsSync(filePath), "Dormant R05 source must remain: " + filePath);
+  }
+
+  const generatedTypes = readFileSync(GENERATED_TYPES_PATH, "utf8");
+  const migration = readFileSync(SERVICE_TASK_MIGRATION_PATH, "utf8");
+  for (const rpc of [
+    "create_service_task_atomic",
+    "update_service_task_fields_atomic",
+    "transition_service_task_status_atomic",
+  ]) {
+    assert.ok(generatedTypes.includes(rpc + ":"), "Generated R05 RPC type must remain: " + rpc);
+    assert.ok(migration.includes("CREATE FUNCTION public." + rpc + "("), "R05 migration RPC must remain: " + rpc);
+  }
+  assert.match(generatedTypes, /service_tasks:/);
+  assert.match(migration, /CREATE TABLE public\.service_tasks\s*\(/);
 });
 
 test("R05 C5 keeps creation closed until requested and lets users dismiss without mutation", () => {
