@@ -99,7 +99,7 @@ async function getExistingQuotationForUpdate(
 ) {
   const { data, error } = await supabase
     .from("quotations")
-    .select("id, quotation_number, service_id, event, date, valid_until, updated_at, status, revision_of_quotation_id, mutation_payload, quotation_items(commercial_role)")
+    .select("id, quotation_number, service_id, event, date, valid_until, discount, discount_type, discount_percentage_bps, updated_at, status, revision_of_quotation_id, mutation_payload, quotation_items(commercial_role)")
     .eq("id", id)
     .eq("is_deleted", false)
     .single();
@@ -378,13 +378,22 @@ export async function updateQuotation(id: string, input: unknown): Promise<Actio
       unit: item.unit ?? "unit",
       description_ar: item.description_ar ?? null,
     }));
+    const discountType = parsed.data.discount_type ??
+      (existingQuotation.discount_type === "percentage" ? "percentage" : "fixed_sar");
+    const discountPercentageBps = discountType === "percentage"
+      ? parsed.data.discount_percentage_bps ?? existingQuotation.discount_percentage_bps ?? null
+      : null;
     const result = await executeUpdateFlexibleQuotationDraft({
       value: {
         quotation_id: id,
         event: parsed.data.event ?? existingQuotation.event,
         date: parsed.data.date ?? existingQuotation.date,
         valid_until: parsed.data.valid_until === undefined ? existingQuotation.valid_until : parsed.data.valid_until,
-        discount: parsed.data.discount ?? 0,
+        discount: discountType === "percentage"
+          ? 0
+          : parsed.data.discount ?? (Number(existingQuotation.discount) || 0),
+        discount_type: discountType,
+        discount_percentage_bps: discountPercentageBps,
         expected_updated_at: existingQuotation.updated_at,
         lines: flexibleItems,
       },

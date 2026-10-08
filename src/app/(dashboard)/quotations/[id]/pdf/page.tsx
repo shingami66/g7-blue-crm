@@ -73,6 +73,11 @@ export default async function QuotationPdfPage({
   };
   const formatAmountWithCurrency = (val: number | null | undefined) =>
     `${formatMoney(val)}${documentCurrency ? ` ${documentCurrency}` : ""}`;
+  const formatPercentage = (basisPoints: number) =>
+    `${new Intl.NumberFormat(`${documentLocale}-SA-u-nu-latn`, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(basisPoints / 100)}%`;
   const documentGroups = groupQuotationItemsForDocument(quotation.items);
   const documentItems = documentGroups.flatMap((group) => group.items);
   const hasAnyCategory = documentItems.some((item) => item.category.trim().length > 0);
@@ -411,12 +416,29 @@ export default async function QuotationPdfPage({
                  <span dir="ltr" className="document-bidi-number">{formatAmountWithCurrency(quotation.subtotal)}</span>
               </span>
             </div>
-            <div className="flex justify-between py-2 border-b border-outline-variant/30 text-[14px]">
-              <span className="text-on-surface-variant">{dictionary.quotation.discount}</span>
-              <span className="text-on-surface">
-                 <span dir="ltr" className="document-bidi-number">{formatAmountWithCurrency(quotation.discount)}</span>
-              </span>
-            </div>
+            {quotation.discountType === "percentage" ? (
+              <>
+                <div className="flex justify-between py-2 border-b border-outline-variant/30 text-[14px]">
+                  <span className="text-on-surface-variant">{dictionary.quotation.discount}</span>
+                  <span className="text-on-surface">
+                    <span dir="ltr" className="document-bidi-number">{formatPercentage(quotation.discountPercentageBps ?? 0)}</span>
+                  </span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-outline-variant/30 text-[14px]">
+                  <span className="text-on-surface-variant">{dictionary.quotation.discountAmount}</span>
+                  <span className="text-on-surface">
+                    <span dir="ltr" className="document-bidi-number">{formatAmountWithCurrency(quotation.discount)}</span>
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-between py-2 border-b border-outline-variant/30 text-[14px]">
+                <span className="text-on-surface-variant">{dictionary.quotation.discount}</span>
+                <span className="text-on-surface">
+                  <span dir="ltr" className="document-bidi-number">{formatAmountWithCurrency(quotation.discount)}</span>
+                </span>
+              </div>
+            )}
             <div className="flex justify-between py-2 border-b border-outline-variant/30 text-[14px]">
               <span className="text-on-surface-variant">{dictionary.quotation.taxVat}:</span>
               <span className="text-on-surface">

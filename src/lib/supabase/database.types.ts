@@ -8321,6 +8321,8 @@ export type Database = {
           date: string
           deleted_at: string | null
           discount: number | null
+          discount_percentage_bps: number | null
+          discount_type: string
           event: string
           event_snapshot: Json | null
           grand_total: number | null
@@ -8355,6 +8357,8 @@ export type Database = {
           date: string
           deleted_at?: string | null
           discount?: number | null
+          discount_percentage_bps?: number | null
+          discount_type?: string
           event: string
           event_snapshot?: Json | null
           grand_total?: number | null
@@ -8389,6 +8393,8 @@ export type Database = {
           date?: string
           deleted_at?: string | null
           discount?: number | null
+          discount_percentage_bps?: number | null
+          discount_type?: string
           event?: string
           event_snapshot?: Json | null
           grand_total?: number | null
@@ -13247,6 +13253,14 @@ export type Database = {
           version: number
         }[]
       }
+      quotation_discount_terms_consistent: {
+        Args: { p_quotation_id: string }
+        Returns: boolean
+      }
+      quotation_eligible_discount_base_h: {
+        Args: { p_quotation_id: string }
+        Returns: number
+      }
       reconcile_invoice_create_mutation: {
         Args: {
           p_invoice_type: string
@@ -13590,6 +13604,15 @@ export type Database = {
           error_code: string
           idempotent_replay: boolean
         }[]
+      }
+      resolve_quotation_discount: {
+        Args: {
+          p_discount_percentage_bps: number
+          p_discount_type: string
+          p_eligible_base_h: number
+          p_fixed_discount: number
+        }
+        Returns: number
       }
       reverse_accounting_journal: {
         Args: {

@@ -13,7 +13,12 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { getQuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
 import { getCommonDictionary } from "@/lib/i18n/dictionaries/common";
-import { formatSarAmount } from "@/lib/i18n/formatting";
+import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
+import {
+  parseDiscountPercentageToBps,
+  previewPercentageDiscountSar,
+  type QuotationDiscountType,
+} from "@/lib/quotations/percentage-discount";
 import { UiDateText } from "@/components/i18n/UiDateText";
 import FlexibleCommercialBuilder from "../FlexibleCommercialBuilder";
 import {
@@ -61,6 +66,11 @@ function newAuthorityLine(): CommercialAmendmentDraftLine {
   };
 }
 
+function formatBpsInput(value: number | null | undefined) {
+  if (value == null) return "";
+  return (value / 100).toFixed(2).replace(/\.?0+$/, "");
+}
+
 export default function QuotationForm({ service, initialData, dictionary: dictionaryProp }: QuotationFormProps) {
   const router = useRouter();
   const locale = useLocale();
@@ -74,7 +84,9 @@ export default function QuotationForm({ service, initialData, dictionary: dictio
   const [event, setEvent] = useState(initialData?.event || service.eventName || service.serviceTitle);
   const [date] = useState(initialData?.date || new Date().toISOString().split("T")[0]);
   const [validUntil, setValidUntil] = useState(initialData?.validUntil || "");
+  const [discountType, setDiscountType] = useState<QuotationDiscountType>(initialData?.discountType ?? "fixed_sar");
   const [discount, setDiscount] = useState(String(initialData?.discount ?? 0));
+  const [discountPercentage, setDiscountPercentage] = useState(() => formatBpsInput(initialData?.discountPercentageBps));
   const [lines, setLines] = useState<CommercialAmendmentDraftLine[]>(() =>
     initialData?.items?.length ? toCommercialAmendmentDraftLines(initialData.items) : [newAuthorityLine()],
   );
@@ -84,10 +96,16 @@ export default function QuotationForm({ service, initialData, dictionary: dictio
   const validUntilExceedsServiceStart = Boolean(
     !serviceStartedBeforeIssueDate && serviceStartDate && validUntil && validUntil > serviceStartDate,
   );
-  const parsedDiscount = Number(discount) || 0;
+  const parsedFixedDiscount = Number(discount) || 0;
+  const discountPercentageBps = parseDiscountPercentageToBps(discountPercentage);
+  const resolvedPercentageDiscount = previewPercentageDiscountSar(lines, discountPercentageBps);
+  const parsedDiscount = discountType === "percentage"
+    ? resolvedPercentageDiscount ?? 0
+    : parsedFixedDiscount;
   const subtotal = commercialAmendmentPreviewSubtotal(lines);
   const grandTotal = commercialAmendmentPreviewGrandTotal(lines, parsedDiscount, 0);
-  const discountExceedsSubtotal = parsedDiscount > subtotal;
+  const discountInvalid = discountType === "percentage" && (discountPercentageBps === null || resolvedPercentageDiscount === null);
+  const discountExceedsSubtotal = !discountInvalid && parsedDiscount > subtotal;
   const hasInvalidLines = lines.some(
     (line) =>
       !line.description.trim() ||
@@ -121,6 +139,7 @@ export default function QuotationForm({ service, initialData, dictionary: dictio
     if (validUntilExceedsServiceStart) return setError(dictionary.form.validation.validUntilAfterServiceStart);
     if (!unitPricesValid) return setError(dictionary.amendment.unitPriceInvalid);
     if (hasInvalidLines) return setError(dictionary.form.validation.invalidItems);
+    if (discountInvalid) return setError(dictionary.form.validation.discountPercentageInvalid);
     if (discountExceedsSubtotal) return setError(dictionary.form.validation.discountExceedsSubtotal);
 
     setIsSubmitting(true);
@@ -128,7 +147,9 @@ export default function QuotationForm({ service, initialData, dictionary: dictio
       event,
       date,
       valid_until: validUntil,
-      discount: parsedDiscount,
+      discount: discountType === "percentage" ? 0 : parsedFixedDiscount,
+      discount_type: discountType,
+      discount_percentage_bps: discountType === "percentage" ? discountPercentageBps : null,
       items: lines.map((line) => ({
         line_key: line.line_key,
         parent_line_key: line.parent_line_key,
@@ -198,7 +219,35 @@ export default function QuotationForm({ service, initialData, dictionary: dictio
               <div><label htmlFor="quotation-valid-until" className="text-[14px] font-semibold text-on-surface">{dictionary.form.validUntil}</label><input id="quotation-valid-until" type="date" value={validUntil} onChange={(inputEvent) => setValidUntil(inputEvent.target.value)} min={date} max={serviceStartDate} disabled={serviceStartedBeforeIssueDate} required={!serviceStartedBeforeIssueDate} aria-invalid={Boolean(validUntilError)} aria-describedby="quotation-valid-until-message" className={`mt-1 w-full rounded-lg border bg-surface px-3 py-2 text-[14px] text-on-surface focus:border-primary focus:outline-none disabled:cursor-not-allowed disabled:bg-surface-container-low ${validUntilError ? "border-error" : "border-outline-variant"}`} dir="ltr" /><p id="quotation-valid-until-message" role={validUntilError ? "alert" : undefined} className={`mt-1 text-[12px] leading-snug ${validUntilError ? "text-error" : "text-on-surface-variant"}`}>{validUntilError ?? dictionary.form.validUntilHint}</p></div>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-on-surface">{dictionary.form.discountSar}<input type="number" min="0" step="0.01" value={discount} onChange={(inputEvent) => setDiscount(inputEvent.target.value)} className="no-number-spinner w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] font-normal text-on-surface focus:border-primary focus:outline-none" dir="ltr" />{discountExceedsSubtotal && <span className="text-[12px] font-normal text-error">{dictionary.form.discountExceededHint}</span>}</label>
+              <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-on-surface">
+                {dictionary.form.discountType}
+                <select value={discountType} onChange={(inputEvent) => setDiscountType(inputEvent.target.value as QuotationDiscountType)} className="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] font-normal text-on-surface focus:border-primary focus:outline-none">
+                  <option value="fixed_sar">{dictionary.form.fixedAmount}</option>
+                  <option value="percentage">{dictionary.form.percentage}</option>
+                </select>
+              </label>
+              {discountType === "fixed_sar" ? (
+                <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-on-surface">
+                  {dictionary.form.fixedAmountSar}
+                  <input type="number" min="0" step="0.01" value={discount} onChange={(inputEvent) => setDiscount(inputEvent.target.value)} className="no-number-spinner w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] font-normal text-on-surface focus:border-primary focus:outline-none" dir="ltr" />
+                  {discountExceedsSubtotal && <span className="text-[12px] font-normal text-error">{dictionary.form.discountExceededHint}</span>}
+                </label>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-on-surface">
+                    {dictionary.form.percentagePercent}
+                    <input type="text" inputMode="decimal" maxLength={6} value={discountPercentage} onChange={(inputEvent) => setDiscountPercentage(inputEvent.target.value)} aria-invalid={discountInvalid} aria-describedby="quotation-discount-percentage-message" className="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-[14px] font-normal text-on-surface focus:border-primary focus:outline-none" dir="ltr" />
+                  </label>
+                  <div className="flex flex-col gap-1.5 text-[14px] font-semibold text-on-surface">
+                    <span>{dictionary.form.discountAmountSar}</span>
+                    <output id="quotation-discount-percentage-message" aria-live="polite" className={`rounded-lg border px-3 py-2 font-normal tabular-nums ${discountInvalid ? "border-error bg-error-container text-on-error-container" : "border-outline-variant bg-surface-container-low text-on-surface"}`} dir="ltr">
+                      {discountInvalid ? dictionary.form.validation.discountPercentageInvalid : formatSarAmount(dictionary.locale, resolvedPercentageDiscount ?? 0)}
+                    </output>
+                    {discountInvalid && <span role="alert" className="text-[12px] font-normal text-error">{dictionary.form.validation.discountPercentageInvalid}</span>}
+                    {discountExceedsSubtotal && <span className="text-[12px] font-normal text-error">{dictionary.form.discountExceededHint}</span>}
+                  </div>
+                </div>
+              )}
               <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-on-surface">{dictionary.form.vat}<input type="text" value={dictionary.form.notApplied} readOnly className="w-full cursor-not-allowed rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2 text-[14px] text-on-surface-variant" title={dictionary.form.vatTitle} /></label>
             </div>
           </div>
@@ -214,11 +263,18 @@ export default function QuotationForm({ service, initialData, dictionary: dictio
         <div className="flex flex-col gap-4 rounded-xl border border-surface-variant bg-surface-container-lowest p-6">
           <div className="flex items-center gap-2 rounded border border-outline-variant/50 bg-surface-container-low p-2 text-[12px] font-mono text-on-surface-variant"><AlertCircle size={14} className="text-primary" />{dictionary.form.previewOnly}</div>
           <div className="flex flex-col items-end gap-2 text-[14px] text-on-surface">
-            <div className="flex w-72 justify-between gap-4"><span className="text-on-surface-variant">{dictionary.form.subtotal}:</span><span dir="ltr" className="tabular-nums">{formatSarAmount(dictionary.locale, subtotal)}</span></div>
-            <div className="flex w-72 justify-between gap-4 text-error"><span className="text-on-surface-variant">{dictionary.form.discount}:</span><span dir="ltr" className="tabular-nums">- {formatSarAmount(dictionary.locale, parsedDiscount)}</span></div>
-            <div className={`flex w-72 justify-between gap-4 border-t border-outline-variant pt-2 text-[16px] font-semibold ${discountExceedsSubtotal ? "text-error" : "text-primary"}`}><span>{dictionary.form.grandTotal}:</span><span dir="ltr" className="tabular-nums">{formatSarAmount(dictionary.locale, grandTotal)}</span></div>
+            <div className="flex w-full max-w-72 justify-between gap-4"><span className="text-on-surface-variant">{dictionary.form.subtotal}:</span><span dir="ltr" className="tabular-nums">{formatSarAmount(dictionary.locale, subtotal)}</span></div>
+            {discountType === "percentage" ? (
+              <>
+                <div className="flex w-full max-w-72 justify-between gap-4 text-error"><span className="text-on-surface-variant">{dictionary.form.discount}:</span><span dir="ltr" className="tabular-nums">{discountPercentageBps === null ? "—" : `${formatUiNumber(dictionary.locale, discountPercentageBps / 100, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%`}</span></div>
+                <div className="flex w-full max-w-72 justify-between gap-4 text-error"><span className="text-on-surface-variant">{dictionary.form.discountAmountSar}:</span><span dir="ltr" className="tabular-nums">- {formatSarAmount(dictionary.locale, resolvedPercentageDiscount ?? 0)}</span></div>
+              </>
+            ) : (
+              <div className="flex w-full max-w-72 justify-between gap-4 text-error"><span className="text-on-surface-variant">{dictionary.form.discount}:</span><span dir="ltr" className="tabular-nums">- {formatSarAmount(dictionary.locale, parsedFixedDiscount)}</span></div>
+            )}
+            <div className={`flex w-full max-w-72 justify-between gap-4 border-t border-outline-variant pt-2 text-[16px] font-semibold ${discountExceedsSubtotal || discountInvalid ? "text-error" : "text-primary"}`}><span>{dictionary.form.grandTotal}:</span><span dir="ltr" className="tabular-nums">{formatSarAmount(dictionary.locale, grandTotal)}</span></div>
           </div>
-          <div className="mt-4 flex justify-end"><Button type="submit" loading={isSubmitting} size="sm" disabled={!unitPricesValid || discountExceedsSubtotal || validUntilExceedsServiceStart || serviceStartedBeforeIssueDate}><Save size={16} />{isEdit ? dictionary.form.saveChanges : dictionary.form.createQuotation}</Button></div>
+          <div className="mt-4 flex justify-end"><Button type="submit" loading={isSubmitting} size="sm" disabled={!unitPricesValid || discountExceedsSubtotal || discountInvalid || validUntilExceedsServiceStart || serviceStartedBeforeIssueDate}><Save size={16} />{isEdit ? dictionary.form.saveChanges : dictionary.form.createQuotation}</Button></div>
         </div>
       </form>
     </div>

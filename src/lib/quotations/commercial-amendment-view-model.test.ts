@@ -69,6 +69,47 @@ test("an exact clone with unique descriptions is a no-op", () => {
   });
 });
 
+test("a rate-only percentage amendment is a change even when its resolved money is unchanged", () => {
+  const predecessor = [item({ id: "main", description: "Main item", total: 1 })];
+  const proposedLines = toCommercialAmendmentDraftLines(predecessor);
+  const result = buildCommercialAmendmentChangeSummary({
+    predecessorItems: predecessor,
+    proposedLines,
+    currentTotal: 0.9,
+    discount: 0.1,
+    vatRate: 0,
+    proposedPersistedTotal: 0.9,
+    currentDiscountType: "percentage",
+    currentDiscountPercentageBps: 1_000,
+    proposedDiscountType: "percentage",
+    proposedDiscountPercentageBps: 1_001,
+  });
+
+  assert.equal(result.hasChanges, true);
+  assert.equal(result.proposedTotal, result.currentTotal);
+  assert.equal(result.delta, 0);
+});
+
+test("switching fixed amount to an equivalent percentage is a commercial change", () => {
+  const predecessor = [item({ id: "main", description: "Main item", total: 1 })];
+  const result = buildCommercialAmendmentChangeSummary({
+    predecessorItems: predecessor,
+    proposedLines: toCommercialAmendmentDraftLines(predecessor),
+    currentTotal: 0.9,
+    discount: 0.1,
+    vatRate: 0,
+    proposedPersistedTotal: 0.9,
+    currentDiscountType: "fixed_sar",
+    currentDiscountPercentageBps: null,
+    proposedDiscountType: "percentage",
+    proposedDiscountPercentageBps: 1_000,
+  });
+
+  assert.equal(result.hasChanges, true);
+  assert.equal(result.proposedTotal, result.currentTotal);
+  assert.equal(result.delta, 0);
+});
+
 function duplicateDescriptionFixture() {
   return [
     item({ id: "main", description: "W7B controlled billable authority", total: 100000 }),

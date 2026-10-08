@@ -7,6 +7,11 @@ import type { QuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
 import { formatSarAmount, formatUiNumber } from "@/lib/i18n/formatting";
 import type { QuotationDetail } from "@/lib/quotations/types";
 import {
+  parseDiscountPercentageToBps,
+  previewPercentageDiscountSar,
+  type QuotationDiscountType,
+} from "@/lib/quotations/percentage-discount";
+import {
   isDateOnlyValue,
   validateCommercialAmendmentValidityWindow,
 } from "@/lib/quotations/commercial-amendment-client-validation";
@@ -24,6 +29,8 @@ function serializeDraft(input: {
   date: string;
   validUntil: string;
   discount: number;
+  discountType: QuotationDiscountType;
+  discountPercentage: string;
   lines: CommercialAmendmentDraftLine[];
 }) {
   return JSON.stringify(input);
@@ -58,6 +65,12 @@ export default function CommercialAmendmentWorkspace({
   const [date, setDate] = useState(quotation.date);
   const [validUntil, setValidUntil] = useState(quotation.validUntil ?? "");
   const [discount, setDiscount] = useState(quotation.discount);
+  const [discountType, setDiscountType] = useState<QuotationDiscountType>(quotation.discountType);
+  const [discountPercentage, setDiscountPercentage] = useState(() =>
+    quotation.discountPercentageBps == null
+      ? ""
+      : (quotation.discountPercentageBps / 100).toFixed(2).replace(/\.?0+$/, ""),
+  );
   const [lines, setLines] = useState(initialLines);
   const [updatedAt, setUpdatedAt] = useState(quotation.updatedAt);
   const [serverTotals, setServerTotals] = useState({
@@ -72,6 +85,10 @@ export default function CommercialAmendmentWorkspace({
       date: quotation.date,
       validUntil: quotation.validUntil ?? "",
       discount: quotation.discount,
+      discountType: quotation.discountType,
+      discountPercentage: quotation.discountPercentageBps == null
+        ? ""
+        : (quotation.discountPercentageBps / 100).toFixed(2).replace(/\.?0+$/, ""),
       lines: initialLines,
     }),
   );
@@ -83,7 +100,7 @@ export default function CommercialAmendmentWorkspace({
   const [approvalKey, setApprovalKey] = useState<string | null>(null);
   const [unitPricesValid, setUnitPricesValid] = useState(true);
 
-  const currentSnapshot = serializeDraft({ event, date, validUntil, discount, lines });
+  const currentSnapshot = serializeDraft({ event, date, validUntil, discount, discountType, discountPercentage, lines });
   const dirty = currentSnapshot !== savedSnapshot || !unitPricesValid;
   const serviceStartDateEvidence = quotation.eventSnapshot?.eventStartDate;
   const serviceStartDate = isDateOnlyValue(serviceStartDateEvidence) ? serviceStartDateEvidence : null;
@@ -110,14 +127,23 @@ export default function CommercialAmendmentWorkspace({
   const invalidLineDescription = lines.some((line) => !line.description.trim());
   const hasDraftValidationErrors = Boolean(validityError || invalidLineDescription || !unitPricesValid);
   const previewSubtotal = commercialAmendmentPreviewSubtotal(lines);
-  const previewGrandTotal = commercialAmendmentPreviewGrandTotal(lines, discount, quotation.vatRate);
+  const discountPercentageBps = parseDiscountPercentageToBps(discountPercentage);
+  const resolvedPercentageDiscount = previewPercentageDiscountSar(lines, discountPercentageBps);
+  const proposedDiscount = discountType === "percentage" ? resolvedPercentageDiscount ?? 0 : discount;
+  const discountInvalid = discountType === "percentage" && (discountPercentageBps === null || resolvedPercentageDiscount === null);
+  const discountExceedsSubtotal = !discountInvalid && proposedDiscount > previewSubtotal;
+  const previewGrandTotal = commercialAmendmentPreviewGrandTotal(lines, proposedDiscount, quotation.vatRate);
   const summary = buildCommercialAmendmentChangeSummary({
     predecessorItems: predecessor.items,
     proposedLines: lines,
     currentTotal: predecessor.grandTotal,
-    discount,
+    discount: proposedDiscount,
     vatRate: quotation.vatRate,
     proposedPersistedTotal: dirty ? undefined : serverTotals.grandTotal,
+    currentDiscountType: predecessor.discountType,
+    currentDiscountPercentageBps: predecessor.discountPercentageBps,
+    proposedDiscountType: discountType,
+    proposedDiscountPercentageBps: discountType === "percentage" ? discountPercentageBps : null,
   });
 
   useEffect(() => {
@@ -138,7 +164,7 @@ export default function CommercialAmendmentWorkspace({
 
   async function saveDraft() {
     if (!canWrite || pending || !dirty) return;
-    if (hasDraftValidationErrors) {
+    if (hasDraftValidationErrors || discountInvalid || discountExceedsSubtotal) {
       setError(amendment.validationRequired);
       return;
     }
@@ -150,7 +176,9 @@ export default function CommercialAmendmentWorkspace({
       event,
       date,
       valid_until: validUntil || null,
-      discount,
+      discount: discountType === "percentage" ? 0 : discount,
+      discount_type: discountType,
+      discount_percentage_bps: discountType === "percentage" ? discountPercentageBps : null,
       expected_updated_at: updatedAt,
       lines,
     });
@@ -199,6 +227,9 @@ export default function CommercialAmendmentWorkspace({
   }
 
   const money = (value: number) => formatSarAmount(dictionary.locale, value);
+  const formattedPercentage = discountPercentageBps === null
+    ? "—"
+    : `${formatUiNumber(dictionary.locale, discountPercentageBps / 100, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%`;
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-12">
@@ -233,7 +264,29 @@ export default function CommercialAmendmentWorkspace({
                 <label className="text-sm font-semibold text-on-surface">{dictionary.form.quotationEventLabel}<input value={event} onChange={(inputEvent) => setEvent(inputEvent.target.value)} dir="auto" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
                 <label className="text-sm font-semibold text-on-surface">{dictionary.form.issueDate}<input type="date" value={date} max={serviceStartDate ?? undefined} aria-invalid={issueDateInvalid} aria-describedby={"amendment-validity-hint" + (issueDateInvalid ? " amendment-validity-error" : "")} onChange={(inputEvent) => { setDate(inputEvent.target.value); setError(null); }} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
                 <label className="text-sm font-semibold text-on-surface">{dictionary.form.validUntil}<input type="date" value={validUntil} min={date || undefined} max={serviceStartDate ?? undefined} aria-invalid={validUntilInvalid} aria-describedby={"amendment-validity-hint" + (validUntilInvalid ? " amendment-validity-error" : "")} onChange={(inputEvent) => { setValidUntil(inputEvent.target.value); setError(null); }} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
-                <label className="text-sm font-semibold text-on-surface">{dictionary.form.discountSar}<input type="number" min="0" step="0.01" value={discount} onChange={(inputEvent) => setDiscount(Number(inputEvent.target.value) || 0)} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
+                <label className="text-sm font-semibold text-on-surface">{dictionary.form.discountType}<select value={discountType} onChange={(inputEvent) => {
+                  const nextType = inputEvent.target.value as QuotationDiscountType;
+                  if (discountType === "percentage" && nextType === "fixed_sar" && resolvedPercentageDiscount !== null) {
+                    setDiscount(resolvedPercentageDiscount);
+                  }
+                  setDiscountType(nextType);
+                }} className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal">
+                  <option value="fixed_sar">{dictionary.form.fixedAmount}</option>
+                  <option value="percentage">{dictionary.form.percentage}</option>
+                </select></label>
+                {discountType === "fixed_sar" ? (
+                  <label className="text-sm font-semibold text-on-surface">{dictionary.form.fixedAmountSar}<input type="number" min="0" step="0.01" value={discount} onChange={(inputEvent) => setDiscount(Number(inputEvent.target.value) || 0)} dir="ltr" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
+                ) : (
+                  <>
+                    <label className="text-sm font-semibold text-on-surface">{dictionary.form.percentagePercent}<input type="text" inputMode="decimal" maxLength={6} value={discountPercentage} onChange={(inputEvent) => setDiscountPercentage(inputEvent.target.value)} dir="ltr" aria-invalid={discountInvalid} aria-describedby="amendment-discount-percentage-message" className="mt-1 w-full rounded border border-outline-variant bg-surface px-3 py-2 font-normal" /></label>
+                    <div className="flex flex-col gap-1 text-sm font-semibold text-on-surface">
+                      <span>{dictionary.form.discountAmountSar}</span>
+                      <output id="amendment-discount-percentage-message" aria-live="polite" className="rounded border border-outline-variant bg-surface-container-low px-3 py-2 font-normal tabular-nums" dir="ltr">
+                        {discountInvalid ? dictionary.form.validation.discountPercentageInvalid : money(resolvedPercentageDiscount ?? 0)}
+                      </output>
+                    </div>
+                  </>
+                )}
               </div>
               {validityErrorMessage && (
                 <p id="amendment-validity-error" className="mt-3 text-sm text-error" role="alert">
@@ -248,7 +301,7 @@ export default function CommercialAmendmentWorkspace({
                       ? amendment.unsavedChanges
                       : saveMessage ?? ""}
                 </div>
-                {canWrite && <button type="button" onClick={saveDraft} disabled={pending || !dirty || hasDraftValidationErrors} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">{pending ? amendment.savingDraft : amendment.saveDraft}</button>}
+                {canWrite && <button type="button" onClick={saveDraft} disabled={pending || !dirty || hasDraftValidationErrors || discountInvalid || discountExceedsSubtotal} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">{pending ? amendment.savingDraft : amendment.saveDraft}</button>}
               </div>
               {error && <p className="mt-3 text-sm text-error" role="alert">{error}</p>}
             </section>
@@ -276,7 +329,14 @@ export default function CommercialAmendmentWorkspace({
           <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-5">
             <div className="space-y-3 text-sm">
               <div className="flex justify-between gap-3"><span className="text-on-surface-variant">{dictionary.form.subtotal}</span><span dir="ltr" className="font-semibold tabular-nums">{money(dirty ? previewSubtotal : serverTotals.subtotal)}</span></div>
-              <div className="flex justify-between gap-3"><span className="text-on-surface-variant">{dictionary.form.discount}</span><span dir="ltr" className="font-semibold tabular-nums">{money(dirty ? discount : serverTotals.discount)}</span></div>
+              {discountType === "percentage" ? (
+                <>
+                  <div className="flex justify-between gap-3"><span className="text-on-surface-variant">{dictionary.form.discount}</span><span dir="ltr" className="font-semibold tabular-nums">{formattedPercentage}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-on-surface-variant">{dictionary.form.discountAmountSar}</span><span dir="ltr" className="font-semibold tabular-nums">{money(dirty ? resolvedPercentageDiscount ?? 0 : serverTotals.discount)}</span></div>
+                </>
+              ) : (
+                <div className="flex justify-between gap-3"><span className="text-on-surface-variant">{dictionary.form.discount}</span><span dir="ltr" className="font-semibold tabular-nums">{money(dirty ? discount : serverTotals.discount)}</span></div>
+              )}
               <div className="flex justify-between gap-3 border-t border-surface-variant pt-3"><span className="font-semibold text-primary">{dictionary.form.grandTotal}</span><span dir="ltr" className="font-semibold text-primary tabular-nums">{money(dirty ? previewGrandTotal : serverTotals.grandTotal)}</span></div>
             </div>
             {canApprove && <button type="button" onClick={() => setApprovalOpen(true)} disabled={dirty || !summary.hasChanges || approvalPending} className="mt-5 w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-on-primary hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">{amendment.approveAction}</button>}

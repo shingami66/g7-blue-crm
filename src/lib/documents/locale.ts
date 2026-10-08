@@ -80,6 +80,7 @@ export type DocumentDictionary = {
     noLineItems: string;
     subtotal: string;
     discount: string;
+    discountAmount: string;
     grandTotal: string;
     termsAndConditions: string;
     commercialTerms: string;
@@ -195,6 +196,7 @@ const english: DocumentDictionary = {
     noLineItems: "No line items.",
     subtotal: "Subtotal:",
     discount: "Discount:",
+    discountAmount: "Discount amount (SAR):",
     grandTotal: "Grand Total:",
     termsAndConditions: "Terms & Conditions",
     commercialTerms: "Commercial Terms",
@@ -310,6 +312,7 @@ const arabic: DocumentDictionary = {
     noLineItems: "لا توجد بنود.",
     subtotal: "المجموع الفرعي:",
     discount: "الخصم:",
+    discountAmount: "قيمة الخصم (ريال سعودي):",
     grandTotal: "الإجمالي الكلي:",
     termsAndConditions: "الشروط والأحكام",
     commercialTerms: "الشروط التجارية",

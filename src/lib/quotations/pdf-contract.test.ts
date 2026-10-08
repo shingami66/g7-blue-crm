@@ -17,6 +17,7 @@ const INVOICE_PDF = join(
   "src/app/(dashboard)/invoices/[id]/pdf/page.tsx",
 );
 const PRINT_CSS = join(REPO_ROOT, "src/app/globals.css");
+const DOCUMENT_LOCALE = join(REPO_ROOT, "src/lib/documents/locale.ts");
 
 function read(path: string) {
   return readFileSync(path, "utf8");
@@ -64,6 +65,10 @@ test("Quotation customer PDF removes internal-only presentation", () => {
   assert.match(template, /formatAmountWithCurrency\(item\.total\)/);
   assert.match(template, /formatAmountWithCurrency\(quotation\.subtotal\)/);
   assert.match(template, /formatAmountWithCurrency\(quotation\.discount\)/);
+  assert.match(template, /quotation\.discountType === "percentage"/);
+  assert.match(template, /formatPercentage\(quotation\.discountPercentageBps/);
+  assert.match(template, /dictionary\.quotation\.discountAmount/);
+  assert.match(template, /dir="ltr" className="document-bidi-number">\{formatPercentage/);
   assert.match(template, /formatAmountWithCurrency\(quotation\.grandTotal\)/);
   assert.match(template, /dictionary\.common\.clientApproval/);
   assert.match(template, /dictionary\.common\.signatureDate/);
@@ -78,6 +83,9 @@ test("Quotation customer PDF removes internal-only presentation", () => {
   assert.match(template, /quotation\.validUntil/);
   assert.match(template, /buyer\.name/);
   assert.match(template, /quotation\.event/);
+  const documentLocale = read(DOCUMENT_LOCALE);
+  assert.match(documentLocale, /discountAmount: "Discount amount \(SAR\):"/);
+  assert.match(documentLocale, /discountAmount: "قيمة الخصم \(ريال سعودي\):"/);
 });
 
 test("Quotation PDF line items conditionally present optional category and details", () => {

@@ -12,6 +12,7 @@ import {
   quotationItemInputSchema,
 } from "./schemas";
 import type { BusinessYear } from "@/lib/business-year";
+import type { QuotationDiscountType } from "./percentage-discount";
 
 export type QuotationStatus = "draft" | "sent" | "approved" | "rejected" | "expired";
 export type QuotationCommercialRole = "authority_line" | "included_component" | "optional_add_on";
@@ -77,6 +78,8 @@ export interface QuotationRow {
   valid_until: string | null;
   subtotal: number;
   discount: number;
+  discount_type: QuotationDiscountType;
+  discount_percentage_bps: number | null;
   vat_rate: number;
   vat_amount: number;
   grand_total: number;
@@ -210,6 +213,8 @@ export interface QuotationItem {
 export interface QuotationDetail extends QuotationListItem {
   subtotal: number;
   discount: number;
+  discountType: QuotationDiscountType;
+  discountPercentageBps: number | null;
   vatRate: number;
   vatAmount: number;
   items: QuotationItem[];

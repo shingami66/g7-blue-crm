@@ -46,6 +46,11 @@ export function sanitizeQuotationRow(row: Record<string, unknown>): QuotationRow
     valid_until: typeof row.valid_until === "string" ? row.valid_until : null,
     subtotal: Number(row.subtotal) || 0,
     discount: Number(row.discount) || 0,
+    discount_type: row.discount_type === "percentage" ? "percentage" : "fixed_sar",
+    discount_percentage_bps:
+      typeof row.discount_percentage_bps === "number" && Number.isInteger(row.discount_percentage_bps)
+        ? row.discount_percentage_bps
+        : null,
     vat_rate: Number(row.vat_rate) || 0,
     vat_amount: Number(row.vat_amount) || 0,
     grand_total: Number(row.grand_total) || 0,

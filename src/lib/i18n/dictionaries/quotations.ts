@@ -112,6 +112,12 @@ export interface QuotationsDictionary {
     validUntil: string;
     validUntilHint: string;
     discountSar: string;
+    discountType: string;
+    fixedAmount: string;
+    fixedAmountSar: string;
+    percentage: string;
+    percentagePercent: string;
+    discountAmountSar: string;
     discountExceededHint: string;
     vat: string;
     notApplied: string;
@@ -141,6 +147,7 @@ export interface QuotationsDictionary {
       validUntilAfterServiceStart: string;
       invalidItems: string;
       discountExceedsSubtotal: string;
+      discountPercentageInvalid: string;
       failedToUpdate: string;
       failedToCreate: string;
       mutationKeyConflict: string;
@@ -423,6 +430,12 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     validUntil: "Valid Until",
     validUntilHint: "Offer expiry date - not related to service execution dates.",
     discountSar: "Discount (SAR)",
+    discountType: "Discount type",
+    fixedAmount: "Fixed amount",
+    fixedAmountSar: "Fixed amount (SAR)",
+    percentage: "Percentage",
+    percentagePercent: "Percentage (%)",
+    discountAmountSar: "Discount amount (SAR)",
     discountExceededHint: "Discount cannot exceed subtotal. Server totals will reject this value.",
     vat: "Tax/VAT",
     notApplied: "Not applied",
@@ -452,6 +465,7 @@ const quotationsDictionaryEn: QuotationsDictionary = {
       validUntilAfterServiceStart: "Quotation cannot remain valid after the service begins.",
       invalidItems: "All items must have a description, positive quantity, and non-negative unit price.",
       discountExceedsSubtotal: "Discount cannot exceed subtotal. Reduce the discount or adjust line items.",
+      discountPercentageInvalid: "Enter a discount percentage from 0 to 100 with up to two decimal places.",
       failedToUpdate: "Failed to update quotation.",
       failedToCreate: "Failed to create quotation.",
       mutationKeyConflict:
@@ -741,6 +755,12 @@ const quotationsDictionaryAr: QuotationsDictionary = {
     validUntil: "صالح حتى",
     validUntilHint: "تاريخ انتهاء العرض، ولا يرتبط بتواريخ تنفيذ الخدمة.",
     discountSar: "الخصم (SAR)",
+    discountType: "نوع الخصم",
+    fixedAmount: "مبلغ ثابت",
+    fixedAmountSar: "مبلغ ثابت (ريال سعودي)",
+    percentage: "نسبة مئوية",
+    percentagePercent: "نسبة الخصم (%)",
+    discountAmountSar: "قيمة الخصم (ريال سعودي)",
     discountExceededHint: "لا يمكن أن يتجاوز الخصم المجموع الفرعي. سيرفض الخادم هذه القيمة عند احتساب الإجماليات.",
     vat: "ضريبة القيمة المضافة",
     notApplied: "غير مطبقة",
@@ -770,6 +790,7 @@ const quotationsDictionaryAr: QuotationsDictionary = {
       validUntilAfterServiceStart: "لا يمكن أن يظل عرض السعر صالحًا بعد بدء الخدمة.",
       invalidItems: "يجب أن تحتوي جميع البنود على وصف وكمية موجبة وسعر وحدة غير سالب.",
       discountExceedsSubtotal: "لا يمكن أن يتجاوز الخصم المجموع الفرعي. قلل قيمة الخصم أو عدل البنود.",
+      discountPercentageInvalid: "أدخل نسبة خصم من 0 إلى 100 وبحد أقصى منزلتين عشريتين.",
       failedToUpdate: "تعذر تحديث عرض السعر.",
       failedToCreate: "تعذر إنشاء عرض السعر.",
       mutationKeyConflict:

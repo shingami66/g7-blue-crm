@@ -1,4 +1,5 @@
 import type { QuotationItem } from "./types";
+import type { QuotationDiscountType } from "./percentage-discount";
 
 export type CommercialAmendmentDraftLine = {
   line_key: string;
@@ -171,6 +172,10 @@ export function buildCommercialAmendmentChangeSummary(input: {
   discount: number;
   vatRate: number;
   proposedPersistedTotal?: number;
+  currentDiscountType?: QuotationDiscountType;
+  currentDiscountPercentageBps?: number | null;
+  proposedDiscountType?: QuotationDiscountType;
+  proposedDiscountPercentageBps?: number | null;
 }): CommercialAmendmentChangeSummary {
   const predecessor = comparableItems(input.predecessorItems);
   const proposed = toComparableLines(input.proposedLines);
@@ -196,8 +201,13 @@ export function buildCommercialAmendmentChangeSummary(input: {
     input.discount,
     input.vatRate,
   );
+  const currentDiscountType = input.currentDiscountType ?? "fixed_sar";
+  const proposedDiscountType = input.proposedDiscountType ?? "fixed_sar";
+  const discountTermsChanged = currentDiscountType !== proposedDiscountType ||
+    (input.currentDiscountPercentageBps ?? null) !== (input.proposedDiscountPercentageBps ?? null);
   return {
-    hasChanges: addedLines > 0 || removedLines > 0 || changedLines > 0 || optionalChanges > 0 || proposedTotal !== input.currentTotal,
+    hasChanges: addedLines > 0 || removedLines > 0 || changedLines > 0 || optionalChanges > 0 ||
+      proposedTotal !== input.currentTotal || discountTermsChanged,
     addedLines,
     removedLines,
     changedLines,

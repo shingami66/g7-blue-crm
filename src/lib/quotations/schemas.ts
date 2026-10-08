@@ -20,6 +20,29 @@ export const quotationCommercialRoleSchema = z.enum([
   "optional_add_on",
 ]);
 
+export const quotationDiscountTypeSchema = z.enum(["fixed_sar", "percentage"]);
+export const quotationDiscountPercentageBpsSchema = z.number().int().min(0).max(10000);
+
+function addDiscountTermIssues(
+  value: { discount_type: "fixed_sar" | "percentage"; discount_percentage_bps: number | null },
+  ctx: z.RefinementCtx,
+) {
+  if (value.discount_type === "fixed_sar" && value.discount_percentage_bps !== null) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["discount_percentage_bps"],
+      message: "Fixed amount discounts cannot include a percentage rate.",
+    });
+  }
+  if (value.discount_type === "percentage" && value.discount_percentage_bps === null) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["discount_percentage_bps"],
+      message: "A percentage discount rate is required.",
+    });
+  }
+}
+
 /**
  * W2A structure metadata is intentionally separate from ordinary quotation
  * item pricing. The server/database remain the source of all amounts.
@@ -50,6 +73,8 @@ export const createQuotationSchema = z.object({
   date: z.string().min(1, "Date is required"),
   valid_until: z.string().optional().nullable(),
   discount: z.coerce.number().nonnegative("Discount cannot be negative").default(0),
+  discount_type: quotationDiscountTypeSchema.default("fixed_sar"),
+  discount_percentage_bps: quotationDiscountPercentageBpsSchema.nullable().default(null),
   items: z.array(quotationItemInputSchema).min(1, "At least one item is required"),
 }).strict().refine(
   (data) => !data.valid_until || new Date(data.valid_until) >= new Date(data.date),
@@ -57,13 +82,15 @@ export const createQuotationSchema = z.object({
     message: "Valid until date must be on or after the quotation date",
     path: ["valid_until"],
   }
-);
+).superRefine(addDiscountTermIssues);
 
 export const updateQuotationSchema = z.object({
   event: z.string().min(1, "Event cannot be empty").optional().nullable(),
   date: z.string().min(1, "Date cannot be empty").optional().nullable(),
   valid_until: z.string().optional().nullable(),
   discount: z.coerce.number().nonnegative("Discount cannot be negative").optional().nullable(),
+  discount_type: quotationDiscountTypeSchema.optional(),
+  discount_percentage_bps: quotationDiscountPercentageBpsSchema.nullable().optional(),
   items: z.array(quotationItemInputSchema).min(1, "At least one item is required"),
 }).strict().refine(
   (data) => {
@@ -76,7 +103,29 @@ export const updateQuotationSchema = z.object({
     message: "Valid until date must be on or after the quotation date",
     path: ["valid_until"],
   }
-);
+).superRefine((value, ctx) => {
+  if (value.discount_type === "fixed_sar" && value.discount_percentage_bps !== undefined && value.discount_percentage_bps !== null) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["discount_percentage_bps"],
+      message: "Fixed amount discounts cannot include a percentage rate.",
+    });
+  }
+  if (value.discount_type === "percentage" && value.discount_percentage_bps == null) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["discount_percentage_bps"],
+      message: "A percentage discount rate is required.",
+    });
+  }
+  if (value.discount_type === undefined && typeof value.discount_percentage_bps === "number") {
+    ctx.addIssue({
+      code: "custom",
+      path: ["discount_type"],
+      message: "A discount type is required with a percentage rate.",
+    });
+  }
+});
 
 /**
  * W2B creates a successor Draft only for a non-approved post-Sent quotation.

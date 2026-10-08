@@ -75,6 +75,11 @@ export function mapRowToQuotationDetail(row: QuotationDetailRow): QuotationDetai
     ...base,
     subtotal: Number(row.subtotal),
     discount: Number(row.discount),
+    discountType: row.discount_type,
+    discountPercentageBps:
+      typeof row.discount_percentage_bps === "number" && Number.isFinite(row.discount_percentage_bps)
+        ? row.discount_percentage_bps
+        : null,
     vatRate: Number(row.vat_rate),
     vatAmount: Number(row.vat_amount),
     items: (row.quotation_items || []).map(mapRowToQuotationItem),

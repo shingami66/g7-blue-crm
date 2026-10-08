@@ -172,6 +172,8 @@ export default async function QuotationDetailPage({
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     });
+  const formatPercentage = (basisPoints: number) =>
+    `${formatUiNumber(locale, basisPoints / 100, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%`;
   const isTaxVatNotApplied = quotation.vatRate === 0 && quotation.vatAmount === 0;
   const formatCopy = (template: string, values: Record<string, string | number>) =>
     template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
@@ -493,12 +495,29 @@ export default async function QuotationDetailPage({
                     {formatMoney(quotation.subtotal)}
                   </span>
                 </div>
-                <div className="flex justify-between gap-4 text-[14px] text-on-surface-variant">
-                  <span>{dictionary.detail.labels.discount}</span>
-                  <span dir="ltr" className="tabular-nums">
-                    {formatMoney(quotation.discount)}
-                  </span>
-                </div>
+                {quotation.discountType === "percentage" ? (
+                  <>
+                    <div className="flex justify-between gap-4 text-[14px] text-on-surface-variant">
+                      <span>{dictionary.detail.labels.discount}</span>
+                      <span dir="ltr" className="tabular-nums">
+                        {formatPercentage(quotation.discountPercentageBps ?? 0)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-4 text-[14px] text-on-surface-variant">
+                      <span>{dictionary.form.discountAmountSar}</span>
+                      <span dir="ltr" className="tabular-nums">
+                        {formatMoney(quotation.discount)}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between gap-4 text-[14px] text-on-surface-variant">
+                    <span>{dictionary.detail.labels.discount}</span>
+                    <span dir="ltr" className="tabular-nums">
+                      {formatMoney(quotation.discount)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between gap-4 text-[14px] text-on-surface-variant">
                   <span>
                     {isTaxVatNotApplied

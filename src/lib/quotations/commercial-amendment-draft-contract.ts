@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  quotationDiscountPercentageBpsSchema,
+  quotationDiscountTypeSchema,
+} from "./schemas.ts";
 
 const commercialRoleSchema = z.enum([
   "authority_line",
@@ -29,11 +33,27 @@ export const approvedCommercialAmendmentDraftSchema = z
     date: z.string().min(1),
     valid_until: z.string().nullable(),
     discount: z.number().finite().nonnegative(),
+    discount_type: quotationDiscountTypeSchema.default("fixed_sar"),
+    discount_percentage_bps: quotationDiscountPercentageBpsSchema.nullable().default(null),
     expected_updated_at: z.string().datetime({ offset: true }),
     lines: z.array(approvedCommercialAmendmentDraftLineSchema).min(1).max(200),
   })
   .strict()
   .superRefine((value, ctx) => {
+    if (value.discount_type === "fixed_sar" && value.discount_percentage_bps !== null) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["discount_percentage_bps"],
+        message: "Fixed amount discounts cannot include a percentage rate.",
+      });
+    }
+    if (value.discount_type === "percentage" && value.discount_percentage_bps === null) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["discount_percentage_bps"],
+        message: "A percentage discount rate is required.",
+      });
+    }
     const keys = new Set<string>();
     const roots = new Set<string>();
     for (const [index, line] of value.lines.entries()) {
@@ -94,7 +114,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   invalid_validity_window: "The quotation validity window is not allowed for this Service.",
   invalid_commercial_hierarchy: "The commercial structure is invalid. Check each child and Authority Line.",
   discount_exceeds_subtotal: "The fixed discount cannot exceed the proposed subtotal.",
-  w2c_discount_currency_unsupported: "Only fixed SAR discounts are supported for this amendment.",
+  w2c_discount_currency_unsupported: "Only SAR discounts are supported for this amendment.",
   commercial_draft_update_failed: "The amendment draft could not be saved. No changes were made.",
 };
 
@@ -113,7 +133,7 @@ const FLEXIBLE_ERROR_MESSAGES: Record<string, string> = {
   invalid_validity_window: "The quotation validity window is not allowed for this Service.",
   invalid_commercial_hierarchy: "The commercial structure is invalid. Check each child and Authority Line.",
   discount_exceeds_subtotal: "The fixed discount cannot exceed the proposed subtotal.",
-  w2c_discount_currency_unsupported: "Only fixed SAR discounts are supported for this quotation.",
+  w2c_discount_currency_unsupported: "Only SAR discounts are supported for this quotation.",
   commercial_draft_update_failed: "The quotation draft could not be saved. No changes were made.",
 };
 
@@ -139,6 +159,8 @@ export async function executeUpdateFlexibleQuotationDraft(input: {
         date: parsed.data.date,
         valid_until: parsed.data.valid_until,
         discount: parsed.data.discount,
+        discount_type: parsed.data.discount_type,
+        discount_percentage_bps: parsed.data.discount_percentage_bps,
       },
       p_lines: parsed.data.lines,
       p_expected_updated_at: parsed.data.expected_updated_at,
@@ -191,6 +213,8 @@ export async function executeUpdateApprovedCommercialAmendmentDraft(input: {
         date: parsed.data.date,
         valid_until: parsed.data.valid_until,
         discount: parsed.data.discount,
+        discount_type: parsed.data.discount_type,
+        discount_percentage_bps: parsed.data.discount_percentage_bps,
       },
       p_lines: parsed.data.lines,
       p_expected_updated_at: parsed.data.expected_updated_at,

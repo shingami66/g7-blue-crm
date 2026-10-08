@@ -286,6 +286,49 @@ test("createQuotationSchema rejects negative discount", () => {
   assert.strictEqual(result.success, false);
 });
 
+test("createQuotationSchema preserves fixed-SAR defaults and validates percentage basis points", () => {
+  const fixed = createQuotationSchema.safeParse(validQuotationInput);
+  assert.equal(fixed.success, true);
+  if (fixed.success) {
+    assert.equal(fixed.data.discount_type, "fixed_sar");
+    assert.equal(fixed.data.discount_percentage_bps, null);
+  }
+
+  for (const basisPoints of [0, 500, 750, 1_225, 10_000]) {
+    const result = createQuotationSchema.safeParse({
+      ...validQuotationInput,
+      discount_type: "percentage",
+      discount_percentage_bps: basisPoints,
+    });
+    assert.equal(result.success, true, `expected ${basisPoints} bps to be valid`);
+  }
+
+  assert.equal(createQuotationSchema.safeParse({
+    ...validQuotationInput,
+    discount_type: "percentage",
+    discount_percentage_bps: 10_001,
+  }).success, false);
+  assert.equal(createQuotationSchema.safeParse({
+    ...validQuotationInput,
+    discount_type: "percentage",
+    discount_percentage_bps: null,
+  }).success, false);
+  assert.equal(createQuotationSchema.safeParse({
+    ...validQuotationInput,
+    discount_type: "fixed_sar",
+    discount_percentage_bps: 500,
+  }).success, false);
+});
+
+test("updateQuotationSchema requires coherent mode and percentage metadata", () => {
+  const base = { event: "Updated event", items: [{ description: "Line", qty: 1, unit_price: 500 }] };
+  assert.equal(updateQuotationSchema.safeParse({ ...base, discount_type: "fixed_sar", discount_percentage_bps: null }).success, true);
+  assert.equal(updateQuotationSchema.safeParse({ ...base, discount_type: "percentage", discount_percentage_bps: 750 }).success, true);
+  assert.equal(updateQuotationSchema.safeParse({ ...base, discount_type: "percentage", discount_percentage_bps: null }).success, false);
+  assert.equal(updateQuotationSchema.safeParse({ ...base, discount_percentage_bps: 750 }).success, false);
+  assert.equal(updateQuotationSchema.safeParse({ ...base, discount_type: "fixed_sar", discount_percentage_bps: 750 }).success, false);
+});
+
 test("createQuotationSchema rejects non-uuid service_id", () => {
   const result = createQuotationSchema.safeParse({
     ...validQuotationInput,

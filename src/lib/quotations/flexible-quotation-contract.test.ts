@@ -72,6 +72,45 @@ test("flexible Draft contract sends the complete structured snapshot", async () 
   assert.equal(invoked.p_expected_updated_at, validDraft.expected_updated_at);
 });
 
+test("percentage Draft contract forwards basis points and excludes client preview from authority", async () => {
+  let invoked: Record<string, unknown> = {};
+  const result = await executeUpdateFlexibleQuotationDraft({
+    value: {
+      ...validDraft,
+      discount: 0,
+      discount_type: "percentage",
+      discount_percentage_bps: 1_225,
+    },
+    actor: { clerk_user_id: "clerk_test_user", role: "admin" },
+    invoke: async (params) => {
+      invoked = params;
+      return {
+        data: [{
+          error_code: null,
+          quotation_id: quotationId,
+          updated_at: "2026-09-20T10:01:00.000Z",
+          line_count: 2,
+          subtotal: 150,
+          discount: 18.38,
+          vat_amount: 0,
+          grand_total: 131.62,
+        }],
+        error: null,
+      };
+    },
+  });
+
+  assert.equal(result.success, true);
+  assert.deepEqual(invoked.p_quotation, {
+    event: validDraft.event,
+    date: validDraft.date,
+    valid_until: validDraft.valid_until,
+    discount: 0,
+    discount_type: "percentage",
+    discount_percentage_bps: 1_225,
+  });
+});
+
 test("flexible Draft contract rejects malformed hierarchy before any RPC", async () => {
   let invoked = false;
   const result = await executeUpdateFlexibleQuotationDraft({

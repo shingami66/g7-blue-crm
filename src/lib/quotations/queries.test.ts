@@ -80,7 +80,8 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { getQuotationsByServiceIdResult } = await import("./queries.ts");
+const { getQuotationsByServiceIdResult, sanitizeQuotationDetailRow } = await import("./queries.ts");
+const { mapRowToQuotationDetail } = await import("./mappers.ts");
 
 function resetScenario(overrides: Partial<Scenario> = {}): Scenario {
   activeScenario = {
@@ -141,4 +142,28 @@ test("Service related quotations preserves the existing load-failure result", as
   const result = await getQuotationsByServiceIdResult("service-1");
 
   assert.deepEqual(result, { quotations: [], error: "quotations_load_failed" });
+});
+
+test("quotation detail sanitizes and maps fixed and percentage discount terms without changing resolved money", () => {
+  const fixed = mapRowToQuotationDetail(sanitizeQuotationDetailRow({
+    id: "fixed-quote",
+    discount: "500.00",
+    discount_type: "fixed_sar",
+    discount_percentage_bps: null,
+    quotation_items: [],
+  }));
+  const percentage = mapRowToQuotationDetail(sanitizeQuotationDetailRow({
+    id: "percentage-quote",
+    discount: "500.00",
+    discount_type: "percentage",
+    discount_percentage_bps: 1_225,
+    quotation_items: [],
+  }));
+
+  assert.equal(fixed.discount, 500);
+  assert.equal(fixed.discountType, "fixed_sar");
+  assert.equal(fixed.discountPercentageBps, null);
+  assert.equal(percentage.discount, 500);
+  assert.equal(percentage.discountType, "percentage");
+  assert.equal(percentage.discountPercentageBps, 1_225);
 });

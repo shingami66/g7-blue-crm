@@ -124,7 +124,24 @@ test("7-8. Create/edit form copy and draft-only edit contracts", () => {
   assert.equal(ar.form.removeItem, "إزالة البند");
   assert.equal(ar.form.subtotal, "المجموع الفرعي");
   assert.equal(ar.form.grandTotal, "الإجمالي");
+  assert.equal(en.form.discountType, "Discount type");
+  assert.equal(en.form.fixedAmount, "Fixed amount");
+  assert.equal(en.form.fixedAmountSar, "Fixed amount (SAR)");
+  assert.equal(en.form.percentage, "Percentage");
+  assert.equal(en.form.percentagePercent, "Percentage (%)");
+  assert.equal(en.form.discountAmountSar, "Discount amount (SAR)");
+  assert.equal(ar.form.discountType, "نوع الخصم");
+  assert.equal(ar.form.fixedAmount, "مبلغ ثابت");
+  assert.equal(ar.form.fixedAmountSar, "مبلغ ثابت (ريال سعودي)");
+  assert.equal(ar.form.percentage, "نسبة مئوية");
+  assert.equal(ar.form.percentagePercent, "نسبة الخصم (%)");
+  assert.equal(ar.form.discountAmountSar, "قيمة الخصم (ريال سعودي)");
+  assert.match(en.form.validation.discountPercentageInvalid, /0 to 100/);
+  assert.match(ar.form.validation.discountPercentageInvalid, /0 إلى 100/);
   assert.match(read(FORM), /createQuotation|updateQuotation/);
+  assert.match(read(FORM), /parseDiscountPercentageToBps/);
+  assert.match(read(FORM), /previewPercentageDiscountSar/);
+  assert.match(read(FORM), /discountType === "percentage"/);
   assert.match(read(FORM), /service_id: service\.id/);
   assert.match(read(EDIT), /quotation\.status !== "draft"/);
   assert.match(read(EDIT), /requirePermission\("quotations:write"\)/);
@@ -139,6 +156,9 @@ test("9. Detail headings, item table, totals, and metadata localize", () => {
   assert.equal(ar.detail.labels.issueDate, "تاريخ الإصدار");
   assert.equal(ar.detail.labels.validUntil, "صالح حتى");
   assert.equal(ar.detail.labels.grandTotal, "الإجمالي");
+  assert.match(read(DETAIL), /quotation\.discountType === "percentage"/);
+  assert.match(read(DETAIL), /dictionary\.form\.discountAmountSar/);
+  assert.match(read(DETAIL), /formatPercentage\(quotation\.discountPercentageBps/);
   assert.equal(en.detail.sections.billingAuthority, "Billing Authority");
   assert.equal(ar.detail.sections.billingAuthority, "مرجعية الفوترة");
   assert.equal(
@@ -339,7 +359,7 @@ test("Commercial Amendment validation and domain errors are localized before sav
   assert.match(workspace, /quotation\.eventSnapshot\?\.eventStartDate/);
   assert.match(workspace, /validateCommercialAmendmentValidityWindow/);
   assert.match(workspace, /max=\{serviceStartDate \?\? undefined\}/);
-  assert.match(workspace, /disabled=\{pending \|\| !dirty \|\| hasDraftValidationErrors\}/);
+  assert.match(workspace, /disabled=\{pending \|\| !dirty \|\| hasDraftValidationErrors \|\| discountInvalid \|\| discountExceedsSubtotal\}/);
   assert.match(workspace, /amendment\.domainErrors/);
   assert.doesNotMatch(workspace, /result\.error/);
   const domainErrorCodes = [

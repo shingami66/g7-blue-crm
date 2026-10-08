@@ -59,8 +59,55 @@ test("structured Draft contract sends one complete snapshot and server concurren
     date: "2026-09-20",
     valid_until: "2026-09-25",
     discount: 10,
+    discount_type: "fixed_sar",
+    discount_percentage_bps: null,
   });
   assert.deepEqual(sent.p_lines, [BASE_LINE]);
+});
+
+test("percentage amendment Draft forwards the rate while treating client money as non-authoritative", async () => {
+  let received: Record<string, unknown> | null = null;
+  const result = await executeUpdateApprovedCommercialAmendmentDraft({
+    value: {
+      quotation_id: QUOTATION_ID,
+      event: "Customer event",
+      date: "2026-09-20",
+      valid_until: "2026-09-25",
+      discount: 0,
+      discount_type: "percentage",
+      discount_percentage_bps: 1_225,
+      expected_updated_at: UPDATED_AT,
+      lines: [BASE_LINE],
+    },
+    actor: ACTOR,
+    invoke: async (params) => {
+      received = params;
+      return {
+        error: null,
+        data: [{
+          error_code: null,
+          quotation_id: QUOTATION_ID,
+          updated_at: UPDATED_AT,
+          line_count: 1,
+          subtotal: 100,
+          discount: 12.25,
+          vat_amount: 0,
+          grand_total: 87.75,
+        }],
+      };
+    },
+  });
+
+  assert.equal(result.success, true);
+  const sent = received as unknown as Record<string, unknown>;
+  assert.deepEqual(sent.p_quotation, {
+    event: "Customer event",
+    date: "2026-09-20",
+    valid_until: "2026-09-25",
+    discount: 0,
+    discount_type: "percentage",
+    discount_percentage_bps: 1_225,
+  });
 });
 
 test("structured Draft contract rejects malformed hierarchy before invoking the RPC", async () => {
