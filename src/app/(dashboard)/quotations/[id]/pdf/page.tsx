@@ -113,6 +113,8 @@ export default async function QuotationPdfPage({
       </div>
 
       {/* A4 Document Canvas */}
+      <div className="quotation-preview-scroll" role="region" aria-label={dictionary.quotation.title} tabIndex={0}>
+        <div className="quotation-preview-canvas">
       <div className="quotation-print-document a4-page p-[40px] flex flex-col relative bg-surface-container-lowest">
         {/* Header */}
         <header className="flex justify-between items-start border-b-2 border-primary-container pb-6 mb-8">
@@ -513,6 +515,8 @@ export default async function QuotationPdfPage({
             </p>
           </div>
           </footer>
+        </div>
+      </div>
         </div>
       </div>
     </div>

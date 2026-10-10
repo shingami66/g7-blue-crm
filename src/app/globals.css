@@ -198,6 +198,19 @@ body {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
+.quotation-preview-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.quotation-preview-canvas {
+  width: max-content;
+  min-width: 100%;
+  display: flex;
+  justify-content: center;
+}
 
 @page {
   size: A4;
@@ -508,5 +521,21 @@ body {
     padding-top: 2mm !important;
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+}
+
+
+@media print {
+  .quotation-preview-scroll {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+
+  .quotation-preview-canvas {
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
   }
 }

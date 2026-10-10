@@ -147,6 +147,47 @@ test("Quotation PDF line items conditionally present optional category and detai
   assert.match(read(INVOICE_PDF), /invoice-print-document/);
 });
 
+
+test("Quotation PDF mobile preview scroll boundary preserves fixed A4 and print flow", () => {
+  const source = read(QUOTATION_PDF);
+  const template = getQuotationTemplate(source);
+  const styles = read(PRINT_CSS);
+  const print = getPrintStyles(styles);
+  const scrollRule = styles.match(/\.quotation-preview-scroll\s*\{[^}]*\}/)?.[0] ?? "";
+  const canvasRule = styles.match(/\.quotation-preview-canvas\s*\{[^}]*\}/)?.[0] ?? "";
+
+  assert.match(
+    template,
+    /className="quotation-preview-scroll"[^>]*role="region"[^>]*tabIndex=\{0\}>\s*<div className="quotation-preview-canvas">\s*<div className="quotation-print-document a4-page/,
+    "the fixed A4 document must be inside its dedicated preview scroll boundary",
+  );
+  assert.match(styles, /\.a4-page\s*\{\s*width:\s*210mm;/);
+  assert.match(scrollRule, /width:\s*100%;/);
+  assert.match(scrollRule, /overflow-x:\s*auto;/);
+  assert.match(canvasRule, /width:\s*max-content;/);
+  assert.match(canvasRule, /display: flex;/);
+  assert.match(canvasRule, /justify-content: center;/);
+  assert.match(canvasRule, /min-width:\s*100%;/);
+  assert.match(
+    print,
+    /\.quotation-preview-scroll\s*\{[^}]*width:\s*auto !important;[^}]*overflow:\s*visible !important;/,
+  );
+  assert.match(
+    print,
+    /\.quotation-preview-canvas\s*\{[^}]*display:\s*block !important;[^}]*width:\s*auto !important;[^}]*min-width:\s*0 !important;/,
+  );
+  assert.match(print, /\.a4-page\s*\{[\s\S]*?width:\s*100% !important;/);
+  assert.doesNotMatch(`${scrollRule}\n${canvasRule}`, /transform:/);
+
+  // Keep percentage-discount content and both document-locale routes intact.
+  assert.match(template, /quotation\.discountType === "percentage"/);
+  assert.match(template, /formatPercentage\(quotation\.discountPercentageBps/);
+  assert.match(template, /dictionary\.quotation\.discountAmount/);
+  assert.match(source, /resolveDocumentLocale\(resolvedSearchParams\)/);
+  assert.match(source, /getDocumentDictionary\(documentLocale\)/);
+  assert.match(source, /dir=\{documentDirection\}/);
+});
+
 test("Quotation print contract preserves A4 and natural pagination", () => {
   const styles = read(PRINT_CSS);
   const print = getPrintStyles(styles);
