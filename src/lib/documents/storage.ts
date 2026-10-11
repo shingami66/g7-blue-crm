@@ -289,7 +289,7 @@ function documentIdFromInput(input: unknown): string {
 function documentServiceReferenceFromInput(input: unknown): BusinessDocumentServiceReference {
   const parsed = documentServiceReferenceSchema.safeParse(input);
   if (!parsed.success) {
-    throw documentError("invalid_document_input", "The document and Service identifiers are invalid.");
+    throw documentError("invalid_document_input", "The document and Event identifiers are invalid.");
   }
   return parsed.data;
 }
@@ -390,7 +390,7 @@ async function assertSupportedLinkTarget(
     .is("deleted_at", null)
     .maybeSingle();
   if (error || !data) {
-    throw documentError("document_link_target_invalid", "The Service link target is invalid.");
+    throw documentError("document_link_target_invalid", "The Event link target is invalid.");
   }
 }
 
@@ -407,10 +407,10 @@ async function assertDocumentLinkedToService(
     .eq("service_id", serviceId)
     .maybeSingle();
   if (error) {
-    throw documentError("document_storage_read_failed", "The Service document link could not be verified.");
+    throw documentError("document_storage_read_failed", "The Event document link could not be verified.");
   }
   if (!data) {
-    throw documentError("document_not_found", "The document was not found for this Service.");
+    throw documentError("document_not_found", "The document was not found for this Event.");
   }
 }
 

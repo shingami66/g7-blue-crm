@@ -263,6 +263,6 @@ test("transition state exposes the full-settlement blocked reason", async () => 
   );
   assert.equal(
     state.actions.find((action) => action.status === "Deposit Paid")?.blockedReason,
-    "The active Deposit Invoice must be fully paid before moving this Service to Deposit Paid.",
+    "The active Deposit Invoice must be fully paid before moving this Event to Deposit Paid.",
   );
 });

@@ -519,7 +519,7 @@ test("Service actions require the linked Service boundary and expose no generic 
   assert.deepEqual(result, {
     success: false,
     code: "document_not_found",
-    error: "The document was not found for this Service.",
+    error: "The document was not found for this Event.",
   });
   assert.deepEqual(state.permissionCalls, ["services:read", "documents:read"]);
   assert.equal(state.signedUrlCalls.length, 0);

@@ -65,7 +65,7 @@ const COLUMNS: Record<keyof typeof REPORTS, Column[]> = {
     { key: "account_code", en: "Account", ar: "الحساب" },
     { key: "side", en: "Side", ar: "الطرف" },
     { key: "amount_halalah", en: "Amount (SAR)", ar: "المبلغ (ريال سعودي)", money: true },
-    { key: "service_number", en: "Service", ar: "الخدمة" },
+    { key: "service_number", en: "Event Reference", ar: "مرجع الفعالية" },
     { key: "reversal_of_journal_id", en: "Reverses", ar: "يعكس القيد" },
     { key: "journal_evidence", en: "Journal evidence", ar: "أدلة القيود" },
   ],
@@ -79,7 +79,7 @@ const COLUMNS: Record<keyof typeof REPORTS, Column[]> = {
     { key: "ending_debit_halalah", en: "Ending debit", ar: "مدين آخر المدة", money: true },
     { key: "ending_credit_halalah", en: "Ending credit", ar: "دائن آخر المدة", money: true },
     { key: "journal_evidence", en: "Journal evidence", ar: "أدلة القيود" },
-    { key: "service_attribution", en: "Service attribution", ar: "إسناد الخدمة" },
+    { key: "service_attribution", en: "Event attribution", ar: "إسناد الفعالية" },
   ],
   "profit-and-loss": [
     { key: "section_key", en: "Section", ar: "القسم" },
@@ -176,7 +176,7 @@ export default async function AccountingReportPage({
     ? "مخرجات محاسبية داخلية مؤقتة. ليست قوائم مالية نظامية. يلزم التحقق المهني قبل الاستخدام الحي أو النظامي."
     : "Provisional internal accounting output. Not a statutory financial statement. Professional validation is required before live or statutory use.";
   const serviceAnalysisNote = serviceId && (reportKey === "profit-and-loss" || reportKey === "balance-sheet")
-    ? (locale === "ar" ? "تحليل محاسبي حسب الخدمة؛ ليس هامشاً إدارياً للفعالية." : "Service-filtered accounting analysis; this is not managerial Event Costing margin.")
+    ? (locale === "ar" ? "تحليل محاسبي حسب الفعالية؛ ليس هامشاً إدارياً لتكاليف الفعالية." : "Event-filtered accounting analysis; this is not managerial Event Costing margin.")
     : null;
 
   return (
@@ -202,7 +202,7 @@ export default async function AccountingReportPage({
           {reportKey === "balance-sheet" ? <input type="hidden" name="from" value={from} /> : <label className="grid gap-1 text-sm"><span>{locale === "ar" ? "من تاريخ المحاسبة" : "Accounting date from"}</span><input type="date" name="from" required defaultValue={from} className="min-h-10 rounded-md border border-outline-variant bg-surface px-3" /></label>}
           <label className="grid gap-1 text-sm"><span>{locale === "ar" ? (reportKey === "balance-sheet" ? "تاريخ الميزانية حتى" : "إلى تاريخ المحاسبة") : (reportKey === "balance-sheet" ? "Balance-sheet date" : "Accounting date through")}</span><input type="date" name="through" required defaultValue={through} className="min-h-10 rounded-md border border-outline-variant bg-surface px-3" /></label>
           <label className="grid gap-1 text-sm"><span>{locale === "ar" ? "حد وقت التسجيل (الوقت المحلي بتوقيت الرياض افتراضياً)" : "Recorded-at cutoff (local input defaults to Riyadh time)"}</span><input type="datetime-local" name="cutoff" defaultValue={cutoffText?.slice(0, 16)} className="min-h-10 rounded-md border border-outline-variant bg-surface px-3" /></label>
-          <label className="grid gap-1 text-sm"><span>{locale === "ar" ? "معرّف الخدمة (اختياري)" : "Service ID (optional)"}</span><input type="text" name="serviceId" defaultValue={serviceId ?? ""} className="min-h-10 rounded-md border border-outline-variant bg-surface px-3" /></label>
+          <label className="grid gap-1 text-sm"><span>{locale === "ar" ? "معرّف الفعالية (اختياري)" : "Event ID (optional)"}</span><input type="text" name="serviceId" defaultValue={serviceId ?? ""} className="min-h-10 rounded-md border border-outline-variant bg-surface px-3" /></label>
           {reportKey === "general-ledger" ? <label className="grid gap-1 text-sm"><span>{locale === "ar" ? "معرّف الحساب (اختياري)" : "Account ID (optional)"}</span><input type="text" name="accountId" defaultValue={accountId ?? ""} className="min-h-10 rounded-md border border-outline-variant bg-surface px-3" /></label> : null}
           <div className="flex items-end"><button type="submit" className="min-h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white">{dictionary.workspace.apply}</button></div>
         </form>}

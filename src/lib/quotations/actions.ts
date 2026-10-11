@@ -69,9 +69,9 @@ function serviceCanReceiveQuotation(status: string) {
 }
 
 const VALID_AFTER_SERVICE_START_ERROR =
-  "Quotation cannot remain valid after the service begins.";
+  "Quotation cannot remain valid after the Event begins.";
 const SERVICE_ALREADY_STARTED_ERROR =
-  "Cannot create a quotation because the service has already started.";
+  "Cannot create a quotation because the Event has already started.";
 
 function validateQuotationValidityWindow(
   validUntil: string | null | undefined,
@@ -130,10 +130,10 @@ export async function createQuotation(input: unknown): Promise<ActionResult<Quot
 
     const service = await getServiceById(parsed.data.service_id);
     if (!service) {
-      return { success: false, code: "SERVICE_UNAVAILABLE", error: "Service not found or unavailable." };
+      return { success: false, code: "SERVICE_UNAVAILABLE", error: "Event not found or unavailable." };
     }
     if (!serviceCanReceiveQuotation(service.status)) {
-      return { success: false, code: "SERVICE_STATUS_INVALID", error: "Quotations can only be created for Inquiry or Quoted services." };
+      return { success: false, code: "SERVICE_STATUS_INVALID", error: "Quotations can only be created for Events in Inquiry or Quoted status." };
     }
 
     const validityError = validateQuotationValidityWindow(
@@ -182,10 +182,10 @@ export async function createQuotation(input: unknown): Promise<ActionResult<Quot
         };
       }
       if (row.error_code === "service_unavailable") {
-        return { success: false, code: "SERVICE_UNAVAILABLE", error: "Service not found or unavailable." };
+      return { success: false, code: "SERVICE_UNAVAILABLE", error: "Event not found or unavailable." };
       }
       if (row.error_code === "service_status_invalid") {
-        return { success: false, code: "SERVICE_STATUS_INVALID", error: "Quotations can only be created for Inquiry or Quoted services." };
+      return { success: false, code: "SERVICE_STATUS_INVALID", error: "Quotations can only be created for Events in Inquiry or Quoted status." };
       }
       if (row.error_code === "invalid_input" || row.error_code === "missing_mutation_key") {
         return { success: false, code: "INVALID_INPUT", error: "Invalid quotation input." };
@@ -352,7 +352,7 @@ export async function updateQuotation(id: string, input: unknown): Promise<Actio
 
     const service = await getServiceById(existingQuotation.service_id);
     if (!service) {
-      return { success: false, error: "Service not found or unavailable." };
+      return { success: false, error: "Event not found or unavailable." };
     }
 
     const effectiveIssueDate = parsed.data.date ?? existingQuotation.date;

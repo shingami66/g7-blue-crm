@@ -260,7 +260,7 @@ export const cashAdvancesDictionaryEn: CashAdvancesDictionary = {
   },
   contextTypes: {
     company: "Company",
-    event: "Event / Service",
+      event: "Event",
   },
   accountability: {
     amountIssued: "Advance Value",
@@ -389,10 +389,10 @@ export const cashAdvancesDictionaryEn: CashAdvancesDictionary = {
     contextLabel: "Context",
     contextCompany: "Company",
     contextCompanyDesc: "General company operations or administrative expenses",
-    contextEvent: "Event / Service",
-    contextEventDesc: "Specific project or event execution service",
-    serviceLabel: "Service / Event",
-    selectServicePlaceholder: "Select eligible service...",
+    contextEvent: "Event",
+    contextEventDesc: "Specific project or event execution",
+    serviceLabel: "Event",
+    selectServicePlaceholder: "Select eligible event...",
     purposeLabel: "Purpose & Justification",
     purposePlaceholder: "Describe the operational necessity for this cash advance (minimum 5 characters)...",
     amountLabel: "Amount Requested (SAR)",
@@ -404,7 +404,7 @@ export const cashAdvancesDictionaryEn: CashAdvancesDictionary = {
     errors: {
       validationError: "Please verify all fields and provide valid information.",
       invalidContext: "Invalid context type selected.",
-      serviceRequired: "Service selection is required for event advances.",
+      serviceRequired: "Event selection is required for event advances.",
       purposeMin: "Purpose must be at least 5 characters.",
       amountPositive: "Amount must be greater than zero.",
       requestConflict: "A request conflict occurred. Please retry.",
@@ -449,7 +449,7 @@ export const cashAdvancesDictionaryEn: CashAdvancesDictionary = {
       cancellationReason: "Cancellation Reason",
       purpose: "Purpose",
       context: "Context",
-      service: "Service / Event",
+      service: "Event",
     },
     allocationsTable: {
       expenseNumber: "Expense Number",
@@ -504,7 +504,7 @@ export const cashAdvancesDictionaryAr: CashAdvancesDictionary = {
   },
   contextTypes: {
     company: "عام للشركة",
-    event: "فعالية / خدمة",
+      event: "فعالية",
   },
   accountability: {
     amountIssued: "قيمة العهدة",
@@ -633,10 +633,10 @@ export const cashAdvancesDictionaryAr: CashAdvancesDictionary = {
     contextLabel: "سياق العهدة",
     contextCompany: "عام للشركة",
     contextCompanyDesc: "عمليات الشركة العامة أو المصروفات الإدارية",
-    contextEvent: "فعالية / خدمة",
-    contextEventDesc: "خدمة تنفيذ مشروع أو فعالية محددة",
-    serviceLabel: "الخدمة / الفعالية",
-    selectServicePlaceholder: "اختر خدمة مؤهلة...",
+    contextEvent: "الفعالية",
+    contextEventDesc: "تنفيذ مشروع أو فعالية محددة",
+    serviceLabel: "الفعالية",
+    selectServicePlaceholder: "اختر فعالية مؤهلة...",
     purposeLabel: "الغرض والمبرر",
     purposePlaceholder: "اكتب المبرر التشغيلي لطلب هذه العهدة النقدية (5 أحرف على الأقل)...",
     amountLabel: "المبلغ المطلوب (ر.س)",
@@ -648,7 +648,7 @@ export const cashAdvancesDictionaryAr: CashAdvancesDictionary = {
     errors: {
       validationError: "يرجى التحقق من جميع الحقول وإدخال بيانات صحيحة.",
       invalidContext: "نوع السياق المحدد غير صالح.",
-      serviceRequired: "يجب اختيار الخدمة للعهد المرتبطة بالفعاليات.",
+      serviceRequired: "يجب اختيار الفعالية للعهد المرتبطة بالفعاليات.",
       purposeMin: "يجب ألا يقل الغرض عن 5 أحرف.",
       amountPositive: "يجب أن يكون المبلغ أكبر من الصفر.",
       requestConflict: "حدث تعارض أثناء معالجة الطلب. يرجى المحاولة مرة أخرى.",
@@ -693,7 +693,7 @@ export const cashAdvancesDictionaryAr: CashAdvancesDictionary = {
       cancellationReason: "سبب الإلغاء",
       purpose: "الغرض",
       context: "السياق",
-      service: "الخدمة / الفعالية",
+      service: "الفعالية",
     },
     allocationsTable: {
       expenseNumber: "رقم المصروف",

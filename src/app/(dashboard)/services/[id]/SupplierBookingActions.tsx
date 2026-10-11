@@ -27,9 +27,9 @@ function getCreateSupplierBookingErrorMessage(
     "Source allocation is deleted.": dictionary.errors.sourceDeleted,
     "Source allocation must be selected before booking.":
       dictionary.errors.sourceMustBeSelected,
-    "Failed to verify service status. Please try again.":
+    "Failed to verify Event status. Please try again.":
       dictionary.errors.serviceStatusVerifyFailed,
-    "Service is unavailable for Supplier Booking.":
+    "Event is unavailable for Supplier Booking.":
       dictionary.errors.serviceUnavailable,
     "Failed to verify Supplier status. Please try again.":
       dictionary.errors.supplierStatusVerifyFailed,
@@ -61,9 +61,9 @@ function getCancelSupplierBookingErrorMessage(
     "Supplier Booking not found.": dictionary.errors.bookingNotFound,
     "Supplier Booking is already cancelled.":
       dictionary.errors.alreadyCancelled,
-    "Failed to verify service status. Please try again.":
+    "Failed to verify Event status. Please try again.":
       dictionary.errors.serviceStatusVerifyFailed,
-    "Service is unavailable for Supplier Booking cancellation.":
+    "Event is unavailable for Supplier Booking cancellation.":
       dictionary.errors.serviceUnavailable,
     "Failed to cancel Supplier Booking. Please try again.":
       dictionary.errors.cancelFailedRetry,

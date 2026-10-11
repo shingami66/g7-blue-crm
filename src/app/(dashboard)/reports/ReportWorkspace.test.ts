@@ -188,7 +188,7 @@ test("receivables content presents the focused invoice model and ranked customer
   const english = render("en");
   assert.equal(english.visibleText.includes("Invoices"), true);
   assert.match(english.visibleText, /3 invoices/);
-  assert.deepEqual(english.headers, ["Invoice", "Customer", "Service", "Due date", "Net due", "Settled", "Outstanding"]);
+  assert.deepEqual(english.headers, ["Invoice", "Customer", "Event Reference", "Due date", "Net due", "Settled", "Outstanding"]);
   for (const label of ["Billed", "Collected Cash", "Outstanding", "Overdue", "Not due", "1–30 days", "31–60 days", "61–90 days", "91+ days"]) {
     assert.ok(english.visibleText.includes(label), `missing ${label}`);
   }
@@ -210,8 +210,8 @@ test("receivables content presents the focused invoice model and ranked customer
   const serviceCellMatch = english.html.match(/<td\b(?=[^>]*style="[^"]*width:28%;[^"]*min-width:250px)[^>]*>([\s\S]*?)<\/td>/);
   const serviceCell = serviceCellMatch?.[1];
   assert.ok(serviceCell, "service cell receives the expanded desktop width");
-  const serviceHeader = english.html.match(/<th\b([^>]*)>Service<\/th>/)?.[1];
-  assert.ok(serviceHeader, "Service header is rendered");
+  const serviceHeader = english.html.match(/<th\b([^>]*)>Event Reference<\/th>/)?.[1];
+  assert.ok(serviceHeader, "Event Reference header is rendered");
   assert.match(serviceHeader, /text-align:start/);
   assert.match(serviceCellMatch?.[0].split(">", 1)[0] ?? "", /text-align:start/);
   assert.match(english.html, /<div dir="ltr">/);
@@ -274,8 +274,8 @@ test("receivables content presents the focused invoice model and ranked customer
   const arabicServiceCellMatch = arabic.html.match(/<td\b(?=[^>]*style="[^"]*width:28%;[^"]*min-width:250px)[^>]*>([\s\S]*?)<\/td>/);
   const arabicServiceCell = arabicServiceCellMatch?.[1];
   assert.ok(arabicServiceCell, "Arabic service identity uses the same adjusted column");
-  const arabicHeader = arabic.html.match(/<th\b([^>]*)>الخدمة<\/th>/)?.[1];
-  assert.ok(arabicHeader, "Arabic Service header is rendered");
+  const arabicHeader = arabic.html.match(/<th\b([^>]*)>مرجع الفعالية<\/th>/)?.[1];
+  assert.ok(arabicHeader, "Arabic Event Reference header is rendered");
   assert.match(arabicHeader, /text-align:start/);
   assert.match(arabicServiceCellMatch?.[0].split(">", 1)[0] ?? "", /text-align:start/);
   assertServiceIdentityAlignment(arabic.html, "rtl");

@@ -163,7 +163,7 @@ test("9. Detail headings, item table, totals, and metadata localize", () => {
   assert.equal(ar.detail.sections.billingAuthority, "مرجعية الفوترة");
   assert.equal(
     en.detail.billingAuthority.openServiceBilling,
-    "Open Service billing",
+    "Open Event billing",
   );
   assert.equal(
     ar.detail.billingAuthority.amountUnavailable,

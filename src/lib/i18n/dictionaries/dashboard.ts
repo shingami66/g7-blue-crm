@@ -69,13 +69,13 @@ const dashboardDictionaryEn: DashboardDictionary = {
   },
   header: {
     title: "Dashboard",
-    subtitle: "Overview of customers, quotations, invoices, and services.",
+    subtitle: "Overview of customers, quotations, invoices, and events.",
   },
   metrics: {
     totalCustomers: "Total Customers",
     totalQuotations: "Total Quotations",
     openInvoices: "Open Invoices",
-    services: "Services",
+    services: "Events",
     totalCollected: "Total Collected",
     pendingBalance: "Pending Balance",
     basedOnLiveRecords: "Based on live records",
@@ -87,7 +87,7 @@ const dashboardDictionaryEn: DashboardDictionary = {
     newCustomer: "New Customer",
     newQuotation: "New Quotation",
     newInvoice: "New Invoice",
-    newService: "New Service",
+    newService: "New Event",
   },
   sections: {
     businessSnapshot: "Business Snapshot",
@@ -111,14 +111,14 @@ const dashboardDictionaryEn: DashboardDictionary = {
     },
   },
   workflow: {
-    title: "Service Workflow",
-    viewServices: "View services",
-    stage: "Service stage",
+    title: "Event Workflow",
+    viewServices: "View events",
+    stage: "Event stage",
     focus: "Focus",
     owner: "Owner",
     rows: {
       Inquiry: { label: "Inquiry", focus: "Capture event or booking request", owner: "Sales" },
-      Quoted: { label: "Quoted", focus: "Prepare Service-scoped quotation", owner: "Sales" },
+      Quoted: { label: "Quoted", focus: "Prepare an event quotation", owner: "Sales" },
       Approved: { label: "Approved", focus: "Record customer approval", owner: "Manager" },
       "Deposit Paid": {
         label: "Deposit Paid",
@@ -139,13 +139,13 @@ const dashboardDictionaryAr: DashboardDictionary = {
   },
   header: {
     title: "لوحة التحكم",
-    subtitle: "نظرة عامة على العملاء وعروض الأسعار والفواتير والخدمات.",
+    subtitle: "نظرة عامة على العملاء وعروض الأسعار والفواتير والفعاليات.",
   },
   metrics: {
     totalCustomers: "إجمالي العملاء",
     totalQuotations: "إجمالي عروض الأسعار",
     openInvoices: "الفواتير المفتوحة",
-    services: "الخدمات",
+    services: "الفعاليات",
     totalCollected: "إجمالي المحصل",
     pendingBalance: "الرصيد المستحق",
     basedOnLiveRecords: "استنادًا إلى السجلات الحالية",
@@ -157,7 +157,7 @@ const dashboardDictionaryAr: DashboardDictionary = {
     newCustomer: "عميل جديد",
     newQuotation: "عرض سعر جديد",
     newInvoice: "فاتورة جديدة",
-    newService: "خدمة جديدة",
+    newService: "فعالية جديدة",
   },
   sections: {
     businessSnapshot: "ملخص الأعمال",
@@ -181,14 +181,14 @@ const dashboardDictionaryAr: DashboardDictionary = {
     },
   },
   workflow: {
-    title: "مسار عمل الخدمة",
-    viewServices: "عرض الخدمات",
-    stage: "مرحلة الخدمة",
+    title: "مسار عمل الفعالية",
+    viewServices: "عرض الفعاليات",
+    stage: "مرحلة الفعالية",
     focus: "التركيز",
     owner: "المسؤول",
     rows: {
       Inquiry: { label: "استفسار", focus: "تسجيل طلب الفعالية أو الحجز", owner: "المبيعات" },
-      Quoted: { label: "تم التسعير", focus: "إعداد عرض سعر مرتبط بالخدمة", owner: "المبيعات" },
+      Quoted: { label: "تم التسعير", focus: "إعداد عرض سعر للفعالية", owner: "المبيعات" },
       Approved: { label: "معتمد", focus: "تسجيل موافقة العميل", owner: "المدير" },
       "Deposit Paid": {
         label: "تم دفع الدفعة المقدمة",

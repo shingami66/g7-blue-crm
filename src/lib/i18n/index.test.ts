@@ -106,7 +106,7 @@ test("ships English-only dictionary skeletons for the approved namespaces", asyn
   );
 
   assert.equal(commonDictionaryEn.actions.save, "Save");
-  assert.equal(navigationDictionaryEn.modules.services, "Services");
+  assert.equal(navigationDictionaryEn.modules.services, "Events");
   assert.equal(statusDictionariesEn.service.Inquiry, "Inquiry");
   assert.equal(statusDictionariesEn.payment.confirmed, "Confirmed");
   assert.equal(documentTypeDictionaryEn.invoiceType.deposit, "Deposit");

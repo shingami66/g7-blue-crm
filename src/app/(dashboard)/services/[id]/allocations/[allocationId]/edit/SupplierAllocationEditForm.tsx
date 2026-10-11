@@ -32,11 +32,11 @@ function getUpdateSupplierAllocationErrorMessage(
       dictionary.errors.linkedActiveBooking,
     "Invalid supplier allocation status transition.":
       dictionary.errors.invalidTransition,
-    "Service is unavailable for supplier allocation update.":
+    "Event is unavailable for supplier allocation update.":
       dictionary.errors.serviceUnavailable,
     "Supplier is unavailable for allocation update.":
       dictionary.errors.supplierUnavailable,
-    "Approved quotation is invalid for this service.":
+    "Approved quotation is invalid for this Event.":
       dictionary.errors.approvedQuotationInvalid,
     "Failed to update supplier allocation. Please try again.":
       dictionary.errors.updateFailedRetry,

@@ -43,7 +43,7 @@ function getRestoreSupplierAllocationErrorMessage(
       dictionary.errors.supplierUnavailable,
     "This allocation cannot be modified because it is linked to an active supplier booking.":
       dictionary.errors.linkedActiveBooking,
-    "Service is unavailable for supplier allocation restoration.":
+    "Event is unavailable for supplier allocation restoration.":
       dictionary.errors.serviceUnavailable,
     "Failed to restore supplier allocation. Please try again.":
       dictionary.errors.restoreFailedRetry,

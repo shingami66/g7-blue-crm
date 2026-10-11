@@ -12,6 +12,7 @@ import {
 import { applyApplicableServiceInvoiceExposurePredicate } from "./exposure.ts";
 import type { ServiceBillingState } from "./types.ts";
 import type { Service, ServiceStatus } from "../../types/service.ts";
+import { getInvoicesDictionary } from "../i18n/dictionaries/invoices.ts";
 
 const serviceQueriesSource = readFileSync(
   new URL("../services/queries.ts", import.meta.url),
@@ -135,9 +136,13 @@ test("chooser remains two-step, accessible, and navigation-only", () => {
 });
 
 test("Invoice chooser keeps locale-aware desktop alignment and a fixed Select action", () => {
+  const en = getInvoicesDictionary("en");
+  const ar = getInvoicesDictionary("ar");
   assert.match(chooserSource, /max-w-5xl/);
   assert.match(selectorSource, /const DESKTOP_COLUMN_ORDER =/);
-  assert.match(selectorSource, />Service \/ الخدمة<\/div>/);
+  assert.equal(en.list.invoiceChooser.eventIdentity, "Event Reference / Event Record Title");
+  assert.equal(ar.list.invoiceChooser.eventIdentity, "مرجع الفعالية / عنوان سجل الفعالية");
+  assert.match(selectorSource, /\{chooser\.eventIdentity\}/);
   assert.match(selectorSource, /en:\s*\{[\s\S]*service: "order-1"[\s\S]*select: "order-6"/);
   assert.match(selectorSource, /ar:\s*\{[\s\S]*service: "order-6"[\s\S]*select: "order-1"/);
   assert.match(selectorSource, /<div dir="ltr" className="hidden grid-cols-12/);
@@ -234,8 +239,8 @@ test("Invoice chooser dictionaries cover distinct English and Arabic Deposit and
   assert.match(servicesDictSource, /costMarginTitle: "التكلفة والهامش التقديري"/);
   assert.match(servicesDictSource, /estimatedGrossMargin: "Estimated Gross Margin"/);
   assert.match(servicesDictSource, /estimatedGrossMargin: "هامش الربح الإجمالي التقديري"/);
-  assert.match(servicesDictSource, /priorInvoiced: "Service-lifetime invoiced exposure"/);
-  assert.match(servicesDictSource, /priorInvoiced: "التعرض المفوتر طوال عمر الخدمة"/);
+  assert.match(servicesDictSource, /priorInvoiced: "Event-lifetime invoiced exposure"/);
+  assert.match(servicesDictSource, /priorInvoiced: "التعرض المفوتر طوال عمر الفعالية"/);
   assert.match(servicesDictSource, /amountSummary: "The final invoice amount is calculated automatically from the remaining billable amount."/);
   assert.match(servicesDictSource, /amountSummary: "يُحتسب مبلغ الفاتورة النهائية تلقائياً من المبلغ المتبقي القابل للفوترة."/);
 });

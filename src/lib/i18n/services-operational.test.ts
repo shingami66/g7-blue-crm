@@ -230,9 +230,9 @@ test("2. Billing headings and labels resolve in both locales", () => {
   assert.equal(ar.billing.cards.billingCalculation, "ملخص الفوترة");
   assert.equal(
     en.billing.cards.priorInvoiced,
-    "Service-lifetime invoiced exposure",
+    "Event-lifetime invoiced exposure",
   );
-  assert.equal(ar.billing.cards.priorInvoiced, "التعرض المفوتر طوال عمر الخدمة");
+  assert.equal(ar.billing.cards.priorInvoiced, "التعرض المفوتر طوال عمر الفعالية");
   assert.equal(en.billing.cards.remaining, "Remaining billable");
   assert.equal(ar.billing.cards.remaining, "المتبقي للفوترة");
   assert.equal(en.billing.cards.amountUnavailable, "Amount unavailable");
@@ -517,7 +517,7 @@ test("7. ABS headings, statuses, line-safety, and item-decision labels localize"
   assert.equal(ar.approvedBillingScopes.labels.sourceQuotation, "عرض السعر المصدر");
   assert.equal(
     en.approvedBillingScopes.labels.lifetimeInvoiceExposure,
-    "Service-lifetime invoiced exposure",
+    "Event-lifetime invoiced exposure",
   );
   assert.equal(en.approvedBillingScopes.fullyAllocated, "Fully allocated");
   assert.equal(en.approvedBillingScopes.history.title, "Scope history");
@@ -849,8 +849,8 @@ test("8e. ABS Void is localized, permission-aware, terminal, and audit-presented
   const voidCopy = en.approvedBillingScopes.detail.voidScope;
   const voidCopyAr = ar.approvedBillingScopes.detail.voidScope;
 
-  assert.equal(voidCopy.reasonCodeLabels.service_cancelled, "Service cancelled");
-  assert.equal(voidCopyAr.reasonCodeLabels.service_cancelled, "تم إلغاء الخدمة");
+  assert.equal(voidCopy.reasonCodeLabels.service_cancelled, "Event cancelled");
+  assert.equal(voidCopyAr.reasonCodeLabels.service_cancelled, "تم إلغاء الفعالية");
   assert.equal(voidCopy.reasonCodeLabels.customer_withdrew_scope, "Customer withdrew scope");
   assert.equal(voidCopyAr.reasonCodeLabels.approved_in_error, "تم الاعتماد بالخطأ");
   assert.equal(voidCopy.reasonCodeLabels.other, "Other");

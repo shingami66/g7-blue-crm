@@ -40,9 +40,9 @@ export interface PaymentsDictionary {
 const paymentsDictionaryEn: PaymentsDictionary = {
   locale: "en",
   title: "Payments",
-  subtitle: "Track recorded payments linked to invoices and services.",
+  subtitle: "Track recorded payments linked to invoices and events.",
   receiptsLink: "Customer Receipts",
-  searchPlaceholder: "Search payment, invoice, reference, customer, or service",
+  searchPlaceholder: "Search payment, invoice, reference, customer, or event",
   stats: {
     confirmedCollected: "Confirmed Collected",
     paymentRecords: "Payment Records",
@@ -53,7 +53,7 @@ const paymentsDictionaryEn: PaymentsDictionary = {
     date: "Payment Date",
     customer: "Customer",
     invoice: "Invoice Number",
-    service: "Service",
+    service: "Event Reference",
     method: "Payment Method",
     reference: "Reference",
     amount: "Amount",
@@ -85,9 +85,9 @@ const paymentsDictionaryEn: PaymentsDictionary = {
 const paymentsDictionaryAr: PaymentsDictionary = {
   locale: "ar",
   title: "المدفوعات",
-  subtitle: "متابعة المدفوعات المسجلة المرتبطة بالفواتير والخدمات.",
+  subtitle: "متابعة المدفوعات المسجلة المرتبطة بالفواتير والفعاليات.",
   receiptsLink: "إيصالات العملاء",
-  searchPlaceholder: "ابحث عن الدفعة أو الفاتورة أو المرجع أو العميل أو الخدمة",
+  searchPlaceholder: "ابحث عن الدفعة أو الفاتورة أو المرجع أو العميل أو الفعالية",
   stats: {
     confirmedCollected: "المبالغ المحصلة المؤكدة",
     paymentRecords: "سجلات المدفوعات",
@@ -98,7 +98,7 @@ const paymentsDictionaryAr: PaymentsDictionary = {
     date: "تاريخ الدفع",
     customer: "العميل",
     invoice: "رقم الفاتورة",
-    service: "الخدمة",
+    service: "مرجع الفعالية",
     method: "طريقة الدفع",
     reference: "المرجع",
     amount: "المبلغ",

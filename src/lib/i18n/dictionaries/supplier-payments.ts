@@ -116,11 +116,11 @@ const errorsAr: Record<string, string> = {
 
 const base: Omit<SupplierPaymentsDictionary, "locale"> = {
   title: "Supplier Payments",
-  subtitle: "Outbound payments recorded against approved Event / Service Supplier Bills.",
+  subtitle: "Outbound payments recorded against approved Event Supplier Bills.",
   recordPayment: "Record Payment",
   backToList: "Back to Supplier Payments",
   fields: {
-    paymentNumber: "Payment Number", bill: "Supplier Bill", supplier: "Supplier", service: "Event / Service", paymentDate: "Payment Date", currency: "Currency", amount: "Amount", method: "Method", reference: "Payment Reference", evidence: "Payment Evidence", notes: "Notes", recordedAt: "Recorded At", recordedBy: "Recorded By", status: "Status", payable: "Payable", paid: "Paid", outstanding: "Outstanding", bankName: "Bank", accountName: "Account Name", iban: "IBAN snapshot", reversalAudit: "Reversal Audit", reversalReason: "Reversal Reason", reversedAt: "Reversed At", reversedBy: "Reversed by",
+    paymentNumber: "Payment Number", bill: "Supplier Bill", supplier: "Supplier", service: "Event Reference", paymentDate: "Payment Date", currency: "Currency", amount: "Amount", method: "Method", reference: "Payment Reference", evidence: "Payment Evidence", notes: "Notes", recordedAt: "Recorded At", recordedBy: "Recorded By", status: "Status", payable: "Payable", paid: "Paid", outstanding: "Outstanding", bankName: "Bank", accountName: "Account Name", iban: "IBAN snapshot", reversalAudit: "Reversal Audit", reversalReason: "Reversal Reason", reversedAt: "Reversed At", reversedBy: "Reversed by",
   },
   columns: { payment: "Payment", bill: "Bill", supplier: "Supplier", date: "Date", amount: "Amount", method: "Method", status: "Status", actions: "Actions" },
   methods: { bank_transfer: "Bank transfer", cash: "Cash", cheque: "Cheque" },
@@ -138,10 +138,10 @@ export const supplierPaymentsDictionaryAr: SupplierPaymentsDictionary = {
   locale: "ar",
   ...base,
   title: "مدفوعات الموردين",
-  subtitle: "المدفوعات المسجلة مقابل فواتير موردي الفعاليات والخدمات المعتمدة.",
+  subtitle: "المدفوعات المسجلة مقابل فواتير موردي الفعاليات المعتمدة.",
   recordPayment: "تسجيل دفعة",
   backToList: "العودة إلى مدفوعات الموردين",
-  fields: { paymentNumber: "رقم الدفعة", bill: "فاتورة المورد", supplier: "المورد", service: "الفعالية / الخدمة", paymentDate: "تاريخ الدفع", currency: "العملة", amount: "المبلغ", method: "طريقة الدفع", reference: "مرجع الدفع", evidence: "مستند تأييد الدفع", notes: "ملاحظات", recordedAt: "تاريخ التسجيل", recordedBy: "سجّلها", status: "الحالة", payable: "المستحق", paid: "المدفوع", outstanding: "المتبقي", bankName: "البنك", accountName: "اسم الحساب", iban: "نسخة IBAN", reversalAudit: "سجل العكس", reversalReason: "سبب العكس", reversedAt: "تاريخ العكس", reversedBy: "تم العكس بواسطة" },
+  fields: { paymentNumber: "رقم الدفعة", bill: "فاتورة المورد", supplier: "المورد", service: "مرجع الفعالية", paymentDate: "تاريخ الدفع", currency: "العملة", amount: "المبلغ", method: "طريقة الدفع", reference: "مرجع الدفع", evidence: "مستند تأييد الدفع", notes: "ملاحظات", recordedAt: "تاريخ التسجيل", recordedBy: "سجّلها", status: "الحالة", payable: "المستحق", paid: "المدفوع", outstanding: "المتبقي", bankName: "البنك", accountName: "اسم الحساب", iban: "نسخة IBAN", reversalAudit: "سجل العكس", reversalReason: "سبب العكس", reversedAt: "تاريخ العكس", reversedBy: "تم العكس بواسطة" },
   columns: { payment: "الدفعة", bill: "الفاتورة", supplier: "المورد", date: "التاريخ", amount: "المبلغ", method: "الطريقة", status: "الحالة", actions: "الإجراءات" },
   methods: { bank_transfer: "تحويل بنكي", cash: "نقدًا", cheque: "شيك" },
   statuses: { recorded: "مسجلة", reversed: "معكوسة" },

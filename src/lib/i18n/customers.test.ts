@@ -193,13 +193,13 @@ test("9. Conditional official-field contracts remain in CustomerFormFields", () 
   assert.match(fields, /dir="ltr"/);
 });
 
-test("10. Related Services headings and empty state are localized", () => {
+test("10. Related Events headings and empty state are localized", () => {
   const en = getCustomersDictionary("en");
   const ar = getCustomersDictionary("ar");
-  assert.equal(en.profile.relatedServices, "Related Services");
-  assert.equal(ar.profile.relatedServices, "الخدمات المرتبطة");
-  assert.equal(en.states.noRelatedServices, "No related services");
-  assert.equal(ar.states.noRelatedServices, "لا توجد خدمات مرتبطة");
+  assert.equal(en.profile.relatedServices, "Related Events");
+  assert.equal(ar.profile.relatedServices, "الفعاليات المرتبطة");
+  assert.equal(en.states.noRelatedServices, "No related events");
+  assert.equal(ar.states.noRelatedServices, "لا توجد فعاليات مرتبطة");
 });
 
 test("11-12. Customer/Service numbers and LTR-safe values remain direction-safe", () => {
@@ -213,7 +213,7 @@ test("11-12. Customer/Service numbers and LTR-safe values remain direction-safe"
   assert.match(profile, /commercialRegistrationNumber|crNumber|vatNumber|postal/i);
   assert.match(profile, /Customer360Workspace/);
   assert.match(workspace, /service\.serviceNumber/);
-  assert.match(workspace, /dir="ltr"/);
+  assert.match(workspace, /<UiLtrText>\{service\.serviceNumber\}<\/UiLtrText>/);
 });
 
 test("13. SAR and counts use shared formatters with Western digits", () => {

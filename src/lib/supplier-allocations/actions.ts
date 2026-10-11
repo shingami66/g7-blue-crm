@@ -135,7 +135,7 @@ export async function transitionSupplierAllocationStatus(
       .single();
 
     if (serviceError || !service || service.status === "Cancelled" || service.status === "Completed") {
-      return { success: false, error: "Service is unavailable for supplier allocation update." };
+      return { success: false, error: "Event is unavailable for supplier allocation update." };
     }
 
     const { data: supplier, error: supplierError } = await supabase
@@ -213,7 +213,7 @@ export async function createSupplierAllocation(
       .single();
 
     if (serviceError || !service || service.status === "Cancelled" || service.status === "Completed") {
-      return { success: false, error: "Service is unavailable for supplier allocation." };
+      return { success: false, error: "Event is unavailable for supplier allocation." };
     }
 
     // Cross-table check 2: Supplier check
@@ -243,7 +243,7 @@ export async function createSupplierAllocation(
         quotation.status !== "approved" ||
         quotation.service_id !== parsed.data.serviceId
       ) {
-        return { success: false, error: "Approved quotation is invalid for this service." };
+        return { success: false, error: "Approved quotation is invalid for this Event." };
       }
     }
 
@@ -279,7 +279,7 @@ export async function createSupplierAllocation(
       }
 
       if (!service.event_start_date) {
-        return { success: false, error: "Rate card is not currently valid for the service usage period." };
+        return { success: false, error: "Rate card is not currently valid for the Event date range." };
       }
 
       const usagePeriod = {
@@ -290,14 +290,14 @@ export async function createSupplierAllocation(
       const usageEnd = usagePeriod.endDate || usageStart;
 
       if (usageEnd < usageStart) {
-        return { success: false, error: "Rate card is not currently valid for the service usage period." };
+        return { success: false, error: "Rate card is not currently valid for the Event date range." };
       }
 
       if (!rateCard.valid_from || rateCard.valid_from > usageStart) {
-        return { success: false, error: "Rate card is not currently valid for the service usage period." };
+        return { success: false, error: "Rate card is not currently valid for the Event date range." };
       }
       if (rateCard.valid_to && rateCard.valid_to < usageEnd) {
-        return { success: false, error: "Rate card is expired for the service usage period." };
+        return { success: false, error: "Rate card is expired for the Event date range." };
       }
 
       const rateCardSnapshot: Json = {
@@ -427,7 +427,7 @@ export async function cancelSupplierAllocation(
       .single();
 
     if (serviceError || !service || service.status === "Cancelled" || service.status === "Completed") {
-      return { success: false, error: "Service is unavailable for supplier allocation cancel." };
+      return { success: false, error: "Event is unavailable for supplier allocation cancel." };
     }
 
     // Business cancellation preserves the row for audit/history and must not set is_deleted.
@@ -542,7 +542,7 @@ export async function updateSupplierAllocation(
       .single();
 
     if (serviceError || !service || service.status === "Cancelled" || service.status === "Completed") {
-      return { success: false, error: "Service is unavailable for supplier allocation update." };
+      return { success: false, error: "Event is unavailable for supplier allocation update." };
     }
 
     // Cross-table check 2: Supplier check (immutable, but check active status)
@@ -572,7 +572,7 @@ export async function updateSupplierAllocation(
         quotation.status !== "approved" ||
         quotation.service_id !== existingAllocation.service_id
       ) {
-        return { success: false, error: "Approved quotation is invalid for this service." };
+        return { success: false, error: "Approved quotation is invalid for this Event." };
       }
     }
 
@@ -670,7 +670,7 @@ export async function deleteSupplierAllocation(id: string): Promise<ActionResult
       .single();
 
     if (serviceError || !service || service.status === "Cancelled" || service.status === "Completed") {
-      return { success: false, error: "Service is unavailable for supplier allocation deletion." };
+      return { success: false, error: "Event is unavailable for supplier allocation deletion." };
     }
 
     const updatePayload = {
@@ -758,7 +758,7 @@ export async function restoreSupplierAllocation(id: string): Promise<ActionResul
       .single();
 
     if (serviceError || !service || service.status === "Cancelled" || service.status === "Completed") {
-      return { success: false, error: "Service is unavailable for supplier allocation restoration." };
+      return { success: false, error: "Event is unavailable for supplier allocation restoration." };
     }
 
     const { data: rawSupplier, error: supplierError } = await supabase

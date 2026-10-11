@@ -286,7 +286,7 @@ test("Arabic copy quality residuals remain product-facing", () => {
   assert.doesNotMatch(getPaymentsDictionary("ar").subtitle, /قاعدة البيانات|مباشرة/);
   assert.equal(
     getServicesDictionary("ar").approvedBillingScopes.subtitle,
-    "النطاق المعتمد للفوترة لهذه الخدمة.",
+    "النطاق المعتمد لفوترة هذه الفعالية.",
   );
   assert.equal(
     getServicesDictionary("ar").supplierAllocations.tabs.history,

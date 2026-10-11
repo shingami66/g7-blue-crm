@@ -64,11 +64,11 @@ export type QuotationApprovalActivationInvoker = (
 export const QUOTATION_APPROVAL_ACTIVATION_ERROR_MESSAGES = {
   quotation_not_found: "Quotation not found or already deleted.",
   quotation_service_lifecycle_ineligible:
-    "Quotation approval is unavailable because the Service is no longer eligible.",
+    "Quotation approval is unavailable because the Event is no longer eligible.",
   quotation_not_approvable:
     "Only draft or sent quotations can be approved.",
   quotation_approval_conflict:
-    "An approved quotation already exists for this Service.",
+      "An approved quotation already exists for this Event.",
   quotation_internal_authority_inconsistent:
     "Quotation approval is blocked because its internal billing authority is inconsistent. No changes were made.",
   quotation_financial_total_mismatch:

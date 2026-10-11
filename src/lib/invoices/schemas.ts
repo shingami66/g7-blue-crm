@@ -6,7 +6,7 @@ export const createInvoiceSchema = z.object({
     z.string().min(1, "Mutation key is required"),
   ),
   quotationId: z.string().uuid("Invalid quotation ID"),
-  serviceId: z.string().uuid("Invalid service ID"),
+  serviceId: z.string().uuid("Invalid Event ID"),
   invoiceType: z.enum(["deposit", "progress", "final"], { message: "Invoice type is invalid" }),
   requestedAmount: z.number().positive("Amount must be positive").finite("Amount must be finite").optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid due date").optional(),

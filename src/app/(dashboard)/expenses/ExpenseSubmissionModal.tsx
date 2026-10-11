@@ -283,8 +283,8 @@ export function ExpenseSubmissionModal({
     if (contextType === "event" && !serviceId) {
       setError(
         locale === "ar"
-          ? "يرجى تحديد الفعالية / الخدمة التابعة لهذا المصروف"
-          : "Please select the Event or Service associated with this expense"
+          ? "يرجى تحديد الفعالية التابعة لهذا المصروف"
+          : "Please select the Event associated with this expense."
       );
       return;
     }

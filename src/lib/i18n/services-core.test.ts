@@ -87,21 +87,23 @@ test("1. Services dictionary English/Arabic shapes stay aligned", () => {
 test("2. Services page headings and primary actions resolve in both locales", () => {
   const en = getServicesDictionary("en");
   const ar = getServicesDictionary("ar");
-  assert.equal(en.list.title, "Services");
-  assert.equal(ar.list.title, "الخدمات");
-  assert.equal(en.list.newService, "New Service");
-  assert.equal(ar.list.newService, "خدمة جديدة");
-  assert.equal(en.form.buttons.create, "Create Service");
-  assert.equal(ar.form.buttons.create, "إنشاء الخدمة");
-  assert.equal(en.form.editTitle, "Edit Service");
-  assert.equal(ar.form.editTitle, "تعديل الخدمة");
+  assert.equal(en.list.title, "Events");
+  assert.equal(ar.list.title, "الفعاليات");
+  assert.equal(en.list.newService, "New Event");
+  assert.equal(ar.list.newService, "فعالية جديدة");
+  assert.equal(en.form.buttons.create, "Create Event");
+  assert.equal(ar.form.buttons.create, "إنشاء الفعالية");
+  assert.equal(en.form.editTitle, "Edit Event");
+  assert.equal(ar.form.editTitle, "تعديل الفعالية");
 });
 
 test("3. List headings, filters, result count, and row actions are localized", () => {
   const en = getServicesDictionary("en");
   const ar = getServicesDictionary("ar");
-  assert.equal(en.list.table.serviceNumber, "Service Number");
-  assert.equal(ar.list.table.serviceNumber, "رقم الخدمة");
+  assert.equal(en.list.table.serviceNumber, "Event Reference");
+  assert.equal(ar.list.table.serviceNumber, "مرجع الفعالية");
+  assert.equal(en.list.table.serviceTitle, "Event Record Title / Event Name");
+  assert.equal(ar.list.table.serviceTitle, "عنوان سجل الفعالية / اسم الفعالية");
   assert.equal(en.list.table.customer, "Customer");
   assert.equal(ar.list.table.customer, "العميل");
   assert.equal(en.list.allStatuses, "All Statuses");
@@ -149,8 +151,10 @@ test("4-7. Canonical Service status display labels; codes stable; Cancelled non-
 test("8. New Service form labels and validation contracts remain localized", () => {
   const en = getServicesDictionary("en");
   const ar = getServicesDictionary("ar");
-  assert.equal(en.form.labels.serviceTitle, "Service Title");
-  assert.equal(ar.form.labels.serviceTitle, "عنوان الخدمة");
+  assert.equal(en.form.labels.serviceTitle, "Event Record Title");
+  assert.equal(ar.form.labels.serviceTitle, "عنوان سجل الفعالية");
+  assert.equal(en.form.labels.eventName, "Event Name");
+  assert.equal(ar.form.labels.eventName, "اسم الفعالية");
   assert.equal(en.form.validation.validActiveCustomer.includes("active"), true);
   assert.match(ar.form.validation.validActiveCustomer, /عميل/);
   const form = readFileSync(SERVICE_FORM, "utf8");
@@ -180,8 +184,8 @@ test("11. Service Detail core headings, customer context, and schedule copy reso
   const en = getServicesDictionary("en");
   const ar = getServicesDictionary("ar");
   assert.equal(en.detail.backToServices.toLowerCase().includes("back"), true);
-  assert.equal(ar.detail.backToServices, "العودة إلى الخدمات");
-  assert.equal(en.detail.sections.serviceSchedule, "Service Schedule");
+  assert.equal(ar.detail.backToServices, "العودة إلى الفعاليات");
+  assert.equal(en.detail.sections.serviceSchedule, "Event Schedule");
   assert.equal(ar.detail.sections.serviceSchedule, "الجدول الزمني");
   assert.equal(en.detail.labels.customer, "Customer");
   assert.equal(ar.detail.labels.customer, "العميل");
@@ -193,7 +197,7 @@ test("12. Status timeline remains read-only (no transition mutation in timeline)
   const timeline = readFileSync(TIMELINE, "utf8");
   assert.doesNotMatch(timeline, /updateService|transitionService|createInvoice|server action/i);
   assert.match(timeline, /getServiceStatusLabel/);
-  assert.equal(getServicesDictionary("ar").serviceStatusTimeline.title, "مسار حالة الخدمة");
+  assert.equal(getServicesDictionary("ar").serviceStatusTimeline.title, "مسار حالة الفعالية");
 });
 
 test("13. Related quotations passive display copy and empty/unavailable states", () => {
@@ -314,7 +318,7 @@ test("24. No raw internal errors introduced on Services core surfaces", () => {
 test("25. No hardcoded English UI shells remain on Services list/detail pages", () => {
   const list = readFileSync(SERVICES_PAGE, "utf8");
   const client = readFileSync(SERVICES_CLIENT, "utf8");
-  const forbidden = ["Access Denied", "Something went wrong", "New Service", "Service Number"];
+  const forbidden = ["Access Denied", "Something went wrong", "New Event", "Event Reference"];
   const offenders = forbidden.filter(
     (phrase) =>
       list.includes(`"${phrase}"`) ||

@@ -119,9 +119,9 @@ export interface ProcurementCommitmentDictionary {
 const english: ProcurementCommitmentDictionary = {
   locale: "en",
   title: "Commitments and Service Receipt",
-  subtitle: "Approved supplier obligations and delivery evidence for this Service.",
-  backToService: "Back to Service",
-  empty: "No Approved Commitments have been recorded for this Service.",
+  subtitle: "Approved supplier obligations and delivery evidence for this Event.",
+  backToService: "Back to Event",
+  empty: "No Approved Commitments have been recorded for this Event.",
   loadError: "Commitment data could not be loaded. Please try again.",
   noPermission: "Commitment and receipt information is restricted to authorized users.",
   chooseFiles: "Choose files",
@@ -142,7 +142,7 @@ const english: ProcurementCommitmentDictionary = {
     REJECTED: "Rejected",
   },
   fields: {
-    supplier: "Supplier", service: "Service", source: "Commitment source", sourceReference: "Authorized source reference",
+    supplier: "Supplier", service: "Event Reference", source: "Commitment source", sourceReference: "Authorized source reference",
     supplierQuotation: "Supplier quotation", originalAmount: "Original approved amount (SAR)", authorizedAmount: "Authorized amount (SAR)",
     acceptedAmount: "Accepted value (SAR)", pendingAmount: "Pending value (SAR)", openAmount: "Open commitment amount (SAR)",
     approvedAt: "Approval date", approvedBy: "Approved by", reviewedBy: "Reviewed by", submittedBy: "Submitted by", submittedAt: "Submitted at", reviewedAt: "Reviewed at", lifecycleAt: "Lifecycle updated at", lifecycleBy: "Lifecycle updated by", lifecycleReason: "Lifecycle reason", performanceDate: "Delivery/performance date", deliveredScope: "Delivered scope",
@@ -166,8 +166,8 @@ const english: ProcurementCommitmentDictionary = {
     service_receipt_self_review_forbidden: "A different authorized reviewer must review this receipt unless you are an Admin.",
     approved_commitment_reopen_ineligible: "Only a closed commitment can be reopened. Cancelled commitments remain cancelled.",
     approved_commitment_request_conflict: "This request was already used with different commitment data.", approved_commitment_source_invalid: "Provide one valid authorized source without duplicating quotation identity.",
-    approved_commitment_service_unavailable: "This Service is not available for a new commitment.", approved_commitment_supplier_unavailable: "This Supplier is not available for a new commitment.",
-    approved_commitment_supplier_quotation_unavailable: "The selected supplier quotation does not belong to this Service and Supplier.", approved_commitment_reduction_exceeds_open: "The reduction is greater than the open commitment amount.",
+    approved_commitment_service_unavailable: "This Event is not available for a new commitment.", approved_commitment_supplier_unavailable: "This Supplier is not available for a new commitment.",
+    approved_commitment_supplier_quotation_unavailable: "The selected supplier quotation does not belong to this Event and Supplier.", approved_commitment_reduction_exceeds_open: "The reduction is greater than the open commitment amount.",
     approved_commitment_not_open: "This commitment is no longer open for amendment.", approved_commitment_open_amount_remaining: "The commitment still has an open amount and cannot be closed.", approved_commitment_pending_receipts: "Review pending receipts before closing or cancelling the commitment.",
     service_receipt_value_exceeds_open: "The receipt value exceeds the remaining authorized commitment.", service_receipt_commitment_not_open: "This commitment is not open. Reopen a closed commitment before correcting its receipts.", service_receipt_already_reviewed: "This receipt has already been reviewed.", service_receipt_not_reviewed: "Only a reviewed receipt can be corrected.", service_receipt_correction_request_conflict: "This correction request was already used with different data.", service_receipt_correction_invalid: "Provide a valid corrected outcome, value, and reason.", service_receipt_correction_permission_denied: "You do not have permission to correct a reviewed receipt.",
     INVALID_INPUT: "Please review the fields.", UNAUTHORIZED: "You must be signed in.", FORBIDDEN: "You do not have permission for this action.", PROCUREMENT_COMMITMENT_WRITE_FAILED: "The operation could not be completed. Please try again.",
@@ -179,9 +179,9 @@ const arabic: ProcurementCommitmentDictionary = {
   ...english,
   locale: "ar",
   title: "الالتزامات وإيصال الخدمة",
-  subtitle: "التزامات المورد المعتمدة وأدلة التسليم لهذه الخدمة.",
-  backToService: "العودة إلى الخدمة",
-  empty: "لم يتم تسجيل التزامات معتمدة لهذه الخدمة.",
+  subtitle: "التزامات المورد المعتمدة وأدلة التسليم لهذه الفعالية.",
+  backToService: "العودة إلى الفعالية",
+  empty: "لم يتم تسجيل التزامات معتمدة لهذه الفعالية.",
   loadError: "تعذر تحميل بيانات الالتزام. يرجى المحاولة مرة أخرى.",
   noPermission: "معلومات الالتزامات والإيصالات مقيدة بالمستخدمين المصرح لهم.",
   chooseFiles: "اختيار الملفات",
@@ -192,7 +192,7 @@ const arabic: ProcurementCommitmentDictionary = {
   statuses: { open: "مفتوح", closed: "مغلق", cancelled: "ملغى" },
   acceptanceStatuses: { PENDING: "قيد المراجعة", ACCEPTED: "مقبول", ACCEPTED_WITH_CONDITIONS: "مقبول بشروط", REJECTED: "مرفوض" },
   fields: {
-    supplier: "المورد", service: "الخدمة", source: "مصدر الالتزام", sourceReference: "مرجع المصدر المعتمد", supplierQuotation: "عرض سعر المورد",
+    supplier: "المورد", service: "مرجع الفعالية", source: "مصدر الالتزام", sourceReference: "مرجع المصدر المعتمد", supplierQuotation: "عرض سعر المورد",
     originalAmount: "القيمة الأصلية المعتمدة (ريال)", authorizedAmount: "القيمة المعتمدة (ريال)", acceptedAmount: "القيمة المقبولة (ريال)", pendingAmount: "القيمة قيد المراجعة (ريال)", openAmount: "قيمة الالتزام المفتوحة (ريال)",
     approvedAt: "تاريخ الاعتماد", approvedBy: "اعتمد بواسطة", reviewedBy: "راجع بواسطة", submittedBy: "أرسل بواسطة", submittedAt: "وقت الإرسال", reviewedAt: "وقت المراجعة", lifecycleAt: "وقت تحديث دورة الحياة", lifecycleBy: "حدّث بواسطة", lifecycleReason: "سبب دورة الحياة", performanceDate: "تاريخ التسليم/الأداء", deliveredScope: "النطاق المسلم", actualQuantity: "الكمية الفعلية", actualHours: "الساعات الفعلية", unit: "الوحدة", receivedAmount: "قيمة الجزء المستلم من الالتزام",
     missingScope: "النطاق الناقص", extraScope: "النطاق الإضافي", defectsIncidents: "العيوب/الحوادث", conditionsNotes: "الشروط/الملاحظات", reason: "السبب", evidence: "مرجع الدليل", approvalEvidenceReference: "مرجع دليل الاعتماد", amendmentType: "نوع التعديل", amendmentAmount: "قيمة التعديل", amendment: "التعديل", receipt: "استلام الخدمة", documents: "المستندات الداعمة", correction: "سجل تصحيحات الإيصال", priorOutcome: "النتيجة السابقة التي تمت مراجعتها", correctedOutcome: "النتيجة المصححة", correctedConditions: "الشروط/الملاحظات المصححة", correctionNoteReason: "ملاحظة / سبب التصحيح", correctionReason: "سبب التصحيح", correctionBy: "صحح بواسطة",
@@ -203,7 +203,7 @@ const arabic: ProcurementCommitmentDictionary = {
   notices: {
     bookingSeparation: "يبقى حجز المورد حجزًا تشغيليًا ولا يمثل هذا الالتزام المعتمد.", receiptSeparation: "استلام الخدمة دليل تسليم منفصل عن فاتورة المورد والذمم والدفع.", historyPreserved: "يبقى الاعتماد السابق ظاهرًا بعد التعديلات أو الإلغاء.", pendingReview: "تحجز الإيصالات قيد المراجعة القيمة المسجلة حتى تتم مراجعتها.", noAmount: "لم يتم تسجيل قيمة لهذا الاستلام.", noDocuments: "لا توجد مستندات داعمة مرفقة.", noReceipts: "لم يتم تسجيل استلام خدمة.", noAmendments: "لم يتم تسجيل تعديلات.", documentHelper: "مستندات PDF أو JPEG أو PNG خاصة؛ يتم الاحتفاظ بالملفات الأصلية دون نسخها.", unknownQuotationReference: "عرض سعر مورد مسجل؛ مرجع المورد غير معروف", correctionHelper: "تحافظ التصحيحات على نتيجة المراجعة السابقة وتتطلب سببًا صريحًا.",
   },
-  errors: { ...english.errors, service_receipt_self_review_forbidden: "يجب أن يراجع هذا الإيصال مستخدم مخول آخر، ما لم تكن مسؤول النظام.", approved_commitment_reopen_ineligible: "يمكن إعادة فتح الالتزام المغلق فقط. تبقى الالتزامات الملغاة ملغاة.", approved_commitment_source_invalid: "أدخل مصدرًا معتمدًا صالحًا دون تكرار هوية عرض السعر.", approved_commitment_reduction_exceeds_open: "قيمة التخفيض أكبر من قيمة الالتزام المفتوحة.", approved_commitment_open_amount_remaining: "لا تزال هناك قيمة مفتوحة ولا يمكن إغلاق الالتزام.", approved_commitment_pending_receipts: "راجع الإيصالات قيد المراجعة قبل إغلاق الالتزام أو إلغائه.", service_receipt_value_exceeds_open: "تتجاوز قيمة الإيصال القيمة المعتمدة المتبقية.", service_receipt_commitment_not_open: "هذا الالتزام غير مفتوح. أعد فتح الالتزام المغلق قبل تصحيح إيصالاته.", service_receipt_already_reviewed: "تمت مراجعة هذا الإيصال بالفعل.", service_receipt_not_reviewed: "لا يمكن تصحيح إيصال لم تتم مراجعته.", service_receipt_correction_request_conflict: "تم استخدام طلب التصحيح ببيانات مختلفة.", service_receipt_correction_invalid: "أدخل نتيجة وقيمة وسببًا صالحًا للتصحيح.", service_receipt_correction_permission_denied: "ليست لديك صلاحية لتصحيح إيصال تمت مراجعته.", INVALID_INPUT: "راجع الحقول.", UNAUTHORIZED: "يجب تسجيل الدخول.", FORBIDDEN: "ليست لديك صلاحية لهذا الإجراء." },
+  errors: { ...english.errors, service_receipt_self_review_forbidden: "يجب أن يراجع هذا الإيصال مستخدم مخول آخر، ما لم تكن مسؤول النظام.", approved_commitment_reopen_ineligible: "يمكن إعادة فتح الالتزام المغلق فقط. تبقى الالتزامات الملغاة ملغاة.", approved_commitment_source_invalid: "أدخل مصدرًا معتمدًا صالحًا دون تكرار هوية عرض السعر.", approved_commitment_service_unavailable: "هذه الفعالية غير متاحة لالتزام جديد.", approved_commitment_supplier_unavailable: "هذا المورد غير متاح لالتزام جديد.", approved_commitment_supplier_quotation_unavailable: "لا ينتمي عرض سعر المورد المحدد إلى هذه الفعالية وهذا المورد.", approved_commitment_reduction_exceeds_open: "قيمة التخفيض أكبر من قيمة الالتزام المفتوحة.", approved_commitment_open_amount_remaining: "لا تزال هناك قيمة مفتوحة ولا يمكن إغلاق الالتزام.", approved_commitment_pending_receipts: "راجع الإيصالات قيد المراجعة قبل إغلاق الالتزام أو إلغائه.", service_receipt_value_exceeds_open: "تتجاوز قيمة الإيصال القيمة المعتمدة المتبقية.", service_receipt_commitment_not_open: "هذا الالتزام غير مفتوح. أعد فتح الالتزام المغلق قبل تصحيح إيصالاته.", service_receipt_already_reviewed: "تمت مراجعة هذا الإيصال بالفعل.", service_receipt_not_reviewed: "لا يمكن تصحيح إيصال لم تتم مراجعته.", service_receipt_correction_request_conflict: "تم استخدام طلب التصحيح ببيانات مختلفة.", service_receipt_correction_invalid: "أدخل نتيجة وقيمة وسببًا صالحًا للتصحيح.", service_receipt_correction_permission_denied: "ليست لديك صلاحية لتصحيح إيصال تمت مراجعته.", INVALID_INPUT: "راجع الحقول.", UNAUTHORIZED: "يجب تسجيل الدخول.", FORBIDDEN: "ليست لديك صلاحية لهذا الإجراء." },
   success: { commitmentCreated: "تم تسجيل الالتزام المعتمد.", amendmentCreated: "تم تسجيل التعديل المعتمد.", receiptCreated: "تم إرسال إيصال الخدمة للمراجعة.", receiptReviewed: "تم تسجيل مراجعة الإيصال.", transition: "تم تحديث دورة حياة الالتزام.", documentUploaded: "تم إرفاق المستندات الداعمة.", receiptCorrected: "تم تسجيل تصحيح الإيصال." },
 };
 

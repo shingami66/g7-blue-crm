@@ -25,11 +25,11 @@ function getCreateSupplierAllocationErrorMessage(
   }
 
   const mappedErrors: Record<string, string> = {
-    "Service is unavailable for supplier allocation.":
+    "Event is unavailable for supplier allocation.":
       dictionary.errors.serviceUnavailable,
     "Supplier is unavailable for allocation.":
       dictionary.errors.supplierUnavailable,
-    "Approved quotation is invalid for this service.":
+    "Approved quotation is invalid for this Event.":
       dictionary.errors.approvedQuotationInvalid,
     "Rate card ID is required.": dictionary.errors.rateCardIdRequired,
     "Rate card not found.": dictionary.errors.rateCardNotFound,

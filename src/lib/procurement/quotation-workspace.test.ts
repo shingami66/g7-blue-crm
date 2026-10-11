@@ -118,12 +118,12 @@ test("Service Detail removes allocation and booking presentation but keeps procu
 test("Quotation copy and Service quotation navigation remain bilingual", () => {
   assert.equal(getSuppliersDictionary("en").quotationHistory.addQuotation, "Add supplier quotation");
   assert.equal(getSuppliersDictionary("ar").quotationHistory.addQuotation, "إضافة عرض سعر مورد");
-  assert.equal(getSuppliersDictionary("en").quotationHistory.serviceSelection, "Service Selection");
-  assert.equal(getSuppliersDictionary("ar").quotationHistory.serviceSelection, "اختيار الخدمة");
-  assert.equal(getSuppliersDictionary("en").quotationHistory.serviceLabel, "Service");
-  assert.equal(getSuppliersDictionary("ar").quotationHistory.serviceLabel, "الخدمة");
-  assert.equal(getSuppliersDictionary("en").quotationHistory.selectServicePlaceholder, "Select a Service…");
-  assert.equal(getSuppliersDictionary("ar").quotationHistory.selectServicePlaceholder, "اختر خدمة…");
+  assert.equal(getSuppliersDictionary("en").quotationHistory.serviceSelection, "Event Selection");
+  assert.equal(getSuppliersDictionary("ar").quotationHistory.serviceSelection, "اختيار الفعالية");
+  assert.equal(getSuppliersDictionary("en").quotationHistory.serviceLabel, "Event Reference");
+  assert.equal(getSuppliersDictionary("ar").quotationHistory.serviceLabel, "مرجع الفعالية");
+  assert.equal(getSuppliersDictionary("en").quotationHistory.selectServicePlaceholder, "Select an Event…");
+  assert.equal(getSuppliersDictionary("ar").quotationHistory.selectServicePlaceholder, "اختر فعالية…");
   assert.equal(getServicesDictionary("en").procurementRequirement.actions.viewQuotations, "View supplier quotations");
   assert.equal(getServicesDictionary("ar").procurementRequirement.actions.viewQuotations, "عرض عروض أسعار المورد");
 });

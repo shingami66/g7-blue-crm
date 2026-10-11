@@ -41,7 +41,7 @@ function getDeleteSupplierAllocationErrorMessage(
       dictionary.errors.rateCardRestricted,
     "This allocation cannot be modified because it is linked to an active supplier booking.":
       dictionary.errors.linkedActiveBooking,
-    "Service is unavailable for supplier allocation deletion.":
+    "Event is unavailable for supplier allocation deletion.":
       dictionary.errors.serviceUnavailable,
     "Failed to delete supplier allocation. Please try again.":
       dictionary.errors.deleteFailedRetry,

@@ -40,7 +40,7 @@ function getCancelSupplierAllocationErrorMessage(
       dictionary.errors.alreadyCancelled,
     "This allocation cannot be modified because it is linked to an active supplier booking.":
       dictionary.errors.linkedActiveBooking,
-    "Service is unavailable for supplier allocation cancel.":
+    "Event is unavailable for supplier allocation cancel.":
       dictionary.errors.serviceUnavailable,
     "Failed to cancel supplier allocation. Please try again.":
       dictionary.errors.cancelFailedRetry,

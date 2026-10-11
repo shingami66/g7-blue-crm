@@ -163,16 +163,16 @@ async function serviceAllowsSupplierBooking(
 
   if (error) {
     console.error("[serviceAllowsSupplierBooking] Supabase error:", error.message);
-    return { success: false, error: "Failed to verify service status. Please try again." };
+    return { success: false, error: "Failed to verify Event status. Please try again." };
   }
 
   if (!service) {
-    return { success: false, error: "Service is unavailable for Supplier Booking." };
+    return { success: false, error: "Event is unavailable for Supplier Booking." };
   }
 
   const { status } = service as ServiceStatusRow;
   if (status === "Cancelled" || status === "Completed") {
-    return { success: false, error: "Service is unavailable for Supplier Booking." };
+    return { success: false, error: "Event is unavailable for Supplier Booking." };
   }
 
   return { success: true };
@@ -358,16 +358,16 @@ export async function cancelSupplierBooking(
 
     if (serviceError) {
       console.error("[cancelSupplierBooking] Supabase service status error:", serviceError.message);
-      return { success: false, error: "Failed to verify service status. Please try again." };
+      return { success: false, error: "Failed to verify Event status. Please try again." };
     }
 
     if (!service) {
-      return { success: false, error: "Service is unavailable for Supplier Booking cancellation." };
+    return { success: false, error: "Event is unavailable for Supplier Booking cancellation." };
     }
 
     const { status } = service as ServiceStatusRow;
     if (status === "Completed" || status === "Cancelled") {
-      return { success: false, error: "Service is unavailable for Supplier Booking cancellation." };
+      return { success: false, error: "Event is unavailable for Supplier Booking cancellation." };
     }
 
     const { data: updatedRow, error: updateError } = await supabase

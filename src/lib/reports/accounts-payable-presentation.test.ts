@@ -92,8 +92,8 @@ test("Supplier Payables retains its filter names and exact eight-column financia
   const keys = columns.map((column) => propertyText(column, "key"));
 
   assert.deepEqual(keys, ["bill", "supplier", "service", "dueDate", "status", "payable", "paid", "outstanding"]);
-  assert.deepEqual([en.bill, en.supplier, en.service, en.dueDate, en.status, en.payable, en.paid, en.outstanding], ["Bill", "Supplier", "Service", "Due date", "Status", "Payable", "Paid", "Outstanding"]);
-  assert.deepEqual([ar.bill, ar.supplier, ar.service, ar.dueDate, ar.status, ar.payable, ar.paid, ar.outstanding], ["الفاتورة", "المورد", "الخدمة", "تاريخ الاستحقاق", "الحالة", "المستحق", "المدفوع", "المتبقي للدفع"]);
+  assert.deepEqual([en.bill, en.supplier, en.service, en.dueDate, en.status, en.payable, en.paid, en.outstanding], ["Bill", "Supplier", "Event Reference", "Due date", "Status", "Payable", "Paid", "Outstanding"]);
+  assert.deepEqual([ar.bill, ar.supplier, ar.service, ar.dueDate, ar.status, ar.payable, ar.paid, ar.outstanding], ["الفاتورة", "المورد", "مرجع الفعالية", "تاريخ الاستحقاق", "الحالة", "المستحق", "المدفوع", "المتبقي للدفع"]);
   for (const key of ["payable", "paid", "outstanding"]) {
     const column = columns.find((entry) => propertyText(entry, "key") === key);
     assert.ok(column);

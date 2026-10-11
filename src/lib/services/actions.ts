@@ -93,11 +93,11 @@ async function validateServiceCanBeDeleted(
 
   if (serviceError) {
     console.error("[validateServiceCanBeDeleted] Service lookup error:", serviceError.message);
-    return { success: false, error: "Failed to delete service. Please try again." };
+    return { success: false, error: "Failed to delete Event. Please try again." };
   }
 
   if (!serviceRow) {
-    return { success: false, error: "Service not found." };
+    return { success: false, error: "Event not found." };
   }
 
   const { count: linkedQuotationCount, error: quotationError } = await supabase
@@ -108,11 +108,11 @@ async function validateServiceCanBeDeleted(
 
   if (quotationError) {
     console.error("[validateServiceCanBeDeleted] Quotation lookup error:", quotationError.message);
-    return { success: false, error: "Failed to delete service. Please try again." };
+    return { success: false, error: "Failed to delete Event. Please try again." };
   }
 
   if ((linkedQuotationCount ?? 0) > 0) {
-    return { success: false, error: "This service cannot be deleted because it has linked quotations." };
+    return { success: false, error: "This Event cannot be deleted because it has linked quotations." };
   }
 
   return { success: true };
@@ -151,12 +151,12 @@ export async function createService(
 
     if (rpcError) {
       console.error("[createService] Supabase error:", rpcError.message);
-      return { success: false, code: "GENERIC_FAILURE", error: "Failed to create service. Please try again." };
+      return { success: false, code: "GENERIC_FAILURE", error: "Failed to create Event. Please try again." };
     }
 
     const row = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
     if (!row) {
-      return { success: false, code: "GENERIC_FAILURE", error: "Failed to create service. Please try again." };
+      return { success: false, code: "GENERIC_FAILURE", error: "Failed to create Event. Please try again." };
     }
 
     if (row.error_code) {
@@ -171,20 +171,20 @@ export async function createService(
           return {
             success: false,
             code: "MUTATION_KEY_CONFLICT",
-            error: "A service with this mutation key already exists with different details.",
+            error: "An Event with this mutation key already exists with different details.",
           };
         case "invalid_service_input":
           return {
             success: false,
             code: "INVALID_INPUT",
-            error: "Invalid service input. Please verify all required fields.",
+            error: "Invalid Event input. Please verify all required fields.",
           };
         case "number_generation_failed":
         default:
           return {
             success: false,
             code: "GENERIC_FAILURE",
-            error: "Failed to create service. Please try again.",
+            error: "Failed to create Event. Please try again.",
           };
       }
     }
@@ -242,16 +242,16 @@ export async function updateService(
     }
 
     if (parsed.data.status !== undefined) {
-      return { success: false, code: "STATUS_CHANGE_DEFERRED", error: "Service status changes are deferred." };
+      return { success: false, code: "STATUS_CHANGE_DEFERRED", error: "Event status changes are deferred." };
     }
 
     const currentService = await getServiceById(id);
     if (!currentService) {
-      return { success: false, error: "Service not found." };
+      return { success: false, error: "Event not found." };
     }
 
     if (currentService.status !== "Inquiry" && currentService.status !== "Quoted") {
-      return { success: false, code: "STATUS_CONFLICT", error: `Editing is not allowed when service status is ${currentService.status}.` };
+      return { success: false, code: "STATUS_CONFLICT", error: `Editing is not allowed when Event status is ${currentService.status}.` };
     }
 
     const updates = serviceUpdatePayload(parsed.data, user.clerk_user_id);
@@ -270,10 +270,10 @@ export async function updateService(
 
     if (error) {
       if (error.code === "PGRST116") {
-        return { success: false, code: "NOT_FOUND", error: "Service not found." };
+        return { success: false, code: "NOT_FOUND", error: "Event not found." };
       }
       console.error("[updateService] Supabase error:", error.message);
-      return { success: false, code: "GENERIC_FAILURE", error: "Failed to update service. Please try again." };
+      return { success: false, code: "GENERIC_FAILURE", error: "Failed to update Event. Please try again." };
     }
 
     revalidatePath("/services");
@@ -310,10 +310,10 @@ export async function softDeleteService(id: string): Promise<ActionResult> {
 
     if (error) {
       if (error.code === "PGRST116") {
-        return { success: false, error: "Service not found." };
+        return { success: false, error: "Event not found." };
       }
       console.error("[softDeleteService] Supabase error:", error.message);
-      return { success: false, error: "Failed to delete service. Please try again." };
+      return { success: false, error: "Failed to delete Event. Please try again." };
     }
 
     revalidatePath("/services");
@@ -398,23 +398,23 @@ async function executeServiceLifecycleRpc(
 
     if (error) {
       console.error(`[${rpcName}] RPC error:`, error.message);
-      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Service action could not be completed." };
+      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Event action could not be completed." };
     }
 
     const parsedResponse = serviceLifecycleRpcResponseSchema.safeParse(data);
     if (!parsedResponse.success) {
-      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Service action could not be completed." };
+      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Event action could not be completed." };
     }
     const [row] = parsedResponse.data;
     if (row.error_code !== null) {
       return {
         success: false,
         code: mapServiceLifecycleRpcError(row.error_code),
-        error: "The Service action is not available in its current state.",
+        error: "The Event action is not available in its current state.",
       };
     }
     if (row.service_id !== serviceId || !row.service_status) {
-      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Service action could not be completed." };
+      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Event action could not be completed." };
     }
 
     revalidatePath("/services");
@@ -427,27 +427,27 @@ async function executeServiceLifecycleRpc(
     if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
     console.error(`[${rpcName}] Unexpected error:`, err instanceof Error ? err.message : "Unknown");
-    return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Service action could not be completed." };
+    return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Event action could not be completed." };
   }
 }
 
 export async function startServiceExecution(serviceId: string) {
   if (!serviceLifecycleIdSchema.safeParse(serviceId).success) {
-    return { success: false as const, code: "INVALID_INPUT" as const, error: "Invalid Service." };
+    return { success: false as const, code: "INVALID_INPUT" as const, error: "Invalid Event." };
   }
   return executeServiceLifecycleRpc(serviceId, "start_service_execution", {});
 }
 
 export async function completeService(serviceId: string) {
   if (!serviceLifecycleIdSchema.safeParse(serviceId).success) {
-    return { success: false as const, code: "INVALID_INPUT" as const, error: "Invalid Service." };
+    return { success: false as const, code: "INVALID_INPUT" as const, error: "Invalid Event." };
   }
   return executeServiceLifecycleRpc(serviceId, "complete_service", {});
 }
 
 export async function cancelService(serviceId: string, reason: unknown) {
   if (!serviceLifecycleIdSchema.safeParse(serviceId).success) {
-    return { success: false as const, code: "INVALID_INPUT" as const, error: "Invalid Service." };
+    return { success: false as const, code: "INVALID_INPUT" as const, error: "Invalid Event." };
   }
   const parsed = z.string().trim().min(1).max(1000).safeParse(reason);
   if (!parsed.success) {
@@ -545,12 +545,12 @@ export async function transitionServiceLifecycle(
   } = {},
 ): Promise<ActionResult<{ id: string; lifecycle: ServiceLifecycleState; idempotent: boolean }>> {
   if (!serviceLifecycleIdSchema.safeParse(serviceId).success) {
-    return { success: false as const, code: "INVALID_INPUT" as const, error: "Invalid Service." };
+    return { success: false as const, code: "INVALID_INPUT" as const, error: "Invalid Event." };
   }
 
   const parsedAction = serviceLifecycleActionSchema.safeParse(action);
   if (!parsedAction.success) {
-    return { success: false, code: "INVALID_INPUT", error: "Invalid Service lifecycle action." };
+    return { success: false, code: "INVALID_INPUT", error: "Invalid Event lifecycle action." };
   }
 
   const parsedReason = z.string().trim().min(1).max(1000).safeParse(options.reason);
@@ -593,12 +593,12 @@ export async function transitionServiceLifecycle(
 
     if (error) {
       console.error("[transitionServiceLifecycle] RPC error:", error.message);
-      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Service action could not be completed." };
+      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Event action could not be completed." };
     }
 
     const parsedResponse = serviceLifecycleTargetResponseSchema.safeParse(data);
     if (!parsedResponse.success) {
-      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Service action could not be completed." };
+      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Event action could not be completed." };
     }
 
     const [row] = parsedResponse.data;
@@ -606,7 +606,7 @@ export async function transitionServiceLifecycle(
       return {
         success: false,
         code: mapServiceLifecycleTargetError(row.error_code),
-        error: "The Service lifecycle action is not available in its current state.",
+        error: "The Event lifecycle action is not available in its current state.",
       };
     }
 
@@ -621,7 +621,7 @@ export async function transitionServiceLifecycle(
       row.close_state === null ||
       row.state_version === null
     ) {
-      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Service action could not be completed." };
+      return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Event action could not be completed." };
     }
 
     revalidatePath("/services");
@@ -650,6 +650,6 @@ export async function transitionServiceLifecycle(
     if (err instanceof UnauthorizedError) return { success: false, code: "UNAUTHORIZED", error: "Unauthorized" };
     if (err instanceof ForbiddenError) return { success: false, code: "FORBIDDEN", error: "Forbidden" };
     console.error("[transitionServiceLifecycle] Unexpected error:", err instanceof Error ? err.message : "Unknown");
-    return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Service action could not be completed." };
+    return { success: false, code: "SERVICE_TRANSITION_FAILED", error: "The Event action could not be completed." };
   }
 }

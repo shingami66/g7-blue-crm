@@ -42,9 +42,9 @@ export const APPROVED_BILLING_SCOPE_ERROR_MESSAGES: Record<
   scope_discount_not_supported:
     "Approved Billing Scope V1 does not support source quotations with discount.",
   scope_source_service_mismatch:
-    "The source quotation does not belong to the expected service.",
+    "The source quotation does not belong to the expected Event.",
   scope_service_lifecycle_ineligible:
-    "A billing scope draft cannot be created for this Service lifecycle state.",
+    "A billing scope draft cannot be created for this Event lifecycle state.",
   scope_duplicate_draft:
     "An active draft billing scope already exists for this source quotation.",
   scope_no_items:
@@ -55,9 +55,9 @@ export const APPROVED_BILLING_SCOPE_ERROR_MESSAGES: Record<
   scope_not_safe:
     "The billing scope must be marked safe before it can be approved.",
   scope_not_active:
-    "The approved billing scope is not the active approved scope for this service.",
+    "The approved billing scope is not the active approved scope for this Event.",
   scope_active_conflict:
-    "Another active approved billing scope already exists for this service.",
+    "Another active approved billing scope already exists for this Event.",
   scope_reduction_invalid:
     "Accepted values must follow the reductions-only rules for this scope item.",
   scope_reason_required:
@@ -74,7 +74,7 @@ export const APPROVED_BILLING_SCOPE_ERROR_MESSAGES: Record<
   scope_supersede_target_required:
     "A supersede target billing scope is required for this action.",
   scope_supersede_service_mismatch:
-    "The supersede target must belong to the same service as the new scope.",
+    "The supersede target must belong to the same Event as the new scope.",
   scope_concurrency_conflict:
     "Approved billing scope creation encountered a concurrency conflict. Please try again.",
   scope_permission_denied:

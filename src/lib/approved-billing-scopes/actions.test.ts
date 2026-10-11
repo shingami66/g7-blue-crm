@@ -93,7 +93,7 @@ test("Approved billing scope taxonomy keeps scope_not_active exact and distinct"
   );
   assert.equal(
     APPROVED_BILLING_SCOPE_ERROR_MESSAGES[stableCode],
-    "The approved billing scope is not the active approved scope for this service.",
+    "The approved billing scope is not the active approved scope for this Event.",
   );
   assert.equal(
     Object.prototype.hasOwnProperty.call(

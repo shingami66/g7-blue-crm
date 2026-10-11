@@ -68,7 +68,7 @@ const baseAllocationSchema = z.object({
 
 export const supplierAllocationCreateSchema = baseAllocationSchema
   .extend({
-    serviceId: z.string().min(1, "Service ID is required"),
+    serviceId: z.string().min(1, "Event is required"),
     supplierId: z.string().min(1, "Supplier ID is required"),
   })
   .superRefine((data, ctx) => {

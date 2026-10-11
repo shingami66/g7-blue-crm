@@ -31,7 +31,7 @@ function getAllocationStatusErrorMessage(
       dictionary.errors.invalidTransition,
     "This allocation cannot be modified because it is linked to an active supplier booking.":
       dictionary.errors.linkedActiveBooking,
-    "Service is unavailable for supplier allocation update.":
+    "Event is unavailable for supplier allocation update.":
       dictionary.errors.serviceUnavailable,
     "Supplier is unavailable for allocation update.":
       dictionary.errors.supplierUnavailable,

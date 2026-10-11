@@ -65,7 +65,7 @@ export const createQuotationSchema = z.object({
     (val) => (typeof val === "string" ? val.trim() : val),
     z.string().min(1, "Mutation key is required")
   ),
-  service_id: z.string().uuid("Service is required"),
+  service_id: z.string().uuid("Event is required"),
   event: z.preprocess(
     (val) => (typeof val === "string" ? val.trim() : val),
     z.string().min(1, "Event is required")

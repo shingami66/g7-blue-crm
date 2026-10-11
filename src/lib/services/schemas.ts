@@ -34,7 +34,7 @@ const nullableNonnegativeMoney = z.preprocess(
 
 const serviceBaseSchema = z.object({
   customer_id: z.string().uuid("Customer is required"),
-  service_title: trimmedRequiredString("Service title is required"),
+  service_title: trimmedRequiredString("Event Record Title is required"),
   event_name: nullableTrimmedString.optional(),
   event_type: nullableTrimmedString.optional(),
   event_start_date: nullableDateString.optional(),
@@ -87,7 +87,7 @@ function validateCancellationReason(
   if (!input.cancellation_reason?.trim()) {
     context.addIssue({
       code: "custom",
-      message: "Cancellation reason is required when service is cancelled",
+      message: "Cancellation reason is required when Event is cancelled",
       path: ["cancellation_reason"],
     });
   }

@@ -213,7 +213,7 @@ export default function EligibleInvoiceServiceSelector({
               <div className="rounded-lg border border-outline-variant/60 bg-surface overflow-hidden divide-y divide-outline-variant/60">
                 {/* Desktop Column Header */}
                 <div dir="ltr" className="hidden grid-cols-12 gap-3 border-b border-outline-variant/60 bg-surface-bright/40 px-4 py-2 text-start text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant/70 md:grid">
-                  <div className={`col-span-3 ${desktopColumnOrder.service}`}>Service / الخدمة</div>
+                  <div className={`col-span-3 ${desktopColumnOrder.service}`}>{chooser.eventIdentity}</div>
                   <div className={`col-span-2 ${desktopColumnOrder.customer}`}>{chooser.customer}</div>
                   <div className={`col-span-2 ${desktopColumnOrder.eventDate}`}>{chooser.eventDate}</div>
                   <div className={`col-span-2 ${desktopColumnOrder.location}`}>{chooser.location}</div>
