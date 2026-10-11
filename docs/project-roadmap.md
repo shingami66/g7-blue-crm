@@ -1,14 +1,15 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ROADMAP POSITION — L1-R01 PROVEN CLOSED / OWNER-ACCEPTED — 10 October 2026
+## CURRENT ROADMAP POSITION — L1-R01 PROVEN CLOSED / OWNER-ACCEPTED — 11 October 2026
 
 - **L1-R04 — Event Brief:** `PROVEN CLOSED / OWNER-ACCEPTED` for the bounded first slice. Published R04-B implementation and UX1/UX2 acceptance repairs: `49384f941ea6305e6d067c9d0bbe3d179d45d92b`, `58604e125a052be5f867d1485b2954ca46fbd2d3`, and `c561da67eef204b5a666e954a3c284b844efa1a3`.
 - On 6 October 2026, Mozfer completed authenticated representative EN/AR/RTL/responsive manual acceptance, including the edit boundary, separate lifecycle, responsive Operational Details, and Arabic mobile Related Quotations without horizontal scrolling.
 - **L1-R01 — Percentage discount:** `PROVEN CLOSED / OWNER-ACCEPTED` for the bounded capability. Mozfer explicitly accepted on 10 October 2026 after completed DEV acceptance: 12.25% persisted as 1225 bps, resolved SAR authority and deterministic allocation, Draft mode transitions and normal UI approval, EN/AR/RTL detail and PDF, mobile detail and repaired PDF preview, approved ABS/billing authority, and a material rate-only 12.25%→10.00% Commercial Amendment change with predecessor immutability.
-- **Remaining first-MVP gates:** R06, R07, and R08 remain **OPEN**; R01–R04 are **PROVEN CLOSED / OWNER-ACCEPTED** for their bounded workflows. R05 remains **DEFERRED FROM FIRST G7 PRODUCT MVP / IMPLEMENTATION PRESERVED** and is not an open first-MVP acceptance gate.
+- **Remaining first-MVP gates:** R07 and R08 remain **OPEN**; R01–R04 are **PROVEN CLOSED / OWNER-ACCEPTED** for their bounded workflows. R05 and R06 are deferred and are not open first-MVP acceptance gates.
 - **R05 — Service Event Tasks:** G7-OD-29 (APPROVED) defers Event Tasks from first-MVP acceptance after no verified repeated non-transactional task-only operating need was demonstrated. The implementation and historical DEV evidence remain preserved; C6 is cancelled. R05-P3 is **IMPLEMENTED / PUBLISHED**: Service detail no longer exposes Event Tasks or loads task/assignee data; the underlying implementation and historical DEV evidence remain preserved.
-- **W11:** Cutover, rehearsal, production, and overall real-use proof remain **NO-GO**. R05's deferral effect on W11 remains subject to separate residual-gate reconciliation; no overall Layer 1 real-use proof is claimed.
-- **EXACT NEXT ACTION:** Return control to the Owner/Controller to select and separately authorize the next residual first-MVP gate. Do not auto-select R06, R07, or R08 or start W11/M0–M6.
+- **R06 — Event Milestones:** The Owner found no verified current first-MVP operating need after inspecting the implemented workflow. R06 is **DEFERRED FROM FIRST G7 PRODUCT MVP / DEV MIGRATION HISTORY PRESERVED / USER-FACING FEATURE NOT PUBLISHED**; applied DEV migration history is unchanged and both exact sources are preserved.
+- **W11:** Cutover, rehearsal, production, and overall real-use proof remain **NO-GO** because R07 and R08 remain undispositioned. No overall Layer 1 real-use proof is claimed.
+- **EXACT NEXT ACTION:** Return control to the Owner/Controller to select and separately authorize R07 Issues or R08 Team / Resources. Do not auto-select either gate or start W11/M0–M6.
 
 ## HISTORICAL ROADMAP SNAPSHOT — R04-B IMPLEMENTED / OWNER ACCEPTANCE PENDING — 5 October 2026 (SUPERSEDED CURRENT POSITION)
 

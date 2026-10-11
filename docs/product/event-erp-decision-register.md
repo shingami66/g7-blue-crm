@@ -12,7 +12,7 @@
 - Strategic expansion authority: [G7 BLUE Event ERP Future Expansion Master](G7_BLUE_Event_ERP_Future_Expansion_Master_Handover.md).
 - A locked decision or roadmap is not implementation, database, deployment, production, publication or Layer 2 authority.
 
-> Current Owner Decision addenda: [G7-OD-28](#20-current-owner-decision--g7-od-28--27-september-2026) qualifies the historical professional prerequisites below for G7's proof-lab only; [G7-OD-29](#21-current-owner-decision--g7-od-29) defers active Service Event Tasks from the first G7 Product MVP while preserving implementation. The later decision changes first-MVP activation only; historical register decisions remain preserved.
+> Current Owner Decision addenda: [G7-OD-28](#20-current-owner-decision--g7-od-28--27-september-2026) qualifies the historical professional prerequisites below for G7's proof-lab only; [G7-OD-29](#21-current-owner-decision--g7-od-29) defers active Service Event Tasks from the first G7 Product MVP while preserving implementation. Section 22 records the 11 October 2026 Owner decision deferring Event Milestones while preserving applied DEV migration history. Historical register decisions remain preserved.
 
 ## 2. Decision Classes
 
@@ -208,5 +208,14 @@ W4 final engineering closeout completed; ready for Controller final W4 verdict. 
 - **R05 disposition:** R05 is **DEFERRED FROM FIRST G7 PRODUCT MVP / IMPLEMENTATION PRESERVED**, not failed, proven closed, or Owner-accepted as an active MVP feature. `service_tasks`, migration `20261007063746_service_tasks`, the three RPCs, runtime/actions/queries, tests, historical DEV acceptance task, audit evidence, and implementation history remain preserved. No deletion or database rollback is authorized.
 - **Evidence basis:** C4 proved the primary real-DEV runtime journey and C5's UX refinement was published. Product reassessment found no verified current operating need for repeated non-transactional Service follow-ups that need a distinct owner, due date, and pending/completed state.
 - **C6 and future activation:** C6 is cancelled. R05-P3 is implemented and published, removing the Event Tasks presentation and Service-page task data loading from the first-MVP Service experience while preserving the dormant implementation. Consider future activation only after a fresh Owner scope decision supported by real evidence of repeated non-transactional follow-ups not adequately represented by authoritative native ERP workflows.
-- **W11 and Generic Core:** R01 and R06–R08 remain open first-MVP residual gates; R05 is deferred; W11 remains **NO-GO** pending separate residual-gate reconciliation. G7-OD-29 does not change the Generic Product MVP, Generic Core boundary/invariants, Core Protocol `v0.1.0-alpha.1`, the exactly five Core specifications, exact `built_from_head()`, Authority Schema, or Task Verdict vocabulary.
+- **W11 and Generic Core:** R07–R08 remain open first-MVP residual gates; R05 is deferred under this decision; the later R06 deferral is recorded in Section 22. W11 remains **NO-GO** pending separate R07/R08 disposition. G7-OD-29 does not change the Generic Product MVP, Generic Core boundary/invariants, Core Protocol `v0.1.0-alpha.1`, the exactly five Core specifications, exact `built_from_head()`, Authority Schema, or Task Verdict vocabulary.
 - **Audit/history:** Improving workflow-specific audit/history visibility remains a separate product concern; this decision does not claim that work complete.
+
+
+## 22. Current Owner Decision — R06 Milestones deferral — 11 October 2026
+
+- **Decision:** R06 Event Milestones is **DEFERRED FROM FIRST G7 PRODUCT MVP / DEV MIGRATION HISTORY PRESERVED / USER-FACING FEATURE NOT PUBLISHED**. The Owner inspected the implemented workflow and found no verified current first-MVP operating need for a separate Milestones capability.
+- **History and workflow authority:** History/Audit remains historical evidence of what occurred. Native ERP records remain authoritative for their own business states. A separate Milestones layer is not retained solely because it appeared in an earlier technical plan.
+- **Future reconsideration:** Reconsider only if real operating evidence shows important cross-workflow Event checkpoints that are not adequately represented by existing authoritative records.
+- **Applied DEV history:** The dormant DEV foundation and both applied migration identities remain preserved: `20261011080610 / 20261011071245_r06_event_milestones` and `20261011082028 / r06_event_milestones_acl_repair`. Their SQL sources remain exact; no rollback, migration repair, reapplication, or history rewrite is implied by this product deferral.
+- **R06 and W11:** R06 is not an open first-MVP acceptance gate. R07 Issues and R08 Team / Resources remain open and outside this decision; W11 remains **NO-GO** pending their separate disposition. Event Tasks remain deferred under G7-OD-29 and are not reactivated.
