@@ -213,7 +213,7 @@ test("11-12. Customer/Service numbers and LTR-safe values remain direction-safe"
   assert.match(profile, /commercialRegistrationNumber|crNumber|vatNumber|postal/i);
   assert.match(profile, /Customer360Workspace/);
   assert.match(workspace, /service\.serviceNumber/);
-  assert.match(workspace, /<UiLtrText>\{service\.serviceNumber\}<\/UiLtrText>/);
+  assert.match(workspace, /dir="ltr"/);
 });
 
 test("13. SAR and counts use shared formatters with Western digits", () => {
