@@ -277,6 +277,8 @@ Warning: the permission/action/audit foundation is cross-cutting. It must remain
 
 Accepted W2A/W2B/W2C, W3 lifecycle, and W4 Procurement & Commitments slices stay closed. Their acceptance covers the delivered behavior below, not every objective of the broader waves. These are required future Layer 1 delivery gates, not implementation authorization or dates. W4 is **CLOSED / COMPLETED** and W5 remains **LOCKED / UNSTARTED**. W11 cannot claim complete Layer 1 proof while these required gates lack delivery/acceptance evidence.
 
+**Current disposition pointer — 12 October 2026:** R07 Event Issues and R08 Team / Resources are **DEFERRED FROM FIRST G7 PRODUCT MVP** under the [current Owner decision](event-erp-decision-register.md). This dated 7 September table preserves historical gate definitions and does not describe currently open first-MVP gates. W11 remains **NO-GO** pending a separate Controller readiness/residual-gate reconciliation.
+
 | Residual ID / capability | Delivered / not delivered | Current deferral | Required future delivery gate / wave | Product Truth closed? |
 |---|---|---|---|---|
 | L1-R01 — Percentage discount | Fixed-SAR deterministic allocation delivered by W2C; percentage input/calculation not delivered. | Outside accepted W2C; no implementation now. | Named commercial extension gate before W7 AR expansion consumes percentage quotations, and before W11 proof. Validate deterministic allocation and approval/ABS equality. | Yes — COM-04; parameter/UI details remain design work. |

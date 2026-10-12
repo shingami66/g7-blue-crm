@@ -200,7 +200,7 @@ W4 final engineering closeout completed; ready for Controller final W4 verdict. 
 - **Current delivery:** [W10 policy](w10-accounting-policy.md) and [technical blueprint](w10-accounting-technical-blueprint.md) are documentation candidates: **W10 POLICY / TECHNICAL BLUEPRINT — ACTIVE; W10 RUNTIME IMPLEMENTATION — NOT STARTED**. The current task grants documentation writes in five exact paths only, no code/database/migration/DEV mutation/deployment/staging/commit/push authority.
 - **Current next action (supersedes historical Section 19 next action):** Controller review of the five-file documentation diff and independent Reviewer findings. Any proposed W10A implementation requires separate exact Owner authorization.
 
-## 21. Current Owner Decision — G7-OD-29
+## 21. Owner Decision — G7-OD-29
 
 - **Decision:** `G7-OD-29 — Service Event Tasks deferred from the first G7 Product MVP` is **APPROVED**. The first Product MVP does not require Service Event Tasks as an active user-facing capability.
 - **Domain product truth vs first-MVP activation:** OPS-04 remains unchanged. Task, Milestone, Issue, Resource, and related Event Operations concepts remain distinct; Task remains a valid future domain concept. This decision narrows first-MVP activation and does not rewrite the broader Event Operations model.
@@ -212,10 +212,22 @@ W4 final engineering closeout completed; ready for Controller final W4 verdict. 
 - **Audit/history:** Improving workflow-specific audit/history visibility remains a separate product concern; this decision does not claim that work complete.
 
 
-## 22. Current Owner Decision — R06 Milestones deferral — 11 October 2026
+## 22. Owner Decision — R06 Milestones deferral — 11 October 2026
 
 - **Decision:** R06 Event Milestones is **DEFERRED FROM FIRST G7 PRODUCT MVP / DEV MIGRATION HISTORY PRESERVED / USER-FACING FEATURE NOT PUBLISHED**. The Owner inspected the implemented workflow and found no verified current first-MVP operating need for a separate Milestones capability.
 - **History and workflow authority:** History/Audit remains historical evidence of what occurred. Native ERP records remain authoritative for their own business states. A separate Milestones layer is not retained solely because it appeared in an earlier technical plan.
 - **Future reconsideration:** Reconsider only if real operating evidence shows important cross-workflow Event checkpoints that are not adequately represented by existing authoritative records.
 - **Applied DEV history:** The dormant DEV foundation and both applied migration identities remain preserved: `20261011080610 / 20261011071245_r06_event_milestones` and `20261011082028 / r06_event_milestones_acl_repair`. Their SQL sources remain exact; no rollback, migration repair, reapplication, or history rewrite is implied by this product deferral.
 - **R06 and W11:** R06 is not an open first-MVP acceptance gate. R07 Issues and R08 Team / Resources remain open and outside this decision; W11 remains **NO-GO** pending their separate disposition. Event Tasks remain deferred under G7-OD-29 and are not reactivated.
+
+
+## 23. Current Owner Decision — R07 Issues and R08 Team / Resources deferral — 12 October 2026
+
+The R07/R08 open-gate references in Sections 21 and 22 record their then-current status and are superseded by this 12 October decision.
+
+- **Decision:** R07 Event Issues and R08 Team / Resources are both **DEFERRED FROM FIRST G7 PRODUCT MVP**. Repository review confirms capability gaps for both domains; no verified current first-MVP operating need was demonstrated to justify a separate first-class capability. Deferral is a Product MVP scope decision, not a claim that either concept can never be useful.
+- **R07 source authority:** Procurement receipt defects/incidents, receipt acceptance/rejection, governed corrections, Service lifecycle, source-specific exceptions, and Action Center links remain with their authoritative workflows. Do not create a generic Event Issue authority. Reconsider R07 only when representative real operating evidence demonstrates recurring Event-wide issues that span authoritative workflows and require their own accountable owner, lifecycle, evidence, escalation, and resolution that those records cannot represent adequately.
+- **R08 source authority:** Supplier Booking, Supplier Allocation, procurement commitments, sales ownership, app-user identity, and audit attribution remain authoritative for their own records and purposes. Do not reinterpret those workflows or fields as a generic Event team/resource planner. Reconsider R08 only when representative real operating evidence demonstrates current Event crew assignment, role/shift scheduling, availability conflicts, equipment/asset allocation conflicts, driver scheduling, capacity collisions, or other resource planning not already owned by an authoritative workflow.
+- **Implementation and database boundary:** No R07/R08 first-class application implementation currently exists to remove; no implementation was deleted. No database rollback, schema mutation, migration, business-data mutation, DEMO/PROD mutation, or deployment occurred.
+- **R01–R08 and W11:** R01–R04 remain **PROVEN CLOSED / OWNER-ACCEPTED** for their bounded workflows; R05–R08 are **DEFERRED FROM FIRST G7 PRODUCT MVP**. No R01–R08 first-MVP capability gate remains **OPEN**. R05 and R06 remain deferred and are not reactivated. W11 remains **NO-GO** pending a separate Controller readiness/residual-gate reconciliation; no overall Layer 1 real-use proof is claimed.
+- **Protected boundaries:** This decision does not alter the Generic Core boundary/invariants, Core Protocol, authority schema, Task Verdict vocabulary, Event lifecycle, supplier workflows, Action Center behavior, or historical gate definitions. Controller canonical artifacts remain outside this repository documentation task.
