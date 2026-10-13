@@ -8,6 +8,15 @@ type QueryState = {
   rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { code?: string } | null }>;
   calls: Array<{ name: string; args: Record<string, unknown> }>;
   permission: string | null;
+  usersManage: boolean;
+  targetRows: unknown;
+  targetQuery: {
+    table: string;
+    columns: string | null;
+    filters: Array<{ method: "eq" | "neq"; column: string; value: unknown }>;
+    orders: Array<{ column: string; ascending: boolean; nullsFirst?: boolean }>;
+    limit: number | null;
+  } | null;
 };
 
 const require = createRequire(import.meta.url);
@@ -37,6 +46,9 @@ let state: QueryState = {
   rpc: async () => ({ data: null, error: null }),
   calls: [],
   permission: null,
+  usersManage: true,
+  targetRows: [],
+  targetQuery: null,
 };
 
 mock.module("@/lib/auth/permissions", {
@@ -45,6 +57,10 @@ mock.module("@/lib/auth/permissions", {
     requirePermission: async (permission: string) => {
       state.permission = permission;
       return { id: "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f", role: "viewer", is_active: true };
+    },
+    checkPermission: async (permission: string) => {
+      state.permission = permission;
+      return state.usersManage;
     },
   },
 });
@@ -56,17 +72,92 @@ mock.module("@/lib/supabase/admin", {
         state.calls.push({ name, args });
         return state.rpc(name, args);
       },
+      from: (table: string) => {
+        state.targetQuery = {
+          table,
+          columns: null,
+          filters: [],
+          orders: [],
+          limit: null,
+        };
+        const query = {
+          select(columns: string) {
+            state.targetQuery!.columns = columns;
+            return query;
+          },
+          eq(column: string, value: unknown) {
+            state.targetQuery!.filters.push({ method: "eq", column, value });
+            return query;
+          },
+          neq(column: string, value: unknown) {
+            state.targetQuery!.filters.push({ method: "neq", column, value });
+            return query;
+          },
+          order(column: string, options: { ascending: boolean; nullsFirst?: boolean }) {
+            state.targetQuery!.orders.push({ column, ...options });
+            return query;
+          },
+          async limit(value: number) {
+            state.targetQuery!.limit = value;
+            return { data: state.targetRows, error: null };
+          },
+        };
+        return query;
+      },
     }),
   },
 });
 
-const { getAccountingProfile, listAccountingAccounts, listAccountingCapabilityAssignments, listAccountingPeriods, listAccountingPostingRules, getAccountingJournal, getAccountingGeneralLedger, getAccountingTrialBalance, getAccountingRevenueReconciliation, getAccountingW10HReport } = await import("./queries.ts");
+const { getAccountingProfile, getAccountingSetupStatus, listAccountingSetupTargets, listAccountingAccounts, listAccountingCapabilityAssignments, listAccountingPeriods, listAccountingPostingRules, getAccountingJournal, getAccountingGeneralLedger, getAccountingTrialBalance, getAccountingRevenueReconciliation, getAccountingW10HReport } = await import("./queries.ts");
 const { AuthDependencyError } = await import("../auth/errors.ts");
 const actorId = "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f";
 
 function resetState(rpc: QueryState["rpc"]) {
-  state = { rpc, calls: [], permission: null };
+  state = { rpc, calls: [], permission: null, usersManage: true, targetRows: [], targetQuery: null };
 }
+
+test("AAR-D1 setup status uses the trusted actor and validates the discriminated response", async () => {
+  resetState(async () => ({ data: { state: "NOT_INITIALIZED", can_bootstrap: true }, error: null }));
+
+  assert.deepEqual(await getAccountingSetupStatus(), { state: "NOT_INITIALIZED", can_bootstrap: true });
+  assert.deepEqual(state.calls, [{
+    name: "get_accounting_setup_status",
+    args: { p_actor_user_id: actorId },
+  }]);
+
+  resetState(async () => ({ data: { state: "INITIALIZED", can_manage_profile: true }, error: null }));
+  await assert.rejects(() => getAccountingSetupStatus(), /Accounting setup status response was invalid/);
+});
+
+test("AAR-D1 setup targets allow CRM Admin or accounting authority and remain active-only and bounded", async () => {
+  resetState(async () => ({ data: false, error: null }));
+  state.targetRows = [{ id: "9f09e715-9698-4804-a72b-331ebc776b8d", name: "Target", role: "accountant" }];
+
+  assert.deepEqual(await listAccountingSetupTargets(true), state.targetRows);
+  assert.equal(state.permission, "users:manage");
+  assert.deepEqual(state.targetQuery, {
+    table: "app_users",
+    columns: "id,name,role",
+    filters: [
+      { method: "eq", column: "is_active", value: true },
+      { method: "neq", column: "id", value: actorId },
+    ],
+    orders: [
+      { column: "name", ascending: true, nullsFirst: false },
+      { column: "id", ascending: true },
+    ],
+    limit: 100,
+  });
+
+  resetState(async () => ({ data: false, error: null }));
+  state.usersManage = false;
+  await assert.rejects(() => listAccountingSetupTargets(), /Accounting authority is required/);
+  assert.equal(state.targetQuery, null);
+  assert.deepEqual(state.calls, [{
+    name: "get_accounting_capability",
+    args: { p_actor_user_id: actorId, p_capability: "accounting:manage_authority" },
+  }]);
+});
 
 test("profile query allows an explicit manage_profile grant without a CRM role grant", async () => {
   resetState(async (name, args) => {

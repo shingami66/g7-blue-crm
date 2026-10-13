@@ -1,5 +1,15 @@
 # G7 BLUE CRM - Project Status
 
+## CURRENT ACCOUNTING SETUP FOUNDATION — AAR-D1 IMPLEMENTATION CONTRACT — 13 October 2026
+
+- **AAR-D1 — Accounting Bootstrap + Setup Foundation:** The repository adds the guarded Settings → Accounting setup page, one-time profile bootstrap, minimal initial authority assignment, root-authority succession and zero-root Admin recovery, derived setup progress, and bounded profile editing in English and Arabic.
+- Additive migration source: `supabase/migrations/20261013100000_aar_d1_accounting_setup_foundation.sql`. Expected DEV migration identity after any separately authorized apply: `20261013100000_aar_d1_accounting_setup_foundation`.
+- **DEV apply:** `NOT AUTHORIZED / NOT APPLIED`. This delivery did not access or mutate DEV, DEMO, or PROD and created no accounting profile, capability assignment, chart, period, rule, journal, or business row.
+- The three initial capabilities remain exactly `accounting:view`, `accounting:manage_profile`, and `accounting:manage_authority`; `manage_authority` remains non-runtime-grantable. CRM Admin remains distinct from accounting authority.
+- The setup page does not create a real Chart of Accounts, opening balances, VAT configuration, or ZATCA/FATOORA configuration. VAT remains not registered; ZATCA/FATOORA remain inactive; professional validation remains deferred. This delivery does not make accounting production-ready.
+- W11 remains **NO-GO** unless separately changed by the Controller.
+- **EXACT NEXT ACCOUNTING SLICE:** AAR-D2 — G7 Chart of Accounts UI + versioned account configuration. Require separate Owner/Controller authorization; do not begin it automatically.
+
 ## CURRENT DELIVERY STATUS — L1-R01 PROVEN CLOSED / OWNER-ACCEPTED — 12 October 2026
 
 - **L1-R04 — Event Brief:** `PROVEN CLOSED / OWNER-ACCEPTED` for the bounded first slice. Published chain: R04-B `49384f941ea6305e6d067c9d0bbe3d179d45d92b`, UX1 `58604e125a052be5f867d1485b2954ca46fbd2d3`, and UX2 `c561da67eef204b5a666e954a3c284b844efa1a3`.

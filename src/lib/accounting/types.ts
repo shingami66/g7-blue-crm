@@ -70,12 +70,56 @@ export type AccountingProfileResult =
   | { state: "NOT_INITIALIZED" }
   | AccountingProfileSnapshot;
 
+export type AccountingSetupTarget = {
+  id: string;
+  name: string | null;
+  role: string;
+};
+
+export type AccountingSetupProgress = {
+  chart_of_accounts_started: boolean;
+  accounting_periods_started: boolean;
+  posting_rules_started: boolean;
+  inception_reconstruction_started: boolean;
+};
+
+export type AccountingSetupStatus =
+  | { state: "NOT_INITIALIZED"; can_bootstrap: true }
+  | { state: "RECOVERY_REQUIRED"; can_recover: true }
+  | {
+      state: "INITIALIZED";
+      profile: AccountingProfileSnapshot;
+      can_manage_profile: boolean;
+      can_manage_authority: boolean;
+      setup_progress: AccountingSetupProgress;
+    };
+
+export type AccountingSetupProfileEdits = {
+  expected_version: number;
+  policy_version: string;
+  endorsement_context: string;
+  professional_validation_evidence_ref: string | null;
+  accounting_start_date: string | null;
+  cutover_boundary_date: string | null;
+  legal_fiscal_evidence_pending: boolean;
+  legal_fiscal_evidence_ref: string | null;
+  reason: string;
+  evidence_ref: string | null;
+  request_id: string;
+};
+
 export type AccountingActionErrorCode =
   | "invalid_input"
   | "actor_inactive"
   | "authority_denied"
+  | "authority_unavailable"
+  | "authority_conflict"
   | "user_not_found"
   | "profile_not_initialized"
+  | "already_initialized"
+  | "preexisting_accounting_state"
+  | "company_settings_unavailable"
+  | "capability_catalog_invalid"
   | "unknown_capability"
   | "capability_disabled"
   | "capability_not_grantable"

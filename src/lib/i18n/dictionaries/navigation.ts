@@ -29,6 +29,7 @@ export interface NavigationDictionary {
     settings: string;
     suppliers: string;
     users: string;
+    accounting: string;
     expenses: string;
     advances: string;
     pettyCash: string;
@@ -84,6 +85,7 @@ export const navigationDictionaryEn: NavigationDictionary = {
     supplierBills: "Supplier Bills",
     supplierPayments: "Supplier Payments",
     supplierAdvances: "Supplier Advances",
+    accounting: "Accounting",
   },
   sections: {
     customersAndSales: "Customers & Sales",
@@ -133,6 +135,7 @@ export const navigationDictionaryAr: NavigationDictionary = {
     supplierBills: "فواتير الموردين",
     supplierPayments: "مدفوعات الموردين",
     supplierAdvances: "الدفعات المقدمة للموردين",
+    accounting: "المحاسبة",
   },
   sections: {
     customersAndSales: "العملاء والمبيعات",

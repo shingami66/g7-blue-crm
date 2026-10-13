@@ -18,6 +18,7 @@ import {
   Wallet,
   Coins,
   ClipboardCheck,
+  Calculator,
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -122,6 +123,7 @@ export default function Sidebar({
   canReadSupplierBills = false,
   canReadSupplierPayments = false,
   canReadSupplierAdvances = false,
+  canAccessAccountingSetup = false,
   authorizedReports = [],
   shellDirection = "ltr",
   currentPathname,
@@ -131,6 +133,7 @@ export default function Sidebar({
   canReadSupplierBills?: boolean;
   canReadSupplierPayments?: boolean;
   canReadSupplierAdvances?: boolean;
+  canAccessAccountingSetup?: boolean;
   authorizedReports?: readonly ReportNavigationItem[];
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
@@ -324,6 +327,14 @@ export default function Sidebar({
         href: "/settings",
         icon: Settings,
       },
+      ...(canAccessAccountingSetup
+        ? [{
+            key: "accounting",
+            label: dictionary.modules.accounting,
+            href: "/settings/accounting",
+            icon: Calculator,
+          }]
+        : []),
       ...(isAdmin
         ? [
             {

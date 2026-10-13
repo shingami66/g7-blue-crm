@@ -12760,6 +12760,10 @@ export type Database = {
         Args: { p_actor_user_id: string }
         Returns: Json
       }
+      get_accounting_setup_status: {
+        Args: { p_actor_user_id: string }
+        Returns: Json
+      }
       get_accounting_revenue_recognition_reconciliation: {
         Args: {
           p_actor: string
@@ -14510,6 +14514,51 @@ export type Database = {
           idempotent_replay: boolean
           profile_id: string
           version: number
+        }[]
+      }
+      bootstrap_accounting_foundation: {
+        Args: {
+          p_actor_user_id: string
+          p_evidence_ref: string | null
+          p_reason: string
+          p_request_id: string
+          p_target_user_id: string
+        }
+        Returns: {
+          error_code: string
+          idempotent_replay: boolean
+          profile_id: string
+          version: number
+        }[]
+      }
+      transfer_accounting_root_authority: {
+        Args: {
+          p_actor_user_id: string
+          p_evidence_ref: string | null
+          p_reason: string
+          p_request_id: string
+          p_target_user_id: string
+        }
+        Returns: {
+          authority_event_id: string
+          error_code: string
+          idempotent_replay: boolean
+          profile_id: string
+        }[]
+      }
+      recover_accounting_root_authority: {
+        Args: {
+          p_actor_user_id: string
+          p_evidence_ref: string | null
+          p_reason: string
+          p_request_id: string
+          p_target_user_id: string
+        }
+        Returns: {
+          authority_event_id: string
+          error_code: string
+          idempotent_replay: boolean
+          profile_id: string
         }[]
       }
       update_app_user_role: {

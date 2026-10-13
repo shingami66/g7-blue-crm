@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { ForbiddenError, AuthDependencyError } from "@/lib/auth/errors";
-import { requirePermission, requireUser } from "@/lib/auth/permissions";
+import { checkPermission, requirePermission, requireUser } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { RpcArgument } from "@/lib/supabase/rpc-argument";
 import {
@@ -17,6 +17,8 @@ import {
   getAccountingPeriodCloseEvidenceInputSchema,
   accountingPostingRuleVersionSchema,
   accountingProfileResultSchema,
+  accountingSetupStatusSchema,
+  accountingSetupTargetsSchema,
   accountingTrialBalanceInputSchema,
   accountingTrialBalanceResultSchema,
   accountingW10HReportInputSchema,
@@ -50,6 +52,8 @@ import type {
   AccountingExpenseBridgeReconciliation,
   AccountingRevenueReconciliation,
   AccountingBankReconciliation,
+  AccountingSetupStatus,
+  AccountingSetupTarget,
 } from "./types";
 
 function throwSafeRpcError(error: { code?: string } | null): never {
@@ -84,6 +88,59 @@ export async function getAccountingProfile() {
   const parsed = accountingProfileResultSchema.safeParse(result.data);
   if (!parsed.success) {
     throw new AuthDependencyError("Accounting profile response was invalid");
+  }
+  return parsed.data;
+}
+
+export async function getAccountingSetupStatus(): Promise<AccountingSetupStatus> {
+  const actor = await requireUser();
+  let result;
+  try {
+    result = await createAdminClient().rpc("get_accounting_setup_status", {
+      p_actor_user_id: actor.id,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting setup status dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  const parsed = accountingSetupStatusSchema.safeParse(result.data);
+  if (!parsed.success) {
+    throw new AuthDependencyError("Accounting setup status response was invalid");
+  }
+  return parsed.data;
+}
+
+export async function listAccountingSetupTargets(
+  excludeCurrentActor = false,
+): Promise<AccountingSetupTarget[]> {
+  const actor = await requireUser();
+  const canManageUsers = await checkPermission("users:manage");
+  const canManageAuthority = canManageUsers
+    ? false
+    : await resolveAccountingCapability(actor.id, "accounting:manage_authority");
+  if (!canManageUsers && !canManageAuthority) {
+    throw new ForbiddenError("Accounting authority is required");
+  }
+
+  let result;
+  try {
+    let query = createAdminClient()
+      .from("app_users")
+      .select("id,name,role")
+      .eq("is_active", true)
+      .order("name", { ascending: true, nullsFirst: false })
+      .order("id", { ascending: true });
+    if (excludeCurrentActor) query = query.neq("id", actor.id);
+    result = await query.limit(100);
+  } catch {
+    throw new AuthDependencyError("Accounting setup target dependency failed");
+  }
+  if (result.error) {
+    throw new AuthDependencyError("Accounting setup target dependency failed");
+  }
+  const parsed = accountingSetupTargetsSchema.safeParse(result.data);
+  if (!parsed.success) {
+    throw new AuthDependencyError("Accounting setup target response was invalid");
   }
   return parsed.data;
 }

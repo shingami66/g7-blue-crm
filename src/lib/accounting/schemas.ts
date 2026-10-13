@@ -126,6 +126,77 @@ export const accountingProfileResultSchema = z.union([
   accountingProfileSnapshotSchema,
 ]);
 
+export const accountingSetupTargetSchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string().max(160).nullable(),
+    role: boundedText(40),
+  })
+  .strict();
+
+export const accountingSetupTargetsSchema = z.array(accountingSetupTargetSchema).max(100);
+
+const accountingSetupProgressSchema = z
+  .object({
+    chart_of_accounts_started: z.boolean(),
+    accounting_periods_started: z.boolean(),
+    posting_rules_started: z.boolean(),
+    inception_reconstruction_started: z.boolean(),
+  })
+  .strict();
+
+export const accountingSetupStatusSchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("NOT_INITIALIZED"), can_bootstrap: z.literal(true) }).strict(),
+  z.object({ state: z.literal("RECOVERY_REQUIRED"), can_recover: z.literal(true) }).strict(),
+  z
+    .object({
+      state: z.literal("INITIALIZED"),
+      profile: accountingProfileSnapshotSchema,
+      can_manage_profile: z.boolean(),
+      can_manage_authority: z.boolean(),
+      setup_progress: accountingSetupProgressSchema,
+    })
+    .strict(),
+]);
+
+export const accountingSetupMutationInputSchema = z
+  .object({
+    target_user_id: z.string().uuid(),
+    reason: boundedText(2000),
+    evidence_ref: nullableEvidence,
+    request_id: z.string().uuid(),
+  })
+  .strict();
+
+export const accountingSetupProfileEditsSchema = z
+  .object({
+    expected_version: z.number().int().positive(),
+    policy_version: boundedText(80),
+    endorsement_context: boundedText(500),
+    professional_validation_evidence_ref: nullableEvidence,
+    accounting_start_date: validDate.nullable(),
+    cutover_boundary_date: validDate.nullable(),
+    legal_fiscal_evidence_pending: z.boolean(),
+    legal_fiscal_evidence_ref: nullableEvidence,
+    reason: boundedText(2000),
+    evidence_ref: nullableEvidence,
+    request_id: z.string().uuid(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (
+      value.accounting_start_date &&
+      value.cutover_boundary_date &&
+      value.cutover_boundary_date < value.accounting_start_date
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["cutover_boundary_date"],
+        message: "Cutover cannot precede the accounting start date",
+      });
+    }
+  });
+
 export const updateAccountingProfileInputSchema = z
   .object({
     expected_version: z.number().int().nonnegative(),

@@ -10,6 +10,8 @@ type ActionState = {
   capabilityChecks: string[];
   allowedCapabilities: Set<string> | null;
   permission: string | null;
+  permissionError: Error | null;
+  revalidated: string[];
 };
 
 const require = createRequire(import.meta.url);
@@ -24,6 +26,12 @@ registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === "server-only") {
       return { shortCircuit: true, url: "data:text/javascript,export default {}" };
+    }
+    if (specifier === "next/cache") {
+      return {
+        shortCircuit: true,
+        url: "data:text/javascript,export function revalidatePath(path){globalThis.__aarD1RevalidatePath(path)}",
+      };
     }
     if (specifier.startsWith("@/")) {
       return { shortCircuit: true, url: new URL(`../../${specifier.slice(2)}.ts`, import.meta.url).href };
@@ -41,15 +49,27 @@ let state: ActionState = {
   capabilityChecks: [],
   allowedCapabilities: null,
   permission: null,
+  permissionError: null,
+  revalidated: [],
 };
 
 mock.module("@/lib/auth/permissions", {
   namedExports: {
     requirePermission: async (permission: string) => {
       state.permission = permission;
+      if (state.permissionError) throw state.permissionError;
       return { id: "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f", role: "viewer", is_active: true };
     },
     requireUser: async () => ({ id: "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f", role: "viewer", is_active: true }),
+    resolveAccountingCapability: async (_actorId: string, capability: string) => {
+      state.capabilityChecks.push(capability);
+      return state.allowedCapabilities === null || state.allowedCapabilities.has(capability);
+    },
+    checkPermission: async (permission: string) => {
+      state.permission = permission;
+      if (state.permissionError) throw state.permissionError;
+      return permission === "users:manage";
+    },
   },
 });
 
@@ -69,15 +89,93 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { saveAccountingAccount, saveAccountingPeriod, setAccountingCapability, updateAccountingProfile, saveAccountingPostingRule, prepareAccountingJournal, postAccountingJournal, reverseAccountingJournal, saveAccountingArBridgeEvent, prepareAccountingArBridgeEvent, postAccountingArBridgeJournal, saveAccountingApBridgeEvent, prepareAccountingApBridgeEvent, postAccountingApBridgeJournal, saveAccountingExpenseBridgeEvent, prepareAccountingExpenseBridgeEvent, postAccountingExpenseBridgeJournal, saveAccountingRevenueArrangement, reviewAccountingRevenueArrangement, saveAccountingRevenuePerformanceEvidence, reviewAccountingRevenuePerformanceEvidence, prepareAccountingRevenueRecognition, postAccountingRevenueRecognitionJournal } = await import("./actions.ts");
-const { AuthDependencyError } = await import("../auth/errors.ts");
+const {
+  saveAccountingAccount,
+  saveAccountingPeriod,
+  setAccountingCapability,
+  updateAccountingProfile,
+  bootstrapAccountingFoundation,
+  transferAccountingRootAuthority,
+  recoverAccountingRootAuthority,
+  updateAccountingSetupProfile,
+  saveAccountingPostingRule,
+  prepareAccountingJournal,
+  postAccountingJournal,
+  reverseAccountingJournal,
+  saveAccountingArBridgeEvent,
+  prepareAccountingArBridgeEvent,
+  postAccountingArBridgeJournal,
+  saveAccountingApBridgeEvent,
+  prepareAccountingApBridgeEvent,
+  postAccountingApBridgeJournal,
+  saveAccountingExpenseBridgeEvent,
+  prepareAccountingExpenseBridgeEvent,
+  postAccountingExpenseBridgeJournal,
+  saveAccountingRevenueArrangement,
+  reviewAccountingRevenueArrangement,
+  saveAccountingRevenuePerformanceEvidence,
+  reviewAccountingRevenuePerformanceEvidence,
+  prepareAccountingRevenueRecognition,
+  postAccountingRevenueRecognitionJournal,
+} = await import("./actions.ts");
+const { AuthDependencyError, ForbiddenError } = await import("../auth/errors.ts");
+
+(globalThis as typeof globalThis & { __aarD1RevalidatePath: (path: string) => void }).__aarD1RevalidatePath =
+  (path) => state.revalidated.push(path);
 
 const actorId = "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f";
 const targetId = "9f09e715-9698-4804-a72b-331ebc776b8d";
 
 function resetState(rpc: ActionState["rpc"]) {
-  state = { rpc, calls: [], capabilityChecks: [], allowedCapabilities: null, permission: null };
+  state = {
+    rpc,
+    calls: [],
+    capabilityChecks: [],
+    allowedCapabilities: null,
+    permission: null,
+    permissionError: null,
+    revalidated: [],
+  };
 }
+
+const setupMutation = {
+  target_user_id: targetId,
+  reason: "Controller-approved accounting setup test",
+  evidence_ref: "evidence://aar-d1/action-test",
+  request_id: "d8057d22-40df-47ba-9f9d-a2404bd5317a",
+};
+
+const setupProfileSnapshot = {
+  id: "00000000-0000-4000-8000-00000000d101",
+  singleton_key: "g7",
+  company_settings_id: "00000000-0000-4000-8000-00000000d102",
+  version: 2,
+  framework_key: "SA_IFRS_FOR_SMES",
+  framework_edition: 2025,
+  policy_version: "W10 provisional policy",
+  endorsement_context: "Controller approved provisional baseline",
+  professional_validation_state: "DEFERRED",
+  professional_validation_evidence_ref: null,
+  functional_currency: "SAR",
+  fiscal_start_month: 1,
+  fiscal_start_day: 1,
+  fiscal_end_month: 12,
+  fiscal_end_day: 31,
+  fiscal_timezone: "Asia/Riyadh",
+  accounting_start_date: null,
+  cutover_boundary_date: null,
+  legal_fiscal_evidence_pending: true,
+  legal_fiscal_evidence_ref: null,
+  vat_mode: "not_registered",
+  zatca_state: "INACTIVE",
+  fatoora_state: "INACTIVE",
+  activation_state: "INACTIVE",
+  effective_from: "2026-01-01T00:00:00.000Z",
+  reason: "Synthetic profile snapshot",
+  evidence_ref: null,
+  created_by: actorId,
+  created_at: "2026-01-01T00:00:00.000Z",
+};
 
 const assignment = {
   target_user_id: targetId,
@@ -318,6 +416,159 @@ test("profile action rejects unsupported production and tax states and maps comp
   });
   assert.equal(state.permission, "accounting:manage_profile");
   assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+});
+
+test("AAR-D1 bootstrap action enforces CRM setup permission, strict inputs, trusted actor, safe errors, and route revalidation", async () => {
+  resetState(async () => ({
+    data: [{ error_code: null, profile_id: setupProfileSnapshot.id, version: 1, idempotent_replay: false }],
+    error: null,
+  }));
+
+  assert.deepEqual(await bootstrapAccountingFoundation({ ...setupMutation, actor_user_id: targetId }), {
+    ok: false,
+    code: "invalid_input",
+  });
+  assert.equal(state.calls.length, 0);
+
+  state.permissionError = new ForbiddenError("users:manage required");
+  await assert.rejects(() => bootstrapAccountingFoundation(setupMutation), ForbiddenError);
+  assert.equal(state.permission, "users:manage");
+  assert.equal(state.calls.length, 0);
+
+  resetState(async () => ({
+    data: [{ error_code: null, profile_id: setupProfileSnapshot.id, version: 1, idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await bootstrapAccountingFoundation(setupMutation), {
+    ok: true,
+    value: { profile_id: setupProfileSnapshot.id, version: 1 },
+    idempotentReplay: false,
+  });
+  assert.equal(state.permission, "users:manage");
+  assert.deepEqual(state.calls[0], {
+    name: "bootstrap_accounting_foundation",
+    args: {
+      p_actor_user_id: actorId,
+      p_target_user_id: targetId,
+      p_reason: setupMutation.reason,
+      p_evidence_ref: setupMutation.evidence_ref,
+      p_request_id: setupMutation.request_id,
+    },
+  });
+  assert.deepEqual(state.revalidated, ["/settings/accounting"]);
+
+  resetState(async () => ({
+    data: [{ error_code: "private_sql_detail", profile_id: null, version: null, idempotent_replay: false }],
+    error: null,
+  }));
+  assert.deepEqual(await bootstrapAccountingFoundation(setupMutation), {
+    ok: false,
+    code: "dependency_failure",
+  });
+});
+
+test("AAR-D1 root succession requires accounting authority and rejects self-targeting before RPC", async () => {
+  resetState(async () => ({
+    data: [{ error_code: null, profile_id: setupProfileSnapshot.id, authority_event_id: "00000000-0000-4000-8000-00000000d103", idempotent_replay: true }],
+    error: null,
+  }));
+
+  assert.deepEqual(await transferAccountingRootAuthority({ ...setupMutation, target_user_id: actorId }), {
+    ok: false,
+    code: "invalid_input",
+  });
+  assert.equal(state.permission, "accounting:manage_authority");
+  assert.equal(state.calls.length, 0);
+
+  assert.deepEqual(await transferAccountingRootAuthority(setupMutation), {
+    ok: true,
+    value: { profile_id: setupProfileSnapshot.id, authority_event_id: "00000000-0000-4000-8000-00000000d103" },
+    idempotentReplay: true,
+  });
+  assert.equal(state.permission, "accounting:manage_authority");
+  assert.deepEqual(state.calls[0], {
+    name: "transfer_accounting_root_authority",
+    args: {
+      p_actor_user_id: actorId,
+      p_target_user_id: targetId,
+      p_reason: setupMutation.reason,
+      p_evidence_ref: setupMutation.evidence_ref,
+      p_request_id: setupMutation.request_id,
+    },
+  });
+  assert.deepEqual(state.revalidated, ["/settings/accounting"]);
+});
+
+test("AAR-D1 root recovery uses users:manage and leaves zero-root enforcement to its dedicated RPC", async () => {
+  resetState(async () => ({
+    data: [{ error_code: "authority_conflict", profile_id: null, authority_event_id: null, idempotent_replay: false }],
+    error: null,
+  }));
+
+  assert.deepEqual(await recoverAccountingRootAuthority(setupMutation), {
+    ok: false,
+    code: "authority_conflict",
+  });
+  assert.equal(state.permission, "users:manage");
+  assert.deepEqual(state.calls[0], {
+    name: "recover_accounting_root_authority",
+    args: {
+      p_actor_user_id: actorId,
+      p_target_user_id: targetId,
+      p_reason: setupMutation.reason,
+      p_evidence_ref: setupMutation.evidence_ref,
+      p_request_id: setupMutation.request_id,
+    },
+  });
+  assert.deepEqual(state.revalidated, []);
+});
+
+test("AAR-D1 profile editor rejects locked-field injection and preserves fixed values from the server snapshot", async () => {
+  const edits = {
+    expected_version: 2,
+    policy_version: "W10 provisional policy amended",
+    endorsement_context: "Controller approved revised baseline",
+    professional_validation_evidence_ref: "professional-evidence",
+    accounting_start_date: "2026-01-01",
+    cutover_boundary_date: "2026-12-31",
+    legal_fiscal_evidence_pending: false,
+    legal_fiscal_evidence_ref: "legal-evidence",
+    reason: "Record bounded setup profile edits",
+    evidence_ref: "profile-evidence",
+    request_id: "00000000-0000-4000-8000-00000000d104",
+  };
+  resetState(async (name) => name === "get_accounting_profile"
+    ? { data: setupProfileSnapshot, error: null }
+    : { data: [{ error_code: null, profile_id: setupProfileSnapshot.id, version: 3, idempotent_replay: false }], error: null });
+
+  assert.deepEqual(await updateAccountingSetupProfile({ ...edits, activation_state: "PRODUCTION_ACTIVE" }), {
+    ok: false,
+    code: "invalid_input",
+  });
+  assert.equal(state.calls.length, 0);
+
+  assert.deepEqual(await updateAccountingSetupProfile(edits), {
+    ok: true,
+    value: { profile_id: setupProfileSnapshot.id, version: 3 },
+    idempotentReplay: false,
+  });
+  assert.equal(state.permission, "accounting:manage_profile");
+  assert.deepEqual(state.calls.map(({ name }) => name), ["get_accounting_profile", "update_accounting_profile"]);
+  const update = state.calls[1];
+  assert.equal(update.args.p_actor_user_id, actorId);
+  assert.equal(update.args.p_expected_version, 2);
+  const profile = update.args.p_profile as Record<string, unknown>;
+  assert.equal(profile.framework_key, setupProfileSnapshot.framework_key);
+  assert.equal(profile.framework_edition, setupProfileSnapshot.framework_edition);
+  assert.equal(profile.functional_currency, setupProfileSnapshot.functional_currency);
+  assert.equal(profile.fiscal_timezone, setupProfileSnapshot.fiscal_timezone);
+  assert.equal(profile.vat_mode, setupProfileSnapshot.vat_mode);
+  assert.equal(profile.zatca_state, setupProfileSnapshot.zatca_state);
+  assert.equal(profile.fatoora_state, setupProfileSnapshot.fatoora_state);
+  assert.equal(profile.activation_state, setupProfileSnapshot.activation_state);
+  assert.equal(profile.policy_version, edits.policy_version);
+  assert.equal(profile.accounting_start_date, edits.accounting_start_date);
+  assert.deepEqual(state.revalidated, ["/settings/accounting"]);
 });
 
 

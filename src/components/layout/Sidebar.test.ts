@@ -123,6 +123,7 @@ const TestLocaleProvider = LocaleProvider as React.ComponentType<{ locale: "en" 
 
 function renderSidebar(props: {
   isAdmin?: boolean;
+  canAccessAccountingSetup?: boolean;
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
   locale?: "en" | "ar";
@@ -323,6 +324,30 @@ test("8. Administration renders Settings for all, but Users appears only for adm
   assert.ok(adminHtml.includes('href="/settings"'), "Settings must be rendered for admin");
   assert.ok(adminHtml.includes('href="/admin/users"'), "Users must be rendered for admin");
   assert.ok(adminHtml.includes(navigationDictionaryEn.sections.administration), "Administration header must be rendered");
+});
+
+test("Accounting setup navigation is permission-gated and localized", () => {
+  const hidden = renderSidebar({ isAdmin: true, canAccessAccountingSetup: false, currentPathname: "/settings" });
+  assert.ok(!hidden.includes('href="/settings/accounting"'));
+
+  const english = renderSidebar({
+    canAccessAccountingSetup: true,
+    currentPathname: "/settings/accounting",
+  });
+  assert.ok(english.includes(`href="/settings/accounting"`));
+  assert.ok(english.includes(navigationDictionaryEn.modules.accounting));
+  assert.equal(getSectionExpandedState(english, "administration"), true);
+  assert.match(english, /href="\/settings\/accounting"[^>]*class="[^"]*border-tertiary-fixed/);
+
+  const arabic = renderSidebar({
+    canAccessAccountingSetup: true,
+    currentPathname: "/settings/accounting",
+    locale: "ar",
+    shellDirection: "rtl",
+  });
+  assert.ok(arabic.includes(navigationDictionaryAr.modules.accounting));
+  assert.ok(arabic.includes('href="/settings/accounting"'));
+  assert.ok(arabic.includes('dir="rtl"'));
 });
 
 test("9. Only one accordion section is expanded at a time", () => {

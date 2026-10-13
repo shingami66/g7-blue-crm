@@ -1,6 +1,7 @@
 "use server";
 
 import { AuthDependencyError, ForbiddenError } from "@/lib/auth/errors";
+import { revalidatePath } from "next/cache";
 import { requirePermission, requireUser } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/database.types";
@@ -63,22 +64,33 @@ import {
   accountingPeriodClosePreparationResultSchema,
   accountingPeriodCloseReviewResultSchema,
   setAccountingCapabilityInputSchema,
+  accountingSetupMutationInputSchema,
+  accountingSetupProfileEditsSchema,
+  accountingProfileInputSchema,
   updateAccountingProfileInputSchema,
 } from "./schemas";
+import { getAccountingProfile } from "./queries";
 import type {
   AccountingActionErrorCode,
   AccountingActionResult,
   AccountingInceptionAcceptanceResult,
   AccountingPeriodClosePreparation,
   AccountingPeriodCloseReview,
+  AccountingProfileInput,
 } from "./types";
 
 const SAFE_ERROR_CODES = new Set([
   "invalid_input",
   "actor_inactive",
   "authority_denied",
+  "authority_unavailable",
+  "authority_conflict",
   "user_not_found",
   "profile_not_initialized",
+  "already_initialized",
+  "preexisting_accounting_state",
+  "company_settings_unavailable",
+  "capability_catalog_invalid",
   "unknown_capability",
   "capability_disabled",
   "capability_not_grantable",
@@ -277,6 +289,158 @@ export async function updateAccountingProfile(
     value: { profile_id: row.profile_id, version: row.version },
     idempotentReplay: row.idempotent_replay,
   };
+}
+
+export async function bootstrapAccountingFoundation(
+  input: unknown,
+): Promise<AccountingActionResult<{ profile_id: string; version: number }>> {
+  const actor = await requirePermission("users:manage");
+  const parsed = accountingSetupMutationInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, code: "invalid_input" };
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("bootstrap_accounting_foundation", {
+      p_actor_user_id: actor.id,
+      p_target_user_id: parsed.data.target_user_id,
+      p_reason: parsed.data.reason,
+      p_evidence_ref: parsed.data.evidence_ref,
+      p_request_id: parsed.data.request_id,
+    });
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof AuthDependencyError) throw error;
+    throw new AuthDependencyError("Accounting bootstrap dependency failed");
+  }
+  if (result.error) return safeFailure(result.error);
+  const row = result.data?.[0];
+  if (!row) throw new AuthDependencyError("Accounting bootstrap response was invalid");
+  if (row.error_code) return { ok: false, code: safeCode(row.error_code) };
+  if (!row.profile_id || row.version == null) {
+    throw new AuthDependencyError("Accounting bootstrap response was invalid");
+  }
+  revalidatePath("/settings/accounting");
+  return {
+    ok: true,
+    value: { profile_id: row.profile_id, version: row.version },
+    idempotentReplay: row.idempotent_replay,
+  };
+}
+
+export async function transferAccountingRootAuthority(
+  input: unknown,
+): Promise<AccountingActionResult<{ profile_id: string; authority_event_id: string }>> {
+  const actor = await requirePermission("accounting:manage_authority");
+  const parsed = accountingSetupMutationInputSchema.safeParse(input);
+  if (!parsed.success || parsed.data.target_user_id === actor.id) {
+    return { ok: false, code: "invalid_input" };
+  }
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("transfer_accounting_root_authority", {
+      p_actor_user_id: actor.id,
+      p_target_user_id: parsed.data.target_user_id,
+      p_reason: parsed.data.reason,
+      p_evidence_ref: parsed.data.evidence_ref,
+      p_request_id: parsed.data.request_id,
+    });
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof AuthDependencyError) throw error;
+    throw new AuthDependencyError("Accounting authority transfer dependency failed");
+  }
+  if (result.error) return safeFailure(result.error);
+  const row = result.data?.[0];
+  if (!row) throw new AuthDependencyError("Accounting authority transfer response was invalid");
+  if (row.error_code) return { ok: false, code: safeCode(row.error_code) };
+  if (!row.profile_id || !row.authority_event_id) {
+    throw new AuthDependencyError("Accounting authority transfer response was invalid");
+  }
+  revalidatePath("/settings/accounting");
+  return {
+    ok: true,
+    value: { profile_id: row.profile_id, authority_event_id: row.authority_event_id },
+    idempotentReplay: row.idempotent_replay,
+  };
+}
+
+export async function recoverAccountingRootAuthority(
+  input: unknown,
+): Promise<AccountingActionResult<{ profile_id: string; authority_event_id: string }>> {
+  const actor = await requirePermission("users:manage");
+  const parsed = accountingSetupMutationInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, code: "invalid_input" };
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("recover_accounting_root_authority", {
+      p_actor_user_id: actor.id,
+      p_target_user_id: parsed.data.target_user_id,
+      p_reason: parsed.data.reason,
+      p_evidence_ref: parsed.data.evidence_ref,
+      p_request_id: parsed.data.request_id,
+    });
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof AuthDependencyError) throw error;
+    throw new AuthDependencyError("Accounting authority recovery dependency failed");
+  }
+  if (result.error) return safeFailure(result.error);
+  const row = result.data?.[0];
+  if (!row) throw new AuthDependencyError("Accounting authority recovery response was invalid");
+  if (row.error_code) return { ok: false, code: safeCode(row.error_code) };
+  if (!row.profile_id || !row.authority_event_id) {
+    throw new AuthDependencyError("Accounting authority recovery response was invalid");
+  }
+  revalidatePath("/settings/accounting");
+  return {
+    ok: true,
+    value: { profile_id: row.profile_id, authority_event_id: row.authority_event_id },
+    idempotentReplay: row.idempotent_replay,
+  };
+}
+
+export async function updateAccountingSetupProfile(
+  input: unknown,
+): Promise<AccountingActionResult<{ profile_id: string; version: number }>> {
+  await requirePermission("accounting:manage_profile");
+  const parsed = accountingSetupProfileEditsSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, code: "invalid_input" };
+
+  const current = await getAccountingProfile();
+  if ("state" in current) return { ok: false, code: "profile_not_initialized" };
+  const profile: AccountingProfileInput = {
+    framework_key: current.framework_key,
+    framework_edition: current.framework_edition,
+    policy_version: parsed.data.policy_version,
+    endorsement_context: parsed.data.endorsement_context,
+    professional_validation_state: current.professional_validation_state,
+    professional_validation_evidence_ref: parsed.data.professional_validation_evidence_ref,
+    functional_currency: current.functional_currency,
+    fiscal_start_month: current.fiscal_start_month,
+    fiscal_start_day: current.fiscal_start_day,
+    fiscal_end_month: current.fiscal_end_month,
+    fiscal_end_day: current.fiscal_end_day,
+    fiscal_timezone: current.fiscal_timezone,
+    accounting_start_date: parsed.data.accounting_start_date,
+    cutover_boundary_date: parsed.data.cutover_boundary_date,
+    legal_fiscal_evidence_pending: parsed.data.legal_fiscal_evidence_pending,
+    legal_fiscal_evidence_ref: parsed.data.legal_fiscal_evidence_ref,
+    vat_mode: current.vat_mode,
+    zatca_state: current.zatca_state,
+    fatoora_state: current.fatoora_state,
+    activation_state: current.activation_state,
+  };
+  const profileCheck = accountingProfileInputSchema.safeParse(profile);
+  if (!profileCheck.success) return { ok: false, code: "invalid_input" };
+
+  const result = await updateAccountingProfile({
+    expected_version: parsed.data.expected_version,
+    profile: profileCheck.data,
+    reason: parsed.data.reason,
+    evidence_ref: parsed.data.evidence_ref,
+    request_id: parsed.data.request_id,
+  });
+  if (result.ok) revalidatePath("/settings/accounting");
+  return result;
 }
 
 export async function saveAccountingAccount(
