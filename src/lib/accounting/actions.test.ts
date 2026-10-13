@@ -607,6 +607,7 @@ test("chart and period actions use only trusted actor IDs and their explicit acc
   assert.equal(state.calls[0].args.p_actor_user_id, actorId);
   assert.deepEqual(state.calls[0].args.p_account, account);
   assert.equal("p_actor_role" in state.calls[0].args, false);
+  assert.deepEqual(state.revalidated, ["/settings/accounting", "/settings/accounting/chart-of-accounts"]);
 
   resetState(async () => ({
     data: [{ error_code: null, period_id: "00000000-0000-4000-8000-00000000a573", version: 1, idempotent_replay: false }],

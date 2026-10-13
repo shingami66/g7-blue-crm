@@ -6,6 +6,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 const require = createRequire(import.meta.url);
 const tsUrl = pathToFileURL(require.resolve("typescript")).href;
+const linkShimUrl = `data:text/javascript,${encodeURIComponent(
+  `import React from ${JSON.stringify(pathToFileURL(require.resolve("react")).href)}; export default function Link(props) { return React.createElement("a", props, props.children); }`,
+)}`;
 
 const testModuleLoader = `
 import ts from ${JSON.stringify(tsUrl)};
@@ -19,6 +22,9 @@ export async function resolve(specifier, context, nextResolve) {
   }
   if (specifier === "next/navigation") {
     return { url: "data:text/javascript,export function redirect(path) { throw new Error('redirect:' + path); }", shortCircuit: true };
+  }
+  if (specifier === "next/link") {
+    return { url: ${JSON.stringify(linkShimUrl)}, shortCircuit: true };
   }
   if (specifier.startsWith("@/")) {
     const rel = specifier.slice(2);

@@ -472,6 +472,8 @@ export async function saveAccountingAccount(
   if (!row.account_id || row.version == null) {
     throw new AuthDependencyError("Accounting mutation response was invalid");
   }
+  revalidatePath("/settings/accounting");
+  revalidatePath("/settings/accounting/chart-of-accounts");
   return {
     ok: true,
     value: { account_id: row.account_id, version: row.version },

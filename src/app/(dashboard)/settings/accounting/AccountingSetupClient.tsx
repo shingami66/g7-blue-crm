@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, type FormEvent } from "react";
+import Link from "next/link";
 import {
   bootstrapAccountingFoundation,
   recoverAccountingRootAuthority,
@@ -340,6 +341,9 @@ export default function AccountingSetupClient({
             <ProfileField key={label} label={label} value={started ? dictionary.started : dictionary.notStarted} />
           ))}
         </dl>
+        <Link href="/settings/accounting/chart-of-accounts" className="mt-4 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
+          {dictionary.openChartOfAccounts}
+        </Link>
       </section>
 
       <section className="min-w-0 rounded-lg border border-outline-variant p-5">

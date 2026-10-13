@@ -59,6 +59,7 @@ export type AccountingSetupDictionary = {
   provisionalDatesLockedNote: string;
   foundationScopeNote: string;
   targetLimitNote: string;
+  openChartOfAccounts: string;
 };
 
 const english: AccountingSetupDictionary = {
@@ -120,6 +121,7 @@ const english: AccountingSetupDictionary = {
   provisionalDatesLockedNote: "Accounting start and cutover dates are locked after DEV provisional activation.",
   foundationScopeNote: "This setup does not create a chart of accounts, periods, posting rules, opening balances, or tax configuration. VAT remains not registered; ZATCA/FATOORA remain inactive.",
   targetLimitNote: "The chooser lists up to 100 active users.",
+  openChartOfAccounts: "Open Chart of Accounts",
 };
 
 const arabic: AccountingSetupDictionary = {
@@ -181,6 +183,7 @@ const arabic: AccountingSetupDictionary = {
   provisionalDatesLockedNote: "يتم قفل تاريخ بدء المحاسبة وتاريخ حد التحول بعد التفعيل التجريبي على DEV.",
   foundationScopeNote: "لا ينشئ هذا الإعداد دليل حسابات أو فترات أو قواعد ترحيل أو أرصدة افتتاحية أو إعدادات ضريبية. تبقى ضريبة القيمة المضافة غير مسجلة، وتبقى زاتكا/فاتورة غير مفعلة.",
   targetLimitNote: "تعرض القائمة ما يصل إلى ١٠٠ مستخدم نشط.",
+  openChartOfAccounts: "فتح دليل الحسابات",
 };
 
 export function getAccountingSetupDictionary(locale: Locale): AccountingSetupDictionary {

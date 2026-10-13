@@ -1,14 +1,13 @@
 # G7 BLUE CRM - Project Status
 
-## CURRENT ACCOUNTING SETUP FOUNDATION — AAR-D1 IMPLEMENTATION CONTRACT — 13 October 2026
+## CURRENT ACCOUNTING ROADMAP POSITION — AAR-D2 IMPLEMENTED / READY FOR CONTROLLER CLOSURE — 13 October 2026
 
-- **AAR-D1 — Accounting Bootstrap + Setup Foundation:** The repository adds the guarded Settings → Accounting setup page, one-time profile bootstrap, minimal initial authority assignment, root-authority succession and zero-root Admin recovery, derived setup progress, and bounded profile editing in English and Arabic.
-- Additive migration source: `supabase/migrations/20261013100000_aar_d1_accounting_setup_foundation.sql`. Expected DEV migration identity after any separately authorized apply: `20261013100000_aar_d1_accounting_setup_foundation`.
-- **DEV apply:** `NOT AUTHORIZED / NOT APPLIED`. This delivery did not access or mutate DEV, DEMO, or PROD and created no accounting profile, capability assignment, chart, period, rule, journal, or business row.
-- The three initial capabilities remain exactly `accounting:view`, `accounting:manage_profile`, and `accounting:manage_authority`; `manage_authority` remains non-runtime-grantable. CRM Admin remains distinct from accounting authority.
-- The setup page does not create a real Chart of Accounts, opening balances, VAT configuration, or ZATCA/FATOORA configuration. VAT remains not registered; ZATCA/FATOORA remain inactive; professional validation remains deferred. This delivery does not make accounting production-ready.
-- W11 remains **NO-GO** unless separately changed by the Controller.
-- **EXACT NEXT ACCOUNTING SLICE:** AAR-D2 — G7 Chart of Accounts UI + versioned account configuration. Require separate Owner/Controller authorization; do not begin it automatically.
+- **AAR-D1 — Accounting Bootstrap + Setup Foundation:** Published migration SQL is present at `supabase/migrations/20261013100000_aar_d1_accounting_setup_foundation.sql`; DEV migration history is reconciled to `20261013100000 / aar_d1_accounting_setup_foundation`. The history repair did not re-execute the migration SQL.
+- The AAR-D1 foundation is deployed on DEV; the accounting profile bootstrap has not been executed. No accounting profile, capability assignment, company account, accounting period, posting rule, journal, or opening balance was created.
+- **AAR-D2 — Chart of Accounts UI + versioned account configuration:** Implemented at Settings → Accounting → Chart of Accounts. It reuses `list_accounting_accounts` and `save_accounting_account`, requires explicit `accounting:view` or `accounting:manage_chart` for reads and `accounting:manage_chart` for edits, and relies on the existing backend for version, parent, cycle, code-conflict, and protected-account authority.
+- The UI supports English and Arabic/RTL, account hierarchy and prior-version display, governed create/revision forms, empty/access-denied/dependency-failure/not-initialized states, and has no seeded or sample account data. No database schema or migration change was made and no accounting account or business row was created.
+- CRM Admin does not inherit accounting authority. VAT remains not registered; ZATCA/FATOORA remain inactive; professional validation remains deferred. This delivery does not make accounting production-ready. W11 remains **NO-GO** unless separately changed by the Controller.
+- **EXACT NEXT ACCOUNTING SLICE:** AAR-D3. Do not start it automatically.
 
 ## CURRENT DELIVERY STATUS — L1-R01 PROVEN CLOSED / OWNER-ACCEPTED — 12 October 2026
 
