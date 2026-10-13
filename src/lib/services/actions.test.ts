@@ -444,6 +444,48 @@ test("G8-SRV-14: Migration SQL invariants - table qualified RETURNING, advisory 
   assert.match(migrationSql, /GRANT EXECUTE ON FUNCTION public\.create_service_atomic TO service_role/);
 });
 
+test("G7-M0: lifecycle integrity migration bounds backfill and keeps creation atomic", () => {
+  const migrationSql = readFileSync(
+    "supabase/migrations/20261012074856_g7_m0_service_lifecycle_integrity_repair.sql",
+    "utf8"
+  );
+
+  assert.match(migrationSql, /^BEGIN;/m);
+  assert.match(migrationSql, /^COMMIT;/m);
+  assert.match(migrationSql, /LOCK TABLE public\.services, public\.service_lifecycle_states/);
+  assert.match(migrationSql, /v_missing_ids IS DISTINCT FROM v_target_ids/);
+  assert.ok(migrationSql.includes("'service_number', 'text', 'NO'"));
+  assert.ok(migrationSql.includes("'customers', 'is_deleted', 'boolean', 'YES'"));
+  assert.ok(migrationSql.includes("597401363a3bdcffe045fac401020fa8"));
+  assert.ok(migrationSql.includes("1f4311228850c596c80670287a1f95c0"));
+  assert.ok(migrationSql.includes("services_service_number_key"));
+  assert.ok(migrationSql.includes("idx_services_mutation_key_unique"));
+  assert.ok(migrationSql.includes("generate_document_number(text)"));
+  assert.match(migrationSql, /'6371cd1f-69af-4b86-9096-b36c1e56bab0'::uuid/);
+  assert.match(migrationSql, /'cd3448ff-c8cf-4ba4-89c0-6d6bd2f0b164'::uuid/);
+  assert.match(migrationSql, /CHECK \(state_version >= 0\)/);
+  assert.match(migrationSql, /CREATE OR REPLACE FUNCTION public\.create_service_atomic/);
+  assert.match(
+    migrationSql,
+    /RETURNING services\.id, services\.service_number[\s\S]{0,1800}INSERT INTO public\.service_lifecycle_states/
+  );
+  assert.match(
+    migrationSql,
+    /v_new_service_id,\s*'Inquiry',\s*'inquiry',\s*'unassessed',\s*'unassessed',\s*'not_started',\s*'pending',\s*'open',\s*NULL,\s*0,\s*'w3-v1'/
+  );
+  assert.match(migrationSql, /service_lifecycle_unavailable/);
+  assert.match(migrationSql, /IF v_inserted_count <> 2 THEN/);
+  assert.match(
+    migrationSql,
+    /s\.status,\s*'quoted',\s*'unassessed',\s*'unassessed',\s*'not_started',\s*'pending',\s*'open',\s*NULL,\s*0,\s*'w3-v1'/
+  );
+  assert.doesNotMatch(migrationSql, /UPDATE public\.services\s+SET\s+status/i);
+  assert.doesNotMatch(
+    migrationSql,
+    /^\s*(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+public\.(?:quotations|invoices|payments|approved_billing_scopes|customers|suppliers|accounting_[a-z0-9_]+|audit_logs)\b/im
+  );
+});
+
 test("G8-SRV-15: getCreateServiceErrorMessage maps MUTATION_KEY_CONFLICT to dedicated localized messages in EN and AR", async () => {
   const { getCreateServiceErrorMessage, getEditServiceErrorMessage } = await import("@/lib/i18n/service-action-feedback");
   const { getServicesDictionary } = await import("@/lib/i18n/dictionaries/services");
