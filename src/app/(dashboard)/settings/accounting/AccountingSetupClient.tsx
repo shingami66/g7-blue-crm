@@ -350,6 +350,12 @@ export default function AccountingSetupClient({
         <Link href="/settings/accounting/posting-rules" className="mt-2 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
           {dictionary.openPostingRules}
         </Link>
+        <Link href="/settings/accounting/inception" className="mt-2 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
+          {dictionary.openInception}
+        </Link>
+        <Link href="/settings/accounting/statement-mappings" className="mt-2 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
+          {dictionary.openStatementMappings}
+        </Link>
       </section>
 
       <section className="min-w-0 rounded-lg border border-outline-variant p-5">

@@ -11,6 +11,8 @@ import {
   saveAccountingAccountInputSchema,
   saveAccountingPeriodInputSchema,
   saveAccountingPostingRuleInputSchema,
+  saveAccountingStatementMappingInputSchema,
+  accountingStatementMappingSaveResultSchema,
   prepareAccountingJournalInputSchema,
   postAccountingJournalInputSchema,
   reverseAccountingJournalInputSchema,
@@ -645,6 +647,66 @@ export async function saveAccountingPostingRule(
   };
 }
 
+function safeStatementMappingFailure(error: { code?: string; message?: string } | null) {
+  if (error?.code === "42501") return { ok: false as const, code: "authority_denied" as const };
+  if (error?.code === "40001") return { ok: false as const, code: "revision_conflict" as const };
+  if (error?.code === "22023" && [
+    "ACCOUNTING_STATEMENT_MAPPING_INPUT_INVALID",
+    "ACCOUNTING_STATEMENT_MAPPING_LINE_CONFLICT",
+    "ACCOUNTING_STATEMENT_MAPPING_ENTRY_INVALID",
+  ].includes(error.message ?? "")) {
+    return { ok: false as const, code: "mapping_invalid" as const };
+  }
+  if (error?.code === "23505" && error.message === "ACCOUNTING_REQUEST_ID_CONFLICT") {
+    return { ok: false as const, code: "request_payload_conflict" as const };
+  }
+  if (error?.code === "23503" && error.message === "ACCOUNTING_STATEMENT_ACCOUNT_VERSION_NOT_FOUND") {
+    return { ok: false as const, code: "account_not_found" as const };
+  }
+  if (error?.code === "23514" && [
+    "ACCOUNTING_STATEMENT_TYPE_ACCOUNT_MISMATCH",
+    "ACCOUNTING_STATEMENT_SECTION_ACCOUNT_MISMATCH",
+  ].includes(error.message ?? "")) {
+    return { ok: false as const, code: "mapping_invalid" as const };
+  }
+  throw new AuthDependencyError("Accounting statement mapping mutation dependency failed");
+}
+
+export async function saveAccountingStatementMapping(input: unknown) {
+  const actor = await requireUser();
+  await requireAccountingCapabilities(actor.id, ["accounting:manage_chart"]);
+  const parsed = saveAccountingStatementMappingInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, code: "invalid_input" as const };
+
+  let result;
+  try {
+    result = await createAdminClient().rpc("save_accounting_statement_mapping", {
+      p_actor_user_id: actor.id,
+      p_profile_id: parsed.data.profile_id,
+      p_mapping_set_id: parsed.data.mapping_set_id as RpcArgument<"save_accounting_statement_mapping", "p_mapping_set_id">,
+      p_expected_version: parsed.data.expected_version,
+      p_effective_from: parsed.data.effective_from,
+      p_reason: parsed.data.reason,
+      p_evidence_ref: parsed.data.evidence_ref,
+      p_entries: parsed.data.entries as Json,
+      p_request_id: parsed.data.request_id,
+    });
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof AuthDependencyError) throw error;
+    throw new AuthDependencyError("Accounting statement mapping mutation dependency failed");
+  }
+  if (result.error) return safeStatementMappingFailure(result.error);
+  const parsedResult = accountingStatementMappingSaveResultSchema.safeParse(result.data);
+  if (!parsedResult.success) throw new AuthDependencyError("Accounting statement mapping response was invalid");
+  revalidatePath("/settings/accounting/statement-mappings");
+  revalidatePath("/settings/accounting");
+  return {
+    ok: true as const,
+    value: { mapping_set_id: parsedResult.data.mapping_set_id, version: parsedResult.data.version },
+    idempotentReplay: parsedResult.data.idempotent_replay,
+  };
+}
+
 export async function prepareAccountingJournal(
   input: unknown,
 ): Promise<AccountingActionResult<{ journal_id: string; version: number; status: "DRAFT" | "POSTED" }>> {
@@ -756,7 +818,7 @@ export async function reverseAccountingJournal(
 
 async function requireAccountingCapabilities(
   actorId: string,
-  capabilities: Array<"accounting:manage_inception" | "accounting:manage_ar_bridge" | "accounting:manage_ap_bridge" | "accounting:manage_expense_bridge" | "accounting:manage_revenue_recognition" | "accounting:reconcile_bank" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view" | "accounting:close_period" | "accounting:reopen_period">,
+  capabilities: Array<"accounting:manage_chart" | "accounting:manage_inception" | "accounting:manage_ar_bridge" | "accounting:manage_ap_bridge" | "accounting:manage_expense_bridge" | "accounting:manage_revenue_recognition" | "accounting:reconcile_bank" | "accounting:prepare_journal" | "accounting:post_journal" | "accounting:view" | "accounting:close_period" | "accounting:reopen_period">,
 ) {
   const allowed = await Promise.all(capabilities.map((capability) =>
     resolveAccountingCapability(actorId, capability)));

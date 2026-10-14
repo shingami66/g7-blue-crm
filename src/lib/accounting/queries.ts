@@ -25,6 +25,8 @@ import {
   accountingW10HReportResultSchema,
   accountingInceptionPackageDetailSchema,
   accountingInceptionPackageSummarySchema,
+  accountingStatementMappingEntrySchema,
+  accountingStatementMappingVersionSchema,
   accountingArBridgeReconciliationInputSchema,
   accountingArBridgeReconciliationSchema,
   accountingApBridgeReconciliationInputSchema,
@@ -47,6 +49,10 @@ import type {
   AccountingPostingRuleVersion,
   AccountingInceptionPackageDetail,
   AccountingInceptionPackageSummary,
+  AccountingInceptionJournalLink,
+  AccountingStatementMappingReadModel,
+  AccountingStatementMappingEntry,
+  AccountingStatementMappingVersionSummary,
   AccountingArBridgeReconciliation,
   AccountingApBridgeReconciliation,
   AccountingExpenseBridgeReconciliation,
@@ -399,7 +405,85 @@ export async function getAccountingInceptionPackage(
   if (result.data === null) return null;
   const parsed = accountingInceptionPackageDetailSchema.safeParse(result.data);
   if (!parsed.success) throw new AuthDependencyError("Accounting inception package response was invalid");
-  return parsed.data;
+  const journalLinks = await listAccountingInceptionJournalLinks(
+    parsed.data.profile_id,
+    parsed.data.package_id,
+    parsed.data.current_version,
+  );
+  return { ...parsed.data, journal_links: journalLinks };
+}
+
+async function listAccountingInceptionJournalLinks(
+  profileId: string,
+  packageId: string,
+  packageVersion: number,
+): Promise<AccountingInceptionJournalLink[]> {
+  const client = createAdminClient();
+  let linksResult;
+  try {
+    linksResult = await client
+      .from("accounting_inception_journal_links")
+      .select("item_id,package_version,journal_id,prepared_version")
+      .eq("profile_id", profileId)
+      .eq("package_id", packageId)
+      .eq("package_version", packageVersion)
+      .order("item_id", { ascending: true })
+      .limit(500);
+  } catch {
+    throw new AuthDependencyError("Accounting inception journal status dependency failed");
+  }
+  if (linksResult.error || !Array.isArray(linksResult.data)) {
+    throw new AuthDependencyError("Accounting inception journal status dependency failed");
+  }
+  const links = z.array(z.object({
+    item_id: z.string().uuid(),
+    package_version: z.number().int().positive(),
+    journal_id: z.string().uuid(),
+    prepared_version: z.number().int().positive(),
+  }).strict()).safeParse(linksResult.data);
+  if (!links.success) throw new AuthDependencyError("Accounting inception journal link response was invalid");
+  if (links.data.length === 0) return [];
+
+  let journalsResult;
+  try {
+    journalsResult = await client
+      .from("accounting_journals")
+      .select("id,current_version,current:accounting_journal_versions!accounting_journals_current_version_fkey(version,status)")
+      .eq("profile_id", profileId)
+      .in("id", links.data.map((link) => link.journal_id))
+      .limit(500);
+  } catch {
+    throw new AuthDependencyError("Accounting inception journal status dependency failed");
+  }
+  if (journalsResult.error || !Array.isArray(journalsResult.data)) {
+    throw new AuthDependencyError("Accounting inception journal status dependency failed");
+  }
+  const currentVersionSchema = z.object({
+    version: z.number().int().positive(),
+    status: z.enum(["DRAFT", "POSTED"]),
+  }).strict();
+  const currentRowsSchema = z.array(z.object({
+    id: z.string().uuid(),
+    current_version: z.number().int().positive(),
+    current: z.union([currentVersionSchema, z.array(currentVersionSchema).length(1)]),
+  }).strict());
+  const currentRows = currentRowsSchema.safeParse(journalsResult.data);
+  if (!currentRows.success) throw new AuthDependencyError("Accounting inception journal status response was invalid");
+  const currentById = new Map(currentRows.data.map((journal) => {
+    const current = Array.isArray(journal.current) ? journal.current[0] : journal.current;
+    if (current.version !== journal.current_version) {
+      throw new AuthDependencyError("Accounting inception journal status response was invalid");
+    }
+    return [journal.id, { version: current.version, status: current.status }] as const;
+  }));
+
+  const result: AccountingInceptionJournalLink[] = [];
+  for (const link of links.data) {
+    const current = currentById.get(link.journal_id);
+    if (!current) throw new AuthDependencyError("Accounting inception journal status response was incomplete");
+    result.push({ ...link, current_version: current.version, status: current.status });
+  }
+  return result;
 }
 
 export async function listAccountingInceptionPackages(): Promise<AccountingInceptionPackageSummary[]> {
@@ -417,6 +501,123 @@ export async function listAccountingInceptionPackages(): Promise<AccountingIncep
   const parsed = z.array(accountingInceptionPackageSummarySchema).safeParse(result.data);
   if (!parsed.success) throw new AuthDependencyError("Accounting inception package list was invalid");
   return parsed.data;
+}
+
+export async function getAccountingInceptionOverview(): Promise<
+  | { state: "NOT_INITIALIZED" }
+  | { state: "READY"; packages: AccountingInceptionPackageSummary[] }
+> {
+  const actor = await requireUser();
+  await requireInceptionReadCapability(actor.id);
+  let profileResult;
+  try {
+    profileResult = await createAdminClient().from("accounting_profiles")
+      .select("id")
+      .eq("singleton_key", "g7")
+      .maybeSingle();
+  } catch {
+    throw new AuthDependencyError("Accounting inception profile dependency failed");
+  }
+  if (profileResult.error) throw new AuthDependencyError("Accounting inception profile dependency failed");
+  if (!profileResult.data) return { state: "NOT_INITIALIZED" };
+  const profile = z.object({ id: z.string().uuid() }).strict().safeParse(profileResult.data);
+  if (!profile.success) throw new AuthDependencyError("Accounting inception profile response was invalid");
+  return { state: "READY", packages: await listAccountingInceptionPackages() };
+}
+
+export async function getAccountingStatementMappings(): Promise<AccountingStatementMappingReadModel> {
+  const actor = await requireUser();
+  if (!(await resolveAccountingCapability(actor.id, "accounting:manage_chart"))) {
+    throw new ForbiddenError("Accounting chart management capability required");
+  }
+  const client = createAdminClient();
+  let profileResult;
+  try {
+    profileResult = await client.from("accounting_profiles")
+      .select("id")
+      .eq("singleton_key", "g7")
+      .maybeSingle();
+  } catch {
+    throw new AuthDependencyError("Accounting statement mapping dependency failed");
+  }
+  if (profileResult.error) throw new AuthDependencyError("Accounting statement mapping dependency failed");
+  if (!profileResult.data) return { state: "NOT_INITIALIZED" };
+  const profile = z.object({ id: z.string().uuid() }).strict().safeParse(profileResult.data);
+  if (!profile.success) throw new AuthDependencyError("Accounting profile response was invalid");
+
+  let setResult;
+  try {
+    setResult = await client.from("accounting_statement_mapping_sets")
+      .select("id,profile_id,current_version")
+      .eq("profile_id", profile.data.id)
+      .maybeSingle();
+  } catch {
+    throw new AuthDependencyError("Accounting statement mapping dependency failed");
+  }
+  if (setResult.error) throw new AuthDependencyError("Accounting statement mapping dependency failed");
+  if (!setResult.data) {
+    return { state: "EMPTY", profile_id: profile.data.id, mapping_set_id: null, current_version: 0, history: [] };
+  }
+  const mappingSet = z.object({ id: z.string().uuid(), profile_id: z.string().uuid(), current_version: z.number().int().positive() })
+    .strict().safeParse(setResult.data);
+  if (!mappingSet.success || mappingSet.data.profile_id !== profile.data.id) {
+    throw new AuthDependencyError("Accounting statement mapping set response was invalid");
+  }
+
+  let historyResult;
+  try {
+    historyResult = await client.from("accounting_statement_mapping_versions")
+      .select("version,previous_version,effective_from,reason,evidence_ref,created_by,created_at")
+      .eq("profile_id", profile.data.id)
+      .eq("mapping_set_id", mappingSet.data.id)
+      .order("version", { ascending: false })
+      .limit(51);
+  } catch {
+    throw new AuthDependencyError("Accounting statement mapping history dependency failed");
+  }
+  if (historyResult.error || !Array.isArray(historyResult.data)) {
+    throw new AuthDependencyError("Accounting statement mapping history dependency failed");
+  }
+  const parsedHistory = z.array(accountingStatementMappingVersionSchema).safeParse(historyResult.data);
+  if (!parsedHistory.success || !parsedHistory.data.some((version) => version.version === mappingSet.data.current_version)) {
+    throw new AuthDependencyError("Accounting statement mapping history response was invalid");
+  }
+
+  const readEntryPage = (from: number, to: number) => client.from("accounting_statement_mapping_entries")
+    .select("account_id,account_version,statement_type,section_key,line_key,label_en,label_ar,display_order")
+    .eq("profile_id", profile.data.id)
+    .eq("mapping_set_id", mappingSet.data.id)
+    .eq("mapping_version", mappingSet.data.current_version)
+    .order("statement_type", { ascending: true })
+    .order("display_order", { ascending: true })
+    .order("account_id", { ascending: true })
+    .range(from, to);
+  let entryPages;
+  try {
+    entryPages = await Promise.all([readEntryPage(0, 999), readEntryPage(1000, 1999)]);
+  } catch {
+    throw new AuthDependencyError("Accounting statement mapping entries dependency failed");
+  }
+  if (entryPages.some((page) => page.error || !Array.isArray(page.data))) {
+    throw new AuthDependencyError("Accounting statement mapping entries dependency failed");
+  }
+  const entriesRaw = [...entryPages[0].data!, ...entryPages[1].data!];
+  if (entriesRaw.length > 2000) throw new AuthDependencyError("Accounting statement mapping entry limit was exceeded");
+  const parsedEntries = z.array(accountingStatementMappingEntrySchema).safeParse(entriesRaw);
+  if (!parsedEntries.success) throw new AuthDependencyError("Accounting statement mapping entries response was invalid");
+  const history: AccountingStatementMappingVersionSummary[] = parsedHistory.data.slice(0, 50).reverse();
+  const base = {
+    profile_id: profile.data.id,
+    mapping_set_id: mappingSet.data.id,
+    current_version: mappingSet.data.current_version,
+  };
+  return {
+    state: "READY",
+    ...base,
+    entries: parsedEntries.data as AccountingStatementMappingEntry[],
+    history,
+    history_truncated: parsedHistory.data.length > 50,
+  };
 }
 
 export async function getAccountingArBridgeReconciliation(

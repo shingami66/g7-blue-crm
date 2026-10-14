@@ -306,6 +306,64 @@ export const saveAccountingPeriodInputSchema = z
     }
   });
 
+export const accountingStatementMappingEntrySchema = z.object({
+  account_id: z.string().uuid(),
+  account_version: z.number().int().positive(),
+  statement_type: z.enum(["PROFIT_LOSS", "BALANCE_SHEET"]),
+  section_key: z.string().regex(/^[A-Z][A-Z0-9_]{0,39}$/),
+  line_key: z.string().regex(/^[A-Z][A-Z0-9_]{0,59}$/),
+  label_en: boundedText(160),
+  label_ar: boundedText(160),
+  display_order: z.number().int().min(0).max(100000),
+}).strict();
+
+export const saveAccountingStatementMappingInputSchema = z.object({
+  profile_id: z.string().uuid(),
+  mapping_set_id: z.string().uuid().nullable(),
+  expected_version: z.number().int().nonnegative(),
+  effective_from: z.string().datetime({ offset: true }),
+  reason: boundedText(2000),
+  evidence_ref: boundedText(2000),
+  entries: z.array(accountingStatementMappingEntrySchema).min(1).max(2000),
+  request_id: z.string().uuid(),
+}).strict().superRefine((value, context) => {
+  if ((value.mapping_set_id === null) !== (value.expected_version === 0)) {
+    context.addIssue({ code: "custom", path: ["expected_version"], message: "Mapping create and revision identity do not match" });
+  }
+  const accountKeys = new Set<string>();
+  const lines = new Map<string, string>();
+  for (const [index, entry] of value.entries.entries()) {
+    const accountKey = `${entry.account_id}:${entry.account_version}:${entry.statement_type}`;
+    if (accountKeys.has(accountKey)) {
+      context.addIssue({ code: "custom", path: ["entries", index], message: "Duplicate account statement mapping" });
+    }
+    accountKeys.add(accountKey);
+    const lineKey = `${entry.statement_type}:${entry.line_key}`;
+    const lineContract = JSON.stringify([entry.section_key, entry.label_en.trim(), entry.label_ar.trim(), entry.display_order]);
+    const previous = lines.get(lineKey);
+    if (previous !== undefined && previous !== lineContract) {
+      context.addIssue({ code: "custom", path: ["entries", index], message: "Statement line labels and ordering must agree" });
+    }
+    lines.set(lineKey, lineContract);
+  }
+});
+
+export const accountingStatementMappingVersionSchema = z.object({
+  version: z.number().int().positive(),
+  previous_version: z.number().int().positive().nullable(),
+  effective_from: z.string().datetime({ offset: true }),
+  reason: boundedText(2000),
+  evidence_ref: boundedText(2000),
+  created_by: z.string().uuid(),
+  created_at: z.string().datetime({ offset: true }),
+}).strict();
+
+export const accountingStatementMappingSaveResultSchema = z.object({
+  mapping_set_id: z.string().uuid(),
+  version: z.number().int().positive(),
+  idempotent_replay: z.boolean(),
+}).strict();
+
 export const accountingAccountVersionSchema = z
   .object({
     account_id: z.string().uuid(),

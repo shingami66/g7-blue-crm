@@ -5,7 +5,7 @@ import test, { mock } from "node:test";
 type ResolveResult = { url: string; shortCircuit?: true };
 type ResolveContext = { parentURL?: string };
 type ActionState = {
-  rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { code?: string } | null }>;
+  rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { code?: string; message?: string } | null }>;
   calls: Array<{ name: string; args: Record<string, unknown> }>;
   capabilityChecks: string[];
   allowedCapabilities: Set<string> | null;
@@ -99,6 +99,12 @@ const {
   recoverAccountingRootAuthority,
   updateAccountingSetupProfile,
   saveAccountingPostingRule,
+  saveAccountingStatementMapping,
+  saveAccountingInceptionPackage,
+  reviewAccountingInceptionPackage,
+  prepareAccountingInceptionJournal,
+  postAccountingInceptionJournal,
+  acceptAccountingInceptionPackage,
   prepareAccountingJournal,
   postAccountingJournal,
   reverseAccountingJournal,
@@ -1034,5 +1040,134 @@ test("W10E2 expense bridge actions derive the actor and map only the governed br
     ok: false,
     code: "invalid_input",
   });
+  assert.equal(state.calls.length, 0);
+});
+
+test("W10H statement mapping action enforces chart authority and maps only the existing versioned RPC", async () => {
+  const profileId = "00000000-0000-4000-8000-00000000d401";
+  const mappingSetId = "00000000-0000-4000-8000-00000000d402";
+  const accountId = "00000000-0000-4000-8000-00000000d403";
+  const input = {
+    profile_id: profileId,
+    mapping_set_id: null,
+    expected_version: 0,
+    effective_from: "2026-10-01T00:00:00.000Z",
+    reason: "Synthetic statement mapping action test",
+    evidence_ref: "synthetic://aar-d4/mapping-evidence",
+    entries: [{
+      account_id: accountId,
+      account_version: 2,
+      statement_type: "PROFIT_LOSS",
+      section_key: "EXPENSE",
+      line_key: "OPERATING_COSTS",
+      label_en: "Operating costs",
+      label_ar: "تكاليف التشغيل",
+      display_order: 10,
+    }],
+    request_id: "00000000-0000-4000-8000-00000000d404",
+  };
+
+  resetState(async () => ({ data: { mapping_set_id: mappingSetId, version: 1, idempotent_replay: false }, error: null }));
+  state.allowedCapabilities = new Set(["accounting:manage_chart"]);
+  assert.deepEqual(await saveAccountingStatementMapping(input), {
+    ok: true,
+    value: { mapping_set_id: mappingSetId, version: 1 },
+    idempotentReplay: false,
+  });
+  assert.deepEqual(state.capabilityChecks, ["accounting:manage_chart"]);
+  assert.equal(state.calls[0].name, "save_accounting_statement_mapping");
+  assert.equal(state.calls[0].args.p_actor_user_id, actorId);
+  assert.equal(state.calls[0].args.p_profile_id, profileId);
+  assert.equal(state.calls[0].args.p_expected_version, 0);
+  assert.deepEqual(state.calls[0].args.p_entries, input.entries);
+  assert.ok(state.revalidated.includes("/settings/accounting/statement-mappings"));
+
+  resetState(async () => ({ data: null, error: { code: "40001" } }));
+  state.allowedCapabilities = new Set(["accounting:manage_chart"]);
+  assert.deepEqual(await saveAccountingStatementMapping({ ...input, mapping_set_id: mappingSetId, expected_version: 1 }), {
+    ok: false,
+    code: "revision_conflict",
+  });
+
+  resetState(async () => ({ data: null, error: null }));
+  state.allowedCapabilities = new Set();
+  await assert.rejects(() => saveAccountingStatementMapping(input), ForbiddenError);
+  assert.equal(state.calls.length, 0);
+});
+
+test("W10C inception actions keep package lifecycle on the existing RPCs and derive actors server-side", async () => {
+  const packageId = "00000000-0000-4000-8000-00000000d501";
+  const journalId = "00000000-0000-4000-8000-00000000d502";
+  const basePackage = {
+    accounting_start_date: "2026-01-01",
+    cutover_boundary_date: "2026-01-31",
+    evidence_inventory: [],
+    items: [{
+      item_id: "00000000-0000-4000-8000-00000000d503",
+      source_domain: "SERVICE",
+      source_record_key: "synthetic-source",
+      economic_event_key: "synthetic-event",
+      classification: "POST_CUTOVER_SOURCE",
+      resolution_state: "RESOLVED",
+      is_material: false,
+      reconciliation_category: "OTHER",
+      reconciliation_reference: null,
+      party_type: "NONE",
+      party_reference: null,
+      evidence_refs: [],
+      journal: null,
+    }],
+    reconciliation_references: [],
+  };
+  const calls = [
+    "save_accounting_inception_package",
+    "review_accounting_inception_package",
+    "prepare_accounting_inception_journal",
+    "post_accounting_inception_journal",
+    "accept_accounting_inception_package",
+  ];
+  resetState(async (name) => ({
+    data: name === calls[0] ? [{ error_code: null, package_id: packageId, version: 1, idempotent_replay: false }]
+      : name === calls[1] ? [{ error_code: null, review_id: "00000000-0000-4000-8000-00000000d504", decision: "APPROVE", idempotent_replay: false }]
+        : name === calls[2] ? [{ error_code: null, journal_id: journalId, version: 1, status: "DRAFT", idempotent_replay: false }]
+          : name === calls[3] ? [{ error_code: null, journal_id: journalId, version: 2, status: "POSTED", idempotent_replay: false }]
+            : [{ error_code: "incomplete_coverage", acceptance_id: null, trial_balance: null, idempotent_replay: false }],
+    error: null,
+  }));
+  state.allowedCapabilities = new Set(["accounting:manage_inception", "accounting:prepare_journal", "accounting:post_journal", "accounting:view"]);
+
+  assert.deepEqual(await saveAccountingInceptionPackage({
+    package_id: null,
+    expected_version: 0,
+    package: basePackage,
+    reason: "Synthetic package creation",
+    request_id: "00000000-0000-4000-8000-00000000d505",
+  }), { ok: true, value: { package_id: packageId, version: 1 }, idempotentReplay: false });
+  assert.deepEqual(await reviewAccountingInceptionPackage({
+    package_id: packageId, package_version: 1, approve: true, reason: "Independent synthetic review",
+    request_id: "00000000-0000-4000-8000-00000000d506",
+  }), { ok: true, value: { review_id: "00000000-0000-4000-8000-00000000d504", decision: "APPROVE" }, idempotentReplay: false });
+  assert.deepEqual(await prepareAccountingInceptionJournal({
+    package_id: packageId, package_version: 1, item_id: basePackage.items[0].item_id, reason: "Synthetic preparation",
+    request_id: "00000000-0000-4000-8000-00000000d507",
+  }), { ok: true, value: { journal_id: journalId, version: 1, status: "DRAFT" }, idempotentReplay: false });
+  assert.deepEqual(await postAccountingInceptionJournal({
+    journal_id: journalId, expected_version: 1, request_id: "00000000-0000-4000-8000-00000000d508",
+  }), { ok: true, value: { journal_id: journalId, version: 2, status: "POSTED" }, idempotentReplay: false });
+  assert.deepEqual(await acceptAccountingInceptionPackage({
+    package_id: packageId, package_version: 1, reason: "Synthetic acceptance check",
+    request_id: "00000000-0000-4000-8000-00000000d509",
+  }), { ok: false, code: "incomplete_coverage" });
+  assert.deepEqual(state.calls.map((call) => call.name), calls);
+  assert.ok(state.calls.every((call) => call.args.p_actor_user_id === actorId));
+  assert.equal(state.calls[0].args.p_package_id, null);
+  assert.equal(state.calls[2].args.p_item_id, basePackage.items[0].item_id);
+
+  resetState(async () => ({ data: [], error: null }));
+  state.allowedCapabilities = new Set(["accounting:manage_inception"]);
+  await assert.rejects(() => prepareAccountingInceptionJournal({
+    package_id: packageId, package_version: 1, item_id: basePackage.items[0].item_id, reason: "No prepare capability",
+    request_id: "00000000-0000-4000-8000-00000000d510",
+  }), ForbiddenError);
   assert.equal(state.calls.length, 0);
 });

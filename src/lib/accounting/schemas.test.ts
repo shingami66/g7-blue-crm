@@ -44,6 +44,10 @@ const {
   saveAccountingRevenueArrangementInputSchema,
   saveAccountingRevenuePerformanceEvidenceInputSchema,
   accountingRevenueReconciliationSchema,
+  accountingStatementMappingEntrySchema,
+  saveAccountingStatementMappingInputSchema,
+  accountingInceptionPayloadSchema,
+  saveAccountingInceptionPackageInputSchema,
 } = await import("./schemas.ts");
 
 const inactiveProfile = {
@@ -697,4 +701,119 @@ test("W10H request and response schemas keep report dates and halalah exact", ()
     rows: [],
     totals: null,
   }).success, true);
+});
+
+test("W10H statement mapping schema binds each entry to an exact account version and versions the set", () => {
+  const accountId = "00000000-0000-4000-8000-00000000d601";
+  const profileId = "00000000-0000-4000-8000-00000000d602";
+  const mappingSetId = "00000000-0000-4000-8000-00000000d603";
+  const entry = {
+    account_id: accountId,
+    account_version: 3,
+    statement_type: "BALANCE_SHEET",
+    section_key: "ASSETS",
+    line_key: "CURRENT_ASSETS",
+    label_en: "Current assets",
+    label_ar: "الأصول المتداولة",
+    display_order: 10,
+  };
+  const base = {
+    profile_id: profileId,
+    mapping_set_id: null,
+    expected_version: 0,
+    effective_from: "2026-10-01T00:00:00.000Z",
+    reason: "Synthetic mapping schema contract",
+    evidence_ref: "synthetic://aar-d4/mapping-schema",
+    entries: [entry],
+    request_id: "00000000-0000-4000-8000-00000000d604",
+  };
+
+  assert.equal(accountingStatementMappingEntrySchema.safeParse(entry).success, true);
+  assert.equal(saveAccountingStatementMappingInputSchema.safeParse(base).success, true);
+  assert.equal(saveAccountingStatementMappingInputSchema.safeParse({
+    ...base, mapping_set_id: mappingSetId, expected_version: 3,
+  }).success, true);
+  assert.equal(saveAccountingStatementMappingInputSchema.safeParse({ ...base, expected_version: 1 }).success, false);
+  assert.equal(saveAccountingStatementMappingInputSchema.safeParse({
+    ...base, mapping_set_id: mappingSetId, expected_version: 0,
+  }).success, false);
+  assert.equal(saveAccountingStatementMappingInputSchema.safeParse({
+    ...base,
+    entries: [entry, { ...entry, account_id: "00000000-0000-4000-8000-00000000d605", label_en: "Other current assets" }],
+  }).success, false);
+  assert.equal(saveAccountingStatementMappingInputSchema.safeParse({
+    ...base,
+    entries: [entry, { ...entry, line_key: "CURRENT_ASSETS" }],
+  }).success, false);
+  assert.equal(saveAccountingStatementMappingInputSchema.safeParse({ ...base, actor_user_id: profileId }).success, false);
+});
+
+test("W10C inception schema couples coverage classification to the existing journal plan contract", () => {
+  const evidenceId = "00000000-0000-4000-8000-00000000d611";
+  const accountId = "00000000-0000-4000-8000-00000000d612";
+  const periodId = "00000000-0000-4000-8000-00000000d613";
+  const item = {
+    item_id: "00000000-0000-4000-8000-00000000d614",
+    source_domain: "SERVICE",
+    source_record_key: "synthetic-source",
+    economic_event_key: "synthetic-event",
+    classification: "OPENING_BALANCE",
+    resolution_state: "RESOLVED",
+    is_material: true,
+    reconciliation_category: "ASSET",
+    reconciliation_reference: "synthetic reconciliation",
+    party_type: "NONE",
+    party_reference: null,
+    evidence_refs: [{ evidence_id: evidenceId, version: 1 }],
+    journal: {
+      accounting_date: "2026-01-31",
+      period_id: periodId,
+      period_version: 1,
+      description_en: "Opening position",
+      description_ar: "المركز الافتتاحي",
+      lines: [
+        { account_id: accountId, account_version: 2, side: "DEBIT", amount_halalah: "10000", description_en: "Asset", description_ar: "أصل" },
+        { account_id: accountId, account_version: 2, side: "CREDIT", amount_halalah: "10000", description_en: "Equity", description_ar: "حقوق الملكية" },
+      ],
+    },
+  };
+  const payload = {
+    accounting_start_date: "2026-01-01",
+    cutover_boundary_date: "2026-01-31",
+    evidence_inventory: [{ evidence_id: evidenceId, version: 1, evidence_type: "OTHER", evidence_ref: "synthetic://aar-d4/evidence", sha256: "a".repeat(64) }],
+    items: [item],
+    reconciliation_references: [{ category: "ASSET", reference: "synthetic reconciliation" }],
+  };
+
+  assert.equal(accountingInceptionPayloadSchema.safeParse(payload).success, true);
+  assert.equal(saveAccountingInceptionPackageInputSchema.safeParse({
+    package_id: null,
+    expected_version: 0,
+    package: payload,
+    reason: "Synthetic inception create",
+    request_id: "00000000-0000-4000-8000-00000000d615",
+  }).success, true);
+  assert.equal(saveAccountingInceptionPackageInputSchema.safeParse({
+    package_id: "00000000-0000-4000-8000-00000000d616",
+    expected_version: 1,
+    package: payload,
+    reason: "Synthetic inception revision",
+    request_id: "00000000-0000-4000-8000-00000000d617",
+  }).success, true);
+  assert.equal(accountingInceptionPayloadSchema.safeParse({
+    ...payload,
+    items: [{ ...item, classification: "POST_CUTOVER_SOURCE", journal: null }],
+  }).success, true);
+  assert.equal(accountingInceptionPayloadSchema.safeParse({
+    ...payload,
+    items: [{ ...item, classification: "POST_CUTOVER_SOURCE", journal: item.journal }],
+  }).success, false);
+  assert.equal(accountingInceptionPayloadSchema.safeParse({
+    ...payload,
+    items: [{ ...item, classification: "UNRESOLVED", resolution_state: "RESOLVED", journal: null }],
+  }).success, false);
+  assert.equal(accountingInceptionPayloadSchema.safeParse({
+    ...payload,
+    items: [{ ...item, source_domain: "CONTROLLED_MANUAL" }],
+  }).success, false);
 });

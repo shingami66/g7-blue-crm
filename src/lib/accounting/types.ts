@@ -848,6 +848,7 @@ export type AccountingInceptionPackageDetail = {
     evidence_count: number;
   }>;
   review: null | Omit<AccountingInceptionReviewHistory, "package_version">;
+  journal_links: AccountingInceptionJournalLink[];
   acceptance: null | {
     acceptance_id: string;
     accepted_by: string;
@@ -857,6 +858,58 @@ export type AccountingInceptionPackageDetail = {
     trial_balance: AccountingInceptionAcceptanceResult["trial_balance"];
   };
 };
+
+export type AccountingInceptionJournalLink = {
+  item_id: string;
+  package_version: number;
+  journal_id: string;
+  prepared_version: number;
+  current_version: number;
+  status: "DRAFT" | "POSTED";
+};
+
+export type AccountingStatementType = "PROFIT_LOSS" | "BALANCE_SHEET";
+export type AccountingStatementMappingEntry = {
+  account_id: string;
+  account_version: number;
+  statement_type: AccountingStatementType;
+  section_key: string;
+  line_key: string;
+  label_en: string;
+  label_ar: string;
+  display_order: number;
+};
+export type SaveAccountingStatementMappingInput = {
+  profile_id: string;
+  mapping_set_id: string | null;
+  expected_version: number;
+  effective_from: string;
+  reason: string;
+  evidence_ref: string;
+  entries: AccountingStatementMappingEntry[];
+  request_id: string;
+};
+export type AccountingStatementMappingVersionSummary = {
+  version: number;
+  previous_version: number | null;
+  effective_from: string;
+  reason: string;
+  evidence_ref: string;
+  created_by: string;
+  created_at: string;
+};
+export type AccountingStatementMappingReadModel =
+  | { state: "NOT_INITIALIZED" }
+  | { state: "EMPTY"; profile_id: string; mapping_set_id: null; current_version: 0; history: [] }
+  | {
+      state: "READY";
+      profile_id: string;
+      mapping_set_id: string;
+      current_version: number;
+      entries: AccountingStatementMappingEntry[];
+      history: AccountingStatementMappingVersionSummary[];
+      history_truncated: boolean;
+    };
 
 export type AccountingArBridgeSourceType =
   | "INVOICE"

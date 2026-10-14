@@ -62,6 +62,8 @@ export type AccountingSetupDictionary = {
   openChartOfAccounts: string;
   openAccountingPeriods: string;
   openPostingRules: string;
+  openInception: string;
+  openStatementMappings: string;
 };
 
 const english: AccountingSetupDictionary = {
@@ -126,6 +128,8 @@ const english: AccountingSetupDictionary = {
   openChartOfAccounts: "Open Chart of Accounts",
   openAccountingPeriods: "Open Accounting Periods",
   openPostingRules: "Open Posting Rules",
+  openInception: "Open Opening Position / Inception",
+  openStatementMappings: "Open Financial Statement Mappings",
 };
 
 const arabic: AccountingSetupDictionary = {
@@ -190,6 +194,8 @@ const arabic: AccountingSetupDictionary = {
   openChartOfAccounts: "فتح دليل الحسابات",
   openAccountingPeriods: "فتح الفترات المحاسبية",
   openPostingRules: "فتح قواعد الترحيل",
+  openInception: "فتح المركز الافتتاحي / بداية المحاسبة",
+  openStatementMappings: "فتح تعيينات القوائم المالية",
 };
 
 export function getAccountingSetupDictionary(locale: Locale): AccountingSetupDictionary {
