@@ -64,6 +64,7 @@ export type AccountingSetupDictionary = {
   openPostingRules: string;
   openInception: string;
   openStatementMappings: string;
+  openPermissions: string;
 };
 
 const english: AccountingSetupDictionary = {
@@ -130,6 +131,7 @@ const english: AccountingSetupDictionary = {
   openPostingRules: "Open Posting Rules",
   openInception: "Open Opening Position / Inception",
   openStatementMappings: "Open Financial Statement Mappings",
+  openPermissions: "Open Accounting Permissions",
 };
 
 const arabic: AccountingSetupDictionary = {
@@ -196,6 +198,7 @@ const arabic: AccountingSetupDictionary = {
   openPostingRules: "فتح قواعد الترحيل",
   openInception: "فتح المركز الافتتاحي / بداية المحاسبة",
   openStatementMappings: "فتح تعيينات القوائم المالية",
+  openPermissions: "فتح صلاحيات المحاسبة",
 };
 
 export function getAccountingSetupDictionary(locale: Locale): AccountingSetupDictionary {
