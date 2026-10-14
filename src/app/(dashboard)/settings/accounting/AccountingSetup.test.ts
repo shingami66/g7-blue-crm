@@ -193,6 +193,10 @@ test("Accounting Setup route renders initialized profile and progress in Arabic 
   assert.match(html, /dir="rtl"/);
   assert.match(html, /إعداد المحاسبة/);
   assert.match(html, /دليل الحسابات/);
+  assert.match(html, /فتح الفترات المحاسبية/);
+  assert.match(html, /فتح قواعد الترحيل/);
+  assert.match(html, /href="\/settings\/accounting\/periods"/);
+  assert.match(html, /href="\/settings\/accounting\/posting-rules"/);
   assert.match(html, /بدأ/);
   assert.match(html, /INACTIVE/);
   assert.match(html, /not_registered/);

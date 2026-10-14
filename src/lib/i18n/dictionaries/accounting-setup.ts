@@ -60,6 +60,8 @@ export type AccountingSetupDictionary = {
   foundationScopeNote: string;
   targetLimitNote: string;
   openChartOfAccounts: string;
+  openAccountingPeriods: string;
+  openPostingRules: string;
 };
 
 const english: AccountingSetupDictionary = {
@@ -122,6 +124,8 @@ const english: AccountingSetupDictionary = {
   foundationScopeNote: "This setup does not create a chart of accounts, periods, posting rules, opening balances, or tax configuration. VAT remains not registered; ZATCA/FATOORA remain inactive.",
   targetLimitNote: "The chooser lists up to 100 active users.",
   openChartOfAccounts: "Open Chart of Accounts",
+  openAccountingPeriods: "Open Accounting Periods",
+  openPostingRules: "Open Posting Rules",
 };
 
 const arabic: AccountingSetupDictionary = {
@@ -184,6 +188,8 @@ const arabic: AccountingSetupDictionary = {
   foundationScopeNote: "لا ينشئ هذا الإعداد دليل حسابات أو فترات أو قواعد ترحيل أو أرصدة افتتاحية أو إعدادات ضريبية. تبقى ضريبة القيمة المضافة غير مسجلة، وتبقى زاتكا/فاتورة غير مفعلة.",
   targetLimitNote: "تعرض القائمة ما يصل إلى ١٠٠ مستخدم نشط.",
   openChartOfAccounts: "فتح دليل الحسابات",
+  openAccountingPeriods: "فتح الفترات المحاسبية",
+  openPostingRules: "فتح قواعد الترحيل",
 };
 
 export function getAccountingSetupDictionary(locale: Locale): AccountingSetupDictionary {

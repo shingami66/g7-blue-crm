@@ -344,6 +344,12 @@ export default function AccountingSetupClient({
         <Link href="/settings/accounting/chart-of-accounts" className="mt-4 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
           {dictionary.openChartOfAccounts}
         </Link>
+        <Link href="/settings/accounting/periods" className="mt-2 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
+          {dictionary.openAccountingPeriods}
+        </Link>
+        <Link href="/settings/accounting/posting-rules" className="mt-2 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
+          {dictionary.openPostingRules}
+        </Link>
       </section>
 
       <section className="min-w-0 rounded-lg border border-outline-variant p-5">
