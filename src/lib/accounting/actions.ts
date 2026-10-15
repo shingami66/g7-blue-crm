@@ -4,6 +4,7 @@ import { AuthDependencyError, ForbiddenError } from "@/lib/auth/errors";
 import { revalidatePath } from "next/cache";
 import { requirePermission, requireUser } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { z } from "zod";
 import type { Json } from "@/lib/supabase/database.types";
 import type { RpcArgument } from "@/lib/supabase/rpc-argument";
 import { resolveAccountingCapability } from "./permissions";
@@ -204,6 +205,21 @@ const SAFE_ERROR_CODES = new Set([
   "review_exists",
   "period_transition_required",
 ]);
+
+const journalSourceDomainSchema = z.enum([
+  "CONTROLLED_MANUAL",
+  "INCEPTION",
+  "AR_BRIDGE",
+  "AP_BRIDGE",
+  "EXPENSE_BRIDGE",
+  "REVENUE_RECOGNITION",
+]);
+const journalPostingSourceSchema = z.array(z.object({
+  current: z.union([
+    z.object({ source_domain: journalSourceDomainSchema }).strict(),
+    z.array(z.object({ source_domain: journalSourceDomainSchema }).strict()).length(1),
+  ]),
+}).strict()).max(1);
 
 function safeCode(code: string | null | undefined) {
   return code && SAFE_ERROR_CODES.has(code)
@@ -749,6 +765,30 @@ export async function postAccountingJournal(
   const actor = await requirePermission("accounting:post_journal");
   const parsed = postAccountingJournalInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "invalid_input" };
+
+  const profile = await getAccountingProfile();
+  if ("state" in profile) return { ok: false, code: "profile_not_initialized" };
+
+  let eligibility;
+  try {
+    eligibility = await createAdminClient()
+      .from("accounting_journals")
+      .select("current:accounting_journal_versions!accounting_journals_current_version_fkey(source_domain)")
+      .eq("profile_id", profile.id)
+      .eq("id", parsed.data.journal_id)
+      .limit(1);
+  } catch {
+    throw new AuthDependencyError("Accounting journal eligibility dependency failed");
+  }
+  if (eligibility.error || !Array.isArray(eligibility.data)) {
+    throw new AuthDependencyError("Accounting journal eligibility dependency failed");
+  }
+  const sourceRows = journalPostingSourceSchema.safeParse(eligibility.data);
+  if (!sourceRows.success) throw new AuthDependencyError("Accounting journal eligibility response was invalid");
+  const sourceRow = sourceRows.data[0];
+  if (!sourceRow) return { ok: false, code: "journal_not_found" };
+  const current = Array.isArray(sourceRow.current) ? sourceRow.current[0]! : sourceRow.current;
+  if (current.source_domain !== "CONTROLLED_MANUAL") return { ok: false, code: "source_not_eligible" };
 
   let result;
   try {

@@ -19,6 +19,7 @@ import {
   Coins,
   ClipboardCheck,
   Calculator,
+  BookOpen,
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -38,6 +39,7 @@ export type NavSectionKey =
   | "billingAndPayments"
   | "expensesAndCosting"
   | "accountsPayable"
+  | "accountingOperations"
   | "reports"
   | "administration";
 
@@ -99,6 +101,9 @@ export function getSectionForPathname(pathname: string): NavSectionKey | null {
   if (pathname === "/supplier-advances" || pathname.startsWith("/supplier-advances/")) {
     return "accountsPayable";
   }
+  if (pathname === "/accounting" || pathname.startsWith("/accounting/")) {
+    return "accountingOperations";
+  }
   if (
     pathname === "/settings" ||
     pathname.startsWith("/settings/") ||
@@ -123,6 +128,7 @@ export default function Sidebar({
   canReadSupplierBills = false,
   canReadSupplierPayments = false,
   canReadSupplierAdvances = false,
+  canViewAccounting = false,
   canAccessAccountingSetup = false,
   authorizedReports = [],
   shellDirection = "ltr",
@@ -133,6 +139,7 @@ export default function Sidebar({
   canReadSupplierBills?: boolean;
   canReadSupplierPayments?: boolean;
   canReadSupplierAdvances?: boolean;
+  canViewAccounting?: boolean;
   canAccessAccountingSetup?: boolean;
   authorizedReports?: readonly ReportNavigationItem[];
   shellDirection?: "ltr" | "rtl";
@@ -213,6 +220,17 @@ export default function Sidebar({
         },
       ],
     },
+    ...(canViewAccounting ? [{
+      key: "accountingOperations" as const,
+      title: dictionary.sections.accountingOperations,
+      icon: BookOpen,
+      children: [{
+        key: "journal-operations",
+        label: dictionary.modules.journalOperations,
+        href: "/accounting/journals",
+        icon: Calculator,
+      }],
+    }] : []),
     {
       key: "suppliersAndProcurement",
       title: dictionary.sections.suppliersAndProcurement,

@@ -12,6 +12,8 @@ type ActionState = {
   permission: string | null;
   permissionError: Error | null;
   revalidated: string[];
+  journalSourceDomain: string | null;
+  journalProfileId: string | null;
 };
 
 const require = createRequire(import.meta.url);
@@ -51,6 +53,8 @@ let state: ActionState = {
   permission: null,
   permissionError: null,
   revalidated: [],
+  journalSourceDomain: null,
+  journalProfileId: null,
 };
 
 mock.module("@/lib/auth/permissions", {
@@ -76,11 +80,34 @@ mock.module("@/lib/auth/permissions", {
 mock.module("@/lib/supabase/admin", {
   namedExports: {
     createAdminClient: () => ({
+      from: (table: string) => {
+        const filters = new Map<string, unknown>();
+        const query = {
+          select() { return this; },
+          eq(column: string, value: unknown) {
+            filters.set(column, value);
+            return this;
+          },
+          limit: async () => {
+            const profileMatches = !filters.has("profile_id") || filters.get("profile_id") === state.journalProfileId;
+            return {
+              data: table === "accounting_journals" && state.journalSourceDomain && profileMatches
+                ? [{ current: { source_domain: state.journalSourceDomain } }]
+                : [],
+              error: null,
+            };
+          },
+        };
+        return query;
+      },
       rpc: async (name: string, args: Record<string, unknown>) => {
         if (name === "get_accounting_capability") {
           const capability = String(args.p_capability);
           state.capabilityChecks.push(capability);
           return { data: state.allowedCapabilities === null || state.allowedCapabilities.has(capability), error: null };
+        }
+        if (name === "get_accounting_profile" && state.journalSourceDomain) {
+          return { data: setupProfileSnapshot, error: null };
         }
         state.calls.push({ name, args });
         return state.rpc(name, args);
@@ -141,6 +168,8 @@ function resetState(rpc: ActionState["rpc"]) {
     permission: null,
     permissionError: null,
     revalidated: [],
+    journalSourceDomain: null,
+    journalProfileId: null,
   };
 }
 
@@ -697,15 +726,36 @@ test("W10B mutations derive actors, require each explicit capability, and call i
     data: [{ error_code: null, journal_id: journalId, version: 2, status: "POSTED", idempotent_replay: false }],
     error: null,
   }));
+  state.journalSourceDomain = "CONTROLLED_MANUAL";
+  state.journalProfileId = setupProfileSnapshot.id;
   assert.deepEqual(await postAccountingJournal({
     journal_id: journalId, expected_version: 1, request_id: "00000000-0000-4000-8000-00000000b927",
   }), { ok: true, value: { journal_id: journalId, version: 2, status: "POSTED" }, idempotentReplay: false });
   assert.equal(state.permission, "accounting:post_journal");
   assert.equal(state.calls[0].name, "post_accounting_journal");
+
+  resetState(async () => ({ data: [], error: null }));
+  state.journalSourceDomain = "AR_BRIDGE";
+  state.journalProfileId = setupProfileSnapshot.id;
+  assert.deepEqual(await postAccountingJournal({
+    journal_id: journalId, expected_version: 1, request_id: "00000000-0000-4000-8000-00000000b92b",
+  }), { ok: false, code: "source_not_eligible" });
+  assert.equal(state.calls.length, 0);
+
+  resetState(async () => ({ data: [], error: null }));
+  state.journalSourceDomain = "AR_BRIDGE";
+  state.journalProfileId = "00000000-0000-4000-8000-00000000b92c";
+  assert.deepEqual(await postAccountingJournal({
+    journal_id: journalId, expected_version: 1, request_id: "00000000-0000-4000-8000-00000000b92d",
+  }), { ok: false, code: "journal_not_found" });
+  assert.equal(state.calls.length, 0);
+
   resetState(async () => ({
     data: [{ error_code: "revision_conflict", journal_id: journalId, version: 2, status: "POSTED", idempotent_replay: false }],
     error: null,
   }));
+  state.journalSourceDomain = "CONTROLLED_MANUAL";
+  state.journalProfileId = setupProfileSnapshot.id;
   const retryRequestId = "00000000-0000-4000-8000-00000000b92a";
   assert.deepEqual(await postAccountingJournal({
     journal_id: journalId, expected_version: 1, request_id: retryRequestId,

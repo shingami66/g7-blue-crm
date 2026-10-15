@@ -69,6 +69,7 @@ export default async function DashboardLayout({
                 canReadSupplierBills={canReadSupplierBills}
                 canReadSupplierPayments={canReadSupplierPayments}
                 canReadSupplierAdvances={canReadSupplierAdvances}
+                canViewAccounting={canViewAccounting}
                 canAccessAccountingSetup={canAccessAccountingSetup}
                 authorizedReports={authorizedReports}
                 shellDirection={shellDirection}

@@ -123,6 +123,7 @@ const TestLocaleProvider = LocaleProvider as React.ComponentType<{ locale: "en" 
 
 function renderSidebar(props: {
   isAdmin?: boolean;
+  canViewAccounting?: boolean;
   canAccessAccountingSetup?: boolean;
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
@@ -205,6 +206,22 @@ test("W5-A11Y-001: mobile sidebar exposes accessible disclosure button, closed-d
 
   // Non-admin view must not render admin links
   assert.ok(!html.includes('href="/admin/users"'), "Non-admin view must not render admin links");
+});
+
+test("journal operations navigation is shown only with accounting view authority", () => {
+  const allowed = renderSidebar({
+    canViewAccounting: true,
+    currentPathname: "/accounting/journals",
+  });
+  assert.ok(allowed.includes('href="/accounting/journals"'));
+  assert.ok(allowed.includes("Journal Operations"));
+  assert.match(allowed, /nav-section-trigger-accountingOperations[^>]*aria-expanded="true"/);
+
+  const denied = renderSidebar({
+    canViewAccounting: false,
+    currentPathname: "/accounting/journals",
+  });
+  assert.ok(!denied.includes('href="/accounting/journals"'));
 });
 
 test("1. Dashboard remains standalone and the Reports section follows report-route state", () => {

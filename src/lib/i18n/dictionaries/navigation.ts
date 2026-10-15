@@ -36,6 +36,7 @@ export interface NavigationDictionary {
     supplierBills: string;
     supplierPayments: string;
     supplierAdvances: string;
+    journalOperations: string;
   };
   sections: {
     customersAndSales: string;
@@ -44,6 +45,7 @@ export interface NavigationDictionary {
     billingAndPayments: string;
     expensesAndCosting: string;
     accountsPayable: string;
+    accountingOperations: string;
     administration: string;
   };
 }
@@ -86,6 +88,7 @@ export const navigationDictionaryEn: NavigationDictionary = {
     supplierPayments: "Supplier Payments",
     supplierAdvances: "Supplier Advances",
     accounting: "Accounting",
+    journalOperations: "Journal Operations",
   },
   sections: {
     customersAndSales: "Customers & Sales",
@@ -94,6 +97,7 @@ export const navigationDictionaryEn: NavigationDictionary = {
     billingAndPayments: "Billing & Payments",
     expensesAndCosting: "Expenses & Costing",
     accountsPayable: "Accounts Payable",
+    accountingOperations: "Accounting",
     administration: "Administration",
   },
 };
@@ -136,6 +140,7 @@ export const navigationDictionaryAr: NavigationDictionary = {
     supplierPayments: "مدفوعات الموردين",
     supplierAdvances: "الدفعات المقدمة للموردين",
     accounting: "المحاسبة",
+    journalOperations: "عمليات القيود",
   },
   sections: {
     customersAndSales: "العملاء والمبيعات",
@@ -144,6 +149,7 @@ export const navigationDictionaryAr: NavigationDictionary = {
     billingAndPayments: "الفواتير والمدفوعات",
     expensesAndCosting: "المصروفات والتكاليف",
     accountsPayable: "حسابات الموردين",
+    accountingOperations: "المحاسبة",
     administration: "الإدارة",
   },
 };
