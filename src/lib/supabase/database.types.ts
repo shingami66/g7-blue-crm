@@ -12710,6 +12710,25 @@ export type Database = {
         }
         Returns: Json
       }
+      get_accounting_bank_reconciliation_history: {
+        Args: {
+          p_actor_user_id: string
+          p_as_of_date: string
+          p_binding_id: string
+          p_limit?: number
+          p_recorded_at_cutoff: string
+        }
+        Returns: Json
+      }
+      list_accounting_bank_bindings: {
+        Args: {
+          p_actor_user_id: string
+          p_as_of_date: string
+          p_limit?: number
+          p_recorded_at_cutoff: string
+        }
+        Returns: Json
+      }
       get_accounting_capability: {
         Args: { p_actor_user_id: string; p_capability: string }
         Returns: boolean

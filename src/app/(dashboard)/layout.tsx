@@ -33,7 +33,7 @@ export default async function DashboardLayout({
     redirect("/unauthorized");
   }
 
-  const [isAdmin, canReadPettyCash, canReadSupplierBills, canReadSupplierPayments, canReadSupplierAdvances, locale, reportPermissionValues, canViewAccounting, canManageAccountingProfile, canManageAccountingAuthority] = await Promise.all([
+  const [isAdmin, canReadPettyCash, canReadSupplierBills, canReadSupplierPayments, canReadSupplierAdvances, locale, reportPermissionValues, canViewAccounting, canReconcileBank, canManageAccountingProfile, canManageAccountingAuthority] = await Promise.all([
     checkPermission("users:manage"),
     checkPermission(PETTY_CASH_PERMISSIONS.read),
     checkPermission(SUPPLIER_BILL_PERMISSIONS.read),
@@ -42,6 +42,7 @@ export default async function DashboardLayout({
     getCurrentSessionEffectiveLocale(),
     Promise.all(REPORT_NAVIGATION_PERMISSIONS.map((permission) => checkPermission(permission))),
     checkPermission("accounting:view"),
+    checkPermission("accounting:reconcile_bank"),
     checkPermission("accounting:manage_profile"),
     checkPermission("accounting:manage_authority"),
   ]);
@@ -70,6 +71,7 @@ export default async function DashboardLayout({
                 canReadSupplierPayments={canReadSupplierPayments}
                 canReadSupplierAdvances={canReadSupplierAdvances}
                 canViewAccounting={canViewAccounting}
+                canReconcileBank={canReconcileBank}
                 canAccessAccountingSetup={canAccessAccountingSetup}
                 authorizedReports={authorizedReports}
                 shellDirection={shellDirection}

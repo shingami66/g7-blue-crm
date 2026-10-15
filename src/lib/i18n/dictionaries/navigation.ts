@@ -37,6 +37,8 @@ export interface NavigationDictionary {
     supplierPayments: string;
     supplierAdvances: string;
     journalOperations: string;
+    bankReconciliation: string;
+    periodClose: string;
   };
   sections: {
     customersAndSales: string;
@@ -89,6 +91,8 @@ export const navigationDictionaryEn: NavigationDictionary = {
     supplierAdvances: "Supplier Advances",
     accounting: "Accounting",
     journalOperations: "Journal Operations",
+    bankReconciliation: "Bank Reconciliation",
+    periodClose: "Period Close / Lock / Reopen",
   },
   sections: {
     customersAndSales: "Customers & Sales",
@@ -141,6 +145,8 @@ export const navigationDictionaryAr: NavigationDictionary = {
     supplierAdvances: "الدفعات المقدمة للموردين",
     accounting: "المحاسبة",
     journalOperations: "عمليات القيود",
+    bankReconciliation: "تسوية البنك",
+    periodClose: "إقفال / قفل / إعادة فتح الفترة",
   },
   sections: {
     customersAndSales: "العملاء والمبيعات",

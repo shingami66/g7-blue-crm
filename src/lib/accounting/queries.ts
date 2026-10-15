@@ -35,8 +35,12 @@ import {
   accountingExpenseBridgeReconciliationSchema,
   accountingRevenueReconciliationInputSchema,
   accountingRevenueReconciliationSchema,
+  accountingBankBindingReadInputSchema,
+  accountingBankBindingReadModelSchema,
   accountingBankReconciliationInputSchema,
   accountingBankReconciliationSchema,
+  accountingBankReconciliationHistoryInputSchema,
+  accountingBankReconciliationHistorySchema,
   listAccountingCapabilityAssignmentsInputSchema,
 } from "./schemas";
 import { resolveAccountingCapability } from "./permissions";
@@ -57,7 +61,9 @@ import type {
   AccountingApBridgeReconciliation,
   AccountingExpenseBridgeReconciliation,
   AccountingRevenueReconciliation,
+  AccountingBankBindingReadModel,
   AccountingBankReconciliation,
+  AccountingBankReconciliationHistory,
   AccountingSetupStatus,
   AccountingSetupTarget,
 } from "./types";
@@ -758,6 +764,61 @@ export async function getAccountingBankReconciliation(
   if (result.error) throwSafeRpcError(result.error);
   const parsed = accountingBankReconciliationSchema.safeParse(result.data);
   if (!parsed.success) throw new AuthDependencyError("Accounting bank reconciliation response was invalid");
+  return parsed.data;
+}
+
+export async function listAccountingBankBindings(input: unknown): Promise<AccountingBankBindingReadModel> {
+  const actor = await requireUser();
+  const [canView, canReconcile] = await Promise.all([
+    resolveAccountingCapability(actor.id, "accounting:view"),
+    resolveAccountingCapability(actor.id, "accounting:reconcile_bank"),
+  ]);
+  if (!canView && !canReconcile) throw new ForbiddenError("Accounting capability required");
+  const parsedInput = accountingBankBindingReadInputSchema.safeParse(input);
+  if (!parsedInput.success) throw new AuthDependencyError("Accounting bank binding request was invalid");
+  let result;
+  try {
+    result = await createAdminClient().rpc("list_accounting_bank_bindings", {
+      p_actor_user_id: actor.id,
+      p_as_of_date: parsedInput.data.as_of_date,
+      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff,
+      p_limit: parsedInput.data.limit,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting bank binding dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  const parsed = accountingBankBindingReadModelSchema.safeParse(result.data);
+  if (!parsed.success) throw new AuthDependencyError("Accounting bank binding response was invalid");
+  return parsed.data;
+}
+
+export async function getAccountingBankReconciliationHistory(
+  input: unknown,
+): Promise<AccountingBankReconciliationHistory> {
+  const actor = await requireUser();
+  const [canView, canReconcile] = await Promise.all([
+    resolveAccountingCapability(actor.id, "accounting:view"),
+    resolveAccountingCapability(actor.id, "accounting:reconcile_bank"),
+  ]);
+  if (!canView && !canReconcile) throw new ForbiddenError("Accounting capability required");
+  const parsedInput = accountingBankReconciliationHistoryInputSchema.safeParse(input);
+  if (!parsedInput.success) throw new AuthDependencyError("Accounting bank reconciliation history request was invalid");
+  let result;
+  try {
+    result = await createAdminClient().rpc("get_accounting_bank_reconciliation_history", {
+      p_actor_user_id: actor.id,
+      p_binding_id: parsedInput.data.binding_id,
+      p_as_of_date: parsedInput.data.as_of_date,
+      p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff,
+      p_limit: parsedInput.data.limit,
+    });
+  } catch {
+    throw new AuthDependencyError("Accounting bank reconciliation history dependency failed");
+  }
+  if (result.error) throwSafeRpcError(result.error);
+  const parsed = accountingBankReconciliationHistorySchema.safeParse(result.data);
+  if (!parsed.success) throw new AuthDependencyError("Accounting bank reconciliation history response was invalid");
   return parsed.data;
 }
 

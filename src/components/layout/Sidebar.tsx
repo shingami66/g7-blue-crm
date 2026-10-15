@@ -129,6 +129,7 @@ export default function Sidebar({
   canReadSupplierPayments = false,
   canReadSupplierAdvances = false,
   canViewAccounting = false,
+  canReconcileBank = false,
   canAccessAccountingSetup = false,
   authorizedReports = [],
   shellDirection = "ltr",
@@ -140,6 +141,7 @@ export default function Sidebar({
   canReadSupplierPayments?: boolean;
   canReadSupplierAdvances?: boolean;
   canViewAccounting?: boolean;
+  canReconcileBank?: boolean;
   canAccessAccountingSetup?: boolean;
   authorizedReports?: readonly ReportNavigationItem[];
   shellDirection?: "ltr" | "rtl";
@@ -220,16 +222,30 @@ export default function Sidebar({
         },
       ],
     },
-    ...(canViewAccounting ? [{
+    ...(canViewAccounting || canReconcileBank ? [{
       key: "accountingOperations" as const,
       title: dictionary.sections.accountingOperations,
       icon: BookOpen,
-      children: [{
-        key: "journal-operations",
-        label: dictionary.modules.journalOperations,
-        href: "/accounting/journals",
-        icon: Calculator,
-      }],
+      children: [
+        ...(canViewAccounting ? [{
+          key: "journal-operations",
+          label: dictionary.modules.journalOperations,
+          href: "/accounting/journals",
+          icon: Calculator,
+        }] : []),
+        {
+          key: "bank-reconciliation",
+          label: dictionary.modules.bankReconciliation,
+          href: "/accounting/bank-reconciliation",
+          icon: CreditCard,
+        },
+        ...(canViewAccounting ? [{
+          key: "period-close",
+          label: dictionary.modules.periodClose,
+          href: "/accounting/period-close",
+          icon: Calculator,
+        }] : []),
+      ],
     }] : []),
     {
       key: "suppliersAndProcurement",

@@ -1,6 +1,6 @@
 # G7 BLUE CRM - Roadmap & Execution Plan
 
-## CURRENT ACCOUNTING ROADMAP POSITION — AAR-D6 IMPLEMENTED / READY FOR CONTROLLER CLOSURE — 15 October 2026
+## CURRENT ACCOUNTING ROADMAP POSITION — AAR-D7 IMPLEMENTED / READY FOR CONTROLLER CLOSURE — 15 October 2026
 
 - **AAR-D1 — Accounting Bootstrap + Setup Foundation:** Published migration SQL is present at `supabase/migrations/20261013100000_aar_d1_accounting_setup_foundation.sql`; DEV migration history is reconciled to `20261013100000 / aar_d1_accounting_setup_foundation`. The history repair did not re-execute the migration SQL.
 - The AAR-D1 foundation is deployed on DEV; the accounting profile bootstrap has not been executed. No accounting profile, capability assignment, company account, accounting period, posting rule, journal, or opening balance was created.
@@ -11,10 +11,12 @@
 - **AAR-D5 — Capability Assignment Read Repair + Permissions UI:** Implemented under `/settings/accounting/permissions`; the additive read-repair migration changes only `list_accounting_capability_assignments(uuid,uuid)`. The AAR-D6 supplied baseline records the DEV migration as applied and live-verified; no capability assignment or accounting business data was changed by D6.
 - **AAR-D6 — Journal Operations + Source Posting Proof:** Implemented at `/accounting/journals` with bounded keyset pagination, governed manual draft preparation and revision, posting and reversal controls, and versioned journal detail proof.
 - Journal detail shows source domain and keys, posting purpose, period and rule versions, exact SAR line amounts, account snapshots, service/event dimensions, reasons, evidence, preparer/poster identities and timestamps, correction group, and reversal lineage. Source-generated journals remain proof-only; manual actions use the existing capability-gated journal RPCs.
-- The surface supports English, Arabic/RTL and narrow screens. It uses the current accounting profile, creates no bootstrap or fixture data, and introduces no database schema or migration change.
-- **D6 validation:** TypeScript, scoped ESLint, production build, focused journal/navigation checks, and the 23-file accounting regression suite passed (188 tests). `git diff --check` reported no whitespace errors.
+- **AAR-D7 — Bank Reconciliation + Period Close Operations:** Implemented at `/accounting/bank-reconciliation` and `/accounting/period-close` using existing W10G reconciliation and W10I CLOSE/LOCK/REOPEN evidence, history, review, and mutation actions.
+- **W10G-R1 — Bank read repair:** An additive migration source adds bounded service-role-only bank binding discovery and reconciliation history reads. It requires an active user and the current `DEV_PROVISIONAL` accounting profile version, returns only masked bank identity, and preserves halalah amounts as strings. The migration was not applied to DEV, DEMO, or PROD.
+- The D7 surfaces support English, Arabic/RTL, responsive layouts, independent review, stale-version evidence, and capability-filtered reporting. No bootstrap, fixture, or accounting business-data mutation was performed; Owner acceptance is not claimed.
+- **D7 validation:** Next route type generation, TypeScript, scoped ESLint, production build, whitespace checks, and the accounting/settings/sidebar regression set passed (259 tests). The unfiltered `pnpm test:all` run exceeded the 120-second command limit; separated broader batches report failures in unrelated module-search, i18n, invoice, and procurement tests, so a repository-wide green test verdict is not claimed.
 - CRM Admin does not inherit accounting authority. VAT remains not registered; ZATCA/FATOORA remain inactive; professional validation remains deferred. W11 remains **NO-GO** unless separately changed by the Controller.
-- **EXACT NEXT ACCOUNTING ACTION:** Controller closes AAR-D6. Do not start AAR-D7 without separate authorization.
+- **EXACT NEXT ACCOUNTING ACTION:** Controller completes the AAR-D7 closure review. Do not start AAR-D8.
 
 
 ## CURRENT ROADMAP POSITION — L1-R01 PROVEN CLOSED / OWNER-ACCEPTED — 12 October 2026

@@ -1474,6 +1474,138 @@ export const accountingBankReconciliationInputSchema = z.object({
   limit: z.number().int().min(1).max(500),
 }).strict();
 
+export const accountingBankBindingReadInputSchema = z.object({
+  as_of_date: validDate,
+  recorded_at_cutoff: z.string().datetime({ offset: true }),
+  limit: z.number().int().min(1).max(500),
+}).strict();
+
+const accountingBankBindingReadSchema = z.object({
+  binding_id: z.string().uuid(),
+  version: z.number().int().positive(),
+  previous_version: z.number().int().positive().nullable(),
+  current_version: z.number().int().positive(),
+  current_status: z.enum(["PREPARED", "APPROVED", "REJECTED", "RETIRED"]),
+  account_id: z.string().uuid(),
+  account_version: z.number().int().positive(),
+  masked_display_identity: z.string().min(1).max(200),
+  currency: z.literal("SAR"),
+  effective_from: validDate,
+  effective_through: validDate.nullable(),
+  status: z.literal("APPROVED"),
+  evidence_ref: z.string().min(1).max(2000),
+  prepared_by: z.string().uuid(),
+  prepared_at: z.string().datetime({ offset: true }),
+  reviewed_by: z.string().uuid().nullable(),
+  reviewed_at: z.string().datetime({ offset: true }).nullable(),
+  reason: z.string().min(1).max(2000),
+}).strict();
+
+export const accountingBankBindingReadModelSchema = z.discriminatedUnion("state", [
+  z.object({
+    state: z.literal("NOT_INITIALIZED"),
+    bindings: z.array(accountingBankBindingReadSchema),
+    as_of_date: validDate,
+    recorded_at_cutoff: z.string().datetime({ offset: true }),
+    truncated: z.literal(false),
+  }).strict(),
+  z.object({
+    state: z.literal("READY"),
+    bindings: z.array(accountingBankBindingReadSchema),
+    as_of_date: validDate,
+    recorded_at_cutoff: z.string().datetime({ offset: true }),
+    truncated: z.boolean(),
+  }).strict(),
+]);
+
+export const accountingBankReconciliationHistoryInputSchema = z.object({
+  binding_id: z.string().uuid(),
+  as_of_date: validDate,
+  recorded_at_cutoff: z.string().datetime({ offset: true }),
+  limit: z.number().int().min(1).max(500),
+}).strict();
+
+const accountingBankReviewDecisionSchema = z.enum([
+  "APPROVED", "REJECTED", "UNMATCHED", "IMPACT_REVIEW_REQUIRED",
+]);
+
+const accountingBankStatementBatchReadSchema = z.object({
+  batch_id: z.string().uuid(),
+  version: z.number().int().positive(),
+  previous_version: z.number().int().positive().nullable(),
+  binding_id: z.string().uuid(),
+  binding_version: z.number().int().positive(),
+  source_document_ref: z.string().min(1).max(2000),
+  evidence_sha256: accountingBankSha256Schema,
+  evidence_identity: z.string().min(1).max(300),
+  coverage_start: validDate,
+  coverage_end: validDate,
+  opening_balance_halalah: z.string().regex(/^-?[0-9]+$/),
+  closing_balance_halalah: z.string().regex(/^-?[0-9]+$/),
+  currency: z.literal("SAR"),
+  status: z.literal("RECORDED"),
+  recorded_by: z.string().uuid(),
+  recorded_at: z.string().datetime({ offset: true }),
+  reason: z.string().min(1).max(2000),
+}).strict();
+
+const accountingBankAllocationReadSchema = z.object({
+  allocation_number: z.number().int().positive(),
+  statement_line_id: z.string().uuid(),
+  statement_line_version: z.number().int().positive(),
+  ledger_journal_id: z.string().uuid(),
+  ledger_journal_version: z.number().int().positive(),
+  ledger_line_number: z.number().int().min(1).max(200),
+  statement_allocated_halalah: z.string().regex(/^-?[0-9]+$/),
+  ledger_allocated_halalah: z.string().regex(/^-?[0-9]+$/),
+  rationale: z.string().min(1).max(2000),
+}).strict();
+
+const accountingBankReconciliationReviewReadSchema = z.object({
+  decision: accountingBankReviewDecisionSchema,
+  reviewer_user_id: z.string().uuid(),
+  reason: z.string().min(1).max(2000),
+  recorded_at: z.string().datetime({ offset: true }),
+}).strict();
+
+const accountingBankReconciliationGroupReadSchema = z.object({
+  group_id: z.string().uuid(),
+  version: z.number().int().positive(),
+  previous_version: z.number().int().positive().nullable(),
+  current_version: z.number().int().positive(),
+  is_current_version: z.boolean(),
+  binding_id: z.string().uuid(),
+  binding_version: z.number().int().positive(),
+  as_of_date: validDate,
+  recorded_at_cutoff: z.string().datetime({ offset: true }),
+  status: z.literal("PREPARED"),
+  rationale: z.string().min(1).max(2000),
+  evidence_ref: z.string().max(2000).nullable(),
+  prepared_by: z.string().uuid(),
+  prepared_at: z.string().datetime({ offset: true }),
+  allocations: z.array(accountingBankAllocationReadSchema),
+  allocations_truncated: z.boolean(),
+  review_history: z.array(accountingBankReconciliationReviewReadSchema),
+  review_history_truncated: z.boolean(),
+  latest_review_decision: accountingBankReviewDecisionSchema.nullable(),
+}).strict();
+
+const accountingBankReconciliationHistoryFields = {
+  binding_id: z.string().uuid(),
+  as_of_date: validDate,
+  recorded_at_cutoff: z.string().datetime({ offset: true }),
+  statement_batches: z.array(accountingBankStatementBatchReadSchema),
+  statement_batches_truncated: z.boolean(),
+  groups: z.array(accountingBankReconciliationGroupReadSchema),
+  groups_truncated: z.boolean(),
+};
+
+export const accountingBankReconciliationHistorySchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("NOT_INITIALIZED"), ...accountingBankReconciliationHistoryFields }).strict(),
+  z.object({ state: z.literal("NOT_FOUND"), ...accountingBankReconciliationHistoryFields }).strict(),
+  z.object({ state: z.literal("READY"), ...accountingBankReconciliationHistoryFields }).strict(),
+]);
+
 const accountingBankReadRowMoneyKeys = [
   "signed_amount_halalah", "amount_halalah", "signed_amount",
   "statement_allocated_halalah", "ledger_allocated_halalah",

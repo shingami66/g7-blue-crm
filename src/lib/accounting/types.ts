@@ -411,6 +411,107 @@ export type AccountingBankReconciliation =
       ledger_cash_lines: AccountingBankReconciliationRow[];
     };
 
+export type AccountingBankBindingRead = {
+  binding_id: string;
+  version: number;
+  previous_version: number | null;
+  current_version: number;
+  current_status: "PREPARED" | "APPROVED" | "REJECTED" | "RETIRED";
+  account_id: string;
+  account_version: number;
+  masked_display_identity: string;
+  currency: "SAR";
+  effective_from: string;
+  effective_through: string | null;
+  status: "APPROVED";
+  evidence_ref: string;
+  prepared_by: string;
+  prepared_at: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  reason: string;
+};
+
+export type AccountingBankBindingReadModel = {
+  state: "NOT_INITIALIZED" | "READY";
+  bindings: AccountingBankBindingRead[];
+  as_of_date: string;
+  recorded_at_cutoff: string;
+  truncated: boolean;
+};
+
+export type AccountingBankStatementBatchRead = {
+  batch_id: string;
+  version: number;
+  previous_version: number | null;
+  binding_id: string;
+  binding_version: number;
+  source_document_ref: string;
+  evidence_sha256: string;
+  evidence_identity: string;
+  coverage_start: string;
+  coverage_end: string;
+  opening_balance_halalah: string;
+  closing_balance_halalah: string;
+  currency: "SAR";
+  status: "RECORDED";
+  recorded_by: string;
+  recorded_at: string;
+  reason: string;
+};
+
+export type AccountingBankReconciliationReviewRead = {
+  decision: "APPROVED" | "REJECTED" | "UNMATCHED" | "IMPACT_REVIEW_REQUIRED";
+  reviewer_user_id: string;
+  reason: string;
+  recorded_at: string;
+};
+
+export type AccountingBankAllocationRead = {
+  allocation_number: number;
+  statement_line_id: string;
+  statement_line_version: number;
+  ledger_journal_id: string;
+  ledger_journal_version: number;
+  ledger_line_number: number;
+  statement_allocated_halalah: string;
+  ledger_allocated_halalah: string;
+  rationale: string;
+};
+
+export type AccountingBankReconciliationGroupRead = {
+  group_id: string;
+  version: number;
+  previous_version: number | null;
+  current_version: number;
+  is_current_version: boolean;
+  binding_id: string;
+  binding_version: number;
+  as_of_date: string;
+  recorded_at_cutoff: string;
+  status: "PREPARED";
+  rationale: string;
+  evidence_ref: string | null;
+  prepared_by: string;
+  prepared_at: string;
+  allocations: AccountingBankAllocationRead[];
+  allocations_truncated: boolean;
+  review_history: AccountingBankReconciliationReviewRead[];
+  review_history_truncated: boolean;
+  latest_review_decision: AccountingBankReconciliationReviewRead["decision"] | null;
+};
+
+export type AccountingBankReconciliationHistory = {
+  state: "NOT_INITIALIZED" | "NOT_FOUND" | "READY";
+  binding_id: string;
+  as_of_date: string;
+  recorded_at_cutoff: string;
+  statement_batches: AccountingBankStatementBatchRead[];
+  statement_batches_truncated: boolean;
+  groups: AccountingBankReconciliationGroupRead[];
+  groups_truncated: boolean;
+};
+
 export type AccountingAccountType = "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE";
 export type AccountingNormalBalance = "DEBIT" | "CREDIT";
 export type AccountingAccountKind = "POSTING" | "NON_POSTING";

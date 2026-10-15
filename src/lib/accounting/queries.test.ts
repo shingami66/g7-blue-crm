@@ -108,7 +108,7 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { getAccountingProfile, getAccountingSetupStatus, listAccountingSetupTargets, listAccountingAccounts, listAccountingCapabilityAssignments, listAccountingPeriods, listAccountingPostingRules, getAccountingJournal, getAccountingGeneralLedger, getAccountingTrialBalance, getAccountingRevenueReconciliation, getAccountingW10HReport } = await import("./queries.ts");
+const { getAccountingProfile, getAccountingSetupStatus, listAccountingSetupTargets, listAccountingAccounts, listAccountingCapabilityAssignments, listAccountingPeriods, listAccountingPostingRules, getAccountingJournal, getAccountingGeneralLedger, getAccountingTrialBalance, getAccountingRevenueReconciliation, getAccountingW10HReport, listAccountingBankBindings, getAccountingBankReconciliationHistory } = await import("./queries.ts");
 const { AuthDependencyError } = await import("../auth/errors.ts");
 const actorId = "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f";
 
@@ -613,4 +613,77 @@ test("W10F reconciliation requires an explicit accounting grant and preserves cu
   await assert.rejects(() => getAccountingRevenueReconciliation({
     as_of_date: "2026-02-30", recorded_at_cutoff: cutoff, limit: 501,
   }), AuthDependencyError);
+});
+
+test("W10G-R1 bank binding reads require view or reconcile authority and send the trusted actor", async () => {
+  const cutoff = "2026-10-15T09:00:00+03:00";
+  resetState(async (name, args) => {
+    if (name === "get_accounting_capability") {
+      return { data: args.p_capability === "accounting:view", error: null };
+    }
+    return { data: { state: "READY", bindings: [], as_of_date: "2026-10-15", recorded_at_cutoff: cutoff, truncated: false }, error: null };
+  });
+  assert.deepEqual(await listAccountingBankBindings({ as_of_date: "2026-10-15", recorded_at_cutoff: cutoff, limit: 50 }), {
+    state: "READY", bindings: [], as_of_date: "2026-10-15", recorded_at_cutoff: cutoff, truncated: false,
+  });
+  assert.deepEqual(state.calls.at(-1), {
+    name: "list_accounting_bank_bindings",
+    args: { p_actor_user_id: actorId, p_as_of_date: "2026-10-15", p_recorded_at_cutoff: cutoff, p_limit: 50 },
+  });
+
+  resetState(async () => ({ data: false, error: null }));
+  await assert.rejects(() => listAccountingBankBindings({
+    as_of_date: "2026-10-15", recorded_at_cutoff: cutoff, limit: 50,
+  }), /Accounting capability required/);
+  assert.equal(state.calls.some(({ name }) => name === "list_accounting_bank_bindings"), false);
+});
+
+test("W10G-R1 history reads preserve exact halalah strings and reject unsafe numeric amounts", async () => {
+  const cutoff = "2026-10-15T09:00:00+03:00";
+  const bindingId = "00000000-0000-4000-8000-00000000b951";
+  const history = {
+    state: "READY",
+    binding_id: bindingId,
+    as_of_date: "2026-10-15",
+    recorded_at_cutoff: cutoff,
+    statement_batches: [{
+      batch_id: "00000000-0000-4000-8000-00000000b952",
+      version: 1,
+      previous_version: null,
+      binding_id: bindingId,
+      binding_version: 1,
+      source_document_ref: "statement-2026-10",
+      evidence_sha256: "a".repeat(64),
+      evidence_identity: "bank-statement-october",
+      coverage_start: "2026-10-01",
+      coverage_end: "2026-10-31",
+      opening_balance_halalah: "9007199254740993",
+      closing_balance_halalah: "9007199254740993",
+      currency: "SAR",
+      status: "RECORDED",
+      recorded_by: actorId,
+      recorded_at: cutoff,
+      reason: "Read contract fixture",
+    }],
+    statement_batches_truncated: false,
+    groups: [],
+    groups_truncated: false,
+  };
+  resetState(async (name, args) => name === "get_accounting_capability"
+    ? { data: args.p_capability === "accounting:reconcile_bank", error: null }
+    : { data: history, error: null });
+  const result = await getAccountingBankReconciliationHistory({
+    binding_id: bindingId, as_of_date: "2026-10-15", recorded_at_cutoff: cutoff, limit: 50,
+  });
+  assert.equal(result.statement_batches[0]?.opening_balance_halalah, "9007199254740993");
+  assert.equal(state.calls.at(-1)?.args.p_actor_user_id, actorId);
+  assert.equal(state.calls.at(-1)?.args.p_binding_id, bindingId);
+
+  resetState(async (name, args) => name === "get_accounting_capability"
+    ? { data: args.p_capability === "accounting:view", error: null }
+    : { data: { ...history, statement_batches: [{ ...history.statement_batches[0], opening_balance_halalah: 9007199254740993 }] }, error: null });
+  await assert.rejects(() => getAccountingBankReconciliationHistory({
+    binding_id: bindingId, as_of_date: "2026-10-15", recorded_at_cutoff: cutoff, limit: 50,
+  }), (error: unknown) => error instanceof AuthDependencyError
+    && error.message === "Accounting bank reconciliation history response was invalid");
 });

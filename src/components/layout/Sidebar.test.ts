@@ -124,6 +124,7 @@ const TestLocaleProvider = LocaleProvider as React.ComponentType<{ locale: "en" 
 function renderSidebar(props: {
   isAdmin?: boolean;
   canViewAccounting?: boolean;
+  canReconcileBank?: boolean;
   canAccessAccountingSetup?: boolean;
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
@@ -222,6 +223,21 @@ test("journal operations navigation is shown only with accounting view authority
     currentPathname: "/accounting/journals",
   });
   assert.ok(!denied.includes('href="/accounting/journals"'));
+});
+
+test("AAR-D7 navigation exposes bank reconciliation to reconcile-only users and period close to accounting viewers", () => {
+  const reconcileOnly = renderSidebar({ canReconcileBank: true, currentPathname: "/accounting/bank-reconciliation" });
+  assert.ok(reconcileOnly.includes('href="/accounting/bank-reconciliation"'));
+  assert.ok(!reconcileOnly.includes('href="/accounting/journals"'));
+  assert.ok(!reconcileOnly.includes('href="/accounting/period-close"'));
+
+  const accountingViewer = renderSidebar({ canViewAccounting: true, currentPathname: "/accounting/period-close" });
+  assert.ok(accountingViewer.includes('href="/accounting/bank-reconciliation"'));
+  assert.ok(accountingViewer.includes('href="/accounting/period-close"'));
+  assert.match(accountingViewer, /nav-section-trigger-accountingOperations[^>]*aria-expanded="true"/);
+
+  const arabicRtl = renderSidebar({ canReconcileBank: true, currentPathname: "/accounting/bank-reconciliation", locale: "ar", shellDirection: "rtl" });
+  assert.ok(arabicRtl.includes("تسوية البنك"));
 });
 
 test("1. Dashboard remains standalone and the Reports section follows report-route state", () => {
