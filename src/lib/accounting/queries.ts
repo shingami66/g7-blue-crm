@@ -43,7 +43,7 @@ import {
   accountingBankReconciliationHistorySchema,
   listAccountingCapabilityAssignmentsInputSchema,
 } from "./schemas";
-import { resolveAccountingCapability } from "./permissions";
+import { canAccessAccountingArBridge, resolveAccountingCapability } from "./permissions";
 import type {
   AccountingAccountVersion,
   AccountingCapabilityAssignment,
@@ -634,12 +634,12 @@ export async function getAccountingArBridgeReconciliation(
     resolveAccountingCapability(actor.id, "accounting:view"),
     resolveAccountingCapability(actor.id, "accounting:manage_ar_bridge"),
   ]);
-  if (!canView && !canManage) throw new ForbiddenError("Accounting capability required");
+  if (!canAccessAccountingArBridge(canView, canManage)) throw new ForbiddenError("Accounting capability required");
   const parsedInput = accountingArBridgeReconciliationInputSchema.safeParse(input);
   if (!parsedInput.success) throw new AuthDependencyError("Accounting AR reconciliation request was invalid");
   let result;
   try {
-    result = await createAdminClient().rpc("get_accounting_ar_bridge_reconciliation", {
+    result = await createAdminClient().rpc("get_accounting_ar_bridge_reconciliation_with_evidence", {
       p_actor_user_id: actor.id,
       p_as_of_date: parsedInput.data.as_of_date,
       p_recorded_at_cutoff: parsedInput.data.recorded_at_cutoff,

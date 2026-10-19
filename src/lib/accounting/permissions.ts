@@ -4,6 +4,11 @@ import { AuthDependencyError } from "@/lib/auth/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { AccountingCapability } from "./types";
 
+
+export function canAccessAccountingArBridge(canView: boolean, canManageArBridge: boolean): boolean {
+  return canView || canManageArBridge;
+}
+
 /** Resolves only explicit, persisted accounting authority for a trusted app user. */
 export async function resolveAccountingCapability(
   actorUserId: string,

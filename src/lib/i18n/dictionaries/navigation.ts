@@ -38,6 +38,7 @@ export interface NavigationDictionary {
     supplierAdvances: string;
     journalOperations: string;
     bankReconciliation: string;
+    accountsReceivableBridge: string;
     periodClose: string;
   };
   sections: {
@@ -92,6 +93,7 @@ export const navigationDictionaryEn: NavigationDictionary = {
     accounting: "Accounting",
     journalOperations: "Journal Operations",
     bankReconciliation: "Bank Reconciliation",
+    accountsReceivableBridge: "AR Accounting Bridge",
     periodClose: "Period Close / Lock / Reopen",
   },
   sections: {
@@ -146,6 +148,7 @@ export const navigationDictionaryAr: NavigationDictionary = {
     accounting: "المحاسبة",
     journalOperations: "عمليات القيود",
     bankReconciliation: "تسوية البنك",
+    accountsReceivableBridge: "جسر محاسبة الذمم المدينة",
     periodClose: "إقفال / قفل / إعادة فتح الفترة",
   },
   sections: {

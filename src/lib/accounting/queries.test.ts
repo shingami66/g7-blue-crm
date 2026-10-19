@@ -4,19 +4,22 @@ import test, { mock } from "node:test";
 
 type ResolveResult = { url: string; shortCircuit?: true };
 type ResolveContext = { parentURL?: string };
+type TargetQuery = {
+  table: string;
+  columns: string | null;
+  filters: Array<{ method: "eq" | "neq" | "in" | "lte"; column: string; value: unknown }>;
+  orders: Array<{ column: string; ascending: boolean; nullsFirst?: boolean }>;
+  limit: number | null;
+};
 type QueryState = {
   rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { code?: string } | null }>;
   calls: Array<{ name: string; args: Record<string, unknown> }>;
   permission: string | null;
   usersManage: boolean;
   targetRows: unknown;
-  targetQuery: {
-    table: string;
-    columns: string | null;
-    filters: Array<{ method: "eq" | "neq"; column: string; value: unknown }>;
-    orders: Array<{ column: string; ascending: boolean; nullsFirst?: boolean }>;
-    limit: number | null;
-  } | null;
+  targetRowsByTable: Record<string, unknown>;
+  targetQuery: TargetQuery | null;
+  targetQueries: TargetQuery[];
 };
 
 const require = createRequire(import.meta.url);
@@ -48,7 +51,9 @@ let state: QueryState = {
   permission: null,
   usersManage: true,
   targetRows: [],
+  targetRowsByTable: {},
   targetQuery: null,
+  targetQueries: [],
 };
 
 mock.module("@/lib/auth/permissions", {
@@ -73,33 +78,50 @@ mock.module("@/lib/supabase/admin", {
         return state.rpc(name, args);
       },
       from: (table: string) => {
-        state.targetQuery = {
+        const queryState: TargetQuery = {
           table,
           columns: null,
           filters: [],
           orders: [],
           limit: null,
         };
+        state.targetQuery = queryState;
+        state.targetQueries.push(queryState);
+        const rows = () => Object.prototype.hasOwnProperty.call(state.targetRowsByTable, table)
+          ? state.targetRowsByTable[table]
+          : state.targetRows;
         const query = {
           select(columns: string) {
-            state.targetQuery!.columns = columns;
+            queryState.columns = columns;
             return query;
           },
           eq(column: string, value: unknown) {
-            state.targetQuery!.filters.push({ method: "eq", column, value });
+            queryState.filters.push({ method: "eq", column, value });
             return query;
           },
           neq(column: string, value: unknown) {
-            state.targetQuery!.filters.push({ method: "neq", column, value });
+            queryState.filters.push({ method: "neq", column, value });
+            return query;
+          },
+          in(column: string, value: unknown) {
+            queryState.filters.push({ method: "in", column, value });
+            return query;
+          },
+          lte(column: string, value: unknown) {
+            queryState.filters.push({ method: "lte", column, value });
             return query;
           },
           order(column: string, options: { ascending: boolean; nullsFirst?: boolean }) {
-            state.targetQuery!.orders.push({ column, ...options });
+            queryState.orders.push({ column, ...options });
             return query;
           },
           async limit(value: number) {
-            state.targetQuery!.limit = value;
-            return { data: state.targetRows, error: null };
+            queryState.limit = value;
+            return { data: rows(), error: null };
+          },
+          async maybeSingle() {
+            const data = rows();
+            return { data: Array.isArray(data) ? data[0] ?? null : data, error: null };
           },
         };
         return query;
@@ -108,12 +130,28 @@ mock.module("@/lib/supabase/admin", {
   },
 });
 
-const { getAccountingProfile, getAccountingSetupStatus, listAccountingSetupTargets, listAccountingAccounts, listAccountingCapabilityAssignments, listAccountingPeriods, listAccountingPostingRules, getAccountingJournal, getAccountingGeneralLedger, getAccountingTrialBalance, getAccountingRevenueReconciliation, getAccountingW10HReport, listAccountingBankBindings, getAccountingBankReconciliationHistory } = await import("./queries.ts");
+const {
+  getAccountingProfile,
+  getAccountingSetupStatus,
+  listAccountingSetupTargets,
+  listAccountingAccounts,
+  listAccountingCapabilityAssignments,
+  listAccountingPeriods,
+  listAccountingPostingRules,
+  getAccountingJournal,
+  getAccountingGeneralLedger,
+  getAccountingTrialBalance,
+  getAccountingRevenueReconciliation,
+  getAccountingW10HReport,
+  listAccountingBankBindings,
+  getAccountingBankReconciliationHistory,
+  getAccountingArBridgeReconciliation,
+} = await import("./queries.ts");
 const { AuthDependencyError } = await import("../auth/errors.ts");
 const actorId = "8cefe8c1-7914-4b3b-915d-24d6fcdfc76f";
 
 function resetState(rpc: QueryState["rpc"]) {
-  state = { rpc, calls: [], permission: null, usersManage: true, targetRows: [], targetQuery: null };
+  state = { rpc, calls: [], permission: null, usersManage: true, targetRows: [], targetRowsByTable: {}, targetQuery: null, targetQueries: [] };
 }
 
 test("AAR-D1 setup status uses the trusted actor and validates the discriminated response", async () => {
@@ -686,4 +724,145 @@ test("W10G-R1 history reads preserve exact halalah strings and reject unsafe num
     binding_id: bindingId, as_of_date: "2026-10-15", recorded_at_cutoff: cutoff, limit: 50,
   }), (error: unknown) => error instanceof AuthDependencyError
     && error.message === "Accounting bank reconciliation history response was invalid");
+});
+
+
+test("AR bridge reconciliation uses the governed evidence RPC and preserves cutoff-bound version evidence", async () => {
+  const cutoff = "2026-10-15T10:00:00Z";
+  const eventId = "00000000-0000-4000-8000-00000000c002";
+  const sourceRecordId = "00000000-0000-4000-8000-00000000c003";
+  const journalId = "00000000-0000-4000-8000-00000000c004";
+  const capturedAt = "2026-10-15T09:59:00Z";
+  const event = {
+    source_type: "INVOICE",
+    source_record_id: sourceRecordId,
+    source_record_key: "synthetic-invoice-1",
+    economic_event_key: "synthetic-invoice-issue-1",
+    reconciliation_status: "PREPARED",
+    event_id: eventId,
+    event_version: 3,
+    classification: "UNCONDITIONAL_CONTRACT_LIABILITY",
+    customer_id: "00000000-0000-4000-8000-00000000c006",
+    service_id: null,
+    invoice_id: null,
+    amount_halalah: "9007199254740993",
+    source_business_date: "2026-10-14",
+    source_recorded_at: "2026-10-14T12:00:00Z",
+    accounting_date: "2026-10-15",
+    posted_accounting_date: null,
+    posted_at: null,
+    journal_id: journalId,
+    held_code: null,
+    expected_ar_delta_halalah: "9007199254740993",
+    posted_ar_delta_halalah: "0",
+    source_snapshot_sha256: "c".repeat(64),
+    classification_reason: "Current classification evidence",
+    classification_evidence_ref: "synthetic/current-evidence",
+    classification_evidence_sha256: "d".repeat(64),
+    classified_by: actorId,
+    classified_at: capturedAt,
+    prepared_journal_version: 4,
+  };
+  const reconciliation = {
+    state: "READY",
+    as_of_date: "2026-10-15",
+    recorded_at_cutoff: cutoff,
+    source_event_count: 1,
+    posted_effect_count: 0,
+    held_unresolved_count: 0,
+    inception_covered_count: 0,
+    missing_effect_count: 0,
+    duplicate_conflict_count: 0,
+    party_difference_count: 0,
+    timing_difference_count: 0,
+    truncated: false,
+    events: [event],
+    party_balances: [],
+  };
+
+  resetState(async (name, args) => {
+    if (name === "get_accounting_capability") {
+      return { data: args.p_capability === "accounting:manage_ar_bridge", error: null };
+    }
+    if (name === "get_accounting_ar_bridge_reconciliation_with_evidence") {
+      return { data: reconciliation, error: null };
+    }
+    return { data: null, error: null };
+  });
+
+  const input = {
+    as_of_date: "2026-10-15",
+    recorded_at_cutoff: cutoff,
+    limit: 20,
+  };
+  const result = await getAccountingArBridgeReconciliation(input);
+
+  assert.equal(result.state, "READY");
+  assert.equal(result.events[0]?.event_version, 3);
+  assert.equal(result.events[0]?.classification_reason, "Current classification evidence");
+  assert.equal(result.events[0]?.classification_evidence_ref, "synthetic/current-evidence");
+  assert.equal(result.events[0]?.classification_evidence_sha256, "d".repeat(64));
+  assert.equal(result.events[0]?.classified_by, actorId);
+  assert.equal(result.events[0]?.classified_at, capturedAt);
+  assert.equal(result.events[0]?.journal_id, journalId);
+  assert.equal(result.events[0]?.prepared_journal_version, 4);
+  assert.equal(result.events[0]?.amount_halalah, "9007199254740993");
+  assert.deepEqual(state.calls.filter(({ name }) => name === "get_accounting_capability").map(({ args }) => args.p_capability), [
+    "accounting:view",
+    "accounting:manage_ar_bridge",
+  ]);
+  assert.deepEqual(state.calls.at(-1), {
+    name: "get_accounting_ar_bridge_reconciliation_with_evidence",
+    args: {
+      p_actor_user_id: actorId,
+      p_as_of_date: input.as_of_date,
+      p_recorded_at_cutoff: input.recorded_at_cutoff,
+      p_limit: input.limit,
+    },
+  });
+  assert.deepEqual(state.targetQueries, []);
+
+  const postedReconciliation = {
+    ...reconciliation,
+    events: [{
+      ...event,
+      reconciliation_status: "POSTED",
+      posted_accounting_date: "2026-10-15",
+      posted_at: cutoff,
+    }],
+  };
+  resetState(async (name, args) => {
+    if (name === "get_accounting_capability") {
+      return { data: args.p_capability === "accounting:manage_ar_bridge", error: null };
+    }
+    if (name === "get_accounting_ar_bridge_reconciliation_with_evidence") {
+      return { data: postedReconciliation, error: null };
+    }
+    return { data: null, error: null };
+  });
+  const postedResult = await getAccountingArBridgeReconciliation(input);
+  assert.equal(postedResult.state, "READY");
+  assert.equal(postedResult.events[0]?.reconciliation_status, "POSTED");
+  assert.equal(postedResult.events[0]?.journal_id, journalId);
+  assert.equal(postedResult.events[0]?.prepared_journal_version, 4);
+  assert.deepEqual(state.targetQueries, []);
+
+  resetState(async (name) => {
+    if (name === "get_accounting_capability") return { data: true, error: null };
+    if (name === "get_accounting_ar_bridge_reconciliation_with_evidence") {
+      return {
+        data: {
+          ...reconciliation,
+          events: [{ ...event, classification_evidence_sha256: "not-a-sha256" }],
+        },
+        error: null,
+      };
+    }
+    return { data: null, error: null };
+  });
+  await assert.rejects(
+    getAccountingArBridgeReconciliation(input),
+    (error: unknown) => error instanceof AuthDependencyError,
+  );
+  assert.deepEqual(state.targetQueries, []);
 });

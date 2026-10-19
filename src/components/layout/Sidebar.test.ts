@@ -124,6 +124,7 @@ const TestLocaleProvider = LocaleProvider as React.ComponentType<{ locale: "en" 
 function renderSidebar(props: {
   isAdmin?: boolean;
   canViewAccounting?: boolean;
+  canManageArBridge?: boolean;
   canReconcileBank?: boolean;
   canAccessAccountingSetup?: boolean;
   shellDirection?: "ltr" | "rtl";
@@ -238,6 +239,27 @@ test("AAR-D7 navigation exposes bank reconciliation to reconcile-only users and 
 
   const arabicRtl = renderSidebar({ canReconcileBank: true, currentPathname: "/accounting/bank-reconciliation", locale: "ar", shellDirection: "rtl" });
   assert.ok(arabicRtl.includes("تسوية البنك"));
+});
+
+test("AR bridge navigation is available to scoped managers without exposing other accounting operations", () => {
+  const managerOnly = renderSidebar({ canManageArBridge: true, currentPathname: "/accounting/ar-bridge" });
+  assert.ok(managerOnly.includes('href="/accounting/ar-bridge"'));
+  assert.ok(managerOnly.includes(navigationDictionaryEn.modules.accountsReceivableBridge));
+  assert.ok(!managerOnly.includes('href="/accounting/journals"'));
+  assert.ok(!managerOnly.includes('href="/accounting/bank-reconciliation"'));
+  assert.ok(!managerOnly.includes('href="/accounting/period-close"'));
+
+  const denied = renderSidebar({ currentPathname: "/accounting/ar-bridge" });
+  assert.ok(!denied.includes('href="/accounting/ar-bridge"'));
+
+  const arabicRtl = renderSidebar({
+    canManageArBridge: true,
+    currentPathname: "/accounting/ar-bridge",
+    locale: "ar",
+    shellDirection: "rtl",
+  });
+  assert.ok(arabicRtl.includes(navigationDictionaryAr.modules.accountsReceivableBridge));
+  assert.ok(arabicRtl.includes('dir="rtl"'));
 });
 
 test("1. Dashboard remains standalone and the Reports section follows report-route state", () => {

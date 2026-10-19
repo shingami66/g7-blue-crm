@@ -12700,6 +12700,15 @@ export type Database = {
         }
         Returns: Json
       }
+      get_accounting_ar_bridge_reconciliation_with_evidence: {
+        Args: {
+          p_actor_user_id: string
+          p_as_of_date: string
+          p_limit?: number
+          p_recorded_at_cutoff: string
+        }
+        Returns: Json
+      }
       get_accounting_bank_reconciliation: {
         Args: {
           p_actor_user_id: string

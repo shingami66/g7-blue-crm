@@ -129,6 +129,7 @@ export default function Sidebar({
   canReadSupplierPayments = false,
   canReadSupplierAdvances = false,
   canViewAccounting = false,
+  canManageArBridge = false,
   canReconcileBank = false,
   canAccessAccountingSetup = false,
   authorizedReports = [],
@@ -141,6 +142,7 @@ export default function Sidebar({
   canReadSupplierPayments?: boolean;
   canReadSupplierAdvances?: boolean;
   canViewAccounting?: boolean;
+  canManageArBridge?: boolean;
   canReconcileBank?: boolean;
   canAccessAccountingSetup?: boolean;
   authorizedReports?: readonly ReportNavigationItem[];
@@ -222,7 +224,7 @@ export default function Sidebar({
         },
       ],
     },
-    ...(canViewAccounting || canReconcileBank ? [{
+    ...(canViewAccounting || canReconcileBank || canManageArBridge ? [{
       key: "accountingOperations" as const,
       title: dictionary.sections.accountingOperations,
       icon: BookOpen,
@@ -233,12 +235,18 @@ export default function Sidebar({
           href: "/accounting/journals",
           icon: Calculator,
         }] : []),
-        {
+        ...(canViewAccounting || canManageArBridge ? [{
+          key: "accounts-receivable-bridge",
+          label: dictionary.modules.accountsReceivableBridge,
+          href: "/accounting/ar-bridge",
+          icon: Receipt,
+        }] : []),
+        ...(canViewAccounting || canReconcileBank ? [{
           key: "bank-reconciliation",
           label: dictionary.modules.bankReconciliation,
           href: "/accounting/bank-reconciliation",
           icon: CreditCard,
-        },
+        }] : []),
         ...(canViewAccounting ? [{
           key: "period-close",
           label: dictionary.modules.periodClose,

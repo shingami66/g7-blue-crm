@@ -1097,6 +1097,12 @@ export type AccountingArBridgeReconciliationEvent = {
   expected_ar_delta_halalah: string;
   posted_ar_delta_halalah: string;
   source_snapshot_sha256: string | null;
+  classification_reason: string | null;
+  classification_evidence_ref: string | null;
+  classification_evidence_sha256: string | null;
+  classified_by: string | null;
+  classified_at: string | null;
+  prepared_journal_version: number | null;
 };
 
 export type AccountingArBridgePartyBalance = {

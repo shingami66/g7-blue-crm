@@ -1241,6 +1241,12 @@ const accountingArBridgeReconciliationEventSchema = z.object({
   expected_ar_delta_halalah: z.string().regex(/^(0|-?[1-9][0-9]*)$/),
   posted_ar_delta_halalah: z.string().regex(/^(0|-?[1-9][0-9]*)$/),
   source_snapshot_sha256: z.string().regex(/^[0-9a-f]{64}$/).nullable(),
+  classification_reason: boundedText(2000).nullable().default(null),
+  classification_evidence_ref: nullableEvidence.default(null),
+  classification_evidence_sha256: z.string().regex(/^[0-9a-f]{64}$/).nullable().default(null),
+  classified_by: z.string().uuid().nullable().default(null),
+  classified_at: z.string().nullable().default(null),
+  prepared_journal_version: z.number().int().positive().nullable().default(null),
 }).strict();
 export const accountingArBridgeReconciliationSchema = z.discriminatedUnion("state", [
   z.object({ state: z.literal("NOT_INITIALIZED") }).strict(),
