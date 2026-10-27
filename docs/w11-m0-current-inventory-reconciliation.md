@@ -1,8 +1,8 @@
 # W11 M0 — Current DEV Inventory and Residual Reconciliation
 
-**Evidence date:** 27 October 2026 (targeted M0-03 supplement; full inventory cutoff remains 26 October 2026).
+**Evidence date:** 27 October 2026 (targeted M0-02 provenance and M0-03 disposition supplements; full inventory cutoff remains 26 October 2026).
 
-**TASK VERDICT: PASS** for the bounded read-only inventory, subject to final independent review and publication.
+**TASK VERDICT: PASS** for the bounded read-only M0-02 provenance review. M0-02 provenance and historical financial impact remain UNKNOWN; Owner disposition is pending.
 
 **W11 READINESS: NO-GO.** Evidence collection is not remediation or later-phase authority.
 
@@ -148,6 +148,18 @@ The [12 October record](w11-m0-lifecycle-integrity-repair.md) is unchanged. **Al
 ### B — Approved quotations without ABS
 
 Two, nested within A: `30d1f7a6-09a9-4e44-9a0a-f6c15eca5b8f` and `82dc2e82-19fa-478a-b9a3-6ea6da4a6168`; **1000.00 each / 2000.00 total**. Zero quotation audits/current invoices/payments/credits. Both created/updated August 17. Current migration presence does not prove pre-ABS provenance. Cause UNKNOWN; no history inferred.
+#### 27 October 2026 M0-02 provenance supplement
+
+The repository review baseline was `690c88278ad62f5adda72ce482bb848736c10c36`. The corrected exact-target, SELECT-only DEV query observed project `dpddrqjzqohexixgdqiq` at `2026-10-27 06:07:57.339640+00`, snapshot `14636:14636:`; see [the reproducible query](../supabase/verification/w11m0_02_abs_provenance_review.sql). It supplements the 26 October inventory and does not move its cutoff.
+
+- Service `3082b962-009c-4e4f-b5c4-ec2adcb27027` was created at `10:09:59.196870Z`; Service `dc395544-9d24-4869-b6c7-ac020dea959f` at `10:10:32.245666Z`. Both are currently Approved and soft-deleted at `2026-08-17 10:13:40.350000Z`.
+- Their linked quotations `30d1f7a6-09a9-4e44-9a0a-f6c15eca5b8f` and `82dc2e82-19fa-478a-b9a3-6ea6da4a6168` are currently approved, not deleted or superseded, each with SAR 1,000.00 commercial total. Each was created and last updated within milliseconds of its Service creation. The `quotations` table has no `approved_at` column, so these timestamps do not establish when approval occurred.
+- No approved billing scope row matched either target Service or quotation in any status; no service/quotation pair mismatch was present. No audit rows were found for the exact Service or quotation IDs. The two linked Customer rows are soft-deleted, and the Service/quotation customer associations match; the query returns no Customer identifiers or names. Invoice matching explicitly checks the Service ID, direct `approved_quotation_id`, and matching ABS ID; the combined current invoice count and linked payment, credit-adjustment, credit-application, AR bridge event, and AR bridge journal-link counts are zero. All checked direct accounting source/effect, journal, inception, revenue-recognition and AR/AP/expense bridge references for the exact IDs are zero. These are current-state observations, not historical replay.
+- Repository history ties no fixture or script to the exact IDs. Commit `4016cf71ed24d1230a7a1f4303dd249edf9a35c9` (4 August 2026) changed supported quotation approval to call `approve_quotation_and_activate_internal_abs`; DEV has `20260803090000 / quotation_approval_internal_abs_activation` and `20260803100000 / quotation_approval_service_status_transition_fix`. A prior direct quotation-approval path existed before that change, but neither the exact approval time nor the application build deployed on 17 August is established. The prior path therefore does not explain these records.
+- Reviewed lifecycle code allows deletion of draft scopes only; voiding and supersession retain scope history. No supported application hard-delete path for approved scopes was found. This does not establish what occurred for these exact records.
+- **Cause classification: UNKNOWN. Financial impact: UNKNOWN.** SAR 2,000.00 is the two quotation totals, a commercial amount only; no invoice amount, receivable, revenue, loss, or historical financial effect is established. No current downstream financial/accounting link was found.
+- **Recommended disposition: OWNER DECISION REQUIRED (pending; not approved).** Accountable decision owner is Mozfer (Owner/Controller). No calendar deadline was set; record the decision before M0 exit or any applicable W11 phase gate. Change the classification only with exact historical approval/deployment evidence or original source/financial records that establish provenance and downstream impact. Do not reconstruct ABS or invoice rows, write off value, waive the exception, or treat current zero links as proof of zero historical impact.
+
 
 ### C — Invoice audit references without source invoices
 
@@ -241,7 +253,7 @@ Historical operator/cause and any separate historical record owner remain UNKNOW
 | Key | Domain/count | Exposure | Invariant/evidence | Cause state | Downstream/W11 significance | Proposed disposition |
 |---|---|---|---|---|---|---|
 | M0-01 | 17 deleted Services/current approved quotations | 14900.00 commercial; 12900.00 ABS subset | Retained commercial authority conflicts with current deletion guard; A | UNKNOWN | Historical integrity unexplained; current invoice/cash/credit links zero | BLOCKS APPLICABLE W11 PHASE |
-| M0-02 | 2 approved quotations missing ABS/audit, subset of M0-01 | 2000.00 commercial | Approval→ABS lineage absent; B | UNKNOWN | Not proven pre-ABS; no current financial downstream | BLOCKS APPLICABLE W11 PHASE |
+| M0-02 | 2 approved quotations missing ABS/audit, subset of M0-01 | 2000.00 commercial | Exact-ID DEV/source review; approval time and deployed path unproven; B | UNKNOWN | Historical financial impact UNKNOWN; no current invoice/payment/credit/AR link found | OWNER DECISION REQUIRED (pending; no reconstruction) |
 | M0-03 | 14 create-audit invoice references without source | UNKNOWN historical amount | 27 current source-reference paths return zero; current/historical source review found no fixture tie or supported app hard-delete path; service_role DELETE is capability only; C | UNKNOWN | No proven downstream financial/accounting effect; linked CRM context remains; cause and financial impact unproven | MONITOR / PRESERVE EVIDENCE |
 | M0-04 | 9 deleted Customers without timestamp | Not a monetary amount; 19 Services/17 quotes overlap A | Deletion chronology; D | UNKNOWN | Zero current invoice/payment/credit links | REMEDIATION CANDIDATE |
 | M0-05 | Invoice privileged DELETE/TRUNCATE | No amount attributable to use | ACL/trigger/source inspection | PARTIALLY EXPLAINED | Current capability verified; historical use unknown; no supported app hard-delete path found | MONITOR |
@@ -252,13 +264,13 @@ No new material business-data exception was proven beyond the refreshed cohorts.
 
 ## 9. W11 implications and exactly one next action
 
-Current bounded M0 inventory is complete. Mozfer's 27 October M0-03 disposition is recorded and closes only that Owner-decision sub-gate; other residual-exception dispositions/acceptance remain incomplete. R01–R04 remain bounded Owner-accepted, R05–R08 deferred. No further accounting slice is justified. Do not repeat bootstrap; DEV_PROVISIONAL configuration exists, without accepted inception or professional approval. VAT not registered/rate 0.00, ZATCA/FATOORA inactive; professional validation remains required before applicable live/production/statutory/external/regulatory/irreversible use.
+Current bounded M0 inventory and the targeted M0-02 provenance review are complete. M0-02 provenance/cause and historical financial impact remain UNKNOWN; Owner/Controller disposition is pending. Mozfer's 27 October M0-03 disposition is recorded and closes only that Owner-decision sub-gate. Other residual-exception dispositions/acceptance remain incomplete. R01–R04 remain bounded Owner-accepted, R05–R08 deferred. No further accounting slice is justified. Do not repeat bootstrap; DEV_PROVISIONAL configuration exists without accepted inception or professional approval. VAT not registered/rate 0.00, ZATCA/FATOORA inactive; professional validation remains required before applicable live/production/statutory/external/regulatory/irreversible use.
 
-W11 stays **NO-GO**. M0-03 is a preserved UNKNOWN exception with an approved monitor disposition; M0-01, M0-02, M0-04 and other applicable evidence/authority gates remain unresolved. Recovery/restore, shadow reconciliation, remaining Owner acceptance, later-phase support/monitoring, and professional/environment gates remain separately pending. DEMO/PROD are uninspected.
+W11 stays **NO-GO**. M0-02 provenance/cause and historical financial impact remain UNKNOWN; its recommended disposition is OWNER DECISION REQUIRED pending Mozfer's decision. No current financial downstream was found, but that does not establish historical impact. M0-03 remains a preserved UNKNOWN exception with an approved MONITOR / PRESERVE EVIDENCE disposition; M0-01, M0-04 and other applicable evidence/authority gates remain unresolved. Recovery/restore, shadow reconciliation, remaining Owner acceptance, later-phase support/monitoring, and professional/environment gates remain separately pending. DEMO/PROD are uninspected.
 
-**EXACT NEXT ACTION:** Owner/Controller reviews and records disposition for M0-02's two approved quotations missing ABS/audit (`2000.00` commercial amount, a subset of M0-01). Keep cause UNKNOWN unless exact historical evidence establishes whether approval predated ABS. This is the next selected action only; it was not executed here. Do not create/reconstruct ABS or invoice rows or infer a financial/accounting effect. M0-03 remains MONITOR / PRESERVE EVIDENCE and reopens only on materially new evidence of provenance, financial impact, or a current integrity/security consequence.
+**EXACT NEXT ACTION:** Mozfer (Owner/Controller) records one evidence-based disposition for M0-02 before M0 exit or any applicable W11 phase gate; no calendar deadline is set. Keep provenance/cause and historical financial impact UNKNOWN unless exact source, approval-time, deployment, or financial records establish otherwise. The SAR 2,000.00 is quotation commercial value only. Do not reconstruct ABS/invoice rows or infer a financial/accounting loss. M0-03 remains MONITOR / PRESERVE EVIDENCE; reopen only on materially new evidence.
 
-M0-02 is the smallest unresolved source-lineage cohort in the residual ledger (two quotation references) and is selected for the next bounded Owner/Controller disposition review; this task did not execute it. M0-03's monitor disposition is not an invoice waiver or financial write-off and does not clear M0-01, M0-02, other M0 exceptions, or later readiness gates.
+The bounded M0-02 evidence review is complete; its disposition remains pending Owner/Controller decision. Reclassification would require exact historical approval/deployment or source-financial evidence. No ABS/invoice reconstruction, cleanup, write-off, or waiver is approved.
 
 ## 10. Validation and evidence limitations
 
