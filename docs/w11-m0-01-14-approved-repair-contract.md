@@ -91,14 +91,18 @@ Use the prior dry-run relation graph as the minimum complete current-repository 
 
 | Area | Relations and matching rule |
 |---|---|
-| Billing and cash | `invoices` by Service ID, quotation ID, or any ABS ID for the Service/quotation, including soft-deleted invoices; `payments` through every matched invoice; `customer_receipt_allocations` through matched invoices. |
-| Credits and refunds | `customer_internal_credit_adjustments` by Service, matched invoice, or ABS; `customer_credit_applications` by target invoice or matched source adjustment; `customer_refunds` by Service or matched source adjustment; `customer_internal_credit_adjustment_reversals` by matched adjustment. |
-| Commitments and operations | `approved_commitments`, `approved_commitment_balances`, `service_receipts`, `service_supplier_allocations` by Service or quotation, `supplier_bookings`, and `expenses` by Service. |
-| AR bridge and journals | `accounting_ar_bridge_event_versions`, `accounting_ar_bridge_events` by matched source IDs, `accounting_ar_bridge_journal_lines`, `accounting_ar_bridge_journal_links`, `accounting_journal_versions`, and `accounting_journal_events` through matching AR journal links. |
-| AP and expense bridges | `accounting_ap_bridge_event_versions`, `accounting_ap_bridge_journal_lines`, `accounting_ap_bridge_journal_links` by Service/receipt; `accounting_expense_bridge_event_versions`, `accounting_expense_bridge_journal_lines`, and `accounting_expense_bridge_journal_links` by Service/expense; linked journal versions/events through those links. |
-| Revenue and foundation | `accounting_revenue_arrangements` by Service or ABS; `accounting_revenue_recognition_events`, `accounting_revenue_recognition_journal_lines`, and `accounting_revenue_recognition_journal_links`; `accounting_journal_line_versions`; and `accounting_foundation_events` by Service, quotation, or ABS. |
+| Billing and cash | `invoices` by Service, quotation, or any ABS ID, including soft-deleted invoices; `invoice_items` and `invoice_draft_update_mutations` through matched invoices; `payments`, `customer_receipt_allocations`, and `customer_receipt_reversals` through matched invoices/payments; derived `customer_invoice_receivable_balances`, `customer_invoice_settlement_balances`, and `customer_receipt_balances`. |
+| Credits and refunds | `customer_internal_credit_adjustments` by Service, matched invoice, or either `source_approved_billing_scope_id` or `successor_approved_billing_scope_id`; derived `customer_credit_adjustment_balances` through the same identities; `customer_credit_applications` by target invoice or matched source adjustment; application reversals; `customer_refunds` by Service or matched source adjustment; refund reversals; and adjustment reversals. |
+| Commitments and receipts | `approved_commitments` by Service or matched supplier quotation; `approved_commitment_balances`, amendments, and documents; `service_receipts` and their corrections/documents; `service_supplier_allocations` by Service/quotation; and `supplier_bookings`. |
+| Service operations and procurement | `service_tasks`, `event_milestones`, `business_document_links`, `projects` and their tasks by quotation, `service_procurement_requirements`, `service_procurement_packages`, package requirements, candidates and candidate documents; `supplier_quotations`, quotation lines/requirements/documents; and Service-linked employee cash advances, event-cost budgets, forecasts, close versions, and close reopenings. |
+| Expense and supplier payables | `expenses` and their evidence documents, evidence exceptions, reimbursement settlements, petty-cash transactions, cash-advance settlements, and derived accountability summaries; `supplier_advances` and derived balances/commitment balances, allocation/authorization/release records, advance payments/refunds and their documents/reversals; `supplier_bills`, derived bill-payment balances, bill documents, `supplier_payments`, and payment documents/reversals. |
+| AR bridge and journals | `accounting_ar_bridge_event_versions`, `accounting_ar_bridge_events` by matched polymorphic source IDs, `accounting_ar_bridge_journal_lines`, and `accounting_ar_bridge_journal_links`; also match journal IDs through `accounting_journals`, versions/events, source effects, and inception journal links. |
+| AP and expense bridges | AP event versions/events and journal lines/links by Service, receipt, supplier bill, supplier advance, and matching source-record IDs; expense event versions/events and journal lines/links by Service, expense, employee advance, and matching source-record IDs; follow their linked journals through the journal relations above. |
+| Revenue and foundation | `accounting_revenue_arrangements` by Service or ABS; `accounting_revenue_recognition_events`, journal lines, and journal links; `accounting_journal_line_versions`; and `accounting_foundation_events` by Service, quotation, or ABS. |
 
-Also follow every FK/source-reference path present in the reviewed schema at implementation time. If a newly added current repository table can carry one of these relationships and is absent from this inventory, update and independently review the contract before execution. Historical `audit_logs` rows are preserved and are not treated as financial links; no raw audit payload is used to infer a cause or amount.
+The target `service_lifecycle_states`, quotation rows/items, ABS headers/items/snapshots, and historical `audit_logs` are preservation evidence, not disallowed downstream links. Their pinned state/content is separately checked and they are never mutated; audit history is not used to infer cause or amount.
+
+The 27 October 2026 implementation-time DEV catalog review confirmed the additional direct Service/quotation/ABS references and FK descendants listed above, including successor-ABS credit pointers, project/procurement/document/cost records, invoice/receipt/expense children, supplier advances/bills/payments, and all three polymorphic accounting bridge source paths. The migration guard and read-only downstream preflight enumerate these paths explicitly. Historical `audit_logs` rows remain preserved.
 
 ## 6. Atomicity, locking, and mutation order
 
@@ -180,4 +184,24 @@ The existing ordinary void RPC cannot serve this cohort because its Service life
 
 **Contract outcome:** `READY FOR OWNER EXECUTION AUTHORIZATION`, contingent on a separate implementation/migration review, a fresh read-only execution preflight, and explicit DEV-only migration/RPC authorization. **No implementation, migration, RPC invocation, or database/environment mutation is authorized by this design.** M0-01 remains `BLOCKS APPLICABLE W11 PHASE`; W11 remains `NO-GO`.
 
-**Exact next action:** Mozfer to issue a separate bounded authorization for implementation and reviewed DEV execution of this contract, or keep the cohort unchanged. Do not begin the repair automatically.
+**Exact next action at contract approval:** Mozfer to issue a separate bounded authorization for implementation and reviewed DEV execution of this contract, or keep the cohort unchanged. This pre-execution action is superseded by the execution record below.
+
+## 13. DEV execution result — 27 October 2026
+
+Mozfer's bounded Owner authorization was executed against DEV project `dpddrqjzqohexixgdqiq` only. The pre-apply repository baseline was branch `main` at `00de96012b78f0d1de4a0207352a13d9ac3a2e1b`, matching `origin/main` and live remote `main`; the worktree was clean before task changes. Fresh preflight revalidated the exact 14 fixed Service/quotation/ABS triples, canonical approval evidence, exclusions, and zero disallowed downstream links.
+
+The repository-supported command applied the migration exactly once:
+
+```text
+pnpm dlx supabase@2.120.0 db push --project-ref dpddrqjzqohexixgdqiq --yes
+```
+
+Migration history was checked immediately and records the exact canonical identity `20261027102347 / w11_m0_01_14_approved_abs_retirement`; its local source SHA-256 is `3b7738fc9ad96c314142e3e392cc398df31ad8588e6c9c5f87deac98d8b7d1c8`. The governed RPC was then invoked exactly once and returned batch `W11-M0-01-14-APPROVED-ABS-RETIREMENT`, `retired_count=14`, `idempotent_replay=false`, recorded at `2026-10-27T11:16:00.308696+00`.
+
+Read-only postflight at `2026-10-27 11:18:18.279688+00` (snapshot `14646:14646:`) found 14/14 target ABS rows retained, 14 retired, zero active target authorities, 14 exact remediation audit events, 14 matching item snapshots, zero non-target batch events, and zero links across the 90 guarded downstream paths. Services, Customers, quotations, ABS items/snapshots, prior approval audit evidence, invoice/payment/credit/accounting facts, the Completed SAR 800.00 case, and both M0-02 cases remained unchanged. No other migration, fixture, bootstrap, grant, or environment was touched.
+
+The historical M0-03 invoice audit/source evidence remains unchanged: no invoice source rows or amounts were created, changed, or inferred. Its derived current-context counts changed from 14 to 0 for currently approved ABS scopes/source quotations because those 14 same target scopes were retired as authorized. The raw invoice audit references and historical source evidence were not modified; provenance and historical financial impact remain `UNKNOWN`.
+
+The 14-case current-authority inconsistency is repaired. M0-01 overall remains `BLOCKS APPLICABLE W11 PHASE` because the excluded soft-deleted Completed Service with active SAR 800.00 ABS remains on `HOLD — BUSINESS EVIDENCE REQUIRED`. Historical cause and financial impact remain `UNKNOWN`; the ABS totals remain commercial authority only. W11 remains `NO-GO`.
+
+**Current exact next action:** Mozfer to provide or decide the business evidence for the excluded Completed SAR 800.00 case before any M0-01/M0 exit or applicable W11 gate reassessment. Preserve that case unchanged while evidence is absent; no further M0-01 mutation is authorized by this completed task.

@@ -2,9 +2,9 @@
 
 **Evidence date:** 27 October 2026.
 
-**Task verdict: PASS — BOUNDED REPAIR CONTRACT DESIGNED.** Mozfer's Owner decision accepts the 14 soft-deleted `Approved` Services as the intended current state and directs governed ABS authority retirement under separate authorization. The 14-case contract is documented at [w11-m0-01-14-approved-repair-contract.md](w11-m0-01-14-approved-repair-contract.md) and is `READY FOR OWNER EXECUTION AUTHORIZATION`; this task authorizes no implementation or mutation. The single soft-deleted `Completed` Service remains unchanged on business-evidence hold.
+**Design-task verdict:** PASS — bounded repair contract designed. That original design task did not authorize execution; its outcome is preserved in sections 1–8. The subsequently authorized DEV execution is recorded in section 9.
 
-**W11 readiness: NO-GO.** M0-01 remains an applicable-phase blocker: the 14 `Approved` cases now have a bounded repair contract ready for separate Owner execution authorization, and the single Completed SAR 800.00 case remains on evidence hold. Historical cause and financial impact remain `UNKNOWN`.
+**Current W11 readiness: NO-GO.** The 14 Approved-Service ABS authorities were retired and verified under separate Owner authorization. M0-01 remains an applicable-phase blocker because the excluded Completed SAR 800.00 case remains on evidence hold. Historical cause and financial impact remain `UNKNOWN`.
 
 ## 1. Baseline and boundary
 
@@ -99,6 +99,18 @@ M0-01 remains `BLOCKS APPLICABLE W11 PHASE`; M0 exit is not satisfied and W11 re
 
 The implementation-ready contract is [W11 M0-01 — 14 Approved-Service ABS Retirement Contract](w11-m0-01-14-approved-repair-contract.md). It fixes the exact 14 Service/quotation/ABS triples, explicitly excludes the Completed SAR 800.00 case, selects a one-time service-role-only RPC with a narrow trigger exception, and defines transactional preconditions, row-lock order, downstream-link checks, audit evidence, replay, failure, and forward-repair behavior.
 
-The last documented DEV read-only observation remains the 27 October 2026 07:43:59.452867 UTC dry run. This contract task did not query DEV; any later implementation/execution must take a fresh preflight and recheck all conditions inside the transaction. The contract is `READY FOR OWNER EXECUTION AUTHORIZATION`, not an authorization to implement or execute. The Completed case, both M0-02 cases, and M0-03 remain outside the write set. Cause and historical financial impact remain `UNKNOWN`; W11 remains `NO-GO`.
+At the contract-design cutoff, the last documented DEV read-only observation was the 27 October 2026 07:43:59.452867 UTC dry run. That design task did not query DEV; its contract required a fresh preflight and in-transaction recheck before separately authorized execution. The Owner-authorized execution is recorded in section 9. The Completed case, both M0-02 cases, and M0-03 remained outside the write set. Cause and historical financial impact remain `UNKNOWN`; W11 remains `NO-GO`.
 
-**EXACT NEXT ACTION:** Mozfer to separately authorize one bounded implementation and reviewed DEV execution task for the contract; do not implement, apply, or invoke the repair automatically.
+**EXACT NEXT ACTION at contract approval:** Mozfer to separately authorize one bounded implementation and reviewed DEV execution task for the contract. This pre-execution action is superseded by the result below.
+
+## 9. Owner-authorized 14-case DEV execution — 27 October 2026
+
+The Owner-authorized implementation, review, DEV application, and one governed execution completed against DEV `dpddrqjzqohexixgdqiq`. The repository baseline was `main` / `origin/main` / live remote `main` at `00de96012b78f0d1de4a0207352a13d9ac3a2e1b`; pre-apply worktree was clean. The exact migration `20261027102347 / w11_m0_01_14_approved_abs_retirement` was applied once through the pinned Supabase CLI workflow, migration history was checked immediately, and its local source SHA-256 is `3b7738fc9ad96c314142e3e392cc398df31ad8588e6c9c5f87deac98d8b7d1c8`. The fixed-allowlist RPC returned exactly 14 retirements with `idempotent_replay=false`.
+
+Postflight confirmed all 14 ABS rows remain, all 14 are retired, none of the target authorities remains active, exactly 14 matching batch audit events exist, all 14 item digests match, and all 90 guarded downstream paths remain zero. The Completed SAR 800.00 case and both M0-02 cases remained excluded and unchanged. Services, Customers, quotations, prior approval audit evidence, invoice/payment/accounting facts, and other business/configuration data were not changed.
+
+M0-03's 14 retained invoice audit references and missing source rows were not changed and no amount was inferred. The derived current approved-scope/source-quotation context moved from 14 to 0 because it referenced the same 14 ABS authorities retired by this task. Historical M0-03 provenance and financial impact remain `UNKNOWN`.
+
+This closes only the 14-case current-authority repair. The Completed SAR 800.00 case remains `HOLD — BUSINESS EVIDENCE REQUIRED`; M0-01 remains an applicable W11 blocker, cause and historical financial impact remain `UNKNOWN`, and W11 remains `NO-GO`.
+
+**EXACT NEXT ACTION:** Mozfer to provide or decide the business evidence for the excluded Completed SAR 800.00 case before M0-01/M0 exit or applicable W11 gate reassessment. Keep it unchanged while evidence is absent; do not repeat the 14-case repair.
