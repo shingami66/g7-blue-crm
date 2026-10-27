@@ -180,6 +180,11 @@ Two, nested within A: `30d1f7a6-09a9-4e44-9a0a-f6c15eca5b8f` and `82dc2e82-19fa-
 | `eba1b438-80fb-4cea-bd2d-822568e25357` | 2026-08-17 10:14:25.91433+00 | 1 | create |
 | `f78093d2-db60-481e-893e-fa4de40c23b5` | 2026-08-17 10:13:10.993681+00 | 1 | create |
 
+
+#### Owner disposition — 27 October 2026
+
+Mozfer (Owner/Controller) approved **MONITOR / PRESERVE EVIDENCE** for M0-03. Preserve the existing audit and evidence unchanged: do not reconstruct invoices, delete or rewrite audit evidence, clean up records, or invent amounts. Provenance/cause and historical financial impact remain **UNKNOWN**; no downstream financial/accounting effect is proven, and no fixture/test claim is accepted without exact-ID evidence. Reopen only if materially new evidence establishes provenance, impact, or a current integrity/security consequence. This resolves the M0-03 Owner-decision sub-gate only; it does not waive another exception, establish M0 exit, or change W11 **NO-GO**.
+
 ### D — Deleted Customers missing deleted_at
 
 Nine remain, linked to 19 Services and 17 quotations, zero invoices/payments/credits. Relationships overlap A; do not add overlap as independent financial loss.
@@ -231,13 +236,13 @@ Generated types contain 141 table names and all eleven views. The only absent DE
 
 ## 8. Residual exception ledger
 
-Historical operator/cause and a separate exception owner are not evidenced. For disposition, the accountable decision owner/role is Owner/Controller (Mozfer); no calendar deadline was supplied. Review before M0 exit or before any applicable W11 phase that relies on invoice lineage. Dispositions below are recommendations and do not authorize execution.
+Historical operator/cause and any separate historical record owner remain UNKNOWN. **M0-03 decision owner:** Mozfer (Owner/Controller); disposition approved 27 October 2026, with no calendar deadline. Reopen this disposition only on materially new evidence of provenance, financial impact, or a current integrity/security consequence. Other exception owners/dispositions remain as shown below; this approval authorizes no reconstruction, cleanup, or other execution.
 
 | Key | Domain/count | Exposure | Invariant/evidence | Cause state | Downstream/W11 significance | Proposed disposition |
 |---|---|---|---|---|---|---|
 | M0-01 | 17 deleted Services/current approved quotations | 14900.00 commercial; 12900.00 ABS subset | Retained commercial authority conflicts with current deletion guard; A | UNKNOWN | Historical integrity unexplained; current invoice/cash/credit links zero | BLOCKS APPLICABLE W11 PHASE |
 | M0-02 | 2 approved quotations missing ABS/audit, subset of M0-01 | 2000.00 commercial | Approval→ABS lineage absent; B | UNKNOWN | Not proven pre-ABS; no current financial downstream | BLOCKS APPLICABLE W11 PHASE |
-| M0-03 | 14 create-audit invoice references without source | UNKNOWN historical amount | 27 current source-reference paths return zero; current/historical source review found no fixture tie or supported app hard-delete path; service_role DELETE is capability only; C | UNKNOWN | No invoice/payment/accounting effects located; linked CRM context remains; cause and financial impact unproven | OWNER DECISION REQUIRED |
+| M0-03 | 14 create-audit invoice references without source | UNKNOWN historical amount | 27 current source-reference paths return zero; current/historical source review found no fixture tie or supported app hard-delete path; service_role DELETE is capability only; C | UNKNOWN | No proven downstream financial/accounting effect; linked CRM context remains; cause and financial impact unproven | MONITOR / PRESERVE EVIDENCE |
 | M0-04 | 9 deleted Customers without timestamp | Not a monetary amount; 19 Services/17 quotes overlap A | Deletion chronology; D | UNKNOWN | Zero current invoice/payment/credit links | REMEDIATION CANDIDATE |
 | M0-05 | Invoice privileged DELETE/TRUNCATE | No amount attributable to use | ACL/trigger/source inspection | PARTIALLY EXPLAINED | Current capability verified; historical use unknown; no supported app hard-delete path found | MONITOR |
 | M0-06 | Legacy broad ACLs / 9 NOT VALID checks | Not a monetary exception | Catalog; zero row-check failures; table RLS | PARTIALLY EXPLAINED | Advisory retained; no browser exploit or check-row violation established | MONITOR |
@@ -247,13 +252,13 @@ No new material business-data exception was proven beyond the refreshed cohorts.
 
 ## 9. W11 implications and exactly one next action
 
-Current bounded M0 inventory is complete; residual-exception disposition/acceptance is not. R01–R04 remain bounded Owner-accepted, R05–R08 deferred. No further accounting slice justified. Do not repeat bootstrap; DEV_PROVISIONAL configuration exists, without accepted inception or professional approval. VAT not registered/rate 0.00, ZATCA/FATOORA inactive, professional validation DEFERRED and required before applicable live/production/statutory/external/regulatory/irreversible use.
+Current bounded M0 inventory is complete. Mozfer's 27 October M0-03 disposition is recorded and closes only that Owner-decision sub-gate; other residual-exception dispositions/acceptance remain incomplete. R01–R04 remain bounded Owner-accepted, R05–R08 deferred. No further accounting slice is justified. Do not repeat bootstrap; DEV_PROVISIONAL configuration exists, without accepted inception or professional approval. VAT not registered/rate 0.00, ZATCA/FATOORA inactive; professional validation remains required before applicable live/production/statutory/external/regulatory/irreversible use.
 
-W11 stays **NO-GO** for unexplained lineage and missing exception ownership/disposition, plus separately pending recovery/restore, shadow reconciliation, material remaining Owner acceptance, later-phase support/monitoring and applicable professional/environment gates. DEMO/PROD are uninspected.
+W11 stays **NO-GO**. M0-03 is a preserved UNKNOWN exception with an approved monitor disposition; M0-01, M0-02, M0-04 and other applicable evidence/authority gates remain unresolved. Recovery/restore, shadow reconciliation, remaining Owner acceptance, later-phase support/monitoring, and professional/environment gates remain separately pending. DEMO/PROD are uninspected.
 
-**EXACT NEXT ACTION:** Owner/Controller (Mozfer) records a decision on M0-03's 14 audit references. Keep provenance/cause and historical financial impact UNKNOWN unless evidence ties exact IDs to a fixture, original invoice/source snapshot, or a verified historical operation. No calendar deadline was supplied; review before M0 exit or any applicable W11 phase relying on invoice lineage. Recommended disposition is OWNER DECISION REQUIRED; no acceptance, waiver, reconstruction, cleanup, or remediation is authorized by this review.
+**EXACT NEXT ACTION:** Owner/Controller reviews and records disposition for M0-02's two approved quotations missing ABS/audit (`2000.00` commercial amount, a subset of M0-01). Keep cause UNKNOWN unless exact historical evidence establishes whether approval predated ABS. This is the next selected action only; it was not executed here. Do not create/reconstruct ABS or invoice rows or infer a financial/accounting effect. M0-03 remains MONITOR / PRESERVE EVIDENCE and reopens only on materially new evidence of provenance, financial impact, or a current integrity/security consequence.
 
-This is smaller/prior to reconstruction, new configuration or professional sign-off: missing invoice sources have no established amount/provenance, so a technical repair would invent facts. Other gates remain; none is waived. This next action is not executed.
+M0-02 is the smallest unresolved source-lineage cohort in the residual ledger (two quotation references) and is selected for the next bounded Owner/Controller disposition review; this task did not execute it. M0-03's monitor disposition is not an invoice waiver or financial write-off and does not clear M0-01, M0-02, other M0 exceptions, or later readiness gates.
 
 ## 10. Validation and evidence limitations
 
