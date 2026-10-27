@@ -2,9 +2,9 @@
 
 **Evidence date:** 27 October 2026.
 
-**Task verdict: PASS — OWNER BUSINESS DECISIONS RECORDED.** Mozfer has accepted the 14 soft-deleted `Approved` Services as the intended current state and directed that their active ABS authority be retired through a separately authorized governed remediation. The single soft-deleted `Completed` Service remains unchanged on business-evidence hold. This task authorizes repair-contract design only; it authorizes no mutation.
+**Task verdict: PASS — BOUNDED REPAIR CONTRACT DESIGNED.** Mozfer's Owner decision accepts the 14 soft-deleted `Approved` Services as the intended current state and directs governed ABS authority retirement under separate authorization. The 14-case contract is documented at [w11-m0-01-14-approved-repair-contract.md](w11-m0-01-14-approved-repair-contract.md) and is `READY FOR OWNER EXECUTION AUTHORIZATION`; this task authorizes no implementation or mutation. The single soft-deleted `Completed` Service remains unchanged on business-evidence hold.
 
-**W11 readiness: NO-GO.** M0-01 remains an applicable-phase blocker: the 14 `Approved` cases are ready only for bounded repair-contract design, and the single Completed SAR 800.00 case remains on evidence hold. Historical cause and financial impact remain `UNKNOWN`.
+**W11 readiness: NO-GO.** M0-01 remains an applicable-phase blocker: the 14 `Approved` cases now have a bounded repair contract ready for separate Owner execution authorization, and the single Completed SAR 800.00 case remains on evidence hold. Historical cause and financial impact remain `UNKNOWN`.
 
 ## 1. Baseline and boundary
 
@@ -45,7 +45,9 @@ All 15 Service rows have `deleted_at` set, and none has a cancellation reason. F
 - Current Service-linked approved commitments, commitment balances, receipts, supplier allocations, supplier bookings, and expenses are zero. Checked AR/AP/expense bridge versions, source events, journal lines/links, revenue arrangements/recognition, journal versions/events, and accounting foundation events are zero.
 - These are bounded current-state observations. They cannot detect hard-deleted source rows or unkeyed external/customer evidence, and they do not establish zero historical financial impact. No amount is inferred as a receivable, cash, revenue, loss, balance, or write-off.
 
-## 4. Candidate comparison
+## 4. Candidate comparison before the Owner decision
+
+This comparison records the earlier pre-decision design state. Section 7 records the later Owner decisions, and section 8 selects the bounded contract mechanism for the 14 Approved cases.
 
 | Candidate | Assessment |
 |---|---|
@@ -53,7 +55,7 @@ All 15 Service rows have `deleted_at` set, and none has a cancellation reason. F
 | Restore each Service, then use existing void | No supported Service restore action was found in the current Service action module. A restore would also change Service visibility and interact with soft-deleted Customer state. No evidence authorizes those changes. |
 | Supersede/reapprove or rewrite the quotation | Not a cleanup operation. It would create or change commercial authority and is not supported by evidence of a requested new scope. |
 | Directly update or delete ABS/Service/quotation rows | Rejected. This bypasses the service-first lifecycle guards and audit contract, changes commercial authority, and violates the task's no-mutation boundary. |
-| New one-time guarded ABS retirement operation | Technically conceivable only if the Owner first confirms that the Service deletions are intended and the active approved scopes should be retired. It would require a new, separately reviewed contract because current lifecycle guards deliberately refuse these Services. This is not selected or approved here. |
+| New one-time guarded ABS retirement operation | Before the Owner decision, this required confirmation that the Service deletions were intended and the active approved scopes should be retired. The Owner later supplied that current-state decision; section 8 defines the separately reviewed contract, without granting execution authority. |
 | Preserve current rows unchanged | Safe interim boundary. It preserves the approved commercial authority and history, but does not clear the M0-01 exception or W11 gate. |
 
 ## 5. Design conclusion before the Owner decision (superseded as to current disposition)
@@ -64,7 +66,7 @@ At the time of the dry run, the evidence did not establish one disposition for a
 
 Preserve all Service, Customer, quotation, ABS, item snapshot, and audit rows. The 14-case retirement direction authorizes only the next bounded repair-contract design; it does not authorize implementation or execution. The Completed Service remains on hold. M0-01 continues to block the applicable W11 phase.
 
-The next contract-design task covers only the 14 `Approved` Service/quotation/ABS triples in the frozen table; it must exclude the Completed SAR 800.00 triple. The contract must define an atomic allowlisted operation and revalidate exact identities, expected versions/statuses, Service/Customer state, zero invoice/payment/credit/operational/accounting links, concurrency and lock order, authorization, audit reason, and before/after evidence. It must preserve ABS items/snapshots and leave Service, Customer, quotation, invoice, and prior audit history untouched. A committed void is not rolled back by deleting or reopening history; any correction requires a separately governed forward action. If any row differs or any link appears, the future batch must stop atomically. This is contract design only; implementation and execution need separate authorization.
+The later bounded contract covers only the 14 `Approved` Service/quotation/ABS triples in the frozen table and excludes the Completed SAR 800.00 triple. See section 8 for the selected mechanism and exact future authorization; implementation and execution still require separate authorization.
 
 ## 6. Validation and independent review
 
@@ -83,12 +85,20 @@ The next contract-design task covers only the 14 `Approved` Service/quotation/AB
 
 Mozfer accepts the Service deletion as the intended current business state for the 14 M0-01 Service/ABS pairs marked `Approved` in section 2. This does not establish why the records were historically deleted. Do not restore these Services or their deleted Customers. Their active approved ABS authority should be retired through a separately authorized governed remediation. Preserve quotation, ABS, snapshot, item, Service, Customer, and audit history; do not directly delete or rewrite historical records.
 
-This decision does not establish historical deletion intent or cause. Historical cause and financial impact remain `UNKNOWN`. The cohort's ABS totals are commercial authority only, not invoice value, receivable, cash, revenue, loss, balance, or write-off. The 14 cases are `READY FOR BOUNDED REPAIR-CONTRACT DESIGN`; no mutation authority is granted.
+This decision does not establish historical deletion intent or cause. Historical cause and financial impact remain `UNKNOWN`. The cohort's ABS totals are commercial authority only, not invoice value, receivable, cash, revenue, loss, balance, or write-off. The decision authorized bounded repair-contract design only; that contract is now complete and ready for separate Owner execution authorization. No implementation or mutation authority is granted.
 
 ### Cohort B — one soft-deleted `Completed` Service with active SAR 800.00 ABS
 
 For Service `c7ca6503-9746-4604-964a-cbe53c118009`, quotation `87932c67-cdca-4d6c-bb20-691b59f8961f`, and ABS `513f1e78-5bfa-4ff2-a8a8-6986498d1987`, preserve the Service, quotation, ABS, Customer, snapshots, items, and audit evidence unchanged. Do not retire the ABS, restore the Service or Customer, or create/reconstruct an invoice. Whether a legitimate unbilled obligation exists remains unresolved. Historical cause and impact remain `UNKNOWN`; SAR 800.00 is commercial authority only. Status: `HOLD — BUSINESS EVIDENCE REQUIRED`.
 
-### Result and next boundary
+### Owner decision result
 
-M0-01 remains `BLOCKS APPLICABLE W11 PHASE`; M0 exit is not satisfied and W11 remains `NO-GO`. The next task is **design the bounded repair contract for the 14 `Approved` cases only**, excluding the Completed SAR 800.00 case. The contract must define an atomic allowlisted retirement operation, preserve existing history and rows as directed above, make no invoice/payment/accounting changes, and stop atomically if any expected identity, version, status, or downstream-link precondition differs. Do not implement or execute that mechanism in this task.
+M0-01 remains `BLOCKS APPLICABLE W11 PHASE`; M0 exit is not satisfied and W11 remains `NO-GO`. The bounded contract is now documented in section 8. No implementation, migration application, RPC invocation, or database mutation is authorized by this design task.
+
+## 8. Bounded 14-case repair contract — 27 October 2026
+
+The implementation-ready contract is [W11 M0-01 — 14 Approved-Service ABS Retirement Contract](w11-m0-01-14-approved-repair-contract.md). It fixes the exact 14 Service/quotation/ABS triples, explicitly excludes the Completed SAR 800.00 case, selects a one-time service-role-only RPC with a narrow trigger exception, and defines transactional preconditions, row-lock order, downstream-link checks, audit evidence, replay, failure, and forward-repair behavior.
+
+The last documented DEV read-only observation remains the 27 October 2026 07:43:59.452867 UTC dry run. This contract task did not query DEV; any later implementation/execution must take a fresh preflight and recheck all conditions inside the transaction. The contract is `READY FOR OWNER EXECUTION AUTHORIZATION`, not an authorization to implement or execute. The Completed case, both M0-02 cases, and M0-03 remain outside the write set. Cause and historical financial impact remain `UNKNOWN`; W11 remains `NO-GO`.
+
+**EXACT NEXT ACTION:** Mozfer to separately authorize one bounded implementation and reviewed DEV execution task for the contract; do not implement, apply, or invoke the repair automatically.
