@@ -1,6 +1,6 @@
 # W11 M0 — Current DEV Inventory and Residual Reconciliation
 
-**Evidence date:** 26 October 2026
+**Evidence date:** 27 October 2026 (targeted M0-03 supplement; full inventory cutoff remains 26 October 2026).
 
 **TASK VERDICT: PASS** for the bounded read-only inventory, subject to final independent review and publication.
 
@@ -151,7 +151,17 @@ Two, nested within A: `30d1f7a6-09a9-4e44-9a0a-f6c15eca5b8f` and `82dc2e82-19fa-
 
 ### C — Invoice audit references without source invoices
 
-14, each one create event and no later invoice event. All 21 inspected explicit invoice/source-reference paths returned zero matches: invoices/items, payments, allocations, draft mutations, credits and accounting bridge/inception/journal/source-effect paths. **Historical financial impact UNKNOWN, not zero.** Missing sources cannot establish an amount; raw audit details were not mined for reconstruction.
+14, each one create event and no later invoice event. At the 26 October packet cutoff, all 21 inspected explicit invoice/source-reference paths returned zero matches: invoices/items, payments, allocations, draft mutations, credits and accounting bridge/inception/journal/source-effect paths. **Historical financial impact UNKNOWN, not zero.** Missing sources cannot establish an amount; raw audit details were not mined for reconstruction. The 27 October targeted supplement below adds six current source-reference paths for this cohort.
+
+
+**27 October 2026 targeted DEV provenance supplement:** The exact-target, SELECT-only query observed `dpddrqjzqohexixgdqiq` at `2026-10-27 05:01:38.708774+00`, snapshot `14636:14636:`. This supplements M0-03 only; the full inventory cutoff above remains 26 October.
+
+- The 14 references each have one retained `create` audit event, all `invoice.created` with `new_state=draft`; 12 are `deposit`, 2 are `final`. Event timestamps span `2026-08-17 10:11:38.356528+00` through `10:14:29.315293+00`.
+- All 27 queried current invoice, payment, receipt, credit, AR/AP/expense bridge, accounting, journal, inception, and revenue-recognition source-reference paths returned zero matches. No downstream invoice/payment/accounting effect was found.
+- Allowlisted audit metadata links the references to 14 currently approved, unsuperseded billing scopes and source quotations, 14 soft-deleted Services, and 3 soft-deleted Customers. There are no scope/Service mismatches; each invoice audit event is at or before its linked Service deletion timestamp. This CRM context does not establish an invoice or amount.
+- The inspected top-level audit fields contain no amount, subtotal, grand-total, VAT, balance-due, or amount-paid field. Related quotation/approved-scope amounts are not invoice amounts. Historical financial impact remains UNKNOWN.
+- Exact-reference searches across repository history and fixtures found no provenance tie. Current and historical application-source review found no supported invoice hard-delete path. DEV currently grants `service_role` DELETE on invoices; this is capability evidence only and does not prove use. Cause remains UNKNOWN.
+- The bounded query is preserved at [w11m0_invoice_provenance_review.sql](../supabase/verification/w11m0_invoice_provenance_review.sql); it returns only the published invoice reference IDs, event action/timestamps, path counts, and aggregate linked context, not raw audit JSON or identity values.
 
 | Missing invoice reference | Event timestamp UTC | Events | Action |
 |---|---|---:|---|
@@ -221,13 +231,13 @@ Generated types contain 141 table names and all eleven views. The only absent DE
 
 ## 8. Residual exception ledger
 
-No source establishes a named accountable exception owner or decision deadline: **unassigned / not evidenced** for each unresolved cohort. Owner/Controller is the next decision authority, not an invented historical operator. Dispositions below propose no execution authority.
+Historical operator/cause and a separate exception owner are not evidenced. For disposition, the accountable decision owner/role is Owner/Controller (Mozfer); no calendar deadline was supplied. Review before M0 exit or before any applicable W11 phase that relies on invoice lineage. Dispositions below are recommendations and do not authorize execution.
 
 | Key | Domain/count | Exposure | Invariant/evidence | Cause state | Downstream/W11 significance | Proposed disposition |
 |---|---|---|---|---|---|---|
 | M0-01 | 17 deleted Services/current approved quotations | 14900.00 commercial; 12900.00 ABS subset | Retained commercial authority conflicts with current deletion guard; A | UNKNOWN | Historical integrity unexplained; current invoice/cash/credit links zero | BLOCKS APPLICABLE W11 PHASE |
 | M0-02 | 2 approved quotations missing ABS/audit, subset of M0-01 | 2000.00 commercial | Approval→ABS lineage absent; B | UNKNOWN | Not proven pre-ABS; no current financial downstream | BLOCKS APPLICABLE W11 PHASE |
-| M0-03 | 14 create-audit invoice references without source | UNKNOWN historical amount | Broken audit/source lineage; 21 zero-match paths; C | UNKNOWN | Cannot certify historical completeness/amount; current privilege does not prove cause | OWNER DECISION REQUIRED |
+| M0-03 | 14 create-audit invoice references without source | UNKNOWN historical amount | 27 current source-reference paths return zero; current/historical source review found no fixture tie or supported app hard-delete path; service_role DELETE is capability only; C | UNKNOWN | No invoice/payment/accounting effects located; linked CRM context remains; cause and financial impact unproven | OWNER DECISION REQUIRED |
 | M0-04 | 9 deleted Customers without timestamp | Not a monetary amount; 19 Services/17 quotes overlap A | Deletion chronology; D | UNKNOWN | Zero current invoice/payment/credit links | REMEDIATION CANDIDATE |
 | M0-05 | Invoice privileged DELETE/TRUNCATE | No amount attributable to use | ACL/trigger/source inspection | PARTIALLY EXPLAINED | Current capability verified; historical use unknown; no supported app hard-delete path found | MONITOR |
 | M0-06 | Legacy broad ACLs / 9 NOT VALID checks | Not a monetary exception | Catalog; zero row-check failures; table RLS | PARTIALLY EXPLAINED | Advisory retained; no browser exploit or check-row violation established | MONITOR |
@@ -241,7 +251,7 @@ Current bounded M0 inventory is complete; residual-exception disposition/accepta
 
 W11 stays **NO-GO** for unexplained lineage and missing exception ownership/disposition, plus separately pending recovery/restore, shadow reconciliation, material remaining Owner acceptance, later-phase support/monitoring and applicable professional/environment gates. DEMO/PROD are uninspected.
 
-**EXACT NEXT ACTION:** Owner/Controller reviews and records the provenance and disposition of M0-03's 14 invoice audit references without source invoices, using approved source evidence or verified DEV-fixture provenance. Record the accountable decision owner and decision deadline; keep financial impact UNKNOWN unless evidence establishes it. Do not reconstruct or delete records, waive other exceptions, or start remediation under this evidence task.
+**EXACT NEXT ACTION:** Owner/Controller (Mozfer) records a decision on M0-03's 14 audit references. Keep provenance/cause and historical financial impact UNKNOWN unless evidence ties exact IDs to a fixture, original invoice/source snapshot, or a verified historical operation. No calendar deadline was supplied; review before M0 exit or any applicable W11 phase relying on invoice lineage. Recommended disposition is OWNER DECISION REQUIRED; no acceptance, waiver, reconstruction, cleanup, or remediation is authorized by this review.
 
 This is smaller/prior to reconstruction, new configuration or professional sign-off: missing invoice sources have no established amount/provenance, so a technical repair would invent facts. Other gates remain; none is waived. This next action is not executed.
 
