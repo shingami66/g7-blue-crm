@@ -1,10 +1,10 @@
 # W11 M0-01 Remediation Design and DEV Dry Run
 
-**Evidence date:** 27 October 2026.
+**Current evidence date:** 28 October 2026 (Completed G8 case Owner-decision and SELECT-only preflight supplement). The full inventory cutoff remains 26 October; the 14-case execution/postflight remains dated 27 October.
 
-**Design-task verdict:** PASS — bounded repair contract designed. That original design task did not authorize execution; its outcome is preserved in sections 1–8. The subsequently authorized DEV execution is recorded in section 9.
+**Current task verdict:** PASS — the Owner decision and one-case bounded repair contract are recorded; no repair was executed. The earlier 14-case contract and separately authorized execution remain in sections 8–9.
 
-**Current W11 readiness: NO-GO.** The 14 Approved-Service ABS authorities were retired and verified under separate Owner authorization. M0-01 remains an applicable-phase blocker because the excluded Completed SAR 800.00 case remains on evidence hold. Historical cause and financial impact remain `UNKNOWN`.
+**Current W11 readiness: NO-GO.** The 14 Approved-Service ABS authorities were retired and verified under separate Owner authorization. The Completed SAR 800.00 case is now a `REMEDIATION CANDIDATE — BUSINESS DECISION RESOLVED`; its separate one-case contract is `READY FOR OWNER EXECUTION AUTHORIZATION`, which has not been granted. M0-01 still blocks the applicable W11 phase. Historical completion mechanism and financial impact remain `UNKNOWN`.
 
 ## 1. Baseline and boundary
 
@@ -111,6 +111,17 @@ Postflight confirmed all 14 ABS rows remain, all 14 are retired, none of the tar
 
 M0-03's 14 retained invoice audit references and missing source rows were not changed and no amount was inferred. The derived current approved-scope/source-quotation context moved from 14 to 0 because it referenced the same 14 ABS authorities retired by this task. Historical M0-03 provenance and financial impact remain `UNKNOWN`.
 
-This closes only the 14-case current-authority repair. The Completed SAR 800.00 case remains `HOLD — BUSINESS EVIDENCE REQUIRED`; M0-01 remains an applicable W11 blocker, cause and historical financial impact remain `UNKNOWN`, and W11 remains `NO-GO`.
+This closes only the 14-case current-authority repair. At the 27 October closeout the Completed SAR 800.00 case was on evidence hold; section 10 records the later Owner decision; M0-01 remains an applicable W11 blocker, cause and historical financial impact remain `UNKNOWN`, and W11 remains `NO-GO`.
 
-**EXACT NEXT ACTION:** Mozfer to provide or decide the business evidence for the excluded Completed SAR 800.00 case before M0-01/M0 exit or applicable W11 gate reassessment. Keep it unchanged while evidence is absent; do not repeat the 14-case repair.
+**Prior exact next action (superseded by section 10):** Mozfer to provide or decide the business evidence for the excluded Completed SAR 800.00 case. The separate current next action is to authorize or decline a future implementation/execution task for the one-case contract; keep DEV rows unchanged until then.
+
+## 10. Completed G8 DEV case — Owner decision and one-case contract — 28 October 2026
+
+Mozfer accepts Service `c7ca6503-9746-4604-964a-cbe53c118009` (`G8 Final Service lmu0p1`) as synthetic G8 DEV verification data and confirms there is no real customer unbilled obligation intended for preservation. The active SAR 800.00 ABS authority should be retired only through a separately authorized governed remediation. Preserve the soft-deleted Service and its historical `Completed` state, Customer, approved/current quotation, ABS row, item snapshots, and audit history. Do not restore records or create/reconstruct invoice, payment, receipt, revenue, receivable, or accounting facts.
+
+- **G8 DEV verification provenance:** `VERIFIED`; exact historical mechanism that produced `Completed`: `UNKNOWN`; historical financial impact: `UNKNOWN`. SAR 800.00 remains commercial authority only.
+- The exact target is the Service / Quotation / ABS triple `c7ca6503-9746-4604-964a-cbe53c118009 / 87932c67-cdca-4d6c-bb20-691b59f8961f / 513f1e78-5bfa-4ff2-a8a8-6986498d1987`. The fresh DEV SELECT-only preflight at 2026-10-28 05:46:04.291820+00, snapshot `14649:14649:`, matched one case, confirmed the version-1 active approved SAR 800.00 ABS and item digest `0f702aaea049a071bdcc9b13de930dd8`, and returned zero across all 90 expanded downstream paths. Three target audit events show quotation approval, ABS approval, and Service `Quoted → Approved`; none establishes the later Completed transition. No direct invoice row or matching `invoice.created` audit reference was found.
+- The reproducible one-case SELECT-only query is [w11m0_01_completed_g8_preflight.sql](../supabase/verification/w11m0_01_completed_g8_preflight.sql). It does not move the full 26 October inventory cutoff.
+- The [Completed G8 repair contract](w11-m0-01-completed-g8-repair-contract.md) selects a separate additive migration, fixed one-case target/downstream helpers and service-role-only RPC, and exact narrow trigger-context extensions. The existing 14-case manifest/RPC and normal void rules remain unchanged. No arbitrary target arguments, UI action, direct grant, migration, or DEV mutation is authorized here.
+
+M0-01 remains `BLOCKS APPLICABLE W11 PHASE`; no Controller closure verdict is implied. The exact next action is Mozfer's separate Owner execution authorization for this one-case DEV contract. W11 remains `NO-GO`.
