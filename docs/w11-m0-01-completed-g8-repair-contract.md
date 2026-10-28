@@ -124,4 +124,4 @@ The independent documentation Reviewer for this task checks the supplied Owner d
 
 ## 10. Current exact next action
 
-Mozfer may separately authorize implementation and reviewed execution of this one-case DEV contract. If authorized, execution still requires a fresh baseline/preflight and an exact migration review before application. Until then, preserve the current DEV rows unchanged; M0-01 remains an applicable-phase blocker and W11 remains `NO-GO`.
+Mozfer to separately authorize or decline implementation and reviewed DEV execution of the one-case Completed G8 repair contract. If authorized, first require a fresh baseline/preflight and exact migration review before application. Until then, preserve the current DEV rows unchanged; M0-01 remains an applicable-phase blocker, M0 exit remains unsatisfied, and W11 remains `NO-GO`.

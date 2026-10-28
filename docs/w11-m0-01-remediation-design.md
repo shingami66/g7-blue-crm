@@ -89,7 +89,7 @@ This decision does not establish historical deletion intent or cause. Historical
 
 ### Cohort B — one soft-deleted `Completed` Service with active SAR 800.00 ABS
 
-For Service `c7ca6503-9746-4604-964a-cbe53c118009`, quotation `87932c67-cdca-4d6c-bb20-691b59f8961f`, and ABS `513f1e78-5bfa-4ff2-a8a8-6986498d1987`, preserve the Service, quotation, ABS, Customer, snapshots, items, and audit evidence unchanged. Do not retire the ABS, restore the Service or Customer, or create/reconstruct an invoice. Whether a legitimate unbilled obligation exists remains unresolved. Historical cause and impact remain `UNKNOWN`; SAR 800.00 is commercial authority only. Status: `HOLD — BUSINESS EVIDENCE REQUIRED`.
+At the 27 October 2026 Owner-decision snapshot, Service `c7ca6503-9746-4604-964a-cbe53c118009`, quotation `87932c67-cdca-4d6c-bb20-691b59f8961f`, and ABS `513f1e78-5bfa-4ff2-a8a8-6986498d1987` were to remain unchanged; the possible unbilled obligation was unresolved and the status then was `HOLD — BUSINESS EVIDENCE REQUIRED`. Section 10 records the 28 October business decision that supersedes this hold: Mozfer accepts the case as synthetic G8 DEV verification data, with no real unbilled obligation intended for preservation. Preserve the Service, quotation, ABS, Customer, snapshots, items, and audit evidence. Historical cause and impact remain `UNKNOWN`; SAR 800.00 is commercial authority only.
 
 ### Owner decision result
 
@@ -124,4 +124,4 @@ Mozfer accepts Service `c7ca6503-9746-4604-964a-cbe53c118009` (`G8 Final Service
 - The reproducible one-case SELECT-only query is [w11m0_01_completed_g8_preflight.sql](../supabase/verification/w11m0_01_completed_g8_preflight.sql). It does not move the full 26 October inventory cutoff.
 - The [Completed G8 repair contract](w11-m0-01-completed-g8-repair-contract.md) selects a separate additive migration, fixed one-case target/downstream helpers and service-role-only RPC, and exact narrow trigger-context extensions. The existing 14-case manifest/RPC and normal void rules remain unchanged. No arbitrary target arguments, UI action, direct grant, migration, or DEV mutation is authorized here.
 
-M0-01 remains `BLOCKS APPLICABLE W11 PHASE`; no Controller closure verdict is implied. The exact next action is Mozfer's separate Owner execution authorization for this one-case DEV contract. W11 remains `NO-GO`.
+M0-01 remains `BLOCKS APPLICABLE W11 PHASE`; no Controller closure verdict is implied and M0 exit remains unsatisfied. The exact next action is Mozfer to separately authorize or decline implementation and reviewed DEV execution of the one-case Completed G8 repair contract. If authorized, first require a fresh baseline/preflight and separate migration review. Preserve current DEV rows unchanged until then. W11 remains `NO-GO`.

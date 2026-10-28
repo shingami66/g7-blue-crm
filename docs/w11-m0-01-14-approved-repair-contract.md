@@ -39,7 +39,7 @@ The fixed set must be internally unique, join one-to-one across all three IDs, a
 
 ### Explicit exclusions
 
-The soft-deleted `Completed` case is **not in the allowlist** and receives no designed mutation behavior here: Service `c7ca6503-9746-4604-964a-cbe53c118009`, quotation `87932c67-cdca-4d6c-bb20-691b59f8961f`, ABS `513f1e78-5bfa-4ff2-a8a8-6986498d1987`. It remains `HOLD — BUSINESS EVIDENCE REQUIRED` and must remain unchanged. The two M0-02 pairs without ABS, all M0-03 invoice audit references, and every other row are also excluded.
+The soft-deleted `Completed` case was **not in the 27 October 14-case allowlist** and received no designed mutation behavior in this contract: Service `c7ca6503-9746-4604-964a-cbe53c118009`, quotation `87932c67-cdca-4d6c-bb20-691b59f8961f`, ABS `513f1e78-5bfa-4ff2-a8a8-6986498d1987`. At that contract cutoff it was classified `HOLD — BUSINESS EVIDENCE REQUIRED` and left unchanged. Mozfer's 28 October Owner decision supersedes that business-evidence hold; see the [current Completed G8 decision and one-case repair contract](w11-m0-01-completed-g8-repair-contract.md). The two M0-02 pairs without ABS, all M0-03 invoice audit references, and every other row are also excluded from this 14-case contract.
 
 ## 3. Source-supported repair mechanism
 
@@ -202,6 +202,6 @@ Read-only postflight at `2026-10-27 11:18:18.279688+00` (snapshot `14646:14646:`
 
 The historical M0-03 invoice audit/source evidence remains unchanged: no invoice source rows or amounts were created, changed, or inferred. Its derived current-context counts changed from 14 to 0 for currently approved ABS scopes/source quotations because those 14 same target scopes were retired as authorized. The raw invoice audit references and historical source evidence were not modified; provenance and historical financial impact remain `UNKNOWN`.
 
-The 14-case current-authority inconsistency is repaired. M0-01 overall remains `BLOCKS APPLICABLE W11 PHASE` because the excluded soft-deleted Completed Service with active SAR 800.00 ABS remains on `HOLD — BUSINESS EVIDENCE REQUIRED`. Historical cause and financial impact remain `UNKNOWN`; the ABS totals remain commercial authority only. W11 remains `NO-GO`.
+Current status (28 October 2026): the 14-case current-authority inconsistency is repaired. M0-01 overall remains `BLOCKS APPLICABLE W11 PHASE` because the excluded soft-deleted Completed G8 Service with active SAR 800.00 ABS is now `REMEDIATION CANDIDATE — BUSINESS DECISION RESOLVED`; its one-case contract is ready for separate Owner execution authorization. Historical cause and financial impact remain `UNKNOWN`; the ABS total remains commercial authority only. W11 remains `NO-GO`.
 
-**Current exact next action:** Mozfer to provide or decide the business evidence for the excluded Completed SAR 800.00 case before any M0-01/M0 exit or applicable W11 gate reassessment. Preserve that case unchanged while evidence is absent; no further M0-01 mutation is authorized by this completed task.
+**Prior exact next action (superseded by the 28 October 2026 Completed G8 Owner decision):** Mozfer to provide or decide the business evidence for the excluded Completed SAR 800.00 case. **Current exact next action:** Mozfer to separately authorize or decline implementation and reviewed DEV execution of the one-case Completed G8 repair contract; if authorized, require a fresh baseline/preflight. Preserve the DEV case unchanged until then; M0-01 remains open and W11 remains `NO-GO`.
