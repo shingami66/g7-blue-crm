@@ -1,15 +1,15 @@
 # W11 M0-01 — Completed G8 DEV Authority Retirement Contract
 
-**Evidence and decision date:** 28 October 2026
-**Contract status:** `READY FOR OWNER EXECUTION AUTHORIZATION`
-**Task verdict:** PASS — the Owner disposition and exact one-case contract are recorded; no repair was executed.
-**W11 readiness:** `NO-GO`. M0-01 continues to block the applicable W11 phase.
+**Evidence and decision date:** 29 October 2026
+**Contract status:** `CORRECTIVE MIGRATION APPLIED; SINGLE AUTHORIZED RETRY SUCCEEDED; POSTFLIGHT VERIFIED — CONTROLLER VERDICT REQUIRED`
+**Task verdict:** PASS for the bounded corrective migration and one-case DEV repair. M0-01 closure evidence is satisfied pending Controller verdict; M0-01 is not declared closed.
+**W11 readiness:** `NO-GO`. M0-01 remains an applicable-phase blocker pending Controller verdict; broader M0/W11 gates remain open.
 
 ## 1. Baseline and authority boundary
 
 - Repository: `D:/G7/g7-crm`, branch `main`; before editing, HEAD, `origin/main`, and live `origin/main` were `ce3a035c4bd58edd4a78c064b074c4d18384b524`; worktree and index were clean.
 - Read-only target: Supabase DEV project `dpddrqjzqohexixgdqiq`.
-- This contract records an Owner business disposition and designs a possible later, separately authorized DEV repair. It grants no implementation, migration, RPC, or data-mutation authority.
+- At the 28 October contract cutoff, this document recorded an Owner business disposition and designed a possible later DEV repair; it granted no implementation, migration, RPC, or data-mutation authority at that time. The separate 29 October authorization and execution are recorded in section 12.
 - No Controller state or handover files are part of this contract.
 
 ## 2. Frozen one-case target
@@ -122,6 +122,28 @@ Before any separately authorized execution, validate migration source tests for 
 
 The independent documentation Reviewer for this task checks the supplied Owner decision against the verified evidence, one-case-only scope, financial unknowns, no state restore/reconstruction, no authority widening, atomicity/fail-closed design, no M0-01 closure, and W11 `NO-GO`.
 
-## 10. Current exact next action
+## 10. Prior authorization status
 
-Mozfer to separately authorize or decline implementation and reviewed DEV execution of the one-case Completed G8 repair contract. If authorized, first require a fresh baseline/preflight and exact migration review before application. Until then, preserve the current DEV rows unchanged; M0-01 remains an applicable-phase blocker, M0 exit remains unsatisfied, and W11 remains `NO-GO`.
+The 28 October authorization was consumed by one failed attempt that rolled back on the existing audit-action constraint. Mozfer issued a separate corrective-migration and single-retry authorization on 29 October. Section 12 records that correction and successful retry; the earlier attempt remains immutable historical evidence.
+
+## 11. Owner-authorized execution attempt — 28 October 2026
+
+Pre-apply baseline was `main` / `HEAD` / `origin/main` / live remote `main` at `03730fe06a570f4597028d7b9d079d6a7456cbda`. Fresh preflight at 2026-10-28 11:49:29.954990+00 matched the fixed one-case contract, including the active approved SAR 800.00 ABS, one item and digest `0f702aaea049a071bdcc9b13de930dd8`, soft-deleted `Completed` Service, approved/current quotation, and zero links across all 90 guard paths.
+
+Migration source `20261028113055_w11_m0_01_completed_g8_abs_retirement.sql` was applied to DEV `dpddrqjzqohexixgdqiq` using the Supabase migration-aware apply tool. The immediately verified history identity is `20261028114736 / 20261028113055_w11_m0_01_completed_g8_abs_retirement`; the tool recorded its application-time version and the exact source basename. Live catalog checks confirmed `postgres` ownership, pinned `search_path=pg_catalog, public`, service-role-only RPC execution, revoked helper execution, and both existing ABS guards enabled. No table-grant statement was included in the migration.
+
+Exactly one call to `public.retire_w11_m0_01_completed_g8_abs(text)` was attempted with the active DEV admin actor. PostgreSQL rejected its audit insert with SQLSTATE `23514`: `audit_logs_action_check` does not accept action `owner_authorized_remediation`. The transaction rolled back. The read-only postflight found the ABS still active (`active_target_count=1`, `retired_abs_count=0`), no remediation audit (`exact_audit_count=0`, `remediation_event_count=0`), no invoice, and zero downstream links across all 90 paths; `all_checks_pass=false` because the expected retirement did not occur.
+
+The before/after preservation snapshots are identical for the Service, lifecycle, Customer, quotation, preserved ABS fields, item snapshot, prior audit evidence, all 14 prior repairs, both M0-02 cases, and all 14 M0-03 raw audit references. M0-03 still has zero source invoice rows. No business-data change persisted. G8 provenance remains `VERIFIED`; the historical Completed mechanism and financial impact remain `UNKNOWN`; SAR 800.00 remains commercial authority only. M0-01 closure evidence was **NOT SATISFIED** after this first attempt; this historical result is superseded by section 12.
+
+## 12. Corrective migration and single retry — 29 October 2026
+
+A separate Owner authorization titled `OWNER AUTHORIZATION — CORRECTIVE MIGRATION AND SINGLE RETRY FOR FINAL M0-01 CASE` authorized one additive DEV migration and exactly one new RPC attempt. The original applied migration and failed transaction remain unchanged in history. The approved correction keeps the existing audit action constraint and uses `status_change` with the distinct remediation event and required provenance/unknown/commercial-authority details in `audit_logs.details`.
+
+Immediately before apply, the fresh SELECT-only preflight at `2026-10-29 05:06:23.238412+00` passed: exactly the fixed Service/quotation/ABS target; expected Completed soft-deleted Service and lifecycle; current approved SAR 800.00 quotation; active version-1 SAR 800.00 ABS with the expected one-item digest; one original approval audit; no prior remediation event; and zero nonzero links across all 90 downstream paths. The targeted independent read-only reviewer returned `CLEAN`.
+
+The migration-aware Supabase apply tool applied `20261029045141_w11_m0_01_completed_g8_audit_action_compatibility.sql` to DEV `dpddrqjzqohexixgdqiq`. Immediate history verification records `20261029050635 / 20261029045141_w11_m0_01_completed_g8_audit_action_compatibility`, chronologically after the immutable first migration `20261028114736 / 20261028113055_w11_m0_01_completed_g8_abs_retirement`. Live verification confirms the RPC remains postgres-owned `SECURITY DEFINER`, `search_path=pg_catalog, public`, executable only by `service_role` beyond its owner; `audit_logs_action_check` is unchanged; the three applicable triggers remain; and no table grants were changed by the migration.
+
+The post-migration/pre-RPC preservation snapshot exactly matches the immediate pre-apply snapshot. One call at `2026-10-29 05:07:10.156770+00` returned `retired_count=1`, `idempotent_replay=false`. No second attempt was made. Read-only postflight passes all checks: one target row, one retired ABS, zero active target ABS, one exact compatible remediation audit (two total ABS audits), zero invoice rows and invoice-created audit references, zero nonzero downstream paths, and all fourteen prior repairs still intact. Target Service/lifecycle/Customer/quotation and protected ABS/item fields remain unchanged. The post-execution preservation fingerprint matches for all fourteen prior repairs, both M0-02 cases, and all fourteen M0-03 audit references; M0-03 still has zero source invoice rows.
+
+Focused corrective source tests pass `10/10`; `git diff --check` passes with only existing CRLF warnings. G8 provenance remains `VERIFIED`; historical Completed mechanism and financial impact remain `UNKNOWN`; SAR 800.00 remains commercial authority only. **M0-01 CLOSURE EVIDENCE SATISFIED — CONTROLLER VERDICT REQUIRED.** M0-01 is not independently closed, M0 exit is not claimed, and W11 remains `NO-GO`. The next action is Controller review and an explicit M0-01 closure verdict; do not start M0-04 automatically.
