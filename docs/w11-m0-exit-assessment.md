@@ -1,8 +1,12 @@
 # W11 M0 Exit Assessment
 
 **Assessment date:** 29 October 2026
-**Task verdict:** M0 EXIT NOT SATISFIED
+**Task Verdict:** PASS WITH WARN
+**M0 Exit Assessment:** M0 EXIT NOT SATISFIED
 **W11 readiness:** NO-GO
+
+The assessment task completed successfully; the warning reflects unresolved governance gaps that prevent M0 exit.
+
 **Repository baseline:** `main` at `1ae68dd88670c9601cd604794c1ad3ef12c74351`; `origin/main` and live remote `main` match.
 
 ## Assessment boundary
