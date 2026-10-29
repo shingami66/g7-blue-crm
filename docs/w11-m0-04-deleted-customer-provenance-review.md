@@ -1,8 +1,9 @@
 # W11 M0-04 — Deleted Customer Provenance Review
 
 **Evidence date:** 29 October 2026
-**Task verdict:** `PASS WITH WARN` — the exact-nine read-only review is complete; the missing deletion timestamps' cause and financial impact remain unknown, and the proposed disposition is not Owner-approved.
-**W11 readiness:** `NO-GO`. M0-01 remains `CLOSED — CONTROLLER PASS`; this review does not reopen it or close M0-04.
+**Task verdict:** `PASS WITH WARN` — the exact-nine read-only review is complete; the cause of the missing deletion timestamps and historical financial impact remain `UNKNOWN`.
+**Owner/Controller disposition (29 October 2026):** `SATISFIED — MONITOR / PRESERVE EVIDENCE`. No current remediation is justified or authorized; preserve the nine Customer records and their evidence unchanged.
+**W11 readiness:** `NO-GO`. M0-01 remains `CLOSED — CONTROLLER PASS`; the M0-04 disposition sub-gate is satisfied, while M0 overall remains open.
 
 ## 1. Baseline and scope
 
@@ -56,12 +57,12 @@ No Customer deletion audit event was found. The current [`softDeleteCustomer` ac
 
 - **Cause classification:** `UNKNOWN`. No evidence establishes the historical mutation that left `deleted_at` null.
 - **Cohort provenance evidence:** partly explained: exact documentation verifies synthetic G8 provenance for three rows, while the G8 naming/cohort supports only likely synthetic provenance for the remaining six.
-- **Disposition recommendation:** `MONITOR / PRESERVE EVIDENCE`, pending Mozfer's Owner/Controller decision. Preserve records and audit evidence unchanged. Do not backfill timestamps, restore Customers/Services, reconstruct invoices, clean up records, or infer financial history.
-- This is not an approval, waiver, phase closure, or remediation authorization. M0-04 remains open. M0 overall remains open and W11 stays **NO-GO**. M0-01 remains closed and is not reopened.
+- **Owner-approved disposition:** `MONITOR / PRESERVE EVIDENCE`, recorded 29 October 2026. This satisfies only the M0-04 Owner-disposition sub-gate; it does not close M0 overall or change W11 `NO-GO`.
+- Current evidence does not justify remediation, and remediation is not authorized. Preserve the nine Customer records and evidence unchanged; do not backfill timestamps, restore Customers/Services, reconstruct invoices, clean up records, or infer financial history.
 
-**Accountable decision owner:** Mozfer (Owner/Controller). **Decision boundary:** before M0 exit or any applicable W11 phase exit. No calendar deadline was supplied.
+**Accountable decision owner:** Mozfer (Owner/Controller); decision approved 29 October 2026. **Decision deadline:** none; no calendar deadline was set.
 
-Evidence that could change the classification includes a Customer-specific deletion audit/history record; a backup/snapshot or immutable log that establishes the exact update and actor; exact fixture/run mapping for the six likely rows; source invoice/payment/accounting evidence establishing an impact; or proof of a current supported application path whose behavior depends on `deleted_at`.
+Reopen only if materially new evidence establishes one or more of: an exact Customer-specific deletion timestamp; the exact historical deletion mechanism; exact fixture/run linkage that changes provenance classification; a current integrity or security consequence caused by missing `deleted_at`; authoritative financial/accounting impact; or a supported current application behavior that materially requires `deleted_at`.
 
 ## 6. Validation, review, and mutation boundary
 
