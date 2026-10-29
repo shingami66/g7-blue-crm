@@ -1,15 +1,15 @@
 # W11 M0-01 — Completed G8 DEV Authority Retirement Contract
 
 **Evidence and decision date:** 29 October 2026
-**Contract status:** `CORRECTIVE MIGRATION APPLIED; SINGLE AUTHORIZED RETRY SUCCEEDED; POSTFLIGHT VERIFIED — CONTROLLER VERDICT REQUIRED`
-**Task verdict:** PASS for the bounded corrective migration and one-case DEV repair. M0-01 closure evidence is satisfied pending Controller verdict; M0-01 is not declared closed.
-**W11 readiness:** `NO-GO`. M0-01 remains an applicable-phase blocker pending Controller verdict; broader M0/W11 gates remain open.
+**Contract status:** `CORRECTIVE MIGRATION APPLIED; SINGLE AUTHORIZED RETRY SUCCEEDED; POSTFLIGHT VERIFIED; M0-01 CLOSED — CONTROLLER PASS`
+**Task verdict:** `PASS`. The Controller records `M0-01 = CLOSED` based on the published repair and postflight evidence in Section 13.
+**W11 readiness:** `NO-GO`. M0 overall and broader W11 gates remain open.
 
 ## 1. Baseline and authority boundary
 
 - Repository: `D:/G7/g7-crm`, branch `main`; before editing, HEAD, `origin/main`, and live `origin/main` were `ce3a035c4bd58edd4a78c064b074c4d18384b524`; worktree and index were clean.
 - Read-only target: Supabase DEV project `dpddrqjzqohexixgdqiq`.
-- At the 28 October contract cutoff, this document recorded an Owner business disposition and designed a possible later DEV repair; it granted no implementation, migration, RPC, or data-mutation authority at that time. The separate 29 October authorization and execution are recorded in section 12.
+- At the 28 October contract cutoff, this document recorded an Owner business disposition and designed a possible later DEV repair; it granted no implementation, migration, RPC, or data-mutation authority at that time. The separate 29 October authorization and execution are recorded in Section 12, and the later Controller closure verdict in Section 13.
 - No Controller state or handover files are part of this contract.
 
 ## 2. Frozen one-case target
@@ -114,13 +114,13 @@ A future successful execution must prove all of the following:
 7. All 14 previously repaired Approved-Service ABS authorities remain retired and unchanged.
 8. M0-02 and M0-03 records/evidence remain unchanged.
 
-Only a later Controller verdict may close M0-01, after it verifies that all former 15 active ABS exceptions on soft-deleted Services have governed disposition, the 14 prior cases and this one are retired and verified, no active ABS authority remains in the original cohort, no new downstream anomaly appeared, and cause/financial-impact classifications remain accurately bounded. This design itself does not close M0-01.
+At the original contract-design stage, M0-01 closure required a later Controller verdict verifying that all 15 former active ABS exceptions on soft-deleted Services had governed disposition, all authorities were retired and verified, no new downstream anomaly appeared, and cause/financial-impact classifications remained accurately bounded. That criterion was satisfied by the Controller verdict in Section 13; this historical design text did not itself close M0-01.
 
 ## 9. Future focused validation and reviewer scope
 
 Before any separately authorized execution, validate migration source tests for the exact target, fixed-one-row manifest, required field guards, item digest, all 90 paths, trigger boundary, service-role-only ACL, no direct table grants, transaction rollback, exact audit, replay, and negative mismatch cases. Apply once only through the repository-supported migration workflow after a fresh DEV preflight and immediate migration-history identity verification. Perform a separate full postflight; do not treat this documentation review as execution evidence.
 
-The independent documentation Reviewer for this task checks the supplied Owner decision against the verified evidence, one-case-only scope, financial unknowns, no state restore/reconstruction, no authority widening, atomicity/fail-closed design, no M0-01 closure, and W11 `NO-GO`.
+The independent documentation Reviewer for the original contract-design task checked the supplied Owner decision against the verified evidence, one-case-only scope, financial unknowns, no state restore/reconstruction, no authority widening, atomicity/fail-closed design, no M0-01 closure at that stage, and W11 `NO-GO`.
 
 ## 10. Prior authorization status
 
@@ -146,4 +146,17 @@ The migration-aware Supabase apply tool applied `20261029045141_w11_m0_01_comple
 
 The post-migration/pre-RPC preservation snapshot exactly matches the immediate pre-apply snapshot. One call at `2026-10-29 05:07:10.156770+00` returned `retired_count=1`, `idempotent_replay=false`. No second attempt was made. Read-only postflight passes all checks: one target row, one retired ABS, zero active target ABS, one exact compatible remediation audit (two total ABS audits), zero invoice rows and invoice-created audit references, zero nonzero downstream paths, and all fourteen prior repairs still intact. Target Service/lifecycle/Customer/quotation and protected ABS/item fields remain unchanged. The post-execution preservation fingerprint matches for all fourteen prior repairs, both M0-02 cases, and all fourteen M0-03 audit references; M0-03 still has zero source invoice rows.
 
-Focused corrective source tests pass `10/10`; `git diff --check` passes with only existing CRLF warnings. G8 provenance remains `VERIFIED`; historical Completed mechanism and financial impact remain `UNKNOWN`; SAR 800.00 remains commercial authority only. **M0-01 CLOSURE EVIDENCE SATISFIED — CONTROLLER VERDICT REQUIRED.** M0-01 is not independently closed, M0 exit is not claimed, and W11 remains `NO-GO`. The next action is Controller review and an explicit M0-01 closure verdict; do not start M0-04 automatically.
+At the 29 October postflight cutoff, focused corrective source tests passed `10/10` and `git diff --check` passed with existing CRLF warnings. G8 provenance was `VERIFIED`; historical Completed mechanism and financial impact were `UNKNOWN`; SAR 800.00 was commercial authority only. The Controller verdict had not yet been recorded at that cutoff; this historical state is superseded by Section 13. M0 exit was not claimed, W11 remained `NO-GO`, and M0-04 had not started.
+
+## 13. Controller final M0-01 closure verdict — 29 October 2026
+
+**Controller verdict:** `M0-01 = CLOSED`
+**Task Verdict:** `PASS`
+
+The Controller records closure based on the published, verified governed repairs: the original cohort's 14 Approved-Service ABS authorities and final Completed G8 ABS authority are retired, leaving zero active ABS authority. No original-cohort ABS row is missing, and all governed historical records remain preserved. The Completed G8 Service remains historically `Completed` and soft-deleted, with its approved/current SAR 800.00 quotation unchanged.
+
+No invoice was reconstructed and the repair created no payment, receipt, credit, revenue, receivable, journal, or accounting fact. Exactly one compatible remediation audit exists, all 90 downstream guard paths remain clear, all 14 prior repairs remain intact, and M0-02/M0-03 evidence remains unchanged.
+
+G8 DEV verification provenance is `VERIFIED`; the exact historical mechanism producing `Completed` and historical financial impact remain `UNKNOWN`; SAR 800.00 is commercial authority only. M0-01 closure does not resolve those unknowns or imply zero impact, cancellation, reversal, or write-off. M0 overall remains open; M0-02/M0-03 remain `MONITOR / PRESERVE EVIDENCE`; M0-04 remains unresolved and unstarted; W11 remains `NO-GO`.
+
+**EXACT NEXT ACTION:** Controller identifies the smallest remaining applicable M0/W11 blocker after M0-01 closure. Do not start remediation automatically.

@@ -1,10 +1,10 @@
 # W11 M0-01 Remediation Design and DEV Dry Run
 
-**Current evidence date:** 29 October 2026. The 26 October full-inventory cutoff and the 27 October 14-case execution/postflight remain unchanged; sections 11–12 record the two Completed G8 attempts and final postflight.
+**Current evidence date:** 29 October 2026. The 26 October full-inventory cutoff and the 27 October 14-case execution/postflight remain unchanged; sections 11–12 record the two Completed G8 attempts and final postflight, and Section 13 records the Controller verdict.
 
-**Current task verdict:** PASS for the bounded corrective migration and single authorized retry. The immutable first attempt rolled back; the additive correction applied and the one new attempt retired exactly one ABS. The targeted postflight and preservation checks pass.
+**Current task verdict:** `PASS`. The Controller records `M0-01 = CLOSED` based on the completed and published repair evidence. The bounded corrective migration and single authorized retry succeeded; the immutable first attempt rolled back, the one retry retired exactly one ABS, and targeted postflight/preservation checks pass.
 
-**Current W11 readiness: NO-GO.** The fourteen Approved-Service ABS authorities and the final Completed G8 ABS authority are retired and verified. M0-01 closure evidence is satisfied pending Controller verdict; M0-01 is not declared closed. Historical completion mechanism and financial impact remain `UNKNOWN`, and SAR 800.00 remains commercial authority only. M0-02/M0-03 dispositions remain unchanged; M0-04 and other applicable gates remain unresolved.
+**Current W11 readiness: NO-GO. Controller verdict: `M0-01 = CLOSED`; Task Verdict: `PASS`.** The fourteen Approved-Service ABS authorities and the final Completed G8 ABS authority are retired and verified. Historical completion mechanism and financial impact remain `UNKNOWN`, and SAR 800.00 remains commercial authority only. M0 overall remains open; M0-02/M0-03 dispositions remain unchanged; M0-04 and other applicable gates remain unresolved.
 
 ## 1. Baseline and boundary
 
@@ -124,7 +124,7 @@ Mozfer accepts Service `c7ca6503-9746-4604-964a-cbe53c118009` (`G8 Final Service
 - The reproducible one-case SELECT-only query is [w11m0_01_completed_g8_preflight.sql](../supabase/verification/w11m0_01_completed_g8_preflight.sql). It does not move the full 26 October inventory cutoff.
 - At the 28 October contract cutoff, the [Completed G8 repair contract](w11-m0-01-completed-g8-repair-contract.md) selected a separate additive migration, fixed one-case target/downstream helpers and service-role-only RPC, and exact narrow trigger-context extensions. The existing 14-case manifest/RPC and normal void rules remained unchanged. No arbitrary target arguments, UI action, direct grant, migration, or DEV mutation was authorized at that cutoff; the separate 29 October authorization and execution are recorded in section 12.
 
-At the 28 October contract cutoff, M0-01 remained `BLOCKS APPLICABLE W11 PHASE`; that execution hold was superseded by the separate 29 October authorization and successful retry in section 12. M0-01 closure still awaits a Controller verdict; M0 exit is not declared and W11 remains `NO-GO`.
+At the 28 October contract cutoff, M0-01 remained `BLOCKS APPLICABLE W11 PHASE`; that execution hold was superseded by the separate 29 October authorization and successful retry in section 12. At the postflight cutoff, the Controller verdict had not yet been recorded; Section 13 records the later closure. M0 exit is not declared and W11 remains `NO-GO`.
 
 ## 11. Completed G8 execution attempt — 28 October 2026
 
@@ -138,4 +138,17 @@ The immediate pre-apply SELECT-only preflight passed at `2026-10-29 05:06:23.238
 
 Exactly one new call at `2026-10-29 05:07:10.156770+00` returned `retired_count=1` and `idempotent_replay=false`. Postflight passes all checks: one ABS authority retired, one exact remediation audit, zero invoice rows/references, zero nonzero links across all 90 paths, and all 14 prior repairs retained. Target protected state, M0-02, and M0-03 snapshots match; M0-03 still has zero source invoice rows.
 
-G8 provenance remains `VERIFIED`; historical Completed mechanism and financial impact remain `UNKNOWN`; SAR 800.00 remains commercial authority only. **M0-01 CLOSURE EVIDENCE SATISFIED — CONTROLLER VERDICT REQUIRED.** M0-01 remains open until that verdict. M0 exit is not claimed; W11 remains `NO-GO`. Do not start M0-04 automatically.
+At the 29 October postflight cutoff, before the Controller verdict recorded in Section 13, G8 provenance was `VERIFIED`; historical Completed mechanism and financial impact were `UNKNOWN`; SAR 800.00 was commercial authority only. M0 exit was not claimed; W11 remained `NO-GO`. This dated pre-verdict state is superseded by Section 13.
+
+## 13. Controller final M0-01 closure verdict — 29 October 2026
+
+**Controller verdict:** `M0-01 = CLOSED`
+**Task Verdict:** `PASS`
+
+The Controller records closure from the published evidence: 14 Approved-Service ABS authorities were retired and verified through the prior governed remediation, and the final Completed G8 ABS authority was retired and verified through the separately authorized corrective path. The original 15-case cohort has zero active ABS authority, no original-cohort ABS row is missing, and governed historical records remain preserved.
+
+The final G8 Service remains historically `Completed` and soft-deleted; its quotation remains approved/current at SAR 800.00. No invoice was reconstructed and no payment, receipt, credit, revenue, receivable, journal, or accounting fact was created by the repair. Exactly one compatible remediation audit exists; all 90 downstream guard paths are clear; the prior 14 repairs remain intact; M0-02/M0-03 evidence remains unchanged.
+
+G8 DEV verification provenance remains `VERIFIED`; the exact historical mechanism producing `Completed` and historical financial impact remain `UNKNOWN`; SAR 800.00 is commercial authority only. M0-01 closure does not imply zero impact, cancellation, reversal, write-off, or a known historical mechanism. M0 overall remains open; M0-02/M0-03 remain `MONITOR / PRESERVE EVIDENCE`; M0-04 remains unresolved and unstarted; W11 remains `NO-GO`.
+
+**EXACT NEXT ACTION:** Controller identifies the smallest remaining applicable M0/W11 blocker after M0-01 closure. Do not start remediation automatically.

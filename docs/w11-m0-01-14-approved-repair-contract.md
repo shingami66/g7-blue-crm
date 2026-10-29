@@ -1,8 +1,10 @@
 # W11 M0-01 — 14 Approved-Service ABS Retirement Contract
 
-**Contract status:** `READY FOR OWNER EXECUTION AUTHORIZATION` — design only. This status means the bounded contract is reviewable for a separate implementation/execution authorization; it does not authorize implementation, migration application, RPC invocation, or database mutation.
+**Historical contract status at design approval:** `READY FOR OWNER EXECUTION AUTHORIZATION` — design only; this pre-execution status is superseded by the governed repair and Controller PASS recorded in the current-status note below. It did not authorize implementation, migration application, RPC invocation, or database mutation by itself.
 
-**W11 readiness:** `NO-GO`. M0-01 remains an applicable-phase blocker. Historical cause and financial impact remain `UNKNOWN`.
+**Current status (29 October 2026):** `M0-01 = CLOSED — Controller PASS`, based on the published 14-case repair, final Completed G8 corrective repair, and verified postflights recorded in the [current M0 reconciliation packet](w11-m0-current-inventory-reconciliation.md). This design-only contract grants no current execution authority.
+
+**W11 readiness:** `NO-GO`. M0 overall remains open; M0-04 and other applicable gates remain unresolved. Historical cause and financial impact remain `UNKNOWN`.
 
 **Design baseline:** repository `D:/G7/g7-crm`, branch `main`, `HEAD` / `origin/main` / live `origin/main` `63a75181854bc72c7af9cf9a672783450e2c2708`; clean before this documentation-only task. DEV project `dpddrqjzqohexixgdqiq` is the only future execution target.
 
@@ -182,7 +184,7 @@ Before any future execution:
 
 The existing ordinary void RPC cannot serve this cohort because its Service lifecycle guard deliberately rejects soft-deleted Services. A narrow fixed-allowlist service-role-only remediation RPC with a transaction-local, exact-state trigger exception is the smallest supported path that can preserve the ordinary lifecycle guard and audit history while remaining atomic and non-general-purpose.
 
-**Contract outcome:** `READY FOR OWNER EXECUTION AUTHORIZATION`, contingent on a separate implementation/migration review, a fresh read-only execution preflight, and explicit DEV-only migration/RPC authorization. **No implementation, migration, RPC invocation, or database/environment mutation is authorized by this design.** M0-01 remains `BLOCKS APPLICABLE W11 PHASE`; W11 remains `NO-GO`.
+**Historical contract outcome at design approval:** `READY FOR OWNER EXECUTION AUTHORIZATION`, contingent on a separate implementation/migration review, a fresh read-only execution preflight, and explicit DEV-only migration/RPC authorization. **No implementation, migration, RPC invocation, or database/environment mutation was authorized by this design at that time.** M0-01 then remained `BLOCKS APPLICABLE W11 PHASE`; the later repairs and Controller PASS are recorded in the current-status note above. W11 remains `NO-GO`.
 
 **Exact next action at contract approval:** Mozfer to issue a separate bounded authorization for implementation and reviewed DEV execution of this contract, or keep the cohort unchanged. This pre-execution action is superseded by the execution record below.
 
@@ -202,6 +204,6 @@ Read-only postflight at `2026-10-27 11:18:18.279688+00` (snapshot `14646:14646:`
 
 The historical M0-03 invoice audit/source evidence remains unchanged: no invoice source rows or amounts were created, changed, or inferred. Its derived current-context counts changed from 14 to 0 for currently approved ABS scopes/source quotations because those 14 same target scopes were retired as authorized. The raw invoice audit references and historical source evidence were not modified; provenance and historical financial impact remain `UNKNOWN`.
 
-Current status (28 October 2026): the 14-case current-authority inconsistency is repaired. M0-01 overall remains `BLOCKS APPLICABLE W11 PHASE` because the excluded soft-deleted Completed G8 Service with active SAR 800.00 ABS is now `REMEDIATION CANDIDATE — BUSINESS DECISION RESOLVED`; its one-case contract is ready for separate Owner execution authorization. Historical cause and financial impact remain `UNKNOWN`; the ABS total remains commercial authority only. W11 remains `NO-GO`.
+Historical status as of 28 October 2026: the 14-case current-authority inconsistency was repaired, while M0-01 overall remained `BLOCKS APPLICABLE W11 PHASE` because the excluded soft-deleted Completed G8 Service still had active SAR 800.00 ABS. At that time the case was a `REMEDIATION CANDIDATE — BUSINESS DECISION RESOLVED`, with a one-case contract ready for separate Owner execution authorization. The later authorized repair and Controller closure are recorded in the current-status note above. Historical cause and financial impact remain `UNKNOWN`; the ABS total is commercial authority only. W11 remains `NO-GO`.
 
-**Prior exact next action (superseded by the 28 October 2026 Completed G8 Owner decision):** Mozfer to provide or decide the business evidence for the excluded Completed SAR 800.00 case. **Current exact next action:** Mozfer to separately authorize or decline implementation and reviewed DEV execution of the one-case Completed G8 repair contract; if authorized, require a fresh baseline/preflight. Preserve the DEV case unchanged until then; M0-01 remains open and W11 remains `NO-GO`.
+**Historical exact next action at the 28 October snapshot (superseded by the later Owner authorization, repair, and Controller verdict):** Mozfer to separately authorize or decline implementation and reviewed DEV execution of the one-case Completed G8 repair contract; if authorized, require a fresh baseline/preflight. The current exact next action is recorded in the current M0 reconciliation packet. W11 remains `NO-GO`.
