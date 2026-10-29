@@ -23,7 +23,7 @@ The [W11 cutover proof contract](product/w11-cutover-readiness-proof-contract.md
 
 The [current M0 inventory](w11-m0-current-inventory-reconciliation.md) explicitly marks the overall data-quality / unexplained-variance gate PENDING and the full privileged-path/security gate UNKNOWN — REQUIRES EVIDENCE.
 
-## Gate assessment
+## Gate assessment at the original assessment cutoff
 
 | M0 item | Current evidence and recorded disposition | Exit assessment |
 |---|---|---|
@@ -46,17 +46,21 @@ The unresolved unknowns remain explicitly UNKNOWN. No historical cause, financia
 
 Backup/restore, shadow reconciliation, manual acceptance, professional validation, and later phase gates remain separately recorded in the proof contract. This assessment does not execute or promote any of them.
 
+## Residual governance reconciliation supplement — 29 October 2026
+
+The [residual governance reconciliation](w11-m0-residual-exception-governance-reconciliation.md) is complete with result **M0 GOVERNANCE RECONCILIATION COMPLETE — OWNER DECISIONS REQUIRED**. GOV-D01 requests only the missing dated review for the existing M0-02/03/04 decisions; GOV-D02 and GOV-D03 propose M0-05/06 custodians and M0-only monitoring acceptance while retaining the separate security gate. All five follow-ups are **2026-11-05 — PROPOSED — OWNER/CONTROLLER APPROVAL REQUIRED**, with review before any earlier renewed exit assessment. This task supplies proposals only; no missing Owner approval is supplied. Missing approved metadata still blocks M0 exit; this is not a renewed exit verdict.
+
 ## Accountability and review boundary
 
-- **Accountable role for the next action:** Controller, for the residual M0 exception reconciliation. Mozfer remains the Owner for any business acceptance required by that reconciliation.
-- **Deadline:** No calendar due date for that action is recorded in the reviewed repository. The next review boundary is before any M0 exit verdict or selection of a later W11 phase.
+- **Accountable role for the next action:** Mozfer, for GOV-D01 through GOV-D03 decisions; Controller records the decisions. M0-05/06 exception-custodian assignments remain proposals.
+- **Deadline:** No calendar date is approved. The proposed follow-up for all five exceptions is **2026-11-05 — PROPOSED — OWNER/CONTROLLER APPROVAL REQUIRED**, with review before any earlier renewed M0 Exit Assessment; applicable later-phase gates retain their existing boundaries.
 - **Evidence needed to change this assessment:** dated, per-exception owner/disposition records with rationale, scope, downstream block, and decision deadline or follow-up/expiry; plus evidence resolving the M0-05/06 security residual or an explicit still-blocked classification. Any historical cause or amount must remain UNKNOWN unless supported by authoritative evidence.
 
-## Single smallest next task
+## Current next action after governance reconciliation
 
-Complete one bounded M0 residual-exception governance reconciliation for M0-02 through M0-06. For each applicable exception, the Controller should record the accountable owner, accepted reason and scope, downstream phase/surface blocked, and an explicit decision deadline or follow-up/expiry date; obtain Mozfer’s decision where business acceptance is required. Keep unknown cause and impact classifications unchanged, and leave any unsupported or unaccepted exception blocking M0. Do not perform remediation as part of that task.
+Mozfer approves, declines or amends GOV-D01, GOV-D02 and GOV-D03 in the [Owner Decision Packet](w11-m0-residual-exception-governance-reconciliation.md); the Controller records those decisions before a separately requested renewed M0 Exit Assessment.
 
-**This is a recommendation, not an Owner decision or Controller closure verdict.** No next W11 gate is selected because M0 exit is not satisfied.
+**The packet contains proposals, not approved Owner decisions or a Controller closure verdict.** M0 EXIT NOT SATISFIED and W11 NO-GO remain unchanged. No remediation or later W11 gate is authorized.
 
 ## Evidence references
 
