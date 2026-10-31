@@ -1,3 +1,4 @@
+import type { RecordQueryContext } from "@/lib/record-navigation/return-to";
 import type { RecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
 import RecordNavigation, {
   RecordNavigationPlaceholder,
@@ -10,6 +11,7 @@ interface RecordNavigationSlotProps {
   recordType: string;
   dictionary: RecordNavigationDictionary;
   returnTo?: string;
+  recordQuery?: RecordQueryContext;
   pendingLabel?: string;
 }
 
@@ -19,6 +21,7 @@ export default async function RecordNavigationSlot({
   recordType,
   dictionary,
   returnTo,
+  recordQuery,
   pendingLabel,
 }: RecordNavigationSlotProps) {
   let navigation: RecordNavigationState;
@@ -42,6 +45,7 @@ export default async function RecordNavigationSlot({
       navigation={navigation}
       dictionary={dictionary}
       returnTo={returnTo}
+      recordQuery={recordQuery}
       pendingLabel={pendingLabel}
     />
   );

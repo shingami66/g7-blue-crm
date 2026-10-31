@@ -13,7 +13,7 @@ import QuotationForm from "./QuotationForm";
 export const dynamic = "force-dynamic";
 
 interface NewQuotationPageProps {
-  searchParams?: Promise<{ serviceId?: string | string[] }>;
+  searchParams?: Promise<{ serviceId?: string | string[]; returnTo?: string }>;
 }
 
 function getRequestedServiceId(searchParams: { serviceId?: string | string[] }) {
@@ -160,7 +160,7 @@ export default async function NewQuotationPage({ searchParams }: NewQuotationPag
 
   return (
     <div className="flex flex-col h-full max-w-5xl mx-auto w-full pb-12">
-      <QuotationForm service={service} dictionary={formDictionary} />
+      <QuotationForm service={service} dictionary={formDictionary} returnTo={resolvedSearchParams.returnTo} />
     </div>
   );
 }

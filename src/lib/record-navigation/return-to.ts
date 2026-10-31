@@ -33,6 +33,22 @@ export function appendReturnTo(targetHref: string, returnTo: string): string {
   return `${url.pathname}${url.search}`;
 }
 
+/**
+ * Record browsing scope is owned by the loader; this context only preserves
+ * destination route mode. Return origin is independent and cannot be overridden
+ * by query context. Callers supply trusted, serializable route parameters.
+ */
+export type RecordQueryContext = Readonly<Record<string, string>>;
+
+export function recordNavigationHref(basePath: string, id: string, returnTo?: string, recordQuery?: RecordQueryContext): string {
+  const params = new URLSearchParams(recordQuery);
+  params.delete("returnTo");
+  const origin = safeRecordReturnTo(returnTo, "");
+  if (origin) params.set("returnTo", origin);
+  const query = params.toString();
+  return `${basePath}/${encodeURIComponent(id)}${query ? `?${query}` : ""}`;
+}
+
 export function buildReturnToUrl(basePath: string, parentReturnTo?: string | null): string {
   if (!parentReturnTo) return basePath;
   return appendReturnTo(basePath, parentReturnTo);

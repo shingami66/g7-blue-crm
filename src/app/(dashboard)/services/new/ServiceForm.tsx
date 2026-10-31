@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import { Save, AlertCircle } from "lucide-react";
 import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import type { CustomerPickerItem } from "@/lib/customers/types";
@@ -14,6 +15,7 @@ import Button from "@/components/ui/Button";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 
 interface ServiceFormProps {
+  returnTo?: string;
   customers: CustomerPickerItem[];
   dictionary: ServicesDictionary;
 }
@@ -25,9 +27,10 @@ function generateMutationKey(): string {
   return `srv_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 }
 
-export default function ServiceForm({ customers, dictionary }: ServiceFormProps) {
+export default function ServiceForm({ customers, dictionary, returnTo }: ServiceFormProps) {
   const router = useRouter();
-  const { back, push } = useGlobalNavigationPending();
+  const exitHref = safeRecordReturnTo(returnTo, "/services");
+  const { push } = useGlobalNavigationPending();
 
   const [mutationKey] = useState<string>(() => generateMutationKey());
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -117,7 +120,7 @@ export default function ServiceForm({ customers, dictionary }: ServiceFormProps)
       <div className="flex items-center gap-4 py-4">
         <button
           type="button"
-          onClick={() => back()}
+          onClick={() => push(exitHref)}
           className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           aria-label={getCommonDictionary(dictionary.locale).actions.back}
         >
@@ -270,7 +273,7 @@ export default function ServiceForm({ customers, dictionary }: ServiceFormProps)
         <div className="flex justify-end gap-3 mt-4">
           <Button
             type="button"
-            onClick={() => push("/services")}
+            onClick={() => push(exitHref)}
             variant="outline"
             size="sm"
             disabled={isSubmitting}

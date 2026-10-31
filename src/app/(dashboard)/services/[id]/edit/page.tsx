@@ -14,8 +14,10 @@ export const dynamic = "force-dynamic";
 
 export default async function EditServicePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnTo?: string }>;
 }) {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getServicesDictionary(locale);
@@ -83,7 +85,7 @@ export default async function EditServicePage({
 
   return (
     <div className="flex flex-col h-full max-w-5xl mx-auto w-full pb-12">
-      <EditServiceForm service={service} dictionary={dictionary} />
+      <EditServiceForm service={service} dictionary={dictionary} returnTo={(await searchParams).returnTo} />
     </div>
   );
 }

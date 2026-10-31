@@ -5,15 +5,19 @@ import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getSuppliersDictionary } from "@/lib/i18n/dictionaries/suppliers";
 import { getSupplierById } from "@/lib/suppliers/queries";
 import SupplierEditForm from "./SupplierEditForm";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 
 export const dynamic = "force-dynamic";
 
 export default async function EditSupplierPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnTo?: string }>;
 }) {
   const { id } = await params;
+  const returnTo = safeRecordReturnTo((await searchParams).returnTo, `/suppliers/${id}`);
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getSuppliersDictionary(locale);
 
@@ -68,5 +72,5 @@ export default async function EditSupplierPage({
 
   const canManageBankDetails = await checkPermission("suppliers:write_bank");
 
-  return <div className="flex h-full w-full max-w-5xl flex-col pb-12"><SupplierEditForm supplier={result.supplier} dictionary={dictionary} canManageBankDetails={canManageBankDetails} /></div>;
+  return <div className="flex h-full w-full max-w-5xl flex-col pb-12"><SupplierEditForm supplier={result.supplier} dictionary={dictionary} canManageBankDetails={canManageBankDetails} returnTo={returnTo} /></div>;
 }

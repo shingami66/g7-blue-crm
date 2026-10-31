@@ -403,7 +403,7 @@ test("Create and edit form action buttons use consistent size='sm'", () => {
   assert.match(supplierNew, /<Button type="submit" loading=\{isSubmitting\} size="sm" className="h-9 min-h-9 whitespace-nowrap">/);
   assert.match(supplierEdit, /<Button type="submit" loading=\{isSubmitting\} size="sm" className="h-9 min-h-9 whitespace-nowrap">/);
   assert.match(supplierNew, /<Button type="button" onClick=\{\(\) => push\("\/suppliers"\)\} disabled=\{isSubmitting\} variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">/);
-  assert.match(supplierEdit, /<Button type="button" onClick=\{\(\) => push\(`\/suppliers\/\$\{supplier\.id\}`\)\} disabled=\{isSubmitting\} variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">/);
+  assert.match(supplierEdit, /<Button type="button" onClick=\{\(\) => push\(exitHref\)\} disabled=\{isSubmitting\} variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">/);
   assert.match(supplierNew, /<span className="inline-flex items-center gap-2"><Save size=\{16\} aria-hidden="true" \/>/);
   assert.match(supplierEdit, /<span className="inline-flex items-center gap-2"><Save size=\{16\} aria-hidden="true" \/>/);
 });

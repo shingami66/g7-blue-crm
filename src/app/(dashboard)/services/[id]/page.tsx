@@ -184,7 +184,7 @@ export default async function ServiceDetailPage({
               </span>
             ) : (
               <Link
-                href={`/quotations/new?serviceId=${service.id}`}
+                href={appendReturnTo(`/quotations/new?serviceId=${service.id}`, currentServiceUrl)}
                 className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[14px] font-semibold transition-colors"
               >
                 <FileText size={18} />
@@ -194,7 +194,7 @@ export default async function ServiceDetailPage({
           )}
           {canEditEventBrief && (
             <PendingLink
-              href={`/services/${service.id}/edit`}
+              href={appendReturnTo(`/services/${service.id}/edit`, currentServiceUrl)}
               className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors"
             >
               <Edit size={18} />

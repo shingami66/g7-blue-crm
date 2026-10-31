@@ -9,6 +9,7 @@ import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationP
 import { updateSupplier } from "@/lib/suppliers/actions";
 import { SAFE_SUPPLIER_CREATE_STATUSES, SUPPLIER_CATEGORIES, SUPPLIER_VAT_STATUSES } from "@/lib/suppliers/schemas";
 import { getSupplierCategoryLabel, getSupplierTypeLabel, type SuppliersDictionary } from "@/lib/i18n/dictionaries/suppliers";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import type { Supplier } from "@/types/supplier";
 
 const SUPPLIER_TYPES = ["company", "individual"] as const;
@@ -19,8 +20,9 @@ function optionalValue(value: string) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-export default function SupplierEditForm({ supplier, dictionary, canManageBankDetails }: { supplier: Supplier; dictionary: SuppliersDictionary; canManageBankDetails: boolean }) {
+export default function SupplierEditForm({ supplier, dictionary, canManageBankDetails, returnTo }: { supplier: Supplier; dictionary: SuppliersDictionary; canManageBankDetails: boolean; returnTo?: string }) {
   const router = useRouter();
+  const exitHref = safeRecordReturnTo(returnTo, `/suppliers/${supplier.id}`);
   const { push } = useGlobalNavigationPending();
   const { locale } = dictionary;
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,7 +102,7 @@ export default function SupplierEditForm({ supplier, dictionary, canManageBankDe
     const result = await updateSupplier(input);
 
     if (result.success) {
-      router.push(`/suppliers/${supplier.id}`);
+      router.push(exitHref);
       router.refresh();
       return;
     }
@@ -111,7 +113,7 @@ export default function SupplierEditForm({ supplier, dictionary, canManageBankDe
 
   return (
     <div className="flex w-full max-w-5xl flex-col gap-6">
-      <div className="flex items-center gap-4 py-4"><button type="button" onClick={() => push(`/suppliers/${supplier.id}`)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" aria-label={dictionary.form.backToSupplier}><LocaleBackIcon size={16} /></button><div><h2 className="text-[28px] font-semibold leading-[36px] text-primary">{dictionary.form.editTitle}</h2><p className="text-[14px] text-on-surface-variant">{dictionary.form.editSubtitle}</p></div></div>
+      <div className="flex items-center gap-4 py-4"><button type="button" onClick={() => push(exitHref)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" aria-label={dictionary.form.backToSupplier}><LocaleBackIcon size={16} /></button><div><h2 className="text-[28px] font-semibold leading-[36px] text-primary">{dictionary.form.editTitle}</h2><p className="text-[14px] text-on-surface-variant">{dictionary.form.editSubtitle}</p></div></div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {error && <div className="flex items-center gap-2 rounded-lg bg-error-container p-4 text-[14px] text-on-error-container"><AlertCircle size={18} />{error}</div>}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -119,7 +121,7 @@ export default function SupplierEditForm({ supplier, dictionary, canManageBankDe
           <section className="flex flex-col gap-4 rounded-xl border border-surface-variant bg-surface-container-lowest p-6"><h3 className="border-b border-surface-variant pb-2 font-semibold text-primary">{dictionary.form.contactLegal}</h3><Field label={dictionary.form.labels.contactName}><input required value={contactName} onChange={(event) => setContactName(event.target.value)} className={inputClassName} dir="auto" /></Field><div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Field label={dictionary.form.labels.phone}><input required type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className={inputClassName} dir="ltr" /></Field><Field label={dictionary.form.labels.whatsappPhone}><input type="tel" value={whatsappPhone} onChange={(event) => setWhatsappPhone(event.target.value)} className={inputClassName} dir="ltr" /></Field></div><Field label={dictionary.form.labels.email}><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClassName} dir="ltr" /></Field><div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Field label={dictionary.form.labels.city}><input required value={city} onChange={(event) => setCity(event.target.value)} className={inputClassName} dir="auto" /></Field><Field label={dictionary.form.labels.country}><input required value={country} onChange={(event) => setCountry(event.target.value)} className={inputClassName} dir="auto" /></Field></div><div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Field label={dictionary.form.labels.crNumber}><input value={crNumber} onChange={(event) => setCrNumber(event.target.value)} className={inputClassName} dir="ltr" /></Field><Field label={dictionary.form.labels.vatRegistration}><select value={vatRegistrationStatus} onChange={(event) => setVatRegistrationStatus(event.target.value)} className={inputClassName}>{SUPPLIER_VAT_STATUSES.map((item) => <option key={item} value={item}>{dictionary.vatRegistration[item]}</option>)}</select></Field></div><Field label={dictionary.form.labels.vatNumber}><input value={vatNumber} onChange={(event) => setVatNumber(event.target.value)} className={inputClassName} dir="ltr" disabled={vatRegistrationStatus !== "registered"} /></Field><Field label={dictionary.form.labels.paymentTerms}><textarea value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} rows={3} className={inputClassName} dir="auto" /></Field><Field label={dictionary.form.labels.internalNotes}><textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={4} className={inputClassName} dir="auto" /></Field></section>
         </div>
         {canManageBankDetails && <section className="flex flex-col gap-4 rounded-xl border border-surface-variant bg-surface-container-lowest p-6"><h3 className="border-b border-surface-variant pb-2 font-semibold text-primary">{dictionary.form.bankDetails}</h3><div className="grid grid-cols-1 gap-4 md:grid-cols-3"><Field label={dictionary.form.labels.bankName}><input value={bankName} onChange={(event) => setBankName(event.target.value)} className={inputClassName} dir="auto" /></Field><Field label={dictionary.form.labels.bankAccountName}><input value={bankAccountName} onChange={(event) => setBankAccountName(event.target.value)} className={inputClassName} dir="auto" /></Field><Field label={dictionary.form.labels.iban}><input value={iban} onChange={(event) => setIban(event.target.value)} className={inputClassName} dir="ltr" /></Field></div></section>}
-        <div className="mt-4 flex flex-wrap items-center justify-end gap-3"><Button type="button" onClick={() => push(`/suppliers/${supplier.id}`)} disabled={isSubmitting} variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">{dictionary.form.buttons.cancel}</Button><Button type="submit" loading={isSubmitting} size="sm" className="h-9 min-h-9 whitespace-nowrap"><span className="inline-flex items-center gap-2"><Save size={16} aria-hidden="true" />{dictionary.form.buttons.update}</span></Button></div>
+        <div className="mt-4 flex flex-wrap items-center justify-end gap-3"><Button type="button" onClick={() => push(exitHref)} disabled={isSubmitting} variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">{dictionary.form.buttons.cancel}</Button><Button type="submit" loading={isSubmitting} size="sm" className="h-9 min-h-9 whitespace-nowrap"><span className="inline-flex items-center gap-2"><Save size={16} aria-hidden="true" />{dictionary.form.buttons.update}</span></Button></div>
       </form>
     </div>
   );

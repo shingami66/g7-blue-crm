@@ -24,7 +24,7 @@ import QuotationBillingAuthorityCard from "./QuotationBillingAuthorityCard";
 import RecordNavigationSlot from "@/components/records/RecordNavigationSlot";
 import { RecordNavigationPlaceholder } from "@/components/records/RecordNavigation";
 import { getRecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
-import { getQuotationRecordNavigation, safeRecordReturnTo } from "@/lib/record-navigation/queries";
+import { getQuotationRecordNavigation, safeRecordReturnTo, appendReturnTo } from "@/lib/record-navigation/queries";
 import CommercialAmendmentCreateDialog from "./CommercialAmendmentCreateDialog";
 import { resolveCommercialAmendmentDetailAction } from "@/lib/quotations/commercial-amendment-detail-action";
 
@@ -246,7 +246,7 @@ export default async function QuotationDetailPage({
           )}
           {canWrite && (quotation.status === "draft" && !quotation.isApprovedCommercialAmendment ? (
             <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
-              <PendingLink href={`/quotations/${quotation.id}/edit`}>
+              <PendingLink href={appendReturnTo(`/quotations/${quotation.id}/edit`, appendReturnTo(`/quotations/${quotation.id}`, returnTo))}>
                 <span className="inline-flex items-center gap-2 whitespace-nowrap">
                   <FileEdit size={16} />
                   <span>{dictionary.detail.actions.edit}</span>

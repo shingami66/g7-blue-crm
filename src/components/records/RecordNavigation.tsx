@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { recordNavigationHref, type RecordQueryContext } from "@/lib/record-navigation/return-to";
 import { useEffect, useRef, useState } from "react";
 import { ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { RecordNavigationDictionary } from "@/lib/i18n/dictionaries/record-navigation";
@@ -25,6 +26,7 @@ interface RecordNavigationProps {
   navigation: RecordNavigationState;
   dictionary: RecordNavigationDictionary;
   returnTo?: string;
+  recordQuery?: RecordQueryContext;
   pendingLabel?: string;
 }
 
@@ -36,10 +38,6 @@ interface RecordNavigationPlaceholderProps {
   state: RecordNavigationPlaceholderState;
 }
 
-function hrefFor(basePath: string, id: string, returnTo?: string) {
-  const returnParam = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
-  return `${basePath}/${id}${returnParam}`;
-}
 
 export function RecordNavigationPlaceholder({
   recordType,
@@ -91,6 +89,7 @@ export default function RecordNavigation({
   navigation,
   dictionary,
   returnTo,
+  recordQuery,
   pendingLabel = dictionary.title,
 }: RecordNavigationProps) {
   const items = [
@@ -167,11 +166,11 @@ export default function RecordNavigation({
         id ? (
           <Link
             key={key}
-            href={hrefFor(basePath, id, returnTo)}
+            href={recordNavigationHref(basePath, id, returnTo, recordQuery)}
             aria-disabled={isGuarded || undefined}
             aria-label={`${label} ${recordType}`}
             title={`${label} ${recordType}`}
-            onClick={(event) => handleNavigationClick(event, hrefFor(basePath, id, returnTo))}
+            onClick={(event) => handleNavigationClick(event, recordNavigationHref(basePath, id, returnTo, recordQuery))}
             className="inline-flex size-8 items-center justify-center rounded-md text-primary transition-colors hover:bg-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary/40 aria-disabled:cursor-not-allowed aria-disabled:opacity-45"
           >
             <Icon size={14} aria-hidden="true" />

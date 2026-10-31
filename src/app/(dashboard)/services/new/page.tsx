@@ -10,7 +10,8 @@ import ServiceForm from "./ServiceForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function NewServicePage() {
+export default async function NewServicePage({ searchParams }: { searchParams: Promise<{ returnTo?: string }> }) {
+  const { returnTo } = await searchParams;
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getServicesDictionary(locale);
   const sharedStates = getSharedUiStates(locale);
@@ -46,7 +47,7 @@ export default async function NewServicePage() {
 
   return (
     <div className="flex flex-col h-full max-w-5xl mx-auto w-full pb-12">
-      <ServiceForm customers={activeCustomers} dictionary={dictionary} />
+      <ServiceForm customers={activeCustomers} dictionary={dictionary} returnTo={returnTo} />
     </div>
   );
 }

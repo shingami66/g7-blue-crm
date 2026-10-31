@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import { AlertCircle, Save } from "lucide-react";
 import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import { createQuotation, updateQuotation } from "@/lib/quotations/actions";
@@ -40,6 +41,7 @@ interface QuotationFormService {
 }
 
 interface QuotationFormProps {
+  returnTo?: string;
   service: QuotationFormService;
   initialData?: QuotationDetail;
   dictionary?: QuotationsDictionary;
@@ -71,11 +73,12 @@ function formatBpsInput(value: number | null | undefined) {
   return (value / 100).toFixed(2).replace(/\.?0+$/, "");
 }
 
-export default function QuotationForm({ service, initialData, dictionary: dictionaryProp }: QuotationFormProps) {
+export default function QuotationForm({ service, initialData, dictionary: dictionaryProp, returnTo }: QuotationFormProps) {
   const router = useRouter();
+  const exitHref = safeRecordReturnTo(returnTo, initialData ? `/quotations/${initialData.id}` : `/services/${service.id}`);
   const locale = useLocale();
   const dictionary = dictionaryProp ?? getQuotationsDictionary(locale);
-  const { back } = useGlobalNavigationPending();
+  const { push } = useGlobalNavigationPending();
   const isEdit = Boolean(initialData);
   const [mutationKey] = useState(generateMutationKey);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -183,7 +186,7 @@ export default function QuotationForm({ service, initialData, dictionary: dictio
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-4 py-4">
-        <button type="button" onClick={() => back()} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low" aria-label={getCommonDictionary(dictionary.locale).actions.back}>
+        <button type="button" onClick={() => push(exitHref)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low" aria-label={getCommonDictionary(dictionary.locale).actions.back}>
           <LocaleBackIcon size={16} />
         </button>
         <div>

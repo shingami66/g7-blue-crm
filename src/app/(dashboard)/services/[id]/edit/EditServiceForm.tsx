@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import { Save, AlertCircle } from "lucide-react";
 import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import type { Service } from "@/types/service";
@@ -14,13 +15,15 @@ import Button from "@/components/ui/Button";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 
 interface EditServiceFormProps {
+  returnTo?: string;
   service: Service;
   dictionary: ServicesDictionary;
 }
 
-export default function EditServiceForm({ service, dictionary }: EditServiceFormProps) {
+export default function EditServiceForm({ service, dictionary, returnTo }: EditServiceFormProps) {
   const router = useRouter();
-  const { back, push } = useGlobalNavigationPending();
+  const exitHref = safeRecordReturnTo(returnTo, `/services/${service.id}`);
+  const { push } = useGlobalNavigationPending();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +104,7 @@ export default function EditServiceForm({ service, dictionary }: EditServiceForm
       <div className="flex items-center gap-4 py-4">
         <button
           type="button"
-          onClick={() => back()}
+          onClick={() => push(exitHref)}
           className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           aria-label={getCommonDictionary(dictionary.locale).actions.back}
         >
@@ -250,7 +253,7 @@ export default function EditServiceForm({ service, dictionary }: EditServiceForm
         <div className="flex justify-end gap-3 mt-4">
           <Button
             type="button"
-            onClick={() => push(`/services/${service.id}`)}
+            onClick={() => push(exitHref)}
             variant="outline"
             size="sm"
             disabled={isSubmitting}

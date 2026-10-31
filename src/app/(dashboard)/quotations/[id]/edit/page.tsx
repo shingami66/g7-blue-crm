@@ -6,15 +6,19 @@ import { getQuotationById } from "@/lib/quotations/queries";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getQuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
 import QuotationForm from "../../new/QuotationForm";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 
 export const dynamic = "force-dynamic";
 
 export default async function EditQuotationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnTo?: string }>;
 }) {
   const { id } = await params;
+  const returnTo = safeRecordReturnTo((await searchParams).returnTo, `/quotations/${id}`);
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getQuotationsDictionary(locale);
   let authOrLoadError: unknown = null;
@@ -115,6 +119,7 @@ export default async function EditQuotationPage({
           customer: quotation.customer,
         }}
         initialData={quotation}
+        returnTo={returnTo}
         dictionary={dictionary}
       />
     </div>
