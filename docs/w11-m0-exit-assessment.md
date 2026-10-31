@@ -46,21 +46,29 @@ The unresolved unknowns remain explicitly UNKNOWN. No historical cause, financia
 
 Backup/restore, shadow reconciliation, manual acceptance, professional validation, and later phase gates remain separately recorded in the proof contract. This assessment does not execute or promote any of them.
 
-## Residual governance reconciliation supplement — 29 October 2026
+## Historical residual governance reconciliation supplement — 29 October 2026
 
-The [residual governance reconciliation](w11-m0-residual-exception-governance-reconciliation.md) is complete with result **M0 GOVERNANCE RECONCILIATION COMPLETE — OWNER DECISIONS REQUIRED**. GOV-D01 requests only the missing dated review for the existing M0-02/03/04 decisions; GOV-D02 and GOV-D03 propose M0-05/06 custodians and M0-only monitoring acceptance while retaining the separate security gate. All five follow-ups are **2026-11-05 — PROPOSED — OWNER/CONTROLLER APPROVAL REQUIRED**, with review before any earlier renewed exit assessment. This task supplies proposals only; no missing Owner approval is supplied. Missing approved metadata still blocks M0 exit; this is not a renewed exit verdict.
+At the 29 October cutoff, the [residual governance reconciliation](w11-m0-residual-exception-governance-reconciliation.md) was complete with result **M0 GOVERNANCE RECONCILIATION COMPLETE — OWNER DECISIONS REQUIRED**. GOV-D01 requested a dated review for M0-02/03/04, while GOV-D02/D03 proposed M0-05/06 custodians and M0-only monitoring acceptance. The five dates were proposals then; the dated proposal history is retained in the linked packet. Mozfer's later approvals are recorded below. This is not a renewed exit verdict.
 
-## Accountability and review boundary
+## Accountability and review boundary at the 29 October assessment snapshot
 
 - **Accountable role for the next action:** Mozfer, for GOV-D01 through GOV-D03 decisions; Controller records the decisions. M0-05/06 exception-custodian assignments remain proposals.
 - **Deadline:** No calendar date is approved. The proposed follow-up for all five exceptions is **2026-11-05 — PROPOSED — OWNER/CONTROLLER APPROVAL REQUIRED**, with review before any earlier renewed M0 Exit Assessment; applicable later-phase gates retain their existing boundaries.
 - **Evidence needed to change this assessment:** dated, per-exception owner/disposition records with rationale, scope, downstream block, and decision deadline or follow-up/expiry; plus evidence resolving the M0-05/06 security residual or an explicit still-blocked classification. Any historical cause or amount must remain UNKNOWN unless supported by authoritative evidence.
 
-## Current next action after governance reconciliation
+## Historical next action at the 29 October assessment snapshot (superseded 31 October 2026)
 
-Mozfer approves, declines or amends GOV-D01, GOV-D02 and GOV-D03 in the [Owner Decision Packet](w11-m0-residual-exception-governance-reconciliation.md); the Controller records those decisions before a separately requested renewed M0 Exit Assessment.
+At the original assessment cutoff, the next action was for Mozfer to decide GOV-D01 through GOV-D03 and for the Controller to record the decisions. The following 31 October supplement supersedes that action.
 
-**The packet contains proposals, not approved Owner decisions or a Controller closure verdict.** M0 EXIT NOT SATISFIED and W11 NO-GO remain unchanged. No remediation or later W11 gate is authorized.
+**At that cutoff, the packet contained proposals, not approved Owner decisions or a Controller closure verdict.** The original assessment result was M0 EXIT NOT SATISFIED and W11 NO-GO. No remediation or later W11 gate was authorized.
+
+## Current Owner decision status — 31 October 2026
+
+Mozfer explicitly approved GOV-D01, GOV-D02, and GOV-D03 as proposed. The 2026-11-05 follow-up is an approved one-off governance checkpoint for M0-02 through M0-06; it is not an automatic expiry or remediation authority. Controller is the approved M0-05/M0-06 governance custodian; Mozfer remains Human Owner / business acceptance authority.
+
+M0-02/03/04 preservation dispositions and all historical UNKNOWN classifications remain unchanged. M0-05/06 are approved MONITOR / PRESERVE EVIDENCE exceptions for M0 purposes only. Full privileged-path/security closure remains UNKNOWN — REQUIRES EVIDENCE; data quality remains PENDING. The M0 Exit Assessment remains M0 EXIT NOT SATISFIED and has not been renewed; W11 remains NO-GO. No other gate or authority changes.
+
+**EXACT NEXT ACTION:** Run one renewed bounded M0 Exit Assessment against the newly approved governance state. Do not start another W11 gate until the Controller issues the renewed M0 exit verdict.
 
 ## Evidence references
 
