@@ -213,13 +213,23 @@ The topbar may carry search, locale, notifications, user context, and global act
 
 Use the existing page-container contract and responsive margins from verified implementation. Do not widen dense ERP surfaces merely to create visual spectacle.
 
+The shared `PageFrame` foundation exposes `workspace`, `record`, and `form` width intents. Workspace and record use the available Dashboard shell width with the same outer alignment; form uses the existing `max-w-5xl` width. Constrain reading sections inside a record when appropriate. PageFrame renders a div inside the existing main landmark. These primitives are available for separately authorized adoption; no application pages were migrated in the foundation slice.
+
 ## 41. Page Header Anatomy
 
 A page header should establish title, concise context, breadcrumbs or back navigation where needed, and permission-aware actions. Reuse `PageHeader` when its semantics fit.
 
+`PageHeader variant="composed"` renders one h1 with optional subtitle, caller-formatted identifier, and a generic status slot next to identity. Its optional `actions` object has a localized accessible `label` plus `primary`, `secondary`, and `overflow` control slots, rendered by `PageActions` as a named group. Overflow is a slot, not a new menu implementation. Callers own permissions, business actions, identifier formatting, and safe controls. Use one composed PageHeader per page; do not pass additional page headings in slots. Existing PageHeader consumers retain the default legacy h2/children layout until separately migrated.
+
 ## 42. Breadcrumbs and Back Navigation
 
 Navigation context must reflect real routes and the Service-centered hierarchy. Back actions must preserve expected filter or record context where the product supports it.
+
+`PageLocation` composes independently supplied `breadcrumbs={{ items, label }}` and `returnControl`. `Breadcrumbs` renders a named nav and ordered list from explicit labels, optional linked or non-linked ancestors, and exactly one final unlinked `current: true` item. Labels default to bidi isolation with `dir="auto"`; DOM order stays structural in both directions. No pathname inference, title fetching, virtual-parent route creation, or return-origin-derived hierarchy occurs.
+
+`RecordBackButton` retains explicit href and PendingLink behavior. Its optional `variant="icon" | "labeled"` selects presentation independently of the semantic label; omitting variant preserves the legacy label-dependent presentation. Every variant has an accessible name and the existing locale-aware arrow. Breadcrumb ancestor and return-control hrefs must be internal absolute paths; this UI safety check does not widen Slice 1's domain-specific return-origin allowlist.
+
+`RecordNavigationRegion` optionally wraps the existing pager in a separately named section using a caller-localized `label`; it is separate from PageLocation's return control. The pager retains its physical LTR order, modified-click/pending guards, route context, and directory browsing scope. Shared composition components introduce no global state, authorization logic, record fetching, or business semantics.
 
 ## 43. Cards
 
