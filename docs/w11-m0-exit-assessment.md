@@ -5,7 +5,7 @@
 **M0 Exit Assessment:** M0 EXIT NOT SATISFIED
 **W11 readiness:** NO-GO
 
-The renewed repository-evidence assessment found one unresolved M0 contract-boundary blocker after the approved GOV-D01/D02/D03 decisions. Historical UNKNOWNs remain governed and unchanged. W11 remains NO-GO.
+The renewed repository-evidence assessment found one unresolved M0 contract-boundary blocker after the initial GOV-D01/D02/D03 approvals. A subsequent explicit Owner decision recorded below approves the expiry for M0-02 through M0-06; the M0 exit result remains unchanged because this task does not perform the required renewed assessment. Historical UNKNOWNs remain governed and unchanged. W11 remains NO-GO.
 
 **Repository baseline:** `main` at `b24b5ca88255799afa7a6c5c62bd1910e68c4665`; `origin/main` and live remote `main` matched before these documentation edits.
 
@@ -18,6 +18,8 @@ This is a repository-evidence assessment of M0 exit criteria. It does not issue 
 **Assessment result: M0 EXIT NOT SATISFIED.** The Writer does not issue a Controller closure verdict. M0 remains open.
 
 ### M0 exit-contract matrix
+
+This matrix records the assessment at its 31 October cutoff, before the subsequent Owner expiry decision below. This task records that later decision but does not rerun the assessment.
 
 | Criterion | Result | Evidence |
 |---|---|---|
@@ -40,7 +42,7 @@ This is a repository-evidence assessment of M0 exit criteria. It does not issue 
 
 ### Current status and determination
 
-- **Current data-quality / unexplained-variance gate:** PENDING because the approved follow-up boundary has not been established as satisfying §12's expiry requirement. This is not pending solely because historical UNKNOWNs remain.
+- **Current data-quality / unexplained-variance gate:** PENDING pending the separately requested renewed assessment after the Owner expiry decision. This task does not reassess or upgrade the gate; historical UNKNOWNs alone are not the reason for PENDING.
 - **M0-01:** CLOSED — CONTROLLER PASS; not reopened.
 - **M0-02/M0-03:** MONITOR / PRESERVE EVIDENCE; provenance/cause and historical financial impact remain UNKNOWN.
 - **M0-04:** SATISFIED — MONITOR / PRESERVE EVIDENCE for its Owner-disposition sub-gate; deletion time remains BOUNDED BUT NOT EXACT, cause and historical financial impact remain UNKNOWN, and current effect remains METADATA INCONSISTENCY ONLY.
@@ -49,13 +51,23 @@ This is a repository-evidence assessment of M0 exit criteria. It does not issue 
 
 Full privileged-path/security closure remains **UNKNOWN — REQUIRES EVIDENCE**. GOV-D02/GOV-D03 do not close it; the proof-contract matrix treats it as a separate W11 gate. W11 remains **NO-GO**; backup/restore, shadow reconciliation, remaining Owner acceptance, professional, environment, rehearsal, and later-phase gates remain separately open.
 
-**Smallest remaining M0 blocker:** The Controller/Owner must resolve whether the §5 follow-up option satisfies §12's expiry requirement for the accepted M0-02 through M0-06 exceptions, or record the required expiry and align the contract text under the proper authority. This is a contract-boundary decision; it does not convert historical UNKNOWNs into facts. No other M0 exit blocker is identified by this repository-only assessment.
+**Smallest remaining M0 blocker at the assessment cutoff:** The Controller/Owner had to resolve whether the §5 follow-up option satisfied §12's expiry requirement for the accepted M0-02 through M0-06 exceptions, or record the required expiry under proper authority. This was a contract-boundary decision; it did not convert historical UNKNOWNs into facts. The following Owner decision addresses this blocker, but this task does not determine whether M0 exit is now satisfied.
 
 The M0-02/03/04 historical causes and downstream financial effects remain UNKNOWN and are not asserted as known differences. The §12 cause/downstream-effect requirement for a known difference is not waived; if authoritative evidence establishes a known difference, its cause and downstream effect must be evidenced and approved. This assessment makes no such claim.
 
-No later W11 gate is selected or started while M0 exit is NOT SATISFIED. The separate security gate remains open for subsequent readiness work.
+No later W11 gate is selected or started while M0 exit remains NOT SATISFIED pending renewed assessment. The separate security gate remains open for subsequent readiness work.
 
-**EXACT NEXT ACTION:** Obtain and record the Controller/Owner interpretation of §5 versus §12 for the 2026-11-05 follow-up, or an authorized expiry/contract clarification that satisfies §12. Do not start W11 security work until the M0 exit blocker is resolved and the Controller issues the M0 verdict.
+**Next action at the assessment cutoff (superseded below):** Obtain and record the Controller/Owner interpretation of §5 versus §12 for the 2026-11-05 follow-up, or an authorized expiry/contract clarification that satisfies §12.
+
+## Subsequent Owner decision — 31 October 2026 (after the renewed assessment; exit not reassessed)
+
+Mozfer explicitly approved **2026-11-05** as the `GOVERNANCE ACCEPTANCE EXPIRY` for the M0-purpose accepted residual-exception dispositions covering M0-02, M0-03, M0-04, M0-05, and M0-06. The existing review checkpoint remains; the same date is additionally the expiry for §12 reliance on those exact acceptances. This resolves the §5/§12 boundary for this set only and creates no general future-exception policy.
+
+The acceptances may be relied on within their recorded scope through the end of **2026-11-05**. After that boundary, any decision or phase that relies on them must revalidate the state, check for materially new evidence, and renew, amend, replace, or withdraw the acceptance as appropriate. The expiry applies only to governance reliance; underlying exceptions and evidence remain, and no UNKNOWN is resolved, made harmless, deleted, or rewritten. Expiry does not authorize remediation, data/security/schema changes, automatic rejection, or automatic continuation.
+
+This decision does not perform a renewed M0 Exit Assessment or change its current result. **M0 EXIT NOT SATISFIED** and current data-quality status **PENDING** remain in place pending the separate renewed assessment; W11 remains **NO-GO**. Full privileged-path/security closure remains **UNKNOWN — REQUIRES EVIDENCE**.
+
+**EXACT NEXT ACTION:** Run one final renewed bounded M0 Exit Assessment against the approved governance acceptance expiry. The Controller then issues the final M0 phase verdict. Do not start another W11 gate before that verdict.
 
 ## Historical pre-GOV assessment — 29 October 2026 (superseded by the renewed assessment above)
 
