@@ -3,8 +3,8 @@
 **Date:** 29 October 2026
 **Task Verdict:** PASS WITH WARN
 **Reconciliation result (29 October 2026):** M0 GOVERNANCE RECONCILIATION COMPLETE — OWNER DECISIONS REQUIRED
-**Current governance status:** GOV-D01, GOV-D02 and GOV-D03 approved; Mozfer additionally approved 2026-11-05 as the governance acceptance expiry for M0-02 through M0-06. M0 EXIT NOT SATISFIED and W11 NO-GO remain current pending a separate renewed assessment.
-**M0 Exit Assessment:** M0 EXIT NOT SATISFIED
+**Current governance status:** GOV-D01, GOV-D02 and GOV-D03 approved; Mozfer additionally approved 2026-11-05 as the governance acceptance expiry for M0-02 through M0-06. Final assessment: M0 EXIT SATISFIED — CONTROLLER VERDICT REQUIRED; data quality SATISFIED FOR M0 EXIT. W11 remains NO-GO.
+**M0 Exit Assessment:** M0 EXIT SATISFIED — CONTROLLER VERDICT REQUIRED
 **W11 readiness:** NO-GO
 
 This document records the 29 October 2026 reconciliation and its proposals as historical context. Section 8 records the subsequent explicit Owner decisions. Those decisions do not close M0, resolve historical UNKNOWNs, close security, or authorize remediation. M0-01 remains CLOSED — CONTROLLER PASS and is outside these decisions.
@@ -35,10 +35,10 @@ The 26 October full-inventory cutoff and later targeted observations retain thei
 | Current impact | Missing ABS/audit provenance; checked current invoice/payment/credit/AR/accounting references were zero at the targeted cutoff. This does not prove historical absence or zero impact. |
 | Historical classifications | Provenance/cause and historical financial impact UNKNOWN; exact approval time and deployed historical path unproven. |
 | Preservation boundary | Preserve quotation, Service, Customer, audit and existing evidence; no reconstruction or history rewrite. |
-| Blocked phase / surface | The dated review is approved, but the source-lineage exception and UNKNOWN historical facts remain in any applicable billing comparison; the data-quality gate remains PENDING and M0 has not been reassessed. No blanket block on every later phase is inferred. |
+| Blocked phase / surface | The dated review is approved, but the source-lineage exception and UNKNOWN historical facts remain in any applicable billing comparison; at the governance-decision cutoff data quality was PENDING; the final assessment below supersedes that status. No blanket block on every later phase is inferred. |
 | Current reopen trigger | Materially new exact historical evidence establishing provenance, financial impact, or a current integrity/security consequence (Inventory B). |
 | Current expiry / follow-up | Owner-approved one-off follow-up checkpoint and governance acceptance expiry for M0 reliance: 2026-11-05, valid through end of that date. Revalidate before any later reliance after the boundary. Expiry is not remediation or history resolution. |
-| Missing fields / decision / exit block | GOV-D01 and the dated follow-up are recorded as approved; the existing preservation disposition and UNKNOWN classifications are unchanged. The original M0 Exit Assessment remains NOT SATISFIED pending a renewed assessment; no remediation is authorized. |
+| Missing fields / decision / exit block | GOV-D01 and the dated follow-up are recorded as approved; the existing preservation disposition and UNKNOWN classifications are unchanged. The original NOT SATISFIED assessment is historical and superseded by the final assessment below; no remediation is authorized. |
 
 ### M0-03 — Fourteen invoice-created audit references without invoices
 
@@ -51,10 +51,10 @@ The 26 October full-inventory cutoff and later targeted observations retain thei
 | Current impact | Recorded targeted source-reference checks found no invoice/payment/accounting effect. CRM/audit context persists; lack of current links does not prove zero historical impact. |
 | Historical classifications | Provenance/cause and historical financial impact UNKNOWN. DELETE capability is not proof of historical use; no supported application hard-delete path was found in the recorded review. |
 | Preservation boundary | Preserve audit/evidence unchanged; no invoice reconstruction, invented amount, audit deletion/rewrite or cleanup. |
-| Blocked phase / surface | The dated review is approved; missing invoice-source/audit lineage and historical UNKNOWNs remain in any applicable billing reconciliation. The data-quality gate remains PENDING and M0 has not been reassessed. No later phase is authorized here. |
+| Blocked phase / surface | The dated review is approved; missing invoice-source/audit lineage and historical UNKNOWNs remain in any applicable billing reconciliation. At the governance-decision cutoff, data quality was PENDING; the final assessment below supersedes that status. No later phase is authorized here. |
 | Current reopen trigger | Materially new evidence establishing provenance, impact, or a current integrity/security consequence (Inventory C). |
 | Current expiry / follow-up | Owner-approved one-off follow-up checkpoint and governance acceptance expiry for M0 reliance: 2026-11-05, valid through end of that date. Revalidate before any later reliance after the boundary. Expiry is not remediation or history resolution. |
-| Missing fields / decision / exit block | GOV-D01 and the dated follow-up are recorded as approved; the existing preservation disposition and UNKNOWN classifications are unchanged. The original M0 Exit Assessment remains NOT SATISFIED pending a renewed assessment; no invoice reconstruction or remediation is authorized. |
+| Missing fields / decision / exit block | GOV-D01 and the dated follow-up are recorded as approved; the existing preservation disposition and UNKNOWN classifications are unchanged. The original NOT SATISFIED assessment is historical and superseded by the final assessment below; no invoice reconstruction or remediation is authorized. |
 
 ### M0-04 — Nine deleted Customers without deletion timestamps
 
@@ -67,10 +67,10 @@ The 26 October full-inventory cutoff and later targeted observations retain thei
 | Current impact | METADATA INCONSISTENCY ONLY. No separate current financial/accounting effect was proven in the bounded review. |
 | Historical classifications | Deletion timing BOUNDED BUT NOT EXACT; cause and historical financial impact UNKNOWN. Three Customers have exact synthetic G8 provenance; six are likely synthetic/test without exact fixture linkage. |
 | Preservation boundary | Preserve records/evidence; no timestamp backfill, restore, invoice reconstruction or cleanup. No current remediation justified or authorized. |
-| Blocked phase / surface | The dated review is approved; Customer deletion-time/source metadata remains an exception if included in a later scoped reconciliation. The data-quality gate remains PENDING and M0 has not been reassessed; no present screen failure or blanket later-phase block is asserted. |
+| Blocked phase / surface | The dated review is approved; Customer deletion-time/source metadata remains an exception if included in a later scoped reconciliation. Final data quality is SATISFIED FOR M0 EXIT, pending Controller phase verdict; no present screen failure or blanket later-phase block is asserted. |
 | Current reopen trigger | New exact Customer deletion timestamp/mechanism, fixture linkage changing provenance, current integrity/security consequence, authoritative financial/accounting impact, or supported behavior materially requiring deleted_at (M0-04 §5). |
 | Current expiry / follow-up | Owner-approved one-off follow-up checkpoint and governance acceptance expiry for M0 reliance: 2026-11-05, valid through end of that date. Revalidate before any later reliance after the boundary. Expiry is not remediation or history resolution. |
-| Missing fields / decision / exit block | GOV-D01 and the dated follow-up are recorded as approved; the M0-04 disposition sub-gate remains SATISFIED. Historical cause and financial impact remain UNKNOWN and the data-quality gate remains PENDING; M0 has not been reassessed. |
+| Missing fields / decision / exit block | GOV-D01 and the dated follow-up are recorded as approved; the M0-04 disposition sub-gate remains SATISFIED. Historical cause and financial impact remain UNKNOWN; final data quality is SATISFIED FOR M0 EXIT, pending Controller verdict. |
 
 ### M0-05 — Privileged invoice DELETE/TRUNCATE capability
 
@@ -214,9 +214,11 @@ Legacy ACL advisories and nine NOT VALID checks remain. Zero tested row violatio
 
 The original 31 October GOV-D01/D02/D03 decisions established **2026-11-05** as a one-off review checkpoint only. The subsequent Owner decision in §9 also approves that date as the governance acceptance expiry for these exact M0 exceptions. It remains non-recurring and is not automatic acceptance, remediation authority, or evidence that UNKNOWN facts have been resolved.
 
-The prior renewed repository-evidence assessment still records **M0 EXIT NOT SATISFIED**; its data-quality gate remains **PENDING** until the separately requested renewed assessment after this Owner decision. The Owner approval resolves the §5/§12 expiry boundary for M0-02 through M0-06 but does not itself reassess M0 exit. Historical UNKNOWNs and all existing dispositions remain unchanged. Full privileged-path/security closure remains **UNKNOWN — REQUIRES EVIDENCE**, and W11 remains **NO-GO**. No other gate or authority is changed.
+Historical Owner-decision cutoff (superseded by the final assessment below): the prior renewed repository-evidence assessment records **M0 EXIT NOT SATISFIED**; its data-quality gate remains **PENDING** until the separately requested renewed assessment after this Owner decision. The Owner approval resolves the §5/§12 expiry boundary for M0-02 through M0-06 but does not itself reassess M0 exit. Historical UNKNOWNs and all existing dispositions remain unchanged. Full privileged-path/security closure remains **UNKNOWN — REQUIRES EVIDENCE**, and W11 remains **NO-GO**. No other gate or authority is changed.
 
-**EXACT NEXT ACTION:** Run one final renewed bounded M0 Exit Assessment against the approved governance acceptance expiry. The Controller then issues the final M0 phase verdict. Do not start another W11 gate before that verdict.
+**Final assessment:** **M0 EXIT SATISFIED — CONTROLLER VERDICT REQUIRED**; data quality **SATISFIED FOR M0 EXIT** within the approved validity through end of 2026-11-05. Historical UNKNOWNs remain governed accepted historical uncertainty. Full privileged-path/security closure remains UNKNOWN — REQUIRES EVIDENCE; W11 remains NO-GO. M0 awaits Controller phase verdict.
+
+**EXACT NEXT ACTION:** Controller issues the final M0 phase verdict against the final assessment. Only after acceptance, separately authorize bounded privileged-path/security evidence review; no next gate is executed here.
 
 ## 9. Owner-approved governance acceptance expiry — 31 October 2026
 
@@ -224,4 +226,4 @@ Mozfer explicitly approved **2026-11-05** as the `GOVERNANCE ACCEPTANCE EXPIRY` 
 
 The acceptances may be relied on for M0 purposes, within their recorded scope, through the end of **2026-11-05**. After that boundary, any later decision or phase that relies on them must revalidate the exception state, confirm whether materially new evidence exists, and renew, amend, replace, or withdraw the acceptance as appropriate. Expiry applies to governance reliance only and does not trigger remediation, mutation, security/schema changes, automatic rejection, automatic continuation, deletion, or rewriting of evidence.
 
-The underlying exceptions and evidence remain. Historical UNKNOWN classifications stay UNKNOWN; no exception becomes harmless, resolved, or historically known. M0-05/06 privileged-path/security and schema evidence remains open. This is a documentation record of Mozfer's Owner decision only; the current M0 EXIT NOT SATISFIED result is unchanged pending a separate renewed assessment, and W11 remains NO-GO.
+The underlying exceptions and evidence remain. Historical UNKNOWN classifications stay UNKNOWN; no exception becomes harmless, resolved, or historically known. M0-05/06 privileged-path/security and schema evidence remains open. This is a documentation record of Mozfer's Owner decision only; at that decision-recording cutoff M0 remained NOT SATISFIED; the final assessment above supersedes that status, and W11 remains NO-GO.
