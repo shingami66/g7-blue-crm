@@ -79,6 +79,8 @@ export interface CustomersDictionary {
   };
   profile: {
     backToCustomers: string;
+    locationLabel: string;
+    actionsLabel: string;
     customerNumber: string;
     customerProfile: string;
     primaryContact: string;
@@ -239,6 +241,8 @@ const customersDictionaryEn: CustomersDictionary = {
   },
   profile: {
     backToCustomers: "Back to customers",
+    locationLabel: "Page location",
+    actionsLabel: "Customer actions",
     customerNumber: "Customer Number",
     customerProfile: "Customer Profile",
     primaryContact: "Contact Person",
@@ -414,6 +418,8 @@ const customersDictionaryAr: CustomersDictionary = {
   },
   profile: {
     backToCustomers: "العودة إلى العملاء",
+    locationLabel: "مسار الصفحة",
+    actionsLabel: "إجراءات العميل",
     customerNumber: "رقم العميل",
     customerProfile: "ملف العميل",
     primaryContact: "مسؤول التواصل",

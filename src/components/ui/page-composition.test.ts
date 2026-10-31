@@ -134,6 +134,10 @@ test("legacy header output remains unchanged and composed mode owns one h1", () 
   assert.equal(legacy.body.firstElementChild!.className, "mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between");
   const { doc } = render(h(Header, { variant: "composed", title: "Record" }));
   assert.equal(doc.querySelectorAll("h1").length, 1);
+  // The detail pilot exposed identity compression beside a wide action cluster.
+  // Keep the composed header able to wrap, without changing legacy consumers.
+  assert.ok(doc.querySelector("header")!.classList.contains("sm:flex-wrap"));
+  assert.ok(doc.querySelector("h1")!.parentElement!.parentElement!.classList.contains("sm:basis-72"));
   assert.equal(doc.querySelectorAll("h2, main, [role=group]").length, 0);
   assert.equal(render(h(Header, { variant: "composed", title: "Reference", identifier: 0 })).doc.querySelector("[data-page-identifier]")!.textContent, "0");
 });

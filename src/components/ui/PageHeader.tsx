@@ -21,8 +21,8 @@ type ComposedPageHeaderProps = {
 export default function PageHeader(props: LegacyPageHeaderProps | ComposedPageHeaderProps) {
   if (props.variant === "composed") {
     return (
-      <header className="flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:justify-between" data-page-header="composed">
-        <div className="min-w-0 flex-1">
+      <header className="flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:flex-wrap sm:justify-between" data-page-header="composed">
+        <div className="min-w-0 flex-1 sm:basis-72">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <h1 dir={props.titleDir ?? "auto"} className="min-w-0 break-words text-[28px] font-semibold leading-[36px] tracking-[-0.01em] text-primary">{props.title}</h1>
             {props.status ? <div className="min-w-0 max-w-full" data-page-status="true">{props.status}</div> : null}

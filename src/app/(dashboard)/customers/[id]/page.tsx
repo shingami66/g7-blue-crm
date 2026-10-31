@@ -1,8 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
-import PendingLink from "@/components/ui/PendingLink";
+import PageFrame from "@/components/ui/PageFrame";
+import PageLocation from "@/components/navigation/PageLocation";
+import RecordBackButton from "@/components/navigation/RecordBackButton";
+import PageHeader from "@/components/ui/PageHeader";
+import RecordNavigationRegion from "@/components/records/RecordNavigationRegion";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { checkPermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
@@ -76,40 +79,24 @@ export default async function CustomerProfilePage({
   const recordNavigationDictionary = getRecordNavigationDictionary(locale);
 
   return (
-    <div data-p2-detail-primary-ready="true" className="flex flex-col gap-6 pb-12">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-4">
-          <PendingLink
-            href={returnTo}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            aria-label={dictionary.profile.backToCustomers}
-          >
-            <LocaleBackIcon size={16} />
-          </PendingLink>
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-[28px] leading-[36px] font-semibold text-primary">
-                <span dir="auto">{formatNullable(customer.company)}</span>
-              </h2>
-              <StatusBadge variant={customer.status}>
-                {getCustomerStatusLabel(locale, customer.status)}
-              </StatusBadge>
-            </div>
-            <p className="mt-1 text-[14px] leading-[20px] text-on-surface-variant">
-              {dictionary.profile.customerNumber}: <span dir="ltr">{formatNullable(customer.customerNumber)}</span>
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <Suspense
-            fallback={
-              <RecordNavigationPlaceholder
-                recordType={dictionary.profile.customerNumber}
-                dictionary={recordNavigationDictionary}
-                state="loading"
-              />
-            }
-          >
+    <div data-p2-detail-primary-ready="true">
+      <PageFrame variant="record">
+        <PageLocation
+          breadcrumbs={{ label: dictionary.profile.locationLabel, items: [
+            { label: dictionary.list.title, href: "/customers" },
+            { label: String(formatNullable(customer.company)), current: true },
+          ] }}
+          returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.profile.backToCustomers} />}
+        />
+        <PageHeader
+          variant="composed"
+          title={String(formatNullable(customer.company))}
+          identifier={<>{dictionary.profile.customerNumber}: <bdi dir="ltr">{formatNullable(customer.customerNumber)}</bdi></>}
+          status={<StatusBadge variant={customer.status}>{getCustomerStatusLabel(locale, customer.status)}</StatusBadge>}
+          actions={{ label: dictionary.profile.actionsLabel, primary: canWrite ? <CustomerProfileActions customer={customer} canWrite={canWrite} dictionary={dictionary} /> : undefined }}
+        />
+        <RecordNavigationRegion label={recordNavigationDictionary.title}>
+          <Suspense fallback={<RecordNavigationPlaceholder recordType={dictionary.profile.customerNumber} dictionary={recordNavigationDictionary} state="loading" />}>
             <RecordNavigationSlot
               loadNavigation={() => getCustomerRecordNavigation(id, customer.customerNumber)}
               basePath="/customers"
@@ -119,9 +106,7 @@ export default async function CustomerProfilePage({
               pendingLabel={dictionary.list.actions.opening}
             />
           </Suspense>
-          <CustomerProfileActions customer={customer} canWrite={canWrite} dictionary={dictionary} />
-        </div>
-      </div>
+        </RecordNavigationRegion>
 
       <section className="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-surface-variant bg-surface-bright">
@@ -202,7 +187,7 @@ export default async function CustomerProfilePage({
           customersDictionary={dictionary}
         />
       </Suspense>
-
+      </PageFrame>
     </div>
   );
 }

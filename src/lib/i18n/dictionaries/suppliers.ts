@@ -68,6 +68,9 @@ export interface SuppliersDictionary {
     title: string;
     subtitle: string;
     backToSuppliers: string;
+    locationLabel: string;
+    actionsLabel: string;
+    secondaryActionsLabel: string;
     edit: string;
     contactInformation: string;
     directoryDetails: string;
@@ -357,6 +360,9 @@ const suppliersDictionaryEn: SuppliersDictionary = {
     title: "Supplier Details",
     subtitle: "Supplier directory record",
     backToSuppliers: "Back to suppliers",
+    locationLabel: "Page location",
+    actionsLabel: "Supplier actions",
+    secondaryActionsLabel: "Additional supplier actions",
     edit: "Edit",
     contactInformation: "Contact Information",
     directoryDetails: "Directory Details",
@@ -459,7 +465,7 @@ const suppliersDictionaryAr: SuppliersDictionary = {
     columns: { supplier: "المورد", category: "الفئة", type: "النوع", location: "الموقع", status: "الحالة", actions: "إجراءات" },
   },
   detail: {
-    title: "تفاصيل المورد", subtitle: "سجل دليل المورد", backToSuppliers: "العودة إلى الموردين", edit: "تعديل", contactInformation: "معلومات التواصل", directoryDetails: "تفاصيل الدليل", address: "العنوان ونطاق التغطية", taxIdentity: "الهوية الضريبية", internalDetails: "بيانات داخلية", bankDetails: "البيانات البنكية", rateCards: "بطاقات الأسعار الداخلية", status: "الحالة", supplierType: "نوع المورد", category: "الفئة", preferred: "مفضل", legalName: "الاسم القانوني", contactName: "جهة الاتصال الرئيسية", phone: "الهاتف", whatsappPhone: "هاتف واتساب", email: "البريد الإلكتروني", city: "المدينة", country: "الدولة", coverageArea: "منطقة التغطية", crNumber: "رقم السجل التجاري", vatRegistration: "تسجيل ضريبة القيمة المضافة", vatNumber: "الرقم الضريبي", paymentTerms: "شروط الدفع", notes: "ملاحظات داخلية", bankName: "اسم البنك", bankAccountName: "اسم صاحب الحساب", iban: "الآيبان", blacklistDetails: "تفاصيل القائمة السوداء", blacklistReason: "السبب", blacklistedOn: "تمت الإضافة إلى القائمة السوداء في {date}", noBankDetails: "لا توجد بيانات بنكية مسجلة.", yes: "نعم", no: "لا", deleted: "مورد محذوف",
+    title: "تفاصيل المورد", subtitle: "سجل دليل المورد", backToSuppliers: "العودة إلى الموردين", locationLabel: "مسار الصفحة", actionsLabel: "إجراءات المورد", secondaryActionsLabel: "إجراءات إضافية للمورد", edit: "تعديل", contactInformation: "معلومات التواصل", directoryDetails: "تفاصيل الدليل", address: "العنوان ونطاق التغطية", taxIdentity: "الهوية الضريبية", internalDetails: "بيانات داخلية", bankDetails: "البيانات البنكية", rateCards: "بطاقات الأسعار الداخلية", status: "الحالة", supplierType: "نوع المورد", category: "الفئة", preferred: "مفضل", legalName: "الاسم القانوني", contactName: "جهة الاتصال الرئيسية", phone: "الهاتف", whatsappPhone: "هاتف واتساب", email: "البريد الإلكتروني", city: "المدينة", country: "الدولة", coverageArea: "منطقة التغطية", crNumber: "رقم السجل التجاري", vatRegistration: "تسجيل ضريبة القيمة المضافة", vatNumber: "الرقم الضريبي", paymentTerms: "شروط الدفع", notes: "ملاحظات داخلية", bankName: "اسم البنك", bankAccountName: "اسم صاحب الحساب", iban: "الآيبان", blacklistDetails: "تفاصيل القائمة السوداء", blacklistReason: "السبب", blacklistedOn: "تمت الإضافة إلى القائمة السوداء في {date}", noBankDetails: "لا توجد بيانات بنكية مسجلة.", yes: "نعم", no: "لا", deleted: "مورد محذوف",
   },
   form: {
     newTitle: "مورد جديد", newSubtitle: "إنشاء سجل مورد في الدليل للاستخدام التشغيلي.", editTitle: "تعديل المورد", editSubtitle: "تحديث سجل المورد في الدليل.", backToSuppliers: "العودة إلى الموردين", backToSupplier: "العودة إلى المورد", directoryDetails: "تفاصيل الدليل", contactLegal: "التواصل والبيانات النظامية", bankDetails: "البيانات البنكية",

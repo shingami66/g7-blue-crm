@@ -67,7 +67,8 @@ test("supplier edit round trip retains detail and original list; invalid origin 
   const page = read("app/(dashboard)/suppliers/[id]/page.tsx");
   assert.ok(page.includes('recordQuery={includeDeleted ? { showDeleted: "true" } : undefined}'));
   assert.ok(page.includes('appendReturnTo(`/suppliers/${supplier.id}/edit`, currentSupplierUrl)'));
-  assert.ok(page.includes("canEdit && !isDeleted"));
+  // Current/deleted Edit visibility is exercised on the rendered real page in
+  // detail-pilot.test.ts; it no longer depends on one spelling of the condition.
   const editPage = read("app/(dashboard)/suppliers/[id]/edit/page.tsx");
   assert.ok(editPage.includes("getSupplierById(id)")); // Deleted editing remains unavailable.
   assert.ok(editPage.includes("returnTo={returnTo}"));
