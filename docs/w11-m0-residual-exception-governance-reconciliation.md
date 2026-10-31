@@ -3,7 +3,7 @@
 **Date:** 29 October 2026
 **Task Verdict:** PASS WITH WARN
 **Reconciliation result (29 October 2026):** M0 GOVERNANCE RECONCILIATION COMPLETE — OWNER DECISIONS REQUIRED
-**Current governance status:** GOV-D01, GOV-D02 and GOV-D03 approved by Mozfer on 31 October 2026; renewed M0 Exit Assessment required.
+**Current governance status:** GOV-D01, GOV-D02 and GOV-D03 approved by Mozfer on 31 October 2026; renewed assessment records M0 EXIT NOT SATISFIED pending §5/§12 follow-up-versus-expiry interpretation.
 **M0 Exit Assessment:** M0 EXIT NOT SATISFIED
 **W11 readiness:** NO-GO
 
@@ -214,6 +214,6 @@ Legacy ACL advisories and nine NOT VALID checks remain. Zero tested row violatio
 
 For M0-02 through M0-06, **2026-11-05** is an approved one-off governance checkpoint. It is not a recurring policy, automatic expiry, automatic acceptance, remediation authority, or evidence that UNKNOWN facts have been resolved. Review earlier if a renewed M0 Exit Assessment or applicable phase request occurs before the checkpoint.
 
-M0 remains open. The M0 Exit Assessment remains **M0 EXIT NOT SATISFIED** and has not been renewed. Current data quality remains **PENDING**; full privileged-path/security closure remains **UNKNOWN — REQUIRES EVIDENCE**; W11 remains **NO-GO**. No other gate is changed by these decisions.
+The renewed repository-evidence assessment records **M0 EXIT NOT SATISFIED** because the approved 2026-11-05 follow-up does not meet §12's expiry requirement absent an approved interpretation of §5 versus §12. Current data quality remains **PENDING** for this contract-boundary blocker, not solely because historical UNKNOWNs remain. Historical UNKNOWNs and all existing dispositions remain unchanged. Full privileged-path/security closure remains **UNKNOWN — REQUIRES EVIDENCE**, and W11 remains **NO-GO**. No other gate or authority is changed by the assessment.
 
-**EXACT NEXT ACTION:** Run one renewed bounded M0 Exit Assessment against the newly approved governance state. Do not start another W11 gate until the Controller issues the renewed M0 exit verdict.
+**EXACT NEXT ACTION:** Resolve the §5/§12 follow-up-versus-expiry interpretation for M0-02 through M0-06, or record an authorized expiry/contract clarification that satisfies §12. No W11 gate is selected or started until this M0 blocker is resolved and the Controller issues the M0 verdict.
