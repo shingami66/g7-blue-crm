@@ -49,7 +49,7 @@ test("Supplier labels and V1 status values stay localized", () => {
   assert.equal(getSuppliersDictionary("en").vatRegistration.unknown, "Unknown");
 });
 
-test("Supplier list uses safe route navigation rather than a local detail panel", () => {
+test("Supplier name is identity text and only explicit Eye/View actions open records", () => {
   const list = read(LIST_CLIENT);
   assert.match(read(LIST_PAGE), /getSuppliersList\(query\)/);
   assert.match(list, /supplierDetailHref\(supplier\.id, showDeleted, returnTo\)/);
@@ -62,15 +62,43 @@ test("Supplier list uses safe route navigation rather than a local detail panel"
   const identityStart = list.indexOf("function SupplierIdentity");
   const identityEnd = list.indexOf("function SupplierClassification", identityStart);
   const identity = list.slice(identityStart, identityEnd);
-  assert.match(identity, /<PendingLink[\s\S]*?href=\{supplierDetailHref\(supplier\.id, showDeleted, returnTo\)\}/);
+  assert.doesNotMatch(identity, /<PendingLink|<a\b|<button\b|onClick=|tabIndex=/);
+  const identityNameStart = identity.indexOf('className="break-words font-semibold text-on-surface"');
+  const identityNameEnd = identity.indexOf("</div>", identityNameStart);
+  const identityName = identity.slice(identityNameStart, identityNameEnd);
+  assert.ok(identityNameStart >= 0 && identityNameEnd > identityNameStart, "expected a plain Supplier name element");
+  assert.match(identityName, /<bdi dir="auto">\{supplierName\}<\/bdi>/);
+  assert.doesNotMatch(identityName, /underline|cursor-pointer|hover:|focus-visible|tabIndex=/);
+
   const actionStart = list.indexOf("data-supplier-view-action");
   const actionEnd = list.indexOf("</td>", actionStart);
   const viewAction = list.slice(actionStart, actionEnd);
+  assert.match(viewAction, /<Button asChild variant="ghost" size="icon"/);
   assert.match(viewAction, /href=\{supplierDetailHref\(supplier\.id, showDeleted, returnTo\)\}/);
   assert.match(viewAction, /aria-label=\{viewLabel\}/);
   assert.match(viewAction, /title=\{viewLabel\}/);
+  assert.match(viewAction, /<Eye size=\{17\} aria-hidden="true" \/>/);
   assert.doesNotMatch(viewAction, /<a\b|<button\b/);
-  assert.equal((list.match(/href=\{supplierDetailHref\(supplier\.id, showDeleted, returnTo\)\}/g) ?? []).length, 3);
+  const desktopRowStart = list.lastIndexOf("<tr", actionStart);
+  const desktopRowEnd = list.indexOf("</tr>", actionStart);
+  const desktopRow = list.slice(desktopRowStart, desktopRowEnd);
+  assert.equal((desktopRow.match(/href=\{supplierDetailHref\(supplier\.id, showDeleted, returnTo\)\}/g) ?? []).length, 1);
+  assert.doesNotMatch(desktopRow, /<tr[^>]*(?:onClick|tabIndex)|<td[^>]*(?:onClick|tabIndex)/);
+
+  const mobileStart = list.indexOf('data-testid="mobile-supplier-cards"');
+  const mobile = list.slice(mobileStart);
+  const mobileHeaderStart = mobile.indexOf("{/* Record Header */}");
+  const mobileActionStart = mobile.indexOf("{/* Mobile View Action */}");
+  const mobileHeader = mobile.slice(mobileHeaderStart, mobileActionStart);
+  const mobileAction = mobile.slice(mobileActionStart);
+  assert.doesNotMatch(mobileHeader, /<PendingLink|<a\b|<button\b|onClick=|tabIndex=/);
+  assert.equal((mobile.match(/href=\{supplierDetailHref\(supplier\.id, showDeleted, returnTo\)\}/g) ?? []).length, 1);
+  assert.match(mobileAction, /aria-label=\{viewLabel\}/);
+  assert.match(mobileAction, /title=\{viewLabel\}/);
+  assert.match(mobileAction, /dictionary\.list\.viewSupplier/);
+  assert.equal((list.match(/href=\{supplierDetailHref\(supplier\.id, showDeleted, returnTo\)\}/g) ?? []).length, 2);
+  assert.equal((list.match(/const viewLabel =/g) ?? []).length, 2);
+
   const iconButton = read(join(REPO_ROOT, "src/components/ui/Button.tsx"));
   assert.match(iconButton, /focus-visible:ring-2/);
   assert.match(iconButton, /icon: "h-10 w-10 p-0"/);

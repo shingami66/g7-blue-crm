@@ -70,16 +70,10 @@ function MobileFieldLabel({ children }: { children: ReactNode }) {
 
 function SupplierIdentity({
   supplier,
-  showDeleted,
-  returnTo,
   dictionary,
-  viewLabel,
 }: {
   supplier: SupplierDirectoryItem;
-  showDeleted: boolean;
-  returnTo: string;
   dictionary: SuppliersDictionary;
-  viewLabel: string;
 }) {
   const supplierName = displaySupplierText(supplier.name);
   const initial = supplier.name.trim().charAt(0).toUpperCase();
@@ -90,15 +84,9 @@ function SupplierIdentity({
         {initial}
       </div>
       <div className="min-w-0">
-        <PendingLink
-          href={supplierDetailHref(supplier.id, showDeleted, returnTo)}
-          pendingLabel={dictionary.list.openingSupplier}
-          aria-label={viewLabel}
-          title={viewLabel}
-          className="inline-flex min-h-11 max-w-full items-center break-words font-semibold text-primary underline decoration-primary/30 underline-offset-2 transition-colors hover:decoration-primary focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-        >
+        <div className="break-words font-semibold text-on-surface" dir="auto">
           <bdi dir="auto">{supplierName}</bdi>
-        </PendingLink>
+        </div>
         {supplier.supplierNumber && (
           <div className="mt-0.5 text-[12px] text-on-surface-variant" dir="ltr">
             {isolateBidiText(supplier.supplierNumber)}
@@ -362,7 +350,7 @@ export default function SuppliersClient({
                       className="hover:bg-surface-container-low/50 transition-colors"
                     >
                       <td className="px-2 py-4 align-top sm:px-3">
-                        <SupplierIdentity supplier={supplier} showDeleted={showDeleted} returnTo={returnTo} dictionary={dictionary} viewLabel={viewLabel} />
+                        <SupplierIdentity supplier={supplier} dictionary={dictionary} />
                       </td>
                       <td className="px-2 py-4 align-top sm:px-3">
                         <SupplierClassification supplier={supplier} locale={locale} />
@@ -418,7 +406,7 @@ export default function SuppliersClient({
                         {initial}
                       </div>
                       <div className="min-w-0">
-                        <div className="break-words font-semibold text-primary text-[15px]" dir="auto">
+                        <div className="break-words font-semibold text-on-surface text-[15px]" dir="auto">
                           {supplierName}
                         </div>
                         {supplier.supplierNumber && (
