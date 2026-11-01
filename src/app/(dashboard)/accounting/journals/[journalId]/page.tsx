@@ -86,12 +86,12 @@ export default async function JournalDetailPage({
   if (state === "not-found") notFound();
   if (state !== "ready" || !detail) {
     const message = state === "access-denied" ? dictionary.accessDenied : dictionary.dependencyFailure;
-    return <main className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}><section role="status" className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 text-sm text-on-surface-variant">{message}</section></main>;
+    return <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}><section role="status" className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 text-sm text-on-surface-variant">{message}</section></div>;
   }
 
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh" }).format(new Date());
   return (
-    <main className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
+    <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
       <JournalDetailWorkspace
         locale={locale}
         dictionary={dictionary}
@@ -106,6 +106,6 @@ export default async function JournalDetailPage({
         reversalJournalId={reversalJournalId}
         today={today}
       />
-    </main>
+    </div>
   );
 }

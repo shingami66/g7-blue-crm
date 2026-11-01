@@ -112,7 +112,7 @@ export default async function BankReconciliationPage({
   }
 
   return (
-    <main className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
+    <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
       <header className="min-w-0">
         <h1 className="text-2xl font-semibold text-on-surface">{dictionary.bank.title}</h1>
         <p className="mt-2 text-sm text-on-surface-variant">{dictionary.bank.subtitle}</p>
@@ -132,6 +132,6 @@ export default async function BankReconciliationPage({
         canViewStatements={canViewStatements}
         actorId={actorId}
       />
-    </main>
+    </div>
   );
 }

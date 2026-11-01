@@ -41,13 +41,13 @@ export default async function AccountingStatementMappingsPage() {
   }
 
   return (
-    <main className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
+    <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
       <header className="min-w-0">
         <Link href="/settings/accounting" className="text-sm font-semibold text-primary underline underline-offset-4">{dictionary.backToSetup}</Link>
         <h1 className="mt-3 text-2xl font-semibold text-on-surface">{dictionary.title}</h1>
         <p className="mt-2 text-sm text-on-surface-variant">{dictionary.subtitle}</p>
       </header>
       <StatementMappingsClient locale={locale} state={state} mappings={mappings} accounts={accounts} />
-    </main>
+    </div>
   );
 }

@@ -39,7 +39,7 @@ export default async function AccountingPermissionsPage({ searchParams }: PagePr
   }
 
   return (
-    <main className="mx-auto flex h-full w-full min-w-0 max-w-5xl flex-col gap-6" dir={getDirection(locale)}>
+    <div className="mx-auto flex h-full w-full min-w-0 max-w-5xl flex-col gap-6" dir={getDirection(locale)}>
       <header className="min-w-0">
         <h1 className="text-2xl font-semibold text-on-surface">{dictionary.title}</h1>
         <p className="mt-2 text-sm text-on-surface-variant">{dictionary.subtitle}</p>
@@ -63,6 +63,6 @@ export default async function AccountingPermissionsPage({ searchParams }: PagePr
           assignments={assignments}
         />
       )}
-    </main>
+    </div>
   );
 }

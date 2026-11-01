@@ -52,13 +52,13 @@ export default async function AccountingInceptionPackagePage({ params }: { param
   }
 
   return (
-    <main className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
+    <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
       <header className="min-w-0">
         <Link href="/settings/accounting/inception" className="text-sm font-semibold text-primary underline underline-offset-4">{dictionary.backToPackages}</Link>
         <h1 className="mt-3 text-2xl font-semibold text-on-surface">{dictionary.title}</h1>
         <p className="mt-2 break-all text-sm text-on-surface-variant"><bdi dir="ltr">{packageId}</bdi></p>
       </header>
       <InceptionPackageDetailClient locale={locale} state={state} detail={detail} isCreator={isCreator} isReviewer={isReviewer} canManage={canManage} canPrepare={canPrepare} canPost={canPost} canView={canView} />
-    </main>
+    </div>
   );
 }
