@@ -121,6 +121,8 @@ export interface InvoicesDictionary {
     };
   };
   detail: {
+    locationLabel: string;
+    actionsLabel: string;
     states: {
       detailForbidden: string;
       unavailable: string;
@@ -380,6 +382,8 @@ const invoicesDictionaryEn: InvoicesDictionary = {
     },
   },
   detail: {
+    locationLabel: "Page location",
+    actionsLabel: "Invoice actions",
     states: {
       detailForbidden: "You don't have permission to view this invoice.",
       unavailable: "Not available",
@@ -648,6 +652,8 @@ const invoicesDictionaryAr: InvoicesDictionary = {
     },
   },
   detail: {
+    locationLabel: "مسار الصفحة",
+    actionsLabel: "إجراءات الفاتورة",
     states: {
       detailForbidden: "ليس لديك صلاحية لعرض هذه الفاتورة.",
       unavailable: "غير متاح",

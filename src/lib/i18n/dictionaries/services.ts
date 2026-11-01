@@ -117,6 +117,8 @@ export interface ServicesDictionary {
   };
   detail: {
     backToServices: string;
+    locationLabel: string;
+    actionsLabel: string;
     createQuotation: string;
     edit: string;
     tabs: {
@@ -1390,6 +1392,8 @@ const servicesDictionaryEn: ServicesDictionary = {
   },
   detail: {
     backToServices: "Back to events",
+    locationLabel: "Page location",
+    actionsLabel: "Event actions",
     createQuotation: "Create Quotation",
     edit: "Edit",
     tabs: {
@@ -3301,6 +3305,8 @@ const servicesDictionaryAr: ServicesDictionary = {
   },
   detail: {
     backToServices: "العودة إلى الفعاليات",
+    locationLabel: "مسار الصفحة",
+    actionsLabel: "إجراءات الفعالية",
     createQuotation: "إنشاء عرض سعر",
     edit: "تعديل",
     tabs: {

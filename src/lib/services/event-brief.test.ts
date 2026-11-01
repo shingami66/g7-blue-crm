@@ -31,12 +31,11 @@ test("R04-B: Event Brief edit control follows the existing Inquiry/Quoted write 
   assert.match(detail, /<ServiceLifecycleActions/);
 });
 
-test("R04-B-UX1: Event Brief omits lifecycle details while retaining Service context and status", () => {
+test("R04-B-UX1: Event Brief retains event context while identity and status move to the composed header", () => {
   const brief = readFileSync(EVENT_BRIEF, "utf8");
+  const detail = readFileSync(DETAIL_PAGE, "utf8");
 
   for (const field of [
-    "service.serviceNumber",
-    "service.serviceTitle",
     "service.customerId",
     "service.customer?.company",
     "service.customer?.contact",
@@ -52,10 +51,9 @@ test("R04-B-UX1: Event Brief omits lifecycle details while retaining Service con
   }
 
   assert.doesNotMatch(brief, /lifecycle/i);
-  assert.match(
-    brief,
-    /<BriefItem label=\{dictionary\.detail\.labels\.status\}>[\s\S]*?<StatusBadge[\s\S]*?getServiceStatusLabel\(dictionary\.locale, service\.status\)/,
-  );
+  assert.doesNotMatch(brief, /service\.serviceNumber|service\.serviceTitle|StatusBadge|service\.status/);
+  assert.match(detail, /<PageHeader[\s\S]*?title=\{service\.serviceTitle\}[\s\S]*?serviceNumber[\s\S]*?getServiceStatusLabel\(locale, service\.status\)/);
+  assert.match(brief, /<h2 id="event-brief-title"/);
   assert.match(brief, /min-w-0 break-words/);
   assert.doesNotMatch(brief, /getQuotationsByServiceIdResult|event_snapshot|estimatedBudget/i);
 });

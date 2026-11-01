@@ -1,26 +1,14 @@
 import type { ReactNode } from "react";
-import StatusBadge from "@/components/ui/StatusBadge";
 import PendingLink from "@/components/ui/PendingLink";
 import { UiDateText } from "@/components/i18n/UiDateText";
 import { isolateBidiText, isolateLtrText } from "@/lib/i18n/bidi";
 import {
   getServiceEventTypeLabel,
-  getServiceStatusLabel,
   type ServicesDictionary,
 } from "@/lib/i18n/dictionaries/services";
 import { eventBriefValue } from "@/lib/services/event-brief";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Service } from "@/types/service";
-
-const STATUS_VARIANTS = {
-  Inquiry: "inquiry",
-  Quoted: "quoted",
-  Approved: "approved",
-  "Deposit Paid": "deposit-paid",
-  "In Progress": "in-progress",
-  Completed: "completed",
-  Cancelled: "cancelled",
-} as const;
 
 interface EventBriefProps {
   service: Service;
@@ -32,17 +20,9 @@ export default function EventBrief({ service, locale, dictionary }: EventBriefPr
   return (
     <section aria-labelledby="event-brief-title" className="min-w-0 overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest">
       <div className="border-b border-surface-variant bg-surface-bright px-6 py-5">
-        <p className="text-[12px] font-semibold uppercase tracking-wider text-on-surface-variant">
+        <h2 id="event-brief-title" className="text-[12px] font-semibold uppercase tracking-wider text-on-surface-variant">
           {dictionary.detail.sections.eventBrief}
-        </p>
-        <p dir="ltr" className="font-mono text-[14px] font-semibold text-primary">
-          {isolateLtrText(service.serviceNumber)}
-        </p>
-        <div className="mt-2 min-w-0">
-          <h1 id="event-brief-title" className="min-w-0 break-words text-[24px] font-semibold leading-[32px] text-on-surface">
-            {isolateBidiText(service.serviceTitle)}
-          </h1>
-        </div>
+        </h2>
       </div>
 
       <dl className="grid min-w-0 grid-cols-1 gap-x-8 gap-y-5 p-6 sm:grid-cols-2 xl:grid-cols-3">
@@ -64,11 +44,6 @@ export default function EventBrief({ service, locale, dictionary }: EventBriefPr
           ) : (
             dictionary.detail.fallbacks.customerReferenceUnavailable
           )}
-        </BriefItem>
-        <BriefItem label={dictionary.detail.labels.status}>
-          <StatusBadge variant={STATUS_VARIANTS[service.status]}>
-            {getServiceStatusLabel(dictionary.locale, service.status)}
-          </StatusBadge>
         </BriefItem>
         <BriefItem label={dictionary.detail.labels.eventName}>
           <BidiValue value={eventBriefValue(service.eventName, dictionary.detail.fallbacks.empty)} />

@@ -1,5 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import StatusBadge from "@/components/ui/StatusBadge";
+import PageLocation from "@/components/navigation/PageLocation";
+import RecordNavigationRegion from "@/components/records/RecordNavigationRegion";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import {
   INVOICE_PERMISSIONS,
@@ -18,6 +23,7 @@ import PendingLink from "@/components/ui/PendingLink";
 import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 import {
   getServicesDictionary,
+  getServiceStatusLabel,
   type ServicesDictionary,
 } from "@/lib/i18n/dictionaries/services";
 import { formatSarAmount } from "@/lib/i18n/formatting";
@@ -50,6 +56,16 @@ import EventBrief from "./EventBrief";
 import { canEditEventBrief as isEventBriefEditable } from "@/lib/services/event-brief";
 
 export const dynamic = "force-dynamic";
+
+const SERVICE_STATUS_BADGE_VARIANTS = {
+  Inquiry: "inquiry",
+  Quoted: "quoted",
+  Approved: "approved",
+  "Deposit Paid": "deposit-paid",
+  "In Progress": "in-progress",
+  Completed: "completed",
+  Cancelled: "cancelled",
+} as const;
 
 // ApprovedBillingScopesCard remains available only on the nested technical evidence surface.
 
@@ -148,13 +164,57 @@ export default async function ServiceDetailPage({
     ? dictionary.detail.quotationDisabledReasonStarted
     : undefined;
   return (
-    <div data-p2-detail-primary-ready="true" dir={locale === "ar" ? "rtl" : "ltr"} className="flex w-full min-w-0 max-w-full flex-col gap-6 pb-12">
-      <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex min-w-0 items-start gap-4">
-          <RecordBackButton href={returnTo} locale={locale} />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
+    <div data-p2-detail-primary-ready="true" dir={locale === "ar" ? "rtl" : "ltr"}>
+      <PageFrame variant="record">
+        <PageLocation
+          breadcrumbs={{
+            label: dictionary.detail.locationLabel,
+            items: [
+              { label: dictionary.list.title, href: "/services" },
+              { label: service.serviceTitle, current: true, dir: "auto" },
+            ],
+          }}
+          returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.detail.backToServices} />}
+        />
+        <PageHeader
+          variant="composed"
+          title={service.serviceTitle}
+          titleDir="auto"
+          identifier={<>{dictionary.list.table.serviceNumber}: <bdi dir="ltr">{service.serviceNumber}</bdi></>}
+          status={<StatusBadge variant={SERVICE_STATUS_BADGE_VARIANTS[service.status]}>{getServiceStatusLabel(locale, service.status)}</StatusBadge>}
+          actions={{
+            label: dictionary.detail.actionsLabel,
+            primary: canCreateQuotation && canModifyService ? (
+              quotationDisabledReason ? (
+                <span
+                  className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant text-on-surface-variant rounded-lg text-[14px] font-semibold cursor-not-allowed opacity-60"
+                  title={quotationDisabledReason}
+                >
+                  <FileText size={18} />
+                  {dictionary.detail.createQuotation}
+                </span>
+              ) : (
+                <Link
+                  href={appendReturnTo(`/quotations/new?serviceId=${service.id}`, currentServiceUrl)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[14px] font-semibold transition-colors"
+                >
+                  <FileText size={18} />
+                  {dictionary.detail.createQuotation}
+                </Link>
+              )
+            ) : undefined,
+            secondary: canEditEventBrief ? (
+              <PendingLink
+                href={appendReturnTo(`/services/${service.id}/edit`, currentServiceUrl)}
+                className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors"
+              >
+                <Edit size={18} />
+                {dictionary.detail.edit}
+              </PendingLink>
+            ) : undefined,
+          }}
+        />
+        <RecordNavigationRegion label={recordNavigationDictionary.title}>
           <Suspense
             fallback={
               <RecordNavigationPlaceholder
@@ -173,36 +233,7 @@ export default async function ServiceDetailPage({
               pendingLabel={dictionary.list.actions.opening}
             />
           </Suspense>
-          {canCreateQuotation && canModifyService && (
-            quotationDisabledReason ? (
-              <span
-                className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant text-on-surface-variant rounded-lg text-[14px] font-semibold cursor-not-allowed opacity-60"
-                title={quotationDisabledReason}
-              >
-                <FileText size={18} />
-                {dictionary.detail.createQuotation}
-              </span>
-            ) : (
-              <Link
-                href={appendReturnTo(`/quotations/new?serviceId=${service.id}`, currentServiceUrl)}
-                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-container text-on-primary rounded-lg text-[14px] font-semibold transition-colors"
-              >
-                <FileText size={18} />
-                {dictionary.detail.createQuotation}
-              </Link>
-            )
-          )}
-          {canEditEventBrief && (
-            <PendingLink
-              href={appendReturnTo(`/services/${service.id}/edit`, currentServiceUrl)}
-              className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low text-[14px] font-semibold transition-colors"
-            >
-              <Edit size={18} />
-              {dictionary.detail.edit}
-            </PendingLink>
-          )}
-        </div>
-      </div>
+        </RecordNavigationRegion>
 
       <div className="min-w-0 max-w-full space-y-6">
         <EventBrief service={service} locale={locale} dictionary={dictionary} />
@@ -261,6 +292,7 @@ export default async function ServiceDetailPage({
           />
         </Suspense>
       </div>
+      </PageFrame>
     </div>
   );
 }

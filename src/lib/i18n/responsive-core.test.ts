@@ -23,6 +23,7 @@ const MODULE_SEARCH_CONTROL = "src/components/ui/ModuleSearchControl.tsx";
 const DATA_TABLE = "src/components/ui/DataTable.tsx";
 const DASHBOARD_LAYOUT = "src/app/(dashboard)/layout.tsx";
 const SERVICE_DETAIL = "src/app/(dashboard)/services/[id]/page.tsx";
+const PAGE_FRAME = "src/components/ui/PageFrame.tsx";
 const SERVICE_CANCELLATION_ACTIONS = "src/app/(dashboard)/services/[id]/ServiceCancellationActions.tsx";
 const SUPPLIER_ALLOCATIONS = "src/app/(dashboard)/services/[id]/SupplierAllocationsPanel.tsx";
 const SUPPLIER_BOOKINGS = "src/app/(dashboard)/services/[id]/SupplierBookingsPanel.tsx";
@@ -128,8 +129,9 @@ test("dashboard shell constrains flex main column so wide tables do not expand b
 
 test("service detail root and lifecycle actions keep bounded responsive controls", () => {
   const detail = read(SERVICE_DETAIL);
-  assert.match(detail, /flex w-full min-w-0 max-w-full flex-col/);
-  assert.match(detail, /flex min-w-0 items-start gap-4/);
+  assert.match(detail, /<PageFrame variant="record">/);
+  assert.match(read(PAGE_FRAME), /record: "w-full max-w-full"/);
+  assert.match(read(PAGE_FRAME), /flex min-w-0 flex-col/);
 
   const actions = read(SERVICE_CANCELLATION_ACTIONS);
   assert.match(actions, /flex flex-wrap gap-2/);

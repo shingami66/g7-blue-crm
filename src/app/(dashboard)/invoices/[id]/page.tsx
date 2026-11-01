@@ -1,10 +1,13 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Suspense, type ComponentProps, type ReactNode } from "react";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
 import { CalendarDays, FileText, Printer, Receipt, UserRound, Wallet } from "lucide-react";
-import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import StatusBadge from "@/components/ui/StatusBadge";
-import PendingLink from "@/components/ui/PendingLink";
+import PageLocation from "@/components/navigation/PageLocation";
+import RecordBackButton from "@/components/navigation/RecordBackButton";
+import RecordNavigationRegion from "@/components/records/RecordNavigationRegion";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { INVOICE_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
@@ -335,36 +338,45 @@ export default async function InvoiceDetailPage({
   );
 
   return (
-    <div data-p2-detail-primary-ready="true" className="flex flex-col gap-6 pb-12">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-start gap-4">
-          <PendingLink
-            href={returnTo}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            aria-label={dictionary.detail.actions.backToInvoices}
-            title={dictionary.detail.actions.backToInvoices}
-          >
-            <LocaleBackIcon size={16} />
-          </PendingLink>
-          <div className="space-y-2 min-w-0">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-[28px] leading-[36px] font-semibold text-primary font-mono tracking-tight" dir="ltr">
-                {isolateBidiText(invoice.invoice_number || invoice.id)}
-              </h1>
-              <StatusBadge variant={invoiceStatusBadgeVariant[invoice.status]}>
-                {getInvoiceStatusLabel(dictionary.locale, invoice.status)}
-              </StatusBadge>
-            </div>
-            <p className="text-[14px] text-on-surface-variant" dir="auto">
-              {getInvoiceDocumentLabelDisplay(
-                locale,
-                invoice.document_label,
-                dictionary.detail.states.unavailable,
-              )}
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-3">
+    <div data-p2-detail-primary-ready="true">
+      <PageFrame variant="record">
+        <PageLocation
+          breadcrumbs={{
+            label: dictionary.detail.locationLabel,
+            items: [
+              { label: dictionary.list.title, href: "/invoices" },
+              { label: invoice.invoice_number || invoice.id, current: true, dir: "ltr" },
+            ],
+          }}
+          returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.detail.actions.backToInvoices} />}
+        />
+        <PageHeader
+          variant="composed"
+          title={isolateBidiText(invoice.invoice_number || invoice.id)}
+          titleDir="ltr"
+          status={<StatusBadge variant={invoiceStatusBadgeVariant[invoice.status]}>{getInvoiceStatusLabel(dictionary.locale, invoice.status)}</StatusBadge>}
+          subtitle={getInvoiceDocumentLabelDisplay(
+            locale,
+            invoice.document_label,
+            dictionary.detail.states.unavailable,
+          )}
+          subtitleDir="auto"
+          actions={{
+            label: dictionary.detail.actionsLabel,
+            secondary: (
+              <Link
+                href={`/invoices/${invoice.id}/pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-primary text-primary hover:bg-surface-container-low rounded-lg text-[14px] font-semibold transition-colors"
+              >
+                <Printer size={18} />
+                {dictionary.detail.actions.printPdf}
+              </Link>
+            ),
+          }}
+        />
+        <RecordNavigationRegion label={recordNavigationDictionary.title}>
           <Suspense
             fallback={
               <RecordNavigationPlaceholder
@@ -383,17 +395,7 @@ export default async function InvoiceDetailPage({
               pendingLabel={dictionary.list.navigationPending}
             />
           </Suspense>
-          <Link
-            href={`/invoices/${invoice.id}/pdf`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-primary text-primary hover:bg-surface-container-low rounded-lg text-[14px] font-semibold transition-colors"
-          >
-            <Printer size={18} />
-            {dictionary.detail.actions.printPdf}
-          </Link>
-        </div>
-      </div>
+        </RecordNavigationRegion>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 flex flex-col gap-6">
@@ -707,6 +709,7 @@ export default async function InvoiceDetailPage({
           </section>
         </div>
       </div>
+      </PageFrame>
     </div>
   );
 }

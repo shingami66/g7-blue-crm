@@ -185,6 +185,10 @@ test("11. Service Detail core headings, customer context, and schedule copy reso
   const ar = getServicesDictionary("ar");
   assert.equal(en.detail.backToServices.toLowerCase().includes("back"), true);
   assert.equal(ar.detail.backToServices, "العودة إلى الفعاليات");
+  assert.equal(en.detail.locationLabel, "Page location");
+  assert.equal(ar.detail.locationLabel, "مسار الصفحة");
+  assert.equal(en.detail.actionsLabel, "Event actions");
+  assert.equal(ar.detail.actionsLabel, "إجراءات الفعالية");
   assert.equal(en.detail.sections.serviceSchedule, "Event Schedule");
   assert.equal(ar.detail.sections.serviceSchedule, "الجدول الزمني");
   assert.equal(en.detail.labels.customer, "Customer");

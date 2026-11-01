@@ -1,10 +1,14 @@
 import { notFound, redirect } from "next/navigation";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Printer, FileEdit } from "lucide-react";
-import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import Link from "next/link";
 import PendingLink from "@/components/ui/PendingLink";
 import Button from "@/components/ui/Button";
+import PageLocation from "@/components/navigation/PageLocation";
+import RecordBackButton from "@/components/navigation/RecordBackButton";
+import RecordNavigationRegion from "@/components/records/RecordNavigationRegion";
 import { getQuotationByIdResult } from "@/lib/quotations/queries";
 import { requirePermission, checkPermission } from "@/lib/auth/permissions";
 import { SERVICE_BILLING_SUMMARY_PERMISSIONS } from "@/lib/auth/role-permissions";
@@ -179,29 +183,90 @@ export default async function QuotationDetailPage({
     template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
 
   return (
-    <div data-p2-detail-primary-ready="true" className="flex flex-col gap-6 pb-12">
-      {/* Top Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
-          <PendingLink
-            href={returnTo}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            aria-label={getCommonDictionary(locale).actions.back}
-          >
-            <LocaleBackIcon size={16} />
-          </PendingLink>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <h2 className="text-[24px] sm:text-[28px] leading-[32px] sm:leading-[36px] font-semibold text-primary font-mono tracking-tight whitespace-nowrap" dir="ltr">
-                {isolateBidiText(quotation.quotationNumber)}
-              </h2>
-              <StatusBadge variant={quotation.status as StatusBadgeVariant}>
-                {getQuotationStatusLabel(dictionary.locale, quotation.status)}
-              </StatusBadge>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 sm:justify-end">
+    <div data-p2-detail-primary-ready="true">
+      <PageFrame variant="record">
+        <PageLocation
+          breadcrumbs={{
+            label: dictionary.detail.locationLabel,
+            items: [
+              { label: dictionary.list.title, href: "/quotations" },
+              { label: quotation.quotationNumber, current: true, dir: "ltr" },
+            ],
+          }}
+          returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.editStates.backToQuotations} />}
+        />
+        <PageHeader
+          variant="composed"
+          title={isolateBidiText(quotation.quotationNumber)}
+          titleDir="ltr"
+          identifier={<>{dictionary.detail.labels.client}: <bdi dir="auto">{quotation.customer?.company || dictionary.detail.states.unknownCompany}</bdi></>}
+          status={<StatusBadge variant={quotation.status as StatusBadgeVariant}>{getQuotationStatusLabel(dictionary.locale, quotation.status)}</StatusBadge>}
+          actions={{
+            label: dictionary.detail.actionsLabel,
+            primary: (canApprove || canWrite) ? (
+              <QuotationApprovalActions
+                quotationId={quotation.id}
+                status={quotation.status}
+                canApprove={canApprove}
+                canWrite={canWrite}
+                dictionary={dictionary.approval}
+                listDictionary={dictionary.list}
+              />
+            ) : undefined,
+            secondary: <>
+              {(commercialAmendmentAction === "open-successor-draft" || commercialAmendmentAction === "open-successor-detail") && quotation.successor && (
+                <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
+                  <Link href={commercialAmendmentAction === "open-successor-draft" ? `/quotations/${quotation.successor.id}/amendment` : `/quotations/${quotation.successor.id}`}>{dictionary.amendment.openAction}</Link>
+                </Button>
+              )}
+              {commercialAmendmentAction === "create" && (
+                <CommercialAmendmentCreateDialog sourceQuotationId={quotation.id} dictionary={dictionary.amendment} />
+              )}
+              {commercialAmendmentAction === "open-draft-workspace" && (
+                <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
+                  <Link href={`/quotations/${quotation.id}/amendment`}>{dictionary.amendment.openAction}</Link>
+                </Button>
+              )}
+              {canWrite && (quotation.status === "draft" && !quotation.isApprovedCommercialAmendment ? (
+                <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
+                  <PendingLink href={appendReturnTo(`/quotations/${quotation.id}/edit`, appendReturnTo(`/quotations/${quotation.id}`, returnTo))}>
+                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                      <FileEdit size={16} />
+                      <span>{dictionary.detail.actions.edit}</span>
+                    </span>
+                  </PendingLink>
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 min-h-9 whitespace-nowrap"
+                  disabled
+                  title={dictionary.list.actionTitles.onlyDraftEditable}
+                  aria-label={dictionary.list.actionTitles.onlyDraftEditable}
+                >
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                    <FileEdit size={16} aria-hidden="true" />
+                    <span>{dictionary.detail.actions.edit}</span>
+                  </span>
+                </Button>
+              ))}
+              <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
+                <Link
+                  href={`/quotations/${quotation.id}/pdf`}
+                  target="_blank"
+                >
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                    <Printer size={16} />
+                    <span>{dictionary.detail.actions.printPdf}</span>
+                  </span>
+                </Link>
+              </Button>
+            </>,
+          }}
+        />
+        <RecordNavigationRegion label={recordNavigationDictionary.title}>
           <Suspense
             fallback={
               <RecordNavigationPlaceholder
@@ -220,68 +285,7 @@ export default async function QuotationDetailPage({
               pendingLabel={dictionary.list.navigationPending}
             />
           </Suspense>
-          <div aria-hidden="true" className="hidden h-6 w-px bg-surface-variant sm:block" />
-          {(canApprove || canWrite) && (
-            <QuotationApprovalActions
-              quotationId={quotation.id}
-              status={quotation.status}
-              canApprove={canApprove}
-              canWrite={canWrite}
-              dictionary={dictionary.approval}
-              listDictionary={dictionary.list}
-            />
-          )}
-          {(commercialAmendmentAction === "open-successor-draft" || commercialAmendmentAction === "open-successor-detail") && quotation.successor && (
-            <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
-              <Link href={commercialAmendmentAction === "open-successor-draft" ? `/quotations/${quotation.successor.id}/amendment` : `/quotations/${quotation.successor.id}`}>{dictionary.amendment.openAction}</Link>
-            </Button>
-          )}
-          {commercialAmendmentAction === "create" && (
-            <CommercialAmendmentCreateDialog sourceQuotationId={quotation.id} dictionary={dictionary.amendment} />
-          )}
-          {commercialAmendmentAction === "open-draft-workspace" && (
-            <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
-              <Link href={`/quotations/${quotation.id}/amendment`}>{dictionary.amendment.openAction}</Link>
-            </Button>
-          )}
-          {canWrite && (quotation.status === "draft" && !quotation.isApprovedCommercialAmendment ? (
-            <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
-              <PendingLink href={appendReturnTo(`/quotations/${quotation.id}/edit`, appendReturnTo(`/quotations/${quotation.id}`, returnTo))}>
-                <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                  <FileEdit size={16} />
-                  <span>{dictionary.detail.actions.edit}</span>
-                </span>
-              </PendingLink>
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 min-h-9 whitespace-nowrap"
-              disabled
-              title={dictionary.list.actionTitles.onlyDraftEditable}
-              aria-label={dictionary.list.actionTitles.onlyDraftEditable}
-            >
-              <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                <FileEdit size={16} aria-hidden="true" />
-                <span>{dictionary.detail.actions.edit}</span>
-              </span>
-            </Button>
-          ))}
-          <Button asChild variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">
-            <Link
-              href={`/quotations/${quotation.id}/pdf`}
-              target="_blank"
-            >
-              <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                <Printer size={16} />
-                <span>{dictionary.detail.actions.printPdf}</span>
-              </span>
-            </Link>
-          </Button>
-        </div>
-      </div>
+        </RecordNavigationRegion>
 
       {/* Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -554,6 +558,7 @@ export default async function QuotationDetailPage({
           )}
         </div>
       </div>
+      </PageFrame>
     </div>
   );
 }

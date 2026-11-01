@@ -145,12 +145,13 @@ test("legacy header output remains unchanged and composed mode owns one h1", () 
 test("composed identity/status and action slots retain semantics in both directions", () => {
   for (const dir of ["ltr", "rtl"]) {
     const { doc } = render(h("div", { dir }, h(Header, {
-      variant: "composed", title: "شركة Example".repeat(10), subtitle: "Context",
+      variant: "composed", title: "شركة Example".repeat(10), subtitle: "Commercial Invoice", subtitleDir: "auto",
       identifier: h("bdi", { dir: "ltr" }, "SUP-123"), status: h("span", null, "Active"),
       actions: { label: "Record actions", primary: h(Button, { disabled: true }, "Save"), secondary: h("a", { href: "/suppliers" }, "Cancel"), overflow: h("button", { type: "button" }, "More") },
     })));
     assert.equal(doc.querySelectorAll("h1").length, 1);
     assert.equal(doc.querySelector("h1")!.getAttribute("dir"), "auto");
+    assert.equal(doc.querySelector("header p")!.getAttribute("dir"), "auto");
     assert.equal(doc.querySelector("[data-page-identifier] bdi")!.getAttribute("dir"), "ltr");
     assert.ok(doc.querySelector("h1")!.parentElement!.querySelector("[data-page-status]"));
     const group = doc.querySelector('[role="group"]')!;

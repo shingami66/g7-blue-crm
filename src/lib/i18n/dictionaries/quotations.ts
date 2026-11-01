@@ -158,6 +158,8 @@ export interface QuotationsDictionary {
     };
   };
   detail: {
+    locationLabel: string;
+    actionsLabel: string;
     sections: {
       details: string;
       lineItems: string;
@@ -477,6 +479,8 @@ const quotationsDictionaryEn: QuotationsDictionary = {
     },
   },
   detail: {
+    locationLabel: "Page location",
+    actionsLabel: "Quotation actions",
     sections: {
       details: "Details",
       lineItems: "Line Items",
@@ -802,6 +806,8 @@ const quotationsDictionaryAr: QuotationsDictionary = {
     },
   },
   detail: {
+    locationLabel: "مسار الصفحة",
+    actionsLabel: "إجراءات عرض السعر",
     sections: {
       details: "تفاصيل عرض السعر",
       lineItems: "بنود عرض السعر",

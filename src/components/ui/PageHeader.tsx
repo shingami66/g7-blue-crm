@@ -13,6 +13,7 @@ type ComposedPageHeaderProps = {
   title: string;
   titleDir?: "auto" | "ltr" | "rtl";
   subtitle?: string;
+  subtitleDir?: "auto" | "ltr" | "rtl";
   identifier?: ReactNode;
   status?: ReactNode;
   actions?: PageActionsProps;
@@ -28,7 +29,7 @@ export default function PageHeader(props: LegacyPageHeaderProps | ComposedPageHe
             {props.status ? <div className="min-w-0 max-w-full" data-page-status="true">{props.status}</div> : null}
           </div>
           {props.identifier != null && props.identifier !== false ? <div className="mt-1 min-w-0 break-words text-sm text-on-surface-variant" data-page-identifier="true">{props.identifier}</div> : null}
-          {props.subtitle ? <p className="mt-1 min-w-0 break-words text-[14px] leading-5 text-on-surface-variant">{props.subtitle}</p> : null}
+          {props.subtitle ? <p dir={props.subtitleDir} className="mt-1 min-w-0 break-words text-[14px] leading-5 text-on-surface-variant">{props.subtitle}</p> : null}
         </div>
         {props.actions ? <PageActions {...props.actions} /> : null}
       </header>
