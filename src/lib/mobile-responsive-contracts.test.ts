@@ -49,12 +49,11 @@ test("3. Services search and filters have a mobile-safe layout", () => {
 
 test("4. Suppliers search/status/category filters have a mobile-safe layout", () => {
   const source = read(SUPPLIERS_CLIENT);
-  // Controls header wraps cleanly on sm+
-  assert.match(source, /flex flex-wrap items-center gap-3/);
-  // Search control owns full-width on mobile without forbidden flex-1/h-full/min-h-0 in SuppliersClient
-  assert.match(source, /<div className="w-full sm:w-auto sm:max-w-xl grow">[\s\S]*?<ModuleSearchControl/);
-  // Filters flow cleanly below
-  assert.match(source, /<div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">/);
+  // Search and both filters occupy explicit responsive grid tracks.
+  assert.match(source, /data-supplier-filters/);
+  assert.match(source, /grid grid-cols-1 gap-3[\s\S]*sm:grid-cols-2[\s\S]*lg:grid-cols-\[minmax\(0,1\.6fr\)_minmax\(11rem,1fr\)_minmax\(11rem,1fr\)\]/);
+  assert.match(source, /className="w-full"/);
+  assert.equal((source.match(/<SelectFilter/g) ?? []).length, 2);
 });
 
 test("5. Customers has separate mobile presentation", () => {

@@ -32,6 +32,11 @@ function leafKeys(value: unknown, prefix = ""): string[] {
 test("Supplier dictionary English and Arabic shapes remain aligned", () => {
   assert.deepEqual(leafKeys(getSuppliersDictionary("en")).sort(), leafKeys(getSuppliersDictionary("ar")).sort());
   assert.equal(getSuppliersDictionary("ar").list.title, "الموردون");
+  assert.equal(getSuppliersDictionary("en").list.columns.classification, "Classification");
+  assert.equal(getSuppliersDictionary("en").list.columns.contact, "Contact");
+  assert.equal(getSuppliersDictionary("ar").list.columns.classification, "التصنيف");
+  assert.equal(getSuppliersDictionary("ar").list.columns.contact, "التواصل");
+  assert.equal(getSuppliersDictionary("ar").list.deletedMode, "الموردون المحذوفون");
   assert.equal(getSuppliersDictionary("ar").detail.bankDetails, "البيانات البنكية");
 });
 
@@ -46,8 +51,40 @@ test("Supplier list uses safe route navigation rather than a local detail panel"
   const list = read(LIST_CLIENT);
   assert.match(read(LIST_PAGE), /getSuppliersList\(query\)/);
   assert.match(list, /supplierDetailHref\(supplier\.id, showDeleted, returnTo\)/);
+  assert.match(list, /const returnTo = supplierListHref\(filters, showDeleted\)/);
   assert.doesNotMatch(list, /SupplierBlacklistActions|SupplierRateCardsList|blacklistedReason|vatNumber|crNumber|bankName|notes/);
   assert.doesNotMatch(list, /supplier\.id\s*\?\?/);
+});
+
+test("Supplier directory groups five desktop columns and retains a focused mobile card", () => {
+  const list = read(LIST_CLIENT);
+  const desktopStart = list.indexOf("data-supplier-desktop-table");
+  const mobileStart = list.indexOf('data-testid="mobile-supplier-cards"');
+  assert.ok(desktopStart >= 0 && mobileStart > desktopStart, "expected distinct desktop and mobile surfaces");
+  const desktop = list.slice(desktopStart, mobileStart);
+
+  assert.equal((desktop.match(/<th scope="col"/g) ?? []).length, 5);
+  assert.match(desktop, /columns\.supplier/);
+  assert.match(desktop, /columns\.classification/);
+  assert.match(desktop, /columns\.contact/);
+  assert.match(desktop, /columns\.location/);
+  assert.match(desktop, /columns\.status/);
+  assert.match(desktop, /SupplierIdentity/);
+  assert.match(desktop, /SupplierClassification/);
+  assert.match(desktop, /SupplierLocation/);
+  assert.match(desktop, /StatusBadge/);
+  assert.match(desktop, /colSpan=\{5\}/);
+  assert.doesNotMatch(desktop, /<Eye|columns\.actions|min-w-\[1080px\]/);
+
+  const mobile = list.slice(mobileStart);
+  assert.match(mobile, /SupplierClassification/);
+  assert.match(mobile, /SupplierLocation/);
+  assert.match(mobile, /columns\.contact/);
+  assert.match(mobile, /<Eye/);
+  assert.match(list, /data-supplier-filters/);
+  assert.match(list, /data-supplier-deleted-mode/);
+  assert.match(list, /<bdi dir="auto">\{supplier\.city\}<\/bdi>/);
+  assert.match(list, /<span aria-hidden="true" dir="ltr">, <\/span>/);
 });
 
 test("Supplier detail, forms, and delete UI remain dictionary-driven", () => {

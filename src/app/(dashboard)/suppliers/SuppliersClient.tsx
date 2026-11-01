@@ -64,16 +64,104 @@ function displaySupplierText(value: string | null | undefined) {
   return value;
 }
 
-function locationFields(supplier: SupplierDirectoryItem) {
-  return {
-    city: displaySupplierText(supplier.city),
-    coverageArea: displaySupplierText(supplier.coverageArea),
-    country: displaySupplierText(supplier.country),
-  };
-}
-
 function MobileFieldLabel({ children }: { children: ReactNode }) {
   return <span className="shrink-0 text-[11px] font-semibold uppercase text-on-surface-variant lg:hidden">{children}</span>;
+}
+
+function SupplierIdentity({
+  supplier,
+  showDeleted,
+  returnTo,
+  dictionary,
+  viewLabel,
+}: {
+  supplier: SupplierDirectoryItem;
+  showDeleted: boolean;
+  returnTo: string;
+  dictionary: SuppliersDictionary;
+  viewLabel: string;
+}) {
+  const supplierName = displaySupplierText(supplier.name);
+  const initial = supplier.name.trim().charAt(0).toUpperCase();
+
+  return (
+    <div className="flex min-w-0 items-start gap-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-primary-fixed text-[16px] font-bold text-primary" aria-hidden="true">
+        {initial}
+      </div>
+      <div className="min-w-0">
+        <PendingLink
+          href={supplierDetailHref(supplier.id, showDeleted, returnTo)}
+          pendingLabel={dictionary.list.openingSupplier}
+          aria-label={viewLabel}
+          title={viewLabel}
+          className="inline-flex min-h-11 max-w-full items-center break-words font-semibold text-primary underline decoration-primary/30 underline-offset-2 transition-colors hover:decoration-primary focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        >
+          <bdi dir="auto">{supplierName}</bdi>
+        </PendingLink>
+        {supplier.supplierNumber && (
+          <div className="mt-0.5 text-[12px] text-on-surface-variant" dir="ltr">
+            {isolateBidiText(supplier.supplierNumber)}
+          </div>
+        )}
+        {supplier.isPreferred && (
+          <div className="mt-1 text-[11px] font-semibold text-primary" dir="auto">
+            {dictionary.detail.preferred}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SupplierClassification({
+  supplier,
+  locale,
+}: {
+  supplier: SupplierDirectoryItem;
+  locale: SuppliersDictionary["locale"];
+}) {
+  return (
+    <div className="flex min-w-0 flex-col items-start gap-1" data-supplier-classification>
+      <span className="max-w-full break-words rounded bg-surface-variant px-2 py-1 text-[12px] font-medium text-on-surface" dir="auto">
+        {getSupplierCategoryLabel(locale, supplier.category)}
+      </span>
+      <span className="min-w-0 break-words text-[12px] text-on-surface-variant" dir="auto">
+        {supplier.supplierType ? getSupplierTypeLabel(locale, supplier.supplierType) : "—"}
+      </span>
+    </div>
+  );
+}
+
+function SupplierLocation({
+  supplier,
+  dictionary,
+}: {
+  supplier: SupplierDirectoryItem;
+  dictionary: SuppliersDictionary;
+}) {
+  const hasCity = Boolean(supplier.city?.trim());
+  const hasCountry = Boolean(supplier.country?.trim());
+  const hasCoverageArea = Boolean(supplier.coverageArea?.trim());
+
+  return (
+    <div className="min-w-0" data-supplier-location>
+      {hasCity || hasCountry ? (
+        <p className="min-w-0 break-words font-medium text-on-surface">
+          {hasCity ? <bdi dir="auto">{supplier.city}</bdi> : null}
+          {hasCity && hasCountry ? <span aria-hidden="true" dir="ltr">, </span> : null}
+          {hasCountry ? <bdi dir="auto">{supplier.country}</bdi> : null}
+        </p>
+      ) : null}
+      {hasCoverageArea ? (
+        <p className="mt-1 min-w-0 break-words text-[12px] leading-[18px] text-on-surface-variant">
+          <span>{dictionary.detail.coverageArea}: </span>
+          <bdi dir="auto">{supplier.coverageArea}</bdi>
+        </p>
+      ) : null}
+      {!hasCity && !hasCountry && !hasCoverageArea ? <span>—</span> : null}
+    </div>
+  );
 }
 
 export default function SuppliersClient({
@@ -130,6 +218,11 @@ export default function SuppliersClient({
     <div className="flex flex-col" data-supplier-directory="workspace">
       <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
         <div className="flex flex-wrap justify-end gap-2">
+          {showDeleted && (
+            <span className="inline-flex min-h-9 items-center rounded-full bg-surface-variant px-3 text-[12px] font-medium text-on-surface-variant" data-supplier-deleted-mode>
+              {dictionary.list.deletedMode}
+            </span>
+          )}
           {canManageDeleted && (
             <Button
               type="button"
@@ -156,8 +249,8 @@ export default function SuppliersClient({
         className="relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest"
         aria-busy={isPending || undefined}
       >
-        <div className="flex flex-wrap items-center gap-3 border-b border-surface-variant bg-surface-bright p-4">
-          <div className="w-full sm:w-auto sm:max-w-xl grow">
+        <div className="grid grid-cols-1 gap-3 border-b border-surface-variant bg-surface-container-low p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.6fr)_minmax(11rem,1fr)_minmax(11rem,1fr)] lg:items-center" data-supplier-filters>
+          <div className="min-w-0 sm:col-span-2 lg:col-span-1">
             <ModuleSearchControl
               mode="supplier"
               modes={[{ value: "supplier", label: dictionary.list.searchPlaceholder, placeholder: dictionary.list.searchPlaceholder }]}
@@ -173,7 +266,7 @@ export default function SuppliersClient({
               className="w-full"
             />
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="min-w-0">
             <SelectFilter
               value={filters.status}
               label={dictionary.list.allStatuses}
@@ -189,6 +282,8 @@ export default function SuppliersClient({
                 ))}
               </>
             </SelectFilter>
+          </div>
+          <div className="min-w-0">
             <SelectFilter
               value={filters.category}
               label={dictionary.list.allCategories}
@@ -230,104 +325,61 @@ export default function SuppliersClient({
             />
           ) : null}
 
-          {/* Desktop Table View (>= lg) */}
-          <div className="hidden lg:block overflow-x-auto">
+          {/* Desktop five-column table (>= lg) */}
+          <div className="hidden min-w-0 lg:block">
             <table
-              className="w-full min-w-[1080px] table-fixed border-collapse text-start"
+              className="w-full min-w-0 table-fixed border-collapse text-start"
+              aria-label={dictionary.list.title}
+              data-supplier-desktop-table
               data-supplier-result-count="single"
             >
               <colgroup>
-                <col className="w-[24%]" />
-                <col className="w-[12%]" />
-                <col className="w-[11%]" />
-                <col className="w-[9%]" />
-                <col className="w-[10%]" />
+                <col className="w-[27%]" />
+                <col className="w-[18%]" />
                 <col className="w-[14%]" />
-                <col className="w-[10%]" />
-                <col className="w-[7%]" />
-                <col className="w-[3%]" />
+                <col className="w-[28%]" />
+                <col className="w-[13%]" />
               </colgroup>
               <thead>
                 <tr className="border-b border-surface-variant bg-surface-container-low">
-                  <th className="px-4 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant">{dictionary.list.columns.supplier}</th>
-                  <th className="px-4 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant">{dictionary.detail.phone}</th>
-                  <th className="px-4 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant">{dictionary.list.columns.category}</th>
-                  <th className="px-4 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant">{dictionary.list.columns.type}</th>
-                  <th className="px-4 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant">{dictionary.detail.city}</th>
-                  <th className="px-4 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant">{dictionary.detail.coverageArea}</th>
-                  <th className="px-4 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant">{dictionary.detail.country}</th>
-                  <th className="px-4 py-3 text-center text-[12px] font-semibold uppercase text-on-surface-variant">{dictionary.list.columns.status}</th>
-                  <th className="px-4 py-3 text-center text-[12px] font-semibold uppercase text-on-surface-variant">{dictionary.list.columns.actions}</th>
+                  <th scope="col" className="px-2 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant sm:px-3">{dictionary.list.columns.supplier}</th>
+                  <th scope="col" className="px-2 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant sm:px-3">{dictionary.list.columns.classification}</th>
+                  <th scope="col" className="px-2 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant sm:px-3">{dictionary.list.columns.contact}</th>
+                  <th scope="col" className="px-2 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant sm:px-3">{dictionary.list.columns.location}</th>
+                  <th scope="col" className="px-2 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant sm:px-3">{dictionary.list.columns.status}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
                 {!loadError && suppliers.map((supplier) => {
-                  const location = locationFields(supplier);
                   const supplierName = displaySupplierText(supplier.name);
                   const viewLabel = `${dictionary.list.viewSupplier}: ${isolateBidiText(supplierName)}`;
-                  const initial = supplier.name.trim().charAt(0).toUpperCase();
 
                   return (
                     <tr
                       key={supplier.id}
                       className="hover:bg-surface-container-low/50 transition-colors"
                     >
-                      <td className="px-4 py-4 align-top">
-                        <div className="flex min-w-0 items-start gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-primary-fixed text-[16px] font-bold text-primary" aria-hidden="true">
-                            {initial}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="break-words font-semibold text-primary" dir="auto">{supplierName}</div>
-                            {supplier.supplierNumber && (
-                              <div className="mt-0.5 text-[12px] text-on-surface-variant" dir="ltr">
-                                {isolateBidiText(supplier.supplierNumber)}
-                              </div>
-                            )}
-                            {supplier.isPreferred && (
-                              <div className="mt-1 text-[11px] font-semibold text-primary" dir="auto">{dictionary.detail.preferred}</div>
-                            )}
-                          </div>
-                        </div>
+                      <td className="px-2 py-4 align-top sm:px-3">
+                        <SupplierIdentity supplier={supplier} showDeleted={showDeleted} returnTo={returnTo} dictionary={dictionary} viewLabel={viewLabel} />
                       </td>
-                      <td className="px-4 py-4 align-top text-on-surface">
-                        <span dir="ltr">{supplier.phone ? isolateBidiText(supplier.phone) : "—"}</span>
+                      <td className="px-2 py-4 align-top sm:px-3">
+                        <SupplierClassification supplier={supplier} locale={locale} />
                       </td>
-                      <td className="px-4 py-4 align-top">
-                        <span className="break-words rounded bg-surface-variant px-2 py-1 text-[12px] font-medium text-on-surface" dir="auto">{getSupplierCategoryLabel(locale, supplier.category)}</span>
+                      <td className="px-2 py-4 align-top text-on-surface sm:px-3">
+                        {supplier.phone ? <bdi dir="ltr" className="whitespace-nowrap">{isolateBidiText(supplier.phone)}</bdi> : "—"}
                       </td>
-                      <td className="px-4 py-4 align-top text-on-surface-variant">
-                        <span dir="auto">{supplier.supplierType ? getSupplierTypeLabel(locale, supplier.supplierType) : "—"}</span>
+                      <td className="px-2 py-4 align-top sm:px-3">
+                        <SupplierLocation supplier={supplier} dictionary={dictionary} />
                       </td>
-                      <td className="px-4 py-4 align-top text-on-surface-variant" dir="auto">
-                        <span className="break-words">{location.city}</span>
-                      </td>
-                      <td className="px-4 py-4 align-top text-on-surface-variant" dir="auto">
-                        <span className="break-words">{location.coverageArea}</span>
-                      </td>
-                      <td className="px-4 py-4 align-top text-on-surface-variant" dir="auto">
-                        <span className="break-words">{location.country}</span>
-                      </td>
-                      <td className="px-4 py-4 align-top text-center">
+                      <td className="px-2 py-4 align-top sm:px-3">
                         <StatusBadge variant={STATUS_VARIANT_MAP[supplier.status]}>{getSupplierStatusLabel(locale, supplier.status)}</StatusBadge>
-                      </td>
-                      <td className="px-4 py-4 align-top text-center">
-                        <PendingLink
-                          href={supplierDetailHref(supplier.id, showDeleted, returnTo)}
-                          pendingLabel={dictionary.list.openingSupplier}
-                          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-transparent text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1 focus-visible:ring-offset-surface"
-                          aria-label={viewLabel}
-                          title={viewLabel}
-                        >
-                          <Eye size={17} aria-hidden="true" />
-                        </PendingLink>
                       </td>
                     </tr>
                   );
                 })}
                 {!loadError && suppliers.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-on-surface-variant">
+                    <td colSpan={5} className="px-4 py-8 text-center text-on-surface-variant">
                       {hasFilters ? dictionary.states.noFilteredSuppliers : dictionary.states.noSuppliers}
                     </td>
                   </tr>
@@ -337,9 +389,8 @@ export default function SuppliersClient({
           </div>
 
           {/* Mobile Cards View (< lg) */}
-          <div className="block lg:hidden divide-y divide-surface-variant" data-testid="mobile-supplier-cards">
+          <div className="block divide-y divide-surface-variant lg:hidden" data-testid="mobile-supplier-cards">
             {!loadError && suppliers.map((supplier) => {
-              const location = locationFields(supplier);
               const supplierName = displaySupplierText(supplier.name);
               const viewLabel = `${dictionary.list.viewSupplier}: ${isolateBidiText(supplierName)}`;
               const initial = supplier.name.trim().charAt(0).toUpperCase();
@@ -376,44 +427,27 @@ export default function SuppliersClient({
                   </div>
 
                   {/* Structured Field Rows */}
-                  <div className="space-y-1.5 text-[13px]">
+                  <div className="space-y-3 text-[13px]">
                     <div className="flex items-baseline justify-between gap-2">
-                      <MobileFieldLabel>{dictionary.detail.phone}</MobileFieldLabel>
+                      <MobileFieldLabel>{dictionary.list.columns.contact}</MobileFieldLabel>
                       <span className="font-medium text-on-surface" dir="ltr">
                         {supplier.phone ? isolateBidiText(supplier.phone) : "—"}
                       </span>
                     </div>
 
-                    <div className="flex items-baseline justify-between gap-2">
-                      <MobileFieldLabel>{dictionary.list.columns.category}</MobileFieldLabel>
-                      <span className="break-words rounded bg-surface-variant px-2 py-0.5 text-[12px] font-medium text-on-surface" dir="auto">
-                        {getSupplierCategoryLabel(locale, supplier.category)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-baseline justify-between gap-2">
-                      <MobileFieldLabel>{dictionary.list.columns.type}</MobileFieldLabel>
-                      <span className="text-on-surface-variant" dir="auto">
-                        {supplier.supplierType ? getSupplierTypeLabel(locale, supplier.supplierType) : "—"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-baseline justify-between gap-2">
-                      <MobileFieldLabel>{dictionary.detail.city}</MobileFieldLabel>
-                      <span className="text-on-surface-variant break-words text-end" dir="auto">
-                        {location.city}
-                      </span>
-                    </div>
-
-                    {(supplier.coverageArea || supplier.country) && (
-                      <div className="flex items-baseline justify-between gap-2">
-                        <MobileFieldLabel>{dictionary.detail.coverageArea}</MobileFieldLabel>
-                        <span className="text-on-surface-variant break-words text-end" dir="auto">
-                          {location.coverageArea}
-                          {supplier.country ? ` (${location.country})` : ""}
-                        </span>
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <MobileFieldLabel>{dictionary.list.columns.classification}</MobileFieldLabel>
+                      <div className="min-w-0 text-end">
+                        <SupplierClassification supplier={supplier} locale={locale} />
                       </div>
-                    )}
+                    </div>
+
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <MobileFieldLabel>{dictionary.list.columns.location}</MobileFieldLabel>
+                      <div className="min-w-0 flex-1 text-end">
+                        <SupplierLocation supplier={supplier} dictionary={dictionary} />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Mobile View Action */}
@@ -465,7 +499,7 @@ function SelectFilter({
   children: ReactNode;
 }) {
   return (
-    <div className="relative grow sm:grow-0 min-w-[130px]">
+    <div className="relative w-full min-w-0">
       <select
         value={value}
         disabled={disabled}

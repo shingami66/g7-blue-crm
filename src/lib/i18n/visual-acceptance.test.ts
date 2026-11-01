@@ -243,20 +243,27 @@ test("Settings IsoDateField uses YYYY-MM-DD contract without mm/dd/yyyy", () => 
   assert.match(settings, /type="text"/);
 });
 
-test("Supplier directory preserves one readable responsive row surface and identity", () => {
+test("Supplier directory keeps grouped five-column desktop identity and narrow mobile cards", () => {
   const suppliers = read("src/app/(dashboard)/suppliers/SuppliersClient.tsx");
 
-  // The current directory uses one semantic table that stacks its rows on narrow screens.
-  assert.match(suppliers, /block w-full min-w-0[\s\S]*lg:table/);
+  // Desktop uses a compact semantic table; mobile keeps a separate actionable card surface.
+  assert.match(suppliers, /data-supplier-desktop-table/);
+  assert.equal((suppliers.match(/<th scope="col"/g) ?? []).length, 5);
+  assert.match(suppliers, /table-fixed/);
+  assert.match(suppliers, /data-testid="mobile-supplier-cards"/);
   assert.match(suppliers, /flex min-w-0 items-start gap-3/);
   assert.match(suppliers, /shrink-0/);
   assert.match(suppliers, /supplier\.name/);
   assert.match(suppliers, /break-words/);
-  assert.match(suppliers, /dir="auto">\{supplierName\}/);
-  assert.match(suppliers, /dictionary\.detail\.city/);
-  assert.match(suppliers, /dictionary\.detail\.coverageArea/);
-  assert.match(suppliers, /dictionary\.detail\.country/);
+  assert.match(suppliers, /<bdi dir="auto">\{supplierName\}<\/bdi>/);
+  assert.match(suppliers, /columns\.classification/);
+  assert.match(suppliers, /columns\.contact/);
+  assert.match(suppliers, /SupplierLocation/);
+  assert.match(suppliers, /SupplierClassification/);
   assert.match(suppliers, /data-supplier-result-count="single"/);
+  assert.match(suppliers, /colSpan=\{5\}/);
+  assert.match(suppliers, /supplierDetailHref\(supplier\.id, showDeleted, returnTo\)/);
+  assert.doesNotMatch(suppliers, /min-w-\[1080px\]/);
   assert.doesNotMatch(suppliers, /columns\.rating|Rating/);
   assert.doesNotMatch(suppliers, /name\.slice|name\.substring|ellipsis/i);
 });

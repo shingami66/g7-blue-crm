@@ -182,17 +182,19 @@ test("accepted table-local overflow wrappers remain present", () => {
   assert.doesNotMatch(read(SERVICE_DETAIL), /overflow-x-hidden/);
 });
 
-test("supplier directory keeps one responsive row surface and service supplier panels provide mobile surfaces", () => {
+test("supplier directory uses a compact desktop table and focused mobile cards while service supplier panels stay responsive", () => {
   const supplierDetail = read(SUPPLIERS);
-  assert.match(supplierDetail, /block w-full min-w-0[\s\S]*lg:table/);
-  assert.match(supplierDetail, /hidden lg:table-header-group/);
+  assert.match(supplierDetail, /data-supplier-desktop-table/);
+  assert.match(supplierDetail, /table-fixed/);
+  assert.match(supplierDetail, /data-testid="mobile-supplier-cards"/);
+  assert.match(supplierDetail, /data-supplier-filters/);
   assert.match(supplierDetail, /suppliers\.map/);
   assert.match(supplierDetail, /dictionary\.list\.viewSupplier/);
   assert.match(supplierDetail, /break-words/);
-  assert.match(supplierDetail, /dictionary\.detail\.city/);
-  assert.match(supplierDetail, /dictionary\.detail\.coverageArea/);
-  assert.match(supplierDetail, /dictionary\.detail\.country/);
+  assert.match(supplierDetail, /SupplierLocation/);
+  assert.match(supplierDetail, /SupplierClassification/);
   assert.match(supplierDetail, /data-supplier-result-count="single"/);
+  assert.doesNotMatch(supplierDetail, /min-w-\[1080px\]/);
   assert.doesNotMatch(supplierDetail, /columns\.rating|Rating/);
 
   const allocations = read(SUPPLIER_ALLOCATIONS);

@@ -468,9 +468,11 @@ test("H24: Supplier Quotation history uses PendingLink with localized pending la
 test("H25: Suppliers list table columns adapt cleanly without horizontal blowout, with responsive card view on mobile", () => {
   const source = read("src/app/(dashboard)/suppliers/SuppliersClient.tsx");
   assert.match(source, /data-testid="mobile-supplier-cards"/);
-  assert.match(source, /className="block lg:hidden divide-y divide-surface-variant"/);
-  assert.match(source, /className="hidden lg:block overflow-x-auto"/);
+  assert.match(source, /className="block divide-y divide-surface-variant lg:hidden"/);
+  assert.match(source, /data-supplier-desktop-table/);
+  assert.match(source, /w-full min-w-0 table-fixed/);
   assert.match(source, /data-supplier-result-count="single"/);
+  assert.doesNotMatch(source, /min-w-\[1080px\]/);
 });
 
 test("H26: All changes maintain full compliance without regressions", () => {

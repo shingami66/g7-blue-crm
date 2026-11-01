@@ -53,10 +53,13 @@ export interface SuppliersDictionary {
     showingRange: string;
     showDeleted: string;
     showCurrent: string;
+    deletedMode: string;
     viewSupplier: string;
     openingSupplier: string;
     columns: {
       supplier: string;
+      classification: string;
+      contact: string;
       category: string;
       type: string;
       location: string;
@@ -352,9 +355,10 @@ const suppliersDictionaryEn: SuppliersDictionary = {
     showingRange: "Showing {start}-{end} of {total} suppliers",
     showDeleted: "Show deleted",
     showCurrent: "Show current",
+    deletedMode: "Deleted suppliers",
     viewSupplier: "View supplier",
     openingSupplier: "Opening supplier…",
-    columns: { supplier: "Supplier", category: "Category", type: "Type", location: "Location", status: "Status", actions: "Actions" },
+    columns: { supplier: "Supplier", classification: "Classification", contact: "Contact", category: "Category", type: "Type", location: "Location", status: "Status", actions: "Actions" },
   },
   detail: {
     title: "Supplier Details",
@@ -460,9 +464,10 @@ const suppliersDictionaryAr: SuppliersDictionary = {
     showingRange: "عرض {start}-{end} من {total} موردين",
     showDeleted: "عرض المحذوفين",
     showCurrent: "عرض الحاليين",
+    deletedMode: "الموردون المحذوفون",
     viewSupplier: "عرض المورد",
     openingSupplier: "جارٍ فتح المورد…",
-    columns: { supplier: "المورد", category: "الفئة", type: "النوع", location: "الموقع", status: "الحالة", actions: "إجراءات" },
+    columns: { supplier: "المورد", classification: "التصنيف", contact: "التواصل", category: "الفئة", type: "النوع", location: "الموقع", status: "الحالة", actions: "إجراءات" },
   },
   detail: {
     title: "تفاصيل المورد", subtitle: "سجل دليل المورد", backToSuppliers: "العودة إلى الموردين", locationLabel: "مسار الصفحة", actionsLabel: "إجراءات المورد", secondaryActionsLabel: "إجراءات إضافية للمورد", edit: "تعديل", contactInformation: "معلومات التواصل", directoryDetails: "تفاصيل الدليل", address: "العنوان ونطاق التغطية", taxIdentity: "الهوية الضريبية", internalDetails: "بيانات داخلية", bankDetails: "البيانات البنكية", rateCards: "بطاقات الأسعار الداخلية", status: "الحالة", supplierType: "نوع المورد", category: "الفئة", preferred: "مفضل", legalName: "الاسم القانوني", contactName: "جهة الاتصال الرئيسية", phone: "الهاتف", whatsappPhone: "هاتف واتساب", email: "البريد الإلكتروني", city: "المدينة", country: "الدولة", coverageArea: "منطقة التغطية", crNumber: "رقم السجل التجاري", vatRegistration: "تسجيل ضريبة القيمة المضافة", vatNumber: "الرقم الضريبي", paymentTerms: "شروط الدفع", notes: "ملاحظات داخلية", bankName: "اسم البنك", bankAccountName: "اسم صاحب الحساب", iban: "الآيبان", blacklistDetails: "تفاصيل القائمة السوداء", blacklistReason: "السبب", blacklistedOn: "تمت الإضافة إلى القائمة السوداء في {date}", noBankDetails: "لا توجد بيانات بنكية مسجلة.", yes: "نعم", no: "لا", deleted: "مورد محذوف",

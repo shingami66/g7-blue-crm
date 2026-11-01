@@ -103,7 +103,12 @@ test("Supplier directory keeps phone, location fallback, mobile cards, and no Ra
   assert.match(queries, /phone/);
   assert.match(mapper, /phone:/);
   assert.match(client, /supplier\.phone/);
-  assert.match(client, /locationFields|dictionary\.detail\.city/);
+  assert.match(client, /function SupplierLocation/);
+  assert.match(client, /supplier\.city/);
+  assert.match(client, /supplier\.country/);
+  assert.match(client, /supplier\.coverageArea/);
+  assert.match(client, /dictionary\.detail\.coverageArea/);
+  assert.match(client, /!hasCity && !hasCountry && !hasCoverageArea/);
   assert.match(client, /lg:hidden/);
   assert.doesNotMatch(client, /columns\.rating|Rating/);
 });
