@@ -12,7 +12,7 @@ import type { SupplierBillListItem, SupplierBillListPagination } from "@/lib/sup
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import { useListNavigation } from "@/components/ui/useListNavigation";
 import type { ListPageSize } from "@/lib/pagination";
-import { supplierBillsHref } from "@/lib/supplier-bills/navigation";
+import { supplierBillDetailHref, supplierBillsHref, type SupplierBillsSearchParams } from "@/lib/supplier-bills/navigation";
 
 function statusVariant(status: SupplierBillListItem["status"]): "pending" | "active" {
   return status === "approved" ? "active" : "pending";
@@ -21,12 +21,16 @@ function statusVariant(status: SupplierBillListItem["status"]): "pending" | "act
 export default function SupplierBillsClient({
   bills,
   pagination,
+  listReturnTo,
+  queryParams,
   canRecord,
   canApprove,
   dictionary,
 }: {
   bills: SupplierBillListItem[];
   pagination: SupplierBillListPagination;
+  listReturnTo: string;
+  queryParams: SupplierBillsSearchParams;
   canRecord: boolean;
   canApprove: boolean;
   dictionary: SupplierBillsDictionary;
@@ -59,8 +63,8 @@ export default function SupplierBillsClient({
             pageSize={pagination.pageSize}
             paginationMode="bounded"
             isPending={isPending}
-            onPageChange={(page) => navigate(supplierBillsHref(page, pagination.pageSize), "push")}
-            onPageSizeChange={(pageSize: ListPageSize) => navigate(supplierBillsHref(1, pageSize), "replace")}
+            onPageChange={(page) => navigate(supplierBillsHref(page, pagination.pageSize, queryParams), "push")}
+            onPageSizeChange={(pageSize: ListPageSize) => navigate(supplierBillsHref(1, pageSize, queryParams), "replace")}
           />
         )}
         <div className="hidden overflow-x-auto lg:block">
@@ -89,7 +93,7 @@ export default function SupplierBillsClient({
               {bills.map((bill) => (
                 <tr key={bill.id} className="transition-colors hover:bg-surface-container-low/50">
                   <td className="px-4 py-4 align-top text-start">
-                    <PendingLink href={`/supplier-bills/${bill.id}`} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline">
+                    <PendingLink href={supplierBillDetailHref(bill.id, listReturnTo)} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline">
                       <bdi dir="ltr">{bill.bill_number}</bdi>
                     </PendingLink>
                     <div className="mt-1 text-[12px] text-on-surface-variant"><bdi dir="ltr">{bill.invoice_number}</bdi></div>
@@ -103,7 +107,7 @@ export default function SupplierBillsClient({
                   <td className="px-4 py-4 text-end align-top"><bdi dir="ltr" className="font-semibold tabular-nums">{formatSarAmount(locale, bill.total_amount)}</bdi></td>
                   <td className="px-4 py-4 text-center align-top"><StatusBadge variant={statusVariant(bill.status)}>{bill.status === "approved" ? dictionary.statuses.approved : dictionary.statuses.pending}</StatusBadge></td>
                   <td className="px-4 py-4 text-center align-top">
-                    <PendingLink href={`/supplier-bills/${bill.id}`} pendingLabel={dictionary.actions.view} aria-label={`${dictionary.actions.view}: ${bill.bill_number}`} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+                    <PendingLink href={supplierBillDetailHref(bill.id, listReturnTo)} pendingLabel={dictionary.actions.view} aria-label={`${dictionary.actions.view}: ${bill.bill_number}`} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
                       <Eye size={16} aria-hidden="true" />
                     </PendingLink>
                   </td>
@@ -120,7 +124,7 @@ export default function SupplierBillsClient({
             <article key={bill.id} className="space-y-3 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <PendingLink href={`/supplier-bills/${bill.id}`} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline">
+                  <PendingLink href={supplierBillDetailHref(bill.id, listReturnTo)} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline">
                     <bdi dir="ltr">{bill.bill_number}</bdi>
                   </PendingLink>
                   <div className="mt-1 truncate text-[12px] text-on-surface-variant"><bdi dir="ltr">{bill.invoice_number}</bdi></div>
@@ -133,7 +137,7 @@ export default function SupplierBillsClient({
                 <div><dt className="text-on-surface-variant">{dictionary.columns.invoiceDate}</dt><dd className="mt-0.5"><UiDateText locale={locale} value={bill.invoice_date} /></dd></div>
                 <div><dt className="text-on-surface-variant">{dictionary.columns.total}</dt><dd className="mt-0.5 text-end font-semibold tabular-nums"><bdi dir="ltr">{formatSarAmount(locale, bill.total_amount)}</bdi></dd></div>
               </dl>
-              <PendingLink href={`/supplier-bills/${bill.id}`} pendingLabel={dictionary.actions.view} className="inline-flex text-[12px] font-semibold text-primary hover:underline">
+              <PendingLink href={supplierBillDetailHref(bill.id, listReturnTo)} pendingLabel={dictionary.actions.view} className="inline-flex text-[12px] font-semibold text-primary hover:underline">
                 {dictionary.actions.view}
               </PendingLink>
             </article>

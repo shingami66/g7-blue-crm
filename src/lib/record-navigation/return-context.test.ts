@@ -6,6 +6,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 import { appendReturnTo, recordNavigationHref, safeRecordReturnTo } from "./return-to.ts";
+import { supplierBillDetailHref, supplierBillsHref, supplierBillsReturnTo } from "../supplier-bills/navigation.ts";
 
 const require = createRequire(import.meta.url);
 const root = new URL("../../", import.meta.url);
@@ -23,6 +24,27 @@ test("record route context and return origin are independent, encoded and option
   assert.equal(deleted.searchParams.get("returnTo"), origin);
   assert.equal(deleted.searchParams.getAll("returnTo").length, 1);
   assert.equal(recordNavigationHref("/suppliers", id, "https://evil.example"), `/suppliers/${id}`);
+});
+
+test("Supplier Bills detail links preserve current list query context and use a validated internal origin", () => {
+  const query = {
+    page: "3",
+    pageSize: "50",
+    search: "Supplier & Event",
+    status: ["pending", "approved"],
+    returnTo: "https://evil.example",
+  };
+  const returnTo = supplierBillsReturnTo(query);
+  assert.equal(returnTo, "/supplier-bills?page=3&pageSize=50&search=Supplier+%26+Event&status=pending&status=approved");
+  assert.equal(supplierBillsHref(4, 20, query), "/supplier-bills?search=Supplier+%26+Event&status=pending&status=approved&page=4&pageSize=20");
+  assert.equal(safeRecordReturnTo(returnTo, "/supplier-bills"), returnTo);
+  assert.equal(safeRecordReturnTo("https://evil.example", "/supplier-bills"), "/supplier-bills");
+  assert.equal(safeRecordReturnTo("//evil.example", "/supplier-bills"), "/supplier-bills");
+
+  const detailHref = new URL(supplierBillDetailHref(id, returnTo), "https://local.g7");
+  assert.equal(detailHref.pathname, `/supplier-bills/${id}`);
+  assert.equal(detailHref.searchParams.get("returnTo"), returnTo);
+  assert.equal(new URL(supplierBillDetailHref(id, "https://evil.example"), "https://local.g7").searchParams.has("returnTo"), false);
 });
 
 test("actual record pager renders all four destinations with mode and origin", () => {

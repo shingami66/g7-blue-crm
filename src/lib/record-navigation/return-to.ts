@@ -1,6 +1,6 @@
 export function safeRecordReturnTo(value: unknown, fallback: string): string {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || /[\r\n]/.test(value)) return fallback;
-  const allowed = ["/customers", "/services", "/quotations", "/invoices", "/suppliers"];
+  const allowed = ["/customers", "/services", "/quotations", "/invoices", "/suppliers", "/supplier-bills"];
   const allowedModulePath = allowed.some((prefix) => value === prefix || value.startsWith(`${prefix}?`));
   const allowedSupplierRecordPath = /^\/suppliers\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\?[^#]*)?$/iu.test(value);
   const allowedServiceRecordPath = /^\/services\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\?[^#]*)?$/iu.test(value);

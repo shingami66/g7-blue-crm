@@ -4,8 +4,11 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import PendingLink from "@/components/ui/PendingLink";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import PageLocation from "@/components/navigation/PageLocation";
+import RecordBackButton from "@/components/navigation/RecordBackButton";
 import { UiDateText, UiDateTimeText } from "@/components/i18n/UiDateText";
 import { formatSarAmount } from "@/lib/i18n/formatting";
 import { approveSupplierBillAction, attachSupplierBillInvoiceAction, createSupplierBillDocumentViewUrl } from "@/lib/supplier-bills/actions";
@@ -31,6 +34,7 @@ export default function SupplierBillDetailClient({
   canRecord,
   canApprove,
   canRecordPayment,
+  returnTo,
   dictionary,
 }: {
   bill: SupplierBillDetail;
@@ -38,6 +42,7 @@ export default function SupplierBillDetailClient({
   canRecord: boolean;
   canApprove: boolean;
   canRecordPayment: boolean;
+  returnTo: string;
   dictionary: SupplierBillsDictionary;
 }) {
   const router = useRouter();
@@ -50,8 +55,10 @@ export default function SupplierBillDetailClient({
   const [isEditOpen, setIsEditOpen] = useState(false);
   const wasEditOpen = useRef(false);
   const locale = dictionary.locale;
-  const isRtl = locale === "ar";
   const approved = bill.status === "approved";
+  const canShowApprove = canApprove && !approved;
+  const canShowRecordPayment = canRecordPayment && approved && (bill.paymentSummary?.outstanding_amount ?? 0) > 0;
+  const canShowHeaderActions = (canRecord && !approved) || canShowApprove || canShowRecordPayment;
   const editTriggerId = "supplier-bill-edit-trigger";
 
   useEffect(() => {
@@ -92,25 +99,33 @@ export default function SupplierBillDetailClient({
   }
 
   return (
-    <div dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-5 pb-12" data-supplier-bill-detail="workspace">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <PendingLink href="/supplier-bills" pendingLabel={dictionary.backToList} className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-[12px] font-semibold text-primary hover:bg-surface-container-low hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
-            {isRtl ? <ArrowRight size={16} aria-hidden="true" /> : <ArrowLeft size={16} aria-hidden="true" />}
-            <span>{dictionary.backToList}</span>
-          </PendingLink>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <h1 className="text-[26px] font-semibold text-primary"><bdi dir="ltr">{bill.bill_number}</bdi></h1>
-            <StatusBadge variant={approved ? "active" : "pending"}>{approved ? dictionary.statuses.approved : dictionary.statuses.pending}</StatusBadge>
-          </div>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-[14px] text-on-surface-variant"><bdi dir="auto">{bill.supplier_name}</bdi><span aria-hidden="true">·</span><bdi dir="ltr">{bill.service_number}</bdi></p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {canRecord && !approved && <Button id={editTriggerId} type="button" variant="secondary" onClick={() => setIsEditOpen((open) => !open)} aria-expanded={isEditOpen} aria-controls={isEditOpen ? "supplier-bill-edit-panel" : undefined}>{isEditOpen ? dictionary.actions.closeEdit : dictionary.actions.editBill}</Button>}
-          {canApprove && !approved && <Button type="button" onClick={approve} disabled={isApprovePending}>{isApprovePending ? "…" : dictionary.actions.approve}</Button>}
-          {canRecordPayment && approved && bill.paymentSummary && bill.paymentSummary.outstanding_amount > 0 && <Button asChild size="sm"><PendingLink href={`/supplier-payments/new?billId=${bill.id}`} pendingLabel={dictionary.actions.recordPayment}>{dictionary.actions.recordPayment}</PendingLink></Button>}
-        </div>
-      </div>
+    <div dir={locale === "ar" ? "rtl" : "ltr"} className="min-w-0" data-supplier-bill-detail="record">
+      <PageFrame variant="record">
+        <PageLocation
+          breadcrumbs={{
+            label: dictionary.title,
+            items: [
+              { label: dictionary.title, href: returnTo },
+              { label: bill.bill_number, current: true, dir: "ltr" },
+            ],
+          }}
+          returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.backToList} />}
+        />
+        <PageHeader
+          variant="composed"
+          title={bill.bill_number}
+          titleDir="ltr"
+          status={<StatusBadge variant={approved ? "active" : "pending"}>{approved ? dictionary.statuses.approved : dictionary.statuses.pending}</StatusBadge>}
+          identifier={<><bdi dir="auto">{bill.supplier_name}</bdi><span aria-hidden="true"> · </span><bdi dir="ltr">{bill.service_number}</bdi><span aria-hidden="true"> · </span><bdi dir="auto">{bill.event_name || bill.service_title}</bdi></>}
+          actions={canShowHeaderActions ? {
+            label: dictionary.columns.actions,
+            secondary: canRecord && !approved ? <Button id={editTriggerId} type="button" variant="secondary" onClick={() => setIsEditOpen((open) => !open)} aria-expanded={isEditOpen} aria-controls={isEditOpen ? "supplier-bill-edit-panel" : undefined}>{isEditOpen ? dictionary.actions.closeEdit : dictionary.actions.editBill}</Button> : undefined,
+            primary: canShowApprove || canShowRecordPayment ? <>
+              {canShowApprove && <Button type="button" onClick={approve} disabled={isApprovePending}>{isApprovePending ? "…" : dictionary.actions.approve}</Button>}
+              {canShowRecordPayment && <Button asChild size="sm"><PendingLink href={`/supplier-payments/new?billId=${bill.id}`} pendingLabel={dictionary.actions.recordPayment}>{dictionary.actions.recordPayment}</PendingLink></Button>}
+            </> : undefined,
+          } : undefined}
+        />
 
       <section className="rounded-xl border border-surface-variant bg-surface-container-lowest p-4" aria-labelledby="supplier-bill-financial-summary">
         <h2 id="supplier-bill-financial-summary" className="text-[14px] font-semibold text-primary">{dictionary.title}</h2>
@@ -180,6 +195,7 @@ export default function SupplierBillDetailClient({
 
       {canRecord && !approved && <section><h2 className="text-[15px] font-semibold text-primary">{dictionary.forms.pendingNotice}</h2>{isEditOpen && <div id="supplier-bill-edit-panel" className="mt-3"><SupplierBillForm options={options} dictionary={dictionary} bill={bill} autoFocus onCancel={() => setIsEditOpen(false)} /></div>}</section>}
       {message && <p role="status" className="text-[12px] text-on-surface-variant">{message}</p>}
+      </PageFrame>
     </div>
   );
 }

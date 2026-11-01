@@ -5,16 +5,12 @@ import { SUPPLIER_BILL_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { normalizeListPage, normalizeListPageSize } from "@/lib/pagination";
 import { getSupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
-import { supplierBillsHref, supplierBillsQueryMatchesPagination } from "@/lib/supplier-bills/navigation";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
+import { supplierBillsHref, supplierBillsQueryMatchesPagination, supplierBillsReturnTo, type SupplierBillsSearchParams } from "@/lib/supplier-bills/navigation";
 import { getSupplierBillsList } from "@/lib/supplier-bills/queries";
 import SupplierBillsClient from "./SupplierBillsClient";
 
 export const dynamic = "force-dynamic";
-
-type SupplierBillsSearchParams = {
-  page?: string;
-  pageSize?: string;
-};
 
 type SupplierBillsPageLoad =
   | { state: "accessDenied" | "loadError" }
@@ -53,9 +49,10 @@ export default async function SupplierBillsPage({
     return <StateCard title={message} message={message} />;
   }
   if (!supplierBillsQueryMatchesPagination(params, pageLoad.list.pagination.page, pageLoad.list.pagination.pageSize)) {
-    redirect(supplierBillsHref(pageLoad.list.pagination.page, pageLoad.list.pagination.pageSize));
+    redirect(supplierBillsHref(pageLoad.list.pagination.page, pageLoad.list.pagination.pageSize, params));
   }
-  return <SupplierBillsClient bills={pageLoad.list.bills} pagination={pageLoad.list.pagination} canRecord={canRecord} canApprove={canApprove} dictionary={dictionary} />;
+  const listReturnTo = safeRecordReturnTo(supplierBillsReturnTo(params), "/supplier-bills");
+  return <SupplierBillsClient bills={pageLoad.list.bills} pagination={pageLoad.list.pagination} listReturnTo={listReturnTo} queryParams={params} canRecord={canRecord} canApprove={canApprove} dictionary={dictionary} />;
 }
 
 function StateCard({ title, message }: { title: string; message: string }) {

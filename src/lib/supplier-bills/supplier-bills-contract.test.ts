@@ -19,6 +19,7 @@ const permissions = readFileSync(new URL("../auth/role-permissions.ts", import.m
 const storage = readFileSync(new URL("../documents/storage.ts", import.meta.url), "utf8");
 const listQueries = readFileSync(new URL("./queries.ts", import.meta.url), "utf8");
 const listPage = readFileSync(new URL("../../app/(dashboard)/supplier-bills/page.tsx", import.meta.url), "utf8");
+const detailPage = readFileSync(new URL("../../app/(dashboard)/supplier-bills/[id]/page.tsx", import.meta.url), "utf8");
 const listClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/SupplierBillsClient.tsx", import.meta.url), "utf8");
 const detailClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/SupplierBillDetailClient.tsx", import.meta.url), "utf8");
 const formClient = readFileSync(new URL("../../app/(dashboard)/supplier-bills/SupplierBillForm.tsx", import.meta.url), "utf8");
@@ -134,10 +135,31 @@ test("W6A exposes a distinct bilingual Supplier Bills workspace with one approva
   assert.match(listClient, /<colgroup>/);
   assert.match(listClient, /supplier-bills-mobile-cards/);
   assert.match(listClient, /<bdi dir="ltr">/);
+  assert.match(detailClient, /<PageFrame variant="record">/);
+  assert.match(detailClient, /<PageHeader\s+variant="composed"/);
+  assert.match(detailClient, /<PageLocation/);
+  assert.match(detailClient, /<RecordBackButton[^>]+variant="labeled"[^>]+label=\{dictionary\.backToList\}/);
+  assert.match(detailClient, /title=\{bill\.bill_number\}/);
+  assert.match(detailClient, /titleDir="ltr"/);
+  assert.match(detailClient, /<StatusBadge variant=\{approved \? "active" : "pending"\}/);
+  assert.equal((detailClient.match(/<PageHeader\b/g) ?? []).length, 1);
+  assert.match(detailPage, /safeRecordReturnTo\(resolvedSearchParams\.returnTo, "\/supplier-bills"\)/);
+  assert.match(listPage, /supplierBillsReturnTo\(params\)/);
+  assert.match(listPage, /queryParams=\{params\}/);
+  assert.equal((listClient.match(/supplierBillDetailHref\(bill\.id, listReturnTo\)/g) ?? []).length, 4);
+  assert.doesNotMatch(listClient, /href=\{`\/supplier-bills\/\$\{bill\.id\}`\}/);
   assert.match(detailClient, /dictionary\.actions\.approve/);
   assert.match(detailClient, /useState\(false\)/);
   assert.match(detailClient, /aria-expanded=\{isEditOpen\}/);
   assert.match(detailClient, /dictionary\.actions\.editBill/);
+  assert.match(detailClient, /secondary: canRecord && !approved/);
+  assert.match(detailClient, /const canShowApprove = canApprove && !approved/);
+  assert.match(detailClient, /const canShowRecordPayment = canRecordPayment && approved && \(bill\.paymentSummary\?\.outstanding_amount \?\? 0\) > 0/);
+  assert.match(detailClient, /href=\{`\/supplier-payments\/new\?billId=\$\{bill\.id\}`\}/);
+  assert.match(detailClient, /returnControl=\{<RecordBackButton href=\{returnTo\}/);
+  assert.match(detailClient, /\{ label: bill\.bill_number, current: true, dir: "ltr" \}/);
+  assert.match(detailClient, /id="supplier-bill-edit-panel"/);
+  assert.match(detailClient, /document\.getElementById\(editTriggerId\)\?\.focus\(\)/);
   assert.doesNotMatch(detailClient, /value=\{bill\.commitment_id\}/);
   assert.doesNotMatch(detailClient, /value=\{bill\.service_receipt_id\}/);
   assert.match(detailClient, /dictionary\.acceptanceStatuses\[bill\.receipt_acceptance_status\]/);
@@ -175,8 +197,8 @@ test("Supplier Bills list uses shared server pagination and keeps URL page state
   assert.match(listPage, /pageSize: normalizeListPageSize\(params\.pageSize\)/);
   assert.match(listClient, /<PaginationFooter/);
   assert.match(listClient, /paginationMode="bounded"/);
-  assert.match(listClient, /supplierBillsHref\(page, pagination\.pageSize\)/);
-  assert.match(listClient, /supplierBillsHref\(1, pageSize\)/);
+  assert.match(listClient, /supplierBillsHref\(page, pagination\.pageSize, queryParams\)/);
+  assert.match(listClient, /supplierBillsHref\(1, pageSize, queryParams\)/);
   assert.match(listClient, /data-testid="supplier-bills-desktop-table"/);
   assert.match(listClient, /data-testid="supplier-bills-mobile-cards"/);
 });
@@ -199,7 +221,7 @@ test("Supplier Bills canonicalize out-of-range page URLs to effective pagination
     true,
   );
   assert.match(listPage, /supplierBillsQueryMatchesPagination\(params, pageLoad\.list\.pagination\.page, pageLoad\.list\.pagination\.pageSize\)/);
-  assert.match(listPage, /redirect\(supplierBillsHref\(pageLoad\.list\.pagination\.page, pageLoad\.list\.pagination\.pageSize\)\)/);
+  assert.match(listPage, /redirect\(supplierBillsHref\(pageLoad\.list\.pagination\.page, pageLoad\.list\.pagination\.pageSize, params\)\)/);
 });
 
 test("Supplier Bills keep RTL table alignment and isolate atomic values at the leaf", () => {
@@ -215,10 +237,11 @@ test("Supplier Bills keep RTL table alignment and isolate atomic values at the l
   assert.doesNotMatch(detailClient, /<p\b[^>]*\bdir\s*=\s*"auto"/);
   assert.doesNotMatch(detailClient, /<span\b[^>]*\bdir\s*=\s*"auto"/);
   assert.doesNotMatch(detailClient, /<dd\b[^>]*\bdir\s*=/);
-  assert.match(detailClient, /<h1 className="[^"]+"><bdi dir="ltr">\{bill\.bill_number\}<\/bdi><\/h1>/);
+  assert.match(detailClient, /title=\{bill\.bill_number\}/);
   assert.match(detailClient, /<bdi dir="ltr">\{bill\.service_number\}<\/bdi>/);
   assert.match(detailClient, /<bdi dir="auto">\{bill\.event_name \|\| bill\.service_title\}<\/bdi>/);
-  assert.match(detailClient, /isRtl \? <ArrowRight[^>]+> : <ArrowLeft/);
+  assert.match(detailClient, /RecordBackButton href=\{returnTo\} locale=\{locale\} variant="labeled"/);
+  assert.match(detailClient, /returnControl=\{<RecordBackButton/);
   assert.match(newPage, /isRtl \? <ArrowRight[^>]+> : <ArrowLeft/);
   assert.match(newPage, /inline-flex items-center gap-2/);
 });

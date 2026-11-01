@@ -5,14 +5,16 @@ import { SUPPLIER_BILL_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { SUPPLIER_PAYMENT_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getSupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import { getSupplierBillById, getSupplierBillFormOptions } from "@/lib/supplier-bills/queries";
 import SupplierBillDetailClient from "../SupplierBillDetailClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function SupplierBillDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const [{ id }, locale, canRead, canRecord, canApprove, canRecordPayment] = await Promise.all([
+export default async function SupplierBillDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ returnTo?: string | string[] }> }) {
+  const [{ id }, resolvedSearchParams, locale, canRead, canRecord, canApprove, canRecordPayment] = await Promise.all([
     params,
+    searchParams,
     getCurrentSessionEffectiveLocale(),
     checkPermission(SUPPLIER_BILL_PERMISSIONS.read),
     checkPermission(SUPPLIER_BILL_PERMISSIONS.record),
@@ -20,6 +22,7 @@ export default async function SupplierBillDetailPage({ params }: { params: Promi
     checkPermission(SUPPLIER_PAYMENT_PERMISSIONS.record),
   ]);
   const dictionary = getSupplierBillsDictionary(locale);
+  const returnTo = safeRecordReturnTo(resolvedSearchParams.returnTo, "/supplier-bills");
   if (!canRead) return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
   let detail: Awaited<ReturnType<typeof getSupplierBillById>> | null = null;
   let options: Awaited<ReturnType<typeof getSupplierBillFormOptions>> | null = null;
@@ -33,7 +36,7 @@ export default async function SupplierBillDetailPage({ params }: { params: Promi
   if (state === "accessDenied") return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
   if (state === "loadError" || !detail || !options) return <StateCard title={dictionary.states.loadError} message={dictionary.states.loadError} />;
   if (!detail.bill) notFound();
-  return <SupplierBillDetailClient bill={detail.bill} options={options} canRecord={canRecord} canApprove={canApprove} canRecordPayment={canRecordPayment} dictionary={dictionary} />;
+  return <SupplierBillDetailClient bill={detail.bill} options={options} returnTo={returnTo} canRecord={canRecord} canApprove={canApprove} canRecordPayment={canRecordPayment} dictionary={dictionary} />;
 }
 
 function StateCard({ title, message }: { title: string; message: string }) {
