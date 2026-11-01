@@ -44,6 +44,8 @@ test("Supplier labels and V1 status values stay localized", () => {
   assert.equal(getSupplierStatusLabel("ar", "active"), "نشط");
   assert.equal(getSupplierTypeLabel("ar", "company"), "شركة");
   assert.equal(getSupplierCategoryLabel("ar", "sound"), "صوت");
+  assert.equal(getSuppliersDictionary("en").list.viewSupplier, "View supplier");
+  assert.equal(getSuppliersDictionary("ar").list.viewSupplier, "عرض المورد");
   assert.equal(getSuppliersDictionary("en").vatRegistration.unknown, "Unknown");
 });
 
@@ -52,18 +54,42 @@ test("Supplier list uses safe route navigation rather than a local detail panel"
   assert.match(read(LIST_PAGE), /getSuppliersList\(query\)/);
   assert.match(list, /supplierDetailHref\(supplier\.id, showDeleted, returnTo\)/);
   assert.match(list, /const returnTo = supplierListHref\(filters, showDeleted\)/);
+  assert.match(list, /if \(normalizedSearch\) params\.set\("search", normalizedSearch\)/);
+  assert.match(list, /if \(filters\.status !== "all"\) params\.set\("status", filters\.status\)/);
+  assert.match(list, /if \(filters\.category !== "all"\) params\.set\("category", filters\.category\)/);
+  assert.match(list, /if \(filters\.page > 1\) params\.set\("page", String\(filters\.page\)\)/);
+  assert.match(list, /function supplierDetailHref\(id: string, showDeleted: boolean, returnTo: string\)[\s\S]*?if \(showDeleted\) params\.set\("showDeleted", "true"\);[\s\S]*?params\.set\("returnTo", returnTo\)/);
+  const identityStart = list.indexOf("function SupplierIdentity");
+  const identityEnd = list.indexOf("function SupplierClassification", identityStart);
+  const identity = list.slice(identityStart, identityEnd);
+  assert.match(identity, /<PendingLink[\s\S]*?href=\{supplierDetailHref\(supplier\.id, showDeleted, returnTo\)\}/);
+  const actionStart = list.indexOf("data-supplier-view-action");
+  const actionEnd = list.indexOf("</td>", actionStart);
+  const viewAction = list.slice(actionStart, actionEnd);
+  assert.match(viewAction, /href=\{supplierDetailHref\(supplier\.id, showDeleted, returnTo\)\}/);
+  assert.match(viewAction, /aria-label=\{viewLabel\}/);
+  assert.match(viewAction, /title=\{viewLabel\}/);
+  assert.doesNotMatch(viewAction, /<a\b|<button\b/);
+  assert.equal((list.match(/href=\{supplierDetailHref\(supplier\.id, showDeleted, returnTo\)\}/g) ?? []).length, 3);
+  const iconButton = read(join(REPO_ROOT, "src/components/ui/Button.tsx"));
+  assert.match(iconButton, /focus-visible:ring-2/);
+  assert.match(iconButton, /icon: "h-10 w-10 p-0"/);
   assert.doesNotMatch(list, /SupplierBlacklistActions|SupplierRateCardsList|blacklistedReason|vatNumber|crNumber|bankName|notes/);
   assert.doesNotMatch(list, /supplier\.id\s*\?\?/);
 });
 
-test("Supplier directory groups five desktop columns and retains a focused mobile card", () => {
+test("Supplier directory keeps five grouped desktop information columns, adds a View action, and retains focused mobile cards", () => {
   const list = read(LIST_CLIENT);
   const desktopStart = list.indexOf("data-supplier-desktop-table");
   const mobileStart = list.indexOf('data-testid="mobile-supplier-cards"');
   assert.ok(desktopStart >= 0 && mobileStart > desktopStart, "expected distinct desktop and mobile surfaces");
   const desktop = list.slice(desktopStart, mobileStart);
 
-  assert.equal((desktop.match(/<th scope="col"/g) ?? []).length, 5);
+  const header = desktop.slice(desktop.indexOf("<thead>"), desktop.indexOf("</thead>"));
+  const colgroup = desktop.slice(desktop.indexOf("<colgroup>"), desktop.indexOf("</colgroup>"));
+  assert.equal((header.match(/<th scope="col"/g) ?? []).length, 6);
+  assert.equal((colgroup.match(/<col /g) ?? []).length, 6);
+  assert.match(header, /columns\.supplier[\s\S]*columns\.classification[\s\S]*columns\.contact[\s\S]*columns\.location[\s\S]*columns\.status[\s\S]*viewSupplier/);
   assert.match(desktop, /columns\.supplier/);
   assert.match(desktop, /columns\.classification/);
   assert.match(desktop, /columns\.contact/);
@@ -73,14 +99,26 @@ test("Supplier directory groups five desktop columns and retains a focused mobil
   assert.match(desktop, /SupplierClassification/);
   assert.match(desktop, /SupplierLocation/);
   assert.match(desktop, /StatusBadge/);
-  assert.match(desktop, /colSpan=\{5\}/);
-  assert.doesNotMatch(desktop, /<Eye|columns\.actions|min-w-\[1080px\]/);
+  const actionStart = desktop.indexOf("data-supplier-view-action");
+  assert.ok(actionStart >= 0, "expected a dedicated desktop View action cell");
+  const actionEnd = desktop.indexOf("</td>", actionStart);
+  const viewAction = desktop.slice(actionStart, actionEnd);
+  const rowStart = desktop.lastIndexOf("<tr", actionStart);
+  const rowEnd = desktop.indexOf("</tr>", actionStart);
+  const supplierRow = desktop.slice(rowStart, rowEnd);
+  assert.equal((supplierRow.match(/<td /g) ?? []).length, 6);
+  assert.doesNotMatch(viewAction, /className="[^"]*(?:opacity-0|group-hover|hidden)/);
+  assert.match(viewAction, /<Button asChild variant="ghost" size="icon"/);
+  assert.match(viewAction, /<Eye size=\{17\} aria-hidden="true" \/>/);
+  assert.match(desktop, /colSpan=\{6\}/);
+  assert.doesNotMatch(desktop, /min-w-\[1080px\]/);
 
   const mobile = list.slice(mobileStart);
   assert.match(mobile, /SupplierClassification/);
   assert.match(mobile, /SupplierLocation/);
   assert.match(mobile, /columns\.contact/);
-  assert.match(mobile, /<Eye/);
+  assert.equal((mobile.match(/<Eye/g) ?? []).length, 1);
+  assert.match(mobile, /dictionary\.list\.viewSupplier/);
   assert.match(list, /data-supplier-filters/);
   assert.match(list, /data-supplier-deleted-mode/);
   assert.match(list, /<bdi dir="auto">\{supplier\.city\}<\/bdi>/);

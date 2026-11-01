@@ -243,12 +243,14 @@ test("Settings IsoDateField uses YYYY-MM-DD contract without mm/dd/yyyy", () => 
   assert.match(settings, /type="text"/);
 });
 
-test("Supplier directory keeps grouped five-column desktop identity and narrow mobile cards", () => {
+test("Supplier directory keeps five grouped information columns, a desktop View action, and narrow mobile cards", () => {
   const suppliers = read("src/app/(dashboard)/suppliers/SuppliersClient.tsx");
 
   // Desktop uses a compact semantic table; mobile keeps a separate actionable card surface.
   assert.match(suppliers, /data-supplier-desktop-table/);
-  assert.equal((suppliers.match(/<th scope="col"/g) ?? []).length, 5);
+  assert.equal((suppliers.match(/<th scope="col"/g) ?? []).length, 6);
+  assert.match(suppliers, /columns\.supplier[\s\S]*columns\.classification[\s\S]*columns\.contact[\s\S]*columns\.location[\s\S]*columns\.status[\s\S]*viewSupplier/);
+  assert.match(suppliers, /data-supplier-view-action/);
   assert.match(suppliers, /table-fixed/);
   assert.match(suppliers, /data-testid="mobile-supplier-cards"/);
   assert.match(suppliers, /flex min-w-0 items-start gap-3/);
@@ -261,7 +263,7 @@ test("Supplier directory keeps grouped five-column desktop identity and narrow m
   assert.match(suppliers, /SupplierLocation/);
   assert.match(suppliers, /SupplierClassification/);
   assert.match(suppliers, /data-supplier-result-count="single"/);
-  assert.match(suppliers, /colSpan=\{5\}/);
+  assert.match(suppliers, /colSpan=\{6\}/);
   assert.match(suppliers, /supplierDetailHref\(supplier\.id, showDeleted, returnTo\)/);
   assert.doesNotMatch(suppliers, /min-w-\[1080px\]/);
   assert.doesNotMatch(suppliers, /columns\.rating|Rating/);

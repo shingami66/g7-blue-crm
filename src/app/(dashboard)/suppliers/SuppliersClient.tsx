@@ -325,7 +325,7 @@ export default function SuppliersClient({
             />
           ) : null}
 
-          {/* Desktop five-column table (>= lg) */}
+          {/* Desktop table keeps five grouped information columns plus the View action (>= lg) */}
           <div className="hidden min-w-0 lg:block">
             <table
               className="w-full min-w-0 table-fixed border-collapse text-start"
@@ -334,11 +334,12 @@ export default function SuppliersClient({
               data-supplier-result-count="single"
             >
               <colgroup>
-                <col className="w-[27%]" />
-                <col className="w-[18%]" />
-                <col className="w-[14%]" />
-                <col className="w-[28%]" />
-                <col className="w-[13%]" />
+                <col className="w-[25%]" />
+                <col className="w-[17%]" />
+                <col className="w-[12%]" />
+                <col className="w-[24%]" />
+                <col className="w-[12%]" />
+                <col className="w-[10%]" />
               </colgroup>
               <thead>
                 <tr className="border-b border-surface-variant bg-surface-container-low">
@@ -347,6 +348,7 @@ export default function SuppliersClient({
                   <th scope="col" className="px-2 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant sm:px-3">{dictionary.list.columns.contact}</th>
                   <th scope="col" className="px-2 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant sm:px-3">{dictionary.list.columns.location}</th>
                   <th scope="col" className="px-2 py-3 text-start text-[12px] font-semibold uppercase text-on-surface-variant sm:px-3">{dictionary.list.columns.status}</th>
+                  <th scope="col" className="px-2 py-3 text-center text-[12px] font-semibold text-on-surface-variant sm:px-3">{dictionary.list.viewSupplier}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant text-[14px] leading-[20px]">
@@ -374,12 +376,24 @@ export default function SuppliersClient({
                       <td className="px-2 py-4 align-top sm:px-3">
                         <StatusBadge variant={STATUS_VARIANT_MAP[supplier.status]}>{getSupplierStatusLabel(locale, supplier.status)}</StatusBadge>
                       </td>
+                      <td className="px-2 py-3 align-top text-center sm:px-3" data-supplier-view-action>
+                        <Button asChild variant="ghost" size="icon" className="shrink-0">
+                          <PendingLink
+                            href={supplierDetailHref(supplier.id, showDeleted, returnTo)}
+                            pendingLabel={dictionary.list.openingSupplier}
+                            aria-label={viewLabel}
+                            title={viewLabel}
+                          >
+                            <Eye size={17} aria-hidden="true" />
+                          </PendingLink>
+                        </Button>
+                      </td>
                     </tr>
                   );
                 })}
                 {!loadError && suppliers.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-on-surface-variant">
+                    <td colSpan={6} className="px-4 py-8 text-center text-on-surface-variant">
                       {hasFilters ? dictionary.states.noFilteredSuppliers : dictionary.states.noSuppliers}
                     </td>
                   </tr>
