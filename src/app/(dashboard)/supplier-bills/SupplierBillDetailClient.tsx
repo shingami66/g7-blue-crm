@@ -11,6 +11,8 @@ import PageLocation from "@/components/navigation/PageLocation";
 import RecordBackButton from "@/components/navigation/RecordBackButton";
 import { UiDateText, UiDateTimeText } from "@/components/i18n/UiDateText";
 import { formatSarAmount } from "@/lib/i18n/formatting";
+import { appendReturnTo } from "@/lib/record-navigation/return-to";
+import { supplierBillDetailHref } from "@/lib/supplier-bills/navigation";
 import { approveSupplierBillAction, attachSupplierBillInvoiceAction, createSupplierBillDocumentViewUrl } from "@/lib/supplier-bills/actions";
 import type { SupplierBillsDictionary } from "@/lib/i18n/dictionaries/supplier-bills";
 import type { SupplierBillDetail, SupplierBillFormOptions } from "@/lib/supplier-bills/types";
@@ -122,7 +124,7 @@ export default function SupplierBillDetailClient({
             secondary: canRecord && !approved ? <Button id={editTriggerId} type="button" variant="secondary" onClick={() => setIsEditOpen((open) => !open)} aria-expanded={isEditOpen} aria-controls={isEditOpen ? "supplier-bill-edit-panel" : undefined}>{isEditOpen ? dictionary.actions.closeEdit : dictionary.actions.editBill}</Button> : undefined,
             primary: canShowApprove || canShowRecordPayment ? <>
               {canShowApprove && <Button type="button" onClick={approve} disabled={isApprovePending}>{isApprovePending ? "…" : dictionary.actions.approve}</Button>}
-              {canShowRecordPayment && <Button asChild size="sm"><PendingLink href={`/supplier-payments/new?billId=${bill.id}`} pendingLabel={dictionary.actions.recordPayment}>{dictionary.actions.recordPayment}</PendingLink></Button>}
+              {canShowRecordPayment && <Button asChild size="sm"><PendingLink href={appendReturnTo(`/supplier-payments/new?billId=${encodeURIComponent(bill.id)}`, supplierBillDetailHref(bill.id, returnTo))} pendingLabel={dictionary.actions.recordPayment}>{dictionary.actions.recordPayment}</PendingLink></Button>}
             </> : undefined,
           } : undefined}
         />

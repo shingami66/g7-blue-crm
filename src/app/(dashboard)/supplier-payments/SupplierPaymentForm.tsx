@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { formatSarAmount } from "@/lib/i18n/formatting";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import type { SupplierPaymentsDictionary } from "@/lib/i18n/dictionaries/supplier-payments";
 import { recordSupplierPaymentAction } from "@/lib/supplier-payments/actions";
 
@@ -23,6 +24,7 @@ export default function SupplierPaymentForm({
   currency,
   outstandingAmount,
   dictionary,
+  returnTo,
 }: {
   supplierBillId: string;
   billNumber: string;
@@ -31,8 +33,10 @@ export default function SupplierPaymentForm({
   currency: string;
   outstandingAmount: number;
   dictionary: SupplierPaymentsDictionary;
+  returnTo: string;
 }) {
   const router = useRouter();
+  const exitHref = safeRecordReturnTo(returnTo, "/supplier-payments");
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [request, setRequest] = useState(requestId);
@@ -69,7 +73,7 @@ export default function SupplierPaymentForm({
         <label className="text-[12px] font-semibold md:col-span-2">{dictionary.forms.paymentEvidence}<input className={fieldClass()} name="document" type="file" required accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" disabled={isPending} /><span className="mt-1 block text-[11px] font-normal text-on-surface-variant">{dictionary.forms.paymentEvidenceHelp}</span></label>
         <label className="text-[12px] font-semibold md:col-span-2">{dictionary.fields.notes}<textarea className={fieldClass()} name="notes" rows={3} maxLength={2000} disabled={isPending} /></label>
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-3"><Button type="submit" disabled={isPending || outstandingAmount <= 0}>{isPending ? "…" : dictionary.actions.save}</Button><Button type="button" variant="secondary" onClick={() => router.push(`/supplier-bills/${supplierBillId}`)} disabled={isPending}>{dictionary.actions.cancel}</Button>{message && <span role="status" className="text-[12px] text-on-surface-variant">{message}</span>}</div>
+      <div className="mt-4 flex flex-wrap items-center gap-3"><Button type="submit" disabled={isPending || outstandingAmount <= 0}>{isPending ? "…" : dictionary.actions.save}</Button><Button type="button" variant="secondary" onClick={() => router.push(exitHref)} disabled={isPending}>{dictionary.actions.cancel}</Button>{message && <span role="status" className="text-[12px] text-on-surface-variant">{message}</span>}</div>
     </form>
   );
 }

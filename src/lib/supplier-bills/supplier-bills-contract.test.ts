@@ -155,7 +155,7 @@ test("W6A exposes a distinct bilingual Supplier Bills workspace with one approva
   assert.match(detailClient, /secondary: canRecord && !approved/);
   assert.match(detailClient, /const canShowApprove = canApprove && !approved/);
   assert.match(detailClient, /const canShowRecordPayment = canRecordPayment && approved && \(bill\.paymentSummary\?\.outstanding_amount \?\? 0\) > 0/);
-  assert.match(detailClient, /href=\{`\/supplier-payments\/new\?billId=\$\{bill\.id\}`\}/);
+  assert.ok(detailClient.includes("appendReturnTo(`/supplier-payments/new?billId=${encodeURIComponent(bill.id)}`, supplierBillDetailHref(bill.id, returnTo))"));
   assert.match(detailClient, /returnControl=\{<RecordBackButton href=\{returnTo\}/);
   assert.match(detailClient, /\{ label: bill\.bill_number, current: true, dir: "ltr" \}/);
   assert.match(detailClient, /id="supplier-bill-edit-panel"/);
@@ -242,8 +242,8 @@ test("Supplier Bills keep RTL table alignment and isolate atomic values at the l
   assert.match(detailClient, /<bdi dir="auto">\{bill\.event_name \|\| bill\.service_title\}<\/bdi>/);
   assert.match(detailClient, /RecordBackButton href=\{returnTo\} locale=\{locale\} variant="labeled"/);
   assert.match(detailClient, /returnControl=\{<RecordBackButton/);
-  assert.match(newPage, /isRtl \? <ArrowRight[^>]+> : <ArrowLeft/);
-  assert.match(newPage, /inline-flex items-center gap-2/);
+  assert.match(newPage, /RecordBackButton href=\{returnTo\} locale=\{locale\} variant="labeled"/);
+  assert.match(newPage, /label=\{dictionary\.backToList\}/);
 });
 
 test("Supplier Bills use structured dates, stable context rows, and text-safe native options", () => {

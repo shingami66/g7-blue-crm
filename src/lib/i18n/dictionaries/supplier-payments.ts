@@ -6,6 +6,7 @@ export interface SupplierPaymentsDictionary {
   subtitle: string;
   recordPayment: string;
   backToList: string;
+  backToBill: string;
   fields: {
     paymentNumber: string;
     bill: string;
@@ -119,6 +120,7 @@ const base: Omit<SupplierPaymentsDictionary, "locale"> = {
   subtitle: "Outbound payments recorded against approved Event Supplier Bills.",
   recordPayment: "Record Payment",
   backToList: "Back to Supplier Payments",
+  backToBill: "Back to Supplier Bill",
   fields: {
     paymentNumber: "Payment Number", bill: "Supplier Bill", supplier: "Supplier", service: "Event Reference", paymentDate: "Payment Date", currency: "Currency", amount: "Amount", method: "Method", reference: "Payment Reference", evidence: "Payment Evidence", notes: "Notes", recordedAt: "Recorded At", recordedBy: "Recorded By", status: "Status", payable: "Payable", paid: "Paid", outstanding: "Outstanding", bankName: "Bank", accountName: "Account Name", iban: "IBAN snapshot", reversalAudit: "Reversal Audit", reversalReason: "Reversal Reason", reversedAt: "Reversed At", reversedBy: "Reversed by",
   },
@@ -141,6 +143,7 @@ export const supplierPaymentsDictionaryAr: SupplierPaymentsDictionary = {
   subtitle: "المدفوعات المسجلة مقابل فواتير موردي الفعاليات المعتمدة.",
   recordPayment: "تسجيل دفعة",
   backToList: "العودة إلى مدفوعات الموردين",
+  backToBill: "العودة إلى فاتورة المورد",
   fields: { paymentNumber: "رقم الدفعة", bill: "فاتورة المورد", supplier: "المورد", service: "مرجع الفعالية", paymentDate: "تاريخ الدفع", currency: "العملة", amount: "المبلغ", method: "طريقة الدفع", reference: "مرجع الدفع", evidence: "مستند تأييد الدفع", notes: "ملاحظات", recordedAt: "تاريخ التسجيل", recordedBy: "سجّلها", status: "الحالة", payable: "المستحق", paid: "المدفوع", outstanding: "المتبقي", bankName: "البنك", accountName: "اسم الحساب", iban: "نسخة IBAN", reversalAudit: "سجل العكس", reversalReason: "سبب العكس", reversedAt: "تاريخ العكس", reversedBy: "تم العكس بواسطة" },
   columns: { payment: "الدفعة", bill: "الفاتورة", supplier: "المورد", date: "التاريخ", amount: "المبلغ", method: "الطريقة", status: "الحالة", actions: "الإجراءات" },
   methods: { bank_transfer: "تحويل بنكي", cash: "نقدًا", cheque: "شيك" },

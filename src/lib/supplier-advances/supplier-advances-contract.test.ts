@@ -320,11 +320,11 @@ test("authorization route hides the editable form at zero capacity and shows the
   assert.notEqual(emptyBranch, "", "the zero-commitment branch must be explicit");
   assert.match(emptyBranch, /data-testid="supplier-advance-no-commitments"/);
   assert.match(emptyBranch, /dictionary\.states\.noCommitments/);
-  assert.match(emptyBranch, /dictionary\.backToList/);
-  assert.match(emptyBranch, /href="\/supplier-advances"/);
-  assert.match(emptyBranch, /isRtl \? <ArrowRight size=\{16\} aria-hidden="true" \/> : <ArrowLeft size=\{16\} aria-hidden="true" \/>/);
+  assert.doesNotMatch(emptyBranch, /PendingLink|href=/);
+  assert.match(authorizationPage, /returnControl=\{<RecordBackButton href=\{returnTo\} locale=\{locale\} variant="labeled" label=\{dictionary\.backToList\} \/>\}/);
+  assert.match(authorizationPage, /<PageHeader variant="composed" title=\{dictionary\.authorizeAdvance\} \/>/);
   assert.doesNotMatch(emptyBranch, /SupplierAdvanceAuthorizationForm|name="(?:amount|reason|document|commitment_id)"/);
-  assert.match(authorizationPage, /commitments\.length > 0 && \(/);
+  assert.match(authorizationPage, /commitments\.length === 0 \?/);
   assert.match(authorizationPage, /dir=\{isRtl \? "rtl" : "ltr"\}/);
   assert.match(authorizationPage, /<SupplierAdvanceAuthorizationForm commitments=\{commitments\}/);
   assert.match(dictionary, /noCommitments: "No open commitment has remaining authorization capacity\."/);
@@ -348,7 +348,7 @@ test("Supplier Advances entry requires authorization permission and eligible com
   assert.match(advancesPage, /hasAuthorizationPermission\s*\?\s*hasEligibleSupplierAdvanceCommitments\(\)\s*:\s*Promise\.resolve\(false\)/);
   assert.match(advancesPage, /isSupplierAdvanceAuthorizationAvailable\(\s*hasAuthorizationPermission,\s*hasEligibleCommitment \? 1 : 0,?\s*\)/);
   assert.match(advancesPage, /canAuthorize=\{canAuthorize\}/);
-  assert.match(list, /\{canAuthorize && <PendingLink href="\/supplier-advances\/new"/);
+  assert.match(list, /\{canAuthorize && <PendingLink href=\{appendReturnTo\("\/supplier-advances\/new", listReturnTo\)\}/);
   assert.match(queries, /\.from\("supplier_advance_commitment_balances"\)/);
   assert.match(queries, /\.eq\("commitment_status", "open"\)/);
   assert.match(queries, /\.gt\("available_authorization_amount", 0\)/);

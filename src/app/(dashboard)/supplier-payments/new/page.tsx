@@ -4,19 +4,24 @@ import { checkPermission } from "@/lib/auth/permissions";
 import { SUPPLIER_PAYMENT_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getSupplierPaymentsDictionary } from "@/lib/i18n/dictionaries/supplier-payments";
+import PageLocation from "@/components/navigation/PageLocation";
+import { RecordBackButton } from "@/components/navigation/RecordBackButton";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import { getSupplierBillById } from "@/lib/supplier-bills/queries";
 import { getSupplierBillPaymentSummary } from "@/lib/supplier-payments/queries";
-import PendingLink from "@/components/ui/PendingLink";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import SupplierPaymentForm from "../SupplierPaymentForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function NewSupplierPaymentPage({ searchParams }: { searchParams: Promise<{ billId?: string | string[] }> }) {
+export default async function NewSupplierPaymentPage({ searchParams }: { searchParams: Promise<{ billId?: string | string[]; returnTo?: string | string[] }> }) {
   const [locale, canRecord, params] = await Promise.all([getCurrentSessionEffectiveLocale(), checkPermission(SUPPLIER_PAYMENT_PERMISSIONS.record), searchParams]);
   const dictionary = getSupplierPaymentsDictionary(locale);
   if (!canRecord) return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
   const billId = Array.isArray(params.billId) ? params.billId[0] : params.billId;
+  const returnToParam = Array.isArray(params.returnTo) ? params.returnTo[0] : params.returnTo;
+  const returnTo = safeRecordReturnTo(returnToParam, "/supplier-payments");
   if (!billId) return <StateCard title={dictionary.states.invalidBill} message={dictionary.states.invalidBill} />;
   let bill: Awaited<ReturnType<typeof getSupplierBillById>>["bill"] = null;
   let summary: Awaited<ReturnType<typeof getSupplierBillPaymentSummary>> = null;
@@ -33,7 +38,24 @@ export default async function NewSupplierPaymentPage({ searchParams }: { searchP
   if (state === "loadError") return <StateCard title={dictionary.states.loadError} message={dictionary.states.loadError} />;
   if (!bill || bill.status !== "approved" || !summary) return <StateCard title={dictionary.states.invalidBill} message={dictionary.states.invalidBill} />;
   const isRtl = locale === "ar";
-  return <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-5 pb-12"><div><PendingLink href={`/supplier-bills/${bill.id}`} pendingLabel={dictionary.backToList} className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-[12px] font-semibold text-primary hover:bg-surface-container-low hover:underline">{isRtl ? <ArrowRight size={16} aria-hidden="true" /> : <ArrowLeft size={16} aria-hidden="true" />}<span>{dictionary.backToList}</span></PendingLink><h1 className="mt-3 text-[26px] font-semibold text-primary">{dictionary.recordPayment}</h1></div><SupplierPaymentForm supplierBillId={bill.id} billNumber={bill.bill_number} supplierName={bill.supplier_name} serviceNumber={bill.service_number} currency={summary.currency} outstandingAmount={summary.outstanding_amount} dictionary={dictionary} /></div>;
+  return (
+    <div dir={isRtl ? "rtl" : "ltr"} className="w-full min-w-0">
+      <PageFrame variant="form">
+        <PageLocation
+          breadcrumbs={{
+            label: dictionary.title,
+            items: [
+              { label: dictionary.title, href: "/supplier-payments" },
+              { label: dictionary.recordPayment, current: true },
+            ],
+          }}
+          returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.backToBill} />}
+        />
+        <PageHeader variant="composed" title={dictionary.recordPayment} />
+        <SupplierPaymentForm supplierBillId={bill.id} billNumber={bill.bill_number} supplierName={bill.supplier_name} serviceNumber={bill.service_number} currency={summary.currency} outstandingAmount={summary.outstanding_amount} dictionary={dictionary} returnTo={returnTo} />
+      </PageFrame>
+    </div>
+  );
 }
 
 function StateCard({ title, message }: { title: string; message: string }) {

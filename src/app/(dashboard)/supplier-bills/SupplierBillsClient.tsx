@@ -13,6 +13,7 @@ import PaginationFooter from "@/components/ui/PaginationFooter";
 import { useListNavigation } from "@/components/ui/useListNavigation";
 import type { ListPageSize } from "@/lib/pagination";
 import { supplierBillDetailHref, supplierBillsHref, type SupplierBillsSearchParams } from "@/lib/supplier-bills/navigation";
+import { appendReturnTo } from "@/lib/record-navigation/return-to";
 
 function statusVariant(status: SupplierBillListItem["status"]): "pending" | "active" {
   return status === "approved" ? "active" : "pending";
@@ -43,7 +44,7 @@ export default function SupplierBillsClient({
       <PageHeader title={dictionary.title} subtitle={dictionary.subtitle}>
         {canRecord && (
           <Button asChild size="sm">
-            <PendingLink href="/supplier-bills/new" pendingLabel={dictionary.newBill}>
+            <PendingLink href={appendReturnTo("/supplier-bills/new", listReturnTo)} pendingLabel={dictionary.newBill}>
               <Plus size={16} aria-hidden="true" />
               {dictionary.newBill}
             </PendingLink>

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import PendingLink from "@/components/ui/PendingLink";
 import { isolateBidiText } from "@/lib/i18n/bidi";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import { formatSupplierAdvanceAmount } from "@/lib/supplier-advances/formatting";
 import { authorizeSupplierAdvanceAction } from "@/lib/supplier-advances/actions";
 import type { SupplierAdvancesDictionary } from "@/lib/i18n/dictionaries/supplier-advances";
@@ -13,12 +14,15 @@ export default function SupplierAdvanceAuthorizationForm({
   commitments,
   dictionary,
   requestId,
+  returnTo,
 }: {
   commitments: SupplierAdvanceCommitmentOption[];
   dictionary: SupplierAdvancesDictionary;
   requestId: string;
+  returnTo: string;
 }) {
   const router = useRouter();
+  const exitHref = safeRecordReturnTo(returnTo, "/supplier-advances");
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -71,7 +75,7 @@ export default function SupplierAdvanceAuthorizationForm({
       {errorCode && <p role="alert" className="mt-4 rounded-lg border border-error/30 bg-error-container/30 px-3 py-2 text-[12px] text-error">{dictionary.errors[errorCode] ?? dictionary.errors.supplier_advance_record_failed}</p>}
       <div className="mt-5 flex flex-wrap items-center gap-2">
         <button type="submit" disabled={pending || commitments.length === 0} className="inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 py-2 text-[13px] font-semibold text-on-primary disabled:opacity-50">{pending ? dictionary.actions.confirm : dictionary.authorizeAdvance}</button>
-        <PendingLink href="/supplier-advances" pendingLabel={dictionary.actions.cancel} className="inline-flex min-h-10 items-center rounded-lg border border-surface-variant px-4 py-2 text-[13px] font-semibold text-on-surface hover:bg-surface-container-low">{dictionary.actions.cancel}</PendingLink>
+        <PendingLink href={exitHref} pendingLabel={dictionary.actions.cancel} className="inline-flex min-h-10 items-center rounded-lg border border-surface-variant px-4 py-2 text-[13px] font-semibold text-on-surface hover:bg-surface-container-low">{dictionary.actions.cancel}</PendingLink>
       </div>
     </form>
   );

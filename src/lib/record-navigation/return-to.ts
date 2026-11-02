@@ -23,6 +23,7 @@ export function safeRecordReturnTo(value: unknown, fallback: string): string {
   const allowedCustomerRecordPath = /^\/customers\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\?[^#]*)?$/iu.test(value);
   const allowedQuotationRecordPath = /^\/quotations\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\?[^#]*)?$/iu.test(value);
   const allowedInvoiceRecordPath = /^\/invoices\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\?[^#]*)?$/iu.test(value);
+  const allowedSupplierBillRecordPath = /^\/supplier-bills\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\?[^#]*)?$/iu.test(value);
 
   return (allowedModulePath || allowedSupplierRecordPath ||
     allowedServiceRecordPath ||
@@ -33,7 +34,8 @@ export function safeRecordReturnTo(value: unknown, fallback: string): string {
     allowedSupplierQuotationDetailPath ||
     allowedCustomerRecordPath ||
     allowedQuotationRecordPath ||
-    allowedInvoiceRecordPath)
+    allowedInvoiceRecordPath ||
+    allowedSupplierBillRecordPath)
     ? value
     : fallback;
 }
