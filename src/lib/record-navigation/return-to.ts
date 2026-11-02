@@ -1,6 +1,17 @@
 export function safeRecordReturnTo(value: unknown, fallback: string): string {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || /[\r\n]/.test(value)) return fallback;
-  const allowed = ["/customers", "/services", "/quotations", "/invoices", "/suppliers", "/supplier-bills"];
+  const allowed = [
+    "/customers",
+    "/services",
+    "/quotations",
+    "/invoices",
+    "/suppliers",
+    "/supplier-bills",
+    "/supplier-payments",
+    "/supplier-advances",
+    "/advances",
+    "/petty-cash",
+  ];
   const allowedModulePath = allowed.some((prefix) => value === prefix || value.startsWith(`${prefix}?`));
   const allowedSupplierRecordPath = /^\/suppliers\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\?[^#]*)?$/iu.test(value);
   const allowedServiceRecordPath = /^\/services\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\?[^#]*)?$/iu.test(value);
@@ -39,6 +50,18 @@ export function appendReturnTo(targetHref: string, returnTo: string): string {
  * by query context. Callers supply trusted, serializable route parameters.
  */
 export type RecordQueryContext = Readonly<Record<string, string>>;
+
+export type RecordListSearchParams = Readonly<Record<string, string | string[] | undefined>>;
+
+export function recordListReturnTo(basePath: string, params: RecordListSearchParams = {}): string {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (key === "returnTo" || value === undefined) continue;
+    for (const entry of typeof value === "string" ? [value] : value) query.append(key, entry);
+  }
+  const search = query.toString();
+  return safeRecordReturnTo(search ? `${basePath}?${search}` : basePath, basePath);
+}
 
 export function recordNavigationHref(basePath: string, id: string, returnTo?: string, recordQuery?: RecordQueryContext): string {
   const params = new URLSearchParams(recordQuery);

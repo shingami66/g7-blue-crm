@@ -6,7 +6,7 @@ import { navigationDictionaryAr, navigationDictionaryEn } from "../i18n/dictiona
 import { supplierAdvancesDictionaryAr, supplierAdvancesDictionaryEn } from "../i18n/dictionaries/supplier-advances.ts";
 import { supplierBillsDictionaryAr } from "../i18n/dictionaries/supplier-bills.ts";
 import { isSupplierAdvanceAuthorizationAvailable } from "./authorization-availability.ts";
-import { supplierAdvancesHref, supplierAdvancesQueryMatchesPagination } from "./navigation.ts";
+import { supplierAdvancesHref, supplierAdvancesQueryMatchesPagination, supplierAdvancesReturnTo } from "./navigation.ts";
 
 const root = new URL("../../../", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), "utf8");
@@ -374,15 +374,16 @@ test("Supplier Advances global list is bounded, compact, and canonicalized", () 
   assert.match(advancesPage, /page: normalizeListPage\(params\.page\)/);
   assert.match(advancesPage, /pageSize: normalizeListPageSize\(params\.pageSize\)/);
   assert.match(advancesPage, /supplierAdvancesQueryMatchesPagination\(params, pageLoad\.list\.pagination\.page, pageLoad\.list\.pagination\.pageSize\)/);
-  assert.match(advancesPage, /redirect\(supplierAdvancesHref\(pageLoad\.list\.pagination\.page, pageLoad\.list\.pagination\.pageSize\)\)/);
+  assert.match(advancesPage, /redirect\(supplierAdvancesHref\(pageLoad\.list\.pagination\.page, pageLoad\.list\.pagination\.pageSize, params\)\)/);
   assert.match(list, /<PaginationFooter/);
   assert.match(list, /paginationMode="bounded"/);
-  assert.match(list, /supplierAdvancesHref\(page, pagination\.pageSize\)/);
-  assert.match(list, /supplierAdvancesHref\(1, pageSize\)/);
+  assert.match(list, /supplierAdvancesHref\(page, pagination\.pageSize, listParams\)/);
+  assert.match(list, /supplierAdvancesHref\(1, pageSize, listParams\)/);
 
   assert.equal(supplierAdvancesHref(1, 10), "/supplier-advances");
   assert.equal(supplierAdvancesHref(1, 20), "/supplier-advances?pageSize=20");
   assert.equal(supplierAdvancesHref(2, 10), "/supplier-advances?page=2");
+  assert.equal(supplierAdvancesReturnTo({ page: "2", pageSize: "20", search: "supplier" }), "/supplier-advances?page=2&pageSize=20&search=supplier");
   assert.equal(supplierAdvancesQueryMatchesPagination({ page: "2", pageSize: "10" }, 1, 10), false);
   assert.equal(supplierAdvancesQueryMatchesPagination({ page: "1", pageSize: "20" }, 1, 20), true);
   assert.equal(supplierAdvancesQueryMatchesPagination({}, 1, 10), true);

@@ -14,6 +14,7 @@ import type {
   CashAdvanceStatus,
 } from "@/lib/expenses/types";
 import PendingLink from "@/components/ui/PendingLink";
+import { recordNavigationHref } from "@/lib/record-navigation/return-to";
 import { CashAdvanceRequestModal } from "./CashAdvanceRequestModal";
 import {
   Wallet,
@@ -37,6 +38,7 @@ interface AdvancesClientProps {
   allAdvances?: EnrichedCashAdvance[];
   eligibleServices?: ExpenseServiceOption[];
   loadError: string | null;
+  listReturnTo?: string;
   dictionary?: CashAdvancesDictionary;
 }
 
@@ -49,11 +51,13 @@ export default function AdvancesClient({
   allAdvances = [],
   eligibleServices = [],
   loadError,
+  listReturnTo = "/advances",
   dictionary: dictionaryProp,
 }: AdvancesClientProps) {
   const locale = useLocale();
   const dictionary = dictionaryProp ?? getCashAdvancesDictionary(locale);
   const isRtl = locale === "ar";
+  const detailHref = (id: string) => recordNavigationHref("/advances", id, listReturnTo);
 
   // Active Tab: "my" | "all"
   const [activeTab, setActiveTab] = useState<"my" | "all">("my");
@@ -365,7 +369,7 @@ export default function AdvancesClient({
                   </span>
 
                   <PendingLink
-                    href={`/advances/${adv.id}`}
+                    href={detailHref(adv.id)}
                     className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                   >
                     <span>{dictionary.table.columns.viewDetails}</span>
@@ -487,7 +491,7 @@ export default function AdvancesClient({
                       {/* Actions */}
                       <td className="px-4 py-3 text-center whitespace-nowrap">
                         <PendingLink
-                          href={`/advances/${adv.id}`}
+                    href={detailHref(adv.id)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-primary hover:bg-surface-container transition-colors"
                         >
                           <span>{dictionary.table.columns.viewDetails}</span>

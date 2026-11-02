@@ -10,11 +10,14 @@ import type {
   EnrichedCashAdvance,
   ExpenseServiceOption,
 } from "@/lib/expenses/types";
+import { recordListReturnTo, type RecordListSearchParams } from "@/lib/record-navigation/return-to";
 import AdvancesClient from "./AdvancesClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdvancesPage() {
+export default async function AdvancesPage({ searchParams }: { searchParams: Promise<RecordListSearchParams> }) {
+  const params = await searchParams;
+  const listReturnTo = recordListReturnTo("/advances", params);
   const [canReadOwn, canReadBroad, canSubmitOwn] = await Promise.all([
     checkPermission(CASH_ADVANCE_PERMISSIONS.readOwn),
     checkPermission(CASH_ADVANCE_PERMISSIONS.read),
@@ -33,6 +36,7 @@ export default async function AdvancesPage() {
         allAdvances={[]}
         eligibleServices={[]}
         loadError={null}
+        listReturnTo={listReturnTo}
       />
     );
   }
@@ -78,6 +82,7 @@ export default async function AdvancesPage() {
       allAdvances={allAdvances}
       eligibleServices={eligibleServices}
       loadError={loadError}
+      listReturnTo={listReturnTo}
     />
   );
 }

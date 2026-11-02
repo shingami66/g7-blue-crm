@@ -5,16 +5,11 @@ import { SUPPLIER_PAYMENT_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { normalizeListPage, normalizeListPageSize } from "@/lib/pagination";
 import { getSupplierPaymentsDictionary } from "@/lib/i18n/dictionaries/supplier-payments";
-import { supplierPaymentsHref, supplierPaymentsQueryMatchesPagination } from "@/lib/supplier-payments/navigation";
+import { supplierPaymentsHref, supplierPaymentsQueryMatchesPagination, supplierPaymentsReturnTo, type SupplierPaymentsSearchParams } from "@/lib/supplier-payments/navigation";
 import { getSupplierPaymentsList } from "@/lib/supplier-payments/queries";
 import SupplierPaymentsClient from "./SupplierPaymentsClient";
 
 export const dynamic = "force-dynamic";
-
-type SupplierPaymentsSearchParams = {
-  page?: string;
-  pageSize?: string;
-};
 
 type SupplierPaymentsPageLoad =
   | { state: "accessDenied" | "loadError" }
@@ -51,9 +46,9 @@ export default async function SupplierPaymentsPage({
     return <StateCard title={message} message={message} />;
   }
   if (!supplierPaymentsQueryMatchesPagination(params, pageLoad.list.pagination.page, pageLoad.list.pagination.pageSize)) {
-    redirect(supplierPaymentsHref(pageLoad.list.pagination.page, pageLoad.list.pagination.pageSize));
+    redirect(supplierPaymentsHref(pageLoad.list.pagination.page, pageLoad.list.pagination.pageSize, params));
   }
-  return <SupplierPaymentsClient payments={pageLoad.list.payments} pagination={pageLoad.list.pagination} dictionary={dictionary} />;
+  return <SupplierPaymentsClient payments={pageLoad.list.payments} pagination={pageLoad.list.pagination} listReturnTo={supplierPaymentsReturnTo(params)} listParams={params} dictionary={dictionary} />;
 }
 
 function StateCard({ title, message }: { title: string; message: string }) {

@@ -15,14 +15,16 @@ import type {
   CashAdvanceBalanceSummary,
   LinkedCashAdvanceExpense,
 } from "@/lib/expenses/types";
-import PendingLink from "@/components/ui/PendingLink";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import PageLocation from "@/components/navigation/PageLocation";
+import RecordBackButton from "@/components/navigation/RecordBackButton";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import {
   CashAdvanceOperationalActions,
   CashAdvanceExpensesSection,
 } from "./CashAdvanceOperationalActions";
 import {
-  ArrowLeft,
-  ArrowRight,
   AlertCircle,
   Building2,
   Calendar,
@@ -34,6 +36,7 @@ import {
 
 interface AdvanceDetailClientProps {
   canRead: boolean;
+  returnTo?: string;
   advance: EnrichedCashAdvance | null;
   allocations: EnrichedCashAdvanceExpenseSettlement[];
   returns: CashAdvanceReturn[];
@@ -60,6 +63,7 @@ interface AdvanceDetailClientProps {
 
 export default function AdvanceDetailClient({
   canRead,
+  returnTo,
   advance,
   allocations,
   returns,
@@ -77,43 +81,33 @@ export default function AdvanceDetailClient({
   const locale = useLocale();
   const dictionary = dictionaryProp ?? getCashAdvancesDictionary(locale);
   const isRtl = locale === "ar";
+  const safeReturnTo = safeRecordReturnTo(returnTo, "/advances");
 
   if (!canRead) {
     return (
-      <div className="p-8 max-w-4xl mx-auto">
-        <div className="rounded-xl border border-error bg-error-container/40 p-6 text-on-error-container">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-error" />
-            {dictionary.states.accessRestricted}
-          </h2>
-          <p className="mt-1 text-sm text-on-error-container">
-            {dictionary.states.accessRestrictedMessage}
-          </p>
-        </div>
+      <div dir={isRtl ? "rtl" : "ltr"} className="min-w-0">
+        <PageFrame variant="record">
+          <PageLocation breadcrumbs={{ label: dictionary.header.title, items: [{ label: dictionary.header.title, href: safeReturnTo }, { label: dictionary.states.accessRestricted, current: true }] }} returnControl={<RecordBackButton href={safeReturnTo} locale={locale} variant="labeled" label={dictionary.detail.backToAdvances} />} />
+          <PageHeader variant="composed" title={dictionary.states.accessRestricted} />
+          <div className="rounded-xl border border-error bg-error-container/40 p-6 text-on-error-container">
+            <p className="flex items-center gap-2 text-sm"><AlertCircle className="w-5 h-5 text-error" aria-hidden="true" />{dictionary.states.accessRestrictedMessage}</p>
+          </div>
+        </PageFrame>
       </div>
     );
   }
 
   if (!advance) {
     return (
-      <div className="p-8 max-w-4xl mx-auto space-y-4">
-        <PendingLink
-          href="/advances"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
-        >
-          {isRtl ? <ArrowRight className="w-3.5 h-3.5" /> : <ArrowLeft className="w-3.5 h-3.5" />}
-          <span>{dictionary.detail.backToAdvances}</span>
-        </PendingLink>
-
-        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-10 text-center text-on-surface-variant space-y-2">
-          <AlertCircle className="w-10 h-10 mx-auto text-amber-600" />
-          <h2 className="text-base font-bold text-on-surface">
-            {dictionary.states.notFoundTitle}
-          </h2>
-          <p className="text-xs max-w-md mx-auto text-on-surface-variant">
-            {dictionary.states.notFoundMessage}
-          </p>
-        </div>
+      <div dir={isRtl ? "rtl" : "ltr"} className="min-w-0">
+        <PageFrame variant="record">
+          <PageLocation breadcrumbs={{ label: dictionary.header.title, items: [{ label: dictionary.header.title, href: safeReturnTo }, { label: dictionary.states.notFoundTitle, current: true }] }} returnControl={<RecordBackButton href={safeReturnTo} locale={locale} variant="labeled" label={dictionary.detail.backToAdvances} />} />
+          <PageHeader variant="composed" title={dictionary.states.notFoundTitle} />
+          <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-10 text-center text-on-surface-variant space-y-2">
+            <AlertCircle className="w-10 h-10 mx-auto text-amber-600" aria-hidden="true" />
+            <p className="text-xs max-w-md mx-auto text-on-surface-variant">{dictionary.states.notFoundMessage}</p>
+          </div>
+        </PageFrame>
       </div>
     );
   }
@@ -137,45 +131,20 @@ export default function AdvanceDetailClient({
   };
 
   return (
-      <div className="flex flex-col gap-4 pb-12">
-      {/* Record Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-4">
-          <PendingLink
-            href="/advances"
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            aria-label={dictionary.detail.backToAdvances}
-            title={dictionary.detail.backToAdvances}
-          >
-            {isRtl ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-          </PendingLink>
-          <div className="min-w-0 space-y-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="break-words text-[28px] leading-[36px] font-semibold tracking-tight text-primary font-mono" dir="ltr">
-                {advance.advance_number}
-              </h1>
-              <span
-                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(
-                  advance.status,
-                )}`}
-              >
-                {getCashAdvanceStatusLabel(locale, advance.status)}
-              </span>
-            </div>
-            <p className="text-[14px] leading-[20px] text-on-surface-variant" dir="auto">
-              <span className="font-medium">{dictionary.detail.fields.purpose}:</span>{" "}
-              {advance.purpose}
-            </p>
-          </div>
-        </div>
-        <CashAdvanceOperationalActions
-          advance={advance}
-          balance={balance}
-          capabilities={capabilities}
-          isRecipient={isRecipient}
-          dictionary={dictionary}
-        />
-      </div>
+      <div dir={isRtl ? "rtl" : "ltr"} className="min-w-0" data-cash-advance-detail="record">
+        <PageFrame variant="record">
+          <PageLocation breadcrumbs={{ label: dictionary.header.title, items: [{ label: dictionary.header.title, href: safeReturnTo }, { label: advance.advance_number, current: true, dir: "ltr" }] }} returnControl={<RecordBackButton href={safeReturnTo} locale={locale} variant="labeled" label={dictionary.detail.backToAdvances} />} />
+          <PageHeader
+            variant="composed"
+            title={advance.advance_number}
+            titleDir="ltr"
+            status={<span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(advance.status)}`}>{getCashAdvanceStatusLabel(locale, advance.status)}</span>}
+            identifier={<><span className="font-medium">{dictionary.detail.fields.purpose}:</span>{" "}<bdi dir="auto">{advance.purpose}</bdi></>}
+            actions={{
+              label: dictionary.actions.sectionLabel,
+              primary: <CashAdvanceOperationalActions advance={advance} balance={balance} capabilities={capabilities} isRecipient={isRecipient} dictionary={dictionary} />,
+            }}
+          />
 
       {/* 4-Metric Accountability Block */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -562,6 +531,7 @@ export default function AdvanceDetailClient({
         </div>
       </section>
       )}
-    </div>
+        </PageFrame>
+      </div>
   );
 }

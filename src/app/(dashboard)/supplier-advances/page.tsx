@@ -10,15 +10,10 @@ import {
   getSupplierAdvancesList,
 } from "@/lib/supplier-advances/queries";
 import { isSupplierAdvanceAuthorizationAvailable } from "@/lib/supplier-advances/authorization-availability";
-import { supplierAdvancesHref, supplierAdvancesQueryMatchesPagination } from "@/lib/supplier-advances/navigation";
+import { supplierAdvancesHref, supplierAdvancesQueryMatchesPagination, supplierAdvancesReturnTo, type SupplierAdvancesSearchParams } from "@/lib/supplier-advances/navigation";
 import SupplierAdvancesClient from "./SupplierAdvancesClient";
 
 export const dynamic = "force-dynamic";
-
-type SupplierAdvancesSearchParams = {
-  page?: string;
-  pageSize?: string;
-};
 
 type SupplierAdvancesPageLoad =
   | { state: "accessDenied" | "loadError" }
@@ -67,13 +62,13 @@ export default async function SupplierAdvancesPage({
     return <StateCard title={message} message={message} />;
   }
   if (!supplierAdvancesQueryMatchesPagination(params, pageLoad.list.pagination.page, pageLoad.list.pagination.pageSize)) {
-    redirect(supplierAdvancesHref(pageLoad.list.pagination.page, pageLoad.list.pagination.pageSize));
+    redirect(supplierAdvancesHref(pageLoad.list.pagination.page, pageLoad.list.pagination.pageSize, params));
   }
   const canAuthorize = isSupplierAdvanceAuthorizationAvailable(
     hasAuthorizationPermission,
     hasEligibleCommitment ? 1 : 0,
   );
-  return <SupplierAdvancesClient advances={pageLoad.list.advances} pagination={pageLoad.list.pagination} canAuthorize={canAuthorize} dictionary={dictionary} />;
+  return <SupplierAdvancesClient advances={pageLoad.list.advances} pagination={pageLoad.list.pagination} canAuthorize={canAuthorize} listReturnTo={supplierAdvancesReturnTo(params)} listParams={params} dictionary={dictionary} />;
 }
 
 function StateCard({ title, message }: { title: string; message: string }) {

@@ -12,6 +12,7 @@ const require = createRequire(import.meta.url);
 const { JSDOM } = require("jsdom") as { JSDOM: new (html: string) => { window: { document: Document } } };
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const cache = new Map<string, Record<string, unknown>>();
+const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 // Load actual TSX components using the repository's existing transpile-test pattern.
 // Only Next's link transport and pending hooks are isolated; UI/locale logic is real.
@@ -173,4 +174,39 @@ test("record region is optional and preserves actual pager links and LTR convent
   assert.deepEqual([...wrapped.querySelectorAll("a")].map((link) => link.getAttribute("href")), [...standalone.querySelectorAll("a")].map((link) => link.getAttribute("href")));
   assert.ok(wrapped.querySelector('button[disabled][aria-disabled="true"]'));
   assert.equal(wrapped.querySelectorAll("main").length, 0);
+});
+
+test("the four Payables/Cash detail clients use the shared record shell without adding a main landmark", () => {
+  const paths = [
+    "app/(dashboard)/supplier-payments/SupplierPaymentDetailClient.tsx",
+    "app/(dashboard)/supplier-advances/[id]/SupplierAdvanceDetailClient.tsx",
+    "app/(dashboard)/advances/[id]/AdvanceDetailClient.tsx",
+    "app/(dashboard)/petty-cash/[id]/PettyCashDetailClient.tsx",
+  ];
+  for (const path of paths) {
+    const source = read(path);
+    assert.ok(source.includes('<PageFrame variant="record">'), `${path} must use PageFrame`);
+    assert.ok(source.includes("<PageLocation"), `${path} must render structural location`);
+    assert.ok(source.includes("<RecordBackButton") && source.includes('variant="labeled"'), `${path} must render a labeled Return control`);
+    assert.ok(source.includes('variant="composed"'), `${path} must use the composed identity/status header`);
+    assert.doesNotMatch(source, /<main\b/i, `${path} must not create a nested main landmark`);
+    assert.doesNotMatch(source, /<h1\b/i, `${path} must delegate its single h1 to PageHeader`);
+  }
+});
+
+test("detail action placement preserves the existing family-specific action conditions", () => {
+  const payment = read("app/(dashboard)/supplier-payments/SupplierPaymentDetailClient.tsx");
+  const supplierAdvance = read("app/(dashboard)/supplier-advances/[id]/SupplierAdvanceDetailClient.tsx");
+  const cashAdvance = read("app/(dashboard)/advances/[id]/AdvanceDetailClient.tsx");
+  const cashActions = read("app/(dashboard)/advances/[id]/CashAdvanceOperationalActions.tsx");
+  const pettyCash = read("app/(dashboard)/petty-cash/[id]/PettyCashDetailClient.tsx");
+  assert.match(payment, /canReverse && payment\.status === "recorded"/);
+  assert.match(payment, /aria-expanded=\{isReverseOpen\}/);
+  assert.match(supplierAdvance, /canAllocate && advance\.remaining_unallocated_amount > 0 && eligibleBills\.length > 0/);
+  assert.match(cashAdvance, /primary: <CashAdvanceOperationalActions/);
+  assert.match(cashActions, /advance\.status === "submitted" && capabilities\.canApproveAdvance/);
+  assert.match(cashActions, /advance\.status === "issued" && capabilities\.canRecordReturn/);
+  assert.match(pettyCash, /canManage && fund\.status !== "closed"/);
+  assert.match(pettyCash, /canTransact && fund\.status === "active"/);
+  assert.match(pettyCash, /canApproveAndDisburse=\{canTransactFund\}/);
 });

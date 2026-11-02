@@ -2,18 +2,20 @@ import { checkPermission } from "@/lib/auth/permissions";
 import { PETTY_CASH_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getPettyCashCustodianOptions, getPettyCashExpensesByFund, getPettyCashFundDetailById } from "@/lib/expenses/queries";
 import type { PettyCashCustodianOption, PettyCashExpenseSummary, PettyCashFund, PettyCashTransaction } from "@/lib/expenses/types";
+import { safeRecordReturnTo, type RecordListSearchParams } from "@/lib/record-navigation/return-to";
 import PettyCashDetailClient from "./PettyCashDetailClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function PettyCashFundPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function PettyCashFundPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<RecordListSearchParams> }) {
+  const [{ id }, query] = await Promise.all([params, searchParams]);
+  const returnTo = safeRecordReturnTo(query.returnTo, "/petty-cash");
   const [canRead, canManage, canTransact] = await Promise.all([
     checkPermission(PETTY_CASH_PERMISSIONS.read),
     checkPermission(PETTY_CASH_PERMISSIONS.manage),
     checkPermission(PETTY_CASH_PERMISSIONS.transact),
   ]);
-  if (!canRead) return <PettyCashDetailClient canRead={false} canManage={false} canTransact={false} fund={null} transactions={[]} expenses={[]} custodians={[]} loadError={false} />;
+  if (!canRead) return <PettyCashDetailClient canRead={false} canManage={false} canTransact={false} fund={null} transactions={[]} expenses={[]} custodians={[]} loadError={false} returnTo={returnTo} />;
 
   let fund: PettyCashFund | null = null;
   let transactions: PettyCashTransaction[] = [];
@@ -34,5 +36,5 @@ export default async function PettyCashFundPage({ params }: { params: Promise<{ 
     loadError = true;
   }
 
-  return <PettyCashDetailClient canRead canManage={canManage} canTransact={canTransact} fund={fund} transactions={transactions} expenses={expenses} custodians={custodians} loadError={loadError} />;
+  return <PettyCashDetailClient canRead canManage={canManage} canTransact={canTransact} fund={fund} transactions={transactions} expenses={expenses} custodians={custodians} loadError={loadError} returnTo={returnTo} />;
 }

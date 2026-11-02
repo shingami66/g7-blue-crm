@@ -1,7 +1,7 @@
 import type { Locale } from "@/lib/i18n";
 
 export interface PettyCashDictionary {
-  header: { title: string; subtitle: string; sectionBadge: string; createFund: string };
+  header: { title: string; subtitle: string; sectionBadge: string; createFund: string; backToList: string };
   labels: {
     fundName: string;
     custodian: string;
@@ -86,6 +86,7 @@ const en: PettyCashDictionary = {
     subtitle: "Company cash float, approved expenses, replenishment, and treasury returns.",
     sectionBadge: "Expenses & Costing",
     createFund: "Create Fund",
+    backToList: "Back to Petty Cash",
   },
   labels: {
     fundName: "Fund name", custodian: "Custodian", floatLimit: "Float limit", currentBalance: "Current balance",
@@ -103,7 +104,7 @@ const en: PettyCashDictionary = {
 };
 
 const ar: PettyCashDictionary = {
-  header: { title: "المصروفات النثرية", subtitle: "صندوق نقدي للشركة مع مصروفات معتمدة وإعادة تغذية وإرجاع للخزينة.", sectionBadge: "المصروفات والتكاليف", createFund: "إنشاء صندوق" },
+  header: { title: "المصروفات النثرية", subtitle: "صندوق نقدي للشركة مع مصروفات معتمدة وإعادة تغذية وإرجاع للخزينة.", sectionBadge: "المصروفات والتكاليف", createFund: "إنشاء صندوق", backToList: "العودة إلى المصروفات النثرية" },
   labels: { fundName: "اسم الصندوق", custodian: "أمين العهدة", floatLimit: "حد الصندوق", currentBalance: "الرصيد الحالي", replenishmentCapacity: "المتاح لإعادة التغذية", lastActivity: "آخر نشاط", status: "الحالة", action: "الإجراء", viewFund: "عرض الصندوق", noFunds: "لا توجد صناديق نقدية نثرية", noFundsDescription: "أنشئ صندوقاً لبدء إدارة النقدية.", fundDetails: "تفاصيل الصندوق", pettyCashExpenses: "مصروفات الصندوق", transactionLedger: "سجل المعاملات", lifecycleAudit: "سجل الصندوق", created: "تاريخ الإنشاء", updated: "آخر تحديث", ledger: "المعاملات", immutableHistory: "سجل المعاملات", recordedBy: "سجل بواسطة", transactionType: "النوع", balanceChange: "التغير في الرصيد", recordedAt: "وقت التسجيل", reference: "المرجع", linkedExpense: "المصروف المرتبط", balanceBefore: "الرصيد قبل", balanceAfter: "الرصيد بعد", amount: "المبلغ", date: "التاريخ", context: "السياق", category: "التصنيف", description: "الوصف", review: "المراجعة المالية", approved: "معتمد", disbursed: "تم الصرف", allocated: "المخصص", remaining: "المتبقي" },
   statuses: { active: "نشط", suspended: "موقوف", closed: "مغلق", submitted: "مقدم", approved: "معتمد", rejected: "مرفوض" },
   transactionTypes: { replenishment: "إعادة تغذية", disbursement: "صرف مصروف", treasury_withdrawal: "إرجاع النقد إلى الخزينة", return: "إرجاع نقدي" },

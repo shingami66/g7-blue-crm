@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Plus, Wallet, AlertCircle, UserRound, Clock3 } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { recordNavigationHref } from "@/lib/record-navigation/return-to";
 import { getPettyCashDictionary } from "@/lib/i18n/dictionaries/petty-cash";
 import type { PettyCashCustodianOption, PettyCashFund } from "@/lib/expenses/types";
 import { createPettyCashFundAction } from "@/lib/expenses/actions";
@@ -42,15 +43,18 @@ export default function PettyCashClient({
   funds,
   custodians,
   loadError,
+  listReturnTo = "/petty-cash",
 }: {
   canRead: boolean;
   canManage: boolean;
   funds: PettyCashFund[];
   custodians: PettyCashCustodianOption[];
   loadError: boolean;
+  listReturnTo?: string;
 }) {
   const locale = useLocale();
   const dictionary = getPettyCashDictionary(locale);
+  const detailHref = (id: string) => recordNavigationHref("/petty-cash", id, listReturnTo);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -107,7 +111,7 @@ export default function PettyCashClient({
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4 md:hidden">
-            {funds.map((fund) => <FundCard key={fund.id} fund={fund} dictionary={dictionary} />)}
+            {funds.map((fund) => <FundCard key={fund.id} fund={fund} dictionary={dictionary} listReturnTo={listReturnTo} />)}
           </div>
           <div className="hidden rounded-xl border border-outline-variant bg-surface-container-lowest md:block">
             <table className="w-full table-fixed text-start text-sm">
@@ -143,7 +147,7 @@ export default function PettyCashClient({
                     <td className="px-3 py-3 text-end font-mono"><bdi dir="ltr">{money(fund.current_balance)}</bdi></td>
                     <td className="px-3 py-3 text-end font-mono"><bdi dir="ltr">{money(Math.max(0, fund.float_limit - fund.current_balance))}</bdi></td>
                     <td className="px-3 py-3 text-start text-on-surface-variant"><bdi dir="ltr">{formatFundDate(fund.last_activity_at)}</bdi></td>
-                    <td className="px-3 py-3 text-end"><Link href={`/petty-cash/${fund.id}`} className="inline-block font-semibold text-primary underline-offset-2 hover:underline">{dictionary.labels.viewFund}</Link></td>
+                    <td className="px-3 py-3 text-end"><Link href={detailHref(fund.id)} className="inline-block font-semibold text-primary underline-offset-2 hover:underline">{dictionary.labels.viewFund}</Link></td>
                   </tr>
                 ))}
               </tbody>
@@ -162,8 +166,8 @@ function StatusBadge({ status, dictionary }: { status: PettyCashFund["status"]; 
   return <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${classes}`}>{dictionary.statuses[status]}</span>;
 }
 
-function FundCard({ fund, dictionary }: { fund: PettyCashFund; dictionary: ReturnType<typeof getPettyCashDictionary> }) {
-  return <Link href={`/petty-cash/${fund.id}`} className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-xs"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold text-on-surface">{fund.fund_name}</h2><p className="mt-1 flex items-center gap-1 text-xs text-on-surface-variant"><UserRound className="h-3.5 w-3.5" aria-hidden="true" />{fund.custodian_name}</p></div><StatusBadge status={fund.status} dictionary={dictionary} /></div><div className="mt-4 grid grid-cols-2 gap-2 text-xs"><Metric label={dictionary.labels.floatLimit} value={money(fund.float_limit)} /><Metric label={dictionary.labels.currentBalance} value={money(fund.current_balance)} /><Metric label={dictionary.labels.replenishmentCapacity} value={money(Math.max(0, fund.float_limit - fund.current_balance))} /><Metric label={dictionary.labels.lastActivity} value={formatFundDate(fund.last_activity_at)} icon={<Clock3 className="h-3 w-3" aria-hidden="true" />} /></div></Link>;
+function FundCard({ fund, dictionary, listReturnTo }: { fund: PettyCashFund; dictionary: ReturnType<typeof getPettyCashDictionary>; listReturnTo: string }) {
+  return <Link href={recordNavigationHref("/petty-cash", fund.id, listReturnTo)} className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-xs"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold text-on-surface">{fund.fund_name}</h2><p className="mt-1 flex items-center gap-1 text-xs text-on-surface-variant"><UserRound className="h-3.5 w-3.5" aria-hidden="true" />{fund.custodian_name}</p></div><StatusBadge status={fund.status} dictionary={dictionary} /></div><div className="mt-4 grid grid-cols-2 gap-2 text-xs"><Metric label={dictionary.labels.floatLimit} value={money(fund.float_limit)} /><Metric label={dictionary.labels.currentBalance} value={money(fund.current_balance)} /><Metric label={dictionary.labels.replenishmentCapacity} value={money(Math.max(0, fund.float_limit - fund.current_balance))} /><Metric label={dictionary.labels.lastActivity} value={formatFundDate(fund.last_activity_at)} icon={<Clock3 className="h-3 w-3" aria-hidden="true" />} /></div></Link>;
 }
 
 function Metric({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) { return <div className="rounded-lg bg-surface-container-low p-2"><span className="block text-[11px] text-on-surface-variant">{label}</span><span className="mt-1 flex items-center gap-1 font-mono text-xs font-semibold text-on-surface" dir="ltr">{icon}{value}</span></div>; }

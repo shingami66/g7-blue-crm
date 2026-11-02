@@ -5,13 +5,15 @@ import { SUPPLIER_ADVANCE_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getSupplierAdvancesDictionary } from "@/lib/i18n/dictionaries/supplier-advances";
 import { getSupplierAdvanceById, getSupplierAdvanceEligibleBills } from "@/lib/supplier-advances/queries";
+import { safeRecordReturnTo, type RecordListSearchParams } from "@/lib/record-navigation/return-to";
 import SupplierAdvanceDetailClient from "./SupplierAdvanceDetailClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function SupplierAdvanceDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const [route, locale, canRead, canPay, canAllocate, canRefund, canReverse, canCorrect, canRelease] = await Promise.all([
+export default async function SupplierAdvanceDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<RecordListSearchParams> }) {
+  const [route, query, locale, canRead, canPay, canAllocate, canRefund, canReverse, canCorrect, canRelease] = await Promise.all([
     params,
+    searchParams,
     getCurrentSessionEffectiveLocale(),
     checkPermission(SUPPLIER_ADVANCE_PERMISSIONS.read),
     checkPermission(SUPPLIER_ADVANCE_PERMISSIONS.pay),
@@ -22,6 +24,7 @@ export default async function SupplierAdvanceDetailPage({ params }: { params: Pr
     checkPermission(SUPPLIER_ADVANCE_PERMISSIONS.release),
   ]);
   const dictionary = getSupplierAdvancesDictionary(locale);
+  const returnTo = safeRecordReturnTo(query.returnTo, "/supplier-advances");
   if (!canRead) return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
   let advance: NonNullable<Awaited<ReturnType<typeof getSupplierAdvanceById>>["advance"]> | null = null;
   let bills: Awaited<ReturnType<typeof getSupplierAdvanceEligibleBills>> = [];
@@ -51,6 +54,7 @@ export default async function SupplierAdvanceDetailPage({ params }: { params: Pr
     canReverse={canReverse}
     canCorrect={canCorrect}
     canRelease={canRelease}
+    returnTo={returnTo}
     dictionary={dictionary}
   />;
 }

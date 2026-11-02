@@ -2,8 +2,13 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Banknote, CheckCircle2, Clock3, LockKeyhole, Pencil, Plus, ShieldAlert, Wallet } from "lucide-react";
+import { Banknote, CheckCircle2, Clock3, LockKeyhole, Pencil, Plus, ShieldAlert, Wallet } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import PageLocation from "@/components/navigation/PageLocation";
+import RecordBackButton from "@/components/navigation/RecordBackButton";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import { getPettyCashDictionary } from "@/lib/i18n/dictionaries/petty-cash";
 import type { PettyCashCustodianOption, PettyCashExpenseSummary, PettyCashFund, PettyCashTransaction } from "@/lib/expenses/types";
 import { approveAndDisbursePettyCashExpenseAction, attachExpenseReceiptAction, recordPettyCashExpenseAction, recordPettyCashTransactionAction, setPettyCashFundStatusAction, updatePettyCashFundAction } from "@/lib/expenses/actions";
@@ -50,10 +55,11 @@ function actionButtonClass(
   return `${base} ${primary ? "bg-primary text-on-primary hover:bg-primary-container" : "border border-outline-variant text-on-surface hover:bg-surface-container-low"}`;
 }
 
-export default function PettyCashDetailClient({ canRead, canManage, canTransact, fund, transactions, expenses, custodians, loadError }: { canRead: boolean; canManage: boolean; canTransact: boolean; fund: PettyCashFund | null; transactions: PettyCashTransaction[]; expenses: PettyCashExpenseSummary[]; custodians: PettyCashCustodianOption[]; loadError: boolean }) {
+export default function PettyCashDetailClient({ canRead, canManage, canTransact, fund, transactions, expenses, custodians, loadError, returnTo }: { canRead: boolean; canManage: boolean; canTransact: boolean; fund: PettyCashFund | null; transactions: PettyCashTransaction[]; expenses: PettyCashExpenseSummary[]; custodians: PettyCashCustodianOption[]; loadError: boolean; returnTo?: string }) {
   const locale = useLocale();
   const dictionary = getPettyCashDictionary(locale);
   const isRtl = locale === "ar";
+  const safeReturnTo = safeRecordReturnTo(returnTo, "/petty-cash");
   const [panel, setPanel] = useState<PettyCashActionPanel | null>(null);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [statusTarget, setStatusTarget] = useState<"active" | "suspended" | "closed" | null>(null);
@@ -69,8 +75,8 @@ export default function PettyCashDetailClient({ canRead, canManage, canTransact,
   const [isRetryPending, startRetryTransition] = useTransition();
   const expenseNumberById = useMemo(() => new Map(expenses.map((expense) => [expense.id, expense.expense_number])), [expenses]);
 
-  if (!canRead) return <div className="rounded-xl border border-error bg-error-container/40 p-6 text-on-error-container"><h1 className="text-lg font-semibold">{dictionary.states.accessRestricted}</h1><p className="mt-1 text-sm">{dictionary.states.accessRestrictedMessage}</p></div>;
-  if (!fund) return <div className="space-y-4"><Link href="/petty-cash" className="inline-flex items-center gap-2 text-sm font-semibold text-primary">{isRtl ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}{dictionary.header.title}</Link><div className="rounded-xl border border-outline-variant p-6 text-sm text-on-surface-variant">{loadError ? dictionary.states.loadError : dictionary.states.error}</div></div>;
+  if (!canRead) return <div dir={isRtl ? "rtl" : "ltr"} className="min-w-0"><PageFrame variant="record"><PageLocation breadcrumbs={{ label: dictionary.header.title, items: [{ label: dictionary.header.title, href: safeReturnTo }, { label: dictionary.states.accessRestricted, current: true }] }} returnControl={<RecordBackButton href={safeReturnTo} locale={locale} variant="labeled" label={dictionary.header.backToList} />} /><PageHeader variant="composed" title={dictionary.states.accessRestricted} /><div className="rounded-xl border border-error bg-error-container/40 p-6 text-on-error-container"><p className="text-sm">{dictionary.states.accessRestrictedMessage}</p></div></PageFrame></div>;
+  if (!fund) return <div dir={isRtl ? "rtl" : "ltr"} className="min-w-0"><PageFrame variant="record"><PageLocation breadcrumbs={{ label: dictionary.header.title, items: [{ label: dictionary.header.title, href: safeReturnTo }, { label: dictionary.header.title, current: true }] }} returnControl={<RecordBackButton href={safeReturnTo} locale={locale} variant="labeled" label={dictionary.header.backToList} />} /><PageHeader variant="composed" title={dictionary.header.title} /><div className="rounded-xl border border-outline-variant p-6 text-sm text-on-surface-variant">{loadError ? dictionary.states.loadError : dictionary.states.error}</div></PageFrame></div>;
 
   const openPanel = (next: typeof panel) => { setPanel(next); setRequestId(crypto.randomUUID()); setError(null); if (next === "expense") { setContextType("company"); setServiceId(""); } };
   const closePanel = () => { setPanel(null); setRequestId(null); setError(null); setContextType("company"); setServiceId(""); };
@@ -164,9 +170,10 @@ export default function PettyCashDetailClient({ canRead, canManage, canTransact,
   };
 
   return (
-    <div className="space-y-4">
-      <Link href="/petty-cash" className="inline-flex items-center gap-2 text-sm font-semibold text-primary">{isRtl ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}{dictionary.header.title}</Link>
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><span className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">{dictionary.header.sectionBadge}</span><h1 className="mt-1 flex items-center gap-2 text-2xl font-bold text-on-surface"><Wallet className="h-6 w-6 text-primary" aria-hidden="true" />{fund.fund_name}</h1><p className="mt-1 text-sm text-on-surface-variant">{dictionary.labels.custodian}: {fund.custodian_name}</p></div><StatusBadge status={fund.status} dictionary={dictionary} /></div>
+    <div dir={isRtl ? "rtl" : "ltr"} className="min-w-0" data-petty-cash-detail="record">
+      <PageFrame variant="record">
+      <PageLocation breadcrumbs={{ label: dictionary.header.title, items: [{ label: dictionary.header.title, href: safeReturnTo }, { label: fund.fund_name, current: true, dir: "auto" }] }} returnControl={<RecordBackButton href={safeReturnTo} locale={locale} variant="labeled" label={dictionary.header.backToList} />} />
+      <PageHeader variant="composed" title={fund.fund_name} titleDir="auto" status={<StatusBadge status={fund.status} dictionary={dictionary} />} identifier={<><span className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">{dictionary.header.sectionBadge}</span><span aria-hidden="true"> · </span><span>{dictionary.labels.custodian}: <bdi dir="auto">{fund.custodian_name}</bdi></span></>} />
 
       {notice && <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900" role="status"><CheckCircle2 className="h-4 w-4" aria-hidden="true" />{notice}</div>}
       {partialReceipt && <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950" role="alert"><p className="font-semibold">{dictionary.states.receiptAttachmentFailed}</p><div className="mt-3 flex flex-wrap items-center gap-2"><label className={`inline-flex cursor-pointer items-center rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-on-primary ${isRetryPending ? "pointer-events-none opacity-50" : ""}`}><input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" onChange={retryReceipt} disabled={isRetryPending} className="sr-only" />{isRetryPending ? dictionary.actions.working : dictionary.actions.retryReceipt}</label><Link href="/expenses" className="rounded-lg border border-outline-variant px-3 py-2 text-xs font-semibold">{dictionary.actions.openExpenseWorkspace}</Link></div>{retryReceiptError && <p className="mt-2 text-xs text-error">{retryReceiptError}</p>}</div>}
@@ -200,6 +207,7 @@ export default function PettyCashDetailClient({ canRead, canManage, canTransact,
       <section className="space-y-3"><h2 className="text-base font-semibold text-on-surface">{dictionary.labels.transactionLedger}</h2>{transactions.length === 0 ? <Empty text={dictionary.labels.noFundsDescription} /> : <div className="space-y-2"><div className="space-y-2 md:hidden">{transactions.map((tx) => <TransactionRow key={tx.id} transaction={tx} dictionary={dictionary} expenseNumber={tx.expense_id ? expenseNumberById.get(tx.expense_id) : undefined} />)}</div><div className="hidden overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest md:block" data-testid="desktop-petty-cash-transaction-table"><table className="w-full table-fixed text-start text-sm"><colgroup><col className="w-[18%]" /><col className="w-[12%]" /><col className="w-[18%]" /><col className="w-[14%]" /><col className="w-[14%]" /><col className="w-[12%]" /><col className="w-[12%]" /></colgroup><thead className="border-b border-outline-variant bg-surface-container-low"><tr><th className="px-3 py-2 text-start">{dictionary.labels.transactionType}</th><th className="px-3 py-2 text-end">{dictionary.labels.amount}</th><th className="px-3 py-2 text-end">{dictionary.labels.balanceChange}</th><th className="px-3 py-2 text-start">{dictionary.labels.linkedExpense}</th><th className="px-3 py-2 text-start">{dictionary.labels.reference}</th><th className="px-3 py-2 text-start">{dictionary.labels.recordedAt}</th><th className="px-3 py-2 text-start">{dictionary.forms.notes}</th></tr></thead><tbody>{transactions.map((tx) => <tr key={tx.id} className="border-b border-outline-variant last:border-0"><td className="px-3 py-2 text-start font-semibold">{dictionary.transactionTypes[tx.transaction_type]}</td><td className="px-3 py-2 text-end font-mono"><bdi dir="ltr">{money(tx.amount)}</bdi></td><td className="px-3 py-2 text-end font-mono text-on-surface-variant"><bdi dir="ltr">{money(tx.balance_before)} → {money(tx.balance_after)}</bdi></td><td className="px-3 py-2 text-start font-mono"><bdi dir="ltr">{expenseNumberById.get(tx.expense_id ?? "") ?? "—"}</bdi></td><td className="px-3 py-2 text-start text-on-surface-variant">{tx.reference ?? "—"}</td><td className="px-3 py-2 text-start text-on-surface-variant"><bdi dir="ltr">{formatTransactionDateTime(tx.recorded_at)}</bdi></td><td className="px-3 py-2 text-start text-on-surface-variant break-words">{tx.notes ?? "—"}</td></tr>)}</tbody></table></div></div>}</section>
       <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4"><h2 className="flex items-center gap-2 text-base font-semibold text-on-surface"><Clock3 className="h-4 w-4 text-primary" aria-hidden="true" />{dictionary.labels.lifecycleAudit}</h2><dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2"><Detail label={dictionary.labels.created} value={new Date(fund.created_at).toLocaleString(locale)} /><Detail label={dictionary.labels.updated} value={new Date(fund.updated_at).toLocaleString(locale)} /><Detail label={dictionary.labels.ledger} value={dictionary.labels.immutableHistory} /></dl></section>
 
+      </PageFrame>
     </div>
   );
 }

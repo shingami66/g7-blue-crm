@@ -169,6 +169,10 @@ async function loadSupplierPaymentDetailClient(): Promise<React.ComponentType<Re
   source = source.replace(/import\s+\{\s*useRouter\s*\}\s+from\s+["']next\/navigation["'];?/, "const useRouter = () => ({ refresh: () => {} });");
   source = source.replace(/import\s+\{\s*ArrowLeft,\s*ArrowRight\s*\}\s+from\s+["']lucide-react["'];?/, "const ArrowLeft = () => null; const ArrowRight = () => null;");
   source = source.replace(/import\s+Button\s+from\s+["']@\/components\/ui\/Button["'];?/, "const Button = ({ children }) => React.createElement('button', null, children);");
+  source = source.replace(/import\s+PageFrame\s+from\s+["']@\/components\/ui\/PageFrame["'];?/, "const PageFrame = ({ children }) => React.createElement('div', null, children);");
+  source = source.replace(/import\s+PageHeader\s+from\s+["']@\/components\/ui\/PageHeader["'];?/, "const PageHeader = ({ title, status, identifier, actions }) => React.createElement('header', null, React.createElement('h1', null, title), status, identifier, actions?.primary, actions?.secondary);");
+  source = source.replace(/import\s+PageLocation\s+from\s+["']@\/components\/navigation\/PageLocation["'];?/, "const PageLocation = ({ returnControl }) => React.createElement('nav', null, returnControl);");
+  source = source.replace(/import\s+RecordBackButton\s+from\s+["']@\/components\/navigation\/RecordBackButton["'];?/, "const RecordBackButton = ({ href, label }) => React.createElement('a', { href }, label);");
   source = source.replace(/import\s+PendingLink\s+from\s+["']@\/components\/ui\/PendingLink["'];?/, "const PendingLink = ({ href, children }) => React.createElement('a', { href }, children);");
   source = source.replace(/import\s+StatusBadge\s+from\s+["']@\/components\/ui\/StatusBadge["'];?/, "const StatusBadge = ({ children }) => React.createElement('span', null, children);");
   source = source.replace(/import\s+\{\s*UiDateText,\s*UiDateTimeText\s*\}\s+from\s+["']@\/components\/i18n\/UiDateText["'];?/, `import { resolveUiDateTimeDisplay } from "${formattingUrl}"; const UiDateText = ({ value }) => React.createElement('span', null, String(value)); const UiDateTimeText = ({ locale, value }) => { const tokens = resolveUiDateTimeDisplay(locale, value); const text = tokens.kind === 'segments' ? [tokens.day, tokens.month, tokens.year].filter(Boolean).join(' ') + (tokens.time ? '، ' + [tokens.time, tokens.dayPeriod].filter(Boolean).join(' ') : '') : tokens.text; return React.createElement('span', { 'data-ui-date-time': 'structured' }, text); };`);
@@ -199,7 +203,7 @@ test("reversal audit renders reason, structured date-time, and the resolved iden
   };
 
   for (const dictionary of [supplierPaymentsDictionaryEn, supplierPaymentsDictionaryAr]) {
-    const html = renderToStaticMarkup(React.createElement(SupplierPaymentDetailClient, { payment, canReverse: false, dictionary }));
+    const html = renderToStaticMarkup(React.createElement(SupplierPaymentDetailClient, { payment, canReverse: false, returnTo: "/supplier-payments", dictionary }));
     const expectedDateTime = structuredDateTimeText(dictionary.locale, reversedAt);
 
     assert.equal((html.match(new RegExp(dictionary.fields.reversalReason, "g")) ?? []).length, 1);

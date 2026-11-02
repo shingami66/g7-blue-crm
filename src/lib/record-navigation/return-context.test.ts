@@ -5,8 +5,10 @@ import test from "node:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
-import { appendReturnTo, recordNavigationHref, safeRecordReturnTo } from "./return-to.ts";
+import { appendReturnTo, recordListReturnTo, recordNavigationHref, safeRecordReturnTo } from "./return-to.ts";
 import { supplierBillDetailHref, supplierBillsHref, supplierBillsReturnTo } from "../supplier-bills/navigation.ts";
+import { supplierPaymentDetailHref, supplierPaymentsHref, supplierPaymentsReturnTo } from "../supplier-payments/navigation.ts";
+import { supplierAdvanceDetailHref, supplierAdvancesHref, supplierAdvancesReturnTo } from "../supplier-advances/navigation.ts";
 
 const require = createRequire(import.meta.url);
 const root = new URL("../../", import.meta.url);
@@ -45,6 +47,49 @@ test("Supplier Bills detail links preserve current list query context and use a 
   assert.equal(detailHref.pathname, `/supplier-bills/${id}`);
   assert.equal(detailHref.searchParams.get("returnTo"), returnTo);
   assert.equal(new URL(supplierBillDetailHref(id, "https://evil.example"), "https://local.g7").searchParams.has("returnTo"), false);
+});
+
+test("Payables and Cash list origins preserve query state and reject unsafe destinations", () => {
+  const query = { page: "3", pageSize: "50", search: "Supplier & Event", status: ["open", "closed"], returnTo: "https://evil.example" };
+  for (const basePath of ["/supplier-payments", "/supplier-advances", "/advances", "/petty-cash"]) {
+    const returnTo = recordListReturnTo(basePath, query);
+    assert.equal(returnTo, `${basePath}?page=3&pageSize=50&search=Supplier+%26+Event&status=open&status=closed`);
+    assert.equal(safeRecordReturnTo(returnTo, basePath), returnTo);
+    assert.equal(safeRecordReturnTo("https://evil.example", basePath), basePath);
+    assert.equal(safeRecordReturnTo("//evil.example", basePath), basePath);
+    const detail = new URL(recordNavigationHref(basePath, id, returnTo), "https://local.g7");
+    assert.equal(detail.pathname, `${basePath}/${id}`);
+    assert.equal(detail.searchParams.get("returnTo"), returnTo);
+  }
+  assert.equal(recordListReturnTo("/supplier-payments", { returnTo: "/petty-cash?other=1" }), "/supplier-payments");
+  assert.equal(safeRecordReturnTo("/supplier-payments\nLocation: https://evil.example", "/supplier-payments"), "/supplier-payments");
+});
+
+test("Supplier Payment and Supplier Advance pagers retain unrelated list query state", () => {
+  const query = { page: "2", pageSize: "20", search: "cash & bank", status: ["paid", "reversed"], returnTo: "https://evil.example" };
+  const paymentOrigin = supplierPaymentsReturnTo(query);
+  const advanceOrigin = supplierAdvancesReturnTo(query);
+  assert.equal(paymentOrigin, "/supplier-payments?page=2&pageSize=20&search=cash+%26+bank&status=paid&status=reversed");
+  assert.equal(advanceOrigin, "/supplier-advances?page=2&pageSize=20&search=cash+%26+bank&status=paid&status=reversed");
+  assert.equal(supplierPaymentsHref(4, 50, query), "/supplier-payments?search=cash+%26+bank&status=paid&status=reversed&page=4&pageSize=50");
+  assert.equal(supplierAdvancesHref(4, 50, query), "/supplier-advances?search=cash+%26+bank&status=paid&status=reversed&page=4&pageSize=50");
+  assert.equal(new URL(supplierPaymentDetailHref(id, paymentOrigin), "https://local.g7").searchParams.get("returnTo"), paymentOrigin);
+  assert.equal(new URL(supplierAdvanceDetailHref(id, advanceOrigin), "https://local.g7").searchParams.get("returnTo"), advanceOrigin);
+});
+
+test("all Payables/Cash detail-opening affordances share the safe family origin helper", () => {
+  const paymentList = read("app/(dashboard)/supplier-payments/SupplierPaymentsClient.tsx");
+  const supplierAdvanceList = read("app/(dashboard)/supplier-advances/SupplierAdvancesClient.tsx");
+  const cashAdvanceList = read("app/(dashboard)/advances/AdvancesClient.tsx");
+  const pettyCashList = read("app/(dashboard)/petty-cash/PettyCashClient.tsx");
+  assert.equal((paymentList.match(/href=\{detailHref\(payment\.id\)\}/g) ?? []).length, 4);
+  assert.equal((supplierAdvanceList.match(/href=\{detailHref\(advance\.supplier_advance_id\)\}/g) ?? []).length, 4);
+  assert.equal((cashAdvanceList.match(/href=\{detailHref\(adv\.id\)\}/g) ?? []).length, 2);
+  assert.match(pettyCashList, /href=\{detailHref\(fund\.id\)\}/);
+  assert.match(pettyCashList, /recordNavigationHref\("\/petty-cash", fund\.id, listReturnTo\)/);
+  for (const source of [paymentList, supplierAdvanceList, cashAdvanceList, pettyCashList]) {
+    assert.doesNotMatch(source, /href=\{`\/(?:supplier-payments|supplier-advances|advances|petty-cash)\/\$\{/);
+  }
 });
 
 test("actual record pager renders all four destinations with mode and origin", () => {

@@ -5,16 +5,19 @@ import { SUPPLIER_PAYMENT_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getSupplierPaymentsDictionary } from "@/lib/i18n/dictionaries/supplier-payments";
 import { getSupplierPaymentById } from "@/lib/supplier-payments/queries";
+import { safeRecordReturnTo, type RecordListSearchParams } from "@/lib/record-navigation/return-to";
 import SupplierPaymentDetailClient from "../SupplierPaymentDetailClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function SupplierPaymentDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const [{ id }, locale, canReverse] = await Promise.all([
+export default async function SupplierPaymentDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<RecordListSearchParams> }) {
+  const [{ id }, query, locale, canReverse] = await Promise.all([
     params,
+    searchParams,
     getCurrentSessionEffectiveLocale(),
     checkPermission(SUPPLIER_PAYMENT_PERMISSIONS.reverse),
   ]);
+  const returnTo = safeRecordReturnTo(query.returnTo, "/supplier-payments");
   const dictionary = getSupplierPaymentsDictionary(locale);
   let result: Awaited<ReturnType<typeof getSupplierPaymentById>>;
   try {
@@ -25,7 +28,7 @@ export default async function SupplierPaymentDetailPage({ params }: { params: Pr
     return <StateCard title={dictionary.states.loadError} message={dictionary.states.loadError} />;
   }
   if (!result.payment) notFound();
-  return <SupplierPaymentDetailClient payment={result.payment} canReverse={canReverse} dictionary={dictionary} />;
+  return <SupplierPaymentDetailClient payment={result.payment} canReverse={canReverse} returnTo={returnTo} dictionary={dictionary} />;
 }
 
 function StateCard({ title, message }: { title: string; message: string }) {

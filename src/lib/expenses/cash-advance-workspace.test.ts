@@ -591,8 +591,8 @@ test("35. Navigation: PendingLink semantics preserved across workspace", () => {
     "AdvancesClient must use PendingLink for navigation",
   );
   assert.ok(
-    detailClientSource.includes("<PendingLink"),
-    "AdvanceDetailClient must use PendingLink for back navigation",
+    detailClientSource.includes("<RecordBackButton") && detailClientSource.includes("safeReturnTo"),
+    "AdvanceDetailClient must use the validated labeled RecordBackButton for return navigation",
   );
 });
 
@@ -951,8 +951,8 @@ test("56. Layout Shell: AdvanceDetailClient uses the canonical dashboard width",
     "AdvanceDetailClient must not add a width constraint to the normal-workspace root",
   );
   assert.ok(
-    detailSource.includes('<div className="flex flex-col gap-4 pb-12">'),
-    "AdvanceDetailClient must use the compact detail-page root rhythm",
+    detailSource.includes('<PageFrame variant="record">'),
+    "AdvanceDetailClient must use the accepted shared record-frame rhythm",
   );
 });
 
@@ -962,11 +962,10 @@ test("57. Detail: record header preserves hierarchy, identity direction, and sta
     "utf8",
   );
   assert.ok(
-    detailSource.includes("text-[28px]") &&
-      detailSource.includes("leading-[36px]") &&
-      detailSource.includes("font-mono") &&
-      detailSource.includes('dir="ltr"'),
-    "Advance header must use mature title scale and LTR identifier treatment",
+    detailSource.includes('titleDir="ltr"') &&
+      detailSource.includes("title={advance.advance_number}") &&
+      detailSource.includes("getStatusBadgeClass(advance.status)"),
+    "Advance header must retain its LTR record identity and existing status treatment",
   );
   assert.ok(
     detailSource.includes("getCashAdvanceStatusLabel") &&

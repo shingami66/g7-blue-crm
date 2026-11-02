@@ -11,6 +11,7 @@ import {
   getExpenseReimbursementStatusLabel,
   getExceptionDispositionLabel,
 } from "./dictionaries/expenses.ts";
+import { getPettyCashDictionary } from "./dictionaries/petty-cash.ts";
 
 const REPO_ROOT = join(import.meta.dirname, "../../..");
 const EXPENSES_PAGE = join(REPO_ROOT, "src/app/(dashboard)/expenses/page.tsx");
@@ -35,6 +36,11 @@ test("Expenses dictionary English and Arabic shapes remain aligned", () => {
   const enKeys = leafKeys(getExpensesDictionary("en")).sort();
   const arKeys = leafKeys(getExpensesDictionary("ar")).sort();
   assert.deepEqual(enKeys, arKeys);
+});
+
+test("Petty Cash detail return label is localized in English and Arabic", () => {
+  assert.equal(getPettyCashDictionary("en").header.backToList, "Back to Petty Cash");
+  assert.equal(getPettyCashDictionary("ar").header.backToList, "العودة إلى المصروفات النثرية");
 });
 
 test("Expenses dictionary exposes the Expenses-only bilingual workspace contract", () => {

@@ -21,16 +21,19 @@ import type {
   CashAdvanceBalanceSummary,
   LinkedCashAdvanceExpense,
 } from "@/lib/expenses/types";
+import { safeRecordReturnTo, type RecordListSearchParams } from "@/lib/record-navigation/return-to";
 import AdvanceDetailClient from "./AdvanceDetailClient";
 
 export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<RecordListSearchParams>;
 }
 
-export default async function CashAdvanceDetailPage({ params }: PageProps) {
-  const { id } = await params;
+export default async function CashAdvanceDetailPage({ params, searchParams }: PageProps) {
+  const [{ id }, query] = await Promise.all([params, searchParams]);
+  const returnTo = safeRecordReturnTo(query.returnTo, "/advances");
 
   const [canReadOwn, canReadBroad, currentUser] = await Promise.all([
     checkPermission(CASH_ADVANCE_PERMISSIONS.readOwn),
@@ -43,6 +46,7 @@ export default async function CashAdvanceDetailPage({ params }: PageProps) {
     return (
       <AdvanceDetailClient
         canRead={false}
+        returnTo={returnTo}
         advance={null}
         allocations={[]}
         returns={[]}
@@ -74,6 +78,7 @@ export default async function CashAdvanceDetailPage({ params }: PageProps) {
     return (
       <AdvanceDetailClient
         canRead={true}
+        returnTo={returnTo}
         advance={null}
         allocations={[]}
         returns={[]}
@@ -152,6 +157,7 @@ export default async function CashAdvanceDetailPage({ params }: PageProps) {
   return (
     <AdvanceDetailClient
       canRead={true}
+      returnTo={returnTo}
       advance={advance}
       allocations={enrichedAllocations}
       returns={detailData.returns}

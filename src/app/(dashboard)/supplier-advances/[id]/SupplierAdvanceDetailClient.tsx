@@ -2,9 +2,13 @@
 
 import { useEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, FileText, RotateCcw } from "lucide-react";
+import { FileText, RotateCcw } from "lucide-react";
 import PendingLink from "@/components/ui/PendingLink";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
+import PageLocation from "@/components/navigation/PageLocation";
+import RecordBackButton from "@/components/navigation/RecordBackButton";
 import { UiDateText, UiDateTimeText } from "@/components/i18n/UiDateText";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import { formatSupplierAdvanceAmount } from "@/lib/supplier-advances/formatting";
@@ -32,6 +36,7 @@ export default function SupplierAdvanceDetailClient({
   canReverse,
   canCorrect,
   canRelease,
+  returnTo,
   dictionary,
 }: {
   advance: SupplierAdvanceDetail;
@@ -42,6 +47,7 @@ export default function SupplierAdvanceDetailClient({
   canReverse: boolean;
   canCorrect: boolean;
   canRelease: boolean;
+  returnTo: string;
   dictionary: SupplierAdvancesDictionary;
 }) {
   const router = useRouter();
@@ -116,24 +122,19 @@ export default function SupplierAdvanceDetailClient({
   const sourceLabel = dictionary.sources[advance.commitment_source] ?? dictionary.sources.other_authorized;
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-5 pb-12" data-testid="supplier-advance-detail">
-      <header className="flex min-w-0 flex-col gap-3">
-        <PendingLink href="/supplier-advances" pendingLabel={dictionary.backToList} className="inline-flex w-fit items-center gap-2 rounded-md px-2 py-1 text-[12px] font-semibold text-primary hover:bg-surface-container-low hover:underline">
-          {isRtl ? <ArrowRight size={16} aria-hidden="true" /> : <ArrowLeft size={16} aria-hidden="true" />}<span>{dictionary.backToList}</span>
-        </PendingLink>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-[24px] font-semibold text-primary"><bdi dir="ltr">{advance.advance_number}</bdi></h1>
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-on-surface-variant">
-              <bdi dir="auto">{advance.supplier_name}</bdi>
-              <span aria-hidden="true">·</span>
-              <bdi dir="ltr">{advance.service_number}</bdi>
-              <span dir="auto">{advance.service_title}</span>
-            </div>
-          </div>
-          <StatusBadge variant={advance.status === "paid" || advance.status === "released" ? "active" : "pending"}>{dictionary.statuses[advance.status]}</StatusBadge>
-        </div>
-      </header>
+    <div dir={isRtl ? "rtl" : "ltr"} className="min-w-0" data-testid="supplier-advance-detail" data-supplier-advance-detail="record">
+      <PageFrame variant="record">
+        <PageLocation
+          breadcrumbs={{ label: dictionary.title, items: [{ label: dictionary.title, href: returnTo }, { label: advance.advance_number, current: true, dir: "ltr" }] }}
+          returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.backToList} />}
+        />
+        <PageHeader
+          variant="composed"
+          title={advance.advance_number}
+          titleDir="ltr"
+          status={<StatusBadge variant={advance.status === "paid" || advance.status === "released" ? "active" : "pending"}>{dictionary.statuses[advance.status]}</StatusBadge>}
+          identifier={<><bdi dir="auto">{advance.supplier_name}</bdi><span aria-hidden="true"> · </span><bdi dir="ltr">{advance.service_number}</bdi><span aria-hidden="true"> · </span><bdi dir="auto">{advance.service_title}</bdi></>}
+        />
 
       <section aria-label={dictionary.title} className="grid grid-cols-2 gap-3 sm:grid-cols-4" data-testid="supplier-advance-financial-summary">
         <Metric label={dictionary.fields.authorized} value={amount(advance.authorized_amount)} primary />
@@ -295,6 +296,7 @@ export default function SupplierAdvanceDetailClient({
           {refund.documents.length > 0 && <DocumentLinks documents={refund.documents} label={dictionary.fields.evidence} onOpen={(doc) => openDocument("refund", refund.id, doc.document_id)} dictionary={dictionary} />}
         </article>)}
       </HistorySection>
+      </PageFrame>
     </div>
   );
 }

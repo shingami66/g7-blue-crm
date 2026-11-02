@@ -11,23 +11,28 @@ import type { SupplierAdvanceListItem, SupplierAdvanceListPagination } from "@/l
 import PaginationFooter from "@/components/ui/PaginationFooter";
 import { useListNavigation } from "@/components/ui/useListNavigation";
 import type { ListPageSize } from "@/lib/pagination";
-import { supplierAdvancesHref } from "@/lib/supplier-advances/navigation";
+import { supplierAdvanceDetailHref, supplierAdvancesHref, type SupplierAdvancesSearchParams } from "@/lib/supplier-advances/navigation";
 
 export default function SupplierAdvancesClient({
   advances,
   pagination,
   canAuthorize,
+  listReturnTo = "/supplier-advances",
+  listParams = {},
   dictionary,
 }: {
   advances: SupplierAdvanceListItem[];
   pagination: SupplierAdvanceListPagination;
   canAuthorize: boolean;
+  listReturnTo?: string;
+  listParams?: SupplierAdvancesSearchParams;
   dictionary: SupplierAdvancesDictionary;
 }) {
   const locale = dictionary.locale;
   const isRtl = locale === "ar";
   const stateKey = `${pagination.page}|${pagination.pageSize}`;
   const { isPending, navigate } = useListNavigation(stateKey);
+  const detailHref = (id: string) => supplierAdvanceDetailHref(id, listReturnTo);
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-5 pb-12" data-supplier-advances-workspace="list">
       <PageHeader title={dictionary.title} subtitle={dictionary.subtitle}>
@@ -42,8 +47,8 @@ export default function SupplierAdvancesClient({
             pageSize={pagination.pageSize}
             paginationMode="bounded"
             isPending={isPending}
-            onPageChange={(page) => navigate(supplierAdvancesHref(page, pagination.pageSize), "push")}
-            onPageSizeChange={(pageSize: ListPageSize) => navigate(supplierAdvancesHref(1, pageSize), "replace")}
+            onPageChange={(page) => navigate(supplierAdvancesHref(page, pagination.pageSize, listParams), "push")}
+            onPageSizeChange={(pageSize: ListPageSize) => navigate(supplierAdvancesHref(1, pageSize, listParams), "replace")}
           />
         )}
         <div className="hidden overflow-x-auto lg:block">
@@ -65,13 +70,13 @@ export default function SupplierAdvancesClient({
             <tbody className="divide-y divide-surface-variant text-[13px]">
               {advances.map((advance) => (
                 <tr key={advance.supplier_advance_id} className="transition-colors hover:bg-surface-container-low/50">
-                  <td className="px-3 py-3 align-middle text-start"><PendingLink href={`/supplier-advances/${advance.supplier_advance_id}`} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline"><bdi dir="ltr">{advance.advance_number}</bdi></PendingLink></td>
+                  <td className="px-3 py-3 align-middle text-start"><PendingLink href={detailHref(advance.supplier_advance_id)} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline"><bdi dir="ltr">{advance.advance_number}</bdi></PendingLink></td>
                   <td className="break-words px-3 py-3 align-middle text-start"><bdi dir="auto">{advance.supplier_name}</bdi></td>
                   <td className="px-3 py-3 align-middle text-start"><span className="flex min-w-0 flex-col gap-0.5"><bdi dir="ltr" className="text-[12px] font-medium">{advance.service_number}</bdi><bdi dir="auto" className="break-words text-[12px] text-on-surface-variant">{advance.service_title}</bdi></span></td>
                   <td className="px-3 py-3 align-middle text-start"><UiDateText locale={locale} value={advance.authorized_at} /></td>
                   <td className="px-3 py-3 align-middle text-end"><bdi dir="ltr" className="font-semibold tabular-nums">{formatSupplierAdvanceAmount(advance.currency, advance.authorized_amount)}</bdi></td>
                   <td className="px-3 py-3 align-middle text-center"><StatusBadge variant={advance.status === "paid" ? "active" : "pending"}>{dictionary.statuses[advance.status]}</StatusBadge></td>
-                  <td className="px-3 py-3 align-middle text-center"><PendingLink href={`/supplier-advances/${advance.supplier_advance_id}`} pendingLabel={dictionary.actions.view} aria-label={`${dictionary.actions.view}: ${advance.advance_number}`} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"><Eye size={16} aria-hidden="true" /></PendingLink></td>
+                  <td className="px-3 py-3 align-middle text-center"><PendingLink href={detailHref(advance.supplier_advance_id)} pendingLabel={dictionary.actions.view} aria-label={`${dictionary.actions.view}: ${advance.advance_number}`} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"><Eye size={16} aria-hidden="true" /></PendingLink></td>
                 </tr>
               ))}
               {advances.length === 0 && <tr><td colSpan={7} className="px-4 py-12 text-center text-on-surface-variant">{dictionary.states.empty}</td></tr>}
@@ -81,9 +86,9 @@ export default function SupplierAdvancesClient({
         <div className="divide-y divide-surface-variant lg:hidden" data-testid="supplier-advances-mobile-cards">
           {advances.map((advance) => (
             <article key={advance.supplier_advance_id} className="space-y-3 p-4">
-              <div className="flex items-start justify-between gap-3"><div className="min-w-0"><PendingLink href={`/supplier-advances/${advance.supplier_advance_id}`} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline"><bdi dir="ltr">{advance.advance_number}</bdi></PendingLink><div className="mt-1 truncate text-[12px] text-on-surface-variant"><bdi dir="auto">{advance.supplier_name}</bdi></div></div><StatusBadge variant={advance.status === "paid" ? "active" : "pending"}>{dictionary.statuses[advance.status]}</StatusBadge></div>
+              <div className="flex items-start justify-between gap-3"><div className="min-w-0"><PendingLink href={detailHref(advance.supplier_advance_id)} pendingLabel={dictionary.actions.view} className="font-semibold text-primary hover:underline"><bdi dir="ltr">{advance.advance_number}</bdi></PendingLink><div className="mt-1 truncate text-[12px] text-on-surface-variant"><bdi dir="auto">{advance.supplier_name}</bdi></div></div><StatusBadge variant={advance.status === "paid" ? "active" : "pending"}>{dictionary.statuses[advance.status]}</StatusBadge></div>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]"><div><dt className="text-on-surface-variant">{dictionary.columns.service}</dt><dd className="mt-0.5 flex flex-col font-medium"><bdi dir="ltr">{advance.service_number}</bdi><bdi dir="auto">{advance.service_title}</bdi></dd></div><div><dt className="text-on-surface-variant">{dictionary.columns.date}</dt><dd className="mt-0.5"><UiDateText locale={locale} value={advance.authorized_at} /></dd></div><div className="col-span-2"><dt className="text-on-surface-variant">{dictionary.columns.amount}</dt><dd className="mt-0.5 text-end font-semibold"><bdi dir="ltr">{formatSupplierAdvanceAmount(advance.currency, advance.authorized_amount)}</bdi></dd></div></dl>
-              <PendingLink href={`/supplier-advances/${advance.supplier_advance_id}`} pendingLabel={dictionary.actions.view} className="inline-flex text-[12px] font-semibold text-primary hover:underline">{dictionary.actions.view}</PendingLink>
+              <PendingLink href={detailHref(advance.supplier_advance_id)} pendingLabel={dictionary.actions.view} className="inline-flex text-[12px] font-semibold text-primary hover:underline">{dictionary.actions.view}</PendingLink>
             </article>
           ))}
           {advances.length === 0 && <div className="px-4 py-12 text-center text-on-surface-variant">{dictionary.states.empty}</div>}
