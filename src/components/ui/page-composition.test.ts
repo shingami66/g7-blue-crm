@@ -210,3 +210,30 @@ test("detail action placement preserves the existing family-specific action cond
   assert.match(pettyCash, /canTransact && fund\.status === "active"/);
   assert.match(pettyCash, /canApproveAndDisburse=\{canTransactFund\}/);
 });
+
+test("the six core commercial routed forms use the shared form shell and keep their bodies single-headed", () => {
+  const routes = [
+    ["app/(dashboard)/suppliers/new/page.tsx", "app/(dashboard)/suppliers/new/SupplierCreateForm.tsx"],
+    ["app/(dashboard)/suppliers/[id]/edit/page.tsx", "app/(dashboard)/suppliers/[id]/edit/SupplierEditForm.tsx"],
+    ["app/(dashboard)/services/new/page.tsx", "app/(dashboard)/services/new/ServiceForm.tsx"],
+    ["app/(dashboard)/services/[id]/edit/page.tsx", "app/(dashboard)/services/[id]/edit/EditServiceForm.tsx"],
+    ["app/(dashboard)/quotations/new/page.tsx", "app/(dashboard)/quotations/new/QuotationForm.tsx"],
+    ["app/(dashboard)/quotations/[id]/edit/page.tsx", "app/(dashboard)/quotations/new/QuotationForm.tsx"],
+  ] as const;
+
+  for (const [pagePath, formPath] of routes) {
+    const page = read(pagePath);
+    const form = read(formPath);
+    assert.ok(page.includes('<PageFrame variant="form">'), `${pagePath} must use the form frame`);
+    assert.ok(page.includes("<PageLocation"), `${pagePath} must expose structural location`);
+    assert.match(page, /returnControl=\{<RecordBackButton[\s\S]*?variant="labeled"/);
+    assert.match(page, /<PageHeader\s+variant="composed"/);
+    assert.doesNotMatch(form, /<h1\b|<h2\b/i, `${formPath} must not duplicate the composed page heading`);
+    assert.doesNotMatch(page, /<main\b/i, `${pagePath} must not add a nested main landmark`);
+  }
+
+  const quotationCreatePage = read("app/(dashboard)/quotations/new/page.tsx");
+  const quotationEditPage = read("app/(dashboard)/quotations/[id]/edit/page.tsx");
+  assert.match(quotationCreatePage, /safeRecordReturnTo\(resolvedSearchParams\.returnTo, `\/services\/\$\{service\.id\}`\)/);
+  assert.match(quotationEditPage, /safeRecordReturnTo\(\(await searchParams\)\.returnTo, `\/quotations\/\$\{id\}`\)/);
+});

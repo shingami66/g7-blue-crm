@@ -258,20 +258,13 @@ test("18. Stored customer/event/location/description data is not translated", ()
   assert.doesNotMatch(client, /translateStored|localizeEvent/);
 });
 
-test("19. Edit Service subtitle isolates Service number without forcing full sentence LTR", () => {
+test("19. Edit Event shared header isolates the Event number and keeps localized context", () => {
+  const page = readFileSync(EDIT_PAGE, "utf8");
   const form = readFileSync(EDIT_FORM, "utf8");
-  assert.match(form, /service\.serviceNumber/);
-  assert.match(form, /dictionary\.form\.editSubtitle/);
-  // Number is LTR-isolated; subtitle remains a separate natural-direction span.
-  assert.match(
-    form,
-    /dir="ltr"[^>]*>[\s\S]*?isolateBidiText\(service\.serviceNumber\)[\s\S]*?<span>\{dictionary\.form\.editSubtitle\}<\/span>/,
-  );
-  assert.doesNotMatch(
-    form,
-    /dir="ltr"[^>]*>[\s\S]*?\$\{service\.serviceNumber\} - \$\{dictionary\.form\.editSubtitle\}/,
-  );
-  assert.doesNotMatch(form, /\$\{service\.serviceNumber\} - \$\{dictionary\.form\.editSubtitle\}/);
+  assert.match(page, /<PageHeader/);
+  assert.match(page, /dictionary\.form\.editSubtitle/);
+  assert.match(page, /identifier=\{<>?<bdi dir="ltr">\{service\.serviceNumber\}<\/bdi>/);
+  assert.doesNotMatch(form, /<h1\b|<h2\b/);
 });
 
 test("20. Empty, filtered-empty, unavailable, and denied states remain distinct", () => {

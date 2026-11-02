@@ -4,6 +4,12 @@ import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getServiceById } from "@/lib/services/queries";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import PageLocation from "@/components/navigation/PageLocation";
+import { RecordBackButton } from "@/components/navigation/RecordBackButton";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import { appendReturnTo, safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import {
   getQuotationsDictionary,
   type QuotationsDictionary,
@@ -158,9 +164,27 @@ export default async function NewQuotationPage({ searchParams }: NewQuotationPag
     );
   }
 
+  const returnTo = safeRecordReturnTo(resolvedSearchParams.returnTo, `/services/${service.id}`);
+  const serviceDetailHref = returnTo === `/services/${service.id}` || returnTo.startsWith(`/services/${service.id}?`)
+    ? returnTo
+    : appendReturnTo(`/services/${service.id}`, returnTo);
+  const servicesDictionary = getServicesDictionary(locale);
+
   return (
-    <div className="flex flex-col h-full max-w-5xl mx-auto w-full pb-12">
-      <QuotationForm service={service} dictionary={formDictionary} returnTo={resolvedSearchParams.returnTo} />
-    </div>
+    <PageFrame variant="form">
+      <PageLocation
+        breadcrumbs={{
+          label: dictionary.detail.locationLabel,
+          items: [
+            { label: servicesDictionary.list.title, href: "/services" },
+            { label: service.serviceTitle, href: serviceDetailHref, dir: "auto" },
+            { label: dictionary.form.newTitle, current: true },
+          ],
+        }}
+        returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.actions.backToService} />}
+      />
+      <PageHeader variant="composed" title={dictionary.form.newTitle} subtitle={dictionary.form.newSubtitle} />
+      <QuotationForm service={service} dictionary={formDictionary} />
+    </PageFrame>
   );
 }

@@ -6,12 +6,17 @@ import SharedAuthenticatedStatePanel from "@/components/ui/SharedAuthenticatedSt
 import { getSharedUiStates } from "@/lib/i18n/dictionaries/common";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import PageLocation from "@/components/navigation/PageLocation";
+import { RecordBackButton } from "@/components/navigation/RecordBackButton";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import ServiceForm from "./ServiceForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewServicePage({ searchParams }: { searchParams: Promise<{ returnTo?: string }> }) {
-  const { returnTo } = await searchParams;
+  const returnTo = safeRecordReturnTo((await searchParams).returnTo, "/services");
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getServicesDictionary(locale);
   const sharedStates = getSharedUiStates(locale);
@@ -46,8 +51,19 @@ export default async function NewServicePage({ searchParams }: { searchParams: P
   }
 
   return (
-    <div className="flex flex-col h-full max-w-5xl mx-auto w-full pb-12">
+    <PageFrame variant="form">
+      <PageLocation
+        breadcrumbs={{
+          label: dictionary.detail.locationLabel,
+          items: [
+            { label: dictionary.list.title, href: "/services" },
+            { label: dictionary.form.newTitle, current: true },
+          ],
+        }}
+        returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.detail.backToServices} />}
+      />
+      <PageHeader variant="composed" title={dictionary.form.newTitle} subtitle={dictionary.form.newSubtitle} />
       <ServiceForm customers={activeCustomers} dictionary={dictionary} returnTo={returnTo} />
-    </div>
+    </PageFrame>
   );
 }

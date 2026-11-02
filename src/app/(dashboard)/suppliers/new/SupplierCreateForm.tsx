@@ -2,13 +2,13 @@
 
 import { type FormEvent, type ReactNode, useState } from "react";
 import { AlertCircle, Save } from "lucide-react";
-import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
 import { createSupplier } from "@/lib/suppliers/actions";
 import { SAFE_SUPPLIER_CREATE_STATUSES, SUPPLIER_CATEGORIES, SUPPLIER_VAT_STATUSES } from "@/lib/suppliers/schemas";
 import { getSupplierCategoryLabel, getSupplierTypeLabel, type SuppliersDictionary } from "@/lib/i18n/dictionaries/suppliers";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 
 const SUPPLIER_TYPES = ["company", "individual"] as const;
 
@@ -17,8 +17,9 @@ function optionalValue(value: string) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-export default function SupplierCreateForm({ dictionary }: { dictionary: SuppliersDictionary }) {
+export default function SupplierCreateForm({ dictionary, returnTo }: { dictionary: SuppliersDictionary; returnTo?: string }) {
   const router = useRouter();
+  const exitHref = safeRecordReturnTo(returnTo, "/suppliers");
   const { push } = useGlobalNavigationPending();
   const { locale } = dictionary;
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,22 +99,7 @@ export default function SupplierCreateForm({ dictionary }: { dictionary: Supplie
   }
 
   return (
-    <div className="flex w-full max-w-5xl flex-col gap-6">
-      <div className="flex items-center gap-4 py-4">
-        <button
-          type="button"
-          onClick={() => push("/suppliers")}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          aria-label={dictionary.form.backToSuppliers}
-        >
-          <LocaleBackIcon size={16} />
-        </button>
-        <div>
-          <h2 className="text-[28px] font-semibold leading-[36px] text-primary">{dictionary.form.newTitle}</h2>
-          <p className="text-[14px] text-on-surface-variant">{dictionary.form.newSubtitle}</p>
-        </div>
-      </div>
-
+    <div className="flex w-full flex-col gap-6">
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {error && <div className="flex items-center gap-2 rounded-lg bg-error-container p-4 text-[14px] text-on-error-container"><AlertCircle size={18} />{error}</div>}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -144,7 +130,7 @@ export default function SupplierCreateForm({ dictionary }: { dictionary: Supplie
             <Field label={dictionary.form.labels.internalNotes}><textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={4} className={inputClassName} placeholder={dictionary.form.placeholders.notes} dir="auto" /></Field>
           </section>
         </div>
-        <div className="mt-4 flex flex-wrap items-center justify-end gap-3"><Button type="button" onClick={() => push("/suppliers")} disabled={isSubmitting} variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">{dictionary.form.buttons.cancel}</Button><Button type="submit" loading={isSubmitting} size="sm" className="h-9 min-h-9 whitespace-nowrap"><span className="inline-flex items-center gap-2"><Save size={16} aria-hidden="true" />{dictionary.form.buttons.create}</span></Button></div>
+        <div className="mt-4 flex flex-wrap items-center justify-end gap-3"><Button type="button" onClick={() => push(exitHref)} disabled={isSubmitting} variant="outline" size="sm" className="h-9 min-h-9 whitespace-nowrap">{dictionary.form.buttons.cancel}</Button><Button type="submit" loading={isSubmitting} size="sm" className="h-9 min-h-9 whitespace-nowrap"><span className="inline-flex items-center gap-2"><Save size={16} aria-hidden="true" />{dictionary.form.buttons.create}</span></Button></div>
       </form>
     </div>
   );

@@ -6,7 +6,11 @@ import { getQuotationById } from "@/lib/quotations/queries";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getQuotationsDictionary } from "@/lib/i18n/dictionaries/quotations";
 import QuotationForm from "../../new/QuotationForm";
-import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
+import PageLocation from "@/components/navigation/PageLocation";
+import { RecordBackButton } from "@/components/navigation/RecordBackButton";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import { appendReturnTo, safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 
 export const dynamic = "force-dynamic";
 
@@ -107,8 +111,29 @@ export default async function EditQuotationPage({
     );
   }
 
+  const quotationDetailHref = returnTo === `/quotations/${quotation.id}` || returnTo.startsWith(`/quotations/${quotation.id}?`)
+    ? returnTo
+    : appendReturnTo(`/quotations/${quotation.id}`, returnTo);
+
   return (
-    <div className="flex flex-col h-full max-w-5xl mx-auto w-full pb-12">
+    <PageFrame variant="form">
+      <PageLocation
+        breadcrumbs={{
+          label: dictionary.detail.locationLabel,
+          items: [
+            { label: dictionary.list.title, href: "/quotations" },
+            { label: quotation.quotationNumber, href: quotationDetailHref, dir: "ltr" },
+            { label: dictionary.form.editTitle, current: true },
+          ],
+        }}
+        returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.editStates.backToQuotations} />}
+      />
+      <PageHeader
+        variant="composed"
+        title={dictionary.form.editTitle}
+        subtitle={dictionary.form.editSubtitle}
+        identifier={<bdi dir="ltr">{quotation.quotationNumber}</bdi>}
+      />
       <QuotationForm
         service={{
           id: quotation.serviceId,
@@ -119,9 +144,8 @@ export default async function EditQuotationPage({
           customer: quotation.customer,
         }}
         initialData={quotation}
-        returnTo={returnTo}
         dictionary={dictionary}
       />
-    </div>
+    </PageFrame>
   );
 }

@@ -3,11 +3,17 @@ import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { requirePermission } from "@/lib/auth/permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getSuppliersDictionary } from "@/lib/i18n/dictionaries/suppliers";
+import PageLocation from "@/components/navigation/PageLocation";
+import { RecordBackButton } from "@/components/navigation/RecordBackButton";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import SupplierCreateForm from "./SupplierCreateForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function NewSupplierPage() {
+export default async function NewSupplierPage({ searchParams }: { searchParams: Promise<{ returnTo?: string }> }) {
+  const returnTo = safeRecordReturnTo((await searchParams).returnTo, "/suppliers");
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getSuppliersDictionary(locale);
 
@@ -44,8 +50,19 @@ export default async function NewSupplierPage() {
   }
 
   return (
-    <div className="flex flex-col h-full max-w-5xl mx-auto w-full pb-12">
-      <SupplierCreateForm dictionary={dictionary} />
-    </div>
+    <PageFrame variant="form">
+      <PageLocation
+        breadcrumbs={{
+          label: dictionary.detail.locationLabel,
+          items: [
+            { label: dictionary.list.title, href: "/suppliers" },
+            { label: dictionary.form.newTitle, current: true },
+          ],
+        }}
+        returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.form.backToSuppliers} />}
+      />
+      <PageHeader variant="composed" title={dictionary.form.newTitle} subtitle={dictionary.form.newSubtitle} />
+      <SupplierCreateForm dictionary={dictionary} returnTo={returnTo} />
+    </PageFrame>
   );
 }

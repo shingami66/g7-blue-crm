@@ -4,12 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 import { Save, AlertCircle } from "lucide-react";
-import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import type { Service } from "@/types/service";
 import { updateService } from "@/lib/services/actions";
 import { getEditServiceErrorMessage } from "@/lib/i18n/service-action-feedback";
 import type { ServicesDictionary } from "@/lib/i18n/dictionaries/services";
-import { getCommonDictionary } from "@/lib/i18n/dictionaries/common";
 import { isolateBidiText } from "@/lib/i18n/bidi";
 import Button from "@/components/ui/Button";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
@@ -101,29 +99,6 @@ export default function EditServiceForm({ service, dictionary, returnTo }: EditS
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-4 py-4">
-        <button
-          type="button"
-          onClick={() => push(exitHref)}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          aria-label={getCommonDictionary(dictionary.locale).actions.back}
-        >
-          <LocaleBackIcon size={16} />
-        </button>
-        <div>
-          <h2 className="text-[28px] leading-[36px] font-semibold text-primary tracking-tight">
-            {dictionary.form.editTitle}
-          </h2>
-          <p className="text-on-surface-variant text-[14px]">
-            <span dir="ltr" className="font-mono">
-              {isolateBidiText(service.serviceNumber)}
-            </span>
-            <span aria-hidden="true">{" — "}</span>
-            <span>{dictionary.form.editSubtitle}</span>
-          </p>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {error && (
           <div className="flex items-center gap-2 p-4 bg-error-container text-on-error-container rounded-lg text-[14px]">

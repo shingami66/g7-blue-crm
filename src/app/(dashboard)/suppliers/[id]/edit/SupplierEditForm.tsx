@@ -2,7 +2,6 @@
 
 import { type FormEvent, type ReactNode, useState } from "react";
 import { AlertCircle, Save } from "lucide-react";
-import { LocaleBackIcon } from "@/components/i18n/LocaleBackIcon";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { useGlobalNavigationPending } from "@/components/ui/useGlobalNavigationPending";
@@ -112,8 +111,7 @@ export default function SupplierEditForm({ supplier, dictionary, canManageBankDe
   }
 
   return (
-    <div className="flex w-full max-w-5xl flex-col gap-6">
-      <div className="flex items-center gap-4 py-4"><button type="button" onClick={() => push(exitHref)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" aria-label={dictionary.form.backToSupplier}><LocaleBackIcon size={16} /></button><div><h2 className="text-[28px] font-semibold leading-[36px] text-primary">{dictionary.form.editTitle}</h2><p className="text-[14px] text-on-surface-variant">{dictionary.form.editSubtitle}</p></div></div>
+    <div className="flex w-full flex-col gap-6">
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {error && <div className="flex items-center gap-2 rounded-lg bg-error-container p-4 text-[14px] text-on-error-container"><AlertCircle size={18} />{error}</div>}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

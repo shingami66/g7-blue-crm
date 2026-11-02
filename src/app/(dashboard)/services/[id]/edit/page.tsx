@@ -9,6 +9,11 @@ import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import EditServiceForm from "./EditServiceForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import PageLocation from "@/components/navigation/PageLocation";
+import { RecordBackButton } from "@/components/navigation/RecordBackButton";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import { appendReturnTo, safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 
 export const dynamic = "force-dynamic";
 
@@ -83,9 +88,31 @@ export default async function EditServicePage({
     );
   }
 
+  const returnTo = safeRecordReturnTo((await searchParams).returnTo, `/services/${service.id}`);
+  const serviceDetailHref = returnTo === `/services/${service.id}` || returnTo.startsWith(`/services/${service.id}?`)
+    ? returnTo
+    : appendReturnTo(`/services/${service.id}`, returnTo);
+
   return (
-    <div className="flex flex-col h-full max-w-5xl mx-auto w-full pb-12">
-      <EditServiceForm service={service} dictionary={dictionary} returnTo={(await searchParams).returnTo} />
-    </div>
+    <PageFrame variant="form">
+      <PageLocation
+        breadcrumbs={{
+          label: dictionary.detail.locationLabel,
+          items: [
+            { label: dictionary.list.title, href: "/services" },
+            { label: service.serviceTitle, href: serviceDetailHref, dir: "auto" },
+            { label: dictionary.form.editTitle, current: true },
+          ],
+        }}
+        returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.detail.backToServices} />}
+      />
+      <PageHeader
+        variant="composed"
+        title={dictionary.form.editTitle}
+        subtitle={dictionary.form.editSubtitle}
+        identifier={<><bdi dir="ltr">{service.serviceNumber}</bdi></>}
+      />
+      <EditServiceForm service={service} dictionary={dictionary} returnTo={returnTo} />
+    </PageFrame>
   );
 }

@@ -141,18 +141,37 @@ test("supplier edit round trip retains detail and original list; invalid origin 
   assert.ok(editPage.includes("returnTo={returnTo}"));
   const form = read("app/(dashboard)/suppliers/[id]/edit/SupplierEditForm.tsx");
   assert.ok(form.includes("router.push(exitHref)"));
-  assert.equal((form.match(/onClick=\{\(\) => push\(exitHref\)\}/g) ?? []).length, 2);
+  assert.equal((form.match(/onClick=\{\(\) => push\(exitHref\)\}/g) ?? []).length, 1);
 });
 
-for (const [file, fallback] of [
-  ["services/new/ServiceForm.tsx", '"/services"'],
-  ["services/[id]/edit/EditServiceForm.tsx", "`/services/${service.id}`"],
-  ["quotations/new/QuotationForm.tsx", "initialData ? `/quotations/${initialData.id}` : `/services/${service.id}`"],
-]) {
+test("supplier create uses a validated list origin for Return and Cancel with a stable fallback", () => {
+  const page = read("app/(dashboard)/suppliers/new/page.tsx");
+  const form = read("app/(dashboard)/suppliers/new/SupplierCreateForm.tsx");
+  assert.ok(page.includes('safeRecordReturnTo((await searchParams).returnTo, "/suppliers")'));
+  assert.ok(page.includes("returnTo={returnTo}"));
+  assert.ok(form.includes('safeRecordReturnTo(returnTo, "/suppliers")'));
+  assert.ok(form.includes("onClick={() => push(exitHref)}"));
+  assert.equal(safeRecordReturnTo(origin, "/suppliers"), origin);
+  for (const invalid of [undefined, "https://evil.example", "//evil.example", "/reports"]) {
+    assert.equal(safeRecordReturnTo(invalid, "/suppliers"), "/suppliers");
+  }
+});
+
+for (const [file, fallback, hasCancel] of [
+  ["services/new/ServiceForm.tsx", '"/services"', true],
+  ["services/[id]/edit/EditServiceForm.tsx", "`/services/${service.id}`", true],
+  ["quotations/new/QuotationForm.tsx", "initialData ? `/quotations/${initialData.id}` : `/services/${service.id}`", false],
+ ] as const) {
   test(`${file}: explicit origin and deterministic deep-link exit wiring`, () => {
     const source = read(`app/(dashboard)/${file}`);
-    assert.ok(source.includes(`safeRecordReturnTo(returnTo, ${fallback})`));
-    assert.ok(source.includes("onClick={() => push(exitHref)}"));
+    if (file.startsWith("quotations/")) {
+      assert.doesNotMatch(source, /safeRecordReturnTo/);
+      assert.ok(read("app/(dashboard)/quotations/new/page.tsx").includes('safeRecordReturnTo(resolvedSearchParams.returnTo, `/services/${service.id}`)'));
+      assert.ok(read("app/(dashboard)/quotations/[id]/edit/page.tsx").includes('safeRecordReturnTo((await searchParams).returnTo, `/quotations/${id}`)'));
+    } else {
+      assert.ok(source.includes(`safeRecordReturnTo(returnTo, ${fallback})`));
+    }
+    assert.equal(source.includes("onClick={() => push(exitHref)}"), hasCancel);
     assert.ok(!source.includes("back()"));
     const target = file.startsWith("services/new") ? "/services" : `/services/${id}`;
     for (const invalid of [undefined, "https://evil.example", "/accounting/journals"]) {
@@ -177,11 +196,10 @@ test("quotation edit route forwards validated origin and detail link retains lis
   assert.equal(safeRecordReturnTo("https://evil.example", `/quotations/${id}`), `/quotations/${id}`);
   const page = read("app/(dashboard)/quotations/[id]/edit/page.tsx");
   assert.ok(page.includes("safeRecordReturnTo((await searchParams).returnTo, `/quotations/${id}`)"));
-  assert.ok(page.includes("returnTo={returnTo}"));
+  assert.ok(page.includes("<RecordBackButton href={returnTo}"));
   assert.ok(read("app/(dashboard)/quotations/[id]/page.tsx").includes("appendReturnTo(`/quotations/${quotation.id}/edit`, appendReturnTo(`/quotations/${quotation.id}`, returnTo))"));
   for (const [route, wiring] of [
     ["services/new/page.tsx", "returnTo={returnTo}"],
-    ["services/[id]/edit/page.tsx", "returnTo={(await searchParams).returnTo}"],
-    ["quotations/new/page.tsx", "returnTo={resolvedSearchParams.returnTo}"],
+    ["services/[id]/edit/page.tsx", "returnTo={returnTo}"],
   ]) assert.ok(read(`app/(dashboard)/${route}`).includes(wiring));
 });

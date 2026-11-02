@@ -5,7 +5,11 @@ import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getSuppliersDictionary } from "@/lib/i18n/dictionaries/suppliers";
 import { getSupplierById } from "@/lib/suppliers/queries";
 import SupplierEditForm from "./SupplierEditForm";
-import { safeRecordReturnTo } from "@/lib/record-navigation/return-to";
+import PageLocation from "@/components/navigation/PageLocation";
+import { RecordBackButton } from "@/components/navigation/RecordBackButton";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import { appendReturnTo, safeRecordReturnTo } from "@/lib/record-navigation/return-to";
 
 export const dynamic = "force-dynamic";
 
@@ -71,6 +75,25 @@ export default async function EditSupplierPage({
   }
 
   const canManageBankDetails = await checkPermission("suppliers:write_bank");
+  const supplierDetailHref = returnTo === `/suppliers/${id}` || returnTo.startsWith(`/suppliers/${id}?`)
+    ? returnTo
+    : appendReturnTo(`/suppliers/${id}`, returnTo);
 
-  return <div className="flex h-full w-full max-w-5xl flex-col pb-12"><SupplierEditForm supplier={result.supplier} dictionary={dictionary} canManageBankDetails={canManageBankDetails} returnTo={returnTo} /></div>;
+  return (
+    <PageFrame variant="form">
+      <PageLocation
+        breadcrumbs={{
+          label: dictionary.detail.locationLabel,
+          items: [
+            { label: dictionary.list.title, href: "/suppliers" },
+            { label: result.supplier.name, href: supplierDetailHref, dir: "auto" },
+            { label: dictionary.form.editTitle, current: true },
+          ],
+        }}
+        returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.form.backToSupplier} />}
+      />
+      <PageHeader variant="composed" title={dictionary.form.editTitle} subtitle={dictionary.form.editSubtitle} />
+      <SupplierEditForm supplier={result.supplier} dictionary={dictionary} canManageBankDetails={canManageBankDetails} returnTo={returnTo} />
+    </PageFrame>
+  );
 }
