@@ -31,10 +31,10 @@ import {
   navigationDictionaryEn,
   type NavigationDictionary,
 } from "@/lib/i18n/dictionaries/navigation";
+import { getReportCenterDictionary } from "@/lib/i18n/dictionaries/report-center";
 
 export type NavSectionKey =
   | "customersAndSales"
-  | "operations"
   | "suppliersAndProcurement"
   | "billingAndPayments"
   | "expensesAndCosting"
@@ -69,7 +69,7 @@ export function getSectionForPathname(pathname: string): NavSectionKey | null {
     return "customersAndSales";
   }
   if (pathname === "/services" || pathname.startsWith("/services/")) {
-    return "operations";
+    return "customersAndSales";
   }
   if (pathname === "/suppliers" || pathname.startsWith("/suppliers/")) {
     return "suppliersAndProcurement";
@@ -116,8 +116,8 @@ export function getSectionForPathname(pathname: string): NavSectionKey | null {
 }
 
 export function isRouteActive(currentPathname: string, targetHref: string): boolean {
-  if (targetHref === "/dashboard") {
-    return currentPathname === "/dashboard";
+  if (targetHref === "/dashboard" || targetHref === "/reports") {
+    return currentPathname === targetHref;
   }
   return currentPathname === targetHref || currentPathname.startsWith(`${targetHref}/`);
 }
@@ -209,13 +209,6 @@ export default function Sidebar({
           href: "/quotations",
           icon: FileText,
         },
-      ],
-    },
-    {
-      key: "operations",
-      title: dictionary.sections.operations,
-      icon: BriefcaseBusiness,
-      children: [
         {
           key: "services",
           label: dictionary.modules.services,
@@ -300,12 +293,20 @@ export default function Sidebar({
           key: "reports" as const,
           title: dictionary.modules.reports,
           icon: BarChart3,
-          children: authorizedReports.map((report) => ({
-            key: report.key,
-            label: report.title,
-            href: report.route,
-            icon: BarChart3,
-          })),
+          children: [
+            {
+              key: "report-center",
+              label: getReportCenterDictionary(locale).title,
+              href: "/reports",
+              icon: BarChart3,
+            },
+            ...authorizedReports.map((report) => ({
+              key: report.key,
+              label: report.title,
+              href: report.route,
+              icon: BarChart3,
+            })),
+          ],
         }]
       : []),
     {
@@ -446,6 +447,7 @@ export default function Sidebar({
               <PendingLink
                 key={child.href}
                 href={child.href}
+                aria-current={active ? "page" : undefined}
                 pendingLabel={child.label}
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.03em] ${
@@ -518,6 +520,7 @@ export default function Sidebar({
           return (
             <PendingLink
               href="/dashboard"
+              aria-current={active ? "page" : undefined}
               pendingLabel={dictionary.modules.dashboard}
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold ${

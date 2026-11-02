@@ -9,6 +9,7 @@ import {
   navigationDictionaryEn,
 } from "../../lib/i18n/dictionaries/navigation.ts";
 import { getReportDefinitions } from "../../lib/reports/catalog.ts";
+import { getReportCenterDictionary } from "../../lib/i18n/dictionaries/report-center.ts";
 import type { ReportNavigationItem } from "../../lib/reports/types.ts";
 
 const require = createRequire(import.meta.url);
@@ -126,6 +127,9 @@ function renderSidebar(props: {
   canViewAccounting?: boolean;
   canManageArBridge?: boolean;
   canReconcileBank?: boolean;
+  canReadSupplierBills?: boolean;
+  canReadSupplierPayments?: boolean;
+  canReadSupplierAdvances?: boolean;
   canAccessAccountingSetup?: boolean;
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
@@ -145,7 +149,6 @@ function renderSidebar(props: {
 
 const ALL_SECTION_KEYS = [
   "customersAndSales",
-  "operations",
   "suppliersAndProcurement",
   "billingAndPayments",
   "expensesAndCosting",
@@ -203,7 +206,7 @@ test("W5-A11Y-001: mobile sidebar exposes accessible disclosure button, closed-d
   assert.ok(html.includes('href="/reports/accounts-receivable"'));
   assert.ok(html.includes('href="/reports/accounts-payable"'));
   assert.ok(html.includes('href="/reports/event-economics"'));
-  assert.ok(!html.includes('href="/reports"'));
+  assert.ok(html.includes('href="/reports"'));
   assert.ok(html.includes('href="/settings"'));
 
   // Non-admin view must not render admin links
@@ -262,31 +265,72 @@ test("AR bridge navigation is available to scoped managers without exposing othe
   assert.ok(arabicRtl.includes('dir="rtl"'));
 });
 
-test("1. Dashboard remains standalone and the Reports section follows report-route state", () => {
-  // On /dashboard:
+test("Accounts Payable preserves the permission-filtered accordion for zero, one, two, and three children", () => {
+  const noAccess = renderSidebar({ currentPathname: "/supplier-bills" });
+  assert.ok(!noAccess.includes('id="nav-section-trigger-accountsPayable"'));
+
+  const billsOnly = renderSidebar({ canReadSupplierBills: true, currentPathname: "/supplier-bills" });
+  assert.equal(getSectionExpandedState(billsOnly, "accountsPayable"), true);
+  assert.ok(billsOnly.includes('id="nav-section-content-accountsPayable"'));
+  assert.ok(billsOnly.includes('href="/supplier-bills"'));
+  assert.ok(!billsOnly.includes('href="/supplier-payments"'));
+  assert.ok(!billsOnly.includes('href="/supplier-advances"'));
+
+  const billsAndPayments = renderSidebar({
+    canReadSupplierBills: true,
+    canReadSupplierPayments: true,
+    currentPathname: "/supplier-bills",
+  });
+  assert.ok(billsAndPayments.includes('href="/supplier-bills"'));
+  assert.ok(billsAndPayments.includes('href="/supplier-payments"'));
+  assert.ok(!billsAndPayments.includes('href="/supplier-advances"'));
+
+  const allPayables = renderSidebar({
+    canReadSupplierBills: true,
+    canReadSupplierPayments: true,
+    canReadSupplierAdvances: true,
+    currentPathname: "/supplier-bills",
+  });
+  for (const route of ["/supplier-bills", "/supplier-payments", "/supplier-advances"]) {
+    assert.ok(allPayables.includes(`href="${route}"`));
+  }
+});
+
+test("1. Dashboard remains standalone and the Reports accordion follows report-route state", () => {
   const dashHtml = renderSidebar({ currentPathname: "/dashboard" });
   for (const key of ALL_SECTION_KEYS) {
     assert.equal(getSectionExpandedState(dashHtml, key), false, `Section ${key} must be collapsed on /dashboard`);
   }
-  assert.ok(
-    dashHtml.includes('href="/dashboard"') && dashHtml.includes("border-tertiary-fixed"),
-    "Dashboard link must be active on /dashboard",
-  );
+  assert.ok(dashHtml.includes('href="/dashboard"') && dashHtml.includes("border-tertiary-fixed"));
+  assert.ok(dashHtml.includes('href="/dashboard" aria-current="page"'));
+  assert.ok(!dashHtml.includes('href="/customers" aria-current="page"'));
 
-  // The Reports landing remains reachable through secondary page navigation, not a standalone sidebar item.
-  const repHtml = renderSidebar({ currentPathname: "/reports" });
-  assert.equal(getSectionExpandedState(repHtml, "reports"), true, "Reports accordion must expand on /reports");
-  assert.ok(!repHtml.includes('href="/reports"'), "Reports landing must not replace direct report children");
-  assert.ok(repHtml.includes('href="/reports/accounts-receivable"'));
+  const reportsHtml = renderSidebar({ currentPathname: "/reports" });
+  assert.equal(getSectionExpandedState(reportsHtml, "reports"), true, "Reports accordion must expand on /reports");
+  assert.ok(reportsHtml.includes(`href="/reports"`));
+  assert.ok(reportsHtml.includes(`>${getReportCenterDictionary("en").title}<`));
+  assert.ok(reportsHtml.includes('href="/reports" aria-current="page"'));
+  assert.ok(reportsHtml.indexOf('href="/reports"') < reportsHtml.indexOf('href="/reports/accounts-receivable"'));
+  assert.ok(!reportsHtml.includes('href="/reports/accounts-receivable" aria-current="page"'));
+
+  const noReportsHtml = renderSidebar({ currentPathname: "/reports", authorizedReports: [] });
+  assert.ok(!noReportsHtml.includes('id="nav-section-trigger-reports"'), "Reports section must be hidden with no authorized reports");
+  assert.ok(!noReportsHtml.includes('href="/reports"'));
 });
 
-test("Reports section directly activates each authorized report and hides items absent from server permission results", () => {
+test("Reports section activates only the matching authorized report and omits unauthorized shortcuts", () => {
   const definitions = getReportDefinitions("en").map(({ key, title, route }) => ({ key, title, route }));
-  for (const route of ["/reports/accounts-receivable", "/reports/accounts-payable", "/reports/event-economics"]) {
+  const routes = ["/reports/accounts-receivable", "/reports/accounts-payable", "/reports/event-economics"];
+  for (const route of routes) {
     const html = renderSidebar({ currentPathname: route, authorizedReports: definitions });
     assert.equal(getSectionExpandedState(html, "reports"), true);
     assert.ok(html.includes(`href="${route}"`));
-    assert.match(html, new RegExp(`href="${route}"[^>]*class="[^"]*border-tertiary-fixed`));
+    assert.ok(html.includes(`href="${route}" aria-current="page"`));
+    assert.match(html, new RegExp(`href="${route.replaceAll("/", "\\/")}"[^>]*class="[^"]*border-tertiary-fixed`));
+    assert.ok(!html.includes('href="/reports" aria-current="page"'));
+    for (const candidate of routes) {
+      assert.equal(html.includes(`href="${candidate}" aria-current="page"`), candidate === route);
+    }
   }
 
   const limited = renderSidebar({
@@ -296,52 +340,54 @@ test("Reports section directly activates each authorized report and hides items 
   assert.ok(!limited.includes('href="/reports/event-economics"'));
   assert.ok(!limited.includes("Event Cost & Margin"));
   assert.ok(limited.includes('href="/reports/accounts-receivable"'));
+  assert.ok(!limited.includes('href="/reports" aria-current="page"'));
 });
 
-test("Reports section title and direct report labels use the active EN/AR catalog locale", () => {
+test("Reports section and Report Center labels use the active EN/AR catalog locale", () => {
   const en = renderSidebar({ currentPathname: "/reports/accounts-receivable", locale: "en" });
   const ar = renderSidebar({ currentPathname: "/reports/accounts-receivable", locale: "ar", shellDirection: "rtl" });
   assert.ok(en.includes(">Reports<"));
+  assert.ok(en.includes(`>${getReportCenterDictionary("en").title}<`));
   for (const label of ["Customer Receivables", "Supplier Payables", "Event Cost &amp; Margin"]) assert.ok(en.includes(label));
   assert.ok(ar.includes(">التقارير<"));
+  assert.ok(ar.includes(`>${getReportCenterDictionary("ar").title}<`));
   assert.ok(ar.includes("مستحقات العملاء"));
   assert.ok(ar.includes("مستحقات الموردين"));
   assert.ok(ar.includes("تكاليف وهوامش الفعاليات"));
 });
 
-test("2 & 3. /customers expands Customers & Sales and renders Customers and Quotations underneath", () => {
+test("2 & 3. Customers & Sales orders Customers, Quotations, and Events", () => {
   const html = renderSidebar({ currentPathname: "/customers" });
 
   assert.equal(getSectionExpandedState(html, "customersAndSales"), true, "Customers & Sales must be expanded on /customers");
-  assert.equal(getSectionExpandedState(html, "operations"), false, "Operations must be collapsed on /customers");
-  assert.equal(getSectionExpandedState(html, "suppliersAndProcurement"), false, "Suppliers & Procurement must be collapsed on /customers");
-  assert.equal(getSectionExpandedState(html, "billingAndPayments"), false, "Billing & Payments must be collapsed on /customers");
-  assert.equal(getSectionExpandedState(html, "administration"), false, "Administration must be collapsed on /customers");
-
-  // Both children appear under Customers & Sales container
+  assert.ok(!html.includes('id="nav-section-trigger-operations"'), "The Operations section must not render in the Sidebar");
   assert.ok(html.includes('id="nav-section-content-customersAndSales"'));
-  assert.ok(html.includes('href="/customers"'));
-  assert.ok(html.includes('href="/quotations"'));
+  assert.ok(html.includes('href="/services"'));
+  assert.ok(html.indexOf('href="/customers"') < html.indexOf('href="/quotations"'));
+  assert.ok(html.indexOf('href="/quotations"') < html.indexOf('href="/services"'));
+  assert.ok(html.includes('href="/customers" aria-current="page"'));
 
-  // When on /quotations:
-  const quotHtml = renderSidebar({ currentPathname: "/quotations" });
-  assert.equal(getSectionExpandedState(quotHtml, "customersAndSales"), true, "Customers & Sales must be expanded on /quotations");
+  const quotationsHtml = renderSidebar({ currentPathname: "/quotations" });
+  assert.equal(getSectionExpandedState(quotationsHtml, "customersAndSales"), true);
+  assert.ok(quotationsHtml.includes('href="/quotations" aria-current="page"'));
 });
 
-test("4. /services expands Operations accordion and activates Services", () => {
+test("4. /services expands Customers & Sales and activates Events", () => {
   const html = renderSidebar({ currentPathname: "/services" });
 
-  assert.equal(getSectionExpandedState(html, "operations"), true, "Operations must be expanded on /services");
-  assert.equal(getSectionExpandedState(html, "customersAndSales"), false, "Customers & Sales must be collapsed on /services");
-  assert.ok(html.includes('id="nav-section-content-operations"'));
-  assert.ok(html.includes('href="/services"'));
+  assert.equal(getSectionExpandedState(html, "customersAndSales"), true, "Customers & Sales must expand on /services");
+  assert.ok(!html.includes('id="nav-section-trigger-operations"'), "The Operations section must not render in the Sidebar");
+  assert.ok(html.includes('id="nav-section-content-customersAndSales"'));
+  assert.ok(html.indexOf('href="/customers"') < html.indexOf('href="/quotations"'));
+  assert.ok(html.indexOf('href="/quotations"') < html.indexOf('href="/services"'));
+  assert.ok(html.includes('href="/services" aria-current="page"'));
+  assert.ok(!html.includes(">Operations<"));
 });
 
 test("5. /suppliers expands Suppliers & Procurement accordion and activates Suppliers", () => {
   const html = renderSidebar({ currentPathname: "/suppliers" });
 
   assert.equal(getSectionExpandedState(html, "suppliersAndProcurement"), true, "Suppliers & Procurement must be expanded on /suppliers");
-  assert.equal(getSectionExpandedState(html, "operations"), false, "Operations must be collapsed on /suppliers");
   assert.ok(html.includes('id="nav-section-content-suppliersAndProcurement"'));
   assert.ok(html.includes('href="/suppliers"'));
 });
@@ -435,7 +481,7 @@ test("11. Collapsed child navigation is hidden and not rendered as active naviga
   );
 
   // Other sections are collapsed: must have hidden attribute
-  for (const key of ["operations", "suppliersAndProcurement", "billingAndPayments", "expensesAndCosting", "administration"]) {
+  for (const key of ["suppliersAndProcurement", "billingAndPayments", "expensesAndCosting", "administration"]) {
     const collapsedPattern = new RegExp(`id="nav-section-content-${key}"[^>]*hidden=""`);
     assert.ok(collapsedPattern.test(html), `Collapsed section ${key} must have hidden attribute`);
   }
@@ -460,7 +506,7 @@ test("12. Sidebar supports Arabic RTL rendering with localized accessible names 
 
   // Localized section titles in Arabic
   assert.ok(html.includes(navigationDictionaryAr.sections.customersAndSales), "Must render Arabic Customers & Sales");
-  assert.ok(html.includes(navigationDictionaryAr.sections.operations), "Must render Arabic Operations");
+  assert.ok(html.includes(navigationDictionaryAr.modules.services), "Must render Arabic Events");
   assert.ok(html.includes(navigationDictionaryAr.sections.suppliersAndProcurement), "Must render Arabic Suppliers & Procurement");
   assert.ok(html.includes(navigationDictionaryAr.sections.billingAndPayments), "Must render Arabic Billing & Payments");
   assert.ok(html.includes(navigationDictionaryAr.sections.administration), "Must render Arabic Administration");
@@ -480,13 +526,11 @@ test("13. Sidebar menu and sections dictionary strings are defined and localized
   assert.equal(navigationDictionaryAr.menu.mainNavigation, "التنقل الرئيسي");
 
   assert.equal(navigationDictionaryEn.sections.customersAndSales, "Customers & Sales");
-  assert.equal(navigationDictionaryEn.sections.operations, "Operations");
   assert.equal(navigationDictionaryEn.sections.suppliersAndProcurement, "Suppliers & Procurement");
   assert.equal(navigationDictionaryEn.sections.billingAndPayments, "Billing & Payments");
   assert.equal(navigationDictionaryEn.sections.administration, "Administration");
 
   assert.equal(navigationDictionaryAr.sections.customersAndSales, "العملاء والمبيعات");
-  assert.equal(navigationDictionaryAr.sections.operations, "العمليات");
   assert.equal(navigationDictionaryAr.sections.suppliersAndProcurement, "الموردون والمشتريات");
   assert.equal(navigationDictionaryAr.sections.billingAndPayments, "الفواتير والمدفوعات");
   assert.equal(navigationDictionaryAr.sections.administration, "الإدارة");
@@ -495,7 +539,7 @@ test("13. Sidebar menu and sections dictionary strings are defined and localized
 test("14. Deep contextual routes expand parent section and activate parent child without adding deep routes to global sidebar", () => {
   // Nested /services route
   const srvHtml = renderSidebar({ currentPathname: "/services/srv-123/procurement" });
-  assert.equal(getSectionExpandedState(srvHtml, "operations"), true, "Deep service procurement route must expand Operations");
+  assert.equal(getSectionExpandedState(srvHtml, "customersAndSales"), true, "Deep service procurement route must expand Customers & Sales");
   assert.ok(srvHtml.includes('href="/services"') && srvHtml.includes("border-tertiary-fixed"), "Services child link must be active");
   assert.ok(!srvHtml.includes('href="/services/srv-123/procurement"'), "Deep procurement route must NOT be a global sidebar link");
 
@@ -584,7 +628,7 @@ test("19. /advances and /advances/:id expand Expenses & Costing accordion and ac
   );
 
   // All other sections must be collapsed
-  const otherSections = ["customersAndSales", "operations", "suppliersAndProcurement", "billingAndPayments", "administration"] as const;
+  const otherSections = ["customersAndSales", "suppliersAndProcurement", "billingAndPayments", "administration"] as const;
   for (const key of otherSections) {
     assert.equal(
       getSectionExpandedState(advHtml, key),

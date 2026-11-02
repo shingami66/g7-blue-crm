@@ -43,7 +43,6 @@ export interface NavigationDictionary {
   };
   sections: {
     customersAndSales: string;
-    operations: string;
     suppliersAndProcurement: string;
     billingAndPayments: string;
     expensesAndCosting: string;
@@ -98,7 +97,6 @@ export const navigationDictionaryEn: NavigationDictionary = {
   },
   sections: {
     customersAndSales: "Customers & Sales",
-    operations: "Operations",
     suppliersAndProcurement: "Suppliers & Procurement",
     billingAndPayments: "Billing & Payments",
     expensesAndCosting: "Expenses & Costing",
@@ -153,7 +151,6 @@ export const navigationDictionaryAr: NavigationDictionary = {
   },
   sections: {
     customersAndSales: "العملاء والمبيعات",
-    operations: "العمليات",
     suppliersAndProcurement: "الموردون والمشتريات",
     billingAndPayments: "الفواتير والمدفوعات",
     expensesAndCosting: "المصروفات والتكاليف",
