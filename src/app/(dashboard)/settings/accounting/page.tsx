@@ -16,7 +16,7 @@ export default async function AccountingSetupPage() {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getAccountingSetupDictionary(locale);
   const navigation = locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn;
-  const settingsLabel = navigation.modules.settings;
+  const accountingLabel = navigation.modules.accounting;
   let status: AccountingSetupStatus | null = null;
   let targets: AccountingSetupTarget[] = [];
   let accessDenied = false;
@@ -44,8 +44,8 @@ export default async function AccountingSetupPage() {
     <div dir={getDirection(locale)} className="min-w-0">
       <PageFrame variant="workspace">
         <PageLocation breadcrumbs={{
-          label: settingsLabel,
-          items: [{ label: settingsLabel }, { label: dictionary.title, current: true }],
+          label: accountingLabel,
+          items: [{ label: accountingLabel }, { label: dictionary.title, current: true }],
         }} />
         <PageHeader variant="composed" title={dictionary.title} subtitle={dictionary.subtitle} />
 

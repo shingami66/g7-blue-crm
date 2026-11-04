@@ -21,7 +21,7 @@ export default async function AccountingPermissionsPage({ searchParams }: PagePr
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getAccountingPermissionsDictionary(locale);
   const setupDictionary = getAccountingSetupDictionary(locale);
-  const settingsLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.settings;
+  const accountingLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.accounting;
   let targets: AccountingSetupTarget[] = [];
   let assignments: AccountingCapabilityAssignment[] = [];
   let selectedTargetId: string | null = null;
@@ -49,9 +49,9 @@ export default async function AccountingPermissionsPage({ searchParams }: PagePr
     <div dir={getDirection(locale)} className="min-w-0">
       <PageFrame variant="workspace">
         <PageLocation breadcrumbs={{
-          label: settingsLabel,
+          label: accountingLabel,
           items: [
-            { label: settingsLabel },
+            { label: accountingLabel },
             { label: setupDictionary.title },
             { label: dictionary.title, current: true },
           ],

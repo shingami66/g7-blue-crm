@@ -19,7 +19,7 @@ export default async function AccountingStatementMappingsPage() {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getAccountingStatementMappingsDictionary(locale);
   const setupDictionary = getAccountingSetupDictionary(locale);
-  const settingsLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.settings;
+  const accountingLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.accounting;
   let state: StatementMappingsPageState = "dependency-failure";
   let mappings: AccountingStatementMappingReadModel = { state: "NOT_INITIALIZED" };
   let accounts: AccountingAccountVersion[] = [];
@@ -52,9 +52,9 @@ export default async function AccountingStatementMappingsPage() {
       <PageFrame variant="workspace">
         <PageLocation
           breadcrumbs={{
-            label: settingsLabel,
+            label: accountingLabel,
             items: [
-              { label: settingsLabel },
+              { label: accountingLabel },
               { label: setupDictionary.title },
               { label: dictionary.title, current: true },
             ],

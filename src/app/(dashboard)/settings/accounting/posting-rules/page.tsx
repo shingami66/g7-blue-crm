@@ -17,7 +17,7 @@ export default async function AccountingPostingRulesPage() {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getAccountingPostingRulesDictionary(locale);
   const setupDictionary = getAccountingSetupDictionary(locale);
-  const settingsLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.settings;
+  const accountingLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.accounting;
   let state: PostingRulesPageState = "dependency-failure";
   let rules: AccountingPostingRuleVersion[] = [];
   let accounts: AccountingAccountVersion[] = [];
@@ -49,9 +49,9 @@ export default async function AccountingPostingRulesPage() {
     <div dir={getDirection(locale)} className="min-w-0">
       <PageFrame variant="workspace">
         <PageLocation breadcrumbs={{
-          label: settingsLabel,
+          label: accountingLabel,
           items: [
-            { label: settingsLabel },
+            { label: accountingLabel },
             { label: setupDictionary.title },
             { label: dictionary.title, current: true },
           ],

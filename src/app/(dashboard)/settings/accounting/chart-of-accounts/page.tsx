@@ -17,7 +17,7 @@ export default async function ChartOfAccountsPage() {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getAccountingChartDictionary(locale);
   const setupDictionary = getAccountingSetupDictionary(locale);
-  const settingsLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.settings;
+  const accountingLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.accounting;
   let state: ChartPageState = "dependency-failure";
   let accounts: AccountingAccountVersion[] = [];
   let canManage = false;
@@ -51,9 +51,9 @@ export default async function ChartOfAccountsPage() {
     <div dir={getDirection(locale)} className="min-w-0">
       <PageFrame variant="workspace">
         <PageLocation breadcrumbs={{
-          label: settingsLabel,
+          label: accountingLabel,
           items: [
-            { label: settingsLabel },
+            { label: accountingLabel },
             { label: setupDictionary.title },
             { label: dictionary.title, current: true },
           ],

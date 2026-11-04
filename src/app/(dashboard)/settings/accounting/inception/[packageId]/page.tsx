@@ -20,7 +20,7 @@ export default async function AccountingInceptionPackagePage({ params }: { param
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getAccountingInceptionDictionary(locale);
   const setupDictionary = getAccountingSetupDictionary(locale);
-  const settingsLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.settings;
+  const accountingLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.accounting;
   let state: InceptionDetailPageState = "dependency-failure";
   let detail: AccountingInceptionPackageDetail | null = null;
   let isCreator = false;
@@ -63,9 +63,9 @@ export default async function AccountingInceptionPackagePage({ params }: { param
       <PageFrame variant="record">
         <PageLocation
           breadcrumbs={{
-            label: settingsLabel,
+            label: accountingLabel,
             items: [
-              { label: settingsLabel },
+              { label: accountingLabel },
               { label: setupDictionary.title },
               { label: dictionary.accountingInceptionLabel, href: "/settings/accounting/inception" },
               { label: dictionary.packageDetailLabel, current: true },

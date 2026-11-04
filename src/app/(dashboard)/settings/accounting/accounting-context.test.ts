@@ -33,7 +33,8 @@ test("all seven Setup workspaces use the shared wide shell and keep their specia
     assert.ok(source.includes(`<${route.client}`), `${route.path} must keep ${route.client} connected`);
 
     const items = breadcrumbItems(source);
-    assert.match(items, /\{ label: settingsLabel \}/, route.path);
+    assert.match(source, /const accountingLabel = .*modules\.accounting;/, route.path);
+    assert.match(items, /\{ label: accountingLabel \}/, route.path);
     if (!route.root) assert.match(items, /\{ label: setupDictionary\.title \}/, route.path);
     assert.doesNotMatch(items, /href\s*:/, `${route.path} must not assume access to a parent Setup destination`);
     if (route.inception) assert.match(items, /dictionary\.accountingInceptionLabel, current: true/);
@@ -55,6 +56,17 @@ test("existing Setup and Inception Return destinations use the shared labeled co
   for (const route of workspaceRoutes.filter((item) => ["chart-of-accounts", "periods", "posting-rules", "permissions"].some((part) => item.path.includes(`/${part}/`)))) {
     assert.doesNotMatch(read(route.path), /RecordBackButton|returnControl/, `${route.path} must not gain an unconditional parent return`);
   }
+});
+
+test("Inception Package Detail uses the localized Accounting Setup breadcrumb hierarchy", () => {
+  const detail = read("app/(dashboard)/settings/accounting/inception/[packageId]/page.tsx");
+  const items = breadcrumbItems(detail);
+  assert.match(detail, /const accountingLabel = .*modules\.accounting;/);
+  assert.match(items, /\{ label: accountingLabel \}/);
+  assert.match(items, /\{ label: setupDictionary\.title \}/);
+  assert.match(items, /\{ label: dictionary\.accountingInceptionLabel, href: "\/settings\/accounting\/inception" \}/);
+  assert.match(items, /\{ label: dictionary\.packageDetailLabel, current: true \}/);
+  assert.doesNotMatch(items, /href:\s*"\/accounting"/);
 });
 
 test("Inception Package Detail shows its LTR identifier only in the authorized ready state", () => {

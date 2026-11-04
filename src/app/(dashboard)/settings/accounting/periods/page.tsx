@@ -17,7 +17,7 @@ export default async function AccountingPeriodsPage() {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getAccountingPeriodsDictionary(locale);
   const setupDictionary = getAccountingSetupDictionary(locale);
-  const settingsLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.settings;
+  const accountingLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.accounting;
   let state: PeriodsPageState = "dependency-failure";
   let periods: AccountingPeriodVersion[] = [];
   let canManage = false;
@@ -48,9 +48,9 @@ export default async function AccountingPeriodsPage() {
     <div dir={getDirection(locale)} className="min-w-0">
       <PageFrame variant="workspace">
         <PageLocation breadcrumbs={{
-          label: settingsLabel,
+          label: accountingLabel,
           items: [
-            { label: settingsLabel },
+            { label: accountingLabel },
             { label: setupDictionary.title },
             { label: dictionary.title, current: true },
           ],

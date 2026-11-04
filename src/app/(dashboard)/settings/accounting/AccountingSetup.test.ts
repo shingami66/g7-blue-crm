@@ -164,6 +164,9 @@ test("Accounting Setup route renders explicit not-initialized and recovery state
   pageState.status = { state: "NOT_INITIALIZED", can_bootstrap: true };
   let html = await renderPage();
   assert.match(html, /dir="ltr"/);
+  assert.match(html, /aria-label="Accounting"/);
+  assert.match(html, /<bdi dir="auto">Accounting<\/bdi>/);
+  assert.match(html, /<bdi dir="auto">Accounting setup<\/bdi>/);
   assert.match(html, /Accounting foundation not initialized/);
   assert.match(html, /Initialize accounting setup/);
   assert.match(html, /Initial authority/);
@@ -191,6 +194,9 @@ test("Accounting Setup route renders initialized profile and progress in Arabic 
   };
   const html = await renderPage();
   assert.match(html, /dir="rtl"/);
+  assert.match(html, /aria-label="المحاسبة"/);
+  assert.match(html, /<bdi dir="auto">المحاسبة<\/bdi>/);
+  assert.match(html, /<bdi dir="auto">إعداد المحاسبة<\/bdi>/);
   assert.match(html, /إعداد المحاسبة/);
   assert.match(html, /دليل الحسابات/);
   assert.match(html, /فتح الفترات المحاسبية/);

@@ -101,6 +101,9 @@ export function getSectionForPathname(pathname: string): NavSectionKey | null {
   if (pathname === "/supplier-advances" || pathname.startsWith("/supplier-advances/")) {
     return "accountsPayable";
   }
+  if (pathname === "/settings/accounting" || pathname.startsWith("/settings/accounting/")) {
+    return "accountingOperations";
+  }
   if (pathname === "/accounting" || pathname.startsWith("/accounting/")) {
     return "accountingOperations";
   }
@@ -118,6 +121,9 @@ export function getSectionForPathname(pathname: string): NavSectionKey | null {
 export function isRouteActive(currentPathname: string, targetHref: string): boolean {
   if (targetHref === "/dashboard" || targetHref === "/reports") {
     return currentPathname === targetHref;
+  }
+  if (targetHref === "/settings" && getSectionForPathname(currentPathname) === "accountingOperations") {
+    return false;
   }
   return currentPathname === targetHref || currentPathname.startsWith(`${targetHref}/`);
 }
@@ -217,7 +223,7 @@ export default function Sidebar({
         },
       ],
     },
-    ...(canViewAccounting || canReconcileBank || canManageArBridge ? [{
+    ...(canViewAccounting || canReconcileBank || canManageArBridge || canAccessAccountingSetup ? [{
       key: "accountingOperations" as const,
       title: dictionary.sections.accountingOperations,
       icon: BookOpen,
@@ -244,6 +250,12 @@ export default function Sidebar({
           key: "period-close",
           label: dictionary.modules.periodClose,
           href: "/accounting/period-close",
+          icon: Calculator,
+        }] : []),
+        ...(canAccessAccountingSetup ? [{
+          key: "accounting-setup",
+          label: dictionary.modules.accounting,
+          href: "/settings/accounting",
           icon: Calculator,
         }] : []),
       ],
@@ -364,14 +376,6 @@ export default function Sidebar({
         href: "/settings",
         icon: Settings,
       },
-      ...(canAccessAccountingSetup
-        ? [{
-            key: "accounting",
-            label: dictionary.modules.accounting,
-            href: "/settings/accounting",
-            icon: Calculator,
-          }]
-        : []),
       ...(isAdmin
         ? [
             {
