@@ -300,12 +300,6 @@ export default function Sidebar({
               href: "/reports",
               icon: BarChart3,
             },
-            ...authorizedReports.map((report) => ({
-              key: report.key,
-              label: report.title,
-              href: report.route,
-              icon: BarChart3,
-            })),
           ],
         }]
       : []),
@@ -393,9 +387,9 @@ export default function Sidebar({
 
   const renderSection = (section: NavSection) => {
     const isExpanded = expandedSection === section.key;
-    const hasActiveChild = section.children.some((child) =>
-      isRouteActive(pathname, child.href),
-    );
+    const hasActiveRoute =
+      (section.key === "reports" && getSectionForPathname(pathname) === "reports") ||
+      section.children.some((child) => isRouteActive(pathname, child.href));
     const SectionIcon = section.icon;
 
     return (
@@ -407,7 +401,7 @@ export default function Sidebar({
           aria-controls={`nav-section-content-${section.key}`}
           onClick={() => toggleSection(section.key)}
           className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-start w-full ${
-            isExpanded || hasActiveChild
+            isExpanded || hasActiveRoute
               ? "text-white bg-on-primary-fixed-variant/5"
               : "text-white/70 hover:text-white hover:bg-on-primary-fixed-variant/5"
           }`}
@@ -415,7 +409,7 @@ export default function Sidebar({
           <div className="flex items-center gap-3 min-w-0">
             <SectionIcon
               size={20}
-              className={isExpanded || hasActiveChild ? "opacity-100" : "opacity-70"}
+              className={isExpanded || hasActiveRoute ? "opacity-100" : "opacity-70"}
               aria-hidden="true"
             />
             <span className="truncate">{section.title}</span>

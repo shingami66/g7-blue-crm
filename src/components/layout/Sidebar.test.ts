@@ -13,6 +13,7 @@ import { getReportCenterDictionary } from "../../lib/i18n/dictionaries/report-ce
 import type { ReportNavigationItem } from "../../lib/reports/types.ts";
 
 const require = createRequire(import.meta.url);
+const { JSDOM } = require("jsdom") as { JSDOM: new (html: string, options?: { url: string }) => { window: Window & typeof globalThis } };
 const tsUrl = pathToFileURL(require.resolve("typescript")).href;
 
 const nextNavDataUrl =
@@ -203,9 +204,6 @@ test("W5-A11Y-001: mobile sidebar exposes accessible disclosure button, closed-d
   assert.ok(html.includes('href="/invoices"'));
   assert.ok(html.includes('href="/suppliers"'));
   assert.ok(html.includes('href="/payments"'));
-  assert.ok(html.includes('href="/reports/accounts-receivable"'));
-  assert.ok(html.includes('href="/reports/accounts-payable"'));
-  assert.ok(html.includes('href="/reports/event-economics"'));
   assert.ok(html.includes('href="/reports"'));
   assert.ok(html.includes('href="/settings"'));
 
@@ -310,50 +308,102 @@ test("1. Dashboard remains standalone and the Reports accordion follows report-r
   assert.ok(reportsHtml.includes(`href="/reports"`));
   assert.ok(reportsHtml.includes(`>${getReportCenterDictionary("en").title}<`));
   assert.ok(reportsHtml.includes('href="/reports" aria-current="page"'));
-  assert.ok(reportsHtml.indexOf('href="/reports"') < reportsHtml.indexOf('href="/reports/accounts-receivable"'));
-  assert.ok(!reportsHtml.includes('href="/reports/accounts-receivable" aria-current="page"'));
+  assert.ok(!reportsHtml.includes('href="/reports/'));
 
   const noReportsHtml = renderSidebar({ currentPathname: "/reports", authorizedReports: [] });
   assert.ok(!noReportsHtml.includes('id="nav-section-trigger-reports"'), "Reports section must be hidden with no authorized reports");
   assert.ok(!noReportsHtml.includes('href="/reports"'));
 });
 
-test("Reports section activates only the matching authorized report and omits unauthorized shortcuts", () => {
-  const definitions = getReportDefinitions("en").map(({ key, title, route }) => ({ key, title, route }));
-  const routes = ["/reports/accounts-receivable", "/reports/accounts-payable", "/reports/event-economics"];
-  for (const route of routes) {
-    const html = renderSidebar({ currentPathname: route, authorizedReports: definitions });
-    assert.equal(getSectionExpandedState(html, "reports"), true);
-    assert.ok(html.includes(`href="${route}"`));
-    assert.ok(html.includes(`href="${route}" aria-current="page"`));
-    assert.match(html, new RegExp(`href="${route.replaceAll("/", "\\/")}"[^>]*class="[^"]*border-tertiary-fixed`));
-    assert.ok(!html.includes('href="/reports" aria-current="page"'));
-    for (const candidate of routes) {
-      assert.equal(html.includes(`href="${candidate}" aria-current="page"`), candidate === route);
+test("Reports keeps only localized Report Center for one or many authorized reports and hides for none", () => {
+  for (const locale of ["en", "ar"] as const) {
+    const definitions = getReportDefinitions(locale);
+    for (const authorizedReports of [[], definitions.slice(0, 1), definitions]) {
+      const html = renderSidebar({ currentPathname: "/reports", locale, shellDirection: locale === "ar" ? "rtl" : "ltr", authorizedReports });
+      const doc = new JSDOM(html).window.document;
+      const trigger = doc.getElementById("nav-section-trigger-reports");
+      if (authorizedReports.length === 0) {
+        assert.equal(trigger, null);
+        assert.equal(doc.querySelector('a[href="/reports"]'), null);
+        continue;
+      }
+      assert.equal(trigger!.tagName, "BUTTON");
+      assert.equal(trigger!.getAttribute("aria-expanded"), "true");
+      assert.equal(trigger!.getAttribute("aria-controls"), "nav-section-content-reports");
+      assert.equal(trigger!.textContent, locale === "ar" ? "التقارير" : "Reports");
+      const links = doc.querySelectorAll("#nav-section-content-reports a");
+      assert.equal(links.length, 1);
+      assert.equal(links[0].getAttribute("href"), "/reports");
+      assert.equal(links[0].textContent, locale === "ar" ? "مركز التقارير" : "Report Center");
+      assert.equal(links[0].getAttribute("aria-current"), "page");
+      assert.equal(doc.querySelectorAll('a[href^="/reports/"]').length, 0);
     }
   }
-
-  const limited = renderSidebar({
-    currentPathname: "/reports/event-economics",
-    authorizedReports: definitions.filter((report) => report.key !== "event_economics"),
-  });
-  assert.ok(!limited.includes('href="/reports/event-economics"'));
-  assert.ok(!limited.includes("Event Cost & Margin"));
-  assert.ok(limited.includes('href="/reports/accounts-receivable"'));
-  assert.ok(!limited.includes('href="/reports" aria-current="page"'));
 });
 
-test("Reports section and Report Center labels use the active EN/AR catalog locale", () => {
-  const en = renderSidebar({ currentPathname: "/reports/accounts-receivable", locale: "en" });
-  const ar = renderSidebar({ currentPathname: "/reports/accounts-receivable", locale: "ar", shellDirection: "rtl" });
-  assert.ok(en.includes(">Reports<"));
-  assert.ok(en.includes(`>${getReportCenterDictionary("en").title}<`));
-  for (const label of ["Customer Receivables", "Supplier Payables", "Event Cost &amp; Margin"]) assert.ok(en.includes(label));
-  assert.ok(ar.includes(">التقارير<"));
-  assert.ok(ar.includes(`>${getReportCenterDictionary("ar").title}<`));
-  assert.ok(ar.includes("مستحقات العملاء"));
-  assert.ok(ar.includes("مستحقات الموردين"));
-  assert.ok(ar.includes("تكاليف وهوامش الفعاليات"));
+test("all seven individual report routes expand Reports without activating Report Center", () => {
+  for (const locale of ["en", "ar"] as const) {
+    const definitions = getReportDefinitions(locale);
+    for (const { route } of definitions) {
+      const html = renderSidebar({ currentPathname: route, locale, shellDirection: locale === "ar" ? "rtl" : "ltr", authorizedReports: definitions });
+      assert.equal(getSectionExpandedState(html, "reports"), true);
+      assert.ok(html.includes('href="/reports"'));
+      assert.ok(!html.includes('href="/reports" aria-current="page"'));
+      assert.ok(!html.includes('href="/reports/'));
+    }
+  }
+});
+
+test("Reports retains its current-section highlight through manual collapse, route changes and mobile drawer interaction", async () => {
+  const dom = new JSDOM("<!doctype html><html><body><div id='root'></div></body></html>", { url: "http://localhost" });
+  const globals = { window: dom.window, document: dom.window.document, navigator: dom.window.navigator, HTMLElement: dom.window.HTMLElement, Node: dom.window.Node, IS_REACT_ACT_ENVIRONMENT: true };
+  const original = new Map(Object.keys(globals).map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  for (const [name, value] of Object.entries(globals)) Object.defineProperty(globalThis, name, { configurable: true, writable: true, value });
+  const { createRoot } = await import("react-dom/client");
+  const container = dom.window.document.getElementById("root")!;
+  const root = createRoot(container);
+  const click = async (element: Element) => React.act(() => { element.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true })); });
+  try {
+    for (const locale of ["en", "ar"] as const) {
+      const render = async (pathname: string) => React.act(() => root.render(React.createElement(TestLocaleProvider, { locale }, React.createElement(Sidebar, {
+        currentPathname: pathname, shellDirection: locale === "ar" ? "rtl" : "ltr", authorizedReports: getReportDefinitions(locale),
+      }))));
+      await render("/reports/accounts-receivable");
+      const reports = container.querySelector("#nav-section-trigger-reports")!;
+      const center = container.querySelector('a[href="/reports"]')!;
+      assert.equal(reports.getAttribute("aria-expanded"), "true");
+      assert.equal(center.getAttribute("aria-current"), null);
+      await click(reports);
+      assert.equal(reports.getAttribute("aria-expanded"), "false");
+      assert.ok(reports.classList.contains("text-white"), "current Reports section stays identified when collapsed");
+      assert.ok(container.querySelector("#nav-section-content-reports")!.hasAttribute("hidden"));
+      await click(container.querySelector("#nav-section-trigger-customersAndSales")!);
+      assert.equal(reports.getAttribute("aria-expanded"), "false");
+      assert.ok(reports.classList.contains("text-white"));
+      await render("/reports");
+      assert.equal(reports.getAttribute("aria-expanded"), "true");
+      assert.equal(center.getAttribute("aria-current"), "page");
+      assert.equal(container.querySelectorAll('button[id^="nav-section-trigger-"][aria-expanded="true"]').length, 1);
+
+      const menu = container.querySelector('button[aria-controls="mobile-sidebar-nav"]')!;
+      await click(menu);
+      assert.equal(menu.getAttribute("aria-expanded"), "true");
+      await React.act(() => { dom.window.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
+      assert.equal(menu.getAttribute("aria-expanded"), "false");
+      assert.equal(dom.window.document.activeElement, menu);
+      await click(menu);
+      await click(center);
+      assert.equal(menu.getAttribute("aria-expanded"), "false");
+      assert.equal(dom.window.document.activeElement, menu);
+    }
+  } finally {
+    await React.act(() => root.unmount());
+    for (const [name, descriptor] of original) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else Reflect.deleteProperty(globalThis, name);
+    }
+    dom.window.close();
+  }
 });
 
 test("2 & 3. Customers & Sales orders Customers, Quotations, and Events", () => {
