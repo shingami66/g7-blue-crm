@@ -10,6 +10,7 @@ const tsUrl = pathToFileURL(require.resolve("typescript")).href;
 const reactModuleUrl = pathToFileURL(require.resolve("react")).href;
 const nextLinkDataUrl = "data:text/javascript," + encodeURIComponent([
   `import React from ${JSON.stringify(reactModuleUrl)};`,
+  "export const useLinkStatus = () => ({ pending: false });",
   "export default function Link({ href, children, ...props }) {",
   '  return React.createElement("a", { href, ...props }, children);',
   "}",
@@ -52,10 +53,11 @@ const [{ default: ReportWorkspace }, { default: AccountsReceivableReportContent,
   import("../../../lib/i18n/dictionaries/report-center.ts"),
   import("./accounts-receivable/AccountsReceivableFilters.tsx"),
 ]);
+const { LocaleProvider } = await import("../../../components/i18n/LocaleProvider.tsx");
 
 test("compact receivables workspace keeps the full report context in its disclosure", () => {
   const dictionary = getReportCenterDictionary("en");
-  const html = renderToStaticMarkup(ReportWorkspace({
+  const html = renderToStaticMarkup(LocaleProvider({ locale: "en", children: ReportWorkspace({
     definition: getReportDefinitions("en").find((item) => item.key === "accounts_receivable")!,
     dictionary,
     locale: "en",
@@ -69,7 +71,7 @@ test("compact receivables workspace keeps the full report context in its disclos
       contextSummary: React.createElement("span", null, "As of 25 Sep 2026 · Historical · Riyadh time"),
     },
     children: React.createElement("div", null, "Receivables report"),
-  }));
+  }) }));
 
   assert.match(html, /Invoices, payments, and what customers still owe\./);
   assert.match(html, /As of 25 Sep 2026 · Historical · Riyadh time/);

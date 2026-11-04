@@ -1,4 +1,8 @@
 import Link from "next/link";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import PageLocation from "@/components/navigation/PageLocation";
+import { navigationDictionaryAr, navigationDictionaryEn } from "@/lib/i18n/dictionaries/navigation";
 import { checkPermission } from "@/lib/auth/permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getReportCenterDictionary } from "@/lib/i18n/dictionaries/report-center";
@@ -21,20 +25,21 @@ function timeBasis(definition: ReportDefinition, dictionary: ReturnType<typeof g
 export default async function ReportsPage() {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getReportCenterDictionary(locale);
+  const reportsLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.reports;
   const definitions = getReportDefinitions(locale);
   const availability = await Promise.all(definitions.map((definition) => canOpen(definition)));
   const financial = definitions.filter((definition) => definition.category === "financial_operations");
   const event = definitions.filter((definition) => definition.category === "event_costing");
 
   return (
-    <div className="min-w-0 space-y-8" data-reports-center="catalog">
-      <header className="space-y-2">
-        <h1 className="text-[28px] font-semibold leading-9 tracking-[-0.01em] text-primary">{dictionary.title}</h1>
-        <p className="max-w-3xl text-sm text-on-surface-variant">{dictionary.subtitle}</p>
-      </header>
-      <CatalogGroup title={dictionary.catalog.financialOperations} definitions={financial} allDefinitions={definitions} availability={availability} dictionary={dictionary} />
-      <CatalogGroup title={dictionary.catalog.eventCosting} definitions={event} allDefinitions={definitions} availability={availability} dictionary={dictionary} />
-    </div>
+    <PageFrame variant="workspace">
+      <PageLocation breadcrumbs={{ label: reportsLabel, items: [{ label: reportsLabel, current: true }] }} />
+      <PageHeader variant="composed" title={dictionary.title} subtitle={dictionary.subtitle} />
+      <div className="min-w-0 space-y-8" data-reports-center="catalog">
+        <CatalogGroup title={dictionary.catalog.financialOperations} definitions={financial} allDefinitions={definitions} availability={availability} dictionary={dictionary} />
+        <CatalogGroup title={dictionary.catalog.eventCosting} definitions={event} allDefinitions={definitions} availability={availability} dictionary={dictionary} />
+      </div>
+    </PageFrame>
   );
 }
 

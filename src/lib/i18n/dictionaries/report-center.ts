@@ -12,6 +12,7 @@ export type ReportCenterDictionary = {
     noExport: string;
   };
   workspace: {
+    returnToCenter: string;
     source: string;
     timeBasis: string;
     freshness: string;
@@ -166,7 +167,7 @@ export type ReportCenterDictionary = {
 };
 
 const en: ReportCenterDictionary = {
-  title: "Reports Center",
+  title: "Report Center",
   subtitle: "Named, read-only reports backed by authoritative operational sources.",
   catalog: {
     financialOperations: "Financial operations",
@@ -177,6 +178,7 @@ const en: ReportCenterDictionary = {
     noExport: "Export unavailable",
   },
   workspace: {
+    returnToCenter: "Return to Report Center",
     source: "Source",
     timeBasis: "Time basis",
     freshness: "Freshness",
@@ -344,6 +346,7 @@ const ar: ReportCenterDictionary = {
   },
   workspace: {
     ...en.workspace,
+    returnToCenter: "العودة إلى مركز التقارير",
     source: "المصدر",
     timeBasis: "الأساس الزمني",
     freshness: "الحداثة",
