@@ -14,6 +14,7 @@ import { join } from "node:path";
 export async function resolve(specifier, context, nextResolve) {
   if (specifier === "server-only") return { url: "data:text/javascript,export default {}", shortCircuit: true };
   if (specifier === "next/navigation") return { url: "data:text/javascript,export function redirect(path) { throw new Error('redirect:' + path); }", shortCircuit: true };
+  if (specifier === "next/link") return { url: "data:text/javascript," + encodeURIComponent("export default function Link() { return null; } export function useLinkStatus() { return { pending: false }; }"), shortCircuit: true };
   if (specifier === "./ArBridgeWorkspace") {
     return { url: "data:text/javascript," + encodeURIComponent("export default function ArBridgeWorkspace() {}"), shortCircuit: true };
   }
@@ -111,9 +112,10 @@ function resetState() {
 
 async function getWorkspaceProps() {
   const page = await AccountingArBridgePage({ searchParams: Promise.resolve({}) });
-  const children = (page as { props: { children: unknown[] } }).props.children;
+  const frame = (page as { props: { children: { props: { children: unknown[] } } } }).props.children;
+  const children = frame.props.children;
   assert.ok(Array.isArray(children));
-  return (children[1] as { props: Record<string, unknown> }).props;
+  return (children[2] as { props: Record<string, unknown> }).props;
 }
 
 test("AR bridge manager can read reconciliation without journal configuration permissions", async () => {

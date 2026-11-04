@@ -17,6 +17,11 @@ import type {
 import { getDirection } from "@/lib/i18n";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getAccountingJournalsDictionary } from "@/lib/i18n/dictionaries/accounting-journals";
+import { navigationDictionaryAr, navigationDictionaryEn } from "@/lib/i18n/dictionaries/navigation";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import PageLocation from "@/components/navigation/PageLocation";
+import RecordBackButton from "@/components/navigation/RecordBackButton";
 import JournalDetailWorkspace from "./JournalDetailWorkspace";
 
 type PageState = "ready" | "access-denied" | "dependency-failure" | "not-found";
@@ -84,28 +89,47 @@ export default async function JournalDetailPage({
   }
 
   if (state === "not-found") notFound();
-  if (state !== "ready" || !detail) {
-    const message = state === "access-denied" ? dictionary.accessDenied : dictionary.dependencyFailure;
-    return <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}><section role="status" className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 text-sm text-on-surface-variant">{message}</section></div>;
-  }
-
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh" }).format(new Date());
+  const accountingLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.accounting;
+  const visibleJournalId = state === "ready" && detail
+    && detail.versions.some((version) => version.version === detail.current_version)
+    ? detail.journal_id
+    : undefined;
+  const message = state === "access-denied" ? dictionary.accessDenied : dictionary.dependencyFailure;
   return (
-    <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
-      <JournalDetailWorkspace
-        locale={locale}
-        dictionary={dictionary}
-        detail={detail}
-        periods={periods}
-        rules={rules}
-        accounts={accounts}
-        canPrepare={canPrepare}
-        canReadServices={canReadServices}
-        canPost={canPost}
-        canReverse={canReverse}
-        reversalJournalId={reversalJournalId}
-        today={today}
-      />
+    <div dir={getDirection(locale)} className="min-w-0">
+      <PageFrame variant="record">
+        <PageLocation
+          breadcrumbs={{
+            label: accountingLabel,
+            items: [
+              { label: accountingLabel },
+              { label: dictionary.title, href: "/accounting/journals" },
+              { label: dictionary.journalDetail, ...(visibleJournalId ? { identifier: visibleJournalId } : {}), current: true },
+            ],
+          }}
+          returnControl={<RecordBackButton href="/accounting/journals" locale={locale} variant="labeled" label={dictionary.backToJournals} />}
+        />
+        <PageHeader variant="composed" title={dictionary.journalDetail} />
+        {state === "ready" && detail ? (
+          <JournalDetailWorkspace
+            locale={locale}
+            dictionary={dictionary}
+            detail={detail}
+            periods={periods}
+            rules={rules}
+            accounts={accounts}
+            canPrepare={canPrepare}
+            canReadServices={canReadServices}
+            canPost={canPost}
+            canReverse={canReverse}
+            reversalJournalId={reversalJournalId}
+            today={today}
+          />
+        ) : (
+          <section role="status" className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 text-sm text-on-surface-variant">{message}</section>
+        )}
+      </PageFrame>
     </div>
   );
 }

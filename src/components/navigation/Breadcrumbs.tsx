@@ -4,6 +4,7 @@ import { requireInternalHref } from "@/lib/navigation/internal-href";
 
 export interface BreadcrumbItem {
   label: string;
+  identifier?: string;
   href?: string;
   current?: boolean;
   dir?: "auto" | "ltr" | "rtl";
@@ -22,10 +23,10 @@ export default function Breadcrumbs({ items, label }: { items: readonly Breadcru
             {index > 0 ? <ChevronRight size={16} aria-hidden="true" className="mt-0.5 shrink-0 rtl:rotate-180" /> : null}
             {item.href !== undefined ? (
               <PendingLink href={requireInternalHref(item.href)} className="min-w-0 break-words rounded-sm text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
-                <bdi dir={item.dir ?? "auto"}>{item.label}</bdi>
+                <bdi dir={item.dir ?? "auto"}>{item.label}</bdi>{item.identifier ? <bdi dir="ltr" className="break-all"> · {item.identifier}</bdi> : null}
               </PendingLink>
             ) : (
-              <span aria-current={item.current ? "page" : undefined} className={`min-w-0 break-words ${item.current ? "font-medium text-on-surface" : ""}`}><bdi dir={item.dir ?? "auto"}>{item.label}</bdi></span>
+              <span aria-current={item.current ? "page" : undefined} className={`min-w-0 break-words ${item.current ? "font-medium text-on-surface" : ""}`}><bdi dir={item.dir ?? "auto"}>{item.label}</bdi>{item.identifier ? <bdi dir="ltr" className="break-all"> · {item.identifier}</bdi> : null}</span>
             )}
           </li>
         ))}

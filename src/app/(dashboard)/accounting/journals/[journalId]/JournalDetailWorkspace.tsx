@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type FormEvent } from "react";
 import { postAccountingJournal, reverseAccountingJournal } from "@/lib/accounting/actions";
@@ -186,11 +185,10 @@ export default function JournalDetailWorkspace({
 
   return (
     <div className="grid min-w-0 gap-5">
-      <Link href="/accounting/journals" className="w-fit text-sm font-semibold text-primary hover:underline">← {dictionary.backToJournals}</Link>
       <section className="grid min-w-0 gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 md:p-5">
         <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
           <div className="grid min-w-0 gap-2">
-            <h1 className="text-xl font-semibold text-on-surface">{dictionary.sourceProof}</h1>
+            <h2 className="text-xl font-semibold text-on-surface">{dictionary.sourceProof}</h2>
             <bdi dir="ltr" className="break-all font-mono text-xs text-on-surface-variant">{detail.journal_id}</bdi>
           </div>
           <div className="flex flex-wrap items-center gap-2">

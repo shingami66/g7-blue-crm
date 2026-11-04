@@ -16,6 +16,10 @@ import type {
 import { getDirection } from "@/lib/i18n";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getAccountingOperationsDictionary } from "@/lib/i18n/dictionaries/accounting-operations";
+import { navigationDictionaryAr, navigationDictionaryEn } from "@/lib/i18n/dictionaries/navigation";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import PageLocation from "@/components/navigation/PageLocation";
 import BankReconciliationWorkspace from "./BankReconciliationWorkspace";
 
 type PageState = "ready" | "not-initialized" | "recovery-required" | "access-denied" | "dependency-failure";
@@ -111,27 +115,28 @@ export default async function BankReconciliationPage({
     else state = "dependency-failure";
   }
 
+  const accountingLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.accounting;
   return (
-    <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
-      <header className="min-w-0">
-        <h1 className="text-2xl font-semibold text-on-surface">{dictionary.bank.title}</h1>
-        <p className="mt-2 text-sm text-on-surface-variant">{dictionary.bank.subtitle}</p>
-      </header>
-      <BankReconciliationWorkspace
-        locale={locale}
-        dictionary={dictionary}
-        state={state}
-        bindings={bindings}
-        selectedBindingId={selectedBindingId}
-        reconciliation={reconciliation}
-        history={history}
-        asOfDate={asOfDate}
-        recordedAtCutoff={recordedAtCutoff}
-        canReconcile={canReconcile}
-        canViewAccounting={canViewAccounting}
-        canViewStatements={canViewStatements}
-        actorId={actorId}
-      />
+    <div dir={getDirection(locale)} className="min-w-0">
+      <PageFrame variant="workspace">
+        <PageLocation breadcrumbs={{ label: accountingLabel, items: [{ label: accountingLabel }, { label: dictionary.bank.title, current: true }] }} />
+        <PageHeader variant="composed" title={dictionary.bank.title} subtitle={dictionary.bank.subtitle} />
+        <BankReconciliationWorkspace
+          locale={locale}
+          dictionary={dictionary}
+          state={state}
+          bindings={bindings}
+          selectedBindingId={selectedBindingId}
+          reconciliation={reconciliation}
+          history={history}
+          asOfDate={asOfDate}
+          recordedAtCutoff={recordedAtCutoff}
+          canReconcile={canReconcile}
+          canViewAccounting={canViewAccounting}
+          canViewStatements={canViewStatements}
+          actorId={actorId}
+        />
+      </PageFrame>
     </div>
   );
 }

@@ -49,15 +49,12 @@ for (const route of routes) {
   });
 }
 
-test("Journal Detail keeps separate neutral wrappers for state and ready branches", () => {
+test("Journal Detail uses one record frame for ready and error states", () => {
   const source = readFileSync(new URL("accounting/journals/[journalId]/page.tsx", dashboard), "utf8");
-  const wrappers = openings(source).filter((node) => node.tagName.getText() === "div" &&
-    node.attributes.properties.some((attribute) => ts.isJsxAttribute(attribute) &&
-      attribute.name.getText() === "className" && attribute.initializer &&
-      ts.isStringLiteral(attribute.initializer) && attribute.initializer.text ===
-      "mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6"));
-  assert.equal(wrappers.length, 2);
-  assert.match(source, /state !== "ready" \|\| !detail/);
+  const frames = openings(source).filter((node) => node.tagName.getText() === "PageFrame");
+  assert.equal(frames.length, 1);
+  assert.match(source, /<PageFrame variant="record">[\s\S]*<PageLocation[\s\S]*<PageHeader[\s\S]*state === "ready" && detail/);
+  assert.match(source, /if \(state === "not-found"\) notFound\(\)/);
   assert.match(source, /<section role="status"/);
   assert.match(source, /<JournalDetailWorkspace/);
 });

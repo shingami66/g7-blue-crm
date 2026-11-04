@@ -3,6 +3,7 @@ import type { Locale } from "@/lib/i18n/locales";
 export type AccountingJournalDictionary = {
   title: string;
   subtitle: string;
+  journalDetail: string;
   createTitle: string;
   editTitle: string;
   listTitle: string;
@@ -99,6 +100,7 @@ export type AccountingJournalDictionary = {
 const en: AccountingJournalDictionary = {
   title: "Journal Operations",
   subtitle: "Prepare governed manual journals and inspect the source proof for every posted entry.",
+  journalDetail: "Journal Detail",
   createTitle: "Prepare a manual journal",
   editTitle: "Revise manual draft",
   listTitle: "Recent journals",
@@ -174,7 +176,7 @@ const en: AccountingJournalDictionary = {
   eventType: "Event type",
   eventStartDate: "Event start date",
   eventEndDate: "Event end date",
-  backToJournals: "Back to journals",
+  backToJournals: "Return to Journal Operations",
   post: "Post journal",
   posting: "Posting…",
   reverse: "Create reversal",
@@ -202,6 +204,7 @@ const en: AccountingJournalDictionary = {
 const ar: AccountingJournalDictionary = {
   title: "عمليات القيود",
   subtitle: "أنشئ مسودات يدوية محكومة وراجع إثبات المصدر لكل قيد مرحّل.",
+  journalDetail: "تفاصيل القيد",
   createTitle: "إعداد قيد يدوي",
   editTitle: "مراجعة مسودة يدوية",
   listTitle: "أحدث القيود",
@@ -277,7 +280,7 @@ const ar: AccountingJournalDictionary = {
   eventType: "نوع الفعالية",
   eventStartDate: "تاريخ بدء الفعالية",
   eventEndDate: "تاريخ انتهاء الفعالية",
-  backToJournals: "العودة إلى القيود",
+  backToJournals: "العودة إلى عمليات القيود",
   post: "ترحيل القيد",
   posting: "جارٍ الترحيل…",
   reverse: "إنشاء قيد عكسي",
