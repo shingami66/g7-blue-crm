@@ -158,6 +158,39 @@ async function renderPage() {
   return renderToStaticMarkup(await AccountingSetupPage());
 }
 
+const setupNavigationDestinations = [
+  { href: "/settings/accounting/chart-of-accounts", en: "Open Chart of Accounts", ar: "فتح دليل الحسابات" },
+  { href: "/settings/accounting/periods", en: "Open Accounting Periods", ar: "فتح الفترات المحاسبية" },
+  { href: "/settings/accounting/posting-rules", en: "Open Posting Rules", ar: "فتح قواعد الترحيل" },
+  { href: "/settings/accounting/inception", en: "Open Opening Position / Inception", ar: "فتح المركز الافتتاحي / بداية المحاسبة" },
+  { href: "/settings/accounting/statement-mappings", en: "Open Financial Statement Mappings", ar: "فتح تعيينات القوائم المالية" },
+  { href: "/settings/accounting/permissions", en: "Open Accounting Permissions", ar: "فتح صلاحيات المحاسبة" },
+] as const;
+
+function assertNavigationCards(html: string, locale: "en" | "ar") {
+  assert.match(html, /grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3/);
+  assert.match(html, /focus-visible:ring-2 focus-visible:ring-primary/);
+  assert.match(html, /break-words/);
+
+  const anchors = [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)];
+  for (const destination of setupNavigationDestinations) {
+    const matchingLinks = anchors.filter(([, attributes]) => attributes.includes(`href="${destination.href}"`));
+    assert.equal(matchingLinks.length, 1, `${destination.href} should appear exactly once`);
+
+    const [anchor, attributes, content] = matchingLinks[0];
+    assert.ok(anchor);
+    assert.match(attributes, /min-w-0[^\"]*rounded-lg[^\"]*border/);
+    assert.ok(content.includes(destination[locale]), `${destination.href} should use its localized label`);
+    assert.match(content, /aria-hidden="true"/);
+    assert.doesNotMatch(content, /<(?:a|button|input|select|textarea)\b/i);
+    if (locale === "ar") {
+      assert.match(content, /class="[^"]*rotate-180[^"]*"/);
+    } else {
+      assert.doesNotMatch(content, /rotate-180/);
+    }
+  }
+}
+
 test("Accounting Setup route renders explicit not-initialized and recovery states", async () => {
   pageState.locale = "en";
   pageState.statusError = null;
@@ -205,6 +238,7 @@ test("Accounting Setup route renders initialized profile and progress in Arabic 
   assert.match(html, /href="\/settings\/accounting\/posting-rules"/);
   assert.match(html, /href="\/settings\/accounting\/permissions"/);
   assert.match(html, /فتح صلاحيات المحاسبة/);
+  assertNavigationCards(html, "ar");
   assert.match(html, /بدأ/);
   assert.match(html, /INACTIVE/);
   assert.match(html, /not_registered/);
@@ -212,6 +246,28 @@ test("Accounting Setup route renders initialized profile and progress in Arabic 
   assert.doesNotMatch(html, /name="vat_mode"/);
   assert.doesNotMatch(html, /name="zatca_state"/);
   assert.doesNotMatch(html, /name="fatoora_state"/);
+});
+
+test("Accounting Setup navigation cards retain all localized destinations in English", async () => {
+  pageState.locale = "en";
+  pageState.statusError = null;
+  pageState.status = {
+    state: "INITIALIZED",
+    profile,
+    can_manage_profile: false,
+    can_manage_authority: false,
+    setup_progress: {
+      chart_of_accounts_started: true,
+      accounting_periods_started: false,
+      posting_rules_started: true,
+      inception_reconstruction_started: false,
+    },
+  };
+
+  const html = await renderPage();
+  assert.match(html, /Derived setup progress/);
+  assert.match(html, /Accounting profile/);
+  assertNavigationCards(html, "en");
 });
 
 test("Accounting Setup route separates access-denied from dependency-failure states", async () => {

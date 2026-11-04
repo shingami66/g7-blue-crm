@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import {
   bootstrapAccountingFoundation,
   recoverAccountingRootAuthority,
@@ -326,6 +327,14 @@ export default function AccountingSetupClient({
     [dictionary.postingRules, progress.posting_rules_started],
     [dictionary.inceptionReconstruction, progress.inception_reconstruction_started],
   ] as const;
+  const navigationCards = [
+    { href: "/settings/accounting/chart-of-accounts", label: dictionary.openChartOfAccounts },
+    { href: "/settings/accounting/periods", label: dictionary.openAccountingPeriods },
+    { href: "/settings/accounting/posting-rules", label: dictionary.openPostingRules },
+    { href: "/settings/accounting/inception", label: dictionary.openInception },
+    { href: "/settings/accounting/statement-mappings", label: dictionary.openStatementMappings },
+    { href: "/settings/accounting/permissions", label: dictionary.openPermissions },
+  ] as const;
 
   return (
     <div className="grid min-w-0 gap-6">
@@ -341,24 +350,21 @@ export default function AccountingSetupClient({
             <ProfileField key={label} label={label} value={started ? dictionary.started : dictionary.notStarted} />
           ))}
         </dl>
-        <Link href="/settings/accounting/chart-of-accounts" className="mt-4 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
-          {dictionary.openChartOfAccounts}
-        </Link>
-        <Link href="/settings/accounting/periods" className="mt-2 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
-          {dictionary.openAccountingPeriods}
-        </Link>
-        <Link href="/settings/accounting/posting-rules" className="mt-2 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
-          {dictionary.openPostingRules}
-        </Link>
-        <Link href="/settings/accounting/inception" className="mt-2 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
-          {dictionary.openInception}
-        </Link>
-        <Link href="/settings/accounting/statement-mappings" className="mt-2 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
-          {dictionary.openStatementMappings}
-        </Link>
-        <Link href="/settings/accounting/permissions" className="mt-2 inline-flex min-h-10 items-center text-sm font-semibold text-primary underline underline-offset-4">
-          {dictionary.openPermissions}
-        </Link>
+        <div className="mt-6 grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {navigationCards.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className="group flex min-h-20 min-w-0 items-center justify-between gap-4 rounded-lg border border-outline-variant bg-surface-container-low p-4 text-start text-sm font-semibold text-on-surface hover:border-primary/50 hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <span className="min-w-0 break-words">{label}</span>
+              <ArrowRight
+                aria-hidden="true"
+                className={`size-4 shrink-0 text-primary ${locale === "ar" ? "rotate-180" : ""}`}
+              />
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="min-w-0 rounded-lg border border-outline-variant p-5">
