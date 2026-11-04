@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthDependencyError, ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { getAccountingSetupStatus, getAccountingInceptionPackage } from "@/lib/accounting/queries";
@@ -8,12 +7,20 @@ import type { AccountingInceptionPackageDetail } from "@/lib/accounting/types";
 import { getDirection } from "@/lib/i18n";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getAccountingInceptionDictionary } from "@/lib/i18n/dictionaries/accounting-inception";
+import { getAccountingSetupDictionary } from "@/lib/i18n/dictionaries/accounting-setup";
+import { navigationDictionaryAr, navigationDictionaryEn } from "@/lib/i18n/dictionaries/navigation";
 import InceptionPackageDetailClient, { type InceptionDetailPageState } from "./InceptionPackageDetailClient";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import PageLocation from "@/components/navigation/PageLocation";
+import RecordBackButton from "@/components/navigation/RecordBackButton";
 
 export default async function AccountingInceptionPackagePage({ params }: { params: Promise<{ packageId: string }> }) {
   const { packageId } = await params;
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getAccountingInceptionDictionary(locale);
+  const setupDictionary = getAccountingSetupDictionary(locale);
+  const settingsLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.settings;
   let state: InceptionDetailPageState = "dependency-failure";
   let detail: AccountingInceptionPackageDetail | null = null;
   let isCreator = false;
@@ -52,13 +59,27 @@ export default async function AccountingInceptionPackagePage({ params }: { param
   }
 
   return (
-    <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
-      <header className="min-w-0">
-        <Link href="/settings/accounting/inception" className="text-sm font-semibold text-primary underline underline-offset-4">{dictionary.backToPackages}</Link>
-        <h1 className="mt-3 text-2xl font-semibold text-on-surface">{dictionary.title}</h1>
-        <p className="mt-2 break-all text-sm text-on-surface-variant"><bdi dir="ltr">{packageId}</bdi></p>
-      </header>
-      <InceptionPackageDetailClient locale={locale} state={state} detail={detail} isCreator={isCreator} isReviewer={isReviewer} canManage={canManage} canPrepare={canPrepare} canPost={canPost} canView={canView} />
+    <div dir={getDirection(locale)} className="min-w-0">
+      <PageFrame variant="record">
+        <PageLocation
+          breadcrumbs={{
+            label: settingsLabel,
+            items: [
+              { label: settingsLabel },
+              { label: setupDictionary.title },
+              { label: dictionary.accountingInceptionLabel, href: "/settings/accounting/inception" },
+              { label: dictionary.packageDetailLabel, current: true },
+            ],
+          }}
+          returnControl={<RecordBackButton href="/settings/accounting/inception" locale={locale} variant="labeled" label={dictionary.backToPackages} />}
+        />
+        <PageHeader
+          variant="composed"
+          title={dictionary.title}
+          identifier={state === "ready" ? <bdi dir="ltr" className="break-all">{packageId}</bdi> : undefined}
+        />
+        <InceptionPackageDetailClient locale={locale} state={state} detail={detail} isCreator={isCreator} isReviewer={isReviewer} canManage={canManage} canPrepare={canPrepare} canPost={canPost} canView={canView} />
+      </PageFrame>
     </div>
   );
 }

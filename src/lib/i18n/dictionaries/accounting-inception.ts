@@ -10,6 +10,8 @@ export type AccountingInceptionDictionary = {
   title: string;
   subtitle: string;
   backToSetup: string;
+  accountingInceptionLabel: string;
+  packageDetailLabel: string;
   createPackage: string;
   revisePackage: string;
   savePackage: string;
@@ -110,6 +112,8 @@ const en: AccountingInceptionDictionary = {
   title: "Opening Position / Inception",
   subtitle: "Build and review the versioned opening position under the existing inception lifecycle.",
   backToSetup: "Accounting setup",
+  accountingInceptionLabel: "Accounting Inception",
+  packageDetailLabel: "Package detail",
   createPackage: "Create inception package",
   revisePackage: "Revise package",
   savePackage: "Save package version",
@@ -226,6 +230,8 @@ const ar: AccountingInceptionDictionary = {
   title: "المركز الافتتاحي / بداية المحاسبة",
   subtitle: "أنشئ المركز الافتتاحي ذي الإصدارات وراجعه وفق دورة بداية المحاسبة الحالية.",
   backToSetup: "إعداد المحاسبة",
+  accountingInceptionLabel: "بداية المحاسبة",
+  packageDetailLabel: "تفاصيل الحزمة",
   createPackage: "إنشاء حزمة بداية المحاسبة",
   revisePackage: "إنشاء إصدار للحزمة",
   savePackage: "حفظ إصدار الحزمة",

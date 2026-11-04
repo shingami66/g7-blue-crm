@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthDependencyError, ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { requireUser } from "@/lib/auth/permissions";
@@ -8,11 +7,19 @@ import type { AccountingAccountVersion, AccountingStatementMappingReadModel } fr
 import { getDirection } from "@/lib/i18n";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getAccountingStatementMappingsDictionary } from "@/lib/i18n/dictionaries/accounting-statement-mappings";
+import { getAccountingSetupDictionary } from "@/lib/i18n/dictionaries/accounting-setup";
+import { navigationDictionaryAr, navigationDictionaryEn } from "@/lib/i18n/dictionaries/navigation";
 import StatementMappingsClient, { type StatementMappingsPageState } from "./StatementMappingsClient";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import PageLocation from "@/components/navigation/PageLocation";
+import RecordBackButton from "@/components/navigation/RecordBackButton";
 
 export default async function AccountingStatementMappingsPage() {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getAccountingStatementMappingsDictionary(locale);
+  const setupDictionary = getAccountingSetupDictionary(locale);
+  const settingsLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.settings;
   let state: StatementMappingsPageState = "dependency-failure";
   let mappings: AccountingStatementMappingReadModel = { state: "NOT_INITIALIZED" };
   let accounts: AccountingAccountVersion[] = [];
@@ -41,13 +48,22 @@ export default async function AccountingStatementMappingsPage() {
   }
 
   return (
-    <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
-      <header className="min-w-0">
-        <Link href="/settings/accounting" className="text-sm font-semibold text-primary underline underline-offset-4">{dictionary.backToSetup}</Link>
-        <h1 className="mt-3 text-2xl font-semibold text-on-surface">{dictionary.title}</h1>
-        <p className="mt-2 text-sm text-on-surface-variant">{dictionary.subtitle}</p>
-      </header>
-      <StatementMappingsClient locale={locale} state={state} mappings={mappings} accounts={accounts} />
+    <div dir={getDirection(locale)} className="min-w-0">
+      <PageFrame variant="workspace">
+        <PageLocation
+          breadcrumbs={{
+            label: settingsLabel,
+            items: [
+              { label: settingsLabel },
+              { label: setupDictionary.title },
+              { label: dictionary.title, current: true },
+            ],
+          }}
+          returnControl={<RecordBackButton href="/settings/accounting" locale={locale} variant="labeled" label={dictionary.backToSetup} />}
+        />
+        <PageHeader variant="composed" title={dictionary.title} subtitle={dictionary.subtitle} />
+        <StatementMappingsClient locale={locale} state={state} mappings={mappings} accounts={accounts} />
+      </PageFrame>
     </div>
   );
 }

@@ -7,10 +7,16 @@ import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getAccountingSetupStatus, listAccountingSetupTargets } from "@/lib/accounting/queries";
 import type { AccountingSetupStatus, AccountingSetupTarget } from "@/lib/accounting/types";
 import AccountingSetupClient from "./AccountingSetupClient";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import PageLocation from "@/components/navigation/PageLocation";
+import { navigationDictionaryAr, navigationDictionaryEn } from "@/lib/i18n/dictionaries/navigation";
 
 export default async function AccountingSetupPage() {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getAccountingSetupDictionary(locale);
+  const navigation = locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn;
+  const settingsLabel = navigation.modules.settings;
   let status: AccountingSetupStatus | null = null;
   let targets: AccountingSetupTarget[] = [];
   let accessDenied = false;
@@ -35,35 +41,38 @@ export default async function AccountingSetupPage() {
   }
 
   return (
-    <div className="mx-auto flex h-full w-full min-w-0 max-w-5xl flex-col gap-6" dir={getDirection(locale)}>
-      <header className="min-w-0">
-        <h1 className="text-2xl font-semibold text-on-surface">{dictionary.title}</h1>
-        <p className="mt-2 text-sm text-on-surface-variant">{dictionary.subtitle}</p>
-      </header>
+    <div dir={getDirection(locale)} className="min-w-0">
+      <PageFrame variant="workspace">
+        <PageLocation breadcrumbs={{
+          label: settingsLabel,
+          items: [{ label: settingsLabel }, { label: dictionary.title, current: true }],
+        }} />
+        <PageHeader variant="composed" title={dictionary.title} subtitle={dictionary.subtitle} />
 
-      {accessDenied ? (
-        <section className="rounded-lg border border-error/20 bg-error-container p-6 text-on-error-container" role="status">
-          <h2 className="text-lg font-semibold">{dictionary.accessDeniedTitle}</h2>
-          <p className="mt-2 text-sm">{dictionary.accessDeniedBody}</p>
-        </section>
-      ) : dependencyFailure || !status ? (
-        <section className="rounded-lg border border-error/20 bg-error-container p-6 text-on-error-container" role="status">
-          <h2 className="text-lg font-semibold">{dictionary.dependencyFailureTitle}</h2>
-          <p className="mt-2 text-sm">{dictionary.dependencyFailureBody}</p>
-        </section>
-      ) : (
-        <AccountingSetupClient
-          locale={locale}
-          status={status}
-          targets={targets}
-          requestIds={{
-            bootstrap: randomUUID(),
-            recovery: randomUUID(),
-            succession: randomUUID(),
-            profile: randomUUID(),
-          }}
-        />
-      )}
+        {accessDenied ? (
+          <section className="rounded-lg border border-error/20 bg-error-container p-6 text-on-error-container" role="status">
+            <h2 className="text-lg font-semibold">{dictionary.accessDeniedTitle}</h2>
+            <p className="mt-2 text-sm">{dictionary.accessDeniedBody}</p>
+          </section>
+        ) : dependencyFailure || !status ? (
+          <section className="rounded-lg border border-error/20 bg-error-container p-6 text-on-error-container" role="status">
+            <h2 className="text-lg font-semibold">{dictionary.dependencyFailureTitle}</h2>
+            <p className="mt-2 text-sm">{dictionary.dependencyFailureBody}</p>
+          </section>
+        ) : (
+          <AccountingSetupClient
+            locale={locale}
+            status={status}
+            targets={targets}
+            requestIds={{
+              bootstrap: randomUUID(),
+              recovery: randomUUID(),
+              succession: randomUUID(),
+              profile: randomUUID(),
+            }}
+          />
+        )}
+      </PageFrame>
     </div>
   );
 }

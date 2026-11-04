@@ -6,11 +6,18 @@ import type { AccountingAccountVersion, AccountingPostingRuleVersion } from "@/l
 import { getDirection } from "@/lib/i18n";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getAccountingPostingRulesDictionary } from "@/lib/i18n/dictionaries/accounting-posting-rules";
+import { getAccountingSetupDictionary } from "@/lib/i18n/dictionaries/accounting-setup";
+import { navigationDictionaryAr, navigationDictionaryEn } from "@/lib/i18n/dictionaries/navigation";
 import PostingRulesClient, { type PostingRulesPageState } from "./PostingRulesClient";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import PageLocation from "@/components/navigation/PageLocation";
 
 export default async function AccountingPostingRulesPage() {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getAccountingPostingRulesDictionary(locale);
+  const setupDictionary = getAccountingSetupDictionary(locale);
+  const settingsLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.settings;
   let state: PostingRulesPageState = "dependency-failure";
   let rules: AccountingPostingRuleVersion[] = [];
   let accounts: AccountingAccountVersion[] = [];
@@ -39,12 +46,19 @@ export default async function AccountingPostingRulesPage() {
   }
 
   return (
-    <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
-      <header className="min-w-0">
-        <h1 className="text-2xl font-semibold text-on-surface">{dictionary.title}</h1>
-        <p className="mt-2 text-sm text-on-surface-variant">{dictionary.subtitle}</p>
-      </header>
-      <PostingRulesClient locale={locale} state={state} rules={rules} accounts={accounts} canManage={canManage} />
+    <div dir={getDirection(locale)} className="min-w-0">
+      <PageFrame variant="workspace">
+        <PageLocation breadcrumbs={{
+          label: settingsLabel,
+          items: [
+            { label: settingsLabel },
+            { label: setupDictionary.title },
+            { label: dictionary.title, current: true },
+          ],
+        }} />
+        <PageHeader variant="composed" title={dictionary.title} subtitle={dictionary.subtitle} />
+        <PostingRulesClient locale={locale} state={state} rules={rules} accounts={accounts} canManage={canManage} />
+      </PageFrame>
     </div>
   );
 }

@@ -6,11 +6,18 @@ import type { AccountingAccountVersion } from "@/lib/accounting/types";
 import { getDirection } from "@/lib/i18n";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getAccountingChartDictionary } from "@/lib/i18n/dictionaries/accounting-chart";
+import { getAccountingSetupDictionary } from "@/lib/i18n/dictionaries/accounting-setup";
+import { navigationDictionaryAr, navigationDictionaryEn } from "@/lib/i18n/dictionaries/navigation";
 import ChartOfAccountsClient, { type ChartPageState } from "./ChartOfAccountsClient";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
+import PageLocation from "@/components/navigation/PageLocation";
 
 export default async function ChartOfAccountsPage() {
   const locale = await getCurrentSessionEffectiveLocale();
   const dictionary = getAccountingChartDictionary(locale);
+  const setupDictionary = getAccountingSetupDictionary(locale);
+  const settingsLabel = (locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn).modules.settings;
   let state: ChartPageState = "dependency-failure";
   let accounts: AccountingAccountVersion[] = [];
   let canManage = false;
@@ -41,12 +48,19 @@ export default async function ChartOfAccountsPage() {
   }
 
   return (
-    <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col gap-6" dir={getDirection(locale)}>
-      <header className="min-w-0">
-        <h1 className="text-2xl font-semibold text-on-surface">{dictionary.title}</h1>
-        <p className="mt-2 text-sm text-on-surface-variant">{dictionary.subtitle}</p>
-      </header>
-      <ChartOfAccountsClient locale={locale} state={state} accounts={accounts} canManage={canManage} />
+    <div dir={getDirection(locale)} className="min-w-0">
+      <PageFrame variant="workspace">
+        <PageLocation breadcrumbs={{
+          label: settingsLabel,
+          items: [
+            { label: settingsLabel },
+            { label: setupDictionary.title },
+            { label: dictionary.title, current: true },
+          ],
+        }} />
+        <PageHeader variant="composed" title={dictionary.title} subtitle={dictionary.subtitle} />
+        <ChartOfAccountsClient locale={locale} state={state} accounts={accounts} canManage={canManage} />
+      </PageFrame>
     </div>
   );
 }

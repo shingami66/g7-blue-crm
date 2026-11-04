@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 const require = createRequire(import.meta.url);
 const tsUrl = pathToFileURL(require.resolve("typescript")).href;
 const linkShimUrl = `data:text/javascript,${encodeURIComponent(
-  `import React from ${JSON.stringify(pathToFileURL(require.resolve("react")).href)}; export default function Link(props) { return React.createElement("a", props, props.children); }`,
+  `import React from ${JSON.stringify(pathToFileURL(require.resolve("react")).href)}; export function useLinkStatus() { return { pending: false }; } export default function Link(props) { return React.createElement("a", props, props.children); }`,
 )}`;
 const testModuleLoader = `
 import ts from ${JSON.stringify(tsUrl)};
