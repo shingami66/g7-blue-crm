@@ -9,6 +9,9 @@ import { getSupplierQuotationHistoryBySupplierId } from "@/lib/procurement/queri
 import { getSupplierById } from "@/lib/suppliers/queries";
 import { safeRecordReturnTo, appendReturnTo } from "@/lib/record-navigation/queries";
 import { RecordBackButton } from "@/components/navigation/RecordBackButton";
+import PageLocation from "@/components/navigation/PageLocation";
+import PageFrame from "@/components/ui/PageFrame";
+import PageHeader from "@/components/ui/PageHeader";
 import SupplierQuotationHistory from "../SupplierQuotationHistory";
 
 export const dynamic = "force-dynamic";
@@ -33,10 +36,30 @@ export default async function SupplierQuotationsPage({
 
   if (data.kind === "unauthorized") redirect("/sign-in");
   if (data.kind === "forbidden") {
-    return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.detailForbidden} />;
+    return (
+      <StateCard
+        locale={locale}
+        moduleTitle={dictionary.list.title}
+        taskTitle={dictionary.quotationHistory.title}
+        locationLabel={dictionary.quotationHistory.title}
+        title={dictionary.states.accessDenied}
+        message={dictionary.states.detailForbidden}
+        role="status"
+      />
+    );
   }
   if (data.kind === "error") {
-    return <StateCard title={dictionary.states.genericError} message={dictionary.states.detailLoadError} />;
+    return (
+      <StateCard
+        locale={locale}
+        moduleTitle={dictionary.list.title}
+        taskTitle={dictionary.quotationHistory.title}
+        locationLabel={dictionary.quotationHistory.title}
+        title={dictionary.states.genericError}
+        message={dictionary.states.detailLoadError}
+        role="alert"
+      />
+    );
   }
   if (data.kind === "not_found") notFound();
 
@@ -131,13 +154,48 @@ async function loadSupplierQuotationHistory(id: string, includeDeleted: boolean)
   }
 }
 
-function StateCard({ title, message }: { title: string; message: string }) {
+function StateCard({
+  locale,
+  moduleTitle,
+  taskTitle,
+  locationLabel,
+  title,
+  message,
+  role,
+}: {
+  locale: "en" | "ar";
+  moduleTitle: string;
+  taskTitle: string;
+  locationLabel: string;
+  title: string;
+  message: string;
+  role: "alert" | "status";
+}) {
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md border border-surface-variant bg-surface-container-lowest p-8 text-center">
-        <h2 className="mb-2 text-xl font-semibold text-primary">{title}</h2>
-        <p className="text-sm text-on-surface-variant">{message}</p>
+    <PageFrame variant="record">
+      <div dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <PageLocation
+          breadcrumbs={{
+            label: locationLabel,
+            items: [
+              { label: moduleTitle, href: "/suppliers" },
+              { label: taskTitle, current: true },
+            ],
+          }}
+          returnControl={<RecordBackButton href="/suppliers" locale={locale} variant="labeled" />}
+        />
+        <PageHeader variant="composed" title={taskTitle} titleDir="auto" />
+        <section
+          role={role}
+          aria-labelledby="supplier-quotation-history-error-title"
+          className="rounded-lg border border-surface-variant bg-surface-container-lowest p-5 sm:p-6"
+        >
+          <h2 id="supplier-quotation-history-error-title" className="text-lg font-semibold text-primary">
+            {title}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-on-surface-variant">{message}</p>
+        </section>
       </div>
-    </div>
+    </PageFrame>
   );
 }

@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { requirePermission } from "@/lib/auth/permissions";
 import { UnauthorizedError, ForbiddenError } from "@/lib/auth/errors";
 import { getQuotationById } from "@/lib/quotations/queries";
@@ -42,54 +41,65 @@ export default async function EditQuotationPage({
 
   if (authOrLoadError instanceof ForbiddenError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.accessDenied}</h2>
-          <p className="text-sm text-slate-500">
-            {dictionary.states.createForbidden}
-          </p>
-        </div>
-      </div>
+      <EditState
+        locale={locale}
+        title={dictionary.states.accessDenied}
+        message={dictionary.states.createForbidden}
+        role="status"
+        returnTo="/quotations"
+        taskTitle={dictionary.form.editTitle}
+        moduleTitle={dictionary.list.title}
+        locationLabel={dictionary.detail.locationLabel}
+        returnLabel={dictionary.editStates.backToQuotations}
+      />
     );
   }
 
   if (authOrLoadError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.states.genericError}</h2>
-          <p className="text-sm text-slate-500">
-            {dictionary.states.createDataLoadError}
-          </p>
-        </div>
-      </div>
+      <EditState
+        locale={locale}
+        title={dictionary.states.genericError}
+        message={dictionary.states.createDataLoadError}
+        role="alert"
+        returnTo="/quotations"
+        taskTitle={dictionary.form.editTitle}
+        moduleTitle={dictionary.list.title}
+        locationLabel={dictionary.detail.locationLabel}
+        returnLabel={dictionary.editStates.backToQuotations}
+      />
     );
   }
 
   if (!quotation) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.editStates.notFound}</h2>
-          <p className="text-sm text-slate-500">
-            {dictionary.editStates.notFoundMessage}
-          </p>
-        </div>
-      </div>
+      <EditState
+        locale={locale}
+        title={dictionary.editStates.notFound}
+        message={dictionary.editStates.notFoundMessage}
+        role="status"
+        returnTo="/quotations"
+        taskTitle={dictionary.form.editTitle}
+        moduleTitle={dictionary.list.title}
+        locationLabel={dictionary.detail.locationLabel}
+        returnLabel={dictionary.editStates.backToQuotations}
+      />
     );
   }
 
   if (quotation.status !== "draft") {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.editStates.locked}</h2>
-          <p className="text-sm text-slate-500 mb-4">
-            {dictionary.editStates.lockedMessage}
-          </p>
-          <Link href="/quotations" className="text-primary hover:underline font-medium">{dictionary.editStates.backToQuotations}</Link>
-        </div>
-      </div>
+      <EditState
+        locale={locale}
+        title={dictionary.editStates.locked}
+        message={dictionary.editStates.lockedMessage}
+        role="status"
+        returnTo={returnTo}
+        taskTitle={dictionary.form.editTitle}
+        moduleTitle={dictionary.list.title}
+        locationLabel={dictionary.detail.locationLabel}
+        returnLabel={dictionary.editStates.backToQuotations}
+      />
     );
   }
 
@@ -99,15 +109,17 @@ export default async function EditQuotationPage({
 
   if (!quotation.service) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <div className="w-full max-w-md p-8 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">{dictionary.editStates.serviceContextRequired}</h2>
-          <p className="text-sm text-slate-500 mb-4">
-            {dictionary.editStates.serviceContextMessage}
-          </p>
-          <Link href="/quotations" className="text-primary hover:underline font-medium">{dictionary.editStates.backToQuotations}</Link>
-        </div>
-      </div>
+      <EditState
+        locale={locale}
+        title={dictionary.editStates.serviceContextRequired}
+        message={dictionary.editStates.serviceContextMessage}
+        role="status"
+        returnTo={returnTo}
+        taskTitle={dictionary.form.editTitle}
+        moduleTitle={dictionary.list.title}
+        locationLabel={dictionary.detail.locationLabel}
+        returnLabel={dictionary.editStates.backToQuotations}
+      />
     );
   }
 
@@ -146,6 +158,61 @@ export default async function EditQuotationPage({
         initialData={quotation}
         dictionary={dictionary}
       />
+    </PageFrame>
+  );
+}
+
+function EditState({
+  locale,
+  title,
+  message,
+  role,
+  returnTo,
+  taskTitle,
+  moduleTitle,
+  locationLabel,
+  returnLabel,
+}: {
+  locale: "en" | "ar";
+  title: string;
+  message: string;
+  role: "alert" | "status";
+  returnTo: string;
+  taskTitle: string;
+  moduleTitle: string;
+  locationLabel: string;
+  returnLabel: string;
+}) {
+  return (
+    <PageFrame variant="form">
+      <PageLocation
+        breadcrumbs={{
+          label: locationLabel,
+          items: [
+            { label: moduleTitle, href: "/quotations" },
+            { label: taskTitle, current: true },
+          ],
+        }}
+        returnControl={
+          <RecordBackButton
+            href={returnTo}
+            locale={locale}
+            variant="labeled"
+            label={returnLabel}
+          />
+        }
+      />
+      <PageHeader variant="composed" title={taskTitle} titleDir="auto" />
+      <section
+        role={role}
+        aria-labelledby="quotation-edit-error-title"
+        className="rounded-xl border border-surface-variant bg-surface-container-lowest p-6 sm:p-8"
+      >
+        <h2 id="quotation-edit-error-title" className="text-lg font-semibold text-primary">
+          {title}
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-on-surface-variant">{message}</p>
+      </section>
     </PageFrame>
   );
 }
