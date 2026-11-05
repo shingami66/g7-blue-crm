@@ -130,7 +130,7 @@ export default function QuotationsClient({
 
   return (
     <div className="flex h-full flex-col">
-      <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
+      <PageHeader headingLevel="h1" title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
         {canSelectService && (
           <Button asChild size="sm">
             <button

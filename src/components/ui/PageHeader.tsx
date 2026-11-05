@@ -3,6 +3,7 @@ import PageActions, { type PageActionsProps } from "./PageActions";
 
 type LegacyPageHeaderProps = {
   variant?: "legacy";
+  headingLevel?: "h1" | "h2";
   title: string;
   subtitle?: string;
   children?: ReactNode;
@@ -37,16 +38,16 @@ export default function PageHeader(props: LegacyPageHeaderProps | ComposedPageHe
   }
 
   // Keep existing consumers' markup and appearance until explicitly migrated.
-  const { title, subtitle, children } = props;
+  const { title, subtitle, children, headingLevel: Heading = "h2" } = props;
   return (
     <div
       className="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"
       style={{ textAlign: "start" }}
     >
       <div style={{ textAlign: "start" }}>
-        <h2 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-primary">
+        <Heading className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-primary">
           {title}
-        </h2>
+        </Heading>
         {subtitle && (
           <p className="text-[14px] leading-[20px] text-on-surface-variant mt-1">
             {subtitle}

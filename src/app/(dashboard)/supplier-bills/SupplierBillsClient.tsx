@@ -41,7 +41,7 @@ export default function SupplierBillsClient({
   const { isPending, navigate } = useListNavigation(stateKey);
   return (
     <div dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-5 pb-12" data-supplier-bills-workspace="list">
-      <PageHeader title={dictionary.title} subtitle={dictionary.subtitle}>
+      <PageHeader headingLevel="h1" title={dictionary.title} subtitle={dictionary.subtitle}>
         {canRecord && (
           <Button asChild size="sm">
             <PendingLink href={appendReturnTo("/supplier-bills/new", listReturnTo)} pendingLabel={dictionary.newBill}>

@@ -91,7 +91,7 @@ export default function ServicesClient({
 
   return (
     <div className="flex h-full flex-col">
-      <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
+      <PageHeader headingLevel="h1" title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
         {canWrite && <Button asChild size="sm"><PendingLink href="/services/new"><Plus size={16} />{dictionary.list.newService}</PendingLink></Button>}
       </PageHeader>
 

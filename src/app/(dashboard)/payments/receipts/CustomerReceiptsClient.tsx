@@ -238,7 +238,7 @@ export default function CustomerReceiptsClient({ data, initialAllocationPage, qu
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={dictionary.title} subtitle={dictionary.subtitle}>
+      <PageHeader headingLevel="h1" title={dictionary.title} subtitle={dictionary.subtitle}>
         <Link
           href="/payments"
           className="rounded-lg border border-outline-variant px-3 py-2 text-[13px] font-semibold text-on-surface hover:bg-surface-container-low"

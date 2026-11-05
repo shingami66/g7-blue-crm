@@ -219,7 +219,7 @@ export default function SettingsForm({
 
   return (
     <div className="flex flex-col h-full max-w-7xl mx-auto pb-12">
-      <PageHeader title={dictionary.page.title} subtitle={dictionary.page.subtitle}>
+      <PageHeader headingLevel="h1" title={dictionary.page.title} subtitle={dictionary.page.subtitle}>
         {canEdit ? (
           isEditing ? (
             <div className="flex items-center gap-3">

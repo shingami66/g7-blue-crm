@@ -433,7 +433,7 @@ export default async function DashboardPage() {
   return (
     <div data-dashboard-workspace="permission-aware" data-dashboard-content-frame="true" className="mx-auto w-full max-w-[1240px] space-y-5">
       <div className="border-b border-surface-variant pb-4">
-        <PageHeader title={dictionary.header.title} subtitle={dictionary.header.subtitle}>
+        <PageHeader headingLevel="h1" title={dictionary.header.title} subtitle={dictionary.header.subtitle}>
         <div data-dashboard-section="quick-actions" className="flex w-full max-w-full flex-wrap gap-2 sm:w-auto">
           {hasQuickAction("new-customer") ? <Link href="/customers" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-[13px] font-semibold leading-[18px] text-on-primary transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"><UserPlus size={16} aria-hidden="true" />{labels.actions.newCustomer}</Link> : null}
           {hasQuickAction("new-quotation") ? <Link href="/quotations" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-primary bg-surface-container-lowest px-3 py-2 text-[13px] font-semibold leading-[18px] text-primary transition-colors hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"><FilePlus size={16} aria-hidden="true" />{labels.actions.newQuotation}</Link> : null}

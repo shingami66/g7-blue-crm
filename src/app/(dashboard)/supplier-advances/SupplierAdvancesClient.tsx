@@ -36,7 +36,7 @@ export default function SupplierAdvancesClient({
   const detailHref = (id: string) => supplierAdvanceDetailHref(id, listReturnTo);
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-5 pb-12" data-supplier-advances-workspace="list">
-      <PageHeader title={dictionary.title} subtitle={dictionary.subtitle}>
+      <PageHeader headingLevel="h1" title={dictionary.title} subtitle={dictionary.subtitle}>
         {canAuthorize && <PendingLink href={appendReturnTo("/supplier-advances/new", listReturnTo)} pendingLabel={dictionary.authorizeAdvance} className="inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 py-2 text-[13px] font-semibold text-on-primary hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{dictionary.authorizeAdvance}</PendingLink>}
       </PageHeader>
       <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-label={dictionary.title}>

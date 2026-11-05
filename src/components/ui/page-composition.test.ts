@@ -143,6 +143,20 @@ test("legacy header output remains unchanged and composed mode owns one h1", () 
   assert.equal(render(h(Header, { variant: "composed", title: "Reference", identifier: 0 })).doc.querySelector("[data-page-identifier]")!.textContent, "0");
 });
 
+test("legacy page-heading opt-in changes only the title tag and preserves children in EN and AR", () => {
+  for (const locale of ["en", "ar"]) {
+    const props = { title: locale === "ar" ? "عنوان الصفحة" : "Page title", subtitle: "Subtitle" };
+    const action = h("button", { type: "button" }, "Action");
+    const legacy = render(h(Header, props, action), locale);
+    const page = render(h(Header, { ...props, headingLevel: "h1" }, action), locale);
+    assert.equal(page.doc.querySelectorAll("h1").length, 1);
+    assert.equal(page.doc.querySelector("h1")!.textContent, props.title);
+    assert.equal(page.doc.querySelectorAll("h2").length, 0);
+    assert.equal(page.html.replaceAll("<h1", "<h2").replaceAll("</h1>", "</h2>"), legacy.html);
+    assert.equal(page.doc.querySelector("button")!.textContent, "Action");
+  }
+});
+
 test("composed identity/status and action slots retain semantics in both directions", () => {
   for (const dir of ["ltr", "rtl"]) {
     const { doc } = render(h("div", { dir }, h(Header, {

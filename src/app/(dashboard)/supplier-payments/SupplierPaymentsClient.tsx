@@ -33,7 +33,7 @@ export default function SupplierPaymentsClient({
   const detailHref = (id: string) => supplierPaymentDetailHref(id, listReturnTo);
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-5 pb-12" data-supplier-payments-workspace="list">
-      <PageHeader title={dictionary.title} subtitle={dictionary.subtitle} />
+      <PageHeader headingLevel="h1" title={dictionary.title} subtitle={dictionary.subtitle} />
       <section className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest" aria-label={dictionary.title}>
         {pagination.total > 0 && (
           <PaginationFooter

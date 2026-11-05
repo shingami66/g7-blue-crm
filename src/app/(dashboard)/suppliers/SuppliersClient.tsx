@@ -204,7 +204,7 @@ export default function SuppliersClient({
 
   return (
     <div className="flex flex-col" data-supplier-directory="workspace">
-      <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
+      <PageHeader headingLevel="h1" title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
         <div className="flex flex-wrap justify-end gap-2">
           {showDeleted && (
             <span className="inline-flex min-h-9 items-center rounded-full bg-surface-variant px-3 text-[12px] font-medium text-on-surface-variant" data-supplier-deleted-mode>

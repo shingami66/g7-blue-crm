@@ -204,7 +204,7 @@ export default function CustomersClient({
 
   return (
     <div className="flex flex-col h-full">
-      <PageHeader title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
+      <PageHeader headingLevel="h1" title={dictionary.list.title} subtitle={dictionary.list.subtitle}>
         {canExport && (
           <Button asChild variant="outline" size="sm">
             <button

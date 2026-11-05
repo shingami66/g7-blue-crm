@@ -110,6 +110,7 @@ export default function PaymentsClient({ payments, pagination, query, error, dic
   return (
     <div className="flex flex-col h-full">
       <PageHeader
+        headingLevel="h1"
         title={dictionary.title}
         subtitle={dictionary.subtitle}
       >
