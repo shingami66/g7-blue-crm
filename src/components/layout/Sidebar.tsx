@@ -254,7 +254,7 @@ export default function Sidebar({
         }] : []),
         ...(canAccessAccountingSetup ? [{
           key: "accounting-setup",
-          label: dictionary.modules.accounting,
+          label: dictionary.modules.accountingSetup,
           href: "/settings/accounting",
           icon: Calculator,
         }] : []),

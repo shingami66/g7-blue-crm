@@ -478,6 +478,13 @@ test("8. Administration renders Settings for all, but Users appears only for adm
 });
 
 test("Accounting setup navigation is permission-gated and localized", () => {
+  assert.equal(navigationDictionaryEn.modules.accounting, "Accounting");
+  assert.equal(navigationDictionaryEn.modules.accountingSetup, "Accounting Setup");
+  assert.equal(navigationDictionaryAr.modules.accounting, "المحاسبة");
+  assert.equal(navigationDictionaryAr.modules.accountingSetup, "إعداد المحاسبة");
+  assert.notEqual(navigationDictionaryEn.modules.accounting, navigationDictionaryEn.modules.accountingSetup);
+  assert.notEqual(navigationDictionaryAr.modules.accounting, navigationDictionaryAr.modules.accountingSetup);
+
   const hidden = renderSidebar({ isAdmin: true, canAccessAccountingSetup: false, currentPathname: "/settings" });
   assert.ok(!hidden.includes('href="/settings/accounting"'));
 
@@ -492,6 +499,8 @@ test("Accounting setup navigation is permission-gated and localized", () => {
   assert.deepEqual([...accountingOnlyLinks].map((link) => link.getAttribute("href")), ["/settings/accounting"]);
   assert.equal(accountingOnlyDoc.querySelectorAll('a[href="/settings/accounting"]').length, 1);
   assert.equal(accountingOnlyDoc.querySelector('a[href="/settings/accounting"]')?.getAttribute("aria-current"), "page");
+  assert.equal(accountingOnlyDoc.querySelector('a[href="/settings/accounting"]')?.textContent?.trim(), navigationDictionaryEn.modules.accountingSetup);
+  assert.ok(accountingOnlyDoc.querySelector("#nav-section-trigger-accountingOperations")?.textContent?.includes(navigationDictionaryEn.sections.accountingOperations));
   assert.equal(accountingOnlyDoc.querySelector('a[href="/settings"]')?.getAttribute("aria-current"), null);
 
   const english = renderSidebar({
@@ -513,6 +522,7 @@ test("Accounting setup navigation is permission-gated and localized", () => {
   assert.equal(getSectionExpandedState(english, "accountingOperations"), true);
   assert.equal(getSectionExpandedState(english, "administration"), false);
   assert.equal(englishDoc.querySelectorAll('a[href="/settings/accounting"]').length, 1);
+  assert.equal(englishDoc.querySelector('a[href="/settings/accounting"]')?.textContent?.trim(), navigationDictionaryEn.modules.accountingSetup);
   assert.match(english, /href="\/settings\/accounting"[^>]*aria-current="page"/);
 
   const admin = renderSidebar({
@@ -531,7 +541,10 @@ test("Accounting setup navigation is permission-gated and localized", () => {
     locale: "ar",
     shellDirection: "rtl",
   });
-  assert.ok(arabic.includes(navigationDictionaryAr.modules.accounting));
+  const arabicDoc = new JSDOM(arabic).window.document;
+  assert.equal(arabicDoc.querySelector('a[href="/settings/accounting"]')?.textContent?.trim(), navigationDictionaryAr.modules.accountingSetup);
+  assert.ok(arabicDoc.querySelector("#nav-section-trigger-accountingOperations")?.textContent?.includes(navigationDictionaryAr.sections.accountingOperations));
+  assert.equal(arabicDoc.querySelectorAll('a[href="/settings/accounting"]').length, 1);
   assert.match(arabic, /href="\/settings\/accounting"[^>]*aria-current="page"/);
   assert.ok(arabic.includes('dir="rtl"'));
 });

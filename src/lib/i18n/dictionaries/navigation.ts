@@ -30,6 +30,7 @@ export interface NavigationDictionary {
     suppliers: string;
     users: string;
     accounting: string;
+    accountingSetup: string;
     expenses: string;
     advances: string;
     pettyCash: string;
@@ -90,6 +91,7 @@ export const navigationDictionaryEn: NavigationDictionary = {
     supplierPayments: "Supplier Payments",
     supplierAdvances: "Supplier Advances",
     accounting: "Accounting",
+    accountingSetup: "Accounting Setup",
     journalOperations: "Journal Operations",
     bankReconciliation: "Bank Reconciliation",
     accountsReceivableBridge: "AR Accounting Bridge",
@@ -144,6 +146,7 @@ export const navigationDictionaryAr: NavigationDictionary = {
     supplierPayments: "مدفوعات الموردين",
     supplierAdvances: "الدفعات المقدمة للموردين",
     accounting: "المحاسبة",
+    accountingSetup: "إعداد المحاسبة",
     journalOperations: "عمليات القيود",
     bankReconciliation: "تسوية البنك",
     accountsReceivableBridge: "جسر محاسبة الذمم المدينة",
