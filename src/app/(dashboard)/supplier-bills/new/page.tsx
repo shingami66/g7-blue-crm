@@ -20,7 +20,26 @@ export default async function NewSupplierBillPage({ searchParams }: { searchPara
   const returnTo = safeRecordReturnTo(returnToParam, "/supplier-bills");
   const [locale, canRecord] = await Promise.all([getCurrentSessionEffectiveLocale(), checkPermission(SUPPLIER_BILL_PERMISSIONS.record)]);
   const dictionary = getSupplierBillsDictionary(locale);
-  if (!canRecord) return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
+  const isRtl = locale === "ar";
+  const renderErrorState = (title: string, message: string, role: "alert" | "status", returnHref = returnTo) => (
+    <div dir={isRtl ? "rtl" : "ltr"} className="w-full min-w-0">
+      <PageFrame variant="form">
+        <PageLocation
+          breadcrumbs={{
+            label: dictionary.title,
+            items: [
+              { label: dictionary.title, href: "/supplier-bills" },
+              { label: dictionary.newBill, current: true },
+            ],
+          }}
+          returnControl={<RecordBackButton href={returnHref} locale={locale} variant="labeled" />}
+        />
+        <PageHeader variant="composed" title={dictionary.newBill} />
+        <StateCard title={title} message={message} role={role} />
+      </PageFrame>
+    </div>
+  );
+  if (!canRecord) return renderErrorState(dictionary.states.accessDenied, dictionary.states.accessDenied, "status", "/supplier-bills");
   let options: Awaited<ReturnType<typeof getSupplierBillFormOptions>> | null = null;
   let state: "accessDenied" | "loadError" | null = null;
   try {
@@ -29,9 +48,8 @@ export default async function NewSupplierBillPage({ searchParams }: { searchPara
     if (error instanceof UnauthorizedError) redirect("/sign-in");
     state = error instanceof ForbiddenError ? "accessDenied" : "loadError";
   }
-  if (state === "accessDenied") return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
-  if (state === "loadError" || !options) return <StateCard title={dictionary.states.loadError} message={dictionary.states.loadError} />;
-  const isRtl = locale === "ar";
+  if (state === "accessDenied") return renderErrorState(dictionary.states.accessDenied, dictionary.states.accessDenied, "status", "/supplier-bills");
+  if (state === "loadError" || !options) return renderErrorState(dictionary.states.loadError, dictionary.states.loadError, "alert");
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="w-full min-w-0">
       <PageFrame variant="form">
@@ -56,6 +74,6 @@ export default async function NewSupplierBillPage({ searchParams }: { searchPara
   );
 }
 
-function StateCard({ title, message }: { title: string; message: string }) {
-  return <div className="flex min-h-[40vh] items-center justify-center px-4"><div className="w-full max-w-lg rounded-xl border border-surface-variant bg-surface-container-lowest p-8 text-center"><h2 className="text-xl font-semibold text-primary">{title}</h2><p className="mt-2 text-sm text-on-surface-variant">{message}</p></div></div>;
+function StateCard({ title, message, role }: { title: string; message: string; role?: "alert" | "status" }) {
+  return <div className="flex min-h-[40vh] items-center justify-center px-4"><div role={role} aria-labelledby={role ? "supplier-bill-create-state-title" : undefined} className="w-full max-w-lg rounded-xl border border-surface-variant bg-surface-container-lowest p-8 text-center"><h2 id={role ? "supplier-bill-create-state-title" : undefined} className="text-xl font-semibold text-primary">{title}</h2><p className="mt-2 text-sm text-on-surface-variant">{message}</p></div></div>;
 }

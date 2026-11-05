@@ -16,25 +16,44 @@ import SupplierAdvanceAuthorizationForm from "../SupplierAdvanceAuthorizationFor
 export const dynamic = "force-dynamic";
 
 export default async function NewSupplierAdvancePage({ searchParams }: { searchParams: Promise<{ returnTo?: string | string[] }> }) {
-  const params = await searchParams;
-  const returnToParam = Array.isArray(params.returnTo) ? params.returnTo[0] : params.returnTo;
-  const returnTo = safeRecordReturnTo(returnToParam, "/supplier-advances");
   const [locale, canAuthorize] = await Promise.all([
     getCurrentSessionEffectiveLocale(),
     checkPermission(SUPPLIER_ADVANCE_PERMISSIONS.authorize),
   ]);
   const dictionary = getSupplierAdvancesDictionary(locale);
-  if (!canAuthorize) return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.accessDenied} />;
+  const isRtl = locale === "ar";
+  const renderErrorState = (returnHref: string, title: string, message: string, role: "alert" | "status") => (
+    <div dir={isRtl ? "rtl" : "ltr"} className="w-full min-w-0">
+      <PageFrame variant="form">
+        <PageLocation
+          breadcrumbs={{
+            label: dictionary.title,
+            items: [
+              { label: dictionary.title, href: "/supplier-advances" },
+              { label: dictionary.authorizeAdvance, current: true },
+            ],
+          }}
+          returnControl={<RecordBackButton href={returnHref} locale={locale} variant="labeled" />}
+        />
+        <PageHeader variant="composed" title={dictionary.authorizeAdvance} />
+        <StateCard title={title} message={message} role={role} />
+      </PageFrame>
+    </div>
+  );
+  if (!canAuthorize) return renderErrorState("/supplier-advances", dictionary.states.accessDenied, dictionary.states.accessDenied, "status");
+  const params = await searchParams;
+  const returnToParam = Array.isArray(params.returnTo) ? params.returnTo[0] : params.returnTo;
+  const returnTo = safeRecordReturnTo(returnToParam, "/supplier-advances");
   let commitments: Awaited<ReturnType<typeof getSupplierAdvanceCommitmentOptions>> = [];
-  let stateMessage: string | null = null;
+  let state: "accessDenied" | "loadError" | null = null;
   try {
     commitments = await getSupplierAdvanceCommitmentOptions();
   } catch (error) {
     if (error instanceof UnauthorizedError) redirect("/sign-in");
-    stateMessage = error instanceof ForbiddenError ? dictionary.states.accessDenied : dictionary.states.loadError;
+    state = error instanceof ForbiddenError ? "accessDenied" : "loadError";
   }
-  if (stateMessage) return <StateCard title={dictionary.title} message={stateMessage} />;
-  const isRtl = locale === "ar";
+  if (state === "accessDenied") return renderErrorState("/supplier-advances", dictionary.states.accessDenied, dictionary.states.accessDenied, "status");
+  if (state === "loadError") return renderErrorState(returnTo, dictionary.states.loadError, dictionary.states.loadError, "alert");
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="w-full min-w-0">
       <PageFrame variant="form">
@@ -61,6 +80,6 @@ export default async function NewSupplierAdvancePage({ searchParams }: { searchP
   );
 }
 
-function StateCard({ title, message }: { title: string; message: string }) {
-  return <div className="flex min-h-[40vh] items-center justify-center px-4"><div className="w-full max-w-lg rounded-xl border border-surface-variant bg-surface-container-lowest p-8 text-center"><h2 className="text-xl font-semibold text-primary">{title}</h2><p className="mt-2 text-sm text-on-surface-variant">{message}</p></div></div>;
+function StateCard({ title, message, role }: { title: string; message: string; role?: "alert" | "status" }) {
+  return <div className="flex min-h-[40vh] items-center justify-center px-4"><div role={role} aria-labelledby={role ? "supplier-advance-create-state-title" : undefined} className="w-full max-w-lg rounded-xl border border-surface-variant bg-surface-container-lowest p-8 text-center"><h2 id={role ? "supplier-advance-create-state-title" : undefined} className="text-xl font-semibold text-primary">{title}</h2><p className="mt-2 text-sm text-on-surface-variant">{message}</p></div></div>;
 }
