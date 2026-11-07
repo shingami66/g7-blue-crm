@@ -5,6 +5,7 @@ import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { checkPermission, requirePermission } from "@/lib/auth/permissions";
 import { PROCUREMENT_COMMITMENT_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
+import type { Locale } from "@/lib/i18n/locales";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
 import { getActiveProcurementSupplierOptions } from "@/lib/procurement/queries";
 import {
@@ -44,8 +45,13 @@ export default async function ServiceProcurementPage({
     if (error instanceof ForbiddenError) {
       return (
         <StateCard
+          locale={locale}
+          taskTitle={dictionary.procurementWorkspace.title}
+          returnTo="/services"
+          returnLabel={dictionary.detail.backToServices}
           title={dictionary.states.accessDenied}
           message={dictionary.states.serviceReadForbidden}
+          role="status"
         />
       );
     }
@@ -57,8 +63,13 @@ export default async function ServiceProcurementPage({
   if (serviceResult.status === "error") {
     return (
       <StateCard
+        locale={locale}
+        taskTitle={dictionary.procurementWorkspace.title}
+        returnTo="/services"
+        returnLabel={dictionary.detail.backToServices}
         title={dictionary.states.genericError}
         message={dictionary.states.serviceDataLoadError}
+        role="alert"
       />
     );
   }
@@ -71,8 +82,13 @@ export default async function ServiceProcurementPage({
   if (!canRead) {
     return (
       <StateCard
+        locale={locale}
+        taskTitle={dictionary.procurementWorkspace.title}
+        returnTo="/services"
+        returnLabel={dictionary.detail.backToServices}
         title={dictionary.states.accessDenied}
         message={dictionary.states.serviceReadForbidden}
+        role="status"
       />
     );
   }
@@ -86,8 +102,13 @@ export default async function ServiceProcurementPage({
   if (packagesResult.error) {
     return (
       <StateCard
+        locale={locale}
+        taskTitle={dictionary.procurementWorkspace.title}
+        returnTo={returnTo}
+        returnLabel={dictionary.detail.backToServices}
         title={dictionary.states.genericError}
         message={dictionary.states.serviceDataLoadError}
+        role="alert"
       />
     );
   }
@@ -138,13 +159,41 @@ export default async function ServiceProcurementPage({
   );
 }
 
-function StateCard({ title, message }: { title: string; message: string }) {
+function StateCard({
+  locale,
+  taskTitle,
+  returnTo,
+  returnLabel,
+  title,
+  message,
+  role,
+}: {
+  locale: Locale;
+  taskTitle: string;
+  returnTo: string;
+  returnLabel: string;
+  title: string;
+  message: string;
+  role: "alert" | "status";
+}) {
   return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center px-4">
-      <div className="w-full max-w-lg rounded-xl border border-surface-variant bg-surface-container-lowest p-8 text-center">
-        <h2 className="text-xl font-semibold text-primary">{title}</h2>
-        <p className="mt-2 text-sm text-on-surface-variant">{message}</p>
-      </div>
+    <div dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-6 pb-12">
+      <header className="flex min-w-0 items-start gap-3">
+        <RecordBackButton href={returnTo} locale={locale} variant="labeled" label={returnLabel} />
+        <h1 className="min-w-0 break-words text-[28px] font-semibold leading-9 text-primary" dir="auto">
+          {taskTitle}
+        </h1>
+      </header>
+      <section
+        role={role}
+        aria-labelledby="procurement-error-title"
+        className="rounded-xl border border-surface-variant bg-surface-container-lowest p-5 sm:p-8"
+      >
+        <h2 id="procurement-error-title" className="text-lg font-semibold text-primary">
+          {title}
+        </h2>
+        <p className="mt-2 break-words text-sm leading-6 text-on-surface-variant">{message}</p>
+      </section>
     </div>
   );
 }
