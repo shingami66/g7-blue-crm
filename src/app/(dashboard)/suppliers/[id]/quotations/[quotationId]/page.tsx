@@ -8,6 +8,7 @@ import { getSupplierQuotationById } from "@/lib/procurement/queries";
 import { getSupplierById } from "@/lib/suppliers/queries";
 import { safeRecordReturnTo } from "@/lib/record-navigation/queries";
 import { RecordBackButton } from "@/components/navigation/RecordBackButton";
+import SupplierQuotationErrorState from "../SupplierQuotationErrorState";
 import SupplierQuotationDetail from "../SupplierQuotationDetail";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,18 @@ export default async function SupplierQuotationDetailPage({
     getCurrentSessionEffectiveLocale(),
   ]);
   const dictionary = getSuppliersDictionary(locale);
+  const renderFailure = (errorTitle: string, message: string, role: "alert" | "status") => (
+    <SupplierQuotationErrorState
+      frameVariant="record"
+      locale={locale}
+      pageTitle={dictionary.quotationHistory.detailTitle}
+      errorTitle={errorTitle}
+      message={message}
+      role={role}
+      returnHref="/suppliers"
+      returnLabel={dictionary.detail.backToSuppliers}
+    />
+  );
   const data = await loadSupplierQuotationDetail(
     id,
     quotationId,
@@ -33,10 +46,10 @@ export default async function SupplierQuotationDetailPage({
 
   if (data.kind === "unauthorized") redirect("/sign-in");
   if (data.kind === "forbidden") {
-    return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.detailForbidden} />;
+    return renderFailure(dictionary.states.accessDenied, dictionary.states.detailForbidden, "status");
   }
   if (data.kind === "error") {
-    return <StateCard title={dictionary.states.genericError} message={dictionary.states.detailLoadError} />;
+    return renderFailure(dictionary.states.genericError, dictionary.states.detailLoadError, "alert");
   }
   if (data.kind === "not_found") notFound();
 
@@ -107,15 +120,4 @@ async function loadSupplierQuotationDetail(
     if (err instanceof ForbiddenError) return { kind: "forbidden" as const };
     return { kind: "error" as const };
   }
-}
-
-function StateCard({ title, message }: { title: string; message: string }) {
-  return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md border border-surface-variant bg-surface-container-lowest p-8 text-center">
-        <h2 className="mb-2 text-xl font-semibold text-primary">{title}</h2>
-        <p className="text-sm text-on-surface-variant">{message}</p>
-      </div>
-    </div>
-  );
 }

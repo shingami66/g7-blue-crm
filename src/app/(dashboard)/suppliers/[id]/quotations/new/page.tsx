@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { checkPermission } from "@/lib/auth/permissions";
 import { getSuppliersDictionary } from "@/lib/i18n/dictionaries/suppliers";
+import { getCommonDictionary } from "@/lib/i18n/dictionaries/common";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import {
   getEligibleServicesForSupplierQuotation,
@@ -14,6 +15,7 @@ import { validatePackageQuotationContext } from "@/lib/procurement/package-conte
 import { getSupplierById } from "@/lib/suppliers/queries";
 import { safeRecordReturnTo } from "@/lib/record-navigation/queries";
 import { RecordBackButton } from "@/components/navigation/RecordBackButton";
+import SupplierQuotationErrorState from "../SupplierQuotationErrorState";
 import SupplierQuotationForm from "../SupplierQuotationForm";
 
 export const dynamic = "force-dynamic";
@@ -36,27 +38,52 @@ export default async function NewSupplierQuotationPage({
     getCurrentSessionEffectiveLocale(),
   ]);
   const dictionary = getSuppliersDictionary(locale);
+  const renderFailure = (
+    errorTitle: string,
+    message: string,
+    role: "alert" | "status",
+    returnHref = "/suppliers",
+    returnLabel = dictionary.detail.backToSuppliers,
+  ) => (
+    <SupplierQuotationErrorState
+      frameVariant="form"
+      locale={locale}
+      pageTitle={dictionary.quotationHistory.newTitle}
+      errorTitle={errorTitle}
+      message={message}
+      role={role}
+      returnHref={returnHref}
+      returnLabel={returnLabel}
+    />
+  );
   const data = await loadNewSupplierQuotation(id, resolvedSearchParams.showDeleted === "true");
 
   if (data.kind === "unauthorized") redirect("/sign-in");
   if (data.kind === "forbidden") {
-    return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.detailForbidden} />;
+    return renderFailure(dictionary.states.accessDenied, dictionary.states.detailForbidden, "status");
   }
   if (data.kind === "error") {
-    return <StateCard title={dictionary.states.genericError} message={dictionary.states.detailLoadError} />;
+    return renderFailure(dictionary.states.genericError, dictionary.states.detailLoadError, "alert");
   }
   if (data.kind === "not_found") notFound();
   if (!data.canManageCosting) {
-    return <StateCard title={dictionary.states.accessDenied} message={dictionary.states.detailForbidden} />;
-  }
-  if (data.supplier.isDeleted || data.supplier.status !== "active") {
-    return <StateCard title={dictionary.quotationHistory.newTitle} message={dictionary.quotationHistory.createUnavailable} />;
+    return renderFailure(dictionary.states.accessDenied, dictionary.states.detailForbidden, "status");
   }
 
   const returnTo = safeRecordReturnTo(
     resolvedSearchParams.returnTo,
     `/suppliers/${data.supplier.id}/quotations`,
   );
+
+  if (data.supplier.isDeleted || data.supplier.status !== "active") {
+    return renderFailure(
+      dictionary.quotationHistory.createUnavailableTitle,
+      dictionary.quotationHistory.createUnavailable,
+      "status",
+      returnTo,
+      getCreationFailureReturnLabel(returnTo, data.supplier.id, locale),
+    );
+  }
 
   // Validate contextual service eligibility if serviceId is provided in URL
   if (resolvedSearchParams.serviceId) {
@@ -146,6 +173,18 @@ export default async function NewSupplierQuotationPage({
       </section>
     </div>
   );
+}
+
+function getCreationFailureReturnLabel(returnTo: string, supplierId: string, locale: "en" | "ar") {
+  const dictionary = getSuppliersDictionary(locale);
+  const historyPath = `/suppliers/${supplierId}/quotations`;
+  if (returnTo === historyPath || returnTo.startsWith(`${historyPath}?`)) {
+    return dictionary.quotationHistory.backToHistory;
+  }
+  if (returnTo === "/suppliers" || returnTo.startsWith("/suppliers?")) {
+    return dictionary.detail.backToSuppliers;
+  }
+  return getCommonDictionary(locale).actions.back;
 }
 
 async function loadNewSupplierQuotation(id: string, includeDeleted: boolean) {
