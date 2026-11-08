@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { UiDateText } from "@/components/i18n/UiDateText";
 import {
   getCashAdvancesDictionary,
   getCashAdvanceStatusLabel,
@@ -365,7 +366,7 @@ export default function AdvancesClient({
                 <div className="flex items-center justify-between pt-2 border-t border-outline-variant/60 text-xs">
                   <span className="text-[11px] text-on-surface-variant flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    <span dir="ltr">{new Date(adv.requested_at).toLocaleDateString()}</span>
+                    <UiDateText locale={locale} value={adv.requested_at} />
                   </span>
 
                   <PendingLink
@@ -429,9 +430,7 @@ export default function AdvancesClient({
 
                       {/* Date */}
                       <td className="px-4 py-3 text-on-surface-variant whitespace-nowrap">
-                        <span dir="ltr">
-                          {new Date(adv.requested_at).toLocaleDateString()}
-                        </span>
+                        <UiDateText locale={locale} value={adv.requested_at} />
                       </td>
 
                       {/* Context */}
