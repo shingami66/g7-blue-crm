@@ -31,10 +31,22 @@ import {
   navigationDictionaryEn,
   type NavigationDictionary,
 } from "@/lib/i18n/dictionaries/navigation";
+import { getAccountingChartDictionary } from "@/lib/i18n/dictionaries/accounting-chart";
+import { getAccountingInceptionDictionary } from "@/lib/i18n/dictionaries/accounting-inception";
 import { getAccountingPermissionsDictionary } from "@/lib/i18n/dictionaries/accounting-permissions";
+import { getAccountingPeriodsDictionary } from "@/lib/i18n/dictionaries/accounting-periods";
+import { getAccountingPostingRulesDictionary } from "@/lib/i18n/dictionaries/accounting-posting-rules";
+import { getAccountingStatementMappingsDictionary } from "@/lib/i18n/dictionaries/accounting-statement-mappings";
 import { getReportCenterDictionary } from "@/lib/i18n/dictionaries/report-center";
 
 const ACCOUNTING_PERMISSIONS_HREF = "/settings/accounting/permissions";
+const ACCOUNTING_SPECIALIST_NAVIGATION_HREFS: readonly string[] = [
+  "/settings/accounting/chart-of-accounts",
+  "/settings/accounting/posting-rules",
+  "/settings/accounting/statement-mappings",
+  "/settings/accounting/periods",
+  "/settings/accounting/inception",
+];
 
 export type NavSectionKey =
   | "customersAndSales"
@@ -121,13 +133,24 @@ export function getSectionForPathname(pathname: string): NavSectionKey | null {
   return null;
 }
 
-export function isRouteActive(currentPathname: string, targetHref: string): boolean {
+export function isRouteActive(
+  currentPathname: string,
+  targetHref: string,
+  visibleAccountingSpecialistHrefs: readonly string[] = [],
+): boolean {
   if (targetHref === "/dashboard" || targetHref === "/reports") {
     return currentPathname === targetHref;
   }
+  const hasVisibleActiveAccountingSpecialistRoute = visibleAccountingSpecialistHrefs.some(
+    (href) => currentPathname === href || currentPathname.startsWith(`${href}/`),
+  );
   if (
     targetHref === "/settings/accounting" &&
-    (currentPathname === ACCOUNTING_PERMISSIONS_HREF || currentPathname.startsWith(`${ACCOUNTING_PERMISSIONS_HREF}/`))
+    (
+      currentPathname === ACCOUNTING_PERMISSIONS_HREF ||
+      currentPathname.startsWith(`${ACCOUNTING_PERMISSIONS_HREF}/`) ||
+      hasVisibleActiveAccountingSpecialistRoute
+    )
   ) {
     return false;
   }
@@ -148,6 +171,9 @@ export default function Sidebar({
   canReconcileBank = false,
   canAccessAccountingSetup = false,
   canManageAccountingAuthority = false,
+  canManageAccountingChart = false,
+  canManageAccountingPeriods = false,
+  canManageAccountingInception = false,
   authorizedReports = [],
   shellDirection = "ltr",
   currentPathname,
@@ -162,6 +188,9 @@ export default function Sidebar({
   canReconcileBank?: boolean;
   canAccessAccountingSetup?: boolean;
   canManageAccountingAuthority?: boolean;
+  canManageAccountingChart?: boolean;
+  canManageAccountingPeriods?: boolean;
+  canManageAccountingInception?: boolean;
   authorizedReports?: readonly ReportNavigationItem[];
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
@@ -169,7 +198,12 @@ export default function Sidebar({
   const locale = useLocale();
   const dictionary: NavigationDictionary =
     locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn;
+  const accountingChartDictionary = getAccountingChartDictionary(locale);
+  const accountingInceptionDictionary = getAccountingInceptionDictionary(locale);
   const accountingPermissionsLabel = getAccountingPermissionsDictionary(locale).title;
+  const accountingPeriodsDictionary = getAccountingPeriodsDictionary(locale);
+  const accountingPostingRulesDictionary = getAccountingPostingRulesDictionary(locale);
+  const accountingStatementMappingsDictionary = getAccountingStatementMappingsDictionary(locale);
   const routerPathname = usePathname();
   const pathname = currentPathname ?? routerPathname;
 
@@ -235,7 +269,7 @@ export default function Sidebar({
         },
       ],
     },
-    ...(canViewAccounting || canReconcileBank || canManageArBridge || canAccessAccountingSetup || canManageAccountingAuthority ? [{
+    ...(canViewAccounting || canReconcileBank || canManageArBridge || canAccessAccountingSetup || canManageAccountingAuthority || canManageAccountingChart || canManageAccountingPeriods || canManageAccountingInception ? [{
       key: "accountingOperations" as const,
       title: dictionary.sections.accountingOperations,
       icon: BookOpen,
@@ -275,6 +309,38 @@ export default function Sidebar({
           label: accountingPermissionsLabel,
           href: ACCOUNTING_PERMISSIONS_HREF,
           icon: ShieldAlert,
+        }] : []),
+        ...(canManageAccountingChart ? [
+          {
+            key: "accounting-chart-of-accounts",
+            label: accountingChartDictionary.title,
+            href: "/settings/accounting/chart-of-accounts",
+            icon: BookOpen,
+          },
+          {
+            key: "accounting-posting-rules",
+            label: accountingPostingRulesDictionary.title,
+            href: "/settings/accounting/posting-rules",
+            icon: ClipboardCheck,
+          },
+          {
+            key: "accounting-statement-mappings",
+            label: accountingStatementMappingsDictionary.title,
+            href: "/settings/accounting/statement-mappings",
+            icon: BarChart3,
+          },
+        ] : []),
+        ...(canManageAccountingPeriods ? [{
+          key: "accounting-periods",
+          label: accountingPeriodsDictionary.title,
+          href: "/settings/accounting/periods",
+          icon: Calculator,
+        }] : []),
+        ...(canManageAccountingInception ? [{
+          key: "accounting-inception",
+          label: accountingInceptionDictionary.title,
+          href: "/settings/accounting/inception",
+          icon: Wallet,
         }] : []),
       ],
     }] : []),
@@ -409,9 +475,15 @@ export default function Sidebar({
 
   const renderSection = (section: NavSection) => {
     const isExpanded = expandedSection === section.key;
+    const visibleAccountingSpecialistHrefs = section.key === "accountingOperations"
+      ? section.children
+        .filter((child) => ACCOUNTING_SPECIALIST_NAVIGATION_HREFS.includes(child.href))
+        .map((child) => child.href)
+      : [];
+    const routeIsActive = (href: string) => isRouteActive(pathname, href, visibleAccountingSpecialistHrefs);
     const hasActiveRoute =
       (section.key === "reports" && getSectionForPathname(pathname) === "reports") ||
-      section.children.some((child) => isRouteActive(pathname, child.href));
+      section.children.some((child) => routeIsActive(child.href));
     const SectionIcon = section.icon;
 
     return (
@@ -457,7 +529,7 @@ export default function Sidebar({
           }
         >
           {section.children.map((child) => {
-            const active = isRouteActive(pathname, child.href);
+            const active = routeIsActive(child.href);
             const ChildIcon = child.icon;
             return (
               <PendingLink

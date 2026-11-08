@@ -33,7 +33,7 @@ export default async function DashboardLayout({
     redirect("/unauthorized");
   }
 
-  const [isAdmin, canReadPettyCash, canReadSupplierBills, canReadSupplierPayments, canReadSupplierAdvances, locale, reportPermissionValues, canViewAccounting, canReconcileBank, canManageArBridge, canManageAccountingProfile, canManageAccountingAuthority] = await Promise.all([
+  const [isAdmin, canReadPettyCash, canReadSupplierBills, canReadSupplierPayments, canReadSupplierAdvances, locale, reportPermissionValues, canViewAccounting, canReconcileBank, canManageArBridge, canManageAccountingProfile, canManageAccountingAuthority, canManageAccountingChart, canManageAccountingPeriods, canManageAccountingInception] = await Promise.all([
     checkPermission("users:manage"),
     checkPermission(PETTY_CASH_PERMISSIONS.read),
     checkPermission(SUPPLIER_BILL_PERMISSIONS.read),
@@ -46,6 +46,9 @@ export default async function DashboardLayout({
     checkPermission("accounting:manage_ar_bridge"),
     checkPermission("accounting:manage_profile"),
     checkPermission("accounting:manage_authority"),
+    checkPermission("accounting:manage_chart"),
+    checkPermission("accounting:manage_periods"),
+    checkPermission("accounting:manage_inception"),
   ]);
   const canAccessAccountingSetup = canViewAccounting || canManageAccountingProfile || isAdmin;
   const effectiveReportPermissions = new Map(
@@ -76,6 +79,9 @@ export default async function DashboardLayout({
                 canReconcileBank={canReconcileBank}
                 canAccessAccountingSetup={canAccessAccountingSetup}
                 canManageAccountingAuthority={canManageAccountingAuthority}
+                canManageAccountingChart={canManageAccountingChart}
+                canManageAccountingPeriods={canManageAccountingPeriods}
+                canManageAccountingInception={canManageAccountingInception}
                 authorizedReports={authorizedReports}
                 shellDirection={shellDirection}
               />

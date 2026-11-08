@@ -192,6 +192,9 @@ test("Admin Setup eligibility is preserved without synthesizing authority access
   assert.equal(adminOnly.isAdmin, true);
   assert.equal(adminOnly.canAccessAccountingSetup, true);
   assert.equal(adminOnly.canManageAccountingAuthority, false);
+  assert.equal(adminOnly.canManageAccountingChart, false);
+  assert.equal(adminOnly.canManageAccountingPeriods, false);
+  assert.equal(adminOnly.canManageAccountingInception, false);
 
   const adminWithAuthority = await getSidebarProps(["users:manage", "accounting:manage_authority"]);
   assert.equal(adminWithAuthority.isAdmin, true);
@@ -207,4 +210,40 @@ test("Chart, Period, and Inception capabilities do not synthesize Accounting Set
     assert.equal(props.canViewAccounting, false, permission);
     assert.equal(props.isAdmin, false, permission);
   }
+});
+
+test("specialist capability checks reach only their dedicated Sidebar props", async () => {
+  const specialistCapabilities = [
+    ["accounting:manage_chart", "canManageAccountingChart"],
+    ["accounting:manage_periods", "canManageAccountingPeriods"],
+    ["accounting:manage_inception", "canManageAccountingInception"],
+  ] as const;
+  const specialistProps = specialistCapabilities.map(([, prop]) => prop);
+
+  for (const [permission, expectedProp] of specialistCapabilities) {
+    const props = await getSidebarProps([permission]);
+    assert.equal(checkedPermissions.filter((checked) => checked === permission).length, 1, permission);
+    assert.equal(props[expectedProp], true, permission);
+    for (const otherProp of specialistProps.filter((prop) => prop !== expectedProp)) {
+      assert.equal(props[otherProp], false, `${permission} must not imply ${otherProp}`);
+    }
+    assert.equal(props.canAccessAccountingSetup, false, permission);
+    assert.equal(props.canManageAccountingAuthority, false, permission);
+    assert.equal(props.canViewAccounting, false, permission);
+    assert.equal(props.isAdmin, false, permission);
+  }
+
+  const chartAndPeriods = await getSidebarProps(["accounting:manage_chart", "accounting:manage_periods"]);
+  assert.equal(chartAndPeriods.canManageAccountingChart, true);
+  assert.equal(chartAndPeriods.canManageAccountingPeriods, true);
+  assert.equal(chartAndPeriods.canManageAccountingInception, false);
+
+  const allSpecialists = await getSidebarProps([
+    "accounting:manage_chart",
+    "accounting:manage_periods",
+    "accounting:manage_inception",
+  ]);
+  assert.equal(allSpecialists.canManageAccountingChart, true);
+  assert.equal(allSpecialists.canManageAccountingPeriods, true);
+  assert.equal(allSpecialists.canManageAccountingInception, true);
 });

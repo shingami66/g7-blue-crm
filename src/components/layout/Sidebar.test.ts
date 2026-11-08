@@ -8,7 +8,12 @@ import {
   navigationDictionaryAr,
   navigationDictionaryEn,
 } from "../../lib/i18n/dictionaries/navigation.ts";
+import { getAccountingChartDictionary } from "../../lib/i18n/dictionaries/accounting-chart.ts";
+import { getAccountingInceptionDictionary } from "../../lib/i18n/dictionaries/accounting-inception.ts";
 import { getAccountingPermissionsDictionary } from "../../lib/i18n/dictionaries/accounting-permissions.ts";
+import { getAccountingPeriodsDictionary } from "../../lib/i18n/dictionaries/accounting-periods.ts";
+import { getAccountingPostingRulesDictionary } from "../../lib/i18n/dictionaries/accounting-posting-rules.ts";
+import { getAccountingStatementMappingsDictionary } from "../../lib/i18n/dictionaries/accounting-statement-mappings.ts";
 import { getReportDefinitions } from "../../lib/reports/catalog.ts";
 import { getReportCenterDictionary } from "../../lib/i18n/dictionaries/report-center.ts";
 import type { ReportNavigationItem } from "../../lib/reports/types.ts";
@@ -134,6 +139,9 @@ function renderSidebar(props: {
   canReadSupplierAdvances?: boolean;
   canAccessAccountingSetup?: boolean;
   canManageAccountingAuthority?: boolean;
+  canManageAccountingChart?: boolean;
+  canManageAccountingPeriods?: boolean;
+  canManageAccountingInception?: boolean;
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
   locale?: "en" | "ar";
@@ -542,6 +550,7 @@ test("Accounting Setup remains separately permission-gated and localized", () =>
   assert.deepEqual([...administrationLinks].map((link) => link.getAttribute("href")), ["/settings", "/admin/users"]);
   assert.equal(adminDoc.querySelectorAll('a[href="/settings/accounting"]').length, 1);
   assert.equal(adminDoc.querySelectorAll('a[href="/settings/accounting/permissions"]').length, 0);
+  assert.equal(adminDoc.querySelectorAll('a[href^="/settings/accounting/"]').length, 0);
 
   const arabic = renderSidebar({
     canAccessAccountingSetup: true,
@@ -635,6 +644,150 @@ test("view and profile users retain Setup beside the dedicated authority destina
     assert.equal(doc.querySelectorAll('a[href="/settings/accounting"]').length, 1, label);
     assert.equal(doc.querySelectorAll('a[href="/settings/accounting/permissions"]').length, 1, label);
   }
+});
+
+test("specialist-only Accounting navigation follows the capability matrix and localized titles", () => {
+  const destinations = {
+    chart: [
+      "/settings/accounting/chart-of-accounts",
+      "/settings/accounting/posting-rules",
+      "/settings/accounting/statement-mappings",
+    ],
+    periods: ["/settings/accounting/periods"],
+    inception: ["/settings/accounting/inception"],
+  };
+  const scenarios = [
+    { label: "manage_chart only", props: { canManageAccountingChart: true }, expected: destinations.chart },
+    { label: "manage_periods only", props: { canManageAccountingPeriods: true }, expected: destinations.periods },
+    { label: "manage_inception only", props: { canManageAccountingInception: true }, expected: destinations.inception },
+    {
+      label: "manage_chart + manage_periods",
+      props: { canManageAccountingChart: true, canManageAccountingPeriods: true },
+      expected: [...destinations.chart, ...destinations.periods],
+    },
+    {
+      label: "all specialist capabilities",
+      props: { canManageAccountingChart: true, canManageAccountingPeriods: true, canManageAccountingInception: true },
+      expected: [...destinations.chart, ...destinations.periods, ...destinations.inception],
+    },
+  ];
+  const englishTitles = {
+    "/settings/accounting/chart-of-accounts": getAccountingChartDictionary("en").title,
+    "/settings/accounting/posting-rules": getAccountingPostingRulesDictionary("en").title,
+    "/settings/accounting/statement-mappings": getAccountingStatementMappingsDictionary("en").title,
+    "/settings/accounting/periods": getAccountingPeriodsDictionary("en").title,
+    "/settings/accounting/inception": getAccountingInceptionDictionary("en").title,
+  };
+
+  const noAccountingCapabilities = new JSDOM(renderSidebar({ currentPathname: "/dashboard" })).window.document;
+  assert.equal(noAccountingCapabilities.querySelector("#nav-section-trigger-accountingOperations"), null);
+
+  for (const { label, props, expected } of scenarios) {
+    const currentPathname = expected[0];
+    const html = renderSidebar({ ...props, currentPathname });
+    const doc = new JSDOM(html).window.document;
+    const links = doc.querySelectorAll("#nav-section-content-accountingOperations a");
+
+    assert.equal(getSectionExpandedState(html, "accountingOperations"), true, label);
+    assert.deepEqual([...links].map((link) => link.getAttribute("href")), expected, label);
+    assert.equal(doc.querySelectorAll('a[href="/settings/accounting"]').length, 0, label);
+    assert.equal(doc.querySelectorAll('a[href="/settings/accounting/permissions"]').length, 0, label);
+    for (const href of expected) {
+      const link = doc.querySelector(`a[href="${href}"]`);
+      assert.equal(doc.querySelectorAll(`a[href="${href}"]`).length, 1, `${label}: ${href} appears once`);
+      assert.equal(link?.tagName, "A", `${label}: ${href} is a native link`);
+      assert.equal((link as HTMLAnchorElement | null)?.tabIndex, 0, `${label}: ${href} is keyboard accessible`);
+      assert.equal(link?.textContent?.trim(), englishTitles[href as keyof typeof englishTitles], `${label}: ${href} label`);
+    }
+    assert.equal(doc.querySelectorAll('a[aria-current="page"]').length, 1, label);
+  }
+
+  const arabic = renderSidebar({
+    canManageAccountingChart: true,
+    canManageAccountingPeriods: true,
+    canManageAccountingInception: true,
+    canAccessAccountingSetup: true,
+    currentPathname: "/settings/accounting/chart-of-accounts",
+    locale: "ar",
+    shellDirection: "rtl",
+  });
+  const arabicDoc = new JSDOM(arabic).window.document;
+  const arabicTitles = {
+    "/settings/accounting/chart-of-accounts": getAccountingChartDictionary("ar").title,
+    "/settings/accounting/posting-rules": getAccountingPostingRulesDictionary("ar").title,
+    "/settings/accounting/statement-mappings": getAccountingStatementMappingsDictionary("ar").title,
+    "/settings/accounting/periods": getAccountingPeriodsDictionary("ar").title,
+    "/settings/accounting/inception": getAccountingInceptionDictionary("ar").title,
+  };
+  for (const [href, title] of Object.entries(arabicTitles)) {
+    assert.equal(arabicDoc.querySelector(`a[href="${href}"]`)?.textContent?.trim(), title, href);
+  }
+  assert.equal(arabicDoc.querySelector('a[href="/settings/accounting"]')?.getAttribute("aria-current"), null);
+  assert.equal(arabicDoc.querySelector('a[href="/settings/accounting/chart-of-accounts"]')?.getAttribute("aria-current"), "page");
+  assert.ok(arabic.includes('dir="rtl"'));
+  assert.ok(arabicDoc.querySelector('nav[dir="rtl"]'));
+});
+
+test("visible specialist destinations take active-state precedence over Setup without changing fallback routes", () => {
+  const routes = [
+    { href: "/settings/accounting/chart-of-accounts", props: { canManageAccountingChart: true } },
+    { href: "/settings/accounting/posting-rules", props: { canManageAccountingChart: true } },
+    { href: "/settings/accounting/statement-mappings", props: { canManageAccountingChart: true } },
+    { href: "/settings/accounting/periods", props: { canManageAccountingPeriods: true } },
+    { href: "/settings/accounting/inception", props: { canManageAccountingInception: true } },
+    { href: "/settings/accounting/inception/package-1", props: { canManageAccountingInception: true } },
+  ];
+
+  for (const { href, props } of routes) {
+    const html = renderSidebar({ ...props, canAccessAccountingSetup: true, currentPathname: href });
+    const doc = new JSDOM(html).window.document;
+    const specialistHref = href.startsWith("/settings/accounting/inception/")
+      ? "/settings/accounting/inception"
+      : href;
+    assert.equal(getSectionExpandedState(html, "accountingOperations"), true, href);
+    assert.equal(doc.querySelector(`a[href="${specialistHref}"]`)?.getAttribute("aria-current"), "page", href);
+    assert.equal(doc.querySelector('a[href="/settings/accounting"]')?.getAttribute("aria-current"), null, href);
+    assert.equal(doc.querySelectorAll('a[aria-current="page"]').length, 1, href);
+    const expandedSections = [...ALL_SECTION_KEYS, "accountingOperations"]
+      .filter((key) => getSectionExpandedState(html, key));
+    assert.deepEqual(expandedSections, ["accountingOperations"], href);
+  }
+
+  const setupFallback = renderSidebar({
+    canAccessAccountingSetup: true,
+    currentPathname: "/settings/accounting/chart-of-accounts",
+  });
+  const setupFallbackDoc = new JSDOM(setupFallback).window.document;
+  assert.equal(setupFallbackDoc.querySelector('a[href="/settings/accounting"]')?.getAttribute("aria-current"), "page");
+
+  const noPeriodSpecialist = renderSidebar({
+    canAccessAccountingSetup: true,
+    canManageAccountingChart: true,
+    currentPathname: "/settings/accounting/periods",
+  });
+  const noPeriodSpecialistDoc = new JSDOM(noPeriodSpecialist).window.document;
+  assert.equal(noPeriodSpecialistDoc.querySelector('a[href="/settings/accounting/periods"]'), null);
+  assert.equal(noPeriodSpecialistDoc.querySelector('a[href="/settings/accounting"]')?.getAttribute("aria-current"), "page");
+
+  for (const { href, props } of routes.slice(0, 5)) {
+    const nearMatch = renderSidebar({
+      ...props,
+      canAccessAccountingSetup: true,
+      currentPathname: `${href}-extra`,
+    });
+    const nearMatchDoc = new JSDOM(nearMatch).window.document;
+    assert.equal(nearMatchDoc.querySelector(`a[href="${href}"]`)?.getAttribute("aria-current"), null, href);
+    assert.equal(nearMatchDoc.querySelector('a[href="/settings/accounting"]')?.getAttribute("aria-current"), "page", href);
+  }
+
+  const inceptionNearMatch = renderSidebar({
+    canManageAccountingInception: true,
+    canAccessAccountingSetup: true,
+    currentPathname: "/settings/accounting/inception-extra",
+  });
+  const inceptionNearMatchDoc = new JSDOM(inceptionNearMatch).window.document;
+  assert.equal(inceptionNearMatchDoc.querySelector('a[href="/settings/accounting/inception"]')?.getAttribute("aria-current"), null);
+  assert.equal(inceptionNearMatchDoc.querySelector('a[href="/settings/accounting"]')?.getAttribute("aria-current"), "page");
 });
 
 test("Accounting Setup routes preserve active behavior while Permissions has its own exact active state", () => {
