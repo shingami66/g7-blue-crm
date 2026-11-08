@@ -79,6 +79,9 @@ type SetupPageState = {
   statusError: Error | null;
   targets: Array<{ id: string; name: string | null; role: string }>;
   targetError: Error | null;
+  capabilities: Set<string>;
+  permissionChecks: string[];
+  permissionError: Error | null;
 };
 
 const pageState: SetupPageState = {
@@ -87,6 +90,9 @@ const pageState: SetupPageState = {
   statusError: null,
   targets: [{ id: "00000000-0000-4000-8000-00000000e101", name: "Initial authority", role: "accountant" }],
   targetError: null,
+  capabilities: new Set<string>(),
+  permissionChecks: [],
+  permissionError: null,
 };
 
 mock.module(new URL("../../../../lib/accounting/queries.ts", import.meta.url).href, {
@@ -98,6 +104,16 @@ mock.module(new URL("../../../../lib/accounting/queries.ts", import.meta.url).hr
     listAccountingSetupTargets: async () => {
       if (pageState.targetError) throw pageState.targetError;
       return pageState.targets;
+    },
+  },
+});
+
+mock.module(new URL("../../../../lib/auth/permissions.ts", import.meta.url).href, {
+  namedExports: {
+    checkPermission: async (permission: string) => {
+      pageState.permissionChecks.push(permission);
+      if (pageState.permissionError) throw pageState.permissionError;
+      return pageState.capabilities.has(permission);
     },
   },
 });
@@ -153,6 +169,38 @@ const profile = {
   created_by: "00000000-0000-4000-8000-00000000e104",
   created_at: "2026-01-01T00:00:00.000Z",
 };
+const accountingNavigationCapabilities = [
+  "accounting:view",
+  "accounting:manage_chart",
+  "accounting:manage_periods",
+  "accounting:manage_inception",
+  "accounting:manage_authority",
+] as const;
+
+function configureInitializedPage(
+  capabilities: readonly string[],
+  options: { locale?: "en" | "ar"; canManageProfile?: boolean } = {},
+) {
+  pageState.locale = options.locale ?? "en";
+  pageState.statusError = null;
+  pageState.targetError = null;
+  pageState.capabilities = new Set(capabilities);
+  pageState.permissionChecks.length = 0;
+  pageState.permissionError = null;
+  pageState.status = {
+    state: "INITIALIZED",
+    profile,
+    can_manage_profile: options.canManageProfile ?? false,
+    can_manage_authority: pageState.capabilities.has("accounting:manage_authority"),
+    setup_progress: {
+      chart_of_accounts_started: false,
+      accounting_periods_started: true,
+      posting_rules_started: false,
+      inception_reconstruction_started: false,
+    },
+  };
+}
+
 
 async function renderPage() {
   return renderToStaticMarkup(await AccountingSetupPage());
@@ -167,19 +215,30 @@ const setupNavigationDestinations = [
   { href: "/settings/accounting/permissions", en: "Open Accounting Permissions", ar: "فتح صلاحيات المحاسبة" },
 ] as const;
 
-function assertNavigationCards(html: string, locale: "en" | "ar") {
-  assert.match(html, /grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3/);
-  assert.match(html, /focus-visible:ring-2 focus-visible:ring-primary/);
-  assert.match(html, /break-words/);
+function assertNavigationCards(
+  html: string,
+  locale: "en" | "ar",
+  expectedHrefs: readonly string[] = setupNavigationDestinations.map(({ href }) => href),
+) {
+  const expectedCards = expectedHrefs.length > 0;
+  const cardGrids = html.match(/grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3/g) ?? [];
+  assert.equal(cardGrids.length, expectedCards ? 1 : 0);
+  if (expectedCards) {
+    assert.match(html, /focus-visible:ring-2 focus-visible:ring-primary/);
+    assert.match(html, /break-words/);
+  }
 
   const anchors = [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)];
   for (const destination of setupNavigationDestinations) {
     const matchingLinks = anchors.filter(([, attributes]) => attributes.includes(`href="${destination.href}"`));
-    assert.equal(matchingLinks.length, 1, `${destination.href} should appear exactly once`);
+    const eligible = expectedHrefs.includes(destination.href);
+    assert.equal(matchingLinks.length, eligible ? 1 : 0, `${destination.href} eligibility`);
+    if (!eligible) continue;
 
     const [anchor, attributes, content] = matchingLinks[0];
     assert.ok(anchor);
     assert.match(attributes, /min-w-0[^\"]*rounded-lg[^\"]*border/);
+    assert.match(attributes, /focus-visible:ring-2 focus-visible:ring-primary/);
     assert.ok(content.includes(destination[locale]), `${destination.href} should use its localized label`);
     assert.match(content, /aria-hidden="true"/);
     assert.doesNotMatch(content, /<(?:a|button|input|select|textarea)\b/i);
@@ -191,9 +250,12 @@ function assertNavigationCards(html: string, locale: "en" | "ar") {
   }
 }
 
-test("Accounting Setup route renders explicit not-initialized and recovery states", async () => {
+test("Accounting Setup route renders explicit not-initialized and recovery states without navigation permission checks", async () => {
   pageState.locale = "en";
   pageState.statusError = null;
+  pageState.capabilities = new Set(accountingNavigationCapabilities);
+  pageState.permissionChecks.length = 0;
+  pageState.permissionError = null;
   pageState.status = { state: "NOT_INITIALIZED", can_bootstrap: true };
   let html = await renderPage();
   assert.match(html, /dir="ltr"/);
@@ -203,28 +265,22 @@ test("Accounting Setup route renders explicit not-initialized and recovery state
   assert.match(html, /Accounting foundation not initialized/);
   assert.match(html, /Initialize accounting setup/);
   assert.match(html, /Initial authority/);
+  assert.deepEqual(pageState.permissionChecks, []);
 
   pageState.status = { state: "RECOVERY_REQUIRED", can_recover: true };
   html = await renderPage();
   assert.match(html, /Accounting authority recovery required/);
   assert.match(html, /Restore authority/);
+  assert.deepEqual(pageState.permissionChecks, []);
 });
 
 test("Accounting Setup route renders initialized profile and progress in Arabic RTL with locked activation and tax fields", async () => {
   pageState.locale = "ar";
   pageState.statusError = null;
-  pageState.status = {
-    state: "INITIALIZED",
-    profile,
-    can_manage_profile: true,
-    can_manage_authority: true,
-    setup_progress: {
-      chart_of_accounts_started: false,
-      accounting_periods_started: true,
-      posting_rules_started: false,
-      inception_reconstruction_started: false,
-    },
-  };
+  configureInitializedPage(accountingNavigationCapabilities, {
+    locale: "ar",
+    canManageProfile: true,
+  });
   const html = await renderPage();
   assert.match(html, /dir="rtl"/);
   assert.match(html, /aria-label="المحاسبة"/);
@@ -249,25 +305,98 @@ test("Accounting Setup route renders initialized profile and progress in Arabic 
 });
 
 test("Accounting Setup navigation cards retain all localized destinations in English", async () => {
-  pageState.locale = "en";
-  pageState.statusError = null;
-  pageState.status = {
-    state: "INITIALIZED",
-    profile,
-    can_manage_profile: false,
-    can_manage_authority: false,
-    setup_progress: {
-      chart_of_accounts_started: true,
-      accounting_periods_started: false,
-      posting_rules_started: true,
-      inception_reconstruction_started: false,
-    },
-  };
-
+  configureInitializedPage(accountingNavigationCapabilities);
   const html = await renderPage();
   assert.match(html, /Derived setup progress/);
   assert.match(html, /Accounting profile/);
   assertNavigationCards(html, "en");
+});
+
+test("Accounting Setup cards follow server-resolved destination capabilities", async () => {
+  const chart = "/settings/accounting/chart-of-accounts";
+  const periods = "/settings/accounting/periods";
+  const postingRules = "/settings/accounting/posting-rules";
+  const inception = "/settings/accounting/inception";
+  const statementMappings = "/settings/accounting/statement-mappings";
+  const permissions = "/settings/accounting/permissions";
+  const scenarios = [
+    {
+      label: "accounting:view only",
+      capabilities: ["accounting:view"],
+      canManageProfile: false,
+      expected: [chart, periods, postingRules, inception],
+    },
+    {
+      label: "accounting:manage_chart only with independent Setup access",
+      capabilities: ["accounting:manage_chart"],
+      canManageProfile: true,
+      expected: [chart, postingRules, statementMappings],
+    },
+    {
+      label: "accounting:manage_periods only with independent Setup access",
+      capabilities: ["accounting:manage_periods"],
+      canManageProfile: true,
+      expected: [periods],
+    },
+    {
+      label: "accounting:manage_inception only with independent Setup access",
+      capabilities: ["accounting:manage_inception"],
+      canManageProfile: true,
+      expected: [inception],
+    },
+    {
+      label: "accounting:manage_authority only with independent Setup access",
+      capabilities: ["accounting:manage_authority"],
+      canManageProfile: true,
+      expected: [permissions],
+    },
+    {
+      label: "accounting:manage_profile only",
+      capabilities: [],
+      canManageProfile: true,
+      expected: [],
+    },
+    {
+      label: "view plus manage_chart",
+      capabilities: ["accounting:view", "accounting:manage_chart"],
+      canManageProfile: false,
+      expected: [chart, periods, postingRules, inception, statementMappings],
+    },
+    {
+      label: "all required capabilities",
+      capabilities: accountingNavigationCapabilities,
+      canManageProfile: false,
+      expected: setupNavigationDestinations.map(({ href }) => href),
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    configureInitializedPage(scenario.capabilities, { canManageProfile: scenario.canManageProfile });
+    const html = await renderPage();
+    assertNavigationCards(html, "en", scenario.expected);
+    assert.deepEqual(pageState.permissionChecks, [...accountingNavigationCapabilities], scenario.label);
+
+    if (scenario.label === "accounting:manage_profile only") {
+      assert.match(html, /Derived setup progress/);
+      assert.match(html, /Accounting profile/);
+      assert.match(html, /Save profile changes/);
+    }
+  }
+});
+
+test("initialized navigation permission failures preserve access-denied and dependency-failure states", async () => {
+  configureInitializedPage([], { canManageProfile: true });
+  pageState.permissionError = new ForbiddenError("private navigation permission");
+  let html = await renderPage();
+  assert.match(html, /Access denied/);
+  assert.doesNotMatch(html, /private navigation permission/);
+
+  configureInitializedPage([], { canManageProfile: true });
+  pageState.permissionError = new AuthDependencyError("private capability dependency");
+  html = await renderPage();
+  assert.match(html, /Accounting setup is temporarily unavailable/);
+  assert.doesNotMatch(html, /private capability dependency/);
+  assert.deepEqual(pageState.permissionChecks, [...accountingNavigationCapabilities]);
 });
 
 test("Accounting Setup route separates access-denied from dependency-failure states", async () => {

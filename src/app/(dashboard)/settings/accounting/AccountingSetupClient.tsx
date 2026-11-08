@@ -26,6 +26,15 @@ type RequestIds = {
   profile: string;
 };
 
+export type AccountingSetupNavigationAccess = {
+  chartOfAccounts: boolean;
+  accountingPeriods: boolean;
+  postingRules: boolean;
+  inception: boolean;
+  statementMappings: boolean;
+  accountingPermissions: boolean;
+};
+
 function textValue(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
@@ -287,11 +296,13 @@ export default function AccountingSetupClient({
   status,
   targets,
   requestIds,
+  navigationAccess,
 }: {
   locale: Locale;
   status: AccountingSetupStatus;
   targets: AccountingSetupTarget[];
   requestIds: RequestIds;
+  navigationAccess: AccountingSetupNavigationAccess;
 }) {
   const dictionary = getAccountingSetupDictionary(locale);
 
@@ -328,13 +339,37 @@ export default function AccountingSetupClient({
     [dictionary.inceptionReconstruction, progress.inception_reconstruction_started],
   ] as const;
   const navigationCards = [
-    { href: "/settings/accounting/chart-of-accounts", label: dictionary.openChartOfAccounts },
-    { href: "/settings/accounting/periods", label: dictionary.openAccountingPeriods },
-    { href: "/settings/accounting/posting-rules", label: dictionary.openPostingRules },
-    { href: "/settings/accounting/inception", label: dictionary.openInception },
-    { href: "/settings/accounting/statement-mappings", label: dictionary.openStatementMappings },
-    { href: "/settings/accounting/permissions", label: dictionary.openPermissions },
-  ] as const;
+    {
+      href: "/settings/accounting/chart-of-accounts",
+      label: dictionary.openChartOfAccounts,
+      eligible: navigationAccess.chartOfAccounts,
+    },
+    {
+      href: "/settings/accounting/periods",
+      label: dictionary.openAccountingPeriods,
+      eligible: navigationAccess.accountingPeriods,
+    },
+    {
+      href: "/settings/accounting/posting-rules",
+      label: dictionary.openPostingRules,
+      eligible: navigationAccess.postingRules,
+    },
+    {
+      href: "/settings/accounting/inception",
+      label: dictionary.openInception,
+      eligible: navigationAccess.inception,
+    },
+    {
+      href: "/settings/accounting/statement-mappings",
+      label: dictionary.openStatementMappings,
+      eligible: navigationAccess.statementMappings,
+    },
+    {
+      href: "/settings/accounting/permissions",
+      label: dictionary.openPermissions,
+      eligible: navigationAccess.accountingPermissions,
+    },
+  ].filter(({ eligible }) => eligible);
 
   return (
     <div className="grid min-w-0 gap-6">
@@ -350,21 +385,23 @@ export default function AccountingSetupClient({
             <ProfileField key={label} label={label} value={started ? dictionary.started : dictionary.notStarted} />
           ))}
         </dl>
-        <div className="mt-6 grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {navigationCards.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className="group flex min-h-20 min-w-0 items-center justify-between gap-4 rounded-lg border border-outline-variant bg-surface-container-low p-4 text-start text-sm font-semibold text-on-surface hover:border-primary/50 hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <span className="min-w-0 break-words">{label}</span>
-              <ArrowRight
-                aria-hidden="true"
-                className={`size-4 shrink-0 text-primary ${locale === "ar" ? "rotate-180" : ""}`}
-              />
-            </Link>
-          ))}
-        </div>
+        {navigationCards.length > 0 ? (
+          <div className="mt-6 grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {navigationCards.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="group flex min-h-20 min-w-0 items-center justify-between gap-4 rounded-lg border border-outline-variant bg-surface-container-low p-4 text-start text-sm font-semibold text-on-surface hover:border-primary/50 hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <span className="min-w-0 break-words">{label}</span>
+                <ArrowRight
+                  aria-hidden="true"
+                  className={`size-4 shrink-0 text-primary ${locale === "ar" ? "rotate-180" : ""}`}
+                />
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       <section className="min-w-0 rounded-lg border border-outline-variant p-5">
