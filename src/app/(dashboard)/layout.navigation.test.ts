@@ -12,6 +12,10 @@ const layoutTestState = {
   grantedPermissions,
   checkedPermissions,
   locale: "en" as "en" | "ar",
+  appUser: { role: "viewer", is_active: true } as { role: string; is_active: boolean } | null,
+  setupStatus: "INITIALIZED" as "NOT_INITIALIZED" | "RECOVERY_REQUIRED" | "INITIALIZED",
+  setupStatusError: null as Error | null,
+  setupStatusChecks: 0,
 };
 
 function SidebarStub() {
@@ -63,7 +67,18 @@ const mockedModules = {
       state.checkedPermissions.push(permission);
       return state.grantedPermissions.has(permission);
     }
-    export async function getCurrentAppUser() { return { is_active: true }; }
+    export async function getCurrentAppUser() {
+      const state = globalThis.__ux03aLayoutTestState;
+      return state.appUser;
+    }
+  `),
+  "@/lib/accounting/queries": dataModule(`
+    export async function getAccountingSetupStatus() {
+      const state = globalThis.__ux03aLayoutTestState;
+      state.setupStatusChecks += 1;
+      if (state.setupStatusError) throw state.setupStatusError;
+      return { state: state.setupStatus };
+    }
   `),
   "@/lib/auth/role-permissions": dataModule(`
     export const PETTY_CASH_PERMISSIONS = { read: "petty_cash:read" };
@@ -131,6 +146,7 @@ export async function load(url, context, nextLoad) {
 
 register(`data:text/javascript,${encodeURIComponent(testModuleLoader)}`, import.meta.url);
 
+const { AuthDependencyError, ForbiddenError } = await import("@/lib/auth/errors");
 const { default: DashboardLayout } = await import("./layout.tsx");
 
 function findSidebarProps(node: ReactNode): Record<string, unknown> | null {
@@ -147,11 +163,27 @@ function findSidebarProps(node: ReactNode): Record<string, unknown> | null {
   return findSidebarProps((node.props as { children?: ReactNode }).children);
 }
 
-async function getSidebarProps(permissions: string[], locale: "en" | "ar" = "en") {
+async function getSidebarProps(
+  permissions: string[],
+  locale: "en" | "ar" = "en",
+  options: {
+    role?: string;
+    active?: boolean;
+    authenticated?: boolean;
+    setupStatus?: "NOT_INITIALIZED" | "RECOVERY_REQUIRED" | "INITIALIZED";
+    setupStatusError?: Error | null;
+  } = {},
+) {
   grantedPermissions.clear();
   checkedPermissions.length = 0;
   for (const permission of permissions) grantedPermissions.add(permission);
   layoutTestState.locale = locale;
+  layoutTestState.appUser = options.authenticated === false
+    ? null
+    : { role: options.role ?? "viewer", is_active: options.active ?? true };
+  layoutTestState.setupStatus = options.setupStatus ?? "INITIALIZED";
+  layoutTestState.setupStatusError = options.setupStatusError ?? null;
+  layoutTestState.setupStatusChecks = 0;
 
   const tree = await DashboardLayout({ children: React.createElement("main") });
   const props = findSidebarProps(tree);
@@ -170,13 +202,15 @@ test("authority-only permission result reaches Sidebar without enabling Accounti
 });
 
 test("view and profile permissions keep Setup separate from authority management", async () => {
-  const viewOnly = await getSidebarProps(["accounting:view"]);
+  const viewOnly = await getSidebarProps(["accounting:view"], "en", { role: "admin" });
   assert.equal(viewOnly.canAccessAccountingSetup, true);
   assert.equal(viewOnly.canManageAccountingAuthority, false);
+  assert.equal(layoutTestState.setupStatusChecks, 0);
 
-  const profileOnly = await getSidebarProps(["accounting:manage_profile"]);
+  const profileOnly = await getSidebarProps(["accounting:manage_profile"], "en", { role: "admin" });
   assert.equal(profileOnly.canAccessAccountingSetup, true);
   assert.equal(profileOnly.canManageAccountingAuthority, false);
+  assert.equal(layoutTestState.setupStatusChecks, 0);
 
   const viewAndAuthority = await getSidebarProps(["accounting:view", "accounting:manage_authority"]);
   assert.equal(viewAndAuthority.canAccessAccountingSetup, true);
@@ -187,19 +221,63 @@ test("view and profile permissions keep Setup separate from authority management
   assert.equal(profileAndAuthority.canManageAccountingAuthority, true);
 });
 
-test("Admin Setup eligibility is preserved without synthesizing authority access", async () => {
-  const adminOnly = await getSidebarProps(["users:manage"]);
-  assert.equal(adminOnly.isAdmin, true);
-  assert.equal(adminOnly.canAccessAccountingSetup, true);
-  assert.equal(adminOnly.canManageAccountingAuthority, false);
-  assert.equal(adminOnly.canManageAccountingChart, false);
-  assert.equal(adminOnly.canManageAccountingPeriods, false);
-  assert.equal(adminOnly.canManageAccountingInception, false);
+test("actual Admin Setup access follows lifecycle while users:manage stays independent", async () => {
+  for (const setupStatus of ["NOT_INITIALIZED", "RECOVERY_REQUIRED"] as const) {
+    const admin = await getSidebarProps([], "en", { role: "admin", setupStatus });
+    assert.equal(admin.canAccessAccountingSetup, true, setupStatus);
+    assert.equal(admin.isAdmin, false, "Accounting lifecycle access must not synthesize Users administration");
+    assert.equal(layoutTestState.setupStatusChecks, 1, setupStatus);
+  }
 
-  const adminWithAuthority = await getSidebarProps(["users:manage", "accounting:manage_authority"]);
-  assert.equal(adminWithAuthority.isAdmin, true);
-  assert.equal(adminWithAuthority.canAccessAccountingSetup, true);
-  assert.equal(adminWithAuthority.canManageAccountingAuthority, true);
+  const initializedAdmin = await getSidebarProps([], "en", {
+    role: "admin",
+    setupStatusError: new ForbiddenError("initialized admin without setup capability"),
+  });
+  assert.equal(initializedAdmin.canAccessAccountingSetup, false);
+  assert.equal(layoutTestState.setupStatusChecks, 1);
+
+  const initializedCapabilityOnly = await getSidebarProps(["accounting:manage_authority"], "en", {
+    role: "admin",
+    setupStatusError: new ForbiddenError("authority cannot imply setup access"),
+  });
+  assert.equal(initializedCapabilityOnly.canAccessAccountingSetup, false);
+  assert.equal(initializedCapabilityOnly.canManageAccountingAuthority, true);
+  assert.equal(layoutTestState.setupStatusChecks, 1);
+
+  const usersManagerOnly = await getSidebarProps(["users:manage"], "en", {
+    role: "manager",
+    setupStatusError: new Error("status lookup must not run for non-admins"),
+  });
+  assert.equal(usersManagerOnly.isAdmin, true, "Existing Users navigation remains permission-gated");
+  assert.equal(usersManagerOnly.canAccessAccountingSetup, false);
+  assert.equal(layoutTestState.setupStatusChecks, 0);
+
+  const roleAdminWithoutUsersPermission = await getSidebarProps([], "en", {
+    role: "admin",
+    setupStatus: "NOT_INITIALIZED",
+  });
+  assert.equal(roleAdminWithoutUsersPermission.canAccessAccountingSetup, true);
+  assert.equal(roleAdminWithoutUsersPermission.isAdmin, false);
+});
+
+test("Accounting Setup lifecycle dependency failures are not converted into permission results", async () => {
+  const dependencyFailure = new AuthDependencyError("accounting setup status unavailable");
+  await assert.rejects(
+    () => getSidebarProps([], "en", { role: "admin", setupStatusError: dependencyFailure }),
+    (error) => error === dependencyFailure,
+  );
+  assert.equal(layoutTestState.setupStatusChecks, 1);
+});
+
+test("unauthenticated and inactive actors receive no Dashboard navigation", async () => {
+  for (const options of [{ authenticated: false }, { role: "admin", active: false }]) {
+    await assert.rejects(
+      () => getSidebarProps(["users:manage"], "en", options),
+      /redirect:\/unauthorized/,
+    );
+    assert.deepEqual(checkedPermissions, []);
+    assert.equal(layoutTestState.setupStatusChecks, 0);
+  }
 });
 
 test("Chart, Period, and Inception capabilities do not synthesize Accounting Setup or authority navigation", async () => {

@@ -50,6 +50,7 @@ mock.module("@/lib/auth/permissions", {
 });
 mock.module(new URL("./permissions.ts", import.meta.url).href, {
   namedExports: {
+    canAccessAccountingArBridge: (canView: boolean, canManageArBridge: boolean) => canView || canManageArBridge,
     resolveAccountingCapability: async (_actorId: string, capability: string) =>
       ["accounting:manage_chart", "accounting:view", "accounting:manage_inception"].includes(capability) && state.canManage,
   },

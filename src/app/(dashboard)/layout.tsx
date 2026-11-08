@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import {
   checkPermission,
   getCurrentAppUser,
 } from "@/lib/auth/permissions";
+import { getAccountingSetupStatus } from "@/lib/accounting/queries";
 import { PETTY_CASH_PERMISSIONS, SUPPLIER_ADVANCE_PERMISSIONS, SUPPLIER_BILL_PERMISSIONS, SUPPLIER_PAYMENT_PERMISSIONS } from "@/lib/auth/role-permissions";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
@@ -50,7 +52,17 @@ export default async function DashboardLayout({
     checkPermission("accounting:manage_periods"),
     checkPermission("accounting:manage_inception"),
   ]);
-  const canAccessAccountingSetup = canViewAccounting || canManageAccountingProfile || isAdmin;
+  let canAccessAccountingSetup = canViewAccounting || canManageAccountingProfile;
+  if (!canAccessAccountingSetup && appUser.role === "admin") {
+    try {
+      const setupStatus = await getAccountingSetupStatus();
+      canAccessAccountingSetup =
+        setupStatus.state === "NOT_INITIALIZED" || setupStatus.state === "RECOVERY_REQUIRED";
+    } catch (error) {
+      if (error instanceof UnauthorizedError) redirect("/unauthorized");
+      if (!(error instanceof ForbiddenError)) throw error;
+    }
+  }
   const effectiveReportPermissions = new Map(
     REPORT_NAVIGATION_PERMISSIONS.map((permission, index) => [permission, reportPermissionValues[index] === true]),
   );
