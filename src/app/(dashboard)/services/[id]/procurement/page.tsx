@@ -7,6 +7,7 @@ import { PROCUREMENT_COMMITMENT_PERMISSIONS } from "@/lib/auth/role-permissions"
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import type { Locale } from "@/lib/i18n/locales";
 import { getServicesDictionary } from "@/lib/i18n/dictionaries/services";
+import { getCommonDictionary } from "@/lib/i18n/dictionaries/common";
 import { getActiveProcurementSupplierOptions } from "@/lib/procurement/queries";
 import {
   getProcurementPackagesByServiceId,
@@ -19,6 +20,20 @@ import { RecordBackButton } from "@/components/navigation/RecordBackButton";
 import ProcurementPackageWorkspace from "./ProcurementPackageWorkspace";
 
 export const dynamic = "force-dynamic";
+
+function resolveProcurementReturnLabel(
+  returnHref: string,
+  labels: { backToServices: string; backToService: string },
+  genericBack: string,
+): string {
+  if (returnHref === "/services" || returnHref.startsWith("/services?")) {
+    return labels.backToServices;
+  }
+  if (/^\/services\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\?[^#]*)?$/iu.test(returnHref)) {
+    return labels.backToService;
+  }
+  return genericBack;
+}
 
 export default async function ServiceProcurementPage({
   params,
@@ -33,6 +48,7 @@ export default async function ServiceProcurementPage({
     getCurrentSessionEffectiveLocale(),
   ]);
   const dictionary = getServicesDictionary(locale);
+  const commonDictionary = getCommonDictionary(locale);
   const returnTo = safeRecordReturnTo(resolvedSearchParams.returnTo, `/services/${id}`);
   const currentProcurementUrl = resolvedSearchParams.returnTo
     ? appendReturnTo(`/services/${id}/procurement`, returnTo)
@@ -105,7 +121,14 @@ export default async function ServiceProcurementPage({
         locale={locale}
         taskTitle={dictionary.procurementWorkspace.title}
         returnTo={returnTo}
-        returnLabel={dictionary.detail.backToServices}
+        returnLabel={resolveProcurementReturnLabel(
+          returnTo,
+          {
+            backToServices: dictionary.detail.backToServices,
+            backToService: dictionary.procurementWorkspace.backToService,
+          },
+          commonDictionary.actions.back,
+        )}
         title={dictionary.states.genericError}
         message={dictionary.states.serviceDataLoadError}
         role="alert"

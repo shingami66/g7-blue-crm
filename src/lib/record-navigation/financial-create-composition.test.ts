@@ -26,7 +26,6 @@ const financialForms = [
     list: "app/(dashboard)/supplier-payments/SupplierPaymentsClient.tsx",
     fallback: "/supplier-payments",
     title: "recordPayment",
-    returnLabel: "backToBill",
   },
   {
     name: "Supplier Advance Create",
@@ -45,7 +44,7 @@ test("the three routed financial Create pages use one shared form shell and labe
     const form = read(route.form);
     assert.ok(page.includes('<PageFrame variant="form">'), `${route.name} must use PageFrame form`);
     assert.ok(page.includes("<PageLocation"), `${route.name} must expose structural location`);
-    assert.ok(page.includes(`label={dictionary.${route.returnLabel}}`), `${route.name} must label its return destination`);
+    if ("returnLabel" in route) assert.ok(page.includes(`label={dictionary.${route.returnLabel}}`), `${route.name} must label its return destination`);
     assert.match(page, /<PageHeader variant="composed" title=\{dictionary\./);
     assert.doesNotMatch(page, /<main\b|<h1\b/i, `${route.name} must not add a main landmark or duplicate h1`);
     assert.doesNotMatch(form, /<h1\b/i, `${route.name} form body must not duplicate the composed h1`);
@@ -95,7 +94,6 @@ test("Supplier Payment retains its bill and original list context through Return
   assert.match(page, /returnTo\?: string \| string\[\]/);
   assert.match(page, /safeRecordReturnTo\(returnToParam, "\/supplier-payments"\)/);
   assert.match(page, /dictionary=\{dictionary\} returnTo=\{returnTo\}/);
-  assert.ok(page.includes("label={dictionary.backToBill}"));
   assert.match(paymentDictionary, /backToBill: "Back to Supplier Bill"/);
   assert.match(paymentDictionary, /backToBill: "العودة إلى فاتورة المورد"/);
   assert.ok(billDetail.includes("appendReturnTo(`/supplier-payments/new?billId=${encodeURIComponent(bill.id)}`, supplierBillDetailHref(bill.id, returnTo))"));

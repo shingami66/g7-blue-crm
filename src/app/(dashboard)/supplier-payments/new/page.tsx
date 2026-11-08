@@ -4,6 +4,7 @@ import { checkPermission } from "@/lib/auth/permissions";
 import { SUPPLIER_PAYMENT_PERMISSIONS } from "@/lib/auth/role-permissions";
 import { getCurrentSessionEffectiveLocale } from "@/lib/i18n/session-locale";
 import { getSupplierPaymentsDictionary } from "@/lib/i18n/dictionaries/supplier-payments";
+import { getCommonDictionary } from "@/lib/i18n/dictionaries/common";
 import PageLocation from "@/components/navigation/PageLocation";
 import { RecordBackButton } from "@/components/navigation/RecordBackButton";
 import PageFrame from "@/components/ui/PageFrame";
@@ -15,9 +16,24 @@ import SupplierPaymentForm from "../SupplierPaymentForm";
 
 export const dynamic = "force-dynamic";
 
+function resolveSupplierPaymentReturnLabel(
+  returnHref: string,
+  labels: { backToBill: string; backToList: string },
+  genericBack: string,
+): string {
+  if (returnHref === "/supplier-payments" || returnHref.startsWith("/supplier-payments?")) {
+    return labels.backToList;
+  }
+  if (/^\/supplier-bills\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\?[^#]*)?$/iu.test(returnHref)) {
+    return labels.backToBill;
+  }
+  return genericBack;
+}
+
 export default async function NewSupplierPaymentPage({ searchParams }: { searchParams: Promise<{ billId?: string | string[]; returnTo?: string | string[] }> }) {
   const [locale, canRecord, params] = await Promise.all([getCurrentSessionEffectiveLocale(), checkPermission(SUPPLIER_PAYMENT_PERMISSIONS.record), searchParams]);
   const dictionary = getSupplierPaymentsDictionary(locale);
+  const commonDictionary = getCommonDictionary(locale);
   const isRtl = locale === "ar";
   const renderErrorState = (returnHref: string, title: string, message: string, role: "alert" | "status") => (
     <div dir={isRtl ? "rtl" : "ltr"} className="w-full min-w-0">
@@ -30,7 +46,18 @@ export default async function NewSupplierPaymentPage({ searchParams }: { searchP
               { label: dictionary.recordPayment, current: true },
             ],
           }}
-          returnControl={<RecordBackButton href={returnHref} locale={locale} variant="labeled" />}
+          returnControl={
+            <RecordBackButton
+              href={returnHref}
+              locale={locale}
+              variant="labeled"
+              label={resolveSupplierPaymentReturnLabel(
+                returnHref,
+                dictionary,
+                commonDictionary.actions.back,
+              )}
+            />
+          }
         />
         <PageHeader variant="composed" title={dictionary.recordPayment} />
         <StateCard title={title} message={message} role={role} />
@@ -67,7 +94,18 @@ export default async function NewSupplierPaymentPage({ searchParams }: { searchP
               { label: dictionary.recordPayment, current: true },
             ],
           }}
-          returnControl={<RecordBackButton href={returnTo} locale={locale} variant="labeled" label={dictionary.backToBill} />}
+          returnControl={
+            <RecordBackButton
+              href={returnTo}
+              locale={locale}
+              variant="labeled"
+              label={resolveSupplierPaymentReturnLabel(
+                returnTo,
+                dictionary,
+                commonDictionary.actions.back,
+              )}
+            />
+          }
         />
         <PageHeader variant="composed" title={dictionary.recordPayment} />
         <SupplierPaymentForm supplierBillId={bill.id} billNumber={bill.bill_number} supplierName={bill.supplier_name} serviceNumber={bill.service_number} currency={summary.currency} outstandingAmount={summary.outstanding_amount} dictionary={dictionary} returnTo={returnTo} />

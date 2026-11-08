@@ -238,6 +238,8 @@ function assertReturn(doc: Document, locale: Locale, href: string, label = getBa
   assert.equal(link.getAttribute("href"), href);
   assert.equal(link.textContent?.trim(), label);
   assert.ok(link.className.includes("focus-visible:ring-2"));
+  assert.equal(link.querySelector("svg")?.classList.contains("scale-x-[-1]"), locale === "ar");
+  assert.equal([...doc.querySelectorAll("a")].filter((candidate) => candidate.getAttribute("aria-label") === label).length, 1);
   assert.equal(doc.querySelectorAll("a a, a button, button a, button button").length, 0);
 }
 
@@ -250,6 +252,7 @@ function assertErrorShell(
   role: "alert" | "status",
   returnHref: string,
   protectedValues: string[] = [],
+  returnLabel = getBackLabel(locale),
 ) {
   assertPageShell(doc, route, locale, dictionary);
   assert.equal(doc.querySelectorAll("h2").length, 1, route);
@@ -260,7 +263,7 @@ function assertErrorShell(
   assert.equal(card.getAttribute("aria-labelledby"), heading?.id);
   assert.equal(doc.querySelectorAll("[role=alert], [role=status]").length, 1, route);
   assert.equal(card.querySelector("p")?.textContent, message, route);
-  assertReturn(doc, locale, returnHref);
+  assertReturn(doc, locale, returnHref, returnLabel);
   assert.equal(doc.querySelectorAll("form, button, input, select, textarea").length, 0, route);
   const markup = doc.documentElement.innerHTML;
   for (const value of protectedValues) assert.equal(markup.includes(value), false, `${route} exposed ${value}`);
@@ -305,6 +308,35 @@ for (const locale of ["en", "ar"] as const) {
     assertReturn(advanceDoc, locale, allowedReturn, advanceDictionary.backToList);
     assert.deepEqual(scenario.permissionChecks, ["supplier_advances:authorize"]);
     assert.deepEqual(scenario.queryCalls, ["advanceCommitments"]);
+  });
+
+  test(`${locale}: Supplier Payment Return labels follow the validated destination`, async () => {
+    const dictionary = getDictionary("payment", locale);
+    const billId = "bill-private-id";
+    const paymentList = "/supplier-payments";
+    const paymentListWithQuery = "/supplier-payments?page=3&search=Supplier%20A";
+    const supplierBillWithQuery = `${recordReturn}?tab=payments`;
+    const otherAllowedRoute = "/services/123e4567-e89b-42d3-a456-426614174001";
+    const cases = [
+      { params: { billId, returnTo: recordReturn }, href: recordReturn, label: dictionary.backToBill! },
+      { params: { billId, returnTo: supplierBillWithQuery }, href: supplierBillWithQuery, label: dictionary.backToBill! },
+      { params: { billId, returnTo: paymentList }, href: paymentList, label: dictionary.backToList },
+      { params: { billId, returnTo: paymentListWithQuery }, href: paymentListWithQuery, label: dictionary.backToList },
+      { params: { billId }, href: paymentList, label: dictionary.backToList },
+      { params: { billId, returnTo: "https://outside.example/private" }, href: paymentList, label: dictionary.backToList },
+      { params: { billId, returnTo: "//outside.example/private" }, href: paymentList, label: dictionary.backToList },
+      { params: { billId, returnTo: "/settings?tab=security" }, href: paymentList, label: dictionary.backToList },
+      { params: { billId, returnTo: otherAllowedRoute }, href: otherAllowedRoute, label: getBackLabel(locale) },
+    ];
+
+    for (const scenarioCase of cases) {
+      reset(locale);
+      const doc = await renderPage("payment", scenarioCase.params);
+      assertPageShell(doc, "payment", locale, dictionary);
+      assertReturn(doc, locale, scenarioCase.href, scenarioCase.label);
+      assert.equal(scenario.formProps["supplier-payment"]?.supplierBillId, billId);
+      assert.equal(scenario.formProps["supplier-payment"]?.returnTo, scenarioCase.href);
+    }
   });
 
   test(`${locale}: Supplier Bill permission, forbidden, load, missing-options, and empty states retain safe task context`, async () => {
@@ -353,40 +385,45 @@ for (const locale of ["en", "ar"] as const) {
 
     reset(locale);
     let doc = await renderPage("payment", { returnTo: "https://evil.example/private" });
-    assertErrorShell(doc, "payment", locale, dictionary, invalidMessage, "alert", "/supplier-payments", protectedBillValues);
+    assertErrorShell(doc, "payment", locale, dictionary, invalidMessage, "alert", "/supplier-payments", protectedBillValues, dictionary.backToList);
     assert.deepEqual(scenario.queryCalls, []);
 
     reset(locale);
     scenario.billResult = { bill: null };
     doc = await renderPage("payment", { billId: "missing-bill-reference", returnTo: "/supplier-payments" });
-    assertErrorShell(doc, "payment", locale, dictionary, invalidMessage, "alert", "/supplier-payments", [...protectedBillValues, "missing-bill-reference"]);
+    assertErrorShell(doc, "payment", locale, dictionary, invalidMessage, "alert", "/supplier-payments", [...protectedBillValues, "missing-bill-reference"], dictionary.backToList);
 
     reset(locale);
     scenario.billResult = { bill: makeBill("pending") };
     doc = await renderPage("payment", { billId: "bill-private-id", returnTo: "/supplier-payments" });
-    assertErrorShell(doc, "payment", locale, dictionary, invalidMessage, "alert", "/supplier-payments", protectedBillValues);
+    assertErrorShell(doc, "payment", locale, dictionary, invalidMessage, "alert", "/supplier-payments", protectedBillValues, dictionary.backToList);
 
     reset(locale);
     scenario.paymentSummary = null;
     doc = await renderPage("payment", { billId: "bill-private-id", returnTo: "/supplier-payments" });
-    assertErrorShell(doc, "payment", locale, dictionary, invalidMessage, "alert", "/supplier-payments", protectedBillValues);
+    assertErrorShell(doc, "payment", locale, dictionary, invalidMessage, "alert", "/supplier-payments", protectedBillValues, dictionary.backToList);
 
     reset(locale);
     scenario.failures.bill = new ForbiddenError("private bill access denied");
     doc = await renderPage("payment", { billId: "bill-private-id", returnTo: recordReturn });
-    assertErrorShell(doc, "payment", locale, dictionary, deniedMessage, "status", "/supplier-payments", ["bill-private-id", "123e4567-e89b-42d3-a456-426614174000", ...protectedBillValues]);
+    assertErrorShell(doc, "payment", locale, dictionary, deniedMessage, "status", "/supplier-payments", ["bill-private-id", "123e4567-e89b-42d3-a456-426614174000", ...protectedBillValues], dictionary.backToList);
     assert.deepEqual(scenario.queryCalls, ["bill"]);
     assert.equal(scenario.queryArguments.billId, "bill-private-id");
 
     reset(locale);
     scenario.failures.bill = new Error("private query details and supplier name");
     doc = await renderPage("payment", { billId: "bill-private-id", returnTo: recordReturn });
-    assertErrorShell(doc, "payment", locale, dictionary, loadMessage, "alert", recordReturn, ["private query details and supplier name", ...protectedBillValues]);
+    assertErrorShell(doc, "payment", locale, dictionary, loadMessage, "alert", recordReturn, ["private query details and supplier name", ...protectedBillValues], dictionary.backToBill!);
+
+    reset(locale);
+    scenario.failures.bill = new Error("private query details and supplier name");
+    doc = await renderPage("payment", { billId: "bill-private-id", returnTo: "/services/123e4567-e89b-42d3-a456-426614174001" });
+    assertErrorShell(doc, "payment", locale, dictionary, loadMessage, "alert", "/services/123e4567-e89b-42d3-a456-426614174001", ["private query details and supplier name", ...protectedBillValues], getBackLabel(locale));
 
     reset(locale);
     scenario.failures.paymentSummary = new Error("payment summary transport details");
     doc = await renderPage("payment", { billId: "bill-private-id", returnTo: "//evil.example" });
-    assertErrorShell(doc, "payment", locale, dictionary, loadMessage, "alert", "/supplier-payments", ["payment summary transport details", ...protectedBillValues]);
+    assertErrorShell(doc, "payment", locale, dictionary, loadMessage, "alert", "/supplier-payments", ["payment summary transport details", ...protectedBillValues], dictionary.backToList);
     assert.deepEqual(scenario.permissionChecks, ["supplier_payments:record"]);
   });
 

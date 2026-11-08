@@ -263,6 +263,7 @@ function assertErrorShell(doc: Document, route: Route, locale: Locale, config: {
   message: string;
   role: "alert" | "status";
   returnHref: string;
+  returnLabel: string;
   protectedValues?: string[];
 }) {
   assert.equal(doc.querySelectorAll("h1").length, 1);
@@ -277,11 +278,10 @@ function assertErrorShell(doc: Document, route: Route, locale: Locale, config: {
   assert.equal(doc.querySelectorAll("[role=alert], [role=status]").length, 1);
   assert.equal(scenario.workspaceProps[route], null, "failure states do not render the specialized workspace");
 
-  const dictionary = getServicesDictionary(locale);
-  const back = [...doc.querySelectorAll<HTMLAnchorElement>("a")].find((link) => link.getAttribute("aria-label") === dictionary.detail.backToServices);
+  const back = [...doc.querySelectorAll<HTMLAnchorElement>("a")].find((link) => link.getAttribute("aria-label") === config.returnLabel);
   assert.ok(back, "localized labeled Return link is visible");
   assert.equal(back.getAttribute("href"), config.returnHref);
-  assert.equal(back.textContent?.trim(), dictionary.detail.backToServices);
+  assert.equal(back.textContent?.trim(), config.returnLabel);
   assert.equal(doc.querySelectorAll("a").length, 1, "failure state has one Return control");
   assert.ok(back.className.includes("focus-visible:ring-2"));
   assert.equal(back.querySelector("svg")?.classList.contains("scale-x-[-1]"), locale === "ar");
@@ -296,7 +296,7 @@ function assertErrorShell(doc: Document, route: Route, locale: Locale, config: {
   for (const value of config.protectedValues ?? privateValues) assert.equal(markup.includes(value), false, `exposed protected value: ${value}`);
 }
 
-function errorConfig(route: Route, locale: Locale, kind: "denied" | "load", returnHref: string) {
+function errorConfig(route: Route, locale: Locale, kind: "denied" | "load", returnHref: string, returnLabel = getServicesDictionary(locale).detail.backToServices) {
   const services = getServicesDictionary(locale);
   const taskTitle = route === "procurement" ? services.procurementWorkspace.title : getCommitmentsDictionary(locale).title;
   const commitments = getCommitmentsDictionary(locale);
@@ -308,6 +308,7 @@ function errorConfig(route: Route, locale: Locale, kind: "denied" | "load", retu
       : kind === "denied" ? commitments.noPermission : commitments.loadError,
     role: kind === "denied" ? "status" as const : "alert" as const,
     returnHref,
+    returnLabel,
   };
 }
 
@@ -332,22 +333,74 @@ for (const locale of ["en", "ar"] as const) {
     assertErrorShell(doc, "procurement", locale, errorConfig("procurement", locale, "denied", "/services"));
     assert.equal(scenario.calls.some((call) => ["packages", "suppliers", "quotations"].includes(call)), false);
 
-    reset(locale);
-    scenario.packageResult = { packages: [], error: new Error("private query detail and supplier name") };
-    doc = await render("procurement", { returnTo: `/services/${otherServiceId}` });
-    assertErrorShell(doc, "procurement", locale, {
-      ...errorConfig("procurement", locale, "load", `/services/${otherServiceId}`),
-      protectedValues: privateValues.filter((value) => value !== otherServiceId),
-    });
-    assert.deepEqual(scenario.calls, [`service:${serviceId}`, "packages", "suppliers", "quotations"]);
+    const serviceDetail = `/services/${otherServiceId}`;
+    const serviceList = "/services";
+    const fallbackServiceDetail = `/services/${serviceId}`;
+    const otherCustomer = "/customers/123e4567-e89b-42d3-a456-426614174111";
+    const specializedProcurement = `${serviceDetail}/procurement?tab=packages`;
+    const packageFailureCases = [
+      {
+        params: { returnTo: serviceDetail },
+        returnHref: serviceDetail,
+        returnLabel: services.procurementWorkspace.backToService,
+      },
+      {
+        params: { returnTo: `${serviceDetail}?tab=overview` },
+        returnHref: `${serviceDetail}?tab=overview`,
+        returnLabel: services.procurementWorkspace.backToService,
+      },
+      {
+        params: { returnTo: serviceList },
+        returnHref: serviceList,
+        returnLabel: services.detail.backToServices,
+      },
+      {
+        params: { returnTo: "/services?page=2&status=Inquiry" },
+        returnHref: "/services?page=2&status=Inquiry",
+        returnLabel: services.detail.backToServices,
+      },
+      {
+        params: {},
+        returnHref: fallbackServiceDetail,
+        returnLabel: services.procurementWorkspace.backToService,
+      },
+      {
+        params: { returnTo: "https://outside.example/private" },
+        returnHref: fallbackServiceDetail,
+        returnLabel: services.procurementWorkspace.backToService,
+      },
+      {
+        params: { returnTo: "//outside.example/private" },
+        returnHref: fallbackServiceDetail,
+        returnLabel: services.procurementWorkspace.backToService,
+      },
+      {
+        params: { returnTo: "/settings?tab=security" },
+        returnHref: fallbackServiceDetail,
+        returnLabel: services.procurementWorkspace.backToService,
+      },
+      {
+        params: { returnTo: otherCustomer },
+        returnHref: otherCustomer,
+        returnLabel: getCommonDictionary(locale).actions.back,
+      },
+      {
+        params: { returnTo: specializedProcurement },
+        returnHref: specializedProcurement,
+        returnLabel: getCommonDictionary(locale).actions.back,
+      },
+    ];
 
-    reset(locale);
-    scenario.packageResult = { packages: [], error: new Error("private query detail and supplier name") };
-    doc = await render("procurement", { returnTo: "//outside.example/private" });
-    assertErrorShell(doc, "procurement", locale, {
-      ...errorConfig("procurement", locale, "load", `/services/${serviceId}`),
-      protectedValues: privateValues.filter((value) => value !== serviceId && value !== otherServiceId),
-    });
+    for (const context of packageFailureCases) {
+      reset(locale);
+      scenario.packageResult = { packages: [], error: new Error("private query detail and supplier name") };
+      doc = await render("procurement", context.params);
+      assertErrorShell(doc, "procurement", locale, {
+        ...errorConfig("procurement", locale, "load", context.returnHref, context.returnLabel),
+        protectedValues: privateValues.filter((value) => !context.returnHref.includes(value)),
+      });
+      assert.deepEqual(scenario.calls, [`service:${serviceId}`, "packages", "suppliers", "quotations"]);
+    }
     assert.equal(services.procurementWorkspace.title, doc.querySelector("h1")?.textContent);
   });
 
