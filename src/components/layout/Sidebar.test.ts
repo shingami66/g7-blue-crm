@@ -8,6 +8,7 @@ import {
   navigationDictionaryAr,
   navigationDictionaryEn,
 } from "../../lib/i18n/dictionaries/navigation.ts";
+import { getAccountingPermissionsDictionary } from "../../lib/i18n/dictionaries/accounting-permissions.ts";
 import { getReportDefinitions } from "../../lib/reports/catalog.ts";
 import { getReportCenterDictionary } from "../../lib/i18n/dictionaries/report-center.ts";
 import type { ReportNavigationItem } from "../../lib/reports/types.ts";
@@ -132,6 +133,7 @@ function renderSidebar(props: {
   canReadSupplierPayments?: boolean;
   canReadSupplierAdvances?: boolean;
   canAccessAccountingSetup?: boolean;
+  canManageAccountingAuthority?: boolean;
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
   locale?: "en" | "ar";
@@ -477,7 +479,7 @@ test("8. Administration renders Settings for all, but Users appears only for adm
   assert.ok(adminHtml.includes(navigationDictionaryEn.sections.administration), "Administration header must be rendered");
 });
 
-test("Accounting setup navigation is permission-gated and localized", () => {
+test("Accounting Setup remains separately permission-gated and localized", () => {
   assert.equal(navigationDictionaryEn.modules.accounting, "Accounting");
   assert.equal(navigationDictionaryEn.modules.accountingSetup, "Accounting Setup");
   assert.equal(navigationDictionaryAr.modules.accounting, "المحاسبة");
@@ -487,6 +489,7 @@ test("Accounting setup navigation is permission-gated and localized", () => {
 
   const hidden = renderSidebar({ isAdmin: true, canAccessAccountingSetup: false, currentPathname: "/settings" });
   assert.ok(!hidden.includes('href="/settings/accounting"'));
+  assert.ok(!hidden.includes('href="/settings/accounting/permissions"'));
 
   const accountingOnly = renderSidebar({
     canAccessAccountingSetup: true,
@@ -508,6 +511,7 @@ test("Accounting setup navigation is permission-gated and localized", () => {
     canManageArBridge: true,
     canReconcileBank: true,
     canAccessAccountingSetup: true,
+    canManageAccountingAuthority: true,
     currentPathname: "/settings/accounting",
   });
   const englishDoc = new JSDOM(english).window.document;
@@ -518,12 +522,15 @@ test("Accounting setup navigation is permission-gated and localized", () => {
     "/accounting/bank-reconciliation",
     "/accounting/period-close",
     "/settings/accounting",
+    "/settings/accounting/permissions",
   ]);
   assert.equal(getSectionExpandedState(english, "accountingOperations"), true);
   assert.equal(getSectionExpandedState(english, "administration"), false);
   assert.equal(englishDoc.querySelectorAll('a[href="/settings/accounting"]').length, 1);
   assert.equal(englishDoc.querySelector('a[href="/settings/accounting"]')?.textContent?.trim(), navigationDictionaryEn.modules.accountingSetup);
+  assert.equal(englishDoc.querySelector('a[href="/settings/accounting/permissions"]')?.textContent?.trim(), getAccountingPermissionsDictionary("en").title);
   assert.match(english, /href="\/settings\/accounting"[^>]*aria-current="page"/);
+  assert.equal(englishDoc.querySelector('a[href="/settings/accounting/permissions"]')?.getAttribute("aria-current"), null);
 
   const admin = renderSidebar({
     isAdmin: true,
@@ -534,10 +541,12 @@ test("Accounting setup navigation is permission-gated and localized", () => {
   const administrationLinks = adminDoc.querySelectorAll("#nav-section-content-administration a");
   assert.deepEqual([...administrationLinks].map((link) => link.getAttribute("href")), ["/settings", "/admin/users"]);
   assert.equal(adminDoc.querySelectorAll('a[href="/settings/accounting"]').length, 1);
+  assert.equal(adminDoc.querySelectorAll('a[href="/settings/accounting/permissions"]').length, 0);
 
   const arabic = renderSidebar({
     canAccessAccountingSetup: true,
-    currentPathname: "/settings/accounting",
+    canManageAccountingAuthority: true,
+    currentPathname: "/settings/accounting/permissions",
     locale: "ar",
     shellDirection: "rtl",
   });
@@ -545,41 +554,143 @@ test("Accounting setup navigation is permission-gated and localized", () => {
   assert.equal(arabicDoc.querySelector('a[href="/settings/accounting"]')?.textContent?.trim(), navigationDictionaryAr.modules.accountingSetup);
   assert.ok(arabicDoc.querySelector("#nav-section-trigger-accountingOperations")?.textContent?.includes(navigationDictionaryAr.sections.accountingOperations));
   assert.equal(arabicDoc.querySelectorAll('a[href="/settings/accounting"]').length, 1);
-  assert.match(arabic, /href="\/settings\/accounting"[^>]*aria-current="page"/);
+  assert.equal(arabicDoc.querySelector('a[href="/settings/accounting"]')?.getAttribute("aria-current"), null);
+  assert.equal(arabicDoc.querySelector('a[href="/settings/accounting/permissions"]')?.textContent?.trim(), getAccountingPermissionsDictionary("ar").title);
+  assert.equal(arabicDoc.querySelector('a[href="/settings/accounting/permissions"]')?.getAttribute("aria-current"), "page");
   assert.ok(arabic.includes('dir="rtl"'));
 });
 
-test("all Accounting Setup routes expand Accounting and activate only the Accounting Setup link", () => {
+test("authority-only users get one accessible, localized Accounting Permissions destination", () => {
+  const href = "/settings/accounting/permissions";
+  const english = renderSidebar({ canManageAccountingAuthority: true, currentPathname: href });
+  const englishDoc = new JSDOM(english).window.document;
+  const accountingLinks = englishDoc.querySelectorAll("#nav-section-content-accountingOperations a");
+  const permissionsLink = englishDoc.querySelector(`a[href="${href}"]`);
+
+  assert.equal(getSectionExpandedState(english, "accountingOperations"), true);
+  assert.deepEqual([...accountingLinks].map((link) => link.getAttribute("href")), [href]);
+  assert.equal(englishDoc.querySelectorAll('a[href="/settings/accounting"]').length, 0);
+  assert.equal(permissionsLink?.tagName, "A", "The destination must use a native keyboard-accessible link");
+  assert.equal((permissionsLink as HTMLAnchorElement | null)?.tabIndex, 0);
+  assert.equal(permissionsLink?.textContent?.trim(), getAccountingPermissionsDictionary("en").title);
+  assert.equal(permissionsLink?.getAttribute("aria-current"), "page");
+  const expandedSections = [...ALL_SECTION_KEYS, "accountingOperations"]
+    .filter((key) => getSectionExpandedState(english, key));
+  assert.deepEqual(expandedSections, ["accountingOperations"]);
+
+  const arabic = renderSidebar({
+    canManageAccountingAuthority: true,
+    currentPathname: href,
+    locale: "ar",
+    shellDirection: "rtl",
+  });
+  const arabicDoc = new JSDOM(arabic).window.document;
+  assert.equal(
+    arabicDoc.querySelector(`a[href="${href}"]`)?.textContent?.trim(),
+    getAccountingPermissionsDictionary("ar").title,
+  );
+  assert.ok(arabic.includes('dir="rtl"'));
+  assert.ok(english.includes('dir="ltr"'));
+});
+
+test("Accounting Permissions is gated only by accounting authority management", () => {
+  const nonAuthorityScenarios = [
+    { label: "application Admin", props: { isAdmin: true } },
+    { label: "accounting viewer", props: { canViewAccounting: true } },
+    { label: "Accounting Setup access", props: { canAccessAccountingSetup: true } },
+  ];
+
+  for (const { label, props } of nonAuthorityScenarios) {
+    const doc = new JSDOM(renderSidebar({ ...props, currentPathname: "/settings" })).window.document;
+    assert.equal(doc.querySelectorAll('a[href="/settings/accounting/permissions"]').length, 0, label);
+  }
+});
+
+test("view and profile users retain Setup beside the dedicated authority destination", () => {
+  const scenarios = [
+    {
+      label: "view + manage_authority",
+      props: { canViewAccounting: true, canAccessAccountingSetup: true, canManageAccountingAuthority: true },
+      expected: [
+        "/accounting/journals",
+        "/accounting/ar-bridge",
+        "/accounting/bank-reconciliation",
+        "/accounting/period-close",
+        "/settings/accounting",
+        "/settings/accounting/permissions",
+      ],
+    },
+    {
+      label: "manage_profile + manage_authority",
+      props: { canAccessAccountingSetup: true, canManageAccountingAuthority: true },
+      expected: ["/settings/accounting", "/settings/accounting/permissions"],
+    },
+  ];
+
+  for (const { label, props, expected } of scenarios) {
+    const html = renderSidebar({ ...props, currentPathname: "/settings/accounting" });
+    const doc = new JSDOM(html).window.document;
+    const links = doc.querySelectorAll("#nav-section-content-accountingOperations a");
+    assert.deepEqual([...links].map((link) => link.getAttribute("href")), expected, label);
+    assert.equal(doc.querySelectorAll('a[href="/settings/accounting"]').length, 1, label);
+    assert.equal(doc.querySelectorAll('a[href="/settings/accounting/permissions"]').length, 1, label);
+  }
+});
+
+test("Accounting Setup routes preserve active behavior while Permissions has its own exact active state", () => {
   const routes = [
     "/settings/accounting",
     "/settings/accounting/chart-of-accounts",
     "/settings/accounting/periods",
     "/settings/accounting/posting-rules",
     "/settings/accounting/statement-mappings",
-    "/settings/accounting/permissions",
     "/settings/accounting/inception",
     "/settings/accounting/inception/package-1",
   ];
 
   for (const currentPathname of routes) {
-    const html = renderSidebar({ canAccessAccountingSetup: true, currentPathname });
+    const html = renderSidebar({ canAccessAccountingSetup: true, canManageAccountingAuthority: true, currentPathname });
     const doc = new JSDOM(html).window.document;
     assert.equal(getSectionExpandedState(html, "accountingOperations"), true, currentPathname);
     assert.equal(getSectionExpandedState(html, "administration"), false, currentPathname);
     assert.equal(doc.querySelectorAll('a[href="/settings/accounting"]').length, 1, currentPathname);
     assert.equal(doc.querySelector('a[href="/settings/accounting"]')?.getAttribute("aria-current"), "page", currentPathname);
+    assert.equal(doc.querySelector('a[href="/settings/accounting/permissions"]')?.getAttribute("aria-current"), null, currentPathname);
     assert.equal(doc.querySelector('a[href="/settings"]')?.getAttribute("aria-current"), null, currentPathname);
   }
 
-  const settings = renderSidebar({ canAccessAccountingSetup: true, currentPathname: "/settings/company" });
+  const permissionsPath = "/settings/accounting/permissions";
+  const bothLinks = renderSidebar({ canAccessAccountingSetup: true, canManageAccountingAuthority: true, currentPathname: permissionsPath });
+  const bothLinksDoc = new JSDOM(bothLinks).window.document;
+  assert.equal(getSectionExpandedState(bothLinks, "accountingOperations"), true);
+  assert.equal(getSectionExpandedState(bothLinks, "administration"), false);
+  assert.equal(bothLinksDoc.querySelector('a[href="/settings/accounting"]')?.getAttribute("aria-current"), null);
+  assert.equal(bothLinksDoc.querySelector('a[href="/settings/accounting/permissions"]')?.getAttribute("aria-current"), "page");
+  assert.equal(bothLinksDoc.querySelectorAll('a[aria-current="page"]').length, 1);
+
+  const settings = renderSidebar({ canAccessAccountingSetup: true, canManageAccountingAuthority: true, currentPathname: "/settings/company" });
   const settingsDoc = new JSDOM(settings).window.document;
   assert.equal(getSectionExpandedState(settings, "administration"), true);
   assert.equal(getSectionExpandedState(settings, "accountingOperations"), false);
   assert.equal(settingsDoc.querySelector('a[href="/settings"]')?.getAttribute("aria-current"), "page");
 
-  const nearMatch = renderSidebar({ canAccessAccountingSetup: true, currentPathname: "/settings/accountingish" });
+  const nearMatch = renderSidebar({ canAccessAccountingSetup: true, canManageAccountingAuthority: true, currentPathname: "/settings/accountingish" });
   assert.equal(getSectionExpandedState(nearMatch, "administration"), true);
   assert.equal(getSectionExpandedState(nearMatch, "accountingOperations"), false);
+
+  const permissionsNearMatch = renderSidebar({
+    canAccessAccountingSetup: true,
+    canManageAccountingAuthority: true,
+    currentPathname: "/settings/accounting/permissions-extra",
+  });
+  const permissionsNearMatchDoc = new JSDOM(permissionsNearMatch).window.document;
+  assert.equal(permissionsNearMatchDoc.querySelector('a[href="/settings/accounting/permissions"]')?.getAttribute("aria-current"), null);
+  assert.equal(permissionsNearMatchDoc.querySelector('a[href="/settings/accounting"]')?.getAttribute("aria-current"), "page");
+
+  const setupOnly = renderSidebar({ canAccessAccountingSetup: true, currentPathname: "/settings/accounting" });
+  const setupOnlyDoc = new JSDOM(setupOnly).window.document;
+  assert.equal(setupOnlyDoc.querySelector('a[href="/settings/accounting"]')?.getAttribute("aria-current"), "page");
+  assert.equal(setupOnlyDoc.querySelectorAll('a[href="/settings/accounting/permissions"]').length, 0);
 });
 
 test("9. Only one accordion section is expanded at a time", () => {

@@ -31,7 +31,10 @@ import {
   navigationDictionaryEn,
   type NavigationDictionary,
 } from "@/lib/i18n/dictionaries/navigation";
+import { getAccountingPermissionsDictionary } from "@/lib/i18n/dictionaries/accounting-permissions";
 import { getReportCenterDictionary } from "@/lib/i18n/dictionaries/report-center";
+
+const ACCOUNTING_PERMISSIONS_HREF = "/settings/accounting/permissions";
 
 export type NavSectionKey =
   | "customersAndSales"
@@ -122,6 +125,12 @@ export function isRouteActive(currentPathname: string, targetHref: string): bool
   if (targetHref === "/dashboard" || targetHref === "/reports") {
     return currentPathname === targetHref;
   }
+  if (
+    targetHref === "/settings/accounting" &&
+    (currentPathname === ACCOUNTING_PERMISSIONS_HREF || currentPathname.startsWith(`${ACCOUNTING_PERMISSIONS_HREF}/`))
+  ) {
+    return false;
+  }
   if (targetHref === "/settings" && getSectionForPathname(currentPathname) === "accountingOperations") {
     return false;
   }
@@ -138,6 +147,7 @@ export default function Sidebar({
   canManageArBridge = false,
   canReconcileBank = false,
   canAccessAccountingSetup = false,
+  canManageAccountingAuthority = false,
   authorizedReports = [],
   shellDirection = "ltr",
   currentPathname,
@@ -151,6 +161,7 @@ export default function Sidebar({
   canManageArBridge?: boolean;
   canReconcileBank?: boolean;
   canAccessAccountingSetup?: boolean;
+  canManageAccountingAuthority?: boolean;
   authorizedReports?: readonly ReportNavigationItem[];
   shellDirection?: "ltr" | "rtl";
   currentPathname?: string;
@@ -158,6 +169,7 @@ export default function Sidebar({
   const locale = useLocale();
   const dictionary: NavigationDictionary =
     locale === "ar" ? navigationDictionaryAr : navigationDictionaryEn;
+  const accountingPermissionsLabel = getAccountingPermissionsDictionary(locale).title;
   const routerPathname = usePathname();
   const pathname = currentPathname ?? routerPathname;
 
@@ -223,7 +235,7 @@ export default function Sidebar({
         },
       ],
     },
-    ...(canViewAccounting || canReconcileBank || canManageArBridge || canAccessAccountingSetup ? [{
+    ...(canViewAccounting || canReconcileBank || canManageArBridge || canAccessAccountingSetup || canManageAccountingAuthority ? [{
       key: "accountingOperations" as const,
       title: dictionary.sections.accountingOperations,
       icon: BookOpen,
@@ -257,6 +269,12 @@ export default function Sidebar({
           label: dictionary.modules.accountingSetup,
           href: "/settings/accounting",
           icon: Calculator,
+        }] : []),
+        ...(canManageAccountingAuthority ? [{
+          key: "accounting-permissions",
+          label: accountingPermissionsLabel,
+          href: ACCOUNTING_PERMISSIONS_HREF,
+          icon: ShieldAlert,
         }] : []),
       ],
     }] : []),

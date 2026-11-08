@@ -47,7 +47,7 @@ export default async function DashboardLayout({
     checkPermission("accounting:manage_profile"),
     checkPermission("accounting:manage_authority"),
   ]);
-  const canAccessAccountingSetup = canViewAccounting || canManageAccountingProfile || canManageAccountingAuthority || isAdmin;
+  const canAccessAccountingSetup = canViewAccounting || canManageAccountingProfile || isAdmin;
   const effectiveReportPermissions = new Map(
     REPORT_NAVIGATION_PERMISSIONS.map((permission, index) => [permission, reportPermissionValues[index] === true]),
   );
@@ -75,6 +75,7 @@ export default async function DashboardLayout({
                 canManageArBridge={canManageArBridge}
                 canReconcileBank={canReconcileBank}
                 canAccessAccountingSetup={canAccessAccountingSetup}
+                canManageAccountingAuthority={canManageAccountingAuthority}
                 authorizedReports={authorizedReports}
                 shellDirection={shellDirection}
               />
